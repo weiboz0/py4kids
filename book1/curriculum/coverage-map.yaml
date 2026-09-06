@@ -1,0 +1,135 @@
+map_version: 1
+entries:
+- id: unit-01-story-machine
+  kind: unit
+  title: "Mad-Libs Story Machine — your first programs"
+  lessons: 2
+  introduces: [run-program, print, comment, string-literal, variable, naming, input,
+               string-concat, f-string, error-messages]
+  requires: []
+  practices: []
+- id: unit-02-number-detective
+  kind: unit
+  title: "Number Detective — the guessing game"
+  lessons: 3
+  introduces: [int-type, arithmetic, type-conversion, boolean, comparison,
+               if-statement, elif-else, import-statement, random-module, while-loop]
+  requires: [print, input, variable, f-string]
+  practices: [string-literal, naming, comment, run-program, error-messages]
+- id: checkpoint-01-first-steps
+  kind: checkpoint
+  title: "Checkpoint 1 — First Steps"
+  lessons: 0.5
+  introduces: []
+  requires: [print, input, variable, if-statement, while-loop]
+  practices: [print, comment, string-literal, variable, naming, input, string-concat, f-string,
+              int-type, arithmetic, type-conversion, boolean, comparison, if-statement,
+              elif-else, while-loop]
+- id: unit-03-turtle-art-studio
+  kind: unit
+  title: "Turtle Art Studio — drawing with loops"
+  lessons: 3
+  introduces: [turtle-basics, turtle-drawing, for-loop, range-function, loop-counter,
+               nested-loops, float-type]
+  requires: [import-statement, variable, arithmetic]
+  practices: [naming, comment, run-program]
+- id: unit-04-quiz-show
+  kind: unit
+  title: "Quiz Show — keeping score"
+  lessons: 2
+  introduces: [accumulator, logical-ops, conditional-nesting, break-statement]
+  requires: [if-statement, elif-else, while-loop, comparison, input, f-string]
+  practices: [boolean, type-conversion, loop-counter, error-messages]
+- id: unit-05-function-factory
+  kind: unit
+  title: "Function Factory — greeting cards and turtle stamps"
+  lessons: 3
+  introduces: [def-function, parameters, return-value, scope]
+  requires: [turtle-basics, turtle-drawing, for-loop, variable, f-string]
+  practices: [range-function, loop-counter, arithmetic, nested-loops, float-type]
+- id: checkpoint-02-loops-and-functions
+  kind: checkpoint
+  title: "Checkpoint 2 — Loops and Functions"
+  lessons: 0.5
+  introduces: []
+  requires: [for-loop, while-loop, def-function]
+  practices: [for-loop, range-function, while-loop, accumulator, logical-ops,
+              conditional-nesting, def-function, parameters, return-value, scope,
+              turtle-basics, turtle-drawing]
+- id: project-01-arcade-night
+  kind: project
+  title: "Arcade Night — build your own mini-game"
+  lessons: 2
+  introduces: []
+  requires: [def-function, parameters, return-value, while-loop, if-statement, random-module]
+  practices: [print, input, f-string, accumulator, logical-ops, loop-counter,
+              elif-else, break-statement, comparison, scope, import-statement, random-module]
+- id: unit-06-secret-codes
+  kind: unit
+  title: "Secret Codes — ciphers and string surgery"
+  lessons: 2
+  introduces: [string-index, string-slice, string-methods, in-operator]
+  requires: [for-loop, string-concat, def-function, parameters, return-value]
+  practices: [f-string, accumulator, if-statement, loop-counter]
+- id: unit-07-high-score-hall
+  kind: unit
+  title: "High-Score Hall of Fame — lists"
+  lessons: 2
+  introduces: [list-literal, list-index, list-append, list-loop, list-sort, builtin-functions]
+  requires: [for-loop, variable, def-function, comparison]
+  practices: [accumulator, f-string, while-loop, string-methods]
+- id: unit-08-word-wizard
+  kind: unit
+  title: "Word Wizard — dictionaries and translation games"
+  lessons: 2
+  introduces: [dict-literal, dict-access, dict-loop]
+  requires: [list-loop, string-methods, in-operator, def-function]
+  practices: [list-literal, list-append, if-statement, f-string]
+- id: checkpoint-03-data-wrangler
+  kind: checkpoint
+  title: "Checkpoint 3 — Data Wrangler"
+  lessons: 0.5
+  introduces: []
+  requires: [list-literal, dict-literal, string-index]
+  practices: [string-index, string-slice, string-methods, in-operator, list-literal,
+              list-index, list-append, list-loop, list-sort, builtin-functions,
+              dict-literal, dict-access, dict-loop]
+- id: unit-09-save-point
+  kind: unit
+  title: "Save Point — files that remember"
+  lessons: 2
+  introduces: [file-read, file-write, with-statement]
+  requires: [list-append, string-methods, def-function, for-loop]
+  practices: [list-loop, dict-access, f-string, in-operator]
+- id: unit-10-pet-simulator
+  kind: unit
+  title: "Pet Simulator — a gentle intro to objects"
+  lessons: 3
+  introduces: [class-def, init-method, attributes, methods]
+  requires: [def-function, parameters, return-value, dict-access, while-loop]
+  practices: [scope, f-string, if-statement, accumulator, list-append]
+- id: checkpoint-04-year-one-finale
+  kind: checkpoint
+  title: "Checkpoint 4 — Year One Finale"
+  lessons: 0.5
+  introduces: []
+  requires: [file-read, class-def]
+  practices: [file-read, file-write, with-statement, class-def, init-method,
+              attributes, methods, dict-loop, list-sort, return-value]
+- id: project-02-grand-adventure
+  kind: project
+  title: "Grand Adventure — the Year 1 capstone"
+  lessons: 4
+  introduces: []
+  requires: [class-def, init-method, attributes, methods, file-read, file-write,
+             dict-literal, list-literal, def-function]
+  practices: [run-program, error-messages, print, comment, input, string-literal, f-string,
+              string-concat, string-index, string-slice, string-methods, in-operator,
+              variable, naming, int-type, float-type, arithmetic, type-conversion, boolean,
+              comparison, logical-ops, if-statement, elif-else, conditional-nesting,
+              while-loop, break-statement, for-loop, range-function, loop-counter,
+              accumulator, nested-loops, import-statement, random-module,
+              def-function, parameters, return-value, scope, list-literal, list-index,
+              list-append, list-loop, list-sort, builtin-functions, dict-literal,
+              dict-access, dict-loop, file-read, file-write, with-statement,
+              class-def, init-method, attributes, methods]
