@@ -21,3 +21,11 @@ usaaio's dated rotation language is not carried over; this repo starts post-cuto
 Gate scripts and tools are written fresh for py4kids rather than ported verbatim;
 usaaio-specific machinery (scope inventories, mutation checks, legacy-layout handling)
 is deliberately absent.
+
+## D-005 (2026-09-06) — Turtle lessons run as .py scripts, not in notebook cells
+Built-in `turtle` opens a Tk window and does not render inside Jupyter cells.
+Turtle-based lessons (Book 1 units 03/05, optional in projects) therefore run as `.py`
+scripts launched from the JupyterLab/VS Code terminal; notebooks remain the medium for
+all other work and for turtle exercise write-ups.
+Rationale: keeps the zero-new-dependencies graphics choice (user-settled 2026-09-06)
+compatible with notebooks-as-source-of-truth (design 000). User-approved 2026-09-06.
