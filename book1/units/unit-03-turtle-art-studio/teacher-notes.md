@@ -51,7 +51,7 @@ Practices reappearance: naming (script variables), comment (script headers stude
 
 - Strugglers: pair at one screen for terminal work; the predict-the-drawing exercises work on paper with no computer pressure.
   Differentiation is MANDATORY in lesson 2 (dense): strugglers stop after the plain polygon; the `i`-scaled variant is the middle tier.
-- Fast finishers: Challenge exercises — star polygons (angle 720/5) and the rainbow spiral.
+- Fast finishers: Challenge exercises — star polygons (angle 720/5) and the rainbow rosette.
 
 ## Visual checklist (teacher's first classroom run)
 

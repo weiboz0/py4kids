@@ -174,7 +174,7 @@ Same file set plus `assets/` under `book1/units/unit-03-turtle-art-studio/`.
   showing turtle code carries the `no-exec` tag (mechanically enforced, Phase A check 6);
   `exercises.ipynb` has predict-the-drawing, range-value tables, fix-the-loop, and
   design-your-polygon planning tasks (headless); drawing tasks reference the assets
-  scripts; stretch: star polygons (angle 720/5), rainbow spiral.
+  scripts; stretch: star polygons (angle 720/5), rainbow rosette (renamed from "spiral" in gate round 2 — the geometry is a ring).
 - Solutions: loop/range answers executable headless in `solutions.ipynb` (self-contained,
   never reads `assets/`); turtle answers as `assets/solutions_*.py` (`py_compile`-checked
   by Phase A; not CI-executed; reviewers code-read them; the teacher's first classroom
@@ -365,6 +365,13 @@ ci-local green; reviewer duties 4–9 discharged in the content-gate round; cont
 - glm 2 `[FIXED]`: open/edit-a-script step added to the terminal walkthrough.
 - glm 3 `[FIXED]`: E5 now closes with "change n and run to confirm".
 - Post-fix verification: unit suite 22 passed; ci-local ALL GREEN.
+
+### Review 5 — [sol] round 2 (2026-09-06)
+- **Verdict**: REJECT (6 of 8 round-1 items verified Pass, both rule clarifications judged reasonable; two residuals)
+1. `[FIXED]` (Must Fix) Scaffolding note mentions only `assert`; the seed exemption goes unexplained though U2 seeds twice.
+   → Response: note extended in all three solutions notebooks — seed pins randomness for repeatable checks; students' own games should not seed.
+2. `[FIXED]` (Should Fix) "rainbow spiral" lingered in U3 teacher-notes differentiation and the plan blueprint.
+   → Response: both renamed; repo-wide grep confirms only the historical ledger mentions remain.
 
 ## Post-Execution Report
 
