@@ -106,3 +106,23 @@ def test_checkpoints_only_assess_taught_concepts():
             untaught = set(e["practices"]) - seen
             assert not untaught, f"{e['id']} assesses untaught concepts: {untaught}"
         seen |= set(e["introduces"])
+
+
+def test_syllabus_table_matches_map():
+    import re
+
+    syllabus = (REPO / "book1" / "syllabus.md").read_text(encoding="utf-8")
+    positions = []
+    for e in load_map():
+        # A table row must carry the id, kind, and lesson count together, e.g.
+        # "| `unit-01-story-machine` | unit | 2 |"
+        row = re.search(
+            rf"\|\s*`{re.escape(e['id'])}`\s*\|\s*{e['kind']}\s*\|\s*{e['lessons']:g}\s*\|",
+            syllabus,
+        )
+        assert row, f"syllabus table missing/incorrect row for {e['id']}"
+        positions.append(row.start())
+    assert positions == sorted(positions), "syllabus table order differs from map order"
+    # No stale/extra rows: every id-shaped table row must correspond to a map entry.
+    all_rows = re.findall(r"\|\s*`((?:unit|project|checkpoint)-[0-9]{2}-[a-z0-9-]+)`\s*\|", syllabus)
+    assert sorted(all_rows) == sorted(e["id"] for e in load_map()), "stale/extra syllabus rows"
