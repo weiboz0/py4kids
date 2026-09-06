@@ -2,9 +2,8 @@
 .gh-token
 .env
 .env.*
-*token*
-*secret*
-*credential*
+*.pem
+*.key
 
 # Student data — NEVER commit (the repo is PUBLIC)
 student-data/
