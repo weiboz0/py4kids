@@ -14,16 +14,18 @@ Per D-005, drawing happens in `.py` scripts run from the terminal; notebooks car
   Open on the project thread: the teacher runs `assets/l3_spirograph.py` as a teaser — "by Friday you'll write this."
   15 min: FIRST-RUN TERMINAL WALKTHROUGH (this is most students' first terminal): open a terminal in JupyterLab (File → New → Terminal), `cd` to the unit directory, `python assets/l1_square.py`.
     Expect to repeat it slowly twice; put the three commands on the board.
+    Also show how to OPEN and EDIT a script: double-click the `.py` file in the JupyterLab file browser, change a number, save (Ctrl+S), re-run in the terminal — the exercises assume students can do this.
   25 min: forward/turn; edit `l1_square.py` to change sizes and directions.
   25 min: the pain of drawing a square with eight copy-pasted lines — leave the pain unresolved (loops rescue us next lesson).
   Window tips: the turtle window may open BEHIND JupyterLab (alt-tab); closing the window ends the script; re-run rather than rescue a half-drawn shape.
 - **Lesson 2 — for-loop, range-function, loop-counter, turtle-drawing, float-type (60–90 min).**
   Open on the thread: the eight sad lines become three with `for`.
   This is one of the year's two densest lessons (five introductions) — hold the allocation strictly and push everything else to exercises.
-  20 min: `for i in range(4)` redraws the square; predict-then-run.
-  15 min: the loop variable `i` counts — sizes that grow with `i`.
-  20 min: any polygon: `angle = 360 / n` — the calculator shows 51.42857…: floats arrive because the turtle NEEDS them.
+  20 min: `for side_number in range(4)` redraws the square; predict-then-run.
+  15 min: the loop variable counts — the lesson scales PEN THICKNESS with it (`pensize`).
+  20 min: any polygon: `angle = 360 / n` — the calculator shows 51.42857…: floats arrive because the turtle NEEDS them (`l2_polygons.py` jumps straight to the 7-gon).
   15 min: pen up/down, colors (turtle-drawing) in `l2_polygons.py`.
+  60-MINUTE CUT: drop the pensize-scaling segment (it returns in the exercises); the polygon-angle discovery is the lesson's non-negotiable core.
 - **Lesson 3 — nested-loops (60–90 min).**
   Open on the thread: what if the whole polygon repeats, turned a little each time?
   25 min: read `l3_spirograph.py` together; the outer loop turns, the inner loop draws.
@@ -55,6 +57,6 @@ Practices reappearance: naming (script variables), comment (script headers stude
 
 Before teaching, run each script once on the classroom machine:
 - `l1_square.py`: a closed square, pen visible, window stays open until clicked/closed.
-- `l2_polygons.py`: triangle, square, hexagon, then a 7-gon that closes cleanly (the 51.428… angle works).
+- `l2_polygons.py`: draws ONE polygon per run (ships with `n = 7`); edit `n` to 3, 4, 6 and re-run — each closes cleanly, including the 7-gon's 51.428… angle.
 - `l3_spirograph.py`: a symmetric rosette; total runtime under ~30 seconds.
 - Solutions scripts (`assets/solutions_*.py`, added with the solutions pass): same standard.

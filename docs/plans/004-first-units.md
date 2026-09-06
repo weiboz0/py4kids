@@ -196,8 +196,15 @@ Mechanical (Phase A tests, wired into ci-local via pytest):
 3. `bash scripts/ci-local.sh` — ALL GREEN.
 
 Reviewer duties (explicit, until plan 003 mechanizes them):
-4. Content-level prereq closure: statements use only each unit's
-   `introduces` ∪ `requires` ∪ `practices` concepts.
+4. Content-level prereq closure — CUMULATIVE interpretation (clarified in gate round 2,
+   resolving sol content #5): content may use any concept introduced by an EARLIER
+   coverage-map entry (design §2's law is "nothing used before it is TAUGHT");
+   the manifest's `requires` names the load-bearing direct prerequisites, not the full
+   transitive closure. What a unit may not use is anything taught LATER.
+   Verification-scaffolding exemption (resolving sol content #4): `assert` lines and
+   `random.seed(4)` calls in `solutions.ipynb` are CI self-checks mandated by this plan's
+   own tests, not teachable content; each solutions notebook carries a teacher-facing note
+   saying students may ignore them.
 5. Solutions cover EVERY exercise, core and stretch, and are non-vacuous.
 6. Exercises genuinely exercise the manifest's `practices` claims (teacher notes name where
    each reappears).
@@ -300,7 +307,64 @@ ci-local green; reviewer duties 4–9 discharged in the content-gate round; cont
 
 ## Content Review
 
-(pre-PR gate findings land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE
+- Mechanical concept-boundary sweeps clean (all keyword hits were English inside strings/comments); hooks open all lessons; full suite + ci-local green with real nbclient execution.
+
+### Review 2 — [fable] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no Must Fix)
+- Blind-solved every core + Challenge exercise before opening solutions; all agree except the items below; ci-local ALL GREEN (33 tests); prereq closure, no-exec audit, assets geometry, practices claims, pacing pressure-tests all verified clean.
+1. `[OPEN]` U2 Challenge 1 solution under-covers the stated task (distance logic only; no model of hints inside the loop game). Priority: Should Fix.
+2. `[OPEN]` U2 teacher-notes cite a `=`-for-`==` bug demo the notebooks don't contain. Priority: Should Fix.
+3. `[OPEN]` U2 Exercise 4: Player A's secret is visible on screen — add "Player B looks away". Priority: Should Fix.
+4. `[OPEN]` U2 Challenge 2: high/low semantics unstated; interactive version needs string `==` (taught on ints only). Priority: Should Fix (low).
+5. `[OPEN]` U3 exercises never say how to record prose/table answers (empty code cells → SyntaxError for sentences). Priority: Should Fix (low).
+6. `[OPEN]` U3 teacher-notes drift from actual L2 content (variable names, pensize-vs-size, checklist claims). Priority: Nice to Have.
+7. `[OPEN]` Stretch-tag inconsistency across units. Priority: Nice to Have.
+8. `[OPEN]` U2 solutions cells not individually self-contained (import in E1 only). Priority: Nice to Have.
+9. `[OPEN]` "Mad-Libs" is a trademark; consider "fill-in-the-blank story" or keep as knowing nominative use. Priority: Nice to Have.
+
+### Review 3 — [glm] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no blockers)
+- Blind-solved all 18 core + 6 Challenge exercises before opening solutions: zero functional discrepancies (full comparison table in review record); ci-local ALL GREEN (33 tests); independent no-exec/headless audit clean; turtle geometry verified (7-gon closure, 24×15° rosette); practices claims traced to concrete exercises; provenance clean.
+1. `[OPEN]` U1 E1 sample solution uses variables (Lesson 2 content) though teacher notes slot E1 into Lesson 1's buffer — print-only sample suggested. Priority: Nice to Have.
+2. `[OPEN]` No taught way to OPEN/EDIT a `.py` file — U3 requires reading/editing scripts but the walkthrough covers running only; add "double-click in the JupyterLab file browser, edit, save, run". Priority: Should Fix (low).
+3. `[OPEN]` U3 E5 design never gets run against the script; add a closing "change n and run to confirm". Priority: Nice to Have.
+4. `[OPEN]` U1 L2 / U3 L2 exceed the 60-min end with no named drop item for short classes. Priority: Nice to Have.
+5. `[OPEN]` U1 E3 wording mildly ambiguous ("saved string"). Priority: Nice to Have.
+6. `[OPEN]` Stretch-tag placement inconsistent (same as fable #7). Priority: Nice to Have.
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT
+- Blind-solved all exercises (all match except items below); in-process execution of all solutions passed every assertion (its sandbox blocks Jupyter tmp dirs — environmental); fake-turtle geometric tracing verified all six scripts; no-exec audit clean; provenance clean.
+1. `[OPEN]` (Must Fix) U2 Challenge 2 solution compares the computer's guess directly to the secret — the computer possesses information it must deduce.
+2. `[OPEN]` (Must Fix) U1 Exercise 3 solution fixes the name but skips the required remix.
+3. `[OPEN]` (Must Fix) U3 visual checklist claims one run of l2_polygons.py shows four shapes; the script draws one heptagon per run.
+4. `[OPEN]` (Must Fix) `assert` scaffolding conflicts with a literal manifest-only accessibility reading.
+5. `[OPEN]` (Must Fix) U3 content uses int/string literals, print, f-strings not in its manifest union.
+6. `[OPEN]` (Should Fix) U2 Challenge 1 solution shows an isolated clue, not the hint inside the game (same as fable #1).
+7. `[OPEN]` (Should Fix) "Rainbow spiral" names a rosette.
+8. `[OPEN]` (Should Fix) Dense lessons fit only the 90-min ceiling; name 60-min cut points (same as glm #4).
+
+### Resolutions (2026-09-06) — applied across all three content reviews
+- sol 1 + fable 4 `[FIXED]`: Challenge 2 restated — player replies are NUMBERS (1=too high, 2=too low, 3=correct), removing both the ambiguity and untaught string equality; solution reworked so the computer acts only on scripted replies and never reads the secret.
+- sol 2 + glm 5 `[FIXED]`: E3 statement reworded ("change the message's words to your own"); solution now fixes the name AND remixes the message.
+- sol 3 + fable 6 `[FIXED]`: checklist and L2 pacing rewritten to match the actual script (one polygon per run, edit `n` between runs; `side_number`; pensize scaling).
+- sol 4 `[FIXED]` (by rule clarification): verification-scaffolding exemption added to Phase E duty 4; every solutions notebook now carries a teacher-facing note that assert lines are CI self-checks.
+- sol 5 `[FIXED]` (by rule clarification): content-closure is CUMULATIVE (taught-before law); Phase E duty 4 amended. Everything sol flagged was taught in units 01–02.
+- sol 6 + fable 1 `[FIXED]`: Challenge 1 solution now shows the hot/cold hint inside the running loop game (scripted two-guess flow).
+- sol 7 `[FIXED]`: "rainbow spiral" renamed "rainbow rosette" across exercises, solutions, and assets.
+- sol 8 + glm 4 `[FIXED]`: explicit 60-MINUTE CUT lines added to U1 L2 and U3 L2 teacher notes.
+- fable 2 `[FIXED]`: `=`-for-`==` demo relabeled teacher-improvised with the exact snippet in the notes.
+- fable 3 `[FIXED]`: "Player B looks away" added to E4.
+- fable 5 `[FIXED]`: U3 exercises intro now shows how to answer in words (`answer = "..."` + print).
+- fable 7 + glm 6 `[FIXED]`: challenge cells uniformly `stretch`-tagged across units.
+- fable 8 `[FIXED]`: `import random` added per random-using solution cell.
+- fable 9 `[WONTFIX]`: "Mad-Libs" retained as knowing nominative genre use; content is original.
+- glm 1 `[FIXED]`: U1 E1 solution is now print-only literals (Lesson-1 level).
+- glm 2 `[FIXED]`: open/edit-a-script step added to the terminal walkthrough.
+- glm 3 `[FIXED]`: E5 now closes with "change n and run to confirm".
+- Post-fix verification: unit suite 22 passed; ci-local ALL GREEN.
 
 ## Post-Execution Report
 

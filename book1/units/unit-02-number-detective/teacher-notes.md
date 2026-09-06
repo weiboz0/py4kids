@@ -24,7 +24,7 @@ Ten concepts land here — the year's joint-heaviest unit — so each lesson car
 - **Lesson 3 — while-loop (60–90 min).**
   Open on the thread: one guess isn't a game; loop until correct.
   25 min: `while guess != secret` — the full game.
-  20 min: deliberate-bug debugging session (practices error-messages): a `=`-for-`==` bug and a forgotten `int()` — read the tracebacks together.
+  20 min: deliberate-bug debugging session (practices error-messages): the forgotten-`int()` bug lives in the exercises; the `=`-for-`==` bug is TEACHER-IMPROVISED — type `while guess = secret:` live, let the SyntaxError land, and read it together (it is not in the notebooks by design).
   Rest: play; hand-tally guess counts for the paper leaderboard.
 
 DELIBERATE OMISSION: there is NO guess counter in this unit — `loop-counter` is introduced in unit 03 (coverage-map contract).

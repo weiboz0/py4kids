@@ -22,6 +22,7 @@ Budget: two lessons of 60–90 minutes; this is the heaviest introduction load o
   20 min: input() collects words.
   25 min: assembling the story — concatenation first, then f-strings as the nicer way.
   Rest: exercises; finish the personal Mad-Libs machine.
+  60-MINUTE CUT: compress the naming-comedy segment to 10 min and defer the concatenation-vs-f-string comparison — teach f-strings only; concatenation resurfaces in exercises.
 
 Practices reappearance (none — this is the first unit; every concept here is practiced in units 02–04 and checkpoint 01).
 
