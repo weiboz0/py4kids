@@ -1,0 +1,24 @@
+# Secrets — NEVER commit (the repo is PUBLIC)
+.gh-token
+.env
+.env.*
+*token*
+*secret*
+*credential*
+
+# Student data — NEVER commit (the repo is PUBLIC)
+student-data/
+rosters/
+grades/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Build artifacts
+build/
+*.pdf
