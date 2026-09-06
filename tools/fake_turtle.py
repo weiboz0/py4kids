@@ -150,15 +150,11 @@ def _has_open_path_comment(source: str) -> bool:
 
 
 def turtle_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    units_root = Path(root).resolve() / book / "units"
-    if unit is not None:
-        candidate = units_root / unit
-        if not candidate.is_dir():
-            return [f"FAIL: {unit}: unit directory does not exist"]
-        units = [candidate]
-    else:
-        units = sorted(path for path in units_root.glob("unit-*") if path.is_dir())
-    findings = []
+    from tools.notebooks import unit_dirs
+
+    units, findings = unit_dirs(root, book, unit)
+    if findings:
+        return findings
     for unit_dir in units:
         for script in sorted((unit_dir / "assets").glob("*.py")):
             try:

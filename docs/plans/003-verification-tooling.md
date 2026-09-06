@@ -286,6 +286,15 @@ test-generated in tmp_path, so lint/discovery isolation is structural, not confi
 6. `[FIXED]` Redundant double-write in the valid_root fixture. → Response: accepted as harmless; not worth touching a green fixture. Recorded, no code change.
 7. Observation (parity-exact, documented in tests): misleading empty-set suffix in one finding message. No action.
 
+### Review 3 — [glm] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no blockers)
+- Ran everything live (167 tests then-current, ci-local 51s ALL GREEN, PDFs verified, adversarial cell-lint offset probes, negative CLI probes in /tmp); parity and one-fault completeness confirmed.
+1. `[FIXED]` (P2) Fail-open on nonexistent book roots / missing target notebooks: typo'd `--book` printed PASS for six checks; deleted solutions.ipynb passed a lone exec-solutions.
+   → Response: `unit_dirs` now fails closed on missing book/units dirs (empty units/ stays the prefix rule's N=0 pass); exec/structure/noexec/stretch checks report missing target files; structure-check dedupes; turtle-check routed through the same guard; 14 new fail-closed tests added (suite now 181).
+2. `[FIXED]` (P3) Turtle instance/Screen stub surface narrower than module level. → Response: accepted — fails closed with a clear finding; the binding API list is module-level by convention. Recorded, no code change.
+3. `[FIXED]` (P3) IPKernelApp plaintext-TCP warnings pollute PASS output. → Response: accepted as cosmetic. Recorded, no code change.
+4. `[FIXED]` (P3/info) Robustness-only schema clauses lack dedicated fixtures. → Response: accepted — they harden beyond the parity contract; noted for future extension. Recorded, no code change.
+
 ## Post-Execution Report
 
 (written before shipping.)

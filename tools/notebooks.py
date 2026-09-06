@@ -44,7 +44,14 @@ def book_root(root: Path, book: str) -> Path:
 
 
 def unit_dirs(root: Path, book: str, unit: str | None = None) -> tuple[list[Path], list[str]]:
-    units = book_root(root, book) / "units"
+    # A MISSING book/units directory fails closed (a typo'd --book/--root must not PASS);
+    # an existing-but-empty units/ passes (the prefix rule's N=0 case).
+    book_dir = book_root(root, book)
+    if not book_dir.is_dir():
+        return [], [_fail(book, "book root does not exist")]
+    units = book_dir / "units"
+    if not units.is_dir():
+        return [], [_fail(book, "units/ directory does not exist")]
     if unit is not None:
         path = units / unit
         if not path.is_dir():
@@ -199,6 +206,7 @@ def hygiene_findings(root: Path, book: str, unit: str | None = None) -> list[str
     for unit_dir in units:
         path = unit_dir / "exercises.ipynb"
         if not path.is_file():
+            findings.append(_fail(unit_dir.name, "missing exercises.ipynb"))
             continue
         notebook = read_nb(path)
         for index, cell in enumerate(code_cells(notebook)):
@@ -222,6 +230,7 @@ def exercise_structure_findings(
     for unit_dir in units:
         path = unit_dir / "exercises.ipynb"
         if not path.is_file():
+            findings.append(_fail(unit_dir.name, "missing exercises.ipynb"))
             continue
         notebook = read_nb(path)
         if not stretch_only:
@@ -244,7 +253,9 @@ def solutions_structure_findings(root: Path, book: str, unit: str | None = None)
     for unit_dir in units:
         exercises_path = unit_dir / "exercises.ipynb"
         solutions_path = unit_dir / "solutions.ipynb"
-        if not exercises_path.is_file() or not solutions_path.is_file():
+        missing = [p.name for p in (exercises_path, solutions_path) if not p.is_file()]
+        if missing:
+            findings.extend(_fail(unit_dir.name, f"missing {name}") for name in missing)
             continue
         exercises = read_nb(exercises_path)
         solutions = read_nb(solutions_path)
@@ -311,6 +322,7 @@ def noexec_findings(root: Path, book: str, unit: str | None = None) -> list[str]
     for unit_dir in units:
         path = unit_dir / "lesson.ipynb"
         if not path.is_file():
+            findings.append(_fail(unit_dir.name, "lesson.ipynb does not exist"))
             continue
         notebook = read_nb(path)
         if not notebook.cells:
@@ -372,7 +384,8 @@ def structure_findings(root: Path, book: str, unit: str | None = None) -> list[s
     findings += teacher_notes_findings(root, book, unit)
     if unit is None:
         findings += prefix_findings(root, book)
-    return findings
+    # Sub-checks and layout may report the same missing file; keep one line each.
+    return list(dict.fromkeys(findings))
 
 
 def execute_notebooks(
@@ -384,6 +397,7 @@ def execute_notebooks(
     for unit_dir in units:
         path = unit_dir / notebook_name
         if not path.is_file():
+            findings.append(_fail(unit_dir.name, f"{notebook_name} does not exist"))
             continue
         notebook = read_nb(path)
         if notebook_name == "lesson.ipynb":

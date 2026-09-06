@@ -1,5 +1,6 @@
 import copy
 import os
+import shutil
 from pathlib import Path
 
 import nbformat
@@ -164,8 +165,8 @@ def valid_root(tmp_path):
     return tmp_path
 
 
-def _run(root, check, capsys, unit=None):
-    args = ["--root", str(root), "--book", "book1"]
+def _run(root, check, capsys, unit=None, book="book1"):
+    args = ["--root", str(root), "--book", book]
     if unit:
         args += ["--unit", unit]
     args.append(check)
@@ -1114,3 +1115,49 @@ def test_pdf_builder_contract():
     assert '--output "$unit_id"' in text
     assert "--pdf-engine=xelatex" in text
     assert "build/handouts" in text
+
+
+# Fail-closed guards (content-gate glm #1): a typo'd book root or a missing target
+# notebook must FAIL, never PASS — an existing-but-empty units/ stays a pass (N=0).
+UNIT_SCOPED_FS_CHECKS = (
+    "hygiene-check", "structure-check", "noexec-check", "stretch-check",
+    "cell-lint", "turtle-check", "exec-solutions", "exec-lessons",
+)
+
+
+@pytest.mark.parametrize("check", UNIT_SCOPED_FS_CHECKS)
+def test_missing_book_root_fails_closed(valid_root, check, capsys):
+    code, output = _run(valid_root, check, capsys, book="no-such-book")
+    assert code == 1
+    assert "book root does not exist" in output
+
+
+def test_missing_units_dir_fails_closed(valid_root, capsys):
+    shutil.rmtree(valid_root / "book1" / "units")
+    code, output = _run(valid_root, "hygiene-check", capsys)
+    assert code == 1
+    assert "units/ directory does not exist" in output
+
+
+def test_empty_units_dir_still_passes(valid_root, capsys):
+    shutil.rmtree(valid_root / "book1" / "units")
+    (valid_root / "book1" / "units").mkdir()
+    code, _ = _run(valid_root, "hygiene-check", capsys)
+    assert code == 0
+
+
+@pytest.mark.parametrize(
+    ("check", "target", "message"),
+    [
+        ("exec-solutions", "solutions.ipynb", "solutions.ipynb does not exist"),
+        ("exec-lessons", "lesson.ipynb", "lesson.ipynb does not exist"),
+        ("noexec-check", "lesson.ipynb", "lesson.ipynb does not exist"),
+        ("stretch-check", "exercises.ipynb", "missing exercises.ipynb"),
+    ],
+)
+def test_missing_target_notebook_fails_closed(valid_root, check, target, message, capsys):
+    unit = next((valid_root / "book1" / "units").glob("unit-*"))
+    (unit / target).unlink()
+    code, output = _run(valid_root, check, capsys)
+    assert code == 1
+    assert message in output
