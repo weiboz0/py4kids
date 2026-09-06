@@ -42,10 +42,11 @@ def _write_nb(path, notebook):
 
 @pytest.fixture
 def valid_root(tmp_path):
-    """Build an all-green registry root with one complete prefix unit."""
+    """Build an all-green registry root with one prefix unit and checkpoint."""
     book = tmp_path / "book1"
     (book / "curriculum").mkdir(parents=True)
     (book / "units").mkdir()
+    (book / "checkpoints").mkdir()
     concept_ids = ["turtle-basics", *(f"concept-{index:02d}" for index in range(39))]
     concepts = {
         "concepts_version": 1,
@@ -160,6 +161,45 @@ def valid_root(tmp_path):
     (assets / "closed.py").write_text(
         "import turtle\nfor _ in range(4):\n    turtle.forward(10)\n    turtle.right(90)\n"
         "turtle.done()\n",
+        encoding="utf-8",
+    )
+    checkpoint = book / "checkpoints/checkpoint-01-fixture"
+    checkpoint.mkdir()
+    checkpoint_entry = next(entry for entry in entries if entry["kind"] == "checkpoint")
+    _write_yaml(
+        checkpoint / "manifest.yaml",
+        {
+            "id": checkpoint_entry["id"],
+            "kind": checkpoint_entry["kind"],
+            "blueprint_version": 1,
+            "lessons": checkpoint_entry["lessons"],
+            "concepts": {
+                field: list(checkpoint_entry[field])
+                for field in ("introduces", "requires", "practices")
+            },
+            "provenance": "original",
+        },
+    )
+    questions = []
+    checkpoint_solutions = []
+    for index in range(1, 7):
+        questions.append(nbformat.v4.new_markdown_cell(f"## Question {index}\nPrompt."))
+        questions.append(nbformat.v4.new_code_cell(f"starter_{index} = {index}"))
+        checkpoint_solutions.append(nbformat.v4.new_markdown_cell(f"## Question {index}"))
+        checkpoint_solutions.append(nbformat.v4.new_code_cell(f"answer_{index} = {index}"))
+        if index <= 4:
+            checkpoint_solutions.append(
+                nbformat.v4.new_code_cell(f"assert answer_{index} == {index}")
+            )
+    _write_nb(checkpoint / "checkpoint.ipynb", nbformat.v4.new_notebook(cells=questions))
+    _write_nb(
+        checkpoint / "solutions.ipynb",
+        nbformat.v4.new_notebook(cells=checkpoint_solutions),
+    )
+    (checkpoint / "teacher-notes.md").write_text(
+        "## Goals\nGoal.\n## Pacing\n30 minutes.\n## Common mistakes\nMistake.\n"
+        "## Discussion prompts\nPrompt.\n## Differentiation\nSupport.\n"
+        "## Grading\nEvidence.\n",
         encoding="utf-8",
     )
     return tmp_path
@@ -1161,3 +1201,582 @@ def test_missing_target_notebook_fails_closed(valid_root, check, target, message
     code, output = _run(valid_root, check, capsys)
     assert code == 1
     assert message in output
+
+
+def _checkpoint(root):
+    return root / "book1/checkpoints/checkpoint-01-fixture"
+
+
+def _checkpoint_notebook(root, name):
+    path = _checkpoint(root) / name
+    return path, _read_nb(path)
+
+
+def _checkpoint_manifest(root):
+    path = _checkpoint(root) / "manifest.yaml"
+    return path, yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize(
+    "name",
+    ("manifest.yaml", "checkpoint.ipynb", "solutions.ipynb", "teacher-notes.md"),
+)
+def test_checkpoint_layout_required_file_one_fault(valid_root, capsys, name):
+    (_checkpoint(valid_root) / name).unlink()
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == f"FAIL: checkpoint-01-fixture: missing {name}\n"
+
+
+def test_checkpoint_manifest_kind_one_fault(valid_root, capsys):
+    path, manifest = _checkpoint_manifest(valid_root)
+    manifest["kind"] = "unit"
+    _write_yaml(path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: kind must be checkpoint\n"
+
+
+def test_checkpoint_manifest_map_equality_one_fault(valid_root, capsys):
+    path, manifest = _checkpoint_manifest(valid_root)
+    manifest["concepts"]["practices"].pop()
+    _write_yaml(path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: practices differs from coverage map\n"
+
+
+def test_checkpoint_manifest_coverage_map_kind_drift(valid_root, capsys):
+    path, data = _map(valid_root)
+    checkpoint_entry = next(entry for entry in data["entries"] if entry["kind"] == "checkpoint")
+    checkpoint_entry["kind"] = "project"
+    _write_yaml(path, data)
+    code, output = _run(valid_root, "manifest-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: kind differs from coverage map\n"
+
+
+@pytest.mark.parametrize("fault", ("output", "executed"))
+def test_checkpoint_hygiene_one_fault(valid_root, capsys, fault):
+    path, notebook = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
+    cell = next(cell for cell in notebook.cells if cell.cell_type == "code")
+    if fault == "output":
+        cell.outputs = [nbformat.v4.new_output("stream", name="stdout", text="leak\n")]
+    else:
+        cell.execution_count = 1
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "hygiene-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output.count("FAIL:") == 1
+    assert "has outputs" in output if fault == "output" else "is executed" in output
+
+
+@pytest.mark.parametrize(
+    ("count", "expected"),
+    ((5, "5 question headings (<6)"), (9, "9 question headings (>8)")),
+)
+def test_checkpoint_question_count_bounds_one_fault(valid_root, capsys, count, expected):
+    path, notebook = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
+    if count == 5:
+        notebook.cells[0].source = notebook.cells[0].source.replace("Question", "Prompt")
+        notebook.cells[0].source += "\n```python\n## Question 1\n```"
+        solutions_path, solutions = _checkpoint_notebook(valid_root, "solutions.ipynb")
+        solutions.cells[0].source = solutions.cells[0].source.replace("Question", "Answer")
+        _write_nb(solutions_path, solutions)
+    else:
+        solutions_path, solutions = _checkpoint_notebook(valid_root, "solutions.ipynb")
+        for question in range(7, 10):
+            notebook.cells.append(
+                nbformat.v4.new_markdown_cell(f"## Question {question}\nExtra.")
+            )
+            solutions.cells.append(nbformat.v4.new_markdown_cell(f"## Question {question}"))
+            solutions.cells.append(nbformat.v4.new_code_cell(f"answer_{question} = {question}"))
+        _write_nb(solutions_path, solutions)
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == f"FAIL: checkpoint-01-fixture: {expected}\n"
+
+
+def test_checkpoint_solutions_missing_mirrored_heading_one_fault(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    notebook.cells[0].source = "## Answer 1"
+    notebook.cells.append(
+        nbformat.v4.new_markdown_cell("```python\n## Question 1\n```")
+    )
+    notebook.cells.append(nbformat.v4.new_code_cell("# ## Question 1"))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: solutions missing '## Question 1'\n"
+
+
+@pytest.mark.parametrize("fault", ("extra", "duplicate", "reordered"))
+def test_checkpoint_solutions_reverse_mirror_one_fault(valid_root, capsys, fault):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    if fault == "extra":
+        notebook.cells.append(nbformat.v4.new_markdown_cell("## Question 7"))
+        notebook.cells.append(nbformat.v4.new_code_cell("answer_7 = 7"))
+    elif fault == "duplicate":
+        notebook.cells.append(nbformat.v4.new_markdown_cell("## Question 6"))
+        notebook.cells.append(nbformat.v4.new_code_cell("another_answer_6 = 6"))
+    else:
+        heading_cells = [
+            cell
+            for cell in notebook.cells
+            if cell.cell_type == "markdown" and "## Question" in cell.source
+        ]
+        heading_cells[0].source, heading_cells[1].source = (
+            heading_cells[1].source,
+            heading_cells[0].source,
+        )
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == (
+        "FAIL: checkpoint-01-fixture: solutions question headings do not mirror checkpoint\n"
+    )
+
+
+def test_checkpoint_duplicate_solution_occurrence_requires_own_code(valid_root, capsys):
+    checkpoint_path, checkpoint = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
+    checkpoint.cells.append(nbformat.v4.new_markdown_cell("## Question 6\nFollow-up."))
+    checkpoint.cells.append(nbformat.v4.new_code_cell("follow_up_starter = 6"))
+    _write_nb(checkpoint_path, checkpoint)
+    solutions_path, solutions = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    solutions.cells.append(nbformat.v4.new_markdown_cell("## Question 6\nFollow-up."))
+    _write_nb(solutions_path, solutions)
+    code, output = _run(
+        valid_root,
+        "structure-check",
+        capsys,
+        unit="checkpoint-01-fixture",
+    )
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: solutions: no code under '## Question 6'\n"
+
+
+def test_checkpoint_solutions_code_under_question_one_fault(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    first = next(
+        index
+        for index, cell in enumerate(notebook.cells)
+        if cell.cell_type == "markdown" and "## Question 1" in cell.source
+    )
+    second = next(
+        index
+        for index, cell in enumerate(notebook.cells[first + 1 :], first + 1)
+        if cell.cell_type == "markdown" and "## Question 2" in cell.source
+    )
+    notebook.cells[first + 1 : second] = [
+        cell for cell in notebook.cells[first + 1 : second] if cell.cell_type != "code"
+    ]
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: solutions: no code under '## Question 1'\n"
+
+
+def test_checkpoint_solutions_assert_floor_one_fault(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    seen = 0
+    for cell in notebook.cells:
+        if cell.cell_type == "code" and "assert" in cell.source:
+            seen += 1
+            if seen > 2:
+                cell.source = cell.source.replace("assert", "# removed check", 1)
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 assert cells\n"
+
+
+def test_checkpoint_solutions_assert_decoys_do_not_meet_floor(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    decoys = ('message = "assert answer"', "# assert answer", "assertion = True", "check = True")
+    assert_cells = [
+        cell
+        for cell in notebook.cells
+        if cell.cell_type == "code" and "assert" in cell.source
+    ]
+    for cell, decoy in zip(assert_cells, decoys, strict=True):
+        cell.source = decoy
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 assert cells\n"
+
+
+def test_checkpoint_magic_prefixed_assert_cells_meet_floor(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    assert_cells = [
+        cell
+        for cell in notebook.cells
+        if cell.cell_type == "code" and "assert" in cell.source
+    ]
+    for index, cell in enumerate(assert_cells[:3], 1):
+        cell.source = f"%time answer_{index}\nassert answer_{index} == {index}"
+    assert_cells[3].source = "check = True"
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 0, output
+    assert output == "structure-check: PASS\n"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    (
+        ("name = input('name? ')", "solutions call input()"),
+        ("import tkinter", "solutions import a GUI"),
+        ("from random import randint", "solutions use 'from random import'"),
+    ),
+)
+def test_checkpoint_solutions_pattern_ban_one_fault(valid_root, capsys, source, expected):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.append(nbformat.v4.new_code_cell(source))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == f"FAIL: checkpoint-01-fixture: {expected}\n"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    (
+        (
+            "import random\nvalue = random.randint(1, 3)",
+            "solutions use random without random.seed(4)",
+        ),
+        (
+            "import random\nvalue = random.randint(1, 3)\nrandom.seed(4)",
+            "solutions: random.seed(4) must precede first use",
+        ),
+    ),
+)
+def test_checkpoint_solutions_seed_rules_one_fault(valid_root, capsys, source, expected):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.append(nbformat.v4.new_code_cell(source))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == f"FAIL: checkpoint-01-fixture: {expected}\n"
+
+
+@pytest.mark.parametrize("decoy", ('note = "random.seed(4)"', "# random.seed(4)"))
+def test_checkpoint_solutions_seed_decoy_one_fault(valid_root, capsys, decoy):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.append(
+        nbformat.v4.new_code_cell(
+            f"import random\n{decoy}\nvalue = random.randint(1, 3)"
+        )
+    )
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == (
+        "FAIL: checkpoint-01-fixture: solutions use random without random.seed(4)\n"
+    )
+
+
+@pytest.mark.parametrize(
+    ("cells", "expected"),
+    (
+        (
+            ("import random as r", "value = r.randint(1, 3)"),
+            "solutions use random without random.seed(4)",
+        ),
+        (
+            ("import random as r", "r.seed(4)", "value = r.randint(1, 3)"),
+            None,
+        ),
+        (
+            ("import random as r", "value = r.randint(1, 3)", "r.seed(4)"),
+            "solutions: random.seed(4) must precede first use",
+        ),
+        (
+            ("import random as r", "r.seed(4); value = r.randint(1, 3)"),
+            None,
+        ),
+        (
+            ("import random as r", "value = r.randint(1, 3); r.seed(4)"),
+            "solutions: random.seed(4) must precede first use",
+        ),
+    ),
+)
+def test_checkpoint_solutions_random_alias_seed_rules(valid_root, capsys, cells, expected):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.extend(nbformat.v4.new_code_cell(source) for source in cells)
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    if expected is None:
+        assert code == 0, output
+        assert output == "structure-check: PASS\n"
+    else:
+        assert code == 1
+        assert output == f"FAIL: checkpoint-01-fixture: {expected}\n"
+
+
+def test_random_alias_binding_is_not_retroactive(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.extend(
+        nbformat.v4.new_code_cell(source)
+        for source in (
+            "r = 3\nbits = r.bit_length()",
+            "import random as r",
+            "r.seed(4)\nvalue = r.randint(1, 3)",
+        )
+    )
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 0, output
+    assert output == "structure-check: PASS\n"
+
+
+def test_random_use_on_modulo_continuation_is_not_sanitized(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.append(
+        nbformat.v4.new_code_cell(
+            "import random\nvalue = (\n    10\n    % random.randint(1, 3)\n)"
+        )
+    )
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == (
+        "FAIL: checkpoint-01-fixture: solutions use random without random.seed(4)\n"
+    )
+
+
+def test_checkpoint_exec_solutions_one_fault(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.append(nbformat.v4.new_code_cell("assert False, 'checkpoint failure'"))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "exec-solutions", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert "solutions.ipynb execution failed" in output
+    assert "checkpoint failure" in output
+
+
+@pytest.mark.parametrize(
+    "heading",
+    (
+        "## Goals",
+        "## Pacing",
+        "## Common mistakes",
+        "## Discussion prompts",
+        "## Differentiation",
+        "## Grading",
+    ),
+)
+def test_checkpoint_teacher_heading_one_fault(valid_root, capsys, heading):
+    path = _checkpoint(valid_root) / "teacher-notes.md"
+    notes = path.read_text(encoding="utf-8").replace(heading, "## Removed", 1)
+    notes += f"\nInline decoy: {heading} is not a heading.\n```text\n{heading}\n```\n"
+    path.write_text(notes, encoding="utf-8")
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == f"FAIL: checkpoint-01-fixture: teacher notes missing '{heading}'\n"
+
+
+def test_checkpoint_student_solution_heading_one_fault(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
+    notebook.cells.append(nbformat.v4.new_markdown_cell("## Solution\nLeak."))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "hygiene-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: checkpoint contains a solution heading\n"
+
+
+def test_checkpoint_structure_rejects_solution_heading_one_fault(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
+    notebook.cells.append(nbformat.v4.new_markdown_cell("## Solution\nLeak."))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: checkpoint contains a solution heading\n"
+
+
+@pytest.mark.parametrize("check", ("hygiene-check", "structure-check"))
+def test_checkpoint_solution_heading_decoys_are_ignored(valid_root, capsys, check):
+    path, notebook = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
+    notebook.cells.append(
+        nbformat.v4.new_markdown_cell("```python\n## Solution\nraise AssertionError\n```")
+    )
+    notebook.cells.append(nbformat.v4.new_code_cell("# ## Solution"))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, check, capsys, unit="checkpoint-01-fixture")
+    assert code == 0, output
+    assert output == f"{check}: PASS\n"
+
+
+def test_checkpoint_student_stretch_tag_one_fault(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
+    notebook.cells[0].metadata["tags"] = ["stretch"]
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: checkpoint contains stretch-tagged cells\n"
+
+
+@pytest.mark.parametrize("fault", ("gap", "orphan"))
+def test_checkpoint_prefix_one_fault(valid_root, capsys, fault):
+    if fault == "gap":
+        _checkpoint(valid_root).rename(valid_root / "book1/checkpoints/checkpoint-02-fixture")
+    else:
+        shutil.copytree(
+            _checkpoint(valid_root),
+            valid_root / "book1/checkpoints/checkpoint-99-orphan",
+        )
+    code, output = _run(valid_root, "structure-check", capsys)
+    assert code == 1
+    assert "checkpoint directories are not the coverage-map prefix" in output
+    assert output.count("FAIL:") == 1
+
+
+def test_missing_checkpoints_dir_fails_closed(valid_root, capsys):
+    shutil.rmtree(valid_root / "book1/checkpoints")
+    code, output = _run(valid_root, "hygiene-check", capsys)
+    assert code == 1
+    assert output == "FAIL: book1: checkpoints/ directory does not exist\n"
+
+
+@pytest.mark.parametrize(
+    "check",
+    ("manifest-check", "hygiene-check", "structure-check", "exec-solutions", "cell-lint"),
+)
+def test_empty_checkpoints_dir_still_passes(valid_root, capsys, check):
+    shutil.rmtree(valid_root / "book1/checkpoints")
+    (valid_root / "book1/checkpoints").mkdir()
+    code, output = _run(valid_root, check, capsys)
+    assert code == 0, output
+    assert output == f"{check}: PASS\n"
+
+
+def test_missing_checkpoint_target_fails_closed(valid_root, capsys):
+    code, output = _run(
+        valid_root,
+        "structure-check",
+        capsys,
+        unit="checkpoint-99-absent",
+    )
+    assert code == 1
+    assert output == "FAIL: checkpoint-99-absent: checkpoint directory does not exist\n"
+
+
+def test_targeted_checkpoint_missing_book_root_fails_closed(valid_root, capsys):
+    code, output = _run(
+        valid_root,
+        "structure-check",
+        capsys,
+        unit="checkpoint-01-fixture",
+        book="no-such-book",
+    )
+    assert code == 1
+    assert output == "FAIL: no-such-book: book root does not exist\n"
+
+
+@pytest.mark.parametrize(
+    "check",
+    ("manifest-check", "hygiene-check", "structure-check", "exec-solutions", "cell-lint"),
+)
+@pytest.mark.parametrize("target", ("unit-01-story-machine", "checkpoint-01-fixture"))
+def test_selector_both_scope_matrix(valid_root, capsys, check, target):
+    code, output = _run(valid_root, check, capsys, unit=target)
+    assert code == 0, output
+    assert output == f"{check}: PASS\n"
+
+
+@pytest.mark.parametrize(
+    "check",
+    ("noexec-check", "stretch-check", "exec-lessons", "turtle-check"),
+)
+@pytest.mark.parametrize(
+    ("target", "expected_code"),
+    (("unit-01-story-machine", 0), ("checkpoint-01-fixture", 2)),
+)
+def test_selector_unit_only_matrix(valid_root, capsys, check, target, expected_code):
+    code, output = _run(valid_root, check, capsys, unit=target)
+    assert code == expected_code
+    if expected_code == 0:
+        assert output == f"{check}: PASS\n"
+    else:
+        assert output == ""
+
+
+def test_checkpoint_target_to_unit_only_check_prints_usage(valid_root, capsys):
+    code = cli.main(
+        [
+            "--root",
+            str(valid_root),
+            "--book",
+            "book1",
+            "--unit",
+            "checkpoint-01-fixture",
+            "stretch-check",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 2
+    assert captured.out == ""
+    assert "usage: --unit checkpoint id does not apply" in captured.err
+
+
+def test_book_level_check_with_unit_keeps_usage_exit_two(valid_root, capsys):
+    code = cli.main(
+        [
+            "--root",
+            str(valid_root),
+            "--book",
+            "book1",
+            "--unit",
+            "unit-01-story-machine",
+            "prereq-check",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 2
+    assert captured.out == ""
+    assert "usage: --unit does not apply to book-level check prereq-check" in captured.err
+
+
+def test_selector_neither_prefix_falls_into_unit_scope(valid_root, capsys):
+    code, output = _run(valid_root, "structure-check", capsys, unit="chekpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: chekpoint-01-fixture: unit directory does not exist\n"
+
+
+def test_targeted_checkpoint_skips_unscoped_prefix_rule(valid_root, capsys):
+    (valid_root / "book1/checkpoints/checkpoint-99-orphan").mkdir()
+    code, output = _run(
+        valid_root,
+        "structure-check",
+        capsys,
+        unit="checkpoint-01-fixture",
+    )
+    assert code == 0
+    assert output == "structure-check: PASS\n"
+
+
+@pytest.mark.parametrize("notebook_name", ("checkpoint.ipynb", "solutions.ipynb"))
+def test_checkpoint_cell_lint_checks_each_notebook(valid_root, capsys, notebook_name):
+    path, notebook = _checkpoint_notebook(valid_root, notebook_name)
+    notebook.cells.append(nbformat.v4.new_code_cell("print(undefined_checkpoint_name)"))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "cell-lint", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert f"{notebook_name} cell" in output
+    assert "undefined_checkpoint_name" in output
+
+
+def test_checkpoint_cell_lint_does_not_honor_noexec_tag(valid_root, capsys):
+    path, notebook = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
+    notebook.cells.append(
+        nbformat.v4.new_code_cell(
+            "print(undefined_checkpoint_noexec)",
+            metadata={"tags": ["no-exec"]},
+        )
+    )
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "cell-lint", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert "undefined_checkpoint_noexec" in output

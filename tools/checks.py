@@ -31,3 +31,5 @@ CHECKS = {
     "coverage-check": coverage_findings,
     "stretch-check": stretch_findings,
 }
+
+UNIT_ONLY_CHECKS = {"noexec-check", "stretch-check", "exec-lessons", "turtle-check"}

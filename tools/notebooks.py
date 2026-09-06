@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import os
 import py_compile
 import re
@@ -20,6 +21,12 @@ REQUIRED_FILES = (
     "solutions.ipynb",
     "teacher-notes.md",
 )
+CHECKPOINT_REQUIRED_FILES = (
+    "manifest.yaml",
+    "checkpoint.ipynb",
+    "solutions.ipynb",
+    "teacher-notes.md",
+)
 MANIFEST_KEYS = {"id", "kind", "blueprint_version", "lessons", "concepts", "provenance"}
 NOTES_HEADINGS = (
     "## Goals",
@@ -28,10 +35,13 @@ NOTES_HEADINGS = (
     "## Discussion prompts",
     "## Differentiation",
 )
+CHECKPOINT_NOTES_HEADINGS = (*NOTES_HEADINGS, "## Grading")
 INTERACTIVE = re.compile(r"\binput\s*\(")
 GUI_IMPORT = re.compile(r"^\s*(import|from)\s+(turtle|tkinter)\b", re.MULTILINE)
 RANDOM_FROM_IMPORT = re.compile(r"^\s*from\s+random\s+import\b", re.MULTILINE)
 EXERCISE_HEADING = re.compile(r"^## Exercise \d+", re.MULTILINE)
+QUESTION_HEADING = re.compile(r"^## Question \d+", re.MULTILINE)
+SOLUTION_HEADING = re.compile(r"(?i)^#+\s*solution", re.MULTILINE)
 ASSET_REF = re.compile(r"assets/[\w.-]+\.py")
 
 
@@ -60,6 +70,40 @@ def unit_dirs(root: Path, book: str, unit: str | None = None) -> tuple[list[Path
     return sorted(path for path in units.glob("unit-*") if path.is_dir()), []
 
 
+def checkpoint_dirs(
+    root: Path, book: str, ident: str | None = None
+) -> tuple[list[Path], list[str]]:
+    book_dir = book_root(root, book)
+    if not book_dir.is_dir():
+        return [], [_fail(book, "book root does not exist")]
+    checkpoints = book_dir / "checkpoints"
+    if not checkpoints.is_dir():
+        return [], [_fail(book, "checkpoints/ directory does not exist")]
+    if ident is not None:
+        path = checkpoints / ident
+        if not path.is_dir():
+            return [], [_fail(ident, "checkpoint directory does not exist")]
+        return [path], []
+    return sorted(path for path in checkpoints.glob("checkpoint-*") if path.is_dir()), []
+
+
+def content_dirs(
+    root: Path, book: str, ident: str | None = None
+) -> tuple[list[tuple[Path, str]], list[str]]:
+    if ident is not None:
+        if ident.startswith("checkpoint-"):
+            paths, findings = checkpoint_dirs(root, book, ident)
+            return [(path, "checkpoint") for path in paths], findings
+        paths, findings = unit_dirs(root, book, ident)
+        return [(path, "unit") for path in paths], findings
+    units, findings = unit_dirs(root, book)
+    checkpoints, checkpoint_findings = checkpoint_dirs(root, book)
+    findings.extend(checkpoint_findings)
+    paths = [(path, "unit") for path in units]
+    paths.extend((path, "checkpoint") for path in checkpoints)
+    return paths, list(dict.fromkeys(findings))
+
+
 def read_nb(path: Path):
     return nbformat.read(path, as_version=4)
 
@@ -70,6 +114,148 @@ def code_cells(notebook):
 
 def tags(cell) -> list[str]:
     return cell.get("metadata", {}).get("tags", [])
+
+
+def _strip_markdown_fences(source: str) -> str:
+    lines = []
+    fence_character = None
+    fence_width = 0
+    for line in source.splitlines():
+        marker = re.match(r"^\s*(`{3,}|~{3,})", line)
+        if fence_character is None:
+            if marker:
+                fence_character = marker.group(1)[0]
+                fence_width = len(marker.group(1))
+                lines.append("")
+            else:
+                lines.append(line)
+            continue
+        is_closing = (
+            marker is not None
+            and marker.group(1)[0] == fence_character
+            and len(marker.group(1)) >= fence_width
+            and not line[marker.end() :].strip()
+        )
+        lines.append("")
+        if is_closing:
+            fence_character = None
+            fence_width = 0
+    return "\n".join(lines)
+
+
+def _markdown_heading_occurrences(notebook, pattern) -> list[tuple[str, int]]:
+    return [
+        (match.group(), cell_index)
+        for cell_index, cell in enumerate(notebook.cells)
+        if cell.cell_type == "markdown"
+        for match in pattern.finditer(_strip_markdown_fences(cell.source))
+    ]
+
+
+def _has_markdown_heading(source: str, heading: str) -> bool:
+    return bool(
+        re.search(
+            rf"^{re.escape(heading)}[ \t]*$",
+            _strip_markdown_fences(source),
+            re.MULTILINE,
+        )
+    )
+
+
+def _sanitized_code_source(source: str) -> str:
+    return "\n".join(
+        "" if line.lstrip().startswith(("%", "!")) else line
+        for line in source.splitlines()
+    )
+
+
+def _is_random_attribute(node, random_names: set[str]) -> bool:
+    return (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id in random_names
+    )
+
+
+def _is_seed_four_call(node, random_names: set[str]) -> bool:
+    return (
+        isinstance(node, ast.Call)
+        and _is_random_attribute(node.func, random_names)
+        and node.func.attr == "seed"
+        and len(node.args) == 1
+        and not node.keywords
+        and isinstance(node.args[0], ast.Constant)
+        and isinstance(node.args[0].value, int)
+        and not isinstance(node.args[0].value, bool)
+        and node.args[0].value == 4
+    )
+
+
+def _solution_policy_findings(scope: str, notebook) -> list[str]:
+    findings = []
+    codes = code_cells(notebook)
+    parsed = []
+    for cell_index, cell in enumerate(codes):
+        try:
+            tree = ast.parse(cell.source)
+        except SyntaxError:
+            try:
+                tree = ast.parse(_sanitized_code_source(cell.source))
+            except SyntaxError:
+                continue
+        parsed.append((cell_index, tree))
+    assert_count = sum(
+        any(isinstance(node, ast.Assert) for node in ast.walk(tree))
+        for _cell_index, tree in parsed
+    )
+    if assert_count < 3:
+        findings.append(_fail(scope, "solutions need >=3 assert cells"))
+    for cell in codes:
+        if INTERACTIVE.search(cell.source):
+            findings.append(_fail(scope, "solutions call input()"))
+        if GUI_IMPORT.search(cell.source):
+            findings.append(_fail(scope, "solutions import a GUI"))
+        if RANDOM_FROM_IMPORT.search(cell.source):
+            findings.append(_fail(scope, "solutions use 'from random import'"))
+    random_names = {"random"}
+    seed_attributes = set()
+    seed_positions = []
+    use_positions = []
+    for cell_index, tree in parsed:
+        events = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.Import, ast.Call, ast.Attribute))
+        ]
+        events.sort(
+            key=lambda node: (
+                node.lineno,
+                node.col_offset,
+                0 if isinstance(node, ast.Import) else 1 if isinstance(node, ast.Call) else 2,
+            )
+        )
+        for node in events:
+            if isinstance(node, ast.Import):
+                random_names.update(
+                    alias.asname
+                    for alias in node.names
+                    if alias.name == "random" and alias.asname is not None
+                )
+            elif isinstance(node, ast.Call) and _is_seed_four_call(node, random_names):
+                seed_attributes.add(id(node.func))
+            elif isinstance(node, ast.Attribute) and _is_random_attribute(node, random_names):
+                position = (cell_index, node.lineno, node.col_offset)
+                if id(node) in seed_attributes:
+                    seed_positions.append(position)
+                else:
+                    use_positions.append(position)
+    if seed_positions or use_positions:
+        first_use = min(use_positions, default=None)
+        if not seed_positions:
+            findings.append(_fail(scope, "solutions use random without random.seed(4)"))
+        elif first_use is not None and min(seed_positions) >= first_use:
+            findings.append(_fail(scope, "solutions: random.seed(4) must precede first use"))
+    return findings
 
 
 def layout_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
@@ -116,7 +302,7 @@ def layout_findings(root: Path, book: str, unit: str | None = None) -> list[str]
 
 
 def manifest_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    units, findings = unit_dirs(root, book, unit)
+    contents, findings = content_dirs(root, book, unit)
     if findings:
         return findings
     map_path = book_root(root, book) / "curriculum/coverage-map.yaml"
@@ -132,50 +318,52 @@ def manifest_findings(root: Path, book: str, unit: str | None = None) -> list[st
         if not isinstance(entry.get("id"), str):
             return [_fail(book, f"coverage-map entry {index} id must be a string")]
     entries = {entry.get("id"): entry for entry in map_entries}
-    for unit_dir in units:
-        path = unit_dir / "manifest.yaml"
+    for content_dir, expected_kind in contents:
+        path = content_dir / "manifest.yaml"
         if not path.is_file():
-            findings.append(_fail(unit_dir.name, "missing manifest.yaml"))
+            findings.append(_fail(content_dir.name, "missing manifest.yaml"))
             continue
         manifest = yaml.safe_load(path.read_text(encoding="utf-8"))
         if not isinstance(manifest, dict):
-            findings.append(_fail(unit_dir.name, "manifest must be a mapping"))
+            findings.append(_fail(content_dir.name, "manifest must be a mapping"))
             continue
         if set(manifest) != MANIFEST_KEYS:
-            findings.append(_fail(unit_dir.name, f"manifest keys {set(manifest)}"))
+            findings.append(_fail(content_dir.name, f"manifest keys {set(manifest)}"))
             continue
-        if manifest["kind"] != "unit":
-            findings.append(_fail(unit_dir.name, "kind must be unit"))
+        if manifest["kind"] != expected_kind:
+            findings.append(_fail(content_dir.name, f"kind must be {expected_kind}"))
         if manifest["blueprint_version"] != 1:
-            findings.append(_fail(unit_dir.name, "blueprint_version must be 1"))
+            findings.append(_fail(content_dir.name, "blueprint_version must be 1"))
         if manifest["provenance"] != "original":
-            findings.append(_fail(unit_dir.name, "provenance must be original"))
-        if manifest["id"] != unit_dir.name:
-            findings.append(_fail(unit_dir.name, "id does not match directory"))
+            findings.append(_fail(content_dir.name, "provenance must be original"))
+        if manifest["id"] != content_dir.name:
+            findings.append(_fail(content_dir.name, "id does not match directory"))
             continue
         entry = entries.get(manifest["id"])
         if entry is None:
-            findings.append(_fail(unit_dir.name, "not in coverage map"))
+            findings.append(_fail(content_dir.name, "not in coverage map"))
             continue
+        if entry.get("kind") != expected_kind:
+            findings.append(_fail(content_dir.name, "kind differs from coverage map"))
         if manifest["lessons"] != entry.get("lessons"):
-            findings.append(_fail(unit_dir.name, "lessons differs from coverage map"))
+            findings.append(_fail(content_dir.name, "lessons differs from coverage map"))
         concepts = manifest["concepts"]
         if not isinstance(concepts, dict):
-            findings.append(_fail(unit_dir.name, "manifest concepts must be a mapping"))
+            findings.append(_fail(content_dir.name, "manifest concepts must be a mapping"))
             continue
         if set(concepts) != {"introduces", "requires", "practices"}:
-            findings.append(_fail(unit_dir.name, f"concept keys {set(concepts)}"))
+            findings.append(_fail(content_dir.name, f"concept keys {set(concepts)}"))
             continue
         for field in ("introduces", "requires", "practices"):
             if not isinstance(concepts[field], list):
                 findings.append(
-                    _fail(unit_dir.name, f"manifest concepts.{field} must be a list")
+                    _fail(content_dir.name, f"manifest concepts.{field} must be a list")
                 )
                 continue
             if not all(isinstance(value, str) for value in concepts[field]):
                 findings.append(
                     _fail(
-                        unit_dir.name,
+                        content_dir.name,
                         f"manifest concepts.{field} must be a list of ids",
                     )
                 )
@@ -195,29 +383,45 @@ def manifest_findings(root: Path, book: str, unit: str | None = None) -> list[st
                 )
                 continue
             if sorted(concepts[field]) != sorted(map_values):
-                findings.append(_fail(unit_dir.name, f"{field} differs from coverage map"))
+                findings.append(_fail(content_dir.name, f"{field} differs from coverage map"))
     return findings
 
 
 def hygiene_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    units, findings = unit_dirs(root, book, unit)
+    contents, findings = content_dirs(root, book, unit)
     if findings:
         return findings
-    for unit_dir in units:
-        path = unit_dir / "exercises.ipynb"
+    for content_dir, kind in contents:
+        notebook_name = "exercises.ipynb" if kind == "unit" else "checkpoint.ipynb"
+        path = content_dir / notebook_name
         if not path.is_file():
-            findings.append(_fail(unit_dir.name, "missing exercises.ipynb"))
+            findings.append(_fail(content_dir.name, f"missing {notebook_name}"))
             continue
         notebook = read_nb(path)
         for index, cell in enumerate(code_cells(notebook)):
             if cell.outputs:
-                findings.append(_fail(unit_dir.name, f"exercises code cell {index} has outputs"))
+                findings.append(
+                    _fail(content_dir.name, f"{notebook_name[:-6]} code cell {index} has outputs")
+                )
             if cell.execution_count is not None:
-                findings.append(_fail(unit_dir.name, f"exercises code cell {index} is executed"))
-        if any(
-            re.search(r"(?i)^#+\s*solution", cell.source, re.MULTILINE) for cell in notebook.cells
-        ):
-            findings.append(_fail(unit_dir.name, "exercises contain a solution heading"))
+                findings.append(
+                    _fail(content_dir.name, f"{notebook_name[:-6]} code cell {index} is executed")
+                )
+        if kind == "unit":
+            has_solution_heading = any(
+                SOLUTION_HEADING.search(cell.source) for cell in notebook.cells
+            )
+        else:
+            has_solution_heading = bool(
+                _markdown_heading_occurrences(notebook, SOLUTION_HEADING)
+            )
+        if has_solution_heading:
+            detail = (
+                "exercises contain a solution heading"
+                if kind == "unit"
+                else "checkpoint contains a solution heading"
+            )
+            findings.append(_fail(content_dir.name, detail))
     return findings
 
 
@@ -284,33 +488,119 @@ def solutions_structure_findings(root: Path, book: str, unit: str | None = None)
                 following.append(cell_type)
             if "code" not in following:
                 findings.append(_fail(unit_dir.name, f"solutions: no code under '{heading}'"))
-        codes = code_cells(solutions)
-        assert_count = sum("assert" in cell.source for cell in codes)
-        if assert_count < 3:
-            findings.append(_fail(unit_dir.name, "solutions need >=3 assert cells"))
-        joined = "\n".join(cell.source for cell in codes)
-        for cell in codes:
-            if INTERACTIVE.search(cell.source):
-                findings.append(_fail(unit_dir.name, "solutions call input()"))
-            if GUI_IMPORT.search(cell.source):
-                findings.append(_fail(unit_dir.name, "solutions import a GUI"))
-            if RANDOM_FROM_IMPORT.search(cell.source):
-                findings.append(_fail(unit_dir.name, "solutions use 'from random import'"))
-        if "random." in joined:
-            seed_position = joined.find("random.seed(4)")
-            first_use = next(
-                (
-                    match.start()
-                    for match in re.finditer(r"\brandom\.\w+", joined)
-                    if not joined.startswith("random.seed(4)", match.start())
-                ),
-                None,
+        findings.extend(_solution_policy_findings(unit_dir.name, solutions))
+    return findings
+
+
+def checkpoint_layout_findings(
+    root: Path, book: str, ident: str | None = None
+) -> list[str]:
+    checkpoints, findings = checkpoint_dirs(root, book, ident)
+    if findings:
+        return findings
+    for checkpoint_dir in checkpoints:
+        missing = [
+            name for name in CHECKPOINT_REQUIRED_FILES if not (checkpoint_dir / name).is_file()
+        ]
+        findings.extend(_fail(checkpoint_dir.name, f"missing {name}") for name in missing)
+    return findings
+
+
+def checkpoint_question_findings(
+    root: Path, book: str, ident: str | None = None
+) -> list[str]:
+    checkpoints, findings = checkpoint_dirs(root, book, ident)
+    if findings:
+        return findings
+    for checkpoint_dir in checkpoints:
+        path = checkpoint_dir / "checkpoint.ipynb"
+        if not path.is_file():
+            findings.append(_fail(checkpoint_dir.name, "missing checkpoint.ipynb"))
+            continue
+        notebook = read_nb(path)
+        count = len(_markdown_heading_occurrences(notebook, QUESTION_HEADING))
+        if count < 6:
+            findings.append(_fail(checkpoint_dir.name, f"{count} question headings (<6)"))
+        if count > 8:
+            findings.append(_fail(checkpoint_dir.name, f"{count} question headings (>8)"))
+        if any("stretch" in tags(cell) for cell in notebook.cells):
+            findings.append(_fail(checkpoint_dir.name, "checkpoint contains stretch-tagged cells"))
+        if _markdown_heading_occurrences(notebook, SOLUTION_HEADING):
+            findings.append(_fail(checkpoint_dir.name, "checkpoint contains a solution heading"))
+    return findings
+
+
+def checkpoint_solutions_findings(
+    root: Path, book: str, ident: str | None = None
+) -> list[str]:
+    checkpoints, findings = checkpoint_dirs(root, book, ident)
+    if findings:
+        return findings
+    for checkpoint_dir in checkpoints:
+        checkpoint_path = checkpoint_dir / "checkpoint.ipynb"
+        solutions_path = checkpoint_dir / "solutions.ipynb"
+        missing = [
+            path.name for path in (checkpoint_path, solutions_path) if not path.is_file()
+        ]
+        if missing:
+            findings.extend(_fail(checkpoint_dir.name, f"missing {name}") for name in missing)
+            continue
+        checkpoint = read_nb(checkpoint_path)
+        solutions = read_nb(solutions_path)
+        headings = [
+            heading
+            for heading, _cell_index in _markdown_heading_occurrences(
+                checkpoint, QUESTION_HEADING
             )
-            if seed_position == -1:
-                findings.append(_fail(unit_dir.name, "solutions use random without random.seed(4)"))
-            elif first_use is not None and seed_position >= first_use:
+        ]
+        heading_occurrences = _markdown_heading_occurrences(solutions, QUESTION_HEADING)
+        solution_headings = [heading for heading, _cell_index in heading_occurrences]
+        unmatched_solution_headings = list(solution_headings)
+        missing_heading = False
+        for heading in headings:
+            try:
+                unmatched_solution_headings.remove(heading)
+            except ValueError:
+                findings.append(_fail(checkpoint_dir.name, f"solutions missing '{heading}'"))
+                missing_heading = True
+        if not missing_heading and solution_headings != headings:
+            findings.append(
+                _fail(
+                    checkpoint_dir.name,
+                    "solutions question headings do not mirror checkpoint",
+                )
+            )
+        if solution_headings == headings:
+            for occurrence, (heading, cell_index) in enumerate(heading_occurrences):
+                next_cell_index = (
+                    heading_occurrences[occurrence + 1][1]
+                    if occurrence + 1 < len(heading_occurrences)
+                    else len(solutions.cells)
+                )
+                following = solutions.cells[cell_index + 1 : next_cell_index]
+                if not any(cell.cell_type == "code" for cell in following):
+                    findings.append(
+                        _fail(checkpoint_dir.name, f"solutions: no code under '{heading}'")
+                    )
+        findings.extend(_solution_policy_findings(checkpoint_dir.name, solutions))
+    return findings
+
+
+def checkpoint_teacher_notes_findings(
+    root: Path, book: str, ident: str | None = None
+) -> list[str]:
+    checkpoints, findings = checkpoint_dirs(root, book, ident)
+    if findings:
+        return findings
+    for checkpoint_dir in checkpoints:
+        path = checkpoint_dir / "teacher-notes.md"
+        if not path.is_file():
+            continue
+        notes = path.read_text(encoding="utf-8")
+        for heading in CHECKPOINT_NOTES_HEADINGS:
+            if not _has_markdown_heading(notes, heading):
                 findings.append(
-                    _fail(unit_dir.name, "solutions: random.seed(4) must precede first use")
+                    _fail(checkpoint_dir.name, f"teacher notes missing '{heading}'")
                 )
     return findings
 
@@ -370,34 +660,65 @@ def prefix_findings(root: Path, book: str) -> list[str]:
     map_units = [entry.get("id") for entry in entries if entry.get("kind") == "unit"]
     existing = sorted(path.name for path in (book_path / "units").glob("unit-*") if path.is_dir())
     if existing != map_units[: len(existing)]:
-        return [_fail(book, "unit directories are not the coverage-map prefix")]
-    return []
+        findings = [_fail(book, "unit directories are not the coverage-map prefix")]
+    else:
+        findings = []
+    map_checkpoints = [
+        entry.get("id") for entry in entries if entry.get("kind") == "checkpoint"
+    ]
+    existing_checkpoints = sorted(
+        path.name
+        for path in (book_path / "checkpoints").glob("checkpoint-*")
+        if path.is_dir()
+    )
+    if existing_checkpoints != map_checkpoints[: len(existing_checkpoints)]:
+        findings.append(_fail(book, "checkpoint directories are not the coverage-map prefix"))
+    return findings
 
 
 def structure_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    _, unit_errors = unit_dirs(root, book, unit)
-    if unit_errors:
-        return unit_errors
-    findings = layout_findings(root, book, unit)
-    findings += exercise_structure_findings(root, book, unit)
-    findings += solutions_structure_findings(root, book, unit)
-    findings += teacher_notes_findings(root, book, unit)
+    _, scope_errors = content_dirs(root, book, unit)
+    if scope_errors:
+        return scope_errors
+    if unit is not None and unit.startswith("checkpoint-"):
+        findings = checkpoint_layout_findings(root, book, unit)
+        findings += checkpoint_question_findings(root, book, unit)
+        findings += checkpoint_solutions_findings(root, book, unit)
+        findings += checkpoint_teacher_notes_findings(root, book, unit)
+    else:
+        findings = layout_findings(root, book, unit)
+        findings += exercise_structure_findings(root, book, unit)
+        findings += solutions_structure_findings(root, book, unit)
+        findings += teacher_notes_findings(root, book, unit)
     if unit is None:
+        findings += checkpoint_layout_findings(root, book)
+        findings += checkpoint_question_findings(root, book)
+        findings += checkpoint_solutions_findings(root, book)
+        findings += checkpoint_teacher_notes_findings(root, book)
         findings += prefix_findings(root, book)
     # Sub-checks and layout may report the same missing file; keep one line each.
     return list(dict.fromkeys(findings))
 
 
 def execute_notebooks(
-    root: Path, book: str, notebook_name: str, unit: str | None = None
+    root: Path,
+    book: str,
+    notebook_name: str,
+    unit: str | None = None,
+    *,
+    include_checkpoints: bool = False,
 ) -> list[str]:
-    units, findings = unit_dirs(root, book, unit)
+    if include_checkpoints:
+        contents, findings = content_dirs(root, book, unit)
+        directories = [path for path, _kind in contents]
+    else:
+        directories, findings = unit_dirs(root, book, unit)
     if findings:
         return findings
-    for unit_dir in units:
-        path = unit_dir / notebook_name
+    for content_dir in directories:
+        path = content_dir / notebook_name
         if not path.is_file():
-            findings.append(_fail(unit_dir.name, f"{notebook_name} does not exist"))
+            findings.append(_fail(content_dir.name, f"{notebook_name} does not exist"))
             continue
         notebook = read_nb(path)
         if notebook_name == "lesson.ipynb":
@@ -407,16 +728,24 @@ def execute_notebooks(
                 notebook,
                 timeout=120,
                 kernel_name="python3",
-                resources={"metadata": {"path": str(unit_dir)}},
+                resources={"metadata": {"path": str(content_dir)}},
             ).execute()
         except Exception as error:  # noqa: BLE001 - nbclient startup/execution failures vary
             summary = str(error).splitlines()[-1] if str(error) else type(error).__name__
-            findings.append(_fail(unit_dir.name, f"{notebook_name} execution failed: {summary}"))
+            findings.append(
+                _fail(content_dir.name, f"{notebook_name} execution failed: {summary}")
+            )
     return findings
 
 
 def exec_solutions_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    return execute_notebooks(root, book, "solutions.ipynb", unit)
+    return execute_notebooks(
+        root,
+        book,
+        "solutions.ipynb",
+        unit,
+        include_checkpoints=True,
+    )
 
 
 def exec_lessons_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
@@ -428,30 +757,28 @@ def _ruff_command() -> list[str]:
 
 
 def cell_lint_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    units, findings = unit_dirs(root, book, unit)
+    contents, findings = content_dirs(root, book, unit)
     if findings:
         return findings
-    for unit_dir in units:
-        for path in sorted(unit_dir.glob("*.ipynb")):
+    for content_dir, kind in contents:
+        for path in sorted(content_dir.glob("*.ipynb")):
             notebook = read_nb(path)
             lines: list[str] = []
             line_cells: dict[int, int] = {}
             syntax_error_cells: set[int] = set()
             for cell_index, cell in enumerate(notebook.cells):
-                if cell.cell_type != "code" or "no-exec" in tags(cell):
+                if cell.cell_type != "code":
                     continue
-                source_lines = [
-                    line
-                    for line in cell.source.splitlines()
-                    if not line.lstrip().startswith(("%", "!"))
-                ]
+                if kind == "unit" and "no-exec" in tags(cell):
+                    continue
+                source_lines = _sanitized_code_source(cell.source).splitlines()
                 try:
                     compile("\n".join(source_lines), f"{path.name}:cell-{cell_index}", "exec")
                 except SyntaxError as error:
                     syntax_error_cells.add(cell_index)
                     findings.append(
                         _fail(
-                            unit_dir.name,
+                            content_dir.name,
                             f"{path.name} cell {cell_index}: syntax error: {error.msg}",
                         )
                     )
@@ -497,10 +824,12 @@ def cell_lint_findings(root: Path, book: str, unit: str | None = None) -> list[s
                 parsed += 1
                 if cell_index not in syntax_error_cells:
                     findings.append(
-                        _fail(unit_dir.name, f"{path.name} cell {cell_index}: {detail}")
+                        _fail(content_dir.name, f"{path.name} cell {cell_index}: {detail}")
                     )
                 pending = None
             if result.returncode != 0 and parsed == 0:
                 detail = result.stderr.strip() or result.stdout.strip()
-                findings.append(_fail(unit_dir.name, f"ruff failed for {path.name}: {detail}"))
+                findings.append(
+                    _fail(content_dir.name, f"ruff failed for {path.name}: {detail}")
+                )
     return findings
