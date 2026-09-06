@@ -2,7 +2,7 @@
 
 **Goal:** Ship the next two coverage-map entries in teaching order — `checkpoint-01-first-steps` (the year's first assessment, covering units 01–02) and `unit-04-quiz-show` — establishing the checkpoint pipeline (conventions + mechanical checks) the remaining three checkpoints will reuse.
 
-**Architecture:** Unit 04 follows the plan-004 unit pipeline unchanged. Checkpoints get first-class conventions mirroring units (student notebook with no solutions, blind-authored solutions, map-equal manifest, teacher notes with grading guidance) and the `tools/` checks are extended from unit-only to unit+checkpoint scope. One curriculum-data amendment rides along: the coverage map's `unit-04-quiz-show.requires` gains `arithmetic` and `int-type` (standing plan-002 follow-up — the score accumulator plainly depends on them; closure holds, both taught in unit 02).
+**Architecture:** Unit 04 follows the plan-004 unit pipeline unchanged. Checkpoints get first-class conventions mirroring units (student notebook with no solutions, blind-authored solutions, map-equal manifest, teacher notes with grading guidance) and the `tools/` checks are extended from unit-only to unit+checkpoint scope. Two curriculum-data amendments ride along (Global Constraints carry the binding text): unit-04's `requires` gains `arithmetic`, `int-type`, and `variable`, and checkpoint-01's `practices` gains `error-messages` — both verified green against every curriculum invariant.
 
 **Spec:** design 000 §1–§3; `book1/curriculum/coverage-map.yaml` (binding); plan 004's conventions + follow-ups; plan 003's check registry.
 
@@ -23,7 +23,9 @@
     every question uses only concepts from the entry's `practices` ∪ `requires`;
     deliberately BROKEN or incomplete snippets ride as fenced code inside MARKDOWN
     cells, never code cells — so cell-lint and hygiene stay clean with no `no-exec`
-    mechanism needed, and any real code cells (answer starters) must run clean.
+    mechanism needed, and any real code cells (answer starters) must LINT clean
+    (nothing executes checkpoint.ipynb — input() is allowed there); checkpoint.ipynb
+    also carries NO `stretch` tags (mechanically scanned) and no solution headings.
   - `solutions.ipynb`: mirrors every `## Question N` heading with ≥1 code cell,
     ≥3 assert cells, the unit solution conventions verbatim (no input()/GUI,
     `import random` only, seed-before-first-use, self-contained, scaffolding note).
@@ -91,9 +93,11 @@ map amendment + manifests inline (trivially-scoped data edits).
    hygiene (outputs / executed cell), question-count floor AND ceiling, solutions
    missing a mirrored heading, no-code-under-a-question, assert floor, each of the three
    pattern bans, seed-ordering, a failing checkpoint exec-solutions, each missing
-   teacher-notes heading incl. `## Grading`, checkpoint prefix violation (gap and
-   orphan), missing checkpoints-root/dir/target fail-closed cases, and the `--unit`
-   matrix cases. The fixture-factory BASELINE gains an empty `checkpoints/` dir plus one
+   teacher-notes heading incl. `## Grading`, a solution heading leaked into
+   checkpoint.ipynb, a `stretch` tag in checkpoint.ipynb, checkpoint prefix violation
+   (gap and orphan), missing checkpoints-root/dir/target fail-closed cases, and the
+   `--unit` matrix cases (including an id matching NEITHER `unit-*` nor `checkpoint-*`,
+   which falls into unit scope and fails closed exit 1 — pinned by a test). The fixture-factory BASELINE gains an empty `checkpoints/` dir plus one
    generated VALID checkpoint (map-equal against the fixture map's checkpoint entry,
    satisfying the checkpoint prefix rule) verified all-green before mutations —
    this baseline change is load-bearing ([fable] round-1 #3). Existing unit fixtures
@@ -134,9 +138,9 @@ break-statement; practices boolean, type-conversion, loop-counter, error-message
 - Hook: host your own quiz show — scores, streaks, sudden death.
 - Lesson 1 (accumulator, logical-ops): a 3-question quiz in straight-line code from
   concepts kids already own (input, int conversion, if/elif); `score = score + 1` names
-  the accumulator pattern, and a visible `questions_asked` counter pays off unit 02's
-  "the machine learns to count" promise (loop-counter practice without needing a
-  question-dispatch loop — that would demand lists). The streak bonus needs `and`
+  the accumulator pattern, and a visible `questions_asked` counter brings counting into
+  the game context (loop-counter PRACTICE — the concept itself arrived in unit 03 — 
+  without needing a question-dispatch loop, which would demand lists). The streak bonus needs `and`
   (answer right AND streak alive) — logical operators arrive because the bonus rule
   demands them.
 - Lesson 2 (conditional-nesting, break-statement): a final round where a question has a
@@ -203,6 +207,15 @@ coverage; ci-local ALL GREEN; content gate 4-way consensus.
 4. `[FIXED]` (Major) `--unit` contract ambiguous. → As fable #5.
 5. `[FIXED]` (Major) Fixture inventory incomplete. → As fable #6 / glm #5.
 6. `[FIXED]` (Minor) "NO stretch requirement" vs "NO stretch" ambiguity. → Definitive: checkpoints contain no stretch/challenge questions at all.
+
+### Round 2 (2026-09-06)
+- **[sol]**: APPROVE WITH NITS — 11/11 items PASS; nit: stale Architecture paragraph. `[FIXED]` (rewritten to the two-amendment set).
+- **[glm]**: APPROVE WITH NITS — both amendments re-verified green in /tmp with a HEAD control; nits: same Architecture line `[FIXED]`; L1 counter phrasing residue `[FIXED]` (reworded to unit-03 introduction / game-context practice).
+- **[fable]**: APPROVE WITH NITS — full mechanical verification (amendments green through all 11 CLI checks incl. real exec; fixture baseline implementable against the existing fixture map's checkpoint entry; markdown-fence convention mechanically true; phase greenness traced). Nits, all `[FIXED]`: checkpoint solution-heading one-fault fixture added to the list; "run clean" → "LINT clean" (nothing executes checkpoint.ipynb); typo-id selector case pinned (unit scope, exit 1, tested); the definitive no-stretch rule got a mechanical stretch-tag scan + fixture.
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE WITH NITS · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **gate PASSED; approval to implement.**
 
 ## Content Review
 
