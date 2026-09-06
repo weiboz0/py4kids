@@ -5,7 +5,6 @@ from __future__ import annotations
 import io
 import json
 import math
-import runpy
 import subprocess
 import sys
 import tokenize
@@ -222,12 +221,3 @@ def turtle_findings(root: Path, book: str, unit: str | None = None) -> list[str]
     return findings
 
 
-def _run_script(script: str):
-    reset()
-    sys.modules["turtle"] = sys.modules[__name__]
-    runpy.run_path(script, run_name="__main__")
-    print("STATE:" + json.dumps(state(), sort_keys=True))
-
-
-if __name__ == "__main__":
-    _run_script(sys.argv[1])

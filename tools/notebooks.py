@@ -459,6 +459,7 @@ def cell_lint_findings(root: Path, book: str, unit: str | None = None) -> list[s
                     capture_output=True,
                     env={**os.environ, "UV_NO_SYNC": "1"},
                     check=False,
+                    cwd=Path(__file__).resolve().parents[1],
                 )
             finally:
                 temporary_path.unlink(missing_ok=True)

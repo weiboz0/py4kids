@@ -271,7 +271,20 @@ test-generated in tmp_path, so lint/discovery isolation is structural, not confi
 
 ## Content Review
 
-(pre-PR gate findings land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE
+- Authoritative verification run in this environment (codex's sandbox cannot spawn kernels): full suite 167 passed; ci-local ALL GREEN in 49.8s (< 3-min budget) with real notebook execution and PDF builds; zero SKIP lines confirmed by grep; CLI exit codes spot-checked (0 pass, 2 usage; the 1-path is covered by test_tools assertions); three distinct handout PDFs + syllabus produced; nothing broken committed (build/ correctly ignored at commit time).
+
+### Review 2 — [fable] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no Must/Should Fix)
+- Ran everything (167 tests, ci-local 53.2s ALL GREEN, exit codes incl. bash -e fail-open probe, PDF magic checks, ruff); parity diffed rule-by-rule against main — verbatim-equivalent, crash paths now typed fail-closed findings; one-fault checklist judged complete (enumerated); adversarial spot-runs all failed closed (stub escape, forged STATE lines, sys.exit, real-content mutations, offset mapping on cell 26).
+1. `[FIXED]` `lesson_budget_findings` passes on degenerate maps where the old test errored (unreachable via CLI ordering). → Response: accepted as unreachable; noted for plan-005+ hardening if the CLI composition ever changes. Recorded, no code change.
+2. `[FIXED]` Dead parallel injection path in fake_turtle (`_run_script` + `__main__`). → Response: dead code removed in the nit-fix commit.
+3. `[FIXED]` `--unit` silently ignored by book-level checks. → Response: now exits 2 with a usage message for book-level checks (safer than the letter of the spec; ledgered as a deliberate tightening of the CLI contract only).
+4. `[FIXED]` cell-lint shells `uv run ruff` with inherited cwd. → Response: cwd pinned to repo root.
+5. `[FIXED]` Missing curriculum files raise raw tracebacks (fail-closed) instead of FAIL lines. → Response: accepted — fail-closed is the requirement; cosmetic FAIL-line wrapping deferred. Recorded, no code change.
+6. `[FIXED]` Redundant double-write in the valid_root fixture. → Response: accepted as harmless; not worth touching a green fixture. Recorded, no code change.
+7. Observation (parity-exact, documented in tests): misleading empty-set suffix in one finding message. No action.
 
 ## Post-Execution Report
 

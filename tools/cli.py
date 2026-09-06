@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 from tools.checks import CHECKS
@@ -22,11 +23,18 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+BOOK_LEVEL_CHECKS = {"prereq-check", "coverage-check"}
+
+
 def main(argv=None):
     try:
         arguments = _parser().parse_args(argv)
     except SystemExit as error:
         return int(error.code)
+    if arguments.unit and arguments.check in BOOK_LEVEL_CHECKS:
+        print(f"usage: --unit does not apply to book-level check {arguments.check}",
+              file=sys.stderr)
+        return 2
     findings = CHECKS[arguments.check](arguments.root, arguments.book, arguments.unit)
     if findings:
         for finding in findings:
