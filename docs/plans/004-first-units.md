@@ -373,6 +373,26 @@ ci-local green; reviewer duties 4–9 discharged in the content-gate round; cont
 2. `[FIXED]` (Should Fix) "rainbow spiral" lingered in U3 teacher-notes differentiation and the plan blueprint.
    → Response: both renamed; repo-wide grep confirms only the historical ledger mentions remain.
 
-## Post-Execution Report
+### Review 6 — [sol] round 3 (2026-09-06)
+- **Verdict**: APPROVE (both residuals verified; fix commit clean — 5 files, 12 insertions, nothing unrelated).
 
-(written before shipping.)
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE (round 3) · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **content gate PASSED; clear to ship.**
+
+## Post-Execution Report (2026-09-06)
+
+**Shipped:** Book 1 units 01–03 complete — manifests (map-exact), lesson + exercise notebooks (GPT-5.6-sol statements per gated blueprints), blind-authored solutions (separate GPT-5.6-sol session that never saw the blueprints), six turtle scripts, teacher notes (inline) — plus `tests/test_book1_units.py`, the interim verification suite (kernel-resolution step 0, layout/manifest/hygiene/structure/no-exec/assets/notes checks, headless solution execution with assertion floors). Final state: unit suite 22 passed; ci-local ALL GREEN.
+
+**Gate history:** plan gate 3 rounds (sol caught a real map violation — unit-02's guess counter — plus test-rigor holes); content gate 3 rounds with genuine blind solves from all three externals (glm/fable: zero functional discrepancies; sol round 1 caught the Challenge-2 information-leak solution, an incomplete E3 solution, and a checklist/script mismatch — all fixed).
+
+**Rule clarifications shipped (recorded in Phase E duty 4):** content-closure is cumulative (taught-before), with `requires` as load-bearing direct prereqs; assert/seed lines in solutions are exempt verification scaffolding, explained by a teacher-facing note in each solutions notebook.
+
+**Deviations:** none from the gated blueprints beyond gate-driven fixes, all ledgered. "Mad-Libs" retained as nominative genre use (WONTFIX, fable #9).
+
+**Limitations:** turtle scripts are py_compile-checked and code-read but not CI-executed (headless strategy is plan 003's); lesson notebooks' untagged cells are reviewer-audited, not CI-executed (plan 003); the teacher's first classroom run performs the visual checklist.
+
+**Follow-ups:**
+- Plan 003 (verification tooling): promote the interim unit tests into `tools/`; add lesson-notebook execution with no-exec skips; headless turtle strategy; generalize the all-three-units check off the coverage map; PDF build.
+- Plan 005+ (unit 04): manifest must list `arithmetic`/`int-type` (plan 002 follow-up, still pending).
+- Codex-sandbox reviews: kernel spawn AND py_compile both fail on read-only FS — future content-gate prompts should name the in-process execution fallback upfront (this round's did; keep doing it).
