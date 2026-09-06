@@ -2,6 +2,7 @@
 # Authoritative local gate for py4kids.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+export PY4KIDS_CI=1
 
 step() { echo; echo "=== $1 ==="; }
 
@@ -22,14 +23,23 @@ uv run ruff check tools/ tests/ scripts/
 step "2/6 unit tests"
 uv run pytest -q
 
-step "3/6 notebook execution + hygiene"
-echo "SKIP (plan 003): solution-notebook execution, student-notebook hygiene, notebook-cell lint"
+step "3/6 notebook structure + execution"
+uv run py4kids-tools --book book1 hygiene-check
+uv run py4kids-tools --book book1 structure-check
+uv run py4kids-tools --book book1 noexec-check
+uv run py4kids-tools --book book1 cell-lint
+uv run py4kids-tools --book book1 exec-solutions
+uv run py4kids-tools --book book1 exec-lessons
 
-step "4/6 manifest + curriculum checks"
-echo "SKIP (plan 003): manifest validation, prereq closure, practice coverage, stretch presence"
+step "4/6 curriculum + assets"
+uv run py4kids-tools --book book1 manifest-check
+uv run py4kids-tools --book book1 prereq-check
+uv run py4kids-tools --book book1 coverage-check
+uv run py4kids-tools --book book1 stretch-check
+uv run py4kids-tools --book book1 turtle-check
 
 step "5/6 PDF build"
-echo "SKIP (plan 003): PDF build"
+bash scripts/build-pdf.sh --book book1
 
 step "6/6 pre-merge guard"
 bash scripts/pre-merge-guard.sh
