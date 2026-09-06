@@ -36,8 +36,13 @@
     patterns below MUST carry the cell tag `no-exec` (mechanically checked in Phase A);
     untagged code cells must execute headless (full execution check lands in plan 003;
     Phase E assigns the manual audit).
-  - Mechanical patterns (code cells only, regex-anchored):
-    interactive `\binput\s*\(`; GUI `^\s*(import|from)\s+(turtle|tkinter)\b`.
+  - Mechanical patterns (code cells only, matched PER LINE — `re.MULTILINE` on each cell's
+    source): interactive `\binput\s*\(`; GUI `^\s*(import|from)\s+(turtle|tkinter)\b`;
+    random-form ban `^\s*from\s+random\s+import\b` (solutions import randomness ONLY via
+    `import random`, so all usage reads `random.<fn>` and is checkable).
+  - Seed ordering (mechanical): concatenating `solutions.ipynb` code cells in order, the
+    first occurrence of `random.` other than `random.seed(4)` must come AFTER an occurrence
+    of `random.seed(4)` — seeding precedes first use, not merely "appears somewhere".
   - `teacher-notes.md` (every unit): required headings `## Goals`, `## Pacing`
     (per-lesson concept allocation; each lesson opens on the continuing project thread),
     `## Common mistakes`, `## Discussion prompts`, `## Differentiation`;
@@ -89,10 +94,10 @@ keys, so the hygiene check branches on cell type):
    tagged `stretch`. (Proxy for the mixed-ability rule; the gate judges quality.)
 5. **Solutions structure + execution:** every `## Exercise \d+` heading in exercises
    appears in `solutions.ipynb`, each followed by ≥1 code cell before the next heading;
-   ≥3 code cells containing `assert`; no code cell matches the interactive/GUI patterns
-   (Global Constraints); if any code cell contains `random.`, the source contains
-   `random.seed(4)`; the notebook executes headless via nbclient (timeout 120s, kernel cwd
-   = the unit directory via `resources={"metadata": {"path": ...}}`).
+   ≥3 code cells containing `assert`; no code-cell line matches the interactive/GUI or
+   random-form-ban patterns (Global Constraints, per-line matching); the seed-ordering rule
+   holds (seed precedes first `random.` use); the notebook executes headless via nbclient
+   (timeout 120s, kernel cwd = the unit directory via `resources={"metadata": {"path": ...}}`).
 6. **Lesson conventions:** the first cell of `lesson.ipynb` is non-empty markdown (hook
    position — hookness itself is the content gate's call, per D-001 this is a UNIT-level
    property); every code cell matching the interactive/GUI patterns carries the `no-exec` tag.
@@ -140,7 +145,7 @@ Same file set under `book1/units/unit-02-number-detective/`.
   too-high/too-low/correct verdicts.
 - Lesson 3 (while-loop): the full game — loop until the guess is correct; debugging session
   practicing error-messages (plan 002 follow-up).
-  CONCEPT BOUNDARY (gate finding sol #2): NO guess counter anywhere in unit 02 —
+  CONCEPT BOUNDARY (gate finding sol #1, round 1): NO guess counter anywhere in unit 02 —
   `loop-counter` is introduced by unit 03 per the binding map. The "fewest guesses"
   competition is run off-screen: students tally guesses on paper and the class keeps a
   hand-written leaderboard (teacher notes explain the deliberate omission and that
@@ -277,6 +282,14 @@ ci-local green; reviewer duties 4–9 discharged in the content-gate round; cont
 - glm 7 `[FIXED]`: reviewer duty 6 checks `practices` coverage; teacher notes name reappearances.
 - glm 8 `[FIXED]`: Phase E duty 9 pressure-tests unit-01 L2 and unit-03 L2; differentiation mandatory there.
 - glm 9 `[FIXED]`: teacher-notes pacing sections open every lesson on the project thread (binding convention).
+
+### Review 5 — [sol] round 2 (2026-09-06)
+- **Verdict**: REJECT (7 of 9 checklist items PASS incl. the counter blocker; two mechanical-check holes remain)
+1. `[FIXED]` (Major) Seed check enforced presence, not ordering, and `from random import x` evaded it.
+   → Response: solutions now import randomness only via `import random` (from-import mechanically banned); seed-ordering rule added — first `random.` use other than the seed call must FOLLOW `random.seed(4)` in cell order.
+2. `[FIXED]` (Major) GUI pattern not specified as multiline — `# comment\nimport turtle` evaded it.
+   → Response: all mechanical patterns now matched per line (`re.MULTILINE`) on each code cell's source.
+3. `[FIXED]` (Nit) Concept-boundary note cited "sol #2" instead of "sol #1". → Response: corrected.
 
 ## Content Review
 
