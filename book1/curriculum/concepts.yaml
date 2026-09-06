@@ -1,0 +1,57 @@
+concepts_version: 1
+concepts:
+- {id: print, name: Printing output, category: io}
+- {id: comment, name: Code comments, category: io}
+- {id: input, name: Reading user input, category: io}
+- {id: run-program, name: Running a program in the classroom environment, category: io}
+- {id: error-messages, name: Reading error messages and tracebacks, category: io}
+- {id: string-literal, name: String literals and quotes, category: strings}
+- {id: f-string, name: f-string formatting, category: strings}
+- {id: string-concat, name: String concatenation and repetition, category: strings}
+- {id: string-index, name: String indexing, category: strings}
+- {id: string-slice, name: String slicing, category: strings}
+- {id: string-methods, name: "String methods (upper/lower/strip/replace)", category: strings}
+- {id: in-operator, name: Membership testing with in, category: strings}
+- {id: variable, name: Variables and assignment, category: data}
+- {id: naming, name: Naming conventions, category: data}
+- {id: int-type, name: Integers, category: data}
+- {id: float-type, name: Floats and decimal arithmetic, category: data}
+- {id: arithmetic, name: "Arithmetic operators (+ - * / // %)", category: data}
+- {id: type-conversion, name: "Type conversion (int/str/float)", category: data}
+- {id: boolean, name: Boolean values, category: data}
+- {id: comparison, name: Comparison operators, category: control}
+- {id: logical-ops, name: "Logical operators (and/or/not)", category: control}
+- {id: if-statement, name: if statements, category: control}
+- {id: elif-else, name: elif and else branches, category: control}
+- {id: conditional-nesting, name: Nested conditionals, category: control}
+- {id: while-loop, name: while loops, category: loops}
+- {id: break-statement, name: Exiting loops with break, category: loops}
+- {id: for-loop, name: for loops, category: loops}
+- {id: range-function, name: The range function, category: loops}
+- {id: loop-counter, name: Counter variables, category: loops}
+- {id: accumulator, name: Accumulator pattern, category: loops}
+- {id: nested-loops, name: Nested loops, category: loops}
+- {id: import-statement, name: Importing modules, category: modules}
+- {id: random-module, name: "Random numbers (randint/choice)", category: modules}
+- {id: turtle-basics, name: "Turtle setup and movement (forward/turn)", category: graphics}
+- {id: turtle-drawing, name: "Turtle pen, color, and shapes", category: graphics}
+- {id: def-function, name: Defining functions, category: functions}
+- {id: parameters, name: Function parameters and arguments, category: functions}
+- {id: return-value, name: Return values, category: functions}
+- {id: scope, name: Local vs global scope, category: functions}
+- {id: builtin-functions, name: "Built-in functions (len/min/max)", category: functions}
+- {id: list-literal, name: Creating lists, category: collections}
+- {id: list-index, name: List indexing, category: collections}
+- {id: list-append, name: Growing lists with append, category: collections}
+- {id: list-loop, name: Looping over lists, category: collections}
+- {id: list-sort, name: Sorting lists with the sort method, category: collections}
+- {id: dict-literal, name: Creating dictionaries, category: collections}
+- {id: dict-access, name: Dictionary lookup and update, category: collections}
+- {id: dict-loop, name: Looping over dictionaries, category: collections}
+- {id: file-read, name: Reading files, category: files}
+- {id: file-write, name: Writing files, category: files}
+- {id: with-statement, name: Opening files with with, category: files}
+- {id: class-def, name: Defining classes, category: oop}
+- {id: init-method, name: "__init__ and creating objects", category: oop}
+- {id: attributes, name: Object attributes, category: oop}
+- {id: methods, name: Object methods, category: oop}
