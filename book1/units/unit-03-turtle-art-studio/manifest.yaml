@@ -1,0 +1,10 @@
+id: unit-03-turtle-art-studio
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [turtle-basics, turtle-drawing, for-loop, range-function, loop-counter,
+               nested-loops, float-type]
+  requires: [import-statement, variable, arithmetic]
+  practices: [naming, comment, run-program]
