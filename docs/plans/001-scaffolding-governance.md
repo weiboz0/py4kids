@@ -100,7 +100,7 @@ git commit -m "chore: uv environment and tools package stub (plan 001)"
 - Test: `tests/test_books.py`
 
 **Interfaces:**
-- Produces: `books.yaml` with `books: [{id, number, root, depends_on}]`, ids exactly `["book1", "book2"]` — ci-local.sh (Task 5) and pre-merge-guard.sh (Task 6) rely on these ids and the six-subdir layout.
+- Produces: `books.yaml` with `books: [{id, number, root, depends_on}]`, ids exactly `["book1", "book2"]` — pre-merge-guard.sh (Task 5) and ci-local.sh (Task 6) rely on these ids and the six-subdir layout.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -583,7 +583,9 @@ if [[ -n "$mode" && "$mode" != --pr ]]; then
   exit 2
 fi
 if [[ "$mode" == --pr ]]; then
-  if ! git fetch -q origin main 2>/dev/null; then
+  # Explicit refspec: a bare `git fetch origin main` only guarantees FETCH_HEAD,
+  # so the guard could read a stale refs/remotes/origin/main and miss collisions.
+  if ! git fetch -q origin "+refs/heads/main:refs/remotes/origin/main" 2>/dev/null; then
     echo "FAIL: origin/main fetch unavailable; --pr union is unverified" >&2
     exit 1
   fi
@@ -688,14 +690,19 @@ Expected: `pre-merge-guard: OK`, exit 0.
 
 ```bash
 touch docs/plans/001-collision-probe.md
-if bash scripts/pre-merge-guard.sh; then
-  echo "BUG: guard missed collision"; rm docs/plans/001-collision-probe.md; exit 1
-fi
+set +e
+out=$(bash scripts/pre-merge-guard.sh 2>&1)
+rc=$?
+set -e
 rm docs/plans/001-collision-probe.md
+echo "$out"
+[[ $rc -eq 1 ]] || { echo "BUG: expected exit 1 from guard, got $rc"; exit 1; }
+grep -qF "duplicate docs/plans number(s): 001" <<<"$out" \
+  || { echo "BUG: guard failed for the wrong reason"; exit 1; }
 echo "guard caught collision"
 ```
 
-Expected: `FAIL: duplicate docs/plans number(s): 001` then `guard caught collision`; the step aborts with exit 1 if the guard misses it.
+Expected: guard output containing `FAIL: duplicate docs/plans number(s): 001`, then `guard caught collision`. The step aborts if the guard exits 0 (missed collision), exits with any code other than 1 (environment error, not detection), or fails for a different reason than the probe's duplicate.
 
 - [ ] **Step 5: Commit**
 
@@ -793,7 +800,7 @@ git commit -m "feat: ci-local gate with plan-003 SKIPs (plan 001)"
 5. `[FIXED]` Worktree scan includes untracked clutter (editor backups can false-positive) and descends `.git`/`.venv` before filtering. Priority: Nice to Have.
    → Response: docs collision scan now considers only `.md` files, which excludes `~`-suffixed backups; the traversal-order perf point is accepted as-is (small repo).
 6. `[FIXED]` Conflict/secret check edges: 7-`=` setext underline matches; `git grep` errors indistinguishable from no-match; `*secret*` gitignore pattern could silently exclude a future "secret codes" unit's files. Priority: Nice to Have.
-   → Response: secret scan narrowed to `.gh-token`/`.env*`/`*.pem`/`*.key` and the `.gitignore` globs narrowed to match (Task 5 Step 1); `git grep` return codes now distinguish no-match from error. Setext edge retained as `[WONTFIX]`-in-part: docs use ATX headings + semantic line breaks, so a bare 7-`=` line indicates a real problem often enough to keep.
+   → Response: secret scan narrowed to `.gh-token`/`.env*`/`*.pem`/`*.key` and the `.gitignore` globs narrowed to match (Task 5 Step 1); `git grep` return codes now distinguish no-match from error. Setext edge retained as `[WONTFIX]`-in-part: docs use ATX headings + semantic line breaks, so a bare 7-`=` line indicates a real problem often enough to keep. Caveat (sol round 2): ATX-only is convention, not enforced — if a setext false positive ever occurs, exclude the file or convert the heading; the guard errs toward false alarm, never silent pass.
 7. `[FIXED]` `--pr` mode trusts `refs/remotes/origin/main` existing after fetch; missing ref silently drops union coverage. Priority: Nice to Have.
    → Response: `git_lines()` now fails closed on any git error, including a missing ref.
 8. `[FIXED]` TODO.md pre-checks plan 001's box before it ships. Priority: Nice to Have.
@@ -837,6 +844,17 @@ git commit -m "feat: ci-local gate with plan-003 SKIPs (plan 001)"
 14. `[WONTFIX]` (Should Fix) AGENTS.md's SSH-key path claim (`~/.ssh/id_ed25519_weiboz0`) called ungrounded.
    → Response: verified against this machine's `~/.ssh/config` (Host github-weiboz0 → IdentityFile ~/.ssh/id_ed25519_weiboz0); the claim is factual and inherited verbatim from usaaio's AGENTS.md.
 15. `[FIXED]` (Nice to Have) TODO.md pre-checked its own box. → Response: see fable #8.
+
+### Review 5 — [sol] round 2 (2026-09-06)
+- **Verdict**: REJECT (14/15 round-1 items confirmed resolved; both WONTFIXes judged reasonable, setext caveat requested)
+1. `[FIXED]` (Must Fix) `--pr` fetch is source-only: `git fetch origin main` updates FETCH_HEAD but not necessarily `refs/remotes/origin/main`, so the guard can read a stale ref and silently miss a cross-branch collision.
+   → Response: fetch now uses the explicit refspec `+refs/heads/main:refs/remotes/origin/main`, guaranteeing the ref the Python reads is fresh; failure still exits 1.
+2. `[FIXED]` (Should Fix) Negative probe accepted any nonzero exit as detection.
+   → Response: probe now asserts exit code is exactly 1 AND the output contains the specific `duplicate docs/plans number(s): 001` failure line.
+3. `[FIXED]` (Nit) Task 2 interface cross-reference reversed after the rev2 reorder.
+   → Response: corrected (guard = Task 5, ci-local = Task 6).
+4. `[FIXED]` (Caveat request) Setext WONTFIX should note ATX-only is unenforced.
+   → Response: caveat added to fable #6 response.
 
 ## Content Review
 
