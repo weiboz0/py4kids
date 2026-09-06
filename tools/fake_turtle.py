@@ -215,5 +215,3 @@ def turtle_findings(root: Path, book: str, unit: str | None = None) -> list[str]
                         f"turn={recorded['total_heading_change']:.6g})"
                     )
     return findings
-
-

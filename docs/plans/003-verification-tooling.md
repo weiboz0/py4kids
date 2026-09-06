@@ -295,6 +295,25 @@ test-generated in tmp_path, so lint/discovery isolation is structural, not confi
 3. `[FIXED]` (P3) IPKernelApp plaintext-TCP warnings pollute PASS output. → Response: accepted as cosmetic. Recorded, no code change.
 4. `[FIXED]` (P3/info) Robustness-only schema clauses lack dedicated fixtures. → Response: accepted — they harden beyond the parity contract; noted for future extension. Recorded, no code change.
 
-## Post-Execution Report
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS
+- (First attempt hung at ~50 min after noting the concurrent fix commits and was cancelled; the time-boxed re-dispatch reviewed the final tree fc790d3.) Verified both fix commits correct — fail-closed guards, dedupe, `--unit` guard, ruff cwd; parity spot-checks match main; fail-closed probes return expected codes; ruff clean; no fixtures committed. Suite unverifiable in its sandbox (no tmp dir) — parent runs authoritative.
+1. `[FIXED]` (Nit) Trailing blank line at EOF in fake_turtle.py. → Response: trimmed in the ship commit.
 
-(written before shipping.)
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE WITH NITS · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **content gate PASSED; clear to ship.**
+
+## Post-Execution Report (2026-09-06)
+
+**Shipped:** the complete verification-tooling layer — `tools/{notebooks,curriculum,fake_turtle,checks,cli}.py` with the `py4kids-tools` CLI (11 checks, `--root`/`--unit`, exit codes 0/1/2), `tests/test_tools.py` (fixture factory + enumerated one-fault parity checklist + fail-closed guards; suite 181 tests), both interim test files refactored to thin parity wrappers (same ids), `scripts/build-pdf.sh` (JUPYTER_CONFIG_DIR-isolated, xelatex/pandoc), and a SKIP-free `scripts/ci-local.sh` (six real steps, PY4KIDS_CI dedupe, ~50s).
+
+**Gate history:** plan gate 2 rounds (all three externals rejected round 1 — stale-jupyter-config PDF failure found empirically, circular parity proof, insufficient turtle invariant; rev2 restructured fixtures to generated one-fault mutations); content gate 1 round + fixes ([fable] adversarial pass all fail-closed; [glm] caught a real fail-open P2 on typo'd book roots, closed with guards + 14 tests; [sol] hung once, re-dispatch approved the final tree).
+
+**Deviations:** `--unit` on book-level checks now exits 2 (deliberate tightening of the CLI contract, ledgered); reviewer-accepted no-change items recorded in the Content Review responses.
+
+**Limitations:** turtle instance/Screen stub surface is module-level by convention (instance-heavy future scripts fail closed with a clear finding); IPKernelApp TCP warnings are cosmetic noise in step 3; a completion-timeout turtle fixture is deliberately omitted.
+
+**Follow-ups:**
+- Plan 005+ (unit 04 Quiz Show): manifest must list `arithmetic`/`int-type` (standing plan-002 follow-up); checkpoint/project check variants extend `kinds` when that content first ships.
+- Codex-sandbox review sessions have twice hung after noticing concurrent workspace commits — avoid committing to the branch while a sol review is in flight, or expect a cancel + scoped re-dispatch.
