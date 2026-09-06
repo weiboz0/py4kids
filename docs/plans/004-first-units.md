@@ -291,6 +291,13 @@ ci-local green; reviewer duties 4–9 discharged in the content-gate round; cont
    → Response: all mechanical patterns now matched per line (`re.MULTILINE`) on each code cell's source.
 3. `[FIXED]` (Nit) Concept-boundary note cited "sol #2" instead of "sol #1". → Response: corrected.
 
+### Review 6 — [sol] round 3 (2026-09-06)
+- **Verdict**: APPROVE (confirmation-only findings; rev3 diff clean). Note: the first round-3 codex run hung at 41 minutes and was cancelled; this verdict is from the tightly-scoped re-dispatch.
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE (round 3) · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **gate PASSED; approval to implement.**
+
 ## Content Review
 
 (pre-PR gate findings land here.)
