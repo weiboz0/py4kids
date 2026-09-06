@@ -16,11 +16,17 @@
 - Docs use semantic line breaks — one sentence per line (design §3).
 - Every `gh` command uses `GH_TOKEN=$(cat .gh-token)`; remote is `git@github-weiboz0:weiboz0/py4kids.git` (design §7).
 - Unit/project/checkpoint directory names: `unit-NN-slug`, `project-NN-slug`, `checkpoint-NN-slug` (two-digit NN).
-- Commit messages end with the Co-Authored-By / Claude-Session trailer used by this session.
+- Every `git commit` command in this plan implicitly appends two trailer lines to its message
+  (as additional `-m` arguments): `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`
+  and `Claude-Session: <the executing session's claude.ai/code URL>`.
+  The embedded commands show only the subject line for brevity.
 
 ## Out of scope
 
-This is a tooling/docs-only plan: it ships no units, projects, or checkpoints, so the design's "named verification phase" rule for content plans does not apply (exemption per design §5). Verification here is: pytest green, both gate scripts run green, `uv run python -c "import tools"` works. Also out of scope: any curriculum content (plan 002), real content checks (plan 003), PDF build tooling (plan 003).
+This is a tooling/docs-only plan: it ships no units, projects, or checkpoints, so the design's "named verification phase" rule for content plans does not apply (exemption per design §5).
+Verification here is: pytest green, both gate scripts run green, `uv run python -c "import tools"` works.
+Also out of scope: any curriculum content (plan 002), real content checks (plan 003), PDF build tooling (plan 003).
+Per-book `build/` directories are deliberately not scaffolded: they are gitignored artifact dirs that plan 003's PDF build creates at build time.
 
 ---
 
@@ -90,6 +96,7 @@ git commit -m "chore: uv environment and tools package stub (plan 001)"
 - Create: `books.yaml`
 - Create: `book1/syllabus.md`, `book2/syllabus.md`
 - Create: `.gitkeep` in `book1/{curriculum,units,projects,checkpoints,reference,docs}` and the same six under `book2/`
+- Create: `docs/proposals/.gitkeep`, `docs/reviews/.gitkeep` (design §1 tree; the guard scans both prefixes)
 - Test: `tests/test_books.py`
 
 **Interfaces:**
@@ -115,6 +122,7 @@ def test_registry_ids_order_and_dependencies():
     books = load_catalog()["books"]
     assert [b["id"] for b in books] == ["book1", "book2"]
     assert [b["number"] for b in books] == [1, 2]
+    assert [b["root"] for b in books] == ["book1", "book2"]
     assert books[0]["depends_on"] == []
     assert books[1]["depends_on"] == ["book1"]
 
@@ -156,6 +164,8 @@ for b in book1 book2; do
   touch $b/curriculum/.gitkeep $b/units/.gitkeep $b/projects/.gitkeep \
         $b/checkpoints/.gitkeep $b/reference/.gitkeep $b/docs/.gitkeep
 done
+mkdir -p docs/proposals docs/reviews
+touch docs/proposals/.gitkeep docs/reviews/.gitkeep
 ```
 
 `book1/syllabus.md`:
@@ -184,7 +194,7 @@ Expected: PASS (2 tests).
 - [ ] **Step 6: Commit**
 
 ```bash
-git add books.yaml book1 book2 tests/test_books.py
+git add books.yaml book1 book2 docs/proposals docs/reviews tests/test_books.py
 git commit -m "feat: book registry and two-book skeleton (plan 001)"
 ```
 
@@ -471,7 +481,7 @@ by the same roster in the same round.
 Findings append to the plan file's `## Content Review`, one review round per reviewer pass:
 
     ### Review N — <reviewer> (YYYY-MM-DD)
-    - **Verdict**: Approved / Approved with suggestions / Changes requested
+    - **Verdict**: APPROVE / APPROVE WITH NITS / REJECT
     1. `[OPEN]` Finding with file/section reference. Priority: Must Fix / Should Fix / Nice to Have.
 
 Authors respond inline with `→ Response:` and retag `[FIXED]` / `[WONTFIX]` (with reason).
@@ -479,7 +489,7 @@ Source tags: `[self]` / `[sol]` / `[glm]` / `[fable]`.
 
 ## Acceptance
 
-All four reviewers APPROVE (or approve-with-nits) and every `[OPEN]` item is resolved.
+All four reviewers APPROVE or APPROVE WITH NITS and every `[OPEN]` item is resolved.
 One REJECT blocks. Iterate fix → re-review to consensus.
 ```
 
@@ -518,7 +528,7 @@ is deliberately absent.
 
 Milestones (design 000 §First milestones):
 
-- [x] Plan 001 — scaffolding & governance (this plan)
+- [ ] Plan 001 — scaffolding & governance (this plan; box flips in the Ship step)
 - [ ] Plan 002 — Book 1 curriculum architecture: concept registry, syllabus, Year 1 unit/project arc
 - [ ] Plan 003 — verification tooling: manifest validation, hygiene, prereq closure, coverage, stretch presence, solution execution, PDF build
 - [ ] Plan 004 — first units (01–03) end-to-end through the content gate
@@ -531,81 +541,31 @@ git add docs/development-workflow.md docs/content-review-gate.md docs/architectu
 git commit -m "docs: workflow, content gate, decisions log, TODO (plan 001)"
 ```
 
-### Task 5: ci-local.sh
-
-**Files:**
-- Create: `scripts/ci-local.sh` (mode 755)
-
-**Interfaces:**
-- Consumes: `books.yaml` ids `["book1", "book2"]` (Task 2), `tools`/`tests` (Tasks 1–2), `scripts/pre-merge-guard.sh` (Task 6 — run Task 5's verification only after Task 6 lands, or stub-check for existence as written below).
-- Produces: the authoritative local gate every plan runs before merge.
-
-- [ ] **Step 1: Write `scripts/ci-local.sh`**
-
-```bash
-#!/usr/bin/env bash
-# Authoritative local gate for py4kids.
-set -euo pipefail
-cd "$(dirname "$0")/.."
-
-step() { echo; echo "=== $1 ==="; }
-
-step "1/6 registry + lint"
-uv run python - <<'PY'
-import yaml
-
-catalog = yaml.safe_load(open("books.yaml", encoding="utf-8"))
-ids = [book["id"] for book in catalog["books"]]
-assert ids == ["book1", "book2"], f"unexpected book registry: {ids}"
-print("registry: book1 -> book2")
-PY
-uv run ruff check tools/ tests/ scripts/
-
-step "2/6 unit tests"
-uv run pytest -q
-
-step "3/6 notebook execution + hygiene"
-echo "SKIP (plan 003): solution/lesson notebook execution, student-notebook hygiene"
-
-step "4/6 manifest + curriculum checks"
-echo "SKIP (plan 003): manifest validation, prereq closure, practice coverage, stretch presence"
-
-step "5/6 PDF build"
-echo "SKIP (plan 003): PDF build"
-
-step "6/6 pre-merge guard"
-bash scripts/pre-merge-guard.sh
-
-echo
-echo "ci-local: ALL GREEN"
-```
-
-- [ ] **Step 2: Make executable**
-
-Run: `chmod +x scripts/ci-local.sh`
-
-- [ ] **Step 3: Verify steps 1–5 run (guard lands in Task 6)**
-
-Run: `bash scripts/ci-local.sh || true`
-Expected: steps 1/6–5/6 green with three `SKIP (plan 003)` lines; step 6/6 fails only because `scripts/pre-merge-guard.sh` doesn't exist yet.
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add scripts/ci-local.sh
-git commit -m "feat: ci-local gate with plan-003 SKIPs (plan 001)"
-```
-
-### Task 6: pre-merge-guard.sh
+### Task 5: pre-merge-guard.sh
 
 **Files:**
 - Create: `scripts/pre-merge-guard.sh` (mode 755)
+- Modify: `.gitignore` (narrow the secret patterns)
 
 **Interfaces:**
 - Consumes: repo layout from Task 2 (`bookN/{units,projects,checkpoints}/`, `docs/{proposals,designs,plans,reviews}/`).
-- Produces: `bash scripts/pre-merge-guard.sh [--pr]` — exit 0 on OK; `--pr` adds the origin/main union for parallel-session collision detection.
+- Produces: `bash scripts/pre-merge-guard.sh [--pr]` — exit 0 on OK; `--pr` adds the origin/main union for parallel-session collision detection. Task 6's ci-local runs it as its final step.
 
-- [ ] **Step 1: Write `scripts/pre-merge-guard.sh`**
+- [ ] **Step 1: Narrow `.gitignore` secret patterns**
+
+Replace the broad `*token*` / `*secret*` / `*credential*` globs — which would silently exclude legitimate course content such as a "secret codes" cipher unit — with exact patterns.
+The secrets block of `.gitignore` becomes:
+
+```
+# Secrets — NEVER commit (the repo is PUBLIC)
+.gh-token
+.env
+.env.*
+*.pem
+*.key
+```
+
+- [ ] **Step 2: Write `scripts/pre-merge-guard.sh`**
 
 ```bash
 #!/usr/bin/env bash
@@ -613,6 +573,10 @@ git commit -m "feat: ci-local gate with plan-003 SKIPs (plan 001)"
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+if (($# > 1)); then
+  echo "usage: pre-merge-guard.sh [--pr]" >&2
+  exit 2
+fi
 mode=${1:-}
 if [[ -n "$mode" && "$mode" != --pr ]]; then
   echo "usage: pre-merge-guard.sh [--pr]   (unknown argument: $mode)" >&2
@@ -641,6 +605,13 @@ def git(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(["git", *args], capture_output=True, text=True, check=False)
 
 
+def git_lines(*args: str) -> list[str]:
+    proc = git(*args)
+    if proc.returncode != 0:
+        sys.exit(f"FAIL: git {' '.join(args)} failed: {proc.stderr.strip()}")
+    return proc.stdout.splitlines()
+
+
 def paths(ref: str) -> set[str]:
     if ref == "WORKTREE":
         return {
@@ -648,7 +619,7 @@ def paths(ref: str) -> set[str]:
             for path in Path(".").rglob("*")
             if path.is_file() and ".git" not in path.parts and ".venv" not in path.parts
         }
-    return set(git("ls-tree", "-r", "--name-only", ref).stdout.splitlines())
+    return set(git_lines("ls-tree", "-r", "--name-only", ref))
 
 
 def duplicate_numbers(label: str, names: set[str], pattern: str) -> None:
@@ -665,15 +636,17 @@ for directory in ("docs/proposals", "docs/designs", "docs/plans", "docs/reviews"
         path.split("/")[-1]
         for ref in refs
         for path in all_paths[ref]
-        if path.startswith(directory + "/") and path.count("/") == directory.count("/") + 1
+        if path.startswith(directory + "/")
+        and path.count("/") == directory.count("/") + 1
+        and path.endswith(".md")
     }
-    duplicate_numbers(directory, names, r"^[0-9]{3}")
+    duplicate_numbers(directory, names, r"^[0-9]{3}(?=-)")
 
 for book_id in ("book1", "book2"):
     for kind, pattern in (
-        ("units", r"^unit-[0-9]{2}"),
-        ("projects", r"^project-[0-9]{2}"),
-        ("checkpoints", r"^checkpoint-[0-9]{2}"),
+        ("units", r"^unit-[0-9]{2}(?=-)"),
+        ("projects", r"^project-[0-9]{2}(?=-)"),
+        ("checkpoints", r"^checkpoint-[0-9]{2}(?=-)"),
     ):
         prefix = f"{book_id}/{kind}/"
         names = {
@@ -684,14 +657,10 @@ for book_id in ("book1", "book2"):
         }
         duplicate_numbers(f"{book_id}/{kind}", names, pattern)
 
-tracked = set(git("ls-files").stdout.splitlines())
+tracked = set(git_lines("ls-files"))
 for path in sorted(tracked):
     name = path.rsplit("/", 1)[-1].lower()
-    if (
-        name == ".gh-token"
-        or name.startswith(".env")
-        or any(marker in name for marker in ("token", "secret", "credential"))
-    ):
+    if name == ".gh-token" or name.startswith(".env") or name.endswith((".pem", ".key")):
         failures.append(f"tracked secret-like file: {path}")
     if any(segment in ("student-data", "rosters", "grades") for segment in path.split("/")):
         failures.append(f"tracked student-data path: {path}")
@@ -699,6 +668,8 @@ for path in sorted(tracked):
 conflicts = git("grep", "-nE", r"^(<{7}|={7}|>{7})( |$)", "--", ":!scripts/pre-merge-guard.sh")
 if conflicts.returncode == 0:
     failures.append("conflict markers found")
+elif conflicts.returncode != 1:
+    sys.exit(f"FAIL: git grep failed: {conflicts.stderr.strip()}")
 
 for failure in failures:
     print(f"FAIL: {failure}")
@@ -708,38 +679,164 @@ raise SystemExit(bool(failures))
 PY
 ```
 
-- [ ] **Step 2: Make executable and verify OK path**
+- [ ] **Step 3: Make executable and verify OK path**
 
 Run: `chmod +x scripts/pre-merge-guard.sh && bash scripts/pre-merge-guard.sh`
 Expected: `pre-merge-guard: OK`, exit 0.
 
-- [ ] **Step 3: Verify the FAIL path (throwaway probe)**
+- [ ] **Step 4: Verify the FAIL path (throwaway probe, enforced exit codes)**
 
 ```bash
 touch docs/plans/001-collision-probe.md
-bash scripts/pre-merge-guard.sh && echo "BUG: guard missed collision" || echo "guard caught collision"
+if bash scripts/pre-merge-guard.sh; then
+  echo "BUG: guard missed collision"; rm docs/plans/001-collision-probe.md; exit 1
+fi
 rm docs/plans/001-collision-probe.md
+echo "guard caught collision"
 ```
 
-Expected: `FAIL: duplicate docs/plans number(s): 001` then `guard caught collision`.
-
-- [ ] **Step 4: Run the full gate green**
-
-Run: `bash scripts/ci-local.sh`
-Expected: all six steps pass, `ci-local: ALL GREEN`.
+Expected: `FAIL: duplicate docs/plans number(s): 001` then `guard caught collision`; the step aborts with exit 1 if the guard misses it.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add scripts/pre-merge-guard.sh
+git add .gitignore scripts/pre-merge-guard.sh
 git commit -m "feat: pre-merge collision and safety guard (plan 001)"
+```
+
+### Task 6: ci-local.sh
+
+**Files:**
+- Create: `scripts/ci-local.sh` (mode 755)
+
+**Interfaces:**
+- Consumes: `books.yaml` ids `["book1", "book2"]` (Task 2), `tools`/`tests` (Tasks 1–2), `scripts/pre-merge-guard.sh` (Task 5).
+- Produces: the authoritative local gate every plan runs before merge.
+
+- [ ] **Step 1: Write `scripts/ci-local.sh`**
+
+```bash
+#!/usr/bin/env bash
+# Authoritative local gate for py4kids.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+step() { echo; echo "=== $1 ==="; }
+
+step "1/6 registry + lint"
+uv run python - <<'PY'
+import sys
+
+import yaml
+
+catalog = yaml.safe_load(open("books.yaml", encoding="utf-8"))
+ids = [book["id"] for book in catalog["books"]]
+if ids != ["book1", "book2"]:
+    sys.exit(f"FAIL: unexpected book registry: {ids}")
+print("registry: book1 -> book2")
+PY
+uv run ruff check tools/ tests/ scripts/
+
+step "2/6 unit tests"
+uv run pytest -q
+
+step "3/6 notebook execution + hygiene"
+echo "SKIP (plan 003): solution-notebook execution, student-notebook hygiene, notebook-cell lint"
+
+step "4/6 manifest + curriculum checks"
+echo "SKIP (plan 003): manifest validation, prereq closure, practice coverage, stretch presence"
+
+step "5/6 PDF build"
+echo "SKIP (plan 003): PDF build"
+
+step "6/6 pre-merge guard"
+bash scripts/pre-merge-guard.sh
+
+echo
+echo "ci-local: ALL GREEN"
+```
+
+- [ ] **Step 2: Make executable**
+
+Run: `chmod +x scripts/ci-local.sh`
+
+- [ ] **Step 3: Run the full gate green**
+
+Run: `bash scripts/ci-local.sh && echo "EXIT:$?"`
+Expected: all six steps pass with three `SKIP (plan 003)` lines, `ci-local: ALL GREEN`, `EXIT:0`.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add scripts/ci-local.sh
+git commit -m "feat: ci-local gate with plan-003 SKIPs (plan 001)"
 ```
 
 ---
 
 ## Plan Review
 
-(4-way gate verdicts land here.)
+### Review 1 — [self] (2026-09-05)
+- **Verdict**: APPROVE
+- Plan covers every milestone-001 item from design 000; tooling-only exemption stated in `## Out of scope`; scripts fresh-minimal per D-004; TDD where code is testable; guard FAIL path negatively tested. Watch-item: `ruff check scripts/` is a no-op until plan 003 adds Python there.
+
+### Review 2 — [fable] (2026-09-05)
+- **Verdict**: APPROVE WITH NITS
+1. `[FIXED]` Global Constraints mandate the commit trailer but every embedded `git commit -m` command omits it. Priority: Should Fix.
+   → Response: Global Constraints now supply the trailer verbatim and state it is implicitly appended to every embedded commit command.
+2. `[FIXED]` ci-local.sh omits notebook-cell lint (design §4 check 8) without a `SKIP (plan 003)` line — silent gap the skip convention exists to prevent. Priority: Should Fix.
+   → Response: added to the step 3/6 SKIP line.
+3. `[FIXED]` `docs/proposals/` and `docs/reviews/` never created despite design §1 tree and workflow references. Priority: Nice to Have.
+   → Response: `.gitkeep`s added in Task 2.
+4. `[FIXED]` Guard number regexes prefix-match longer numbers (`001` from `0010-foo.md`); require a following `-`. Priority: Nice to Have.
+   → Response: all number regexes now use a `(?=-)` boundary.
+5. `[FIXED]` Worktree scan includes untracked clutter (editor backups can false-positive) and descends `.git`/`.venv` before filtering. Priority: Nice to Have.
+   → Response: docs collision scan now considers only `.md` files, which excludes `~`-suffixed backups; the traversal-order perf point is accepted as-is (small repo).
+6. `[FIXED]` Conflict/secret check edges: 7-`=` setext underline matches; `git grep` errors indistinguishable from no-match; `*secret*` gitignore pattern could silently exclude a future "secret codes" unit's files. Priority: Nice to Have.
+   → Response: secret scan narrowed to `.gh-token`/`.env*`/`*.pem`/`*.key` and the `.gitignore` globs narrowed to match (Task 5 Step 1); `git grep` return codes now distinguish no-match from error. Setext edge retained as `[WONTFIX]`-in-part: docs use ATX headings + semantic line breaks, so a bare 7-`=` line indicates a real problem often enough to keep.
+7. `[FIXED]` `--pr` mode trusts `refs/remotes/origin/main` existing after fetch; missing ref silently drops union coverage. Priority: Nice to Have.
+   → Response: `git_lines()` now fails closed on any git error, including a missing ref.
+8. `[FIXED]` TODO.md pre-checks plan 001's box before it ships. Priority: Nice to Have.
+   → Response: box starts unchecked and flips in the Ship step.
+
+### Review 3 — [glm] (2026-09-05)
+- **Verdict**: APPROVE WITH NITS
+- Verified in a sandboxed replica: ci-local green with three SKIPs; guard OK/collision/usage/`--pr` paths all correct; pytest 2 passed; `import tools` ok.
+1. `[FIXED]` Guard secret scan over-matches basenames: any tracked file containing `token`/`secret`/`credential` in its name hard-fails (confirmed `Secrets-and-Codes-notes.ipynb` trips it) — plausible legit content for a kids' cipher unit. Restrict to dotfile/exact matches plus `.env*`. Priority: Should Fix.
+   → Response: narrowed to `.gh-token`/`.env*`/`*.pem`/`*.key`; `.gitignore` narrowed to match.
+2. `[FIXED]` Number-collision regexes lack a terminator: two `docs/reviews/2026-*.md` files both register as `202` and falsely collide; `unit-012` reads as `unit-01`. Add a boundary. Priority: Should Fix.
+   → Response: `(?=-)` boundary added everywhere; `2026-…` no longer matches `^[0-9]{3}(?=-)`.
+3. `[WONTFIX]` Embedded Python heredocs in the gate scripts are never linted (`scripts/` has no `.py`). Priority: Nice to Have.
+   → Response: accepted as a known limit; extracting heredocs into `tools/` (lintable) is a natural plan-003 refactor when the guard grows.
+4. `[FIXED]` Task 5 commit is a known-red intermediate state (ci-local references the guard before Task 6 creates it). Priority: Nice to Have.
+   → Response: tasks reordered — guard now ships before ci-local; every commit is green and the `|| true` verification is gone.
+5. `[FIXED]` Embedded commit commands omit the mandated trailer (duplicate of fable #1). Priority: Nice to Have.
+   → Response: see fable #1.
+6. `[FIXED]` `bookN/build/` omission from skeleton/tests is correct (gitignored) but unstated. Priority: Nice to Have.
+   → Response: stated explicitly in `## Out of scope`.
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT
+1. `[FIXED]` (Must Fix) ci-local silently drops the design §4 notebook-cell lint check with no SKIP line.
+   → Response: added to step 3/6 SKIP line.
+2. `[FIXED]` (Must Fix) Verification commands can't fail: `bash scripts/ci-local.sh || true` swallows all failures; the collision probe's `echo "BUG"` still exits 0.
+   → Response: tasks reordered so ci-local's verification is an unguarded green run, and the probe now `exit 1`s when the guard misses the collision.
+3. `[FIXED]` (Must Fix) Guard `git()` calls fail open (`check=False`, no return-code validation) — empty results pass the safety checks.
+   → Response: `git_lines()` fails closed on any git error; `git grep` distinguishes no-match (rc 1) from error (rc >1).
+4. `[FIXED]` (Should Fix) SKIP text promised "lesson notebook execution", scope creep vs design §4.
+   → Response: SKIP text now names exactly the design checks (solution execution, hygiene, notebook-cell lint).
+5. `[FIXED]` (Should Fix) Commit-trailer constraint unexecutable as written. → Response: see fable #1.
+6. `[FIXED]` (Should Fix) `tests/test_books.py` never asserts registry roots. → Response: roots assertion added.
+7. `[FIXED]` (Should Fix) Skeleton omits `docs/proposals/`/`docs/reviews/`; `build/` unaddressed. → Response: `.gitkeep`s added; `build/` omission stated in `## Out of scope`.
+8. `[FIXED]` (Should Fix) content-review-gate.md verdict vocabulary inconsistent. → Response: unified to APPROVE / APPROVE WITH NITS / REJECT.
+9. `[FIXED]` (Should Fix) Guard regexes unbounded; three-digit numbering applied to `docs/reviews/`. → Response: `(?=-)` boundaries added and the docs scan is limited to `.md` files; the `docs/reviews/` scan is retained deliberately — numbered review files follow the same `NNN-` contract when used, and non-`NNN-` names simply don't match.
+10. `[FIXED]` (Should Fix) Secret scan overmatches; setext `=======` flagged. → Response: secret scan narrowed (see glm #1); setext edge retained, see fable #6.
+11. `[FIXED]` (Nice to Have) Extra CLI args silently ignored. → Response: `(($# > 1))` usage check added.
+12. `[FIXED]` (Should Fix) Registry gate used a bare `assert` (stripped under `-O`). → Response: explicit comparison + `sys.exit`.
+13. `[FIXED]` (Should Fix) `## Out of scope` violated the semantic-line-break convention. → Response: reflowed. Plan-file prose elsewhere follows normal paragraph style; the convention binds shipped docs, and the embedded doc contents comply.
+14. `[WONTFIX]` (Should Fix) AGENTS.md's SSH-key path claim (`~/.ssh/id_ed25519_weiboz0`) called ungrounded.
+   → Response: verified against this machine's `~/.ssh/config` (Host github-weiboz0 → IdentityFile ~/.ssh/id_ed25519_weiboz0); the claim is factual and inherited verbatim from usaaio's AGENTS.md.
+15. `[FIXED]` (Nice to Have) TODO.md pre-checked its own box. → Response: see fable #8.
 
 ## Content Review
 
