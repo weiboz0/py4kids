@@ -44,7 +44,7 @@ Dispatch: tools/scripts implementation via `codex:codex-rescue` (GPT-5.6-sol, wr
 ### Phase A — package layout, CLI skeleton, fixture factory (TDD)
 
 **Files:** `tools/{__init__.py,cli.py,notebooks.py,curriculum.py,fake_turtle.py,checks.py}`, `tests/test_tools.py`. NOTHING broken is committed: all negative fixtures are GENERATED at test time in `tmp_path` by a fixture factory (this removes the ruff/step-1 collision entirely — gate findings fable #2 / glm #2 / sol #8; `tests/fixtures/` is not created).
-- Fixture factory: builds a minimal VALID book root in `tmp_path` (its own `concepts.yaml`, `coverage-map.yaml`, `syllabus.md`, one complete unit with notebooks/manifest/notes/assets), verified all-green as the baseline; each negative test clones it, applies exactly ONE mutation, and asserts exactly the targeted check fails with its expected `FAIL:` line and exit 1. Mutations cover EVERY promoted rule (the enumerated parity checklist in Global Constraints), including map-level rules (broken registry/map/syllabus — a broken BOOK root, resolving fable #4's map-level gap), a `cell-lint` undefined-name cell, an `exec-lessons` untagged cell depending on `no-exec` state (deterministic NameError), an `exec-solutions` failing assert, a non-compiling asset, and both non-closing and open-path turtle scripts.
+- Fixture factory: builds a VALID book root in `tmp_path` — its own `concepts.yaml`, `coverage-map.yaml`, `syllabus.md`, and ONE physically complete unit. Note (fable round-2 #1): the curriculum layer cannot be literally minimal — the promoted rules apply verbatim (parity), so the synthetic map needs ≥40 concepts, budget 28–32, introduce-exactly-once over the whole registry, an entry literally named `project-02-grand-adventure` (the pre-capstone coverage rule keys on it), and a first entry with empty `practices`; only the first unit exists on disk (the prefix rule permits that). Baseline is verified all-green before any mutation; each negative test clones it, applies exactly ONE mutation, and asserts exactly the targeted check fails with its expected `FAIL:` line and exit 1. Mutations cover EVERY promoted rule (the enumerated parity checklist in Global Constraints), including map-level rules (broken registry/map/syllabus — a broken BOOK root, resolving fable #4's map-level gap), a `cell-lint` undefined-name cell, an `exec-lessons` untagged cell depending on `no-exec` state (deterministic NameError), an `exec-solutions` failing assert, a non-compiling asset, and both non-closing and open-path turtle scripts.
 - `pyproject.toml` gains `[project.scripts] py4kids-tools = "tools.cli:main"`.
 - CLI contract: `py4kids-tools [--root <dir>] --book <id> <check>` where `--root` (default:
   repo root) points at a book-registry root — this is how tests route the CLI at generated
@@ -66,10 +66,20 @@ student hygiene, exercise structure, solutions structure + pattern bans + seed o
 lesson no-exec tagging, teacher-notes headings. `tests/test_book1_units.py` becomes thin
 wrappers asserting `findings == []` per unit (same pytest ids, same skip guard, same
 all-three-units check).
-The all-three-units test is GENERALIZED off the coverage map (plan 004 follow-up, gate
-findings fable #3 / glm #4 / sol #3): the hardcoded tuple is replaced by a map-driven rule —
-the set of existing `book1/units/unit-*` directories must equal the FIRST N unit entries of
-the coverage map in order (no gaps, no orphans, any N ≥ 0).
+The all-three-units test keeps its test id but is GENERALIZED off the coverage map
+(plan 004 follow-up, gate findings fable #3 / glm #4 / sol #3): the hardcoded tuple is
+replaced by a map-driven rule — the set of existing `book1/units/unit-*` directories must
+equal the FIRST N unit entries of the coverage map in order (no gaps, no orphans, any
+N ≥ 0). Known blind spot, accepted: deleting the TRAILING unit dir shrinks N silently —
+inherent to any prefix rule; the pre-merge guard's origin/main union catches accidental
+deletions at PR time.
+Check-name → rule-group binding (glm round-2 #1): `hygiene-check` = student outputs/
+execution_count + solution-leak headings; `structure-check` = layout + assets py_compile +
+exercise/stretch floors + solutions mirroring/asserts + pattern bans + seed ordering +
+teacher-notes headings; `noexec-check` = lesson first-cell markdown + no-exec tagging;
+`manifest-check` = manifest schema keys + map agreement; concepts/map schema validation is
+part of `coverage-check`. ("Registry" in this plan means `concepts.yaml`; `books.yaml` is
+step 1/6's concern and fixture roots need none — fable round-2 #5.)
 New capabilities beyond parity:
 1. **exec-lessons**: execute `lesson.ipynb` headless via nbclient AFTER dropping cells
    tagged `no-exec` (mechanizes plan 004's follow-up and reviewer duty 7 — attribution per
@@ -89,8 +99,10 @@ Check-ordering rule (glm #5): within CLI composition and ci-local, structure/pat
 checks run BEFORE any nbclient execution, so an `input()`-bearing notebook fails fast
 rather than hanging to the 120s timeout.
 Double-execution control (fable #7 / glm #11 / sol #9): ci-local exports `PY4KIDS_CI=1`,
-under which the pytest exec wrappers skip their nbclient runs (the CLI steps are
-authoritative there); a plain `uv run pytest` still executes everything.
+under which the pytest exec WRAPPERS for the real book skip their nbclient runs (the CLI
+steps are authoritative there); a plain `uv run pytest` still executes everything.
+Scope note (glm round-2 #3): `tests/test_tools.py`'s negative exec fixtures do NOT skip
+under `PY4KIDS_CI` — they test the tools themselves and always run.
 
 ### Phase C — headless turtle verification
 
@@ -105,8 +117,12 @@ fresh subprocess and execute; enforce the binding turtle conventions in Global C
 `# turtle-check: open-path` opt-out). Shipped-script expectations: square/pentagon/7-gon
 close at 360° total turn; both rosettes total 9000° = 25×360 (hence mod-360, fable #6);
 all return to start.
-One-fault fixtures: a non-closing script FAILS; an open-path-commented script PASSES with
-only completion/move bounds applied.
+One-fault fixtures cover all four clauses (glm round-2 #2): a non-closing script FAILS
+closure; an open-path-commented non-closing script PASSES (the comment waives only the
+closure conditions — ≥1 pen-down and the move/completion bounds still apply, per Global
+Constraints); an all-pen-up script FAILS the pen-down floor; an over-10000-move loop FAILS
+the bound. A completion-timeout fixture is deliberately omitted (a 20s sleep per test run
+is not worth it); the timeout path is exercised only if it ever fires in real use.
 
 ### Phase D — curriculum checks promoted into tools
 
@@ -144,7 +160,8 @@ stretch tags), `manifest-check` (unit manifests vs map).
    checklist in `tests/test_tools.py`); exit codes 0/1/2 explicitly asserted.
 3. Behavior parity: refactored unit/curriculum wrappers pass on the shipped three units
    with NO check regressions (same pass set as pre-refactor), and the one-fault checklist
-   covers every rule named in Global Constraints — a rule without a fixture is a finding.
+   covers EVERY promoted rule (the Global Constraints parenthetical is illustrative, not
+   the boundary — fable round-2 #2); a rule without a fixture is a finding.
 4. `bash scripts/ci-local.sh` — ALL GREEN, zero `SKIP` occurrences
    (`! grep -q "SKIP (plan" scripts/ci-local.sh` and the run output), under 3 minutes
    (fable/glm measured components projecting 40–60s total, so ample margin).
@@ -221,6 +238,36 @@ test-generated in tmp_path, so lint/discovery isolation is structural, not confi
 - sol 6 `[FIXED]`: `--pdf-engine=xelatex` bound.
 - sol 10 `[FIXED]`: exit-code assertions required in tests.
 - sol 11 `[FIXED]`: lesson execution attributed to plan 004's follow-up.
+
+### Review 5 — [sol] round 2 (2026-09-06)
+- **Verdict**: APPROVE — all 12 tracked items verified resolved at HEAD (static verification); the fixture-factory design "substantively breaks the round-1 circularity rather than merely renaming the wrapper test".
+
+### Review 6 — [glm] round 2 (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no blockers) — all 12 round-1 items confirmed real at HEAD; prefix rule cross-checked against the live repo; no new contradictions.
+1. `[OPEN]` Check-name → rule-group binding lives only in the ledger; add a one-line binding in Phase B (which rules live under structure-check / hygiene-check / noexec-check / manifest-check). Priority: Nit.
+2. `[OPEN]` Turtle one-fault fixtures enumerate only 2 of the binding's 4 clauses; add all-penup and over-bound fixtures, note the timeout fixture explicitly. Priority: Nit.
+3. `[OPEN]` State whether test_tools negative exec fixtures also skip under PY4KIDS_CI. Priority: Nit.
+
+### Review 7 — [fable] round 2 (2026-09-06)
+- **Verdict**: APPROVE WITH NITS — all four round-1 blockers verified FIXED (every fixture mention traced to tmp_path generation; prefix rule stress-tested against unit-04 landing, renames, middle deletions; one inherent trailing-deletion blind spot accepted); all cross-reviewer fixes coherent.
+1. `[OPEN]` (Minor) Baseline factory understated: curriculum layer can't be minimal (≥40 concepts, budget, literal capstone id, empty first-entry practices). Priority: Minor.
+2. `[OPEN]` (Nit) Phase F item 3 "rules named in Global Constraints" narrower than "every promoted rule".
+3. `[OPEN]` (Nit) "Same all-three-units check" vs generalization wording; acknowledge trailing-deletion blind spot.
+4. `[OPEN]` (Nit) Open-path opt-out scope phrasing inconsistent between Global Constraints and Phase C.
+5. `[OPEN]` (Nit) "Registry" overloaded; concepts-schema CLI home implicit.
+
+### Rev3 nit resolutions (2026-09-06)
+- fable r2 #1 `[FIXED]`: factory note added (synthetic multi-entry map, literal thresholds and capstone id, first unit only on disk).
+- fable r2 #2 `[FIXED]`: Phase F item 3 says "EVERY promoted rule"; parenthetical marked illustrative.
+- fable r2 #3 `[FIXED]`: "keeps its test id but is generalized"; trailing-deletion blind spot acknowledged with the pre-merge-guard mitigation.
+- fable r2 #4 `[FIXED]`: Phase C now uses the Global Constraints phrasing (opt-out waives only closure).
+- fable r2 #5 / glm r2 #1 `[FIXED]`: check-name → rule-group binding added to Phase B; "registry" disambiguated; concepts/map schema homed under coverage-check.
+- glm r2 #2 `[FIXED]`: turtle fixtures enumerated for all four clauses; timeout fixture deliberately omitted with rationale.
+- glm r2 #3 `[FIXED]`: PY4KIDS_CI scope note — tool tests never skip.
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE (round 2) · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **gate PASSED; approval to implement.**
 
 ## Content Review
 
