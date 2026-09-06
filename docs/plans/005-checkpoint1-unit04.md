@@ -18,19 +18,35 @@
     entry (the map already forces `introduces: []`).
   - `checkpoint.ipynb`: questions are markdown headings matching `^## Question \d+`,
     6–8 of them for a half-lesson; NO solutions, NO outputs, `input()` allowed;
-    NO stretch requirement (assessments assess — the mixed-ability rule lives in units);
-    every question uses only concepts from the entry's `practices` ∪ `requires`.
+    checkpoints contain NO stretch/challenge questions at all — definitive rule, not
+    merely unchecked (assessments assess; the mixed-ability rule lives in units);
+    every question uses only concepts from the entry's `practices` ∪ `requires`;
+    deliberately BROKEN or incomplete snippets ride as fenced code inside MARKDOWN
+    cells, never code cells — so cell-lint and hygiene stay clean with no `no-exec`
+    mechanism needed, and any real code cells (answer starters) must run clean.
   - `solutions.ipynb`: mirrors every `## Question N` heading with ≥1 code cell,
     ≥3 assert cells, the unit solution conventions verbatim (no input()/GUI,
     `import random` only, seed-before-first-use, self-contained, scaffolding note).
   - `teacher-notes.md`: the five unit headings PLUS `## Grading` (per-question intent,
-    what partial understanding looks like, when to re-teach vs move on).
-- Coverage-map amendment is EXACTLY: append `arithmetic, int-type` to
-  `unit-04-quiz-show.requires`. Nothing else in the map changes; all curriculum
-  invariants must still pass; unit-04's manifest carries the amended list.
-- Unit 04 finally has counters: `loop-counter` (introduced in unit 03) is in its
-  `practices` — the "machine learns to count" promise from unit 02's teacher notes
-  is paid off explicitly in the lesson.
+    what partial understanding looks like, when to re-teach vs move on) — all six
+    headings bound to `structure-check` with a one-fault fixture each way.
+- Coverage-map amendments are EXACTLY these two (rev2, gate round 1):
+  (a) `unit-04-quiz-show.requires` += `arithmetic, int-type, variable` — the score
+  accumulator's core path depends on all three ([sol] round-1 #2); all introduced by
+  units 01–02, closure holds;
+  (b) `checkpoint-01-first-steps.practices` += `error-messages` — traceback reading is
+  units 01–02's signature skill and the blueprint's Question 1 assesses it; introduced
+  in unit 01, so the checkpoint-taught-only law holds ([glm]/[fable]/[sol] round-1
+  blocker resolution, option (b)).
+  Nothing else in the map changes; all curriculum invariants must pass; both new
+  manifests carry the amended lists.
+- Process (standing follow-ups, plans 003/004): NO commits to this branch while a [sol]
+  review is in flight; codex content-gate prompts name the in-process execution fallback
+  upfront.
+- Counter framing, stated precisely ([fable]/[glm] round-1): `loop-counter` is INTRODUCED
+  by unit 03 per the binding map; unit 02's teacher notes promise counting "next unit",
+  which unit 03 honors. What unit 04 adds is counters IN THE GAME CONTEXT where the
+  promise was made — scores and questions-asked — as `practices`, and the lesson says so.
 
 ## Out of scope
 
@@ -49,36 +65,65 @@ map amendment + manifests inline (trivially-scoped data edits).
 ### Phase A — checkpoint support in tools (TDD, codex)
 
 **Files:** `tools/notebooks.py`, `tools/checks.py`, `tests/test_tools.py`, `tests/test_book1_units.py` (or a new thin wrapper module for checkpoints).
-1. `checkpoint_dirs(root, book, checkpoint=None)` mirroring `unit_dirs` (fail-closed the
-   same way; empty checkpoints/ = N=0 pass).
-2. Extend or twin the checks: layout (checkpoint file set), manifest (map-equal, kind
-   checkpoint), hygiene (checkpoint.ipynb), structure (`^## Question \d+` count 6–8,
-   solutions mirroring + floors + bans + seed), exec-solutions; the checkpoint prefix rule
-   (existing checkpoint dirs = first M checkpoint map entries, in order). NO stretch, NO
-   lesson/no-exec, NO turtle checks for checkpoints.
-3. CLI: existing check names gain checkpoint coverage transparently (a check reports both
-   scopes); `--unit` continues to accept a checkpoint id for unit-scoped checks where that
-   is coherent, else document.
-4. One-fault fixtures for every NEW rule (question-count floor both directions, mirror,
-   manifest kind/equality, prefix rule, hygiene) from a generated valid checkpoint —
-   same fixture-factory discipline as plan 003; nothing broken committed.
-5. Parity guard: all existing unit checks unchanged on the real book (same pass set).
+1. `checkpoint_dirs(root, book, ident=None)` mirroring `unit_dirs` (fail-closed the same
+   way on missing book/checkpoints dirs; an existing-but-empty `checkpoints/` = N=0 pass —
+   which is also why the REAL book stays green before Phase C: `book1/checkpoints/`
+   currently holds only `.gitkeep`).
+2. **Check scope matrix (exhaustive — no other reading is valid):**
+   BOTH scopes: `manifest-check` (map-equal; kind per scope), `hygiene-check`
+   (exercises.ipynb / checkpoint.ipynb), `structure-check` (units: as today; checkpoints:
+   `^## Question \d+` count 6–8 both directions, solutions mirroring + code-under-each-
+   question + ≥3 asserts + input/GUI/from-random bans + seed ordering, six teacher-notes
+   headings incl. `## Grading`, checkpoint layout file set, checkpoint prefix rule when
+   unscoped), `exec-solutions`, `cell-lint` (checkpoint.ipynb code cells lint like any
+   other — broken snippets are markdown by convention, so no exclusion exists).
+   UNIT-ONLY, unchanged: `noexec-check`, `stretch-check`, `exec-lessons`, `turtle-check`.
+   ci-local needs zero edits (steps invoke check names).
+3. **`--unit <id>` selector matrix:** an id matching `unit-*` narrows to the unit scope;
+   an id matching `checkpoint-*` narrows to the checkpoint scope; passing a
+   `checkpoint-*` id to a UNIT-ONLY check exits 2 with usage (mirroring the
+   `BOOK_LEVEL_CHECKS` guard); a well-formed id whose directory doesn't exist exits 1
+   fail-closed; both prefix rules run only in unscoped mode (as today). Tests cover all
+   four combinations plus the usage case.
+4. **One-fault fixtures — one generated mutation per NEW rule; a rule without a fixture
+   is a finding (plan-003 law; the following list is exhaustive for this plan):**
+   checkpoint layout (each required file removed), manifest kind + map-equality drift,
+   hygiene (outputs / executed cell), question-count floor AND ceiling, solutions
+   missing a mirrored heading, no-code-under-a-question, assert floor, each of the three
+   pattern bans, seed-ordering, a failing checkpoint exec-solutions, each missing
+   teacher-notes heading incl. `## Grading`, checkpoint prefix violation (gap and
+   orphan), missing checkpoints-root/dir/target fail-closed cases, and the `--unit`
+   matrix cases. The fixture-factory BASELINE gains an empty `checkpoints/` dir plus one
+   generated VALID checkpoint (map-equal against the fixture map's checkpoint entry,
+   satisfying the checkpoint prefix rule) verified all-green before mutations —
+   this baseline change is load-bearing ([fable] round-1 #3). Existing unit fixtures
+   unchanged.
+5. Parity guard: all existing unit checks and their one-fault tests unchanged and green
+   on the real book (same pass set as plan 003 shipped).
 
-### Phase B — map amendment + manifests (inline)
+### Phase B — map amendment ONLY (inline)
 
-1. Amend `coverage-map.yaml` (`unit-04-quiz-show.requires` += arithmetic, int-type).
-2. `book1/checkpoints/checkpoint-01-first-steps/manifest.yaml` and
-   `book1/units/unit-04-quiz-show/manifest.yaml`, both map-equal.
-3. Full curriculum suite green before any content lands.
+1. Amend `coverage-map.yaml` exactly per Global Constraints (both amendments).
+2. Full suite green with the amendment alone — verified pre-gate by two reviewers:
+   the map edit without new directories passes every check.
+3. NO manifests here: a manifest-only directory is discoverable and breaks
+   layout/structure/hygiene between phases ([fable] round-1 #1 — verified mechanically).
+   Each manifest lands in the same phase and commit as its directory's COMPLETE file set
+   (Phase C for the checkpoint, Phase D for the unit); every phase commit leaves the
+   repo green.
 
 ### Phase C — checkpoint-01-first-steps content
 
 Blueprint (statements codex; solutions blind codex; grading notes inline):
-- 7 questions over the entry's practices (u01–u02 material), ~30–45 min of a lesson slot:
-  fix-the-error (traceback reading), predict-the-output (f-string + arithmetic),
-  write-a-line (input + int conversion), trace an if/elif chain, complete a while loop,
-  a naming/comment judgment question, one small build-it (mini mad-libs or one-guess
-  detective variant). Tone: "show what you've got", zero trick questions.
+- 7 questions over the entry's amended practices (u01–u02 material), ~30–45 min of a
+  lesson slot: fix-the-error (traceback reading — legal via map amendment (b); the broken
+  snippet lives in a markdown fence per the conventions), predict-the-output (f-string +
+  arithmetic), write-a-line (input + int conversion), trace an if/elif chain, complete a
+  while loop (CONDITION-completion — fill in `while guess != secret:` — never a
+  counter-style loop; `loop-counter` is untaught at checkpoint time), a naming/comment
+  judgment question, one small build-it (mini mad-libs, or a one-guess detective with a
+  HARD-CODED secret — `random-module` is outside the union and stays out).
+  Tone: "show what you've got", zero trick questions.
 - Teacher notes + `## Grading`: what each question is FOR, common partial answers,
   the re-teach signal (≥1/3 of class missing loops → re-teach before unit 03's density).
 
@@ -97,6 +142,9 @@ break-statement; practices boolean, type-conversion, loop-counter, error-message
 - Lesson 2 (conditional-nesting, break-statement): a final round where a question has a
   follow-up only if the first part is right (nesting), and SUDDEN DEATH — one wrong
   answer ends the round immediately (`break` arrives as the drama mechanic).
+  Loop shape, named so nothing gets smuggled ([fable] round-1 #7): the sudden-death round
+  is a `while` loop over a `questions_asked` counter with an if/elif chain keyed on the
+  counter dispatching 3 hard-coded questions — NO lists (unit 07), NO functions in core.
 - Exercises ≥6 core + 2 stretch: score-the-answers snippets, fix-the-streak-logic,
   add-a-category-bonus (nesting), sudden-death remix, error-messages debugging,
   predict-the-score; stretch: double-or-nothing round, lightning round with a countdown
@@ -123,7 +171,38 @@ coverage; ci-local ALL GREEN; content gate 4-way consensus.
 
 ## Plan Review
 
-(4-way gate verdicts land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE — allocation exact, no dispatch-loop leakage, conventions mirror units + grading, named verification present.
+
+### Review 2 — [glm] (2026-09-06)
+- **Verdict**: REJECT
+1. `[FIXED]` (Blocker) Checkpoint Q1 (traceback reading) uses `error-messages`, outside checkpoint-01's map union; detective variant would need `random-module`. → Resolution: map amendment (b) adds `error-messages` to checkpoint-01 practices; build-it uses a hard-coded secret; the "EXACTLY" amendment clause restated for both amendments.
+2. `[FIXED]` (Should Fix) Phase B manifests-before-content breaks the repo between phases. → Phase B is amendment-only; manifests land with their complete file sets.
+3. `[FIXED]` (Should Fix) Phase A scope mapping contradictory. → Exhaustive check scope matrix added.
+4. `[FIXED]` (Should Fix) `## Grading` had no mechanical home/fixture. → Bound to structure-check; fixture required.
+5. `[FIXED]` (Minor) One-fault enumeration incomplete; cell-lint stance unstated. → Exhaustive fixture list added; broken snippets ride in markdown so cell-lint covers checkpoint code cells with no exclusions.
+6. `[FIXED]` (Minor) "Machine learns to count" misattribution. → Reworded (unit 03 introduces; unit 04 pays off in the game context).
+
+### Review 3 — [fable] (2026-09-06)
+- **Verdict**: REJECT
+1. `[FIXED]` (Must Fix) Phase B ordering — verified mechanically both ways. → As glm #2; amendment-alone-green finding cited in Phase B.
+2. `[FIXED]` (Must Fix) Union violation (= glm #1); also: while-loop question must be condition-completion (no counters at checkpoint time). → All three addressed in Phase C.
+3. `[FIXED]` (Should Fix) Fixture-factory baseline never gains checkpoints/. → Baseline change specified as load-bearing (empty dir + one valid checkpoint).
+4. `[FIXED]` (Should Fix) cell-lint scope for broken checkpoint snippets. → Markdown-fence convention; lint applies to real code cells.
+5. `[FIXED]` (Should Fix) `--unit` not implementable as written. → Selector matrix with exit codes + tests.
+6. `[FIXED]` (Should Fix) Notes/Grading + several new rules missing from check/fixture lists. → Exhaustive lists, plan-003 "rule without a fixture" law restated.
+7. `[FIXED]` (Nit) L2 loop shape unnamed. → while + counter-keyed if/elif chain, no lists.
+8. `[FIXED]` (Nit) Counter-promise framing. → As glm #6.
+9. `[FIXED]` (Nit) Standing process follow-ups. → Added to Global Constraints.
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT
+1. `[FIXED]` (Blocker) Union violation (= glm #1 / fable #2). → Amendment (b).
+2. `[FIXED]` (Major) `variable` missing from unit-04 requires though the core path assigns/updates score and questions_asked. → Amendment (a) now adds arithmetic, int-type, AND variable (matches u02/u03/u07 precedent).
+3. `[FIXED]` (Major) Grading-heading enforcement unassigned. → As glm #4.
+4. `[FIXED]` (Major) `--unit` contract ambiguous. → As fable #5.
+5. `[FIXED]` (Major) Fixture inventory incomplete. → As fable #6 / glm #5.
+6. `[FIXED]` (Minor) "NO stretch requirement" vs "NO stretch" ambiguity. → Definitive: checkpoints contain no stretch/challenge questions at all.
 
 ## Content Review
 
