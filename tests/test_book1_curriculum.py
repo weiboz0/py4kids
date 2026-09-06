@@ -1,128 +1,51 @@
 from pathlib import Path
 
-import yaml
+from tools.curriculum import (
+    checkpoint_findings,
+    concepts_schema_findings,
+    introduction_findings,
+    lesson_budget_findings,
+    map_schema_findings,
+    practice_findings,
+    prereq_findings,
+    referenced_concepts_findings,
+    syllabus_findings,
+)
 
 REPO = Path(__file__).resolve().parents[1]
-CURRICULUM = REPO / "book1" / "curriculum"
-
-CATEGORIES = {
-    "io", "data", "strings", "control", "loops", "functions",
-    "collections", "files", "oop", "graphics", "modules",
-}
-
-
-def load_concepts():
-    data = yaml.safe_load((CURRICULUM / "concepts.yaml").read_text(encoding="utf-8"))
-    assert data["concepts_version"] == 1
-    return data["concepts"]
 
 
 def test_concepts_schema_and_unique_ids():
-    concepts = load_concepts()
-    assert len(concepts) >= 40
-    ids = [c["id"] for c in concepts]
-    assert len(ids) == len(set(ids)), "duplicate concept ids"
-    import re
-
-    for c in concepts:
-        assert set(c) == {"id", "name", "category"}, f"bad keys in {c}"
-        assert c["category"] in CATEGORIES, f"unknown category: {c}"
-        assert re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", c["id"]), f"non-kebab id: {c['id']!r}"
-
-
-def load_map():
-    data = yaml.safe_load((CURRICULUM / "coverage-map.yaml").read_text(encoding="utf-8"))
-    assert data["map_version"] == 1
-    return data["entries"]
+    assert concepts_schema_findings(REPO, "book1") == []
 
 
 def test_map_schema_and_id_contract():
-    import re
-
-    entries = load_map()
-    kinds = {"unit": r"^unit-[0-9]{2}-[a-z0-9-]+$",
-             "project": r"^project-[0-9]{2}-[a-z0-9-]+$",
-             "checkpoint": r"^checkpoint-[0-9]{2}-[a-z0-9-]+$"}
-    ids = [e["id"] for e in entries]
-    assert len(ids) == len(set(ids)), "duplicate entry ids"
-    for e in entries:
-        assert set(e) == {"id", "kind", "title", "lessons", "introduces", "requires", "practices"}
-        assert e["kind"] in kinds and re.match(kinds[e["kind"]], e["id"]), f"bad id: {e['id']}"
-        assert isinstance(e["lessons"], (int, float)) and e["lessons"] > 0
+    assert map_schema_findings(REPO, "book1") == []
 
 
 def test_lesson_budget_close_to_thirty():
-    total = sum(e["lessons"] for e in load_map())
-    assert 28 <= total <= 32, f"lesson budget {total} outside 28-32"
+    assert lesson_budget_findings(REPO, "book1") == []
 
 
 def test_all_referenced_concepts_exist():
-    known = {c["id"] for c in load_concepts()}
-    for e in load_map():
-        for field in ("introduces", "requires", "practices"):
-            unknown = set(e[field]) - known
-            assert not unknown, f"{e['id']}.{field} references unknown concepts: {unknown}"
+    assert referenced_concepts_findings(REPO, "book1") == []
 
 
 def test_every_concept_introduced_exactly_once():
-    known = {c["id"] for c in load_concepts()}
-    introduced = [c for e in load_map() for c in e["introduces"]]
-    assert len(introduced) == len(set(introduced)), "concept introduced twice"
-    assert set(introduced) == known, f"never introduced: {known - set(introduced)}"
+    assert introduction_findings(REPO, "book1") == []
 
 
 def test_prereq_closure_planning_level():
-    # Both requires AND practices may only use concepts introduced by EARLIER entries —
-    # design §2's "nothing may be used before it is taught", enforced for every entry kind.
-    seen: set[str] = set()
-    for e in load_map():
-        missing = (set(e["requires"]) | set(e["practices"])) - seen
-        assert not missing, f"{e['id']} uses concepts not yet introduced: {missing}"
-        seen |= set(e["introduces"])
+    assert prereq_findings(REPO, "book1") == []
 
 
 def test_practice_coverage_planning_level():
-    # Practicing means an entry OTHER than the introduction: practices-only union must
-    # cover the whole registry, and no entry may "practice" what it itself introduces.
-    for e in load_map():
-        overlap = set(e["practices"]) & set(e["introduces"])
-        assert not overlap, f"{e['id']} practices its own introductions: {overlap}"
-        for field in ("introduces", "requires", "practices"):
-            assert len(e[field]) == len(set(e[field])), f"{e['id']}.{field} has duplicates"
-    # Coverage must hold WITHOUT the capstone: an omnibus final project must not be the
-    # only place a concept is ever practiced (anti-tautology rule, gate finding sol #2).
-    known = {c["id"] for c in load_concepts()}
-    pre_capstone = {
-        c for e in load_map() if e["id"] != "project-02-grand-adventure" for c in e["practices"]
-    }
-    assert pre_capstone == known, f"only the capstone practices: {known - pre_capstone}"
+    assert practice_findings(REPO, "book1") == []
 
 
 def test_checkpoints_only_assess_taught_concepts():
-    seen: set[str] = set()
-    for e in load_map():
-        if e["kind"] == "checkpoint":
-            assert not e["introduces"], f"{e['id']} introduces concepts"
-            untaught = set(e["practices"]) - seen
-            assert not untaught, f"{e['id']} assesses untaught concepts: {untaught}"
-        seen |= set(e["introduces"])
+    assert checkpoint_findings(REPO, "book1") == []
 
 
 def test_syllabus_table_matches_map():
-    import re
-
-    syllabus = (REPO / "book1" / "syllabus.md").read_text(encoding="utf-8")
-    positions = []
-    for e in load_map():
-        # A table row must carry the id, kind, and lesson count together, e.g.
-        # "| `unit-01-story-machine` | unit | 2 |"
-        row = re.search(
-            rf"\|\s*`{re.escape(e['id'])}`\s*\|\s*{e['kind']}\s*\|\s*{e['lessons']:g}\s*\|",
-            syllabus,
-        )
-        assert row, f"syllabus table missing/incorrect row for {e['id']}"
-        positions.append(row.start())
-    assert positions == sorted(positions), "syllabus table order differs from map order"
-    # No stale/extra rows: every id-shaped table row must correspond to a map entry.
-    all_rows = re.findall(r"\|\s*`((?:unit|project|checkpoint)-[0-9]{2}-[a-z0-9-]+)`\s*\|", syllabus)
-    assert sorted(all_rows) == sorted(e["id"] for e in load_map()), "stale/extra syllabus rows"
+    assert syllabus_findings(REPO, "book1") == []

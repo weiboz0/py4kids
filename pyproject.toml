@@ -11,6 +11,9 @@ dependencies = [
     "pyyaml",
 ]
 
+[project.scripts]
+py4kids-tools = "tools.cli:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",
