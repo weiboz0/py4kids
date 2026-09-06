@@ -186,7 +186,6 @@ def test_teacher_notes_structure(unit_dir):
         assert heading in notes, f"{unit_dir.name} teacher notes missing '{heading}'"
 
 
-@pytest.mark.xfail(reason="strict once Phase D lands all three units", strict=False)
 def test_all_three_units_present():
     for unit_id in PLAN_004_UNITS:
         assert (UNITS_ROOT / unit_id).is_dir(), f"{unit_id} missing"
