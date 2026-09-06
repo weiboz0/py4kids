@@ -22,10 +22,20 @@
   Year 1 lands through lists/dicts/files PLUS a gentle OOP intro;
   graphics stack is built-in turtle + text games (zero new dependencies);
   ~4 checkpoints (one per 2–3 units).
+- Turtle delivery assumption (binding on plan 004+): built-in `turtle` opens a Tk window and
+  does NOT render inside notebook cells, so turtle-based lessons (units 03/05, optional in
+  projects) run as `.py` scripts launched from the JupyterLab/VS Code terminal;
+  notebooks remain the medium for all non-turtle work and for turtle exercise write-ups.
+  Propose recording this as decision D-005 at ship time (decisions.md is governance —
+  needs user sign-off).
+- Pacing directive (binding on plan 004): units 01–02 carry the year's heaviest introduction
+  load (10 concepts each) at the students' most fragile point; their teacher notes MUST
+  allocate concepts to specific lessons explicitly (e.g. unit 02: lesson 1 numbers+random,
+  lesson 2 conditionals, lesson 3 the while-loop finale), and their exercise sets stay short.
 
 ## Out of scope
 
-This is a curriculum-data/docs-only plan: it ships NO units, projects, or checkpoints (only their planned registry entries), so the design's "named verification phase" rule for content plans does not apply (exemption per design §5).
+This is a curriculum-data/docs plan (plus planning-level pytest code): it ships NO units, projects, or checkpoints (only their planned registry entries), so the design's "named verification phase" rule for content plans does not apply (exemption per design §5).
 Verification here is the pytest suite added by this plan (registry schema, unique ids, prereq ordering, introduce-exactly-once, practice coverage, syllabus consistency) plus green `ci-local.sh`.
 Also out of scope: unit/lesson content and manifests (plan 004+), verification tooling in `tools/` (plan 003), Book 2 curriculum (later), teacher notes (ship with units).
 
@@ -70,10 +80,12 @@ def test_concepts_schema_and_unique_ids():
     assert len(concepts) >= 40
     ids = [c["id"] for c in concepts]
     assert len(ids) == len(set(ids)), "duplicate concept ids"
+    import re
+
     for c in concepts:
         assert set(c) == {"id", "name", "category"}, f"bad keys in {c}"
         assert c["category"] in CATEGORIES, f"unknown category: {c}"
-        assert c["id"] == c["id"].lower() and " " not in c["id"], f"non-kebab id: {c['id']}"
+        assert re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", c["id"]), f"non-kebab id: {c['id']!r}"
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -89,6 +101,8 @@ concepts:
 - {id: print, name: Printing output, category: io}
 - {id: comment, name: Code comments, category: io}
 - {id: input, name: Reading user input, category: io}
+- {id: run-program, name: Running a program in the classroom environment, category: io}
+- {id: error-messages, name: Reading error messages and tracebacks, category: io}
 - {id: string-literal, name: String literals and quotes, category: strings}
 - {id: f-string, name: f-string formatting, category: strings}
 - {id: string-concat, name: String concatenation and repetition, category: strings}
@@ -127,7 +141,8 @@ concepts:
 - {id: list-index, name: List indexing, category: collections}
 - {id: list-append, name: Growing lists with append, category: collections}
 - {id: list-loop, name: Looping over lists, category: collections}
-- {id: list-methods, name: "List helpers (sort/min/max/len)", category: collections}
+- {id: list-sort, name: Sorting lists with the sort method, category: collections}
+- {id: builtin-functions, name: "Built-in functions (len/min/max)", category: functions}
 - {id: dict-literal, name: Creating dictionaries, category: collections}
 - {id: dict-access, name: Dictionary lookup and update, category: collections}
 - {id: dict-loop, name: Looping over dictionaries, category: collections}
@@ -149,7 +164,7 @@ Expected: PASS (1 test).
 
 ```bash
 git add book1/curriculum/concepts.yaml tests/test_book1_curriculum.py
-git commit -m "feat(book1): concept registry, 52 concepts (plan 002)"
+git commit -m "feat(book1): concept registry, 55 concepts (plan 002)"
 ```
 
 ### Task 2: coverage map (TDD)
@@ -161,6 +176,7 @@ git commit -m "feat(book1): concept registry, 52 concepts (plan 002)"
 **Interfaces:**
 - Consumes: concept ids from Task 1.
 - Produces: `coverage-map.yaml` with `map_version: 1` and `entries:` — ordered list of `{id, kind, title, lessons, introduces, requires, practices}` where `kind` ∈ `unit|project|checkpoint`, `id` matches the directory-name contract, `lessons` is the lesson-count budget, and the three concept lists reference registry ids. Plan 004+ unit manifests must agree with this map; plan 003 tooling enforces it.
+- Field semantics (binding on plan 003/004 authors): `requires` = prerequisites the entry's core path depends on; `practices` = concepts from EARLIER entries this entry deliberately revisits in exercises (a reinforcement claim, not an exhaustive exercise inventory); `requires` and `practices` may overlap; an entry never lists its own `introduces` in `practices`.
 
 - [ ] **Step 1: Write the failing coverage-map tests**
 
@@ -209,10 +225,12 @@ def test_every_concept_introduced_exactly_once():
 
 
 def test_prereq_closure_planning_level():
+    # Both requires AND practices may only use concepts introduced by EARLIER entries —
+    # design §2's "nothing may be used before it is taught", enforced for every entry kind.
     seen: set[str] = set()
     for e in load_map():
-        missing = set(e["requires"]) - seen
-        assert not missing, f"{e['id']} requires concepts not yet introduced: {missing}"
+        missing = (set(e["requires"]) | set(e["practices"])) - seen
+        assert not missing, f"{e['id']} uses concepts not yet introduced: {missing}"
         seen |= set(e["introduces"])
 
 
@@ -224,9 +242,13 @@ def test_practice_coverage_planning_level():
         assert not overlap, f"{e['id']} practices its own introductions: {overlap}"
         for field in ("introduces", "requires", "practices"):
             assert len(e[field]) == len(set(e[field])), f"{e['id']}.{field} has duplicates"
-    practiced = {c for e in load_map() for c in e["practices"]}
+    # Coverage must hold WITHOUT the capstone: an omnibus final project must not be the
+    # only place a concept is ever practiced (anti-tautology rule, gate finding sol #2).
     known = {c["id"] for c in load_concepts()}
-    assert practiced == known, f"never practiced beyond introduction: {known - practiced}"
+    pre_capstone = {
+        c for e in load_map() if e["id"] != "project-02-grand-adventure" for c in e["practices"]
+    }
+    assert pre_capstone == known, f"only the capstone practices: {known - pre_capstone}"
 
 
 def test_checkpoints_only_assess_taught_concepts():
@@ -255,17 +277,18 @@ entries:
   kind: unit
   title: "Mad-Libs Story Machine — your first programs"
   lessons: 2
-  introduces: [print, comment, string-literal, variable, naming, input, string-concat, f-string]
+  introduces: [run-program, print, comment, string-literal, variable, naming, input,
+               string-concat, f-string, error-messages]
   requires: []
   practices: []
 - id: unit-02-number-detective
   kind: unit
   title: "Number Detective — the guessing game"
   lessons: 3
-  introduces: [int-type, float-type, arithmetic, type-conversion, boolean, comparison,
-               if-statement, elif-else, import-statement, random-module, while-loop, break-statement]
+  introduces: [int-type, arithmetic, type-conversion, boolean, comparison,
+               if-statement, elif-else, import-statement, random-module, while-loop]
   requires: [print, input, variable, f-string]
-  practices: [string-literal, naming, comment]
+  practices: [string-literal, naming, comment, run-program, error-messages]
 - id: checkpoint-01-first-steps
   kind: checkpoint
   title: "Checkpoint 1 — First Steps"
@@ -279,23 +302,24 @@ entries:
   kind: unit
   title: "Turtle Art Studio — drawing with loops"
   lessons: 3
-  introduces: [turtle-basics, turtle-drawing, for-loop, range-function, loop-counter, nested-loops]
+  introduces: [turtle-basics, turtle-drawing, for-loop, range-function, loop-counter,
+               nested-loops, float-type]
   requires: [import-statement, variable, arithmetic]
-  practices: [naming, float-type, comment]
+  practices: [naming, comment, run-program]
 - id: unit-04-quiz-show
   kind: unit
   title: "Quiz Show — keeping score"
   lessons: 2
-  introduces: [accumulator, logical-ops, conditional-nesting]
+  introduces: [accumulator, logical-ops, conditional-nesting, break-statement]
   requires: [if-statement, elif-else, while-loop, comparison, input, f-string]
-  practices: [boolean, type-conversion, loop-counter, break-statement]
+  practices: [boolean, type-conversion, loop-counter, error-messages]
 - id: unit-05-function-factory
   kind: unit
   title: "Function Factory — greeting cards and turtle stamps"
   lessons: 3
   introduces: [def-function, parameters, return-value, scope]
   requires: [turtle-basics, turtle-drawing, for-loop, variable, f-string]
-  practices: [range-function, loop-counter, arithmetic, nested-loops]
+  practices: [range-function, loop-counter, arithmetic, nested-loops, float-type]
 - id: checkpoint-02-loops-and-functions
   kind: checkpoint
   title: "Checkpoint 2 — Loops and Functions"
@@ -312,7 +336,7 @@ entries:
   introduces: []
   requires: [def-function, parameters, return-value, while-loop, if-statement, random-module]
   practices: [print, input, f-string, accumulator, logical-ops, loop-counter,
-              elif-else, break-statement, comparison, scope]
+              elif-else, break-statement, comparison, scope, import-statement, random-module]
 - id: unit-06-secret-codes
   kind: unit
   title: "Secret Codes — ciphers and string surgery"
@@ -324,7 +348,7 @@ entries:
   kind: unit
   title: "High-Score Hall of Fame — lists"
   lessons: 2
-  introduces: [list-literal, list-index, list-append, list-loop, list-methods]
+  introduces: [list-literal, list-index, list-append, list-loop, list-sort, builtin-functions]
   requires: [for-loop, variable, def-function, comparison]
   practices: [accumulator, f-string, while-loop, string-methods]
 - id: unit-08-word-wizard
@@ -341,8 +365,8 @@ entries:
   introduces: []
   requires: [list-literal, dict-literal, string-index]
   practices: [string-index, string-slice, string-methods, in-operator, list-literal,
-              list-index, list-append, list-loop, list-methods, dict-literal,
-              dict-access, dict-loop]
+              list-index, list-append, list-loop, list-sort, builtin-functions,
+              dict-literal, dict-access, dict-loop]
 - id: unit-09-save-point
   kind: unit
   title: "Save Point — files that remember"
@@ -364,7 +388,7 @@ entries:
   introduces: []
   requires: [file-read, class-def]
   practices: [file-read, file-write, with-statement, class-def, init-method,
-              attributes, methods, dict-loop, list-methods, return-value]
+              attributes, methods, dict-loop, list-sort, return-value]
 - id: project-02-grand-adventure
   kind: project
   title: "Grand Adventure — the Year 1 capstone"
@@ -372,19 +396,19 @@ entries:
   introduces: []
   requires: [class-def, init-method, attributes, methods, file-read, file-write,
              dict-literal, list-literal, def-function]
-  practices: [print, comment, input, string-literal, f-string, string-concat, string-index,
-              string-slice, string-methods, in-operator, variable, naming, int-type,
-              float-type, arithmetic, type-conversion, boolean, comparison, logical-ops,
-              if-statement, elif-else, conditional-nesting, while-loop, break-statement,
-              for-loop, range-function, loop-counter, accumulator, nested-loops,
-              import-statement, random-module, turtle-basics, turtle-drawing,
+  practices: [run-program, error-messages, print, comment, input, string-literal, f-string,
+              string-concat, string-index, string-slice, string-methods, in-operator,
+              variable, naming, int-type, float-type, arithmetic, type-conversion, boolean,
+              comparison, logical-ops, if-statement, elif-else, conditional-nesting,
+              while-loop, break-statement, for-loop, range-function, loop-counter,
+              accumulator, nested-loops, import-statement, random-module,
               def-function, parameters, return-value, scope, list-literal, list-index,
-              list-append, list-loop, list-methods, dict-literal, dict-access, dict-loop,
-              file-read, file-write, with-statement, class-def, init-method,
-              attributes, methods]
+              list-append, list-loop, list-sort, builtin-functions, dict-literal,
+              dict-access, dict-loop, file-read, file-write, with-statement,
+              class-def, init-method, attributes, methods]
 ```
 
-Note: the capstone's `practices` is deliberately the complete 52-concept registry (whole-year integration), which also guarantees `test_practice_coverage_planning_level`'s union check; if the registry ever changes, regenerate this list rather than editing it by hand.
+Note: the capstone's `practices` is the full registry MINUS `turtle-basics`/`turtle-drawing` (a text-adventure capstone need not draw — claiming turtle practice here would be false; the arcade variant may still use it informally). Coverage does not depend on this list: `test_practice_coverage_planning_level` requires the pre-capstone union alone to cover the registry. If the registry changes, regenerate this list rather than editing it by hand.
 
 - [ ] **Step 4: Run tests green**
 
@@ -413,10 +437,21 @@ git commit -m "feat(book1): Year 1 coverage map — 10 units, 2 projects, 4 chec
 Append to `tests/test_book1_curriculum.py`:
 
 ```python
-def test_syllabus_mentions_every_map_entry():
+def test_syllabus_table_matches_map():
+    import re
+
     syllabus = (REPO / "book1" / "syllabus.md").read_text(encoding="utf-8")
+    positions = []
     for e in load_map():
-        assert e["id"] in syllabus, f"syllabus missing {e['id']}"
+        # A table row must carry the id, kind, and lesson count together, e.g.
+        # "| `unit-01-story-machine` | unit | 2 |"
+        row = re.search(
+            rf"\|\s*`{re.escape(e['id'])}`\s*\|\s*{e['kind']}\s*\|\s*{e['lessons']:g}\s*\|",
+            syllabus,
+        )
+        assert row, f"syllabus table missing/incorrect row for {e['id']}"
+        positions.append(row.start())
+    assert positions == sorted(positions), "syllabus table order differs from map order"
 ```
 
 Run: `uv run pytest tests/test_book1_curriculum.py -q` → the new test FAILS (placeholder syllabus).
@@ -453,7 +488,9 @@ Every unit ships stretch ("Challenge") exercises for faster students; core conte
 | 15 | `checkpoint-04-year-one-finale` | checkpoint | 0.5 | Files and objects, proven. |
 | 16 | `project-02-grand-adventure` | project | 4 | Capstone: a text adventure (or arcade game) using everything from the year. |
 
-Lesson budget: 30 full lessons (units 24 + projects 6); the four half-lesson checkpoints run inside existing slots, bringing the map total to 32 scheduled lesson-units.
+Lesson budget: the map's `lessons` values are workload units summing to 32 — 24 unit lessons + 6 project lessons + 4 half-lesson checkpoints.
+On the calendar this fits ~30–32 class sessions: each checkpoint's half-lesson is absorbed into the session that opens the following unit when the schedule is tight.
+Turtle-based lessons (units 03/05) run as `.py` scripts launched from the JupyterLab/VS Code terminal — turtle opens its own window and does not draw inside notebook cells; all other work stays in notebooks.
 
 ## Term shape
 
@@ -498,7 +535,53 @@ Expected: ALL GREEN (now 11 tests total: 2 registry/skeleton + 9 curriculum).
 
 ## Plan Review
 
-(4-way gate verdicts land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE
+- Hand-verified all map invariants against the embedded tests (52 introduced-exactly-once, prereq closure, checkpoint rules, disjointness, capstone = full registry, budget 32 ∈ [28,32]); caught and fixed four self-inconsistencies pre-commit (concept count, trivially-passing coverage test, capstone duplicates, budget wording).
+
+### Review 2 — [fable] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS
+- Mechanically verified every embedded-test invariant plus stricter extras (all pass, including the unenforced practices-ordering invariant); arc judged pedagogically sound (while-before-for explicitly defensible; hooks age-appropriate; OOP landing gentle).
+1. `[OPEN]` Turtle requires a Tk window and won't run in a notebook cell — contradicts design's notebooks-as-medium unless the delivery assumption (turtle lessons launch as .py scripts from a JupyterLab/VS Code terminal) is recorded now, before plan 004 hits it. Priority: Should Fix.
+2. `[OPEN]` Test hole: `practices` ordering unenforced for units/projects — an entry could practice a concept introduced later and pass. Data is currently clean (verified); fold practices into the closure walk. Priority: Should Fix.
+3. `[OPEN]` Unit 02 heaviest load (12 concepts) at the most fragile point; `float-type` not demanded by an integer guessing game (violates D-001's "only when the project demands it"). Priority: Should Fix.
+4. `[OPEN]` No registry concepts for "running a program" / "reading error messages" — unavoidable in lesson 1, formally unteachable under the closed vocabulary. Priority: Nice to Have.
+5. `[OPEN]` Budget sits at the test's exact upper bound (32) and the syllabus sentence double-counts checkpoint slots. Priority: Nice to Have.
+6. `[OPEN]` Concept-id kebab check weaker than the entry-id regexes. Priority: Nice to Have.
+7. `[OPEN]` Syllabus test is substring-only; note that plan 003 tooling should also check table kinds/lesson counts. Priority: Nice to Have.
+
+### Review 3 — [glm] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no blockers)
+- Extracted and ran the embedded pytest suite against the embedded YAML: 9/9 pass; all invariants hold; exemption legitimate; arc pedagogically sound.
+1. `[OPEN]` Unit 02 front-loads 12 introductions in 3 lessons at the most fragile point (overlaps fable #3); move `break-statement`/`conditional-nesting` out or document the pacing call. Priority: Should Fix.
+2. `[OPEN]` Capstone's all-52 `practices` masks that `import-statement` and `random-module` get no deliberate pre-capstone practice; strengthen test or add pre-capstone practice. Priority: Should Fix.
+3. `[OPEN]` Syllabus test substring-only (overlaps fable #7). Priority: Nice to Have.
+4. `[OPEN]` Budget narrative arithmetic confusing (overlaps fable #5). Priority: Nice to Have.
+5. `[OPEN]` `practices` field semantics (cross-unit revisits, not exhaustive exercise coverage) should be stated in the Task 2 Interfaces block. Priority: Nice to Have.
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT (data currently consistent — static trace all-PASS — but test rigor insufficient)
+1. `[OPEN]` (Must Fix) Practice ordering unenforced for units/projects (overlaps fable #2): future-concept `practices` would pass the suite.
+2. `[OPEN]` (Must Fix) Capstone's all-52 omnibus makes practice coverage tautological, and claims turtle practice in a possibly text-only capstone; `import-statement`/`random-module` get no real pre-capstone practice.
+3. `[OPEN]` (Should Fix) Unit 02 overloaded; `float-type` not demanded by an integer guessing game (overlaps fable #3, glm #1).
+4. `[OPEN]` (Should Fix) Syllabus test substring-only (overlaps fable #7, glm #3).
+5. `[OPEN]` (Should Fix) Concept-id test doesn't enforce its kebab contract (overlaps fable #6).
+6. `[OPEN]` (Should Fix) `list-methods` groups built-ins (`len/min/max`) with the `.sort()` method — teaches kids `scores.len()`.
+7. `[OPEN]` (Nice to Have) Checkpoint scheduling wording ambiguous (overlaps fable #5, glm #4).
+8. `[OPEN]` (Nice to Have) "docs-only" imprecise — the plan also ships test code.
+
+### Revision 2 resolutions (2026-09-06) — applied across all three reviews
+- fable 1 `[FIXED]`: turtle delivery assumption recorded in Global Constraints and the syllabus; D-005 proposal flagged for ship time (governance needs user sign-off).
+- fable 2 / sol 1 `[FIXED]`: closure test now walks `requires` ∪ `practices` for EVERY entry.
+- fable 3 / glm 1 / sol 3 `[FIXED]`: unit 02 slimmed to 10 introductions — `float-type` moved to unit 03 (turtle angles like `360/7` genuinely demand floats), `break-statement` to unit 04 (sudden-death round); binding pacing directive for units 01–02 teacher notes added to Global Constraints.
+- fable 4 `[FIXED]`: `run-program` and `error-messages` added to the registry, introduced in unit 01, practiced in units 02/03/04.
+- fable 5 / glm 4 / sol 7 `[FIXED]`: budget wording rewritten (32 workload units, ~30–32 calendar sessions, absorption rule stated).
+- fable 6 / sol 5 `[FIXED]`: concept-id test now enforces `[a-z0-9]+(-[a-z0-9]+)*` via `re.fullmatch`.
+- fable 7 / glm 3 / sol 4 `[FIXED]`: syllabus test now matches full table rows (id + kind + lesson count) and asserts map order.
+- glm 2 / sol 2 `[FIXED]`: coverage test now requires the PRE-capstone practices union to cover the registry (anti-tautology rule); `import-statement`/`random-module` practiced in project 01; capstone list regenerated as registry minus the turtle pair with an honesty note.
+- glm 5 `[FIXED]`: `requires`/`practices` semantics documented in the Task 2 Interfaces block.
+- sol 6 `[FIXED]`: `list-methods` split into `list-sort` (collections) and `builtin-functions` (functions); all references updated. Registry is now 55 concepts.
+- sol 8 `[FIXED]`: Out-of-scope wording now says "curriculum-data/docs plan (plus planning-level pytest code)".
 
 ## Content Review
 
