@@ -866,7 +866,64 @@ git commit -m "feat: ci-local gate with plan-003 SKIPs (plan 001)"
 
 ## Content Review
 
-(pre-PR gate findings land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE
+- Tree matches the gated plan's embedded contents exactly; ci-local fully green; guard OK and FAIL paths verified live; TDD cycle honored for the registry test.
+
+### Review 2 — [glm] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no blockers)
+- Verified verbatim plan conformance for all 32 tracked files; `.gh-token` untracked and check-ignore-confirmed; both gates run green live; FAIL paths probed in a /tmp copy (plan-number, unit-ID, secret, roster, conflict-marker cases all caught; no false positives on `docs/reviews/2026-*.md` or `unit-012` boundary cases).
+1. `[FIXED]` Post-execution report placeholder and TODO box must land before squash-merge (workflow Step 6). Priority: Should Fix.
+   → Response: both are written in the Ship step below, before the PR.
+2. `[WONTFIX]` Guard flags any tracked basename starting `.env` (superset of .gitignore) — e.g. a hypothetical `.environment-notes`. Priority: Nice to Have.
+   → Response: unreachable without `git add -f` and errs fail-closed by design; acceptable.
+3. `[WONTFIX]` Setext `=======` false-positive inherited from the plan-review WONTFIX. Priority: Nice to Have.
+   → Response: caveat already recorded in Plan Review (fable #6).
+
+### Review 3 — [fable] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no Must Fix / Should Fix)
+- Byte-exact diff of shipped files vs the plan's embedded blocks; `.gh-token` untracked + check-ignore confirmed; `uv.lock` scanned clean for credential-shaped strings; both scripts run green with correct usage exits; guard detection logic traced end-to-end.
+1. `[WONTFIX]` AGENTS.md's hard-safeguard list still cites the broad `*token*`/`*secret*`/`*credential*` patterns the mechanical checks deliberately narrowed — a future "secret codes" unit triggers an autopilot pause. Priority: Nice to Have.
+   → Response: intentional layering — the judgment-level pause errs safe while the mechanical gates stay precise; AGENTS.md is governance (human-reviewed), so the alignment edit is deferred to a future governance change and noted in the post-execution report.
+2. `[WONTFIX]` Guard could false-positive on legit basenames like `answer.key`. Priority: Nice to Have.
+   → Response: fails toward alarm by design; rename-on-collision is the documented remedy.
+3. `[WONTFIX]` `ruff check scripts/` is a no-op until plan 003 adds Python there. Priority: Nice to Have.
+   → Response: already recorded as a self-review watch-item.
+4. Observation (correct as-is): TODO box and post-execution report are Ship-step items and were expectedly pending at review time.
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT (environment-caused verification blocker only; no content discrepancy found)
+1. `[OPEN]` (Blocker) Reviewer's sandbox lacked `uv` on PATH and blocked the uv cache, so `ci-local.sh`/`pre-merge-guard.sh` exited 127 there; approval would claim verification not obtained in that environment. All non-uv checks passed (byte-exact conformance, modes, `git diff --check`, secrets/history clean, guard's embedded Python printing OK).
+   → Response: round 2 dispatched with `PATH` including `~/.local/bin` and a writable `UV_CACHE_DIR`, so the reviewer can run both gates itself.
+
+### Review 5 — [sol] round 2 (2026-09-06)
+- **Verdict**: REJECT (same environment blocker: sandbox filesystem fully read-only — `mktemp` fails, `uv` cannot run there at all; no new content findings)
+   → Response: round 3 dispatched with a write-free verification path — the gates' exact heredoc bodies piped into `.venv/bin/python`, cache-free ruff/pytest — which is the authoritative check minus only the `uv run` wrapper; [glm] and [fable] executions of the literal commands are on record.
+
+### Review 6 — [sol] round 3 (2026-09-06)
+- **Verdict**: REJECT (no defect found; 3 of 4 substantive checks now executed green in-sandbox: registry, ruff, guard. pytest alone unexecuted — its default capture allocates a TemporaryFile and the sandbox has no writable temp dir.)
+   → Response: round 4 dispatched running pytest with `--capture=no` (removes the TemporaryFile requirement; the two tests touch no tmp fixtures).
+
+### Review 7 — [sol] round 4 (2026-09-06)
+- **Verdict**: APPROVE
+- `pytest -q -p no:cacheprovider --capture=no tests/` → `2 passed`, exit 0. With rounds 1–3 (zero defects; registry, ruff, guard green in-sandbox), all substantive checks are now executed by [sol] itself.
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE (round 4) · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **content gate PASSED; clear to ship.**
+
+## Post-Execution Report (2026-09-06)
+
+**Shipped:** everything the plan promised, byte-identical to its embedded contents (confirmed independently by [glm] and [fable]): uv environment + `tools` stub; `books.yaml` + two-book skeleton + `tests/test_books.py` (TDD: red → green); `AGENTS.md`/`CLAUDE.md`; `docs/development-workflow.md`, `docs/content-review-gate.md`, `docs/architecture/decisions.md` (D-001–D-004), `TODO.md`; narrowed `.gitignore`; `scripts/pre-merge-guard.sh`; `scripts/ci-local.sh`. Final `ci-local.sh`: ALL GREEN (three `SKIP (plan 003)` lines as designed).
+
+**Deviations from the gated plan:** none in content. Process deviation: the [sol] content review took 4 rounds — rounds 1–3 were blocked by its read-only sandbox (no `uv`, no writable temp dir), resolved by piping the scripts' heredoc bodies into `.venv/bin/python` and running pytest with `--capture=no`; no round produced an implementation finding.
+
+**Limitations:** content checks (notebook execution/hygiene, manifests, prereq closure, coverage, stretch, PDF, notebook-cell lint) are declared SKIPs until plan 003; `ruff check scripts/` is a no-op until Python lands there.
+
+**Follow-ups:**
+- Plan 002 — Book 1 curriculum architecture (next milestone).
+- Governance alignment edit (needs user sign-off, per hard safeguards): AGENTS.md's hard-safeguard list still names the broad `*token*`/`*secret*`/`*credential*` patterns that the mechanical checks deliberately narrowed ([fable] content nit #1); align wording when AGENTS.md is next edited.
+- For future [sol] content reviews, include the read-only-sandbox verification recipe (heredoc pipe + `--capture=no`) in the dispatch prompt to avoid multi-round environment loops.
 
 ## Post-Execution Report
 
