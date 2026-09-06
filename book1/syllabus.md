@@ -28,7 +28,7 @@ Every unit ships stretch ("Challenge") exercises for faster students; core conte
 | 16 | `project-02-grand-adventure` | project | 4 | Capstone: a text adventure (or arcade game) using everything from the year. |
 
 Lesson budget: the map's `lessons` values are workload units summing to 32 — 24 unit lessons + 6 project lessons + 4 half-lesson checkpoints.
-On the calendar this fits ~30–32 class sessions: each checkpoint's half-lesson is absorbed into the session that opens the following unit when the schedule is tight.
+On the calendar this fits ~30–32 class sessions: each checkpoint's half-lesson is absorbed into the session that opens the following entry when the schedule is tight.
 Turtle-based lessons (units 03/05) run as `.py` scripts launched from the JupyterLab/VS Code terminal — turtle opens its own window and does not draw inside notebook cells; all other work stays in notebooks.
 
 ## Term shape

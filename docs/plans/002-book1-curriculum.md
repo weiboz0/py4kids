@@ -598,7 +598,51 @@ Expected: ALL GREEN (now 11 tests total: 2 registry/skeleton + 9 curriculum).
 
 ## Content Review
 
-(pre-PR gate findings land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE
+- Files transcribed from the gated rev3 plan; every TDD cycle red→green; ci-local ALL GREEN (11 tests).
+
+### Review 2 — [fable] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS
+- Byte-compared shipped files vs the plan's final blocks; ran ci-local (ALL GREEN, 11 tests); independently re-verified every curriculum invariant on the shipped files with its own script (all pass); content pass clean; no secrets.
+1. `[FIXED]` Deviation to ledger: `builtin-functions` placed with the functions-category group instead of after `list-sort`. → Response: deliberate — category-grouped order reads better; registry order is semantically inert and untested. Recorded here.
+2. `[FIXED]` Deviation to ledger: syllabus adds ", before the capstone" to the coverage rule and a fifth bullet restating the units 01–02 pacing directive. → Response: deliberate — both reflect the strengthened rev2 tests/constraints. Recorded here.
+3. `[FIXED]` Plan-004 input: unit-04's manifest should list `arithmetic`/`int-type` (score accumulator depends on them). → Response: noted in the post-execution report's follow-ups for the plan-004 brief.
+4. `[FIXED]` Plan-004 input: no `ord`/`chr` concept — unit-06 ciphers must use alphabet-string indexing, or the registry grows later. → Response: noted in the post-execution report's follow-ups.
+5. Observation (correct as-is): Ship-step items (TODO flip, post-exec report, D-005 proposal) deliberately outstanding at review time.
+
+### Review 3 — [glm] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no blockers)
+- ci-local ALL GREEN (11 tests); coverage-map an exact byte match; independently confirmed closure, introduce-once, pre-capstone coverage, budget arithmetic, table/map agreement; secret scan clean (content "secret" hits are false positives).
+1. `[FIXED]` Syllabus drifts from the embedded block (", before the capstone"; pacing bullet) — additive and faithful to gate resolutions. → Response: same as fable #2, ledgered as deliberate.
+2. `[FIXED]` `builtin-functions` position drift. → Response: same as fable #1, ledgered.
+3. `[FIXED]` Test file differs only by blank-line grouping between appended blocks. → Response: expected consequence of the plan's "append" instructions; no functional difference.
+4. `[FIXED]` Unit 03 density (7 concepts/3 lessons) comparable to unit 02 — extend the per-lesson allocation requirement to unit 03's teacher notes. → Response: added to the post-execution report's plan-004 follow-ups.
+5. Observation: ship-step bookkeeping pending, as designed.
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS
+- Ran the write-free suite in its sandbox: 11/11 pass; ruff clean; coverage map + tests exact matches to the gated blocks; content original, no PII.
+1. `[FIXED]` Same transcription drifts as fable #1–2 / glm #1–2. → Response: ledgered as deliberate (see above).
+2. `[FIXED]` Syllabus absorption sentence said "following unit" but checkpoint 04 precedes a project. → Response: reworded to "following entry".
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE WITH NITS · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **content gate PASSED; clear to ship.**
+
+## Post-Execution Report (2026-09-06)
+
+**Shipped:** Book 1's curriculum architecture exactly as gated (rev3): 55-concept registry (`concepts.yaml`), 16-entry Year 1 coverage map (`coverage-map.yaml` — 10 units, 2 projects, 4 checkpoints, budget 32 workload units), the Year 1 syllabus, and 9 planning-level tests enforcing the self-containedness laws (closure over requires ∪ practices, introduce-exactly-once, pre-capstone practice coverage, checkpoint rules, syllabus/table consistency). Final ci-local: ALL GREEN, 11 tests.
+
+**Deviations from the gated plan (all ledgered in Content Review, all reviewer-accepted):** `builtin-functions` placed with its category group; two additive syllabus lines (", before the capstone"; the pacing bullet); "following entry" wording fix; test file blank-line grouping.
+
+**Limitations:** invariants are enforced by pytest only until plan 003 promotes them into `tools/` CI checks; `requires` completeness is not machine-checkable (reviewer-enforced); no unit content exists yet — checkpoint difficulty/blind-solve verification happens when statements ship (plan 004+).
+
+**Follow-ups (inputs to plan 004 briefs, from gate findings):**
+- Unit 04 manifest: list `arithmetic`/`int-type` (score accumulator depends on them) — fable content #3.
+- Unit 06 ciphers: build on alphabet-string indexing (no `ord`/`chr` concept), or grow the registry — fable content #4.
+- Per-lesson concept allocation in teacher notes: required for units 01–02 (Global Constraints) and extended to unit 03 (glm content #4).
+- D-005 (turtle delivery assumption) proposed to the user at ship time; decisions.md untouched pending sign-off.
 
 ## Post-Execution Report
 
