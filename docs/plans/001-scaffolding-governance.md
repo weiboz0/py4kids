@@ -856,6 +856,14 @@ git commit -m "feat: ci-local gate with plan-003 SKIPs (plan 001)"
 4. `[FIXED]` (Caveat request) Setext WONTFIX should note ATX-only is unenforced.
    → Response: caveat added to fable #6 response.
 
+### Review 6 — [sol] round 3 (2026-09-06)
+- **Verdict**: APPROVE
+- All three round-2 residuals confirmed resolved (refspec fetch, strict probe, cross-reference); `bash -n` and `git diff --check` clean on rev3; runtime execution left to the implementation phase (read-only reviewer).
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE (round 3) · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **gate PASSED; approval to implement.**
+
 ## Content Review
 
 (pre-PR gate findings land here.)
