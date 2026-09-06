@@ -452,6 +452,9 @@ def test_syllabus_table_matches_map():
         assert row, f"syllabus table missing/incorrect row for {e['id']}"
         positions.append(row.start())
     assert positions == sorted(positions), "syllabus table order differs from map order"
+    # No stale/extra rows: every id-shaped table row must correspond to a map entry.
+    all_rows = re.findall(r"\|\s*`((?:unit|project|checkpoint)-[0-9]{2}-[a-z0-9-]+)`\s*\|", syllabus)
+    assert sorted(all_rows) == sorted(e["id"] for e in load_map()), "stale/extra syllabus rows"
 ```
 
 Run: `uv run pytest tests/test_book1_curriculum.py -q` → the new test FAILS (placeholder syllabus).
@@ -582,6 +585,16 @@ Expected: ALL GREEN (now 11 tests total: 2 registry/skeleton + 9 curriculum).
 - glm 5 `[FIXED]`: `requires`/`practices` semantics documented in the Task 2 Interfaces block.
 - sol 6 `[FIXED]`: `list-methods` split into `list-sort` (collections) and `builtin-functions` (functions); all references updated. Registry is now 55 concepts.
 - sol 8 `[FIXED]`: Out-of-scope wording now says "curriculum-data/docs plan (plus planning-level pytest code)".
+
+### Review 5 — [sol] round 2 (2026-09-06)
+- **Verdict**: APPROVE WITH NITS
+- Independent static re-trace of rev2: all invariants hold (55 ids, 16 entries, budget 32, closure over requires ∪ practices, non-capstone union exact, capstone = registry minus turtle pair); no regressions; five of six Should Fix items fully resolved.
+1. `[FIXED]` Residual: syllabus test wouldn't catch a stale/extra table row.
+   → Response: test now also asserts the set of id-shaped table rows equals the map's entry ids exactly.
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE WITH NITS (round 2) · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **gate PASSED; approval to implement.**
 
 ## Content Review
 
