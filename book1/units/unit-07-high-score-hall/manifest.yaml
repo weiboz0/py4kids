@@ -1,0 +1,11 @@
+id: unit-07-high-score-hall
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [list-literal, list-index, list-append, list-loop, list-sort, builtin-functions]
+  requires: [for-loop, variable, def-function, comparison, parameters, return-value]
+  practices: [accumulator, f-string, while-loop, string-methods, print, arithmetic, int-type,
+              range-function, loop-counter, if-statement, elif-else, string-concat, float-type,
+              type-conversion, input, in-operator, error-messages, string-literal, boolean]
