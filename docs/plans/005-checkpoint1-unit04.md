@@ -249,6 +249,23 @@ coverage; ci-local ALL GREEN; content gate 4-way consensus.
 - **Verdict**: REJECT — 6 of 7 verified fixed; only finding 2's E5 half remained: the markdown described the fix but didn't show the literal `bonus = int(input("Bonus points: "))` line (Q3 did).
 1. `[FIXED]` E5 solution markdown now shows the literal repaired line, matching the Q3 treatment sol approved.
 
-## Post-Execution Report
+### Review 6 — [sol] round 3 (2026-09-06)
+- **Verdict**: APPROVE — E5 solution shows the literal input line; commit touched nothing else.
 
-(written before shipping.)
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE (round 3) · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **content gate PASSED; clear to ship.**
+
+## Post-Execution Report (2026-09-06)
+
+**Shipped:** the year's first assessment (`checkpoint-01-first-steps` — 7 questions over units 01–02, blind-authored solutions, teacher notes with a full `## Grading` section) and `unit-04-quiz-show` (2 lessons introducing accumulator, logical-ops incl. a real `not` beat, conditional-nesting, break; blind solutions; teacher notes), plus the tools/tests extension giving checkpoints first-class mechanical checks (scope matrix, `--unit` selector, checkpoint prefix rule, ~20 one-fault fixtures) and two general hardenings (non-vacuous assert floor; sequential-unique question numbers). Two map amendments: unit-04 requires += arithmetic/int-type/variable; checkpoint-01 practices += error-messages. Final: 271 tests, ci-local ALL GREEN.
+
+**Gate history:** plan gate 2 rounds (all three externals REJECTED round 1 — the checkpoint-union blocker, Phase-B ordering, and Phase-A under-specification; rev2 resolved all 21 findings). Content gate 3 rounds: [glm]/[fable] APPROVE WITH NITS on first pass (zero blind-solve discrepancies); [sol] found real defects the others missed — a wrong Q4 explanation, weak assertions, and two tooling gaps (vacuous asserts, non-sequential question numbers) — all fixed; a lone E5 residual closed in round 3.
+
+**Deliberate deviation from two reviewers, resolved the stronger way:** glm/fable read the `not` mismatch as "trim the teacher notes"; sol read it as under-coverage of the `logical-ops` concept. Resolved by genuinely teaching `not` (lesson beat + exercise 7 + solution), which satisfies all three.
+
+**Limitations:** checkpoint handouts are not PDF-built (build-pdf stays unit-scoped until a real need); no auto-grading (design out-of-scope).
+
+**Follow-ups:**
+- Next content slice: unit 05 (Function Factory) + checkpoint 02 territory; the checkpoint pipeline is now reusable.
+- Standing: the codex forwarder mangles prompts containing tokens that look like CLI flags (a literal `-p`/model-name fragment triggered a "'pytest' model not supported" 400); phrase content-gate prompts to avoid bare flag-like tokens.
