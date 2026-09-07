@@ -197,6 +197,57 @@ gitignored; plan-review + content-review 4-way consensus.
 
 ---
 
+## Post-Execution Report (2026-09-07)
+
+**Status: implemented, Phases A–C GREEN. Content gate next.**
+
+- **Phase A (gitignore):** committed `eb7e5cc`. `.gitignore` += `adventure_save.txt`. project-02 map
+  entry already existed (no amendment).
+- **Phase B (content):** `brief.ipynb` (11 cells: title + 4 `## Milestone N` + scaffolds +
+  `## Make it yours` + `## Requirements checklist`; descriptive ids; FLAT world — `descriptions` /
+  `exits` (composite `"room direction"` keys) / `room_items`, no nesting), `teacher-notes.md` (six
+  headings incl. `## Rubric`), `solutions.ipynb` (blind-authored; headless + input-free; `seed(4)`
+  first cell; single `Hero` class; parameterized `describe`/`move`/`apply_event`; scripted
+  `["east","north","east","q"]` driver — "north" from forest exercises the missing-exit branch live;
+  14 non-vacuous asserts across 3 cells), `manifest.yaml` map-equal (post-trim).
+- **Maintainer fixes over the blind output (closure):** the blind solution + brief both read with
+  `readlines()` (untaught — unit-09 teaches `for line in f`) and the brief sliced `saved_lines[2:]`
+  (untaught list-slice). Both rewritten to the taught `for line in f` + line-counter idiom. The
+  14 asserts were split into 3 cells (structure-check requires ≥3 non-vacuous assert cells).
+- **Phase C (verification, clean-slate + SUBSTRATE RECONCILIATION):** `rm -f adventure_save.txt` then
+  exec-solutions PASS (create-before-read), structure/manifest/hygiene/cell-lint PASS. ONE-CLASS AST
+  check: only `ClassDef` is `Hero`. Scanner scoped to project-02: clean (no used-but-unlisted).
+  RECONCILED the map + manifest practices by TRIMMING 9 concepts the 4 milestones never exercise —
+  `error-messages` (no traceback beat), `string-index`, `string-slice`, `float-type`, `logical-ops`
+  (the 2 `not` are `not in` membership = in-operator, verified 0 BoolOp), `range-function`,
+  `nested-loops`, `list-sort`, `dict-loop` (no dict iteration) — leaving 44 genuinely-used practices;
+  `conditional-nesting` KEPT (nested `if` in M3), `scope` KEPT (real functions with params). map ==
+  manifest == reality; coverage-check still PASS (trimmed concepts are practiced in their home
+  units/checkpoints). `adventure_save.txt` gitignored.
+
+---
+
+## Content Review
+
+Roster + tags per the plan-review gate; findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`; all `[OPEN]`
+resolve before merge.
+
+### Review 1 — [self] (2026-09-07) → APPROVE
+Blind-audited all 4 milestones against the reference. Runs headless + input-free (verified: no
+`input()`, `seed(4)` first cell, exec-solutions PASS clean-slate). Single `Hero` class; FLAT
+single-subscript dicts (no nested `][`); `move` pins BOTH branches (valid exit → next room, missing
+exit → stay — and the scripted "north" exercises the miss live); the seeded event helper pins BOTH
+outcomes (roll 1 → health 15, roll 6 → health 20) plus the actual `event_roll == 2`; save round-trip
+pinned by INDEX + `len` primary (`loaded_items[0]`, `len ==`) plus whole-list secondary. Closure
+clean AFTER the maintainer fixes (readlines→`for line in f`; no list-slice). `builtin-functions`
+(`len`) used legitimately (allowed here). Substrate reconciled: map == manifest == the 44 concepts
+actually used. Path traced: cave →east→ forest (pick up sword) →north→ (missing exit, stay; sword
+already held) →east→ river (pick up shield) →q→ quit; final inventory `["sword", "shield"]`
+(`len == 2`, `[0] == "sword"`), health 20 − 5 = 15 after the seeded trap (roll 2). All asserts
+consistent; exec-solutions PASS confirms.
+
+---
+
 ## Plan Review
 
 ### Review 1 — [self] (2026-09-07)
