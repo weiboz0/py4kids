@@ -198,6 +198,13 @@ GREEN (incl. the tooling fail-close fixture and amended map); content gate 4-way
   2. `[FIXED]` Not every amended practices concept was pinned to a question (f-string/int-type/elif-else implicit). → binding rule added; all 10 pinned to Q1–Q8.
   3. `[FIXED]` Warn the codex author that turtle-check uses the fake-turtle stub (limited API; open-path waives only closure). → Phase B API-constraint note added.
 
+### Round 3 (2026-09-06)
+- **[sol]**: APPROVE — both doc fixes confirmed; rev3 delta (concept pinning, wording, API note) introduced no contradiction.
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE (round 3) · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **gate PASSED; approval to implement.**
+
 ## Content Review
 
 (pre-PR gate findings land here.)
