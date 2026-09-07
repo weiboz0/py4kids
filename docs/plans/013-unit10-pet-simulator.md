@@ -292,3 +292,66 @@ matches historical/struck); `list-index` present; union closure-complete (no use
   3–4 cleared residual scope-homing wording. The file/OOP substrate was scanner-DERIVED + validated
   green each round. No open blockers.
 - **Gate PASSED. Proceeding to Phase A → Phase B → Phase C.**
+
+## Content Review
+
+### Review 1 — [self] (2026-09-07)
+APPROVE. Traced every exercise + solution top-to-bottom: all 14 asserts correct + non-vacuous (Ex3
+feed(2)→3, Ex6 feed(4)→1, Ex5 pets[1].name=="Rocket", Ex9 manual-max best==9, Ex10 play-until
+happiness==10; two-pets independence in Ex2). Closure clean (OOP-enhanced scanner OK): single plain
+`Pet` class + `__init__` + instance methods; NO inheritance/dunders-beyond-__init__/decorators/
+isinstance/`.sort`/`.items`/`len`/`max`/`min`/`.split`/files/nested-loops; index-based list asserts
+(`pets[1].name`), not `len`; `input` only in Ex7's prompt; happiest-pet manual running-best.
+Pedagogy: hook-first; `self`/attributes/methods clearly taught; independent instances explained as
+"each object carries its own attributes" (NOT scope); flat L3 (pets-pass + separate play-until-happy
+while); `no-exec` AttributeError beat + traceback. ci-local ALL GREEN. Minor: Ex8 reads `buddy` from
+Ex6 (sequential cross-exercise state — standard for unit solutions).
+
+### Review 2 — [fable] (2026-09-07)
+APPROVE WITH NITS. Blind-solved all 10, executed solutions top-to-bottom (all 14 asserts pass).
+Closure CLEAN (single plain Pet class, only `__init__` dunder, no inheritance/decorators/isinstance/
+.sort/.items/len/max/min anywhere; index-based list asserts; manual-max Ex9; no files/nested-loops).
+Conventions + pedagogy pass (self/class/attributes/methods clear; independent instances NOT
+mislabeled scope; flat sim; no-exec AttributeError). Nits:
+- `[candidate]` fable-1: exercises Ex3/4/5/6/10 say "define the Pet class AGAIN (with method X)", but
+  the solution defines the FULL class once in Ex1 and later cells only USE it — mismatch (later
+  solution cells don't model "define again" and fail in isolation). → BATCH decision (soften
+  statements to "reuse from Ex1" vs redefine in solutions).
+- `[candidate]` fable-2: Ex4 assert checks `buddy.hunger==8` not the mood result ("hungry") — status
+  prints not returns; optional strengthening.
+- `[WONTFIX]` fable-3: Ex8 reuses `buddy` from Ex6 (order-sensitive by design — fine top-to-bottom).
+
+### Review 3 — [glm] (2026-09-07)
+REJECT (converges with fable). Blind-solved all 10 + executed both notebooks (14/14 asserts, all
+mechanical checks PASS); closure CLEAN (single plain Pet class, no forbidden constructs, no
+len/max/min, index-based asserts); conventions + pedagogy sound. Findings:
+- `[candidate]` glm-1 (MUST FIX = fable-2 elevated): the mood-ladder assert Plan-013 promised is
+  ABSENT — Ex4 asserts only `buddy.hunger==8`; because `status` PRINTS the local `mood` (never
+  returns it), a reversed/broken ladder passes all 14 asserts (the unit's core new skill is
+  unverified). Fix: `status` also `return mood` (print unchanged → Ex5 loop unaffected); Ex4 asserts
+  `buddy.status() == "hungry"`. → BATCH-FIX.
+- `[candidate]` glm-2 (SHOULD FIX = fable-1): the full Pet is parked in the Ex1 solution; Ex3/Ex4/Ex10
+  blocks contain NO `def`, deviating from the repo convention (unit-05 puts each asked `def` under
+  its exercise) and weakening the reference where the first-OOP difficulty lives. Fix: Ex1 = minimal
+  Pet (`__init__` only); each later block REDEFINES Pet with the methods its statement requests
+  (self-contained, top-to-bottom stays green). → BATCH-FIX.
+- `[candidate]` glm-3 (nit = fable-3): Ex8 reads `buddy` from Ex6 — add a self-contained
+  `buddy = Pet("Buddy")` for robustness. → BATCH-FIX (cheap).
+
+### Review 4 — [sol] (2026-09-07)
+REJECT → resolved. Closure/blind-solve/input/flat-loops all PASS. Sole OPEN finding = the SAME
+mood-ladder vacuous assert (fable-2/glm-1): Ex4's `assert buddy.hunger == 8` rechecks the assignment,
+not the mood — a broken `status()` passes. `[FIXED]` (same fix as glm-1).
+
+### Batch fix (2026-09-07)
+Unanimous mood-assert (fable/glm/sol) + fable/glm restructure applied:
+- `[FIXED]` MOOD ASSERT: `status()` now RETURNS `mood` (after printing) in BOTH lesson and solutions;
+  Ex4 solution `reported = buddy.status(); assert reported == "hungry"`; Ex4 exercise statement +
+  lesson markdown updated to describe the return. The mood ladder is now executably verified.
+- `[FIXED]` SELF-CONTAINED SOLUTIONS (fable-1/glm-2): each `## Exercise N` solution block now DEFINES
+  the `Pet` class it needs (Ex1 __init__; Ex3/Ex6 +feed; Ex4/Ex5 +status; Ex10 +play), matching the
+  "define the class again with method X" statements and the unit-05 convention — isolation-runnable,
+  models the class-writing where the first-OOP difficulty lives.
+- `[FIXED]` Ex8 self-contained `buddy = Pet("Buddy")` (fable-3/glm-3).
+Scanner clean; ci-local ALL GREEN (14 asserts + Ex4 mood assert all pass under real-kernel exec).
+Re-dispatching [glm]/[sol] round 2 (both REJECTed round 1).
