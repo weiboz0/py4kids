@@ -1,0 +1,151 @@
+# Plan 010 — Unit 08 Word Wizard Implementation Plan
+
+**Goal:** Ship `unit-08-word-wizard` — the dictionaries unit — where students build a translation
+wizard and a word-frequency counter: a DICT maps each word (key) to its translation or its count
+(value), looked up with `[]`/`.get`, guarded with `in`, and walked with `.items()`.
+
+**Architecture:** Standard unit pipeline (plan 004), no new tooling. ONE map amendment lands UP
+FRONT (the standing substrate audit, validated with the AST concept-scanner): unit-08's
+`requires ∪ practices` omits the substrate its content uses. Helper functions take arguments and
+return values (`for-loop`, `parameters`, `return-value` → requires); the count/translate/display
+beats use `print`, `variable`, `comparison` (reverse-lookup), `string-concat` (a `word => value`
+label), `elif-else`, `arithmetic` (`count + 1`), `int-type` (counts), `error-messages` (the
+KeyError beat), `input` (an exercise prompt), `string-literal` (every key/value/message), and
+`boolean` (a `print("cat" in translations)` membership-truth beat) → practices. All taught by
+units 01–07; verified green in scratch.
+
+**Spec:** `book1/curriculum/coverage-map.yaml` (binding, amended); plan 004 unit conventions; D-001.
+
+## Global Constraints
+
+- All plan-004 unit Global Constraints apply (map-equal manifest, hook-first, exercise ≥6 core
+  + ≥2 stretch, solution floors + per-line bans, seed ordering, non-vacuous asserts incl. no
+  tautologies, five teacher-notes headings, per-lesson allocation, commit trailers).
+- Coverage-map amendment (EXACTLY this, pre-audited + scanner-validated green):
+  - append to `unit-08-word-wizard.requires` — `for-loop, parameters, return-value`.
+  - append to `unit-08-word-wizard.practices` — `print, variable, comparison, string-concat,
+    elif-else, arithmetic, int-type, error-messages, input, string-literal, boolean,
+    type-conversion` (the last homes `str(count)` in the `word + " => " + str(count)` label).
+  - All introduced by units 01–07; `practices ∩ introduces` stays empty (introduces =
+    dict-literal/dict-access/dict-loop). Apply surgically (no YAML round-trip). Manifest carries
+    the amended lists. Each amended concept HOMED in ≥1 beat/exercise (teacher notes name each).
+- **Pre-gate closure self-check (standing from plan 008/009):** before dispatching the `[sol]`
+  content review, run the AST concept-scanner scoped to unit-08 and confirm ZERO used-but-unlisted
+  concepts AND zero untaught method calls.
+- **Dict mechanics (binding):** dicts are built with `{key: value, ...}` literals; read with
+  `translations[key]` and the safe `translations.get(key, default)`; updated/added with
+  `translations[key] = value`; membership-tested with `key in translations`; walked with
+  `for key in translations` and `for key, value in translations.items()`. `.get`, `.items`,
+  `.keys`, `.values` are the ONLY dict methods used. FORBIDDEN: any other dict method
+  (`.pop`/`.update`/`.setdefault`/`.pop`/comprehensions), sets, tuples-as-keys beyond trivial,
+  and anything from later units (files/classes).
+- **`.split()` is NOT taught (binding, closure trap):** the taught `string-methods` subset is
+  ONLY `upper/lower/strip/replace`. Word-frequency counting therefore iterates a GIVEN list of
+  words (`words = ["cat", "dog", "cat", ...]`), NEVER a `sentence.split()`. Reviewers reject any
+  `.split()`.
+- **No lists-beyond-taught / no nested loops past the counter:** list ops stay within unit-07's
+  taught set (`.append`, `.sort`, index, iterate, len/max/min); `.pop`/`.insert`/`.remove`/
+  `.index`/`sorted()` remain forbidden. The word-count loop is a SINGLE loop over the word list;
+  reverse-lookup is a SINGLE loop over `.items()`. No nested loops.
+- **Input discipline (binding):** executed cells (lessons + solutions) are input-free; `input()`
+  appears only in an exercise PROMPT (markdown) with a parameterized reference solution.
+- Process (standing): no commits while a `[sol]` review is in flight; codex content-gate prompts
+  name the in-process execution fallback and avoid bare CLI-flag-like tokens.
+
+## Out of scope
+
+Content plan → Phase C is the mandatory named verification phase. Out of scope: checkpoint 03
+and units 09+ (later plans); the latent practice-completeness hygiene PR for shipped units
+03/04/05/cp02/proj01 + scanner promotion to `tools/` (tracked separately); PDF handouts; any map
+edit beyond the Phase-A substrate amendment; files/classes; `.split()`.
+
+## Phases
+
+Dispatch per AGENTS.md: lesson/exercise statements via codex; solutions via a SEPARATE blind
+codex session; teacher notes inline; map amendment + manifest inline.
+
+### Phase A — map amendment + manifest (inline)
+
+1. Amend `coverage-map.yaml` per Global Constraints (surgical, both requires + practices); full
+   suite green with the amendment alone before content.
+2. `book1/units/unit-08-word-wizard/manifest.yaml`, map-equal to the amended entry; lands with
+   the complete directory in Phase B.
+- **Acceptance (Phase A):** the map amendment ALONE is green (`uv run pytest -q` + `ci-local`)
+  before any unit directory exists.
+
+### Phase B — unit-08-word-wizard content (2 lessons)
+
+Blueprint (introduces dict-literal, dict-access, dict-loop; requires list-loop, string-methods,
+in-operator, def-function, + amended for-loop/parameters/return-value; practices list-literal,
+list-append, if-statement, f-string, + amended print/variable/comparison/string-concat/elif-else/
+arithmetic/int-type/error-messages/input/string-literal/boolean):
+- Hook: WORD WIZARD — a program that translates words and, like a spell-checker, counts how often
+  each word appears. The teacher shows a tiny bilingual phrasebook and asks how a program could
+  look a word up instantly.
+- Lesson 1 (dict-literal, dict-access) — open on the hook: a DICT pairs each word (key) with its
+  translation (value) — `translations = {"hello": "hola", "cat": "gato", "dog": "perro"}`. Look up
+  `translations["hello"]`; add/update `translations["bird"] = "pajaro"`; test membership
+  `print("cat" in translations)` (a True/False value — boolean); the SAFE lookup
+  `translations.get("fish", "???")` that returns a default instead of crashing; the deliberate
+  bug `translations["fish"]` → KeyError, read the traceback together (error-messages) — which is
+  exactly why `.get` exists.
+- Lesson 2 (dict-loop; the counter + translator) — open on the thread ("yesterday we looked words
+  up; today we count them and translate a whole list"): walk keys `for word in translations:` and
+  pairs `for word, translation in translations.items():`; a `translate(word, dictionary)` helper
+  returning `dictionary.get(word, "???")` (def-function, parameters, return-value); a
+  word-FREQUENCY counter over a GIVEN list (NOT split) — `words = ["cat","dog","cat","bird","cat"]`,
+  `counts = {}`, then a SINGLE loop `for word in words: if word in counts: counts[word] =
+  counts[word] + 1` (arithmetic/int-type/in-operator) `else: counts[word] = 1` (elif-else path);
+  print each `word => count` with `.items()` and a `word + " => " + str(count)` label
+  (string-concat + type-conversion via `str` — both in the amended union). Then a "most common
+  word" beat over `.items()` — `best_word = ""; best_count = 0; for word, count in counts.items():
+  if count > best_count: best_count = count; best_word = word` — which homes `comparison` in CORE
+  content (not only the reverse-lookup stretch), a SINGLE loop, no nesting.
+- Exercises ≥6 core + ≥2 stretch: build-a-phrasebook (dict-literal), safe-lookup (`.get` default),
+  is-it-in-the-book (`in` condition), add-a-word (`dict[key] = value`), count-the-words (single
+  loop over a given word list), most-common-word (single loop over `.items()`, `comparison` —
+  core), print-every-pair (`.items()`), translate-a-list (loop a word list, print each
+  `translate`), fix-the-KeyError (swap `[]` for `.get`); stretch: reverse-lookup (find
+  the key whose value matches a target — SINGLE loop over `.items()`, comparison), merge-two-
+  phrasebooks (copy pairs from a second dict with a single loop + `dict[key] = value`).
+- Solutions: execute headless, input-free (fixed sample dicts/word-lists), non-vacuous asserts —
+  a `.get` default assert (`translate("fish", d) == "???"`), a count assert (`counts["cat"] == 3`),
+  a membership assert (`("cat" in d) == True` is a tautology-risk — instead assert on a computed
+  lookup), a reverse-lookup assert. `random.seed(4)` only if any randomness.
+- Teacher notes: five headings, per-lesson allocation (L1 build/lookup/get/KeyError, L2 loop/
+  count/translate), 60-min cuts, differentiation; common mistakes (KeyError on a missing key →
+  use `.get`; overwriting a value by re-assigning an existing key; counting by iterating the dict
+  instead of the word list; forgetting the `else: = 1` first-sighting case).
+
+**Design decision (resolved):** the `word + " => " + str(count)` label homes both `string-concat`
+and `type-conversion` (`str`, introduced unit 02, closure-safe) — both are in the amended union.
+All other display uses f-strings.
+
+### Phase C — Verification (NAMED, mandatory)
+
+Mechanical: full pytest green; `ci-local.sh` ALL GREEN; AST concept-scanner scoped to unit-08
+clean (zero used-but-unlisted, zero untaught methods) BEFORE the content gate; solutions execute
+with non-vacuous asserts; manifest map-equal.
+Reviewer duties: blind-solve exercises; cumulative closure (only ≤unit-08 — NO `.split()`, NO
+files/classes, NO dict methods beyond `.get`/`.items`/`.keys`/`.values`, NO sets, NO nested loops
+— check explicitly); the phrasebook + counter are buildable and correct (`.get` default, KeyError
+motivation, single-loop count, reverse-lookup); solutions non-vacuous/complete; grading usable;
+timing; each lesson opens on the project thread (hook-first, D-001); age-appropriate; each amended
+concept exercised by ≥1 named beat.
+
+**Acceptance criteria:** the unit directory complete; `uv run pytest -q` green; ci-local ALL
+GREEN; concept-scanner clean; content gate 4-way consensus.
+
+---
+
+## Plan Review
+
+### Review 1 — [self] (2026-09-06)
+APPROVE (after one self-fix pre-dispatch): caught that `comparison` would be homed only in the
+reverse-lookup STRETCH exercise (core must not depend on stretch), so added a core "most common
+word" beat (`if count > best_count`) + a core exercise homing `comparison`. Amendment validated
+green (prereq/practice/reference/schema/checkpoint/introduction). Closure design honors: `.split()`
+forbidden (word-count iterates a GIVEN list, not a split sentence); KeyError→`error-messages`;
+only `.get`/`.items`/`.keys`/`.values` dict methods; single loops (no nesting); `boolean` via
+`print("cat" in translations)`; `string-literal` via keys/values; `type-conversion`+`string-concat`
+via the `word + " => " + str(count)` label. `practices ∩ introduces` empty.
