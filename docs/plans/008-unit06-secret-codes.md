@@ -153,7 +153,21 @@ GREEN; content gate 4-way consensus.
 
 ## Content Review
 
-(pre-PR gate findings land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE — boundary sweep clean (range(26) scan, no .index/len/lists), round-trip + boundary asserts, hook-first; 336 tests, ci-local ALL GREEN.
+
+### Review 2 — [fable] (2026-09-06)
+- **Verdict**: APPROVE (no findings)
+- Blind-solved all 9 exercises — zero discrepancies; independently verified round-trip, boundary (z+3→c), atbash (decoded the hook to "meet me at the library"); closure clean (no len/.index/.find/ord/chr/lists/dicts; range(26) scan ×5); case contract honored; all 7 amended practices homed; 11 non-vacuous asserts; 336 tests, ci-local ALL GREEN.
+- Optional observation (no change): input() practice lives in the exercise prompt + the lesson's no-exec cell, not an executable solution cell — by design (headless).
+
+### Review 3 — [glm] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no blockers)
+- Blind-solved all 9 (zero substantive discrepancies), executed solutions in /tmp (round-trip + boundary green); closure clean; `%` confirmed taught unit 02; all 7 practices homed.
+1. `[FIXED]` (NTH) E4 solution had a stray space `" " )`. → tidied.
+2. `[WONTFIX]` (NTH) E2 "print both characters" is open-ended (`"c r"` vs `"cr"`) — the c/r asserts are the real check; format left student-open by design.
+3. `[FIXED]` (NTH) Teacher-notes L2 pacing had no explicit 60-min cut like L1. → cut added.
+4. `[WONTFIX]` (NTH) E5 solution cell is print-only (no assert) — a branch demo; the notebook meets the ≥3 non-vacuous assert floor overall.
 
 ## Post-Execution Report
 

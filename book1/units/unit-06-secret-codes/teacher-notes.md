@@ -30,6 +30,9 @@ Budget: two lessons of 60–90 minutes.
   rebuild with `result = result + new_letter`; `decode` shifts back by `26 - shift`.
   15 min: the deliberate wrap bug — forget the `% 26` and watch `z` shift off the end; read
   the resulting error/wrong output together.
+  Rest: the trade-and-decode activity — pairs swap encoded messages and crack each other's.
+  60-MINUTE CUT: skip the wrap-bug demo (the fix-the-caesar exercise covers it); the encode/
+  decode function is the non-negotiable core.
 
 Practices reappearance: print runs through every "show your result" step; input is used in
 the encode-my-typed-message exercise; variable/arithmetic/comparison/range-function are the
