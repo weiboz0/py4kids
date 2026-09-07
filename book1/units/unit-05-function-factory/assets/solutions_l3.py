@@ -31,3 +31,22 @@ stamp(24)
 stamp_gallery(3, 6)
 
 turtle.done()
+
+
+# Challenge 2 — the real drawing the notebook plan describes: a flower whose `petal`
+# actually draws a closed shape, called once per loop turn. Run this file to see it.
+def petal_shape(size):
+    for edge in range(4):
+        turtle.forward(size)
+        turtle.right(90)
+
+
+def flower(size, petal_count):
+    for petal_number in range(petal_count):
+        petal_shape(size)
+        turtle.right(360 / petal_count)
+
+
+turtle.color("purple")
+flower(30, 6)
+turtle.done()

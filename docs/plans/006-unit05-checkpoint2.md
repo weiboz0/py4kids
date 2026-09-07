@@ -207,7 +207,27 @@ GREEN (incl. the tooling fail-close fixture and amended map); content gate 4-way
 
 ## Content Review
 
-(pre-PR gate findings land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE — concept sweep clean (brace hits are f-strings); hook opens the lesson; 279 tests, ci-local ALL GREEN.
+
+### Review 2 — [fable] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no blockers)
+- Blind-solved all 6 core + 2 Challenge exercises and all 8 questions — zero discrepancies; verified every amended-practices concept appears in ≥1 question (glm's decorative-claim concern, mapping listed); all six turtle assets close; tooling fail-close verified non-over-triggering.
+1. `[FIXED]` Challenge-2 `petal(size)` solution is a non-drawing stub — add a one-line "plan stub" comment. → added.
+2. `[WONTFIX]` Q6 solution refactors the shown print-in-branches into a `door_message` variable for the mirror assert — harmless, differs slightly from the literal snippet. → intentional (the assert needs a value to check); the reasoning is identical.
+
+### Review 3 — [glm] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no blockers) — zero blind-solve discrepancies; closure, Q7 rule, tooling fail-close all verified clean.
+1. `[FIXED]` (Should Fix) Checkpoint Q2 "write the two repaired lines" reads as an un-runnable fragment. → reworded to "rewrite the whole program … filling in both blanks so it runs".
+2. `[FIXED]` (Nice to Have) Unit Ex3 had no concrete sample number. → "(For example, double the number 7.)" added.
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT
+1. `[FIXED]` (Blocker) Challenge-2 `petal()` draws nothing, so the promised flower has no real drawing (the asset drew a stamp_gallery, not a flower). → added a genuinely-drawing `flower()`/`petal_shape()` to `assets/solutions_l3.py` (turtle-check PASS, closes); the notebook stub now points at it and explains the count-only headless check.
+2. `[FIXED]` (Major) Checkpoint grading Q3/Q8 accepted `print` where the questions require `return`. → both tightened to require the returned value; partial credit named as the return-vs-print gap.
+3. `[FIXED]` (Minor) Turtle fail-close practices-branch had no regression test. → `_practices_turtle_missing_assets` fixture added alongside the requires one.
+4. `[FIXED]` (Nit) Unit Ex4 solution didn't state the float/whole-number prediction. → solution now says "FLOAT (20.0), because 2.5 is a float".
+- Blind-solve: no checkpoint discrepancies; the two unit divergences (Ex6 blank values, Challenge-2 drawing) both trace to the under-constrained plan prompt, resolved by finding 1.
 
 ## Post-Execution Report
 

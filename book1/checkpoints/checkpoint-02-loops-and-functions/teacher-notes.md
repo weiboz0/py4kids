@@ -49,8 +49,10 @@ Manual, per D-002 — a judgment read. Per question:
 2. **while-accumulator completion**: full = a condition that terminates AND the total
    accumulates outside the reset; partial = loops but mis-updates. A never-terminating
    condition is the flag to catch before project 01.
-3. **write-a-function-with-parameter**: full = correct `def` + parameter used in the body +
-   an f-string greeting returned or printed; partial = defines but ignores the parameter.
+3. **write-a-function-with-parameter**: the question asks the function to RETURN the greeting
+   (the caller prints it), so full = correct `def` + parameter used + an f-string greeting
+   `return`ed; partial = defines and uses the parameter but `print`s inside instead of
+   returning (the exact return-vs-print gap Q4 targets — worth naming to the student).
 4. **return-vs-print judgment**: THE load-bearing question. Full = names that `return` hands
    the value back for reuse while `print` only shows it. A wrong answer here predicts
    project-01 struggle — flag those students specifically.
@@ -60,8 +62,10 @@ Manual, per D-002 — a judgment read. Per question:
    partial = right operator, wrong branch order.
 7. **turtle trace/predict**: full = "pentagon" (or five-sided) WITH the 360/5 = 72°
    reasoning; partial = the shape without the angle logic.
-8. **build-it scoring function**: full = a function that takes answers, accumulates a score
-   with an `if`, and returns/prints it; partial = correct scoring outside a function.
+8. **build-it scoring function**: the question requires the function to RETURN the score, so
+   full = a function that takes the three answers, accumulates with an `if` per answer, and
+   `return`s the integer; partial = correct scoring but `print`ed inside instead of returned,
+   or scoring done outside a function.
 
 **Re-teach signal:** functions are the hard idea and project 01 leans on them hard. If a
 third of the class or more misses Q3 or Q4 (writing a function / return-vs-print), spend
