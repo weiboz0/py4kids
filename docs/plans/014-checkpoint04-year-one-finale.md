@@ -149,6 +149,29 @@ GREEN (clean-slate); concept-scanner clean; `finale.txt` gitignored; content gat
 
 ---
 
+## Post-Execution Report (2026-09-07)
+
+**Status: implemented, Phases A–C GREEN. Content gate next.**
+
+- **Phase A (map + gitignore):** committed `c4a0674`. `.gitignore` += `finale.txt`; coverage-map
+  checkpoint-04 amended (requires += `for-loop`; practices += the 23-concept substrate,
+  `def-function` omitted). Acceptance: pytest 364 pass, prereq + coverage PASS, ci-local ALL GREEN
+  with the amendment alone (empty checkpoint dir).
+- **Phase B (content):** `checkpoint.ipynb` (17 cells: title + 8 `## Question N` + 8 EMPTY student
+  cells; Q8 bug in a non-executable markdown fence; no `input()`; no leaked solutions; unique 8-hex
+  ids), `teacher-notes.md` (six ordered headings incl. `## Grading` — 40 pts, 5/question, rubric
+  denies credit for out-of-scope tools `max`/`len`/`.split`/`.get`; RUN-IN-ORDER + FileNotFoundError
+  note), `solutions.ipynb` (blind-authored, 16 cells, 7 non-vacuous assert cells — Q3 writes,
+  Q4 verifies `loaded == [40,90,20]`, Q5 `loaded[0] == 90`, Q2 `hero.health == 13`), `manifest.yaml`
+  map-equal. Solutions authored by a SEPARATE blind codex session (read only `checkpoint.ipynb`).
+- **Phase C (verification, clean-slate):** `rm -f finale.txt` then authoritative checks — exec-solutions
+  PASS (Q3 creates `finale.txt`, Q4 reads it), manifest/structure/noexec/hygiene/cell-lint PASS,
+  scanner scoped to cp-04 shows ONLY the `def-function` false-positive (documented blind spot; gate
+  adjudicated it homes to `methods`/`init-method`), `finale.txt` gitignored (no git noise), full
+  `ci-local.sh` **ALL GREEN** (exit 0), pre-merge-guard OK.
+
+---
+
 ## Plan Review
 
 ### Review 1 — [self] (2026-09-07)
