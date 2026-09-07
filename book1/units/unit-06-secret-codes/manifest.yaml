@@ -1,0 +1,10 @@
+id: unit-06-secret-codes
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [string-index, string-slice, string-methods, in-operator]
+  requires: [for-loop, string-concat, def-function, parameters, return-value]
+  practices: [f-string, accumulator, if-statement, loop-counter, print, variable, comparison,
+              arithmetic, range-function, int-type, input, elif-else, error-messages, nested-loops, boolean, string-literal]
