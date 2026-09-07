@@ -141,13 +141,11 @@ entries:
   introduces: []
   requires: [class-def, init-method, attributes, methods, file-read, file-write,
              dict-literal, list-literal, def-function]
-  practices: [run-program, error-messages, print, comment, input, string-literal, f-string,
-              string-concat, string-index, string-slice, string-methods, in-operator,
-              variable, naming, int-type, float-type, arithmetic, type-conversion, boolean,
-              comparison, logical-ops, if-statement, elif-else, conditional-nesting,
-              while-loop, break-statement, for-loop, range-function, loop-counter,
-              accumulator, nested-loops, import-statement, random-module,
-              def-function, parameters, return-value, scope, list-literal, list-index,
-              list-append, list-loop, list-sort, builtin-functions, dict-literal,
-              dict-access, dict-loop, file-read, file-write, with-statement,
-              class-def, init-method, attributes, methods]
+  practices: [run-program, print, comment, input, string-literal, f-string,
+              string-concat, string-methods, in-operator, variable, naming, int-type,
+              arithmetic, type-conversion, boolean, comparison, if-statement, elif-else,
+              conditional-nesting, while-loop, break-statement, for-loop, loop-counter,
+              accumulator, import-statement, random-module, def-function, parameters,
+              return-value, scope, list-literal, list-index, list-append, list-loop,
+              builtin-functions, dict-literal, dict-access, file-read, file-write,
+              with-statement, class-def, init-method, attributes, methods]
