@@ -203,6 +203,14 @@ All round-1 findings applied; the project-01 substrate amendment verified green 
   4. `[FIXED]` (glm nit) Phase C blueprint union not updated with the amended practices; Phase C solutions line still said "scripted choices replace input" → both corrected.
   5. `[FIXED]` (fable/glm nit) `variable` unit-01 attribution.
 
+### Round 3 (2026-09-06)
+- **[sol]**: APPROVE — the headless no-input design, Phase C union, and out-of-scope all internally consistent.
+- **[glm]**: APPROVE — all five verified against HEAD; no remaining contradiction.
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE (round 3) · `[glm]` APPROVE (round 3) · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **gate PASSED; approval to implement.**
+
 ## Content Review
 
 (pre-PR gate findings land here.)
