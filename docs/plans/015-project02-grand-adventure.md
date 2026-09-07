@@ -208,12 +208,16 @@ gitignored; plan-review + content-review 4-way consensus.
   `exits` (composite `"room direction"` keys) / `room_items`, no nesting), `teacher-notes.md` (six
   headings incl. `## Rubric`), `solutions.ipynb` (blind-authored; headless + input-free; `seed(4)`
   first cell; single `Hero` class; parameterized `describe`/`move`/`apply_event`; scripted
-  `["east","north","east","q"]` driver — "north" from forest exercises the missing-exit branch live;
-  14 non-vacuous asserts across 3 cells), `manifest.yaml` map-equal (post-trim).
-- **Maintainer fixes over the blind output (closure):** the blind solution + brief both read with
-  `readlines()` (untaught — unit-09 teaches `for line in f`) and the brief sliced `saved_lines[2:]`
-  (untaught list-slice). Both rewritten to the taught `for line in f` + line-counter idiom. The
-  14 asserts were split into 3 cells (structure-check requires ≥3 non-vacuous assert cells).
+  `["east","west","east","east","q"]` driver; 15 non-vacuous asserts across 3 cells),
+  `manifest.yaml` map-equal (post-trim). The `move` missing-exit branch is pinned by a direct
+  `move(exits,"cave","north") == "cave"` assert (the all-valid scripted path does not walk it live —
+  acceptable per spec).
+- **Maintainer fixes over the blind output (closure):** the brief sliced `saved_lines[2:]` (untaught
+  list-slice) and both notebooks read with `readlines()` (untaught — unit-09 teaches `for line in f`).
+  A first patch was CLOBBERED by the solution subagent's later write (it was still running when I
+  patched); the content gate re-caught `readlines()` in the committed solution + brief prose and it
+  was fixed for real to `for saved_line in save_file:` + a line-counter (see Content Review). Asserts
+  sit in 3 cells (structure-check requires ≥3 non-vacuous assert cells).
 - **Phase C (verification, clean-slate + SUBSTRATE RECONCILIATION):** `rm -f adventure_save.txt` then
   exec-solutions PASS (create-before-read), structure/manifest/hygiene/cell-lint PASS. ONE-CLASS AST
   check: only `ClassDef` is `Hero`. Scanner scoped to project-02: clean (no used-but-unlisted).
@@ -232,19 +236,50 @@ gitignored; plan-review + content-review 4-way consensus.
 Roster + tags per the plan-review gate; findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`; all `[OPEN]`
 resolve before merge.
 
-### Review 1 — [self] (2026-09-07) → APPROVE
+### Review 1 — [self] (2026-09-07) → APPROVE (corrected to the committed version)
 Blind-audited all 4 milestones against the reference. Runs headless + input-free (verified: no
 `input()`, `seed(4)` first cell, exec-solutions PASS clean-slate). Single `Hero` class; FLAT
-single-subscript dicts (no nested `][`); `move` pins BOTH branches (valid exit → next room, missing
-exit → stay — and the scripted "north" exercises the miss live); the seeded event helper pins BOTH
-outcomes (roll 1 → health 15, roll 6 → health 20) plus the actual `event_roll == 2`; save round-trip
-pinned by INDEX + `len` primary (`loaded_items[0]`, `len ==`) plus whole-list secondary. Closure
-clean AFTER the maintainer fixes (readlines→`for line in f`; no list-slice). `builtin-functions`
-(`len`) used legitimately (allowed here). Substrate reconciled: map == manifest == the 44 concepts
-actually used. Path traced: cave →east→ forest (pick up sword) →north→ (missing exit, stay; sword
-already held) →east→ river (pick up shield) →q→ quit; final inventory `["sword", "shield"]`
-(`len == 2`, `[0] == "sword"`), health 20 − 5 = 15 after the seeded trap (roll 2). All asserts
-consistent; exec-solutions PASS confirms.
+single-subscript dicts (no nested `][`); `move` pins BOTH branches (valid exit → next room via
+`move(exits,"cave","east") == "forest"`; missing exit → stay via `move(exits,"cave","north") ==
+"cave"`); the seeded event helper pins BOTH outcomes (roll 1 → damage → health 17, roll 6 → no
+damage → health 20) plus the actual `roll == 2`; save round-trip pinned by INDEX + `len` primary
+(`loaded_items[0]`, `len ==`) plus whole-list secondary. `builtin-functions` (`len`) used
+legitimately (allowed here). Substrate reconciled: map == manifest == the 44 concepts actually used.
+Path traced: cave →east→ forest (pick up sword) →west→ cave →east→ forest (sword already held) →east→
+river (pick up shield) →q→ quit; final inventory `["sword", "shield"]` (`len == 2`, `[0] == "sword"`),
+health 20 − 3 = 17 after the seeded trap (roll 2). All 15 asserts consistent; exec-solutions PASS
+confirms. (Closure clean only AFTER the content-gate `readlines()` fix — see below.)
+
+### Reviews 2–4 — [fable] / [glm] / [sol] (2026-09-07) → REJECT (unanimous, one blocker), reconciled
+All three externals blind-built the 4 milestones, confirmed the reference correct, and verified:
+input-free CI-safety (`seed(4)` literal first cell, `randint` only), exactly one `Hero` ClassDef,
+flat single-subscript world (no nested dicts), asserts non-vacuous (fable ran 12 mutations, glm/sol
+their own — move both branches, event both outcomes + seeded roll, save round-trip all fail under
+mutation), manifest == the trimmed map entry token-for-token (all 44 practices used, all 9 trims
+confirmed unused), teacher-notes six headings incl. `## Rubric` (4×25 = 100), brief Make-it-yours +
+Requirements checklist. ONE shared blocker + minor items:
+- **[FIXED] BLOCKER (all three) — `readlines()` untaught API** in `solutions.ipynb` save-and-load
+  cell AND `brief.ipynb` M4 prose. unit-09 teaches only `for line in f`; plan-015 + plan-012 forbid
+  it. (My earlier fix was clobbered by the solution subagent's still-running later write — the gate
+  re-caught it.) → solution now `for saved_line in save_file:` + line-counter; brief prose reworded
+  to "loops over the file line by line (`for saved_line in save_file:`)". Re-verified: no `readlines`
+  anywhere, exec-solutions PASS clean-slate.
+- **[FIXED] Should (fable-3) — `x not in y` composed syntax** never shown in units 01–10 → added a
+  one-line reading gloss in the brief M3 ("`item not in hero.inventory` is the opposite of `in`").
+- **[FIXED] Nice (glm) — solution M1 never instantiates/prints a hero** → added a demo
+  `hero = Hero("Ada")` + stat prints to the M1 cell (the driver re-creates `hero` fresh, no state
+  bleed).
+- **[FIXED] Nice (fable-5) — placeholder-free f-strings in the brief** (`f"Name your hero: "` etc.)
+  → dropped the `f` prefix.
+- **[FIXED] Should (fable-4/glm) — stale post-exec/[self] narrative** (claimed path `east/north/east/q`,
+  health 15, 14 asserts) → corrected to the committed reality (`east/west/east/east/q`, `take_damage(3)`
+  → health 17, 15 asserts; missing-exit branch pinned by the direct `move(...,"north")` assert).
+
+### Content-gate resolutions + re-verify (2026-09-07)
+Batch over `solutions.ipynb` (readlines→`for line in f`; M1 demo prints), `brief.ipynb` (M4 prose
+reword; M3 `not in` gloss; f-prefix cleanup), and this plan (narrative correction). Re-verified
+clean-slate: no `readlines` anywhere; exec-solutions PASS; structure/manifest/hygiene/cell-lint/
+coverage PASS; one `ClassDef` (`Hero`). Round-2 content re-review dispatched.
 
 ---
 
