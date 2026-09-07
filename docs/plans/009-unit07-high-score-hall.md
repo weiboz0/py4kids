@@ -266,3 +266,47 @@ data model coherent. In-memory prereq/coverage checks PASS (31-concept union).
 - All round-2 nits are Phase-B authoring specs (re-sort after append; position vs place framing;
   input-prose + illustrative-name acknowledgments) — staged, not plan blockers.
 - **Gate PASSED. Proceeding to Phase A (map amendment) → Phase B (content) → Phase C.**
+
+## Content Review
+
+### Review 1 — [self] (2026-09-06)
+APPROVE. Traced every exercise + solution: all 18 asserts correct (Ex4 total=2400/avg=800.0;
+Ex7 `scores[0]==champion`; Ex9 dup-guard both branches; Challenge2 merged board
+`[1500,1310,1200,1050,990,700]`). Closure clean (scoped AST scanner: no used-but-unlisted, no
+untaught methods; only `.append`/`.sort`/index/loop/len/max/min). Pedagogy honors all round-2
+gate nits: "Entry #N" (unsorted, L1) vs "Place N" (sorted, L2); `.sort()` mutates-in-place with
+explicit unit-06 rebuild contrast; `add_score` re-sorts to keep the hall ranked; the scalar
+`winner` name flagged as illustrative, not score-linked (dicts → unit 08); `input()` only in
+Ex7's prompt, never an executable cell; IndexError traceback beat. ci-local ALL GREEN
+(lessons not executed by CI, so the deliberate `scores[len(scores)]` bug cell is safe; solution
+logic mirrors the lesson and IS executed with asserts).
+
+### Review 2 — [fable] (2026-09-06)
+APPROVE WITH NITS. Blind-solved all 9 exercises + 2 challenges, matched every reference solution;
+all asserts correct + non-vacuous; grep-confirmed no untaught construct; no stored outputs / no
+executed input(). Nits (to fix in the batch after [sol] returns):
+- `[OPEN→pending]` N1: Challenge 2 initial list mismatch — exercises.ipynb states
+  `scores = [1200, 990, 1500]` (genuinely unranked, fits "arrival-order"), solutions uses
+  `[1500, 1200, 990]` (already descending, undercuts the framing). Align the SOLUTION to the
+  statement's `[1200, 990, 1500]` (final assert holds either way — sort is order-invariant).
+- `[OPEN→pending]` N2: `.sort()` returns `None` lives only in teacher-notes; add one sentence to
+  the L2 lesson body naming the `None` return (hardens the most common list bug).
+- Observation (no action): Ex3 is print-only, so no assert is fine.
+- Affirmed: hook-first both lessons; Entry #N vs Place N kept rigorously straight; single-list
+  model coherent; correctness spot-checks all pass.
+
+### Review 3 — [glm] (2026-09-06)
+APPROVE WITH NITS. Executed all three notebooks cell-by-cell, hand-traced every assert/merge/tier.
+Closure clean (only taught constructs; the scanned `and`/`or`/`is` tokens are inside f-strings,
+not operators). Findings:
+- `[OPEN→pending]` F1: same Challenge-2 initial-list mismatch as fable N1 → align solution to
+  `[1200, 990, 1500]`.
+- `[OPEN→pending]` F2 (IMPORTANT): Ex7 assert `scores[0] == champion` (1500) is WEAK — it passes
+  even if the re-sort is forgotten (sample new score 1310 < 1500 stays out of index 0), so it
+  can't catch the unit's headline "forgot to re-sort" mistake. Strengthen to
+  `assert scores[1] == 1310` (the pattern Ex9 already uses).
+- `[WONTFIX]` F3: the L2 membership-guard demo shows only the "already present" branch (valid — it
+  demonstrates the guard catching a duplicate); Ex9 exercises both branches. Justified WONTFIX.
+- `[WONTFIX]` F4: traceback wording ("leave it unrun" vs "read together") matches the intended
+  live flow (teacher runs the bug cell aloud after predictions). Justified WONTFIX.
+- Affirmed: no closure/correctness/pedagogy blockers; manifest == map exactly.
