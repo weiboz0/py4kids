@@ -98,10 +98,12 @@ entries:
   title: "Checkpoint 3 — Data Wrangler"
   lessons: 0.5
   introduces: []
-  requires: [list-literal, dict-literal, string-index]
+  requires: [list-literal, dict-literal, string-index, for-loop]
   practices: [string-index, string-slice, string-methods, in-operator, list-literal,
               list-index, list-append, list-loop, list-sort, builtin-functions,
-              dict-literal, dict-access, dict-loop]
+              dict-literal, dict-access, dict-loop, for-loop, print, variable, f-string,
+              string-literal, if-statement, boolean, accumulator, arithmetic, int-type,
+              elif-else, error-messages]
 - id: unit-09-save-point
   kind: unit
   title: "Save Point — files that remember"

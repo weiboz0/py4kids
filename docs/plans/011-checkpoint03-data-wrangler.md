@@ -1,0 +1,290 @@
+# Plan 011 — Checkpoint 03 Data Wrangler Implementation Plan
+
+**Goal:** Ship `checkpoint-03-data-wrangler` — Term 3's assessment — where students demonstrate
+the term's data-handling skills: string surgery (index/slice/methods/membership, unit 06), lists
+(build/index/append/loop/sort/builtins, unit 07), and dictionaries (build/lookup/`.get`/`.items`
+walk, unit 08). No new concepts; a comprehensive, self-contained checkpoint.
+
+**Architecture:** Standard checkpoint pipeline (plan 005/006), no new tooling. ONE map amendment
+lands UP FRONT (the standing substrate audit, validated with the AST concept-scanner): the
+checkpoint entry lists only the 13 term-3 HEADLINE concepts and omits the substrate the questions
+use — `print`/`variable`/`f-string`/`string-literal` (display), `if-statement`/`elif-else`/
+`boolean` (conditionals + membership predicates; all conditions are `in`-membership, never `==`,
+so `comparison` is NOT used and NOT listed), `for-loop` (list/dict loops),
+`accumulator`/`arithmetic`/`int-type` (totals + the word counter), and `error-messages` (the
+fix-the-bug beat). All taught by units 01–08; verified green in scratch. This mirrors the
+checkpoint-02 substrate amendment (plan 006).
+
+**Spec:** `book1/curriculum/coverage-map.yaml` (binding, amended); plan 005/006 checkpoint
+conventions; D-001.
+
+## Global Constraints
+
+- Checkpoint conventions (plan 005/006): `checkpoint.ipynb` has `## Question N` headings (6–8,
+  sequential, unique), each followed by an EMPTY student code cell; any broken/"fix this" snippet
+  lives in a MARKDOWN fence (never an executable code cell); NO stretch tags; NO solutions in the
+  checkpoint. `solutions.ipynb` mirrors `## Question N`, runs top-to-bottom clean and input-free
+  with non-vacuous asserts (no tautologies). `teacher-notes.md` carries SIX headings: Goals,
+  Pacing, Common mistakes, Discussion prompts, Differentiation, **Grading**. Checkpoint dir prefix
+  `checkpoint-03-`. Manifest map-equal.
+- Coverage-map amendment (EXACTLY this, pre-audited + scanner-validated green):
+  - append to `checkpoint-03-data-wrangler.requires` — `for-loop`.
+  - append to `checkpoint-03-data-wrangler.practices` — `for-loop, print, variable, f-string,
+    string-literal, if-statement, boolean, accumulator, arithmetic, int-type, elif-else,
+    error-messages` (`for-loop` in BOTH requires and practices, matching shipped cp-02 — students
+    actively WRITE loops in Q4/Q7; fable plan-review).
+  - **`comparison` is deliberately NOT listed** (fable plan-review): no question uses `==`/`<`/`>`;
+    all conditionals are MEMBERSHIP (`in`, already listed). Q6/Q7 use `if <key> in <dict>:`, never a
+    `== sentinel` compare — matching the taught unit-08 `.get`/`in` idiom. The Phase-C scanner is
+    the backstop for any stray `==`.
+  - All introduced by units 01–08; `checkpoint-only-taught` holds. Apply surgically (no YAML
+    round-trip). Manifest carries the amended lists.
+- **Pre-gate closure self-check (standing from plans 008–010):** run the AST concept-scanner
+  scoped to checkpoint-03 and confirm ZERO used-but-unlisted concepts AND zero untaught methods
+  before dispatching the `[sol]` content review.
+- **Closure (binding):** questions use ONLY concepts taught through unit 08. String methods stay
+  in the taught subset `upper/lower/strip/replace` (NO `.split()`). Lists use only
+  `.append`/`.sort` + `len`/`max`/`min` (NO `.pop`/`.insert`/`.remove`/`.index`/`sorted()`).
+  Dicts use only `[]`/`.get`/`.items` (NO `.pop`/`.update`/`.setdefault`/`.keys`/`.values`). NO
+  files/classes (units 09/10), NO nested loops, NO comprehensions, NO sets. Word-counting
+  iterates a GIVEN word list, never a split sentence.
+- **Assessment scope (binding):** the checkpoint assesses ONLY skills taught in units 06–08 (with
+  their substrate). No question introduces anything new or requires an out-of-budget construct.
+- **Self-contained questions (binding, fable/glm plan-review):** every question RESTATES its own
+  data in its own cell (e.g. Q4/Q5 restate `scores = [88, 92, 75, 100]` rather than relying on the
+  list Q3 built and mutated). No question depends on kernel state left by an earlier cell, so
+  each is order-independent and gradable in isolation. Solutions likewise restate data per
+  question. (Q5's in-place `.sort` therefore mutates only its own local list.)
+- **Input discipline:** the checkpoint + solutions are input-free (a checkpoint is worked in
+  class); NO `input()` anywhere, including question prompts (unlike units, a checkpoint has no
+  "type your…" beat — all data is given).
+- Process (standing): no commits while a `[sol]` review is in flight; codex prompts name the
+  in-process execution fallback and avoid bare CLI-flag-like tokens.
+
+## Out of scope
+
+Checkpoint plan → Phase C is the mandatory named verification phase. Out of scope: units 09+
+(later plans); the latent practice-completeness hygiene PR + scanner promotion (tracked
+separately); PDF handouts; any map edit beyond the Phase-A substrate amendment; files/classes.
+
+## Phases
+
+Dispatch per AGENTS.md: checkpoint question STATEMENTS via codex; solutions via a SEPARATE blind
+codex session; teacher notes inline; map amendment + manifest inline.
+
+### Phase A — map amendment + manifest (inline)
+
+1. Amend `coverage-map.yaml` per Global Constraints (surgical, requires + practices); full suite
+   green with the amendment alone before content.
+2. `book1/checkpoints/checkpoint-03-data-wrangler/manifest.yaml`, map-equal to the amended entry;
+   lands with the complete directory in Phase B.
+- **Acceptance (Phase A):** the map amendment ALONE is green (`uv run pytest -q` + `ci-local`)
+  before any checkpoint directory exists.
+
+### Phase B — checkpoint-03-data-wrangler content (8 questions)
+
+Blueprint (requires list-literal, dict-literal, string-index, for-loop; practices = the 13
+term-3 headline concepts + amended for-loop/print/variable/f-string/string-literal/if-statement/boolean/
+accumulator/arithmetic/int-type/elif-else/error-messages):
+- Title: `# Checkpoint 3 — Data Wrangler`. A short framing line (a "data wrangler" tidies and
+  summarizes messy data — show what you have learned this term).
+- **Q1 — string surgery (string-index, string-slice, string-literal):** given `word = "wizardry"`,
+  grab the first char `word[0]`, the last `word[-1]`, a slice `word[2:5]`, and the reverse
+  `word[::-1]`; print each in an f-string.
+- **Q2 — clean and search text (string-methods, in-operator, boolean):** given
+  `phrase = "  Hello, Data World!  "`, produce a stripped lowercase version with `.strip().lower()`
+  and a `.replace(",", "")`; print whether `"data"` is `in` the cleaned phrase (a True/False value).
+- **Q3 — build a list (list-literal, list-index, list-append, int-type):** start
+  `scores = [88, 92, 75]`, append `100`, then print the first and last scores.
+- **Q4 — measure a list (list-loop, for-loop, builtin-functions, accumulator, arithmetic):** loop
+  the scores printing each; then print `len`, `max` (top), `min` (low), and a `total` accumulated
+  in a loop (integers only — no average, so no float).
+- **Q5 — rank a list (list-sort, boolean, list-index):** sort a copy-free `scores` list
+  `.sort(reverse=True)` (in place) and print the top three by index 0/1/2.
+- **Q6 — a price book (dict-literal, dict-access, in-operator, if-statement, elif-else, boolean):**
+  build `prices = {"apple": 3, "pear": 2, "plum": 4}`; look up `prices["pear"]`; use `.get("fig", 0)`
+  for a missing key; print whether `"apple" in prices` (a True/False value); then a 3-way
+  MEMBERSHIP branch homes a REAL `elif` (no `comparison` — fable/glm plan-review):
+  `if "plum" in prices: print(prices["plum"])  elif "pear" in prices: print(prices["pear"])
+  else: print("sold out")`.
+- **Q7 — count words (dict-loop, dict-access, in-operator, if-statement, elif-else, accumulator,
+  arithmetic, int-type):** given `words = ["cat","dog","cat","bird","cat"]`, build `counts = {}`
+  with ONE loop (`if word in counts: counts[word] = counts[word] + 1  else: counts[word] = 1`),
+  then print each `word` and `count` with `.items()`.
+- **Q8 — fix the bug (error-messages, dict-access):** a MARKDOWN fence shows a crashing snippet
+  `prices = {"apple": 3}` then `print(prices["fig"])` raising a KeyError; the student rewrites it in
+  the code cell using `.get("fig", 0)` so it prints safely. The question names the traceback's
+  final line (`KeyError: 'fig'`) as the clue.
+- Solutions: mirror `## Question N`, execute headless + input-free, non-vacuous asserts — e.g.
+  `word[::-1] == "yrdraziw"`; `"data" in cleaned`; `len(scores) == 4` after append; `total == 355`;
+  `scores[0] == max(...)` after reverse-sort; `prices.get("fig", 0) == 0`; `counts["cat"] == 3`;
+  the Q8 safe result `prices.get("fig", 0) == 0`.
+- Teacher notes: SIX headings incl. `## Grading` — per-question point allocation, what full credit
+  looks like, and common partial-credit cases; **35–40 min pacing** (checkpoint is 0.5 lesson;
+  Q4/Q7 are multi-step write-from-scratch — cp-02 allots 35–45 min, fable/glm plan-review); a
+  "run cells top-to-bottom / each question is self-contained" note; common mistakes (off-by-one
+  slice bounds; `.sort()` returns None; KeyError vs `.get`; counting the dict instead of the word
+  list); differentiation (a struggling student may skip Q5/Q8).
+
+### Phase C — Verification (NAMED, mandatory)
+
+Mechanical: full pytest green; `ci-local.sh` ALL GREEN; AST concept-scanner scoped to
+checkpoint-03 clean (zero used-but-unlisted, zero untaught methods) BEFORE the content gate;
+solutions execute with non-vacuous asserts; manifest map-equal; checkpoint checks pass
+(sequential-unique `## Question N`, no stretch, broken snippets in markdown only).
+Reviewer duties: blind-solve every question; cumulative closure (only ≤unit-08 concepts — NO
+`.split()`, NO files/classes, NO untaught list/dict methods, NO nested loops — check explicitly);
+each question is solvable and its reference correct; asserts non-vacuous; grading rubric usable +
+point allocation sums sensibly; timing (30 min); no `input()` anywhere; assesses only taught
+skills (nothing un-taught assessed — the checkpoint discipline).
+
+**Acceptance criteria:** the checkpoint directory complete; `uv run pytest -q` green; ci-local ALL
+GREEN; concept-scanner clean; content gate 4-way consensus.
+
+---
+
+## Plan Review
+
+### Review 1 — [self] (2026-09-07)
+APPROVE. Substrate amendment pre-audited from the 8-question design + scanner-validated green
+(prereq/practice/reference/schema/checkpoint/introduction curriculum checks). Design honors:
+checkpoint conventions (`## Question N`, empty student cells, broken snippets in markdown, no
+stretch, six teacher-notes headings incl. Grading); cumulative closure (only ≤unit-08 — `.split()`
+forbidden, only taught list/dict methods, no files/classes/nested-loops); input-free throughout
+(no `input()` even in prompts — a checkpoint gives all data). Verified each amended concept has a
+home: print/variable/f-string/string-literal (all Qs), if-statement/boolean (Q2/Q6),
+elif-else (Q6/Q7 else), for-loop/accumulator/arithmetic/int-type (Q4/Q7), error-messages (Q8).
+`practices ∩ requires`-only concept `for-loop` moved to requires (load-bearing, mirrors cp-02).
+
+### Review 2 — [fable] (2026-09-07)
+APPROVE WITH NITS → all addressed (revised in place before commit):
+1. `[FIXED]` (Primary) `comparison` risk — Q6/Q7 conditionals PINNED to `in`-membership (never
+   `==`); Q6 now a 3-way membership `elif`; `comparison` explicitly NOT listed; scanner backstop.
+2. `[FIXED]` (Minor) `elif-else` half-exercised — Q6 now has a REAL membership `elif` (no comparison).
+3. `[FIXED]` (Minor) `for-loop` in requires only — added to practices too (mirrors cp-02).
+4. `[FIXED]` (Minor) 30-min budget optimistic — widened to 35–40 min in teacher-notes.
+5. `[FIXED]` (Low) shared mutable `scores` — Self-contained-questions constraint: every question
+   restates its own data (order-independent).
+- fable affirmed: closure sound (every construct taught ≤unit-08, verbatim in several cases);
+  conventions match cp-02; no over-listing; asserts numerically correct.
+
+### Review 3 — [glm] (2026-09-07)
+APPROVE WITH NITS → all addressed:
+- `[FIXED]` NIT-1 elif-else half-exercised — real membership elif in Q6 (same fix as fable #2).
+- `[FIXED]` NIT-2 shared `scores` across Q3–Q5 — self-contained restated data per question.
+- `[FIXED]` NIT-3 for-loop in practices — added.
+- `[FIXED]` NIT-4 stale `comparison` in Architecture prose — removed.
+- glm affirmed: closure PASS (no used-but-unlisted), closure-safety PASS (no .split/untaught
+  methods/files/classes/nested-loops), conventions PASS, assessment quality PASS.
+
+### Round 2 revisions (2026-09-07)
+Amendment now: requires += `for-loop`; practices += `for-loop, print, variable, f-string,
+string-literal, if-statement, boolean, accumulator, arithmetic, int-type, elif-else,
+error-messages`. Q6 = 3-way membership elif (homes elif-else, no comparison). Every question
+restates its data. Pacing 35–40 min. Re-validated green; Q6 re-smoke-tested (elif-else present,
+comparison absent). Awaiting [sol].
+
+### Review 4 — [sol] (2026-09-07)
+APPROVE WITH NITS. Full beat-by-beat mapping of all 8 questions → every concept homed, no
+used-but-unlisted, no over-listing, no untaught leak (strings ≤4-method subset, lists .append/.sort
++ len/max/min, dicts []/.get/.items, no .split/files/classes/nested-loops). Q6/Q7 conditions use
+MEMBERSHIP not comparison (the `==` at solution asserts are exempt scaffolding). Scratch
+prereq-check + coverage-check PASS.
+- `[FIXED]` NIT: Phase-B "practices" summary omitted `for-loop` (stale prose) — added.
+
+## Plan Gate — CONSENSUS REACHED (2026-09-07)
+- `[self]` APPROVE · `[fable]` APPROVE WITH NITS · `[glm]` APPROVE WITH NITS · `[sol]` APPROVE WITH NITS.
+- All nits resolved (elif-else real membership elif; self-contained data; for-loop in practices;
+  comparison-prose removed; 35–40 min pacing; Phase-B summary). No open blockers; no REJECT.
+- **Gate PASSED. Proceeding to Phase A → Phase B → Phase C.**
+
+## Content Review
+
+### Review 1 — [self] (2026-09-07)
+APPROVE. Traced every question + solution: all 8 asserts correct + non-vacuous (Q1 `word[::-1]==
+"yrdraziw"`, Q2 `cleaned=="hello data world!"`, Q3 `len==4`, Q4 `total==355`, Q5 `scores[0]==100`
+after reverse-sort, Q6 `.get("fig",0)==0`, Q7 `counts["cat"]==3`, Q8 safe `0`). Closure clean
+(scoped scanner OK: taught-only constructs; Q6 3-way MEMBERSHIP elif — no comparison; no .split/
+untaught methods/files/classes/nested-loops). Conventions: 8 sequential `## Question N`, empty
+student cells, Q8 KeyError snippet in a MARKDOWN fence, no stretch/input/outputs, self-contained
+data per question, solutions mirror headings. ci-local ALL GREEN.
+
+### Review 2 — [fable] (2026-09-07)
+APPROVE WITH NITS. Blind-solved all 8, executed every solution cell, all 8 asserts pass with the
+exact prompt values. Closure verified against unit sources (Q1 slices/reverse-step, Q2 chained
+methods, Q5 `reverse=True`, Q7 counter + `.items()` unpack all taught ≤unit-08); membership-only
+conditionals; input-free; no .split/files/classes/nested-loops. Conventions all pass. Nits:
+- `[WONTFIX]` N1: solution asserts use `==` — exempt CI scaffolding, not student answer logic
+  (comparison is unit-02-taught; the scanner exempts asserts).
+- `[candidate]` N2: some asserts are narrow spot-checks (Q3 len only; Q6 `.get` only, not the
+  3-way branch) — optional strengthening.
+- `[WONTFIX]` N3: questions are heavily scaffolded (transcription-leaning) — appropriate difficulty
+  for a 35–40 min term checkpoint at this level.
+
+### Review 3 — [glm] (2026-09-07)
+APPROVE WITH NITS. Blind-solved all 8 (outputs tabulated + executed), closure clean (verified vs
+unit 06–08 sources; membership-only conditionals; `==` only in exempt asserts), all 8 asserts
+non-vacuous, conventions PASS (Q8 fence, 6 teacher-notes headings, Grading sums to 40, map-equal
+manifest, exec-solutions PASS). Nits (all teacher-notes Grading wording — batch-fix after [sol]):
+- `[candidate]` glm-1: Q6 Grading "`== 0` comparison still works — full credit" aside is unclear +
+  endorses the excluded comparison idiom — reword/drop.
+- `[candidate]` glm-2: Q8 Grading credits "name the error as KeyError" but the statement already
+  supplies it — fold into the safe-`.get` credit.
+- `[candidate]` glm-3: note that Q6's `elif`/`else` credit requires the VISIBLE branches (they're
+  unreachable at runtime since plum+pear are both present).
+
+### Review 4 — [sol] (2026-09-07)
+REJECT → resolved. sol confirmed closure clean, all 8 blind-solved + correct, all asserts
+non-vacuous, conventions pass, no input(), Q8 fence markdown-only. Sole REJECT reason: two
+teacher-notes GRADING concessions that endorsed UNTAUGHT tools:
+- `[FIXED]` sol-1: Q4 rubric awarded the total point for `sum()` (not taught) — now requires the
+  accumulator LOOP; `sum()` earns nothing.
+- `[FIXED]` sol-2: Q6 rubric granted full credit for a `.get(...) == 0` comparison (membership-only
+  design; comparison not in the union) — now requires the `in` membership branch (= glm-1).
+
+### Batch fix (2026-09-07)
+Teacher-notes Grading corrected: `[FIXED]` Q4 sum()-concession removed (sol-1); `[FIXED]` Q6
+==-concession removed + visible-branch note (sol-2/glm-1/glm-3); `[FIXED]` Q8 error-naming folded
+into the `.get` credit (glm-2). `[FIXED]` Q3 solution assert strengthened to check `scores[0]==88
+and scores[-1]==100` (fable-N2). WONTFIX: asserts-use-`==` (exempt scaffolding, fable-N1);
+scaffolded-questions (appropriate for a term checkpoint, fable-N3). Scanner clean; ci-local ALL
+GREEN. Re-dispatching focused [sol] re-check.
+
+
+## Content Gate — CONSENSUS REACHED (2026-09-07)
+- `[self]` APPROVE · `[fable]` APPROVE WITH NITS (fixed) · `[glm]` APPROVE WITH NITS (fixed) ·
+  `[sol]` APPROVE (re-check — the two Grading concessions to untaught tools removed & re-confirmed).
+- All `[OPEN]` findings resolved; WONTFIX items justified. Scanner clean; ci-local ALL GREEN.
+- **Gate PASSED. Shipping PR #11.**
+
+## Post-Execution Report (2026-09-07)
+
+**Shipped:** `checkpoint-03-data-wrangler` — Term 3's assessment (strings/lists/dicts, units 06–08).
+
+**What was built:**
+- `checkpoint.ipynb`: 8 self-contained questions (Q1-2 strings, Q3-5 lists, Q6-8 dicts), empty
+  student cells, Q8 fix-the-KeyError with the crashing snippet in a markdown fence.
+- `solutions.ipynb`: blind (from the checkpoint alone), input-free, 9 non-vacuous asserts (8 + a
+  strengthened Q3), executes headless clean.
+- `manifest.yaml` (map-equal), `teacher-notes.md` (six headings incl. a per-question Grading rubric
+  summing to 40).
+
+**Verification:** `ci-local.sh` ALL GREEN; AST concept-scanner scoped to checkpoint-03 clean.
+
+**Map amendment (Phase A):** checkpoint-03 `requires` += `for-loop`; `practices` += `for-loop` + 11
+substrate concepts (print/variable/f-string/string-literal/if-statement/boolean/accumulator/
+arithmetic/int-type/elif-else/error-messages). Surgical diff.
+
+**Gates:**
+- Plan-review: consensus ([self] APPROVE; [fable]/[glm]/[sol] APPROVE WITH NITS) — nits (elif-else
+  real membership elif; self-contained per-question data; for-loop in practices; comparison removed;
+  35-40min pacing) all fixed.
+- Content-review: [self] APPROVE, [glm]/[fable] APPROVE WITH NITS, [sol] REJECT→fixed (two Grading
+  concessions to untaught tools — sum()/== — removed; Q8/branch notes; Q3 assert strengthened).
+
+**Key design:** membership-only conditionals (Q6 3-way `in` elif — no comparison); word-count over
+a given list (no .split); `.get`-vs-`[]` habit assessed via Q6/Q8; input-free (a checkpoint gives
+all data).
+
+**Follow-ups (tracked):** hygiene PR for shipped-unit practice gaps + scanner promotion to tools/;
+then plan 012 = unit 09 Save Point (files) — the first Term-4 unit.

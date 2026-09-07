@@ -1,0 +1,13 @@
+id: checkpoint-03-data-wrangler
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+concepts:
+  introduces: []
+  requires: [list-literal, dict-literal, string-index, for-loop]
+  practices: [string-index, string-slice, string-methods, in-operator, list-literal,
+              list-index, list-append, list-loop, list-sort, builtin-functions,
+              dict-literal, dict-access, dict-loop, for-loop, print, variable, f-string,
+              string-literal, if-statement, boolean, accumulator, arithmetic, int-type,
+              elif-else, error-messages]
