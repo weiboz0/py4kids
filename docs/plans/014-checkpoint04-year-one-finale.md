@@ -241,7 +241,20 @@ Batch fix over solutions.ipynb Q6 + Q7 and teacher-notes rubric:
 Re-verified clean-slate: exec-solutions PASS; manifest/structure/noexec/hygiene/cell-lint/coverage/
 prereq PASS; scanner scoped to cp-04 shows ONLY the `def-function` false-positive; all new asserts
 mutation-verified non-vacuous. No new concept introduced (f-string/list-literal/list-append/boolean
-all already in the union). Full `ci-local.sh` re-run + round-2 content re-review to confirm.
+all already in the union). Full `ci-local.sh` re-run: **ALL GREEN** (exit 0), pre-merge-guard OK.
+
+### Content-gate CONSENSUS (2026-09-07) — round-2: 4-way APPROVE, no open findings
+- [self] APPROVE (with the two nits it raised now fixed).
+- [fable] APPROVE — Q6/Q7 fixes verified non-vacuous under the stated mutations; no closure
+  regression; clean-slate solutions run passes end-to-end.
+- [sol] APPROVE — Q6/Q7 mutations raise AssertionError; closure clean; all 8 cells execute from a
+  file-free /dev/shm state (Q4 reads [40,90,20]). (Round-1 Must-Fix Q6 resolved; round-1 file-I/O
+  [OPEN] was sol's own read-only-sandbox artifact — the mandated clean-slate run passed for self,
+  glm, fable, and sol's own /dev/shm fallback.)
+- [glm] APPROVE — all five items confirmed (Q6/Q7 non-vacuity mutation-tested via nbclient; f-string
+  load-bearing; rubric wording cross-checked accurate against unit content; clean-slate exec PASS);
+  G5 accepted WONTFIX. No `[OPEN]` findings remain.
+Content-review gate CLOSED. Proceeding to PR.
 
 
 ## Plan Review
