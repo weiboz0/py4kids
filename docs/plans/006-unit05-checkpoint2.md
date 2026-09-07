@@ -229,6 +229,10 @@ GREEN (incl. the tooling fail-close fixture and amended map); content gate 4-way
 4. `[FIXED]` (Nit) Unit Ex4 solution didn't state the float/whole-number prediction. → solution now says "FLOAT (20.0), because 2.5 is a float".
 - Blind-solve: no checkpoint discrepancies; the two unit divergences (Ex6 blank values, Challenge-2 drawing) both trace to the under-constrained plan prompt, resolved by finding 1.
 
+### Review 5 — [sol] round 2 (2026-09-06)
+- **Verdict**: REJECT — findings 2/3/4 verified fixed; finding 1 partial: the drawing flower was appended AFTER `solutions_l3.py`'s existing `turtle.done()`, which (under real turtle) enters the GUI mainloop and blocks, so the flower would never draw. The fake-turtle `done()` is a no-op, so turtle-check missed it — a genuinely sharp catch.
+1. `[FIXED]` → the flower moved to its own self-contained asset `assets/solutions_challenge2.py` with a single `turtle.done()` as the last statement; solutions_l3.py reverted to the stamp-gallery only. Verified: NO asset has code after `done()` (checked all six), turtle-check PASS, ci-local ALL GREEN. The notebook Challenge-2 stub now points at solutions_challenge2.py.
+
 ## Post-Execution Report
 
 (written before shipping.)
