@@ -43,17 +43,32 @@ false-positive fixed so the whole book scans clean.
     concepts the scanner does not flag; the OOP exemption (subtract user `FunctionDef`/method names
     from untaught-method flagging); accumulator detection (read-modify-write self-reference incl.
     `AugAssign` and attribute targets).
-  - **FIX (required) — class-body `def` is NOT `def-function`:** a `FunctionDef` whose parent is a
-    `ClassDef` is a METHOD (`methods`/`init-method`), never `def-function`. Only MODULE-LEVEL (or
-    nested-in-function) `def` counts as `def-function`. After this fix + workstream A, the scanner
-    must report ZERO gaps across ALL 16 book-1 entries (checkpoint-04 + project-02 + unit-10 no longer
-    false-flag def-function).
-  - The check is BLOCKING (fails ci-local on any high-confidence used-but-unlisted concept). It is
-    necessary-not-sufficient (MANUAL_ONLY concepts stay reviewer-enforced) — document that in the
-    check's help/among the SKIP semantics.
-  - Add pytest coverage: the check passes on the real book; a one-fault fixture (an entry using a
-    concept absent from its union) makes it FAIL; a class-body-only `def` does NOT trigger
-    `def-function`.
+  - **FIX (required) — class-body `def` is NOT `def-function`:** a `FunctionDef` whose IMMEDIATE
+    PARENT is a `ClassDef` is a METHOD (`methods`/`init-method`), never `def-function`. The test is
+    PARENT-BASED, NOT depth-based — a `def` nested inside a METHOD body IS still `def-function` (a
+    `class_depth > 0` suppression would wrongly mask it). Only a module-level `def`, or a `def`
+    nested in a function/method body, counts as `def-function`. After this fix + workstream A, the
+    scanner reports ZERO gaps across ALL 16 book-1 entries (only checkpoint-04's scan OUTCOME
+    changes — unit-10 and project-02 already carry `def-function` in their unions via requires, so
+    they never flagged; fable-7/glm-F4/sol wording).
+  - **`string-literal` from f-string fragments (glm-F2/fable-4):** the scanner counts a `Constant`
+    str inside a `JoinedStr` (an f-string's literal text) as `string-literal` — this is WHY
+    project-01 (which wraps every string in `f"…"`, even placeholder-free) legitimately practices
+    `string-literal`. DOCUMENT this rule in the check's help, and add a test that an f-string-only
+    code cell still flags `string-literal`.
+  - The check is BLOCKING (fails ci-local on any high-confidence used-but-unlisted concept), and is
+    BOOK-LEVEL only (scans all entries like `coverage-check`; no `--unit` selector needed). It is
+    necessary-not-sufficient (MANUAL_ONLY fuzzy concepts stay reviewer-enforced) — document that in
+    the check's help. Wire it into `scripts/ci-local.sh` in the manifest/registry phase (alongside
+    `manifest-check`/`coverage-check`); `ci-local.sh`'s `set -euo pipefail` fails the run closed.
+  - **Constants are book1-coupled (fable-10):** `TAUGHT_METHODS`/`BUILTINS`/`MANUAL_ONLY` encode
+    book-1 assumptions; note in the module that Book 2 will need per-book treatment (out of scope now).
+  - Add pytest coverage: (a) the check PASSES on the real book (all 16 entries clean after
+    workstream A); (b) a one-fault fixture (an entry using a concept absent from its union) FAILS;
+    (c) def-function classification — a class-body-only `def` does NOT flag `def-function` (NEGATIVE),
+    a MODULE-LEVEL `def` DOES (POSITIVE), and a `def` NESTED IN A METHOD body DOES (POSITIVE,
+    guards against the depth-based mistake — sol-9/glm-F4); (d) an f-string-only cell flags
+    `string-literal` (glm-F2).
 - Process (standing): no commits while a `[sol]` review is in flight; codex prompts name the
   in-process execution fallback and avoid bare CLI-flag-like tokens.
 
@@ -118,3 +133,31 @@ retcon. The check is necessary-not-sufficient (MANUAL_ONLY fuzzy concepts stay r
 which the plan states. Phase C is the named verification phase (this is a metadata+tooling plan, no
 new content). The def-function decision on checkpoint-04 is preserved (the fix removes the false
 flag; the manifest is untouched).
+
+### Reviews 2–4 — [fable] / [glm] / [sol] (2026-09-07) → APPROVE WITH NITS (no blockers), reconciled
+All three independently: re-derived the amendment set with the prototype (exactly the five entries ×
+listed concepts, nothing missing/extra), AST-audited genuine usage of each added concept, applied
+all five amendments to a /dev/shm scratch and got `manifest-check`/`coverage-check`/`prereq-check`
+PASS, confirmed checkpoint-04's def-function non-amendment correct (class-body-only defs; plan-014
+precedent), and validated the parent-based scanner fix (sol ran a probe: class-body→`def-function`
+False, module-level→True, nested-in-method→True; all 16 entries clean). NITS, ALL folded into the
+plan's Global Constraints / Phase-B tests:
+- **[FIXED] f-string-fragment rule (glm-F2/fable-4):** project-01's `string-literal` comes from
+  `Constant` str inside `JoinedStr` (it wraps every string in `f"…"`). Documented + a test added
+  (an f-string-only cell flags `string-literal`).
+- **[FIXED] parent-based, not depth-based (fable-8/sol-9/glm-F4):** the fix keys on the IMMEDIATE
+  parent being a `ClassDef`; a `def` nested in a METHOD body is still `def-function`. Tests now
+  require class-body NEGATIVE + module-level POSITIVE + nested-in-method POSITIVE.
+- **[FIXED] commit the prototype (glm-F4/fable-9):** the port starts from a committed
+  `tools/concept_scan.py` (I seed it from the current prototype) rather than an ephemeral `/tmp`
+  path; codex refines in-repo.
+- **[FIXED] wording (fable-7/glm-F4/sol):** only checkpoint-04's scan OUTCOME changes; unit-10 and
+  project-02 already carry `def-function` in their unions, so they never flagged — corrected.
+- **[FIXED] ci-local wiring + scope (glm-F5):** book-level only (no `--unit`), wired in the
+  manifest/registry phase, blocking via `set -euo pipefail`.
+- **[FIXED] book1-coupling note (fable-10):** `TAUGHT_METHODS`/`BUILTINS`/`MANUAL_ONLY` flagged as
+  book-1-scoped for a future Book-2 pass.
+
+### Consensus (2026-09-07)
+[self] APPROVE; [fable]/[glm]/[sol] APPROVE WITH NITS — no `[OPEN]` blockers, all nits folded in
+(above). Plan-review gate CLOSED. Proceeding to implementation.

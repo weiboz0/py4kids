@@ -9,4 +9,5 @@ concepts:
   practices: [for-loop, range-function, while-loop, accumulator, logical-ops,
               conditional-nesting, def-function, parameters, return-value, scope,
               turtle-basics, turtle-drawing, print, variable, comparison, arithmetic,
-              if-statement, elif-else, boolean, int-type, loop-counter, f-string]
+              if-statement, elif-else, boolean, int-type, loop-counter, f-string,
+              string-literal]

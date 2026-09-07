@@ -7,4 +7,4 @@ concepts:
   introduces: [turtle-basics, turtle-drawing, for-loop, range-function, loop-counter,
                nested-loops, float-type]
   requires: [import-statement, variable, arithmetic]
-  practices: [naming, comment, run-program]
+  practices: [naming, comment, run-program, f-string, string-literal]
