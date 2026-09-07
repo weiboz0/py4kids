@@ -9,7 +9,7 @@ Milestones (design 000 §First milestones):
 - [x] Plan 005 — checkpoint 01 + unit 04 Quiz Show; checkpoint pipeline established (shipped 2026-09-06)
 
 ## Book 1 remaining content (each its own plan)
-- [ ] Unit 05 Function Factory + Checkpoint 02 (Loops & Functions)
+- [x] Unit 05 Function Factory + Checkpoint 02 (Loops & Functions) (shipped 2026-09-06)
 - [ ] Project 01 Arcade Night (milestone)
 - [ ] Units 06–08 (Secret Codes, High-Score Hall, Word Wizard) + Checkpoint 03
 - [ ] Units 09–10 (Save Point, Pet Simulator) + Checkpoint 04

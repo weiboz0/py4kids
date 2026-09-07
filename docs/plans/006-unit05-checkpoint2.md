@@ -233,6 +233,23 @@ GREEN (incl. the tooling fail-close fixture and amended map); content gate 4-way
 - **Verdict**: REJECT — findings 2/3/4 verified fixed; finding 1 partial: the drawing flower was appended AFTER `solutions_l3.py`'s existing `turtle.done()`, which (under real turtle) enters the GUI mainloop and blocks, so the flower would never draw. The fake-turtle `done()` is a no-op, so turtle-check missed it — a genuinely sharp catch.
 1. `[FIXED]` → the flower moved to its own self-contained asset `assets/solutions_challenge2.py` with a single `turtle.done()` as the last statement; solutions_l3.py reverted to the stamp-gallery only. Verified: NO asset has code after `done()` (checked all six), turtle-check PASS, ci-local ALL GREEN. The notebook Challenge-2 stub now points at solutions_challenge2.py.
 
-## Post-Execution Report
+### Review 6 — [sol] round 3 (2026-09-06)
+- **Verdict**: APPROVE — flower moved to solutions_challenge2.py with `done()` last; all 7 assets verified clean; notebook stub repointed.
 
-(written before shipping.)
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE (round 3) · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **content gate PASSED; clear to ship.**
+
+## Post-Execution Report (2026-09-06)
+
+**Shipped:** `unit-05-function-factory` (3 lessons introducing def-function, parameters, return-value, scope — functions-first-in-plain-Python then applied to turtle; three lesson + three solution turtle assets) and `checkpoint-02-loops-and-functions` (8 questions over Term 2, blind solutions, `## Grading` notes). Phase A shipped a tooling fail-close (turtle assets now enforced for units that REQUIRE/PRACTICE turtle, not only introduce it; +2 regression fixtures) and the checkpoint-02 substrate map amendment (10 foundational concepts the entry was missing). Final: 279 tests, ci-local ALL GREEN.
+
+**Gate history:** plan gate 3 rounds (all three externals rejected/nit-flagged round 1 — the checkpoint-02 under-specification, Phase-B ordering, turtle-asset fail-open, and the build-it draw-option all caught; glm's first opencode pass timed out and reviewed rev2 fresh). Content gate 3 rounds: glm/fable APPROVE WITH NITS on first pass (zero blind-solve discrepancies); sol caught two real defects the others softened — return-not-required grading on Q3/Q8, and (round 2) a flower drawn AFTER `turtle.done()` that the fake-turtle stub can't detect.
+
+**Notable finds the gate caught (worth remembering):**
+- checkpoint-02's `practices` was missing its foundational substrate (plan-002 under-specification) — fixed by amendment, precedent for auditing checkpoints 03–04.
+- turtle `done()` must be the LAST statement; the fake-turtle stub no-ops `done()` so code-after-`done()` passes CI silently. Saved to memory; a mechanical check is a worthwhile follow-up.
+
+**Follow-ups:**
+- Add a tooling check: no non-blank code after `turtle.done()` in an asset.
+- Next: project 01 (Arcade Night) — the Term 2 milestone drawing on units 01–05.
