@@ -65,7 +65,8 @@ entries:
   introduces: []
   requires: [def-function, parameters, return-value, while-loop, if-statement, random-module]
   practices: [print, input, f-string, accumulator, logical-ops, loop-counter,
-              elif-else, break-statement, comparison, scope, import-statement, random-module]
+              elif-else, break-statement, comparison, scope, import-statement, random-module,
+              variable, arithmetic, int-type]
 - id: unit-06-secret-codes
   kind: unit
   title: "Secret Codes — ciphers and string surgery"

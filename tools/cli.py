@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from tools.checks import CHECKS, UNIT_ONLY_CHECKS
+from tools.notebooks import project_dirs
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -35,13 +36,20 @@ def main(argv=None):
         print(f"usage: --unit does not apply to book-level check {arguments.check}",
               file=sys.stderr)
         return 2
+    if arguments.unit and arguments.unit.startswith("project-"):
+        _, project_findings = project_dirs(arguments.root, arguments.book, arguments.unit)
+        if project_findings:
+            for finding in project_findings:
+                print(finding)
+            return 1
     if (
         arguments.unit
-        and arguments.unit.startswith("checkpoint-")
+        and arguments.unit.startswith(("checkpoint-", "project-"))
         and arguments.check in UNIT_ONLY_CHECKS
     ):
+        kind = arguments.unit.split("-", 1)[0]
         print(
-            f"usage: --unit checkpoint id does not apply to unit-only check {arguments.check}",
+            f"usage: --unit {kind} id does not apply to unit-only check {arguments.check}",
             file=sys.stderr,
         )
         return 2
