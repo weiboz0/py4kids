@@ -142,6 +142,15 @@ GREEN; content gate 4-way consensus.
 5. `[FIXED]` (Nit) Lesson 2 continuing hook not explicit. → both lessons now open on the thread.
 6. `[FIXED]` (Minor) Phase D→C (= fable #2).
 
+### Round 2 (2026-09-06)
+- **[fable]**: APPROVE — re-prototyped the case contract in /tmp (round-trip 4 msgs × 25 shifts, boundary, passthrough, mixed-case→lower all pass); all 7 practices homed; no new defect.
+- **[glm]**: APPROVE — all 3 nits fixed, case contract coherent, re-prototyped green.
+- **[sol]**: APPROVE — all 6 findings resolved; no new issues.
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[sol]` APPROVE (round 2) · `[glm]` APPROVE (round 2) · `[fable]` APPROVE (round 2).
+- Full consensus, no `[OPEN]` items — **gate PASSED; approval to implement.**
+
 ## Content Review
 
 (pre-PR gate findings land here.)
