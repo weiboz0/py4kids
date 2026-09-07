@@ -41,7 +41,9 @@ Budget the most time for Q2 and the Q3–Q5 sequence.
 40 points total, 5 points per question.
 Full credit requires correct, runnable code that follows the requested Book 1 approach.
 Partial credit is available for a sound structure with one local syntax, naming, conversion, or ordering mistake.
-Do not award credit for replacing the assessed approach with tools outside Units 01–10, including `max`, `len`, `.split()`, or `.get()`.
+Each question assesses one specific Book 1 technique, so a substitute that skips that technique does not earn credit — even a tool the student has been taught.
+For example: `max`/`len` on Q5 (Q5 assesses a `.sort(reverse=True)` plus index lookup), `.get()` on Q7/Q8 (these assess the `in`-membership guard), or `.split()` on Q4 (Q4 assesses `for line in f` with `.strip()` + `int()`).
+`.split()` is not taught in Book 1 at all; `max`/`len`/`.get()` are taught (Units 07–08) but are simply not the skill under assessment here.
 
 - **Q1 — define a class (5):** constructor and `self` use (2), both required attributes (1), object creation (1), and both requested prints (1).
 - **Q2 — add a method (5):** complete stand-alone class (1), correct method signature and `self` use (1), state update (1), returned new state (1), and call plus print (1).

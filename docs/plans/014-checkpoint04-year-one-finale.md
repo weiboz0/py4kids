@@ -172,6 +172,78 @@ GREEN (clean-slate); concept-scanner clean; `finale.txt` gitignored; content gat
 
 ---
 
+## Content Review
+
+Roster + tags per the plan-review gate; findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`; all `[OPEN]`
+resolve before merge.
+
+### Review 1 — [self] (2026-09-07) → APPROVE
+Blind-audited all 8 questions against the authored solutions. Each question is solvable with only
+units 01–10, and each reference is correct. Closure clean: single plain `Hero` class (`__init__` +
+`heal` only, no inheritance/dunder-beyond-init/isinstance/type); NO `len`/`max`/`min` anywhere
+(Q5 uses `loaded[0]` after `.sort(reverse=True)`); NO `.split` (Q4 reads one int/line via
+`.strip()`+`int()`); NO append mode / `os`/`tempfile`; dicts use `[key]`/`.items` only. Asserts
+NON-VACUOUS: Q4 `loaded == [40,90,20]` proves the write→read round-trip (computed from the file);
+Q5 `loaded == [90,40,20]`/`loaded[0] == 90` proves the sort; Q2 `new_health == 13`/`hero.health == 13`
+proves `heal` (computed via the method); Q7 membership booleans; Q8 `result == "no shield"` proves
+the guard took the else branch. File-I/O: Q3 writes `finale.txt` BEFORE Q4 reads it; clean-slate
+`exec-solutions` PASS; `finale.txt` gitignored. Q8 bug in a non-executable markdown fence; student
+cells empty; no `input()`. Grading: 40 pts (5/question) summing to total, rubric denies out-of-scope
+credit. NITS (non-blocking): Q6's `assert inventory["sword"] == 1` re-reads a dict literal (the
+`.items()` loop's value is a print side-effect, not cheaply assertable — matches checkpoint-03
+precedent); Q3 carries no assert (Q4 verifies the round-trip). Both defensible.
+[UPDATED post-gate: the Q6 assert was strengthened — see resolutions below.]
+
+### Review 2 — [fable] (2026-09-07) → APPROVE WITH NITS
+Blind-solved all 8 (matched reference); closure PASS; non-vacuity empirically confirmed (6 wrong
+solutions all fail); clean-slate `exec-solutions` PASS; finale.txt gitignored; grading sums to 40.
+- **[FIXED] N1 — Q7 assert pins only given data** (a swapped branch still passes) → Q7 now captures
+  `result` and asserts it (mutation-verified: wrong-key guard fails).
+- **[FIXED] N2 — `f-string` over-listed** (no question used one) → Q6 reference now builds
+  `line = f"{item}: {count}"` (f-string genuinely used; AST confirms 1 JoinedStr node).
+
+### Review 3 — [glm] (2026-09-07) → APPROVE WITH NITS (no blockers)
+Blind-solved all 8 (matched); clean-slate `exec-solutions`/prereq/coverage/pytest PASS; manifest ==
+map; AST closure scan clean.
+- **[FIXED] G1 (Should-Fix) — rubric misstates course facts** (`len`/`max`/`.get` ARE taught, units
+  07–08; only `.split()` is outside 01–10) → rubric reworded: each question assesses ONE technique,
+  a substitute that skips it earns no credit *even if taught*; `.split()` noted as untaught, the
+  others as taught-but-not-assessed-here.
+- **[FIXED] G2 (Should-Fix) — Q6 assert vacuous** → strengthened (see below; three reviewers concur).
+- **[FIXED] G3 (Should-Fix) — Q7 assert vacuous w.r.t. branch** → captured `result` (fable-N1 dup).
+- **[FIXED] G4 (Nice) — f-string listed-but-unused** → now used (fable-N2 dup).
+- **[WONTFIX] G5 (Nice, informational) — Q4 assert can't catch a forgotten `.strip()`** since
+  `int("40\n") == 40`. The round-trip assert (`loaded == [40,90,20]`) is otherwise strong; `.strip()`
+  is a taught habit enforced by grading. A contrived whitespace assert would read worse than the
+  natural round-trip; accepted as-is (matches unit-09's own solution idiom).
+
+### Review 4 — [sol] (2026-09-07) → Must-Fix Q6, reconciled
+Blind-solved all 8 (exact match); closure clean (AST); manifest order-for-order == map; grading +
+Q8-placement no finding.
+- **[FIXED] S-4.1 (Must Fix) — Q6 assert vacuous** (negative probe: deleting the `.items()` loop
+  still passed) → Q6 now accumulates `lines.append(f"{item}: {count}")` and asserts
+  `lines == ["sword: 1", "potion: 3"]`. Mutation-verified: delete-loop, swapped-unpack BOTH fail.
+- **[RESOLVED — reviewer-env] S-3.1 (Open) — clean-slate run UNVERIFIED in sol's sandbox** (`rm`
+  policy-blocked; read-only EROFS mount held a stale `finale.txt`; kernels socket-blocked). NOT a
+  checkpoint defect: the mandated clean-slate `rm -f finale.txt` → `exec-solutions` PASS was run
+  independently by [self], [glm], AND [fable] from a file-free state (create-before-read proven);
+  sol's own /dev/shm fallback also passed all asserts and wrote exactly `40\n90\n20\n`.
+
+### Content-gate resolutions (2026-09-07)
+Batch fix over solutions.ipynb Q6 + Q7 and teacher-notes rubric:
+- **Q6:** `lines = []; for item, count in inventory.items(): line = f"{item}: {count}"; print(line);
+  lines.append(line)` then `assert lines == ["sword: 1", "potion: 3"]` — resolves the Q6-vacuous
+  Must/Should-Fix (all 3 externals) AND the f-string-unused nit in one change.
+- **Q7:** capture `has_sword` + `result` in the branch; `assert has_sword == True and
+  result == "no shield"` — resolves the Q7-vacuous nit.
+- **Rubric:** reworded to distinguish untaught (`.split()`) from taught-but-not-assessed
+  (`max`/`len`/`.get`).
+Re-verified clean-slate: exec-solutions PASS; manifest/structure/noexec/hygiene/cell-lint/coverage/
+prereq PASS; scanner scoped to cp-04 shows ONLY the `def-function` false-positive; all new asserts
+mutation-verified non-vacuous. No new concept introduced (f-string/list-literal/list-append/boolean
+all already in the union). Full `ci-local.sh` re-run + round-2 content re-review to confirm.
+
+
 ## Plan Review
 
 ### Review 1 — [self] (2026-09-07)
