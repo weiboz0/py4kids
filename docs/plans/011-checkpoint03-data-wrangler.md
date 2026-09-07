@@ -197,3 +197,55 @@ prereq-check + coverage-check PASS.
 - All nits resolved (elif-else real membership elif; self-contained data; for-loop in practices;
   comparison-prose removed; 35–40 min pacing; Phase-B summary). No open blockers; no REJECT.
 - **Gate PASSED. Proceeding to Phase A → Phase B → Phase C.**
+
+## Content Review
+
+### Review 1 — [self] (2026-09-07)
+APPROVE. Traced every question + solution: all 8 asserts correct + non-vacuous (Q1 `word[::-1]==
+"yrdraziw"`, Q2 `cleaned=="hello data world!"`, Q3 `len==4`, Q4 `total==355`, Q5 `scores[0]==100`
+after reverse-sort, Q6 `.get("fig",0)==0`, Q7 `counts["cat"]==3`, Q8 safe `0`). Closure clean
+(scoped scanner OK: taught-only constructs; Q6 3-way MEMBERSHIP elif — no comparison; no .split/
+untaught methods/files/classes/nested-loops). Conventions: 8 sequential `## Question N`, empty
+student cells, Q8 KeyError snippet in a MARKDOWN fence, no stretch/input/outputs, self-contained
+data per question, solutions mirror headings. ci-local ALL GREEN.
+
+### Review 2 — [fable] (2026-09-07)
+APPROVE WITH NITS. Blind-solved all 8, executed every solution cell, all 8 asserts pass with the
+exact prompt values. Closure verified against unit sources (Q1 slices/reverse-step, Q2 chained
+methods, Q5 `reverse=True`, Q7 counter + `.items()` unpack all taught ≤unit-08); membership-only
+conditionals; input-free; no .split/files/classes/nested-loops. Conventions all pass. Nits:
+- `[WONTFIX]` N1: solution asserts use `==` — exempt CI scaffolding, not student answer logic
+  (comparison is unit-02-taught; the scanner exempts asserts).
+- `[candidate]` N2: some asserts are narrow spot-checks (Q3 len only; Q6 `.get` only, not the
+  3-way branch) — optional strengthening.
+- `[WONTFIX]` N3: questions are heavily scaffolded (transcription-leaning) — appropriate difficulty
+  for a 35–40 min term checkpoint at this level.
+
+### Review 3 — [glm] (2026-09-07)
+APPROVE WITH NITS. Blind-solved all 8 (outputs tabulated + executed), closure clean (verified vs
+unit 06–08 sources; membership-only conditionals; `==` only in exempt asserts), all 8 asserts
+non-vacuous, conventions PASS (Q8 fence, 6 teacher-notes headings, Grading sums to 40, map-equal
+manifest, exec-solutions PASS). Nits (all teacher-notes Grading wording — batch-fix after [sol]):
+- `[candidate]` glm-1: Q6 Grading "`== 0` comparison still works — full credit" aside is unclear +
+  endorses the excluded comparison idiom — reword/drop.
+- `[candidate]` glm-2: Q8 Grading credits "name the error as KeyError" but the statement already
+  supplies it — fold into the safe-`.get` credit.
+- `[candidate]` glm-3: note that Q6's `elif`/`else` credit requires the VISIBLE branches (they're
+  unreachable at runtime since plum+pear are both present).
+
+### Review 4 — [sol] (2026-09-07)
+REJECT → resolved. sol confirmed closure clean, all 8 blind-solved + correct, all asserts
+non-vacuous, conventions pass, no input(), Q8 fence markdown-only. Sole REJECT reason: two
+teacher-notes GRADING concessions that endorsed UNTAUGHT tools:
+- `[FIXED]` sol-1: Q4 rubric awarded the total point for `sum()` (not taught) — now requires the
+  accumulator LOOP; `sum()` earns nothing.
+- `[FIXED]` sol-2: Q6 rubric granted full credit for a `.get(...) == 0` comparison (membership-only
+  design; comparison not in the union) — now requires the `in` membership branch (= glm-1).
+
+### Batch fix (2026-09-07)
+Teacher-notes Grading corrected: `[FIXED]` Q4 sum()-concession removed (sol-1); `[FIXED]` Q6
+==-concession removed + visible-branch note (sol-2/glm-1/glm-3); `[FIXED]` Q8 error-naming folded
+into the `.get` credit (glm-2). `[FIXED]` Q3 solution assert strengthened to check `scores[0]==88
+and scores[-1]==100` (fable-N2). WONTFIX: asserts-use-`==` (exempt scaffolding, fable-N1);
+scaffolded-questions (appropriate for a term checkpoint, fable-N3). Scanner clean; ci-local ALL
+GREEN. Re-dispatching focused [sol] re-check.

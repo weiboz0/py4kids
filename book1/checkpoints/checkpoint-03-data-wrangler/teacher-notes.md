@@ -56,18 +56,20 @@ taught tools; partial credit as noted.
   instead of the True/False result.
 - **Q3 — build a list (5):** literal (1), `.append(100)` (2), first + last via `[0]`/`[-1]` (2).
 - **Q4 — measure a list (5):** loop printing each (1), `len`/`max`/`min` (1 each), accumulated
-  `total == 355` via a loop (1). Partial: using `sum()` (not taught) instead of an accumulator
-  loop still shows the idea — award the total point but note the taught pattern.
+  `total == 355` via a LOOP (1). The total point requires the accumulator loop — `sum()` is NOT
+  taught and does not earn it (it does not demonstrate the accumulator skill Q4 assesses).
 - **Q5 — rank a list (5):** `.sort(reverse=True)` in place (2), top three by index 0/1/2 (3).
   Partial: sorting ascending and reading from the end, or expecting `.sort()` to return a list.
 - **Q6 — price book (5):** `["pear"]` (1), `.get("fig", 0)` default (2), `in` membership print (1),
-  3-way membership branch (1). Partial: a `== 0` comparison on the `.get` result instead of
-  membership still works — full credit (the taught idiom is `in`, but the result is correct).
+  3-way MEMBERSHIP branch (1). The branch must use `in` (the taught idiom — a `==` comparison is
+  out of scope) and the `elif`/`else` must be VISIBLE in the code: with `plum` and `pear` both
+  present the branches never run at runtime, so credit rests on the written structure, not output.
 - **Q7 — count words (5):** `counts = {}` start (1), single loop with the `if`/`else`
   first-sighting counter (3), `.items()` walk printing each pair (1). `counts["cat"] == 3` is the
   key check. Partial: missing the `else` branch, or looping the dict instead of the word list.
 - **Q8 — fix the bug (5):** replaces the crashing `prices["fig"]` with `prices.get("fig", 0)` so it
-  prints safely (4), and can name the error as a `KeyError` (1).
+  prints safely (5). The statement already names the error (`KeyError: 'fig'`), so there is no
+  separate point for restating it — the credit is the working `.get` fix.
 
 A student scoring ≥ 28/40 (70%) is solid on the term's data tools; below that, revisit `.get()` vs
 `[]` (Q6/Q8) and the word-counter pattern (Q7) first.
