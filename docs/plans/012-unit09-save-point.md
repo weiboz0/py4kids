@@ -128,10 +128,14 @@ variable/string-concat/string-literal/type-conversion/int-type/error-messages/in
   scores (builtin-functions `len`), save-settings (dict-access write name+volume+difficulty as TEXT
   → `settings.txt`), search-the-settings (in-operator membership on `settings.txt` text — e.g.
   `if "Ada" in info`), save-then-load (a `save`+`load` integer round-trip via helpers on
-  `savegame.txt`); stretch: highest-saved-score (load `savegame.txt` then `max`), append-a-new-high
-  (load list, `.append`, re-SAVE with `"w"` — NOT append mode; titled "add-a-new-high", NOT "append", so the word can't
-  steer a beginner toward mode `"a"` — glm plan-review). input() appears only in an exercise
-  PROMPT; solutions are parameterized with the fixed filenames.
+  `savegame.txt`), save-my-score (the PROMPT asks for a SCORE via `input("Your score? ")` — the
+  student is told NOT to call it; the reference solution uses a FIXED sample score, `int()`s it,
+  appends to the scores list, and re-SAVEs to `savegame.txt` — a SCORE→int path so the int-only
+  split HOLDS; this is the NAMED home for `input`, glm/sol plan-review); stretch: highest-saved-score
+  (load `savegame.txt` then `max`), add-a-new-high (load list, `.append`, re-SAVE with `"w"` — NOT
+  append mode; the word "add" not "append" so it can't steer a beginner toward mode `"a"` — glm
+  plan-review). input() appears only in the save-my-score PROMPT; solutions are parameterized with
+  fixed values and the fixed filenames.
 - Solutions: execute headless (they WRITE-THEN-READ `savegame.txt`/`settings.txt` in the unit dir,
   deterministic `"w"` mode, gitignored), input-free, non-vacuous asserts — an integer round-trip
   assert (`load_scores(save_scores([100, 200], "savegame.txt")) == [100, 200]`), a length assert
@@ -230,3 +234,29 @@ if-statement, list-literal, print, variable, string-concat, string-literal, type
 int-type, error-messages, input` (12). Payload split (fable) empirically re-validated; glm's 5 nits
 + sol's input blocker + doc nits all fixed. Re-validated green. Re-dispatching [glm]/[fable]/[sol]
 round 2 to confirm.
+
+### Round 2 re-review verdicts (2026-09-07)
+**[fable] round 2: APPROVE WITH NITS.** Round-1 int-parse BLOCKER truly resolved — payload split
+coherent end-to-end (savegame.txt only ever int-parsed; settings.txt only text/membership; no name
+leak; asserts on the correct files). Closure PASS (every amended concept ≤unit-08, `practices ∩
+introduces` empty, `input` correctly homed), over-listing PASS, closure-safety PASS (no .split/
+slicing/os/tempfile/append/classes/nested-loops; with-only opens; FileNotFound in no-exec). No new
+problems (separate `with` blocks avoid exhausted-iterator; clean-slate forces create-before-read).
+Content-gate nits: N1 narrate `for line in f:` as `for-loop` file-iteration (not list-loop —
+list-loop is `for score in scores`; both in-union, no gap); N2 confirm `==`/`<`/`>` stay OUT of
+student exercise cells (only in solution asserts). Awaiting [glm]/[sol] round 2.
+
+**[glm] round 2: APPROVE WITH NITS.** All 5 round-1 nits confirmed resolved; payload split coherent
++ closure-safe; amended union complete + not over-listed. New nit FIXED: the `input` home was a
+"phantom exercise" (amendment cited "save-my-score" but the Phase-B enumeration lacked it) — added
+`save-my-score` explicitly as a SCORE→`int()`→`savegame.txt` path (so the int-only split holds) and
+pinned it as input's named home; also fixed the residual literal "append-a-new-high" → "add-a-new-high".
+Optional advisory-wording touch-up on the scanner mentions: left as-is (Phase C already frames the
+scanner as advisory).
+
+**[sol] round 2: REJECT → resolved.** sol confirmed input blocker FIXED, open() nit FIXED, closure
+scan NONE FOUND (all 25 union symbols homed; prereq/coverage PASS), file-I/O design sound. Sole
+REJECT reason: the leftover literal `append-a-new-high` in the Phase-B exercise enumeration (sol
+reviewed committed HEAD, before the working-tree rename). `[FIXED]` — the exercise is now
+`add-a-new-high` in the enumeration; the only remaining `append-a-new-high` strings are ledger
+history describing the rename. Re-dispatching a focused [sol] round 3 to confirm.
