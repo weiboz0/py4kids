@@ -271,3 +271,72 @@ score→int→savegame.txt); stretch is `add-a-new-high`; `append-a-new-high` on
   The file-I/O CI-safety design was empirically validated against the real NotebookClient executor.
   No open blockers.
 - **Gate PASSED. Proceeding to Phase A → Phase B → Phase C.**
+
+## Content Review
+
+### Review 1 — [self] (2026-09-07)
+APPROVE. Traced every exercise + solution top-to-bottom: all 9 asserts correct + non-vacuous
+(Ex3 loaded==[1200,850,990], Ex4 len==3, Ex7 round-trip==[100,200] then [1200,850,990], Ex8 1350
+appended, Ex9 max==1350, Ex10 max==1600 — sequential state consistent). PAYLOAD SPLIT held:
+savegame.txt int-only (int-parsed), settings.txt text read via membership only (`"Ada"`/`"easy" in
+info`), never int-parsed. Closure clean (scoped scanner OK after removing a forbidden `[:4]` list
+slice in Ex10): `with`-only file opens, no .split/slice/append-mode/os/tempfile/classes/nested-loops.
+Pedagogy: hook-first; explicit `\n` teaching beat; the lesson NARRATES `for line in f` (file
+line-by-line) vs `for score in scores` (list) — pre-addressing fable's round-2 N1; FileNotFoundError
+no-exec beat + traceback; `input` only in Ex8's PROMPT with a `sample_score` starter. `==` appears
+only in asserts (fable N2). CLEAN-SLATE ci-local ALL GREEN (real-kernel exec proves create-before-read;
+scratch .txt gitignored, not committed). Minor: Ex9's `max==1350` assert depends on Ex8 running
+first (sequential solution state — standard for unit solutions).
+
+### Review 2 — [fable] (2026-09-07)
+APPROVE WITH NITS. Blind-solved all 10, traced sequential on-disk state, all 9 asserts non-vacuous
++ correct; CI file-I/O safety clean (with-only, "w"-only, every read written earlier, no-exec
+FileNotFoundError confirmed via tools/notebooks.py:900, input only in Ex8 prompt); closure clean
+(.strip only string-method, no .split/slice/os/classes/nested-loops; == only in asserts); manifest
+== map. Findings:
+- `[candidate]` fable-1 (content bug): Ex10 statement claims `"w"` mode stops the file growing on
+  re-run, but Ex10 is load→append→re-save (grows every run — `"w"` and `"a"` indistinguishable
+  there), undercutting the w-vs-a point. Reword the parenthetical. → BATCH-FIX.
+- `[WONTFIX]` fable-2: the `savegame.txt`/`settings.txt` in the unit dir are NOT committed —
+  `git ls-files` shows only the 5 content files and `git check-ignore` confirms both are ignored;
+  they are runtime working-tree files from the last CI run (as designed). No action.
+- `[WONTFIX]` fable-3: Ex9 `assert highest_score == 1350` is a moment-in-time snapshot (sequential
+  on-disk state between Ex8 and Ex10) — standard for a stateful files unit; only breaks under manual
+  out-of-order re-runs; exercises have no asserts.
+- `[candidate]` fable-4: `f-string` is used in lesson but not an exercise/solution cell (Ex4 uses
+  comma-print) — optional: make Ex4's message an f-string. → BATCH-FIX (cheap robustness).
+
+### Review 3 — [glm] (2026-09-07)
+APPROVE WITH NITS. All 10 blind-solved + matched; CI-safety confirmed by executing both notebooks
+from a pristine state + full unit-scoped check suite (all PASS); closure + conventions clean (8 core
++ 2 stretch, hook-first, 6... 5 teacher-notes headings, solutions mirror, input only Ex8). Nits:
+- `[candidate]` glm-1: Ex8/Ex10 asserts pass even under the `"a"`-mode regression the unit warns
+  against — strengthen Ex8 to `assert load_scores(...) == [1200, 850, 990, 1350]` (full-list, stable
+  since Ex7 resets). Pairs with fable-1. → BATCH-FIX.
+- `[WONTFIX]` glm-2: `return filename` in Ex7's save helper is non-idiomatic but enables the
+  one-line round-trip assert (acceptable, matches units 07/08 helper style).
+- `[candidate]` glm-3: Ex8 statement silently reuses the `load_scores` helper from Ex7 — add a
+  clause naming it. → BATCH-FIX (clarity).
+
+### Review 4 — [sol] (2026-09-07)
+REJECT → resolved. sol confirmed closure clean, file-I/O safe, no input(). Blockers (all the same
+w-vs-a/weak-assert cluster fable-1 + glm-1 flagged):
+- `[FIXED]` sol-3: Ex10's re-run grows the file, violating its OWN statement's false "`"w"` stops
+  it growing" claim — REMOVED the false claim (statement now: `"w"` REPLACES the file's contents
+  with the updated list). Dissolving the false requirement resolves the "violation".
+- `[FIXED]` sol-4: Ex10 `assert max(...) == 1600` masked growth — strengthened to
+  `assert load_scores(...) == [1200, 850, 990, 1350, 1600]` (full list, exact cumulative state).
+- `[FIXED]` sol-5: Ex8 `assert 1350 in load_scores(...)` (membership) masked cumulative errors —
+  strengthened to `assert load_scores(...) == [1200, 850, 990, 1350]`.
+- `[WONTFIX]` sol-6: isolated out-of-order cell re-runs are state-sensitive — the load→modify→save
+  ("add a score") pattern is the unit's Save-Point core and correctly grows the saved list; CI runs
+  the notebook TOP-TO-BOTTOM (Ex1/Ex7 reset savegame.txt) so it is deterministic/idempotent at the
+  notebook level; the strengthened full-list asserts now verify exact state.
+
+### Batch fix (2026-09-07)
+`[FIXED]` Ex10 statement false non-growth claim (fable-1/sol-3); `[FIXED]` Ex8+Ex10 asserts → full
+list (glm-1/sol-4/5); `[FIXED]` Ex8 statement names the load_scores helper (glm-3); `[FIXED]` Ex4
+solution now uses an f-string (fable-4). WONTFIX: committed-.txt false alarm (gitignored, fable-2),
+Ex9 snapshot assert (fable-3/sol-6), return-filename style (glm-2). Scanner clean; clean-slate
+ci-local ALL GREEN (strengthened asserts hold on the deterministic run). Re-dispatching focused
+[sol] re-check.
