@@ -6,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from tools.checks import CHECKS
+from tools.checks import CHECKS, UNIT_ONLY_CHECKS
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -34,6 +34,16 @@ def main(argv=None):
     if arguments.unit and arguments.check in BOOK_LEVEL_CHECKS:
         print(f"usage: --unit does not apply to book-level check {arguments.check}",
               file=sys.stderr)
+        return 2
+    if (
+        arguments.unit
+        and arguments.unit.startswith("checkpoint-")
+        and arguments.check in UNIT_ONLY_CHECKS
+    ):
+        print(
+            f"usage: --unit checkpoint id does not apply to unit-only check {arguments.check}",
+            file=sys.stderr,
+        )
         return 2
     findings = CHECKS[arguments.check](arguments.root, arguments.book, arguments.unit)
     if findings:

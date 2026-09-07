@@ -24,7 +24,7 @@ entries:
   requires: [print, input, variable, if-statement, while-loop]
   practices: [print, comment, string-literal, variable, naming, input, string-concat, f-string,
               int-type, arithmetic, type-conversion, boolean, comparison, if-statement,
-              elif-else, while-loop]
+              elif-else, while-loop, error-messages]
 - id: unit-03-turtle-art-studio
   kind: unit
   title: "Turtle Art Studio — drawing with loops"
@@ -38,7 +38,8 @@ entries:
   title: "Quiz Show — keeping score"
   lessons: 2
   introduces: [accumulator, logical-ops, conditional-nesting, break-statement]
-  requires: [if-statement, elif-else, while-loop, comparison, input, f-string]
+  requires: [if-statement, elif-else, while-loop, comparison, input, f-string,
+             arithmetic, int-type, variable]
   practices: [boolean, type-conversion, loop-counter, error-messages]
 - id: unit-05-function-factory
   kind: unit

@@ -1,0 +1,11 @@
+id: checkpoint-01-first-steps
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+concepts:
+  introduces: []
+  requires: [print, input, variable, if-statement, while-loop]
+  practices: [print, comment, string-literal, variable, naming, input, string-concat, f-string,
+              int-type, arithmetic, type-conversion, boolean, comparison, if-statement,
+              elif-else, while-loop, error-messages]
