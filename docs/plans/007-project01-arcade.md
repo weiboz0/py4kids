@@ -2,7 +2,7 @@
 
 **Goal:** Ship `project-01-arcade-night` — Term 2's milestone build where students combine functions, loops, conditionals, and randomness into their own mini-arcade — and establish the PROJECT pipeline (conventions + `tools/` checks) the year's second project (the capstone) will reuse.
 
-**Architecture:** Projects are a new content KIND (like checkpoints were in plan 005): a multi-lesson guided BUILD, `introduces: []`, integrating prior concepts. New first-class conventions mirroring units/checkpoints (student-facing brief, a reference solution, map-equal manifest, teacher notes with a rubric) and `tools/` checks extended from unit+checkpoint to also cover projects. ONE map amendment rides along (gate round 1, sol #5) — the SAME systemic plan-002 under-specification fixed for unit-04 (plan 005) and checkpoint-02 (plan 006): project-01's `requires ∪ practices` omits `variable`, `arithmetic`, `int-type`, yet a running score and returned point values inherently need them; `practices` gains those three (all introduced by unit 02; verified green). The redundant `random-module` in both `requires` and `practices` is harmless and stays as-is (no invariant inspects `requires ∩ practices`; verified) — not a "correction", just mirrored verbatim.
+**Architecture:** Projects are a new content KIND (like checkpoints were in plan 005): a multi-lesson guided BUILD, `introduces: []`, integrating prior concepts. New first-class conventions mirroring units/checkpoints (student-facing brief, a reference solution, map-equal manifest, teacher notes with a rubric) and `tools/` checks extended from unit+checkpoint to also cover projects. ONE map amendment rides along (gate round 1, sol #5) — the SAME systemic plan-002 under-specification fixed for unit-04 (plan 005) and checkpoint-02 (plan 006): project-01's `requires ∪ practices` omits `variable`, `arithmetic`, `int-type`, yet a running score and returned point values inherently need them; `practices` gains those three (variable from unit 01, arithmetic/int-type from unit 02; verified green). The redundant `random-module` in both `requires` and `practices` is harmless and stays as-is (no invariant inspects `requires ∩ practices`; verified) — not a "correction", just mirrored verbatim.
 
 **Spec:** design 000 §1–§3 (`projects/` in the tree); `book1/curriculum/coverage-map.yaml` (binding); plan 004/005 conventions; plan 003/006 tooling; D-001, D-002.
 
@@ -24,15 +24,18 @@
     `import random` only + `random.seed(4)` — placed in the FIRST code cell ABOVE any `def`
     that uses random, since the seed-order check reads source position not call order
     (glm #1); no GUI, self-contained, ≥3 non-vacuous asserts, scaffolding note).
-    **Headless reference design (binding, sol #1 / fable F1) — the ONLY in-budget shape:**
-    the interactive menu function is DEFINED but not executed; each game function takes the
-    player's choice/guess as a PARAMETER (or is pure-random), and the solution asserts by
-    CALLING the game functions directly with fixed sample arguments and accumulating the
-    score in straight-line/`while` code. Scripting an input SEQUENCE with a list, `for`-loop,
-    or string-indexing is FORBIDDEN (all untaught until units 07+) — that is the trap the
-    "scripted choices" shorthand hides. Whether the solution "defines and calls the brief's
-    required functions" is a REVIEWER duty (no mechanical check); the mechanical check is
-    only: ≥1 `def`, headless execution, ≥3 non-vacuous asserts, the pattern/seed bans.
+    **Headless reference design (binding, sol #1 / fable F1 / gate round-2) — the ONLY
+    in-budget shape:** the solution contains NO `input()` anywhere. The interactive
+    input-driven menu lives ONLY in the brief; the solution defines each game function to
+    take the player's choice/guess as a PARAMETER (or be pure-random), returns points, and
+    an EXECUTED driver (straight-line or `while`) calls those functions with fixed sample
+    arguments, accumulates the score, and asserts outcomes. Do NOT script an input SEQUENCE
+    with a list or string-indexing — neither is in project-01's `requires ∪ practices`
+    (amended), so it is OUT OF THE CONCEPT BUDGET (not a claim about teaching order:
+    `for-loop` is unit 03, `string-index` unit 06, lists unit 07 — the point is none is in
+    THIS entry's union). Whether the solution "defines and calls the brief's required
+    functions" is a REVIEWER duty (no mechanical check); the mechanical floor is only: ≥1
+    `def`, headless execution, ≥3 non-vacuous asserts, the pattern/seed bans.
   - `teacher-notes.md`: the five unit headings PLUS `## Rubric` (milestone-by-milestone
     "what done looks like", the minimum bar vs. stretch, how to run the 2-lesson build and
     the class showcase, how to assess a student's OWN game not a fixed answer key).
@@ -45,7 +48,8 @@
 
 Content plan → Phase D is the mandatory named verification phase. Out of scope: the capstone
 (project 02) and units 06+ (later plans); PDF handouts for the project; auto-grading (D-002 —
-projects are assessed manually against the rubric); any map edit; turtle anything.
+projects are assessed manually against the rubric); any map edit BEYOND the project-01
+practices amendment in Phase B; turtle anything.
 
 ## Phases
 
@@ -111,8 +115,8 @@ inline; manifest inline.
 ### Phase C — project-01-arcade-night content
 
 Blueprint (requires def-function/parameters/return-value/while-loop/if-statement/random-module;
-practices print/input/f-string/accumulator/logical-ops/loop-counter/elif-else/break-statement/
-comparison/scope/import-statement):
+AMENDED practices print/input/f-string/accumulator/logical-ops/loop-counter/elif-else/
+break-statement/comparison/scope/import-statement/variable/arithmetic/int-type):
 - Hook: ARCADE NIGHT — build a mini-arcade of 2–3 games the class plays on each other's.
 - brief.ipynb, 3–6 milestones (~2 lessons): M1 a menu loop (`while` + input choice + `break`
   to quit); M2 game one as a FUNCTION returning points (a guess/luck game using
@@ -122,9 +126,15 @@ comparison/scope/import-statement):
   high-score message, a difficulty toggle). A requirements checklist ("your arcade must:
   use at least two game functions that RETURN points, keep a total score, let the player
   quit"). Starter scaffold cells with `input()` are fine (student-facing).
-- solutions.ipynb: ONE complete arcade — two game functions returning points, a scored menu
-  loop — made HEADLESS (scripted choices replace input, `random.seed(4)`), asserting the
-  final score for a fixed play-through and that a game function returns the expected points.
+- solutions.ipynb: proves the arcade LOGIC works headlessly. It contains NO `input()`
+  ANYWHERE (glm/sol round-2 blocker: the no-input scan is a source scan over every code cell,
+  so even an unexecuted menu `def` with `input()` in its body fails — the interactive menu
+  belongs only in the brief). Instead the solution defines the two parameterized game
+  functions (each takes the player's guess/choice as an argument, returns points, uses
+  `random.randint` seeded in the first cell) and an EXECUTED driver — a straight-line or
+  `while` sequence that CALLS the game functions with fixed sample arguments, accumulates the
+  score, and asserts the final score and each function's returned points. This mirrors how
+  unit-02's guessing-game solution replaces `input()` with assigned sample values.
 - Teacher notes + `## Rubric`: minimum bar (two returning game functions + a working total +
   a quit path) vs. stretch (a third game, high-score, difficulty); how to run the 2-lesson
   build (design → build → showcase), how to grade a student's OWN arcade against the rubric,
@@ -181,7 +191,17 @@ ci-local ALL GREEN; content gate 4-way consensus.
 6. `[FIXED]` (Nit) Phase E→D in out-of-scope.
 
 ### Revision 2 (2026-09-06)
-All findings above applied; the project-01 substrate amendment verified green in /tmp before drafting; this is the THIRD entry (unit-04, checkpoint-02, project-01) with the same plan-002 substrate gap — flagged in the post-execution follow-ups for a proactive audit of units 06–10 / checkpoints 03–04 / project 02.
+All round-1 findings applied; the project-01 substrate amendment verified green in /tmp before drafting; this is the THIRD entry (unit-04, checkpoint-02, project-01) with the same plan-002 substrate gap — flagged in the post-execution follow-ups for a proactive audit of units 06–10 / checkpoints 03–04 / project 02.
+
+### Round 2 (2026-09-06)
+- **[fable]**: APPROVE WITH NITS — all round-1 items verified resolved; amendment re-verified green (280 tests); amended union covers the scored arcade with no gap. Nit: `variable` attribution (unit 01 not 02) — `[FIXED]`.
+- **[glm]**: REJECT — round-1 items confirmed fixed, but rev2 introduced two contradictions + a false rationale.
+- **[sol]**: REJECT — 5 of 6 confirmed resolved; the headless design became internally contradictory.
+  1. `[FIXED]` (glm/sol blocker) Out-of-scope still said "any map edit" while Phase B performs one → "beyond the project-01 practices amendment in Phase B".
+  2. `[FIXED]` (glm/sol blocker) "menu DEFINED but not executed" conflicts with the source-scan no-`input()` check (an unexecuted def with input() still fails) → the solution now contains NO input() anywhere; the interactive menu is brief-only; the solution defines parameterized game functions + an EXECUTED driver calling them with fixed values (mirrors unit-02's solution).
+  3. `[FIXED]` (glm should-fix) False "untaught until 07+" rationale (for-loop is unit 03, string-index unit 06) → reframed as the concept-BUDGET justification (none in this entry's union).
+  4. `[FIXED]` (glm nit) Phase C blueprint union not updated with the amended practices; Phase C solutions line still said "scripted choices replace input" → both corrected.
+  5. `[FIXED]` (fable/glm nit) `variable` unit-01 attribution.
 
 ## Content Review
 
