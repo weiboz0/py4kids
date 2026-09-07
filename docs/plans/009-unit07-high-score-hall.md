@@ -310,3 +310,74 @@ not operators). Findings:
 - `[WONTFIX]` F4: traceback wording ("leave it unrun" vs "read together") matches the intended
   live flow (teacher runs the bug cell aloud after predictions). Justified WONTFIX.
 - Affirmed: no closure/correctness/pedagogy blockers; manifest == map exactly.
+
+### Review 4 — [sol] (2026-09-06)
+REJECT (round 1) → blocker FIXED. sol's closure scan clean, all 18 asserts pass, headless-clean,
+no input(). Single OPEN blocker: Challenge-2 reference started `[1500, 1200, 990]` vs the
+statement's `[1200, 990, 1500]` — the same mismatch fable N1 + glm F1 found. `[FIXED]` — solution
+aligned to `[1200, 990, 1500]` (final assert holds; sort is order-invariant over the multiset).
+
+### Batch fix + resolution (2026-09-06)
+Applied after all four reviews (sol done executing the notebooks):
+- `[FIXED]` Challenge-2 start list → `[1200, 990, 1500]` (fable N1 / glm F1 / sol #1 — unanimous).
+- `[FIXED]` Ex7 assert strengthened with `scores[1] == 1310` (glm F2 — the original `scores[0] ==
+  champion` passed even with a forgotten re-sort since the sample 1310 < 1500).
+- `[FIXED]` L2 lesson now states `.sort()` returns `None` — call it on its own line, never
+  `best = scores.sort()` (fable N2).
+- `[WONTFIX]` glm F3 (single-branch guard demo — Ex9 covers both) and F4 (traceback wording
+  matches intended live flow).
+Scanner clean post-fix; ci-local ALL GREEN. Re-dispatched [sol] to confirm its blocker is cleared
+(disciplined close for a REJECT).
+
+## Post-Execution Report (2026-09-06)
+
+**Shipped:** `unit-07-high-score-hall` — Book 1's first collections unit (Term 3 unit 2).
+
+**What was built:**
+- `lesson.ipynb` (2 lessons, hook-first): L1 builds/indexes/appends/loops a scores list, numbers
+  it as "Entry #N" (unsorted), measures with `len`/`max`/`min`, computes a float average; L2 sorts
+  in place (with the mutate-vs-rebuild contrast + the `.sort()`→`None` note), ranks by "Place N"
+  via a `board_line` helper, `add_score` re-sorts to stay ranked, tier ladder, membership guard,
+  a qualifying-threshold `while` loop, and a deliberate IndexError traceback beat.
+- `exercises.ipynb`: 9 core + 2 Challenge (stretch-tagged) exercises, empty starter cells, no
+  leaked solutions, no executed outputs.
+- `solutions.ipynb`: blind (authored from exercises.ipynb only), input-free, 19 non-vacuous
+  asserts, executes headless clean.
+- `manifest.yaml` (map-equal), `teacher-notes.md` (five headings, per-lesson pacing, 60-min cuts).
+
+**Verification:** `scripts/ci-local.sh` ALL GREEN; AST concept-scanner scoped to unit-07 clean
+(zero used-but-unlisted, zero untaught methods) on lesson + solution code.
+
+**Map amendment (Phase A):** unit-07 `requires` += `parameters, return-value`; `practices` += 15
+substrate concepts (print/arithmetic/int-type/range-function/loop-counter/if-statement/elif-else/
+string-concat/float-type/type-conversion/input/in-operator/error-messages/string-literal/boolean).
+Surgical diff (no YAML reflow).
+
+**Gates:**
+- Plan-review gate: round-1 convergent 3× REJECT (string-literal/boolean/sorted()/parallel-array
+  data model), all fixed in round 2 → consensus ([self] APPROVE, [glm]/[fable] APPROVE WITH NITS,
+  [sol] APPROVE).
+- Content-review gate: [self] APPROVE, [fable]/[glm] APPROVE WITH NITS, [sol] REJECT→FIXED; all
+  [OPEN] findings resolved (Challenge-2 start list, Ex7 assert strengthened, `.sort()`→None note).
+
+**Key design decision:** a SINGLE integer scores list (no parallel names list — it breaks under
+`.sort()` with no in-budget re-pairing); name↔score pairing deferred to dictionaries (unit 08).
+
+**Deviations from plan:** none material. Solutions were authored with `## Solution N` headings and
+remapped inline to the `## Exercise N` convention (CI requires the mirror). Cell ids were
+normalized (codex omitted them).
+
+**Process dividend:** the AST concept-scanner (prototyped during plan 008) caught the
+string-literal/boolean closure gaps at the PLAN stage, before authoring — pre-empting the
+multi-round used-but-unlisted saga that unit-06 suffered. Now also detects untaught method calls.
+
+**Follow-ups (tracked, non-blocking):** (1) latent practice-completeness hygiene PR for shipped
+units 03/04/05 + cp02 + proj01 (string-literal; unit-03 f-string; unit-05 import-statement) +
+promote the concept-scanner into `tools/` as an advisory check; (2) plan 010 (unit 08 Word Wizard,
+dicts) drafted and its substrate amendment pre-validated green.
+
+## Content Gate — CONSENSUS REACHED (2026-09-06)
+- `[self]` APPROVE · `[fable]` APPROVE WITH NITS (fixed) · `[glm]` APPROVE WITH NITS (fixed) ·
+  `[sol]` APPROVE (round 2 — round-1 blocker fixed & re-confirmed clean).
+- All `[OPEN]` findings resolved; F3/F4 justified WONTFIX. Scanner clean; ci-local ALL GREEN.
+- **Gate PASSED. Shipping PR #9.**
