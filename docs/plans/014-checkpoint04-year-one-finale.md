@@ -24,10 +24,18 @@ conventions; design-000 §4 (notebook execution); D-001.
   (a checkpoint gives all data — NO `input()`).
 - Coverage-map amendment (EXACTLY this, scanner-DERIVED + validated green):
   - append to `checkpoint-04-year-one-finale.requires` — `for-loop`.
-  - append to `checkpoint-04-year-one-finale.practices` — `def-function, parameters, dict-literal,
-    list-literal, list-append, list-index, for-loop, if-statement, in-operator, arithmetic,
-    int-type, type-conversion, string-concat, string-literal, string-methods, f-string, print,
-    variable, boolean, error-messages, accumulator, elif-else`. NOTE: `accumulator` covers the `heal` method's
+  - append to `checkpoint-04-year-one-finale.practices` — `parameters, dict-literal,
+    dict-access, list-literal, list-append, list-index, for-loop, list-loop, if-statement,
+    in-operator, arithmetic, int-type, type-conversion, string-concat, string-literal,
+    string-methods, f-string, print, variable, boolean, error-messages, accumulator, elif-else`.
+    NOTE: `dict-access` covers the Q7/Q8 `inventory["shield"]` subscript (my scanner folded it into
+    `list-index` — both are AST `Subscript`; fable + glm gates caught it; checkpoint-03 precedent
+    lists it). `list-loop` covers Q3's `for score in scores:` over a concrete list (glm caught it;
+    plan-012 taxonomy keeps BOTH `for-loop` and `list-loop`; introduced unit-07). `def-function` is
+    NOT listed: every `def` is a class-body method (`__init__`/`heal` = `methods`/`init-method`,
+    per unit-10's scanner exemption), no module-level function exists — glm + fable both flagged the
+    over-listing. `parameters` IS kept (`heal(self, amount)`/`__init__(self, name)` genuinely bind a
+    parameter). `accumulator` covers the `heal` method's
     `self.health = self.health + amount` (read-modify-write on an attribute — my scanner initially
     missed attribute-target accumulators; scanner fixed + `accumulator` added).
   - All introduced by units 01–10; `checkpoint-only-taught` holds. Apply surgically (no YAML
@@ -44,8 +52,9 @@ conventions; design-000 §4 (notebook execution); D-001.
   decorators/`@property`, `isinstance`/`type`/`getattr`/`setattr`.
 - **Closure (binding):** only concepts taught ≤ unit 10. `builtin-functions` (`len`/`max`/`min`) is
   NOT in the union and must NOT appear ANYWHERE — including asserts (only bare comparison operators
-  are exempt scaffolding); assert list state via INDEX (`scores[0]`, `pets[1].name`), the sorted
-  top via `scores[0]` after `.sort(reverse=True)`. String methods stay in the taught subset
+  are exempt scaffolding); assert list state via INDEX (`loaded[0]`) and attribute state directly
+  (`hero.health == 13`) — cp-04 has ONE `hero`, no list-of-objects, so no `pets[i].attr` beat; the
+  sorted top via `loaded[0]` after `.sort(reverse=True)`. String methods stay in the taught subset
   (upper/lower/strip/replace, NO `.split`). Lists use `.append`/`.sort` only; dicts use
   `[key]`/`.items` only (NO `.get`/`.pop`/`.update`). NO nested loops, NO comprehensions, NO sets.
 - **Deliberate-bug beat (Q8):** ONE fix-the-bug question — a `KeyError` (accessing a missing dict
@@ -67,13 +76,13 @@ PDF handouts; any map edit beyond the Phase-A substrate amendment; inheritance/d
 Dispatch per AGENTS.md: checkpoint question STATEMENTS via codex; solutions via a SEPARATE blind
 codex session; teacher notes inline; gitignore + map amendment + manifest inline.
 
-### Phase A — gitignore + map amendment + manifest (inline)
+### Phase A — gitignore + map amendment (inline)
 
 1. Append to `.gitignore` (surgical): a comment + `book1/checkpoints/checkpoint-04-year-one-finale/finale.txt`.
 2. Amend `coverage-map.yaml` per Global Constraints (surgical, requires + practices).
-3. `book1/checkpoints/checkpoint-04-year-one-finale/manifest.yaml`, map-equal to the amended entry.
 - **Acceptance (Phase A):** the gitignore + map amendment ALONE are green (`uv run pytest -q` +
-  `ci-local`) before any checkpoint directory exists.
+  `ci-local`) before any checkpoint directory exists. (The `manifest.yaml`, map-equal to the amended
+  entry, lands in Phase B alongside the checkpoint dir — glm-6: it cannot exist before its dir.)
 
 ### Phase B — checkpoint-04-year-one-finale content (8 questions)
 
@@ -109,11 +118,18 @@ Blueprint (requires file-read, class-def, for-loop; practices = the 10 headline 
   (deterministic `"w"`, gitignored), non-vacuous asserts — `hero.health == 13` after `heal(3)`;
   `loaded == [40, 90, 20]` after load; `loaded[0] == 90` after reverse-sort; a dict membership
   assert on a computed lookup; the Q8 safe result. NO `len`/`max`/`min`; NO `.split`; NO append
-  mode; index-based list asserts.
+  mode; index-based list asserts. SELF-CONTAINMENT (glm-5, unit-10 content-gate precedent): the
+  Q2 solution cell REDEFINES `class Hero:` with both `__init__` and `heal` (so it stands alone in
+  a headless top-to-bottom run); Q3 writes `finale.txt` BEFORE Q4 reads it (the write cell precedes
+  the read cell in notebook order). Solutions run top-to-bottom clean; the checkpoint is
+  RUN-IN-ORDER (a student running Q4 before Q3 hits a FileNotFoundError — teacher notes flag this).
+- `book1/checkpoints/checkpoint-04-year-one-finale/manifest.yaml`, map-equal to the amended entry
+  (glm-6: manifest lands here in Phase B, with its dir — not Phase A).
 - Teacher notes: SIX headings incl. `## Grading` — per-question points summing to a total; full-
   credit + partial-credit notes; 35–40 min pacing (this is the hardest checkpoint — files + OOP);
   common mistakes (forgetting `self`; KeyError vs a guard; `.sort()` returns None; forgetting
-  `.strip()` before `int()`; a typo'd attribute).
+  `.strip()` before `int()`; a typo'd attribute; running Q4 before Q3 → FileNotFoundError, so
+  RUN THE QUESTIONS IN ORDER — the save file must be written before it is read).
 
 ### Phase C — Verification (NAMED, mandatory)
 
@@ -143,3 +159,63 @@ unit-10 OOP — so it inherits BOTH units' hard-won binding rules: file-I/O CI-s
 (single plain class, no inheritance/dunders-beyond-init). Closure: NO `len`/`max`/`min` (index-based
 asserts, sorted-top via `[0]`); membership-based Q7; KeyError fix-the-bug in a markdown fence.
 Input-free (checkpoint gives all data). `practices ∩ introduces` empty (introduces = []).
+
+### Review 2 — [glm] (2026-09-07) → REJECT, reconciled
+GLM-5.2, read-only. File-I/O CI-safety, OOP/closure safety, conventions, amendment hygiene all
+confirmed clean. Blockers, ALL FIXED in the amendment:
+- **[FIXED] `dict-access` used but unlisted** (Q7/Q8 `inventory["shield"]`; introduced unit-08) →
+  added.
+- **[FIXED] `list-loop` used but unlisted** (Q3 `for score in scores:` over a concrete list;
+  plan-012 taxonomy keeps BOTH `for-loop` and `list-loop`; introduced unit-07) → added.
+- **[FIXED] `def-function` over-listed** (every `def` is a class-body method; no module-level
+  function) → dropped from practices (`parameters`/`return-value`/`methods`/`init-method` cover
+  the method defs).
+Nits, all applied: [FIXED] stale `pets[1].name` → `loaded[0]`/`hero.health` (cp-04 has one hero);
+[FIXED] solution self-containment + RUN-IN-ORDER (Q2 redefines `Hero`; Q3 writes before Q4 reads;
+FileNotFoundError note added to teacher notes); [FIXED] `manifest.yaml` moved Phase A → Phase B
+(cannot exist before its dir).
+
+### Review 3 — [fable] (2026-09-07) → REJECT, reconciled
+Fable 5, read-only. Structure (CI-safety, OOP closure, conventions, closure-legality) all correct.
+Blockers, ALL FIXED:
+- **[FIXED] `dict-access` used but unlisted** (Q7/Q8 subscript; scanner folded it into `list-index`
+  since both are AST `Subscript`) → added (corroborates glm).
+- **[FIXED] `elif-else` used but unlisted** (Q7/Q8 `else` branches) → already added pre-gate.
+- **[NOTE] `accumulator`** (heal `self.health = self.health + amount`) — fable leans omit-fine
+  (single attribute read-modify-write, not a loop; `arithmetic` covers `+`); KEPT listed (stricter
+  scanners treat any `x = x + y` as accumulator; harmless, defensibly present).
+- **[NOTE] `def-function` over-listed** — corroborates glm; dropped (see glm review).
+
+### Reconciliation validation (2026-09-07)
+Amended union: requires += `for-loop`; practices += `parameters, dict-literal, dict-access,
+list-literal, list-append, list-index, for-loop, list-loop, if-statement, in-operator, arithmetic,
+int-type, type-conversion, string-concat, string-literal, string-methods, f-string, print, variable,
+boolean, error-messages, accumulator, elif-else` (def-function DROPPED, dict-access + list-loop
+ADDED vs the pre-gate draft). Validated on a `/dev/shm` scratch map: `prereq-check: PASS`,
+`coverage-check: PASS`. Scanner `detect()` on the planned 8-question code: union complete — the lone
+residual flag is `def-function`, the scanner's known blind spot (it counts every `def`, including
+class-body method defs, as `def-function`; both gates confirmed these are `methods`/`init-method`,
+so the drop is correct). `heal` is the expected exempt user-method. `practices ∩ introduces` empty.
+
+### Review 4 — [sol] (2026-09-07) → REJECT, reconciled
+GPT-5.6-sol, read-only. Beat-by-beat substrate walk of all 8 questions. File-I/O CI-safety and
+OOP/closure safety both confirmed clean (all 6 + 5 sub-checks PASS). Two blockers — EXACTLY the two
+already reconciled from glm/fable:
+- **[FIXED] `list-loop`** (Q3 `for score in scores`, distinct from `for-loop`, registered
+  `concepts.yaml:46`; taught unit-07) → added.
+- **[FIXED] `dict-access`** (Q7/Q8 `inventory["shield"]`, registered `concepts.yaml:49`; taught
+  unit-08) → added.
+sol's scratch prereq-check + coverage-check both exited 0 on the pre-fix amendment, and sol notes
+(as glm did) that those checks CANNOT catch used-but-unlisted substrate — human beat-mapping is the
+enforcement. On `def-function`: sol homes it in Q1/Q2 and did NOT flag it as over-listed (a 1-keep
+minority vs glm+fable's 2-drop). RESOLUTION: dropped, following the unit-10 precedent glm cited
+(`coverage-map.yaml:121` — the OOP unit itself put `def-function` in `requires`, not `practices`,
+because method defs are homed by `methods`/`init-method`). Dropping is CI-clean (prereq-check PASS
+without it) and does not violate sol's review (sol REJECTed on absent concepts, not on this one's
+removal). All three external REJECT-blockers (dict-access ×3, list-loop ×2, elif-else ×1) resolved.
+
+### Consensus (2026-09-07)
+Round-1: [self] APPROVE; [glm]/[fable]/[sol] REJECT on used-but-unlisted substrate (dict-access,
+list-loop, elif-else) + over-listed def-function + doc nits — ALL mechanical list-additions the
+reviewers named explicitly. Reconciled on HEAD: +dict-access +list-loop +elif-else, −def-function,
+3 doc nits. Round-2 confirmation dispatched on the reconciled HEAD.
