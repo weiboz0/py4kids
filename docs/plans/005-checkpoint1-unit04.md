@@ -219,7 +219,31 @@ coverage; ci-local ALL GREEN; content gate 4-way consensus.
 
 ## Content Review
 
-(pre-PR gate findings land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE — concept-boundary sweep clean (keyword hits all in prose/comments); hook opens unit 04; 269 tests green, ci-local ALL GREEN.
+
+### Review 2 — [glm] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS — blind-solved all 15 items, zero discrepancies; unit-scope parity verified; full CLI exit-code matrix probed, no fail-open.
+1. `[FIXED]` Both new solutions notebooks lack cell ids (MissingIDFieldWarning; future hard error). → normalize() pass; verified 0 warnings.
+2. `[FIXED]` Teacher notes overstate `not` (only and/or in material). → a real `not` beat added (lesson + exercise 7 + solution); notes now accurate.
+
+### Review 3 — [fable] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS — zero blind-solve discrepancies; parity vs main verified live; fail-open probed clean.
+1. `[FIXED]` Missing cell ids (= glm #1).
+2. `[FIXED]` Checkpoint Q3 solution hides the answer behind the stand-in. → real answer line shown in the Q3 markdown.
+3. `[FIXED]` Teacher-notes `not` overstatement (= glm #2).
+4. `[FIXED]` Checkpoint Q1 "do not run it yet" — "yet" implies a later run. → dropped.
+5. `[FIXED]` E5 solution could show the repaired line. → added to the E5 markdown.
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT (first attempt failed on a forwarder flag-parse error; re-dispatched)
+1. `[FIXED]` (Blocker) `logical-ops` covers and/or/not but only and/or taught. → real `not` beat added (glm/fable saw it as notes-trim; resolved the stronger way — genuine coverage).
+2. `[FIXED]` (Major) Q3/E5 answer keys hide the requested `int(input(...))` line. → shown in markdown (= fable #2/#5).
+3. `[FIXED]` (Major) Q4 explanation wrong (false `if` "skipped by later elif" — it was evaluated False). → solution matched to the real question (secret=20, guess=27 → "Too high") with a correct top-to-bottom explanation.
+4. `[FIXED]` (Major) Rubric too loose (Q5/Q7 accept violating answers). → grading notes tightened to name the required shapes.
+5. `[FIXED]` (Major) Assertions assert setup not derived answer (Q5 keep_guessing; Challenge 2 none). → keep_guessing and countdown outcomes now asserted.
+6. `[FIXED]` (Major) Assert floor accepts `assert True`. → non-vacuous check added (bare-constant asserts excluded) + fixture.
+7. `[FIXED]` (Major) Question check accepts six "Question 1"s. → sequential-unique 1..N check (gated to in-range counts) + fixture.
 
 ## Post-Execution Report
 

@@ -19,10 +19,11 @@ Budget: two lessons of 60–90 minutes.
   20 min: `score = score + 1` — name the ACCUMULATOR pattern out loud; add a visible
   `questions_asked` counter (counting arrived with unit 03's loops; today it counts
   the game the class actually cares about).
-  25 min: the streak bonus — right answer AND streak alive earns double; `and`/`or`/`not`
-  arrive because the bonus rule cannot be written without them.
+  25 min: the streak bonus — right answer AND streak alive earns double; `and`, `or`, and
+  `not` all arrive here — the bonus rule needs `and`, and `not on_streak` powers the
+  coasting-penalty (exercise 7). All three logical operators are genuinely taught.
   Rest: exercises 1–3.
-  60-MINUTE CUT: drop the `or`/`not` variants (they return in exercises); the accumulator
+  60-MINUTE CUT: drop the `or` variant (it returns in exercise 2); the accumulator
   and one `and` are the non-negotiable core.
 - **Lesson 2 — conditional-nesting, break-statement (60–90 min).**
   Open on the thread: yesterday's quiz was fair; finals are dramatic.

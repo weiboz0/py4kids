@@ -431,7 +431,7 @@ STRUCTURE_CASES = [
         _solution_heading_without_code,
         "solutions: no code under '## Exercise 1'",
     ),
-    ("assert-floor", _assert_floor, "solutions need >=3 assert cells"),
+    ("assert-floor", _assert_floor, "solutions need >=3 non-vacuous assert cells"),
     ("input-ban", _input_ban, "solutions call input()"),
     ("gui-ban", _gui_ban, "solutions import a GUI"),
     ("gui-from-turtle-ban", _gui_from_turtle_ban, "solutions import a GUI"),
@@ -1352,8 +1352,10 @@ def test_checkpoint_duplicate_solution_occurrence_requires_own_code(valid_root, 
         capsys,
         unit="checkpoint-01-fixture",
     )
+    # A duplicated question number is now rejected at the checkpoint level (stricter
+    # sequential rule); the plain code-under-heading rule is covered by the next test.
     assert code == 1
-    assert output == "FAIL: checkpoint-01-fixture: solutions: no code under '## Question 6'\n"
+    assert "must be sequential 1..N" in output
 
 
 def test_checkpoint_solutions_code_under_question_one_fault(valid_root, capsys):
@@ -1388,7 +1390,7 @@ def test_checkpoint_solutions_assert_floor_one_fault(valid_root, capsys):
     _write_nb(path, notebook)
     code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
     assert code == 1
-    assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 assert cells\n"
+    assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 non-vacuous assert cells\n"
 
 
 def test_checkpoint_solutions_assert_decoys_do_not_meet_floor(valid_root, capsys):
@@ -1404,7 +1406,7 @@ def test_checkpoint_solutions_assert_decoys_do_not_meet_floor(valid_root, capsys
     _write_nb(path, notebook)
     code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
     assert code == 1
-    assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 assert cells\n"
+    assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 non-vacuous assert cells\n"
 
 
 def test_checkpoint_magic_prefixed_assert_cells_meet_floor(valid_root, capsys):
@@ -1780,3 +1782,31 @@ def test_checkpoint_cell_lint_does_not_honor_noexec_tag(valid_root, capsys):
     code, output = _run(valid_root, "cell-lint", capsys, unit="checkpoint-01-fixture")
     assert code == 1
     assert "undefined_checkpoint_noexec" in output
+
+
+def test_checkpoint_vacuous_asserts_do_not_meet_floor(valid_root, capsys):
+    # `assert True` (and bare-constant asserts) prove nothing — must not satisfy the floor.
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    assert_cells = [
+        cell for cell in notebook.cells
+        if cell.cell_type == "code" and "assert" in cell.source
+    ]
+    for cell in assert_cells:
+        cell.source = "assert True"
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 non-vacuous assert cells\n"
+
+
+def test_checkpoint_question_numbers_must_be_sequential(valid_root, capsys):
+    # Six headings all labeled "Question 1" must be rejected, not counted as six questions.
+    path, notebook = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
+    for cell in notebook.cells:
+        if cell.cell_type == "markdown" and cell.source.lstrip().startswith("## Question"):
+            import re as _re
+            cell.source = _re.sub(r"## Question \d+", "## Question 1", cell.source, count=1)
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert "must be sequential 1..N" in output

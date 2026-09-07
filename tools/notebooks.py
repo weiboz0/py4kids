@@ -204,12 +204,18 @@ def _solution_policy_findings(scope: str, notebook) -> list[str]:
             except SyntaxError:
                 continue
         parsed.append((cell_index, tree))
-    assert_count = sum(
-        any(isinstance(node, ast.Assert) for node in ast.walk(tree))
-        for _cell_index, tree in parsed
-    )
+    def _non_vacuous_assert(tree) -> bool:
+        # An assert whose test is a bare True/constant (or `assert True`) proves nothing.
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assert) and not (
+                isinstance(node.test, ast.Constant) and bool(node.test.value)
+            ):
+                return True
+        return False
+
+    assert_count = sum(_non_vacuous_assert(tree) for _cell_index, tree in parsed)
     if assert_count < 3:
-        findings.append(_fail(scope, "solutions need >=3 assert cells"))
+        findings.append(_fail(scope, "solutions need >=3 non-vacuous assert cells"))
     for cell in codes:
         if INTERACTIVE.search(cell.source):
             findings.append(_fail(scope, "solutions call input()"))
@@ -518,11 +524,21 @@ def checkpoint_question_findings(
             findings.append(_fail(checkpoint_dir.name, "missing checkpoint.ipynb"))
             continue
         notebook = read_nb(path)
-        count = len(_markdown_heading_occurrences(notebook, QUESTION_HEADING))
+        occurrences = _markdown_heading_occurrences(notebook, QUESTION_HEADING)
+        count = len(occurrences)
         if count < 6:
             findings.append(_fail(checkpoint_dir.name, f"{count} question headings (<6)"))
         if count > 8:
             findings.append(_fail(checkpoint_dir.name, f"{count} question headings (>8)"))
+        # Only judge numbering when the count is in range — otherwise the count finding
+        # above is the story and a numbering finding would just pile on.
+        if 6 <= count <= 8:
+            numbers = [int(re.search(r"\d+", text).group(0)) for text, _idx in occurrences]
+            if numbers != list(range(1, len(numbers) + 1)):
+                findings.append(
+                    _fail(checkpoint_dir.name,
+                          f"question numbers must be sequential 1..N, got {numbers}")
+                )
         if any("stretch" in tags(cell) for cell in notebook.cells):
             findings.append(_fail(checkpoint_dir.name, "checkpoint contains stretch-tagged cells"))
         if _markdown_heading_occurrences(notebook, SOLUTION_HEADING):

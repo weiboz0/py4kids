@@ -58,13 +58,16 @@ Manual, per D-002 — a judgment read, not a point count. Per question:
    for that moment.
 4. **Trace the if/elif chain** (comparison, elif-else): full = right branch AND says why
    the later branch didn't run. The "why" is the understanding.
-5. **Complete the while condition**: full = a condition that can become False; the
-   classic wrong answer (`while True`-ish or a condition that never changes) means the
-   loop mental model needs one more rep — catch it before unit 03 leans on loops hard.
+5. **Complete the while condition**: full = the specific condition `guess != secret`
+   (or an equivalent that keeps looping while the guess is wrong AND stops when it's
+   right); a condition that can never become False (`while True`-ish) or the wrong
+   comparison is the classic miss — catch it before unit 03 leans on loops hard.
 6. **Naming/comment judgment**: any defensible answer is full marks; this question
    exists to make style a conversation, not a rule.
-7. **Build-it**: grade that it RUNS and uses a variable + input + a branch; elegance is
-   not the bar at week five.
+7. **Build-it**: full = it RUNS and uses the required shape — a hard-coded secret, one
+   `input()` guess, and an `if`/`elif`/`else` giving a too-low / too-high / correct
+   verdict; partial = runs but collapses the three-way branch to one check. Elegance is
+   not the bar at week five, but the three-way branch is the point of the question.
 
 **Re-teach signal:** if a third of the class or more stumbles on questions 4–5
 (branches/loops), spend 20 minutes re-teaching before unit 03's lesson 2 — unit 03
