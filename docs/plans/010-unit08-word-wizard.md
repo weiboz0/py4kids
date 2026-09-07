@@ -303,3 +303,48 @@ space (glm-1); `[FIXED]` hit-path asserts on Ex2/Ex10 (fable-N1, pins the `.get`
 WONTFIX: elif-else (glm-2, unit-06 precedent), tie-break (fable-N2, deterministic), letter-counter
 (sol-3, optional extension). Scanner clean post-fix; ci-local ALL GREEN. Re-dispatching focused
 [sol] re-check.
+
+## Post-Execution Report (2026-09-06)
+
+**Shipped:** `unit-08-word-wizard` — Book 1's dictionaries unit (Term 3 unit 3).
+
+**What was built:**
+- `lesson.ipynb` (2 lessons, hook-first): L1 builds a phrasebook, `[]`/`.get` lookup, `.strip().lower()`
+  normalization, membership boolean, KeyError→`.get` traceback beat; L2 walks `.items()`, a
+  `translate` helper, a word-frequency counter (else-first-sighting), a `word => count` label,
+  most-common by running-best comparison, and grow-the-log (append + reset counts).
+- `exercises.ipynb`: 11 core + 2 Challenge (stretch) exercises; `input` confined to Ex2's prompt.
+- `solutions.ipynb`: blind, input-free, 15 non-vacuous asserts (13 + 2 added hit-path), headless clean.
+- `manifest.yaml` (map-equal), `teacher-notes.md` (five headings, L2-density split + L1 cut).
+
+**Verification:** `ci-local.sh` ALL GREEN; AST concept-scanner scoped to unit-08 clean.
+
+**Map amendment (Phase A):** unit-08 `requires` += `for-loop, parameters, return-value`;
+`practices` += 13 substrate concepts (incl. `accumulator`). Surgical diff.
+
+**Gates:**
+- Plan-review: round-1 convergent REJECT (accumulator used-but-unlisted; list-append + string-methods
+  unhomed) → all fixed → consensus ([self]/[sol] APPROVE, [glm]/[fable] APPROVE WITH NITS).
+- Content-review: [self] APPROVE, [glm]/[fable] APPROVE WITH NITS, [sol] REJECT→fixed (teacher-note
+  append drift; + glm stray-space + fable hit-path asserts). WONTFIX: elif-else (unit-06 precedent),
+  tie-break, optional letter-counter.
+
+**Key design:** word-frequency counting iterates a GIVEN word list (`.split()` untaught); only
+`.get`/`.items` dict methods; `.get(k, default)` motivated by a deliberate KeyError beat;
+grow-the-log resets `counts` to avoid double-counting.
+
+**Process dividend:** the concept-scanner was extended to DETECT the accumulator pattern
+(read-modify-write self-reference), closing the blind spot that let plan-010's accumulator miss
+reach the reviewers. It also surfaced a true latent `accumulator` gap in shipped unit-05
+(`petals_drawn = petals_drawn + 1`) for the hygiene PR.
+
+**Follow-ups (tracked, non-blocking):** hygiene PR for shipped-unit practice gaps (string-literal in
+03/04/05/cp02/proj01; f-string in 03; import-statement in 05; **accumulator in 05**) + promote the
+scanner into `tools/`; then plan 011 = checkpoint 03 Data Wrangler (assesses lists + dicts).
+
+## Content Gate — CONSENSUS REACHED (2026-09-06)
+- `[self]` APPROVE · `[fable]` APPROVE WITH NITS (fixed) · `[glm]` APPROVE WITH NITS (fixed) ·
+  `[sol]` APPROVE (re-check — round-1 REJECT items resolved & re-confirmed clean).
+- All `[OPEN]` findings resolved; WONTFIX items justified (elif-else per unit-06 precedent,
+  tie-break deterministic, letter-counter optional). Scanner clean; ci-local ALL GREEN.
+- **Gate PASSED. Shipping PR #10.**
