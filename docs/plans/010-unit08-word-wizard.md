@@ -8,11 +8,15 @@ wizard and a word-frequency counter: a DICT maps each word (key) to its translat
 FRONT (the standing substrate audit, validated with the AST concept-scanner): unit-08's
 `requires ∪ practices` omits the substrate its content uses. Helper functions take arguments and
 return values (`for-loop`, `parameters`, `return-value` → requires); the count/translate/display
-beats use `print`, `variable`, `comparison` (reverse-lookup), `string-concat` (a `word => value`
-label), `elif-else`, `arithmetic` (`count + 1`), `int-type` (counts), `error-messages` (the
-KeyError beat), `input` (an exercise prompt), `string-literal` (every key/value/message), and
-`boolean` (a `print("cat" in translations)` membership-truth beat) → practices. All taught by
-units 01–07; verified green in scratch.
+beats use `print`, `variable`, `comparison` (the CORE most-common-word `count > best_count`, plus
+reverse-lookup), `string-concat` (a `word => value` label), `elif-else`, `arithmetic` (`count +
+1`), `int-type` (counts), `accumulator` (the counter `counts[word] = counts[word] + 1`),
+`error-messages` (the KeyError beat), `input` (an exercise prompt), `string-literal` (every
+key/value/message), `type-conversion` (`str(count)`), and `boolean` (a `print("cat" in
+translations)` membership-truth beat) → practices. All taught by units 01–07; verified green in
+scratch. NOTE (glm plan-review): the pre-gate concept-scanner's method allowlist already maps
+`.get`/`.keys`/`.values` and `.items` to taught dict concepts, so `.get()`/`.items()` do NOT
+false-positive as untaught methods.
 
 **Spec:** `book1/curriculum/coverage-map.yaml` (binding, amended); plan 004 unit conventions; D-001.
 
@@ -25,7 +29,10 @@ units 01–07; verified green in scratch.
   - append to `unit-08-word-wizard.requires` — `for-loop, parameters, return-value`.
   - append to `unit-08-word-wizard.practices` — `print, variable, comparison, string-concat,
     elif-else, arithmetic, int-type, error-messages, input, string-literal, boolean,
-    type-conversion` (the last homes `str(count)` in the `word + " => " + str(count)` label).
+    type-conversion, accumulator` (`type-conversion` homes `str(count)` in the
+    `word + " => " + str(count)` label; `accumulator` homes the counter `counts[word] =
+    counts[word] + 1` — the read-modify-write running-total pattern, same classification unit-07
+    gave `total = total + score`; fable plan-review, introduced unit 04).
   - All introduced by units 01–07; `practices ∩ introduces` stays empty (introduces =
     dict-literal/dict-access/dict-loop). Apply surgically (no YAML round-trip). Manifest carries
     the amended lists. Each amended concept HOMED in ≥1 beat/exercise (teacher notes name each).
@@ -78,17 +85,19 @@ codex session; teacher notes inline; map amendment + manifest inline.
 Blueprint (introduces dict-literal, dict-access, dict-loop; requires list-loop, string-methods,
 in-operator, def-function, + amended for-loop/parameters/return-value; practices list-literal,
 list-append, if-statement, f-string, + amended print/variable/comparison/string-concat/elif-else/
-arithmetic/int-type/error-messages/input/string-literal/boolean):
+arithmetic/int-type/error-messages/input/string-literal/boolean/type-conversion/accumulator):
 - Hook: WORD WIZARD — a program that translates words and, like a spell-checker, counts how often
   each word appears. The teacher shows a tiny bilingual phrasebook and asks how a program could
   look a word up instantly.
 - Lesson 1 (dict-literal, dict-access) — open on the hook: a DICT pairs each word (key) with its
   translation (value) — `translations = {"hello": "hola", "cat": "gato", "dog": "perro"}`. Look up
-  `translations["hello"]`; add/update `translations["bird"] = "pajaro"`; test membership
-  `print("cat" in translations)` (a True/False value — boolean); the SAFE lookup
-  `translations.get("fish", "???")` that returns a default instead of crashing; the deliberate
-  bug `translations["fish"]` → KeyError, read the traceback together (error-messages) — which is
-  exactly why `.get` exists.
+  `translations["hello"]`; add/update `translations["bird"] = "pajaro"`. Words arrive messy, so
+  CLEAN the search word first — `clean = raw_word.strip().lower()` — so `"  Hello "` still matches
+  the key `"hello"` (homes `string-methods`, which unit-08 `requires` — sol plan-review; the
+  taught subset strip/lower). Test membership `print("cat" in translations)` (a True/False value —
+  boolean); the SAFE lookup `translations.get("fish", "???")` that returns a default instead of
+  crashing; the deliberate bug `translations["fish"]` → KeyError, read the traceback together
+  (error-messages) — which is exactly why `.get` exists.
 - Lesson 2 (dict-loop; the counter + translator) — open on the thread ("yesterday we looked words
   up; today we count them and translate a whole list"): walk keys `for word in translations:` and
   pairs `for word, translation in translations.items():`; a `translate(word, dictionary)` helper
@@ -100,12 +109,17 @@ arithmetic/int-type/error-messages/input/string-literal/boolean):
   (string-concat + type-conversion via `str` — both in the amended union). Then a "most common
   word" beat over `.items()` — `best_word = ""; best_count = 0; for word, count in counts.items():
   if count > best_count: best_count = count; best_word = word` — which homes `comparison` in CORE
-  content (not only the reverse-lookup stretch), a SINGLE loop, no nesting.
+  content (not only the reverse-lookup stretch), a SINGLE loop, no nesting. A "new word arrives"
+  beat homes `list-append` (glm plan-review): the word log grows as more text comes in —
+  `words.append("cat")` — then the counter re-runs over the grown list (single loop, no nesting).
 - Exercises ≥6 core + ≥2 stretch: build-a-phrasebook (dict-literal), safe-lookup (`.get` default),
   is-it-in-the-book (`in` condition), add-a-word (`dict[key] = value`), count-the-words (single
   loop over a given word list), most-common-word (single loop over `.items()`, `comparison` —
-  core), print-every-pair (`.items()`), translate-a-list (loop a word list, print each
-  `translate`), fix-the-KeyError (swap `[]` for `.get`); stretch: reverse-lookup (find
+  core), grow-the-log (`words.append(new_word)` then re-count — homes `list-append` in a core
+  exercise), tidy-then-translate (clean a messy word with `.strip().lower()` before looking it up,
+  so `"  CAT "` finds `"cat"` — homes `string-methods` in a core exercise), print-every-pair
+  (`.items()`), translate-a-list (loop a word list, print each `translate`), fix-the-KeyError
+  (swap `[]` for `.get`); stretch: reverse-lookup (find
   the key whose value matches a target — SINGLE loop over `.items()`, comparison), merge-two-
   phrasebooks (copy pairs from a second dict with a single loop + `dict[key] = value`).
 - Solutions: execute headless, input-free (fixed sample dicts/word-lists), non-vacuous asserts —
@@ -113,7 +127,9 @@ arithmetic/int-type/error-messages/input/string-literal/boolean):
   a membership assert (`("cat" in d) == True` is a tautology-risk — instead assert on a computed
   lookup), a reverse-lookup assert. `random.seed(4)` only if any randomness.
 - Teacher notes: five headings, per-lesson allocation (L1 build/lookup/get/KeyError, L2 loop/
-  count/translate), 60-min cuts, differentiation; common mistakes (KeyError on a missing key →
+  count/translate) with an EXPLICIT L2-density split (L2 is dense — the counter can open L2; the
+  translate helper + most-common can be a 60-min cut) — glm plan-review; 60-min cuts,
+  differentiation; common mistakes (KeyError on a missing key →
   use `.get`; overwriting a value by re-assigning an existing key; counting by iterating the dict
   instead of the word list; forgetting the `else: = 1` first-sighting case).
 
@@ -149,3 +165,51 @@ forbidden (word-count iterates a GIVEN list, not a split sentence); KeyError→`
 only `.get`/`.items`/`.keys`/`.values` dict methods; single loops (no nesting); `boolean` via
 `print("cat" in translations)`; `string-literal` via keys/values; `type-conversion`+`string-concat`
 via the `word + " => " + str(count)` label. `practices ∩ introduces` empty.
+
+### Review 2 — [glm] (2026-09-06)
+APPROVE WITH NITS → all addressed (revised in place before commit):
+1. `[FIXED]` (Minor) `list-append` listed-but-unhomed — homed via a "new word arrives"
+   `words.append(...)` lesson beat + a `grow-the-log` core exercise.
+2. `[FIXED]` (Nit) Architecture prose pinned `comparison` to the stretch — now names the CORE
+   most-common-word homing.
+3. `[FIXED]` (Nit) scanner allowlist mapping for `.get`/`.items` — noted in Architecture; the
+   scanner already registers these as taught (no false positive).
+4. `[FIXED]` (Nit) L2 density — explicit L2 split carried to the teacher-notes spec.
+- glm affirmed: closure complete (no used-but-unlisted), amendment closure-safe, `.split()` trap
+  avoided, KeyError→`.get` sound, only `.get/.items` dict methods, no nesting.
+
+### Review 3 — [fable] (2026-09-06)
+REJECT → both findings RESOLVED:
+1. `[FIXED]` (Blocker) `accumulator` used-but-unlisted — the counter `counts[word] =
+   counts[word] + 1` is the read-modify-write accumulator pattern (unit-07 classified the
+   identical `total = total + score` as accumulator). Added to the practices amendment
+   (introduced unit 04, closure-safe; `practices ∩ introduces` stays empty). Re-validated green.
+2. `[FIXED]` (Major) `list-append` listed-but-unhomed — same as glm #1, homed.
+- fable affirmed: prereq closure of all amended concepts; `.split()` avoided; dict-method
+  discipline; no nested loops / builtin-functions / float-type; counter + most-common logic
+  correct; boolean correctly homed+listed; comparison in core; hook-first pedagogy.
+
+### Round 2 revisions (2026-09-06)
+Amendment now: requires += `for-loop, parameters, return-value`; practices += `print, variable,
+comparison, string-concat, elif-else, arithmetic, int-type, error-messages, input, string-literal,
+boolean, type-conversion, accumulator` (13). `list-append` homed (lesson beat + core exercise).
+Re-validated green.
+
+### Review 4 — [sol] (2026-09-06)
+REJECT → all findings RESOLVED:
+1. `[FIXED]` (Blocker) `accumulator` used-but-unlisted — same as fable #1; added to practices.
+2. `[FIXED]` (Blocker) `list-append` over-listed/unhomed — homed via the `words.append(...)`
+   lesson beat + `grow-the-log` core exercise (now a genuine practice, not padding).
+3. `[FIXED]` (Nit) `string-methods` in `requires` had no described use — added a word-
+   normalization beat (`clean = raw_word.strip().lower()` before lookup) to L1 + a
+   `tidy-then-translate` core exercise. Pedagogically strong (case-insensitive matching).
+- sol affirmed: no `.split()`; only `.get`/`.items` dict methods; no sets/comprehensions/nested-
+  loops/files/classes; mechanical map checks + `tests/test_book1_curriculum.py` (9 tests) pass.
+
+### Round 2 revisions — FINAL (2026-09-06)
+All three external reviewers converged on `accumulator` (used-but-unlisted) and `list-append`
+(unhomed); sol added `string-methods` (unhomed requires). Amendment now: requires += `for-loop,
+parameters, return-value`; practices += `print, variable, comparison, string-concat, elif-else,
+arithmetic, int-type, error-messages, input, string-literal, boolean, type-conversion,
+accumulator` (13). `list-append` homed (beat + exercise); `string-methods` homed (normalization
+beat + exercise). Re-validated green. Re-dispatching [glm]/[fable]/[sol] round 2 to confirm.
