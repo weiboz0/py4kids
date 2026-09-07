@@ -28,7 +28,7 @@ two lessons split along that order:
   15 min: SHOWCASE — pairs swap seats and play each other's arcades; each author notes one
   thing they'd add next.
 
-Differentiation: strugglers ship the one-game minimum bar as a complete, celebrated result;
+Differentiation: strugglers ship the one-game minimum bar as a celebrated developing-level result (a real playable arcade, below the two-game spec);
 the second game and extensions are where faster students spend lesson 2.
 
 ## Common mistakes
@@ -50,7 +50,7 @@ the second game and extensions are where faster students spend lesson 2.
 ## Differentiation
 
 - Strugglers: provide a menu + one-game skeleton with the game function's `def` line and
-  `return` stubbed; they fill the body. The one-game arcade is a full, valid submission.
+  `return` stubbed; they fill the body. The one-game arcade is a genuine, celebrated result at the Developing level — not full credit (the spec is two games), but never a failure.
 - Middle tier: the second game and a high-score message.
 - Fast finishers: a difficulty toggle passed as a parameter, or a third game — all inside
   the taught concept set (no lists needed; a third `elif` branch handles a third game).
@@ -67,10 +67,12 @@ games differ by design. Judge the BUILD, not a match to a reference.
 - The program RUNS without crashing on normal play.
 
 **Developing (a valid, celebrated result for strugglers — below the two-game spec):**
-- ONE working game function that returns points, wired into a menu with a running total
-  and a quit path. This is the end-of-lesson-1 minimum bar; a student who ships exactly
-  this has a real, playable arcade — mark it complete-for-them and note the second game as
-  the next step, don't fail it.
+- ONE working game function that returns points, wired into a menu with a quit path, and a
+  score that adds up that game's points across repeated plays. This is the end-of-lesson-1
+  minimum bar (Milestones 1–2; the full cross-game running total is Milestone 4, lesson 2);
+  a student who ships exactly this has a real, playable arcade — celebrate it at the
+  Developing level and name the second game as their next step; never a failure, but not
+  yet the two-game full-credit bar.
 
 **Milestone-by-milestone "what done looks like":**
 1. **Menu loop:** loops until the player quits; each choice routes to a game or exits.

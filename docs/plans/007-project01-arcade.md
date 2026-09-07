@@ -233,6 +233,18 @@ All round-1 findings applied; the project-01 substrate amendment verified green 
 5. `[FIXED]` (Blocker) Brief requirements checklist not mechanically enforced. → `project_milestone_findings` now requires a `## Requirements` heading in the brief; +fixture; fixture-factory baseline brief gains one.
 6. `[FIXED]` (Blocker) Non-vacuous assert check missed executable tautologies (`1 == 1`, `x == x`, `not False`). → `_is_tautology` now rejects bare constants, `not <constant>`, and same-node/constant comparisons; +fixture; verified no real solution assert regresses.
 
+### Round 2 (2026-09-06)
+- **[fable]** (round 1): APPROVE WITH NITS — quit-branch nit fixed (driver rewritten).
+- **[glm]**: APPROVE WITH NITS (both the original review and a retry approved the fixed tree; ci-local ALL GREEN, selector 0/2/1, tautology check verified). Nits:
+  1. `[FIXED]` Solution exercised only the all-win path — added three quick_quiz branch asserts (4/2/0) so points can't be hard-coded (caught and fixed a branch-logic slip in the process).
+  2. `[FIXED]` "Developing" rubric bar mentioned a running total lesson 1 doesn't reach — reworded to a single-game score across replays, with the cross-game total named as M4/lesson 2.
+- **[sol] round 2**: REJECT → then addressed.
+  1. `[FIXED]` (Major) Rubric said one game = Developing, but differentiation/pacing text still called a one-game arcade "a full, valid submission" / "complete-for-them" — contradictory. → all one-game language reconciled to "Developing level, not full credit, never a failure."
+  2. `[FIXED]` (Nit) Requirements-heading fixture used `in output`, not an exact single-failure assertion. → tightened to exact-match.
+
+### Gate result (2026-09-06)
+- `[self]` APPROVE · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS · `[sol]` — round-2 fixes applied, re-verification dispatched (round 3).
+
 ## Post-Execution Report
 
 (written before shipping.)

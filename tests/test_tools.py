@@ -2051,7 +2051,7 @@ def test_project_requires_requirements_checklist(valid_root, capsys):
     _write_nb(path, notebook)
     code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
     assert code == 1
-    assert "missing '## Requirements' checklist" in output
+    assert output == "FAIL: project-02-grand-adventure: missing '## Requirements' checklist\n"
 
 
 def test_project_brief_solution_heading_one_fault(valid_root, capsys):
