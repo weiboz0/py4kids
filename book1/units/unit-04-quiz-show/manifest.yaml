@@ -7,4 +7,4 @@ concepts:
   introduces: [accumulator, logical-ops, conditional-nesting, break-statement]
   requires: [if-statement, elif-else, while-loop, comparison, input, f-string,
              arithmetic, int-type, variable]
-  practices: [boolean, type-conversion, loop-counter, error-messages]
+  practices: [boolean, type-conversion, loop-counter, error-messages, string-literal]

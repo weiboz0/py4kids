@@ -35,6 +35,7 @@ step "4/6 curriculum + assets"
 uv run py4kids-tools --book book1 manifest-check
 uv run py4kids-tools --book book1 prereq-check
 uv run py4kids-tools --book book1 coverage-check
+uv run py4kids-tools --book book1 concept-scan
 uv run py4kids-tools --book book1 stretch-check
 uv run py4kids-tools --book book1 turtle-check
 

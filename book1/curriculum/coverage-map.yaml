@@ -32,7 +32,7 @@ entries:
   introduces: [turtle-basics, turtle-drawing, for-loop, range-function, loop-counter,
                nested-loops, float-type]
   requires: [import-statement, variable, arithmetic]
-  practices: [naming, comment, run-program]
+  practices: [naming, comment, run-program, f-string, string-literal]
 - id: unit-04-quiz-show
   kind: unit
   title: "Quiz Show — keeping score"
@@ -40,14 +40,15 @@ entries:
   introduces: [accumulator, logical-ops, conditional-nesting, break-statement]
   requires: [if-statement, elif-else, while-loop, comparison, input, f-string,
              arithmetic, int-type, variable]
-  practices: [boolean, type-conversion, loop-counter, error-messages]
+  practices: [boolean, type-conversion, loop-counter, error-messages, string-literal]
 - id: unit-05-function-factory
   kind: unit
   title: "Function Factory — greeting cards and turtle stamps"
   lessons: 3
   introduces: [def-function, parameters, return-value, scope]
   requires: [turtle-basics, turtle-drawing, for-loop, variable, f-string]
-  practices: [range-function, loop-counter, arithmetic, nested-loops, float-type]
+  practices: [range-function, loop-counter, arithmetic, nested-loops, float-type,
+              accumulator, import-statement, string-literal]
 - id: checkpoint-02-loops-and-functions
   kind: checkpoint
   title: "Checkpoint 2 — Loops and Functions"
@@ -57,7 +58,8 @@ entries:
   practices: [for-loop, range-function, while-loop, accumulator, logical-ops,
               conditional-nesting, def-function, parameters, return-value, scope,
               turtle-basics, turtle-drawing, print, variable, comparison, arithmetic,
-              if-statement, elif-else, boolean, int-type, loop-counter, f-string]
+              if-statement, elif-else, boolean, int-type, loop-counter, f-string,
+              string-literal]
 - id: project-01-arcade-night
   kind: project
   title: "Arcade Night — build your own mini-game"
@@ -66,7 +68,7 @@ entries:
   requires: [def-function, parameters, return-value, while-loop, if-statement, random-module]
   practices: [print, input, f-string, accumulator, logical-ops, loop-counter,
               elif-else, break-statement, comparison, scope, import-statement, random-module,
-              variable, arithmetic, int-type]
+              variable, arithmetic, int-type, string-literal]
 - id: unit-06-secret-codes
   kind: unit
   title: "Secret Codes — ciphers and string surgery"
