@@ -34,7 +34,7 @@ D-001; design-000 §4 (notebook execution).
   3. The scratch filenames are gitignored in Phase A so the runtime-created files never show up as
      git noise or get committed. Use ONLY these two scratch names so the ignore stays tight:
      `savegame.txt` and `settings.txt` (both in the unit dir).
-  4. The FileNotFoundError teaching beat (`open("missing.txt")`) lives in a `no-exec`-tagged cell
+  4. The FileNotFoundError teaching beat (`with open("missing.txt") as f: f.read()`) lives in a `no-exec`-tagged cell
      (like the unit-07 IndexError / unit-08 KeyError beats) so CI never runs it. Its traceback is
      shown in a following markdown cell.
   5. `os.remove`/`os.path`/`tempfile`/`pathlib` are NOT taught — NO cleanup code, NO imports; the
@@ -43,7 +43,9 @@ D-001; design-000 §4 (notebook execution).
   - append to `unit-09-save-point.requires` — `parameters, return-value`.
   - append to `unit-09-save-point.practices` — `builtin-functions, dict-literal, if-statement,
     list-literal, print, variable, string-concat, string-literal, type-conversion, int-type,
-    error-messages`.
+    error-messages, input` (`input` homed by the "save-my-score" exercise PROMPT only — prose, not
+    an executable cell; solution parameterized with a fixed score, matching units 07/08; sol
+    plan-review caught it used-but-unlisted).
   - All introduced by units 01–08; `practices ∩ introduces` empty (introduces = file-read/
     file-write/with-statement). Apply surgically (no YAML round-trip). Manifest carries the lists.
 - **Pre-gate closure self-check (standing):** run the AST concept-scanner scoped to unit-09 and
@@ -89,36 +91,53 @@ session; teacher notes inline; map amendment + gitignore + manifest inline.
 Blueprint (introduces file-read, file-write, with-statement; requires list-append, string-methods,
 def-function, for-loop, + amended parameters/return-value; practices list-loop, dict-access,
 f-string, in-operator, + amended builtin-functions/dict-literal/if-statement/list-literal/print/
-variable/string-concat/string-literal/type-conversion/int-type/error-messages):
+variable/string-concat/string-literal/type-conversion/int-type/error-messages/input):
 - Hook: SAVE POINT — a game that forgets everything when you close it is no fun. Teach the program
   to WRITE the player's progress to a file and LOAD it back next time.
-- Lesson 1 (file-write, with-statement) — open on the hook: `with open("savegame.txt", "w") as f:`
-  then `f.write("Ada\n")` and, for a score list, `for score in scores: f.write(str(score) + "\n")`
-  (list-loop + type-conversion + string-concat). Explain `with` closes the file automatically, and
-  `"\n"` is the newline that puts each value on its own line. A settings dict written to a second
-  file: `settings = {"volume": 8, "difficulty": "easy"}`; `f.write(str(settings["volume"]) + "\n")`
-  (dict-literal + dict-access). Show the file was created by reading it straight back with
-  `f.read()`.
+- **PAYLOAD SPLIT (binding, fable plan-review — prevents an int-parse crash):** `savegame.txt`
+  holds INTEGER SCORE lines ONLY (so every line int-parses clean). `settings.txt` holds TEXT lines
+  (player name, volume, difficulty) and is read back as TEXT via membership ONLY — its lines are
+  NEVER `int(...)`-parsed. The two files never mix payloads; each read/membership beat names which
+  file it targets.
+- Lesson 1 (file-write, with-statement) — open on the hook: save a SCORE LIST to `savegame.txt` —
+  `scores = [1200, 850, 990]`; `with open("savegame.txt", "w") as f: for score in scores:
+  f.write(str(score) + "\n")` (list-loop + type-conversion + string-concat). Explain `with` closes
+  the file automatically and `"\n"` puts each value on its own line. Then save the player + settings
+  as TEXT to `settings.txt` — `settings = {"volume": 8, "difficulty": "easy"}`; `with
+  open("settings.txt", "w") as f: f.write("Ada\n"); f.write(str(settings["volume"]) + "\n");
+  f.write(settings["difficulty"] + "\n")` (dict-literal + dict-access). Show each file was created by
+  reading it straight back with `f.read()`. **Give `"\n"` its own teaching beat (glm plan-review):**
+  it is new syntax (no concept id — absorbed under `string-literal`) — explain that `"\n"` is the
+  invisible "new line" character that ends a line, so each `f.write(... + "\n")` starts the next
+  value on a fresh line; without it everything runs together.
 - Lesson 2 (file-read) — open on the thread ("yesterday we saved; today we load"): read the whole
-  file `with open("savegame.txt") as f: content = f.read()`; then rebuild a list line-by-line —
-  `loaded = []` / `with open("savegame.txt") as f: for line in f: loaded.append(int(line.strip()))`
-  (list-append + type-conversion + string-methods) — noting `.strip()` drops the trailing newline.
+  scores file `with open("savegame.txt") as f: content = f.read()`; then rebuild the score list
+  line-by-line — `loaded = []` / `with open("savegame.txt") as f: for line in f:
+  loaded.append(int(line.strip()))` (list-append + type-conversion + string-methods) — noting
+  `.strip()` drops the trailing newline and EVERY line of `savegame.txt` is an integer.
   A `load_scores(filename)` helper returns the list (def-function/parameters/return-value);
-  `print(f"Loaded {len(loaded)} scores")` (builtin-functions + f-string). Search the save text with
-  membership: `if "Ada" in content: print("Welcome back, Ada!")` (if-statement + in-operator). The
-  deliberate bug in a `no-exec` cell: `open("missing.txt")` → FileNotFoundError, read the traceback
-  together (error-messages); the fix is to save before you load.
-- Exercises ≥6 core + ≥2 stretch, each HOMING a concept: save-a-name (write one line), save-a-score-
-  list (write loop + str + "\n"), load-the-file (read + print), load-scores-into-a-list (read loop +
-  int + strip + append), count-the-saved-scores (builtin-functions len), save-settings (dict-access
-  write), search-the-save (in-operator membership), save-then-load (a `save`+`load` round-trip via
-  helpers); stretch: highest-saved-score (load then `max`), append-a-new-high (load list, `.append`,
-  re-SAVE with `"w"` — NOT append mode). input() appears only in an exercise PROMPT; solutions are
-  parameterized with fixed filenames (`savegame.txt`).
+  `print(f"Loaded {len(loaded)} scores")` (builtin-functions + f-string). Search the SETTINGS text
+  with membership: `with open("settings.txt") as f: info = f.read()`; `if "Ada" in info:
+  print("Welcome back, Ada!")` (if-statement + in-operator) — `settings.txt` is read as TEXT, never
+  int-parsed. The deliberate bug in a `no-exec` cell: `with open("missing.txt") as f: f.read()` →
+  FileNotFoundError, read the traceback together (error-messages); the fix is to save before you
+  load.
+- Exercises ≥6 core + ≥2 stretch, each HOMING a concept (each names its target file): save-a-score-
+  list (write loop + str + "\n" → `savegame.txt`), load-the-file (read + print `savegame.txt`),
+  load-scores-into-a-list (read loop + int + strip + append from `savegame.txt`), count-the-saved-
+  scores (builtin-functions `len`), save-settings (dict-access write name+volume+difficulty as TEXT
+  → `settings.txt`), search-the-settings (in-operator membership on `settings.txt` text — e.g.
+  `if "Ada" in info`), save-then-load (a `save`+`load` integer round-trip via helpers on
+  `savegame.txt`); stretch: highest-saved-score (load `savegame.txt` then `max`), append-a-new-high
+  (load list, `.append`, re-SAVE with `"w"` — NOT append mode; titled "add-a-new-high", NOT "append", so the word can't
+  steer a beginner toward mode `"a"` — glm plan-review). input() appears only in an exercise
+  PROMPT; solutions are parameterized with the fixed filenames.
 - Solutions: execute headless (they WRITE-THEN-READ `savegame.txt`/`settings.txt` in the unit dir,
-  deterministic `"w"` mode, gitignored), input-free, non-vacuous asserts — a round-trip assert
-  (`load_scores(save_scores([100, 200], "savegame.txt")) == [100, 200]`), a length assert, a
-  membership assert on read content, a settings read-back assert. NO append mode, NO os/tempfile.
+  deterministic `"w"` mode, gitignored), input-free, non-vacuous asserts — an integer round-trip
+  assert (`load_scores(save_scores([100, 200], "savegame.txt")) == [100, 200]`), a length assert
+  (`len(loaded) == 3`), a TEXT membership assert on the settings read-back
+  (`"Ada" in info` after reading `settings.txt`), and a settings value membership (`"easy" in info`).
+  `settings.txt` lines are NEVER int-parsed. NO append mode, NO os/tempfile.
 - Teacher notes: five headings, per-lesson allocation (L1 write/with, L2 read/parse/helpers), 60-min
   cuts, differentiation; common mistakes (forgetting `"\n"` so everything runs together; forgetting
   `.strip()` before `int()`; using append mode and doubling the file; reading a file that was never
@@ -126,9 +145,16 @@ variable/string-concat/string-literal/type-conversion/int-type/error-messages):
 
 ### Phase C — Verification (NAMED, mandatory)
 
-Mechanical: full pytest green; `ci-local.sh` ALL GREEN (exec-lessons + exec-solutions BOTH run the
-file I/O — confirm no stray committed files: the scratch files are gitignored); AST concept-scanner
-scoped to unit-09 clean; solutions execute with non-vacuous round-trip asserts; manifest map-equal.
+Mechanical: full pytest green; **CLEAN-SLATE RUN (glm plan-review):** `rm -f
+book1/units/unit-09-save-point/savegame.txt book1/units/unit-09-save-point/settings.txt` immediately
+BEFORE the final `ci-local.sh` run, so the notebooks must CREATE the files themselves — green then
+genuinely evidences create-before-read (ci-local otherwise can't falsify a read-before-write since
+the gitignored files persist across runs and exec-solutions precedes exec-lessons). `ci-local.sh`
+ALL GREEN (exec-lessons + exec-solutions BOTH run the file I/O; the scratch files are gitignored, so
+`git status` stays clean after the run). The AST concept-scanner scoped to unit-09 is an ADVISORY
+pre-gate aid (a scratch prototype, not wired into `tools/` — see Out of scope), not a mechanical CI
+gate; closure is enforced by reviewer manual checks + the 4-way blind-solve. Solutions execute with
+non-vacuous round-trip asserts; manifest map-equal.
 Reviewer duties: blind-solve exercises; cumulative closure (only ≤unit-09 — NO `.split()`, NO
 append mode, NO `os`/`tempfile`/`pathlib`/`.readlines`, NO list slicing, NO comparison operators in
 student code, NO classes/nested-loops — check explicitly); every file open uses `with`; writes are
@@ -153,3 +179,54 @@ scratch files, deterministic `"w"` mode (never append), gitignored scratch, File
 (one-value-per-line files, `for line in f` + `.strip()` + `int()`), membership-not-comparison, and
 no list slicing. `dict-access` (a pre-existing map practice) is homed by a settings-dict write beat
 (adding `dict-literal`). `practices ∩ introduces` empty.
+
+### Review 2 — [fable] (2026-09-07)
+REJECT → all findings RESOLVED (revised in place before commit):
+1. `[FIXED]` (BLOCKING, file-I/O) `savegame.txt` mixed a NAME line with SCORE lines, so Lesson 2's
+   `int(line.strip())` over every line → `int("Ada")` ValueError → exec-lessons FAILS; and the
+   welcome beat needed "Ada" present — mutually exclusive on one file. **PAYLOAD SPLIT**:
+   `savegame.txt` = integer scores ONLY (int-parse clean); `settings.txt` = TEXT (name, volume,
+   difficulty) read back via membership ONLY, never int-parsed. Empirically re-validated: the
+   corrected design executes clean via NotebookClient (cwd=unit dir), all round-trip + membership
+   asserts pass, idempotent `"w"` mode.
+2. `[FIXED]` (Nit) FileNotFoundError beat used a bare `open()` — now `with open("missing.txt") as f:`
+   (models the with-only File API rule; still a no-exec cell).
+3. `[FIXED]` (Watch) `settings.txt` read-back is TEXT/membership only — never `int(...)`-parsed
+   (folded into the payload split).
+- fable affirmed everything else sound: completeness (no used-but-unlisted), amendment correctness
+  (all added concepts taught ≤unit-08, `practices ∩ introduces` empty), no over-listing (dict-access
+  homed by `settings["volume"]`), closure safety (no .split/list-slice/comparison/os/tempfile/append/
+  classes/nested-loops), no cross-notebook dependency / no git noise, hook-first pedagogy.
+
+### Review 3 — [glm] (2026-09-07)
+APPROVE WITH NITS (glm reviewed the working-tree file, which already carried the payload-split fix —
+so it confirmed the corrected design: closure PASS, over-listing PASS, pedagogy PASS). Nits, all
+fixed:
+- `[FIXED]` glm-1 (highest): ci-local can't falsify read-before-write (gitignored scratch persists;
+  exec-solutions precedes exec-lessons) — added a CLEAN-SLATE `rm -f` of the two scratch files before
+  the final Phase-C ci-local so green evidences create-before-read.
+- `[FIXED]` glm-2: the concept-scanner is a scratch ADVISORY prototype, not a mechanical CI gate —
+  Phase C reworded (closure enforced by reviewers + blind-solve).
+- `[FIXED]` glm-3: settings.txt read-back is membership-only (no int reconstruction of the volume
+  line) — the payload split already guarantees `settings.txt` is never int-parsed; reinforced.
+- `[FIXED]` glm-4: renamed the "append-a-new-high" stretch to "add-a-new-high" (the word "append"
+  must not steer a beginner toward mode `"a"`).
+- `[FIXED]` glm-5: `"\n"` is new syntax with no concept id — added an explicit Lesson-1 teaching beat.
+
+### Review 4 — [sol] (2026-09-07)
+REJECT → all findings RESOLVED. sol confirmed the file-I/O design is sound (no read-before-write,
+no parse bug, clean-slate run good, gitignore paths correct) and closure otherwise maps cleanly;
+scratch prereq-check + coverage-check PASS.
+- `[FIXED]` (BLOCKER) `input` used-but-unlisted — the exercise prompt uses `input()`; added `input`
+  to the practices amendment (homed by a "save-my-score" PROMPT only, solution parameterized —
+  matching units 07/08).
+- `[FIXED]` (nit) Architecture summary still showed bare `open("missing.txt")` — now
+  `with open("missing.txt") as f: f.read()`.
+- `[FIXED]` (nit) stretch still literally named "append-a-new-high" — renamed to "add-a-new-high".
+
+### Round 2 revisions (2026-09-07)
+Amendment now: requires += `parameters, return-value`; practices += `builtin-functions, dict-literal,
+if-statement, list-literal, print, variable, string-concat, string-literal, type-conversion,
+int-type, error-messages, input` (12). Payload split (fable) empirically re-validated; glm's 5 nits
++ sol's input blocker + doc nits all fixed. Re-validated green. Re-dispatching [glm]/[fable]/[sol]
+round 2 to confirm.
