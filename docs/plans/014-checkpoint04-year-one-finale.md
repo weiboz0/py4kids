@@ -27,7 +27,9 @@ conventions; design-000 §4 (notebook execution); D-001.
   - append to `checkpoint-04-year-one-finale.practices` — `def-function, parameters, dict-literal,
     list-literal, list-append, list-index, for-loop, if-statement, in-operator, arithmetic,
     int-type, type-conversion, string-concat, string-literal, string-methods, f-string, print,
-    variable, boolean, error-messages`.
+    variable, boolean, error-messages, accumulator, elif-else`. NOTE: `accumulator` covers the `heal` method's
+    `self.health = self.health + amount` (read-modify-write on an attribute — my scanner initially
+    missed attribute-target accumulators; scanner fixed + `accumulator` added).
   - All introduced by units 01–10; `checkpoint-only-taught` holds. Apply surgically (no YAML
     round-trip). Manifest carries the amended lists.
 - **FILE-I/O CI-SAFETY (binding, from unit 09):** CI executes `solutions.ipynb` with cwd = the
@@ -76,7 +78,7 @@ codex session; teacher notes inline; gitignore + map amendment + manifest inline
 ### Phase B — checkpoint-04-year-one-finale content (8 questions)
 
 Blueprint (requires file-read, class-def, for-loop; practices = the 10 headline concepts + amended
-20-concept substrate):
+22-concept substrate):
 - Title: `# Checkpoint 4 — Year One Finale`. A short framing line (put the year's biggest skills
   together — objects and files).
 - **Q1 — define a class (class-def, init-method, attributes):** define `class Hero:` with
