@@ -1,5 +1,6 @@
 """Named check registry used by the command-line interface."""
 
+from tools.concept_scan import concept_scan_findings
 from tools.curriculum import coverage_findings, prereq_findings
 from tools.fake_turtle import turtle_findings
 from tools.notebooks import (
@@ -29,6 +30,7 @@ CHECKS = {
     "turtle-check": turtle_findings,
     "prereq-check": prereq_findings,
     "coverage-check": coverage_findings,
+    "concept-scan": concept_scan_findings,
     "stretch-check": stretch_findings,
 }
 

@@ -23,6 +23,7 @@ CHECK_NAMES = (
     "turtle-check",
     "prereq-check",
     "coverage-check",
+    "concept-scan",
     "stretch-check",
 )
 REAL_BOOK_EXEC_CHECKS = {"exec-solutions", "exec-lessons"}
@@ -48,7 +49,13 @@ def valid_root(tmp_path):
     (book / "units").mkdir()
     (book / "checkpoints").mkdir()
     (book / "projects").mkdir()
-    concept_ids = ["turtle-basics", *(f"concept-{index:02d}" for index in range(39))]
+    concept_ids = [
+        "turtle-basics",
+        "import-statement",
+        "string-literal",
+        "input",
+        *(f"concept-{index:02d}" for index in range(36)),
+    ]
     concepts = {
         "concepts_version": 1,
         "concepts": [
@@ -160,7 +167,11 @@ def valid_root(tmp_path):
     assets = unit / "assets"
     assets.mkdir()
     (assets / "closed.py").write_text(
-        "import turtle\nfor _ in range(4):\n    turtle.forward(10)\n    turtle.right(90)\n"
+        "import turtle\n"
+        "turtle.forward(10)\nturtle.right(90)\n"
+        "turtle.forward(10)\nturtle.right(90)\n"
+        "turtle.forward(10)\nturtle.right(90)\n"
+        "turtle.forward(10)\nturtle.right(90)\n"
         "turtle.done()\n",
         encoding="utf-8",
     )
@@ -1220,6 +1231,7 @@ def test_ci_local_has_exact_six_real_steps():
         "manifest-check",
         "prereq-check",
         "coverage-check",
+        "concept-scan",
         "stretch-check",
         "turtle-check",
     ]
@@ -1805,7 +1817,8 @@ def test_checkpoint_target_to_unit_only_check_prints_usage(valid_root, capsys):
     assert "usage: --unit checkpoint id does not apply" in captured.err
 
 
-def test_book_level_check_with_unit_keeps_usage_exit_two(valid_root, capsys):
+@pytest.mark.parametrize("check", ["prereq-check", "concept-scan"])
+def test_book_level_check_with_unit_keeps_usage_exit_two(valid_root, capsys, check):
     code = cli.main(
         [
             "--root",
@@ -1814,13 +1827,13 @@ def test_book_level_check_with_unit_keeps_usage_exit_two(valid_root, capsys):
             "book1",
             "--unit",
             "unit-01-story-machine",
-            "prereq-check",
+            check,
         ]
     )
     captured = capsys.readouterr()
     assert code == 2
     assert captured.out == ""
-    assert "usage: --unit does not apply to book-level check prereq-check" in captured.err
+    assert f"usage: --unit does not apply to book-level check {check}" in captured.err
 
 
 def test_selector_neither_prefix_falls_into_unit_scope(valid_root, capsys):

@@ -161,3 +161,47 @@ plan's Global Constraints / Phase-B tests:
 ### Consensus (2026-09-07)
 [self] APPROVE; [fable]/[glm]/[sol] APPROVE WITH NITS — no `[OPEN]` blockers, all nits folded in
 (above). Plan-review gate CLOSED. Proceeding to implementation.
+
+---
+
+## Post-Execution Report (2026-09-07)
+
+**Status: implemented, Phases A–C GREEN. Content gate next.**
+
+- **Phase A (metadata):** committed `aa2dc2a`. Five entries' map + manifest practices amended
+  (unit-03 +f-string,+string-literal; unit-04 +string-literal; unit-05 +accumulator,
+  +import-statement,+string-literal; checkpoint-02 +string-literal; project-01 +string-literal).
+  manifest/coverage/prereq PASS; pytest 364.
+- **Phase B (scanner promotion, codex):** `tools/concept_scan.py` (ported from the prototype; now
+  exposes `concept_scan_findings(root, book, unit=None)`), registered `concept-scan` in
+  `tools/checks.py`, added to `BOOK_LEVEL_CHECKS` in `tools/cli.py` (rejects `--unit`), wired into
+  `scripts/ci-local.sh` after `coverage-check`. The class-body `def-function` fix is PARENT-BASED
+  (`isinstance(parents.get(node), ast.ClassDef)` → method, not def-function; a def nested in a
+  method body still counts). New `tests/test_concept_scan.py` (6 tests): class-body-def NEGATIVE,
+  module-level POSITIVE, nested-in-method POSITIVE, f-string-fragment → string-literal, real-book
+  clean, one-fault fixture fails.
+- **Phase C (verification):** ruff clean; `uv run pytest -q` → **373 passed** (+9 vs Phase A; the 6
+  new scanner tests all pass — codex's sandbox showed 23 socket-denied notebook-exec "failures",
+  confirmed environment-only, all green in the kernel-capable env); `py4kids-tools --book book1
+  concept-scan` → PASS (ZERO used-but-unlisted across all 16 entries, checkpoint-04 def-function
+  false-positive resolved by the fix, no manifest retcon); `--unit` correctly rejected; full
+  `ci-local.sh` **ALL GREEN** with `concept-scan` active; pre-merge-guard OK.
+
+---
+
+## Content Review
+
+Roster + tags per the plan-review gate; findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`; all `[OPEN]` resolve
+before merge.
+
+### Review 1 — [self] (2026-09-07) → APPROVE
+Verified the delivered code against the plan: (A) the five metadata amendments are exactly the
+scanner-derived, closure-checked set (map == manifest, all PASS). (B) `tools/concept_scan.py` exposes
+the `_findings(root, book, unit=None)` contract, is registered + book-level + ci-local-wired; the
+def-function fix is PARENT-based not depth-based (confirmed in code: `parents.get(node)` immediate
+parent test) with the three classification tests (class-body NEG, module-level POS, nested-in-method
+POS) proving it; the f-string-fragment → string-literal rule is tested; the one-fault fixture fails;
+the real book is clean. ruff clean, pytest 373 green, concept-scan PASS, ci-local ALL GREEN. No
+content/requires/introduces changed. Necessary-not-sufficient documented (MANUAL_ONLY stays
+reviewer-enforced). NIT (non-blocking): the constants are book1-coupled — noted for a future Book-2
+pass, out of scope here.
