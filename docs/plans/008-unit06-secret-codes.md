@@ -15,7 +15,25 @@
   `unit-06-secret-codes.practices` — `print, variable, comparison, arithmetic,
   range-function, int-type, input` — all introduced by units 01–03; verified green.
   Apply surgically (no YAML round-trip — it reflows the file). The manifest carries the
-  amended list.
+  amended list. Every one of these must be HOMED in ≥1 exercise (not padding, gate
+  round-1): print (emit the code), variable (`letters`/`result`/`shift`), comparison (the
+  position scan), arithmetic (`+ shift`, `% 26`), range-function (the position scan),
+  int-type (the shift is an integer LITERAL/parameter), input (an exercise reads a message
+  to encode). Teacher notes name each one's reappearance.
+- **Position-lookup mechanism (binding, gate round-1 blocker — sol/glm/fable):** to find a
+  letter's alphabet position, content uses a `for position in range(26)` scan with
+  `if letters[position] == letter` — the ONLY in-budget idiom. `len()` (that is
+  `builtin-functions`, introduced unit 07) and `.index()`/`.find()` (outside the taught
+  `string-methods` subset "upper/lower/strip/replace", and they would slip past a
+  concept-ID closure check) are FORBIDDEN in unit-06 content; reviewers check for them
+  explicitly. `range-function` is LOAD-BEARING here (not incidental) — it is the only way
+  to scan the alphabet without `len`.
+- **Case contract (binding, sol #3):** ciphers operate on LOWERCASE a–z. Encode/decode
+  normalize the message with `.lower()` first; letters not in `letters` (spaces,
+  punctuation) pass through unchanged; the round-trip is `decode(encode(msg, n), n)`
+  equals `msg.lower()` — mixed-case exact round-trip is NOT claimed, and all sample
+  messages in exercises/solutions are lowercase. The shift is a fixed integer literal or
+  parameter, NEVER `int(input(...))` (which would drag in un-amended `type-conversion`).
 - NO `ord`/`chr`: ciphers work on an alphabet STRING via `string-index` + `in-operator` +
   arithmetic (shift `%`), never character codes (the registry has no ord/chr concept).
 - No lists/dicts/classes (units 07/08/10). No turtle (no assets).
@@ -24,7 +42,7 @@
 
 ## Out of scope
 
-Content plan → Phase D is the mandatory named verification phase. Out of scope: units 07+,
+Content plan → Phase C is the mandatory named verification phase. Out of scope: units 07+,
 checkpoint 03 (later plans); PDF handouts; any map edit beyond the Phase-A substrate
 amendment; ord/chr; lists/dicts.
 
@@ -39,7 +57,9 @@ blind codex session; teacher notes inline; map amendment + manifest inline.
    amendment alone before content.
 2. `book1/units/unit-06-secret-codes/manifest.yaml`, map-equal to the amended entry; lands
    with the complete directory.
-- **Acceptance:** amendment green (`ci-local`); manifest passes `manifest-check`.
+- **Acceptance (Phase A):** the map amendment ALONE is green (`uv run pytest -q` +
+  `ci-local`) before any unit directory exists (glm #3 — manifest-check lands with the
+  content in Phase B, not here).
 
 ### Phase B — unit-06-secret-codes content (2 lessons)
 
@@ -49,21 +69,30 @@ accumulator, if-statement, loop-counter, + amended print/variable/comparison/ari
 range-function/int-type/input):
 - Hook: SECRET CODES — pass messages only your friends can crack; the teacher shows an
   encoded note and the class tries to break it.
-- Lesson 1 (string-index, string-slice, string-methods): text as a sequence — grab a
-  character by position (`word[0]`), a slice (`word[1:4]`), and clean it up
-  (`.upper()`/`.lower()`/`.strip()`/`.replace()`). A REVERSE cipher (`word[::-1]` via
-  slicing) and an ATBASH-style flip built by looking up each letter's index in a
-  `letters = "abcdefghijklmnopqrstuvwxyz"` string.
-- Lesson 2 (in-operator; practices the Caesar build): membership (`if letter in letters`)
-  to skip spaces/punctuation; the CAESAR cipher as a function — for each letter find its
-  index, add the shift, wrap with `%` (arithmetic + comparison), rebuild with string-concat
-  in an accumulator; decode = shift back. A deliberate off-by-one/wrap bug + traceback moment.
-- Exercises ≥6 core + ≥2 stretch: reverse-a-word, first-and-last-letter (index),
-  grab-the-middle (slice), shout-it (string-methods), is-it-a-vowel (in-operator),
-  fix-the-caesar (debug); stretch: a keyword check that ignores case, a two-step cipher
-  (reverse then shift).
-- Solutions: execute headless, input-free (assigned sample messages), non-vacuous asserts
-  on encoded/decoded round-trips (`decode(encode(msg, 3), 3) == msg`).
+- Lesson 1 (string-index, string-slice, string-methods) — opens on the hook (decode a
+  note): text as a sequence — grab a character by position (`word[0]`), a slice
+  (`word[1:4]`), and clean it up (`.upper()`/`.lower()`/`.strip()`/`.replace()`), PRINTing
+  each result. A REVERSE cipher (`word[::-1]` via slicing) and an ATBASH-style flip built by
+  scanning `letters = "abcdefghijklmnopqrstuvwxyz"` with `for position in range(26)` +
+  `if letters[position] == letter` and taking `letters[25 - position]`.
+- Lesson 2 (in-operator; practices the Caesar build) — opens on the thread ("yesterday we
+  read codes; today we write one only your friend can crack"): membership
+  (`if letter in letters`) to pass spaces/punctuation through unchanged; the CAESAR cipher
+  as a function `encode(message, shift)` — `.lower()` the message first (case contract),
+  for each letter scan `range(26)` for its position, `new = (position + shift) % 26`
+  (arithmetic + comparison), rebuild with string-concat in a `result` accumulator; `decode`
+  = `encode(message, 26 - shift)`. The shift is an integer parameter (never `int(input())`).
+  A deliberate wrap/off-by-one bug + traceback moment. An exercise reads a message via
+  `input()` to encode (homes `input`).
+- Exercises ≥6 core + ≥2 stretch, each HOMING an amended practice: reverse-a-word (slice),
+  first-and-last-letter (index), grab-the-middle (slice), shout-it-and-print (string-methods
+  + print), is-it-a-vowel (in-operator + comparison), encode-my-typed-message
+  (input + the Caesar function), fix-the-caesar (debug the `% 26` wrap); stretch: a
+  case-insensitive keyword check, a two-step cipher (reverse then shift).
+- Solutions: execute headless, input-free (assigned LOWERCASE sample messages), non-vacuous
+  asserts on round-trips honoring the case contract
+  (`decode(encode(msg, 3), 3) == msg` where `msg` is lowercase), plus a boundary assert
+  (`z` with shift 3 → `c`).
 - Teacher notes: five headings, per-lesson allocation (L1 index/slice/methods, L2
   in-operator + Caesar), 60-min cut points, differentiation; common mistakes (off-by-one
   slice bounds, forgetting the `%` wrap, mutating vs rebuilding a string, case mismatch in
@@ -74,9 +103,13 @@ range-function/int-type/input):
 Mechanical: full pytest green; `ci-local.sh` ALL GREEN; solutions execute with non-vacuous
 asserts (round-trip encode/decode); manifest map-equal.
 Reviewer duties: blind-solve exercises; cumulative closure (only ≤unit-06 concepts — NO
-ord/chr, NO lists/dicts); the alphabet-string cipher approach is genuinely buildable and
-correct (encode/decode round-trip); solutions non-vacuous/complete; grading usable; timing;
-hook-first; age-appropriate; the amended practices are each exercised by ≥1 exercise.
+ord/chr, NO lists/dicts, NO `len()`, NO `.index()`/`.find()` — check for these explicitly
+since `.index()` maps to an allowed concept id and would slip a mechanical closure check);
+the alphabet-string cipher is buildable and correct (encode/decode round-trip on lowercase,
+boundary wrap); solutions non-vacuous/complete; grading usable; timing; each lesson opens on
+the project thread (hook-first, per D-001); age-appropriate; EACH of the 7 amended practices
+is exercised by ≥1 named exercise (print/input especially — they were the round-1 padding
+risk).
 
 **Acceptance criteria:** the unit directory complete; `uv run pytest -q` green; ci-local ALL
 GREEN; content gate 4-way consensus.
@@ -85,7 +118,29 @@ GREEN; content gate 4-way consensus.
 
 ## Plan Review
 
-(4-way gate verdicts land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE — substrate pre-audited and verified green; unit pipeline reused; no-ord/chr constraint stated.
+
+### Review 2 — [glm] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (amendment verified green live; no-ord/chr Caesar confirmed buildable)
+1. `[FIXED]` Position-lookup unspecified — pin `range(26)` scan, forbid `.index()`/`.find()`/`len()`.
+2. `[FIXED]` Home each amended practice (esp. input/int-type); avoid `int(input())` → type-conversion; name reappearances.
+3. `[FIXED]` Phase A acceptance contradicted Phase B (manifest-check) — reworded to amendment-only-green.
+
+### Review 3 — [fable] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (PROTOTYPED the cipher in /tmp — round-trips across 5 msgs × 7 shifts, no list/ord/chr/len)
+1. `[FIXED]` Position-lookup latent closure trap (= glm #1; `.index()` slips a concept-id check) — pinned + forbidden.
+2. `[FIXED]` Out-of-scope said "Phase D" — corrected to Phase C.
+3. `[FIXED]` range-function role understated — now stated as load-bearing.
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT
+1. `[FIXED]` (Major) print/input unhomed (padding risk); `int()` is type-conversion not int-type. → both homed in exercises; shift kept a fixed integer.
+2. `[FIXED]` (Blocker) Position-lookup unspecified/unenforceable (= glm/fable). → pinned `for position in range(26)` + `letters[position] == letter`; len/.index/.find forbidden.
+3. `[FIXED]` (Major) Round-trip needs a CASE CONTRACT (lowercasing loses case; not lowercasing breaks on uppercase). → cipher operates on lowercase (`.lower()` first); round-trip asserted on lowercase; mixed-case not claimed.
+4. `[FIXED]` (Major) print/input not bound to any exercise (= #1).
+5. `[FIXED]` (Nit) Lesson 2 continuing hook not explicit. → both lessons now open on the thread.
+6. `[FIXED]` (Minor) Phase D→C (= fable #2).
 
 ## Content Review
 
