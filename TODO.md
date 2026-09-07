@@ -10,7 +10,7 @@ Milestones (design 000 §First milestones):
 
 ## Book 1 remaining content (each its own plan)
 - [x] Unit 05 Function Factory + Checkpoint 02 (Loops & Functions) (shipped 2026-09-06)
-- [ ] Project 01 Arcade Night (milestone)
+- [x] Project 01 Arcade Night (milestone) (shipped 2026-09-06) — Term 2 complete
 - [ ] Units 06–08 (Secret Codes, High-Score Hall, Word Wizard) + Checkpoint 03
 - [ ] Units 09–10 (Save Point, Pet Simulator) + Checkpoint 04
 - [ ] Project 02 Grand Adventure (capstone)

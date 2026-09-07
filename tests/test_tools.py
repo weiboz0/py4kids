@@ -7,7 +7,7 @@ import nbformat
 import pytest
 import yaml
 
-from tools import cli
+from tools import cli, notebooks
 from tools.checks import CHECKS
 from tools.curriculum import map_schema_findings
 
@@ -42,11 +42,12 @@ def _write_nb(path, notebook):
 
 @pytest.fixture
 def valid_root(tmp_path):
-    """Build an all-green registry root with one prefix unit and checkpoint."""
+    """Build an all-green registry root with one prefix unit, checkpoint, and project."""
     book = tmp_path / "book1"
     (book / "curriculum").mkdir(parents=True)
     (book / "units").mkdir()
     (book / "checkpoints").mkdir()
+    (book / "projects").mkdir()
     concept_ids = ["turtle-basics", *(f"concept-{index:02d}" for index in range(39))]
     concepts = {
         "concepts_version": 1,
@@ -200,6 +201,59 @@ def valid_root(tmp_path):
         "## Goals\nGoal.\n## Pacing\n30 minutes.\n## Common mistakes\nMistake.\n"
         "## Discussion prompts\nPrompt.\n## Differentiation\nSupport.\n"
         "## Grading\nEvidence.\n",
+        encoding="utf-8",
+    )
+    project = book / "projects/project-02-grand-adventure"
+    project.mkdir()
+    project_entry = next(entry for entry in entries if entry["kind"] == "project")
+    _write_yaml(
+        project / "manifest.yaml",
+        {
+            "id": project_entry["id"],
+            "kind": project_entry["kind"],
+            "blueprint_version": 1,
+            "lessons": project_entry["lessons"],
+            "concepts": {
+                field: list(project_entry[field])
+                for field in ("introduces", "requires", "practices")
+            },
+            "provenance": "original",
+        },
+    )
+    _write_nb(
+        project / "brief.ipynb",
+        nbformat.v4.new_notebook(
+            cells=[
+                nbformat.v4.new_markdown_cell("# Grand Adventure"),
+                nbformat.v4.new_markdown_cell("## Milestone 1\nBuild the opening."),
+                nbformat.v4.new_code_cell("opening = 'forest'"),
+                nbformat.v4.new_markdown_cell("## Milestone 2\nAdd a choice."),
+                nbformat.v4.new_code_cell("choice = 'left'"),
+                nbformat.v4.new_markdown_cell("## Milestone 3\nFinish the ending."),
+                nbformat.v4.new_code_cell("ending = 'home'"),
+                nbformat.v4.new_markdown_cell("## Requirements\nYour build must have a start."),
+                nbformat.v4.new_markdown_cell("## Make it yours\nInvent a new scene."),
+            ]
+        ),
+    )
+    _write_nb(
+        project / "solutions.ipynb",
+        nbformat.v4.new_notebook(
+            cells=[
+                nbformat.v4.new_markdown_cell("# Grand Adventure solution"),
+                nbformat.v4.new_code_cell("opening = 'forest'"),
+                nbformat.v4.new_code_cell("choice = 'left'"),
+                nbformat.v4.new_code_cell("ending = 'home'"),
+                nbformat.v4.new_code_cell("assert opening == 'forest'"),
+                nbformat.v4.new_code_cell("assert choice in {'left', 'right'}"),
+                nbformat.v4.new_code_cell("assert ending == 'home'"),
+            ]
+        ),
+    )
+    (project / "teacher-notes.md").write_text(
+        "## Goals\nGoal.\n## Pacing\nFive lessons.\n## Common mistakes\nMistake.\n"
+        "## Discussion prompts\nPrompt.\n## Differentiation\nSupport.\n"
+        "## Rubric\nEvidence.\n",
         encoding="utf-8",
     )
     return tmp_path
@@ -1827,6 +1881,23 @@ def test_checkpoint_vacuous_asserts_do_not_meet_floor(valid_root, capsys):
     assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 non-vacuous assert cells\n"
 
 
+def test_checkpoint_tautology_asserts_do_not_meet_floor(valid_root, capsys):
+    # Executable tautologies prove nothing either (gate finding sol #6): `1 == 1`,
+    # `x == x`, `not False`.
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    tautologies = ("assert 1 == 1", "assert score == score", "assert not False", "assert True")
+    assert_cells = [
+        cell for cell in notebook.cells
+        if cell.cell_type == "code" and "assert" in cell.source
+    ]
+    for cell, taut in zip(assert_cells, tautologies, strict=False):
+        cell.source = taut
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 non-vacuous assert cells\n"
+
+
 def test_checkpoint_question_numbers_must_be_sequential(valid_root, capsys):
     # Six headings all labeled "Question 1" must be rejected, not counted as six questions.
     path, notebook = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
@@ -1838,3 +1909,333 @@ def test_checkpoint_question_numbers_must_be_sequential(valid_root, capsys):
     code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
     assert code == 1
     assert "must be sequential 1..N" in output
+
+
+def _project(root):
+    return root / "book1/projects/project-02-grand-adventure"
+
+
+def _project_notebook(root, name):
+    path = _project(root) / name
+    return path, _read_nb(path)
+
+
+def _project_manifest(root):
+    path = _project(root) / "manifest.yaml"
+    return path, yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def test_project_dirs_and_content_dirs_discover_project(valid_root):
+    projects, findings = notebooks.project_dirs(valid_root, "book1")
+    assert findings == []
+    assert [path.name for path in projects] == ["project-02-grand-adventure"]
+    contents, findings = notebooks.content_dirs(
+        valid_root, "book1", "project-02-grand-adventure"
+    )
+    assert findings == []
+    assert [(path.name, kind) for path, kind in contents] == [
+        ("project-02-grand-adventure", "project")
+    ]
+    contents, findings = notebooks.content_dirs(valid_root, "book1")
+    assert findings == []
+    assert ("project-02-grand-adventure", "project") in [
+        (path.name, kind) for path, kind in contents
+    ]
+    projects, findings = notebooks.project_dirs(valid_root, "no-such-book")
+    assert projects == []
+    assert findings == ["FAIL: no-such-book: book root does not exist"]
+
+
+@pytest.mark.parametrize(
+    "name",
+    ("manifest.yaml", "brief.ipynb", "solutions.ipynb", "teacher-notes.md"),
+)
+def test_project_layout_required_file_one_fault(valid_root, capsys, name):
+    (_project(valid_root) / name).unlink()
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == f"FAIL: project-02-grand-adventure: missing {name}\n"
+
+
+def test_project_manifest_kind_one_fault(valid_root, capsys):
+    path, manifest = _project_manifest(valid_root)
+    manifest["kind"] = "unit"
+    _write_yaml(path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == "FAIL: project-02-grand-adventure: kind must be project\n"
+
+
+def test_project_manifest_map_equality_one_fault(valid_root, capsys):
+    path, manifest = _project_manifest(valid_root)
+    manifest["concepts"]["practices"].pop()
+    _write_yaml(path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == "FAIL: project-02-grand-adventure: practices differs from coverage map\n"
+
+
+def test_project_manifest_coverage_map_kind_drift(valid_root, capsys):
+    path, data = _map(valid_root)
+    project_entry = next(entry for entry in data["entries"] if entry["kind"] == "project")
+    project_entry["kind"] = "checkpoint"
+    _write_yaml(path, data)
+    code, output = _run(valid_root, "manifest-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == "FAIL: project-02-grand-adventure: kind differs from coverage map\n"
+
+
+@pytest.mark.parametrize("fault", ("output", "executed"))
+def test_project_hygiene_one_fault(valid_root, capsys, fault):
+    path, notebook = _project_notebook(valid_root, "brief.ipynb")
+    cell = next(cell for cell in notebook.cells if cell.cell_type == "code")
+    if fault == "output":
+        cell.outputs = [nbformat.v4.new_output("stream", name="stdout", text="leak\n")]
+    else:
+        cell.execution_count = 1
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "hygiene-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output.count("FAIL:") == 1
+    assert "has outputs" in output if fault == "output" else "is executed" in output
+
+
+@pytest.mark.parametrize(
+    ("count", "expected"),
+    ((2, "2 milestone headings (<3)"), (7, "7 milestone headings (>6)")),
+)
+def test_project_milestone_count_bounds_one_fault(valid_root, capsys, count, expected):
+    path, notebook = _project_notebook(valid_root, "brief.ipynb")
+    if count == 2:
+        notebook.cells[1].source = notebook.cells[1].source.replace("Milestone", "Stage", 1)
+        notebook.cells.append(nbformat.v4.new_markdown_cell("```text\n## Milestone 1\n```"))
+    else:
+        notebook.cells.extend(
+            nbformat.v4.new_markdown_cell(f"## Milestone {number}\nExtra.")
+            for number in range(4, 8)
+        )
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == f"FAIL: project-02-grand-adventure: {expected}\n"
+
+
+def test_project_milestone_numbers_must_be_sequential(valid_root, capsys):
+    path, notebook = _project_notebook(valid_root, "brief.ipynb")
+    notebook.cells[3].source = notebook.cells[3].source.replace("Milestone 2", "Milestone 3")
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == (
+        "FAIL: project-02-grand-adventure: milestone numbers must be sequential 1..N, "
+        "got [1, 3, 3]\n"
+    )
+
+
+def test_project_requires_exact_make_it_yours_heading(valid_root, capsys):
+    path, notebook = _project_notebook(valid_root, "brief.ipynb")
+    notebook.cells[-1].source = "## Make it yours!\nInvent a new scene."
+    notebook.cells.append(nbformat.v4.new_markdown_cell("```text\n## Make it yours\n```"))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == "FAIL: project-02-grand-adventure: missing '## Make it yours'\n"
+
+
+def test_project_requires_requirements_checklist(valid_root, capsys):
+    # The student-facing '## Requirements' checklist must be present in the brief (sol #5).
+    path, notebook = _project_notebook(valid_root, "brief.ipynb")
+    for cell in notebook.cells:
+        if cell.cell_type == "markdown" and cell.source.lstrip().startswith("## Requirements"):
+            cell.source = cell.source.replace("## Requirements", "## Checklist", 1)
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == "FAIL: project-02-grand-adventure: missing '## Requirements' checklist\n"
+
+
+def test_project_brief_solution_heading_one_fault(valid_root, capsys):
+    path, notebook = _project_notebook(valid_root, "brief.ipynb")
+    notebook.cells.append(nbformat.v4.new_markdown_cell("## Solution\nLeak."))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "hygiene-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == "FAIL: project-02-grand-adventure: project contains a solution heading\n"
+
+
+def test_project_solution_headings_need_not_mirror_milestones(valid_root, capsys):
+    path, notebook = _project_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.insert(1, nbformat.v4.new_markdown_cell("## Different solution organization"))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 0, output
+    assert output == "structure-check: PASS\n"
+
+
+def test_project_solutions_assert_floor_one_fault(valid_root, capsys):
+    path, notebook = _project_notebook(valid_root, "solutions.ipynb")
+    assert_cells = [
+        cell for cell in notebook.cells if cell.cell_type == "code" and "assert" in cell.source
+    ]
+    assert_cells[-1].source = "assert True"
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == "FAIL: project-02-grand-adventure: solutions need >=3 non-vacuous assert cells\n"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    (
+        ("name = input('name? ')", "solutions call input()"),
+        ("import tkinter", "solutions import a GUI"),
+        ("from random import randint", "solutions use 'from random import'"),
+    ),
+)
+def test_project_solutions_pattern_ban_one_fault(valid_root, capsys, source, expected):
+    path, notebook = _project_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.append(nbformat.v4.new_code_cell(source))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == f"FAIL: project-02-grand-adventure: {expected}\n"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    (
+        (
+            "import random\nvalue = random.randint(1, 3)",
+            "solutions use random without random.seed(4)",
+        ),
+        (
+            "import random\nvalue = random.randint(1, 3)\nrandom.seed(4)",
+            "solutions: random.seed(4) must precede first use",
+        ),
+    ),
+)
+def test_project_solutions_seed_rules_one_fault(valid_root, capsys, source, expected):
+    path, notebook = _project_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.append(nbformat.v4.new_code_cell(source))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == f"FAIL: project-02-grand-adventure: {expected}\n"
+
+
+@pytest.mark.parametrize("heading", (*(
+    "## Goals",
+    "## Pacing",
+    "## Common mistakes",
+    "## Discussion prompts",
+    "## Differentiation",
+), "## Rubric"))
+def test_project_teacher_heading_one_fault(valid_root, capsys, heading):
+    path = _project(valid_root) / "teacher-notes.md"
+    notes = path.read_text(encoding="utf-8").replace(heading, "## Removed", 1)
+    notes += f"\nInline decoy: {heading} is not a heading.\n```text\n{heading}\n```\n"
+    path.write_text(notes, encoding="utf-8")
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert output == f"FAIL: project-02-grand-adventure: teacher notes missing '{heading}'\n"
+
+
+@pytest.mark.parametrize("fault", ("gap", "orphan"))
+def test_project_prefix_one_fault(valid_root, capsys, fault):
+    if fault == "gap":
+        _project(valid_root).rename(valid_root / "book1/projects/project-03-grand-adventure")
+    else:
+        shutil.copytree(_project(valid_root), valid_root / "book1/projects/project-99-orphan")
+    code, output = _run(valid_root, "structure-check", capsys)
+    assert code == 1
+    assert "project directories are not the coverage-map prefix" in output
+    assert output.count("FAIL:") == 1
+
+
+def test_missing_projects_dir_fails_closed(valid_root, capsys):
+    shutil.rmtree(valid_root / "book1/projects")
+    code, output = _run(valid_root, "hygiene-check", capsys)
+    assert code == 1
+    assert output == "FAIL: book1: projects/ directory does not exist\n"
+
+
+def test_empty_projects_dir_still_passes_and_ignores_gitkeep(valid_root):
+    shutil.rmtree(valid_root / "book1/projects")
+    (valid_root / "book1/projects").mkdir()
+    (valid_root / "book1/projects/.gitkeep").touch()
+    projects, findings = notebooks.project_dirs(valid_root, "book1")
+    assert projects == []
+    assert findings == []
+
+
+def test_missing_project_target_fails_closed(valid_root, capsys):
+    for check in ("structure-check", "stretch-check"):
+        code, output = _run(valid_root, check, capsys, unit="project-99-absent")
+        assert code == 1
+        assert output == "FAIL: project-99-absent: project directory does not exist\n"
+
+
+@pytest.mark.parametrize(
+    "check",
+    ("manifest-check", "hygiene-check", "structure-check", "exec-solutions", "cell-lint"),
+)
+def test_selector_project_applicable_matrix(valid_root, capsys, check):
+    code, output = _run(valid_root, check, capsys, unit="project-02-grand-adventure")
+    assert code == 0, output
+    assert output == f"{check}: PASS\n"
+
+
+@pytest.mark.parametrize(
+    "check",
+    ("noexec-check", "stretch-check", "exec-lessons", "turtle-check"),
+)
+def test_selector_project_inapplicable_matrix(valid_root, capsys, check):
+    code, output = _run(valid_root, check, capsys, unit="project-02-grand-adventure")
+    assert code == 2
+    assert output == ""
+
+
+def test_selector_project_like_typo_falls_into_unit_scope(valid_root, capsys):
+    code, output = _run(valid_root, "structure-check", capsys, unit="projct-02-grand-adventure")
+    assert code == 1
+    assert output == "FAIL: projct-02-grand-adventure: unit directory does not exist\n"
+
+
+@pytest.mark.parametrize("notebook_name", ("brief.ipynb", "solutions.ipynb"))
+def test_project_cell_lint_checks_each_notebook(valid_root, capsys, notebook_name):
+    path, notebook = _project_notebook(valid_root, notebook_name)
+    notebook.cells.append(nbformat.v4.new_code_cell("print(undefined_project_name)"))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "cell-lint", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert f"{notebook_name} cell" in output
+    assert "undefined_project_name" in output
+
+
+def test_project_exec_solutions_one_fault(valid_root, capsys):
+    path, notebook = _project_notebook(valid_root, "solutions.ipynb")
+    notebook.cells.append(nbformat.v4.new_code_cell("assert False, 'project failure'"))
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "exec-solutions", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert "solutions.ipynb execution failed" in output
+    assert "project failure" in output
+
+
+def test_unit_checkpoint_only_rules_do_not_inspect_project_notebooks(valid_root, capsys):
+    brief_path, brief = _project_notebook(valid_root, "brief.ipynb")
+    brief.cells.append(
+        nbformat.v4.new_code_cell(
+            "name = input('name? ')\nimport turtle",
+            metadata={"tags": ["no-exec", "stretch"]},
+        )
+    )
+    _write_nb(brief_path, brief)
+    for check in ("noexec-check", "stretch-check", "turtle-check"):
+        code, output = _run(valid_root, check, capsys)
+        assert code == 0, output
+        assert output == f"{check}: PASS\n"
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 0, output
+    assert output == "structure-check: PASS\n"
+    assert "question headings" not in output

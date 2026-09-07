@@ -27,6 +27,12 @@ CHECKPOINT_REQUIRED_FILES = (
     "solutions.ipynb",
     "teacher-notes.md",
 )
+PROJECT_REQUIRED_FILES = (
+    "manifest.yaml",
+    "brief.ipynb",
+    "solutions.ipynb",
+    "teacher-notes.md",
+)
 MANIFEST_KEYS = {"id", "kind", "blueprint_version", "lessons", "concepts", "provenance"}
 NOTES_HEADINGS = (
     "## Goals",
@@ -36,11 +42,13 @@ NOTES_HEADINGS = (
     "## Differentiation",
 )
 CHECKPOINT_NOTES_HEADINGS = (*NOTES_HEADINGS, "## Grading")
+PROJECT_NOTES_HEADINGS = (*NOTES_HEADINGS, "## Rubric")
 INTERACTIVE = re.compile(r"\binput\s*\(")
 GUI_IMPORT = re.compile(r"^\s*(import|from)\s+(turtle|tkinter)\b", re.MULTILINE)
 RANDOM_FROM_IMPORT = re.compile(r"^\s*from\s+random\s+import\b", re.MULTILINE)
 EXERCISE_HEADING = re.compile(r"^## Exercise \d+", re.MULTILINE)
 QUESTION_HEADING = re.compile(r"^## Question \d+", re.MULTILINE)
+MILESTONE_HEADING = re.compile(r"^## Milestone \d+", re.MULTILINE)
 SOLUTION_HEADING = re.compile(r"(?i)^#+\s*solution", re.MULTILINE)
 ASSET_REF = re.compile(r"assets/[\w.-]+\.py")
 
@@ -87,6 +95,23 @@ def checkpoint_dirs(
     return sorted(path for path in checkpoints.glob("checkpoint-*") if path.is_dir()), []
 
 
+def project_dirs(
+    root: Path, book: str, ident: str | None = None
+) -> tuple[list[Path], list[str]]:
+    book_dir = book_root(root, book)
+    if not book_dir.is_dir():
+        return [], [_fail(book, "book root does not exist")]
+    projects = book_dir / "projects"
+    if not projects.is_dir():
+        return [], [_fail(book, "projects/ directory does not exist")]
+    if ident is not None:
+        path = projects / ident
+        if not path.is_dir():
+            return [], [_fail(ident, "project directory does not exist")]
+        return [path], []
+    return sorted(path for path in projects.glob("project-*") if path.is_dir()), []
+
+
 def content_dirs(
     root: Path, book: str, ident: str | None = None
 ) -> tuple[list[tuple[Path, str]], list[str]]:
@@ -94,13 +119,19 @@ def content_dirs(
         if ident.startswith("checkpoint-"):
             paths, findings = checkpoint_dirs(root, book, ident)
             return [(path, "checkpoint") for path in paths], findings
+        if ident.startswith("project-"):
+            paths, findings = project_dirs(root, book, ident)
+            return [(path, "project") for path in paths], findings
         paths, findings = unit_dirs(root, book, ident)
         return [(path, "unit") for path in paths], findings
     units, findings = unit_dirs(root, book)
     checkpoints, checkpoint_findings = checkpoint_dirs(root, book)
     findings.extend(checkpoint_findings)
+    projects, project_findings = project_dirs(root, book)
+    findings.extend(project_findings)
     paths = [(path, "unit") for path in units]
     paths.extend((path, "checkpoint") for path in checkpoints)
+    paths.extend((path, "project") for path in projects)
     return paths, list(dict.fromkeys(findings))
 
 
@@ -204,12 +235,26 @@ def _solution_policy_findings(scope: str, notebook) -> list[str]:
             except SyntaxError:
                 continue
         parsed.append((cell_index, tree))
+    def _is_tautology(test) -> bool:
+        # Tests that are true by construction and prove nothing about the solution:
+        # a bare truthy constant, `not <constant>`, or a comparison whose two sides are the
+        # syntactically identical constant or name (`1 == 1`, `score == score`).
+        if isinstance(test, ast.Constant):
+            return bool(test.value)
+        if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
+            return isinstance(test.operand, ast.Constant)
+        if isinstance(test, ast.Compare) and len(test.comparators) == 1:
+            left, right = test.left, test.comparators[0]
+            if isinstance(left, ast.Constant) and isinstance(right, ast.Constant):
+                return True
+            if (isinstance(left, ast.Name) and isinstance(right, ast.Name)
+                    and left.id == right.id):
+                return True
+        return False
+
     def _non_vacuous_assert(tree) -> bool:
-        # An assert whose test is a bare True/constant (or `assert True`) proves nothing.
         for node in ast.walk(tree):
-            if isinstance(node, ast.Assert) and not (
-                isinstance(node.test, ast.Constant) and bool(node.test.value)
-            ):
+            if isinstance(node, ast.Assert) and not _is_tautology(node.test):
                 return True
         return False
 
@@ -404,7 +449,11 @@ def hygiene_findings(root: Path, book: str, unit: str | None = None) -> list[str
     if findings:
         return findings
     for content_dir, kind in contents:
-        notebook_name = "exercises.ipynb" if kind == "unit" else "checkpoint.ipynb"
+        notebook_name = {
+            "unit": "exercises.ipynb",
+            "checkpoint": "checkpoint.ipynb",
+            "project": "brief.ipynb",
+        }[kind]
         path = content_dir / notebook_name
         if not path.is_file():
             findings.append(_fail(content_dir.name, f"missing {notebook_name}"))
@@ -431,7 +480,7 @@ def hygiene_findings(root: Path, book: str, unit: str | None = None) -> list[str
             detail = (
                 "exercises contain a solution heading"
                 if kind == "unit"
-                else "checkpoint contains a solution heading"
+                else f"{kind} contains a solution heading"
             )
             findings.append(_fail(content_dir.name, detail))
     return findings
@@ -627,6 +676,95 @@ def checkpoint_teacher_notes_findings(
     return findings
 
 
+def project_layout_findings(
+    root: Path, book: str, ident: str | None = None
+) -> list[str]:
+    projects, findings = project_dirs(root, book, ident)
+    if findings:
+        return findings
+    for project_dir in projects:
+        missing = [
+            name for name in PROJECT_REQUIRED_FILES if not (project_dir / name).is_file()
+        ]
+        findings.extend(_fail(project_dir.name, f"missing {name}") for name in missing)
+    return findings
+
+
+def project_milestone_findings(
+    root: Path, book: str, ident: str | None = None
+) -> list[str]:
+    projects, findings = project_dirs(root, book, ident)
+    if findings:
+        return findings
+    for project_dir in projects:
+        path = project_dir / "brief.ipynb"
+        if not path.is_file():
+            findings.append(_fail(project_dir.name, "missing brief.ipynb"))
+            continue
+        notebook = read_nb(path)
+        occurrences = _markdown_heading_occurrences(notebook, MILESTONE_HEADING)
+        count = len(occurrences)
+        if count < 3:
+            findings.append(_fail(project_dir.name, f"{count} milestone headings (<3)"))
+        if count > 6:
+            findings.append(_fail(project_dir.name, f"{count} milestone headings (>6)"))
+        if 3 <= count <= 6:
+            numbers = [int(re.search(r"\d+", text).group(0)) for text, _idx in occurrences]
+            if numbers != list(range(1, len(numbers) + 1)):
+                findings.append(
+                    _fail(
+                        project_dir.name,
+                        f"milestone numbers must be sequential 1..N, got {numbers}",
+                    )
+                )
+        markdown = "\n".join(
+            cell.source for cell in notebook.cells if cell.cell_type == "markdown"
+        )
+        if not _has_markdown_heading(markdown, "## Make it yours"):
+            findings.append(_fail(project_dir.name, "missing '## Make it yours'"))
+        # The student-facing success criteria must be present in the brief (not only the
+        # teacher-notes rubric) so students know what "done" means (gate finding sol #5).
+        if not re.search(r"^##\s+Requirements", markdown, re.MULTILINE):
+            findings.append(_fail(project_dir.name, "missing '## Requirements' checklist"))
+        if _markdown_heading_occurrences(notebook, SOLUTION_HEADING):
+            findings.append(_fail(project_dir.name, "project contains a solution heading"))
+    return findings
+
+
+def project_solutions_findings(
+    root: Path, book: str, ident: str | None = None
+) -> list[str]:
+    projects, findings = project_dirs(root, book, ident)
+    if findings:
+        return findings
+    for project_dir in projects:
+        path = project_dir / "solutions.ipynb"
+        if not path.is_file():
+            findings.append(_fail(project_dir.name, "missing solutions.ipynb"))
+            continue
+        findings.extend(_solution_policy_findings(project_dir.name, read_nb(path)))
+    return findings
+
+
+def project_teacher_notes_findings(
+    root: Path, book: str, ident: str | None = None
+) -> list[str]:
+    projects, findings = project_dirs(root, book, ident)
+    if findings:
+        return findings
+    for project_dir in projects:
+        path = project_dir / "teacher-notes.md"
+        if not path.is_file():
+            continue
+        notes = path.read_text(encoding="utf-8")
+        for heading in PROJECT_NOTES_HEADINGS:
+            if not _has_markdown_heading(notes, heading):
+                findings.append(
+                    _fail(project_dir.name, f"teacher notes missing '{heading}'")
+                )
+    return findings
+
+
 def noexec_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
     units, findings = unit_dirs(root, book, unit)
     if findings:
@@ -695,6 +833,12 @@ def prefix_findings(root: Path, book: str) -> list[str]:
     )
     if existing_checkpoints != map_checkpoints[: len(existing_checkpoints)]:
         findings.append(_fail(book, "checkpoint directories are not the coverage-map prefix"))
+    map_projects = [entry.get("id") for entry in entries if entry.get("kind") == "project"]
+    existing_projects = sorted(
+        path.name for path in (book_path / "projects").glob("project-*") if path.is_dir()
+    )
+    if existing_projects != map_projects[: len(existing_projects)]:
+        findings.append(_fail(book, "project directories are not the coverage-map prefix"))
     return findings
 
 
@@ -707,6 +851,11 @@ def structure_findings(root: Path, book: str, unit: str | None = None) -> list[s
         findings += checkpoint_question_findings(root, book, unit)
         findings += checkpoint_solutions_findings(root, book, unit)
         findings += checkpoint_teacher_notes_findings(root, book, unit)
+    elif unit is not None and unit.startswith("project-"):
+        findings = project_layout_findings(root, book, unit)
+        findings += project_milestone_findings(root, book, unit)
+        findings += project_solutions_findings(root, book, unit)
+        findings += project_teacher_notes_findings(root, book, unit)
     else:
         findings = layout_findings(root, book, unit)
         findings += exercise_structure_findings(root, book, unit)
@@ -717,6 +866,10 @@ def structure_findings(root: Path, book: str, unit: str | None = None) -> list[s
         findings += checkpoint_question_findings(root, book)
         findings += checkpoint_solutions_findings(root, book)
         findings += checkpoint_teacher_notes_findings(root, book)
+        findings += project_layout_findings(root, book)
+        findings += project_milestone_findings(root, book)
+        findings += project_solutions_findings(root, book)
+        findings += project_teacher_notes_findings(root, book)
         findings += prefix_findings(root, book)
     # Sub-checks and layout may report the same missing file; keep one line each.
     return list(dict.fromkeys(findings))
