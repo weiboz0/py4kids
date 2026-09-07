@@ -249,3 +249,42 @@ into the `.get` credit (glm-2). `[FIXED]` Q3 solution assert strengthened to che
 and scores[-1]==100` (fable-N2). WONTFIX: asserts-use-`==` (exempt scaffolding, fable-N1);
 scaffolded-questions (appropriate for a term checkpoint, fable-N3). Scanner clean; ci-local ALL
 GREEN. Re-dispatching focused [sol] re-check.
+
+
+## Content Gate — CONSENSUS REACHED (2026-09-07)
+- `[self]` APPROVE · `[fable]` APPROVE WITH NITS (fixed) · `[glm]` APPROVE WITH NITS (fixed) ·
+  `[sol]` APPROVE (re-check — the two Grading concessions to untaught tools removed & re-confirmed).
+- All `[OPEN]` findings resolved; WONTFIX items justified. Scanner clean; ci-local ALL GREEN.
+- **Gate PASSED. Shipping PR #11.**
+
+## Post-Execution Report (2026-09-07)
+
+**Shipped:** `checkpoint-03-data-wrangler` — Term 3's assessment (strings/lists/dicts, units 06–08).
+
+**What was built:**
+- `checkpoint.ipynb`: 8 self-contained questions (Q1-2 strings, Q3-5 lists, Q6-8 dicts), empty
+  student cells, Q8 fix-the-KeyError with the crashing snippet in a markdown fence.
+- `solutions.ipynb`: blind (from the checkpoint alone), input-free, 9 non-vacuous asserts (8 + a
+  strengthened Q3), executes headless clean.
+- `manifest.yaml` (map-equal), `teacher-notes.md` (six headings incl. a per-question Grading rubric
+  summing to 40).
+
+**Verification:** `ci-local.sh` ALL GREEN; AST concept-scanner scoped to checkpoint-03 clean.
+
+**Map amendment (Phase A):** checkpoint-03 `requires` += `for-loop`; `practices` += `for-loop` + 11
+substrate concepts (print/variable/f-string/string-literal/if-statement/boolean/accumulator/
+arithmetic/int-type/elif-else/error-messages). Surgical diff.
+
+**Gates:**
+- Plan-review: consensus ([self] APPROVE; [fable]/[glm]/[sol] APPROVE WITH NITS) — nits (elif-else
+  real membership elif; self-contained per-question data; for-loop in practices; comparison removed;
+  35-40min pacing) all fixed.
+- Content-review: [self] APPROVE, [glm]/[fable] APPROVE WITH NITS, [sol] REJECT→fixed (two Grading
+  concessions to untaught tools — sum()/== — removed; Q8/branch notes; Q3 assert strengthened).
+
+**Key design:** membership-only conditionals (Q6 3-way `in` elif — no comparison); word-count over
+a given list (no .split); `.get`-vs-`[]` habit assessed via Q6/Q8; input-free (a checkpoint gives
+all data).
+
+**Follow-ups (tracked):** hygiene PR for shipped-unit practice gaps + scanner promotion to tools/;
+then plan 012 = unit 09 Save Point (files) — the first Term-4 unit.
