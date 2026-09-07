@@ -240,3 +240,13 @@ listed-but-unhomed — no named exercise identified the input prompt. This is th
 fable round-2 nit (a), already fixed in the (then-uncommitted) revision: `input` is now pinned to
 the named `safe-lookup` exercise (prompt prose only, fixed-sample solution). `[FIXED]`.
 Re-dispatching a focused [sol] round 3 to confirm the input home.
+
+**[sol] round 3: APPROVE.** `input` confirmed homed in the named `safe-lookup` exercise (prompt
+prose, fixed-sample solution). All prior findings cleared.
+
+## Plan Gate — CONSENSUS REACHED (2026-09-06)
+- `[self]` APPROVE · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS · `[sol]` APPROVE.
+- Round 1 was a convergent REJECT (accumulator used-but-unlisted + list-append unhomed; sol added
+  string-methods unhomed); all fixed in round 2 (+accumulator; homed list-append + string-methods +
+  input). No open blockers; nits are Phase-B authoring specs, staged.
+- **Gate PASSED. Proceeding to Phase A → Phase B → Phase C.**
