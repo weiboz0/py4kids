@@ -176,6 +176,12 @@ GREEN; content gate 4-way consensus.
 - Otherwise clean: zero blind-solve discrepancies, no forbidden constructs, range(26) scan, 11 asserts, round-trip + boundary verified.
 - Note: my Phase-A pre-audit missed `elif-else`/`error-messages` — the `else` passthrough and the traceback beat weren't in the "plausibly needed" set. Future pre-audits must include else-branches and deliberate-bug moments.
 
+### Review 5 — [sol] round 2 (2026-09-06)
+- **Verdict**: REJECT — elif-else/error-messages confirmed fixed, but a re-scan found TWO MORE used-but-unlisted concepts:
+1. `[FIXED]` (Blocker) `nested-loops` — the `for position in range(26)` alphabet scan nests inside `for letter in message`. → amended (introduced unit 03).
+2. `[FIXED]` (Blocker) `boolean` — Lesson 2's `print("m" in letters)` truth-value predictions. → amended (introduced unit 02).
+- I then ran my OWN thorough code-only concept scan to catch anything else before re-review: confirmed NO other used-but-unlisted concept (the "logical-ops" apparent hits were all English "not" inside strings; no while/break/type-conversion in code; negative index → string-index, `[::-1]` → string-slice). unit-06 practices is now 15 concepts.
+
 ## Post-Execution Report
 
 (written before shipping.)
