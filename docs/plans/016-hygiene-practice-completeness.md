@@ -205,3 +205,29 @@ the real book is clean. ruff clean, pytest 373 green, concept-scan PASS, ci-loca
 content/requires/introduces changed. Necessary-not-sufficient documented (MANUAL_ONLY stays
 reviewer-enforced). NIT (non-blocking): the constants are book1-coupled — noted for a future Book-2
 pass, out of scope here.
+
+### Reviews 2–4 — [fable] / [glm] / [sol] (2026-09-07) → APPROVE, no open blockers
+All three verified independently and reached consensus:
+- [fable] APPROVE — ran the committed detector over each amended entry (all 8 concept/entry pairs
+  used + introduced-earlier + disjoint-introduces; map == manifest; diff is metadata+tooling+tests
+  only, no `introduces`/`requires`/notebook changes). Diffed the promoted module against the
+  prototype: ONLY change is the def-function class_depth→immediate-parent swap (all other detectors
+  byte-identical). Proved non-vacuity with two mutant scanners (prototype behaviour breaks the
+  class-body NEGATIVE test; depth-based breaks the nested-in-method POSITIVE test). ruff/pytest
+  (6)/concept-scan(0/16)/manifest/coverage/prereq all green. WONTFIX nits: a test fixture unrolled a
+  loop (behaviour-equivalent); a pre-existing prototype style line.
+- [glm] APPROVE — same verification incl. def-in-if-block and nested-class-in-method probes; usage
+  confirmed in STUDENT-facing notebooks (not only solutions); tests non-vacuous. One wording nit
+  (unit-10 phrasing) already softened here.
+- [sol] APPROVE WITH NITS — `git show aa2dc2a` confirms practices-only diffs; immediate-parent
+  classification at `concept_scan.py:221`; all six non-vacuous tests present; one-fault scenario
+  returns exactly one FAIL. Its lone NIT is ENVIRONMENTAL (sol's sandbox lacks `uv` on PATH and
+  mounts `/dev/shm` read-only, erroring the `tmp_path` test) — NOT a repo defect; `.venv` fallback
+  ruff + concept-scan + manifest/coverage/prereq all PASS, and the kernel-capable env runs all 373
+  tests green.
+
+### Content-gate CONSENSUS (2026-09-07): 4-way APPROVE, no `[OPEN]` findings
+[self]/[fable]/[glm] APPROVE, [sol] APPROVE WITH NITS (environmental only). The parent-based
+def-function fix is correct + non-vacuously tested; no detector regression; the five amendments are
+closure-clean (map == manifest == reality); ruff clean, pytest 373, concept-scan PASS (0 gaps/16
+entries), ci-local ALL GREEN. Content-review gate CLOSED. Proceeding to PR.
