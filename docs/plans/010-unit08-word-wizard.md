@@ -111,12 +111,16 @@ arithmetic/int-type/error-messages/input/string-literal/boolean/type-conversion/
   if count > best_count: best_count = count; best_word = word` — which homes `comparison` in CORE
   content (not only the reverse-lookup stretch), a SINGLE loop, no nesting. A "new word arrives"
   beat homes `list-append` (glm plan-review): the word log grows as more text comes in —
-  `words.append("cat")` — then the counter re-runs over the grown list (single loop, no nesting).
-- Exercises ≥6 core + ≥2 stretch: build-a-phrasebook (dict-literal), safe-lookup (`.get` default),
-  is-it-in-the-book (`in` condition), add-a-word (`dict[key] = value`), count-the-words (single
-  loop over a given word list), most-common-word (single loop over `.items()`, `comparison` —
-  core), grow-the-log (`words.append(new_word)` then re-count — homes `list-append` in a core
-  exercise), tidy-then-translate (clean a messy word with `.strip().lower()` before looking it up,
+  `words.append("cat")` — then RESET `counts = {}` and re-run the counter over the grown list
+  (single loop, no nesting; the reset avoids double-counting — fable plan-review).
+- Exercises ≥6 core + ≥2 stretch: build-a-phrasebook (dict-literal), safe-lookup (a game asks for
+  a word with `input("word? ")` in the PROMPT prose — do NOT call it; the reference solution uses a
+  FIXED sample word — then `.get(word, "???")`; this is the named home for `input`, fable
+  plan-review), is-it-in-the-book (`in` condition), add-a-word (`dict[key] = value`), count-the-words
+  (single loop over a given word list), most-common-word (single loop over `.items()`, `comparison`
+  — core), grow-the-log (`words.append(new_word)`, then RESET `counts = {}` and re-count over the
+  grown list so counts don't double — homes `list-append` in a core exercise), tidy-then-translate
+  (clean a messy word with `.strip().lower()` before looking it up,
   so `"  CAT "` finds `"cat"` — homes `string-methods` in a core exercise), print-every-pair
   (`.items()`), translate-a-list (loop a word list, print each `translate`), fix-the-KeyError
   (swap `[]` for `.get`); stretch: reverse-lookup (find
@@ -126,9 +130,10 @@ arithmetic/int-type/error-messages/input/string-literal/boolean/type-conversion/
   a `.get` default assert (`translate("fish", d) == "???"`), a count assert (`counts["cat"] == 3`),
   a membership assert (`("cat" in d) == True` is a tautology-risk — instead assert on a computed
   lookup), a reverse-lookup assert. `random.seed(4)` only if any randomness.
-- Teacher notes: five headings, per-lesson allocation (L1 build/lookup/get/KeyError, L2 loop/
-  count/translate) with an EXPLICIT L2-density split (L2 is dense — the counter can open L2; the
-  translate helper + most-common can be a 60-min cut) — glm plan-review; 60-min cuts,
+- Teacher notes: five headings, per-lesson allocation (L1 build/lookup/normalize/get/KeyError, L2
+  loop/count/translate) with an EXPLICIT L2-density split (L2 is dense — the counter can open L2;
+  the translate helper + most-common can be a 60-min cut) and an L1 60-min cut (normalization can
+  be trimmed if L1 runs long) — glm plan-review; 60-min cuts,
   differentiation; common mistakes (KeyError on a missing key →
   use `.get`; overwriting a value by re-assigning an existing key; counting by iterating the dict
   instead of the word list; forgetting the `else: = 1` first-sighting case).
@@ -213,3 +218,25 @@ parameters, return-value`; practices += `print, variable, comparison, string-con
 arithmetic, int-type, error-messages, input, string-literal, boolean, type-conversion,
 accumulator` (13). `list-append` homed (beat + exercise); `string-methods` homed (normalization
 beat + exercise). Re-validated green. Re-dispatching [glm]/[fable]/[sol] round 2 to confirm.
+
+### Round 2 re-review verdicts (2026-09-06)
+**[fable] round 2: APPROVE WITH NITS.** Both round-1 blockers confirmed resolved; traced all 27
+union concepts homed, zero used-but-unlisted, no untaught leaks; counter/most-common/normalization
+logic correct. Non-blocking nits folded into the exercise specs: (a) `input` pinned to the named
+`safe-lookup` exercise (prompt prose only, fixed-sample solution); (b) `grow-the-log` resets
+`counts = {}` before re-counting so counts don't double. Awaiting [glm]/[sol] round 2.
+
+**[glm] round 2: APPROVE WITH NITS.** Independently re-ran the amendment on a scratch map →
+tests/test_book1_curriculum.py 9/9 pass. All three round-1 fixes present + coherent; full-union
+audit clean (every concept homed, nothing over-listed/used-but-unlisted, `practices ∩ introduces`
+empty); no untaught leak (no .split, only .get/.items, no sets/comprehensions/nested-loops/files/
+classes). One doc-coherence nit FIXED: teacher-notes L1 allocation now names the normalize beat +
+an L1 60-min cut. Awaiting [sol] round 2.
+
+### Review — [sol] round 2 (2026-09-06)
+REJECT (reviewed pre-fix commit 5309bf9). Confirmed all three round-1 findings RESOLVED
+(accumulator/list-append/string-methods) and NO untaught leak. Sole REJECT reason: `input`
+listed-but-unhomed — no named exercise identified the input prompt. This is the SAME finding as
+fable round-2 nit (a), already fixed in the (then-uncommitted) revision: `input` is now pinned to
+the named `safe-lookup` exercise (prompt prose only, fixed-sample solution). `[FIXED]`.
+Re-dispatching a focused [sol] round 3 to confirm the input home.
