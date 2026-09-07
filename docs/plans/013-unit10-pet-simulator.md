@@ -355,3 +355,60 @@ Unanimous mood-assert (fable/glm/sol) + fable/glm restructure applied:
 - `[FIXED]` Ex8 self-contained `buddy = Pet("Buddy")` (fable-3/glm-3).
 Scanner clean; ci-local ALL GREEN (14 asserts + Ex4 mood assert all pass under real-kernel exec).
 Re-dispatching [glm]/[sol] round 2 (both REJECTed round 1).
+
+
+**[sol] round 2: APPROVE.** Ex4 asserts the RETURNED mood (mutation-tested: hungry→content yields
+AssertionError); status returns mood + prints in both notebooks; all 10 cells execute clean
+input-free; no new closure violation; every block defines Pet; Ex8 self-contained. glm's 2 nits then
+applied: `print(reported)` added + Ex4 now asserts all THREE branches (hunger 8→hungry, 1→stuffed,
+5→content). Scanner clean; ci-local ALL GREEN.
+
+## Content Gate — CONSENSUS REACHED (2026-09-07)
+- `[self]` APPROVE · `[fable]` APPROVE WITH NITS (fixed) · `[glm]` APPROVE WITH NITS (fixed) ·
+  `[sol]` APPROVE (re-check). All `[OPEN]` resolved (mood ladder now executably verified across all
+  branches; self-contained per-exercise Pet definitions). Scanner clean; ci-local ALL GREEN.
+- **Gate PASSED. Shipping PR #13 — the LAST of the ten Book-1 units.**
+
+## Post-Execution Report (2026-09-07)
+
+**Shipped:** `unit-10-pet-simulator` — Book 1's OOP unit and its LAST unit.
+
+**What was built:**
+- `lesson.ipynb` (3 lessons, hook-first): L1 a `Pet` class with `__init__` + attributes + independent
+  instances; L2 methods (`feed`/`play`/`pass_time`/`status`-returns-mood); L3 a FLAT simulation
+  (foods dict, a pets list walked once, a separate play-until-happy `while`) + a `no-exec`
+  AttributeError beat.
+- `exercises.ipynb`: 8 core + 2 Challenge; `input` only in Ex7's prompt.
+- `solutions.ipynb`: blind then reworked to self-contained per-exercise `Pet` definitions; 14
+  non-vacuous asserts incl. the mood-ladder `status()=="hungry"` check; executes headless clean.
+- `manifest.yaml` (map-equal), `teacher-notes.md` (five headings, 3-lesson allocation, OOP mistakes).
+
+**Verification:** `ci-local.sh` ALL GREEN; OOP-enhanced AST concept-scanner clean (user-defined
+class methods exempted).
+
+**Map amendment (Phase A):** unit-10 `practices` REMOVE `scope`; += 14 substrate concepts (incl.
+`list-index`, `input`). requires unchanged.
+
+**Gates:**
+- Plan-review: a 4-round convergence — `input` (fable/sol), over-listed `scope` removed (sol),
+  nested-sim/unreachable-mood (glm), then the `len`→index fix surfacing `list-index` (glm/sol), then
+  residual scope wording. Substrate scanner-DERIVED + validated green each round.
+- Content-review: [self] APPROVE, [fable] APPROVE WITH NITS, [glm]/[sol] REJECT→fixed — unanimous
+  mood-ladder assert (status returns mood; Ex4 verifies it) + self-contained per-exercise class
+  definitions.
+
+**Process dividends:** the concept-scanner gained an OOP exemption (user-defined methods) this unit;
+the content gate caught a genuine coverage gap (the mood ladder — the unit's core new skill — was
+un-asserted because `status` only printed).
+
+**MILESTONE: all TEN Book-1 units are now shipped (units 01–10).** Remaining Book-1 work: checkpoint
+04 (Year One Finale — assesses files + OOP) and project 02 (Grand Adventure capstone). Plus the
+tracked hygiene PR (shipped-unit practice gaps + scanner promotion to tools/).
+
+### Round 2 content re-review (2026-09-07)
+**[glm] round 2: APPROVE WITH NITS.** All 3 round-1 findings resolved; glm MUTATION-TESTED the mood
+ladder against Ex4's assert (inverted branches, threshold typo, mood-string typo, removed `return
+mood` all correctly FAIL) — executably verified. Self-contained blocks run green in isolation + top-
+to-bottom; closure clean; no vacuous asserts. Non-blocking nits (batch after [sol]): (1) Ex4
+statement says to PRINT the returned mood but the solution only asserts it — add `print(reported)`;
+(2) Ex4 pins only the `>6→hungry` branch — optionally add stuffed/content asserts. Awaiting [sol].
