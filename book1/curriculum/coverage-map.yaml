@@ -56,7 +56,8 @@ entries:
   requires: [for-loop, while-loop, def-function]
   practices: [for-loop, range-function, while-loop, accumulator, logical-ops,
               conditional-nesting, def-function, parameters, return-value, scope,
-              turtle-basics, turtle-drawing]
+              turtle-basics, turtle-drawing, print, variable, comparison, arithmetic,
+              if-statement, elif-else, boolean, int-type, loop-counter, f-string]
 - id: project-01-arcade-night
   kind: project
   title: "Arcade Night — build your own mini-game"

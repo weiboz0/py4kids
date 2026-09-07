@@ -1,0 +1,9 @@
+id: unit-05-function-factory
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [def-function, parameters, return-value, scope]
+  requires: [turtle-basics, turtle-drawing, for-loop, variable, f-string]
+  practices: [range-function, loop-counter, arithmetic, nested-loops, float-type]

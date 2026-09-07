@@ -292,6 +292,32 @@ def _missing_assets(root):
     (_unit(root) / "assets").rmdir()
 
 
+def _turtle_in_field_missing_assets(root, field):
+    # A unit that names turtle in `field` (requires or practices) must still fail closed
+    # on missing assets, not only one that INTRODUCES it.
+    unit = _unit(root)
+    manifest_path = unit / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    concepts = manifest["concepts"]
+    concepts["introduces"] = [c for c in concepts["introduces"] if c != "turtle-basics"] or [
+        "concept-00"
+    ]
+    if "turtle-basics" not in concepts[field]:
+        concepts[field] = [*concepts[field], "turtle-basics"]
+    _write_yaml(manifest_path, manifest)
+    for path in (unit / "assets").iterdir():
+        path.unlink()
+    (unit / "assets").rmdir()
+
+
+def _requires_turtle_missing_assets(root):
+    _turtle_in_field_missing_assets(root, "requires")
+
+
+def _practices_turtle_missing_assets(root):
+    _turtle_in_field_missing_assets(root, "practices")
+
+
 def _missing_asset_reference(root):
     path, nb = _notebook(root, "lesson.ipynb")
     nb.cells.append(nbformat.v4.new_markdown_cell("Run `assets/missing.py`."))
@@ -420,7 +446,9 @@ STRUCTURE_CASES = [
             "teacher-notes.md",
         )
     ),
-    ("turtle-assets", _missing_assets, "introduces turtle but has no assets/"),
+    ("turtle-assets", _missing_assets, "uses turtle but has no assets/"),
+    ("requires-turtle-assets", _requires_turtle_missing_assets, "uses turtle but has no assets/"),
+    ("practices-turtle-assets", _practices_turtle_missing_assets, "uses turtle but has no assets/"),
     ("asset-reference", _missing_asset_reference, "references missing assets/missing.py"),
     ("asset-compile", _noncompiling_asset, "asset closed.py does not compile"),
     ("exercise-floor", _exercise_heading_floor, "5 exercise headings (<6)"),
