@@ -281,6 +281,19 @@ reword; M3 `not in` gloss; f-prefix cleanup), and this plan (narrative correctio
 clean-slate: no `readlines` anywhere; exec-solutions PASS; structure/manifest/hygiene/cell-lint/
 coverage PASS; one `ClassDef` (`Hero`). Round-2 content re-review dispatched.
 
+**Content-gate CONSENSUS (round-2 on HEAD 9f39db0): 4-way APPROVE, no open findings.**
+- [self] APPROVE (corrected narrative).
+- [fable] APPROVE — all five items confirmed (readlines gone, `not in` gloss, f-prefixes dropped,
+  narrative matches reality, exec-solutions PASS clean-slate; M1 prints stats).
+- [glm] APPROVE — readlines gone, exec PASS clean-slate (save file shows `17`, create-before-read
+  proven), manifest == map token-for-token, one Hero class, asserts non-vacuous.
+- [sol] APPROVE — no `.readlines()`, manifest == map (44), one Hero class, flat world, 15 concrete
+  asserts, structure-check PASS. (sol's clean-slate exec was blocked by its sandbox's kernel-socket
+  policy — its fallback passed all cells + asserts; the mandated run passed for [self], [fable],
+  [glm], and full `ci-local.sh` ALL GREEN.)
+Full `ci-local.sh` **ALL GREEN** (exit 0) after the fixes. Content-review gate CLOSED. Proceeding
+to PR.
+
 ---
 
 ## Plan Review
