@@ -39,7 +39,7 @@ Budget: two lessons of 60–90 minutes.
   15 min: print each `word => count` with `.items()`, and find the "most common word" by tracking
   a running best (`best_count = 0`, `if count > best_count: ...`).
   10 min: a `translate(word, dictionary)` helper returning `dictionary.get(word, "???")`.
-  10 min: a "new word arrives" beat — `words.append("bird")` — then RESET `counts = {}` and
+  10 min: a "new word arrives" beat — `words.append("cat")` — then RESET `counts = {}` and
   re-count. Emphasize the reset: without it, the counts double.
   60-MINUTE CUT: skip the translate helper + most-common beat; the counter is the non-negotiable
   core.

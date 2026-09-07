@@ -250,3 +250,56 @@ prose, fixed-sample solution). All prior findings cleared.
   string-methods unhomed); all fixed in round 2 (+accumulator; homed list-append + string-methods +
   input). No open blockers; nits are Phase-B authoring specs, staged.
 - **Gate PASSED. Proceeding to Phase A → Phase B → Phase C.**
+
+## Content Review
+
+### Review 1 — [self] (2026-09-06)
+APPROVE. Traced every exercise + solution: all 13 asserts correct + non-vacuous (Ex5 owl:3/fox:1;
+Ex6 best_word==owl/3; Ex7 cat:3 after append+reset; Ex8 strip/lower→gato; Challenge1
+reverse-lookup→"dog"; Challenge2 merge→"pez"). Closure clean (scoped AST scanner: no
+used-but-unlisted, no untaught methods; only `.get`/`.items` dict methods, only `.append` list
+method, no `.split`/nested loops/comprehensions/sets/files/classes). Pedagogy: hook-first both
+lessons; `.strip().lower()` normalization homes string-methods; `print("cat" in translations)`
+boolean beat; KeyError traceback in unrun markdown → `.get` motivation; counter else-first-sighting;
+most-common comparison; grow-the-log resets `counts` (no double-count); `input` only in Ex2's
+prompt. ci-local ALL GREEN (lessons not CI-executed, so the deliberate `translations["fish"]`
+KeyError cell is safe; solution logic mirrors the lesson and IS executed with asserts).
+
+### Review 2 — [fable] (2026-09-06)
+APPROVE WITH NITS. Blind-solved all 11 exercises + 2 challenges, executed both notebooks, verified
+every assert empirically. Closure CLEAN (token scan: no .split/.pop/.update/.setdefault/.keys/
+.values/.sort/sorted/set/comprehension/nested-loop/file/class; only .get/.items dict methods; no
+builtin-functions — Ex6 finds max by manual running-best). All 13 asserts pass + non-vacuous.
+Pedagogy sound (hook-first, counter else-first-sighting, grow-the-log reset stated, KeyError→.get,
+input in prose only). Optional nits (batch-fix candidates, non-blocking):
+- N1: Ex2/Ex10 asserts only exercise the `.get` MISS path — optionally add a HIT-path assert
+  (`translate("cat", translations) == "gato"`) to pin both branches.
+- N2 [WONTFIX]: Challenge1/Ex6 don't state tie-break — harmless with the given unique/sole-max data
+  (insertion-ordered dicts make the reference deterministic).
+
+### Review 3 — [glm] (2026-09-06)
+APPROVE WITH NITS. Blind-solved all 13, executed both notebooks, all asserts correct + non-vacuous,
+closure clean, pedagogy sound. Nits:
+- `[FIXED]` glm-1: Ex2 statement had a stray space in `input("Word? " )` → removed.
+- `[WONTFIX]` glm-2: `elif-else` listed but counter is bare `if/else` (no `elif`). PRECEDENT:
+  unit-06 (shipped, sol-approved) lists elif-else with 0 elif / 7 bare else. The registry separates
+  `if-statement` (the `if`) from `elif-else` (which covers bare `else` branches) — dropping it would
+  make the `else` used-but-unlisted. Kept.
+
+### Review 4 — [sol] (2026-09-06)
+REJECT → resolved. Findings 1/2/4/5 = NO issue (closure clean; blind-solve matches; execution
+passed input-free; no input() in code). Actionable:
+- `[FIXED]` sol-6: teacher-notes said the lesson appends `"bird"` but lesson cell 31 appends
+  `"cat"` — aligned teacher-notes to `words.append("cat")`.
+- `[WONTFIX]` sol-3: sol read the prompt's "counter (owl→3)" as requiring a LETTER-counter (owl has
+  3 letters), but the intended content is the WORD-frequency counter (owl appears 3× in the word
+  list — sol itself confirmed it works). Letter-counting is an OPTIONAL teacher-notes differentiation
+  extension, never required content. sol offered "clarify the criterion meant the word-frequency
+  example" as an acceptable resolution — taken.
+
+### Batch fix (2026-09-06)
+Applied after all four reviews: `[FIXED]` teacher-notes append drift (sol-6); `[FIXED]` Ex2 stray
+space (glm-1); `[FIXED]` hit-path asserts on Ex2/Ex10 (fable-N1, pins the `.get` hit path).
+WONTFIX: elif-else (glm-2, unit-06 precedent), tie-break (fable-N2, deterministic), letter-counter
+(sol-3, optional extension). Scanner clean post-fix; ci-local ALL GREEN. Re-dispatching focused
+[sol] re-check.
