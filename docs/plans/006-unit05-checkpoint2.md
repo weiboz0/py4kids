@@ -35,9 +35,10 @@
 
 ## Out of scope
 
-Content plan → Phase D is the mandatory named verification phase. Out of scope: project 01
-and units 06+ (later plans); PDF handouts for the checkpoint; any tooling change (the
-checkpoint/unit checks already exist); any map edit.
+Content plan → Phase D is the mandatory named verification phase. In scope (gate round 1):
+ONE tooling change (the turtle-asset fail-close in Phase A.1) and ONE map amendment
+(checkpoint-02 substrate, Phase A.2). Out of scope: project 01 and units 06+ (later plans);
+PDF handouts for the checkpoint; any OTHER tooling change or map edit beyond those two.
 
 ## Phases
 
@@ -50,9 +51,12 @@ session on finished statements only; teacher/grading notes inline; manifests inl
 1. **Tooling (codex, sol #4):** `layout_findings` currently enforces `assets/` existence +
    reference resolution + `py_compile` only when the manifest INTRODUCES `turtle-basics`.
    Change the guard to fire when `turtle-basics` is in `introduces ∪ requires ∪ practices`,
-   so a turtle-REQUIRING unit with missing/unreferenced assets fails closed. Add a one-fault
-   fixture (turtle-requiring unit, assets dir removed → FAIL). Parity: unit-03 (introduces)
-   and non-turtle units unchanged.
+   so a turtle-REQUIRING unit with missing/unreferenced assets fails closed. Reword the
+   finding message from "introduces turtle but has no assets/" to "uses turtle but has no
+   assets/" (it now fires for require/practice too — fable round-2 nit). Add a one-fault
+   fixture (turtle-requiring unit, assets dir removed → FAIL). Parity verified by fable:
+   real book1 unchanged (unit-03 introduces → still green; non-turtle units not triggered),
+   synthetic turtle-in-requires unit newly caught.
 2. **Map amendment (inline):** apply the checkpoint-02 practices amendment (Global
    Constraints); full curriculum suite green with the amendment alone before any content.
 - **Acceptance:** `uv run pytest -q` green (new fixture passes; existing unchanged);
@@ -64,6 +68,9 @@ session on finished statements only; teacher/grading notes inline; manifests inl
 `book1/checkpoints/checkpoint-02-loops-and-functions/manifest.yaml`, both map-equal
 (checkpoint carries the amended practices). Land each in the same commit as its complete
 directory (no manifest-only intermediate — plan-005 discipline).
+- **Acceptance:** each manifest is map-equal (`manifest-check` passes for its scope) and lands
+  only in the commit that also carries its directory's complete file set (repo stays green
+  at every commit).
 
 ### Phase B — unit-05-function-factory content (3 lessons)
 
@@ -84,6 +91,13 @@ nested-loops, float-type):
 - Lesson 3 (scope): local vs global — why a name inside a function doesn't leak out;
   a nested-loops turtle pattern factory (`assets/l3_stamps.py`, practices nested-loops)
   where each call is self-contained. A deliberate scope bug + traceback moment.
+- Turtle-asset API constraint (glm round-2 #3): `turtle-check` runs every `assets/*.py`
+  under the plan-003 FAKE-turtle stub, whose surface is only forward/backward/left/right/
+  penup/pendown/pensize/pencolor/color/speed/bgcolor/Screen/done/exitonclick/Turtle —
+  scripts must use ONLY these (no `write`/`goto`/`textinput`/`setpos`, which AttributeError
+  under the stub); the `# turtle-check: open-path` opt-out waives ONLY closure, so the
+  ≥1-pen-down and <10000-move bounds still apply. The greeting-card visual is drawn with
+  pen strokes, not `turtle.write`.
 - Notebooks carry the reasoning, predict-the-output for functions, and turtle predictions
   (turtle cells tagged `no-exec` or shown as markdown; nothing imports turtle in notebooks);
   `exercises.ipynb` ≥6 core + ≥2 stretch (write-a-function, fix-the-parameter,
@@ -105,16 +119,19 @@ Blueprint (practices for-loop, range-function, while-loop, accumulator, logical-
 conditional-nesting, def-function, parameters, return-value, scope, turtle-basics,
 turtle-drawing — units 03–05 material):
 - 8 questions (sequential 1..8, ceiling), ~35–45 min, all within the AMENDED
-  practices ∪ requires: trace a `for`/`range` loop's output (for-loop, range-function,
-  loop-counter, print); complete a `while` accumulator (while-loop, accumulator, comparison,
-  arithmetic); write a small function with a parameter (def-function, parameters, return
-  or print); return-vs-print judgment (return-value, print); a scope trace (scope,
-  def-function, variable); a logical-ops/nesting condition (logical-ops, conditional-nesting,
-  if-statement, boolean, comparison); a TURTLE TRACE/PREDICT question (read
-  `for i in range(5): forward(...); right(72)` in a markdown fence → "a pentagon",
-  no execution; solution is a plain-value code cell); one build-it — a SCORING function
-  only (def-function, parameters, accumulator, if-statement), NO draw option (sol #2:
-  a draw option would be turtle build/production, violating the trace/predict-only rule).
+  practices ∪ requires. EVERY amended practices concept must appear in ≥1 named question
+  (glm round-2 #2 — a practice with no question is a decorative map claim), pinned thus:
+  Q1 trace a `for`/`range` loop's output (for-loop, range-function, loop-counter, print,
+  int-type); Q2 complete a `while` accumulator (while-loop, accumulator, comparison,
+  arithmetic, variable); Q3 write a small function with a parameter that returns an
+  `f-string` greeting (def-function, parameters, return-value, f-string); Q4 return-vs-print
+  judgment (return-value, print); Q5 scope trace (scope, def-function, variable); Q6 a
+  logical-ops/nesting condition with a full `if`/`elif`/`else` ladder (logical-ops,
+  conditional-nesting, if-statement, elif-else, boolean, comparison); Q7 TURTLE
+  TRACE/PREDICT (read `for i in range(5): forward(...); right(72)` in a markdown fence →
+  "a pentagon", no execution; solution is a plain-value code cell); Q8 build-it — a SCORING
+  function only (def-function, parameters, accumulator, if-statement), NO draw option
+  (sol #2: a draw option would be turtle production, violating trace/predict-only).
 - Teacher notes + `## Grading`: per-question intent, partial reads, re-teach signal
   (functions are the hard idea — ≥1/3 missing the write-a-function or return question →
   revisit before project 01 leans on functions).
@@ -169,6 +186,17 @@ GREEN (incl. the tooling fail-close fixture and amended map); content gate 4-way
 - fable 1 `[FIXED]`: turtle-checkpoint solution is a plain-value CODE cell (not prose).
 - fable 4 `[FIXED]`: L1 60-min cut targets the turtle stamp, not the core def.
 - fable 5 `[FIXED]`: solutions stated input-free.
+
+### Round 2 (2026-09-06)
+- **[sol]**: REJECT — all 5 substantive items verified Clean; two stale-doc issues only.
+  1. `[FIXED]` Phase A′ lacked an acceptance block. → added.
+  2. `[FIXED]` `## Out of scope` still excluded "tooling change"/"map edit" that Phase A performs. → reworded to "beyond the two round-1 fixes".
+- **[fable]**: APPROVE WITH NITS — prototyped the amendment + tooling change live (unit-03 stays green, no over-trigger, unit-05 enforced); all 8 questions within the amended union.
+  1. `[FIXED]` Fail message "introduces turtle" should read "uses turtle" (fires for require/practice now). → reworded in Phase A.1.
+- **[glm]**: APPROVE WITH NITS — re-verified amendment + tooling in /tmp.
+  1. `[FIXED]` Out-of-scope self-contradiction (= sol r2 #2).
+  2. `[FIXED]` Not every amended practices concept was pinned to a question (f-string/int-type/elif-else implicit). → binding rule added; all 10 pinned to Q1–Q8.
+  3. `[FIXED]` Warn the codex author that turtle-check uses the fake-turtle stub (limited API; open-path waives only closure). → Phase B API-constraint note added.
 
 ## Content Review
 
