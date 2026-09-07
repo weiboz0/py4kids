@@ -104,13 +104,13 @@ inheritance; `os`/`tempfile`; append-mode files; any typed `input()` in an execu
 Dispatch per AGENTS.md: milestone STATEMENTS (brief) via codex; the reference solution via a SEPARATE
 blind codex session; teacher notes inline; gitignore + manifest + Phase-C map reconciliation inline.
 
-### Phase A — gitignore + provisional manifest (inline)
+### Phase A — gitignore (inline)
 
 1. Append to `.gitignore` (surgical): a comment + `book1/projects/project-02-grand-adventure/adventure_save.txt`.
-2. `book1/projects/project-02-grand-adventure/manifest.yaml`, provisionally map-equal to the CURRENT
-   project-02 entry (Phase C reconciles both together once the scanner has the real content).
-- **Acceptance (Phase A):** gitignore + provisional manifest are green (`uv run pytest -q` +
-  `ci-local` — manifest == the current map entry) before the notebooks exist.
+- **Acceptance (Phase A):** the gitignore change is green (`uv run pytest -q`) on its own. NOTE: the
+  project-02 map entry ALREADY EXISTS (no amendment needed, unlike checkpoint-04), so Phase A is
+  gitignore-only; `manifest.yaml` lands in Phase B WITH the notebooks (a project dir with a manifest
+  but no `brief.ipynb`/`solutions.ipynb`/`teacher-notes.md` FAILS `structure-check`).
 
 ### Phase B — project-02-grand-adventure content (4 milestones)
 
@@ -259,3 +259,15 @@ asserts; (6) driver length event-independent; (7) string-methods = unit-06 subse
 brief+solution, `input` survives trim; (9) descriptive cell ids. No closure violation remains; all
 concepts trace ≤ unit-10. prereq + coverage PASS on scratch (unchanged — the map entry is untouched
 until Phase C reconciliation). Round-2 confirmation dispatched.
+
+**Round-2 (on HEAD 008edd4): CONSENSUS REACHED — 4-way APPROVE, no open blockers.**
+- [self] APPROVE (round-1).
+- [fable] APPROVE — all three findings (a event-both-branches, b index/len-primary, c flat-world)
+  reconciled; one-class + glm nits sound; no closure violation (all concepts trace ≤ unit-10).
+- [glm] APPROVE — all six nits applied; one-Hero-class + three-flat-dict world closure-clean;
+  composite exit key is a string-concat key (never a tuple), every access single-subscript or `in`.
+- [sol] APPROVE — one-class constraint + Phase-C AST check confirmed; no new blocker; prereq closure
+  supported by the unit manifests (string-concat unit-01 … class/init unit-10).
+Content-phase note (fable, non-blocking, already folded into authoring): name the item dict
+`room_items`, not `items`, to avoid colliding with the `.items()` method vocabulary.
+Plan-review gate CLOSED. Proceeding to implementation (Phase A).
