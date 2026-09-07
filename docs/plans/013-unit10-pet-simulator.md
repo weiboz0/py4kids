@@ -281,3 +281,14 @@ round-2 note still positively said "scope homed by method-locals"). `[FIXED]` �
 SUPERSEDED; NO content beat and NO active ledger claim now homes or teaches `scope`. The only
 remaining "homes scope" strings are historical entries that QUOTE the old phrase in a
 "reworded/struck/superseded" context. Re-dispatching focused [sol] round 4.
+
+**[sol] round 4: APPROVE.** `scope` not in union; no active/positive scope-homing claim (all
+matches historical/struck); `list-index` present; union closure-complete (no used-but-unlisted).
+
+## Plan Gate — CONSENSUS REACHED (2026-09-07)
+- `[self]` APPROVE · `[fable]` APPROVE WITH NITS · `[glm]` APPROVE · `[sol]` APPROVE.
+- A 4-round convergence: round 1 caught `input` (fable/sol) + over-listed `scope` (sol) + nested-sim
+  design/unreachable-mood (glm); round 2 the `len`→index fix surfaced `list-index` (glm/sol); rounds
+  3–4 cleared residual scope-homing wording. The file/OOP substrate was scanner-DERIVED + validated
+  green each round. No open blockers.
+- **Gate PASSED. Proceeding to Phase A → Phase B → Phase C.**

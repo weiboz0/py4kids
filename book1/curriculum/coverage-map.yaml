@@ -119,7 +119,9 @@ entries:
   lessons: 3
   introduces: [class-def, init-method, attributes, methods]
   requires: [def-function, parameters, return-value, dict-access, while-loop]
-  practices: [scope, f-string, if-statement, accumulator, list-append]
+  practices: [f-string, if-statement, accumulator, list-append, arithmetic, comparison,
+              dict-literal, elif-else, for-loop, list-loop, list-literal, list-index, print,
+              variable, string-literal, int-type, error-messages, input]
 - id: checkpoint-04-year-one-finale
   kind: checkpoint
   title: "Checkpoint 4 — Year One Finale"
