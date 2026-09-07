@@ -2,7 +2,7 @@
 
 **Goal:** Ship `project-01-arcade-night` — Term 2's milestone build where students combine functions, loops, conditionals, and randomness into their own mini-arcade — and establish the PROJECT pipeline (conventions + `tools/` checks) the year's second project (the capstone) will reuse.
 
-**Architecture:** Projects are a new content KIND (like checkpoints were in plan 005): a multi-lesson guided BUILD, `introduces: []`, integrating prior concepts. New first-class conventions mirroring units/checkpoints (student-facing brief, a reference solution, map-equal manifest, teacher notes with a rubric) and `tools/` checks extended from unit+checkpoint to also cover projects. One small correction rides along: project-01's map entry lists `random-module` in BOTH `requires` and `practices` (redundant) — but the map is the binding contract and this is harmless (a concept can be required and practiced), so NO map edit; the manifest mirrors it as-is.
+**Architecture:** Projects are a new content KIND (like checkpoints were in plan 005): a multi-lesson guided BUILD, `introduces: []`, integrating prior concepts. New first-class conventions mirroring units/checkpoints (student-facing brief, a reference solution, map-equal manifest, teacher notes with a rubric) and `tools/` checks extended from unit+checkpoint to also cover projects. ONE map amendment rides along (gate round 1, sol #5) — the SAME systemic plan-002 under-specification fixed for unit-04 (plan 005) and checkpoint-02 (plan 006): project-01's `requires ∪ practices` omits `variable`, `arithmetic`, `int-type`, yet a running score and returned point values inherently need them; `practices` gains those three (all introduced by unit 02; verified green). The redundant `random-module` in both `requires` and `practices` is harmless and stays as-is (no invariant inspects `requires ∩ practices`; verified) — not a "correction", just mirrored verbatim.
 
 **Spec:** design 000 §1–§3 (`projects/` in the tree); `book1/curriculum/coverage-map.yaml` (binding); plan 004/005 conventions; plan 003/006 tooling; D-001, D-002.
 
@@ -21,10 +21,18 @@
     in a `## Make it yours` markdown section, not by tagged cells.
   - `solutions.ipynb`: ONE complete reference game proving a compliant build exists from the
     taught concepts. Runs headless; the unit solution conventions verbatim (no `input()`,
-    `import random` only + `random.seed(4)` before first use, no GUI, self-contained,
-    ≥3 non-vacuous asserts, scaffolding note); it need NOT mirror milestone headings
-    (a project isn't Q&A) but MUST define and call the functions the brief requires and
-    assert on the game's computed outcomes (final score, a decided round).
+    `import random` only + `random.seed(4)` — placed in the FIRST code cell ABOVE any `def`
+    that uses random, since the seed-order check reads source position not call order
+    (glm #1); no GUI, self-contained, ≥3 non-vacuous asserts, scaffolding note).
+    **Headless reference design (binding, sol #1 / fable F1) — the ONLY in-budget shape:**
+    the interactive menu function is DEFINED but not executed; each game function takes the
+    player's choice/guess as a PARAMETER (or is pure-random), and the solution asserts by
+    CALLING the game functions directly with fixed sample arguments and accumulating the
+    score in straight-line/`while` code. Scripting an input SEQUENCE with a list, `for`-loop,
+    or string-indexing is FORBIDDEN (all untaught until units 07+) — that is the trap the
+    "scripted choices" shorthand hides. Whether the solution "defines and calls the brief's
+    required functions" is a REVIEWER duty (no mechanical check); the mechanical check is
+    only: ≥1 `def`, headless execution, ≥3 non-vacuous asserts, the pattern/seed bans.
   - `teacher-notes.md`: the five unit headings PLUS `## Rubric` (milestone-by-milestone
     "what done looks like", the minimum bar vs. stretch, how to run the 2-lesson build and
     the class showcase, how to assess a student's OWN game not a fixed answer key).
@@ -35,7 +43,7 @@
 
 ## Out of scope
 
-Content plan → Phase E is the mandatory named verification phase. Out of scope: the capstone
+Content plan → Phase D is the mandatory named verification phase. Out of scope: the capstone
 (project 02) and units 06+ (later plans); PDF handouts for the project; auto-grading (D-002 —
 projects are assessed manually against the rubric); any map edit; turtle anything.
 
@@ -55,7 +63,10 @@ inline; manifest inline.
    - layout (project file set: manifest/brief/solutions/teacher-notes);
    - manifest map-equality with `kind: project`;
    - brief hygiene (no solutions, no outputs in code cells; broken/starter snippets that
-     shouldn't run ride in markdown fences, same as checkpoints);
+     shouldn't run ride in markdown fences, same as checkpoints). IMPLEMENTATION NOTE
+     (fable F4): `hygiene_findings`'s kind→notebook map is currently BINARY (unit→exercises
+     else checkpoint) — make it THREE-WAY so a project targets `brief.ipynb`, not
+     checkpoint.ipynb;
    - milestone structure (`^## Milestone \d+` count 3–6, sequential 1..N; a `## Make it yours`
      section present); NO stretch check;
    - solutions structure: ≥3 non-vacuous asserts, pattern/seed bans, self-contained,
@@ -70,18 +81,32 @@ inline; manifest inline.
    checkpoint matrix.
 4. One-fault fixtures for every NEW project rule (layout each file, manifest kind/equality,
    brief hygiene, milestone count both directions + sequence, missing `## Make it yours`,
-   solutions assert-floor/bans/seed, `## Rubric` heading, project prefix, fail-closed
-   missing-root/dir/target) from a generated valid project; nothing broken committed; the
-   fixture-factory baseline gains an empty `projects/` + one valid project (map-equal to a
-   fixture project entry). Parity: all existing unit + checkpoint checks unchanged.
+   solutions assert-floor/bans/seed, `## Rubric` heading, project prefix gap+orphan,
+   fail-closed missing-root/dir/target) AND the `--unit project-*` selector matrix cases
+   (sol #2: a `project-*` id on a project-applicable check → scoped run; on an
+   inapplicable check → exit 2; a missing project id → exit 1; a neither-prefix id →
+   unit scope exit 1) from a generated valid project. Nothing broken committed. The
+   fixture-factory baseline gains an empty `projects/` dir PLUS one valid project directory
+   map-equal to the fixture map's EXISTING `project-02-grand-adventure` entry (sol #3 /
+   fable F4 — no new fixture-map entry needed); this baseline change lands in the same
+   change as `content_dirs` enumerating projects, or `test_generated_baseline_passes_each_check`
+   breaks. Parity: all existing unit + checkpoint checks and their tests unchanged; no new
+   check NAMES (projects reuse the extended checks, so the registry/6-step pins stay green).
 - **Acceptance:** `uv run pytest -q` green (new fixtures pass; existing unchanged);
   `ci-local.sh` ALL GREEN with the project checks live.
 
-### Phase B — manifest (inline, lands with content)
+### Phase B — map amendment + manifest
 
-`book1/projects/project-01-arcade-night/manifest.yaml`, map-equal (`kind: project`,
-`introduces: []`, requires/practices verbatim from the map incl. the redundant
-`random-module`). Lands in the same commit as the complete directory.
+1. **Map amendment (inline):** append `variable, arithmetic, int-type` to
+   `project-01-arcade-night.practices` (sol #5; verified green against every curriculum
+   invariant). Apply surgically to keep a clean diff (do NOT round-trip the whole file
+   through a YAML dumper — it reflows every entry). Nothing else in the map changes.
+2. **Manifest (inline, lands with content):**
+   `book1/projects/project-01-arcade-night/manifest.yaml`, map-equal to the AMENDED entry
+   (`kind: project`, `introduces: []`, requires/practices verbatim incl. the redundant
+   `random-module`). Lands in the same commit as the complete directory.
+- **Acceptance:** amendment green with `ci-local` before content; manifest passes
+  `manifest-check` in the project scope.
 
 ### Phase C — project-01-arcade-night content
 
@@ -103,18 +128,25 @@ comparison/scope/import-statement):
 - Teacher notes + `## Rubric`: minimum bar (two returning game functions + a working total +
   a quit path) vs. stretch (a third game, high-score, difficulty); how to run the 2-lesson
   build (design → build → showcase), how to grade a student's OWN arcade against the rubric,
-  differentiation, the class-showcase logistics.
+  differentiation, the class-showcase logistics. PACING CUT (glm #2 / fable F7): the `## Pacing`
+  section pins the minimum bar to END OF LESSON 1 (menu + one returning game + a total),
+  with the second game, `## Make it yours` extensions, and the showcase in lesson 2 — so a
+  mixed-ability class always finishes a playable arcade.
 
 ### Phase D — Verification (NAMED, mandatory)
 
 Mechanical: full pytest green (incl. new project one-fault fixtures); `ci-local.sh` ALL GREEN
 (project checks in steps 3–4); the reference solution executes with non-vacuous asserts;
 manifest map-equal.
-Reviewer duties: the reference arcade genuinely satisfies the brief's requirements checklist
-and uses only requires ∪ practices concepts (no lists/dicts/classes); it is non-vacuous and
-buildable by a student who finished unit 05; the brief's milestones are achievable in 2
-lessons; the rubric is usable to assess DIFFERENT student arcades (not a fixed key); hook-first;
-`## Make it yours` gives real, taught-concept-only extensions; age-appropriateness.
+Reviewer duties (explicit — several conventions are reviewer-only, no mechanical check,
+fable F6): run the brief's requirements checklist LINE-BY-LINE against the reference
+solution (glm #3), confirming it defines AND exercises the required functions; the reference
+arcade uses only the AMENDED requires ∪ practices concepts — NO lists/dicts/classes/
+string-methods/for-loops-as-scripting (the trap of F1); it is non-vacuous and buildable by a
+student who finished unit 05; the brief's milestones are achievable in 2 lessons with the
+min bar reachable by end of lesson 1; the rubric is usable to assess DIFFERENT student
+arcades (not a fixed key); hook-first; `## Make it yours` gives real, taught-concept-only
+extensions; age-appropriateness.
 
 **Acceptance criteria:** the project directory is complete; `uv run pytest -q` green;
 ci-local ALL GREEN; content gate 4-way consensus.
@@ -123,7 +155,33 @@ ci-local ALL GREEN; content gate 4-way consensus.
 
 ## Plan Review
 
-(4-way gate verdicts land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE — project pipeline mirrors the shipped checkpoint pattern; conventions and tooling extension enumerated; named verification present.
+
+### Review 2 — [glm] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (no blockers; confirmed fixture map already has project-02 entry, redundant random harmless, no list smuggled)
+1. `[FIXED]` Seed-before-def source-order trap — pin seed in the first cell above any random-using def.
+2. `[FIXED]` 2-lesson pacing tight — encode a min-bar-by-lesson-1 cut.
+3. `[FIXED]` "Solution defines+calls required functions" has no proxy — assign it as an explicit Phase-D checklist reviewer duty.
+
+### Review 3 — [fable] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS (deep trace; redundant-random and closure mechanically confirmed)
+1. `[FIXED]` (F1, should-fix) Headless reference-solution under-specified and collides with the no-list/no-for budget — pin the parameterized design (game funcs take choice as parameter, assert via direct calls, menu defined-not-executed; list/for/string-index forbidden as scripting).
+2. `[FIXED]` (F2) Phase E→D text bug.
+3. `[FIXED]` (F4) `hygiene_findings` binary kind→notebook map must go three-way for brief.ipynb; fixture baseline ties to content_dirs change.
+4. `[NOTED]` (F6/F7) some conventions reviewer-only (stated in Phase D); pacing ambitious (cut added).
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT
+1. `[FIXED]` (Major) "Solution defines+calls required functions" not mechanically specified — clarified as reviewer-only; mechanical floor stated.
+2. `[FIXED]` (Major) `project-*` selector matrix absent from the one-fault inventory — added.
+3. `[FIXED]` (Nit) Name the fixture project — `project-02-grand-adventure` (already in fixture map).
+4. `[FIXED]` (Nit) "Correction" wording misleading — reworded (now a real amendment + a verbatim-mirror note).
+5. `[FIXED]` (Blocker) requires ∪ practices omits variable/arithmetic/int-type the score needs — map amendment adds them to practices (verified green).
+6. `[FIXED]` (Nit) Phase E→D in out-of-scope.
+
+### Revision 2 (2026-09-06)
+All findings above applied; the project-01 substrate amendment verified green in /tmp before drafting; this is the THIRD entry (unit-04, checkpoint-02, project-01) with the same plan-002 substrate gap — flagged in the post-execution follow-ups for a proactive audit of units 06–10 / checkpoints 03–04 / project 02.
 
 ## Content Review
 
