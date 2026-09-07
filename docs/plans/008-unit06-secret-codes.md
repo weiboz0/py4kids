@@ -182,6 +182,12 @@ GREEN; content gate 4-way consensus.
 2. `[FIXED]` (Blocker) `boolean` — Lesson 2's `print("m" in letters)` truth-value predictions. → amended (introduced unit 02).
 - I then ran my OWN thorough code-only concept scan to catch anything else before re-review: confirmed NO other used-but-unlisted concept (the "logical-ops" apparent hits were all English "not" inside strings; no while/break/type-conversion in code; negative index → string-index, `[::-1]` → string-slice). unit-06 practices is now 15 concepts.
 
+### Review 6 — [sol] round 3 (2026-09-06)
+- **Verdict**: REJECT — declarations match and both round-2 additions valid, but sol's definitive 25-concept code-cell inventory found ONE more registered-but-unlisted: `string-literal` (`"nvvg"`, `"stressed"` etc.), introduced unit 01, used throughout.
+- **Resolution**: `[FIXED]` — added `string-literal`. Considered pushing back (units 04/05, both sol-approved, use string literals without listing string-literal — an ambient-concept inconsistency), but checkpoint-01 DOES list it, and adding it makes sol's own enumerated inventory provably complete, so this is the convergent close rather than a round-4 over concept philosophy. unit-06 practices is now 16 concepts.
+- **Latent map issue (follow-up, not blocking unit-06):** units 04 and 05 use string literals without listing `string-literal`; the map treats ambient foundational concepts (string-literal/comment/naming) inconsistently across units vs checkpoints. Worth a systemic pass, but out of unit-06 scope.
+- **Tooling follow-up:** content-level closure (every concept USED in code is in the entry's union) is entirely reviewer-manual — it took 3 sol rounds to enumerate elif-else/error-messages/nested-loops/boolean/string-literal. A concept-usage scanner would mechanize it (concept-from-code detection is fuzzy but a keyword+AST heuristic would catch the obvious ones).
+
 ## Post-Execution Report
 
 (written before shipping.)
