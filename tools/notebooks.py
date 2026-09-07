@@ -280,11 +280,17 @@ def layout_findings(root: Path, book: str, unit: str | None = None) -> list[str]
         concepts = manifest.get("concepts")
         if not isinstance(concepts, dict):
             continue
-        introduces = concepts.get("introduces")
-        if isinstance(introduces, list) and "turtle-basics" in introduces:
+        # A unit that INTRODUCES, REQUIRES, or PRACTICES turtle ships assets — a unit that
+        # merely requires turtle (e.g. unit-05 applies functions to turtle) must still fail
+        # closed on missing/unreferenced/uncompilable assets, not just an introducing one.
+        uses_turtle = any(
+            isinstance(concepts.get(field), list) and "turtle-basics" in concepts[field]
+            for field in ("introduces", "requires", "practices")
+        )
+        if uses_turtle:
             assets = unit_dir / "assets"
             if not assets.is_dir():
-                findings.append(_fail(unit_dir.name, "introduces turtle but has no assets/"))
+                findings.append(_fail(unit_dir.name, "uses turtle but has no assets/"))
                 continue
             referenced: set[str] = set()
             for name in ("lesson.ipynb", "exercises.ipynb", "solutions.ipynb"):
