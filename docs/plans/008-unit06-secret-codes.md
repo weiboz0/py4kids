@@ -169,6 +169,13 @@ GREEN; content gate 4-way consensus.
 3. `[FIXED]` (NTH) Teacher-notes L2 pacing had no explicit 60-min cut like L1. → cut added.
 4. `[WONTFIX]` (NTH) E5 solution cell is print-only (no assert) — a branch demo; the notebook meets the ≥3 non-vacuous assert floor overall.
 
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT — two closure violations fable/glm missed (both real)
+1. `[FIXED]` (Blocker) `elif-else` used throughout (the cipher's `else` passthrough branch, the vowel classifier) but absent from the union. → map+manifest amended: unit-06 practices += `elif-else` (introduced unit 02; genuinely homed).
+2. `[FIXED]` (Blocker) Lesson 2 teaches traceback reading / IndexError — the `error-messages` concept, absent from the union. → amended: practices += `error-messages` (introduced unit 01; homed by the deliberate-bug moment).
+- Otherwise clean: zero blind-solve discrepancies, no forbidden constructs, range(26) scan, 11 asserts, round-trip + boundary verified.
+- Note: my Phase-A pre-audit missed `elif-else`/`error-messages` — the `else` passthrough and the traceback beat weren't in the "plausibly needed" set. Future pre-audits must include else-branches and deliberate-bug moments.
+
 ## Post-Execution Report
 
 (written before shipping.)
