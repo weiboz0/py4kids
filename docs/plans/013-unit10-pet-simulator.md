@@ -185,9 +185,11 @@ The scanner's untaught-method check will FALSE-POSITIVE on user-defined methods 
 REJECT → all findings RESOLVED (revised in place before commit):
 1. `[FIXED]` (BLOCKER) `input` used-but-unlisted (type-a-name prompt) — added to the practices
    amendment (homed by the PROMPT only, parameterized solution; the identical unit-09 pattern).
-2. `[FIXED]` (Nit) `scope` mis-homed on "independent instances = scope" (a misconception) — L1 now
-   explains independent instances plainly as "each object carries its own attributes", NOT scope;
-   `scope` is homed silently by method-local variables (`amount` param, local `mood`) in L2.
+2. `[FIXED, then SUPERSEDED by sol-6 removal]` (Nit) `scope` mis-homed on "independent instances =
+   scope" — L1 now explains independent instances plainly as "each object carries its own
+   attributes", NOT scope. (This entry originally said scope was homed by method-locals; sol-6 then
+   REMOVED `scope` from the unit-10 union entirely — see the amendment + round-2/3 ledger. No content
+   beat homes or teaches `scope`.)
 3. `[FIXED]` (Watch) `builtin-functions` (len/max) not in union — added a binding note: no
    len/max/min in any STUDENT cell; happiest-pet tracks max MANUALLY; `len(pets)` only in a solution
    assert (exempt scaffolding).
@@ -212,8 +214,9 @@ APPROVE WITH NITS → all addressed:
 ### Round 2 revisions (2026-09-07)
 Amendment now: requires UNCHANGED; practices += `arithmetic, comparison, dict-literal, elif-else,
 for-loop, list-loop, list-literal, print, variable, string-literal, int-type, error-messages, input`
-(13). L2 gains `pass_time`; L3 is flat (list-loop pass + separate play-until-happy while). Scope
-homed on method-local vars. Re-validated green. Awaiting [sol].
+(13). L2 gains `pass_time`; L3 is flat (list-loop pass + separate play-until-happy while).
+(This note pre-dated sol-6; `scope` was subsequently REMOVED from the union — no content beat homes
+or teaches it.) Re-validated green. Awaiting [sol].
 
 ### Review 4 — [sol] (2026-09-07)
 REJECT → all findings RESOLVED. sol confirmed the beat mapping, accumulator, arithmetic, and (in the
@@ -270,3 +273,11 @@ listed-but-unhomed: none. Its two used-but-unlisted: `list-index` (= glm round-2
 amendment) and the residual L2 "`mood` homes `scope`" text (= fable round-2; reworded to "incidental
 method-local, covered by `variable`"). Both resolved. Re-dispatching a focused [glm]/[sol] round 3
 to confirm the list-index add + scope-text removal.
+
+### Round 3 (2026-09-07)
+[glm] round 3: APPROVE (list-index listed, union clean, wording nits resolved). [sol] round 3:
+REJECT on two RESIDUAL scope-homing claims in the LEDGER HISTORY (the [self] Review-1 line and a
+round-2 note still positively said "scope homed by method-locals"). `[FIXED]` — both struck/marked
+SUPERSEDED; NO content beat and NO active ledger claim now homes or teaches `scope`. The only
+remaining "homes scope" strings are historical entries that QUOTE the old phrase in a
+"reworded/struck/superseded" context. Re-dispatching focused [sol] round 4.
