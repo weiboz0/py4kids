@@ -1,0 +1,11 @@
+id: unit-09-save-point
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [file-read, file-write, with-statement]
+  requires: [list-append, string-methods, def-function, for-loop, parameters, return-value]
+  practices: [list-loop, dict-access, f-string, in-operator, builtin-functions, dict-literal,
+              if-statement, list-literal, print, variable, string-concat, string-literal,
+              type-conversion, int-type, error-messages, input]
