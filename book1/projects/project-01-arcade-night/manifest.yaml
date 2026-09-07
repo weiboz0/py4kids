@@ -1,0 +1,11 @@
+id: project-01-arcade-night
+kind: project
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: []
+  requires: [def-function, parameters, return-value, while-loop, if-statement, random-module]
+  practices: [print, input, f-string, accumulator, logical-ops, loop-counter,
+              elif-else, break-statement, comparison, scope, import-statement, random-module,
+              variable, arithmetic, int-type]
