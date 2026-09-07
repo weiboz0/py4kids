@@ -127,9 +127,13 @@ entries:
   title: "Checkpoint 4 — Year One Finale"
   lessons: 0.5
   introduces: []
-  requires: [file-read, class-def]
+  requires: [file-read, class-def, for-loop]
   practices: [file-read, file-write, with-statement, class-def, init-method,
-              attributes, methods, dict-loop, list-sort, return-value]
+              attributes, methods, dict-loop, list-sort, return-value,
+              parameters, dict-literal, dict-access, list-literal, list-append, list-index,
+              for-loop, list-loop, if-statement, in-operator, arithmetic, int-type,
+              type-conversion, string-concat, string-literal, string-methods, f-string,
+              print, variable, boolean, error-messages, accumulator, elif-else]
 - id: project-02-grand-adventure
   kind: project
   title: "Grand Adventure — the Year 1 capstone"
