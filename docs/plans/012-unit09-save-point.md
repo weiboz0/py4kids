@@ -340,3 +340,49 @@ solution now uses an f-string (fable-4). WONTFIX: committed-.txt false alarm (gi
 Ex9 snapshot assert (fable-3/sol-6), return-filename style (glm-2). Scanner clean; clean-slate
 ci-local ALL GREEN (strengthened asserts hold on the deterministic run). Re-dispatching focused
 [sol] re-check.
+
+
+## Content Gate — CONSENSUS REACHED (2026-09-07)
+- `[self]` APPROVE · `[fable]` APPROVE WITH NITS (fixed) · `[glm]` APPROVE WITH NITS (fixed) ·
+  `[sol]` APPROVE (re-check — the w-vs-a claim + weak asserts fixed & re-confirmed).
+- All `[OPEN]` findings resolved; WONTFIX items justified. Scanner clean; clean-slate ci-local ALL
+  GREEN; scratch .txt gitignored (not committed).
+- **Gate PASSED. Shipping PR #12.**
+
+## Post-Execution Report (2026-09-07)
+
+**Shipped:** `unit-09-save-point` — Book 1's files unit (first Term-4 unit).
+
+**What was built:**
+- `lesson.ipynb` (2 lessons, hook-first): L1 writes a score list + settings with `with open(...,"w")`,
+  teaches `"\n"`; L2 reads back — whole-file `f.read()`, line-by-line `for line in f`, a
+  `load_scores` helper, membership search of settings, and a `no-exec` FileNotFoundError beat.
+- `exercises.ipynb`: 8 core + 2 Challenge (stretch); `input` only in Ex8's prompt (with a
+  `sample_score` starter).
+- `solutions.ipynb`: blind, input-free, 9 non-vacuous asserts (full-list round-trips), executes
+  headless clean.
+- `manifest.yaml` (map-equal), `teacher-notes.md` (five headings, file-I/O common mistakes).
+
+**Verification:** `ci-local.sh` ALL GREEN under the CLEAN-SLATE protocol (`rm -f` the two scratch
+files first, so green proves create-before-read); AST concept-scanner scoped to unit-09 clean.
+
+**Infra (Phase A):** `.gitignore` entries for `book1/units/unit-09-save-point/savegame.txt` +
+`settings.txt` (runtime scratch — created by the notebooks, never committed; verified via
+`git ls-files`/`git check-ignore`). Map amendment: requires += `parameters, return-value`; practices
++= 12 substrate concepts (incl. `input`).
+
+**Gates:**
+- Plan-review: consensus after a convergent round-1 reject — fable caught an `int("Ada")` crash
+  (mixed name/score file), sol caught unlisted `input`, glm 5 nits + a phantom input-exercise. The
+  file-I/O-in-CI design was empirically validated against the real NotebookClient executor.
+- Content-review: [self] APPROVE, [glm]/[fable] APPROVE WITH NITS, [sol] REJECT→fixed (the Ex8/Ex10
+  load-append-save w-vs-a claim + weak asserts — false claim removed, asserts strengthened to
+  full-list; a forbidden `[:4]` list slice removed pre-gate).
+
+**Key design:** the FILE payload split — `savegame.txt` integer scores only (int-parsed clean),
+`settings.txt` text (read via membership, never int-parsed) — plus write-then-read self-contained
+notebooks and gitignored scratch, is the whole safety story for file I/O in CI-executed notebooks.
+
+**Follow-ups (tracked):** hygiene PR (shipped-unit practice gaps + scanner promotion to tools/);
+plan 013 = unit 10 Pet Simulator (OOP/classes) — the last Book-1 unit before checkpoint 04 + the
+project 02 capstone.
