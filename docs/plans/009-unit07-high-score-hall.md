@@ -238,3 +238,31 @@ All four round-1 verdicts REJECTed on the SAME convergent core (string-literal +
 sorted() + parallel-array data model); fixes applied exactly as prescribed and re-validated
 green. Re-dispatching [glm]/[fable]/[sol] to confirm the revised plan — especially the
 single-scores-list data model — closes.
+
+**[fable] round 2: APPROVE WITH NITS.** All round-1 findings affirmed resolved; mapped every
+code shape to a listed concept (zero used-but-unlisted); DATA MODEL coherent with zero residual
+name↔score pairing; no untaught leak / nested loops; input discipline intact. Non-blocking nits
+folded into Phase B authoring: (N1) teacher-notes acknowledge `input` is homed via exercise
+prompt only; (N2) lesson prose states the cleaned `winner` name is illustrative of string-methods,
+not derived from the leaderboard (true pairing waits for dicts, unit 08).
+
+**[glm] round 2: APPROVE WITH NITS.** All four round-1 findings verified truly resolved; closure
+independently re-confirmed (31-concept union, `practices ∩ introduces` empty, no over-listing, no
+untaught leak). Three authoring-level nits folded into Phase B: (G1) after any append to a ranked
+board — `add_score`, add-my-score, merge-two-boards — RE-SORT (`append` then `.sort(reverse=True)`,
+single loop, no copies) so the hall stays ranked; (G2) `"Place N"`/`board_line` implies RANK so
+it runs on a SORTED list (L2 post-sort) — L1's pre-sort numbered board is framed as
+"position/entry #N", not place/rank; (G3) concurs with fable's input-prose + illustrative-name nits.
+
+**[sol] round 2: APPROVE.** Definitive beat-by-beat used-but-unlisted scan → `used-but-unlisted:
+[]`, `listed-but-unhomed: []`. Amendment complete (all 15 practices + 2 requires, incl.
+string-literal/boolean, introduced units 01–06); `sorted()` + slicing bans binding; single-list
+data model coherent. In-memory prereq/coverage checks PASS (31-concept union).
+
+## Plan Gate — CONSENSUS REACHED (2026-09-06)
+- `[self]` APPROVE · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS · `[sol]` APPROVE.
+- Round 1 was a convergent 3× REJECT (string-literal/boolean/sorted()/parallel-array data model);
+  all fixed in round-2 revisions and confirmed by all reviewers in round 2. No open blockers.
+- All round-2 nits are Phase-B authoring specs (re-sort after append; position vs place framing;
+  input-prose + illustrative-name acknowledgments) — staged, not plan blockers.
+- **Gate PASSED. Proceeding to Phase A (map amendment) → Phase B (content) → Phase C.**
