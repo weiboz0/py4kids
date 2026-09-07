@@ -1,0 +1,11 @@
+id: unit-10-pet-simulator
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [class-def, init-method, attributes, methods]
+  requires: [def-function, parameters, return-value, dict-access, while-loop]
+  practices: [f-string, if-statement, accumulator, list-append, arithmetic, comparison,
+              dict-literal, elif-else, for-loop, list-loop, list-literal, list-index, print,
+              variable, string-literal, int-type, error-messages, input]
