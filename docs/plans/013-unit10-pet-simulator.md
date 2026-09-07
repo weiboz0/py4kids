@@ -2,8 +2,8 @@
 
 **Goal:** Ship `unit-10-pet-simulator` — Book 1's OOP unit and its LAST unit — where students build
 a virtual pet as a CLASS: `__init__` sets up each pet's attributes (name, hunger, happiness),
-methods (`feed`, `play`, `status`) read and change those attributes, and a little simulation runs
-several pets through a few rounds.
+methods (`feed`, `play`, `pass_time`, `status`) read and change those attributes, and a small FLAT
+simulation gives a list of pets one status/time pass and plays one pet until it is happy.
 
 **Architecture:** Standard unit pipeline (plan 004), no new tooling in the unit itself. ONE map
 amendment lands UP FRONT (the standing substrate audit, DERIVED with the AST concept-scanner from
@@ -29,8 +29,10 @@ pets), `print`/`variable`/`string-literal`/`int-type`, and `error-messages` (an 
     variables do not amount to a deliberate scope beat. `scope` remains practiced in checkpoint-02
     and the project-02 capstone, so removal is closure-safe (not a capstone-only concept).
   - append to `unit-10-pet-simulator.practices` — `arithmetic, comparison, dict-literal, elif-else,
-    for-loop, list-loop, list-literal, print, variable, string-literal, int-type, error-messages,
-    input`. Notes: `input` homed by the `type-a-name` exercise PROMPT only — prose, not an
+    for-loop, list-loop, list-literal, list-index, print, variable, string-literal, int-type,
+    error-messages, input`. Notes: `list-index` covers `pets[1]` (used in the index-based list-state
+    assert that replaced `len`, and any `pets[0]` access — introduced unit-07, closure-safe; glm
+    round-2 caught it used-but-unlisted). `input` homed by the `type-a-name` exercise PROMPT only — prose, not an
     executable cell; solution parameterized with a fixed name, matching units 07/08/09 (fable
     plan-review). `list-loop` covers `for pet in pets` (looping over a LIST — the registry's
     list-iteration concept, distinct from `for-loop`; glm plan-review); `for-loop` is kept because
@@ -60,10 +62,10 @@ pets), `print`/`variable`/`string-literal`/`int-type`, and `error-messages` (an 
   files (`open`) — that was unit 09; NO `.split()`. Lists use ONLY `.append` (NO `.sort` — that is
   `list-sort`, not in the unit-10 union); dicts use ONLY `[key]` read (NO `.items`/`.get` — those
   are `dict-loop`/`dict-access`-plus; only plain `[key]` lookup, which is the required `dict-access`).
-  `builtin-functions` (`len`/`max`/`min`) is NOT in the union and must NOT appear ANYWHERE —
-  including inside solution asserts (sol rejects the assert-scaffolding exemption for a function
-  call; only bare comparison operators `==`/`<`/`>` are exempt scaffolding). Assert list state via
-  INDEX (`pets[1].name == "Rex"`), never `len`. NO nested loops, NO comprehensions, NO sets. The
+  `builtin-functions` (`len`/`max`/`min`) is NOT in the union and must NOT appear ANYWHERE — the
+  exemption for solution asserts covers COMPARISON OPERATORS (`==`/`!=`/`<`/`>`, all under the
+  listed `comparison` practice) but NOT FUNCTION CALLS like `len(...)` (sol round-1). Assert list
+  state via `list-index` (`pets[1].name == "Rex"` — `list-index` is now listed), never `len`. NO nested loops, NO comprehensions, NO sets. The
   `status` mood ladder uses `comparison` + `elif-else` (this unit DOES teach comparison-based
   branching, unlike the membership-only checkpoint 03).
 - **Input discipline:** executed cells (lessons + solutions) are input-free; `input()` only in an
@@ -99,7 +101,7 @@ inline (scratchpad tool, not shipped).
 Blueprint (introduces class-def, init-method, attributes, methods; requires def-function, parameters,
 return-value, dict-access, while-loop; practices f-string, if-statement, accumulator,
 list-append (scope REMOVED), + amended arithmetic/comparison/dict-literal/elif-else/for-loop/
-list-loop/list-literal/print/variable/string-literal/int-type/error-messages/input):
+list-loop/list-literal/list-index/print/variable/string-literal/int-type/error-messages/input):
 - Hook: PET SIMULATOR — adopt a virtual pet that has its OWN name and mood and remembers them; feed
   it and play with it and watch its stats change. The teacher "adopts" a pet live and the class
   suggests actions.
@@ -115,7 +117,8 @@ list-loop/list-literal/print/variable/string-literal/int-type/error-messages/inp
   `self.hunger = self.hunger + 2` (time makes a pet HUNGRIER — so the "hungry" mood is reachable
   organically and feeding is motivated, glm plan-review); `status(self)` builds a LOCAL `mood`
   variable via a ladder `if self.hunger > 6: mood = "hungry"  elif self.hunger < 3: mood = "stuffed"
-  else: mood = "content"` (comparison + elif-else; `mood` is method-local — homes `scope`) and
+  else: mood = "content"` (comparison + elif-else; `mood` is an incidental method-local, covered by
+  `variable` — NOT a taught scope beat, `scope` is removed) and
   prints an f-string. Call `buddy.feed(2)`, `buddy.play()`, `buddy.pass_time()`, `buddy.status()`.
 - **Lesson 3 (a little simulation, FLAT — no nested loops, glm plan-review):** a
   `foods = {"apple": 2, "steak": 4}` table (dict-literal + dict-access) feeds by name; a LIST of
@@ -234,3 +237,36 @@ Amendment now: requires UNCHANGED; practices = REMOVE `scope`, then the pre-exis
 elif-else, for-loop, list-loop, list-literal, print, variable, string-literal, int-type,
 error-messages, input`. builtin-functions/.sort/.items FORBIDDEN; len-assert → index. Re-validated
 green. Re-dispatching [glm]/[fable]/[sol] round 2.
+
+### Round 2 re-review verdicts (2026-09-07)
+**[fable] round 2: APPROVE WITH NITS.** Round-1 `input` blocker RESOLVED; full closure CLEAN (no
+used-but-unlisted, no over-listing, all 17 practices introduced ≤unit-09, `practices ∩ introduces`
+empty); `scope` removal closure-safe (still practiced cp-02 + project-01/02); closure-safety clean
+(`.append`/`[key]` only, no len/max/min, no inheritance/dunders/nested-loops; L3 flat; `pass_time`
+makes "hungry" reachable). One doc nit `[FIXED]`: L2 blueprint said "`mood` … homes `scope`" —
+reworded ("incidental method-local, covered by `variable`, NOT a taught scope beat"). Awaiting
+[glm]/[sol] round 2.
+
+**[glm] round 2: REJECT → fixed.** All 5 round-1 nits confirmed resolved; scope removal confirmed
+closure-safe (no downstream entry requires scope); the .sort/.items/len bans create no gap.
+Substantive finding + nits, all fixed:
+- `[FIXED]` (BLOCKER) `list-index` used-but-unlisted — my sol-4 fix (`pets[1].name == "Rex"` to avoid
+  len) introduced `pets[1]` = `list-index`, absent from the union. Added `list-index` to the
+  practices amendment (introduced unit-07, already practiced cp-03 → closure-safe). Re-validated green.
+- `[FIXED]` (nit) the "only bare comparison operators exempt" sentence contradicted the `!=`/`==`
+  asserts — reworded: the assert exemption covers COMPARISON OPERATORS (listed `comparison`), the
+  ban is on FUNCTION CALLS (`len`).
+- `[FIXED]` (nit) L2 "`mood` … homes `scope`" — already struck (fable round-2).
+- `[FIXED]` (nit) stale goal summary — updated to list `pass_time` + the flat single-pass L3.
+
+### Round 2 revisions v2 (2026-09-07)
+Added `list-index` to the amendment (14 practices additions now; scope still removed). Comparison-
+exemption sentence + goal summary + Phase-B parenthetical aligned. Re-validated green. Awaiting
+[sol] round 2 (dispatched before the list-index fix — may independently flag it; now resolved).
+
+**[sol] round 2: (reviewed committed pre-fix version) — its 2 used-but-unlisted findings both
+already FIXED in working tree.** sol confirmed sol-4/6/8/9 + input/list-loop resolved,
+listed-but-unhomed: none. Its two used-but-unlisted: `list-index` (= glm round-2; added to
+amendment) and the residual L2 "`mood` homes `scope`" text (= fable round-2; reworded to "incidental
+method-local, covered by `variable`"). Both resolved. Re-dispatching a focused [glm]/[sol] round 3
+to confirm the list-index add + scope-text removal.
