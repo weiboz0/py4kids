@@ -245,6 +245,10 @@ coverage; ci-local ALL GREEN; content gate 4-way consensus.
 6. `[FIXED]` (Major) Assert floor accepts `assert True`. → non-vacuous check added (bare-constant asserts excluded) + fixture.
 7. `[FIXED]` (Major) Question check accepts six "Question 1"s. → sequential-unique 1..N check (gated to in-range counts) + fixture.
 
+### Review 5 — [sol] round 2 (2026-09-06)
+- **Verdict**: REJECT — 6 of 7 verified fixed; only finding 2's E5 half remained: the markdown described the fix but didn't show the literal `bonus = int(input("Bonus points: "))` line (Q3 did).
+1. `[FIXED]` E5 solution markdown now shows the literal repaired line, matching the Q3 treatment sol approved.
+
 ## Post-Execution Report
 
 (written before shipping.)
