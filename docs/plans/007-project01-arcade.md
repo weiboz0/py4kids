@@ -242,8 +242,22 @@ All round-1 findings applied; the project-01 substrate amendment verified green 
   1. `[FIXED]` (Major) Rubric said one game = Developing, but differentiation/pacing text still called a one-game arcade "a full, valid submission" / "complete-for-them" — contradictory. → all one-game language reconciled to "Developing level, not full credit, never a failure."
   2. `[FIXED]` (Nit) Requirements-heading fixture used `in output`, not an exact single-failure assertion. → tightened to exact-match.
 
+### Round 3 (2026-09-06)
+- **[sol]**: APPROVE — one-game language consistent (Developing, not full credit); requirements fixture asserts exact single failure.
+
 ### Gate result (2026-09-06)
-- `[self]` APPROVE · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS · `[sol]` — round-2 fixes applied, re-verification dispatched (round 3).
+- `[self]` APPROVE · `[sol]` APPROVE (round 3) · `[glm]` APPROVE WITH NITS · `[fable]` APPROVE WITH NITS.
+- Full consensus, no `[OPEN]` items — **content gate PASSED; clear to ship.**
+
+## Post-Execution Report (2026-09-06)
+
+**Shipped:** the PROJECT content kind (third and final content type) — `project_dirs`, milestone/rubric/requirements checks, the `--unit project-*` selector matrix, the three-way hygiene map, a stricter tautology-rejecting assert floor, and the full one-fault fixture battery — plus `project-01-arcade-night`: a student brief (Lucky Guess + Quick Quiz over 4 milestones, `## Requirements` + `## Make it yours`), a blind reference solution with NO `input()` (parameterized game functions driven by fixed values, a live `while True` quit path, five branch-pinned asserts), and teacher notes with a `## Rubric` grading each student's OWN arcade. One map amendment (project-01 practices += variable/arithmetic/int-type — the third recurrence of the plan-002 substrate gap). Final: 329 tests, ci-local ALL GREEN.
+
+**Gate history:** plan gate 3 rounds (project conventions + tooling design; sol caught the substrate gap and the input()-in-unexecuted-def trap; glm caught the false teaching-order rationale). Content gate 3 rounds — sol was decisive throughout, catching a dead quit branch, a rubric/requirement contradiction, two unenforced conventions (requirements checklist, tautology asserts), and a one-game grading inconsistency the other reviewers passed over.
+
+**Follow-ups (carried forward):**
+- PROACTIVE substrate audit: the plan-002 map under-specification has now recurred three times (unit-04, checkpoint-02, project-01). Before authoring units 06–10 / checkpoints 03–04 / project 02, audit each entry's requires ∪ practices for the foundational substrate its content will use, and amend up front rather than at the gate.
+- A tooling check for no code after `turtle.done()` (from plan 006) remains open.
 
 ## Post-Execution Report
 
