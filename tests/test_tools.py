@@ -231,6 +231,7 @@ def valid_root(tmp_path):
                 nbformat.v4.new_code_cell("choice = 'left'"),
                 nbformat.v4.new_markdown_cell("## Milestone 3\nFinish the ending."),
                 nbformat.v4.new_code_cell("ending = 'home'"),
+                nbformat.v4.new_markdown_cell("## Requirements\nYour build must have a start."),
                 nbformat.v4.new_markdown_cell("## Make it yours\nInvent a new scene."),
             ]
         ),
@@ -1880,6 +1881,23 @@ def test_checkpoint_vacuous_asserts_do_not_meet_floor(valid_root, capsys):
     assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 non-vacuous assert cells\n"
 
 
+def test_checkpoint_tautology_asserts_do_not_meet_floor(valid_root, capsys):
+    # Executable tautologies prove nothing either (gate finding sol #6): `1 == 1`,
+    # `x == x`, `not False`.
+    path, notebook = _checkpoint_notebook(valid_root, "solutions.ipynb")
+    tautologies = ("assert 1 == 1", "assert score == score", "assert not False", "assert True")
+    assert_cells = [
+        cell for cell in notebook.cells
+        if cell.cell_type == "code" and "assert" in cell.source
+    ]
+    for cell, taut in zip(assert_cells, tautologies, strict=False):
+        cell.source = taut
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="checkpoint-01-fixture")
+    assert code == 1
+    assert output == "FAIL: checkpoint-01-fixture: solutions need >=3 non-vacuous assert cells\n"
+
+
 def test_checkpoint_question_numbers_must_be_sequential(valid_root, capsys):
     # Six headings all labeled "Question 1" must be rejected, not counted as six questions.
     path, notebook = _checkpoint_notebook(valid_root, "checkpoint.ipynb")
@@ -2022,6 +2040,18 @@ def test_project_requires_exact_make_it_yours_heading(valid_root, capsys):
     code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
     assert code == 1
     assert output == "FAIL: project-02-grand-adventure: missing '## Make it yours'\n"
+
+
+def test_project_requires_requirements_checklist(valid_root, capsys):
+    # The student-facing '## Requirements' checklist must be present in the brief (sol #5).
+    path, notebook = _project_notebook(valid_root, "brief.ipynb")
+    for cell in notebook.cells:
+        if cell.cell_type == "markdown" and cell.source.lstrip().startswith("## Requirements"):
+            cell.source = cell.source.replace("## Requirements", "## Checklist", 1)
+    _write_nb(path, notebook)
+    code, output = _run(valid_root, "structure-check", capsys, unit="project-02-grand-adventure")
+    assert code == 1
+    assert "missing '## Requirements' checklist" in output
 
 
 def test_project_brief_solution_heading_one_fault(valid_root, capsys):

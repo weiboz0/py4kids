@@ -12,17 +12,20 @@ and the class plays each other's on showcase day.
 
 Budget: two lessons of 60–90 minutes, run as design → build → showcase.
 
-- **Lesson 1 — design + the minimum bar.**
+The brief's milestones run M1 menu → M2 game one → M3 game two → M4 running total, so the
+two lessons split along that order:
+
+- **Lesson 1 — design + Milestones 1–2 (the minimum bar).**
   10 min: the hook — the teacher plays a finished arcade; the class lists what makes it fun.
   10 min: design on paper — pick two games, name each game's function and what it returns.
-  40 min: BUILD to the minimum bar — a menu loop, ONE game function that returns points, and
-  a running total. Every student reaches a playable one-game arcade by end of lesson 1.
-  MINIMUM BAR BY END OF LESSON 1 is the promise: nobody leaves lesson 1 without something
+  40 min: BUILD Milestones 1–2 — the menu loop (M1) and the FIRST game as a function that
+  returns points, called from the menu and showing that game's points (M2). Every student
+  reaches a playable one-game arcade by end of lesson 1 — nobody leaves without something
   that runs.
-- **Lesson 2 — second game, extensions, showcase.**
-  30 min: add the second game function and wire it into the menu + score.
+- **Lesson 2 — Milestones 3–4, extensions, showcase.**
+  25 min: the SECOND game function (M3) and the running total across both games (M4).
   20 min: `## Make it yours` — a third game, a high-score line, or a difficulty parameter.
-  20 min: SHOWCASE — pairs swap seats and play each other's arcades; each author notes one
+  15 min: SHOWCASE — pairs swap seats and play each other's arcades; each author notes one
   thing they'd add next.
 
 Differentiation: strugglers ship the one-game minimum bar as a complete, celebrated result;
@@ -57,11 +60,17 @@ the second game and extensions are where faster students spend lesson 2.
 Assess each student's OWN arcade against these criteria — there is no fixed answer key; the
 games differ by design. Judge the BUILD, not a match to a reference.
 
-**Minimum bar (this is "done" — full credit for a complete, playable arcade):**
-- At least ONE game implemented as a function that RETURNS points (not prints them).
+**Meets the brief (full credit — the spec is TWO games):**
+- TWO games, each implemented as a function that RETURNS points (not prints them).
 - A menu the player navigates and can QUIT (a `while` loop with a `break`/quit path).
-- A running total `score` that actually accumulates across plays, shown with an f-string.
+- A running total `score` that accumulates across both games, shown with an f-string.
 - The program RUNS without crashing on normal play.
+
+**Developing (a valid, celebrated result for strugglers — below the two-game spec):**
+- ONE working game function that returns points, wired into a menu with a running total
+  and a quit path. This is the end-of-lesson-1 minimum bar; a student who ships exactly
+  this has a real, playable arcade — mark it complete-for-them and note the second game as
+  the next step, don't fail it.
 
 **Milestone-by-milestone "what done looks like":**
 1. **Menu loop:** loops until the player quits; each choice routes to a game or exits.

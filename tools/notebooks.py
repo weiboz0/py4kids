@@ -235,12 +235,26 @@ def _solution_policy_findings(scope: str, notebook) -> list[str]:
             except SyntaxError:
                 continue
         parsed.append((cell_index, tree))
+    def _is_tautology(test) -> bool:
+        # Tests that are true by construction and prove nothing about the solution:
+        # a bare truthy constant, `not <constant>`, or a comparison whose two sides are the
+        # syntactically identical constant or name (`1 == 1`, `score == score`).
+        if isinstance(test, ast.Constant):
+            return bool(test.value)
+        if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
+            return isinstance(test.operand, ast.Constant)
+        if isinstance(test, ast.Compare) and len(test.comparators) == 1:
+            left, right = test.left, test.comparators[0]
+            if isinstance(left, ast.Constant) and isinstance(right, ast.Constant):
+                return True
+            if (isinstance(left, ast.Name) and isinstance(right, ast.Name)
+                    and left.id == right.id):
+                return True
+        return False
+
     def _non_vacuous_assert(tree) -> bool:
-        # An assert whose test is a bare True/constant (or `assert True`) proves nothing.
         for node in ast.walk(tree):
-            if isinstance(node, ast.Assert) and not (
-                isinstance(node.test, ast.Constant) and bool(node.test.value)
-            ):
+            if isinstance(node, ast.Assert) and not _is_tautology(node.test):
                 return True
         return False
 
@@ -708,6 +722,10 @@ def project_milestone_findings(
         )
         if not _has_markdown_heading(markdown, "## Make it yours"):
             findings.append(_fail(project_dir.name, "missing '## Make it yours'"))
+        # The student-facing success criteria must be present in the brief (not only the
+        # teacher-notes rubric) so students know what "done" means (gate finding sol #5).
+        if not re.search(r"^##\s+Requirements", markdown, re.MULTILINE):
+            findings.append(_fail(project_dir.name, "missing '## Requirements' checklist"))
         if _markdown_heading_occurrences(notebook, SOLUTION_HEADING):
             findings.append(_fail(project_dir.name, "project contains a solution heading"))
     return findings

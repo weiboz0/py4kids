@@ -213,7 +213,25 @@ All round-1 findings applied; the project-01 substrate amendment verified green 
 
 ## Content Review
 
-(pre-PR gate findings land here.)
+### Review 1 — [self] (2026-09-06)
+- **Verdict**: APPROVE — clean concept sweep (no input/list/for in the solution), hook-first, 329 tests, ci-local ALL GREEN.
+
+### Review 2 — [fable] (2026-09-06)
+- **Verdict**: APPROVE WITH NITS — requirements checklist satisfied line-by-line; closure clean; tooling parity confirmed; selector matrix 0/2/1.
+1. `[FIXED]` Reference driver's quit branch was dead (loop exited on the counter). → driver rewritten as `while True` with the `q` else-branch as the genuine exit; quit path now exercised.
+2. `[WONTFIX]` Conditional-expression assert in a fixture reads non-obviously. → style-only; left as-is.
+
+### Review 3 — [glm] (2026-09-06)
+- **Verdict**: (no verdict — the opencode forwarder returned no output). Re-dispatched on the fixed tree in round 2.
+
+### Review 4 — [sol] (2026-09-06)
+- **Verdict**: REJECT
+1. `[FIXED]` (Blocker) Quit not exercised (= fable #1). → driver rewritten.
+2. `[WONTFIX-misread]` (Blocker) "`## Rubric` absent from brief" — by design the `## Rubric` is a TEACHER-NOTES heading (present); the brief carries a student-facing `## Requirements` checklist. Underlying concern (student-facing criteria unenforced) addressed by #5.
+3. `[FIXED]` (Major) Rubric granted full credit for ONE game while the brief requires TWO. → rubric reworked: two games = meets the brief (full credit); one game = a celebrated "developing" floor for strugglers, explicitly below the spec.
+4. `[FIXED]` (Major) Pacing (one game + total by lesson 1) conflicted with the brief's milestone order (total is M4, after game two). → pacing rewritten to the brief's order: lesson 1 = M1–M2 (menu + one returning game), lesson 2 = M3–M4 + extensions.
+5. `[FIXED]` (Blocker) Brief requirements checklist not mechanically enforced. → `project_milestone_findings` now requires a `## Requirements` heading in the brief; +fixture; fixture-factory baseline brief gains one.
+6. `[FIXED]` (Blocker) Non-vacuous assert check missed executable tautologies (`1 == 1`, `x == x`, `not False`). → `_is_tautology` now rejects bare constants, `not <constant>`, and same-node/constant comparisons; +fixture; verified no real solution assert regresses.
 
 ## Post-Execution Report
 
