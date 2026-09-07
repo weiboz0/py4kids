@@ -186,7 +186,18 @@ GREEN; content gate 4-way consensus.
 - **Verdict**: REJECT — declarations match and both round-2 additions valid, but sol's definitive 25-concept code-cell inventory found ONE more registered-but-unlisted: `string-literal` (`"nvvg"`, `"stressed"` etc.), introduced unit 01, used throughout.
 - **Resolution**: `[FIXED]` — added `string-literal`. Considered pushing back (units 04/05, both sol-approved, use string literals without listing string-literal — an ambient-concept inconsistency), but checkpoint-01 DOES list it, and adding it makes sol's own enumerated inventory provably complete, so this is the convergent close rather than a round-4 over concept philosophy. unit-06 practices is now 16 concepts.
 - **Latent map issue (follow-up, not blocking unit-06):** units 04 and 05 use string literals without listing `string-literal`; the map treats ambient foundational concepts (string-literal/comment/naming) inconsistently across units vs checkpoints. Worth a systemic pass, but out of unit-06 scope.
-- **Tooling follow-up:** content-level closure (every concept USED in code is in the entry's union) is entirely reviewer-manual — it took 3 sol rounds to enumerate elif-else/error-messages/nested-loops/boolean/string-literal. A concept-usage scanner would mechanize it (concept-from-code detection is fuzzy but a keyword+AST heuristic would catch the obvious ones).
+- **Tooling follow-up:** content-level closure (every concept USED in code is in the entry's union) is entirely reviewer-manual — it took 3 sol rounds to enumerate elif-else/error-messages/nested-loops/boolean/string-literal. A concept-usage scanner would mechanize it (concept-from-code detection is fuzzy but a keyword+AST heuristic would catch the obvious ones). PROTOTYPED an AST-based advisory scanner in scratchpad during this gate: it independently confirms unit-06 is closure-clean, and it surfaced latent practice-completeness gaps in shipped units (string-literal in units 03/04/05 + cp02 + proj01; f-string in unit-03; import-statement in unit-05). Those are NOT correctness violations (prereq-closure is green — nothing used-before-taught), only under-counted practices. Candidate for a real tools/ check + a one-shot cleanup PR.
+
+### Review 7 — [sol] round 4 (2026-09-06) — FINAL
+- **Verdict**: APPROVE — closure complete. Sol ran `manifest-check: PASS`, confirmed manifest==map practices equality (order + set), and tabled all 25 union concepts as satisfied. "Remaining closure gaps: none."
+
+## Content Gate — CONSENSUS REACHED (2026-09-06)
+- `[self]` Fable inline: APPROVE
+- `[sol]` GPT-5.6-sol: APPROVE (round 4 — took 4 rounds; pre-audit missed elif-else/error-messages/nested-loops/boolean/string-literal)
+- `[glm]` GLM-5.2: APPROVE WITH NITS (E4 stray space, L2 60-min cut, hand-written assert — all fixed)
+- `[fable]` fresh Fable subagent: APPROVE
+- Independent cross-check: prototype AST concept-scanner reports unit-06 closure-clean.
+- **Gate PASSED. Ready to ship PR #8.**
 
 ## Post-Execution Report
 
