@@ -6,9 +6,9 @@ contract, following the shipped CP1 checkpoint pattern.
 
 **Architecture:** A checkpoint entry (`checkpoint.ipynb` + `solutions.ipynb` + `teacher-notes.md` +
 `manifest.yaml`). `checkpoint.ipynb` opens with contest framing (time budget + rules), then 6 timed
-`## Question N` problems that collectively exercise the Term-2 techniques — two greedy (sort-then-sweep),
-two simulation (step-by-step state / grid), two prefix-sum (1D range query + 2D sub-rectangle) — each with
-an EMPTY student code cell. `solutions.ipynb` mirrors the `## Question N` headings with pure `solve(data)`
+`## Question N` problems on the fixed allocation pinned in A1 — Q1 greedy (interval scheduling), Q2
+simulation (grid walk), Q3 prefix-sum 1D (range-sum queries), Q4 greedy (max-items-under-budget), Q5
+simulation (tick counter), Q6 prefix-sum 2D (sub-rectangle) — each with an EMPTY student code cell. `solutions.ipynb` mirrors the `## Question N` headings with pure `solve(data)`
 references and non-vacuous asserts. Introduces nothing; requires the U06–U08 techniques it assesses (plus
 the earlier introduces its solutions genuinely use); practices the Book-1 concepts its solutions use.
 
@@ -99,11 +99,11 @@ Copied from the design + registry + the CP1/U06–U08 gate lessons; every task's
   2 greedy / 2 simulation / 2 prefix-sum — pinned, no alternatives):**
   - **Q1 greedy** — interval scheduling / max non-overlapping (sort by end, then sweep).
   - **Q2 simulation** — grid robot / bounded walk following a command string (clamp/stop at walls).
-  - **Q3 prefix-sum (1D)** — answer many range-sum (or range-count) queries via a cumulative array.
-  - **Q4 greedy** — a different-key greedy: fewest-coins (canonical denominations) or max-items-under-budget
-    (sort by cost, take cheapest).
-  - **Q5 simulation** — tick-by-tick state update (a bounded counter/resource, or an event sequence
-    processed by index-walk — no `.pop`/`deque`).
+  - **Q3 prefix-sum (1D)** — answer many range-sum queries over an array via a cumulative-sum array.
+  - **Q4 greedy** — max-items-under-budget: sort by cost ascending, take the cheapest items until the budget
+    is exhausted (a different sort key from Q1).
+  - **Q5 simulation** — a bounded counter/resource updated tick by tick, rising and falling against a fixed
+    cap and floor.
   - **Q6 prefix-sum (2D)** — sum/aggregate a sub-rectangle of a grid via the four-term inclusion-exclusion
     formula.
   Integer/plain-string outputs; decisive values last / last-after-sort.
@@ -168,9 +168,13 @@ nits folded (no architecture change):
 No reviewer found a wrong structure claim or closure hole. Round-2 (sol, focused) dispatched at the revised
 HEAD to confirm the pin; glm + fable round-1 approvals stand (the edits only tightened what they approved).
 
-### Round 2 — [self] APPROVE; [sol] focused re-check dispatched, pending
-Consensus recorded here once sol confirms the pin (glm/fable round-1 APPROVE-WITH-NITS stand); no `[OPEN]`
-blocker remains before implementation.
+### Round 2 (HEAD 50265a0) — [sol] REJECT (residual): Q3/Q4/Q5 still carried within-technique "(or …)"
+sub-choices, contradicting A1's "no alternatives". Removed every "or": Q3 = range-SUM queries, Q4 =
+max-items-under-budget, Q5 = bounded tick counter with cap/floor; and rewrote the Architecture sentence to
+name the same six pinned problems. Bans/wrapper/citation fixes all PASS'd. Round-3 (sol, focused) dispatched.
+
+### Round 3 — [self] APPROVE; [sol] focused re-check dispatched, pending
+Consensus recorded here once sol confirms the fully-pinned six (glm/fable round-1 APPROVE-WITH-NITS stand).
 
 ## Content Review
 
