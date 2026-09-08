@@ -1,0 +1,13 @@
+id: unit-09-recursion-backtracking
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [recursion, backtracking, comprehension]
+  requires: [def-function, parameters, return-value, if-statement, for-loop, list-append,
+             list-literal, complete-search]
+  practices: [input-parse, accumulator, arithmetic, boolean, builtin-functions, comparison,
+              elif-else, list-sort, logical-ops, nested-loops, print, range-function,
+              string-concat, string-literal, string-methods, string-slice, type-conversion,
+              while-loop]

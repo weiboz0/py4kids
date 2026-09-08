@@ -103,7 +103,10 @@ entries:
   introduces: [recursion, backtracking, comprehension]
   requires: [def-function, parameters, return-value, if-statement, for-loop, list-append,
              list-literal, complete-search]
-  practices: []
+  practices: [input-parse, accumulator, arithmetic, boolean, builtin-functions, comparison,
+              elif-else, list-sort, logical-ops, nested-loops, print, range-function,
+              string-concat, string-literal, string-methods, string-slice, type-conversion,
+              while-loop]
 - id: unit-10-stacks-queues-deques
   kind: unit
   title: "Stacks, Queues & Deques"
