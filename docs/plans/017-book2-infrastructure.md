@@ -200,7 +200,53 @@ plan-review + content-review 4-way consensus.
 
 ---
 
-## Architecture decision (AD-001, recorded here per gate findings)
+## Post-Execution Report (2026-09-07)
+
+**Status: implemented, Phases A–C GREEN. Content gate next.**
+
+- **Phase A (tooling, codex, committed `861fa5d`):** `tools/books.py` (baseline resolver — transitive
+  `depends_on` with cycle-guard, per-book `concept_minimum`/`lesson_budget`), `tools/curriculum.py`
+  (baseline-seeded prereq/checkpoint; `referenced_concepts` known = baseline ∪ own; per-book capstone
+  derivation + content-less practice deferral; optional `kind` key + per-book concept floor +
+  algorithms categories; `global_concept_uniqueness_findings` folded into `coverage_findings`),
+  `tools/concept_scan.py` (immutable per-book profiles, baseline in the allowed union, registry-gated
+  detectors for set-literal/set-ops/tuple/comprehension/str-split/sorted-key/deque/recursion/
+  bitwise-ops), `tests/test_book2_tooling.py` (30 fixture tests incl. the in-process Book2→Book1
+  byte-identity isolation test). Verified in the kernel-capable env: `ruff` clean; `pytest` **403
+  passed** (373 prior + 30 new, zero failures); Book-1 prereq/coverage/concept-scan byte-identical.
+- **Phase B (curriculum, inline):** `book2/curriculum/concepts.yaml` (32 concepts: 9 `feature` + 23
+  `technique`, `concepts_version: 1` wrapper), `book2/curriculum/coverage-map.yaml` (18 entries:
+  U01–U14 + CP1–CP3 + `project-03-mock-contest` capstone; each of the 32 concepts introduced exactly
+  once at its design §7 home — `grid-2d`@U01, `complexity`@U03; requires closes against the Book-1
+  baseline + earlier Book-2), `book2/syllabus.md` (four-term arc, the machine-checked `|id|kind|
+  lessons|` table in map order, `solve(data)` contract, mock-contest format, pacing contract). Two
+  authoring fixes: `concepts.yaml` needed the `concepts_version:`/`concepts:` wrapper; the `set-ops`
+  name needed quoting (a comma broke inline flow-mapping).
+- **Phase C (verification):** Book-2 `prereq-check`/`coverage-check`/`concept-scan` all PASS against
+  the baseline (coverage-check exercises schema + `kind` + global-uniqueness + referenced-concepts +
+  practice-deferral + the syllabus table); no Book-1↔Book-2 concept-id collisions; Book-1 all checks
+  byte-identical; `book2/{units,checkpoints,projects,…}/.gitkeep` present; Book-2 map-level checks
+  wired into `ci-local.sh` (per-entry checks deferred until content); full `ci-local.sh` **ALL GREEN**
+  (both books), pre-merge-guard OK.
+
+---
+
+## Content Review
+
+Roster + tags per the plan-review gate; findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`; all `[OPEN]` resolve
+before merge.
+
+### Review 1 — [self] (2026-09-07) → APPROVE
+Verified the shipped code + registry against the plan. Phase A: `books.py` baseline is transitive +
+cycle-guarded; the coverage-suite de-coupling is complete (uniqueness runs inside coverage-check;
+`concept_minimum`=1 / `lesson_budget`=(1,None) for dependent books relax the Book-1 40/28-32 guards
+without touching Book 1); detectors are registry-gated (Book-1 scan byte-identical, confirmed by the
+in-process regression test + 403-pass suite). Phase B: 32 concepts each introduced once; arc order
+closure-safe (prereq/coverage PASS prove it); `input-parse`/`grid-2d` correctly `technique`-kind;
+capstone `kind: project` id-legal; no id collisions. Phase C: both books green in ci-local, Book-1
+unchanged. No content authored (correct for infra). NIT (non-blocking): the dependent-book
+concept-floor (1) and lesson-budget ((1,None)) are permissive — acceptable now; a book may set an
+explicit `lesson_budget` in `books.yaml` for a tighter bound later.
 
 **Flat shared concept namespace.** Book-1 concept ids remain bare; Book-2 (and later books) add only
 globally-unique new ids; no `book1:`-qualified ids. Uniqueness is enforced across ALL registered

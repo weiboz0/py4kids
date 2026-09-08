@@ -1,0 +1,136 @@
+map_version: 1
+entries:
+- id: unit-01-reading-the-input
+  kind: unit
+  title: "Reading the Input"
+  lessons: 2
+  introduces: [input-parse, str-split, grid-2d]
+  requires: [for-loop, string-methods, type-conversion, int-type, list-literal, list-append,
+             def-function, parameters, return-value, print, with-statement, file-read]
+  practices: []
+- id: unit-02-boolean-logic
+  kind: unit
+  title: "Boolean Logic & Algebra"
+  lessons: 2
+  introduces: [boolean-algebra, code-tracing]
+  requires: [boolean, logical-ops, comparison, if-statement, elif-else, print, variable]
+  practices: []
+- id: unit-03-complexity
+  kind: unit
+  title: "Fast Enough? (Complexity)"
+  lessons: 1
+  introduces: [complexity]
+  requires: [for-loop, nested-loops, list-loop, list-literal, range-function]
+  practices: []
+- id: unit-04-sets-tuples-sorting
+  kind: unit
+  title: "Sets, Tuples & Sorting"
+  lessons: 2
+  introduces: [set-literal, set-ops, tuple, sorted-key]
+  requires: [list-literal, list-sort, in-operator, def-function, parameters, for-loop, comparison]
+  practices: []
+- id: unit-05-searching-complete-search
+  kind: unit
+  title: "Searching & Complete Search"
+  lessons: 3
+  introduces: [binary-search, complete-search]
+  requires: [list-index, list-literal, comparison, while-loop, for-loop, nested-loops, arithmetic,
+             sorted-key, int-type]
+  practices: []
+- id: checkpoint-01-mock-contest-1
+  kind: checkpoint
+  title: "Mock Contest 1"
+  lessons: 0.5
+  introduces: []
+  requires: [input-parse, str-split, grid-2d, boolean-algebra, complexity, set-literal, set-ops,
+             tuple, sorted-key, binary-search, complete-search]
+  practices: []
+- id: unit-06-greedy
+  kind: unit
+  title: "Greedy"
+  lessons: 2
+  introduces: [greedy]
+  requires: [sorted-key, list-sort, for-loop, accumulator, tuple, comparison]
+  practices: []
+- id: unit-07-simulation
+  kind: unit
+  title: "Simulation & Ad Hoc"
+  lessons: 2
+  introduces: [simulation]
+  requires: [for-loop, while-loop, if-statement, list-literal, accumulator, grid-2d, input-parse]
+  practices: []
+- id: unit-08-prefix-sums
+  kind: unit
+  title: "Prefix Sums"
+  lessons: 2
+  introduces: [prefix-sum]
+  requires: [list-literal, list-append, for-loop, loop-counter, accumulator, grid-2d, nested-loops]
+  practices: []
+- id: checkpoint-02-mock-contest-2
+  kind: checkpoint
+  title: "Mock Contest 2"
+  lessons: 0.5
+  introduces: []
+  requires: [greedy, simulation, prefix-sum]
+  practices: []
+- id: unit-09-recursion-backtracking
+  kind: unit
+  title: "Recursion & Backtracking"
+  lessons: 3
+  introduces: [recursion, backtracking, comprehension]
+  requires: [def-function, parameters, return-value, if-statement, for-loop, list-append,
+             list-literal, complete-search]
+  practices: []
+- id: unit-10-stacks-queues-deques
+  kind: unit
+  title: "Stacks, Queues & Deques"
+  lessons: 2
+  introduces: [deque, postfix-eval]
+  requires: [list-literal, list-append, import-statement, for-loop, str-split, arithmetic, in-operator]
+  practices: []
+- id: unit-11-number-systems-bitwise
+  kind: unit
+  title: "Number Systems, Bitwise & Number Theory"
+  lessons: 3
+  introduces: [base-conversion, bitwise-ops, bitmask, gcd, sieve, modular-arithmetic]
+  requires: [arithmetic, int-type, while-loop, for-loop, range-function, list-literal, complete-search]
+  practices: []
+- id: unit-12-binary-trees
+  kind: unit
+  title: "Binary Trees & Traversals"
+  lessons: 2
+  introduces: [tree-traversal]
+  requires: [recursion, dict-literal, dict-access, list-literal, def-function, return-value]
+  practices: []
+- id: checkpoint-03-mock-contest-3
+  kind: checkpoint
+  title: "Mock Contest 3"
+  lessons: 0.5
+  introduces: []
+  requires: [recursion, backtracking, deque, postfix-eval, base-conversion, bitwise-ops, gcd,
+             sieve, modular-arithmetic, tree-traversal]
+  practices: []
+- id: unit-13-grids-graphs
+  kind: unit
+  title: "Grids, Graphs & Traversal"
+  lessons: 3
+  introduces: [graph-repr, bfs, dfs, flood-fill]
+  requires: [grid-2d, dict-literal, dict-access, list-literal, list-append, deque, recursion,
+             for-loop, set-literal, in-operator]
+  practices: []
+- id: unit-14-two-pointers
+  kind: unit
+  title: "Two Pointers & Sliding Window"
+  lessons: 2
+  introduces: [two-pointers]
+  requires: [list-index, sorted-key, while-loop, accumulator, comparison]
+  practices: []
+- id: project-03-mock-contest
+  kind: project
+  title: "Grand Mock Contest (Year-2 Capstone)"
+  lessons: 3
+  introduces: []
+  requires: [input-parse, complete-search, binary-search, greedy, simulation, prefix-sum,
+             recursion, backtracking, deque, graph-repr, bfs, dfs, flood-fill, two-pointers,
+             tree-traversal, sorted-key, set-literal]
+  practices: []
