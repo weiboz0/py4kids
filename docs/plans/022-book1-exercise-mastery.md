@@ -600,13 +600,21 @@ now a content-gate finding requiring explicit reviewer sign-off before merge (en
 pass). **Re-dispatching [sol] for round-5** ([glm]/[fable] APPROVE-W-NITS carried — no change touches
 their concerns).
 
-### Round 5
+### Round 5 (2026-09-08)
 
 - **[self] → APPROVE.** The lone round-4 contradiction is resolved (Phase V accepts count-exemptions);
   header + volume nits closed. No open blockers.
-- **[sol] → (pending round-5)**
+- **[sol] → APPROVE.** Verified all three round-4 items resolved in the live plan body (count-exemption
+  accepted by Phase V; Phase 3 header targets; volume sign-off), no new inconsistency. "The round-5
+  plan-review gate can be closed for this reviewer."
 - **[glm] → APPROVE WITH NITS (carried).**
 - **[fable] → APPROVE WITH NITS (carried).**
+
+### CONSENSUS (2026-09-08) — plan-review gate CLOSED
+
+4-way: [self] APPROVE, [sol] APPROVE, [glm] APPROVE WITH NITS, [fable] APPROVE WITH NITS — no `[OPEN]`
+blockers, all nits folded across rounds 1–5. Plan-review gate CLOSED. Proceeding to implementation
+(PR-A = Term 1–2: Phases 1, 2, 3 + Phase 8.1 metadata; then PR-B = Term 3–4).
 
 ## Content Review
 
