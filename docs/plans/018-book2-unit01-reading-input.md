@@ -31,16 +31,32 @@ precedent). Book-1 content conventions transfer (5-heading unit teacher-notes, �
   executable cell. Verified by inline asserts token-compared: `assert solve(SAMPLE_IN).split() ==
   EXPECTED.split()`, against the sample **plus ≥1 crafted edge/larger case per problem** (non-vacuous;
   a wrong solution fails — content gate mutation-checks). The real-submission wrapper
-  (`import sys; print(solve(sys.stdin.read()))`) appears ONLY in a `no-exec`-tagged cell or teacher
-  note, never CI-run. Deterministic (no `random`).
+  (`import sys; print(solve(sys.stdin.read()))`) appears ONLY in a `no-exec`-tagged cell of
+  `lesson.ipynb` or in `teacher-notes.md` markdown — **NEVER in `solutions.ipynb`** (fable-5/glm-5):
+  `exec-solutions` runs ALL solution cells regardless of the `no-exec` tag (that tag is stripped only
+  for `lesson.ipynb`), so a wrapper there would `sys.stdin.read()` → hang-to-timeout. Deterministic:
+  NO `random` anywhere (the exec policy would tolerate a seeded `random`, so "no random" is
+  reviewer/content-gate-enforced — mutation-checked at the gate) — glm-6c.
+- **Untaught methods (scanner-enforced — fable-6/glm-6b):** the only string/list method taught by U01
+  is `.split` (via `str-split`); the Book-2 scanner profile adds only `split` (+ Book-1's taught
+  methods). So U01 content must NOT use `.join`, `.splitlines`, `.index`, `.count`, `.find`, etc. —
+  build output with concatenation/f-strings/loops, and find a position with a manual loop. (This is
+  good pedagogy and the scanner enforces it — the same guard that nearly caught `.index` in Book-1
+  unit-06.) The codex authoring prompts MUST state this.
 - **Unit anatomy (design §4; Book-1 conventions):** `lesson.ipynb` opens on the motivating problem
   (too-slow/naive → the technique), teaches, works one problem end-to-end; `exercises.ipynb` = a
   laddered PROBLEM SET (≥8 problems, each: statement + constraints + sample input/output; ≥2
   `stretch`-tagged as "Challenge"); `solutions.ipynb` = reference `solve` functions + the non-vacuous
-  asserts (mirror `## Exercise N` / `## Problem N` headings, unique cell ids, no executed outputs);
-  `teacher-notes.md` = FIVE `##` headings (`## Goals`, `## Pacing`, `## Common mistakes`,
-  `## Discussion prompts`, `## Differentiation`) and states each problem's intended Big-O; student
-  notebooks carry NO solutions and NO executed outputs.
+  asserts; **headings are `## Exercise N` in BOTH `exercises.ipynb` and `solutions.ipynb`** —
+  `structure-check`/`stretch-check` count the `^## Exercise \d+` regex, so framing items as "problems"
+  in the PROSE is fine but the HEADINGS stay `## Exercise N` (`## Problem N` is reserved for
+  checkpoint/mock-contest files) — glm-4. Unique cell ids, no executed outputs; `teacher-notes.md` =
+  FIVE `##` headings (`## Goals`, `## Pacing`, `## Common mistakes`, `## Discussion prompts`,
+  `## Differentiation`) and states each exercise's intended Big-O; student notebooks carry NO
+  solutions and NO executed outputs. (NOTE: design-001 §4 says "six headings incl. `## Rubric`" for
+  units — that is a design-doc slip; the tooling + Book-1 convention give UNITS five headings
+  (`## Rubric` is projects-only, `## Grading` checkpoints-only). The plan follows the tooling;
+  design-001 §4 gets an errata note — fable-7/glm-observation.)
 - **U01 concept scope (closure + two-tier):** U01 `introduces` `input-parse`, `str-split`, `grid-2d`
   (per the map; `input-parse`/`grid-2d` are TECHNIQUES, `str-split` a FEATURE). It may USE any Book-1
   baseline concept (for-loop, list-append, type-conversion, int-type, string-methods, def-function,
@@ -55,7 +71,10 @@ precedent). Book-1 content conventions transfer (5-heading unit teacher-notes, �
   fixture — NO reading real stdin. No scratch files needed (input is a string arg).
 - **ci-local wiring:** with U01 authored, ADD Book-2 per-entry checks for the content that now
   exists — `manifest-check`/`structure-check`/`hygiene-check`/`cell-lint`/`exec-solutions`/
-  `noexec-check`/`stretch-check` for `--book book2` (these iterate only existing entry dirs, so they
+  **`exec-lessons`** (fable-4/glm-5 — else U01's `lesson.ipynb` is never EXECUTED, only regex-linted,
+  and a runtime error or the `sys.stdin.read()` wrapper would slip CI; the wrapper cell MUST be
+  `no-exec`-tagged so `exec-lessons` strips it rather than hanging)/`noexec-check`/`stretch-check` for
+  `--book book2` (these iterate only existing entry dirs, so they
   cover U01 and are inert for unauthored entries). Keep the map-level checks. (Confirm each per-entry
   check tolerates a partially-authored book — if any require ALL map entries to have dirs, scope
   them or defer, as plan 017 did for the map-level split.) **VERIFIED (2026-09-07):** all seven
@@ -82,11 +101,21 @@ manifest + ci-local wiring inline.
 
 1. In `tools/curriculum.py` `practice_findings`, replace `has_authored_entry = any(entry dir exists)`
    with `capstone_authored = (capstone entry's dir exists)`; enforce the pre-capstone-coverage rule
-   only when `capstone_authored`.
-2. Tests: dependent-book fixture with a unit dir but no capstone dir → NO practice finding; with the
-   capstone dir + incomplete pre-capstone practices → the finding fires; Book-1 unchanged.
-- Acceptance (A): `ruff` clean; `pytest` green (incl. new tests); Book-1 prereq/coverage/concept-scan
-  byte-identical; `--book book2 coverage-check` still PASS (no content yet → deferred).
+   only when `capstone_authored`. **Guard `capstone_id is None`** (a finale-less map) →
+   `capstone_authored = False` (do NOT dereference `book_dir/"projects"/None`) — glm-3/fable-2. Leave
+   the per-entry overlap/duplicate checks (`curriculum.py:250-262`) UNCONDITIONAL (map-level
+   discipline, not dir-gated) — the fix touches ONLY the `:280` pre-capstone rule (glm-1).
+2. **UPDATE the two EXISTING tests that encode the OLD gating (glm-2 — else pytest reds on the first
+   run):** `test_practice_completeness_reactivates_when_content_exists` and
+   `test_dependency_practices_do_not_expand_own_completeness_set` currently author only a unit dir and
+   assert the finding fires; under capstone-gating that finding no longer fires. Re-point them to also
+   author the capstone fixture dir (`<book>/projects/project-03-fixture` or the fixture's capstone id)
+   so they keep asserting the finding.
+3. ADD tests: a dependent-book fixture with a unit dir but NO capstone dir → NO practice finding;
+   with the capstone dir + incomplete pre-capstone practices → the finding fires; a finale-less map →
+   no crash (capstone_authored False); Book-1 unchanged.
+- Acceptance (A): `ruff` clean; `pytest` green (incl. updated + new tests); Book-1 prereq/coverage/
+  concept-scan byte-identical; `--book book2 coverage-check` still PASS (no content yet → deferred).
 
 ### Phase B — U01 content (codex statements + blind solutions; inline manifest + wiring)
 
@@ -103,8 +132,13 @@ Blueprint (motivating problem → technique → laddered problem set; the `solve
 - **Solutions:** each a `solve(data:str)->str`; asserts against the given sample PLUS a crafted edge
   case (empty/N=0, single element, all-equal, a 1×K or K×1 grid) — non-vacuous; token-compared.
 - **manifest.yaml** map-equal: `introduces: [input-parse, str-split, grid-2d]`; `requires` = the
-  Book-1 baseline concepts U01 leans on; `practices` = the Book-1 concepts U01 actually exercises
-  (scanner-derived; `practices ∩ introduces` empty). Amend the map entry's `practices` to match.
+  Book-1 baseline concepts U01 GENUINELY uses (scanner/content-derived) — **TRIM `file-read` and
+  `with-statement`** from the current map entry (glm-6a: pure `solve(data)` problems read a string
+  arg, never files); keep e.g. `for-loop`/`string-methods`/`type-conversion`/`int-type`/`list-literal`/
+  `list-append`/`def-function`/`parameters`/`return-value`/`print`. `practices` = the Book-1 concepts
+  U01 actually exercises (scanner-derived; `practices ∩ introduces` empty, so NOT input-parse/
+  str-split/grid-2d). Amend BOTH the map entry (`requires` trim + `practices`) AND the manifest to
+  match (map == manifest).
 - **teacher-notes.md**: five headings; each problem's intended Big-O; the `solve` contract rationale;
   common parse mistakes (off-by-one on N, forgetting `int()`, trailing whitespace, `.split()` on an
   empty line).
@@ -142,3 +176,38 @@ model keeps `input-parse`/`grid-2d` reviewer-enforced. Phase C is the named veri
 per-entry ci-local wiring is scoped to now-authored content. Risk to watch at the gate: a per-entry
 check that assumes every map entry has a dir (would fail on the still-unauthored U02–capstone) — the
 plan flags confirming each tolerates a partially-authored book.
+
+### Reviews 2–3 — [fable] / [glm] (2026-09-07) → APPROVE WITH NITS, reconciled
+Both verified the Phase-A fix correct + Book-1-safe against `curriculum.py:247-282`, the solve
+contract airtight (CI bans `input()` in solutions), closure tight, and the "per-entry checks tolerate
+a partial book" claim EMPIRICALLY true (all seven pass on content-less Book 2). NITS, all folded in:
+- **[FIXED] (glm-2, critical) two EXISTING tests encode the OLD gating** → Phase A.2 re-points them
+  to author the capstone fixture dir (else pytest reds on the first Phase-A run).
+- **[FIXED] (glm-4, critical) `## Exercise N` headings** → `structure`/`stretch-check` count
+  `^## Exercise \d+`; exercises keep `## Exercise N` headings (problems framing in prose only).
+- **[FIXED] (fable-2/glm-3) `capstone_id is None` guard** → `capstone_authored=False`.
+- **[FIXED] (fable-4/glm-5) add `exec-lessons`** to the wiring; wrapper cell `no-exec`-tagged.
+- **[FIXED] (fable-5/glm-5) wrapper only in lesson `no-exec` / teacher-notes**, never `solutions.ipynb`.
+- **[FIXED] (fable-6/glm-6b) untaught methods** (`.join`/`.splitlines`/`.index`/`.count`) — authoring
+  uses loops/concat only.
+- **[FIXED] (glm-6a) trim U01 `requires`** (`file-read`/`with-statement`) to genuinely-used.
+- **[FIXED] (glm-6c) no random** — reviewer/content-gate mutation-checked.
+- **[FIXED] (fable-7/glm) design-001 §4 heading slip** — units are 5 headings, not 6; errata-note it.
+
+### Carry-forwards (record; NOT plan-018's to fix)
+- **[OPEN → Term-4/capstone plan] U13/U14 have no pre-capstone practice home (fable-3):** `two-pointers`
+  @U14 is the LAST pre-capstone entry, and since no entry may practice its own introductions nor a
+  not-yet-introduced concept, nothing pre-capstone can legally practice U13's graph concepts or
+  `two-pointers` → when the capstone dir lands, `practice_findings` fires "only the capstone
+  practices: [...]" unavoidably. Book 1 escaped this because checkpoint-04 sat between its last unit
+  and the capstone. FIX in the Term-4 plan: add a 4th mock-contest checkpoint AFTER U14 (before the
+  capstone) that practices U13+U14 concepts, or otherwise restructure. (Phase-A semantics stay
+  correct — "must fire at the end" is by design.)
+- **[OPEN → design maintenance] design-001 §4** says units carry six teacher-notes headings incl.
+  `## Rubric`; tooling + convention give units FIVE. Errata note (governance-light doc edit).
+
+### Reconciliation (2026-09-07) — sol re-dispatched on round-2
+fable + glm APPROVE WITH NITS (no blockers); all nits folded above. The round-1 sol review HUNG (a
+known codex-sol failure mode — its subagent stalled ~33 min; two ORPHANED codex tasks from earlier
+sessions were also cleaned up); stopped it and re-dispatched a FRESH sol on the reconciled plan for
+round-2. Round-2 to all three on the revised HEAD.
