@@ -143,9 +143,33 @@ Copied from the design + registry + the CP1/U06–U08 gate lessons; every task's
   GREEN — all precede the PR.
 - [ ] **B6 — PR** → `pre-merge-guard.sh --pr` OK → squash-merge → delete branch → update memory.
 
-## Post-Execution Report
+## Post-Execution Report (2026-09-08)
 
-_(filled at Phase B)_
+**Delivered:** `checkpoint-02-mock-contest-2` — the second timed mock contest (0.5 lesson), assessing Term-2
+(greedy/simulation/prefix-sum) on the U01–U08 foundation.
+- **Phase A** — `checkpoint.ipynb` (6 pinned `## Question N`: Q1 greedy interval-scheduling, Q2 simulation
+  grid-robot, Q3 prefix-sum 1D range-queries, Q4 greedy max-items-under-budget, Q5 simulation bounded
+  counter, Q6 prefix-sum 2D sub-rectangle — exactly 2 each; empty student cells; wrapper markdown-only) +
+  `solutions.ipynb`, authored by two separate codex sessions (statements, then a fresh blind solver);
+  teacher-notes (six headings incl `## Grading`, 100-pt split, ~40-min budget) + manifest inline.
+  `introduces: []`; `requires` = the 8 genuinely-assessed U01–U08 introduces (greedy/simulation/prefix-sum/
+  grid-2d/input-parse/str-split/sorted-key/tuple); `practices` = Book-1 concepts used; manifest==map.
+- **Phase B** — verification. Full `scripts/ci-local.sh` ALL GREEN both books. 4-way content gate: round 1
+  confirmed all 6 solvers correct (fable 2,400 differential trials, 0 mismatches) with AST closure clean
+  (0 chained comparisons, 0 list-repetitions, no premature technique) but flagged one convergent assert gap
+  (Q2 wall/boundary check never decisive); fixed with two added asserts (wall-blocked + out-of-grid),
+  mutation-verified, round 2 unanimous APPROVE. Fixes committed f6e4644.
+
+**Verification note:** the full ci-local ran ALL GREEN once orphaned ci-local/xelatex processes were cleared
+(leftover detached runs from earlier attempts caused the harness to detach fresh foreground runs and unlink
+their output). Reliable pattern in this environment: kill all `scripts/ci-local.sh`/`xelatex`/`nbconvert`
+first, then run ci-local in the FOREGROUND redirecting to a scratchpad log (NOT `/dev/shm`, which ci-local
+cleans; NOT piped to `head`/`tail`, which SIGPIPEs it).
+
+**Term 2 (U06–U08 + CP2) COMPLETE.** Book-2 now has U01–U08 + CP1 + CP2 = 10 of 18 content entries. Next:
+Term 3 — U09 Recursion & Backtracking, U10 Stacks/Queues/Deques, U11 Number Systems/Bitwise, U12 Binary
+Trees, CP3. Then Term 4 — U13 Grids/Graphs, U14 Two-Pointers, capstone, and the added CP4 (after U14).
+Carry-forwards unchanged. Future cleanup: add cell IDs to the U02/U04/U05 solution notebooks.
 
 ## Plan Review
 
@@ -205,5 +229,9 @@ a CORRECT solver — is fixed:
   detected, no assert can/needs-to kill them.
 All checks re-PASS after the fix.
 
-### Round 2 — [self] APPROVE; [sol]/[glm]/[fable] dispatched (revised HEAD), pending
-Consensus recorded here once all four APPROVE; every `[OPEN]` resolves before merge.
+### Round 2 (2026-09-08, HEAD f6e4644) — CONSENSUS: [self] · [fable] · [glm] · [sol] all APPROVE
+Both Q2 mutants confirmed killed by the two added asserts: wall-removal → "C" ≠ "A"; commit-before-validate
+(incl. the negative-index-wrap variant) → "B" ≠ "A". Pristine passes all 5 Q2 asserts. Diff since round 1
+(254591e→f6e4644) touches ONLY the Q2 cell (two added assert lines) + the plan record; the other five
+solution cells are byte-identical (hash-verified). exec-solutions / concept-scan / cell-lint / manifest-check
+PASS; no regression. **Content-review gate CLOSED — zero open blockers, cleared for PR.**
