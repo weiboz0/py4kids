@@ -136,9 +136,31 @@ Copied from the design + registry + prior-gate lessons; every task's requirement
   GREEN — all precede the PR.
 - [ ] **B6 — PR** → `pre-merge-guard.sh --pr` OK → squash-merge → delete branch → update memory.
 
-## Post-Execution Report
+## Post-Execution Report (2026-09-08)
 
-_(filled at Phase B)_
+**Delivered:** `unit-08-prefix-sums` — the final Term-2 unit — on the `solve(data:str)->str` contract.
+- **Phase A** — lesson (2 lessons: 1D prefix build + O(1) range query with the ±1 convention; 2D grid
+  prefix + the four-term inclusion-exclusion formula) + 9 integer-output exercises (2 stretch): 1D range
+  totals/counts/target/max, 2D sub-rectangle sums/region-count/max, and two stretch window problems.
+  Statements + fresh blind solutions authored by separate codex sessions; teacher-notes + manifest inline.
+  AST-verified NO list-repetition `[x]*n` and NO chained comparison `a<=b<c` (the two closure slips from
+  plan 022), no `.remove`/`.pop`/floats, all cells have IDs. `practices = used − requires − introduces −
+  wrapper-artifacts`; manifest==map. Committed 0f63ac2.
+- **Phase B** — verification. Full `scripts/ci-local.sh` ALL GREEN both books. 4-way content gate: round 1
+  confirmed all 9 solvers correct (fable 3,600 differential trials; sol/glm blind) with every ±1-index and
+  2D inclusion-exclusion mutant killed and AST closure clean, but flagged 5 documentation/metadata items
+  (Ex9 no-window guarantee, Ex9 Big-O O(n)→O(n²), Ex9 name, Ex4 extension wording, unused `for-loop`
+  require) — all fixed with NO solution change (solutions byte-identical), round 2 unanimous APPROVE.
+  Fixes committed 7e4ce45.
+
+**Verification note:** the full ci-local's PDF-build step is environmentally flaky (xelatex) and background
+wrappers get SIGTERM'd — run it in the foreground (piped to `tail`, or a subshell writing a scratchpad log
+outside `/dev/shm`, which ci-local cleans). All per-entry content checks were green throughout.
+
+**Term 2 units (U06–U08) all done.** Next: CP2 Mock Contest 2 (plan 024, assesses greedy/simulation/
+prefix-sum). Then Term 3 (U09–U12 + CP3), Term 4 (U13–U14 + capstone + CP4). Carry-forwards unchanged
+(CP4 after U14; audit every technique's pre-capstone practice home). Future cleanup: add cell IDs to the
+U02/U04/U05 solution notebooks.
 
 ## Plan Review
 
@@ -183,5 +205,11 @@ closure) — all fixed:
   from `requires` in both manifest and map.
 No solution logic changed. All 11 book2 checks re-PASS.
 
-### Round 2 — [self] APPROVE; [sol]/[glm]/[fable] dispatched (revised HEAD), pending
-Consensus recorded here once all four APPROVE; every `[OPEN]` resolves before merge.
+### Round 2 (2026-09-08, HEAD 7e4ce45) — CONSENSUS: [self] · [fable] · [glm] APPROVE, [sol] APPROVE WITH NITS
+All five round-1 doc/metadata findings confirmed resolved by all reviewers; the solutions notebook is
+**byte-identical** to the round-1-approved version (git blob + SHA-256 match; diff touches only the Ex9
+markdown cell, teacher-notes, manifest, and map), so the ±1 and 2D inclusion-exclusion asserts still kill
+all 39 mutants (re-confirmed). exec-solutions (real kernel) / concept-scan / manifest-check / prereq-check
+PASS; AST closure re-scan clean (0 chained comparisons, 0 list-repetitions, 0 for-loops). sol's lone "nit"
+is only the sandbox Jupyter-socket block (handled via its input-free fallback, 9/9). **Content-review gate
+CLOSED — zero open blockers, cleared for PR.**
