@@ -117,13 +117,17 @@ Copied from the design + registry + the plan-020 gate lessons; every task's requ
   and the ~35–45 min time budget; `## Pacing` frames the single timed 0.5-lesson sitting; a per-question
   Big-O line; which Term-1 unit each question assesses. May also carry the submission-wrapper snippet
   (allowed here, unlike checkpoint.ipynb code cells).
-- [ ] **B2 — manifest.yaml + map (inline).** `introduces: []`; `requires:` = the U01–U05 concepts actually
-  assessed (trim unused); `practices:` = scanner-derived features + hand-listed techniques (`input-parse`
-  etc.) + Book-1 concepts used (minus wrapper artifacts); `requires ∩ practices = ∅`; `practices ∩
-  introduces = ∅` (trivially, introduces empty). Copy identically into the coverage-map CP1 entry
-  (manifest == map). Derive `practices` from an ad-hoc `detect()` over both notebooks (concept-scan is
-  one-directional); hand-add any genuinely-used-but-scanner-invisible concept (e.g. `dict-access`,
-  techniques).
+- [ ] **B2 — manifest.yaml + map (inline).** `introduces: []`; `lessons: 0.5`. `requires:` = EVERY U01–U05
+  introduced concept the solutions USE (trim any not used) — including `str-split`, the U04 features, and
+  the U05 techniques; these are ASSESSED, so they live in `requires`, never `practices`. `practices:` =
+  `(detected ∪ manually-listed used concepts) − requires − introduces − wrapper-artifacts` = ONLY the
+  Book-1 concepts the solutions use (e.g. `def-function`, `parameters`, `return-value`, `for-loop`,
+  `if-statement`, `arithmetic`, `list-append`, `dict-access`, `type-conversion`, `print`); NO U01–U05
+  introduce (no `str-split`/`input-parse`/feature/technique) and NO `file-read`/`import-statement` appear
+  in `practices`. `requires ∩ practices = ∅`; `practices ∩ introduces = ∅` (trivial, introduces empty).
+  Copy identically into the coverage-map CP1 entry (manifest == map). Derive from an ad-hoc `detect()` over
+  both notebooks (concept-scan is one-directional); hand-add any genuinely-used-but-scanner-invisible
+  Book-1 concept (e.g. `dict-access` via `.get`/`[]`).
 
 ### Phase C — Verification (named verification phase)
 
