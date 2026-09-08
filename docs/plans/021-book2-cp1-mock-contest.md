@@ -176,8 +176,14 @@ Nits folded: pinned Q6 to fixed-depth nested-loop complete-search (glm — searc
 stated manifest `lessons: 0.5` (glm); noted 6–8 sequential question bound (fable). No reviewer found a
 wrong structure claim or missing/placeholder task. Round-2 dispatched at the revised HEAD.
 
-### Round 2 — [self] APPROVE; [sol]/[glm]/[fable] dispatched (revised HEAD), pending
-Consensus recorded here once all four APPROVE; no `[OPEN]` blocker remains before implementation.
+### Round 2 (HEAD 6553d98) / Round 3 (HEAD d439f06) — CONSENSUS: [self] · [glm] · [sol] APPROVE, [fable] APPROVE-WITH-NITS
+Round 2: [glm] APPROVE, [fable] APPROVE (all 3 blockers confirmed resolved — wrapper markdown-only,
+requires/practices disjoint, `.remove` banned, Q6 pinned, budget 0.5-lesson), [sol] REJECT on ONE residual
+wording contradiction (B2 task text still listed features/`input-parse` as practices, contradicting the
+approved Global Constraints). Fixed B2 to restate the exact `used − requires − introduces − wrapper-artifacts`
+= Book-1-only formula. Round 3 (sol-only re-check): **[sol] APPROVE** — B2 now matches the Global Constraints,
+no contradiction remains. glm/fable round-2 approvals stand (the fix only tightened wording they approved).
+**Plan-review gate CLOSED — cleared for implementation (Phase A).**
 
 ## Content Review
 
