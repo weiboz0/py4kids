@@ -70,8 +70,8 @@ problems).
 2. Battery Ticks — O(T) over the T ticks (add/subtract with a cap and floor).
 3. Jumping Event Log — O(E) over the E events (apply each rule in order).
 4. Mood Dial — O(S) over the S steps (wrap with `%`).
-5. Neighbor Tiles — O(K) over the K operations on the tile string.
+5. Neighbor Tiles — O(L + K) for a length-L tile string and K operations.
 6. Edge-Light Automaton — O(C·S) for C cells over S steps (snapshot then update).
 7. Odd-Card Turn Game — O(N) over the N cards (simulate the turns).
-8. Rolling Grains *(stretch)* — O(G·H) for G grains over the fall height H (bounded settling).
-9. Turning Ant Automaton *(stretch)* — O(S) over the S steps (turn/move/flip; terminates by the step cap).
+8. Rolling Grains *(stretch)* — O(R·C + G·H) (build the R×C grid, then settle G grains over fall height H).
+9. Turning Ant Automaton *(stretch)* — O(R·C + S) (build the R×C grid and count at the end, plus S simulated steps; terminates by the step cap).

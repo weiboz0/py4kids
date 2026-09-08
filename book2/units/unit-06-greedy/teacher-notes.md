@@ -74,4 +74,4 @@ Class works Exercises 6–9 (budget items, shortest-job checkout, and the two st
 6. Most Supplies on Budget — O(n log n) (sort by cost ascending, take cheapest until budget runs out).
 7. Fast Checkout Order — O(n log n) (shortest-job-first: sort ascending, sum completion times).
 8. Fewest Checkpoints *(stretch)* — O(n log n) (sort by end, cover greedily).
-9. Prize Jobs *(stretch)* — O(n log n) (sort by profit / deadline, schedule into latest free slot).
+9. Prize Jobs *(stretch)* — O(n²) worst case (sort by profit O(n log n), then for each job scan backward for the latest free slot — the scan is O(n) per job).
