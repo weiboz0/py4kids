@@ -283,7 +283,7 @@ only). Adds `turtle-drawing` to `practices` (reconciliation 2).
 - Trace-only exemptions (unit-05): `range-function` may remain fill-in/traced (the flagship/grid author
   the loop bodies; audit rated it "filled, not authored" — acceptable) — listed here per the bar.
 
-### Phase 3 — Term-1 units 01 & 02 (LEAN: minimum reps only)
+### Phase 3 — Term-1 units 01 & 02 (LEAN: minimum reps only) — target core 01: 6 → 7, 02: 6 → 8
 
 Gaps unit-01: `string-concat` rests on one buried line. unit-02: `arithmetic` (incl. `//`/`%`) in ZERO
 core exercises, `boolean` implicit only, `str()` never, `elif` single-touch (CP1 grades it hard).
@@ -436,16 +436,20 @@ Mechanical (authoritative — `scripts/ci-local.sh` is the gate, design §4):
   touched unit and notebook cell/PDF-page counts + `ci-local` duration. FAIL the phase if: any unit
   exceeds **16 core exercises**; any notebook cell exceeds the `exec-solutions` **120 s per-CELL**
   timeout (`NotebookClient(timeout=120)`, `notebooks.py`) — a hard CI limit; or the PDF build fails.
-  Flag for human review (not auto-fail) if any touched notebook's **cell count grows > 2×**, the built
-  **PDF page count grows > 30 %**, or total `ci-local` wall-time grows **> 25 %**.
+  If any touched notebook's **cell count grows > 2×**, the built **PDF page count grows > 30 %**, or
+  total `ci-local` wall-time grows **> 25 %**, that is a **content-gate finding requiring explicit
+  reviewer sign-off** before merge (not a silent pass, and not an auto-fail) — the reviewer confirms
+  the growth is pedagogically warranted, not bloat.
 
 Proficiency (reviewer-enforced — Phase V is NOT met without this):
 - **Whole-union inventory with rep COUNTS (not target-only, not just ≥1):** for EACH touched unit, a
   reviewer walks the COMPLETE `introduces ∪ practices` union and records, per concept, the COUNT of
   non-stretch student-authored exercises that use it. Bar: **≥3** for every concept, **≥5** for each
   listed essential concept (units 03–10); **≥1** for units 01–02. A concept below its bar must be
-  either raised or carry a listed trace-only exemption (with justification). No concept left below bar
-  and unexplained. (This is why Phase V exceeds the named remediation list — [sol] blocker 2 + the
+  either raised, OR carry one of the two listed exemptions (with justification): a **trace-only
+  exemption** (concept kept trace-only) or a **justified-peripheral count-exemption** (≥1 genuine
+  authoring rep but below the count bar, e.g. `error-messages`). No concept left below bar and
+  unexplained. (This is why Phase V exceeds the named remediation list — [sol] blocker 2 + the
   quantity goal.)
 - Each added exercise's solution `assert` would catch the intended mistake; ≥1 rep of each concept is
   on the in-class path; any conditional scanner-derived `practices` addition is listed in the
@@ -577,14 +581,32 @@ Round-4 plan (above) folds all three [sol] blockers + the remaining [fable]/[glm
 **Re-dispatching [sol] for round-4 confirmation** ([fable]/[glm] already APPROVE-W-NITS with their nits
 now folded; no new material change affects their verdicts).
 
-### Round 4
+### Round 4 (2026-09-08)
 
-- **[self] → APPROVE.** Phase 8.5 is a single binding action; the quantity goal is the sole count
-  authority (no per-item contradiction possible); headers match the table; count-exemptions + numeric
-  budgets close the remaining [sol] nits. No open blockers.
-- **[sol] → (pending round-4)**
+- **[self] → APPROVE.**
 - **[glm] → APPROVE WITH NITS (carried; round-3 nits folded).**
 - **[fable] → APPROVE WITH NITS (carried; round-3 nits folded).**
+- **[sol] → REJECT (1 blocker + 2 nits).** Blocker: I added the count-exemption category in Global
+  Constraints but Phase V's inventory still accepted only "raise or trace-only exemption" — so
+  count-exemptions (e.g. `error-messages`) could not satisfy verification (self-contradiction). Nits:
+  Phase 3 header lacked its table targets; volume >2×/>30% were flags, not enforceable.
+
+### Round-4 reconciliation (2026-09-08)
+
+Round-5 plan (above) fixes all three: **blocker** → Phase V now explicitly accepts BOTH a trace-only
+exemption AND a justified-peripheral count-exemption for below-bar concepts; **nit 1** → Phase 3 header
+now carries "01: 6 → 7, 02: 6 → 8"; **nit 2** → the >2× cell / >30% PDF / >25% wall-time thresholds are
+now a content-gate finding requiring explicit reviewer sign-off before merge (enforceable, not a silent
+pass). **Re-dispatching [sol] for round-5** ([glm]/[fable] APPROVE-W-NITS carried — no change touches
+their concerns).
+
+### Round 5
+
+- **[self] → APPROVE.** The lone round-4 contradiction is resolved (Phase V accepts count-exemptions);
+  header + volume nits closed. No open blockers.
+- **[sol] → (pending round-5)**
+- **[glm] → APPROVE WITH NITS (carried).**
+- **[fable] → APPROVE WITH NITS (carried).**
 
 ## Content Review
 
