@@ -161,4 +161,27 @@ inclusion-exclusion), integer-only outputs, and Phase B verification all PASS. N
 
 ## Content Review
 
-_(4-way content-review gate — findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`, all resolve before merge)_
+### Round 1 (2026-09-08, HEAD 0f63ac2) — [self] APPROVE · [glm]/[fable] APPROVE-WITH-NITS · [sol] REJECT
+All reviewers confirmed the SOLUTIONS correct and the SUITE strong: blind-solved 9/9 (fable 3,600 differential
+trials 0 mismatch); the ±1 prefix-index and 2D inclusion-exclusion mutants all killed (fable 38/38
+non-equivalent, sol 39/39, glm 31/31 — the only survivors were provably-equivalent `pre=[0]→[1]` seed
+mutants, a constant offset that cancels in every `pre[r+1]-pre[l]`); AST closure clean (0 chained
+comparisons, 0 list-repetitions, no premature/banned surface); per-technique TAUGHT checklist ✓; all cells
+have IDs. Every finding was documentation/metadata/statement-level (none touched solution correctness or
+closure) — all fixed:
+- **[FIXED] Ex9 (glm+fable+sol) — undefined no-qualifying-window result.** Inputs may have no window with
+  total ≤ B (reference returns 0, pinned by its assert but unstated). Added to the statement: "If no
+  non-empty window has a total at most `B`, return `0`."
+- **[FIXED] Ex9 teacher-notes Big-O (fable+sol) — said O(n)** but the reference (and the statement) enumerate
+  all O(n²) windows; an O(n) solve would need the U14 two-pointer (premature). Corrected to "O(n²) after an
+  O(n) prefix build".
+- **[FIXED] Ex9 name (glm+fable+sol)** — teacher-notes said "Longest Affordable Streak"; the exercise is
+  "Longest Low-Total Streak". Aligned everywhere.
+- **[FIXED] Ex4 teacher-notes extension (fable) — factually wrong** (max over ALL ranges ≠ max over the
+  *reported* ranges). Reworded to loop-sum-each-reported-range (O(Q·n)) vs the prefix-sum version.
+- **[FIXED] `for-loop` unused require (fable+sol)** — no `ast.For` anywhere (all loops are `while`). Trimmed
+  from `requires` in both manifest and map.
+No solution logic changed. All 11 book2 checks re-PASS.
+
+### Round 2 — [self] APPROVE; [sol]/[glm]/[fable] dispatched (revised HEAD), pending
+Consensus recorded here once all four APPROVE; every `[OPEN]` resolves before merge.

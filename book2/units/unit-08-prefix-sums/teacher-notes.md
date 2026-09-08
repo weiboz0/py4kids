@@ -34,7 +34,7 @@ four overlapping regions.
 Hand-trace one sub-rectangle so the signs are concrete: add the big corner, subtract the two strips, add
 back the doubly-subtracted corner.
 Class works Exercises 5–9 (map rectangle totals, region beacon counts, best survey zone, and the two
-stretch window problems).
+stretch window problems — 8 Best Bounded Candidate Window and 9 Longest Low-Total Streak).
 
 ## Common mistakes
 
@@ -60,10 +60,12 @@ stretch window problems).
 
 - **More support:** give the built prefix array for Exercises 1 and 5 and have students write only the
   query formula; provide a labeled diagram of the 2D four-term rectangle.
-- **More challenge:** the stretch problems (8 Best Bounded Candidate Window, 9 Longest Affordable Streak)
+- **More challenge:** the stretch problems (8 Best Bounded Candidate Window, 9 Longest Low-Total Streak)
   combine prefix sums with a scan or search; ask students to state the Big-O and where the ±1 lives.
-- **Extension:** ask fast finishers to re-derive Exercise 4's "strongest range" answer two ways — brute
-  O(n²) over all ranges and the prefix-sum O(n)/O(n²) version — and confirm they agree on small inputs.
+- **Extension:** ask fast finishers to answer Exercise 4's *reported* ranges two ways — by loop-summing
+  each reported range directly (O(Q·n)) and via the prefix-sum O(1)-per-query version — and confirm they
+  agree on small inputs. (Note this is the max over the *given* ranges, not the max over all possible
+  subranges.)
 
 ### Big-O per exercise
 
@@ -75,5 +77,5 @@ stretch window problems).
 6. Beacons in a Region — O(R·C + Q) (2D prefix counts over the beacon indicator grid).
 7. Most Valuable Survey Zone — O(R·C + Q) (2D prefix sums; one O(1) rectangle sum per candidate zone).
 8. Best Bounded Candidate Window *(stretch)* — O(n + Q) (prefix sums, O(1) per candidate window).
-9. Longest Affordable Streak *(stretch)* — O(n) after the prefix build (scan for the longest window whose
-   total stays within budget).
+9. Longest Low-Total Streak *(stretch)* — O(n²) after an O(n) prefix build (enumerate all O(n²) windows,
+   each total checked in O(1) via the prefix array — negatives rule out a linear sliding window here).
