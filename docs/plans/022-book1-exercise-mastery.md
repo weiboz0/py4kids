@@ -1,25 +1,26 @@
 # Plan 022 — Book 1 exercise mastery (proficiency completeness) Implementation Plan
 
 **Goal:** Ensure every concept each Book-1 unit `introduces`/`practices` is ACTIVELY EXERCISED by
-students in a student-facing `exercises.ipynb` cell, with enough depth to build proficiency — closing
-the exercise-coverage and depth gaps a four-layer audit (10 units + 4 checkpoints + 2 projects, plus a
-Sol second opinion) found, so no concept is assessed at a checkpoint/project without upstream authoring
-practice.
+students in a NON-stretch `exercises.ipynb` cell (or is a documented trace-only exemption), with enough
+depth to build proficiency — closing the exercise-coverage and depth gaps a four-layer audit (10 units
++ 4 checkpoints + 2 projects, plus a Sol second opinion) found, so no concept is assessed at a
+checkpoint/project without upstream authoring practice.
 
 **Architecture:** Content changes to student-facing `exercises.ipynb` + their matching
-`solutions.ipynb` across the affected Book-1 units, plus two small project fixes and three small
-checkpoint/manifest reconciliations. Grouped into phases by curriculum locality (so each phase is one
-coherent reviewer gate). This plan is the complement to plan 016: 016 made manifests match what content
-*uses* (used→listed, via the `concept-scan` CI check); 022 makes what students *do* match what is
-taught/assessed (listed/taught→student-exercised). Exercise **statements** and **solutions** are
-authored by Codex (GPT-5.6-sol) in separate sessions per the AGENTS.md dispatch table; this plan
-supplies the per-exercise spec + acceptance, not the notebook JSON.
+`solutions.ipynb` (and a few `.py` turtle assets) across the affected Book-1 units, plus two project
+fixes and a metadata-reconciliation set. Grouped into phases by curriculum locality. This plan is the
+complement to plan 016: 016 made manifests match what content *uses* (used→listed, via `concept-scan`);
+022 makes what students *do* match what is taught/assessed (listed/taught→student-authored). Exercise
+**statements** and **solutions** are authored by Codex (GPT-5.6-sol) in separate sessions per the
+AGENTS.md dispatch table; this plan supplies the per-exercise spec + acceptance, not notebook JSON.
 
 **Spec:** this plan (audit-derived); `docs/designs/000-project-design.md` (§1 structure, §4
-verification); `book1/curriculum/concepts.yaml` (concept registry) and
-`book1/curriculum/coverage-map.yaml` (arc contract); plan `016-hygiene-practice-completeness.md` (the
-`concept-scan` check + the unit-05 `accumulator` tag this plan revisits); the 16 audit reports in the
-session scratchpad (`audit-unit-01.md` … `audit-project-02.md`) are the finding provenance.
+verification); `book1/curriculum/concepts.yaml`; `book1/curriculum/coverage-map.yaml`; plan
+`016-hygiene-practice-completeness.md` (the `concept-scan` check + the unit-05 `accumulator` tag this
+plan revisits); the CI tools `tools/curriculum.py` (`coverage-check`/`prereq-check`/`manifest-check`),
+`tools/concept_scan.py`, `tools/notebooks.py` (`cell-lint`/`ASSET_REF`/`exec-solutions`),
+`tools/fake_turtle.py` (`turtle-check`); the 16 audit reports in the session scratchpad
+(`audit-unit-01.md` … `audit-project-02.md`, `audit-sol-book1.md`) are the finding provenance.
 
 ## Audit provenance & verdict reconciliation
 
@@ -27,342 +28,389 @@ Two independent audits ran. The Claude pass (10 units + 4 checkpoints + 2 projec
 7 ADEQUATE / 2 WEAK against a bar of "introduced concepts covered." The Sol (GPT-5.6-sol) second
 opinion applied a stricter bar — ANY `introduces`/`practices` tag not student-authored is a coverage
 failure — and rated **8 units WEAK (02, 03, 05, 06, 07, 08, 09, 10), unit-04 STRONG, unit-01
-ADEQUATE**. This plan adopts **Sol's stricter bar** (it matches the user's "guarantee mastery" goal),
-so scope already covers every Sol-WEAK unit. The two audits AGREE on all systemic gaps; Sol adds three
-items folded in below: the `input` false-practice reconciliation (units 07–10), the unit-03 Ex5
-full-program rewrite (flagship), and a flag that unit-05 Ex6's solution may be incomplete vs. its
-statement (verify in Phase 2).
+ADEQUATE**. This plan adopts **Sol's stricter bar**, and Phase V enforces it over each unit's COMPLETE
+`introduces ∪ practices` union (not just the named remediation targets), so a concept cannot slip
+through by being un-listed as a phase target.
 
 ## Global Constraints
 
-- **This is a CONTENT plan.** It ships changed student-facing exercises and their solutions in
-  already-shipped Book-1 units/projects — so per AGENTS.md it carries a **named verification phase**
-  (Phase V) and goes through BOTH the 4-way plan-review gate and the 4-way content-review gate before
-  PR. It introduces NO new units/projects/checkpoints and adds NO new concepts to any `introduces`
-  list.
-- **The proficiency bar (the definition of done for every added/modified exercise):** a concept is
-  "actively exercised" only when a STUDENT-facing `exercises.ipynb` code cell requires the student to
-  *author or complete* code that uses it — not when it appears only in the lesson, only in a
-  `solutions.ipynb` cell, only inside an `assert` (CI self-check), or only in a `stretch`/Challenge
-  cell. Reading/tracing/predicting counts as active use ONLY for concepts the unit deliberately keeps
-  trace-only (documented per unit below); everything else needs authoring.
-- **Self-containedness is law (unchanged).** Every new/modified exercise may use ONLY concepts
-  introduced ≤ that entry in `coverage-map.yaml` (prereq closure). No forward references. Nothing
-  assessed downstream may rely on a concept this plan has not made student-exercised upstream.
-- **Content conventions (unchanged, enforced):** student notebooks contain NO solutions and NO executed
-  outputs; solutions run top-to-bottom clean with fixed seeds and are `assert`-backed; interactive
-  `input()` cells stay `no-exec` and solutions substitute fixed values; turtle work stays in `.py`
-  assets (headless notebooks) — new turtle exercises use the existing predict/trace/repair/author-on-
-  paper pattern, never a turtle window in a cell. Datasets from seeded scripts only.
-- **Stretch rule (unchanged):** every unit keeps ≥1 `stretch`-tagged ("Challenge") exercise and core
-  content never depends on stretch. New core exercises added by this plan must NOT be tagged `stretch`
-  — the whole point is to move proficiency-critical practice OUT of stretch into core.
-- **Grow the exercise SET (primary lever for mastery).** The default remediation is to ADD new core
-  exercises, not to minimally edit existing ones. Each under-practiced concept gets **≥2 authoring
-  reps with genuine variety** (typically one guided/scaffolded + one independent, in a different
-  context — not the same task reskinned), and each touched unit gains a small "more practice" cluster
-  so its core count meaningfully increases. Proficiency comes from volume + variety of active
-  authoring, so err toward more exercises. This lengthens notebooks — acceptable.
-  - **Exception — units 01 & 02 stay lean.** The syllabus binds units 01–02 to short exercise sets
-    (heaviest introduction load at the most fragile point). There, add the MINIMUM new exercises
-    needed to close the named gaps (one solid authoring rep per gap), not a large cluster. All other
-    units (03–10) and the projects take the full "grow the set" treatment.
-  - Each new exercise still obeys every constraint above (self-contained, non-stretch for core,
-    assert-backed headless solution, no forward refs) and keeps the unit's project-first framing.
-- **Lesson parity:** if a target concept is genuinely not taught in the unit's `lesson.ipynb` (audit
-  found this ONLY for unit-05 `accumulator`), the fix is EITHER add a minimal lesson beat + a core
-  exercise, OR reconcile the manifest (drop the tag) — decided per Phase 2 below; do not add an
-  exercise for an untaught concept without a matching lesson beat.
-- **Manifest/map honesty (interacts with plan 016):** where this plan adds real student practice for a
-  concept, the existing `practices`/`introduces` tags already cover it (016 made them
-  used-complete), so most phases change NO metadata. Two reconciliations are explicit (Phase 2
-  `accumulator`, Phase 8 checkpoint-02 `turtle-drawing`) and each keeps `practices ∩ introduces` empty
-  and closure intact, and must keep the `concept-scan` check GREEN.
-- **`input` false-practice reconciliation (Sol):** units 07–10 (and any other) list `input` in
-  `practices`, but their exercises forbid students from writing it (notebooks must run input-free —
-  documented design). This is dishonest metadata. Per unit, EITHER (a) drop `input` from `practices`
-  (map + manifest) if it is genuinely never student-authored, OR (b) add a student-authored `input()`
-  line the exercise requires (with a `no-exec` tag + an executable fixed-value fallback beside it) so
-  the tag is earned. Constraint: keep `concept-scan` GREEN — if `input` still appears in the unit's
-  lesson/solution code cells it stays "used" and must remain listed, so option (a) is only valid when
-  the scanner does not detect `input` usage in that unit. Decide per unit in Phase 8; default (b) for
-  units where input is pedagogically load-bearing, (a) where it is vestigial.
-- **Do not touch:** `introduces`/`requires` lists; teacher-notes learning-goal claims except to align
-  them with new exercises; any Book-2 content; the governance files (CLAUDE.md,
+- **This is a CONTENT plan.** It ships changed student-facing exercises + solutions in already-shipped
+  units/projects, so per AGENTS.md it carries a **named verification phase** (Phase V) and goes through
+  BOTH the 4-way plan-review and 4-way content-review gates before PR. It adds NO new concepts to any
+  `introduces` list and ships NO new units/projects/checkpoints.
+- **The proficiency bar (definition of done for every concept):** a concept is "actively exercised"
+  only when a STUDENT-facing `exercises.ipynb` code cell (or a student-authored `.py` asset) requires
+  the student to *author or complete* code that uses it — NOT when it appears only in the lesson, only
+  in a `solutions.ipynb` cell, only inside an `assert` (asserts are `concept-scan`-exempt and don't
+  count as practice), or only in a `stretch`/Challenge cell. Reading/tracing/predicting counts as
+  active use ONLY for concepts a unit **deliberately keeps trace-only**, and every such exemption MUST
+  be listed explicitly in that unit's phase (see the per-phase "Trace-only exemptions" lines).
+- **Grow the exercise SET (primary lever), WITH a pacing budget.** The default remediation is to ADD
+  new core exercises. Each under-practiced concept gets **≥2 varied authoring reps** (typically one
+  guided + one independent, different context), and each touched unit gains a small "more practice"
+  cluster. BUT growth must not push required mastery work past class time:
+  - Each unit phase states a **per-unit target core count** (before → after) and confirms an in-class
+    **60–90 min core path**. New exercises land in a clearly **labelled "More Practice" section**;
+    teacher-notes name which reps are in-class vs. homework; **≥1 of each concept's ≥2 reps sits on the
+    in-class path** (so no proficiency-critical rep is de-facto skippable like stretch).
+  - MINOR "fold into an existing exercise" items (explicitly tagged MINOR below) are EXEMPT from the
+    ≥2-new-exercises rule.
+  - **Exception — units 01 & 02 stay lean** (syllabus binds them to short sets at the most fragile
+    point): add the MINIMUM new exercises to close named gaps (one authoring rep per gap), not a
+    cluster.
+  - Every new exercise still obeys all constraints (self-contained, non-stretch for core, assert-backed
+    headless solution, no forward refs) and keeps the unit's project-first framing.
+- **Self-containedness is law.** Every new/modified exercise may use ONLY concepts introduced ≤ that
+  entry in `coverage-map.yaml` (prereq closure). No forward references. In particular: file-existence
+  checks (`os.path`/`pathlib`/`try`/`except`) are UNTAUGHT in Book 1 and forbidden; `round()` /
+  `builtin-functions` is introduced unit-07 and must not appear in a code cell before then (keep any
+  "why can't we round?" beat prose-only).
+- **Content conventions (enforced):** student notebooks contain NO solutions and NO executed outputs;
+  solutions run top-to-bottom clean with fixed seeds and are `assert`-backed; interactive `input()`
+  cells stay `no-exec` and solutions substitute fixed values; turtle work lives in `.py` assets run
+  from the terminal (headless notebooks) — solution/notebook cells must NOT `import turtle` (they run
+  un-stubbed under `exec-solutions`); `____` placeholders live only in markdown/comments, never in code
+  cells (`cell-lint` runs ruff F82); any `assets/*.py` referenced by a cell MUST exist (`ASSET_REF`)
+  and must `py_compile` + draw a closed shape (`turtle-check`).
+- **Stretch rule:** every touched unit keeps ≥1 `stretch` ("Challenge") exercise and core never depends
+  on stretch. New CORE exercises added here must NOT be `stretch` — the point is to move
+  proficiency-critical practice OUT of stretch into core.
+- **Metadata reconciliations (this plan's full, enumerated set — supersedes any "two" wording).** Each
+  is surgical (map entry + matching manifest, identical order), keeps `practices ∩ introduces` empty
+  and closure intact, and must keep `concept-scan` + `coverage-check` + `prereq-check` GREEN:
+  1. **CP2:** DROP `turtle-drawing` from `checkpoint-02` `practices` — AND (2) ADD it to unit-05
+     `practices` (see below). (Dropping from CP2 ALONE fails `coverage-check`: CP2 is the only
+     pre-capstone practicer of `turtle-drawing`; `practice_findings` would report "only the capstone
+     practices turtle-drawing". [fable] B1.)
+  2. **unit-05:** ADD `turtle-drawing` to `practices` (introduced unit-03; unit-05 already `requires`
+     it; Ex6 authors `penup()/pendown()` and Phase 2.4's grid plan will too — requires∩practices
+     overlap is allowed, project-01 precedent).
+  3. **unit-09:** ADD `elif-else` to `practices` (introduced unit-02) — required because Phase 6.2 adds
+     an `if…else` branch and `concept-scan` flags `elif-else` on any non-empty `orelse`. [fable] B3.
+  4. **units 07, 08, 09, 10:** DROP `input` from `practices` (Sol false-practice finding). Verified
+     RED-safe by [glm] and [fable]: `input(` appears in ZERO code cells of these units' lesson/
+     exercises/solutions/assets (only markdown prompts), and `input` stays practiced pre-capstone in
+     CP1, project-01, and unit-06 (whose lesson genuinely uses it), so both `concept-scan` and
+     `coverage-check` stay GREEN. Decision is (a)=drop for all four (fork answer below).
+  5. **CP1:** reconcile `string-concat` — CP1 lists it in `practices` but Q1 only shows it as a broken
+     line to replace; confirm it is genuinely practiced by CP1 (or adjust Q1 to author concat, now that
+     unit-01 Phase 3.1 teaches it upstream) so the tag is earned.
+- **General rule — 016-style scanner-derived `practices` additions are PRE-AUTHORIZED** for this plan:
+  when adding a required exercise makes `concept-scan` detect a concept not yet listed, the implementer
+  MAY add that concept to the entry's `practices` (map + manifest) provided it is introduced ≤ the
+  entry (closure), is NOT in the entry's `introduces`, and no `introduces`/`requires` changes. This
+  gives implementers a sanctioned path (used by reconciliations 2–3) instead of an un-owned scan
+  failure.
+- **Do not touch:** `introduces`/`requires` lists; Book-2 anything; governance files (CLAUDE.md,
   docs/development-workflow.md, docs/content-review-gate.md, docs/architecture/decisions.md).
-- Process (standing): branch is `feature/plan-022-book1-exercise-mastery`; no commits while a `[sol]`
-  review is in flight; every `gh` call uses `GH_TOKEN=$(cat .gh-token)`; codex content prompts for
-  SOLUTIONS run in a SEPARATE fresh session that never sees the statement-authoring outline.
+- Process (standing): branch `feature/plan-022-book1-exercise-mastery`; no commits while a `[sol]`
+  review is in flight; every `gh` call uses `GH_TOKEN=$(cat .gh-token)`; codex SOLUTION prompts run in
+  a SEPARATE fresh session that never sees the statement-authoring outline.
+
+## Resolved judgment forks (plan-review consensus)
+
+- **accumulator (Phase 2.1) → (a) BINDING:** add a minimal lesson beat + a core authoring exercise;
+  do NOT drop the tag (option (b) is scan-unsafe — the Challenge-2 solution's
+  `petals_drawn = petals_drawn + 1` is detected by `visit_Assign`). [glm]/[sol]/[fable].
+- **input (units 07–10) → (a):** drop the `practices` tag for all four (reconciliation 4). [glm]/[fable].
+- **CP3 Q8 → (b):** make the student read the actual `KeyError` before applying `.get`. [fable].
+- **CP2 turtle-drawing → (ii):** drop from CP2 + add to unit-05 (reconciliations 1–2). [fable].
 
 ## Out of scope
 
-- **New automated "listed-but-not-student-exercised" CI check.** The durable guarantee against this
-  class of gap is a tool check (analogous to 016's `concept-scan`) that flags any `introduces`/
-  `practices` concept never appearing in a student-facing `exercises.ipynb` code cell. It is the
-  natural fast-follow (proposed **plan 023, tooling**) but is deliberately OUT of scope here: building
-  it well needs the same false-positive care 016's scanner required (trace-only concepts, `stretch`
-  exclusion, input/`no-exec` handling, OOP method exemptions), and bundling it would make this content
-  plan un-reviewable. For THIS plan the proficiency bar is enforced by per-phase acceptance +
-  reviewer duty + the content gate's blind-solve, exactly as AGENTS.md prescribes pre-tooling.
-- Rewriting checkpoints/projects wholesale. The audit found all checkpoints correct and self-contained;
-  their proficiency risk is upstream, fixed by the unit phases. Only the three named minor
-  checkpoint/project touches (Phases 7–8) are in scope.
-- Reworking the difficulty ramp, project hooks, or teacher-notes pacing where the audit found them
-  sound (all units).
+- **New automated "listed-but-not-student-exercised" CI check** — the durable guarantee against this
+  class of gap (analogous to 016's `concept-scan`), deliberately deferred to **plan 023 (tooling)**:
+  building it needs the same false-positive care (trace-only concepts, `stretch` exclusion, `input`/
+  `no-exec` handling, OOP method exemptions, asset authorship) and bundling it would make this content
+  plan un-reviewable. For THIS plan the bar is reviewer-enforced (Phase V union inventory + content-gate
+  blind-solve), per AGENTS.md pre-tooling prescription. **Risk acknowledged:** until 023 lands nothing
+  automatically prevents regression — recorded as a named follow-up in the post-execution report.
+- Rewriting checkpoints/projects wholesale (all checkpoints are correct + self-contained; risk is
+  upstream). Reworking ramps/hooks/pacing where the audit found them sound.
+
+## Implementation & gate batching
+
+To keep the content gate's 4-way blind-solve tractable (~35–45 new/modified exercises), implementation
+ships as **two PRs, each through its own content-review gate**: **PR-A = Term 1–2** (Phases 1, 2, 3 +
+the CP2/unit-05 metadata) and **PR-B = Term 3–4** (Phases 4–8). Both PRs share this one plan file; each
+carries its own post-execution report + content-review section. (Non-blocking structure; a single PR is
+permissible if the gate roster prefers it.)
 
 ## Phases
 
 Dispatch per AGENTS.md: exercise STATEMENTS and SOLUTIONS to Codex (GPT-5.6-sol), solutions in a
-separate fresh session; teacher-notes alignment inline; manifest reconciliations inline. Each unit
-phase's deliverable is: the target concepts made student-exercised in core, matching solutions
-`assert`-backed and headless, teacher-notes aligned, and the unit's `ci-local` slice green.
+separate fresh session; teacher-notes alignment inline; metadata reconciliations inline.
 
-Each numbered item in Phases 1–7 means "add one or more NEW core exercises" (per the "Grow the
-exercise SET" constraint: ≥2 authoring reps per concept, with variety), except units 01 & 02 where each
-item is the single minimum authoring rep needed. Modifying an existing exercise is allowed only when
-the audit named it specifically (e.g. unit-06 Ex7, unit-09 Ex5); otherwise prefer adding.
+Per-phase acceptance (EVERY phase unless noted):
+- Each named target concept is actively exercised in a NON-stretch cell (proficiency bar), with ≥2
+  varied authoring reps (units 01–02: ≥1; MINOR fold-ins exempt); the unit's core count moves from its
+  stated before→after and keeps a 60–90 min in-class core path.
+- Matching `solutions.ipynb`/asset cells run clean (fixed seeds / `no-exec` inputs) with `assert`
+  self-checks that would catch the intended mistake.
+- `manifest-check` / `coverage-check` / `prereq-check` PASS; `concept-scan` GREEN; notebook execution +
+  hygiene + `cell-lint` + `ASSET_REF` + `turtle-check` (where assets change) PASS.
+- Unit keeps ≥1 `stretch`; no core depends on stretch; no forward references; trace-only exemptions
+  listed.
 
-Per-phase acceptance (applies to EVERY phase below unless it says otherwise):
-- Each named target concept is actively exercised in a NON-stretch `exercises.ipynb` cell (proficiency
-  bar above), with ≥2 varied authoring reps (units 01–02: ≥1), and the unit's core exercise count
-  increases accordingly.
-- Matching `solutions.ipynb` cells run top-to-bottom clean (fixed seeds / `no-exec` inputs) with
-  `assert` self-checks that would catch the intended mistake.
-- `manifest-check` / `coverage-check` / `prereq-check` PASS; `concept-scan` GREEN; notebook
-  execution + hygiene PASS for the touched notebooks.
-- Unit keeps ≥1 `stretch` exercise; no core exercise depends on stretch; no forward references.
+### Phase 1 — unit-03-turtle-art-studio (WEAK) — target core 6 → ~9
 
-### Phase 1 — unit-03-turtle-art-studio (WEAK → target ADEQUATE+)
+Gaps: `f-string` (MISSING from statements), `turtle-drawing` (stretch-only), `loop-counter` (never in
+an expression), `float-type` (real decimal never engaged). Sol flagship: Ex5 only edits two asset
+values — students never AUTHOR a turtle program.
 
-Audit: `f-string` (MISSING from statements), `turtle-drawing` (active use only in stretch),
-`loop-counter` (never used in an expression), `float-type` (real decimal never engaged). Sol flagship:
-Ex5 only edits two values in an existing asset — students never AUTHOR a turtle program.
+0. **FLAGSHIP — rewrite Ex5 into a student-AUTHORED complete polygon program.** Student writes a real
+   `assets/`-style `.py` (run from the terminal like Ex1), authoring turtle setup + drawing
+   (`penup`/`pendown`/`color`/`pensize`), a `for` over `range(n)`, a counter that DRIVES behavior
+   (`pensize(side_number + 1)`), and `angle = 360 / n`. Ship the reference as `assets/solutions_ex5.py`
+   with `n = 7` (closes within `turtle-check` tolerance). The notebook cell asserts the numeric parts
+   (angle value, counter values, `pensize` for side 0 vs side 3) — NOT the drawing. Codex constraints:
+   referenced asset must exist (`ASSET_REF`), must `py_compile` + draw a closed shape (`turtle-check`),
+   starter template cannot contain `____` in code cells or be move-free (`cell-lint`). This one rewrite
+   makes `turtle-basics`, `turtle-drawing`, `for-loop`, `range-function`, `loop-counter`, `float-type`
+   all student-authored.
+1. **turtle-drawing 2nd rep (MINOR fold OK).** A short second pen/color authoring touch (different
+   shape/color spec) so `turtle-drawing` has ≥2 reps, not carried by the flagship alone.
+2. **loop-counter expression rep.** In addition to the flagship, one focused exercise using the counter
+   in an expression (`pensize(side_number + 1)`), or a trace asking `pensize` for side 0 vs side 3.
+3. **float-type real decimal.** A prediction row for `n = 7` (`angle = 360 / 7` → `51.428571…`); the
+   "why can't this be a whole number / what breaks if we round to 51?" beat stays **prose-only** (no
+   `round()` call — would flag `builtin-functions`, untaught here).
+4. **f-string required by a statement.** Change one worded-answer exercise so the STATEMENT requires an
+   f-string report (`print(f"{straight_sides} sides of {side_length} steps")`).
+- Trace-only exemptions (unit-03): none required after the flagship (all `introduces`/`practices` now
+  authored). Note the audit's Ex4/Ex5 cross-lesson ordering nit as WONTFIX (both taught by unit end).
 
-0. **FLAGSHIP — rewrite Ex5 into a full authored polygon program (Sol's highest-priority fix).**
-   Replace the "edit `n`/`side_length` in the asset" exercise with one where the student AUTHORS a
-   complete polygon program (as a headless `.py`-style plan / the existing author-command pattern):
-   turtle setup + drawing (`penup`/`pendown`/`color`), a `for` over `range(n)`, a counter that DRIVES
-   behavior (e.g. `pensize(side_number + 1)`), and `angle = 360 / n` for a non-clean `n`. This single
-   rewrite makes `turtle-basics`, `turtle-drawing`, `for-loop`, `range-function`, `loop-counter`, and
-   `float-type` all student-authored at once. Keep it core (not stretch); provide a headless,
-   assert-backed solution.
-1. **turtle-drawing → more core reps.** Beyond the flagship, add a second "pen plan" exercise
-   (headless, author-command-strings pattern) — a different shape/color spec — so `turtle-drawing` has
-   ≥2 varied authoring reps and is not carried by the flagship alone.
-2. **loop-counter → expression use.** Add/modify an exercise that USES the counter value in an
-   expression (the lesson's headline `turtle.pensize(side_number + 1)`), e.g. "write the line that
-   makes each side one step thicker using `side_number`", or a trace that asks the `pensize` for side
-   0 vs side 3.
-3. **float-type → real decimal.** Add a prediction row for `n = 7` (`angle = 360 / 7` → `51.428571…`)
-   plus a one-line "why can't this be a whole number, what breaks if we round to 51?" (mirrors the
-   teacher-notes discussion prompt). Ensure at least one exercise's `assert` exercises a non-terminating
-   float, not a clean `72.0`.
-4. **f-string → required by a statement.** Change one worded-answer exercise (e.g. Ex1) so the
-   STATEMENT requires an f-string report (`print(f"{straight_sides} sides of {side_length} steps")`),
-   not only the solution.
-5. Align teacher-notes if pacing changes. Acceptance: the four concepts above are student-exercised in
-   core; `f-string` (already in unit-03 `practices` via 016) now honored by a statement.
+### Phase 2 — unit-05-function-factory (WEAK) — target core ~6 → ~10
 
-### Phase 2 — unit-05-function-factory (WEAK → target ADEQUATE+) + `accumulator` reconciliation
+Gaps: `accumulator` (never taught OR exercised — only a solution CI-scaffold line), `nested-loops`
+(never authored), `scope` (trace-only), `return-value` (authored once), `import-statement` (asset-run
+only). Adds `turtle-drawing` to `practices` (reconciliation 2).
 
-Audit: `accumulator` (never taught OR exercised — only a solution CI-scaffold line; 016 tagged it from
-that usage), `nested-loops` (never authored in an exercise), `scope` (trace-only, never authored),
-`return-value` (authored only once).
+1. **accumulator — option (a), BINDING.** Add a minimal lesson beat (a running `total` over N stamp
+   sizes) + a core exercise that authors `total = total + size` and returns it. (Do NOT drop the tag.)
+2. **scope authoring.** A scope-repair exercise: a broken snippet that prints a local after the call
+   (NameError); student fixes it by RETURNING the value and storing it outside (the repair
+   `lesson l3-traceback` promises) — turns scope from trace-only into authoring.
+3. **return-value composition.** Author `perimeter(side)` returning `4*side`, then USE the returned
+   value in a further computation or feed one function's return into another (`polygon_points →
+   polygon` shape) — a 2nd authoring rep in a composition context.
+4. **nested-loops + import-statement + turtle-drawing (authored, headless `.py`).** A grid-of-stamps
+   program the student authors: starts with a student-written `import turtle` line, both `for` lines
+   (outer rows, inner columns) calling `stamp(size)`, and pen/color authoring; predicts the total call
+   count. Ship reference as an `assets/*.py` (verified by `turtle-check`); the notebook asserts the
+   numeric count. This earns `nested-loops`, `import-statement`, and the newly-added `turtle-drawing`
+   in one authored artifact.
+5. **unit-05 Ex6 solution note (resolves Sol's flag — NOT errata).** [fable] verified Ex6's solution
+   (cell 13) satisfies its statement (cell 17: on-paper blanks + recorded counters/size/distance +
+   explanation; solution supplies 90, `*5`, `*40`) — it is the intended headless stub. Action: add a
+   one-line note in the solution cell so it is not misread. No code change.
+6. Align teacher-notes; record the two metadata adds (reconciliations 2).
+- Trace-only exemptions (unit-05): `range-function` may remain fill-in/traced (the flagship/grid author
+  the loop bodies; audit rated it "filled, not authored" — acceptable) — listed here per the bar.
 
-1. **accumulator — DECISION (judgment fork, raise at plan-review gate):** EITHER (a) add a minimal
-   lesson beat (a running `total` over N stamp sizes) + a core exercise that authors
-   `total = total + size` and returns it — the pedagogically richer option, pairs naturally with
-   `return-value`; OR (b) drop `accumulator` from unit-05's `practices` (map + manifest) and rely on
-   its genuine home in unit-04 (introduced) / unit-06/07 (practiced). Default recommendation: **(a)**,
-   because CP2 Q2/Q8 and project-01 M4 make accumulator load-bearing right after unit-05, so students
-   need the authoring rep here. Whichever is chosen, `concept-scan` stays GREEN and
-   `practices ∩ introduces` stays empty.
-2. **scope → authoring.** Add a scope-repair exercise: a broken snippet that prints a local after the
-   call (NameError); student fixes it by RETURNING the value and storing it outside — the exact repair
-   `lesson l3-traceback` promises. Turns scope from trace-only into authoring.
-3. **return-value → composition.** Add an exercise that authors `perimeter(side)` returning `4*side`
-   and then USES the returned value in a further computation or feeds one function's return into
-   another (the lesson's `polygon_points → polygon` shape). Gives return a second authoring rep in a
-   composition context.
-4. **nested-loops → authored (headless).** Add a core exercise where the student writes BOTH `for`
-   lines of a grid-of-stamps plan (outer rows, inner columns, calling `stamp(size)`) and predicts the
-   total call count — headless, per the turtle convention.
-5. **Verify unit-05 Ex6 solution completeness (Sol flag) — possible pre-existing defect.** Sol
-   reported Ex6's solution omits the completed turtle function + call plan relative to its statement;
-   the Claude pass saw only a `petal`/`petal_shape` naming inconsistency vs. the asset. Read
-   `unit-05/solutions.ipynb` Ex6 against its statement and asset: if the notebook solution genuinely
-   fails to satisfy the statement, FIX it (assert-backed, headless) — if it is the intended headless
-   stub deferring drawing to the `.py` asset, document that in the solution cell so it is not misread.
-   Treat as errata-grade if it is a real gap.
-6. Align teacher-notes. Acceptance as above; if 1(b) chosen, note the metadata diff explicitly.
+### Phase 3 — Term-1 units 01 & 02 (LEAN: minimum reps only)
 
-### Phase 3 — Term-1 units 01 & 02 (string-concat, arithmetic, boolean-as-value)
+Gaps unit-01: `string-concat` rests on one buried line. unit-02: `arithmetic` (incl. `//`/`%`) in ZERO
+core exercises, `boolean` implicit only, `str()` never, `elif` single-touch (CP1 grades it hard).
 
-Audit unit-01: `string-concat` proficiency rests on one buried line. Audit unit-02: `arithmetic`
-(incl. `//`/`%`) in ZERO core exercises (stretch only), `boolean` only implicit, `str()` never, `elif`
-single-touch.
+1. **unit-01 string-concat (1 core rep, f-string-free).** A concatenation-only exercise (explicitly "do
+   NOT use an f-string"): join a fixed greeting + `name` + a punctuation literal with `+` to print
+   `Hello, <name>!`.
+2. **unit-02 arithmetic + elif + str (1 combined core rep, kept lean).** A "range width" exercise:
+   given `low`/`high`, print the span (`high - low`), midpoint (`(low + high) // 2`), and use `%` for
+   even/odd; classify the span three ways with `if/elif/else`; and include a `+`/`*` precedence line
+   and a `str()` use in the printed message. Closes `arithmetic` (`+ - // %`), the CP1-graded `elif`
+   and precedence, and the `str()` direction in one lean exercise.
+3. **unit-02 boolean-as-value (1 core rep).** Store + print a boolean (`print(guess == secret)`) before
+   the verdict.
+4. **(MINOR)** unit-02: fix Challenge-2's `high`/`low`/`correct` vs numeric `1`/`2`/`3` inconsistency.
+5. Align teacher-notes.
+- Trace-only exemptions (unit-01/02): none.
 
-1. **unit-01 string-concat → core, f-string-free.** Add a short core exercise that is concatenation-
-   only (explicitly "do NOT use an f-string here"): join a fixed greeting + a `name` variable + a
-   punctuation literal with `+` to print `Hello, <name>!`, forcing management of `+` and interior
-   spaces.
-2. **unit-02 arithmetic → core.** Add a non-stretch "range width" exercise: given `low`/`high`, print
-   the span (`high - low`), the midpoint (`(low + high) // 2`), and use `%` to report even/odd —
-   giving `+ - // %` required practice and seeding the halving idea the Challenges use.
-3. **unit-02 boolean → stored/printed value.** Add a one-line exercise that stores and prints a boolean
-   (`print(guess == secret)` as `True`/`False`) before the verdict, so boolean is exercised as a value,
-   not only as a condition. (This same boolean-as-value beat recurs in Phases 4–5; keep the wording/
-   pattern consistent across units.)
-4. (Optional, MINOR) unit-02: fix Challenge-2 statement's `high`/`low`/`correct` vs numeric `1`/`2`/`3`
-   inconsistency (a documentation fix flagged by the audit).
-5. Align teacher-notes. Acceptance as above.
+### Phase 4 — units 04 & 06 — target unit-06 core ~7 → ~10
 
-### Phase 4 — units 04 & 06 (author `or`; boolean-as-value; active traceback-reading; `elif`)
+Gaps unit-04: `or` never authored. unit-06: `boolean`-as-value implicit; `error-messages` fix handed;
+`elif` never exercised; `int-type` single touch.
 
-Audit unit-04: `or` read/replaced but never authored. Audit unit-06: `boolean`-as-value implicit only;
-`error-messages` fix handed to student; `elif` never exercised; `int-type` single touch.
+1. **unit-04 author `or` (≥1 core rep; unit-04 is STRONG so this is a single targeted add).** Require
+   the student to WRITE an `or` rule from scratch (e.g. accept `"true"` or `"True"`).
+2. **unit-06 boolean-as-value (≥2 reps).** Store + print a boolean (`is_vowel = letter in vowels;
+   print(is_vowel)`), plus a second combining two checks.
+3. **unit-06 active traceback-reading — CANONICAL TEMPLATE (≥2 reps).** Rework Ex7 so the student RUNS
+   the buggy `encode("zoo", 3)`, copies the LAST traceback line, and names the failing op BEFORE
+   applying `% 26`; add a second small run-broken→read→fix rep. This template is reused in Phases 5–6.
+4. **unit-06 elif (≥1 rep).** Classify a char vowel/`y`/consonant with `if…elif…else`.
+5. **(MINOR)** unit-06 int-type 2nd touch: call `encode` with two different shifts (3 and 5) and
+   compare — fold into an existing exercise.
+6. Align teacher-notes.
+- Trace-only exemptions (unit-04/06): none.
 
-1. **unit-04 author `or`.** Add a short core exercise requiring the student to WRITE an `or` rule from
-   scratch (e.g. accept `"true"` or `"True"`), restoring `and`/`or`/`not` authoring symmetry. Highest-
-   value unit-04 fix.
-2. **unit-06 boolean-as-value.** Add/extend an exercise that stores + prints a boolean
-   (`is_vowel = letter in vowels; print(is_vowel)`).
-3. **unit-06 active traceback-reading (the systemic `error-messages` pattern — canonical template).**
-   Rework Ex7 so the student first RUNS the buggy `encode("zoo", 3)`, copies the LAST line of the
-   traceback, and names the failing operation BEFORE applying `% 26`. This is the repeatable
-   "run-broken → read-traceback → fix" template reused in Phases 5–6.
-4. **unit-06 elif.** Add one `elif` touch (e.g. classify a char as vowel / `y` / consonant with
-   `if…elif…else`), closing the `elif` half of `elif-else`.
-5. Align teacher-notes. Acceptance as above.
+### Phase 5 — units 07 & 08 — target core 07: 9→~13, 08: 11→~14
 
-### Phase 5 — units 07 & 08 (sort-returns-None, while, concat/str, boolean, traceback)
+Gaps unit-07: `.sort()`-returns-`None` never exercised, `while-loop` (no exercise), `error-messages`
+(no exercise), `max`/`min` single touch, negative index & ascending `.sort()` never, `boolean`
+implicit. unit-08: `string-concat` + `type-conversion` MISSING, `boolean` implicit, `error-messages`
+shallow, dict key-only iteration never.
 
-Audit unit-07: `.sort()`-returns-`None` mental model never exercised (the unit's own #1 common
-mistake), `while-loop` (practices, no exercise), `error-messages` (no exercise), `max`/`min` single
-touch, negative index & ascending `.sort()` never. Audit unit-08: `string-concat` + `type-conversion`
-MISSING (f-strings crowd them out), `boolean` implicit, `error-messages` shallow.
+1. **unit-07 sort-returns-None (≥1 core rep).** "Predict what `best = scores.sort()` prints, then fix
+   it so `best` holds the sorted board."
+2. **unit-07 while-loop (≥2 reps).** An arcade `while` exercise (bonus threshold doubles until it passes
+   the champion score) + one more `while` rep.
+3. **unit-07 error-messages (traceback template, ≥1 rep).** "Write `scores[len(scores)]`, predict the
+   error, then rewrite to safely print the last score" — closes `error-messages` AND forces a negative
+   index (`scores[-1]`).
+4. **unit-07 boolean-as-value + max/min + ascending sort (MINOR folds into existing CORE exercises,
+   not challenges).** `print(new_score in scores)`; a 2nd `max`/`min` touch; one plain ascending
+   `.sort()` rep.
+5. **unit-08 string-concat + type-conversion → core (≥2 reps).** A "print a scoreboard" exercise
+   REQUIRING `word + " => " + str(count)` with `+` and explicit `str()` (NOT an f-string), + a second
+   varied concat/`str()` rep.
+6. **unit-08 boolean-as-value** (`known = word in translations; print(known)`) **+ traceback for Ex11**
+   (read the actual `KeyError` before `.get`) **+ (MINOR) dict key-only loop** (`for word in
+   translations:`), folded in.
+7. Align teacher-notes.
+- Trace-only exemptions (unit-07/08): none.
 
-1. **unit-07 sort-returns-None.** Add an exercise: "predict what `best = scores.sort()` prints, then
-   fix it so `best` holds the sorted board" — exercises the unit's headline mental model.
-2. **unit-07 while-loop.** Add an arcade-themed `while` exercise (e.g. a bonus threshold that doubles
-   until it passes the champion score), honoring the `practices` tag.
-3. **unit-07 error-messages (traceback template).** "Write `scores[len(scores)]`, predict the error,
-   then rewrite to safely print the last score" — closes `error-messages` AND forces a negative-index
-   (`scores[-1]`) use.
-4. **unit-07 max/min + ascending sort (MINOR).** Fold a second `max`/`min` touch and one plain
-   ascending `.sort()` into an existing exercise/challenge.
-5. **unit-08 string-concat + type-conversion → core.** Add a "print a scoreboard" exercise that
-   REQUIRES `word + " => " + str(count)` using `+` and explicit `str()` (NOT an f-string), directly
-   mirroring lesson cell 27 and closing both MISSING gaps at once.
-6. **unit-08 boolean-as-value** (`known = word in translations; print(known)`) and **traceback for
-   Ex11** (read the actual `KeyError` before applying `.get`).
-7. Align teacher-notes. Acceptance as above.
+### Phase 6 — units 09 & 10 — target core 09: 8→~12, 10: 10→~13. Adds unit-09 `elif-else` (recon. 3)
 
-### Phase 6 — units 09 & 10 (files: error-messages/branch/edge; OOP: list-index/integration/pass_time)
+Gaps unit-09: `error-messages` MISSING, `if-statement` trivial always-true, no edge cases, 6/8 near-
+verbatim lesson copies. unit-10: `list-index` near-MISSING, no integrative full-`Pet`, `pass_time`
+unpracticed, `dict-literal` shallow, `error-messages` passive.
 
-Audit unit-09: `error-messages` MISSING (FileNotFoundError only demoed), `if-statement` trivial always-
-true, no edge cases (`"w"` vs `"a"`, missing file), 6/8 exercises near-verbatim lesson copies. Audit
-unit-10: `list-index` near-MISSING, no integrative full-`Pet` exercise, `pass_time` unpracticed,
-`dict-literal` shallow, `error-messages` passive.
+1. **unit-09 error-messages (traceback template).** A study/`no-exec` exercise showing a
+   `FileNotFoundError` traceback; student names the missing file and writes the **"save before load"
+   ordering fix** (NO existence check — `os.path`/`pathlib`/`try/except` are untaught, forward-ref).
+2. **unit-09 real branch (adds `elif-else` tag, recon. 3).** Extend the `if "Ada" in info` exercise to
+   `if…else` and test a name NOT present so both paths execute. Add `elif-else` to unit-09 `practices`
+   (introduced unit-02) so `concept-scan` stays GREEN.
+3. **unit-09 edge case ("w" vs "a").** Save the same list twice with `"w"`, confirm no growth, contrast
+   with `"a"`. Use a DISTINCT filename (or place so downstream file-state asserts in Ex3/4/8/9/10 still
+   hold — the unit's cells chain on file mutations).
+4. **unit-09 transfer.** Vary ≥1 early copy-of-lesson exercise (different score list / settings dict).
+5. **unit-10 list-index → statement.** Extend Ex5: after the loop, student writes `pets[0].name` and
+   `pets[1].status()` explicitly.
+6. **unit-10 integrative full-class (capstone-prep).** A core "Run a Pet Day": student defines the FULL
+   `Pet` (all four methods incl. `pass_time`), runs `feed → play → pass_time → status`, asserts final
+   hunger/happiness. Closes integration + gives `pass_time` its only student rep.
+7. **(MINOR)** unit-10 dict depth (feed from two foods + add a third entry) + run-then-read the
+   `AttributeError` in Ex8 — folded into existing exercises.
+8. Align teacher-notes.
+- Trace-only exemptions (unit-09/10): none.
 
-1. **unit-09 error-messages.** Add a study/`no-exec` exercise showing a `FileNotFoundError` traceback
-   where the student names the missing file and writes the one-line "save before load" / existence-
-   check fix (keeps notebooks runnable while making the concept active).
-2. **unit-09 real branch.** Extend the `if "Ada" in info` exercise to `if…else` and have the student
-   also test a NAME NOT PRESENT, so both paths execute.
-3. **unit-09 edge case.** Add a `"w"` vs `"a"` exercise: save the same list twice with `"w"`, confirm
-   the file did not grow, contrast with what `"a"` would do — the unit's #1 listed mistake.
-4. **unit-09 transfer.** Vary at least one early copy-of-lesson exercise (a different score list /
-   settings dict) so ≥1 core exercise requires transfer, not transcription.
-5. **unit-10 list-index → statement.** Extend Ex5 (or add a step): after the loop, student writes
-   `pets[0].name` and `pets[1].status()` explicitly, turning the indexing now hidden in solution
-   asserts into student-authored code.
-6. **unit-10 integrative full-class (the capstone-prep fix).** Add a core "Run a Pet Day" exercise:
-   student defines the FULL `Pet` (all four methods incl. `pass_time`), makes a pet, runs a fixed
-   `feed → play → pass_time → status` sequence, `assert` on final hunger/happiness. Closes the
-   integration gap AND gives `pass_time` its only student rep.
-7. **unit-10 dict + traceback (MINOR).** Deepen Ex6 (feed from two different foods + add a third dict
-   entry); add a run-then-read step to the `AttributeError` Ex8.
-8. Align teacher-notes. Acceptance as above.
+### Phase 7 — project-01 & project-02
 
-### Phase 7 — project-01 & project-02 (author the load-bearing concepts; grade OOP + integration)
-
-Audit project-01 (STRONG): `return` pre-supplied in both required game functions — students never
-author it in a required path. Audit project-02 (capstone, ADEQUATE): graded path never exercises class
-METHODS (Hero has only `__init__`); integration/synthesis is a TODO, not a graded milestone;
-list-index only in asserts; traceback under-prepared.
+project-01 (STRONG): `return` pre-supplied in both required game functions. project-02 (capstone):
+graded path never exercises class METHODS (Hero has only `__init__`); integration/synthesis is a TODO,
+not graded; `list-index` only in asserts; traceback under-prepared.
 
 1. **project-01.** Remove the `return` line from ONE required milestone's game function so the student
-   must author `return` in a required (non-stretch) path — demonstrating the return-vs-print hinge the
-   teacher notes call the #1 project bug. Keep the reference + rubric aligned.
-2. **project-02.** (a) Make the graded path require ≥1 class METHOD on `Hero` (not only `__init__`) and
-   its call — mirroring the unit-10 integrative fix. (b) Promote the "assemble the four scaffolds into
-   one coherent program" synthesis step from a TODO into a named, rubric-scored milestone. (c)
-   Optionally require one student-authored `list-index` in the graded path. Keep the exemplar/reference
-   correct (`seed(4)` reproducibility) and self-contained.
-3. Align each project's `teacher-notes.md` / rubric. Acceptance: reference solutions run clean with
-   fixed seeds; rubric lines match the new required work; no new concept introduced.
+   authors `return` in a required (non-stretch) path. Keep reference + rubric aligned.
+2. **project-02.** (a) Require ≥1 student-authored class METHOD on `Hero` with a parameter + return
+   (`describe`/`move` exist in the reference) as a graded RUBRIC line — closes both the "no graded
+   methods" gap AND the audit's manifest-honesty note that `def-function`/`parameters`/`return-value`
+   are solution-only. (b) Promote the "assemble the four scaffolds into one coherent program" synthesis
+   step from a TODO into a named, rubric-scored milestone. (c) Require one student-authored `list-index`
+   on the graded path. Traceback readiness is declared resolved upstream by Phase 6 (state so in the
+   rubric). Keep the exemplar correct (`seed(4)` reproducibility) + self-contained.
+3. Align each project's teacher-notes/rubric. Acceptance: references run clean with fixed seeds; rubric
+   lines match new required work; no new concept introduced.
 
-### Phase 8 — checkpoint & manifest reconciliations (MINOR, inline)
+### Phase 8 — checkpoint & metadata reconciliations (MINOR, inline)
 
-Audit: CP2 `manifest.yaml` over-claims `turtle-drawing` in `practices` (Q7 only reads forward/right =
-`turtle-basics`); CP3 Q6 `elif`/`else` is dead code at runtime (`"plum"` always present) so branching
-can't be verified; CP3 Q8 hands both the `KeyError` name and the `.get` fix (does not assess traceback
-reading despite the tag).
-
-1. **CP2 metadata:** remove `turtle-drawing` from checkpoint-02's `practices` in BOTH `coverage-map.yaml`
-   and `manifest.yaml` (surgical, identical order), keeping `turtle-basics`. Verify `manifest-check`/
-   `coverage-check`/`prereq-check`/`concept-scan` all PASS after.
-2. **CP3 Q6:** adjust the data so the `elif`/`else` branch is reachable (a key that is absent on one
-   path), so the branch logic actually executes and the solution's `assert` proves it.
-3. **CP3 Q8:** either (a) keep it as a `.get` fix drill but stop claiming it assesses traceback reading
-   (align teacher-notes), or (b) make the student read the actual `KeyError` first — consistent with
-   the Phase 4–6 traceback template. Default: **(b)** for consistency.
-4. **`input` false-practice reconciliation (Sol) — units 07–10.** For each of units 07, 08, 09, 10
-   apply the per-unit decision from Global Constraints: run `concept-scan` to see whether `input` is
-   detected as used in that unit's cells; where it is NOT, either drop `input` from `practices`
-   (map + manifest, surgical) OR ensure the unit's Phase (4–6) added a genuine student-authored
-   `input()` rep so the tag is earned. Record the per-unit choice. Verify `manifest-check`/
-   `coverage-check`/`prereq-check`/`concept-scan` PASS after.
-- Checkpoint edits (1–3) are the ONLY checkpoint changes; all four checkpoints otherwise stay as
-  shipped (their proficiency risk is resolved upstream by Phases 1–6). Item 4 is unit-manifest metadata
-  grouped here for one clean reconciliation pass.
+1. **CP2 + unit-05 turtle-drawing (reconciliations 1–2):** DROP `turtle-drawing` from checkpoint-02
+   `practices` AND ADD it to unit-05 `practices` (both surgical, map+manifest). Verify `coverage-check`
+   no longer reports capstone-only, and `manifest`/`prereq`/`concept-scan` PASS.
+2. **CP3 Q6:** adjust the data so the `elif`/`else` branch is reachable (a key absent on one path) so
+   the branch executes and the solution's `assert` proves it.
+3. **CP3 Q8 → (b):** make the student read the actual `KeyError` first (traceback template).
+4. **input false-practice (reconciliation 4):** DROP `input` from `practices` in units 07, 08, 09, 10
+   (pure metadata + teacher-notes alignment; decision (a), RED-safe per Global Constraints). Record per
+   unit.
+5. **CP1 string-concat (reconciliation 5):** confirm CP1 genuinely practices `string-concat` (now
+   taught upstream by Phase 3.1); if Q1 only shows it as a broken line, adjust Q1 to author concat or
+   note the disposition.
+6. **unit-09 elif-else (reconciliation 3):** applied in Phase 6.2; re-verify here.
+- Checkpoints otherwise stay as shipped (proficiency risk resolved upstream by Phases 1–6).
 
 ### Phase V — Verification (NAMED, mandatory)
 
 Mechanical (authoritative — `scripts/ci-local.sh` is the gate, design §4):
-- `uv run pytest -q` green (incl. any curriculum tests); ruff clean.
-- `scripts/ci-local.sh` **ALL GREEN**: registry+lint, unit tests, **notebook execution + hygiene**
-  (every touched `exercises.ipynb`/`solutions.ipynb`/checkpoint/project notebook executes clean with no
-  stored outputs in student cells and clean assert-backed solutions), `manifest-check`/`coverage-check`/
-  `prereq-check`, `concept-scan` (STILL zero used-but-unlisted across all 16 entries after the two
-  metadata reconciliations), stretch-check, PDF build, pre-merge guard.
-- `bash scripts/pre-merge-guard.sh --pr` OK.
+- `uv run pytest -q` green; ruff clean.
+- `scripts/ci-local.sh` **ALL GREEN**: registry+lint, unit tests, notebook execution + hygiene +
+  `cell-lint` + `ASSET_REF` + `turtle-check`, `manifest-check`/`coverage-check`/`prereq-check`,
+  `concept-scan` (zero used-but-unlisted across all entries after the reconciliation set),
+  stretch-check, PDF build, pre-merge guard. `bash scripts/pre-merge-guard.sh --pr` OK.
+- **Volume budget observed:** record before→after core-exercise counts per touched unit and notebook
+  cell/page counts + `ci-local` duration, so volume/PDF regressions are visible before the gate.
 
-Proficiency (reviewer-enforced, the plan's raison d'être — Phase V acceptance is NOT met without this):
-- For EVERY concept named in Phases 1–8, a reviewer confirms it is now actively exercised in a
-  NON-stretch student `exercises.ipynb` cell (the proficiency bar), and that each such exercise's
-  solution `assert` would catch the intended mistake.
-- Confirm no `introduces`/`requires` changed; the two metadata reconciliations keep closure +
-  `practices ∩ introduces` empty; the `accumulator` decision (Phase 2) is recorded.
-- Confirm every touched unit keeps ≥1 `stretch` exercise and no core exercise depends on stretch, and
-  no new forward references were introduced.
+Proficiency (reviewer-enforced — Phase V is NOT met without this):
+- **Whole-union inventory (not target-only):** for EACH touched unit, a reviewer walks the COMPLETE
+  `introduces ∪ practices` union and records, per concept, the non-stretch student-authored evidence
+  (exercise/asset cell) OR its listed trace-only exemption. No concept in the union may be left with
+  neither. (This is why Phase V exceeds the named remediation list — [sol] blocker 2.)
+- Each added exercise's solution `assert` would catch the intended mistake; ≥1 rep of each concept is
+  on the in-class path.
+- No `introduces`/`requires` changed; the enumerated reconciliation set applied (map == manifest,
+  closure + `practices ∩ introduces` empty); every touched unit keeps ≥1 stretch, no core depends on
+  stretch, no new forward references.
 
-**Acceptance criteria:** all Phase 1–8 target concepts student-exercised in core (proficiency bar);
-solutions assert-backed + headless clean; two metadata reconciliations applied (map == manifest);
-`ci-local.sh` ALL GREEN incl. `concept-scan`; `pre-merge-guard --pr` OK; plan-review + content-review
-4-way consensus with no `[OPEN]` blockers.
+**Acceptance criteria:** all Phase 1–8 targets student-exercised in core (proficiency bar) AND every
+touched unit's full union inventoried; solutions assert-backed + headless clean; the enumerated
+metadata reconciliations applied; `ci-local.sh` ALL GREEN incl. `concept-scan`; `pre-merge-guard --pr`
+OK; plan-review + (per-PR) content-review 4-way consensus with no `[OPEN]` blockers; plan-023 recorded
+as a named follow-up in the post-execution report.
 
 ---
 
 ## Plan Review
 
-_(4-way gate — [self] / [sol] / [glm] / [fable]. To be conducted before any implementation.)_
+_(4-way gate — [self] / [sol] / [glm] / [fable]. Consensus = all four APPROVE / APPROVE WITH NITS, no
+open blockers.)_
+
+### Round 1 (2026-09-08)
+
+- **[self] → APPROVE WITH NITS.** Spec-coverage checklist passed; folded two self-nits (unit-02
+  `elif`+`str`, unit-05 `import-statement`) before external review.
+- **[glm] → REJECT (1 blocker + nits).** Blocker: unit-05 `import-statement` orphan gap. Nits:
+  accumulator (b) scan-unsafe; Phase 6.1 existence-check forward-ref; unit-07 boolean implicit; unit-02
+  `elif`; CP1 concat overclaim; verified `input` drop RED-safe for 07–10.
+- **[sol] → REJECT (4 blockers).** (1) audit-gap inventory incomplete (unit-05 import, unit-06 int-type,
+  unit-07 boolean, unit-09 f-string). (2) Phase V verified only named targets, not each unit's full
+  `introduces ∪ practices` union. (3) accumulator fork (b) not scan-safe. (4) grow-the-set had no
+  pacing/load acceptance. Nits: Phase 5.4 "challenge" vs core; "two reconciliations" count wrong;
+  budget notebook/PDF growth.
+- **[fable] → REJECT (4 blockers, all small edits; "expected to flip to APPROVE").** B1 CP2
+  `turtle-drawing` drop breaks `coverage-check` (only pre-capstone practicer) → drop-from-CP2 +
+  add-to-unit-05. B2 Phase 6.1 existence-check is a forward-ref → "save before load" only. B3 unit-09
+  `if/else` flips `concept-scan` RED → add `elif-else` reconciliation + pre-authorize scanner-derived
+  adds. B4 accumulator (b) not metadata-only + input decision mis-ordered → commit (a), decide input now.
+  Plus CI-grounded nits: unit-03 flagship should author a real `.py` verified by `turtle-check`; keep
+  `round()` prose-only; Ex6 is intended stub not errata; per-unit pacing/labelled sections; project-02
+  manifest-honesty disposition; list trace-only exemptions; gate-load batching by Term.
+
+### Round-1 reconciliation (2026-09-08)
+
+Round-2 plan (above) folds ALL blockers and nits: CP2/unit-05 `turtle-drawing` swap
+(reconciliations 1–2, fixes [fable] B1); unit-09 `elif-else` add + pre-authorization rule ([fable] B3);
+"save before load" only ([glm]/[fable] forward-ref); accumulator (a) binding + input decided now
+(all); Phase V whole-union inventory + pacing/volume budget ([sol] blockers 2 & 4); unit-05
+`import-statement` + unit-06 `int-type` + unit-07 `boolean` + the enumerated reconciliation-count fix
+([sol]/[glm] gaps); unit-03 flagship authored-`.py`/`turtle-check` spec + `round()` prose-only + Ex6
+note + trace-only exemption lists + project-02 disposition + Term-batched PRs ([fable] nits). All four
+plan-review fork answers adopted. **Re-dispatching [sol]/[glm]/[fable] for round-2 confirmation.**
+
+### Round 2
+
+- **[self] → APPROVE.** All round-1 blockers/nits addressed in the round-2 plan; forks resolved by
+  consensus; Phase V now enforces the whole-union bar with a pacing budget.
+- **[sol] → (pending round-2)**
+- **[glm] → (pending round-2)**
+- **[fable] → (pending round-2)**
 
 ## Content Review
 
-_(4-way gate — conducted pre-PR after implementation. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`.)_
+_(4-way gate — conducted pre-PR after implementation, per PR. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`.)_
 
 ## Post-Execution Report
 
-_(Written before PR.)_
+_(Written before PR; records plan-023 as a named follow-up.)_
