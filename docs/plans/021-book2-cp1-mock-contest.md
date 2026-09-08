@@ -148,9 +148,31 @@ Copied from the design + registry + the plan-020 gate lessons; every task's requ
   content-gate fix — both precede the PR.
 - [ ] **C6 — PR** → `pre-merge-guard.sh --pr` OK → squash-merge → delete branch → update memory.
 
-## Post-Execution Report
+## Post-Execution Report (2026-09-08)
 
-_(filled at Phase C)_
+**Delivered:** `checkpoint-01-mock-contest-1` — the first timed Book-2 mock contest (0.5 lesson), assessing
+Term-1 (U01–U05) on the `solve(data:str)->str` contract.
+- **Phase A** — `checkpoint.ipynb` (6 sequential `## Question N`, empty student cells, submission wrapper in
+  markdown only) + `solutions.ipynb`, authored by two separate codex sessions (statements, then a fresh
+  blind solver). Coverage: Q1 grid parsing (U01), Q2 boolean gate (U02), Q3 O(n) max-gain (U03), Q4
+  dedup+tuple-key sort (U04), Q5 binary-search count queries (U05), Q6 triple-count fixed-depth
+  complete-search (U05).
+- **Phase B** — teacher-notes (six headings incl `## Grading`, 100-pt split, ~40-min budget) + manifest,
+  inline. `introduces: []`; `requires` = the 10 genuinely-assessed U01–U05 concepts (`set-literal` dropped —
+  Q4 seeds with `set()`, no `{…}` literal, so it is not exercised); `practices` = 19 Book-1 concepts used;
+  manifest == map.
+- **Phase C** — verification. All checkpoint checks + full `scripts/ci-local.sh` ALL GREEN both books.
+  4-way content-review gate: round 1 confirmed all 6 solvers correct (fable 3,000 differential trials, 0
+  mismatches) and flagged 2 blocking assert gaps (Q2 conjunct, Q6 outer-loop off-by-one) + 1 best-effort
+  (Q4 tiebreak); all fixed and mutation-verified, round 2 unanimous APPROVE. Fixes committed ec123a2.
+
+**Verification:** closure clean (no `.remove`/recursion/converging-two-pointer/comprehension/untaught
+builtin; Q6 = three nested loops; self-pair `j=i`/`k=j` and decisive-last-after-sort all killed). Full
+ci-local ALL GREEN both books at the content HEAD (an earlier ci-local run stalled in the Book-1 PDF build —
+environmental xelatex, re-run passed). Book-1 regression-locked.
+
+**Term 1 (U01–U05 + CP1) COMPLETE.** Next: Term 2 — U06 Greedy, U07 Simulation, U08 Prefix Sums, CP2. The
+Term-4/capstone plan must still add CP4 after U14 and audit every technique's pre-capstone practice home.
 
 ## Plan Review
 
@@ -210,5 +232,10 @@ Book-1-only). Findings (all fixed + verified):
 All checks re-PASS after fixes (exec-solutions runs the 3 new asserts; cell-lint/concept-scan/manifest
 clean).
 
-### Round 2 — [self] APPROVE; [sol]/[glm]/[fable] dispatched (revised HEAD), pending
-Consensus recorded here once all four APPROVE; every `[OPEN]` resolves before merge.
+### Round 2 (2026-09-08, HEAD ec123a2) — CONSENSUS: [self] · [fable] · [glm] · [sol] all APPROVE
+Q2 and Q6 mutants confirmed killed by their added asserts (deterministic); Q4 4-tied assert passes pristine
+and is accepted best-effort (fable: 85/100 seeds kill the mutant, glm: ~75% — inherently non-deterministic
+by construction, no CI flakiness since the pristine full key is order-independent). Diff scope clean (only
+the 3 asserts + plan record; zero solver-code change). exec-solutions / cell-lint / concept-scan /
+manifest-check PASS; all 6 pristine solvers pass; no wrong-oracle regression. **Content-review gate CLOSED —
+zero open blockers, cleared for PR.**
