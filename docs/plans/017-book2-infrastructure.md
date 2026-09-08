@@ -46,7 +46,7 @@ completeness).
   4. `map_schema_findings` — keep the existing exact key-set; therefore the map does **NOT** add a
      `term` field (term grouping lives in the syllabus, not the map schema).
   5. Capstone kind — the schema recognizes `unit|project|checkpoint`; the capstone is a
-     `kind: project` Book-2 entry (a legal id, e.g. `project-book2-mock-contest`), so no kind-schema
+     `kind: project` Book-2 entry (a legal id, e.g. `project-03-mock-contest`), so no kind-schema
      change is needed.
   6. `lesson_budget_findings` — the `28–32` workload bound is Book-1-shaped; make the bound per-book
      (Book 2 from its syllabus).
@@ -268,4 +268,12 @@ All three externals converge; two REJECT. The revision above folds in EVERY find
   errata pointer.
 - **Scope** kept as one plan (fable+glm) but Phase A expanded to the full per-book schema/coverage/
   scanner contract + regression matrix (addresses sol's expand-or-split).
-Round-2 plan-review dispatched on the reconciled plan.
+
+**Round-2 (on HEAD after reconciliation): CONSENSUS REACHED — 4-way, no open blockers.**
+- [self] APPROVE. [fable] APPROVE WITH NITS — every round-1 finding confirmed folded in against the
+  code; design-001 errata verified present. [glm] APPROVE WITH NITS — all blockers confirmed
+  resolved. [sol] APPROVE WITH NITS — all 5 review items SATISFIED (incl. the in-process
+  Book2→Book1 regression + AD-001).
+- Sole nit (all three): the example capstone id must match `^project-[0-9]{2}-…` → fixed to
+  `project-03-mock-contest`. (sol also noted the branch is `feature/plan-017-book2-infra` — harmless.)
+Plan-review gate CLOSED. Proceeding to implementation (Phase A).
