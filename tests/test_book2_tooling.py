@@ -225,6 +225,7 @@ def test_practice_completeness_is_deferred_for_contentless_skeleton(cross_book_r
 
 def test_practice_completeness_reactivates_when_content_exists(cross_book_root):
     (cross_book_root / "dependent/units/unit-01-dependent").mkdir(parents=True)
+    (cross_book_root / "dependent/projects/project-03-fixture").mkdir(parents=True)
     assert practice_findings(cross_book_root, "dependent") == [
         "FAIL: dependent: only the capstone practices: ['new-technique']"
     ]
@@ -237,10 +238,35 @@ def test_dependency_practices_do_not_expand_own_completeness_set(cross_book_root
     data["entries"][1]["practices"] = ["new-technique"]
     _write_yaml(path, data)
     (cross_book_root / "dependent/units/unit-01-dependent").mkdir(parents=True)
+    (cross_book_root / "dependent/projects/project-03-fixture").mkdir(parents=True)
 
     assert practice_findings(cross_book_root, "dependent") == [
         "FAIL: dependent: only the capstone practices: ['new-technique']"
     ]
+
+
+def test_practice_completeness_is_deferred_until_capstone_is_authored(cross_book_root):
+    (cross_book_root / "dependent/units/unit-01-dependent").mkdir(parents=True)
+
+    assert practice_findings(cross_book_root, "dependent") == []
+
+
+def test_authored_capstone_activates_incomplete_practice_finding(cross_book_root):
+    (cross_book_root / "dependent/projects/project-03-fixture").mkdir(parents=True)
+
+    assert practice_findings(cross_book_root, "dependent") == [
+        "FAIL: dependent: only the capstone practices: ['new-technique']"
+    ]
+
+
+def test_practice_completeness_is_deferred_for_finale_less_map(cross_book_root):
+    path = cross_book_root / "dependent/curriculum/coverage-map.yaml"
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    data["entries"] = [entry for entry in data["entries"] if entry["kind"] != "project"]
+    _write_yaml(path, data)
+    (cross_book_root / "dependent/units/unit-01-dependent").mkdir(parents=True)
+
+    assert practice_findings(cross_book_root, "dependent") == []
 
 
 FEATURE_CASES = [

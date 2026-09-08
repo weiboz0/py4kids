@@ -272,12 +272,10 @@ def practice_findings(root: Path, book: str) -> list[str]:
         for concept in entry.get("practices", [])
     }
     book_dir = book_path(root, book)
-    kind_dirs = {"unit": "units", "checkpoint": "checkpoints", "project": "projects"}
-    has_authored_entry = any(
-        (book_dir / kind_dirs.get(entry.get("kind"), "") / str(entry.get("id"))).is_dir()
-        for entry in entries
-    )
-    if has_authored_entry and not known <= pre_capstone:
+    capstone_authored = capstone_id is not None and (
+        book_dir / "projects" / capstone_id
+    ).is_dir()
+    if capstone_authored and not known <= pre_capstone:
         findings.append(_fail(book, f"only the capstone practices: {sorted(known - pre_capstone)}"))
     return findings
 
