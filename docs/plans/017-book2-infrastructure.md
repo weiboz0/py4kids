@@ -248,6 +248,43 @@ unchanged. No content authored (correct for infra). NIT (non-blocking): the depe
 concept-floor (1) and lesson-budget ((1,None)) are permissive — acceptable now; a book may set an
 explicit `lesson_budget` in `books.yaml` for a tighter bound later.
 
+### Reviews 2–4 — [fable]/[glm]/[sol] (2026-09-07) → APPROVE / APPROVE-WITH-NITS / REJECT, reconciled
+All three ran the full evidence set: Book-1 prereq/coverage/concept-scan **byte-identical** vs
+pre-017 (`0092321`) by hash/cmp; Book-2 checks PASS; full ci-local ALL GREEN (403 pass); mutation
+experiments proving the registry-gating is load-bearing; registry/map/syllabus audits (32 concepts
+introduced once, arc closure, capstone kind:project, syllabus table in map order, solve contract).
+- **[fable] APPROVE WITH NITS.** Nits carried below.
+- **[glm] APPROVE WITH NITS**, no blockers.
+- **[sol] REJECT (1 blocker) → [FIXED].** The in-process Book2→Book1 isolation test was VACUOUS
+  w.r.t. profile leakage: its dependent fixture registered only a technique, never activating the
+  `str-split`/`set-ops`/`deque` profile-extension paths, so restoring the in-place-alias bug
+  (`taught_methods = TAUGHT_METHODS`) still passed it. FIX: added
+  `test_scanner_profile_does_not_mutate_module_globals` — builds a profile that activates ALL
+  extension paths and asserts both the extensions landed (sensitivity) AND the module-global
+  `TAUGHT_METHODS`/`MANUAL_ONLY` are unmutated (immutability lock). Mutation-verified: PASSES on
+  shipped code, FAILS under the exact alias bug sol restored. Suite now 31 tests; ruff clean; Book-1
+  byte-clean.
+
+### Content-plan carry-forwards (fable/glm nits → tracked for the Term-1 plan, NOT plan-017 blockers)
+- **[OPEN → plan 018] Practice-completeness deferral granularity (fable-2/glm-N2):** the deferral is
+  whole-book on/off keyed on "any authored entry dir exists". When unit-01 lands, it flips OFF and
+  demands ALL 32 concepts practiced pre-capstone → red coverage-check. Plan 018's FIRST task: refine
+  the deferral to require only concepts introduced by AUTHORED entries (or gate on the capstone dir).
+- **[OPEN → content plans] Scanner-profile precision (glm-N3):** (a) U10 stack `.pop()` (list/deque)
+  will trip "untaught method" — extend the profile for U10 or avoid `.pop`; (b) a set `&`/`|`/`-`
+  also fires `bitwise-ops`/`arithmetic` — so U04 set-ops content must use set METHODS
+  (`.union`/`.intersection`/`.difference`), NOT operators, to avoid a `bitwise-ops` false-positive
+  before U11; (c) tuple destructuring fires `tuple`. These are binding authoring rules for the
+  content plans.
+- **[WONTFIX-acceptable] permissive dependent-book budget** (may pin `lesson_budget` in books.yaml);
+  **cycle-guard has no unit test** (verified correct by inspection) — optional follow-ups.
+
+### Content-gate resolution + re-verify (2026-09-07)
+Added the direct immutability test (sol's blocker). Re-verified: `pytest tests/test_book2_tooling.py`
+31 passed; ruff clean; Book-1 prereq/coverage/concept-scan byte-identical. Round-2 content re-review
+dispatched. The two `[OPEN]` items are explicitly scoped to the content plans (not plan-017) — the
+first is plan-018's opening task.
+
 **Flat shared concept namespace.** Book-1 concept ids remain bare; Book-2 (and later books) add only
 globally-unique new ids; no `book1:`-qualified ids. Uniqueness is enforced across ALL registered
 books. This SUPERSEDES design-000's "namespaced by book" note and design-001 §6's `book1:for-loop`

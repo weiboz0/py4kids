@@ -332,3 +332,33 @@ def test_dependent_checks_do_not_change_book1_output_in_process(cross_book_root,
     assert concept_scan_findings(cross_book_root, "dependent") == []
 
     assert book1_outputs() == before
+
+
+def test_scanner_profile_does_not_mutate_module_globals():
+    """Locks per-book profile immutability: building a profile that activates every
+    extension path (str-split -> split; set-ops -> add/discard/remove; deque ->
+    appendleft/popleft; a technique -> never_flag) must NOT mutate the module-global
+    TAUGHT_METHODS / MANUAL_ONLY sets. Reverting the `set(...)` copies to in-place
+    aliases/updates makes this test fail (the vacuity gap sol flagged at the content gate)."""
+    import tools.concept_scan as cs
+
+    taught_before = set(cs.TAUGHT_METHODS)
+    manual_before = set(cs.MANUAL_ONLY)
+
+    concepts = [
+        {"id": "str-split", "name": "Split", "category": "io", "kind": "feature"},
+        {"id": "set-ops", "name": "Set ops", "category": "data-structures", "kind": "feature"},
+        {"id": "deque", "name": "Deque", "category": "data-structures", "kind": "feature"},
+        {"id": "greedy", "name": "Greedy", "category": "techniques", "kind": "technique"},
+    ]
+    profile = cs.scanner_profile(concepts)
+
+    # Sensitivity: the extension paths actually ran (non-vacuous).
+    assert "split" in profile.taught_methods
+    assert {"add", "discard", "remove"} <= profile.taught_methods
+    assert {"appendleft", "popleft"} <= profile.taught_methods
+    assert "greedy" in profile.never_flag
+
+    # Immutability lock: the module globals are unchanged by profile construction.
+    assert cs.TAUGHT_METHODS == taught_before
+    assert cs.MANUAL_ONLY == manual_before
