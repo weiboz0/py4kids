@@ -7,6 +7,14 @@ from pathlib import Path
 
 import yaml
 
+from tools.books import (
+    book_entries,
+    book_path,
+    concept_minimum,
+    dependency_baseline,
+    lesson_budget,
+)
+
 CATEGORIES = {
     "io",
     "data",
@@ -19,6 +27,12 @@ CATEGORIES = {
     "oop",
     "graphics",
     "modules",
+    "search",
+    "sorting",
+    "data-structures",
+    "graphs",
+    "number-theory",
+    "techniques",
 }
 ENTRY_PATTERNS = {
     "unit": r"^unit-[0-9]{2}-[a-z0-9-]+$",
@@ -32,7 +46,30 @@ def _fail(book: str, detail: str) -> str:
 
 
 def _curriculum(root: Path, book: str) -> Path:
-    return Path(root).resolve() / book / "curriculum"
+    return book_path(root, book) / "curriculum"
+
+
+def global_concept_uniqueness_findings(root: Path) -> list[str]:
+    """Report concept ids defined by more than one registered book."""
+    owners: dict[str, set[str]] = {}
+    for registered_book in book_entries(root):
+        path = _curriculum(root, registered_book) / "concepts.yaml"
+        if not path.is_file():
+            continue
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or not isinstance(data.get("concepts"), list):
+            continue
+        for concept in data["concepts"]:
+            if isinstance(concept, dict) and isinstance(concept.get("id"), str):
+                owners.setdefault(concept["id"], set()).add(registered_book)
+    return [
+        _fail(
+            "books",
+            f"concept id {concept_id!r} is defined in multiple books: {sorted(books)}",
+        )
+        for concept_id, books in sorted(owners.items())
+        if len(books) > 1
+    ]
 
 
 def _concept_data(root: Path, book: str):
@@ -63,15 +100,23 @@ def concepts_schema_findings(root: Path, book: str) -> list[str]:
     findings = []
     if data.get("concepts_version") != 1:
         findings.append(_fail(book, "concepts_version must be 1"))
-    if len(concepts) < 40:
-        findings.append(_fail(book, "concept registry has fewer than 40 concepts"))
+    minimum = concept_minimum(root, book)
+    if len(concepts) < minimum:
+        findings.append(_fail(book, f"concept registry has fewer than {minimum} concepts"))
     ids = [concept.get("id") for concept in concepts]
     if _has_duplicates(ids):
         findings.append(_fail(book, "duplicate concept ids"))
     for concept in concepts:
-        if set(concept) != {"id", "name", "category"}:
+        if set(concept) not in ({"id", "name", "category"}, {"id", "name", "category", "kind"}):
             findings.append(_fail(book, f"bad concept keys in {concept.get('id', concept)}"))
             continue
+        if "kind" in concept and (
+            not isinstance(concept["kind"], str)
+            or concept["kind"] not in {"feature", "technique"}
+        ):
+            findings.append(
+                _fail(book, f"bad concept kind in {concept['id']}: {concept['kind']}")
+            )
         if not isinstance(concept["category"], str) or concept["category"] not in CATEGORIES:
             findings.append(_fail(book, f"unknown category: {concept['category']}"))
         if not isinstance(concept["id"], str) or not re.fullmatch(
@@ -136,18 +181,22 @@ def lesson_budget_findings(root: Path, book: str) -> list[str]:
     ):
         return []
     total = sum(entry["lessons"] for entry in entries)
-    if not 28 <= total <= 32:
-        return [_fail(book, f"lesson budget {total:g} outside 28-32")]
+    minimum, maximum = lesson_budget(root, book)
+    if total < minimum or (maximum is not None and total > maximum):
+        bound = f"{minimum:g}+" if maximum is None else f"{minimum:g}-{maximum:g}"
+        return [_fail(book, f"lesson budget {total:g} outside {bound}")]
     return []
 
 
 def referenced_concepts_findings(root: Path, book: str) -> list[str]:
     concepts = _concept_data(root, book).get("concepts", [])
-    known = {concept["id"] for concept in concepts if "id" in concept}
+    own = {concept["id"] for concept in concepts if "id" in concept}
+    known = own | dependency_baseline(root, book)
     findings = []
     for entry in _map_data(root, book).get("entries", []):
         for field in ("introduces", "requires", "practices"):
-            unknown = set(entry.get(field, [])) - known
+            allowed = own if field == "introduces" else known
+            unknown = set(entry.get(field, [])) - allowed
             if unknown:
                 findings.append(
                     _fail(
@@ -181,7 +230,7 @@ def prereq_findings(root: Path, book: str, unit: str | None = None) -> list[str]
     if schema_findings:
         return schema_findings
     findings = []
-    seen: set[str] = set()
+    seen = dependency_baseline(root, book)
     for entry in _map_data(root, book).get("entries", []):
         missing = (set(entry.get("requires", [])) | set(entry.get("practices", []))) - seen
         if missing:
@@ -212,20 +261,30 @@ def practice_findings(root: Path, book: str) -> list[str]:
             if len(values) != len(set(values)):
                 findings.append(_fail(book, f"{entry.get('id', '?')}.{field} has duplicates"))
     known = {concept["id"] for concept in _concept_data(root, book).get("concepts", [])}
+    capstone_id = next(
+        (entry.get("id") for entry in reversed(entries) if entry.get("kind") == "project"),
+        None,
+    )
     pre_capstone = {
         concept
         for entry in entries
-        if entry.get("id") != "project-02-grand-adventure"
+        if entry.get("id") != capstone_id
         for concept in entry.get("practices", [])
     }
-    if pre_capstone != known:
+    book_dir = book_path(root, book)
+    kind_dirs = {"unit": "units", "checkpoint": "checkpoints", "project": "projects"}
+    has_authored_entry = any(
+        (book_dir / kind_dirs.get(entry.get("kind"), "") / str(entry.get("id"))).is_dir()
+        for entry in entries
+    )
+    if has_authored_entry and not known <= pre_capstone:
         findings.append(_fail(book, f"only the capstone practices: {sorted(known - pre_capstone)}"))
     return findings
 
 
 def checkpoint_findings(root: Path, book: str) -> list[str]:
     findings = []
-    seen: set[str] = set()
+    seen = dependency_baseline(root, book)
     for entry in _map_data(root, book).get("entries", []):
         if entry.get("kind") == "checkpoint":
             if entry.get("introduces"):
@@ -244,7 +303,7 @@ def checkpoint_findings(root: Path, book: str) -> list[str]:
 
 def syllabus_findings(root: Path, book: str) -> list[str]:
     entries = _map_data(root, book).get("entries", [])
-    syllabus = (Path(root).resolve() / book / "syllabus.md").read_text(encoding="utf-8")
+    syllabus = (book_path(root, book) / "syllabus.md").read_text(encoding="utf-8")
     findings = []
     positions = []
     for entry in entries:
@@ -272,6 +331,7 @@ def syllabus_findings(root: Path, book: str) -> list[str]:
 def coverage_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
     del unit
     findings = concepts_schema_findings(root, book)
+    findings += global_concept_uniqueness_findings(root)
     findings += map_schema_findings(root, book)
     if findings:
         return findings

@@ -1,0 +1,36 @@
+concepts_version: 1
+concepts:
+# --- language features (kind: feature) ---
+- {id: set-literal, name: Set literals, category: data-structures, kind: feature}
+- {id: set-ops, name: "Set operations (add/discard, union/intersection)", category: data-structures, kind: feature}
+- {id: tuple, name: Tuples, category: data-structures, kind: feature}
+- {id: str-split, name: Splitting strings, category: io, kind: feature}
+- {id: sorted-key, name: Sorting with a key, category: sorting, kind: feature}
+- {id: comprehension, name: List/set/dict comprehensions, category: techniques, kind: feature}
+- {id: recursion, name: Recursion (self-calling functions), category: techniques, kind: feature}
+- {id: deque, name: Double-ended queue (deque), category: data-structures, kind: feature}
+- {id: bitwise-ops, name: Bitwise operators, category: number-theory, kind: feature}
+# --- algorithmic techniques (kind: technique; reviewer-enforced, never scanner-flagged) ---
+- {id: input-parse, name: Parsing structured input, category: io, kind: technique}
+- {id: grid-2d, name: 2D grids (list of lists), category: data-structures, kind: technique}
+- {id: complexity, name: Time complexity / Big-O, category: techniques, kind: technique}
+- {id: boolean-algebra, name: Boolean algebra, category: techniques, kind: technique}
+- {id: code-tracing, name: Reading and tracing code, category: techniques, kind: technique}
+- {id: complete-search, name: Complete search (brute force), category: search, kind: technique}
+- {id: binary-search, name: Binary search, category: search, kind: technique}
+- {id: greedy, name: Greedy algorithms, category: techniques, kind: technique}
+- {id: simulation, name: Simulation / ad hoc, category: techniques, kind: technique}
+- {id: prefix-sum, name: Prefix sums, category: techniques, kind: technique}
+- {id: backtracking, name: Backtracking, category: techniques, kind: technique}
+- {id: postfix-eval, name: Postfix expression evaluation, category: techniques, kind: technique}
+- {id: base-conversion, name: Number base conversion, category: number-theory, kind: technique}
+- {id: bitmask, name: Bitmask subsets, category: techniques, kind: technique}
+- {id: gcd, name: Greatest common divisor (Euclid), category: number-theory, kind: technique}
+- {id: sieve, name: Sieve of Eratosthenes / primes, category: number-theory, kind: technique}
+- {id: modular-arithmetic, name: Modular arithmetic, category: number-theory, kind: technique}
+- {id: tree-traversal, name: Binary tree traversal (pre/in/post-order), category: data-structures, kind: technique}
+- {id: graph-repr, name: Graph representation (adjacency list), category: graphs, kind: technique}
+- {id: bfs, name: Breadth-first search, category: graphs, kind: technique}
+- {id: dfs, name: Depth-first search, category: graphs, kind: technique}
+- {id: flood-fill, name: Flood fill / connected components, category: graphs, kind: technique}
+- {id: two-pointers, name: Two pointers / sliding window, category: techniques, kind: technique}

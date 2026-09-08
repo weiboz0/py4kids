@@ -14,17 +14,21 @@ MANUAL_ONLY concepts remain reviewer-enforced.
 A string ``Constant`` inside a ``JoinedStr`` counts as ``string-literal``. Thus
 the literal text in an f-string records both ``f-string`` and ``string-literal``.
 
-TAUGHT_METHODS, BUILTINS, and MANUAL_ONLY are coupled to Book 1. Book 2 will
-need a per-book pass before this check is enabled there.
+Each scan builds a fresh per-book profile. Book 1 retains the original method,
+builtin, and manual-only literals; dependent books extend that profile only for
+features and techniques present in their own registry.
 """
 
 from __future__ import annotations
 
 import ast
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
+
+from tools.books import book_path, dependency_baseline
 
 # Concepts we do NOT flag as violations: not detectable from code, or too fuzzy
 # to assert confidently. These stay reviewer-manual.
@@ -59,8 +63,50 @@ BUILTINS = {"len", "min", "max", "sorted", "sum", "abs", "round"}
 DICT_METHODS = {"items", "keys", "values", "get"}
 
 
-def detect(tree: ast.AST) -> tuple[set[str], set[str]]:
+@dataclass(frozen=True)
+class ScanProfile:
+    taught_methods: frozenset[str]
+    builtins: frozenset[str]
+    never_flag: frozenset[str]
+
+
+def scanner_profile(concepts: list[dict]) -> ScanProfile:
+    """Build a new immutable profile from one book's own concept registry."""
+    registered = {
+        concept.get("id")
+        for concept in concepts
+        if isinstance(concept, dict) and isinstance(concept.get("id"), str)
+    }
+    techniques = {
+        concept["id"]
+        for concept in concepts
+        if isinstance(concept, dict)
+        and concept.get("kind") == "technique"
+        and isinstance(concept.get("id"), str)
+    }
+    taught_methods = set(TAUGHT_METHODS)
+    if "str-split" in registered:
+        taught_methods.add("split")
+    if "set-ops" in registered:
+        taught_methods.update({"add", "discard", "remove"})
+    if "deque" in registered:
+        taught_methods.update({"appendleft", "popleft"})
+    return ScanProfile(
+        taught_methods=frozenset(taught_methods),
+        builtins=frozenset(BUILTINS),
+        never_flag=frozenset(set(MANUAL_ONLY) | techniques),
+    )
+
+
+def detect(
+    tree: ast.AST,
+    *,
+    registered_concepts: set[str] | None = None,
+    profile: ScanProfile | None = None,
+) -> tuple[set[str], set[str]]:
     """Return (concept ids used, unknown method names) — high-confidence only."""
+    registered = set() if registered_concepts is None else set(registered_concepts)
+    active_profile = profile or scanner_profile([])
     used: set[str] = set()
     unknown_methods: set[str] = set()
     parents = {
@@ -68,6 +114,32 @@ def detect(tree: ast.AST) -> tuple[set[str], set[str]]:
         for parent in ast.walk(tree)
         for child in ast.iter_child_nodes(parent)
     }
+    set_names = {
+        target.id
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.Assign, ast.AnnAssign))
+        for target in (
+            node.targets if isinstance(node, ast.Assign) else [node.target]
+        )
+        if isinstance(target, ast.Name)
+        and (
+            isinstance(node.value, ast.Set)
+            or (
+                isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Name)
+                and node.value.func.id == "set"
+            )
+        )
+    }
+
+    def add_feature(concept: str) -> None:
+        if concept in registered:
+            used.add(concept)
+
+    def is_set_expression(node: ast.AST) -> bool:
+        return isinstance(node, ast.Set) or (
+            isinstance(node, ast.Name) and node.id in set_names
+        )
 
     class V(ast.NodeVisitor):
         def __init__(self):
@@ -115,6 +187,8 @@ def detect(tree: ast.AST) -> tuple[set[str], set[str]]:
         def visit_UnaryOp(self, node):
             if isinstance(node.op, ast.Not):
                 used.add("logical-ops")
+            if isinstance(node.op, ast.Invert):
+                add_feature("bitwise-ops")
             self.generic_visit(node)
 
         def visit_BinOp(self, node):
@@ -126,7 +200,19 @@ def detect(tree: ast.AST) -> tuple[set[str], set[str]]:
                 if isinstance(n, ast.BinOp) and isinstance(n.op, (ast.Add, ast.Mult)):
                     return has_str(n.left) or has_str(n.right)
                 return False
-            if isinstance(node.op, (ast.Add, ast.Mult)) and (has_str(node.left) or has_str(node.right)):
+            if isinstance(node.op, ast.Sub) and (
+                is_set_expression(node.left) or is_set_expression(node.right)
+            ):
+                add_feature("set-ops")
+            if isinstance(node.op, (ast.BitAnd, ast.BitOr, ast.BitXor, ast.LShift, ast.RShift)):
+                add_feature("bitwise-ops")
+                if isinstance(node.op, (ast.BitAnd, ast.BitOr, ast.BitXor)) and (
+                    is_set_expression(node.left) or is_set_expression(node.right)
+                ):
+                    add_feature("set-ops")
+            elif isinstance(node.op, (ast.Add, ast.Mult)) and (
+                has_str(node.left) or has_str(node.right)
+            ):
                 used.add("string-concat")  # str +/* is concat/repeat, not arithmetic
             elif isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div,
                                       ast.FloorDiv, ast.Mod, ast.Pow)):
@@ -185,6 +271,30 @@ def detect(tree: ast.AST) -> tuple[set[str], set[str]]:
             used.add("dict-literal")
             self.generic_visit(node)
 
+        def visit_Set(self, node):
+            add_feature("set-literal")
+            self.generic_visit(node)
+
+        def visit_Tuple(self, node):
+            add_feature("tuple")
+            self.generic_visit(node)
+
+        def visit_ListComp(self, node):
+            add_feature("comprehension")
+            self.generic_visit(node)
+
+        def visit_SetComp(self, node):
+            add_feature("comprehension")
+            self.generic_visit(node)
+
+        def visit_DictComp(self, node):
+            add_feature("comprehension")
+            self.generic_visit(node)
+
+        def visit_GeneratorExp(self, node):
+            add_feature("comprehension")
+            self.generic_visit(node)
+
         def visit_Subscript(self, node):
             if isinstance(node.slice, ast.Slice):
                 used.add("string-slice")  # also covers list slice; rare either way
@@ -231,6 +341,13 @@ def detect(tree: ast.AST) -> tuple[set[str], set[str]]:
             )
             if has_parameters and not is_self_only_method:
                 used.add("parameters")
+            if any(
+                isinstance(descendant, ast.Call)
+                and isinstance(descendant.func, ast.Name)
+                and descendant.func.id == node.name
+                for descendant in ast.walk(node)
+            ):
+                add_feature("recursion")
             self.generic_visit(node)
 
         def visit_Return(self, node):
@@ -253,7 +370,21 @@ def detect(tree: ast.AST) -> tuple[set[str], set[str]]:
                 used.add("file-read")
             if node.attr == "write":
                 used.add("file-write")
+            if node.attr == "split":
+                add_feature("str-split")
+            if (
+                node.attr in {"add", "discard", "remove"}
+                and isinstance(node.value, ast.Name)
+                and node.value.id in set_names
+            ):
+                add_feature("set-ops")
+            if node.attr in {"appendleft", "popleft"}:
+                add_feature("deque")
             self.generic_visit(node)
+
+        def visit_Name(self, node):
+            if node.id == "deque":
+                add_feature("deque")
 
         def visit_Call(self, node):
             f = node.func
@@ -261,7 +392,7 @@ def detect(tree: ast.AST) -> tuple[set[str], set[str]]:
                 # a method call x.name(...) — flag names that map to no taught concept
                 recv = f.value
                 recv_is_self = isinstance(recv, ast.Name) and recv.id == "self"
-                if (f.attr not in TAUGHT_METHODS
+                if (f.attr not in active_profile.taught_methods
                         and not f.attr.startswith("__")
                         and not recv_is_self):  # own object methods are fine
                     unknown_methods.add(f.attr)
@@ -276,7 +407,9 @@ def detect(tree: ast.AST) -> tuple[set[str], set[str]]:
                     used.add("type-conversion")
                 elif f.id == "sorted":
                     used.add("builtin-functions"); used.add("list-sort")
-                elif f.id in BUILTINS:
+                    if any(keyword.arg == "key" for keyword in node.keywords):
+                        add_feature("sorted-key")
+                elif f.id in active_profile.builtins:
                     used.add("builtin-functions")
                 elif f.id == "open":
                     used.add("with-statement")
@@ -321,13 +454,27 @@ def concept_scan_findings(
 ) -> list[str]:
     """Return high-confidence used-but-unlisted findings for every book entry."""
     del unit
-    book_dir = Path(root).resolve() / book
+    book_dir = book_path(root, book)
     map_path = book_dir / "curriculum" / "coverage-map.yaml"
     if not map_path.is_file():
         return [f"FAIL: {book}: coverage-map.yaml does not exist"]
     cmap = yaml.safe_load(map_path.read_text(encoding="utf-8"))
     if not isinstance(cmap, dict) or not isinstance(cmap.get("entries"), list):
         return [f"FAIL: {book}: coverage-map entries must be a list"]
+    concepts_path = book_dir / "curriculum" / "concepts.yaml"
+    concepts_data = (
+        yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
+        if concepts_path.is_file()
+        else {}
+    )
+    concepts = concepts_data.get("concepts", []) if isinstance(concepts_data, dict) else []
+    registered = {
+        concept["id"]
+        for concept in concepts
+        if isinstance(concept, dict) and isinstance(concept.get("id"), str)
+    }
+    profile = scanner_profile(concepts)
+    baseline = dependency_baseline(root, book)
     dirs = {
         "unit": book_dir / "units",
         "checkpoint": book_dir / "checkpoints",
@@ -340,8 +487,12 @@ def concept_scan_findings(
         edir = dirs[kind] / eid
         if not edir.exists():
             continue
-        union = set(entry.get("introduces", []) or []) | set(entry.get("requires", []) or []) \
+        union = (
+            set(entry.get("introduces", []) or [])
+            | set(entry.get("requires", []) or [])
             | set(entry.get("practices", []) or [])
+            | baseline
+        )
         used = set()
         methods = set()
         defined_names = set()  # functions + class methods defined in this entry's notebooks
@@ -351,7 +502,7 @@ def concept_scan_findings(
                     tree = ast.parse(src)
                 except SyntaxError:
                     continue
-                u, m = detect(tree)
+                u, m = detect(tree, registered_concepts=registered, profile=profile)
                 used |= u
                 methods |= m
                 for node in ast.walk(tree):
@@ -359,7 +510,7 @@ def concept_scan_findings(
                         defined_names.add(node.name)  # incl. class methods (feed/play/status)
         # a call to a method the notebooks define themselves is NOT an untaught library method
         methods -= defined_names
-        gaps = sorted((used - union) - MANUAL_ONLY)
+        gaps = sorted((used - union) - profile.never_flag)
         findings.extend(
             f"FAIL: {eid}: used-but-unlisted concept {concept}" for concept in gaps
         )

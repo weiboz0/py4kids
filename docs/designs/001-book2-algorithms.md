@@ -112,6 +112,12 @@ Book 2; the Book-1 class intro is used only incidentally, never built upon.
 
 ## 6. Cross-book prerequisite infrastructure (SHIPS FIRST)
 
+> **ERRATA (plan 017, AD-001):** the `book1:for-loop` *namespaced-id* framing in this section is
+> SUPERSEDED by a **flat shared namespace** — Book-1 ids stay bare, Book-2 adds globally-unique new
+> ids, and a CI check enforces uniqueness across all books. Book 1 already shipped with bare ids and
+> total Book-1-precedes-Book-2 ordering makes prefixes unnecessary. Read `book1:X` below as "the
+> (bare) Book-1 concept `X`, available to Book 2 as a prerequisite."
+
 `books.yaml` already declares `book2 depends_on book1`, and design-000 mandates **namespaced concept
 ids** (`book1:for-loop`) for cross-book contracts. The verification tooling is currently per-book and
 must learn cross-book resolution:
