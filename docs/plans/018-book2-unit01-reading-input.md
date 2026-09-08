@@ -77,7 +77,7 @@ precedent). Book-1 content conventions transfer (5-heading unit teacher-notes, �
   `--book book2` (these iterate only existing entry dirs, so they
   cover U01 and are inert for unauthored entries). Keep the map-level checks. (Confirm each per-entry
   check tolerates a partially-authored book — if any require ALL map entries to have dirs, scope
-  them or defer, as plan 017 did for the map-level split.) **VERIFIED (2026-09-07):** all seven
+  them or defer, as plan 017 did for the map-level split.) **VERIFIED (2026-09-07):** all eight
   per-entry checks already PASS on the content-less Book 2 — they iterate EXISTING dirs, so a
   partially-authored book is fine; the "requires all map entries to have dirs" risk does not
   materialize.
@@ -114,8 +114,10 @@ manifest + ci-local wiring inline.
 3. ADD tests: a dependent-book fixture with a unit dir but NO capstone dir → NO practice finding;
    with the capstone dir + incomplete pre-capstone practices → the finding fires; a finale-less map →
    no crash (capstone_authored False); Book-1 unchanged.
-- Acceptance (A): `ruff` clean; `pytest` green (incl. updated + new tests); Book-1 prereq/coverage/
-  concept-scan byte-identical; `--book book2 coverage-check` still PASS (no content yet → deferred).
+- Acceptance (A): `ruff` clean; `pytest` green (incl. updated + new tests); **Book-1 byte-identical
+  by the named procedure (sol-1):** capture `--book book1 prereq-check`/`coverage-check`/`concept-scan`
+  stdout+exit BEFORE the change (or from `main`) and AFTER, and diff them equal; `--book book2
+  coverage-check` still PASS (no content yet → deferred).
 
 ### Phase B — U01 content (codex statements + blind solutions; inline manifest + wiring)
 
@@ -147,8 +149,8 @@ Blueprint (motivating problem → technique → laddered problem set; the `solve
 ### Phase C — Verification (NAMED, mandatory)
 
 Mechanical: `ruff` clean; `pytest` green; `--book book2` `manifest-check`/`structure-check`/
-`hygiene-check`/`cell-lint`/`noexec-check`/`stretch-check`/`exec-solutions`/`prereq-check`/
-`coverage-check`/`concept-scan` all PASS (U01 content clean; `concept-scan` sees only `str-split` +
+`hygiene-check`/`cell-lint`/`noexec-check`/`stretch-check`/`exec-solutions`/`exec-lessons`/
+`prereq-check`/`coverage-check`/`concept-scan` all PASS (U01 content clean; `concept-scan` sees only `str-split` +
 baseline features; no not-yet-taught Book-2 feature); solutions execute headless input-free with
 non-vacuous sample+edge asserts; manifest map-equal; Book-1 byte-identical; full `ci-local.sh` ALL
 GREEN (both books). Reviewer duties (both gates): blind-solve the problem set from the statements;
@@ -180,7 +182,7 @@ plan flags confirming each tolerates a partially-authored book.
 ### Reviews 2–3 — [fable] / [glm] (2026-09-07) → APPROVE WITH NITS, reconciled
 Both verified the Phase-A fix correct + Book-1-safe against `curriculum.py:247-282`, the solve
 contract airtight (CI bans `input()` in solutions), closure tight, and the "per-entry checks tolerate
-a partial book" claim EMPIRICALLY true (all seven pass on content-less Book 2). NITS, all folded in:
+a partial book" claim EMPIRICALLY true (all eight pass on content-less Book 2). NITS, all folded in:
 - **[FIXED] (glm-2, critical) two EXISTING tests encode the OLD gating** → Phase A.2 re-points them
   to author the capstone fixture dir (else pytest reds on the first Phase-A run).
 - **[FIXED] (glm-4, critical) `## Exercise N` headings** → `structure`/`stretch-check` count
@@ -194,16 +196,18 @@ a partial book" claim EMPIRICALLY true (all seven pass on content-less Book 2). 
 - **[FIXED] (glm-6c) no random** — reviewer/content-gate mutation-checked.
 - **[FIXED] (fable-7/glm) design-001 §4 heading slip** — units are 5 headings, not 6; errata-note it.
 
-### Carry-forwards (record; NOT plan-018's to fix)
-- **[OPEN → Term-4/capstone plan] U13/U14 have no pre-capstone practice home (fable-3):** `two-pointers`
-  @U14 is the LAST pre-capstone entry, and since no entry may practice its own introductions nor a
-  not-yet-introduced concept, nothing pre-capstone can legally practice U13's graph concepts or
-  `two-pointers` → when the capstone dir lands, `practice_findings` fires "only the capstone
-  practices: [...]" unavoidably. Book 1 escaped this because checkpoint-04 sat between its last unit
-  and the capstone. FIX in the Term-4 plan: add a 4th mock-contest checkpoint AFTER U14 (before the
-  capstone) that practices U13+U14 concepts, or otherwise restructure. (Phase-A semantics stay
-  correct — "must fire at the end" is by design.)
-- **[OPEN → design maintenance] design-001 §4** says units carry six teacher-notes headings incl.
+### Carry-forwards (DEFERRED — recorded, NOT plan-018's to fix; distinct from any `[OPEN]` gate item)
+- **[DEFERRED → Term-4/capstone plan] `two-pointers`@U14 has no pre-capstone practice home
+  (fable-3, corrected per sol-3):** `two-pointers` is introduced by U14, the LAST pre-capstone entry;
+  since no entry may practice its own introductions nor a not-yet-introduced concept, NO pre-capstone
+  entry can legally practice `two-pointers` → when the capstone dir lands, `practice_findings` fires
+  "only the capstone practices: [two-pointers, …]" unavoidably. (Correction: U13's graph concepts CAN
+  be practiced by U14, which comes after U13 — only `two-pointers`, U14's own introduction, is
+  strictly homeless.) Book 1 escaped this because checkpoint-04 sat between its last unit and the
+  capstone. FIX in the Term-4 plan: add a 4th mock-contest checkpoint AFTER U14 (before the capstone)
+  that practices U14's `two-pointers` (and can double as U13/U14 review), or otherwise restructure.
+  (Phase-A semantics stay correct — "must fire at the end" is by design.)
+- **[DEFERRED → design maintenance] design-001 §4** says units carry six teacher-notes headings incl.
   `## Rubric`; tooling + convention give units FIVE. Errata note (governance-light doc edit).
 
 ### Reconciliation (2026-09-07) — sol re-dispatched on round-2
@@ -211,3 +215,11 @@ fable + glm APPROVE WITH NITS (no blockers); all nits folded above. The round-1 
 known codex-sol failure mode — its subagent stalled ~33 min; two ORPHANED codex tasks from earlier
 sessions were also cleaned up); stopped it and re-dispatched a FRESH sol on the reconciled plan for
 round-2. Round-2 to all three on the revised HEAD.
+
+**Round-2: CONSENSUS REACHED — 4-way, no open blockers.** [self] APPROVE · [fable] APPROVE (traced
+the re-pointed tests stay non-vacuous) · [glm] APPROVE · [sol] APPROVE WITH NITS. sol's three nits,
+all folded: (1) named the Book-1 byte-identical capture-and-compare procedure in Phase-A acceptance;
+(2) added `exec-lessons` to the Phase-C command list + fixed the seven→EIGHT per-entry count; (3)
+corrected the U13/U14 carry-forward (U14 CAN practice U13's concepts — only `two-pointers` is
+strictly homeless). Carry-forwards retagged `[DEFERRED]` (glm) so they don't read as `[OPEN]` gate
+blockers. Plan-review gate CLOSED. Proceeding to implementation (Phase A).
