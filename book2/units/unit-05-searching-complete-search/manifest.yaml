@@ -1,0 +1,12 @@
+id: unit-05-searching-complete-search
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [binary-search, complete-search]
+  requires: [list-index, list-literal, comparison, while-loop, for-loop, nested-loops, arithmetic,
+             sorted-key, int-type]
+  practices: [str-split, input-parse, accumulator, builtin-functions, def-function, elif-else,
+              if-statement, list-append, list-sort, logical-ops, parameters, print, range-function,
+              return-value, string-concat, string-literal, type-conversion]

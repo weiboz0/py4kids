@@ -35,7 +35,10 @@ entries:
   lessons: 2
   introduces: [set-literal, set-ops, tuple, sorted-key]
   requires: [list-literal, list-sort, in-operator, def-function, parameters, for-loop, comparison]
-  practices: []
+  practices: [str-split, input-parse, accumulator, arithmetic, boolean, builtin-functions,
+              dict-literal, dict-access, if-statement, list-append, logical-ops, print,
+              range-function, return-value, string-concat, string-literal, type-conversion,
+              while-loop]
 - id: unit-05-searching-complete-search
   kind: unit
   title: "Searching & Complete Search"
@@ -43,7 +46,9 @@ entries:
   introduces: [binary-search, complete-search]
   requires: [list-index, list-literal, comparison, while-loop, for-loop, nested-loops, arithmetic,
              sorted-key, int-type]
-  practices: []
+  practices: [str-split, input-parse, accumulator, builtin-functions, def-function, elif-else,
+              if-statement, list-append, list-sort, logical-ops, parameters, print, range-function,
+              return-value, string-concat, string-literal, type-conversion]
 - id: checkpoint-01-mock-contest-1
   kind: checkpoint
   title: "Mock Contest 1"

@@ -1,0 +1,12 @@
+id: unit-04-sets-tuples-sorting
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [set-literal, set-ops, tuple, sorted-key]
+  requires: [list-literal, list-sort, in-operator, def-function, parameters, for-loop, comparison]
+  practices: [str-split, input-parse, accumulator, arithmetic, boolean, builtin-functions,
+              dict-literal, dict-access, if-statement, list-append, logical-ops, print,
+              range-function, return-value, string-concat, string-literal, type-conversion,
+              while-loop]
