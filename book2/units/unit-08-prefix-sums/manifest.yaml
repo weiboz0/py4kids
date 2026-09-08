@@ -1,0 +1,11 @@
+id: unit-08-prefix-sums
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [prefix-sum]
+  requires: [list-literal, list-append, for-loop, loop-counter, accumulator, grid-2d, nested-loops]
+  practices: [str-split, input-parse, arithmetic, comparison, def-function, if-statement,
+              logical-ops, parameters, print, return-value, string-concat, string-literal,
+              type-conversion, while-loop]
