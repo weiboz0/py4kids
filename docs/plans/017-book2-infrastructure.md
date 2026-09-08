@@ -285,6 +285,13 @@ Added the direct immutability test (sol's blocker). Re-verified: `pytest tests/t
 dispatched. The two `[OPEN]` items are explicitly scoped to the content plans (not plan-017) — the
 first is plan-018's opening task.
 
+**Content-gate CONSENSUS (round-2 on HEAD 804e0e8): 4-way APPROVE, no open blockers.**
+[self] APPROVE · [fable] APPROVE WITH NITS · [glm] APPROVE WITH NITS · [sol] APPROVE. sol round-2
+reproduced BOTH mutations (`taught_methods = TAUGHT_METHODS` and `MANUAL_ONLY |= techniques`) and
+confirmed the new test FAILS on each while passing on shipped code; 31 tests pass, ruff clean, Book-1
+byte-identical. The two `[OPEN]` items are carry-forwards for the content plans (plan-018 opens with
+the practice-completeness deferral refinement). Content-review gate CLOSED. Proceeding to PR.
+
 **Flat shared concept namespace.** Book-1 concept ids remain bare; Book-2 (and later books) add only
 globally-unique new ids; no `book1:`-qualified ids. Uniqueness is enforced across ALL registered
 books. This SUPERSEDES design-000's "namespaced by book" note and design-001 §6's `book1:for-loop`
