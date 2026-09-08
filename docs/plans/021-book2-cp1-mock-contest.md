@@ -187,4 +187,28 @@ no contradiction remains. glm/fable round-2 approvals stand (the fix only tighte
 
 ## Content Review
 
-_(4-way content-review gate — findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`, all resolve before merge)_
+### Round 1 (2026-09-08, HEAD dceeb38) — [self] APPROVE · [fable]/[glm] APPROVE-WITH-NITS · [sol] REJECT (1 [OPEN])
+All 6 reference solutions confirmed CORRECT (fable 3,000 differential trials 0 mismatches; glm + sol
+blind-solved and matched every sample). All reviewers confirmed: set-literal trim correct (zero `{…}` set
+literals; Q4 seeds with `set()`), no `.remove`/premature technique (Q6 = three nested loops, self-pair
+`j=i`/`k=j` both killed), Q4/Q5 decisive-last-after-sort killed, binary-search boundaries killed, closure
+clean, structure/metadata correct (6 sequential `## Question N`, empty cells, no stretch, wrapper markdown-
+only, teacher-notes six headings incl `## Grading`, manifest==map, 10 requires each exercised, practices
+Book-1-only). Findings (all fixed + verified):
+- **[FIXED] Q2 (fable+glm) — the `(badge or coach)` conjunct is never decisive.** Dropping `and (badge or
+  coach)` survived all asserts. Added `solve("1 0 0 0 0") == "CLOSED"` (pristine passes; mutant killed
+  deterministically).
+- **[FIXED] Q6 (sol) — outer-loop off-by-one `while i < n-2` → `n-3` survived** (no assert's only triple is
+  the final three positions). Added `solve("3 6\n1 2 3") == "1"` (pristine 1; mutant 0 → killed).
+- **[FIXED best-effort] Q4 (fable+glm) — tiebreak-drop `key=(-score,)`.** Added `solve("4 1\nEve 4\nMax 4\n
+  Uma 4\nBea 4") == "Bea 4"`. NOTE: this mutant is **inherently non-deterministic** — `records` is a set,
+  so a dropped name tiebreak leaves order to hash-randomized set iteration (glm tested ~300 PYTHONHASHSEEDs:
+  survives ~25%); no single assert can guarantee-kill it. The added assert improves coverage (~75% kill)
+  and documents the tiebreak with zero CI downside (the pristine full key `(-score, name)` sorts
+  deterministically, so the assert always passes for the reference). A real such bug would surface as flaky
+  output. Accepted as the best available hardening.
+All checks re-PASS after fixes (exec-solutions runs the 3 new asserts; cell-lint/concept-scan/manifest
+clean).
+
+### Round 2 — [self] APPROVE; [sol]/[glm]/[fable] dispatched (revised HEAD), pending
+Consensus recorded here once all four APPROVE; every `[OPEN]` resolves before merge.
