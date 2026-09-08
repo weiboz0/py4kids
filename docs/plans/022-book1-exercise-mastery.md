@@ -45,19 +45,32 @@ through by being un-listed as a phase target.
   count as practice), or only in a `stretch`/Challenge cell. Reading/tracing/predicting counts as
   active use ONLY for concepts a unit **deliberately keeps trace-only**, and every such exemption MUST
   be listed explicitly in that unit's phase (see the per-phase "Trace-only exemptions" lines).
-- **Grow the exercise SET (primary lever), WITH a pacing budget.** The default remediation is to ADD
-  new core exercises. Each under-practiced concept gets **≥2 varied authoring reps** (typically one
-  guided + one independent, different context), and each touched unit gains a small "more practice"
-  cluster. BUT growth must not push required mastery work past class time:
-  - Each unit phase states a **per-unit target core count** (before → after) and confirms an in-class
-    **60–90 min core path**. New exercises land in a clearly **labelled "More Practice" section**;
-    teacher-notes name which reps are in-class vs. homework; **≥1 of each concept's ≥2 reps sits on the
-    in-class path** (so no proficiency-critical rep is de-facto skippable like stretch).
-  - MINOR "fold into an existing exercise" items (explicitly tagged MINOR below) are EXEMPT from the
-    ≥2-new-exercises rule.
-  - **Exception — units 01 & 02 stay lean** (syllabus binds them to short sets at the most fragile
-    point): add the MINIMUM new exercises to close named gaps (one authoring rep per gap), not a
-    cluster.
+- **Quantity goal (concept-scaled depth — the plan's headline target, set by the author).** Growth is
+  measured per CONCEPT, not per unit:
+  - **Baseline: every concept** in a unit's `introduces ∪ practices` union appears in **≥3** distinct
+    student-authored (non-stretch) exercises.
+  - **Essential concepts: ≥5.** Each unit designates its ESSENTIAL (core/load-bearing) concepts —
+    typically its `introduces` spine plus the foundations it leans on (io/print, variables, if/elif,
+    for/while, functions, and the unit's headline new concept). These reach **≥5** distinct
+    student-authored exercises. The essential set is LISTED in each unit's phase (Phase V checks it).
+    (Not every introduced concept is essential — peripheral introduced concepts sit at the ≥3
+    baseline — this keeps concept-dense units within the pacing budget.)
+  - "Distinct authoring exercise per concept": one exercise counts once toward EVERY concept it makes
+    the student author (exercises are multi-concept, so spine concepts hit ≥5 quickly and the real lift
+    is bringing thin `practices` concepts to ≥3). Reading/tracing does NOT count except for a listed
+    trace-only exemption; `assert`-only and stretch-only uses do NOT count. MINOR "fold into an existing
+    exercise" items still produce a real authoring rep and DO count.
+  - **Applies to units 03–10.** **Units 01 & 02 are the lean exception** (syllabus binds them to short
+    sets at the most fragile point): they target ≥1 rep per concept + closing named gaps, NOT the
+    ≥3/≥5 depth target; this exception is recorded, not silently taken.
+- **Pacing budget (growth must not exceed class time).** Each unit phase states a per-unit **before →
+  after core count** and confirms an in-class **60–90 min core path**. Extra depth reps land in a
+  **labelled "More Practice"** area (a markdown label, NOT a heading level — exercises stay
+  `## Exercise N` so `EXERCISE_HEADING`/`solutions_structure` checks pass); teacher-notes name which
+  reps are in-class vs. homework; **≥1 rep of each concept sits on the in-class path** (so no
+  proficiency-critical rep is de-facto skippable like stretch). Hard ceiling: **no unit exceeds ~16
+  core exercises**, and each `solutions.ipynb` must run within the `exec-solutions` 120 s per-notebook
+  timeout (Phase V records before/after counts + `ci-local` duration).
   - Every new exercise still obeys all constraints (self-contained, non-stretch for core, assert-backed
     headless solution, no forward refs) and keeps the unit's project-first framing.
 - **Self-containedness is law.** Every new/modified exercise may use ONLY concepts introduced ≤ that
@@ -71,7 +84,19 @@ through by being un-listed as a phase target.
   from the terminal (headless notebooks) — solution/notebook cells must NOT `import turtle` (they run
   un-stubbed under `exec-solutions`); `____` placeholders live only in markdown/comments, never in code
   cells (`cell-lint` runs ruff F82); any `assets/*.py` referenced by a cell MUST exist (`ASSET_REF`)
-  and must `py_compile` + draw a closed shape (`turtle-check`).
+  and must `py_compile` + draw a **closed** shape (`turtle-check`: final position == first pen-down
+  position and heading ≡ 0 mod 360) unless the file carries a `# turtle-check: open-path` comment.
+- **Turtle nav is limited to `forward`/`backward`/`left`/`right`** (+ `penup`/`pendown`/`pensize`/
+  `color`). `tools/fake_turtle.py` does NOT stub `goto`/`setheading`/`stamp`/`circle`/`begin_fill`/…,
+  so authored `.py` assets must reposition via `penup`+`backward` patterns (the `l1_cards.py`/
+  `l3_stamps.py` precedent), never `goto` — `turtle-check`-green is stricter than `concept-scan`-green
+  here.
+- **Traceback-template exercises (the `error-messages` reps in Phases 4–6, 8):** the actual RAISING
+  line must live in **markdown** (or a `no-exec`-tagged STUDENT exercise cell), NEVER in a
+  `solutions.ipynb` code cell — `exec-solutions` runs solution notebooks in full with no `no-exec`
+  filtering and `try/except` is untaught, so a raising line would crash CI. Solutions record the
+  diagnosis/fix as code + `assert`; the traceback text is shown in markdown (hygiene forbids stored
+  outputs).
 - **Stretch rule:** every touched unit keeps ≥1 `stretch` ("Challenge") exercise and core never depends
   on stretch. New CORE exercises added here must NOT be `stretch` — the point is to move
   proficiency-critical practice OUT of stretch into core.
@@ -83,8 +108,9 @@ through by being un-listed as a phase target.
      pre-capstone practicer of `turtle-drawing`; `practice_findings` would report "only the capstone
      practices turtle-drawing". [fable] B1.)
   2. **unit-05:** ADD `turtle-drawing` to `practices` (introduced unit-03; unit-05 already `requires`
-     it; Ex6 authors `penup()/pendown()` and Phase 2.4's grid plan will too — requires∩practices
-     overlap is allowed, project-01 precedent).
+     it). The genuine pen/color AUTHORSHIP that earns this tag lives in the NEW Phase 2.4 grid program
+     (not Ex6, whose `penup()/pendown()` are given lines with only blanks to fill) — the content gate
+     looks for the authorship there. requires∩practices overlap is allowed (project-01 precedent).
   3. **unit-09:** ADD `elif-else` to `practices` (introduced unit-02) — required because Phase 6.2 adds
      an `if…else` branch and `concept-scan` flags `elif-else` on any non-empty `orelse`. [fable] B3.
   4. **units 07, 08, 09, 10:** DROP `input` from `practices` (Sol false-practice finding). Verified
@@ -100,7 +126,10 @@ through by being un-listed as a phase target.
   MAY add that concept to the entry's `practices` (map + manifest) provided it is introduced ≤ the
   entry (closure), is NOT in the entry's `introduces`, and no `introduces`/`requires` changes. This
   gives implementers a sanctioned path (used by reconciliations 2–3) instead of an un-owned scan
-  failure.
+  failure. The enumerated set above is the KNOWN reconciliations; any ADDITIONAL scanner-derived
+  addition made under this rule during implementation MUST be listed in the post-execution report (so
+  "full set" stays honest). Note the scanner observes lessons, exercises, solutions, AND assets — not
+  only the newly-required exercise.
 - **Do not touch:** `introduces`/`requires` lists; Book-2 anything; governance files (CLAUDE.md,
   docs/development-workflow.md, docs/content-review-gate.md, docs/architecture/decisions.md).
 - Process (standing): branch `feature/plan-022-book1-exercise-mastery`; no commits while a `[sol]`
@@ -130,11 +159,12 @@ through by being un-listed as a phase target.
 
 ## Implementation & gate batching
 
-To keep the content gate's 4-way blind-solve tractable (~35–45 new/modified exercises), implementation
-ships as **two PRs, each through its own content-review gate**: **PR-A = Term 1–2** (Phases 1, 2, 3 +
-the CP2/unit-05 metadata) and **PR-B = Term 3–4** (Phases 4–8). Both PRs share this one plan file; each
-carries its own post-execution report + content-review section. (Non-blocking structure; a single PR is
-permissible if the gate roster prefers it.)
+To keep the content gate's 4-way blind-solve tractable, implementation ships as **two PRs, each through
+its own content-review gate**: **PR-A = Term 1–2** (Phases 1, 2, 3 **plus Phase 8.1's atomic
+CP2-drop + unit-05-add of `turtle-drawing`**, which must ship together with the unit-05 content that
+earns it) and **PR-B = Term 3–4** (Phases 4–7 + Phase 8 items 2–6). Both PRs share this one plan file;
+each carries its own post-execution report + content-review section. (Non-blocking structure; a single
+PR is permissible if the gate roster prefers it.)
 
 ## Phases
 
@@ -142,15 +172,35 @@ Dispatch per AGENTS.md: exercise STATEMENTS and SOLUTIONS to Codex (GPT-5.6-sol)
 separate fresh session; teacher-notes alignment inline; metadata reconciliations inline.
 
 Per-phase acceptance (EVERY phase unless noted):
-- Each named target concept is actively exercised in a NON-stretch cell (proficiency bar), with ≥2
-  varied authoring reps (units 01–02: ≥1; MINOR fold-ins exempt); the unit's core count moves from its
-  stated before→after and keeps a 60–90 min in-class core path.
+- Each named target concept is actively exercised in NON-stretch cells (proficiency bar). **Quantity
+  goal met (units 03–10):** every concept in the unit's union reaches **≥3** distinct student-authored
+  exercises, and each **essential** concept (listed in the phase) reaches **≥5** (counted per Global
+  Constraints; MINOR fold-ins count). **Units 01–02 (lean exception):** ≥1 rep per concept + named gaps
+  closed. The unit's core count moves from its stated before→after, keeps a 60–90 min in-class core
+  path, and stays ≤16 core.
 - Matching `solutions.ipynb`/asset cells run clean (fixed seeds / `no-exec` inputs) with `assert`
   self-checks that would catch the intended mistake.
 - `manifest-check` / `coverage-check` / `prereq-check` PASS; `concept-scan` GREEN; notebook execution +
   hygiene + `cell-lint` + `ASSET_REF` + `turtle-check` (where assets change) PASS.
 - Unit keeps ≥1 `stretch`; no core depends on stretch; no forward references; trace-only exemptions
   listed.
+
+**Per-unit core-count targets & essential concepts** (current core measured 2026-09-08; essential = ≥5
+reps, all other union concepts ≥3; units 01–02 lean = ≥1). Targets are the pacing envelope (≤16 core);
+Phase V enforces the per-concept rep counts.
+
+| Unit | core now → target | Essential concepts (≥5 reps) |
+|------|------------------|------------------------------|
+| 01 (lean) | 6 → 7 | print, variable, input, string-concat, f-string |
+| 02 (lean) | 6 → 8 | int-type, arithmetic, comparison, if-statement, elif-else, while-loop, type-conversion |
+| 03 | 6 → 10 | turtle-basics, turtle-drawing, for-loop, range-function, loop-counter |
+| 04 | 7 → 10 | accumulator, logical-ops, conditional-nesting, break-statement |
+| 05 | 6 → 11 | def-function, parameters, return-value, scope |
+| 06 | 7 → 11 | string-index, string-slice, string-methods, in-operator |
+| 07 | 9 → 13 | list-literal, list-index, list-append, list-loop, list-sort |
+| 08 | 11 → 14 | dict-literal, dict-access, dict-loop |
+| 09 | 8 → 12 | file-read, file-write, with-statement |
+| 10 | 8 → 12 | class-def, init-method, attributes, methods |
 
 ### Phase 1 — unit-03-turtle-art-studio (WEAK) — target core 6 → ~9
 
@@ -271,7 +321,7 @@ shallow, dict key-only iteration never.
 7. Align teacher-notes.
 - Trace-only exemptions (unit-07/08): none.
 
-### Phase 6 — units 09 & 10 — target core 09: 8→~12, 10: 10→~13. Adds unit-09 `elif-else` (recon. 3)
+### Phase 6 — units 09 & 10 — target core 09: 8→12, 10: 8→12. Adds unit-09 `elif-else` (recon. 3)
 
 Gaps unit-09: `error-messages` MISSING, `if-statement` trivial always-true, no edge cases, 6/8 near-
 verbatim lesson copies. unit-10: `list-index` near-MISSING, no integrative full-`Pet`, `pass_time`
@@ -280,6 +330,11 @@ unpracticed, `dict-literal` shallow, `error-messages` passive.
 1. **unit-09 error-messages (traceback template).** A study/`no-exec` exercise showing a
    `FileNotFoundError` traceback; student names the missing file and writes the **"save before load"
    ordering fix** (NO existence check — `os.path`/`pathlib`/`try/except` are untaught, forward-ref).
+1b. **unit-09 f-string authoring ([sol] blocker).** `f-string` is a unit-09 `practices` tag but Ex4 only
+   asks for a "friendly message" and only the SOLUTION uses an f-string — the exact "listed-but-
+   solution-only" pattern this plan targets. Add a core exercise (or amend Ex4's statement) that
+   REQUIRES a student-authored f-string reporting loaded data (e.g. `print(f"{name} — high score
+   {score}")`), so the tag is earned in a student cell.
 2. **unit-09 real branch (adds `elif-else` tag, recon. 3).** Extend the `if "Ada" in info` exercise to
    `if…else` and test a name NOT present so both paths execute. Add `elif-else` to unit-09 `practices`
    (introduced unit-02) so `concept-scan` stays GREEN.
@@ -305,30 +360,37 @@ not graded; `list-index` only in asserts; traceback under-prepared.
 
 1. **project-01.** Remove the `return` line from ONE required milestone's game function so the student
    authors `return` in a required (non-stretch) path. Keep reference + rubric aligned.
-2. **project-02.** (a) Require ≥1 student-authored class METHOD on `Hero` with a parameter + return
-   (`describe`/`move` exist in the reference) as a graded RUBRIC line — closes both the "no graded
-   methods" gap AND the audit's manifest-honesty note that `def-function`/`parameters`/`return-value`
-   are solution-only. (b) Promote the "assemble the four scaffolds into one coherent program" synthesis
+2. **project-02.** (a) Require ≥1 student-authored class METHOD on `Hero` with a parameter + return as a
+   graded RUBRIC line — the reference's `Hero.take_damage(self, amount)` (returns `self.health`) is the
+   parameter+return exemplar (NOT `describe`/`move`, which are module-level functions, per [fable]);
+   closes the "no graded methods" gap AND the audit's manifest-honesty note that `def-function`/
+   `parameters`/`return-value` are solution-only. (b) Promote the "assemble the four scaffolds into one
+   coherent program" synthesis
    step from a TODO into a named, rubric-scored milestone. (c) Require one student-authored `list-index`
    on the graded path. Traceback readiness is declared resolved upstream by Phase 6 (state so in the
    rubric). Keep the exemplar correct (`seed(4)` reproducibility) + self-contained.
 3. Align each project's teacher-notes/rubric. Acceptance: references run clean with fixed seeds; rubric
    lines match new required work; no new concept introduced.
 
-### Phase 8 — checkpoint & metadata reconciliations (MINOR, inline)
+### Phase 8 — checkpoint & metadata reconciliations (MINOR, inline; item 1 ships with PR-A)
 
-1. **CP2 + unit-05 turtle-drawing (reconciliations 1–2):** DROP `turtle-drawing` from checkpoint-02
-   `practices` AND ADD it to unit-05 `practices` (both surgical, map+manifest). Verify `coverage-check`
-   no longer reports capstone-only, and `manifest`/`prereq`/`concept-scan` PASS.
+1. **CP2 + unit-05 turtle-drawing (reconciliations 1–2) — ships in PR-A** (atomic with the unit-05
+   content that earns it): DROP `turtle-drawing` from checkpoint-02 `practices` AND ADD it to unit-05
+   `practices` (both surgical, map+manifest). Verify `coverage-check` no longer reports capstone-only,
+   and `manifest`/`prereq`/`concept-scan` PASS. (Items 2–6 ship in PR-B.)
 2. **CP3 Q6:** adjust the data so the `elif`/`else` branch is reachable (a key absent on one path) so
    the branch executes and the solution's `assert` proves it.
 3. **CP3 Q8 → (b):** make the student read the actual `KeyError` first (traceback template).
 4. **input false-practice (reconciliation 4):** DROP `input` from `practices` in units 07, 08, 09, 10
    (pure metadata + teacher-notes alignment; decision (a), RED-safe per Global Constraints). Record per
    unit.
-5. **CP1 string-concat (reconciliation 5):** confirm CP1 genuinely practices `string-concat` (now
-   taught upstream by Phase 3.1); if Q1 only shows it as a broken line, adjust Q1 to author concat or
-   note the disposition.
+5. **CP1 string-concat (reconciliation 5) — BINDING ([sol] blocker).** CP1 Q1 currently shows broken
+   concatenation as prose and has the student REPLACE it with an f-string, so the `string-concat`
+   `practices` tag is unearned (and no CI check catches a listed-but-unused concept). Resolve it with a
+   real action — NOT a "note": EITHER (a) amend CP1 Q1 so the student AUTHORS a `+` concatenation
+   (now taught upstream by Phase 3.1), OR (b) DROP `string-concat` from checkpoint-01's `practices`
+   (map + manifest). Default (a). `string-concat` stays practiced pre-capstone regardless (units 07–09),
+   so either is coverage-safe.
 6. **unit-09 elif-else (reconciliation 3):** applied in Phase 6.2; re-verify here.
 - Checkpoints otherwise stay as shipped (proficiency risk resolved upstream by Phases 1–6).
 
@@ -340,16 +402,23 @@ Mechanical (authoritative — `scripts/ci-local.sh` is the gate, design §4):
   `cell-lint` + `ASSET_REF` + `turtle-check`, `manifest-check`/`coverage-check`/`prereq-check`,
   `concept-scan` (zero used-but-unlisted across all entries after the reconciliation set),
   stretch-check, PDF build, pre-merge guard. `bash scripts/pre-merge-guard.sh --pr` OK.
-- **Volume budget observed:** record before→after core-exercise counts per touched unit and notebook
-  cell/page counts + `ci-local` duration, so volume/PDF regressions are visible before the gate.
+- **Volume budget (numeric pass/fail, not just "recorded"):** record before→after core counts per
+  touched unit and notebook cell/page counts + `ci-local` duration. FAIL the phase if any unit exceeds
+  **16 core exercises**, if any `solutions.ipynb` exceeds the `exec-solutions` **120 s** per-notebook
+  timeout (a hard CI limit already), or if the PDF build fails. Flag for human review if total
+  `ci-local` wall-time grows **> 25 %**.
 
 Proficiency (reviewer-enforced — Phase V is NOT met without this):
-- **Whole-union inventory (not target-only):** for EACH touched unit, a reviewer walks the COMPLETE
-  `introduces ∪ practices` union and records, per concept, the non-stretch student-authored evidence
-  (exercise/asset cell) OR its listed trace-only exemption. No concept in the union may be left with
-  neither. (This is why Phase V exceeds the named remediation list — [sol] blocker 2.)
+- **Whole-union inventory with rep COUNTS (not target-only, not just ≥1):** for EACH touched unit, a
+  reviewer walks the COMPLETE `introduces ∪ practices` union and records, per concept, the COUNT of
+  non-stretch student-authored exercises that use it. Bar: **≥3** for every concept, **≥5** for each
+  listed essential concept (units 03–10); **≥1** for units 01–02. A concept below its bar must be
+  either raised or carry a listed trace-only exemption (with justification). No concept left below bar
+  and unexplained. (This is why Phase V exceeds the named remediation list — [sol] blocker 2 + the
+  quantity goal.)
 - Each added exercise's solution `assert` would catch the intended mistake; ≥1 rep of each concept is
-  on the in-class path.
+  on the in-class path; any conditional scanner-derived `practices` addition is listed in the
+  post-execution report.
 - No `introduces`/`requires` changed; the enumerated reconciliation set applied (map == manifest,
   closure + `practices ∩ introduces` empty); every touched unit keeps ≥1 stretch, no core depends on
   stretch, no new forward references.
@@ -399,13 +468,48 @@ Round-2 plan (above) folds ALL blockers and nits: CP2/unit-05 `turtle-drawing` s
 note + trace-only exemption lists + project-02 disposition + Term-batched PRs ([fable] nits). All four
 plan-review fork answers adopted. **Re-dispatching [sol]/[glm]/[fable] for round-2 confirmation.**
 
-### Round 2
+### Round 2 (2026-09-08)
 
-- **[self] → APPROVE.** All round-1 blockers/nits addressed in the round-2 plan; forks resolved by
-  consensus; Phase V now enforces the whole-union bar with a pacing budget.
-- **[sol] → (pending round-2)**
-- **[glm] → (pending round-2)**
-- **[fable] → (pending round-2)**
+- **[self] → APPROVE.**
+- **[fable] → APPROVE WITH NITS (no blockers).** Mechanically applied the full reconciliation set +
+  a simulated unit-09 `if/else` to a scratch copy and ran the real checkers: coverage/prereq/manifest/
+  concept-scan all GREEN; reproduced the CP2-drop-only and unit-09-without-elif-add FAILs (confirming
+  those fixes necessary). 7 CI-grounded nits: cite `Hero.take_damage` (not `describe`/`move`); turtle
+  nav limited to `forward/back/left/right` (fake_turtle stub surface); grid must close or carry
+  `# turtle-check: open-path`; traceback RAISING lines in markdown not solution cells; ASSET_REF +
+  second turtle rep must be a `.py` asset; "More Practice" a label not a heading; "Phase 8 except 8.1".
+- **[glm] → APPROVE WITH NITS (no blockers).** Re-verified all reconciliations against the tools
+  (drop-only vs drop+add coverage FAIL; unit-09 zero current `orelse`; zero `input(` in 07–10 cells;
+  pre-authorization rule bounded + CI-safe). 3 nits: PR-8.1-in-PR-A wording; recon-2 rationale should
+  point authorship at Phase 2.4 (not Ex6); Phase 5.4 boolean must place real authorship in core +
+  Phase V confirm unit-07 boolean.
+- **[sol] → REJECT (2 blockers + 3 nits).** Confirmed round-1 blockers 2–4 resolved + metadata CI-clean.
+  Remaining: (B1) unit-09 `f-string` has no remediation action (listed practice, solution-only); (B2)
+  CP1 `string-concat` disposition non-binding ("or note"). Nits: numeric volume ceiling (not just
+  "record"); enumerate conditional scanner-derived adds; before→after counts for units 01/02/04.
+
+### Round-2 reconciliation (2026-09-08)
+
+Round-3 plan (above) folds everything: **[sol] B1** → new Phase 6.1b (unit-09 f-string authoring rep);
+**[sol] B2** → Phase 8.5 now BINDING (author concat or drop the tag); [sol] nits → numeric volume
+budget in Phase V (≤16 core, 120 s exec-solutions, PDF, >25% wall-time flag), scanner-derived adds
+enumerated in post-exec, and a per-unit core-count + essential-concept table (covers 01/02/04);
+**[fable] nits** → `Hero.take_damage` cited, turtle-nav + grid-closure + traceback-in-markdown + ASSET
+constraints added to Global Constraints, "More Practice" as a label, Phase 8.1→PR-A; **[glm] nits** →
+recon-2 rationale re-pointed to Phase 2.4, Phase 5.4 authorship + Phase V unit-07 boolean, 8.1-in-PR-A.
+**Also folds the author's ≥3/≥5 quantity goal** (baseline ≥3 per union concept, ≥5 per listed essential
+concept; units 01–02 lean) into Global Constraints, per-phase acceptance, the target table, and Phase V.
+**Re-dispatching [sol]/[glm]/[fable] for round-3 confirmation** (the quantity goal is a new,
+author-directed scope change all three should see for CI/pacing feasibility).
+
+### Round 3
+
+- **[self] → APPROVE.** Both [sol] blockers now have binding actions; all nits folded; the quantity
+  goal is expressed as an enforceable per-concept bar with a pacing ceiling and an essential-concept
+  table. No open blockers from my seat.
+- **[sol] → (pending round-3)**
+- **[glm] → (pending round-3)**
+- **[fable] → (pending round-3)**
 
 ## Content Review
 
