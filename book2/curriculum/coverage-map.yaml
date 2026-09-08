@@ -113,7 +113,10 @@ entries:
   lessons: 2
   introduces: [deque, postfix-eval]
   requires: [list-literal, list-append, import-statement, for-loop, str-split, arithmetic, in-operator]
-  practices: []
+  practices: [accumulator, break-statement, builtin-functions, comparison, def-function,
+              dict-literal, elif-else, if-statement, logical-ops, nested-loops, parameters,
+              print, return-value, string-concat, string-literal, string-methods,
+              type-conversion, while-loop]
 - id: unit-11-number-systems-bitwise
   kind: unit
   title: "Number Systems, Bitwise & Number Theory"
