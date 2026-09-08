@@ -39,10 +39,19 @@ uv run py4kids-tools --book book1 concept-scan
 uv run py4kids-tools --book book1 stretch-check
 uv run py4kids-tools --book book1 turtle-check
 
-# Book 2: MAP-LEVEL checks only (no content dirs yet — per-entry checks come online per-unit).
+# Book 2: map-level checks + per-entry checks (per-entry iterate existing dirs, so they cover
+# authored units and are inert for unauthored entries).
 uv run py4kids-tools --book book2 prereq-check
 uv run py4kids-tools --book book2 coverage-check
 uv run py4kids-tools --book book2 concept-scan
+uv run py4kids-tools --book book2 manifest-check
+uv run py4kids-tools --book book2 structure-check
+uv run py4kids-tools --book book2 hygiene-check
+uv run py4kids-tools --book book2 cell-lint
+uv run py4kids-tools --book book2 noexec-check
+uv run py4kids-tools --book book2 stretch-check
+uv run py4kids-tools --book book2 exec-solutions
+uv run py4kids-tools --book book2 exec-lessons
 
 step "5/6 PDF build"
 bash scripts/build-pdf.sh --book book1

@@ -164,6 +164,54 @@ GREEN with Book-2 per-entry checks wired; plan-review + content-review 4-way con
 
 ---
 
+## Post-Execution Report (2026-09-07)
+
+**Status: implemented, Phases A–C GREEN. Content gate next.**
+
+- **Phase A (fix, codex, committed `cfd5c85`):** `practice_findings` now gates the pre-capstone rule
+  on the CAPSTONE project dir existing (guarded `capstone_id is None`→False); overlap/duplicate checks
+  stay unconditional. Re-pointed the two existing tests to author the capstone fixture; added
+  unit-only-deferral / authored-capstone-enforcement / finale-less tests. `ruff` clean; `pytest` 407
+  pass (34 book2 tooling tests); Book-1 prereq/coverage/concept-scan byte-identical; Book-2
+  coverage-check deferred (no capstone dir).
+- **Phase B (U01 content):** `lesson.ipynb` (opens on "read N then N ints, print sum+max"; teaches
+  `.split`/`int()`/N-then-N/grid parsing + the `solve(data)->str` contract; submission wrapper in a
+  `no-exec` cell; six executable demos run headless incl. `solve("3\n4 9 2")=="15 9"`),
+  `exercises.ipynb` (9 `## Exercise N`, 2 stretch, empty student cells), `solutions.ipynb`
+  (blind-authored; 9 pure `solve(data)` fns, 9 assert cells with sample+edge non-vacuous asserts, no
+  `input()`/forbidden methods/comprehensions), `teacher-notes.md` (5 headings + per-exercise Big-O),
+  `manifest.yaml` map-equal. Map U01 entry amended: `requires` TRIMMED of `file-read`/`with-statement`
+  (+`string-methods`, unused — glm-6a) to the genuinely-used prereqs; `practices` = the 11
+  scanner-derived Book-1 concepts exercised (`practices ∩ introduces` empty). `file-read`/
+  `import-statement` from the no-exec wrapper are excluded (demo-only; baseline-allowed, so
+  concept-scan is clean either way).
+- **Phase C (verification):** all 11 Book-2 checks PASS with U01 authored (manifest/structure/hygiene/
+  cell-lint/noexec/stretch/exec-solutions/exec-lessons/prereq/coverage/concept-scan); `concept-scan`
+  sees only the `str-split` feature (input-parse/grid-2d techniques; no untaught methods). Wired the
+  Book-2 per-entry checks (incl. `exec-lessons`) into `ci-local.sh`. Full `ci-local.sh` run for both
+  books (see final line).
+
+---
+
+## Content Review
+
+Roster + tags per the plan-review gate; findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`; all `[OPEN]` resolve
+before merge.
+
+### Review 1 — [self] (2026-09-07) → APPROVE
+Verified U01 against the plan. The `solve(data:str)->str` contract holds: 9 pure functions, ZERO
+`input()` in executable cells (exec-solutions runs them headless), the submission wrapper isolated to
+a `no-exec` lesson cell, sample+edge asserts (9 assert cells) — non-vacuous (a wrong parse fails).
+Closure clean: `concept-scan` detects only `str-split` (the one new feature); `input-parse`/`grid-2d`
+are reviewer-enforced techniques; no `.join`/`.splitlines`/`.index`/`.count`/`.find`, no sets/tuples/
+comprehensions/recursion/random. Manifest == map; `requires` trimmed to genuinely-used; practices are
+the 11 Book-1 concepts exercised. Phase A fix is correct + Book-1-safe (407 pass, byte-identical).
+Teacher-notes: 5 headings + per-exercise Big-O. NIT (non-blocking): U01's map `practices` omits the
+no-exec-wrapper-only `file-read`/`import-statement` (defensible — a demo cell, and both are
+baseline-allowed so concept-scan is unaffected); a reviewer could argue either way.
+
+---
+
 ## Plan Review
 
 ### Review 1 — [self] (2026-09-07)
