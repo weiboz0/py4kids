@@ -65,7 +65,7 @@ Copied from the design + registry + prior-gate lessons; every task's requirement
 ## Out of scope
 
 - No new feature or tooling change; no checkpoint (CP2 is plan 024, assesses U06–U08).
-- **Verification is NOT out of scope:** Phase C is the named verification phase (blind-solve + mutation +
+- **Verification is NOT out of scope:** **Phase B** is the named verification phase (blind-solve + mutation +
   full ci-local + 4-way content gate).
 
 ---
@@ -93,7 +93,9 @@ Copied from the design + registry + prior-gate lessons; every task's requirement
 - [ ] **A2 — exercises.ipynb.** ≥ 8 `## Exercise N` `solve(data)` problems that REQUIRE prefix sums
   (constraints make per-query recomputation too slow, or a 2D sub-rectangle sum is asked): many 1D range-sum
   queries, count-in-range via prefix counts, max/target range using cumulative sums, 2D sub-rectangle sum,
-  count/aggregate over a grid region, a difference-array-style update-then-query. ≥ 2 `stretch`. EMPTY
+  count/aggregate over a grid region, longest/best window whose running total meets a bound. All problems
+  are solvable with plain 1D/2D prefix-sum reasoning as taught in A1 — do NOT introduce a difference-array
+  or any un-taught trick (taught-before-assessed is law). ≥ 2 `stretch`. EMPTY
   student cells; Sample I/O + Constraints; INTEGER outputs; decisive cells at the last position / last
   row-column. Statements unambiguous.
 - [ ] **A3 — solutions.ipynb (FRESH author, blind).** Mirror `## Exercise N`; pure `solve(data)`; build
@@ -109,8 +111,11 @@ Copied from the design + registry + prior-gate lessons; every task's requirement
   `input-parse` if not in requires); `requires ∩ practices = ∅`, `practices ∩ introduces = ∅`; `lessons: 2`;
   manifest == map.
 - [ ] **A6 — verify U08 in isolation:** all `--book book2` checks PASS; concept-scan clean (ad-hoc `detect()`
-  shows no premature FEATURE); **grep** for `.remove(`, `* (`/`]*`, `<= .* <`, and the banned builtins;
-  prefix-sum genuinely taught + used.
+  shows no premature FEATURE). For the scanner-blind slips, run an **AST check** over every code cell (more
+  robust than grep): flag any `ast.Compare` with `len(node.ops) > 1` (chained comparison) and any
+  `ast.BinOp` with `ast.Mult` where either operand is a list (`ast.List`) — i.e. list-repetition; also grep
+  `.remove(` and the banned builtins (`all`/`any`/`enumerate`/`zip`/`reversed`/`map`/`filter`). Confirm
+  prefix-sum is genuinely taught + used.
 
 ### Phase B — Verification (named verification phase)
 
@@ -137,7 +142,22 @@ _(filled at Phase B)_
 
 ## Plan Review
 
-_(4-way plan-review gate verdicts recorded here before implementation)_
+### Round 1 (2026-09-08, HEAD dbdbc0f) — CONSENSUS: [self] APPROVE · [glm]/[fable]/[sol] APPROVE-WITH-NITS
+No closure hole and no blocker from any reviewer. All three independently verified against `concept_scan.py`
+that the closure boundary is correct — the premature list (recursion/backtracking U09, deque/`.pop` U10,
+comprehension U09, bitwise-ops/base-conversion U11, two-pointer U14) and the scanner-BLIND bans (`.remove`
+silently set-credited, bare-name builtins unreported, list-repetition reads as arithmetic, chained comparison
+collapses to `comparison`) are right and correctly assigned to grep/AST + review (with `.pop` correctly
+scanner-caught via the unknown-method path). Two-tier practices, mutation focus (±1 prefix index + 2D
+inclusion-exclusion), integer-only outputs, and Phase B verification all PASS. Non-blocking nits folded:
+- **[FIXED] (all three) stale "Phase C" label** in Out of scope → Phase B.
+- **[FIXED] (glm+fable) difference-array exercise** not covered by the lesson/checklist → removed from A2
+  (replaced with a running-total-window prefix-sum problem); A2 now states taught-before-assessed explicitly.
+- **[FIXED] (fable) A6 scanner-blind check hardened** — replaced under-inclusive greps with an AST check
+  (`ast.Compare len(ops)>1` for chained comparison; `ast.BinOp` Mult with a list operand for list-repetition),
+  the same method the plan-022 remediation used.
+
+**Plan-review gate CLOSED — 4-way consensus, zero blockers. Cleared for implementation (Phase A).**
 
 ## Content Review
 
