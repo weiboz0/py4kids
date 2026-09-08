@@ -66,14 +66,18 @@ entries:
   lessons: 2
   introduces: [greedy]
   requires: [sorted-key, list-sort, for-loop, accumulator, tuple, comparison]
-  practices: []
+  practices: [str-split, input-parse, arithmetic, boolean, builtin-functions, def-function,
+              if-statement, list-append, list-literal, logical-ops, nested-loops, parameters,
+              print, range-function, return-value, string-methods, type-conversion, while-loop]
 - id: unit-07-simulation
   kind: unit
   title: "Simulation & Ad Hoc"
   lessons: 2
   introduces: [simulation]
   requires: [for-loop, while-loop, if-statement, list-literal, accumulator, grid-2d, input-parse]
-  practices: []
+  practices: [str-split, arithmetic, builtin-functions, comparison, def-function, elif-else,
+              list-append, logical-ops, nested-loops, parameters, print, range-function,
+              return-value, string-concat, string-literal, type-conversion]
 - id: unit-08-prefix-sums
   kind: unit
   title: "Prefix Sums"

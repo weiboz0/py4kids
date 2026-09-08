@@ -1,0 +1,11 @@
+id: unit-07-simulation
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [simulation]
+  requires: [for-loop, while-loop, if-statement, list-literal, accumulator, grid-2d, input-parse]
+  practices: [str-split, arithmetic, builtin-functions, comparison, def-function, elif-else,
+              list-append, logical-ops, nested-loops, parameters, print, range-function,
+              return-value, string-concat, string-literal, type-conversion]
