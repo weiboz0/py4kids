@@ -1,0 +1,12 @@
+id: unit-01-reading-the-input
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [input-parse, str-split, grid-2d]
+  requires: [def-function, parameters, return-value, for-loop, list-literal, list-append,
+             int-type, type-conversion, print]
+  practices: [arithmetic, comparison, if-statement, builtin-functions, f-string,
+              string-literal, string-concat, accumulator, nested-loops, range-function,
+              logical-ops]

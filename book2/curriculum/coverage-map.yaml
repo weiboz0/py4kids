@@ -5,9 +5,11 @@ entries:
   title: "Reading the Input"
   lessons: 2
   introduces: [input-parse, str-split, grid-2d]
-  requires: [for-loop, string-methods, type-conversion, int-type, list-literal, list-append,
-             def-function, parameters, return-value, print, with-statement, file-read]
-  practices: []
+  requires: [def-function, parameters, return-value, for-loop, list-literal, list-append,
+             int-type, type-conversion, print]
+  practices: [arithmetic, comparison, if-statement, builtin-functions, f-string,
+              string-literal, string-concat, accumulator, nested-loops, range-function,
+              logical-ops]
 - id: unit-02-boolean-logic
   kind: unit
   title: "Boolean Logic & Algebra"
