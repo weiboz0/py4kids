@@ -1,0 +1,11 @@
+id: unit-02-boolean-logic
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [boolean-algebra, code-tracing]
+  requires: [boolean, logical-ops, comparison, if-statement, elif-else, print, variable]
+  practices: [str-split, input-parse, def-function, parameters, return-value, for-loop,
+              range-function, list-literal, accumulator, arithmetic, nested-loops,
+              string-literal, string-methods, type-conversion]
