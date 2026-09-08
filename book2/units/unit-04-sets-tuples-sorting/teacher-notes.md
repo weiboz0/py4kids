@@ -77,5 +77,5 @@ Class works Exercises 5, 6, 8, 9 (leaderboard, top-K boundary, partner groups, a
 5. Final Leaderboard — O(n log n) (compound-key sort).
 6. Last Player in the Top K — O(n log n) (sort, then read index K−1).
 7. Unique Allowed Codes — O(n) (dedup then remove the banned set).
-8. Partner Groups *(stretch)* — O(n) (dedup tuple records into a set, `len`).
+8. Partner Groups *(stretch)* — O(n) (count `(grade, color)` records in a dict, pairing off and resetting each group's counter on every second match).
 9. Allowed Finalists *(stretch)* — O(n log n) (membership filter, then compound-key sort).

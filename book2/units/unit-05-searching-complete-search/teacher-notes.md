@@ -87,4 +87,4 @@ then revisits any Lesson 1–2 problem students found hard.
 6. Three Values Make the Target — O(n³) worst case (fixed-depth triple loop, small N).
 7. Smallest Delivery Capacity — O(n log(Σ)) (binary search over the answer, O(n) feasibility check).
 8. Values in Each Range *(stretch)* — O((n + q) log n) (two bounds per query).
-9. Sum-and-Product Lock *(stretch)* — O(n²) (fixed-depth complete search over candidate pairs).
+9. Sum-and-Product Lock *(stretch)* — O(1) (fixed-depth complete search over a constant domain: every 3-digit combination, ~10³ candidates, independent of the input size).
