@@ -186,4 +186,24 @@ CLOSED — cleared for implementation (Phase A).**
 
 ## Content Review
 
-_(4-way content-review gate — findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`, all resolve before merge)_
+### Round 1 (2026-09-08, HEAD 254591e) — [self] APPROVE · [glm]/[fable] APPROVE-WITH-NITS · [sol] REJECT
+All reviewers confirmed the 6 solvers CORRECT (blind-solved; fable 2,400 differential trials 0 mismatch)
+and the SUITE otherwise strong: AST closure clean (0 chained comparisons, 0 list-repetitions, no premature
+technique/`.remove`/untaught builtin); structure/metadata exact (6 sequential `## Question N`, empty cells,
+no stretch, wrapper markdown-only, cell IDs; teacher-notes six headings incl `## Grading` summing to 100;
+manifest==map; requires = the 8 genuinely-assessed U01–U08 introduces, each exercised; practices Book-1-only;
+`requires ∩ practices = ∅`); 2-each Term-2 coverage. The one convergent finding — an assert-coverage gap on
+a CORRECT solver — is fixed:
+- **[FIXED] Q2 (glm+fable+sol) — the grid-robot wall/boundary check was never decisive.** Both signature
+  mutants survived all three shipped asserts: removing the `grid[nr][nc] != "#"` wall check, and committing
+  the move before validating bounds. The three samples' wall/edge moves all reconverged to the same final
+  cell. Added `solve("1 3\n0 0\nA#C\nRR") == "A"` (a wall-blocked move — mutant returns "C") and
+  `solve("1 2\n0 0\nAB\nL") == "A"` (an out-of-grid move — no-validate mutant returns "B"). Both verified to
+  pass pristine and kill their mutants.
+- [WONTFIX] fable/sol noted equivalent survivors (Q1 equal-end-tie reorder, Q4 keep-scanning after a failed
+  cost with costs sorted ascending, Q2 bounds mutants dying by IndexError) — provably equivalent / still
+  detected, no assert can/needs-to kill them.
+All checks re-PASS after the fix.
+
+### Round 2 — [self] APPROVE; [sol]/[glm]/[fable] dispatched (revised HEAD), pending
+Consensus recorded here once all four APPROVE; every `[OPEN]` resolves before merge.
