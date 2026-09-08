@@ -175,8 +175,14 @@ sub-choices, contradicting A1's "no alternatives". Removed every "or": Q3 = rang
 max-items-under-budget, Q5 = bounded tick counter with cap/floor; and rewrote the Architecture sentence to
 name the same six pinned problems. Bans/wrapper/citation fixes all PASS'd. Round-3 (sol, focused) dispatched.
 
-### Round 3 — [self] APPROVE; [sol] focused re-check dispatched, pending
-Consensus recorded here once sol confirms the fully-pinned six (glm/fable round-1 APPROVE-WITH-NITS stand).
+### Rounds 3–4 — CONSENSUS: [self] · [sol] APPROVE, [glm] · [fable] APPROVE-WITH-NITS. Gate CLOSED.
+sol held the six-question pin to a strict "one concrete definition, no alternatives/slashes" bar: round 3
+still flagged Q2 ("clamp/stop at walls") and Q5 ("counter/resource"); both were pinned to a single behavior
+(Q2 = out-of-grid/wall move skipped, robot stays; Q5 = a single bounded integer counter with fixed cap and
+floor) and the Architecture sentence aligned to A1. **[sol] APPROVE at round 4** (HEAD 0e67467) — all six
+concrete, no residual alternatives, Architecture matches A1. glm + fable round-1 APPROVE-WITH-NITS stand
+(their nits — pin the split, U13 ban, wrapper wording, §8 citation — all folded). **Plan-review gate
+CLOSED — cleared for implementation (Phase A).**
 
 ## Content Review
 
