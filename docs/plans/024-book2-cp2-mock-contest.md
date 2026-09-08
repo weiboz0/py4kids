@@ -7,8 +7,9 @@ contract, following the shipped CP1 checkpoint pattern.
 **Architecture:** A checkpoint entry (`checkpoint.ipynb` + `solutions.ipynb` + `teacher-notes.md` +
 `manifest.yaml`). `checkpoint.ipynb` opens with contest framing (time budget + rules), then 6 timed
 `## Question N` problems on the fixed allocation pinned in A1 — Q1 greedy (interval scheduling), Q2
-simulation (grid walk), Q3 prefix-sum 1D (range-sum queries), Q4 greedy (max-items-under-budget), Q5
-simulation (tick counter), Q6 prefix-sum 2D (sub-rectangle) — each with an EMPTY student code cell. `solutions.ipynb` mirrors the `## Question N` headings with pure `solve(data)`
+simulation (grid robot, out-of-grid moves skipped), Q3 prefix-sum 1D (range-sum queries), Q4 greedy
+(max-items-under-budget), Q5 simulation (bounded tick counter with fixed cap and floor), Q6 prefix-sum 2D
+(sub-rectangle) — each with an EMPTY student code cell. `solutions.ipynb` mirrors the `## Question N` headings with pure `solve(data)`
 references and non-vacuous asserts. Introduces nothing; requires the U06–U08 techniques it assesses (plus
 the earlier introduces its solutions genuinely use); practices the Book-1 concepts its solutions use.
 
@@ -98,12 +99,13 @@ Copied from the design + registry + the CP1/U06–U08 gate lessons; every task's
   `### Sample Output` (```text fences), then an EMPTY code cell. **Fixed six-question allocation (exactly
   2 greedy / 2 simulation / 2 prefix-sum — pinned, no alternatives):**
   - **Q1 greedy** — interval scheduling / max non-overlapping (sort by end, then sweep).
-  - **Q2 simulation** — grid robot / bounded walk following a command string (clamp/stop at walls).
+  - **Q2 simulation** — a grid robot following a command string; a move that would leave the grid or hit a
+    wall is skipped and the robot stays in place.
   - **Q3 prefix-sum (1D)** — answer many range-sum queries over an array via a cumulative-sum array.
   - **Q4 greedy** — max-items-under-budget: sort by cost ascending, take the cheapest items until the budget
     is exhausted (a different sort key from Q1).
-  - **Q5 simulation** — a bounded counter/resource updated tick by tick, rising and falling against a fixed
-    cap and floor.
+  - **Q5 simulation** — a single bounded integer counter updated tick by tick, rising and falling against a
+    fixed cap and floor.
   - **Q6 prefix-sum (2D)** — sum/aggregate a sub-rectangle of a grid via the four-term inclusion-exclusion
     formula.
   Integer/plain-string outputs; decisive values last / last-after-sort.
