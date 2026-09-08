@@ -15,7 +15,10 @@ the earlier introduces its solutions genuinely use); practices the Book-1 concep
 **Tech Stack:** Jupyter notebooks (nbformat), `tools/` checks, `scripts/ci-local.sh`,
 `py4kids-tools --book book2`; Python 3 stdlib only.
 
-**Spec:** `docs/designs/001-book2-algorithms.md` (§7 CP2; §8 mock-contest timing); `book2/syllabus.md`;
+**Spec:** `docs/designs/001-book2-algorithms.md` (§7 CP2). NOTE: the design's contest-realism prose is
+stale — §1 says "2–3 problems", but the shipped tooling (`checkpoint_question_findings`) requires 6–8, and
+CP1 shipped 6; the ~35–45 min budget derives from `lessons: 0.5` + the CP1 precedent, not a design §8 time
+budget (§8 is annual pacing). `book2/syllabus.md`;
 `book2/curriculum/coverage-map.yaml` (`checkpoint-02-mock-contest-2` entry); the shipped
 `book2/checkpoints/checkpoint-01-mock-contest-1/` (the exact checkpoint pattern) and plan 021 (CP1 — all
 its gate lessons transfer); plans 022/023 (U06–U08) and their content-gate lessons.
@@ -28,7 +31,8 @@ Copied from the design + registry + the CP1/U06–U08 gate lessons; every task's
   executable cell. The `import sys; print(solve(sys.stdin.read()))` wrapper is shown ONLY as a **markdown
   fenced block** in `checkpoint.ipynb` or in teacher-notes — **NEVER as a code cell** (checkpoint code cells
   are ruff-linted with NO `no-exec` exemption — that exemption is `kind=="unit"` only — so a wrapper code
-  cell's undefined `solve` fails cell-lint with F821). Deterministic. Every cell has an `id`.
+  cell's undefined `solve` fails cell-lint with F821), and NEVER in solutions.ipynb (which both cell-lints
+  AND executes — a wrapper there fails twice). Deterministic. Every cell has an `id`.
 - **Checkpoint structure (structure-check):** required files exactly `manifest.yaml`, `checkpoint.ipynb`,
   `solutions.ipynb`, `teacher-notes.md`. Problem headings are `## Question N` (NOT `## Exercise`) — **6–8,
   numbered sequentially 1..N** (this plan uses exactly 6). Student code cells are EMPTY (`''`). Checkpoints
@@ -40,7 +44,9 @@ Copied from the design + registry + the CP1/U06–U08 gate lessons; every task's
   U04 taught only `.add`/`.discard`); NEVER `&|^`; NEVER `.union`/`.intersection`/`.difference`.
   `sorted(seq, key=named_fn)` (NO lambda). greedy/simulation/prefix-sum/binary-search/complete-search all
   allowed (≤U08). **NO not-yet-taught concept: no recursion/backtracking (U09), no `deque`/`.pop` (U10), no
-  comprehension/genexps (U09), no bitwise-ops/base-conversion (U11), no converging two-pointer (U14).** **NO
+  comprehension/genexps (U09), no bitwise-ops/base-conversion (U11), no `tree-traversal` (U12), no
+  graph traversal / `bfs`/`dfs`/`flood-fill`/`graph-repr` (U13 — the most realistic slip for a grid-
+  simulation question quietly becoming connected-components/flood-fill), no converging two-pointer (U14).** **NO
   scanner-blind untaught surface: no list-repetition `[x]*n` (build with while/append), no chained
   comparison `a<=b<c` (use `b>=a and b<c`).** NO untaught methods (.join/.splitlines/.index/.count/.find/
   .pop). Allowed builtins ONLY `{len,min,max,sorted,sum,abs,round}` — NO `all`/`any`/`enumerate`/`zip`/
@@ -89,10 +95,18 @@ Copied from the design + registry + the CP1/U06–U08 gate lessons; every task's
   `lessons: 0.5`), rules (each `solve(data)` reads the whole input string; the submission wrapper is shown
   as a markdown fenced block, NOT a code cell), and a points-table pointer. Then EXACTLY 6 `## Question N`
   (sequential 1..6), each: title (### …), one-paragraph statement, `### Constraints`, `### Sample Input`,
-  `### Sample Output` (```text fences), then an EMPTY code cell. Coverage: Q1 greedy (sort-then-sweep), Q2
-  simulation (step/grid), Q3 prefix-sum (1D range query), Q4 greedy (different key), Q5 simulation OR
-  prefix-sum (2D sub-rectangle), Q6 prefix-sum (2D) OR a mixed problem — ensure ≥2 each of greedy/
-  simulation/prefix-sum across the six. Integer/plain-string outputs; decisive values last / last-after-sort.
+  `### Sample Output` (```text fences), then an EMPTY code cell. **Fixed six-question allocation (exactly
+  2 greedy / 2 simulation / 2 prefix-sum — pinned, no alternatives):**
+  - **Q1 greedy** — interval scheduling / max non-overlapping (sort by end, then sweep).
+  - **Q2 simulation** — grid robot / bounded walk following a command string (clamp/stop at walls).
+  - **Q3 prefix-sum (1D)** — answer many range-sum (or range-count) queries via a cumulative array.
+  - **Q4 greedy** — a different-key greedy: fewest-coins (canonical denominations) or max-items-under-budget
+    (sort by cost, take cheapest).
+  - **Q5 simulation** — tick-by-tick state update (a bounded counter/resource, or an event sequence
+    processed by index-walk — no `.pop`/`deque`).
+  - **Q6 prefix-sum (2D)** — sum/aggregate a sub-rectangle of a grid via the four-term inclusion-exclusion
+    formula.
+  Integer/plain-string outputs; decisive values last / last-after-sort.
 - [ ] **A2 — solutions.ipynb (FRESH author, blind).** Mirror `## Question N`; pure `solve(data)`;
   scanner-clean forms (greedy via `sorted(key=named_fn)`+sweep; simulation via bounded loops, no `.pop`/
   recursion; prefix-sum via while/append build + the ±1 / 2D inclusion-exclusion formula; NO list-repetition,
@@ -133,7 +147,30 @@ _(filled at Phase B)_
 
 ## Plan Review
 
-_(4-way plan-review gate verdicts recorded here before implementation)_
+### Round 1 (2026-09-08, HEAD a12e71a) — [self] APPROVE · [glm]/[fable] APPROVE-WITH-NITS · [sol] REJECT
+All three external reviewers verified the checkpoint STRUCTURE correct against `tools/notebooks.py` (files,
+`## Question N` 6–8 sequential, six teacher-note headings incl `## Grading`, no stretch, the wrapper-code-
+cell F821 rule) and the closure/metadata carried correctly from CP1 + U06–U08. One blocker + convergent
+nits folded (no architecture change):
+- **[FIXED] BLOCKER (sol; glm+fable as nit) — the six questions were not concretely pinned.** A1 used
+  generic shapes with Q5/Q6 "OR"-alternatives + a "mixed problem", which could diverge from the declared
+  2-greedy/2-simulation/2-prefix-sum split. Replaced with a **fixed pinned allocation**: Q1 greedy (interval
+  scheduling), Q2 simulation (grid walk), Q3 prefix-sum 1D (range queries), Q4 greedy (coins/budget), Q5
+  simulation (tick state), Q6 prefix-sum 2D (sub-rectangle inclusion-exclusion) — no alternatives.
+- **[FIXED] nit (fable) — B4/closure ban omitted U13.** Added `tree-traversal` (U12) and `bfs`/`dfs`/
+  `flood-fill`/`graph-repr` (U13) to the premature bans — the realistic slip for a grid-simulation question
+  becoming flood-fill/connected-components.
+- **[FIXED] nit (fable) — wrapper wording.** Added explicit "NEVER in solutions.ipynb" (it both cell-lints
+  and executes there).
+- **[FIXED] nit (sol) — stale §8 citation.** Corrected the Spec: the ~35–45 min budget derives from
+  `lessons: 0.5` + CP1, not a design §8 time budget; noted design §1's "2–3 problems" prose is stale vs the
+  tooling's 6–8.
+No reviewer found a wrong structure claim or closure hole. Round-2 (sol, focused) dispatched at the revised
+HEAD to confirm the pin; glm + fable round-1 approvals stand (the edits only tightened what they approved).
+
+### Round 2 — [self] APPROVE; [sol] focused re-check dispatched, pending
+Consensus recorded here once sol confirms the pin (glm/fable round-1 APPROVE-WITH-NITS stand); no `[OPEN]`
+blocker remains before implementation.
 
 ## Content Review
 
