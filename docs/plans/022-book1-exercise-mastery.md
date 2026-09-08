@@ -44,17 +44,20 @@ through by being un-listed as a phase target.
   in a `solutions.ipynb` cell, only inside an `assert` (asserts are `concept-scan`-exempt and don't
   count as practice), or only in a `stretch`/Challenge cell. Reading/tracing/predicting counts as
   active use ONLY for concepts a unit **deliberately keeps trace-only**, and every such exemption MUST
-  be listed explicitly in that unit's phase (see the per-phase "Trace-only exemptions" lines).
+  be listed explicitly in that unit's phase (see the per-phase "Exemptions" lines). A second exemption
+  type — **justified-peripheral count-exemption** — covers concepts where meeting the ≥3/≥5 count is
+  pedagogically unreasonable (e.g. `error-messages`: staging many run-a-traceback exercises is
+  artificial, and it is practiced across many units): such a concept may sit BELOW its count bar with a
+  written justification in the phase + Phase V inventory, but must still have ≥1 genuine authoring rep.
 - **Quantity goal (concept-scaled depth — the plan's headline target, set by the author).** Growth is
   measured per CONCEPT, not per unit:
   - **Baseline: every concept** in a unit's `introduces ∪ practices` union appears in **≥3** distinct
     student-authored (non-stretch) exercises.
-  - **Essential concepts: ≥5.** Each unit designates its ESSENTIAL (core/load-bearing) concepts —
-    typically its `introduces` spine plus the foundations it leans on (io/print, variables, if/elif,
-    for/while, functions, and the unit's headline new concept). These reach **≥5** distinct
-    student-authored exercises. The essential set is LISTED in each unit's phase (Phase V checks it).
-    (Not every introduced concept is essential — peripheral introduced concepts sit at the ≥3
-    baseline — this keeps concept-dense units within the pacing budget.)
+  - **Essential concepts: ≥5.** Each unit designates its ESSENTIAL (core/load-bearing) concepts — the
+    exact set is LISTED in the target table below (for units 03–10 it is that unit's `introduces`
+    spine). These reach **≥5** distinct student-authored exercises. (Not every introduced concept is
+    essential — peripheral introduced concepts sit at the ≥3 baseline — this keeps concept-dense units
+    within the pacing budget.)
   - "Distinct authoring exercise per concept": one exercise counts once toward EVERY concept it makes
     the student author (exercises are multi-concept, so spine concepts hit ≥5 quickly and the real lift
     is bringing thin `practices` concepts to ≥3). Reading/tracing does NOT count except for a listed
@@ -63,12 +66,21 @@ through by being un-listed as a phase target.
   - **Applies to units 03–10.** **Units 01 & 02 are the lean exception** (syllabus binds them to short
     sets at the most fragile point): they target ≥1 rep per concept + closing named gaps, NOT the
     ≥3/≥5 depth target; this exception is recorded, not silently taken.
-- **Pacing budget (growth must not exceed class time).** Each unit phase states a per-unit **before →
-  after core count** and confirms an in-class **60–90 min core path**. Extra depth reps land in a
-  **labelled "More Practice"** area (a markdown label, NOT a heading level — exercises stay
-  `## Exercise N` so `EXERCISE_HEADING`/`solutions_structure` checks pass); teacher-notes name which
-  reps are in-class vs. homework; **≥1 rep of each concept sits on the in-class path** (so no
-  proficiency-critical rep is de-facto skippable like stretch). Hard ceiling: **no unit exceeds ~16
+  - **This quantity goal is the SOLE authority on rep counts.** The per-phase items below enumerate
+    WHICH concepts/exercises to author (the gaps to close), NOT how many reps each concept gets — any
+    "≥1"/"≥2"/"a rep" figure inside a phase item is an illustrative floor SUPERSEDED by this bar. The
+    implementer (Codex) authors enough varied exercises, distributing multi-concept reps and fold-ins,
+    to satisfy ≥3/≥5 (with documented exemptions); the plan does not pre-enumerate all ~40 exercises —
+    that is Codex's authoring job, verified at Phase V + the content gate (the AGENTS.md model). Where a
+    phase item's number and this bar differ, THIS BAR GOVERNS.
+- **Pacing budget (growth must not exceed class time).** Targets are the per-unit **before → after
+  core count** in the table below. The budget is measured against the unit's ACTUAL lesson count from
+  its `teacher-notes.md` (units are multi-lesson: e.g. unit-03 = 3 lessons, unit-07 = 2), NOT a single
+  60–90 min session. Extra depth reps land in a **labelled "More Practice"** area (a markdown label,
+  NOT a heading level — exercises stay `## Exercise N` so `EXERCISE_HEADING`/`solutions_structure`
+  checks pass); teacher-notes name which reps are in-class vs. homework, allocated across the unit's
+  lessons; **≥1 rep of each concept sits on the in-class path** (so no proficiency-critical rep is
+  de-facto skippable like stretch). Hard ceiling: **no unit exceeds ~16
   core exercises**, and each `solutions.ipynb` must run within the `exec-solutions` 120 s per-notebook
   timeout (Phase V records before/after counts + `ci-local` duration).
   - Every new exercise still obeys all constraints (self-contained, non-stretch for core, assert-backed
@@ -91,12 +103,15 @@ through by being un-listed as a phase target.
   so authored `.py` assets must reposition via `penup`+`backward` patterns (the `l1_cards.py`/
   `l3_stamps.py` precedent), never `goto` — `turtle-check`-green is stricter than `concept-scan`-green
   here.
-- **Traceback-template exercises (the `error-messages` reps in Phases 4–6, 8):** the actual RAISING
-  line must live in **markdown** (or a `no-exec`-tagged STUDENT exercise cell), NEVER in a
-  `solutions.ipynb` code cell — `exec-solutions` runs solution notebooks in full with no `no-exec`
-  filtering and `try/except` is untaught, so a raising line would crash CI. Solutions record the
-  diagnosis/fix as code + `assert`; the traceback text is shown in markdown (hygiene forbids stored
-  outputs).
+- **Any deliberately-broken/raising snippet (the `error-messages` traceback reps in Phases 4–6, 8 AND
+  the Phase 2.2 scope-repair NameError):** the actual RAISING line must live in **markdown** (or a
+  `no-exec`-tagged STUDENT exercise cell), NEVER in a `solutions.ipynb` code cell — `exec-solutions`
+  runs solution notebooks in full with no `no-exec` filtering and `try/except` is untaught, so a
+  raising line would crash CI; also, a bare undefined-name line in a student CODE cell trips
+  `cell-lint` ruff F82 unless the cell is `no-exec`-tagged (and `no-exec` does NOT exempt CHECKPOINT
+  cells from `cell-lint`, so CP3 Q8's `KeyError` line must be markdown or F82-clean, e.g. `d["zzz"]`).
+  Solutions record the diagnosis/fix as code + `assert`; the traceback text is shown in markdown
+  (hygiene forbids stored outputs).
 - **Stretch rule:** every touched unit keeps ≥1 `stretch` ("Challenge") exercise and core never depends
   on stretch. New CORE exercises added here must NOT be `stretch` — the point is to move
   proficiency-critical practice OUT of stretch into core.
@@ -118,18 +133,21 @@ through by being un-listed as a phase target.
      exercises/solutions/assets (only markdown prompts), and `input` stays practiced pre-capstone in
      CP1, project-01, and unit-06 (whose lesson genuinely uses it), so both `concept-scan` and
      `coverage-check` stay GREEN. Decision is (a)=drop for all four (fork answer below).
-  5. **CP1:** reconcile `string-concat` — CP1 lists it in `practices` but Q1 only shows it as a broken
-     line to replace; confirm it is genuinely practiced by CP1 (or adjust Q1 to author concat, now that
-     unit-01 Phase 3.1 teaches it upstream) so the tag is earned.
+  5. **CP1:** `string-concat` — CP1 lists it in `practices` but Q1 only has the student REPLACE a broken
+     concat with an f-string, so the tag is unearned. **Binding action: amend CP1 Q1 so the student
+     authors a `+` concatenation** (see Phase 8.5 — single committed disposition, not a fork).
 - **General rule — 016-style scanner-derived `practices` additions are PRE-AUTHORIZED** for this plan:
   when adding a required exercise makes `concept-scan` detect a concept not yet listed, the implementer
   MAY add that concept to the entry's `practices` (map + manifest) provided it is introduced ≤ the
   entry (closure), is NOT in the entry's `introduces`, and no `introduces`/`requires` changes. This
   gives implementers a sanctioned path (used by reconciliations 2–3) instead of an un-owned scan
-  failure. The enumerated set above is the KNOWN reconciliations; any ADDITIONAL scanner-derived
-  addition made under this rule during implementation MUST be listed in the post-execution report (so
-  "full set" stays honest). Note the scanner observes lessons, exercises, solutions, AND assets — not
-  only the newly-required exercise.
+  failure. The enumerated set 1–5 is the ANTICIPATED COMPLETE set — no additional scanner-derived
+  additions are expected, because the plan's new exercises author concepts already in each entry's
+  union. Should the scanner nonetheless flag a new one, the addition is bounded by the closure rule
+  above, MUST be surfaced in that PR's description AND the content-review gate (not merely the
+  post-execution report), and requires reviewer sign-off — it is not a silent license to expand
+  metadata. Note the scanner observes lessons, exercises, solutions, AND assets — not only the
+  newly-required exercise.
 - **Do not touch:** `introduces`/`requires` lists; Book-2 anything; governance files (CLAUDE.md,
   docs/development-workflow.md, docs/content-review-gate.md, docs/architecture/decisions.md).
 - Process (standing): branch `feature/plan-022-book1-exercise-mastery`; no commits while a `[sol]`
@@ -189,10 +207,10 @@ Per-phase acceptance (EVERY phase unless noted):
 reps, all other union concepts ≥3; units 01–02 lean = ≥1). Targets are the pacing envelope (≤16 core);
 Phase V enforces the per-concept rep counts.
 
-| Unit | core now → target | Essential concepts (≥5 reps) |
+| Unit | core now → target | Essential concepts (units 03–10: ≥5 reps) |
 |------|------------------|------------------------------|
-| 01 (lean) | 6 → 7 | print, variable, input, string-concat, f-string |
-| 02 (lean) | 6 → 8 | int-type, arithmetic, comparison, if-statement, elif-else, while-loop, type-conversion |
+| 01 (lean¹) | 6 → 7 | print, variable, input, string-concat, f-string |
+| 02 (lean¹) | 6 → 8 | int-type, arithmetic, comparison, if-statement, elif-else, while-loop, type-conversion |
 | 03 | 6 → 10 | turtle-basics, turtle-drawing, for-loop, range-function, loop-counter |
 | 04 | 7 → 10 | accumulator, logical-ops, conditional-nesting, break-statement |
 | 05 | 6 → 11 | def-function, parameters, return-value, scope |
@@ -202,7 +220,10 @@ Phase V enforces the per-concept rep counts.
 | 09 | 8 → 12 | file-read, file-write, with-statement |
 | 10 | 8 → 12 | class-def, init-method, attributes, methods |
 
-### Phase 1 — unit-03-turtle-art-studio (WEAK) — target core 6 → ~9
+¹ **Units 01–02 lean exception:** the "Essential concepts" column is illustrative only — the ≥5/≥3 bar
+does NOT apply; these units target ≥1 rep per concept + closing named gaps (syllabus short-set rule).
+
+### Phase 1 — unit-03-turtle-art-studio (WEAK) — target core 6 → 10 (table authoritative)
 
 Gaps: `f-string` (MISSING from statements), `turtle-drawing` (stretch-only), `loop-counter` (never in
 an expression), `float-type` (real decimal never engaged). Sol flagship: Ex5 only edits two asset
@@ -218,10 +239,14 @@ values — students never AUTHOR a turtle program.
    starter template cannot contain `____` in code cells or be move-free (`cell-lint`). This one rewrite
    makes `turtle-basics`, `turtle-drawing`, `for-loop`, `range-function`, `loop-counter`, `float-type`
    all student-authored.
-1. **turtle-drawing 2nd rep (MINOR fold OK).** A short second pen/color authoring touch (different
-   shape/color spec) so `turtle-drawing` has ≥2 reps, not carried by the flagship alone.
-2. **loop-counter expression rep.** In addition to the flagship, one focused exercise using the counter
-   in an expression (`pensize(side_number + 1)`), or a trace asking `pensize` for side 0 vs side 3.
+1. **turtle-drawing more reps (essential → ≥5 AUTHORING; `.py` assets, not notebook cells).** Add pen/
+   color authoring touches (different shape/color specs) as student-authored `.py` assets — turtle code
+   must NOT live in notebook code cells (`GUI_IMPORT`/un-stubbed execution). `turtle-drawing` is
+   essential, so distribute ≥5 authoring reps across the flagship + these assets.
+2. **loop-counter expression reps (essential → ≥5 AUTHORING).** `loop-counter` is essential; beyond the
+   flagship, add focused exercises that AUTHOR the counter in an expression (`pensize(side_number + 1)`,
+   `forward(side_number * 10)`, etc.) — a trace does NOT count toward the bar; distribute the reps
+   across the polygon exercises to reach ≥5.
 3. **float-type real decimal.** A prediction row for `n = 7` (`angle = 360 / 7` → `51.428571…`); the
    "why can't this be a whole number / what breaks if we round to 51?" beat stays **prose-only** (no
    `round()` call — would flag `builtin-functions`, untaught here).
@@ -230,7 +255,7 @@ values — students never AUTHOR a turtle program.
 - Trace-only exemptions (unit-03): none required after the flagship (all `introduces`/`practices` now
   authored). Note the audit's Ex4/Ex5 cross-lesson ordering nit as WONTFIX (both taught by unit end).
 
-### Phase 2 — unit-05-function-factory (WEAK) — target core ~6 → ~10
+### Phase 2 — unit-05-function-factory (WEAK) — target core 6 → 11 (table authoritative)
 
 Gaps: `accumulator` (never taught OR exercised — only a solution CI-scaffold line), `nested-loops`
 (never authored), `scope` (trace-only), `return-value` (authored once), `import-statement` (asset-run
@@ -277,7 +302,7 @@ core exercises, `boolean` implicit only, `str()` never, `elif` single-touch (CP1
 5. Align teacher-notes.
 - Trace-only exemptions (unit-01/02): none.
 
-### Phase 4 — units 04 & 06 — target unit-06 core ~7 → ~10
+### Phase 4 — units 04 & 06 — target core 04: 7 → 10, 06: 7 → 11 (table authoritative)
 
 Gaps unit-04: `or` never authored. unit-06: `boolean`-as-value implicit; `error-messages` fix handed;
 `elif` never exercised; `int-type` single touch.
@@ -295,7 +320,7 @@ Gaps unit-04: `or` never authored. unit-06: `boolean`-as-value implicit; `error-
 6. Align teacher-notes.
 - Trace-only exemptions (unit-04/06): none.
 
-### Phase 5 — units 07 & 08 — target core 07: 9→~13, 08: 11→~14
+### Phase 5 — units 07 & 08 — target core 07: 9 → 13, 08: 11 → 14 (table authoritative)
 
 Gaps unit-07: `.sort()`-returns-`None` never exercised, `while-loop` (no exercise), `error-messages`
 (no exercise), `max`/`min` single touch, negative index & ascending `.sort()` never, `boolean`
@@ -319,7 +344,9 @@ shallow, dict key-only iteration never.
    (read the actual `KeyError` before `.get`) **+ (MINOR) dict key-only loop** (`for word in
    translations:`), folded in.
 7. Align teacher-notes.
-- Trace-only exemptions (unit-07/08): none.
+- Exemptions (unit-07/08): **count-exemption** — `error-messages` (both units) may sit below ≥3 with
+  ≥1 genuine authoring rep (traceback-reading exercises are inherently limited; practiced across
+  06–10); justify in Phase V. No trace-only exemptions.
 
 ### Phase 6 — units 09 & 10 — target core 09: 8→12, 10: 8→12. Adds unit-09 `elif-else` (recon. 3)
 
@@ -340,7 +367,9 @@ unpracticed, `dict-literal` shallow, `error-messages` passive.
    (introduced unit-02) so `concept-scan` stays GREEN.
 3. **unit-09 edge case ("w" vs "a").** Save the same list twice with `"w"`, confirm no growth, contrast
    with `"a"`. Use a DISTINCT filename (or place so downstream file-state asserts in Ex3/4/8/9/10 still
-   hold — the unit's cells chain on file mutations).
+   hold — the unit's cells chain on file mutations). Any NEW run-time save file must be added to
+   `.gitignore` (currently only `unit-09-save-point/savegame.txt` + `settings.txt` are ignored), else
+   `ci-local`/`pre-merge-guard` sees an untracked file.
 4. **unit-09 transfer.** Vary ≥1 early copy-of-lesson exercise (different score list / settings dict).
 5. **unit-10 list-index → statement.** Extend Ex5: after the loop, student writes `pets[0].name` and
    `pets[1].status()` explicitly.
@@ -350,7 +379,8 @@ unpracticed, `dict-literal` shallow, `error-messages` passive.
 7. **(MINOR)** unit-10 dict depth (feed from two foods + add a third entry) + run-then-read the
    `AttributeError` in Ex8 — folded into existing exercises.
 8. Align teacher-notes.
-- Trace-only exemptions (unit-09/10): none.
+- Exemptions (unit-09/10): **count-exemption** — `error-messages` may sit below ≥3 with ≥1 authoring
+  rep (as in 07/08). No trace-only exemptions.
 
 ### Phase 7 — project-01 & project-02
 
@@ -384,13 +414,13 @@ not graded; `list-index` only in asserts; traceback under-prepared.
 4. **input false-practice (reconciliation 4):** DROP `input` from `practices` in units 07, 08, 09, 10
    (pure metadata + teacher-notes alignment; decision (a), RED-safe per Global Constraints). Record per
    unit.
-5. **CP1 string-concat (reconciliation 5) — BINDING ([sol] blocker).** CP1 Q1 currently shows broken
-   concatenation as prose and has the student REPLACE it with an f-string, so the `string-concat`
-   `practices` tag is unearned (and no CI check catches a listed-but-unused concept). Resolve it with a
-   real action — NOT a "note": EITHER (a) amend CP1 Q1 so the student AUTHORS a `+` concatenation
-   (now taught upstream by Phase 3.1), OR (b) DROP `string-concat` from checkpoint-01's `practices`
-   (map + manifest). Default (a). `string-concat` stays practiced pre-capstone regardless (units 07–09),
-   so either is coverage-safe.
+5. **CP1 string-concat (reconciliation 5) — BINDING SINGLE ACTION ([sol] blocker).** CP1 Q1 currently
+   shows broken concatenation as prose and has the student REPLACE it with an f-string, so the
+   `string-concat` `practices` tag is unearned. **The action is: amend CP1 Q1 so the student AUTHORS a
+   `+` concatenation** (feasible — `string-concat` is introduced unit-01, and Phase 3.1 adds upstream
+   authoring practice). This is the committed disposition; the alternative (dropping the tag) is NOT
+   taken because concat is genuinely a CP1-appropriate skill. Verify `manifest`/`coverage`/`concept-scan`
+   PASS after.
 6. **unit-09 elif-else (reconciliation 3):** applied in Phase 6.2; re-verify here.
 - Checkpoints otherwise stay as shipped (proficiency risk resolved upstream by Phases 1–6).
 
@@ -403,10 +433,11 @@ Mechanical (authoritative — `scripts/ci-local.sh` is the gate, design §4):
   `concept-scan` (zero used-but-unlisted across all entries after the reconciliation set),
   stretch-check, PDF build, pre-merge guard. `bash scripts/pre-merge-guard.sh --pr` OK.
 - **Volume budget (numeric pass/fail, not just "recorded"):** record before→after core counts per
-  touched unit and notebook cell/page counts + `ci-local` duration. FAIL the phase if any unit exceeds
-  **16 core exercises**, if any `solutions.ipynb` exceeds the `exec-solutions` **120 s** per-notebook
-  timeout (a hard CI limit already), or if the PDF build fails. Flag for human review if total
-  `ci-local` wall-time grows **> 25 %**.
+  touched unit and notebook cell/PDF-page counts + `ci-local` duration. FAIL the phase if: any unit
+  exceeds **16 core exercises**; any notebook cell exceeds the `exec-solutions` **120 s per-CELL**
+  timeout (`NotebookClient(timeout=120)`, `notebooks.py`) — a hard CI limit; or the PDF build fails.
+  Flag for human review (not auto-fail) if any touched notebook's **cell count grows > 2×**, the built
+  **PDF page count grows > 30 %**, or total `ci-local` wall-time grows **> 25 %**.
 
 Proficiency (reviewer-enforced — Phase V is NOT met without this):
 - **Whole-union inventory with rep COUNTS (not target-only, not just ≥1):** for EACH touched unit, a
@@ -502,14 +533,58 @@ concept; units 01–02 lean) into Global Constraints, per-phase acceptance, the 
 **Re-dispatching [sol]/[glm]/[fable] for round-3 confirmation** (the quantity goal is a new,
 author-directed scope change all three should see for CI/pacing feasibility).
 
-### Round 3
+### Round 3 (2026-09-08)
 
-- **[self] → APPROVE.** Both [sol] blockers now have binding actions; all nits folded; the quantity
-  goal is expressed as an enforceable per-concept bar with a pacing ceiling and an essential-concept
-  table. No open blockers from my seat.
-- **[sol] → (pending round-3)**
-- **[glm] → (pending round-3)**
-- **[fable] → (pending round-3)**
+- **[self] → APPROVE.**
+- **[fable] → APPROVE WITH NITS (no blockers).** Verified all 7 round-2 nits folded; re-ran the full
+  reconciliation set (incl. CP1-drop option) GREEN; simulated the flagship polygon under the real stub
+  (n=7 closes). Nits: per-item specs not re-scaled to ≥3/≥5 + no "peripheral count exemption" category;
+  120 s is per-CELL not per-notebook; scope-repair NameError is a raising snippet outside the traceback
+  rule's stated scope; phase headers vs table; essential text vs table; Phase 6.3 new file gitignore;
+  Phase 1.1 `.py` asset.
+- **[glm] → APPROVE WITH NITS (no blockers).** Verified its 3 round-2 nits folded + all reconciliations
+  CI-safe. Nits: newly-added tags (`turtle-drawing` u05, `elif-else` u09, `boolean` u07) each get ~1
+  locus but owe ≥3 under Phase V — name the loci or exempt; phase-header vs table coherence; lean-unit
+  essential-cell annotation; recon-item-5 cross-ref Phase 8.5 binding.
+- **[sol] → REJECT (3 blockers).** (1) Phase 8.5 still an either/or fork, not a single binding
+  disposition. (2) Per-item specs contradict the ≥3/≥5 bar (Phase 1 "2 turtle-drawing" + a
+  non-counting trace; Phase 5 while "≥2"/error "≥1") → re-author loop. (3) Phase headers disagree with
+  the table (ambiguous targets). Confirmed the quantity goal is CI-safe and FEASIBLE within ≤16
+  (u03 46 incidences ≈4.6/ex; u07 82 ≈6.3/ex) and that units are multi-lesson. Nits: numeric cell/PDF
+  ceiling; bound scanner-derived adds in-plan; per-unit in-class timing.
+
+### Round-3 reconciliation (2026-09-08)
+
+Round-4 plan (above) folds all three [sol] blockers + the remaining [fable]/[glm] nits:
+- **[sol] B1 (8.5 binding)** → Phase 8.5 + reconciliation-item-5 now a SINGLE committed action (amend
+  CP1 Q1 so the student authors a `+` concatenation); the drop alternative removed.
+- **[sol] B2 + [fable]/[glm] "per-item vs bar"** → new governing statement: **the quantity goal is the
+  SOLE authority on rep counts**; per-item "≥1/≥2" figures are illustrative floors superseded by the
+  bar; the plan enumerates WHICH concepts/exercises (Codex authors the counts, verified at Phase V +
+  content gate). Added a **justified-peripheral count-exemption** category (e.g. `error-messages`);
+  Phase 1.2 trace no longer counts (loop-counter needs authored reps); u07/u08/u09/u10 `error-messages`
+  count-exemptions listed.
+- **[sol] B3 (headers vs table)** → all phase headers reconciled to the table (table declared
+  authoritative): P1 6→10, P2 6→11, P4 04 7→10/06 7→11, P5 07 9→13/08 11→14, P6 09 8→12/10 8→12.
+- **[sol] nits** → Phase V numeric cell/PDF-page ceilings (>2× cells / >30% pages flag), scanner-derived
+  adds bounded in-plan (anticipated set is complete; extras need PR + gate sign-off), pacing tied to
+  each unit's real lesson count (multi-lesson).
+- **[fable] nits** → 120 s corrected to per-CELL; traceback rule extended to "any deliberately-broken
+  snippet" incl. Phase 2.2 + CP3 Q8 cell-lint note; essential text aligned to the table; Phase 1.1 is a
+  `.py` asset; Phase 6.3 gitignore.
+- **[glm] nits** → newly-added-tag loci covered by the count-exemption + governing statement; lean-unit
+  essential cells annotated (footnote ¹); recon-item-5 cross-refs Phase 8.5.
+**Re-dispatching [sol] for round-4 confirmation** ([fable]/[glm] already APPROVE-W-NITS with their nits
+now folded; no new material change affects their verdicts).
+
+### Round 4
+
+- **[self] → APPROVE.** Phase 8.5 is a single binding action; the quantity goal is the sole count
+  authority (no per-item contradiction possible); headers match the table; count-exemptions + numeric
+  budgets close the remaining [sol] nits. No open blockers.
+- **[sol] → (pending round-4)**
+- **[glm] → APPROVE WITH NITS (carried; round-3 nits folded).**
+- **[fable] → APPROVE WITH NITS (carried; round-3 nits folded).**
 
 ## Content Review
 
