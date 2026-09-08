@@ -25,7 +25,10 @@ entries:
   lessons: 1
   introduces: [complexity]
   requires: [for-loop, nested-loops, list-loop, list-literal, range-function]
-  practices: []
+  practices: [str-split, input-parse, def-function, parameters, return-value, if-statement,
+              elif-else, comparison, boolean, logical-ops, arithmetic, type-conversion,
+              accumulator, list-append, list-sort, builtin-functions, dict-literal, dict-access,
+              in-operator, while-loop, break-statement, string-literal, string-concat, print]
 - id: unit-04-sets-tuples-sorting
   kind: unit
   title: "Sets, Tuples & Sorting"
