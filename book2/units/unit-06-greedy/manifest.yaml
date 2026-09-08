@@ -1,0 +1,11 @@
+id: unit-06-greedy
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [greedy]
+  requires: [sorted-key, list-sort, for-loop, accumulator, tuple, comparison]
+  practices: [str-split, input-parse, arithmetic, boolean, builtin-functions, def-function,
+              if-statement, list-append, list-literal, logical-ops, nested-loops, parameters,
+              print, range-function, return-value, string-methods, type-conversion, while-loop]
