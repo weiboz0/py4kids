@@ -92,8 +92,10 @@ entries:
   title: "Mock Contest 2"
   lessons: 0.5
   introduces: []
-  requires: [greedy, simulation, prefix-sum]
-  practices: []
+  requires: [greedy, simulation, prefix-sum, grid-2d, input-parse, str-split, sorted-key, tuple]
+  practices: [accumulator, arithmetic, builtin-functions, comparison, def-function, elif-else,
+              if-statement, list-append, list-literal, list-sort, logical-ops, nested-loops,
+              parameters, return-value, string-concat, string-literal, type-conversion, while-loop]
 - id: unit-09-recursion-backtracking
   kind: unit
   title: "Recursion & Backtracking"
