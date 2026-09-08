@@ -27,30 +27,28 @@ The intended complexity for every exercise is linear in the amount of input it p
 
 ## Pacing
 
-Budget: one 60–90 minute lesson.
+Budget: two 60–90 minute lessons (parsing first, grids and exact output second).
 
-- **Hook and contract (10 min).**
-  Put the running sample on the board as raw text.
-  Ask what the judge gives our program and what exact text it expects back.
-  Introduce `solve(data)` as the boundary used throughout Book 2.
-- **Tokens and integers (15 min).**
-  Run the `.split()` and `int()` demonstrations.
-  Have students predict the token list, then emphasize that number-looking tokens are still
-  strings until converted.
-- **N values and the running solution (15 min).**
-  Trace token positions for `N` followed by `N` integers.
-  Build the sum-and-maximum solver and check its exact returned string.
-- **Grid reading (15 min).**
-  Draw a 2-by-3 grid and track the token-position counter while building each inner row list.
-  Connect this representation directly to Exercises 5, 6, and 9.
-- **Exact output (10 min).**
-  Contrast a fixed f-string with loop-built output for a variable-length list.
-  Point out where spaces are added and why there is no extra space at the beginning.
-- **Independent practice (15–25 min).**
-  Start everyone on Exercises 1 and 2, then route students through 3–7.
-  Exercises 8 and 9 are stretch work.
-  60-MINUTE CUT: demonstrate only the first grid row together and assign Exercises 5–9 for a
-  later practice block.
+- **Lesson 1 — the contract, tokens, and N values (60–90 min).**
+  - **Hook and contract (10 min).** Put the running sample on the board as raw text. Ask what the
+    judge gives our program and what exact text it expects back. Introduce `solve(data)` as the
+    boundary used throughout Book 2, and show the `no-exec` submission wrapper once.
+  - **Tokens and integers (15 min).** Run the `.split()` and `int()` demonstrations. Have students
+    predict the token list, then emphasize that number-looking tokens are still strings until
+    converted.
+  - **N values and the running solution (20 min).** Trace token positions for `N` followed by `N`
+    integers. Build the sum-and-maximum solver and check its exact returned string.
+  - **Independent practice (15–25 min).** Start everyone on Exercises 1–4 (single-list parsing,
+    threshold count, per-line sums, position search). 60-MINUTE CUT: demo Exercise 1 together, assign
+    2–4.
+- **Lesson 2 — grids and exact output (60–90 min).**
+  - **Grid reading (20 min).** Draw a 2-by-3 grid and track the token-position counter while building
+    each inner row list. Connect this representation directly to Exercises 5, 6, and 9.
+  - **Exact output (15 min).** Contrast a fixed f-string with loop-built output for a variable-length
+    list. Point out where spaces are added and why there is no extra space at the beginning.
+  - **Independent practice (25–40 min).** Route students through Exercises 5–7 (grid row/column sums,
+    doubling); Exercises 8 and 9 are the stretch "Challenge" work. 60-MINUTE CUT: demonstrate only the
+    first grid row together and assign 5–9 for a later practice block.
 
 ## Common mistakes
 

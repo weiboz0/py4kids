@@ -210,6 +210,39 @@ Teacher-notes: 5 headings + per-exercise Big-O. NIT (non-blocking): U01's map `p
 no-exec-wrapper-only `file-read`/`import-statement` (defensible — a demo cell, and both are
 baseline-allowed so concept-scan is unaffected); a reviewer could argue either way.
 
+### Reviews 2–4 — [glm]/[fable]/[sol] (2026-09-07) → APPROVE-WITH-NITS / REJECT, reconciled
+All three blind-solved the 9 exercises and confirmed the `solve()` contract, closure, manifest==map,
+and structure. Findings (fable + sol independently mutation-tested):
+- **[FIXED] Ex2 asserts vacuous vs off-by-one-on-N (fable-1, sol-1):** `range(n-1)` and `parts[i+1]`
+  mutants passed both asserts (both inputs' last value ≤ threshold). Added
+  `solve("3 4\n1 2 9") == "1"` (last value 9 > 4) — both mutants now KILLED, exec-solutions PASS.
+- **[FIXED] Ex4 asserts vacuous vs off-by-one (sol-2, NEW):** `range(n-1)` passed all 3 asserts (no
+  case had the target only at the last position). Added `solve("3 9\n1 2 9") == "YES 3"` — mutant
+  KILLED. Then AUDITED all 9 exercises against the off-by-one class: all 9 now kill it (Ex8 by
+  IndexError).
+- **[FIXED] Pacing 1-vs-2 lessons (fable-2, sol-3):** teacher-notes said "one lesson"; manifest/map/
+  syllabus say `lessons: 2` → Pacing expanded to two lessons (parsing + Ex1–4; grids/output + Ex5–9).
+- **[FIXED] heading text (glm):** `## Exercise 8 [stretch]` in exercises vs plain in solutions →
+  aligned to plain `## Exercise N` + a "Challenge (stretch)" body marker; stretch cell tags retained
+  (stretch-check PASS).
+- **[WONTFIX/env] sol-4 official exec runners failed in sol's sandbox** (socket restriction) —
+  environmental, NOT a defect; exec-solutions/exec-lessons PASS in the kernel-capable env, sol's
+  own fallback passed all cells.
+- **[WONTFIX] sol-5 "Project hook" heading** — the 5 unit headings match plan-018 + the `NOTES_HEADINGS`
+  tooling contract + Book-1 convention (there is no `## Project hook` heading for units;
+  structure-check PASS). Duty-wording ambiguity, not a content defect.
+- **[WONTFIX/self] `file-read`/`import-statement` practices exclusion** — fable concurred it's
+  reasonable (no-exec demo cell; baseline-allowed).
+
+### Content-gate resolution + re-verify (2026-09-07)
+Fixed the two vacuous-assert exercises (Ex2, Ex4) with killer edge cases + audited all 9 off-by-one-
+clean; expanded pacing to two lessons; aligned stretch headings. Re-verified: exec-solutions PASS;
+all 8 re-run book2 checks PASS (structure/stretch/hygiene/cell-lint/exec-solutions/exec-lessons/
+concept-scan/manifest); the off-by-one mutants for all 9 exercises now die. Full ci-local + round-2
+content re-review to confirm. (Note: I edited the working tree while sol's round-1 was mid-review —
+sol correctly pinned its verdict to HEAD `c4f8d67` and ignored the uncommitted edits; round-2 reviews
+the committed-fixed state. Lesson: do not modify files under review until all reviewers return.)
+
 ---
 
 ## Plan Review
