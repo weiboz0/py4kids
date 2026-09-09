@@ -9,7 +9,8 @@ By the end of this unit students can:
 - Recognize when a problem is "make a choice, then solve the smaller rest" and express it recursively.
 - Use **backtracking**: extend a partial solution, recurse, and **undo** the choice on the way back —
   counting or generating all valid completions.
-- Use a **list comprehension** as a concise way to build a list.
+- Evaluate a **nested parenthesized expression** by recursion — find the operator that joins the two sides
+  at depth zero, then evaluate each side the same way.
 
 This is the first unit where a function may call itself and where "try every possibility" is done by search
 rather than by nested loops — the tools for the counting/generation problems earlier units had to defer.
@@ -23,7 +24,7 @@ Open with a self-similar hook (count-the-ways).
 Live-code the shape: a base case that returns directly, and a recursive case that calls the same function
 on a smaller input. Warm-ups: factorial, sum-of-list, countdown. Hand-trace the call stack for a tiny input
 so "what happens at the base case, then on the way back up" is concrete.
-Class works Exercises 1 and 5 (subset count; nested-expression score).
+Class works Exercise 1 (subset count).
 
 **Lesson 2 — Backtracking.**
 Introduce the try → recurse → **undo** pattern: pick a choice, extend the partial path, recurse, then
@@ -33,10 +34,11 @@ extended copy `path + [choice]` down (the caller's list is untouched), or restor
 shared list mutated). Generate subsets / permutations / placements.
 Class works Exercises 2, 3, 4 (spaced permutations; N-queens; coin combinations).
 
-**Lesson 3 — Harder search + comprehensions.**
-Work a partition/placement search and introduce the list comprehension as a tidy build. Discuss why these
-searches are exponential and why the constraints keep N small.
-Class works Exercises 6, 7 and the two stretch problems (8, 9).
+**Lesson 3 — Parsing by recursion + harder search.**
+Work the nested-parenthesized-expression evaluator (scan at depth zero for the operator that joins the two
+sides, then recurse on each side), then a partition/placement search. Discuss why these searches are
+exponential and why the constraints keep N small.
+Class works Exercises 5, 6, 7; assign a stretch problem (8 or 9) as an extension.
 
 ## Common mistakes
 

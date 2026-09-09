@@ -6,7 +6,6 @@ concepts:
 - {id: tuple, name: Tuples, category: data-structures, kind: feature}
 - {id: str-split, name: Splitting strings, category: io, kind: feature}
 - {id: sorted-key, name: Sorting with a key, category: sorting, kind: feature}
-- {id: comprehension, name: List/set/dict comprehensions, category: techniques, kind: feature}
 - {id: recursion, name: Recursion (self-calling functions), category: techniques, kind: feature}
 - {id: deque, name: Double-ended queue (deque), category: data-structures, kind: feature}
 - {id: bitwise-ops, name: Bitwise operators, category: number-theory, kind: feature}

@@ -16,9 +16,10 @@ This is the first unit with a named data structure whose *shape* (which end you 
 the whole idea. Stress that a `deque` is one tool that becomes a stack or a queue depending on which methods
 you use — the LIFO/FIFO choice is a decision the programmer makes, not a different type.
 
-**A note on `.pop()`:** this course deliberately never teaches `list.pop()` or `deque.pop()`. Removal is
-always `.popleft`, and the top-of-stack is read with `stack[0]`. Keep to that so the notebooks stay inside
-the taught surface; a student who reaches for `.pop()` should be redirected to `.popleft`.
+**A note on popping:** this course deliberately never teaches a `pop` that removes from the *end* of a list
+or deque. Removal is always `.popleft`, and the top-of-stack is read with `stack[0]`. Keep to that so the
+notebooks stay inside the taught surface; a student who reaches for a remove-from-the-end should be
+redirected to `.popleft`.
 
 ## Pacing
 
@@ -34,15 +35,17 @@ Class works Exercises 1, 3, 5 (brackets; undo stack; help-desk queue — the FIF
 
 **Lesson 2 — Postfix evaluation & harder stack problems.**
 Introduce postfix (RPN): push numbers, and on an operator remove the right operand first, then the left,
-apply, and push the result. Then build to the monotonic stack — a stack that only ever holds indices whose
-answer is still unknown — for the next-greater problem. Discuss why each item is pushed once and removed at
-most once, so the whole scan is linear.
-Class works Exercises 2, 4, 6, 7 and the two stretch problems (8, 9).
+apply, and push the result. Then work the lesson's next-greater demo to build the monotonic stack — a stack
+that only ever holds indices whose answer is still unknown. Discuss why each item is pushed once and removed
+at most once, so the whole scan is linear.
+Class works Exercises 2 and 4 (postfix; next-greater via the monotonic stack). Assign Exercises 6 and 7 and
+the two stretch problems (8, 9) as homework or extension — the monotonic stack and the two-stack queue are
+the hardest novel reasoning in the unit, so do not pack all six into one session.
 
 ## Common mistakes
 
-- **Reaching for `.pop()`.** It is untaught here — removal is `.popleft`, and the top is `stack[0]`. This is
-  the single most common slip; catch it early.
+- **Reaching for a remove-from-the-end.** That shortcut is untaught here — removal is `.popleft`, and the
+  top is `stack[0]`. This is the single most common slip; catch it early.
 - **Popping an empty stack.** A closing bracket (Ex 1) or a departure (Ex 9) when the stack is empty must be
   handled — check `len(stack)` or `if stack:` before reading `stack[0]` or calling `.popleft`.
 - **Mixing up LIFO and FIFO.** Using a stack where the problem needs a queue (Ex 5) serves the newest waiter
