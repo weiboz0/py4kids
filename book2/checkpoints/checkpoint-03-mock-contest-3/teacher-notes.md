@@ -35,8 +35,10 @@ heaviest (a full backtracking search with a correct un-mark). A student who solv
   shift drops or double-counts items. Remember the empty mask (subset sum 0).
 - **Sieve bound (Q6)** — cross off multiples starting at `p*p` and include the endpoint correctly; `N = 49`
   (= 7²) is the case a `<` vs `<=` slip gets wrong.
-- **The `-1` child sentinel in Q7** — test `child == -1` BEFORE indexing the arrays; `arr[-1]` silently reads
-  the last node and yields a wrong (not crashing) answer.
+- **The `-1` child sentinel in Q7** — test `child == -1` at the TOP of the recursion (return `""`) before
+  indexing the arrays. Skip that base case and recursing on child `-1` re-enters the LAST node's children and
+  typically recurses forever (`RecursionError`); a non-recursive variant instead reads `arr[-1]` and yields a
+  silently wrong answer.
 
 ## Discussion prompts
 

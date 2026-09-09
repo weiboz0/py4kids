@@ -278,3 +278,36 @@ findings (all addressed in the Round-2 revision at HEAD below):
 ## Content Review
 
 _(4-way content-review gate — findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`, all resolve before merge)_
+
+### Review 1 — [self] (2026-09-09)
+- **Verdict**: APPROVE
+
+Pre-gate verification: all 10 `--book book2` checks PASS; all 7 CP3 solutions match their stated Sample I/O;
+26 inline asserts pass (real exec). Conventions: 7 sequential `## Question N`, 0 stretch tags, 7 EMPTY
+student code cells, wrapper markdown-only (cell-lint PASS), teacher-notes six headings incl `## Grading`,
+`introduces: []`, `lessons: 0.5`, manifest == map. Closure: recursion/deque/bitwise legal (≤U12); AST+grep
+CLEAN — 0 comprehension/augmented-assignment/class/chained-comparison/list-or-str-repetition (the Q2 `"*"`
+operator-token grep flag confirmed a false positive via AST), no `.pop`/`.join`/`del`/base-modular shortcuts/
+`sorted()`-traversal/non-allowed-builtins; Q1 uses `used[]` mark/un-mark (genuine backtracking), Q2 uses
+`deque.popleft`. Metadata: requires = the 10 assessed + `str-split`/`tuple`/`input-parse`/`complete-search`
+genuinely used; practices = Book-1 only; disjoint. No open [self] findings. Awaiting [sol]/[glm]/[fable] +
+full `ci-local.sh`.
+
+### Reviews 2–4 — [glm]/[fable]/[sol] (2026-09-09) — all REJECT (one shared Must + 2 nits)
+
+Full `ci-local.sh`: ALL GREEN, pre-merge-guard OK. All three blind-solved all 7, matched every sample,
+confirmed every signature mutant killed, timing comfortable (Q1 N=9 ~0.7s, Q4 N=18 ~0.35s, Q6 2·10⁶ ~0.4s),
+conventions/metadata/closure clean. Findings:
+
+1. `[FIXED]` **[glm]/[fable]/[sol] Must — Q7 `nonlocal`.** The Q7 reference accumulated via `nonlocal result`
+   — a language feature taught NOWHERE in Book 1/2 (repo-wide its only occurrence was this cell) and invisible
+   to the AST/grep scan. → rewrote `walk` to the U12 taught idiom: return each subtree's pre-order string and
+   concatenate (`return walk(root)`); no `nonlocal`. Verified Q7 still outputs `40 10 30 20`; `nonlocal`
+   count now 0; all asserts pass.
+2. `[FIXED]` **[fable] Nice — Q4 constant-output assert gap.** All four Q4 asserts expected `"1"`, so a
+   degenerate `return "1"` mutant survived. → added `solve("3 5\n1 4 5\n") == "2"` (subsets {1,4},{5}).
+3. `[FIXED]` **[fable] Nice — teacher-notes Q7 `-1`-sentinel wording.** The note said `arr[-1]` "silently"
+   yields a wrong answer; for the recursive walk, recursing on child `-1` actually loops to `RecursionError`.
+   → reworded to name the RecursionError (recursive) and the silent `arr[-1]` (non-recursive) cases.
+
+All 10 `--book book2` checks PASS after fixes. Round-2 re-review pending.
