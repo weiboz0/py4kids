@@ -123,14 +123,18 @@ entries:
   lessons: 3
   introduces: [base-conversion, bitwise-ops, bitmask, gcd, sieve, modular-arithmetic]
   requires: [arithmetic, int-type, while-loop, for-loop, range-function, list-literal, complete-search]
-  practices: []
+  practices: [input-parse, accumulator, boolean, builtin-functions, comparison, def-function, elif-else,
+              if-statement, list-append, logical-ops, nested-loops, parameters, print, return-value,
+              str-split, string-concat, string-literal, string-methods, tuple, type-conversion]
 - id: unit-12-binary-trees
   kind: unit
   title: "Binary Trees & Traversals"
   lessons: 2
   introduces: [tree-traversal]
-  requires: [recursion, dict-literal, dict-access, list-literal, def-function, return-value]
-  practices: []
+  requires: [recursion, list-literal, def-function, return-value]
+  practices: [input-parse, accumulator, arithmetic, boolean, builtin-functions, comparison, elif-else,
+              if-statement, list-append, logical-ops, parameters, print, str-split, string-concat,
+              string-literal, tuple, type-conversion, while-loop]
 - id: checkpoint-03-mock-contest-3
   kind: checkpoint
   title: "Mock Contest 3"

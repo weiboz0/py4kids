@@ -1,0 +1,11 @@
+id: unit-12-binary-trees
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [tree-traversal]
+  requires: [recursion, list-literal, def-function, return-value]
+  practices: [input-parse, accumulator, arithmetic, boolean, builtin-functions, comparison, elif-else,
+              if-statement, list-append, logical-ops, parameters, print, str-split, string-concat,
+              string-literal, tuple, type-conversion, while-loop]
