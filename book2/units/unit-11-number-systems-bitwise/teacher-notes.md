@@ -21,10 +21,12 @@ not used here); lists are built with `while`/`append` (never `[0]*n`).
 Three 60–90 minute lessons.
 
 **Lesson 1 — Binary & bitwise (≈60–75 min instruction, rest practice).**
-Write numbers in binary by repeated division; read them back by positional value. Hexadecimal is introduced as
-reading (its digits `A–F` = 10–15) and practiced in Lesson 2. Live-code the bitwise operators and the
-test/set/clear-bit idioms, then the **finite-width NOT** rule (`~x & ((1<<w)-1)`) — stress that Python's `~x`
-is infinite-width (`~5 == -6`) so a width must always be fixed.
+Write numbers in binary by repeated division; read them back by positional value, then extend the same
+by-hand method to hexadecimal (its digits `A–F` = 10–15) — the lesson's converter cell does both bases in
+both directions, and Lesson 2 gives hex more practice. Live-code the bitwise operators and the
+test/set/clear-bit idioms, noting that a nonzero integer is `True` in a condition (so `if x & (1<<i):` tests a
+bit) and that `x ^ x == 0` makes paired values cancel; then the **finite-width NOT** rule (`~x & ((1<<w)-1)`)
+— stress that Python's `~x` is infinite-width (`~5 == -6`) so a width must always be fixed.
 Class works Exercises 1, 3, 4 (decimal→binary; light-panel bit commands; lone XOR code).
 
 **Lesson 2 — Bitmasks & GCD/LCM.**
@@ -72,6 +74,19 @@ Class works Exercises 7, 8 (prime count; power mod M). Assign the stretch proble
   masking and sizing a sieve bound; ask students to state the Big-O and justify the sieve bound they pick.
 - **Extension:** ask fast finishers to explain why repeated-squaring makes a power-mod fast, or to estimate the
   sieve size needed for the nth prime.
+
+### Concept → core-exercise coverage
+
+Every introduced concept is practiced by at least one non-stretch exercise:
+
+- **base-conversion** → Ex 1 (decimal→binary), Ex 2 (two-way hex)
+- **bitwise-ops** → Ex 3 (test/set/clear/flip bits), Ex 4 (XOR lone value)
+- **bitmask** → Ex 5 (subset count by mask)
+- **gcd** → Ex 6 (GCD + LCM)
+- **sieve** → Ex 7 (prime count through a boundary)
+- **modular-arithmetic** → Ex 8 (huge power mod M)
+
+(Stretch: Ex 9 fixed-width hex complement, Ex 10 nth prime.)
 
 ### Big-O per exercise
 

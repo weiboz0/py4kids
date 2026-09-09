@@ -67,6 +67,16 @@ problems (8, 9) as extension.
 - **Extension:** ask fast finishers to explain why a balanced BST gives O(log N) search while a skewed one
   degrades to O(N), and to build the worst-case insert order.
 
+### Concept → core-exercise coverage
+
+The unit's one introduced concept is practiced by every core exercise:
+
+- **tree-traversal** → Ex 1 (pre-order output), Ex 2 (height), Ex 3 (leaf count), Ex 4 (sum/min/max
+  aggregation), Ex 5 (BST search), Ex 6 (build-by-insert then pre-order), Ex 7 (BST validation) — each is a
+  recursive walk over the tree.
+
+(Stretch: Ex 8 post-order audit, Ex 9 target depth.)
+
 ### Big-O per exercise
 
 _(reconciled against the shipped reference solutions in Phase C)_
