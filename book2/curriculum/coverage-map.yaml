@@ -140,9 +140,12 @@ entries:
   title: "Mock Contest 3"
   lessons: 0.5
   introduces: []
-  requires: [recursion, backtracking, deque, postfix-eval, base-conversion, bitwise-ops, gcd,
-             sieve, modular-arithmetic, tree-traversal]
-  practices: []
+  requires: [recursion, backtracking, deque, postfix-eval, base-conversion, bitwise-ops, bitmask, gcd,
+             sieve, tree-traversal, complete-search, input-parse, str-split, tuple]
+  practices: [accumulator, arithmetic, boolean, builtin-functions, comparison, def-function, elif-else,
+              for-loop, if-statement, list-append, list-literal, logical-ops, nested-loops, parameters,
+              range-function, return-value, string-concat, string-literal, string-methods, type-conversion,
+              while-loop]
 - id: unit-13-grids-graphs
   kind: unit
   title: "Grids, Graphs & Traversal"
