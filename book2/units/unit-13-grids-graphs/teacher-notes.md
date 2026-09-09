@@ -27,12 +27,13 @@ Class works **Exercise 1 (Friendship Degrees)**.
 
 **Lesson 2 — Flood-fill & BFS.** Recursive flood-fill with a visited set; then BFS shortest-steps with a
 `deque` FIFO queue (`while len(queue) > 0`), visited, and a per-cell distance. Stress the FIFO order — a LIFO
-stack gives wrong distances. Class works **Exercises 2, 3, 4** (Paint One Room; Count the Islands; Fewest
-Maze Steps).
+stack gives wrong distances. Class works **Exercises 2, 3, 4, 5** (Paint One Room; Count the Islands; Fewest
+Maze Steps; Emergency Exit — a BFS reachability check).
 
-**Lesson 3 — DFS reachability.** Recursive DFS with visited passed as an argument; connectivity / components.
-Class works **Exercises 5, 6, 7** (Emergency Exit; Can the Message Travel?; Separate Networks). Assign the
-stretch problems (8 Largest Meadow, 9 Farthest Delivery) as extension.
+**Lesson 3 — DFS reachability & connectivity.** Recursive DFS with visited passed as an argument;
+reachability and whether a graph is one connected network. Class works **Exercises 6, 7** (Can the Message
+Travel?; Separate Networks). Assign the stretch problems (8 Largest Meadow, 9 Farthest Delivery) as
+extension.
 
 ## Common mistakes
 
@@ -70,8 +71,12 @@ stretch problems (8 Largest Meadow, 9 Farthest Delivery) as extension.
 
 - **graph-repr** → Ex 1 (Friendship Degrees), Ex 6 (Can the Message Travel?), Ex 7 (Separate Networks)
 - **flood-fill** → Ex 2 (Paint One Room), Ex 3 (Count the Islands)
-- **bfs** → Ex 4 (Fewest Maze Steps)
-- **dfs** → Ex 5 (Emergency Exit), Ex 6 (Can the Message Travel?)
+- **bfs** → Ex 4 (Fewest Maze Steps), Ex 5 (Emergency Exit — reachability via BFS)
+- **dfs** → Ex 6 (Can the Message Travel?), Ex 7 (Separate Networks — connectivity)
+
+Note: Ex 5/6/7 are reachability/connectivity questions (YES/NO or a count), so their answer does not depend on
+the visit ORDER — the FIFO-vs-LIFO distinction is exercised instead by the shortest-distance problems Ex 4 and
+Ex 9 (whose asserts include a grid/graph where a LIFO traversal returns a longer, wrong distance).
 
 (Stretch: Ex 8 Largest Meadow — flood-fill; Ex 9 Farthest Delivery — BFS.)
 
@@ -81,8 +86,8 @@ stretch problems (8 Largest Meadow, 9 Farthest Delivery) as extension.
 2. Paint One Room — O(cells) (one flood-fill over the region).
 3. Count the Islands — O(R·C) (each cell visited once across all fills).
 4. Fewest Maze Steps — O(R·C) BFS (each cell enqueued once).
-5. Emergency Exit — O(R·C) DFS/BFS reachability.
+5. Emergency Exit — O(R·C) BFS reachability (can the exit be reached?).
 6. Can the Message Travel? — O(V + E) DFS reachability on the graph.
-7. Separate Networks — O(V + E) (count components via repeated traversal).
+7. Separate Networks — O(V + E) DFS connectivity (is every node in one network?).
 8. Largest Meadow *(stretch)* — O(R·C) (flood-fill every region, track the max).
 9. Farthest Delivery *(stretch)* — O(V + E) BFS from the source, take the max distance.
