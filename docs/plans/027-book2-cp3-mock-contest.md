@@ -79,10 +79,16 @@ Copied from the design + registry + the CP1/CP2/U09–U12 gate lessons; every ta
   introduce genuinely used (`input-parse`/`str-split`/`complete-search`/… — trim to those actually used).
   All 10 target concepts are used by the A1 allocation (Q1 recursion+backtracking, Q2 deque+postfix-eval,
   Q3 base-conversion, Q4 bitwise-ops+bitmask, Q5 gcd, Q6 sieve, Q7 tree-traversal); if a `detect()` trim
-  would drop any of the 10, that is an A1-allocation bug to fix, not a metadata adjustment. `practices:` =
-  `(used) − requires − introduces − wrapper-artifacts (file-read, import-statement)` = the Book-1 +
-  earlier-Book-2 concepts the solutions use; NO U09–U12 introduce appears in `practices`.
-  `requires ∩ practices = ∅`; manifest == coverage-map exactly (incl. list order); `lessons: 0.5`.
+  would drop any of the 10, that is an A1-allocation bug to fix, not a metadata adjustment. **The final
+  `requires` is the 10 assessed Term-3 concepts PLUS every EARLIER-BOOK-2 introduce the solutions genuinely
+  use** — this is the shipped CP1/CP2 checkpoint convention (CP2 `requires` = `[greedy, simulation,
+  prefix-sum, grid-2d, input-parse, str-split, sorted-key, tuple]` — the Term-2 assessed set PLUS earlier
+  `grid-2d`/`input-parse`/`str-split`/`sorted-key`/`tuple`). It is NOT "exactly the 10": a checkpoint's
+  `practices` holds **Book-1 concepts ONLY**, so any earlier-Book-2 introduce used (e.g. `input-parse`,
+  `str-split`, `complete-search`) MUST go in `requires`, never `practices`. `practices:` = `(used) −
+  requires − introduces − wrapper-artifacts (file-read, import-statement)` = the Book-1 concepts the
+  solutions use; NO Book-2 introduce (U01–U12) appears in `practices`. `requires ∩ practices = ∅`; manifest
+  == coverage-map exactly (incl. list order); `lessons: 0.5`.
 - **Non-vacuous asserts — each question's signature mutant (matched to its PINNED solver, per [sol]#3):**
   Q1 recursion/backtracking — the no-solution base case (e.g. `N` forcing a dead end → `0`), a path that
   must be un-marked before the next branch (a missing un-mark over-prunes → wrong count), a decisive-last
@@ -243,8 +249,20 @@ findings (all addressed in the Round-2 revision at HEAD below):
    concepts showing unused is an A1-allocation bug to fix, not a metadata trim.
 7. `[noted]` [glm#4] adding `bitmask` is correct/prereq-closed (map omits it; U11 introduces it).
 
-- **[self] Round 2 — APPROVE** (revision addresses every Must/Should above; design now honest + pinned).
-- **[sol]/[glm]/[fable] Round 2 — _pending_**
+### Round 2 (HEAD 65ba8e3) — [self] APPROVE · [fable] APPROVE · [glm] APPROVE · [sol] REJECT (contract misread)
+
+- **[self] / [fable] / [glm] — APPROVE.** All Round-1 Must/Should confirmed resolved; [fable] and [glm]
+  independently verified the capstone (`project-03`) does not require `modular-arithmetic`, so dropping it
+  orphans nothing; every question pinned; mutants match solvers; requires/practices disjoint; closure ≤U12.
+- **[sol] — REJECT (non-defect).** Confirmed all four Round-1 items resolved, but raised a `requires`-shape
+  concern: it read my re-review prompt's shorthand ("requires = the 10-concept set") as "EXACTLY 10" and
+  objected that the plan also puts earlier-Book-2 introduces in `requires`. **This is the correct checkpoint
+  convention, not a defect** — the shipped CP2 `requires` is `[greedy, simulation, prefix-sum, grid-2d,
+  input-parse, str-split, sorted-key, tuple]` (assessed set + earlier-Book-2 introduces), because a
+  checkpoint's `practices` holds Book-1 concepts ONLY. `[FIXED]` the plan wording (two-tier metadata bullet)
+  now states this explicitly and cites the CP2 precedent, and sol is re-confirmed in Round 3 with the correct
+  framing.
+- **[sol] Round 3 — _pending_** (contract clarified; fable/glm/self APPROVE stand).
 
 ## Content Review
 
