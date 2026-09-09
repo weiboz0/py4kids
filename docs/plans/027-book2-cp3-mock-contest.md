@@ -13,7 +13,8 @@ checkpoint pattern.
 `## Question N` problems on the fixed allocation pinned in A1, each with an EMPTY student code cell.
 `solutions.ipynb` mirrors the `## Question N` headings with pure `solve(data)` references and non-vacuous
 asserts. Introduces nothing; requires the U09–U12 techniques it assesses (plus earlier introduces its
-solutions genuinely use); practices the Book-1 + earlier-Book-2 concepts its solutions use.
+solutions genuinely use); practices the Book-1 concepts its solutions use (earlier-Book-2 introduces go in
+`requires`, not `practices` — the checkpoint convention).
 
 **Tech Stack:** Jupyter notebooks (nbformat), `tools/` checks, `scripts/ci-local.sh`,
 `py4kids-tools --book book2`; Python 3 stdlib only (no imports — deque is `from collections import deque`).
@@ -188,7 +189,8 @@ assessed set incl. `bitmask` + `practices` = used earlier concepts — both mirr
   U09–U12 introduces — the **10-concept target set** `[recursion, backtracking, deque, postfix-eval,
   base-conversion, bitwise-ops, bitmask, gcd, sieve, tree-traversal]` (bitmask added, modular-arithmetic
   removed vs the current map) + earlier introduces genuinely used; `practices:` = `used − requires −
-  introduces − wrapper-artifacts` (Book-1 + earlier-Book-2 concepts, incl. `dict-access` if used);
+  introduces − wrapper-artifacts` (**Book-1 concepts ONLY**, incl. `dict-access` if used; every used
+earlier-Book-2 introduce such as `input-parse`/`str-split`/`complete-search` goes in `requires`, never here);
   `requires ∩ practices = ∅`; manifest == map (incl. order). Derive from an ad-hoc `detect()` over both
   notebooks; hand-add scanner-invisible used concepts (techniques). If `detect()` shows any of the 10 target
   concepts is NOT used, fix the A1 allocation (do not silently drop it from `requires`).
@@ -208,7 +210,8 @@ assessed set incl. `bitmask` + `practices` = used earlier concepts — both mirr
   all 7; mutation sweep (categories above); closure (AST + grep as in B1); `## Question N` 6–8 sequential,
   empty student cells, wrapper markdown-only (cell-lint clean); teacher-notes six headings incl `## Grading`;
   manifest==map, `requires` = assessed set (each genuinely used, `bitmask` included), `practices`
-  Book-1/earlier-Book-2 only; each problem prereq-closed to ≤ U12; the seven collectively cover Term-3.
+  Book-1-only (every used earlier-Book-2 introduce is in `requires`, not `practices`); each problem
+  prereq-closed to ≤ U12; the seven collectively cover Term-3.
   Resolve every `[OPEN]`; re-verify in round-2 before consensus. (Note: `opencode`/[glm] has been flaky —
   may return a placeholder then re-notify async; re-dispatch if it yields a non-verdict.)
 - [ ] **B5 — commit content-gate fixes, write the post-execution report**, re-run full `ci-local.sh` ALL
@@ -262,7 +265,11 @@ findings (all addressed in the Round-2 revision at HEAD below):
   checkpoint's `practices` holds Book-1 concepts ONLY. `[FIXED]` the plan wording (two-tier metadata bullet)
   now states this explicitly and cites the CP2 precedent, and sol is re-confirmed in Round 3 with the correct
   framing.
-- **[sol] Round 3 — _pending_** (contract clarified; fable/glm/self APPROVE stand).
+- **[sol] Round 3 — REJECT (valid).** Confirmed the convention matches CP1/CP2 and all Round-1 items
+  resolved, but caught a real internal inconsistency: Architecture, A4, and B4 still described `practices` as
+  "Book-1 + earlier-Book-2 concepts," contradicting the (correct) Book-1-only rule. `[FIXED]` all three now
+  say `practices` = Book-1-only and every used earlier-Book-2 introduce goes in `requires`.
+- **[sol] Round 4 — _pending_** (internal-consistency fix applied; self/fable/glm APPROVE stand).
 
 ## Content Review
 
