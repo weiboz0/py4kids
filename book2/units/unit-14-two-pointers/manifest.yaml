@@ -1,0 +1,12 @@
+id: unit-14-two-pointers
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [two-pointers]
+  requires: [list-index, sorted-key, while-loop, accumulator, comparison]
+  practices: [input-parse, arithmetic, builtin-functions, def-function, dict-literal, elif-else,
+              if-statement, in-operator, list-append, list-literal, list-sort, logical-ops, nested-loops,
+              parameters, print, return-value, str-split, string-concat, string-literal, tuple,
+              type-conversion]
