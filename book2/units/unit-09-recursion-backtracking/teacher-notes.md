@@ -79,8 +79,8 @@ Class works Exercises 5, 6, 7; assign a stretch problem (8 or 9) as an extension
 2. Spaced Permutation Count — O(n!) (permutation backtracking with a spacing check).
 3. Queens Without Conflict — O(N!) worst case (place one queen per row, backtrack on conflict).
 4. Coin Bag Combinations — exponential in the number of coins (combination search, order-independent).
-5. Nested Expression Score — O(L) over the length-L expression (each character consumed once by the
-   recursive parse).
+5. Nested Expression Score — O(L·d) for a length-L expression nested d deep (each parenthesis level rescans
+   its span to find the depth-zero operator; worst case about O(L²)), comfortably fast for the small L here.
 6. Fractal Trail Count — O(bᵈ) for branching factor b and depth d (self-similar recursion).
 7. Equal Team Partitions — O(2ⁿ) (assign each member to a side, backtrack).
 8. Smallest Spaced Permutation *(stretch)* — O(n!) (ordered permutation search, keep the smallest valid).
