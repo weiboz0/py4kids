@@ -1,0 +1,13 @@
+id: unit-10-stacks-queues-deques
+kind: unit
+blueprint_version: 1
+lessons: 2
+provenance: original
+concepts:
+  introduces: [deque, postfix-eval]
+  requires: [list-literal, list-append, import-statement, for-loop, str-split, arithmetic,
+             in-operator]
+  practices: [accumulator, break-statement, builtin-functions, comparison, def-function,
+              dict-literal, elif-else, if-statement, logical-ops, nested-loops, parameters,
+              print, return-value, string-concat, string-literal, string-methods,
+              type-conversion, while-loop]

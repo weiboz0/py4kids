@@ -35,7 +35,7 @@ Big-O is stated in teacher notes; "fast enough" is taught, not CI-enforced.
 | `unit-07-simulation` | unit | 2 | simulation & ad hoc |
 | `unit-08-prefix-sums` | unit | 2 | 1D → 2D prefix sums |
 | `checkpoint-02-mock-contest-2` | checkpoint | 0.5 | Mock Contest 2 (Term 2) |
-| `unit-09-recursion-backtracking` | unit | 3 | recursion, backtracking, comprehensions |
+| `unit-09-recursion-backtracking` | unit | 3 | recursion, backtracking |
 | `unit-10-stacks-queues-deques` | unit | 2 | stacks/queues/`deque`, postfix eval |
 | `unit-11-number-systems-bitwise` | unit | 3 | bases, bitwise, GCD, sieve, modular arithmetic |
 | `unit-12-binary-trees` | unit | 2 | binary trees, BST, traversals |
