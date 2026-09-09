@@ -220,7 +220,43 @@ earlier-Book-2 introduce such as `input-parse`/`str-split`/`complete-search` goe
 
 ## Post-Execution Report
 
-_(filled at Phase B)_
+**Delivered:** `checkpoint-03-mock-contest-3` — the third timed mock contest (0.5 lesson, 7 questions),
+assessing Term-3: Q1 spaced-permutation count (recursion+backtracking, `used[]` mark/un-mark), Q2 postfix
+eval (deque), Q3 decimal→binary (base-conversion), Q4 exact-total subsets (bitwise+bitmask), Q5 GCD+LCM
+(gcd), Q6 primes≤N (sieve, N=49 boundary), Q7 pre-order readout (tree-traversal). Files:
+checkpoint/solutions.ipynb + teacher-notes.md + manifest.yaml + coverage-map entry.
+
+**Metadata:** `introduces: []`, `lessons: 0.5`; `requires` = the 10 assessed Term-3 concepts + earlier-Book-2
+introduces used (`complete-search`, `input-parse`, `str-split`, `tuple`); `practices` = Book-1 only; disjoint;
+manifest == map. **`modular-arithmetic` intentionally NOT assessed** (a backtracking count can't force
+reduce-as-you-go, and it is not a capstone prerequisite — see Out of scope); `bitmask` ADDED to the map's CP3
+requires (it was omitted).
+
+**Process:** plan-review gate took 4 rounds to consensus — sol's literalism drove pinning every question to
+ONE concrete problem, correctly flagged that folding modular into a backtracking count is a fake assessment
+(→ modular dropped, Q1 made a genuine `used[]`-undo count), and its round-3 catch of a real
+`practices = Book-1 + earlier-Book-2` internal inconsistency was valid. Statements + fresh blind solutions
+authored by separate codex sessions; teacher-notes + manifest inline.
+
+**Content-review gate:** Round 1 — [self] APPROVE, [glm]/[fable]/[sol] all REJECT on ONE shared scanner-blind
+Must (0 correctness defects): **Q7 used `nonlocal`**, a feature taught nowhere in Book 1/2 and invisible to
+the AST/grep scan — rewritten to the U12 string-returning recursion idiom. Plus 2 [fable] nits (Q4
+constant-output assert gap → added a `"2"`-count assert; teacher-notes Q7 `-1`-sentinel wording → corrected
+to RecursionError). Round 2 — all four APPROVE (consensus); [fable] re-executed all 27 asserts and all three
+reviewers re-confirmed `nonlocal` gone.
+
+**Verification evidence:** all 7 solutions match their stated Sample I/O; 27 inline asserts pass (real exec);
+every signature mutant killed (Q1 missing-un-mark, Q2 operand-order, Q3 digit-order/0, Q4 empty/full/mid mask
++ constant-output, Q5 lcm-without-gcd, Q6 N=49 `p*p` boundary, Q7 sorted-shortcut/`-1`-sentinel); worst-case
+timing comfortable (Q1 N=9 ~0.7s, Q4 N=18 ~0.35s, Q6 2·10⁶ ~0.4s). AST+grep CLEAN — no `nonlocal`/
+comprehension/`+=`/`.pop`/`.join`/`del`/base-modular shortcuts/`sorted()`-traversal/list-or-str-repetition/
+chained-comparison/non-allowed-builtins; wrapper markdown-only; 7 sequential `## Question N`, no stretch.
+Final `scripts/ci-local.sh`: ALL GREEN, pre-merge-guard OK.
+
+**Carry-forward:** Term 4 (U13 Grids/Graphs, U14 Two-Pointers, project-03 capstone) remains — U13 makes
+`deque`+`recursion` central to BFS/DFS; consider CP4 after U14 so two-pointers has a pre-capstone practice
+home. A repo-wide guard for `nonlocal`/`global` (both untaught) would catch the Q7-class slip the scanner
+misses — worth a future tooling note.
 
 ## Plan Review
 
@@ -310,4 +346,11 @@ conventions/metadata/closure clean. Findings:
    yields a wrong answer; for the recursive walk, recursing on child `-1` actually loops to `RecursionError`.
    → reworded to name the RecursionError (recursive) and the silent `arr[-1]` (non-recursive) cases.
 
-All 10 `--book book2` checks PASS after fixes. Round-2 re-review pending.
+All 10 `--book book2` checks PASS after fixes.
+
+### Round 2 re-review (2026-09-09, HEAD 8f17de2) — CONSENSUS
+- **[self]/[glm]/[sol]/[fable] Round 2 — all APPROVE.** Q7 `nonlocal` confirmed resolved by all (grep 0;
+  U12 string-returning idiom; Q7 outputs `40 10 30 20`; asserts hold); Q4 different-count assert and the
+  teacher-notes RecursionError wording confirmed; [fable] re-executed all 27 asserts. One cosmetic note
+  (single vs double quotes in the added Q4 assert) — non-blocking, left as-is.
+- **Content-review gate CLOSED — 4-way consensus (all APPROVE), every `[OPEN]` finding [FIXED].**
