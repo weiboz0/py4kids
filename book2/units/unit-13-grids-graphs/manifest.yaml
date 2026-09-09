@@ -1,0 +1,12 @@
+id: unit-13-grids-graphs
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [graph-repr, bfs, dfs, flood-fill]
+  requires: [grid-2d, dict-literal, dict-access, list-literal, list-append, deque, recursion,
+             set-literal, in-operator]
+  practices: [input-parse, accumulator, arithmetic, boolean, builtin-functions, comparison, def-function,
+              elif-else, if-statement, logical-ops, nested-loops, parameters, print, return-value, set-ops,
+              str-split, string-concat, string-literal, tuple, type-conversion, while-loop]
