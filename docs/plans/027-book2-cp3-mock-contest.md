@@ -74,29 +74,44 @@ Copied from the design + registry + the CP1/CP2/U09–U12 gate lessons; every ta
   the banned builtins, and `sorted`/`\.sort` in any traversal-output solution.
 - **Two-tier metadata (a checkpoint ASSESSES its concepts):** `introduces: []`. `requires:` = EVERY U09–U12
   introduced concept the solutions USE — target set `[recursion, backtracking, deque, postfix-eval,
-  base-conversion, bitwise-ops, bitmask, gcd, sieve, modular-arithmetic, tree-traversal]` (**bitmask added**
-  vs the current map), PLUS any earlier introduce genuinely used (`input-parse`/`str-split`/`complete-search`
-  /`grid-2d`/… — trim to those actually used). `practices:` = `(used) − requires − introduces −
-  wrapper-artifacts (file-read, import-statement)` = the Book-1 + earlier-Book-2 concepts the solutions use;
-  NO U09–U12 introduce appears in `practices`. `requires ∩ practices = ∅`; manifest == coverage-map exactly
-  (incl. list order); `lessons: 0.5`.
-- **Non-vacuous asserts (the U09–U12 mutation categories):** each reference solution carries the sample
-  assert PLUS crafted edge cases killing the technique's signature mutants — backtracking: the base case
-  (empty/no-solution → correct empty answer), a must-undo path, a decisive-last choice; deque/postfix: the
-  LIFO order, an empty-stack/unbalanced edge, a decisive-last token; base-conversion: a decisive last digit/
-  bit + a 0/power boundary; bitwise/bitmask: `&` vs `|` vs `^` differ, empty+full mask, finite-width `~`;
-  gcd: coprime(→1)/one-divides/equal; sieve: the PRIME-SQUARE boundary (e.g. bound 49); modular: a
-  brute-force-checkable case + a wrong-operand / missing-final-`%M` mutant (NO reduce-midway-vs-end assert —
-  impossible in Python); tree-traversal: single node, left-only & right-only skew, a pre/in/post-
-  distinguishing tree (graded traversal output PRE/POST-order so `sorted()` can't shortcut). Decisive values
-  last / last-after-sort.
+  base-conversion, bitwise-ops, bitmask, gcd, sieve, tree-traversal]` (10 concepts: **`bitmask` added** vs
+  the current map, **`modular-arithmetic` removed** — not assessed, see Out of scope), PLUS any earlier
+  introduce genuinely used (`input-parse`/`str-split`/`complete-search`/… — trim to those actually used).
+  All 10 target concepts are used by the A1 allocation (Q1 recursion+backtracking, Q2 deque+postfix-eval,
+  Q3 base-conversion, Q4 bitwise-ops+bitmask, Q5 gcd, Q6 sieve, Q7 tree-traversal); if a `detect()` trim
+  would drop any of the 10, that is an A1-allocation bug to fix, not a metadata adjustment. `practices:` =
+  `(used) − requires − introduces − wrapper-artifacts (file-read, import-statement)` = the Book-1 +
+  earlier-Book-2 concepts the solutions use; NO U09–U12 introduce appears in `practices`.
+  `requires ∩ practices = ∅`; manifest == coverage-map exactly (incl. list order); `lessons: 0.5`.
+- **Non-vacuous asserts — each question's signature mutant (matched to its PINNED solver, per [sol]#3):**
+  Q1 recursion/backtracking — the no-solution base case (e.g. `N` forcing a dead end → `0`), a path that
+  must be un-marked before the next branch (a missing un-mark over-prunes → wrong count), a decisive-last
+  value. Q2 postfix — operand ORDER for `-` (`5 3 -` → `2`, a swapped-operand mutant gives `-2`) and a
+  decisive-last `+` token (no empty-stack edge: input is guaranteed valid). Q3 base-conversion — a decisive
+  last bit, `0` (→ `"0"`), and an exact power of two. Q4 bitwise/bitmask — the EMPTY mask (sum 0) and the
+  FULL mask both counted, and a mid-subset being the unique match (the bitwise witness is the `mask&(1<<i)`
+  membership test). Q5 gcd — coprime (→ GCD 1), one value dividing another, all-equal. Q6 sieve — the
+  PRIME-SQUARE boundary `N = 49` killing the `p*p` `<`-vs-`<=` mutant. Q7 tree-traversal — a single node, a
+  left-only and a right-only skew, and a tree whose pre-order ≠ its values sorted (kills a `sorted()`
+  shortcut). Decisive values last / last-after-sort.
 - **Assessment integrity:** every problem solvable with ONLY ≤ U12 material (prereq closure); the seven
-  collectively cover Term-3 (see A1); contest-appropriate difficulty for a timed sitting (no stretch tier).
-  **Every output is an INTEGER or plain string — never a float.**
+  collectively cover Term-3 — U09 (Q1), U10 (Q2), U11 (Q3 base-conversion, Q4 bitwise+bitmask, Q5 gcd, Q6
+  sieve — 5 of U11's 6 techniques; modular-arithmetic excluded, see Out of scope), U12 (Q7); contest-
+  appropriate difficulty for a timed sitting (no stretch tier). **Every output is an INTEGER or plain string
+  — never a float.**
 
 ## Out of scope
 
 - No new unit/technique/feature (introduces empty); no tooling change.
+- **`modular-arithmetic` is intentionally NOT assessed by CP3 (removed from the map's CP3 `requires`).**
+  Rationale: genuinely assessing modular-arithmetic's "reduce-as-you-go" core needs a dedicated problem whose
+  UNREDUCED value is infeasible while the reduced computation stays fast (a power/factorial mod M) — a
+  backtracking-count-mod-M (the natural fold into Q1) cannot, because the search visits ≥1 state per counted
+  item so the count and the search cost scale together (plan-gate [sol]#2). Adding a dedicated 8th question
+  worsens the already-tight ~40–50 min feasibility ([sol]#4/[fable]#4/[glm]#2). modular-arithmetic is taught
+  and practiced in U11, and is **not a prerequisite of the capstone** (`project-03` requires does not list
+  it), so omitting it from CP3 breaks no downstream closure. CP3 still assesses 5 of U11's 6 techniques
+  (base-conversion, bitwise-ops, bitmask, gcd, sieve).
 - **Verification is NOT out of scope:** Phase B is the named verification phase (blind-solve + mutation +
   full ci-local + 4-way content gate).
 
@@ -118,22 +133,38 @@ assessed set incl. `bitmask` + `practices` = used earlier concepts — both mirr
   (sequential 1..7), each: `### <title>`, one-paragraph statement, `### Constraints`, `### Sample Input`,
   `### Sample Output` (```text fences), then an EMPTY code cell. **Fixed seven-question allocation (pinned to
   ONE concrete problem each — NO "or"/alternatives, per the sol plan-gate lesson):**
-  - **Q1 — recursion + backtracking + modular-arithmetic (U09/U11):** count the arrangements/subsets meeting
-    a stated rule via a recursive backtracking search, and report the count **modulo `M`** (the count can be
-    large; reduce as you go). Small N bound.
-  - **Q2 — deque + postfix-eval (U10):** evaluate a valid space-separated postfix (RPN) expression with a
-    `deque` used as a stack (`appendleft`/`popleft`, never `.pop`); integer result.
-  - **Q3 — base-conversion (U11):** convert a value between decimal and a stated base (binary or hex) BY
-    HAND; a decisive last digit and a boundary (0 / a power) in the asserts.
-  - **Q4 — bitwise-ops + bitmask (U11):** enumerate subsets of a small set via `range(1<<n)` + `mask&(1<<i)`
-    and report a count/selection (the empty and full masks both exercised).
-  - **Q5 — gcd (U11):** GCD/LCM over a list (iterative Euclid; `a // gcd * b`; the zero/coprime/equal edges).
-  - **Q6 — sieve (U11):** count primes ≤ N (or the nth prime) via a sieve built with while/append, crossing
-    off from `p*p`; a sample whose bound is a prime square (e.g. 49).
-  - **Q7 — tree-traversal (U12):** over a binary tree given as parallel arrays (root index, `-1` sentinel
-    base-cased with `== -1`), produce a PRE- or POST-order output or a recursive aggregation (height/leaf/
-    sum) — NOT in-order (so `sorted()` can't shortcut); single-node + skew in the asserts.
-  Integer/plain-string outputs; decisive values last; multi-item output assembled one concat per statement.
+  - **Q1 — recursion + backtracking (U09):** count the number of ways to arrange all `N` distinct given
+    values in a row so that **no two adjacent values differ by exactly 1** (a spaced-permutation count).
+    Solve with a recursive backtracking search that marks a chosen value in a boolean `used[]`, recurses,
+    and **un-marks it on return** (the undo is the point — a choose/skip subset search would NOT exercise
+    backtracking). Output the integer count. `1 <= N <= 9`.
+  - **Q2 — deque + postfix-eval (U10):** evaluate a valid space-separated postfix (RPN) expression with the
+    operators `+ - *` using a `deque` as a stack (`appendleft` push, `popleft` pop — never `.pop`); output
+    the integer result. (Input is guaranteed valid, so there is no empty-stack edge — the decisive mutants
+    are operand order for `-` and a decisive-last `+` token.)
+  - **Q3 — base-conversion (U11):** read a non-negative decimal integer and output its **binary** (base-2)
+    representation, computed BY HAND (repeated `% 2` / `// 2`, digits assembled by `+` concat) — no
+    `bin`/`format`/`:b`. Asserts pin a decisive last bit, `0`, and an exact power of two.
+  - **Q4 — bitwise-ops + bitmask (U11):** given `N` item weights and a target `T`, count the subsets whose
+    total equals `T` by enumerating every mask in `range(1 << N)` and testing membership with
+    `mask & (1 << i)`. Output the integer count. `1 <= N <= 18`. Asserts exercise the empty mask (sum 0) and
+    the full mask, and a mid-subset being the unique match. (Bitwise witnesses are `<<` and `&`, matching the
+    solver; `|`/`^`/`~` are not used here.)
+  - **Q5 — gcd (U11):** read `N` positive integers and output two space-separated values: the GCD of all of
+    them and the LCM of all of them, computed with iterative Euclid (`while b != 0: a, b = b, a % b`) and
+    `lcm = a // gcd * b`. Asserts cover coprime (GCD 1), one value dividing another, and all-equal.
+  - **Q6 — sieve (U11):** read `N` and output the count of primes `p` with `2 <= p <= N`, using a Sieve of
+    Eratosthenes whose boolean array is built with `while`/`append` (never `[False]*n`) and which crosses off
+    multiples starting at `p*p`. One sample uses `N = 49` (= 7²) to pin the `p*p` `<=` boundary.
+  - **Q7 — tree-traversal (U12):** over a binary tree given as parallel arrays (`N`, a root index, then
+    `value left right` per node with `-1` for "no child", base-cased with `== -1` before indexing), output
+    the **pre-order** traversal of the values, space-separated, via a recursive walk (NO class, NO `sorted()`
+    — the sample tree's pre-order differs from its sorted order). Asserts cover a single node, a left-only
+    and a right-only skew, and a tree whose pre-order ≠ its values sorted.
+  Integer/plain-string outputs; decisive values last; multi-item output assembled ONE concat per statement
+  (`result = result + piece` — never the O(n²) `result = result + a + " " + b` form).
+
+  **modular-arithmetic is intentionally NOT assessed in CP3** — see `## Out of scope` for the rationale.
 - [ ] **A2 — solutions.ipynb (FRESH author, blind).** Mirror `## Question N`; pure `solve(data)`;
   scanner-clean forms — recursion/backtracking with pop-free undo (`path + [choice]` or `path[:]=path[:-1]`,
   never `path=path[:-1]`/`del`/`.pop`); deque stack via `appendleft`/`popleft`; base-conversion/gcd/sieve by
@@ -142,13 +173,19 @@ assessed set incl. `bitmask` + `practices` = used earlier concepts — both mirr
   NO comprehension/`+=`/list-or-str-repetition/chained-comparison/`.remove`/banned-builtins. Non-vacuous
   asserts per the mutation categories above. Every cell has an `id`; NO stored outputs.
 - [ ] **A3 — teacher-notes.md.** The SIX headings incl `## Grading` (points per question + total, ~40–50 min
-  budget); `## Pacing` frames the single timed 0.5-lesson sitting; a per-question Big-O line; which Term-3
-  unit/technique each question assesses. May carry the submission-wrapper snippet (allowed in `.md`).
+  budget); `## Pacing` frames the single timed 0.5-lesson sitting and — matching the CP1/CP2 teacher-notes
+  posture — states students are **not expected to finish all seven**: bank the surest questions first, and
+  the grading rewards partial completion (a student who solves 5 cleanly passes). Flag **Q1** (recursive
+  backtracking) as the heaviest. A per-question Big-O line; which Term-3 unit/technique each question
+  assesses. May carry the submission-wrapper snippet (allowed in `.md`).
 - [ ] **A4 — manifest.yaml + map.** `introduces: []`; `lessons: 0.5`; `requires:` = the genuinely-assessed
-  U09–U12 introduces (the 11-concept target set, incl. `bitmask`, trimmed to those actually used) + earlier
-  introduces used; `practices:` = `used − requires − introduces − wrapper-artifacts` (Book-1 + earlier-Book-2
-  concepts, incl. `dict-access` if used); `requires ∩ practices = ∅`; manifest == map (incl. order). Derive
-  from an ad-hoc `detect()` over both notebooks; hand-add scanner-invisible used concepts (techniques).
+  U09–U12 introduces — the **10-concept target set** `[recursion, backtracking, deque, postfix-eval,
+  base-conversion, bitwise-ops, bitmask, gcd, sieve, tree-traversal]` (bitmask added, modular-arithmetic
+  removed vs the current map) + earlier introduces genuinely used; `practices:` = `used − requires −
+  introduces − wrapper-artifacts` (Book-1 + earlier-Book-2 concepts, incl. `dict-access` if used);
+  `requires ∩ practices = ∅`; manifest == map (incl. order). Derive from an ad-hoc `detect()` over both
+  notebooks; hand-add scanner-invisible used concepts (techniques). If `detect()` shows any of the 10 target
+  concepts is NOT used, fix the A1 allocation (do not silently drop it from `requires`).
 
 ### Phase B — Verification (named verification phase)
 
@@ -179,6 +216,35 @@ _(filled at Phase B)_
 ## Plan Review
 
 _(4-way plan-review gate — consensus before any implementation)_
+
+### Round 1 (2026-09-09, HEAD 6766776) — [self] APPROVE · [fable] APPROVE WITH NITS · [glm] APPROVE WITH NITS · [sol] REJECT
+
+Conventions/metadata-shape/closure/verification-phase confirmed sound by all four. Blocking + should-fix
+findings (all addressed in the Round-2 revision at HEAD below):
+1. `[FIXED]` [sol#1 = fable#1 = glm#3] A1 claimed "pin ONE concrete problem each" but 5 of 7 slots carried
+   "or"/alternatives (Q1 arrangements/subsets, Q3 binary/hex, Q4 count/selection, Q6 prime-count/nth-prime,
+   Q7 traversal/aggregation). → every slot now pinned to ONE concrete problem (Q1 spaced-permutation count,
+   Q3 decimal→binary, Q4 subset-sum count, Q5 GCD+LCM, Q6 count primes ≤N, Q7 pre-order).
+2. `[FIXED]` [sol#2, fable#2] Q1 folding modular-arithmetic was a FAKE assessment — a backtracking count
+   can't force reduce-as-you-go (count and search cost scale together), and choose/skip subset-counting
+   needs no undo so `backtracking` went unexercised. → Q1 is now a **spaced-permutation count with `used[]`
+   mark/un-mark** (genuine backtracking undo); **modular-arithmetic dropped** from the assessed set (honest
+   `requires`; rationale in Out of scope — it needs a dedicated power/factorial-mod problem and is not a
+   capstone prereq).
+3. `[FIXED]` [sol#3] Mandated mutants didn't match the (unpinned) solvers. → per-question signature mutants
+   now match each PINNED solver (Q2 operand-order/decisive-`+`, no empty-stack since input is valid; Q4 `&`/
+   `<<` witnesses only; Q6 prime-square `N=49`; Q7 pre-order ≠ sorted).
+4. `[FIXED]` [sol#4 = fable#4 = glm#2] 7 dense problems in ~40–50 min feasibility risk. → A3 now states the
+   CP1/CP2 partial-credit posture ("not expected to finish all seven; bank the surest; 5 clean passes") and
+   flags Q1 as heaviest. Kept at 7 (within the 6–8 tooling bound; each question single-focus).
+5. `[FIXED]` [fable#3] pin Q1's (N, M) so count > M. → moot: modular dropped; Q1 outputs a plain integer
+   count (`N ≤ 9`).
+6. `[FIXED]` [fable#5] A4 "trim to used" could shrink the assessed set. → A4 now says any of the 10 target
+   concepts showing unused is an A1-allocation bug to fix, not a metadata trim.
+7. `[noted]` [glm#4] adding `bitmask` is correct/prereq-closed (map omits it; U11 introduces it).
+
+- **[self] Round 2 — APPROVE** (revision addresses every Must/Should above; design now honest + pinned).
+- **[sol]/[glm]/[fable] Round 2 — _pending_**
 
 ## Content Review
 
