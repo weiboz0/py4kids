@@ -269,7 +269,11 @@ findings (all addressed in the Round-2 revision at HEAD below):
   resolved, but caught a real internal inconsistency: Architecture, A4, and B4 still described `practices` as
   "Book-1 + earlier-Book-2 concepts," contradicting the (correct) Book-1-only rule. `[FIXED]` all three now
   say `practices` = Book-1-only and every used earlier-Book-2 introduce goes in `requires`.
-- **[sol] Round 4 — _pending_** (internal-consistency fix applied; self/fable/glm APPROVE stand).
+- **[sol] Round 4 — APPROVE.** practices/requires contract internally consistent; no blocking findings.
+
+### CONSENSUS — plan-review gate CLOSED
+[self] APPROVE · [fable] APPROVE · [glm] APPROVE · [sol] APPROVE. All four APPROVE, no open blocker.
+**Implementation authorized (Phase A).**
 
 ## Content Review
 
