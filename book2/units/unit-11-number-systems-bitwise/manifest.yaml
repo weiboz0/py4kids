@@ -1,0 +1,11 @@
+id: unit-11-number-systems-bitwise
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [base-conversion, bitwise-ops, bitmask, gcd, sieve, modular-arithmetic]
+  requires: [arithmetic, int-type, while-loop, for-loop, range-function, list-literal, complete-search]
+  practices: [input-parse, accumulator, boolean, builtin-functions, comparison, def-function, elif-else,
+              if-statement, list-append, logical-ops, nested-loops, parameters, print, return-value,
+              str-split, string-concat, string-literal, string-methods, tuple, type-conversion]
