@@ -3,7 +3,7 @@ entries:
 - id: unit-01-story-machine
   kind: unit
   title: "Mad-Libs Story Machine — your first programs"
-  lessons: 2
+  lessons: 3
   introduces: [run-program, print, comment, string-literal, variable, naming, input,
                string-concat, f-string, error-messages]
   requires: []
@@ -11,7 +11,7 @@ entries:
 - id: unit-02-number-detective
   kind: unit
   title: "Number Detective — the guessing game"
-  lessons: 3
+  lessons: 4
   introduces: [int-type, arithmetic, type-conversion, boolean, comparison,
                if-statement, elif-else, import-statement, random-module, while-loop]
   requires: [print, input, variable, f-string]

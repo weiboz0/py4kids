@@ -145,7 +145,35 @@ Executable rungs run clean; `input()`/error rungs `no-exec`. Re-allocate across 
 
 ## Post-Execution Report
 
-_(filled at Phase D)_
+**Shipped (pilot):** reworked U01 (Story Machine) and U02 (Number Detective) lessons with worked-example
+ladders, establishing the reusable standard for a later U03–U10 rollout.
+
+**Phase A — U01:** `lesson.ipynb` rebuilt (24 → 62 cells; 26 code, 5 `no-exec`), re-segmented into 3 lesson
+sections (output basics → saving/reusing → combining + project). Each introduced concept is now a graduated
+ladder + `Notice:` lines (print 3 rungs, string-literal 3, comment 2, variable 3, naming 3, input 3 all
+`no-exec`, string-concat 3, f-string 3; `error-messages` keeps its single broken/fixed demo). All rungs are
+STRINGS only (no numbers — arithmetic is U02). teacher-notes `## Pacing` → 3 lessons; manifest `lessons: 3`.
+
+**Phase B — U02:** `lesson.ipynb` rebuilt (23 → 68 cells; 29 code, 8 `no-exec`), re-segmented into 4 lesson
+sections (numbers → picks & judges → one-guess verdict → full game + debugging). Ladders for all 10 introduced
+concepts; the beginner-hard ones carry 4 rungs (arithmetic, comparison) and the conditionals/loop build up
+gradually. **while-loop rungs are all `no-exec` + input-driven with NO counting variable** — any read-modify-
+write (`x = x - 1`, `x = x // 2`, …) is flagged `accumulator` (U04) by concept-scan, so loops make progress by
+re-reading `input()`, matching the existing unit. teacher-notes `## Pacing` → 4 lessons; manifest `lessons: 4`.
+
+**Phase C:** `books.yaml` book1 `lesson_budget: [28, 44]` (headroom for the rollout); coverage-map U01 `lessons:
+3`, U02 `lessons: 4` (= manifests; total 34); syllabus arc-table + the "~30 lessons"/"summing to 32"/"~30–32
+class sessions" prose updated to the advisory new figures.
+
+**Phase D — verification:** `ci-local.sh` ALL GREEN. concept-scan clean (two `+` false-classifications fixed:
+a U01 variable+variable concat read as `arithmetic` → kept a string literal in every U01 `+`; a U02 concat
+read as `string-concat` not in U02's manifest → used an f-string instead, keeping U02 concat-free as shipped).
+exec-lessons runs every non-`no-exec` rung clean; AST closure audit confirms no U01 rung uses a number and no
+rung uses a later-in-unit concept or `accumulator`/`loop-counter`. Concepts introduced/required/practiced
+unchanged (only `lessons` + examples grew); exercises/solutions/checkpoints untouched.
+
+**Deviations:** none to scope. `lesson_budget` set to `[28, 44]` (not the exact 34) for rollout headroom, per
+the round-1 nit + "budget isn't a constraint".
 
 ## Plan Review
 

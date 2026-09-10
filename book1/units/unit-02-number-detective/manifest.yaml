@@ -1,7 +1,7 @@
 id: unit-02-number-detective
 kind: unit
 blueprint_version: 1
-lessons: 3
+lessons: 4
 provenance: original
 concepts:
   introduces: [int-type, arithmetic, type-conversion, boolean, comparison,

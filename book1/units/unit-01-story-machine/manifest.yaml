@@ -1,7 +1,7 @@
 id: unit-01-story-machine
 kind: unit
 blueprint_version: 1
-lessons: 2
+lessons: 3
 provenance: original
 concepts:
   introduces: [run-program, print, comment, string-literal, variable, naming, input,

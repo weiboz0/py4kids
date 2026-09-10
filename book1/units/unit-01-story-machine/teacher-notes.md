@@ -7,22 +7,24 @@ Success looks like: every student runs a Mad-Libs machine they modified themselv
 
 ## Pacing
 
-Budget: two lessons of 60–90 minutes; this is the heaviest introduction load of the year at the most fragile point, so the exercise set stays short and the pace stays gentle.
+Budget: three lessons of 60–90 minutes (this is the heaviest introduction load of the year at the most fragile point). Each concept is taught as a short **worked-example ladder** — a minimal example, then one small twist, then a realistic use — with a one-line *Notice* after each rung naming the single new thing. The lesson-count is advisory: pull in as many rungs as the class has time for; the ladders exist so students generalize a concept rather than copy one line.
 
-- **Lesson 1 — run-program, print, comment, string-literal, error-messages (60–90 min).**
+- **Lesson 1 — run-program, print, string-literal, comment, error-messages (60–90 min).**
   Open on the project thread: run the finished Mad-Libs machine live and let the class shout the words.
   10 min: what a program is; running a notebook cell (run-program).
-  25 min: print and string literals — students make the starter story their own.
-  15 min: comments as notes-to-self.
-  20 min: DELIBERATELY break a line (unclosed quote, misspelled print) and read the traceback together (error-messages); the message is a clue, not a scolding.
-  Buffer: exercises 1–2.
-- **Lesson 2 — variable, naming, input, string-concat, f-string (60–90 min).**
-  Open on the thread: yesterday's story was fixed; today the machine asks for the words.
-  20 min: variables as labeled boxes; naming conventions via bad-name comedy (`x`, `thing2`, `myAwesomeDogName`).
-  20 min: input() collects words.
-  25 min: assembling the story — concatenation first, then f-strings as the nicer way.
-  Rest: exercises; finish the personal Mad-Libs machine.
-  60-MINUTE CUT: compress the naming-comedy segment to 10 min and defer the concatenation-vs-f-string comparison — teach f-strings only; concatenation resurfaces in exercises.
+  30 min: the print ladder (one line → several lines → a blank line) and the string-literal ladder (double quotes → single quotes → punctuation is text) — students make each rung their own.
+  15 min: the comment ladder (a note line → a comment at the end of a line).
+  20 min: DELIBERATELY break a line (unclosed quote) and read the traceback together (error-messages); the message is a clue, not a scolding.
+- **Lesson 2 — variable, naming, input (60–90 min).**
+  Open on the thread: yesterday's story was fixed; today the machine remembers and asks for the words.
+  25 min: the variable ladder (save + show → two variables → reassigning replaces the value).
+  20 min: the naming ladder (a descriptive name → underscores for multiple words → exact-same-spelling), spiced with bad-name comedy (`x`, `thing2`, `myAwesomeDogName`).
+  20 min: the input ladder (prompt + show → reuse the reply → two questions) — each rung is teacher-run (it waits for typing).
+- **Lesson 3 — string-concat, f-string, and the Story Machine (60–90 min).**
+  25 min: the concatenation ladder (`+` two pieces → join several → spaces must be added by hand).
+  25 min: the f-string ladder (one `{name}` → several `{names}` → the same name twice) as the nicer way.
+  Rest: finish the personal Mad-Libs machine; exercises.
+  60-MINUTE CUT (any lesson): teach rungs 1–2 of each ladder live and leave rung 3 as a "try it" — the *Notice* lines let students self-serve the last rung.
 
 Practices reappearance (none — this is the first unit; every concept here is practiced in units 02–04 and checkpoint 01).
 

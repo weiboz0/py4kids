@@ -1,7 +1,7 @@
 # Book 1 — Year 1 Syllabus
 
 Project-first Python fundamentals for middle school students with zero programming experience.
-~30 lessons of 60–90 minutes across one school year.
+~34 lessons of 60–90 minutes across one school year (the lesson counts are advisory workload estimates — a teacher pulls in as many worked examples as class time allows).
 Every unit opens with a project the students want to build; concepts arrive only when the project needs them (decision D-001).
 Machine-readable arc: `curriculum/coverage-map.yaml` against `curriculum/concepts.yaml`.
 Every unit ships stretch ("Challenge") exercises for faster students; core content never depends on them.
@@ -10,8 +10,8 @@ Every unit ships stretch ("Challenge") exercises for faster students; core conte
 
 | # | Entry | Kind | Lessons | The hook |
 |---|-------|------|---------|----------|
-| 1 | `unit-01-story-machine` | unit | 2 | Build a Mad-Libs machine that writes silly stories from your friends' words. |
-| 2 | `unit-02-number-detective` | unit | 3 | The computer picks a secret number — outsmart it in as few guesses as possible. |
+| 1 | `unit-01-story-machine` | unit | 3 | Build a Mad-Libs machine that writes silly stories from your friends' words. |
+| 2 | `unit-02-number-detective` | unit | 4 | The computer picks a secret number — outsmart it in as few guesses as possible. |
 | 3 | `checkpoint-01-first-steps` | checkpoint | 0.5 | Show what you've got: stories and guessing. |
 | 4 | `unit-03-turtle-art-studio` | unit | 3 | Command a robot turtle to draw spirals, stars, and gallery-worthy art. |
 | 5 | `unit-04-quiz-show` | unit | 2 | Host your own quiz show with scores, streaks, and sudden death. |
@@ -27,8 +27,8 @@ Every unit ships stretch ("Challenge") exercises for faster students; core conte
 | 15 | `checkpoint-04-year-one-finale` | checkpoint | 0.5 | Files and objects, proven. |
 | 16 | `project-02-grand-adventure` | project | 4 | Capstone: a text adventure (or arcade game) using everything from the year. |
 
-Lesson budget: the map's `lessons` values are workload units summing to 32 — 24 unit lessons + 6 project lessons + 4 half-lesson checkpoints.
-On the calendar this fits ~30–32 class sessions: each checkpoint's half-lesson is absorbed into the session that opens the following entry when the schedule is tight.
+Lesson budget: the map's `lessons` values are advisory workload units summing to 34 — 26 unit lessons + 6 project lessons + 4 half-lesson checkpoints. (Units 01–02 carry worked-example ladders, so they run 3 and 4 lessons respectively; see plan 031.)
+On the calendar this fits ~32–34 class sessions: each checkpoint's half-lesson is absorbed into the session that opens the following entry when the schedule is tight.
 Turtle-based lessons (units 03/05) run as `.py` scripts launched from the JupyterLab/VS Code terminal — turtle opens its own window and does not draw inside notebook cells; all other work stays in notebooks.
 
 ## Term shape
