@@ -94,38 +94,96 @@ all Book-2 closure rules (see below); the full solver obeys them too but may rea
 
 ## Phases
 
-### Phase A — `judge-check` tool + `concept-scan` over `.py` + `ci-local` wiring
+### Phase A — `judge-check` + `source-policy` checker + per-entry switch + `ci-local` wiring
 
-- **Create `tools/judge.py`** with `judge_findings(root, book, unit=None)` (modeled on
-  `turtle_findings`): for each entry dir under the book, for each `assets/*.py`, for each fixture pair
-  `assets/<pid>/<k>.in`+`<k>.out`, run `subprocess.run([sys.executable, script], stdin=<in bytes>,
-  capture_output=True, text=True, timeout=…, cwd=repo root, check=False)`; FAIL on nonzero/timeout/no
-  output; token-compare stdout to expected; FAIL with a diff-ish message on mismatch. Require **≥1
-  `.py` with ≥2 fixture pairs** per authored entry that has an `assets/` dir (entries without
-  `assets/` are skipped — tolerate a partial book, like the other per-entry checks). Register
-  `"judge-check": judge_findings` in `tools/checks.py`; add to `UNIT_ONLY`/entry iteration as
-  appropriate.
-- **Extend `concept-scan`** to also scan each entry's `assets/*.py` (parse with `ast`, run the same
-  `detect()` closure) so real contest code is held to taught-concepts; **allow `input` and `sys`** for
-  `.py` solvers (add `input` to the scanner's recognized/never-flag set or map to `input-parse`; `sys`
-  import → `import-statement`, exempt like the precedented no-exec wrapper `import sys`). Verify the
-  banned-token AST greps still fire on the `.py`.
-- **Retire the book2 `solve()`-assert path:** `_solution_policy_findings` (≥3 asserts) and
-  `exec-solutions` should no longer REQUIRE executable assert cells for book2 entries that use the new
-  `assets/`+`judge-check` model. Make `solutions.ipynb` permitted to be all-`no-exec` display;
-  `exec-solutions` must not execute (and hang on) `no-exec`/stdin display cells. Keep `exec-lessons`
-  (the literal-data ladder rungs still run).
-- **Wire `judge-check` into `scripts/ci-local.sh`** for book2 (after the existing per-entry checks).
-- **Tests:** add `tools/` unit tests for `judge_findings` (a passing fixture set, a wrong-output
-  FAIL, a timeout/nonzero FAIL) using a tiny temp entry.
+**A1 — `tools/judge.py` `judge_findings(root, book, unit=None)`** (modeled on `turtle_findings`,
+iterating `content_dirs` — units + checkpoints + projects):
+- For each entry with an `assets/` dir, **derive the expected solver set from the entry's headings**
+  (`## Exercise N` → `exN.py`; `## Question N` → `qN.py`; lesson solvers `l1.py`,`l2.py`,…
+  referenced by the lesson) and FAIL any expected-but-missing `.py`.
+- For **every** discovered `assets/*.py` (not just one), require **≥2 matched fixture pairs**
+  `assets/<pid>/<k>.in`+`<k>.out`; FAIL a `.py` with <2 pairs, an `.in` with no matching `.out` (or
+  vice-versa), and an orphan fixture dir with no `.py`.
+- Run each case: `subprocess.run([sys.executable, str(script)], input=<case>.in.read_text(),
+  text=True, capture_output=True, timeout=JUDGE_TIMEOUT_S, cwd=<repo root>, check=False)` — note
+  **`input=` (a string), NOT `stdin=`**, with `text=True` (Sol BLOCKER 1). FAIL on nonzero exit,
+  timeout, or empty output; else **token-compare** `stdout.split() == expected.split()`, FAIL with a
+  short diff on mismatch. `JUDGE_TIMEOUT_S = 30` (module constant); keep fixtures modest so a correct
+  solver finishes well under it. Entries without `assets/` are skipped (partial-book tolerant).
+- **Mirror check:** for each `<pid>.py`, the matching `solutions.ipynb`/lesson display cell must equal
+  the `.py` source modulo whitespace (kills the display-vs-`.py` drift nit class across the rollout).
+- Register `"judge-check": judge_findings` in `tools/checks.py`; it is **NOT** in `UNIT_ONLY_CHECKS`
+  (checkpoints/projects gain `assets/` in rollout). Update the registry inventory test
+  (`tuple(CHECKS) == CHECK_NAMES`) and the missing-root/selector matrices.
 
-### Phase B — design-001 §3 amendment + standard
+**A2 — per-entry new-vs-old switch (the correctness-continuity linchpin).** Detection: an entry is
+**new-model** iff it has an `assets/` dir containing ≥1 `.py`. For a new-model book2 entry, **skip the
+ENTIRE `_solution_policy_findings`** (not only the ≥3-assert sub-finding but also its `input()`/GUI/
+`random` bans at `tools/notebooks.py:264-270` — the no-exec display cells legitimately mirror stdin
+`input()`/`sys` code) AND have `exec-solutions` skip the entry outright (it has no `no-exec` filter
+and would hang on stdin display cells); correctness comes from `judge-check`. An **old-model** entry
+(no `assets/`) is unchanged — `exec-solutions` + ≥3 asserts exactly as today, so the 13 un-migrated
+units + 4 checkpoints + capstone stay verified throughout the rollout. Add `no-exec` filtering to
+`exec-solutions` too (harmless — no current `solutions.ipynb` carries a `no-exec` cell). Scope every
+exemption to **book2 + assets-model**; update `tests/test_tools.py` (the policy tests near :1525,
+:2103) and add **both-direction** tests (assets entry exempt incl. an `input()` display cell;
+assets-less book2 entry STILL requires ≥3 asserts).
 
-Rewrite `docs/designs/001-book2-algorithms.md §3` from the `solve(data)` inline-assert contract to the
-stdin-first subprocess-judge contract above (fixtures in `assets/`, `judge-check`, `.py` solvers,
-`solutions.ipynb` as display, lessons' executable-literal rungs + no-exec stdin solver). Record the
-Book-2 ladder/completeness standard (this plan's section) there or in the plan as the reusable
-reference for the rollout. (design-001 is a design doc, not a governance file — amendable here.)
+**A3 — `noexec-check` stdin extension.** `INTERACTIVE` (`tools/notebooks.py:46`) matches only
+`input(`; extend it to also match `sys.stdin` so a lesson solver cell reading `sys.stdin.read()` is
+forced `no-exec` (else `nbclient` silently returns `""` and the cell "executes clean" on garbage —
+GLM #2 / fable N3). Still guards `lesson.ipynb` (where the mirror solver cell lives).
+
+**A4 — `concept-scan` over `.py` is VERIFY-not-build.** `concept_scan` already yields `assets/*.py`
+(`tools/concept_scan.py:447-449`) and `input`→baseline, `import sys`→`import-statement`,
+`.read`→`file-read`, `.split`→`str-split`, `int()/str()`→`type-conversion` all resolve with zero gaps
+(glm/fable verified via `detect()`). So this is a verification step (run the scan on the `.py`,
+confirm no gaps), not new code. **Do NOT claim an automated banned-token check here** — that is A5.
+
+**A5 — NEW `tools/source_policy.py` `source_policy_findings` (replaces the nonexistent "AST greps"
+Sol BLOCKER 3 flagged).** An explicit AST checker over executable lesson rungs + every solver
+`assets/*.py`, FAILing the always-banned scanner-blind surface that has repeatedly slipped past
+`concept-scan` and been reviewer-caught all through Book 2: chained comparison (`ast.Compare` with
+>1 op), list/str repetition (`ast.BinOp` `Mult` with a `List`/`Str` operand), ternary (`ast.IfExp`),
+`global`/`nonlocal`, `del`, augmented assign `+=` (`ast.AugAssign`), comprehensions
+(`ListComp`/`SetComp`/`DictComp`/`GeneratorExp`), `import itertools`/`from collections import Counter`,
+the banned methods (`.pop`/`.join`/`.index`/`.count`/`.find`), and builtins outside the allowed set
+`{len,min,max,sorted,sum,abs,round}` ∪ the stdin set `{input,print,range,int,str,len,...}` (pin the
+exact allowed set). Ship a **mutation fixture per ban** (a tiny snippet that must FAIL). Register +
+wire into `ci-local` for book2 (book1 retro-coverage is a later option, out of scope here).
+
+**A6 — `layout`/`ASSET_REF` existence extension.** The referenced-asset existence + py-compile check
+is currently `uses_turtle`-guarded (`tools/notebooks.py:331-357`); extend the existence check to ANY
+entry with an `assets/` dir so a lesson referencing a missing `assets/l2.py` FAILs `structure-check`
+(compile is redundant with `judge-check` execution).
+
+**A7 — wire into `scripts/ci-local.sh`** (book2): add `judge-check` and `source-policy` after the
+existing per-entry checks.
+
+**A8 — tests:** `judge_findings` — pass; wrong-output FAIL; nonzero FAIL; timeout FAIL; **missing
+expected script** FAIL; a script with **0 or 1 case** FAIL; **missing `.in`/`.out` counterpart** FAIL;
+**orphan fixture dir** FAIL; a second **untested script** FAIL; mirror-drift FAIL. `source_policy` —
+one mutation fixture per ban (each FAILs) + a clean sample (passes). Policy exemption — both
+directions (A2). Registry inventory + selector matrices updated.
+
+### Phase B — amend ALL binding contract references + standard
+
+Amending only §3 leaves stale binding claims elsewhere that U08 would immediately violate (Sol MAJOR
+4/5). Update every binding reference in `docs/designs/001-book2-algorithms.md`:
+- **§3** — rewrite to the stdin-first subprocess-judge contract above (`.py` solvers reading stdin,
+  `.in`/`.out` fixtures in `assets/`, `judge-check`, `solutions.ipynb` as no-exec display, lessons'
+  executable-literal ladder rungs + no-exec stdin "Put it together" solver).
+- **§4** — the unit file-set line wrongly says `solutions.ipynb` holds "`solve` functions + asserts"
+  and teacher-notes has "six headings incl `## Rubric`". Correct both: solutions are the no-exec
+  display + `assets/` `.py`; unit teacher-notes are the **5** `NOTES_HEADINGS` (verified against
+  `tools/notebooks.py:38-45`; `## Grading` is checkpoints, `## Rubric` is projects).
+- **§7 / §11** — update any remaining `solve(data)`/inline-assert binding language.
+- **`book2/syllabus.md:14`** — independently declares the old contract binding; rewrite to the new
+  contract.
+- Add a short **staged-transition note** (old-model entries keep `solve()`+asserts until migrated;
+  the per-entry `assets/` switch is the boundary) so the half-migrated book is internally consistent.
+- Record the **Book-2 ladder/completeness standard** (this plan's section) as the reusable rollout
+  reference. (design-001 + syllabus are content/design docs, not governance files — amendable here.)
 
 ### Phase C — U08 Prefix Sums re-author (the end-to-end pilot)
 
@@ -138,22 +196,29 @@ Re-author `book2/units/unit-08-prefix-sums/`:
   incl. a decisive-last / boundary case per the Book-2 mutation-kill discipline).
 - `exercises.ipynb`: statements unchanged in shape (`## Exercise N`, Sample Input/Output, Constraints;
   ≥8, ≥2 stretch) — re-point "submit" to running the `.py` with piped input.
-- `solutions.ipynb`: all-`no-exec` display mirroring each `.py` + short explanation.
-- `teacher-notes.md`: 5 unit headings; pacing re-synced to the ladders (U08 stays 2 lessons);
-  per-exercise Big-O; the concept→core-practice matrix.
+- `solutions.ipynb`: all-`no-exec` display mirroring each `.py` (each `## Exercise N` gets a CODE
+  cell — `solutions_structure_findings` requires it) + short explanation; source must match the `.py`
+  (the A1 mirror check enforces this).
+- `teacher-notes.md`: the 5 unit `NOTES_HEADINGS`; pacing re-synced to the ladders (U08 stays 2
+  lessons); per-exercise Big-O; the concept→core-practice matrix; a note that the `[x]*n`
+  list-repetition ban means pre-sized 2D prefix arrays are built with append-loops (so the verbose 2D
+  rungs don't surprise — fable pedagogy caution).
 - `manifest.yaml`: add nothing to concepts (prefix-sum unchanged); `lessons: 2` unchanged.
 
 ### Phase D — Verification (named verification phase)
 
-`scripts/ci-local.sh` ALL GREEN including the new `judge-check`: registry/lint, unit tests (incl. the
-new `judge_findings` tests), `exec-lessons` (U08 literal-data rungs run clean; stdin solver cells
-`no-exec`), `judge-check` (every U08 `assets/*.py` passes its fixtures), `concept-scan` (closure over
-lesson + `.py`, stdin constructs allowed, banned AST-greps clean), `coverage`/`prereq`, manifest==map,
-structure/hygiene/noexec/cell-lint, Book-1 PDF build (book1-only — unaffected), pre-merge guard.
-**Closure + completeness audit (primary content-review duty):** each ladder one-increment with a
-focused Notice; full solver framed "Put it together"; fixtures non-vacuous + mutation-killing; no
-banned/untaught construct in any `.py` or rung; stdin solvers correct on the stated samples; lessons
-project-first; `## Pacing` == lessons.
+`scripts/ci-local.sh` ALL GREEN including the new checks: registry/lint, unit tests (incl. the new
+`judge_findings` + `source_policy` tests + the policy-exemption both-direction tests), `exec-lessons`
+(U08 literal-data rungs run clean; stdin solver cells `no-exec`), `judge-check` (every U08
+`assets/*.py` passes ≥2 fixtures; expected-script set complete; mirror matches), `source-policy` (no
+banned construct in any rung or `.py`), `concept-scan` (closure over lesson + `.py`; stdin constructs
+resolve), `coverage`/`prereq`, manifest==map, structure/hygiene/noexec/cell-lint, Book-1 PDF build
+(book1-only — unaffected), pre-merge guard. The 13 un-migrated units + 4 checkpoints + capstone stay
+GREEN on the OLD path (no `assets/` ⇒ `exec-solutions` + asserts unchanged). **Closure + completeness
+audit (primary content-review duty):** each ladder one-increment with a focused Notice; full solver
+framed "Put it together"; fixtures non-vacuous + mutation-killing (decisive-last/boundary case per
+problem); banned constructs now MECHANICALLY enforced by `source-policy` (reviewers still sanity-check);
+stdin solvers correct on the stated samples; lessons project-first; `## Pacing` == lessons.
 
 ## Out of scope
 
@@ -168,7 +233,79 @@ _(filled at Phase D)_
 
 ## Plan Review
 
-_(4-way plan-review gate — consensus before implementation)_
+### Round 1 (HEAD 683f1a7) — [self] APPROVE WITH NITS
+
+- **Tooling soundness ✓** — `judge-check` mirrors the proven `turtle_findings` subprocess model;
+  stdin-pipe + token-compare is standard. Named verification Phase D present. design-001 is amendable
+  (not governance).
+- **CRITICAL implementation clarification (the #1 correctness-continuity risk):** retiring the
+  `solve()`/assert path must be **CONDITIONAL and per-entry**, NOT global. The switch = "entry has an
+  `assets/` dir containing ≥1 `.py`" ⇒ NEW model (judge-check verifies it; `exec-solutions` and
+  `_solution_policy_findings` SKIP it; its `solutions.ipynb` may be all-`no-exec`). An entry WITHOUT
+  `assets/` ⇒ OLD model (keep `exec-solutions` + ≥3-asserts exactly as today). This is essential
+  because plan 036 migrates ONLY U08 — the other 13 units + 4 checkpoints + capstone still carry
+  `solve()`+asserts and MUST stay verified by `exec-solutions` throughout the rollout. `exec-solutions`
+  must not execute a new-model entry's `no-exec` stdin display cells (it has no `no-exec` filter), so
+  it must skip new-model entries entirely, not just their no-exec cells.
+- **concept-scan ✓ with work** — extending `detect()`/closure to `assets/*.py` and allowing
+  `input`/`sys`/`sys.stdin.read` (add `input` to the recognized/allowed set; `import sys` exempt like
+  the precedented wrapper) while keeping the banned-token AST-greps (ternary/comprehension/`+=`/
+  chained-compare/list-repetition/`.pop`/`.join`) firing on the `.py` — real but bounded tooling.
+- **cell-lint ✓ for the pilot** — U08 is a `kind:unit`, whose `no-exec` cells are cell-lint-exempt;
+  self-contained stdin display cells define all their names (no F821). Flag for later checkpoint/
+  project batches where the exemption is unit-only.
+- **Nits / watch-items:** (a) make the per-entry new-vs-old switch explicit in Phase A (above);
+  (b) `judge-check` timeout value + a fixture-size guidance (keep correct solvers well under it);
+  (c) confirm `structure-check` tolerates an `assets/` dir on a book2 unit (book1 turtle units prove
+  it does); (d) reviewers may prefer splitting infra (Phase A/B) from content (Phase C) — I coupled
+  them so U08 proves the harness end-to-end, with `tools/` unit tests giving infra independent
+  coverage; open to splitting if consensus wants it.
+
+### Round 1 (HEAD 683f1a7) — [glm] APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] REJECT
+
+All three confirmed the direction is sound (no tool hard-codes `solve(`; `judge-check` mirrors the
+`turtle_findings` precedent; `concept-scan` already scans `assets/*.py` and stdin resolves with zero
+gaps; named Phase D present; no split needed). Findings (blockers + must-fixes), all `[FIXED]` in the
+revised plan:
+
+1. `[FIXED]` **[sol B1] subprocess call invalid** — `stdin=<bytes>`+`text=True` is wrong. → Phase A1
+   now uses `subprocess.run([py, script], input=<case>.in.read_text(), text=True, …)`.
+2. `[FIXED]` **[sol B2 / glm #3 / fable] judge-check fail-open** — "1 `.py` with 2 fixtures/entry" let
+   other solvers ship unverified. → A1 requires EVERY `.py` to have ≥2 matched pairs, derives the
+   expected `exN`/`qN`/`lN` script set from headings (missing script FAILs), and rejects orphan
+   fixtures; A8 adds the one-fault tests.
+3. `[FIXED]` **[sol B3 / glm #5 / fable] banned-construct check didn't exist** — the plan claimed "AST
+   greps" that `detect()` does not perform. → Built as the real **A5 `source-policy` AST checker**
+   (chained-compare, `[x]*n`, ternary, `global`/`nonlocal`, `del`, `+=`, comprehensions,
+   itertools/Counter, banned methods, non-allowed builtins) with a mutation fixture per ban; Phase D
+   reworded from "greps" to this mechanical check.
+4. `[FIXED]` **[sol M4] doc amendment incomplete** — §3 alone left old-contract bindings in §4/§7/§11
+   and `book2/syllabus.md:14`. → Phase B now amends all of them + adds a staged-transition note.
+5. `[FIXED]` **[sol M5] teacher-notes heading conflict** — verified tooling requires 5 for units
+   (`NOTES_HEADINGS`), so U08's 5 is correct; design §4's "six incl `## Rubric`" is STALE → amended in
+   Phase B (and its stale "solutions = solve+asserts" line).
+6. `[FIXED]` **[glm #1 / fable N1] `_solution_policy_findings` also bans `input()`** (not just
+   asserts) — must waive the WHOLE policy for new-model entries. → A2 waives the entire policy + has
+   `exec-solutions` skip new-model entries; both-direction tests added; scoped book2+assets-only.
+7. `[FIXED]` **[glm #2 / fable N3] `noexec-check` misses `sys.stdin`** — my "already enforced" claim
+   was false. → A3 extends `INTERACTIVE` to match `sys.stdin`.
+8. `[FIXED]` **[glm #6 / fable N4] `ASSET_REF` existence check is turtle-only** — → A6 extends it to
+   any entry with an `assets/` dir.
+9. `[FIXED]` **[fable N5 / sol NIT] registration** — A1: `judge-check` iterates `content_dirs`, NOT
+   `UNIT_ONLY_CHECKS`; registry-inventory + selector tests updated.
+10. `[FIXED]` **[fable N2 / self] mirror drift** — A1 adds a display-cell-vs-`.py` mirror check
+    (kills the drift nit class across the whole rollout).
+11. `[FIXED]` **[glm #8] solutions mirror cells must be CODE cells** (`solutions_structure_findings`)
+    and **[fable pedagogy]** `[x]*n` ban → 2D prefix via append-loops — both noted in Phase C.
+12. `[FIXED]` **[glm #4] concept-scan over `.py` already implemented** — A4 reworded to verify-not-
+    build.
+
+### Round 2 (HEAD pending) — re-dispatched to [sol]/[glm]/[fable]
+
+The revision adds a new `source-policy` tool and materially hardens the tooling spec, so all three
+are re-dispatched to bless the revised plan.
+
+_(awaiting round 2)_
 
 ## Content Review
 
