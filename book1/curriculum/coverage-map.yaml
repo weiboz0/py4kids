@@ -114,7 +114,7 @@ entries:
   requires: [list-append, string-methods, def-function, for-loop, parameters, return-value]
   practices: [list-loop, dict-access, f-string, in-operator, builtin-functions, dict-literal,
               if-statement, list-literal, print, variable, string-concat, string-literal,
-              type-conversion, int-type, error-messages, input]
+              type-conversion, int-type, error-messages, input, elif-else]
 - id: unit-10-pet-simulator
   kind: unit
   title: "Pet Simulator — a gentle intro to objects"

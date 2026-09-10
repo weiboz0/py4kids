@@ -25,6 +25,7 @@ build/
 # unit-09 file-I/O runtime scratch (created by lesson/solution notebooks at run time; never commit)
 book1/units/unit-09-save-point/savegame.txt
 book1/units/unit-09-save-point/settings.txt
+book1/units/unit-09-save-point/overwrite_scores_tmp.txt
 
 # checkpoint-04 file-I/O runtime scratch (written by Q3, read by Q4 at run time; never commit)
 book1/checkpoints/checkpoint-04-year-one-finale/finale.txt
