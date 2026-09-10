@@ -98,11 +98,19 @@ all Book-2 closure rules (see below); the full solver obeys them too but may rea
 
 **A1 — `tools/judge.py` `judge_findings(root, book, unit=None)`** (modeled on `turtle_findings`,
 iterating `content_dirs` — units + checkpoints + projects):
-- For each entry with an `assets/` dir, **derive the expected solver set from the entry's headings**
-  (`## Exercise N` → `exN.py`; `## Question N` → `qN.py`; lesson solvers `l1.py`,`l2.py`,…
-  referenced by the lesson) and FAIL any expected-but-missing `.py`.
-- For **every** discovered `assets/*.py` (not just one), require **≥2 matched fixture pairs**
-  `assets/<pid>/<k>.in`+`<k>.out`; FAIL a `.py` with <2 pairs, an `.in` with no matching `.out` (or
+- **BOOK-SCOPED to `book2`** (GLM blocker): return `[]` immediately for any `book != "book2"`. The
+  "new-model = `assets/` + `.py`" detector is indistinguishable from Book-1 turtle assets, so running
+  this on Book 1 would try to judge 22 turtle scripts (no `fake_turtle` stub → fail) and break the
+  `CHECK_NAMES`-parametrized Book-1 suites. `source_policy_findings` (A5) is book-scoped the same way.
+- **Expected-solver PID derivation, per entry kind** (so a MISSING solver is caught, not just a
+  present one — Sol B2): a **unit** derives `exN.py` from each `## Exercise N` in `exercises.ipynb`
+  plus lesson solvers `l1.py`,`l2.py`,… referenced by `lesson.ipynb`; a **checkpoint** derives
+  `qN.py` from each `## Question N`; a **project** derives `pN.py` from each `### Problem N` in
+  `brief.ipynb` (the capstone's heading level — NOT `## Milestone N`, which groups problems). FAIL any
+  expected-but-missing `.py`. A `.py` whose stem is NOT a derived PID is treated as a **helper
+  module**: still source-policy-scanned (A5), but not fixture-required and not run standalone.
+- For **every** solver `.py` (a derived PID), require **≥2 matched fixture pairs**
+  `assets/<pid>/<k>.in`+`<k>.out`; FAIL a solver with <2 pairs, an `.in` with no matching `.out` (or
   vice-versa), and an orphan fixture dir with no `.py`.
 - Run each case: `subprocess.run([sys.executable, str(script)], input=<case>.in.read_text(),
   text=True, capture_output=True, timeout=JUDGE_TIMEOUT_S, cwd=<repo root>, check=False)` — note
@@ -110,11 +118,15 @@ iterating `content_dirs` — units + checkpoints + projects):
   timeout, or empty output; else **token-compare** `stdout.split() == expected.split()`, FAIL with a
   short diff on mismatch. `JUDGE_TIMEOUT_S = 30` (module constant); keep fixtures modest so a correct
   solver finishes well under it. Entries without `assets/` are skipped (partial-book tolerant).
-- **Mirror check:** for each `<pid>.py`, the matching `solutions.ipynb`/lesson display cell must equal
-  the `.py` source modulo whitespace (kills the display-vs-`.py` drift nit class across the rollout).
+- **Mirror check:** for each solver `<pid>.py`, exactly ONE display source must equal the `.py` modulo
+  whitespace — for an exercise/question PID it is the CODE cell under that `## Exercise N`/`## Question
+  N` in `solutions.ipynb`; for a lesson solver `lN` it is its `no-exec` display cell in `lesson.ipynb`.
+  The lesson's ladder-rung cells (partial excerpts on literal data) are NOT mirror targets. This kills
+  the display-vs-`.py` drift nit class across the rollout without false-positiving on partial rungs.
 - Register `"judge-check": judge_findings` in `tools/checks.py`; it is **NOT** in `UNIT_ONLY_CHECKS`
   (checkpoints/projects gain `assets/` in rollout). Update the registry inventory test
-  (`tuple(CHECKS) == CHECK_NAMES`) and the missing-root/selector matrices.
+  (`tuple(CHECKS) == CHECK_NAMES`) and the missing-root/selector matrices (both pass because the check
+  returns `[]` for book1).
 
 **A2 — per-entry new-vs-old switch (the correctness-continuity linchpin).** Detection: an entry is
 **new-model** iff it has an `assets/` dir containing ≥1 `.py`. For a new-model book2 entry, **skip the
@@ -141,30 +153,50 @@ GLM #2 / fable N3). Still guards `lesson.ipynb` (where the mirror solver cell li
 confirm no gaps), not new code. **Do NOT claim an automated banned-token check here** — that is A5.
 
 **A5 — NEW `tools/source_policy.py` `source_policy_findings` (replaces the nonexistent "AST greps"
-Sol BLOCKER 3 flagged).** An explicit AST checker over executable lesson rungs + every solver
-`assets/*.py`, FAILing the always-banned scanner-blind surface that has repeatedly slipped past
-`concept-scan` and been reviewer-caught all through Book 2: chained comparison (`ast.Compare` with
->1 op), list/str repetition (`ast.BinOp` `Mult` with a `List`/`Str` operand), ternary (`ast.IfExp`),
-`global`/`nonlocal`, `del`, augmented assign `+=` (`ast.AugAssign`), comprehensions
-(`ListComp`/`SetComp`/`DictComp`/`GeneratorExp`), `import itertools`/`from collections import Counter`,
-the banned methods (`.pop`/`.join`/`.index`/`.count`/`.find`), and builtins outside the allowed set
-`{len,min,max,sorted,sum,abs,round}` ∪ the stdin set `{input,print,range,int,str,len,...}` (pin the
-exact allowed set). Ship a **mutation fixture per ban** (a tiny snippet that must FAIL). Register +
-wire into `ci-local` for book2 (book1 retro-coverage is a later option, out of scope here).
+Sol BLOCKER 3 flagged). BOOK-SCOPED to `book2`** (return `[]` otherwise — same reason as A1). An
+explicit AST checker over executable lesson rungs + every `assets/*.py` (solvers + helpers), FAILing:
+- **Structural bans** (scanner-blind, repeatedly reviewer-caught in Book 2): chained comparison
+  (`ast.Compare` with >1 comparator), list/str repetition (`ast.BinOp` `Mult` with a `List`/`Str`
+  operand), ternary (`ast.IfExp`), `global`/`nonlocal` (`ast.Global`/`ast.Nonlocal`), `del`
+  (`ast.Delete`), augmented assign (`ast.AugAssign`, e.g. `+=`), comprehensions
+  (`ListComp`/`SetComp`/`DictComp`/`GeneratorExp`).
+- **Import bans:** `import itertools`, `from collections import Counter` (but `from collections import
+  deque` is ALLOWED — taught U10; `import sys` ALLOWED).
+- **Banned methods:** `.pop`, `.join`, `.index`, `.count`, `.find` (attribute-call names).
+- **Builtins:** enforce a **pinned allowlist** (a precise set, NOT an open-ended one) — a call to a
+  NAME that is a Python builtin but not in the allowlist FAILs; a call to a name DEFINED in the same
+  file (user helper) or imported is NOT a builtin and is exempt. **Pin the allowlist by auditing
+  current Book 2** so it does not false-positive on valid existing content: it MUST include at least
+  `{len, min, max, sorted, sum, abs, round}` (the free set) ∪ `{input, print, range, int, str}` (stdin
+  + conversions) ∪ `{set}` (set-literal/ops constructor, used in U04/U13 — Sol MAJOR 2) ∪ `{deque}`
+  (from the allowed import). The implementer derives the FINAL set empirically: run a draft over ALL
+  current `book2` lesson cells, and any builtin that surfaces must be deliberately added-or-confirmed-
+  banned before ship (no `...`). Everything else (`enumerate`/`zip`/`map`/`filter`/`all`/`any`/
+  `reversed`/`list`/`dict`/`tuple`/…) is rejected unless the audit shows a legitimate existing use.
+- Ship a **mutation fixture per ban** (a tiny snippet that must FAIL) AND — critically — a
+  **full-current-Book-2 clean regression**: `source_policy_findings(root, "book2")` over the whole
+  existing book MUST return `[]` (proves zero false-positives on shipped content before wiring it into
+  `ci-local`). Register + wire into `ci-local` for book2 (book1 retro-coverage is out of scope here).
 
 **A6 — `layout`/`ASSET_REF` existence extension.** The referenced-asset existence + py-compile check
 is currently `uses_turtle`-guarded (`tools/notebooks.py:331-357`); extend the existence check to ANY
-entry with an `assets/` dir so a lesson referencing a missing `assets/l2.py` FAILs `structure-check`
-(compile is redundant with `judge-check` execution).
+entry with an `assets/` dir so a notebook referencing a missing `assets/l2.py` FAILs `structure-check`
+(compile is redundant with `judge-check` execution). Apply it in the unit, checkpoint, AND project
+layout checks (not just `layout_findings`) so migrated checkpoints/projects are covered too.
 
 **A7 — wire into `scripts/ci-local.sh`** (book2): add `judge-check` and `source-policy` after the
 existing per-entry checks.
 
 **A8 — tests:** `judge_findings` — pass; wrong-output FAIL; nonzero FAIL; timeout FAIL; **missing
-expected script** FAIL; a script with **0 or 1 case** FAIL; **missing `.in`/`.out` counterpart** FAIL;
-**orphan fixture dir** FAIL; a second **untested script** FAIL; mirror-drift FAIL. `source_policy` —
-one mutation fixture per ban (each FAILs) + a clean sample (passes). Policy exemption — both
-directions (A2). Registry inventory + selector matrices updated.
+expected script** FAIL for a unit (`exN`), a checkpoint (`qN`), AND a **project** (`pN` from `###
+Problem N` — Sol B2); a solver with **0 or 1 case** FAIL; **missing `.in`/`.out` counterpart** FAIL;
+**orphan fixture dir** FAIL; a second **untested solver** FAIL; mirror-drift FAIL; a helper `.py`
+(non-PID) is NOT fixture-required; **`judge_findings(root,"book1")` returns `[]`** (book-scope).
+`source_policy` — one mutation fixture per ban (each FAILs); a clean sample (passes);
+**`source_policy_findings(root,"book2")` over the whole current book returns `[]`** (full-book clean
+regression, Sol MAJOR 2); **`(root,"book1")` returns `[]`** (book-scope). Policy exemption — both
+directions (A2). Registry inventory (`tuple(CHECKS)==CHECK_NAMES`) + missing-root/selector matrices
+updated (book1-parametrized rows pass since both new checks return `[]`).
 
 ### Phase B — amend ALL binding contract references + standard
 
@@ -300,12 +332,32 @@ revised plan:
 12. `[FIXED]` **[glm #4] concept-scan over `.py` already implemented** — A4 reworded to verify-not-
     build.
 
-### Round 2 (HEAD pending) — re-dispatched to [sol]/[glm]/[fable]
+### Round 2 (HEAD cb7c1e8) — [glm] REJECT · [sol] REJECT · [fable] (rate-limited, pending)
 
-The revision adds a new `source-policy` tool and materially hardens the tooling spec, so all three
-are re-dispatched to bless the revised plan.
+Round-1 fixes all verified closed (subprocess `input=`, per-script ≥2-fixtures, doc list, 5-heading
+unit contract). Two new blocking findings, both `[FIXED]`; [fable]'s run hit a fable-5 session limit
+(no verdict — re-dispatched round 3):
 
-_(awaiting round 2)_
+1. `[FIXED]` **[glm blocker] `judge-check`/`source-policy` not book-scoped** — as written they'd run
+   over Book-1's 22 turtle `assets/*.py` (no `fake_turtle` stub → fail) and break the
+   `CHECK_NAMES`-parametrized Book-1 suites. → A1 + A5 now return `[]` for any `book != "book2"`; A8
+   adds `(root,"book1")==[]` tests; registry/selector matrices pass.
+2. `[FIXED]` **[sol blocker] project solver discovery fails open** — derivation covered only
+   `## Exercise`/`## Question`; the capstone uses `### Problem N`, so a migrated capstone missing
+   `p8.py` would pass. → A1 now derives `pN.py` from `### Problem N` (projects), `exN`/`qN` for
+   units/checkpoints, with a missing-project-solver test (A8).
+3. `[FIXED]` **[sol major] `source-policy` builtin policy unpinned + would false-positive** — it
+   omitted `set`, which U04/U13 validly call. → A5 now pins the allowlist (incl. `set`, `deque`,
+   stdin/conversion builtins), distinguishes user-defined/imported calls from builtins, and A8
+   mandates a **full-current-Book-2 clean regression** (`source_policy_findings(root,"book2")==[]`)
+   before wiring into ci-local.
+4. `[FIXED]` **[glm nits]** mirror-check target pinned to the `solutions.ipynb` exercise cell /
+   lesson `lN` display cell (not partial ladder rungs); helper `.py` (non-PID) allowed (source-policy-
+   scanned, not fixture-required); A6 existence extension applied to checkpoint/project layout too.
+
+### Round 3 (HEAD pending) — re-dispatched to [sol]/[glm]/[fable]
+
+_(awaiting round 3; [fable] pending its session-limit reset ~2:50am PT)_
 
 ## Content Review
 
