@@ -25,6 +25,8 @@ CHECK_NAMES = (
     "coverage-check",
     "concept-scan",
     "stretch-check",
+    "judge-check",
+    "source-policy",
 )
 REAL_BOOK_EXEC_CHECKS = {"exec-solutions", "exec-lessons"}
 
