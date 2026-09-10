@@ -296,10 +296,16 @@ RESOLVED, but flagged the SAME residual imprecision in the mutant-(b) prose — 
   (feasibility), answer-side→small-case value. Verified all three numerically. (Findings 1 and 2 were
   `[FIXED]` in round 2 and re-confirmed RESOLVED by [sol] here.)
 
-### Round 4
+### Round 4 (2026-09-09, HEAD f456149) — [sol] APPROVE
 
-_(pending — re-dispatch [sol] to confirm the mutant-(b) rewording; [glm]/[fable] already APPROVE/AWN and
-this was their exact nit)_
+[sol] re-ran all three Q6 mutants and confirmed finding 3 resolved: guard-drop `2 5 4`→3, square-side drop
+passes small cases but ~1.6×10¹⁸ bits on huge-`E` (feasibility witness), answer-side drop feasible and
+value-killed (`2 5 3`→8, huge→`50031545098999707`). "Nothing remains."
+
+### CONSENSUS — plan-review gate CLOSED
+
+[self] APPROVE · [glm] APPROVE · [fable] APPROVE (round-3 AWN; the one nit was fixed in round 4) ·
+[sol] APPROVE. Full 4-way blocking consensus, zero open findings. Cleared for implementation (Phases A–D).
 
 ## Content Review
 
