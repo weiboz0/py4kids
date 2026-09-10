@@ -15,7 +15,7 @@ entries:
   introduces: [int-type, arithmetic, type-conversion, boolean, comparison,
                if-statement, elif-else, import-statement, random-module, while-loop]
   requires: [print, input, variable, f-string]
-  practices: [string-literal, naming, comment, run-program, error-messages]
+  practices: [string-literal, naming, comment, run-program, error-messages, string-concat]
 - id: checkpoint-01-first-steps
   kind: checkpoint
   title: "Checkpoint 1 — First Steps"
