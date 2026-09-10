@@ -694,7 +694,27 @@ wording [fable-N3]. PR-body must name the unit-02 `string-concat` scanner-derive
 
 4-way: [self] APPROVE; [sol]/[glm]/[fable] APPROVE WITH NITS — no `[OPEN]` blockers; all round-1
 findings `[FIXED]`; round-2 cosmetic nits folded. `ci-local.sh` ALL GREEN. Content-review gate CLOSED
-for PR-A. Proceeding to PR.
+for PR-A. Merged as PR #39 (squash `acd5bcc`).
+
+### PR-B (Term 3–4: units 04/06/07/08/09/10 + projects 01/02 + checkpoints CP1/CP3)
+
+_4-way gate. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`._
+
+#### Review 1 — [self] (2026-09-10) → APPROVE WITH NITS
+
+- Mechanical: full `ci-local` OOMs in this environment (whole-repo notebook-exec + PDF spike after
+  Book-2 growth), so ran its checks in memory-light groups — ALL GREEN: book-level
+  `concept-scan`/`coverage`/`prereq`/`manifest`/`stretch`/`cell-lint`/`hygiene`/`turtle`/`noexec`/
+  `structure`, `ruff`, `pre-merge-guard`; per-unit `exec-solutions` + `structure` GREEN for all 6 units
+  + both projects + CP1/CP3 (in a kernel-capable env); PDFs build for all 6 touched units.
+- Quantity goal met per Codex rep-count reports: essentials ≥5, others ≥3, with documented
+  `error-messages` count-exemptions (u06/07/08/09/10) and `input` kept as genuinely student-authored
+  (no-exec cells) rather than dropped — a stronger resolution of Sol's false-practice finding than
+  reconciliation #4's drop (deviation recorded; see below).
+- `[self]` NIT `[OPEN]` (Nice to Have): the `input`-kept deviation from plan reconciliation #4 should be
+  explicitly blessed by the gate; confirm the no-exec `input()` reps read as genuine authoring.
+
+#### Reviews 2–4 — [sol] / [glm] / [fable] (pending)
 
 ## Post-Execution Report
 
@@ -717,4 +737,30 @@ for PR-A. Proceeding to PR.
   7/8/10/11 (all ≤16); no notebook cell exceeded the 120 s per-cell timeout; PDF build passed.
 - **Named follow-up:** plan 038 (tooling) — automated "listed-but-not-student-exercised" check — remains
   the durable guard against regression (out of scope here; reviewer-enforced in the interim).
-- **PR-B (Term 3–4: Phases 4–7 + Phase 8 items 2–6):** not yet started — begins after PR-A merges.
+### PR-B (2026-09-10) — Term 3–4, implemented; content gate in progress
+
+- **Statements + solutions** (Codex/GPT-5.6-sol, separate sessions per unit): unit-04 7→10 (author `or`
+  from scratch; accumulator/nesting/break depth); unit-06 7→11 (boolean-as-value, two-round traceback
+  Ex7, `elif` classify, two-shift int-type); unit-07 9→13 (`.sort()`-returns-`None`, `while` ×3,
+  IndexError→`scores[-1]`, ascending sort, max/min); unit-08 11→14 (concat/`str()` scoreboard,
+  boolean-as-value, read-KeyError, key-only dict-loop); unit-09 8→12 (student f-string, FileNotFound
+  "save-before-load" study, real `if/else`, `"w"`-vs-`"a"` edge, transfer); unit-10 8→12 (student
+  `list-index`, integrative "Run a Pet Day" full-`Pet` incl. `pass_time`, deepened dict, run-and-read
+  AttributeError). Essentials ≥5, others ≥3 (per Codex counts), `error-messages` count-exempt with
+  justification.
+- **Projects:** project-01 — student authors `return` in Milestone 3 `quick_quiz()` (the return-vs-print
+  hinge). project-02 — Milestone 1 requires a student-authored `Hero.take_damage` method (param+return,
+  graded), Milestone 5 "Assemble the Grand Adventure" is a named graded synthesis milestone, Milestone 3
+  requires a student-authored `list-index`; exemplar deterministic (`seed(4)`).
+- **Checkpoints:** CP1 Q1 now authors a `+` concatenation (earns the `string-concat` tag); CP3 Q6 branch
+  made reachable; CP3 Q8 reads the actual KeyError before `.get`.
+- **Metadata:** unit-09 `practices += elif-else` (introduced unit-02, closure-clean); `.gitignore` +=
+  `overwrite_scores_tmp.txt`. **Deviation from reconciliation #4:** `input` NOT dropped from units
+  07–10 — PR-B statement authoring made it genuinely student-authored (no-exec cells), which resolves
+  Sol's false-practice finding more directly; recorded here per the honesty principle (content gate to
+  bless).
+- **Verification:** full `ci-local` OOMs in this environment (whole-repo memory spike); its checks were
+  run in memory-light groups — book-level checks + `ruff` + `pre-merge-guard` GREEN, per-unit
+  `exec-solutions`/`structure`/`turtle` GREEN for all touched entries, PDFs build for all 6 units.
+  Per-unit core 10/11/13/14/12/12 (all ≤16).
+- **Named follow-up:** plan 038 (tooling) still the durable regression guard (out of scope).
