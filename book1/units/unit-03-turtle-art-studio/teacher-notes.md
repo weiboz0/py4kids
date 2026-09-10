@@ -24,7 +24,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   20 min: any polygon — `angle = 360 / n` (`l2_polygon`, the 7-gon): the calculator shows 51.42857…; floats arrive because `/` always makes a decimal and the turtle turns by it just the same. `float-type` is co-taught here (it is inseparable from the computed angle).
   15 min: the loop **counter** does work — `pensize(side_number + 1)` thickens each side (`l2_polygons`).
   60-MINUTE CUT: drop the pensize-scaling rung (it returns in the exercises); the polygon-angle discovery is the non-negotiable core.
-  In-class exercises: complete Exercise 2's `360 / 7` prediction, Exercise 3's counter-driven repair, and the Exercise 5 flagship seven-sided script.
+  In-class exercises: complete Exercise 1's f-string report, Exercise 2's `360 / 7` prediction, Exercise 3's counter-driven repair, and the Exercise 5 flagship seven-sided script.
   Exercise 5 is the proficiency check: students author turtle setup, pen controls, the loop, the counter expression, and the decimal angle rather than editing a finished lesson asset.
 - **Lesson 3 — nested-loops (60–90 min).**
   Open on the thread: what if the whole polygon repeats, turned a little each time?
