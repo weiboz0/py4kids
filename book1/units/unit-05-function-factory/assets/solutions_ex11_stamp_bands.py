@@ -9,7 +9,6 @@ def stamp(size):
 
 turtle.color("darkorange")
 turtle.pensize(2)
-turtle.speed(0)
 turtle.pendown()
 
 bands = 2

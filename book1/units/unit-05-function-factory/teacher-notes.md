@@ -58,6 +58,15 @@ WRITE `def`/parameters/`return`/scope repeatedly (not just trace), author the ac
 compose one function's return into another, and write the nested-loop stamp grid as a `.py` asset;
 extra reps beyond the in-class core are labelled "More Practice" (homework).
 
+In-class/homework allocation:
+
+- **Lesson 1:** use Exercise 6 as the loop-and-turtle bridge; students author the qualified
+  `import turtle`, both loops, and the counter-driven pen width in the asset.
+- **Lesson 2:** complete Exercises 3, 4, and 7. Exercise 7 is the required **in-class accumulator**
+  rep: students build and return a running total of card-border lengths.
+- **Lesson 3:** complete Exercises 1, 2, and 5 after scope is taught. Exercises 8–11 sit below the
+  **More Practice** label and are homework; use them in class only when time permits.
+
 ## Common mistakes
 
 - `print` inside a function when `return` was needed — the value is shown but can't be used
