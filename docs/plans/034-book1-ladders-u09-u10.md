@@ -71,8 +71,7 @@ names them in passing (usage-order ≠ naming-order, sanctioned).
 - `book1/curriculum/coverage-map.yaml`: set U09 `lessons: 3` (U10 is already 3 — leave it) (= manifests;
   book1 total 38 → **39**, ≤ 44). `book1/syllabus.md`: update the U09 arc-table `Lessons` cell (2→3; U10's row
   is already 3) and the figures — "~38 lessons"→39, "summing to 38 — 30 unit lessons"→"39 — 31 unit lessons",
-  "~36–38 class sessions"→"~37–39" + the ladder parenthetical (add U09; U10 already laddered? no — U10 is
-  reworked here too, so name both U09+U10).
+  "~36–38 class sessions"→"~37–39". Update the ladder parenthetical to name U09 and U10 (both reworked here).
 - `scripts/ci-local.sh` ALL GREEN: `exec-lessons` (file I/O + class cells run clean), `concept-scan`,
   `coverage`/`prereq`, `lesson-budget` (≤ 44), manifest==map, structure/hygiene/noexec, PDF, pre-merge guard.
 - **Closure + completeness/gradual audit (primary content-review duty):** no rung uses a later-in-unit/
