@@ -14,17 +14,17 @@ Budget: four lessons of 60–90 minutes. Ten concepts land here — the year's j
   15 min: the integer ladder (a whole number → negatives/zero → number vs look-alike text).
   25 min: the arithmetic ladder (`+` → `-`/`*` → on saved numbers → `//` and `%`).
   20 min: the type-conversion ladder (`int("27")` → `str()` → `int(input(...))`, the bridge from unit 01).
-  Rest: begin the required Exercise 7 range-width report; finish it at the start of Lesson 2 if needed.
+  Rest: arithmetic and type-conversion practice from the existing core exercises.
 - **Lesson 2 — import-statement, random-module, boolean, comparison (60–90 min).**
   Open on the thread: the machine needs its own secret, and a way to judge a guess.
   20 min: the random ladder (`randint(1,6)` → change the range → save the pick as the secret).
   25 min: the comparison ladder (one `==` → `<` both ways → all four operators → compare saved numbers), with True/False as the boolean answer.
-  Rest: complete the required Exercise 8 truth check so students store and print a Boolean before branching on it.
+  Rest: random and comparison practice from the existing core exercises; save branching exercises for Lesson 3.
 - **Lesson 3 — if-statement, elif-else (60–90 min).**
   Open on the thread: the machine has a secret; today it answers one guess.
   20 min: the `if` ladder (one true branch → a false test does nothing → `if`/`else`).
   25 min: the `elif` ladder (three-way verdict → first-True-wins → the one-guess detective with a real input).
-  Rest: higher-or-lower exercises.
+  Rest: complete the in-class branching path with Exercise 2, then the required Exercise 7 range-width report and Exercise 8 truth check. Start these only after the `if`/`elif`/`else` ladders above.
 - **Lesson 4 — while-loop + debugging (60–90 min).**
   Open on the thread: one guess isn't a game; loop until correct.
   30 min: the `while` ladder (loop until a typed sentinel → loop until the guess matches → add an `if` hint inside → the full random game). Every rung is teacher-run (it waits for typing) and counter-free by design.
