@@ -29,7 +29,8 @@ mock-contest checkpoints + capstone). This plan edits a design doc — permitted
   SIX headings = the 5 unit headings + `## Grading`; concept-scan + closure run over BOTH
   `checkpoint.ipynb` and `solutions.ipynb`, exec-solutions over `solutions.ipynb` only, `checkpoint.ipynb`
   never executed. `manifest` must equal the map entry — the tool compares each concept list as a SORTED set
-  (not byte-for-byte), so order/duplicates are normalized but membership must match.
+  (not byte-for-byte), so element ORDER is normalized but membership must match; duplicate ids are NOT
+  collapsed — a repeated concept fails a separate duplicate check (`curriculum.py`).
 - **Checkpoint metadata (CORRECTED — this is the errata):** a checkpoint's `practices` holds the concepts
   its questions genuinely EXERCISE (Book-2 concepts introduced by earlier units + Book-1 concepts);
   `requires` holds only the direct structural parsing prerequisites (kept small, per Book 1). `introduces`
@@ -61,7 +62,7 @@ mock-contest checkpoints + capstone). This plan edits a design doc — permitted
 - Changing the `practice_findings` tooling. The gap is closed by content (CP4) + metadata (errata), not by
   weakening the check — the check keeps its "reinforce every concept before the capstone" intent intact.
 - **Verification-phase exemption:** N/A — this plan ships a checkpoint (CP4) WITH a named verification phase
-  (Phase C). The CP1–3 errata is metadata-only and is verified by the same phase (coverage/manifest checks).
+  (Phase D). The CP1–3 errata is metadata-only and is verified by the same phase (coverage/manifest checks).
 
 ## Phases
 
@@ -89,8 +90,10 @@ Edit `docs/designs/001-book2-algorithms.md`:
 - **§7 arc:** change "≈14 units + **3** mock-contest checkpoints + capstone" → "**4** mock-contest
   checkpoints"; add a **CP4 — Mock Contest 4** entry to the arc list, positioned after U14 and before the
   capstone, described as the Term-4 finale (grids/graphs + two-pointers).
-- **§4 (contest-realism):** correct the stale "checkpoints are **2–3 problems**" to match the shipped
-  reality and the tooling bound (**6–8 questions**); CP1–CP3 all ship 6–7.
+- **§4 (contest-realism, line 24):** correct the stale "checkpoints are … **2–3 problems**" to match the
+  shipped reality and the tooling bound (**6–8 questions**); CP1–CP3 all ship 6–7. The identical stale
+  phrase also appears in `book2/syllabus.md` (Assessment-format section, "2–3 problems") — fix it there too
+  (done in Phase C alongside the CP4 syllabus row).
 
 ### Phase C — CP4 "Mock Contest 4" (Term-4 finale) authoring
 
@@ -105,30 +108,33 @@ complexity, and the signature mutant its asserts must kill):
 1. **Count the Islands** (flood-fill; grid-2d, recursion, **set-literal**). Input: line `R C`, then `R`
    rows of `#` (land) / `.` (water). Output: the integer count of 4-connected land regions. Reference:
    recursive flood-fill, `visited` seeded as a `{...}` **set literal** (e.g. `visited = {(r, c)}`), 4-neighbour.
-   Constraints: `1 <= R, C`, `R*C <= 400` (recursive-grid cap). Signature mutant: 8-neighbour (diagonals)
-   merges regions → wrong count; assert includes a grid where two land cells touch only diagonally and must
-   stay separate.
+   Constraints: `1 <= R, C`, `R*C <= 400` (recursive-grid cap). Complexity: **O(R·C)** (each cell visited
+   once). Signature mutant: 8-neighbour (diagonals) merges regions → wrong count; assert includes a grid
+   where two land cells touch only diagonally and must stay separate.
 2. **Fewest Steps** (bfs; grid-2d, deque). Input: `R C`, then `R` rows with one `S`, one `T`, `#` walls,
    `.` open. Output: fewest 4-neighbour steps `S`→`T`, or `-1` if unreachable. Reference: deque FIFO
    (`append`/`popleft`, `while len(queue) > 0`), `visited` set, layer distance. Constraints: `R*C <= 2000`
-   (iterative BFS, no recursion cap). Signature mutant: LIFO (`popleft`→`pop`, i.e. a stack) returns a
-   longer distance → a FIFO-witness assert on a grid where a stack overshoots.
+   (iterative BFS, no recursion cap). Complexity: **O(R·C)** (each cell enqueued once). Signature mutant:
+   LIFO (`popleft`→`pop`, i.e. a stack) returns a longer distance → a FIFO-witness assert on a grid where a
+   stack overshoots.
 3. **One Network?** (dfs, graph-repr; recursion). Input: `N M`, then `M` lines `u v` (undirected edges,
    nodes `1..N`). Output: `YES` if every node is reachable from node 1 (one connected component), else `NO`.
    Reference: adjacency-list plain dict (`if u not in adj: adj[u] = []`), recursive DFS with `visited`
-   passed as an argument. Constraints: `1 <= N <= 300`, `0 <= M <= 2000`. Signature mutant: not marking the
-   start visited / counting only direct neighbours → mislabels a disconnected graph; assert includes a
-   2-component graph (→ `NO`) and a connected one (→ `YES`).
+   passed as an argument. Constraints: `1 <= N <= 300`, `0 <= M <= 2000`. Complexity: **O(N + M)**.
+   Signature mutant: not marking the start visited / counting only direct neighbours → mislabels a
+   disconnected graph; assert includes a 2-component graph (→ `NO`) and a connected one (→ `YES`).
 4. **Exact Budget Pair** (two-pointers). Input: `N T`, then `N` non-negative integer prices. Output: `YES`
    if some two distinct items sum to EXACTLY `T`, else `NO`. Reference: `sorted()` (plain, numeric — no
    key), converging `lo`/`hi` (sum too small → `lo = lo + 1`; too big → `hi = hi - 1`). Constraints:
-   `2 <= N <= 100000`, values fit int. Signature mutant: advancing the wrong pointer misses a valid pair;
-   assert includes a case answerable only by the correct pointer move, and a no-pair case (→ `NO`).
+   `2 <= N <= 100000`, values fit int. Complexity: **O(N log N)** (the sort) then **O(N)** (the scan).
+   Signature mutant: advancing the wrong pointer misses a valid pair; assert includes a case answerable only
+   by the correct pointer move, and a no-pair case (→ `NO`).
 5. **Longest Affordable Streak** (two-pointers / sliding window). Input: `N K`, then `N` non-negative costs.
    Output: the length of the LONGEST contiguous window with sum `<= K` (0 if none). Reference: grow `right`,
    shrink `left` while `window_sum > K`, running sum maintained incrementally. Constraints: `1 <= N <=
-   100000`, non-negative values (stated). Signature mutant: never shrinking `left` → over-long window;
-   assert includes an input where an early expensive item forces a shrink.
+   100000`, non-negative values (stated). Complexity: **O(N)** (each index enters/leaves the window once).
+   Signature mutant: never shrinking `left` → over-long window; assert includes an input where an early
+   expensive item forces a shrink.
 6. **Astronomical Power Modulo M** (modular-arithmetic) — mirrors U11 Ex8 (the genuine reduce-as-you-go
    assessment; NOT a count). Input: `A M E` (non-negative base, positive modulus, non-negative exponent).
    Output: `A**E mod M` as a non-negative integer, via repeated squaring reducing `% M` after every
@@ -137,18 +143,29 @@ complexity, and the signature mutant its asserts must kill):
    Constraints: `0 <= A <= 10^18`, `1 <= M <= 10^18`, `0 <= E <= 10^18`. **Enforcement (genuine):** the
    huge-`E` sample (`7 13 1000000000000000000` → `9`, from U11) makes an unreduced `A**E` astronomically
    infeasible to even compute — a no-reduction solution cannot produce output at all, so reduce-as-you-go is
-   forced by feasibility, not by a value-differing assert. Asserts: small-`E` correctness cases against a
-   brute `A**E % M` oracle (`2 5 3`→`3`, `20 7 1`→`6`, `9 1 0`→`0`, `3 11 0`→`1`) PLUS the huge-`E` case.
-   Signature mutants: dropping the `if exponent & 1` guard, or omitting the final `% M`, changes small-`E`
-   values → killed by the brute-checked cases.
+   forced by feasibility, not by a value-differing assert. Complexity: **O(log E)** modular multiplications.
+   Asserts: small-`E` correctness cases against a brute `A**E % M` oracle (`2 5 3`→`3`, `20 7 1`→`6`,
+   `9 1 0`→`0`, `3 11 0`→`1`, and — crucially — an even/internal-zero-bit exponent `2 5 4`→`1`) PLUS the
+   huge-`E` case (`7 13 1000000000000000000`→`9`). Signature mutants and how each is killed: (a) dropping
+   the `if exponent & 1` guard (always multiply) survives odd/all-ones exponents but is killed at small scale
+   by `2 5 4`→`1` (the guard-drop mutant returns 3, since bits 0 and 1 of E=4 are zero); (b) omitting the
+   per-multiply `% M` (i.e. `answer = answer * current` without reducing) leaves `answer` correct-but-
+   unreduced on small cases yet makes the huge-`E` case infeasible to compute — so it is killed by the huge-`E`
+   assert (feasibility), NOT a small-case value. There is no separate "final `% M`" to omit — the algorithm
+   keeps `answer` reduced every step.
 7. **Trace the Traversal** (code-tracing; **set-literal**). The question markdown SHOWS a short fixed BFS
-   routine that seeds `visited = {start}` (a `{...}` **set literal**) and prints each node as it is dequeued;
-   the student predicts the exact printed output for a given input. Input under the judge contract: the
-   graph/queue-start data the shown routine consumes. Output: the exact space-separated visit order the
-   shown routine prints. Reference `solve(data)`: parse the input and REPRODUCE the shown routine (same
-   `{...}` visited literal, same FIFO order) returning its printed order — a pure `solve()` per the
-   contract. Constraints: `N <= 30`. Signature mutant: reading the traversal in the wrong (LIFO) order
-   yields a different sequence → asserts pin the true FIFO order on a graph where FIFO≠LIFO.
+   routine (reproduced verbatim in the question) that seeds `visited = {start}` (a `{...}` **set literal**),
+   uses a deque FIFO, appends a dequeued node's neighbours **in the order they appear in that node's
+   adjacency list**, marks each on enqueue, and prints each node as it is dequeued. The student predicts the
+   exact printed output. **Pinned input format** (the judge `data` the shown routine consumes): first line
+   `N M start` (nodes `1..N`, `M` edges, BFS start node); then `M` lines `u v`, each a **directed** edge
+   `u → v`; the adjacency list of each node lists its out-neighbours **in input order** (no sorting), so the
+   trace is deterministic. Output: the space-separated node ids in dequeue order. Reference `solve(data)`:
+   parse this input and REPRODUCE the shown routine exactly (same `{...}` visited literal, same input-order
+   neighbour appends, same FIFO order), returning its printed order — a pure `solve()` per the contract.
+   Constraints: `1 <= N <= 30`, `0 <= M <= 200`. Complexity: **O(N + M)**. Signature mutant: reading the
+   traversal in LIFO (stack) order yields a different sequence → asserts pin the true FIFO order on a graph
+   whose input-order adjacency makes FIFO≠LIFO.
 
 **CP4 manifest:** `introduces: []`;
 `requires: [input-parse, str-split, grid-2d]` (structural prerequisites);
@@ -161,8 +178,10 @@ both are already homed by CP1/CP2/CP3, so completeness is unaffected. A concept 
 two-pointers, set-literal, modular-arithmetic, code-tracing` — each map to a genuine question above.
 
 Add the CP4 row to `book2/curriculum/coverage-map.yaml` (after U14, before `project-03-mock-contest`) and to
-`book2/syllabus.md` (in map order) — `syllabus_findings` checks the table row and its order. Manifest and
-map entry are kept equal (the tool compares each concept list as a SORTED set, not byte-for-byte).
+`book2/syllabus.md` (in map order) — `syllabus_findings` checks the table row and its order. In the SAME
+`book2/syllabus.md` edit, correct the stale "2–3 problems" phrase in the Assessment-format section to "6–8
+questions" (paired with the design-001 §4 fix in Phase B). Manifest and map entry are kept equal (the tool
+compares each concept list as SORTED lists, not byte-for-byte; duplicate ids fail separately).
 
 ### Phase D — Verification (named verification phase)
 
@@ -176,8 +195,10 @@ map entry are kept equal (the tool compares each concept list as a SORTED set, n
 - AST-grep CP4 for the always-banned scanner-blind traps (nonlocal/global, `.pop(`, `.index`, `+=`,
   comprehensions, chained comparison, bare truthiness, base shortcuts, banned imports).
 - **Q6 modular**: confirm the huge-`E` case is present and the reference is O(log E) repeated-squaring with
-  `% M` after every multiply; confirm no 3-arg `pow`; verify the small-`E` asserts match a brute
-  `A**E % M` oracle and that dropping the `if exponent & 1` guard or the final `% M` breaks them.
+  `% M` after every multiply/square; confirm no 3-arg `pow`; verify the small-`E` asserts match a brute
+  `A**E % M` oracle; verify the guard-drop mutant (`if exponent & 1` removed) is killed by the internal-
+  zero-bit case `2 5 4`→`1`; and that removing the per-multiply `% M` is caught by the huge-`E` case
+  (feasibility), since it leaves small-case values unchanged.
 - **Per-question signature mutants**: confirm each pinned question's asserts kill its named mutant
   (Q1 8-neighbour, Q2 LIFO-overshoot, Q3 disconnected mislabel, Q4 wrong-pointer, Q5 never-shrink,
   Q7 wrong-order trace).
@@ -229,9 +250,34 @@ Non-blocking nits noted and accepted (no plan change needed): [fable/glm] CP3 `t
 practice claims are thin-but-genuine (each also homed elsewhere) — the content gate will confirm the actual
 question exercises them. Round 2 re-review pending on the revised plan.
 
-### Round 2
+### Round 2 (2026-09-09, HEAD 5d22de9) — [fable] AWN · [glm] AWN · [sol] REJECT
 
-_(pending — re-dispatch [sol]/[glm]/[fable] on the revised HEAD)_
+[fable] and [glm] both re-verified Q6 against the shipped U11 content (independently confirming
+`7^(10^18) mod 13 = 9`), ran the actual tooling on a simulated end-state ([glm]: prereq/coverage/manifest/
+concept-scan all PASS, 31/31), and confirmed all round-1 fixes. All three converged on one Q6-mutant-prose
+nit; [sol] (REJECT) added two more precision findings. Dispositions:
+
+1. `[FIXED]` **[sol/fable/glm] Q6 mutant prose was wrong.** The `if exponent & 1` guard-drop mutant survives
+   the four listed small cases (E=3 is `11`, E=1, E=0 — no internal zero bit) and the "omit final `% M`"
+   mutant is inert (the algorithm keeps `answer` reduced every step). → Added an internal-zero-bit assert
+   `2 5 4`→`1` (guard-drop returns 3 → killed at small scale; verified) and reworded both the Phase C and
+   Phase D Q6 text: guard-drop is killed by `2 5 4`; the per-multiply `% M` removal is caught by the huge-`E`
+   case (feasibility), and there is no separate "final `% M`".
+2. `[FIXED]` **[sol, blocking] Q7 input contract under-specified.** → Q7 now pins the exact format
+   (`N M start`; `M` directed edges `u v`; adjacency in input order; BFS prints dequeue order), making the
+   trace deterministic.
+3. `[FIXED]` **[sol, blocking] "intended complexity" promised but Big-O absent from Q1–Q5/Q7.** → Added an
+   explicit Complexity line to every question (Q1/Q2 O(R·C), Q3/Q7 O(N+M), Q4 O(N log N), Q5 O(N),
+   Q6 O(log E)).
+4. `[FIXED]` **[sol, blocking] §4 "2–3 problems" edit targeted only design-001; the stale phrase is in BOTH
+   design-001 line 24 AND `book2/syllabus.md`.** → Phase B fixes design-001 §4; Phase C fixes the same phrase
+   in `book2/syllabus.md` alongside the CP4 row.
+5. `[FIXED]` **[sol] Wording.** "duplicates are normalized" was false (the tool sorts lists, does not
+   dedupe; duplicate ids fail a separate check) → corrected. Stale "(Phase C)" cross-reference → "(Phase D)".
+
+### Round 3
+
+_(pending — re-dispatch [sol] (REJECT→confirm) + [fable]/[glm] re-confirm on the revised HEAD)_
 
 ## Content Review
 
