@@ -14,7 +14,7 @@ Budget: four lessons of 60–90 minutes. Ten concepts land here — the year's j
   15 min: the integer ladder (a whole number → negatives/zero → number vs look-alike text).
   25 min: the arithmetic ladder (`+` → `-`/`*` → on saved numbers → `//` and `%`).
   20 min: the type-conversion ladder (`int("27")` → `str()` → `int(input(...))`, the bridge from unit 01).
-  Rest: arithmetic and type-conversion practice from the existing core exercises.
+  Rest: repeat the arithmetic and type-conversion ladders above with new numbers and input text.
 - **Lesson 2 — import-statement, random-module, boolean, comparison (60–90 min).**
   Open on the thread: the machine needs its own secret, and a way to judge a guess.
   20 min: the random ladder (`randint(1,6)` → change the range → save the pick as the secret).

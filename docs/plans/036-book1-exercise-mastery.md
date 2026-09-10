@@ -668,8 +668,33 @@ Consolidated `[OPEN]` findings (overlapping across reviewers):
 #### Round-1 reconciliation (2026-09-10)
 
 Dispatched one Codex fix session per unit (05/03/02) applying its findings across exercises +
-solutions + teacher-notes + assets; re-verify `ci-local` + rep counts, then re-review. All findings
-are "cheap edits"; [glm]/[fable] expect APPROVE on the next round.
+solutions + teacher-notes + assets. **All round-1 `[OPEN]` findings are `[FIXED]`** (retagged):
+- unit-05 `float-type` 1→3 (Ex3/4/9, `turn_angle(n)=360/n` composed) and `loop-counter` 2→3
+  (Ex6/7/11) → `[FIXED]`; starters `from turtle import`→`import turtle` + open-path comments removed
+  → `[FIXED]`; Ex6/10/11 students now `print` (no student `assert`) → `[FIXED]`; `accumulator` Ex7
+  moved to in-class core (Lesson 2) → `[FIXED]`; Ex10/11 specified (choose `size` / reuse
+  `stamp(size)`) → `[FIXED]`.
+- turtle solution asserts (u03 Ex1/5/7/8/9; u05 Ex6/7/9/10/11) → technique-connected + mutation-tested
+  (15 mutations caught) → `[FIXED]`.
+- u03 Ex8 teaches `turtle.backward` → `[FIXED]`; teacher-notes forward-ref allocations (u03 Ex1/Ex7;
+  u02 Ex7/8) reallocated → `[FIXED]`; u02 "More Practice" label removed (lean in-class core) →
+  `[FIXED]`; nice-to-haves (u05 `speed(0)`, stale intro, Ex7 varied, per-lesson allocation) → `[FIXED]`.
+`ci-local` re-run **ALL GREEN** after fixes.
+
+#### Reviews 2–4 — [sol] / [glm] / [fable] (round 2, 2026-09-10) → APPROVE WITH NITS
+
+All three verified their round-1 findings `[FIXED]` on the branch and re-ran the checks GREEN;
+[fable] and [sol] mutation-tested the new asserts (all mutants caught); blind re-solves matched.
+Remaining nits are all Nice-to-Have cosmetic wording, folded in a round-2 tidy: u05 teacher-notes
+"stamp sizes"→"card-border lengths" [sol]; u03 teacher-notes Lesson-2 include Ex1 [glm-N2]; u05
+Ex10/11 `left` note + Ex6 `side_moves=0` init [fable-N1/N2]; u02 teacher-notes Lesson-1 pointer
+wording [fable-N3]. PR-body must name the unit-02 `string-concat` scanner-derived addition [glm-N1].
+
+#### Content-gate CONSENSUS (2026-09-10) — CLOSED
+
+4-way: [self] APPROVE; [sol]/[glm]/[fable] APPROVE WITH NITS — no `[OPEN]` blockers; all round-1
+findings `[FIXED]`; round-2 cosmetic nits folded. `ci-local.sh` ALL GREEN. Content-review gate CLOSED
+for PR-A. Proceeding to PR.
 
 ## Post-Execution Report
 
