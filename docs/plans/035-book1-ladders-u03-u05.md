@@ -219,9 +219,19 @@ carry forward. Re-dispatching [sol] (the sole REJECT) to confirm the two finer s
 - `[FIXED]` **[sol #3] stale Round-1 self-review line** said `structure-check` enforces `no-exec`. →
   Corrected to `noexec-check` (structure-check does asset existence/compile).
 
-### Round 3 (HEAD pending) — re-dispatched to [sol]
+### Round 3 (HEAD 0d970e2) — [sol] APPROVE
 
-_(awaiting [sol] round 3)_
+Both round-2 must-changes verified resolved: Ladder B computed-angle + `float-type` legitimately
+co-taught (a pre-float `int` computed rung is impossible — `/` always yields a float), and no
+remaining `structure-check`/`no-exec` misattribution anywhere in the file. No new nits or blockers.
+
+**CONSENSUS — plan-review gate CLOSED:** [self] APPROVE · [sol] APPROVE · [glm] APPROVE WITH NITS ·
+[fable] APPROVE WITH NITS. Cleared for implementation. Author notes: U03 Ladder A = 5 pen rungs
+(move+turn open-path, square, penup/pendown, color, pensize); Ladder B = 4 rungs (range(4) square,
+range(3) int triangle, `360/n` float co-taught, loop-counter pensize); Ladder C = 2 genuine nested
+rungs + spirograph "Put it together". Every asset: `done()` last, closes or bare `# turtle-check:
+open-path`. U05 = plain-Python def/parameters/return/scope ladders + `no-exec` NameError + fenced
+turtle "Put it together".
 
 ## Content Review
 
