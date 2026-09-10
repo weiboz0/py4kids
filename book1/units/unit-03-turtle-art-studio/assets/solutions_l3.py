@@ -9,7 +9,6 @@ turn_between_shapes = 15
 
 # Set up the pen for a rainbow ring of 24 shapes.
 turtle.pensize(2)
-turtle.speed(0)
 
 # Draw four red polygons.
 turtle.color("red")

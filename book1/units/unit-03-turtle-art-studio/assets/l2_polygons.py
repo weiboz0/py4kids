@@ -11,7 +11,6 @@ angle = 360 / n
 
 # Set up a blue pen.
 turtle.color("blue")
-turtle.speed(4)
 turtle.pensize(2)
 
 # Lift the pen, move a little, and lower the pen again.

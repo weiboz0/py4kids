@@ -14,7 +14,6 @@ def polygon(n, side_length):
 
 turtle.color("purple")
 turtle.pensize(3)
-turtle.speed(4)
 
 polygon(3, 90)
 turtle.right(120)

@@ -1,10 +1,9 @@
 # Bring in Python's turtle drawing tools.
 import turtle
 
-# Choose how the pen looks and how fast the turtle moves.
+# Choose how the pen looks.
 turtle.color("teal")
 turtle.pensize(4)
-turtle.speed(3)
 
 # Draw side 1, then turn one square corner.
 turtle.forward(100)

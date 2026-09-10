@@ -25,7 +25,6 @@ def stamp_gallery(rings, stamps_per_ring):
 
 turtle.color("darkgreen")
 turtle.pensize(2)
-turtle.speed(0)
 
 stamp(24)
 stamp_gallery(3, 6)
