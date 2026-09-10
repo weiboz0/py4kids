@@ -152,6 +152,27 @@ def test_judge_second_untested_solver(tmp_path):
     assert any("ex2.py needs >=2 fixture pairs" in f for f in judge_findings(root, "book2"))
 
 
+def test_judge_referenced_lesson_solver_missing(tmp_path):
+    # A lesson that references assets/l3.py with no l3.py present FAILs judge-check (Sol blocker fix).
+    root = _book2(tmp_path)
+    d = _solver_entry(root)
+    _nb(d / "lesson.ipynb", new_markdown_cell("Run `python assets/l3.py < assets/l3/1.in`"))
+    assert any("missing solver l3" in f for f in judge_findings(root, "book2"))
+
+
+def test_judge_present_unreferenced_lesson_solver_no_false_missing(tmp_path):
+    # Converse: an l3.py present but unreferenced is judged via the reserved stem, never a false miss.
+    root = _book2(tmp_path)
+    d = _solver_entry(root)
+    (d / "assets" / "l3.py").write_text("print(1)\n")
+    fx = d / "assets" / "l3"
+    fx.mkdir()
+    for k in ("1", "2"):
+        (fx / f"{k}.in").write_text("x\n")
+        (fx / f"{k}.out").write_text("1\n")
+    assert not any("missing solver l3" in f for f in judge_findings(root, "book2"))
+
+
 def test_judge_helper_not_fixture_required(tmp_path):
     root = _book2(tmp_path)
     d = _solver_entry(root)
@@ -185,6 +206,7 @@ def test_source_policy_full_current_book2_clean():
         ("a = 1\nb = 2\nc = 3\nprint(0 < a < b)", "chained comparison"),
         ("row = [0] * 5\nprint(row)", "list/str repetition"),
         ("x = 1\nprint(x if x else 0)", "ternary"),
+        ("f = lambda a: a\nprint(f(1))", "lambda"),
         ("def f():\n    global g\n    g = 1", "global/nonlocal"),
         ("d = {1: 2}\ndel d[1]", "del"),
         ("x = 0\nx += 1", "augmented"),
