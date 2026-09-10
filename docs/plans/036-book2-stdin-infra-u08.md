@@ -102,27 +102,45 @@ iterating `content_dirs` — units + checkpoints + projects):
   "new-model = `assets/` + `.py`" detector is indistinguishable from Book-1 turtle assets, so running
   this on Book 1 would try to judge 22 turtle scripts (no `fake_turtle` stub → fail) and break the
   `CHECK_NAMES`-parametrized Book-1 suites. `source_policy_findings` (A5) is book-scoped the same way.
+  This book1/unknown-book `[]` is an **intentional documented no-op** (NOT the fail-closed-on-missing-
+  root convention — these checks simply don't apply outside book2); note it at the return site.
 - **Expected-solver PID derivation, per entry kind** (so a MISSING solver is caught, not just a
   present one — Sol B2): a **unit** derives `exN.py` from each `## Exercise N` in `exercises.ipynb`
-  plus lesson solvers `l1.py`,`l2.py`,… referenced by `lesson.ipynb`; a **checkpoint** derives
+  plus lesson solvers `l1.py`…`l{manifest.lessons}.py` (derive from `manifest.lessons` / `## Lesson N`
+  headings — NOT circularly from which `.py` the lesson references, glm N2); a **checkpoint** derives
   `qN.py` from each `## Question N`; a **project** derives `pN.py` from each `### Problem N` in
-  `brief.ipynb` (the capstone's heading level — NOT `## Milestone N`, which groups problems). FAIL any
-  expected-but-missing `.py`. A `.py` whose stem is NOT a derived PID is treated as a **helper
-  module**: still source-policy-scanned (A5), but not fixture-required and not run standalone.
+  `brief.ipynb` (the capstone's heading level — NOT `## Milestone N`, which groups problems). **All
+  heading regexes MUST be end-unanchored** (follow the house `EXERCISE_HEADING` pattern) — real
+  headings are decorated, e.g. `### Problem 1 — Checkpoint Ledger *(prefix sums)*`; a `$`-anchored
+  regex derives zero PIDs and resurrects the fail-open (fable N1). FAIL any expected-but-missing
+  `.py`. **Reserved-stem rule (fable N2):** any `assets/*.py` whose stem matches `(l|ex|q|p)\d+` is
+  ALWAYS a solver (fixtures + judged + mirrored), never silently demoted to a helper. A `.py` whose
+  stem does NOT match that pattern is a **helper module**: still source-policy-scanned (A5) and
+  parse-checked, but not fixture-required and not run standalone.
 - For **every** solver `.py` (a derived PID), require **≥2 matched fixture pairs**
   `assets/<pid>/<k>.in`+`<k>.out`; FAIL a solver with <2 pairs, an `.in` with no matching `.out` (or
   vice-versa), and an orphan fixture dir with no `.py`.
 - Run each case: `subprocess.run([sys.executable, str(script)], input=<case>.in.read_text(),
   text=True, capture_output=True, timeout=JUDGE_TIMEOUT_S, cwd=<repo root>, check=False)` — note
   **`input=` (a string), NOT `stdin=`**, with `text=True` (Sol BLOCKER 1). FAIL on nonzero exit,
-  timeout, or empty output; else **token-compare** `stdout.split() == expected.split()`, FAIL with a
+  timeout, or empty output (**`stdout.strip() == ""`** so a trailing-newline-only output is
+  unambiguous, fable N6); else **token-compare** `stdout.split() == expected.split()`, FAIL with a
   short diff on mismatch. `JUDGE_TIMEOUT_S = 30` (module constant); keep fixtures modest so a correct
   solver finishes well under it. Entries without `assets/` are skipped (partial-book tolerant).
-- **Mirror check:** for each solver `<pid>.py`, exactly ONE display source must equal the `.py` modulo
-  whitespace — for an exercise/question PID it is the CODE cell under that `## Exercise N`/`## Question
-  N` in `solutions.ipynb`; for a lesson solver `lN` it is its `no-exec` display cell in `lesson.ipynb`.
-  The lesson's ladder-rung cells (partial excerpts on literal data) are NOT mirror targets. This kills
-  the display-vs-`.py` drift nit class across the rollout without false-positiving on partial rungs.
+- **Mirror check:** for each solver `<pid>.py`, exactly ONE display source must equal the `.py`
+  **modulo whitespace = per-line trailing-whitespace strip + trailing-blank-line strip (NOT full
+  whitespace collapse)** (fable N3). The target: an `exN`/`qN` PID → the CODE cell under that
+  `## Exercise N`/`## Question N` in `solutions.ipynb`; a project `pN` → the CODE cell under
+  `## Problem N` in the project `solutions.ipynb` (note: brief uses `### Problem N` but the project
+  `solutions.ipynb` uses `## Problem N`, and `project_solutions_findings` has no code-cell-under-
+  heading enforcement, so the mirror check must target it — glm N1); a lesson `lN` → its `no-exec`
+  display cell in `lesson.ipynb`. The lesson's ladder-rung cells (partial excerpts on literal data)
+  are NOT mirror targets. This kills the display-vs-`.py` drift nit class across the rollout without
+  false-positiving on partial rungs.
+- **turtle-check footgun (fable N4):** `turtle_findings` globs ALL `assets/*.py`; a manual
+  `py4kids-tools --book book2 turtle-check` would run U08's stdin solvers under the stub and block on
+  `sys.stdin.read()`. While in Phase A, have `turtle_findings` skip any script with no `import turtle`
+  (or book-scope it to book1).
 - Register `"judge-check": judge_findings` in `tools/checks.py`; it is **NOT** in `UNIT_ONLY_CHECKS`
   (checkpoints/projects gain `assets/` in rollout). Update the registry inventory test
   (`tuple(CHECKS) == CHECK_NAMES`) and the missing-root/selector matrices (both pass because the check
@@ -173,6 +191,11 @@ explicit AST checker over executable lesson rungs + every `assets/*.py` (solvers
   current `book2` lesson cells, and any builtin that surfaces must be deliberately added-or-confirmed-
   banned before ship (no `...`). Everything else (`enumerate`/`zip`/`map`/`filter`/`all`/`any`/
   `reversed`/`list`/`dict`/`tuple`/…) is rejected unless the audit shows a legitimate existing use.
+- **Parse failures surface as findings (glm minor):** `source_policy_findings` `ast.parse`s every
+  `assets/*.py` INCLUDING non-PID helper modules; a `SyntaxError` must be reported as a FAIL (a helper
+  never imported by a runnable solver is otherwise unchecked since `judge-check` never runs it).
+- The SHIPPED checker contains a **precise literal allowlist with NO ellipsis**, reject-by-default
+  (sol nit); the `{…}` above is the lower bound the implementer confirms/extends via the audit.
 - Ship a **mutation fixture per ban** (a tiny snippet that must FAIL) AND — critically — a
   **full-current-Book-2 clean regression**: `source_policy_findings(root, "book2")` over the whole
   existing book MUST return `[]` (proves zero false-positives on shipped content before wiring it into
@@ -188,10 +211,13 @@ layout checks (not just `layout_findings`) so migrated checkpoints/projects are 
 existing per-entry checks.
 
 **A8 — tests:** `judge_findings` — pass; wrong-output FAIL; nonzero FAIL; timeout FAIL; **missing
-expected script** FAIL for a unit (`exN`), a checkpoint (`qN`), AND a **project** (`pN` from `###
-Problem N` — Sol B2); a solver with **0 or 1 case** FAIL; **missing `.in`/`.out` counterpart** FAIL;
-**orphan fixture dir** FAIL; a second **untested solver** FAIL; mirror-drift FAIL; a helper `.py`
-(non-PID) is NOT fixture-required; **`judge_findings(root,"book1")` returns `[]`** (book-scope).
+expected script** FAIL for a unit (`exN`), a checkpoint (`qN`), AND a **project** (`pN`) — the
+project fixture uses a **decorated `### Problem N — title *(tag)*` heading** so an over-strict
+`$`-anchored regex cannot pass (fable N1); a solver with **0 or 1 case** FAIL; **missing `.in`/`.out`
+counterpart** FAIL; **orphan fixture dir** FAIL; a second **untested solver** FAIL; mirror-drift FAIL
+for an exercise cell AND a **project `## Problem N` cell** (glm N1); a non-`(l|ex|q|p)\d+` helper
+`.py` is NOT fixture-required but a helper `SyntaxError` FAILs; **`judge_findings(root,"book1")`
+returns `[]`** (book-scope).
 `source_policy` — one mutation fixture per ban (each FAILs); a clean sample (passes);
 **`source_policy_findings(root,"book2")` over the whole current book returns `[]`** (full-book clean
 regression, Sol MAJOR 2); **`(root,"book1")` returns `[]`** (book-scope). Policy exemption — both
@@ -209,9 +235,13 @@ Amending only §3 leaves stale binding claims elsewhere that U08 would immediate
   and teacher-notes has "six headings incl `## Rubric`". Correct both: solutions are the no-exec
   display + `assets/` `.py`; unit teacher-notes are the **5** `NOTES_HEADINGS` (verified against
   `tools/notebooks.py:38-45`; `## Grading` is checkpoints, `## Rubric` is projects).
-- **§7 / §11** — update any remaining `solve(data)`/inline-assert binding language.
+- **§7 / §11** — update any remaining `solve(data)`/inline-assert binding language. Also fix §4's
+  **checkpoint** bullet, which says `## Problem N` while the tooling enforces `## Question N` (fable
+  N5 — correct it while rewriting §4).
 - **`book2/syllabus.md:14`** — independently declares the old contract binding; rewrite to the new
-  contract.
+  contract. The staged-transition note should also acknowledge `book2/syllabus.md:28`'s U01 row still
+  naming "the `solve()` contract" (fine during the transition; reconcile as entries migrate — fable
+  N5).
 - Add a short **staged-transition note** (old-model entries keep `solve()`+asserts until migrated;
   the per-entry `assets/` switch is the boundary) so the half-migrated book is internally consistent.
 - Record the **Book-2 ladder/completeness standard** (this plan's section) as the reusable rollout
@@ -355,9 +385,33 @@ unit contract). Two new blocking findings, both `[FIXED]`; [fable]'s run hit a f
    lesson `lN` display cell (not partial ladder rungs); helper `.py` (non-PID) allowed (source-policy-
    scanned, not fixture-required); A6 existence extension applied to checkpoint/project layout too.
 
-### Round 3 (HEAD pending) — re-dispatched to [sol]/[glm]/[fable]
+### Round 3 (HEAD 06f8052) — [sol] APPROVE WITH NITS · [glm] APPROVE WITH NITS · [fable] APPROVE WITH NITS
 
-_(awaiting round 3; [fable] pending its session-limit reset ~2:50am PT)_
+All round-2 blockers verified resolved. [glm] and [fable] independently AUDITED the real book2 tree:
+the only builtins used are `{abs,int,len,max,min,print,range,set,sorted,str,sum}` (all in the pinned
+allowlist), a draft `source-policy` over all book2 returns **0** hits (full-book clean regression
+achievable), `.pop` ban ≠ U10's `.popleft`, book-scoping keeps every book1 suite green, and PID
+headings match reality (`## Question N` / `### Problem N`). Non-blocking round-3 nits — all `[FIXED]`:
+
+- `[FIXED]` **[fable N1] decorated headings** — all PID regexes end-unanchored (house
+  `EXERCISE_HEADING` pattern); A8 project fixture uses a decorated `### Problem N — title *(tag)*`.
+- `[FIXED]` **[fable N2 / glm N2] reserved-stem + lesson PID** — any `(l|ex|q|p)\d+` stem is always a
+  solver (never a silent helper); lesson `lN` derived from `manifest.lessons`/`## Lesson N`, not
+  circular references.
+- `[FIXED]` **[fable N3] mirror "modulo whitespace"** defined (per-line trailing strip + trailing
+  blank-line strip).
+- `[FIXED]` **[glm N1] project mirror target** — `pN` mirrors the `## Problem N` cell in the project
+  `solutions.ipynb` (which `project_solutions_findings` doesn't enforce); A8 adds the test.
+- `[FIXED]` **[fable N4] turtle-check footgun** — `turtle_findings` skips scripts with no
+  `import turtle` so book2 stdin solvers aren't run under the stub.
+- `[FIXED]` **[glm N3] book-scope no-op** documented at the return site (not fail-closed-on-missing-
+  root). **[glm minor]** source-policy surfaces helper `SyntaxError` as a FAIL.
+- `[FIXED]` **[fable N5] stale prose** — Phase B also fixes design §4's `## Problem N`→`## Question N`
+  and notes `syllabus.md:28`. **[fable N6]** empty output = `stdout.strip()==""`. **[sol]** shipped
+  allowlist is a precise literal set (no ellipsis).
+
+**CONSENSUS — plan-review gate CLOSED:** [self] APPROVE WITH NITS · [sol] APPROVE WITH NITS · [glm]
+APPROVE WITH NITS · [fable] APPROVE WITH NITS. No open blockers. Cleared for implementation.
 
 ## Content Review
 
