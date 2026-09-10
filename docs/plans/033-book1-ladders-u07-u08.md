@@ -166,6 +166,14 @@ focused rung + a separate "put it together" application). Findings:
 
 U07 now 63 cells, U08 35 cells; all book1 checks PASS. Re-running ci-local + re-dispatching [sol].
 
-### Round 2
+### Round 2 — [sol] APPROVE WITH NITS · CONSENSUS
 
-_(pending — [sol] on the fixed HEAD; [glm]/[fable] AWN stands, nits fixed)_
+[sol] re-review: all three pacing findings CONFIRMED FIXED (U07 list-loop bridge→numbered; U07 sort focused
+rung + "Put it together" framing; U08 dict-loop focused `.items()` count + framed translate app); closure/
+execution/project-first/hygiene all re-confirmed clean. One nit: intro markdown cells pack multiple sentences
+per source line — `[WONTFIX]`: the semantic-line-break convention is for `docs/` files, not lesson-notebook
+prose cells (every shipped lesson writes intros as paragraphs).
+
+**CONSENSUS — content-review gate CLOSED:** [self] APPROVE · [glm] APPROVE WITH NITS · [fable] APPROVE WITH
+NITS · [sol] APPROVE WITH NITS. Completeness + gradual pacing confirmed MET by all four; closure AST-clean;
+all blocking findings `[FIXED]`. `ci-local.sh` ALL GREEN. Cleared for PR.
