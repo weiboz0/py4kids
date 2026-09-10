@@ -54,12 +54,12 @@ entries:
   title: "Mock Contest 1"
   lessons: 0.5
   introduces: []
-  requires: [input-parse, str-split, grid-2d, boolean-algebra, complexity, set-ops, tuple,
-             sorted-key, binary-search, complete-search]
-  practices: [accumulator, arithmetic, builtin-functions, comparison, def-function, elif-else,
-              if-statement, in-operator, list-append, list-literal, list-sort, logical-ops,
-              nested-loops, parameters, return-value, string-concat, string-literal,
-              type-conversion, while-loop]
+  requires: [input-parse, str-split]
+  practices: [grid-2d, boolean-algebra, complexity, set-ops, tuple, sorted-key, binary-search,
+              complete-search, accumulator, arithmetic, builtin-functions, comparison, def-function,
+              elif-else, if-statement, in-operator, list-append, list-literal, list-sort, logical-ops,
+              nested-loops, parameters, return-value, string-concat, string-literal, type-conversion,
+              while-loop]
 - id: unit-06-greedy
   kind: unit
   title: "Greedy"
@@ -92,10 +92,11 @@ entries:
   title: "Mock Contest 2"
   lessons: 0.5
   introduces: []
-  requires: [greedy, simulation, prefix-sum, grid-2d, input-parse, str-split, sorted-key, tuple]
-  practices: [accumulator, arithmetic, builtin-functions, comparison, def-function, elif-else,
-              if-statement, list-append, list-literal, list-sort, logical-ops, nested-loops,
-              parameters, return-value, string-concat, string-literal, type-conversion, while-loop]
+  requires: [input-parse, str-split]
+  practices: [greedy, simulation, prefix-sum, grid-2d, sorted-key, tuple, accumulator, arithmetic,
+              builtin-functions, comparison, def-function, elif-else, if-statement, list-append,
+              list-literal, list-sort, logical-ops, nested-loops, parameters, return-value, string-concat,
+              string-literal, type-conversion, while-loop]
 - id: unit-09-recursion-backtracking
   kind: unit
   title: "Recursion & Backtracking"
@@ -140,12 +141,12 @@ entries:
   title: "Mock Contest 3"
   lessons: 0.5
   introduces: []
-  requires: [recursion, backtracking, deque, postfix-eval, base-conversion, bitwise-ops, bitmask, gcd,
-             sieve, tree-traversal, complete-search, input-parse, str-split, tuple]
-  practices: [accumulator, arithmetic, boolean, builtin-functions, comparison, def-function, elif-else,
-              for-loop, if-statement, list-append, list-literal, logical-ops, nested-loops, parameters,
-              range-function, return-value, string-concat, string-literal, string-methods, type-conversion,
-              while-loop]
+  requires: [input-parse, str-split]
+  practices: [recursion, backtracking, deque, postfix-eval, base-conversion, bitwise-ops, bitmask, gcd,
+              sieve, tree-traversal, complete-search, tuple, accumulator, arithmetic, boolean,
+              builtin-functions, comparison, def-function, elif-else, for-loop, if-statement, list-append,
+              list-literal, logical-ops, nested-loops, parameters, range-function, return-value,
+              string-concat, string-literal, string-methods, type-conversion, while-loop]
 - id: unit-13-grids-graphs
   kind: unit
   title: "Grids, Graphs & Traversal"
@@ -166,6 +167,17 @@ entries:
               if-statement, in-operator, list-append, list-literal, list-sort, logical-ops, nested-loops,
               parameters, print, return-value, str-split, string-concat, string-literal, tuple,
               type-conversion]
+- id: checkpoint-04-mock-contest-4
+  kind: checkpoint
+  title: "Mock Contest 4"
+  lessons: 0.5
+  introduces: []
+  requires: [input-parse, str-split, grid-2d]
+  practices: [graph-repr, bfs, dfs, flood-fill, two-pointers, set-literal, modular-arithmetic, code-tracing,
+              recursion, deque, set-ops, tuple, accumulator, arithmetic, builtin-functions, comparison,
+              def-function, dict-literal, elif-else, for-loop, if-statement, in-operator, list-append,
+              list-literal, list-sort, logical-ops, nested-loops, parameters, return-value, string-concat,
+              string-literal, type-conversion, while-loop]
 - id: project-03-mock-contest
   kind: project
   title: "Grand Mock Contest (Year-2 Capstone)"

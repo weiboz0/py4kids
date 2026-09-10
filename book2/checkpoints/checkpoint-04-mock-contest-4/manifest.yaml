@@ -1,0 +1,13 @@
+id: checkpoint-04-mock-contest-4
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+concepts:
+  introduces: []
+  requires: [input-parse, str-split, grid-2d]
+  practices: [graph-repr, bfs, dfs, flood-fill, two-pointers, set-literal, modular-arithmetic, code-tracing,
+              recursion, deque, set-ops, tuple, accumulator, arithmetic, builtin-functions, comparison,
+              def-function, dict-literal, elif-else, for-loop, if-statement, in-operator, list-append,
+              list-literal, list-sort, logical-ops, nested-loops, parameters, return-value, string-concat,
+              string-literal, type-conversion, while-loop]

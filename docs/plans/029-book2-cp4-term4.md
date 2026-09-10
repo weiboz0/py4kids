@@ -211,7 +211,42 @@ compares each concept list as SORTED lists, not byte-for-byte; duplicate ids fai
 
 ## Post-Execution Report
 
-_(filled at Phase D)_
+**Shipped:** CP4 "Mock Contest 4" (Term-4 finale checkpoint) + the CP1–3 practices errata + the design-001
+§7/§4 and syllabus amendments. This is the 18th of 18 map entries' enabling work — it makes the capstone
+(plan 030) authorable; with CP4 merged, Book 2 will be 18/18 once the capstone lands.
+
+**Phase A (errata):** CP1/CP2/CP3 manifests + coverage-map entries rewritten so `requires` holds only the
+parsing prerequisites (`input-parse, str-split`) and the assessed Book-2 concepts moved into `practices`
+(matching Book 1, where checkpoints are the practice homes). No notebook content changed — the questions
+already exercised these concepts; only the metadata field placement was corrected.
+
+**Phase B (design):** `docs/designs/001-book2-algorithms.md` §7 updated to "14 units + **4** mock-contest
+checkpoints + capstone" with a CP4 arc entry after U14; §4's stale "2–3 problems" → "6–8 questions". The
+same stale phrase in `book2/syllabus.md` was corrected and the Term-4 shape + arc table updated.
+
+**Phase C (CP4):** `book2/checkpoints/checkpoint-04-mock-contest-4/` with `manifest.yaml`, `checkpoint.ipynb`
+(7 `## Question N` blocks, empty student cells, markdown-only submission wrapper), `solutions.ipynb` (7 pure
+`solve()` with sample + distinguishing asserts), and `teacher-notes.md` (six headings incl. `## Grading`,
+per-question Big-O table). 7 questions: Q1 Count the Islands (flood-fill), Q2 Fewest Steps (BFS), Q3 One
+Network? (DFS connectivity), Q4 Exact Budget Pair (converging two-pointers), Q5 Longest Affordable Streak
+(sliding window), Q6 Astronomical Power Modulo M (modular exponentiation, repeated squaring `% M` each step),
+Q7 Trace the Traversal (code-tracing, `{start}` set literal). CP4 `practices` homes the 8 concepts CP1–3
+don't reach — `graph-repr, bfs, dfs, flood-fill, two-pointers, set-literal, modular-arithmetic, code-tracing`
+— so `pre_capstone ⊇ all 31` (verified).
+
+**Phase D (verification):** `scripts/ci-local.sh` — all book2 checks (prereq, coverage, concept-scan,
+manifest, structure, hygiene, cell-lint, noexec, stretch, exec-solutions) PASS; solutions execute clean with
+every assert holding; each signature mutant confirmed killed (Q1 8-neighbour→wrong count, Q2 LIFO→8 vs 2,
+Q3 disconnected→NO, Q4 wrong-pointer→NO, Q5 never-shrink→5 vs 3, Q6 guard-drop→3 on `2 5 4`, Q7 LIFO→
+`1 3 4 2` vs `1 2 3 4`). `pre_capstone ⊇ all 31 Book-2 concepts` asserted directly (`practice_findings`
+stays deferred until the capstone dir exists). Q6 authored in the arithmetic form (`% 2 == 1`, `// 2`)
+matching U11's shipped solution `u11s0011`, avoiding bitwise-ops/integer-truthiness.
+
+**Deviations from plan:** (1) Q6 uses `% 2 == 1` / `// 2` instead of `& 1` / `>> 1` — equivalent repeated
+squaring, matches U11's shipped solution, and avoids listing bitwise-ops. (2) `tuple` and `set-ops` are in
+CP4 `practices` after all — the plan dropped `tuple`, but coordinate tuples (`(r, c)`) and `visited.add`
+are genuinely used, so the scanner requires them listed; both are also homed elsewhere, so this does not
+affect completeness. `sorted-key` stays dropped (Q4 uses plain `sorted()`).
 
 ## Plan Review
 
