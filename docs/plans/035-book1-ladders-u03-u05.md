@@ -59,13 +59,15 @@ folded in below.
   - **L2 — Ladder B: `for-loop` + `range-function` + `loop-counter` (CO-TAUGHT** — Python's loop IS
     `for i in range(n)`): rung 1 redraw the square with `for side in range(4)` (the loop replaces the
     written-out repetition — one increment); rung 2 a hard-coded triangle — `for side in range(3)`
-    with `angle = 120` (the increment is "change the side count"; angle still a typed whole number);
-    rung 3 tie the angle to the count with `n` + `angle = 360 / n` but pick `n = 5` so `360/5 = 72` is
-    still whole (the increment is "compute the turn from `n`" — NOT float yet); rung 4 set `n = 7` so
-    `angle = 360 / 7` is a decimal (**`float-type` — its own focused rung + Notice** that some `n` make
-    `360/n` a float the turtle can still turn); rung 5 use the `loop-counter` to vary each side
-    (`pensize = side_number + 1`). `angle = 360 / n` is arithmetic (in `requires`); `pensize =
-    side_number + 1` is counter-derived, NOT an accumulator (no read-modify-write of one variable).
+    with the typed literal `angle = 120` (an `int`; the increment is "change the side count"); rung 3
+    tie the angle to the count with `n` + `angle = 360 / n` (**`float-type` CO-TAUGHT here** — it is
+    INSEPARABLE from the computed angle: Python's `/` ALWAYS yields a float, so `360 / 5` is `72.0` and
+    `360 / 7` is `51.428…`; the focused Notice names that `/` makes a decimal the turtle turns by just
+    the same). rung 4 use the `loop-counter` to vary each side (`pensize = side_number + 1`). `angle =
+    360 / n` is arithmetic (in `requires`); `pensize = side_number + 1` is counter-derived, NOT an
+    accumulator (no read-modify-write of one variable). (NOTE: a "compute from `n` but still `int`"
+    rung is impossible — `360 / n` is a float for every `n` — so computed-angle and `float-type` share
+    one co-taught rung rather than being split.)
   - **L3 — Ladder C: `nested-loops`**: rung 1 a minimal nest — an outer `for` repeating a square twice
     with a `right(90)` between (`2 × 90 = 180`? NO — pick a turn whose total closes: two squares with
     `right(180)` between → `2 × 180 = 360`, closes); rung 2 step up — more repeats / a smaller
@@ -150,8 +152,9 @@ _(filled at Phase C)_
   `nested-loops`/`float-type` + `import`/`variable`/`arithmetic` + `f-string`/`string-literal`; NO
   functions/conditionals/lists/string-methods (all other units). U05 executable rungs are plain
   Python (`def`/`parameters`/`return`/`scope` + `print`/`f-string`/`arithmetic`); turtle stays fenced.
-- **Turtle contract ✓** — verified against `tools/notebooks.py` (structure-check FAILs a non-`no-exec`
-  GUI/`input` lesson cell) and `tools/fake_turtle.py` (closure = return-to-start AND heading ≡ 0 mod
+- **Turtle contract ✓** — verified against `tools/notebooks.py` (`noexec-check` FAILs a non-`no-exec`
+  GUI/`input` lesson cell; structure-check does asset existence/compile) and `tools/fake_turtle.py`
+  (closure = return-to-start AND heading ≡ 0 mod
   360, `# turtle-check: open-path` escape hatch, ≥1 pen-down, <10000 moves, stub API); `done()`-last
   is reviewer-enforced. Plan's model is accurate.
 - **Pacing ✓** — ladders one-increment; co-taught pairs (`turtle-basics`+`turtle-drawing`;
@@ -199,13 +202,26 @@ glm/fable and now `[FIXED]` with FINER splits than round-1:
 - `[FIXED]` **[sol #4/#2]** checker contract — already corrected (noexec-check attribution, real stub
   API, manual lesson-order) in fixes 1–2 above.
 
-### Round 2 (HEAD pending) — re-dispatched to [sol]
+### Round 2 (HEAD e4051ad) — re-dispatched to [sol]
 
 The round-1 fixes only TIGHTEN pacing (more granular rungs) and correct plan-text tool attributions;
 they introduce no new closure risk, so [glm]/[fable] APPROVE-WITH-NITS (all their findings `[FIXED]`)
 carry forward. Re-dispatching [sol] (the sole REJECT) to confirm the two finer splits.
 
-_(awaiting [sol] round 2)_
+**[sol] REJECT** (HEAD e4051ad) — Ladder A five-rung split confirmed resolved; closure math confirmed
+(`2×180`, `6×60 ≡ 0 mod 360`). Two must-changes, both a correct catch, now `[FIXED]`:
+
+- `[FIXED]` **[sol #2] Ladder B `360/5` is `72.0`, a float** — Python's `/` always yields a float, so a
+  "compute from `n` but still `int`" rung 3 is impossible; my `n=5` whole-number rung was wrong. →
+  Redesigned: computed-angle and `float-type` are now ONE CO-TAUGHT rung 3 (`angle = 360 / n`,
+  inseparable — `/` always makes a decimal), preceded by the typed-literal `int` triangle (rung 2).
+  Ladder B is now 4 rungs; float gets its focused Notice on the co-taught rung.
+- `[FIXED]` **[sol #3] stale Round-1 self-review line** said `structure-check` enforces `no-exec`. →
+  Corrected to `noexec-check` (structure-check does asset existence/compile).
+
+### Round 3 (HEAD pending) — re-dispatched to [sol]
+
+_(awaiting [sol] round 3)_
 
 ## Content Review
 
