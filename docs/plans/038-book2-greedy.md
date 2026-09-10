@@ -147,8 +147,9 @@ machine-checked); project-first; `## Pacing` == 2 lessons.
   clean; 320 tool tests pass.
 - **Phase A (assets):** 13 stdin `.py` solvers (`l1`–`l4` lesson + `ex1`–`ex9`) transformed from the
   shipped verified `solve()` bodies (fixing the transform to convert only the top-level `return`, not
-  nested key-function returns), with 62 committed `.in`/`.out` fixtures (≥2/solver, from the shipped
-  mutation-hardened asserts + crafted lesson edges); all 13 validated against their fixtures.
+  nested key-function returns), with **52 committed `.in`/`.out` fixture pairs** (104 files, ≥2/solver,
+  from the shipped mutation-hardened asserts + crafted/hardened lesson edges); all 13 validated against
+  their fixtures.
 - **Phase B (content):** `lesson.ipynb` rebuilt to greedy ladders — L1 interval scheduling
   (sort-by-end → sweep → stdin `l1` "Put it together" → **counterexample rung** greedy-by-start
   attends 1 vs by-end 2 → equal-end-tie note → complexity), keeping the exchange-argument prose; L2
@@ -216,4 +217,45 @@ under-specified. [glm]/[fable] re-verified the fixes + both counterexamples. Non
 
 ## Content Review
 
-_(4-way content-review gate — consensus before PR)_
+4-way content-review gate (HEAD c122d9b). Verdicts tagged [self]/[sol]/[glm]/[fable].
+
+### [self] APPROVE WITH NITS (2026-09-10)
+
+CORRECTNESS ✓ — all 13 solvers validated against their fixtures in-session (subprocess judge green);
+bodies are the shipped verified `solve()` logic, only un-wrapped to stdin (transform fixed to convert
+just the top-level return, preserving nested key functions). FIXTURES ✓ — derived from the shipped
+mutation-hardened asserts (which killed wrong-key/boundary mutants at the plan-022 gate); non-vacuity
+carries over. COUNTEREXAMPLES ✓ — both are executable LESSON cells (not solver fixtures) and correct:
+greedy-by-start attends 1 vs by-end 2 on `[(0,10),(1,2),(3,4)]`; coins `[1,3,4]`/6 greedy 3 vs optimal
+2. LADDER/MASTERY ✓ — L1 one-increment (sort-by-end → sweep → Put-it-together → counterexample); l3
+crossed-vs-sorted rung (53 vs 45); l4 budget-sweep rung; complexity notes; project-first. CLOSURE ✓ —
+named keys only, `source-policy` (now with the `ast.Lambda` ban) clean; no banned construct. PIPELINE
+✓ — `solutions.ipynb` no-exec mirrors each `exN.py`; the four l1–l4 no-exec solver mirrors + run
+lines; old `solve()` wrapper cell gone; exercises intro off `solve(data)`; teacher-notes 5 headings,
+pacing 2 lessons. Nits watched: sweep rung reuses `ordered` from the prior rung via shared kernel
+(exec-lessons verified); the two lesson counterexample cells necessarily reprint the greedy sweep code
+(acceptable — they isolate the wrong-key failure).
+
+### Round 1 (HEAD c122d9b) — [glm] AWN · [sol] REJECT · [fable] REJECT
+
+All three verified: 13 solvers correct (independent brute-force of every `.out`), both counterexamples
+correct + properly placed as executable lesson cells, mirrors byte-identical, closure mechanical (no
+lambda), tooling green. Findings, all `[FIXED]`:
+
+1. `[FIXED]` **[fable F1] l3 fixtures vacuous** — both `l3` inputs were pre-sorted, so a no-sort
+   (identity-pairing) mutant passed. → Replaced `l3/1` with an UNsorted input (`4 / 10 1 4 30 /
+   2 11 6 50` → 24); **verified** the no-sort mutant now gives 40 ≠ 24.
+2. `[FIXED]` **[fable F2 / glm N1] l1 `>=`→`>` boundary unpinned** — → added a touching-events fixture
+   `l1/3` (`3 / 0 2 / 2 4 / 4 5` → 3); **verified** the `>` mutant gives 2 ≠ 3.
+3. `[FIXED]` **[sol #1 / glm N3] solver rungs lacked a Notice + complexity** — each of the four "Put it
+   together" solver cells now has a `**Notice:**` (the stdin increment) and a `**Complexity:**` line
+   (l1/l3/l4 `O(n log n)`; l2 `O(k)`).
+4. `[FIXED]` **[sol #2] teacher-notes pacing out of sync** — re-synced the two lesson bullets to the
+   rebuilt structure (L1 interval + wrong-key counterexample + exchange argument; L2 coins +
+   coin-counterexample + pairing/cheapest mastery rungs) and the exercise split.
+5. `[FIXED]` **[glm N2] touch-vs-tie wording** reworded; **[glm N4]** report figure corrected (52
+   pairs / 104 files).
+
+### Round 2 (HEAD 863796a) — re-dispatched to [sol]/[glm]/[fable]
+
+_(awaiting round 2)_
