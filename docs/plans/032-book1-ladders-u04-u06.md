@@ -176,6 +176,12 @@ judged completeness + gradual pacing MET and APPROVED WITH NITS; [sol] REJECTed 
 
 U04 now 42 cells (2 bridge rungs added); all book1 checks PASS. Re-running ci-local + re-dispatching [sol].
 
-### Round 2
+### Round 2 — [sol] APPROVE · CONSENSUS
 
-_(pending — [sol] on the fixed HEAD; [glm]/[fable] AWN stands, nits fixed)_
+[sol] re-review: both pacing bridges CONFIRMED FIXED (U04 nesting cells 27/29 scoring bridge + "put
+together" framing; break cells 37/39 accumulator-target bridge → full SUDDEN DEATH application), U06 Notice
+accurate, closure/methods/exec/conventions all re-confirmed. **APPROVE.**
+
+**CONSENSUS — content-review gate CLOSED:** [self] APPROVE · [glm] APPROVE WITH NITS · [fable] APPROVE WITH
+NITS · [sol] APPROVE. Completeness + gradual pacing confirmed MET by all four; closure clean; all findings
+`[FIXED]` (one pre-existing observation `[WONTFIX]`). `ci-local.sh` ALL GREEN. Cleared for PR.
