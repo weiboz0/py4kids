@@ -109,7 +109,7 @@ entries:
 - id: unit-09-save-point
   kind: unit
   title: "Save Point — files that remember"
-  lessons: 2
+  lessons: 3
   introduces: [file-read, file-write, with-statement]
   requires: [list-append, string-methods, def-function, for-loop, parameters, return-value]
   practices: [list-loop, dict-access, f-string, in-operator, builtin-functions, dict-literal,

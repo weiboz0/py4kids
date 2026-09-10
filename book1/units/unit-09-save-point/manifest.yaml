@@ -1,7 +1,7 @@
 id: unit-09-save-point
 kind: unit
 blueprint_version: 1
-lessons: 2
+lessons: 3
 provenance: original
 concepts:
   introduces: [file-read, file-write, with-statement]

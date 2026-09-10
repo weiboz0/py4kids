@@ -81,7 +81,27 @@ names them in passing (usage-order ≠ naming-order, sanctioned).
 
 ## Post-Execution Report
 
-_(filled at Phase C)_
+**Status:** Implemented; `scripts/ci-local.sh` ALL GREEN (pre-merge-guard OK, CI_EXIT=0).
+
+- **Phase A — U09 Save Point** (`lesson.ipynb` rebuilt 14→24 cells, 10 code + 1 `no-exec`):
+  3 lessons. L1 file-write ladder (one line → loop several scores → mixed `settings.txt`);
+  `with-statement` co-taught with a focused auto-close Notice. L2 file-read ladder with bridge
+  (`.read()` whole → `for line in f:` print → `.strip()` clean → `int()`+`.append()` rebuild list).
+  L3 **"Put it together"**: `load_scores(filename)` helper (return) + `in`-search of `settings.txt`;
+  `FileNotFoundError` demo `no-exec`. manifest + map `lessons: 2→3`; teacher-notes `## Pacing` = 3.
+- **Phase B — U10 Pet Simulator** (`lesson.ipynb` rebuilt 31 cells, 13 code + 1 `no-exec`):
+  STAYS 3 lessons. L1 `class-def`+`__init__` co-taught ladder (minimal class → several attributes)
+  + `attributes` ladder (read `buddy.name` → two independent objects → change `luna.hunger`). L2
+  `methods` ladder GROWN incrementally (`play` → `feed(amount)`+return → `pass_time` → `status` with
+  if/elif/else+return), re-instantiating `buddy` after each class redefinition. L3 **"Put it
+  together"**: foods-dict feed, multi-pet loop, `while buddy.happiness < 10`; `AttributeError` demo
+  `no-exec`. manifest/map unchanged at `lessons: 3`; teacher-notes pacing reframed to the ladder.
+- **Phase C:** coverage-map U09 `lessons: 3` (U10 already 3); book1 total **38 → 39** (31 unit
+  lessons, ≤ 44). syllabus arc-table U09 row 2→3, figures "~39 lessons", "summing to 39 — 31 unit
+  lessons", "~37–39 class sessions", ladder parenthetical names U09 (U10 already 3). All CI checks
+  green: concept-scan (closure within each union, order write→read / class→attrs→methods),
+  exec-lessons (file I/O + class cells run clean under one kernel; error demos `no-exec`),
+  coverage/prereq/manifest==map, structure/hygiene/noexec, PDF, pre-merge-guard.
 
 ## Plan Review
 

@@ -11,7 +11,7 @@ mood change. This is the last unit of Year 1 — the first taste of object-orien
 
 ## Pacing
 
-Budget: three lessons of 60–90 minutes (this unit is bigger — objects are a new mental model).
+Budget: three lessons of 60–90 minutes (objects are a new mental model). Each concept is a short **worked-example ladder** (minimal → one step up → real simulator, with a *Notice* per rung); the lesson-count is advisory. `class-def` and `__init__` are co-taught; the `methods` ladder GROWS the class one method at a time — re-make the pet (`buddy = Pet(...)`) after each change so it has the new methods. The foods dict, the multi-pet loop, and the while-play loop are the Lesson-3 "put it together" applications, not new concepts.
 
 - **Lesson 1 — a class is a blueprint (class-def, __init__, attributes) (60–90 min).**
   Open on the hook: adopt a virtual pet. 20 min: `class Pet:` + `def __init__(self, name):` setting
