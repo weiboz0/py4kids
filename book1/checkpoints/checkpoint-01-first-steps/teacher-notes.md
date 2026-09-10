@@ -3,7 +3,8 @@
 ## Goals
 
 A low-stakes half-lesson check on everything from units 01–02: printing, strings,
-variables, input, f-strings, numbers and conversion, comparisons, if/elif/else,
+variables, input, string concatenation, f-strings, numbers and conversion,
+comparisons, if/elif/else,
 the while loop, and reading a traceback without panic.
 Success looks like: you know exactly who needs a revisit before unit 03's dense
 turtle-and-loops stretch, and every student leaves feeling "I can do this".
@@ -20,9 +21,9 @@ with the checkpoint's confidence still warm.
 
 ## Common mistakes
 
-- Question 1 (fix-the-error): "fixing" by deleting the broken line instead of reading
-  the traceback's clue; students who do this need the error-reading ritual re-run, not
-  more syntax.
+- Question 1 (fix-the-error): keeping the integer unconverted in the `+` expression, or
+  switching to an f-string instead of authoring the requested concatenation; students who
+  miss the traceback's type clue need the error-reading ritual re-run, not more syntax.
 - Predict-the-output: computing the arithmetic right but dropping the f-string's
   surrounding text.
 - The while question: writing `=` for `==` in the condition — note it but grade the
@@ -47,9 +48,11 @@ Save discussion for AFTER collection (answers walk otherwise):
 ## Grading
 
 Manual, per D-002 — a judgment read, not a point count. Per question:
-1. **Fix-the-error** (error-messages): full = names what the traceback says AND fixes it;
-   partial = fixes by pattern-matching without citing the message. Partial is fine at
-   this stage; note who cited the message — they're your future debuggers.
+1. **Fix-the-error** (error-messages, string-concat): full = names the two types AND uses
+   `str(clues_found)` in a working `+` concatenation assigned to `clue_message`, then prints
+   it; partial = fixes by pattern-matching without citing the message, or uses an f-string
+   instead of the requested concatenation. Partial is fine at this stage; note who cited
+   the message — they're your future debuggers.
 2. **Predict-the-output** (f-string, arithmetic): full = exact string; partial = right
    arithmetic, mangled text. Partial means re-show f-strings in unit 04's scoring, not
    a re-teach.
