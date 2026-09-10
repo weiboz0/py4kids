@@ -108,9 +108,9 @@ teacher-notes.md` `## Pacing` to 3 lessons with the concept→lesson allocation,
 
 ### Phase B — U02 "Number Detective" lesson ladders
 
-Rework `book1/units/unit-02-number-detective/lesson.ipynb`: graduated ladders (≥3 rungs; the
-beginner-hard concepts `arithmetic, comparison, if-statement, elif-else, while-loop` get 4+ so no rung is a
-leap) for the introduced concepts (`int-type, arithmetic, type-conversion, boolean, comparison, if-statement,
+Rework `book1/units/unit-02-number-detective/lesson.ipynb`: graduated ladders (≥3 rungs; `arithmetic`,
+`comparison`, and `while-loop` carry 4–5 rungs; `if-statement` and `elif-else` get 3 each and together form a
+6-rung conditional arc — all complete and one-increment-per-rung) for the introduced concepts (`int-type, arithmetic, type-conversion, boolean, comparison, if-statement,
 elif-else, import-statement, random-module, while-loop`), respecting U02's internal order (e.g. a
 `comparison` rung must not use `while-loop`). Reused U01 concepts (`print, input, variable, f-string`) get a one-line recap, not a ladder.
 Executable rungs run clean; `input()`/error rungs `no-exec`. Re-allocate across **4 lessons**; update
@@ -154,10 +154,12 @@ ladder + `Notice:` lines (print 3 rungs, string-literal 3, comment 2, variable 3
 `no-exec`, string-concat 3, f-string 3; `error-messages` keeps its single broken/fixed demo). All rungs are
 STRINGS only (no numbers — arithmetic is U02). teacher-notes `## Pacing` → 3 lessons; manifest `lessons: 3`.
 
-**Phase B — U02:** `lesson.ipynb` rebuilt (23 → 68 cells; 29 code, 8 `no-exec`), re-segmented into 4 lesson
+**Phase B — U02:** `lesson.ipynb` rebuilt (23 → 72 cells; 31 code, 8 `no-exec`), re-segmented into 4 lesson
 sections (numbers → picks & judges → one-guess verdict → full game + debugging). Ladders for all 10 introduced
-concepts; the beginner-hard ones carry 4 rungs (arithmetic, comparison) and the conditionals/loop build up
-gradually. **while-loop rungs are all `no-exec` + input-driven with NO counting variable** — any read-modify-
+concepts: `arithmetic` 5 rungs (`+` → `-`/`*` → saved numbers → `//` → `%`), `comparison` 5 (one `==` → `<`
+both ways → all four operators → compare variables → store the `True`/`False`), `while-loop` 4; `if-statement`
+and `elif-else` 3 each (a 6-rung conditional arc together); the rest 3 (`int-type`/`type-conversion`/
+`random`) — every ladder complete and one-increment-per-rung (rung counts follow difficulty, not a quota). **while-loop rungs are all `no-exec` + input-driven with NO counting variable** — any read-modify-
 write (`x = x - 1`, `x = x // 2`, …) is flagged `accumulator` (U04) by concept-scan, so loops make progress by
 re-reading `input()`, matching the existing unit. teacher-notes `## Pacing` → 4 lessons; manifest `lessons: 4`.
 
@@ -224,4 +226,33 @@ rung-count wording). Cleared for implementation (Phases A–D).
 
 ## Content Review
 
-_(4-way content-review gate — consensus before PR)_
+### Review 1 — [self] (2026-09-09, HEAD 6940e66) — APPROVE
+
+Both lessons execute clean (no-exec stripped); AST closure audit clean (U01 zero numbers/non-Add BinOps;
+U02 zero accumulator/loop-counter — while rungs input-driven); every concept's ladder is complete +
+one-increment; concepts introduced/required/practiced unchanged; conventions clean; both open project-first.
+
+### Reviews 2–3 — [glm] & [fable] (2026-09-09, HEAD 6940e66) — both APPROVE WITH NITS
+
+Both independently executed both lessons (no-exec stripped), AST-audited closure/accumulator/numbers, and
+judged the primary bar: **both confirm completeness + gradual pacing is MET** for every concept, Notices
+accurate, closure clean (U01 zero numbers; U02 zero accumulator — while rungs input-driven), concepts
+unchanged, conventions clean. No blocking findings. Nits (all `[FIXED]` unless noted):
+
+1. `[FIXED]` **[glm/fable] arithmetic `//`/`%` in one rung** (the one rung both flagged as two-idea). →
+   Split into two rungs (`//` quotient, then `%` remainder) — arithmetic now 5 rungs, strictly one-increment.
+2. `[FIXED]` **[fable] `boolean` never stored in a variable** (only printed). → Added a comparison-ladder
+   rung `is_too_low = guess < secret` / `print(is_too_low)` — shows a `True`/`False` value is storable.
+3. `[FIXED]` **[glm/fable] int-type rung-3 Notice over-claimed "compute with"** before arithmetic. →
+   Reworded to "Python treats them differently (you will see how in a moment)".
+4. `[FIXED]` **[glm N1] plan/report claimed `if`/`elif` get 4 rungs** but they get 3 (complete + gradual, a
+   6-rung arc together). → Phase B + post-exec report corrected to the actual per-concept counts.
+5. `[FIXED]` **[fable] U02 teacher-notes "lesson-3 debugging session"** (stale after re-segmentation) →
+   "lesson-4"; also fixed the Differentiation "lesson-2 detective" stale ref.
+6. `[WONTFIX]` **[fable/glm] operator-pair rungs** (arithmetic `-`/`*`; comparison's four-operator rung) —
+   both reviewers call these defensible single-category increments matching the operator-completeness intent.
+7. `[WONTFIX]` **[fable] U01 naming rung-3** can't show a live misspelling (the teacher's traceback ritual
+   does) — non-blocking; a teacher-notes pointer suffices at rollout.
+
+Solutions re-executed clean after the fixes (U02 now 72 cells / 31 code); all book1 checks PASS. Awaiting
+[sol] on the improved version.

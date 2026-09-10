@@ -33,7 +33,7 @@ Budget: four lessons of 60–90 minutes. Ten concepts land here — the year's j
 DELIBERATE OMISSION: there is NO guess counter in this unit — `loop-counter` is introduced in unit 03 (coverage-map contract).
 Students tally their guesses on paper and the class keeps a hand-written leaderboard; tell them the machine learns to count next unit.
 
-Practices reappearance: string-literal/naming/comment are exercised throughout the game's messages and code style; run-program and error-messages get the lesson-3 debugging session; all five reappear in checkpoint 01.
+Practices reappearance: string-literal/naming/comment are exercised throughout the game's messages and code style; run-program and error-messages get the lesson-4 debugging session; all five reappear in checkpoint 01.
 
 ## Common mistakes
 
@@ -51,6 +51,6 @@ Practices reappearance: string-literal/naming/comment are exercised throughout t
 
 ## Differentiation
 
-- Strugglers: provide the lesson-2 detective as a fill-in-the-branches skeleton; pair for lesson 3.
+- Strugglers: provide the lesson-3 one-guess detective as a fill-in-the-branches skeleton; pair for the lesson-4 full game.
 - Fast finishers: Challenge exercises — "hot/cold" distance hints (arithmetic + comparison only) and computer-guesses-your-number (halving narrative, no counters).
 - The 1–1000 range remix is a good middle-tier extension before the Challenges.
