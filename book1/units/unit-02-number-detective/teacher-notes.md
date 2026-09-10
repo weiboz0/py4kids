@@ -7,30 +7,33 @@ Success looks like: every student's game loops until the correct guess, and stud
 
 ## Pacing
 
-Budget: three lessons of 60–90 minutes.
-Ten concepts land here — the year's joint-heaviest unit — so each lesson carries a fixed allocation and the exercise set stays short.
+Budget: four lessons of 60–90 minutes. Ten concepts land here — the year's joint-heaviest unit — so each is taught as a short **worked-example ladder** (minimal → one twist → realistic, with a *Notice* line per rung). The beginner-hard ideas (arithmetic, comparison, `if`/`elif`/`else`, `while`) carry an extra rung so no step is a leap. The lesson-count is advisory: take as many rungs per sitting as time allows.
 
-- **Lesson 1 — int-type, arithmetic, type-conversion, import-statement, random-module (60–90 min).**
+- **Lesson 1 — int-type, arithmetic, type-conversion (60–90 min).**
   Open on the project thread: the teacher's computer picks a secret number; the class tries to find it by shouting — chaos motivates a smarter way.
-  20 min: integers and arithmetic (including `//` and `%` as party tricks).
-  15 min: `input()` gives text — `int()` fixes it (bridge from unit 01).
-  25 min: `import random`, `random.randint` — every student's machine picks a secret.
-  Rest: dice-roller exercise.
-- **Lesson 2 — boolean, comparison, if-statement, elif-else (60–90 min).**
-  Open on the thread: the machine has a secret; today it learns to answer one guess.
-  20 min: comparisons and True/False.
-  30 min: the one-guess detective — `if`/`elif`/`else` gives "too high / too low / got it!".
+  15 min: the integer ladder (a whole number → negatives/zero → number vs look-alike text).
+  25 min: the arithmetic ladder (`+` → `-`/`*` → on saved numbers → `//` and `%`).
+  20 min: the type-conversion ladder (`int("27")` → `str()` → `int(input(...))`, the bridge from unit 01).
+- **Lesson 2 — import-statement, random-module, boolean, comparison (60–90 min).**
+  Open on the thread: the machine needs its own secret, and a way to judge a guess.
+  20 min: the random ladder (`randint(1,6)` → change the range → save the pick as the secret).
+  25 min: the comparison ladder (one `==` → `<` both ways → all four operators → compare saved numbers), with True/False as the boolean answer.
+- **Lesson 3 — if-statement, elif-else (60–90 min).**
+  Open on the thread: the machine has a secret; today it answers one guess.
+  20 min: the `if` ladder (one true branch → a false test does nothing → `if`/`else`).
+  25 min: the `elif` ladder (three-way verdict → first-True-wins → the one-guess detective with a real input).
   Rest: higher-or-lower exercises.
-- **Lesson 3 — while-loop (60–90 min).**
+- **Lesson 4 — while-loop + debugging (60–90 min).**
   Open on the thread: one guess isn't a game; loop until correct.
-  25 min: `while guess != secret` — the full game.
-  20 min: deliberate-bug debugging session (practices error-messages): the forgotten-`int()` bug lives in the exercises; the `=`-for-`==` bug is TEACHER-IMPROVISED — type `while guess = secret:` live, let the SyntaxError land, and read it together (it is not in the notebooks by design).
+  30 min: the `while` ladder (loop until a typed sentinel → loop until the guess matches → add an `if` hint inside → the full random game). Every rung is teacher-run (it waits for typing) and counter-free by design.
+  20 min: deliberate-bug debugging session (practices error-messages): the forgotten-`int()` bug is in the lesson's broken/fixed pair; the `=`-for-`==` bug is TEACHER-IMPROVISED — type `while guess = secret:` live, let the SyntaxError land, and read it together.
   Rest: play; hand-tally guess counts for the paper leaderboard.
+  60-MINUTE CUT (any lesson): teach rungs 1–2 of each ladder live and leave the last rung as a "try it"; the *Notice* lines let students self-serve it.
 
 DELIBERATE OMISSION: there is NO guess counter in this unit — `loop-counter` is introduced in unit 03 (coverage-map contract).
 Students tally their guesses on paper and the class keeps a hand-written leaderboard; tell them the machine learns to count next unit.
 
-Practices reappearance: string-literal/naming/comment are exercised throughout the game's messages and code style; run-program and error-messages get the lesson-3 debugging session; all five reappear in checkpoint 01.
+Practices reappearance: string-literal/naming/comment are exercised throughout the game's messages and code style; run-program and error-messages get the lesson-4 debugging session; all five reappear in checkpoint 01.
 
 ## Common mistakes
 
@@ -48,6 +51,6 @@ Practices reappearance: string-literal/naming/comment are exercised throughout t
 
 ## Differentiation
 
-- Strugglers: provide the lesson-2 detective as a fill-in-the-branches skeleton; pair for lesson 3.
+- Strugglers: provide the lesson-3 one-guess detective as a fill-in-the-branches skeleton; pair for the lesson-4 full game.
 - Fast finishers: Challenge exercises — "hot/cold" distance hints (arithmetic + comparison only) and computer-guesses-your-number (halving narrative, no counters).
 - The 1–1000 range remix is a good middle-tier extension before the Challenges.

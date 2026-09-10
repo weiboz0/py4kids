@@ -4,6 +4,7 @@ books:
   number: 1
   root: book1
   depends_on: []
+  lesson_budget: [28, 44]
 - id: book2
   number: 2
   root: book2
