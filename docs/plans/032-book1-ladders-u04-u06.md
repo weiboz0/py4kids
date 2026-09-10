@@ -54,7 +54,7 @@ advisory (book1 budget ceiling already `[28, 44]`). The ladder standard is defin
 Rework `book1/units/unit-04-quiz-show/lesson.ipynb`: graduated ladders for `accumulator` (set a total at 0 →
 add one → add again to see it grow → count with a **`while`-loop + counter**, NO `for`/`range`), `logical-ops`
 (`and` → `or` → `not` → a combined rule — fixes a real gap: `not` currently has no code cell), `conditional-
-nesting` (an `if` inside an `if` → a realistic locked-follow-up gate), `break-statement` (leave a `while` loop
+nesting` (an `if` inside an `if` → an inner `elif`/`else` → a realistic locked-follow-up gate — ≥3 rungs, it is beginner-hard), `break-statement` (leave a `while` loop
 early → with a condition → in the sudden-death game). Each rung adds exactly one increment. Executable rungs
 with literal values where possible; `no-exec` for `input()`-driven game rungs. Set `manifest.yaml` `lessons: 3`
 and update teacher-notes `## Pacing` to 3 lessons.
@@ -72,15 +72,17 @@ strings preferred. Set `manifest.yaml` `lessons: 3` and update teacher-notes `##
 
 - `book1/curriculum/coverage-map.yaml`: set U04 `lessons: 3`, U06 `lessons: 3` (= their manifests; book1 total
   34 → 36, ≤ the `[28, 44]` ceiling). `book1/syllabus.md`: update the U04/U06 arc-table `Lessons` cells and
-  the "~34 lessons"/"summing to 34"/"~32–34 class sessions" figures to 36.
+  the "~34 lessons"/"summing to 34 — 26 unit lessons"/"~32–34 class sessions" figures (→ 36, 28 unit lessons).
 - `scripts/ci-local.sh` ALL GREEN: `exec-lessons` (every non-`no-exec` rung runs clean), `concept-scan`
-  (no used-but-unlisted / untaught method — **watch: NO `for`/`range`/`string-slice` in U04; only `.strip`/
-  `.lower`/`.upper`/`.replace` in U06 methods rungs; keep a string literal in any strings-context `+`**),
+  (no used-but-unlisted / untaught method — **watch: in U04, NO `for`/`range`/`string-slice` AND NO string
+  `+` at all (`string-concat` is NOT in U04's union — use f-strings for output); in U06, only `.strip`/
+  `.lower`/`.upper`/`.replace` in methods rungs, and string `+` is fine there (`string-concat` is a U06
+  require)**),
   `coverage`/`prereq` (concepts unchanged → stable), `lesson-budget` (≤ 44), manifest==map, structure/hygiene/
   noexec, PDF build, pre-merge guard.
 - **Closure + completeness/gradual audit (primary content-review duty):** no rung uses a later-in-unit or
   untaught concept or method; each ladder is complete + one-increment-per-rung; Notices accurate; lessons
-  open project-first.
+  open project-first; and the numbered `## Pacing` blocks equal the new `lessons` count (manual — tooling only checks heading presence).
 
 ## Post-Execution Report
 
@@ -111,9 +113,17 @@ converge on one blocking error + nits:
 
 [fable] APPROVE WITH NITS (no blocking); [glm] REJECT on B1 (now fixed). Re-confirming [glm]; [sol] pending.
 
-### Round 2
+### Round 2 (2026-09-09, HEAD 7fa2264) — [glm] AWN · [sol] APPROVE · CONSENSUS
 
-_(pending — [glm] re-confirm B1; [sol] on the fixed HEAD)_
+[glm] re-confirm: **APPROVE WITH NITS** (B1 verified resolved against the tooling; 2 editorial nits applied —
+the Phase-C watch note's U04 string-`+` inversion → corrected to "NO string `+` in U04, use f-strings", and
+the syllabus "26 unit lessons" sub-figure). [sol] on the fixed HEAD: **APPROVE** (no blocking; confirmed
+while-only/no-for-range/no-slice for U04, the four U06 methods + order, one-increment slice split, metadata +
+budget + Phase C all sound). Also applied [sol]'s notes: conditional-nesting → ≥3 rungs (beginner-hard), and a
+`## Pacing`-blocks==lessons manual check in Phase C.
+
+**CONSENSUS — plan-review gate CLOSED:** [self] APPROVE · [fable] APPROVE WITH NITS · [glm] APPROVE WITH NITS
+· [sol] APPROVE. Cleared for implementation.
 
 ## Content Review
 
