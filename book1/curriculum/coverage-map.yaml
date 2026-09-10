@@ -48,7 +48,7 @@ entries:
   introduces: [def-function, parameters, return-value, scope]
   requires: [turtle-basics, turtle-drawing, for-loop, variable, f-string]
   practices: [range-function, loop-counter, arithmetic, nested-loops, float-type,
-              accumulator, import-statement, string-literal]
+              accumulator, import-statement, string-literal, turtle-drawing]
 - id: checkpoint-02-loops-and-functions
   kind: checkpoint
   title: "Checkpoint 2 — Loops and Functions"
@@ -57,7 +57,7 @@ entries:
   requires: [for-loop, while-loop, def-function]
   practices: [for-loop, range-function, while-loop, accumulator, logical-ops,
               conditional-nesting, def-function, parameters, return-value, scope,
-              turtle-basics, turtle-drawing, print, variable, comparison, arithmetic,
+              turtle-basics, print, variable, comparison, arithmetic,
               if-statement, elif-else, boolean, int-type, loop-counter, f-string,
               string-literal]
 - id: project-01-arcade-night
