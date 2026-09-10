@@ -45,8 +45,10 @@ leap. Each rung (after the first) carries a one-line **`Notice:`** markdown line
 thing that changed from the previous rung ("Notice: you can drop in more than one `{…}`"), so the gradual
 progression is explicit and students extract the rule rather than memorize a line. Rungs are short (2–5 code
 lines). A concept a unit only **reuses** gets a single one-line recap + at most one example, not a ladder.
-The deliberate-error / `input()` demos keep their existing single-example + `no-exec` treatment (executing
-them would hang or raise).
+The `error-messages` deliberate-error demo stays a single `no-exec` example (its job is to show one
+traceback, not to generalize). `input` DOES get a ladder, but since `input()` can't be executed under CI its
+rungs are all tagged `no-exec` (e.g. prompt → save the reply in a variable → reuse the saved reply in a
+later line); `run-program`/`error-messages` keep their existing single-demo framing.
 
 ## Global Constraints
 
@@ -54,7 +56,19 @@ them would hang or raise).
   the unit's lesson ORDER (concept-scan is unit-level and will NOT catch a within-unit ordering violation —
   reviewers must). In particular **U01 rungs use only strings / variables / `input` / concat / f-string — NO
   numbers or arithmetic** (those arrive in U02). U02 rungs may use U01 concepts + the U02 concepts taught
-  earlier in U02, never a later-in-U02 concept.
+  earlier in U02, never a later-in-U02 concept. Two closure clarifications so the audit doesn't false-positive: (a)
+usage-order ≠ formal-naming-order within a cell is fine — a `print` rung uses a string literal before
+`string-literal` is formally named, exactly as the current notebook already does; the audit keys on whether a
+concept has been TAUGHT by that lesson, not on naming sequence; (b) CO-TAUGHT pairs that share one lesson cell
+(`boolean`+`comparison`; `import-statement`+`random-module`) may appear together in a rung — the author picks
+a sensible intra-cell order, and neither counts as "used before taught".
+- **`accumulator`/`loop-counter` are OFF-LIMITS (CI-enforced trap):** `loop-counter` is U03 and `accumulator`
+  is U04, and `accumulator` is AST-detected by concept-scan (any `x = x + …` read-modify-write or `x += …`
+  fails CI as used-but-unlisted). So **`while-loop` rungs must NOT use a counting/accumulating variable** —
+  use condition-driven termination instead (an `input()`-driven loop as a `no-exec` rung, or shrinking a
+  value with taught arithmetic that is not `+`-accumulation, e.g. `n = n // 2`), matching U02's existing
+  counter-free while-loop. The general closure law covers this, but it is called out because it is the
+  natural-but-wrong way to write a loop ladder.
 - **Execution:** `exec-lessons` runs every lesson code cell EXCEPT those tagged `no-exec`. New executable
   rungs must run top-to-bottom clean in the shared kernel (use literal values; they may build on variables
   set by earlier executed cells). Any rung using `input()` or demonstrating an error is tagged `no-exec`.
@@ -87,8 +101,8 @@ Rework `book1/units/unit-01-story-machine/lesson.ipynb`: for each introduced con
 `error-messages` keep their existing framing/single demo), expand the single example into a graduated ladder
 (≥3 rungs; fewer only for a trivial concept like `comment`, more where completeness/gradual pacing need it) +
 `Notice:` lines per the standard. All rungs use STRINGS only (no numbers). `input()` rungs and the
-`SyntaxError` demo stay `no-exec`; the rest execute clean. Keep the Lesson One / Lesson Two structure but
-re-allocate across **3 lessons** (see teacher-notes). Update `book1/units/unit-01-story-machine/
+`SyntaxError` demo stay `no-exec`; the rest execute clean. Re-segment the lesson arc into **3 lesson
+sections** (the richer ladders no longer fit two). Update `book1/units/unit-01-story-machine/
 teacher-notes.md` `## Pacing` to 3 lessons with the concept→lesson allocation, and set
 `manifest.yaml` `lessons: 3` (concepts unchanged).
 
@@ -104,11 +118,14 @@ Executable rungs run clean; `input()`/error rungs `no-exec`. Re-allocate across 
 
 ### Phase C — Lesson budget + map + syllabus
 
-- `books.yaml`: add `lesson_budget: [28, 34]` to the `book1` entry (raise the ceiling 32→34 for the two added
-  lessons; min unchanged).
+- `books.yaml`: add `lesson_budget: [28, 44]` to the `book1` entry — real headroom so neither this pilot
+  (total 34) nor the eventual U03–U10 rollout has to re-bump the ceiling every plan (min unchanged; the
+  number is a loose guardrail, per "budget isn't a constraint", not a target).
 - `book1/curriculum/coverage-map.yaml`: set U01 `lessons: 3`, U02 `lessons: 4` (must equal the manifests).
-- `book1/syllabus.md`: update the arc-table `Lessons` cells for U01 (2→3) and U02 (3→4), and the prose
-  "summing to 32 — 24 unit lessons…" → the new total (34 — 26 unit lessons + 6 project + 4 half-checkpoints).
+- `book1/syllabus.md`: update the arc-table `Lessons` cells for U01 (2→3) and U02 (3→4); the prose
+  "summing to 32 — 24 unit lessons…" → the new total (34 — 26 unit lessons + 6 project + 4 half-checkpoints);
+  and the stale "~30 lessons" (line ~4) and "~30–32 class sessions" (line ~31) phrases → the new figure.
+  (Syllabus prose is consistency-only, not CI-checked, but keep it accurate.)
 
 ### Phase D — Verification (named verification phase)
 
@@ -132,7 +149,34 @@ _(filled at Phase D)_
 
 ## Plan Review
 
-_(4-way plan-review gate — consensus before any implementation)_
+### Round 1 (2026-09-09, HEAD 04aaaba) — [self] APPROVE · [glm] AWN · [fable] AWN · [sol] pending
+
+[glm] and [fable] both independently verified (against both manifests, both notebooks, and the tooling): the
+closure constraint is correct (U01 strings-only; `int-type` is `MANUAL_ONLY` so a stray number wouldn't even
+be CI-caught → reviewer-enforced is accurate), metadata stays stable (concepts untouched; `manifest.lessons
+== map.lessons` enforced), the budget override is valid (`books.yaml` not governance-restricted; total 34),
+Phase D is an adequate named verification phase, and the ladder pedagogy is sound (worked-example effect +
+variation theory). Both APPROVE WITH NITS on the same 5 points; [sol]'s codex task backgrounded without a real
+verdict (flaky) — re-dispatched on the fixed HEAD. Dispositions (all `[FIXED]`):
+
+1. `[FIXED]` **while-loop `accumulator` trap** — a counting loop (`x = x + 1`) is AST-detected as `accumulator`
+   (U04) and FAILS concept-scan; `loop-counter` is U03. → Added an explicit Global-Constraints rule:
+   while-loop rungs use condition-driven termination (input-driven `no-exec`, or shrinking via non-`+`
+   arithmetic like `n = n // 2`), never a counter/accumulator — matching U02's existing counter-free loop.
+2. `[FIXED]` **"3 is the floor" vs "comment may need 2" + co-taught pairs** — added closure clarifications:
+   usage-order ≠ naming-order is fine; co-taught pairs (`boolean`+`comparison`, `import-statement`+
+   `random-module`) may share a rung with an author-chosen intra-cell order.
+3. `[FIXED]` **budget ceiling exactly-tight vs "generously"** — set `lesson_budget: [28, 44]` (real headroom
+   for the rollout), not `[28, 34]`.
+4. `[FIXED]` **`input` ladder contradiction** — the standard said input keeps a single demo, but Phase A
+   laddered it. → `input` gets a ladder of all-`no-exec` rungs (prompt → save → reuse); only the
+   `error-messages` deliberate-error demo stays a single example.
+5. `[FIXED]` **wording** — Phase A "keep Lesson One/Two but re-allocate" → "re-segment into 3 lesson
+   sections"; Phase C now also updates the stale syllabus "~30 lessons" / "~30–32 class sessions" prose.
+
+### Round 2
+
+_(pending — [sol] on the fixed HEAD; [glm]/[fable] AWN stands, nits fixed)_
 
 ## Content Review
 
