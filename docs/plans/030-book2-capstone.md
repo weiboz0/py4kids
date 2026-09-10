@@ -296,4 +296,20 @@ WITH NITS. **[fable] REJECT** on two scanner-blind closure violations (correctne
    to the real feasibility-comparison mutant the assert actually kills.
 
 Solutions re-executed clean after the closure fixes; all book2 checks PASS. [self] APPROVE stands; [glm]
-APPROVE WITH NITS (nits fixed). Awaiting [sol] on the fixed version.
+APPROVE WITH NITS (nits fixed).
+
+### Review 4 — [sol] (2026-09-09, fixed HEAD 798618e) — APPROVE
+
+Fresh top-to-bottom execution + differential testing + AST scans + eight mutation probes. Confirmed: all 8
+references correct and samples match; every distinguishing assert non-vacuous; all 17 required concepts
+genuinely exercised; house rules clean (the list-repetition and ternary closure violations are gone —
+AST-verified); structure and conventions correct. No blocking findings.
+
+### CONSENSUS — content-review gate CLOSED
+
+[self] APPROVE · [glm] APPROVE WITH NITS · [fable] APPROVE (round-1 REJECT; both scanner-blind closure
+violations `[FIXED]`) · [sol] APPROVE. All four blind-solved the 8 problems correct; every blocking-class
+check (correctness, non-vacuous critical asserts, all-17-concepts-genuine, house rules, structure) passed;
+all `[OPEN]` findings `[FIXED]` (or `[WONTFIX]` with reason). `ci-local.sh` ALL GREEN (practice gate active +
+passing) + `pre-merge-guard` OK. Cleared for PR + squash-merge. **This is the final Book-2 entry — on merge,
+Book 2 is complete.**
