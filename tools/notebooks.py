@@ -43,14 +43,28 @@ NOTES_HEADINGS = (
 )
 CHECKPOINT_NOTES_HEADINGS = (*NOTES_HEADINGS, "## Grading")
 PROJECT_NOTES_HEADINGS = (*NOTES_HEADINGS, "## Rubric")
-INTERACTIVE = re.compile(r"\binput\s*\(")
+# INTERACTIVE also matches stdin reads so a stdin-reading lesson cell is forced no-exec (else
+# nbclient silently returns "" for sys.stdin.read() and the cell "executes clean" on garbage).
+INTERACTIVE = re.compile(r"\binput\s*\(|\bsys\.stdin\b")
 GUI_IMPORT = re.compile(r"^\s*(import|from)\s+(turtle|tkinter)\b", re.MULTILINE)
 RANDOM_FROM_IMPORT = re.compile(r"^\s*from\s+random\s+import\b", re.MULTILINE)
 EXERCISE_HEADING = re.compile(r"^## Exercise \d+", re.MULTILINE)
 QUESTION_HEADING = re.compile(r"^## Question \d+", re.MULTILINE)
 MILESTONE_HEADING = re.compile(r"^## Milestone \d+", re.MULTILINE)
+PROBLEM_HEADING = re.compile(r"^### Problem \d+", re.MULTILINE)
 SOLUTION_HEADING = re.compile(r"(?i)^#+\s*solution", re.MULTILINE)
 ASSET_REF = re.compile(r"assets/[\w.-]+\.py")
+
+
+def is_stdin_model_entry(entry_dir: Path) -> bool:
+    """Plan-036 new model: an entry that ships an ``assets/`` dir containing >=1 ``.py`` solver.
+
+    Such an entry is verified by ``judge-check`` (stdin fixtures), so the old ``solve()``-assert
+    checks (_solution_policy_findings, exec-solutions) are skipped for it. Entries without such an
+    ``assets/`` dir stay on the old path unchanged.
+    """
+    assets = entry_dir / "assets"
+    return assets.is_dir() and any(assets.glob("*.py"))
 
 
 def _fail(scope: str, detail: str) -> str:
@@ -332,29 +346,43 @@ def layout_findings(root: Path, book: str, unit: str | None = None) -> list[str]
             isinstance(concepts.get(field), list) and "turtle-basics" in concepts[field]
             for field in ("introduces", "requires", "practices")
         )
-        if uses_turtle:
-            assets = unit_dir / "assets"
-            if not assets.is_dir():
-                findings.append(_fail(unit_dir.name, "uses turtle but has no assets/"))
-                continue
-            referenced: set[str] = set()
-            for name in ("lesson.ipynb", "exercises.ipynb", "solutions.ipynb"):
-                path = unit_dir / name
-                if path.is_file():
-                    for cell in read_nb(path).cells:
-                        referenced.update(ASSET_REF.findall(cell.source))
-            for reference in sorted(referenced):
-                if not (unit_dir / reference).is_file():
-                    findings.append(_fail(unit_dir.name, f"references missing {reference}"))
-            for script in sorted(assets.glob("*.py")):
-                with tempfile.NamedTemporaryFile(suffix=".pyc", delete=False) as compiled:
-                    compiled_path = Path(compiled.name)
-                try:
-                    py_compile.compile(str(script), cfile=str(compiled_path), doraise=True)
-                except py_compile.PyCompileError:
-                    findings.append(_fail(unit_dir.name, f"asset {script.name} does not compile"))
-                finally:
-                    compiled_path.unlink(missing_ok=True)
+        assets = unit_dir / "assets"
+        if uses_turtle and not assets.is_dir():
+            findings.append(_fail(unit_dir.name, "uses turtle but has no assets/"))
+            continue
+        findings.extend(
+            _assets_reference_findings(
+                unit_dir, ("lesson.ipynb", "exercises.ipynb", "solutions.ipynb")
+            )
+        )
+    return findings
+
+
+def _assets_reference_findings(entry_dir: Path, notebook_names) -> list[str]:
+    """For ANY entry with an assets/ dir (turtle or Plan-036 stdin): referenced assets must exist and
+    every asset must compile."""
+    assets = entry_dir / "assets"
+    if not assets.is_dir():
+        return []
+    findings: list[str] = []
+    referenced: set[str] = set()
+    for name in notebook_names:
+        path = entry_dir / name
+        if path.is_file():
+            for cell in read_nb(path).cells:
+                referenced.update(ASSET_REF.findall(cell.source))
+    for reference in sorted(referenced):
+        if not (entry_dir / reference).is_file():
+            findings.append(_fail(entry_dir.name, f"references missing {reference}"))
+    for script in sorted(assets.glob("*.py")):
+        with tempfile.NamedTemporaryFile(suffix=".pyc", delete=False) as compiled:
+            compiled_path = Path(compiled.name)
+        try:
+            py_compile.compile(str(script), cfile=str(compiled_path), doraise=True)
+        except py_compile.PyCompileError:
+            findings.append(_fail(entry_dir.name, f"asset {script.name} does not compile"))
+        finally:
+            compiled_path.unlink(missing_ok=True)
     return findings
 
 
@@ -549,7 +577,9 @@ def solutions_structure_findings(root: Path, book: str, unit: str | None = None)
                 following.append(cell_type)
             if "code" not in following:
                 findings.append(_fail(unit_dir.name, f"solutions: no code under '{heading}'"))
-        findings.extend(_solution_policy_findings(unit_dir.name, solutions))
+        # Plan 036: stdin-model book2 entries are verified by judge-check, not solve()+asserts.
+        if not (book == "book2" and is_stdin_model_entry(unit_dir)):
+            findings.extend(_solution_policy_findings(unit_dir.name, solutions))
     return findings
 
 
@@ -564,6 +594,9 @@ def checkpoint_layout_findings(
             name for name in CHECKPOINT_REQUIRED_FILES if not (checkpoint_dir / name).is_file()
         ]
         findings.extend(_fail(checkpoint_dir.name, f"missing {name}") for name in missing)
+        findings.extend(
+            _assets_reference_findings(checkpoint_dir, ("checkpoint.ipynb", "solutions.ipynb"))
+        )
     return findings
 
 
@@ -653,7 +686,8 @@ def checkpoint_solutions_findings(
                     findings.append(
                         _fail(checkpoint_dir.name, f"solutions: no code under '{heading}'")
                     )
-        findings.extend(_solution_policy_findings(checkpoint_dir.name, solutions))
+        if not (book == "book2" and is_stdin_model_entry(checkpoint_dir)):
+            findings.extend(_solution_policy_findings(checkpoint_dir.name, solutions))
     return findings
 
 
@@ -687,6 +721,9 @@ def project_layout_findings(
             name for name in PROJECT_REQUIRED_FILES if not (project_dir / name).is_file()
         ]
         findings.extend(_fail(project_dir.name, f"missing {name}") for name in missing)
+        findings.extend(
+            _assets_reference_findings(project_dir, ("brief.ipynb", "solutions.ipynb"))
+        )
     return findings
 
 
@@ -742,7 +779,8 @@ def project_solutions_findings(
         if not path.is_file():
             findings.append(_fail(project_dir.name, "missing solutions.ipynb"))
             continue
-        findings.extend(_solution_policy_findings(project_dir.name, read_nb(path)))
+        if not (book == "book2" and is_stdin_model_entry(project_dir)):
+            findings.extend(_solution_policy_findings(project_dir.name, read_nb(path)))
     return findings
 
 
@@ -891,13 +929,20 @@ def execute_notebooks(
     if findings:
         return findings
     for content_dir in directories:
+        # Plan 036: a stdin-model book2 entry's solutions are no-exec display cells mirroring the
+        # judged assets/*.py — executing them would hang on stdin. judge-check verifies them instead.
+        if (
+            notebook_name == "solutions.ipynb"
+            and book == "book2"
+            and is_stdin_model_entry(content_dir)
+        ):
+            continue
         path = content_dir / notebook_name
         if not path.is_file():
             findings.append(_fail(content_dir.name, f"{notebook_name} does not exist"))
             continue
         notebook = read_nb(path)
-        if notebook_name == "lesson.ipynb":
-            notebook.cells = [cell for cell in notebook.cells if "no-exec" not in tags(cell)]
+        notebook.cells = [cell for cell in notebook.cells if "no-exec" not in tags(cell)]
         try:
             NotebookClient(
                 notebook,

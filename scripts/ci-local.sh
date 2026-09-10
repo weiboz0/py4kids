@@ -52,6 +52,8 @@ uv run py4kids-tools --book book2 noexec-check
 uv run py4kids-tools --book book2 stretch-check
 uv run py4kids-tools --book book2 exec-solutions
 uv run py4kids-tools --book book2 exec-lessons
+uv run py4kids-tools --book book2 judge-check
+uv run py4kids-tools --book book2 source-policy
 
 step "5/6 PDF build"
 bash scripts/build-pdf.sh --book book1
