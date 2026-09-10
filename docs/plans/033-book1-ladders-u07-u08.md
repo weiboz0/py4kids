@@ -16,22 +16,28 @@ defined in `docs/plans/031-book1-worked-examples.md`.
 ## Global Constraints (closure specifics — reviewer-enforced; concept-scan is unit-level)
 
 A rung uses only concepts taught by its point in the unit's lesson ORDER. Per-unit:
+- **Closure here is REVIEWER-ENFORCED, not tool-caught.** concept-scan's builtin/method sets are GLOBAL:
+  `sum`, `sorted`, `abs`, `round`, `.keys()`, `.values()` all pass concept-scan GREEN even though these units
+  don't teach them. So the author MUST hand-restrict to the taught set below; the Phase C manual audit is the
+  real enforcement.
 - **U07 High-Score Hall** introduces `list-literal, list-index, list-append, list-loop, list-sort,
   builtin-functions`; union also has `for-loop, range-function, variable, def-function, comparison,
   parameters, return-value, accumulator, f-string, while-loop, string-methods, print, arithmetic, int-type,
-  loop-counter, if-statement, elif-else, string-concat, float-type, type-conversion, input, in-operator`
-  (requires+practices). So `for`-loops ARE available here (list-loop can iterate with `for`). **ENUMERATE at
-  authoring which builtins the unit teaches** (`builtin-functions` — likely `len`, `max`, `min`, `sum`; a
-  builtin not used by the unit must not appear, and any builtin call must be one concept-scan treats as
-  taught). `list-sort` = `.sort()` (in-place) and/or `sorted()` — use the forms the unit teaches. Order:
-  list-literal → index → append → loop → sort (confirm against the notebook).
+  loop-counter, if-statement, elif-else, string-concat, float-type, type-conversion, input, in-operator`.
+  `for`-loops are available. **Taught builtins are EXACTLY `len`, `max`, `min`** — NOT `sum` (the unit
+  deliberately teaches an accumulator total instead; do not use `sum`). **`list-sort` is `.sort()` and
+  `.sort(reverse=True)` ONLY** — never `sorted()`. **Actual intra-unit order: list-literal → index → append →
+  loop → builtin-functions (L1) → list-sort (L2)** — builtins come BEFORE sort. A `list-loop` rung (before
+  builtins) must use an accumulator total or comparison "best so far", NOT a `max()`/`min()` call (those are
+  taught in the next block); `len()` appearing inside a `range(len(...))` loop rung is the sanctioned
+  usage-before-naming case (as in the shipped notebook).
 - **U08 Word Wizard** introduces `dict-literal, dict-access, dict-loop`; union has `list-loop, list-literal,
   list-append, string-methods, in-operator, def-function, for-loop, parameters, return-value, if-statement,
   f-string, print, variable, comparison, string-concat, elif-else, arithmetic, int-type, input,
-  type-conversion, accumulator, boolean, string-literal`. Order: dict-literal → dict-access → dict-loop. A
-  `dict-access` rung may use `d[key]` and `.get()` only if the unit teaches `.get` (enumerate taught dict
-  methods; an untaught method reds concept-scan). `in` on a dict tests keys — fine (`in-operator` is a
-  require).
+  type-conversion, accumulator, boolean, string-literal`. Order: dict-literal → dict-access → dict-loop.
+  **Taught dict methods are EXACTLY `.get(key, default)` and `.items()`** — NOT `.keys()`/`.values()` (they
+  pass scan green but are untaught → reviewer-caught). `dict-access` rungs use `d[key]` read, `d[key] = value`
+  write, and `.get` default; `in` on a dict tests keys (`in-operator` is a require).
 - **Execution:** `exec-lessons` runs every non-`no-exec` cell; prefer executable rungs with literal values;
   `no-exec` any `input()`/error rung.
 - **Concepts unchanged:** U07/U08 `manifest.concepts` and coverage-map entries stay identical EXCEPT the
@@ -49,30 +55,32 @@ A rung uses only concepts taught by its point in the unit's lesson ORDER. Per-un
 
 ### Phase A — U07 "High-Score Hall" lesson ladders
 
-Rework `book1/units/unit-07-high-score-hall/lesson.ipynb`: ladders for `list-literal` (empty list → a few
-items → a list of scores), `list-index` (`[0]` → another position → `[-1]`), `list-append` (append one →
-append in a loop to build a list), `list-loop` (print each with `for` → accumulate a total/`max` over the
-list), `list-sort` (`.sort()` ascending → reverse/`sorted` as the unit teaches → rank the hall),
-`builtin-functions` (the taught builtins, e.g. `len` → `max`/`min` → `sum`, one per rung). Respect order;
-executable rungs with literal lists. Set `manifest.yaml` `lessons: 3` (from 2) and update teacher-notes
-`## Pacing`.
+Rework `book1/units/unit-07-high-score-hall/lesson.ipynb` in the actual order **list-literal → index →
+append → loop → builtin-functions (L1) → list-sort (L2)**: ladders for `list-literal` (empty `[]` → a few
+items → the scores list), `list-index` (`[0]` → another position → `[-1]`), `list-append` (append one → append
+again → append inside a loop to build a list), `list-loop` (print each with `for` → accumulate a total with an
+accumulator — NOT `max()`), `builtin-functions` (`len` → `max` → `min`, one distinct builtin per rung — NOT
+`sum`), `list-sort` (`.sort()` ascending → `.sort(reverse=True)` → rank the hall; never `sorted()`). Executable
+rungs with literal lists. Set `manifest.yaml` `lessons: 3` and update teacher-notes `## Pacing`.
 
 ### Phase B — U08 "Word Wizard" lesson ladders
 
 Rework `book1/units/unit-08-word-wizard/lesson.ipynb`: ladders for `dict-literal` (one pair → a few pairs →
-a realistic word→meaning map), `dict-access` (`d[key]` → update/add a key → the taught `.get` default if the
-unit teaches it; else membership-guarded access), `dict-loop` (loop keys → use each value → build a
-count/translation). Respect order dict-literal → access → loop. Executable rungs with literal dicts. Set
-`manifest.yaml` `lessons: 3` (from 2) and update teacher-notes `## Pacing`.
+the word→translation map), `dict-access` (`d[key]` read → `d[key] = value` add/update → `.get(key, default)`
+for a safe miss), `dict-loop` (`for key in d` → `for k, v in d.items()` → build a count/translation).
+Taught dict methods are ONLY `.get` and `.items()` (no `.keys`/`.values`). Respect order dict-literal →
+access → loop. Executable rungs with literal dicts. Set `manifest.yaml` `lessons: 3` and update teacher-notes
+`## Pacing`.
 
 ### Phase C — map/syllabus + Verification (named verification phase)
 
 - `book1/curriculum/coverage-map.yaml`: U07 `lessons: 3`, U08 `lessons: 3` (= manifests; book1 total 36 → 38,
-  ≤ 44). `book1/syllabus.md`: update the U07/U08 arc-table cells and the "36/28 unit lessons/class-sessions"
-  figures (→ 38, 30 unit lessons).
-- `scripts/ci-local.sh` ALL GREEN: `exec-lessons`, `concept-scan` (**watch: only taught builtins in U07;
-  only taught dict methods in U08; respect within-unit order**), `coverage`/`prereq`, `lesson-budget` (≤ 44),
-  manifest==map, structure/hygiene/noexec, PDF build, pre-merge guard.
+  ≤ 44). `book1/syllabus.md`: update the U07/U08 arc-table `Lessons` cells, and the figures on line ~4
+  ("~36 lessons" → 38), line ~30 ("summing to 36 — 28 unit lessons" → 38/30, and the ladder parenthetical to
+  include U07/U08), and line ~31 ("~34–36 class sessions" → ~36–38).
+- `scripts/ci-local.sh` ALL GREEN: `exec-lessons`, `concept-scan`, `coverage`/`prereq`, `lesson-budget` (≤ 44),
+  manifest==map, structure/hygiene/noexec, PDF build, pre-merge guard. **NOTE: concept-scan will NOT catch a
+  `sum`/`sorted()`/`.keys`/`.values` leak (global sets) — the closure audit below is the real guard.**
 - **Closure + completeness/gradual audit (primary content-review duty):** no rung uses a later-in-unit/
   untaught concept/method/builtin; each ladder complete + one-increment (incl. the realistic rung — bridge +
   "put it together" framing if it would jump); Notices accurate; lessons open project-first; `## Pacing`
@@ -84,7 +92,30 @@ _(filled at Phase C)_
 
 ## Plan Review
 
-_(4-way plan-review gate — consensus before any implementation)_
+### Round 1 (2026-09-09, HEAD ec48926) — [fable] AWN · [glm] REJECT · [sol] pending
+
+Both externals verified U08 is sound (order dict-literal→access→loop; taught methods `.get`/`.items` only)
+and metadata is stable. They converge on U07 specifics + a tooling-claim correction:
+
+1. `[FIXED]` **[glm B1 / fable B] `sum` is untaught in U07** — builtins are exactly `len`/`max`/`min` (the
+   unit teaches an accumulator total, not `sum`); concept-scan passes `sum` green. → Builtins ladder pinned
+   to `len`→`max`→`min` (3 distinct one-increment rungs); `sum` dropped.
+2. `[FIXED]` **[glm B2] `sorted()` untaught** — `list-sort` is `.sort()`/`.sort(reverse=True)` only (scan
+   passes `sorted` green). → Pinned; `sorted()` removed.
+3. `[FIXED]` **[glm B3 / fable A] U07 order mis-stated** — builtins are taught in L1 BEFORE `list-sort` in L2.
+   → Order pinned: list-literal → index → append → loop → builtin-functions → list-sort. The `list-loop` rung
+   (before builtins) uses an accumulator total, not `max()`.
+4. `[FIXED]` **[glm N1 / fable D] overstated tooling claims** — `sum`/`sorted`/`.keys`/`.values` all pass
+   concept-scan green (global builtin/method sets), so closure for them is REVIEWER-enforced. → Global
+   Constraints + Phase C corrected to say concept-scan will NOT catch these; the manual audit is the guard.
+   U08 dict methods pinned to `.get`/`.items` (no `.keys`/`.values` rungs).
+5. `[FIXED]` **[glm N2] syllabus figures** — Phase C now names lines 4/30/31 + the ladder parenthetical.
+
+[fable] APPROVE WITH NITS (no blocking); [glm] REJECT on B1–B3 (now fixed). Re-confirming [glm]; [sol] pending.
+
+### Round 2
+
+_(pending — [glm] re-confirm; [sol] on the fixed HEAD)_
 
 ## Content Review
 
