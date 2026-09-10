@@ -24,11 +24,19 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   20 min: any polygon — `angle = 360 / n` (`l2_polygon`, the 7-gon): the calculator shows 51.42857…; floats arrive because `/` always makes a decimal and the turtle turns by it just the same. `float-type` is co-taught here (it is inseparable from the computed angle).
   15 min: the loop **counter** does work — `pensize(side_number + 1)` thickens each side (`l2_polygons`).
   60-MINUTE CUT: drop the pensize-scaling rung (it returns in the exercises); the polygon-angle discovery is the non-negotiable core.
+  In-class exercises: complete Exercise 2's `360 / 7` prediction, Exercise 3's counter-driven repair, and the Exercise 5 flagship seven-sided script.
+  Exercise 5 is the proficiency check: students author turtle setup, pen controls, the loop, the counter expression, and the decimal angle rather than editing a finished lesson asset.
 - **Lesson 3 — nested-loops (60–90 min).**
   Open on the thread: what if the whole polygon repeats, turned a little each time?
   20 min: the two nested rungs — two squares with a 180° turn between (`l3_two_squares`), then six squares fanned into a ring (`l3_rings`): the inner loop finishes one shape before the outer turns.
   20 min: **put it together** — read `l3_spirograph.py`; the outer loop sweeps, the inner draws, `angle = 360 / n` shapes each polygon.
-  Rest: design-your-own gallery; export by screenshot for the classroom wall.
+  20 min: Exercises 4 and 6 move from tracing to authored nested-loop plans and repairs.
+  Rest: finish the flagship gallery piece; export by screenshot for the classroom wall.
+
+Exercise allocation: Exercise 1 follows the Lesson-1 pen ladder; Exercises 2, 3, and 5 are the Lesson-2 in-class path; Exercises 4 and 6 are the Lesson-3 in-class path.
+This path includes at least one authored repetition of every unit concept, including the required f-string report in Exercise 1.
+Exercises 7–10 are labelled **More Practice** in the notebook and are assigned across the three lessons as homework or independent studio time: Exercise 7 after Lesson 1, Exercises 8 and 10 after Lesson 2, and Exercise 9 after Lesson 3.
+They provide the remaining proficiency repetitions without crowding the 60–90 minute in-class path.
 
 Practices reappearance: naming (script variables), comment (script headers students edit), run-program (the terminal itself) — all three throughout every lesson; all reappear in unit 04 and beyond.
 
