@@ -113,9 +113,11 @@ and metadata is stable. They converge on U07 specifics + a tooling-claim correct
 
 [fable] APPROVE WITH NITS (no blocking); [glm] REJECT on B1–B3 (now fixed). Re-confirming [glm]; [sol] pending.
 
-### Round 2
+### Round 2 (HEAD f7077fc) — [glm] AWN · [sol] APPROVE · CONSENSUS
 
-_(pending — [glm] re-confirm; [sol] on the fixed HEAD)_
+[glm] re-confirm: APPROVE WITH NITS (B1/B2/B3 verified resolved against the tooling; 2 non-blocking nits — the "union has…" enumerations omit a few always-available practices concepts (harmless), and the list-loop print→accumulate rung may need a bridge (content-gate/authoring will enforce one increment)). [sol] re-confirm: APPROVE (all five findings RESOLVED).
+
+**CONSENSUS — plan-review gate CLOSED:** [self] APPROVE · [fable] APPROVE WITH NITS · [glm] APPROVE WITH NITS · [sol] APPROVE. Cleared for implementation. Author note: add a bridge rung if the U07 list-loop print→total rung jumps.
 
 ## Content Review
 
