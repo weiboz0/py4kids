@@ -256,6 +256,13 @@ lambda), tooling green. Findings, all `[FIXED]`:
 5. `[FIXED]` **[glm N2] touch-vs-tie wording** reworded; **[glm N4]** report figure corrected (52
    pairs / 104 files).
 
-### Round 2 (HEAD 863796a) — re-dispatched to [sol]/[glm]/[fable]
+### Round 2 (HEAD 78557e9) — [sol] APPROVE · [glm] APPROVE WITH NITS · [fable] APPROVE WITH NITS
 
-_(awaiting round 2)_
+All round-1 findings verified FIXED by mutation test: [glm]/[fable] confirmed the l1 `>` mutant is
+killed by `l1/3` (2 ≠ 3) and every l3 sort-removal variant is killed by `l3/1` (40/32 ≠ 24); [sol]
+confirmed each l1–l4 solver rung now carries a `**Notice:**` + `**Complexity:**` and the teacher-notes
+pacing matches the rebuilt lesson. All 52 fixture pairs pass; mirrors byte-identical. Doc-only nit
+`[FIXED]`: the stale round-2 header hash corrected to `78557e9`.
+
+**CONSENSUS — content-review gate CLOSED:** [self] APPROVE WITH NITS · [sol] APPROVE · [glm] APPROVE
+WITH NITS · [fable] APPROVE WITH NITS. No open blockers. Cleared for PR.
