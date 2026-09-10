@@ -149,4 +149,33 @@ budget + Phase C all sound). Also applied [sol]'s notes: conditional-nesting →
 
 ## Content Review
 
-_(4-way content-review gate — consensus before PR)_
+### Round 1 (2026-09-09, HEAD e884e1a) — [self] APPROVE · [glm] AWN · [fable] AWN · [sol] REJECT
+
+All reviewers AST-verified closure (U04 zero for/range/slice/string-`+`; U06 only the four methods, order
+index→slice→methods→`in`), executed non-`no-exec` rungs clean, and confirmed conventions. [glm] and [fable]
+judged completeness + gradual pacing MET and APPROVED WITH NITS; [sol] REJECTed on two pacing jumps. Findings:
+
+1. `[FIXED]` **[sol, blocking] U04 conditional-nesting realistic rung jumped too hard** (cell 25 inner if/else
+   → the full locked-follow-up game adds equality tests + two accumulators + outer else + output at once). →
+   Added a bridge rung (nesting + one scoring step) and framed the full game as "put it together", so the
+   increment is one step. (Aligns with the user's gradual-pacing priority.)
+2. `[FIXED]` **[sol, blocking] U04 break realistic rung jumped too hard** (cell 32 conditional break → full
+   SUDDEN DEATH with inputs + if/elif/else dispatch + tally). → Added a bridge rung (break when an
+   accumulator hits a target, executable) and framed the full game as the application.
+3. `[FIXED]` **[sol nit / glm nit1 / fable nit1] U06 in-loop Notice over-claimed** "shift a letter, copy a
+   mark" when the rung only labels characters. → Reworded to "tests each character — here it just labels
+   them; the real cipher will use that test to shift/copy."
+4. `[FIXED]` **[glm nit1 / fable nit1] U06 teacher-notes "Lesson-2 bug" stale** → "Lesson-3 bug".
+5. `[FIXED]` **[glm nit2] syllabus ladder parenthetical** now names U04/U06 (plans 031–032).
+6. `[FIXED]` **[fable nit2] U04 logical-ops combined-rung Notice** tightened ("use `and` for a real rule").
+7. `[WONTFIX]` **[fable nit3] U06 ATBASH loop uses direct string iteration** vs the index ladder's range walk
+   — PRE-EXISTING (3 occurrences before the rework), not a plan-032 regression; future errata/polish.
+8. `[N/A]` **[sol] "ci-local FAIL"** — a SANDBOX artifact in sol's clone (Jupyter socket `PermissionError:
+   Operation not permitted`); the real `ci-local.sh` runs ALL GREEN (CI_EXIT=0) here and [glm]/[fable]
+   executed every rung clean. Not a repo defect.
+
+U04 now 42 cells (2 bridge rungs added); all book1 checks PASS. Re-running ci-local + re-dispatching [sol].
+
+### Round 2
+
+_(pending — [sol] on the fixed HEAD; [glm]/[fable] AWN stands, nits fixed)_

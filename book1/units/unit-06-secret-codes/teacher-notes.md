@@ -38,7 +38,7 @@ unit 07's high-score work and the capstone.
 ## Common mistakes
 
 - Off-by-one on slice bounds (`word[1:4]` is characters 1,2,3 — not 4).
-- Forgetting the `% 26` wrap, so shifting `z` runs past the alphabet (the planned Lesson-2
+- Forgetting the `% 26` wrap, so shifting `z` runs past the alphabet (the planned Lesson-3
   bug — read the wrong output together).
 - Trying to CHANGE a letter in place (`word[0] = "x"`) — strings can't be mutated; you
   REBUILD a new string with concatenation. Name this explicitly; it's the unit's key idea.
