@@ -344,4 +344,41 @@ value-killed (`2 5 3`→8, huge→`50031545098999707`). "Nothing remains."
 
 ## Content Review
 
-_(4-way content-review gate — consensus before PR)_
+### Review 1 — [self] (2026-09-09, HEAD 01d2ed7)
+
+**APPROVE.** Verified: all 7 CP4 solutions execute clean in a real kernel with every assert holding; each
+signature mutant is killed by a distinguishing assert (Q1 8-neighbour→1 vs 2 on `2 2\n#.\n.#`; Q2 LIFO→8 vs
+2; Q3 disconnected→NO; Q4 wrong-pointer→NO; Q5 never-shrink→5 vs 3; Q6 guard-drop→3 on `2 5 4`, huge-`E`
+feasibility; Q7 LIFO→`1 3 4 2` vs `1 2 3 4`). concept-scan clean (no used-but-unlisted, no untaught methods);
+all book2 checks + exec-solutions PASS; `pre_capstone ⊇ all 31` verified. Conventions met (7 `## Question N`,
+no stretch, six teacher-notes headings incl. `## Grading`, markdown-only wrapper, unique ids, no outputs).
+Errata: each concept moved into CP1/CP2/CP3 practices is exactly what those checkpoints' questions assess.
+
+Deviations documented in the post-execution report: Q6 uses `% 2 == 1` / `// 2` (matches U11's shipped
+solution `u11s0011`, avoids bitwise-ops/integer-truthiness); `tuple`/`set-ops` remain in CP4 practices
+(coordinate tuples + `visited.add` genuinely used); `sorted-key` stays dropped (Q4 uses plain `sorted()`).
+
+### Reviews 2–3 — [glm] & [fable] (2026-09-09, HEAD 01d2ed7) — both APPROVE WITH NITS
+
+Both blind-solved all 7 questions independently ([fable] with 400 randomized cross-checks per question,
+brute/`pow` oracles) — **all 7 reference solutions correct, all samples match**, all specified critical
+asserts confirmed non-vacuous by mutant execution, house rules clean (AST scans zero hits), and all CP1–3
+errata practice claims verified genuinely exercised. No blocking findings. Nits (all `[FIXED]` unless noted):
+
+1. `[FIXED]` **[fable NIT-1] Q3 directed-edge mutant survives** — dropping `adj[v].append(u)` (the common
+   "forgot undirected" bug) passed all 4 asserts. → Added `solve("2 1\n2 1") == "YES"` (directed mutant → NO;
+   verified).
+2. `[FIXED]` **[fable NIT-2] Q4 distinctness untested** — a `while lo <= hi` self-pair mutant and a
+   build-set-then-membership mutant survived. → Added `solve("3 8\n1 4 6") == "NO"` (verified kills both).
+3. `[FIXED]` **[fable NIT-3] Q5 reset-on-overflow mutant survives** — restart-window-at-current passed all 4
+   asserts. → Added `solve("5 9\n2 2 3 3 1") == "4"` (mutant → 3; verified).
+4. `[FIXED]` **[fable NIT-4 = glm nit-2] Q7 relied on Q2's `deque` import** (cell order). → Added
+   `from collections import deque` to Q7's own solution cell (self-contained).
+5. `[FIXED]` **[glm nit-1] CP4 student cells shipped a `def solve(data): … pass` scaffold** vs CP1–3's truly
+   EMPTY cells (and the report's "empty student cells" claim). → All 7 `checkpoint.ipynb` student code cells
+   emptied to match the shipped convention.
+6. `[WONTFIX]` **[glm nit-3] CP3 `tuple` is thin** (exercised only by the Q5 swap `a, b = b, a % b`) — genuine
+   and also homed by CP1/CP2; no change (matches the plan-review disposition).
+
+Solutions re-executed clean with the three new asserts; all book2 checks PASS at the patched HEAD.
+[self] APPROVE stands. Awaiting [sol] blind-solve on the patched version.
