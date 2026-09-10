@@ -12,54 +12,23 @@ numbered "Place N: score" hall of fame.
 
 ## Pacing
 
-Budget: two lessons of 60–90 minutes.
+Budget: three lessons of 60–90 minutes. Each concept is a short **worked-example ladder** (minimal → one step up → real board use, with a *Notice* per rung); the lesson-count is advisory. Closure note: this unit's built-ins are exactly `len`/`max`/`min` (an accumulator gives the total, NOT `sum`), and sorting is `.sort()` / `.sort(reverse=True)` only (never `sorted()`); builtins are taught in Lesson 1, before sorting in Lesson 2.
 
-- **Lesson 1 — lists hold many scores (list-literal, list-index, list-append, list-loop,
-  builtin-functions) (60–90 min).**
+- **Lesson 1 — lists hold many scores (list-literal, list-index, list-append, list-loop, builtin-functions) (60–90 min).**
   Open on the hook: a messy scrap of paper full of scores — how would a program keep them?
-  15 min: a list is one variable holding many scores — `scores = [1200, 850, 990, 1500]`;
-  first and last with `scores[0]` / `scores[-1]`.
-  15 min: grow the board with `scores.append(1310)`; walk it with `for score in scores`.
-  15 min: a numbered board over the list AS ENTERED — `for position in range(len(scores))`.
-  Call these "entry #1, #2…" (POSITION in the list), NOT "place" or "rank" — ranking comes in
-  Lesson 2 after we sort. Naming them "places" before sorting is the trap to avoid.
-  20 min: measure it — `len` (how many), `max` (the champion), `min` (the rookie); a running
-  `total` accumulator and `average = total / len(scores)` (note the average is a decimal —
-  a float — even when the scores are whole numbers).
-  60-MINUTE CUT: drop the average beat; build/index/append/loop/`max`/`min` are the core.
-- **Lesson 2 — rank the hall and crown a champion (list-sort; helpers + tiers) (60–90 min).**
-  Open on the thread: yesterday we LISTED scores; today we RANK them and crown the champion.
-  10 min: capture `champion = max(scores)` first, then `scores.sort()` (low→high) and
-  `scores.sort(reverse=True)` (top-first). Emphasize `.sort()` changes the list IN PLACE — it
-  does NOT return a new list (contrast Unit 06, where you REBUILD a string rather than change
-  it). This is the unit's key mental-model beat.
-  20 min: a `board_line(place, score)` helper (`return "Place " + str(place) + ": " +
-  str(score)`) printed over the SORTED list — now the numbers really are places/ranks. An
-  `add_score(scores, new_score)` helper that appends AND re-sorts, so the hall stays ranked
-  after every addition.
-  15 min: tier ranking with `if score >= 1000: … elif score >= 500: … else:` →
-  gold/silver/bronze; an already-on-the-board guard `if new_score in scores`.
-  10 min: the qualifying-threshold `while` loop (`threshold` doubles each round until it passes
-  the champion) and the deliberate off-the-end bug `scores[len(scores)]` — read the IndexError
-  traceback together (valid positions are `0` to `len(scores) - 1`).
-  60-MINUTE CUT: skip the while-loop threshold demo; sort + board_line + tiers are the core.
-
-Note on the champion's NAME: Lesson 2 cleans a single scalar name
-(`winner = "  ada lovelace  ".strip().upper()`) purely to practice string methods. Say plainly
-that this name is an ILLUSTRATION and is NOT linked to any particular score — pairing a name to
-a score needs a dictionary, which arrives in Unit 08. Keeping one list of numbers is a
-deliberate simplification, not an oversight.
-
-Practices reappearance: `print`/`f-string` run through every "show the board" step;
-`arithmetic` is the running total and `position + 1`; `int-type` is the scores themselves;
-`range-function`/`loop-counter` drive the numbered board; `if-statement`/`elif-else`/
-`comparison` are the tiers; `string-concat`/`type-conversion` build the `board_line` label;
-`float-type` is the average; `string-methods` cleans the winner name; `in-operator` is the
-already-on-the-board guard; `while-loop`/`accumulator` carry over; `error-messages` is the
-IndexError beat. `input` is practiced through the "add-my-score" exercise PROMPT only — the
-executable cells stay input-free so the notebooks run start-to-finish in class without waiting
-on typed input; students see `input()` in the exercise text and the reference solution uses a
-fixed sample score instead. All of these return in Unit 08's word games and the capstone.
+  15 min: the list ladder (`[]` → a few items → the scores list) and the index ladder (`[0]` → another → `[-1]`).
+  15 min: the append ladder (append one → again → append in a loop) and the list-loop ladder (print each → accumulate a total). Call a `range(len(...))` walk "entry #1, #2…" (POSITION), NOT "place"/"rank" — ranking comes after sorting. Naming them "places" before sorting is the trap.
+  20 min: the builtins ladder (`len` → `max` → `min`) plus `average = total / len(scores)` (a decimal — a float).
+  60-MINUTE CUT: teach ladder rungs 1–2; leave the last rung as a "try it".
+- **Lesson 2 — rank the hall and crown a champion (list-sort; helpers) (60–90 min).**
+  Open on the thread: yesterday we LISTED scores; today we RANK them.
+  20 min: the sort ladder (`.sort()` low→high → `.sort(reverse=True)` top-first → print with a `board_line` helper). Emphasize `.sort()` changes the list IN PLACE and returns `None` (contrast Unit 06's string rebuild).
+  20 min: `add_score` appends then re-sorts so the hall stays ranked.
+  Rest: ranking exercises.
+- **Lesson 3 — polish the hall (tiers, membership, a doubling threshold) (60–90 min).**
+  20 min: a gold/silver/bronze tier with `if`/`elif`/`else`; guard a duplicate with `if score in scores`.
+  15 min: a `while` loop doubling a qualifying threshold; then the deliberate `IndexError` (`scores[len(scores)]`) — read the traceback together.
+  Rest: exercises; play with each other's halls.
 
 ## Common mistakes
 
@@ -67,12 +36,12 @@ fixed sample score instead. All of these return in Unit 08's word games and the 
   `best` to `None`. `.sort()` rearranges the list in place; just use `scores` afterward.
 - Forgetting `reverse=True`, so the "top" of the board is actually the lowest score.
 - Off-the-end indexing: `scores[len(scores)]` is an IndexError — valid positions run `0` to
-  `len(scores) - 1`. This is the planned Lesson-2 bug; read the traceback together.
+  `len(scores) - 1`. This is the planned Lesson-3 bug; read the traceback together.
 - Off-by-one on the numbered board: humans count from 1, so print `position + 1`, not
   `position`.
 - Adding a score to a ranked board and forgetting to re-sort, so the new score sits at the
   bottom no matter how big it is — `.append()` always adds to the END.
-- Expecting the illustrative `winner` name to be tied to a score — it isn't yet (that needs
+- Expecting the champion-name string demo (now in the exercises, not the lesson)
   dictionaries, Unit 08).
 
 ## Discussion prompts

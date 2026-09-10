@@ -11,48 +11,20 @@ a word and a counter that reports how many times each word appears.
 
 ## Pacing
 
-Budget: two lessons of 60–90 minutes.
+Budget: three lessons of 60–90 minutes. Each concept is a short **worked-example ladder** (minimal → one step up → real use, with a *Notice* per rung); the lesson-count is advisory. This unit teaches exactly two dict methods — `.get(key, default)` and `.items()` — and no others.
 
 - **Lesson 1 — a dictionary pairs keys with values (dict-literal, dict-access) (60–90 min).**
-  Open on the hook: a tiny bilingual phrasebook — how would a program look a word up instantly?
-  15 min: a dict pairs each word (key) with its translation (value) —
-  `translations = {"hello": "hola", "cat": "gato", "dog": "perro"}`; look up `translations["hello"]`.
-  10 min: add or change a pair with `translations["bird"] = "pajaro"`.
-  15 min: words arrive messy, so CLEAN the search word first — `clean = raw_word.strip().lower()` —
-  so `"  Hello "` still matches the key `"hello"`. This is case-insensitive matching; it reuses the
-  string methods from Unit 06.
-  10 min: membership — `print("cat" in translations)` shows a True/False value (a boolean).
-  20 min: the SAFE lookup — `translations.get("fish", "???")` returns a default instead of crashing.
-  Then the deliberate bug: `translations["fish"]` raises a KeyError — show it, read the traceback
-  together, and name why `.get` exists.
-  60-MINUTE CUT: trim the normalization beat (it returns whenever input is messy); build/lookup/
-  `.get`/KeyError are the core.
-- **Lesson 2 — count and translate with a loop (dict-loop) (60–90 min).**
-  Open on the thread: yesterday we looked words up; today we count them and translate a whole list.
-  The counter can OPEN this lesson if L1 ran long.
-  10 min: walk a dict — `for word in translations:` (keys) and
-  `for word, translation in translations.items():` (pairs).
-  15 min: the word-FREQUENCY counter over a GIVEN list — `words = ["cat","dog","cat","bird","cat"]`,
-  `counts = {}`, then one loop: `if word in counts: counts[word] = counts[word] + 1` else
-  `counts[word] = 1`. The `else` handles a word's FIRST sighting (start it at 1); the `if` branch
-  adds to a word already seen (the accumulator/running-total idea, now per key).
-  15 min: print each `word => count` with `.items()`, and find the "most common word" by tracking
-  a running best (`best_count = 0`, `if count > best_count: ...`).
-  10 min: a `translate(word, dictionary)` helper returning `dictionary.get(word, "???")`.
-  10 min: a "new word arrives" beat — `words.append("cat")` — then RESET `counts = {}` and
-  re-count. Emphasize the reset: without it, the counts double.
-  60-MINUTE CUT: skip the translate helper + most-common beat; the counter is the non-negotiable
-  core.
-
-Practices reappearance: `print`/`f-string` show every result; `string-methods` (`.strip().lower()`)
-cleans the search word; `in-operator` tests membership and guards the counter; `arithmetic`/
-`int-type`/`accumulator` are the count increment; `comparison` finds the most-common word;
-`string-concat`/`type-conversion` build the `word => count` label; `elif-else` handles a word's
-first sighting; `error-messages` is the KeyError beat; `list-literal`/`list-append`/`list-loop`
-carry the word list; `def-function`/`parameters`/`return-value` build `translate`; `boolean` is the
-membership print. `input` is practiced only in the `safe-lookup` exercise PROMPT — the executable
-cells stay input-free so the notebooks run in class without waiting on typed input, and the
-reference solution uses a fixed sample word. All of these return in units 09–10 and the capstone.
+  Open on the hook: a bilingual phrasebook — how would a program look a word up instantly?
+  20 min: the dict-literal ladder (one pair → a few → the phrasebook) and the access ladder (`d["hello"]` read → `d["bird"] = "pajaro"` add → `.get("fish", "???")` safe miss).
+  15 min: the KeyError bug (`translations["fish"]`) — read the traceback and name why `.get` exists. Mention cleaning a messy search with `raw.strip().lower()`.
+  60-MINUTE CUT: teach ladder rungs 1–2; leave the last rung as a "try it".
+- **Lesson 2 — walk the phrasebook (dict-loop; translate) (60–90 min).**
+  Open on the thread: today we walk the whole phrasebook.
+  20 min: the dict-loop ladder (`for word in d` keys → `for k, v in d.items()` pairs → a `translate` helper looping a whole list through `.get`).
+  Rest: translate-a-list exercises.
+- **Lesson 3 — count the word log (60–90 min).**
+  20 min: count repeats with one loop (`if word in counts` → grow or start at 1); print each pair with `.items()` and `word + " => " + str(count)`; find the most common with a best-so-far loop.
+  Rest: trade word logs and count each other's; discuss why `counts` must reset to `{}` before a re-count.
 
 ## Common mistakes
 

@@ -1,7 +1,7 @@
 # Book 1 — Year 1 Syllabus
 
 Project-first Python fundamentals for middle school students with zero programming experience.
-~36 lessons of 60–90 minutes across one school year (the lesson counts are advisory workload estimates — a teacher pulls in as many worked examples as class time allows).
+~38 lessons of 60–90 minutes across one school year (the lesson counts are advisory workload estimates — a teacher pulls in as many worked examples as class time allows).
 Every unit opens with a project the students want to build; concepts arrive only when the project needs them (decision D-001).
 Machine-readable arc: `curriculum/coverage-map.yaml` against `curriculum/concepts.yaml`.
 Every unit ships stretch ("Challenge") exercises for faster students; core content never depends on them.
@@ -19,16 +19,16 @@ Every unit ships stretch ("Challenge") exercises for faster students; core conte
 | 7 | `checkpoint-02-loops-and-functions` | checkpoint | 0.5 | Loops and functions, proven. |
 | 8 | `project-01-arcade-night` | project | 2 | Milestone: design and build your own mini-game; class plays everyone's. |
 | 9 | `unit-06-secret-codes` | unit | 3 | Encrypt messages with ciphers only your friends can crack. |
-| 10 | `unit-07-high-score-hall` | unit | 2 | A Hall of Fame that tracks and sorts every score in the class. |
-| 11 | `unit-08-word-wizard` | unit | 2 | A translator and word-game engine powered by dictionaries. |
+| 10 | `unit-07-high-score-hall` | unit | 3 | A Hall of Fame that tracks and sorts every score in the class. |
+| 11 | `unit-08-word-wizard` | unit | 3 | A translator and word-game engine powered by dictionaries. |
 | 12 | `checkpoint-03-data-wrangler` | checkpoint | 0.5 | Strings, lists, and dicts, proven. |
 | 13 | `unit-09-save-point` | unit | 2 | Games that remember you — save and load real files. |
 | 14 | `unit-10-pet-simulator` | unit | 3 | Adopt a virtual pet: feed it, teach it tricks, keep it alive (objects!). |
 | 15 | `checkpoint-04-year-one-finale` | checkpoint | 0.5 | Files and objects, proven. |
 | 16 | `project-02-grand-adventure` | project | 4 | Capstone: a text adventure (or arcade game) using everything from the year. |
 
-Lesson budget: the map's `lessons` values are advisory workload units summing to 36 — 28 unit lessons + 6 project lessons + 4 half-lesson checkpoints. (Units with worked-example ladders run longer: U01→3, U02→4, U04→3, U06→3 lessons; see plans 031–032, with U03/U05/U07–U10 to follow.)
-On the calendar this fits ~34–36 class sessions: each checkpoint's half-lesson is absorbed into the session that opens the following entry when the schedule is tight.
+Lesson budget: the map's `lessons` values are advisory workload units summing to 38 — 30 unit lessons + 6 project lessons + 4 half-lesson checkpoints. (Units with worked-example ladders run longer: U01→3, U02→4, U04→3, U06→3, U07→3, U08→3 lessons; see plans 031–033, with U03/U05/U09/U10 to follow.)
+On the calendar this fits ~36–38 class sessions: each checkpoint's half-lesson is absorbed into the session that opens the following entry when the schedule is tight.
 Turtle-based lessons (units 03/05) run as `.py` scripts launched from the JupyterLab/VS Code terminal — turtle opens its own window and does not draw inside notebook cells; all other work stays in notebooks.
 
 ## Term shape
