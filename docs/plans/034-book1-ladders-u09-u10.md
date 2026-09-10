@@ -104,9 +104,11 @@ shared factual error:
 Closure, hygiene (gitignore covers savegame.txt/settings.txt; exec cwd=unit_dir), metadata, and Phase C all
 verified sound. Re-confirming [glm]/[fable]; [sol] pending.
 
-### Round 2
+### Round 2 (HEAD eaa357c) — [fable] APPROVE · [sol] APPROVE · [glm] AWN · CONSENSUS
 
-_(pending — [glm]/[fable] re-confirm; [sol] on the fixed HEAD)_
+B1 (U10-already-3 double-count) verified FIXED by all three (arithmetic 38→39/31 unit lessons exact). [glm] AWN (tightened an editorial syllabus parenthetical — done); [fable] APPROVE; [sol] APPROVE.
+
+**CONSENSUS — plan-review gate CLOSED:** [self] APPROVE · [fable] APPROVE · [glm] APPROVE WITH NITS · [sol] APPROVE. Cleared for implementation. Author notes: only U09 lessons 2→3 (U10 stays 3); add a bridge if U09 file-read rung-3 (strip+int+append) or U10 status (return+if/elif/else) jumps; re-instantiate pets after the class gains methods.
 
 ## Content Review
 
