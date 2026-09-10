@@ -32,7 +32,16 @@ from tools.notebooks import (
 JUDGE_TIMEOUT_S = 30
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SOLVER_STEM = re.compile(r"^(?:l|ex|q|p)\d+$")
+_LESSON_ASSET = re.compile(r"assets/(l\d+)\.py")
 _NUM = re.compile(r"\d+")
+
+
+def _referenced_lesson_pids(notebook) -> set[str]:
+    """Lesson-solver PIDs the lesson.ipynb references (assets/lN.py, filtered to the l\\d+ stem)."""
+    pids: set[str] = set()
+    for cell in notebook.cells:
+        pids.update(_LESSON_ASSET.findall(cell.source))
+    return pids
 
 
 def _norm_ws(source: str) -> str:
@@ -57,10 +66,14 @@ def _expected_pids(entry_dir: Path, kind: str) -> set[str]:
         exercises = entry_dir / "exercises.ipynb"
         if exercises.is_file():
             pids |= {f"ex{n}" for n in _heading_numbers(read_nb(exercises), EXERCISE_HEADING)}
-        # Lesson solvers l1..l{manifest.lessons} — derived from the manifest, NOT from which .py the
-        # lesson happens to reference (that would be circular).
+        # Lesson solvers: the manifest floor (l1..l{manifest.lessons}) UNION every lesson solver the
+        # lesson references (assets/lN.py) — so a unit with more solvers than lessons (e.g. U06's four)
+        # still fails closed on a referenced-but-missing lN.py.
         lessons = _manifest_lessons(entry_dir)
         pids |= {f"l{n}" for n in range(1, lessons + 1)}
+        lesson_nb = entry_dir / "lesson.ipynb"
+        if lesson_nb.is_file():
+            pids |= _referenced_lesson_pids(read_nb(lesson_nb))
     elif kind == "checkpoint":
         checkpoint = entry_dir / "checkpoint.ipynb"
         if checkpoint.is_file():

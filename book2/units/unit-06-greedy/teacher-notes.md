@@ -16,23 +16,27 @@ is where their attention should go.
 
 ## Pacing
 
-Two 60–90 minute lessons.
+Two 60–90 minute lessons. Each greedy pattern is a short **worked-example ladder** — the local choice on a tiny hand-traceable case (executable in the notebook on literal data), then the full **stdin** solver shown `no-exec` and run from a terminal (`python assets/l1.py < assets/l1/1.in`; Book 2 now reads stdin/prints stdout — no `solve()` wrapper). BOTH counterexamples are executable rungs (greedy-by-start attends fewer than greedy-by-end; greedy coins `1,3,4` for `6` uses 3 vs the optimal 2), and the pairing (`l3`) and cheapest-first (`l4`) patterns each get an executable mastery rung (crossed-vs-sorted distance; a budget sweep). Reference solvers live as runnable `.py` in `assets/`, judged against committed `.in`/`.out` fixtures.
 
-**Lesson 1 — The greedy pattern.**
+**Lesson 1 — Interval scheduling and the sort key (`l1`).**
 Open with the project hook (fit the most non-overlapping events into a day).
-Live-code the classic: sort the intervals by END time, then sweep, taking each event whose start is after
-the last one taken.
+Live-code the ladder: sort the intervals by END time (a NAMED key), then sweep, taking each event whose
+start is `>= last_end` (touching events do not overlap).
+Run the **counterexample rung**: greedy by START time attends fewer events (1 vs 2 on the tiny case) —
+the sort key IS the algorithm.
 Walk the exchange argument out loud: if the optimal answer didn't take the earliest-ending compatible
 event, we could swap it in without losing anything.
-Introduce a second pattern — fewest coins with canonical denominations (take as many of the largest as
-fit, then the next) — and the deadline/shortest-job orderings.
-Class works Exercises 1–5.
+Class works the scheduling-flavored exercises — 1 (arena ranges), 2 (min-max lateness), 5 (deadline
+count), 8 (stabbing points).
 
-**Lesson 2 — Choosing the key, and when greedy fails.**
-Compare sort keys on the same problem to show a wrong key gives a wrong answer.
-Present ONE counter-example where greedy is tempting but wrong (e.g. coins `1, 3, 4` making `6`: greedy
-gives `4+1+1`, optimal is `3+3`) — the takeaway is "justify the choice, don't assume."
-Class works Exercises 6–9 (budget items, shortest-job checkout, and the two stretch problems).
+**Lesson 2 — More patterns, and when greedy fails (`l2`–`l4`).**
+Coins on the SAFE `25/10/5/1` system — largest-first with `//`/`%` (`l2`). Then run the **coin
+counterexample rung**: coins `1, 3, 4` making `6` gives greedy `4+1+1` = 3 but optimal `3+3` = 2 — the
+takeaway is "justify the choice, don't assume." Then the two mastery rungs: pairing (`l3`) with the
+crossed-vs-sorted exchange demo, and cheapest-first under a budget (`l4`) with the budget sweep.
+Class works the remaining exercises — 3 (fewest coins), 4 (pairing), 6 (budget items), 7 (shortest-job
+checkout / total completion), 9 (prize scheduling, stretch). Both stretch problems (8, 9) are the
+hardest.
 
 ## Common mistakes
 

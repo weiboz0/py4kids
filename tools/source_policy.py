@@ -86,6 +86,8 @@ def _check_source(source: str, scope: str, where: str) -> list[str]:
                     break
         elif isinstance(node, ast.IfExp):
             report(node, "ternary (if-expression)")
+        elif isinstance(node, ast.Lambda):
+            report(node, "lambda (use a named function)")
         elif isinstance(node, (ast.Global, ast.Nonlocal)):
             report(node, "global/nonlocal")
         elif isinstance(node, ast.Delete):
