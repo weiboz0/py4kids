@@ -10,31 +10,24 @@ sudden-death round they built and can explain.
 
 ## Pacing
 
-Budget: two lessons of 60–90 minutes.
+Budget: three lessons of 60–90 minutes. Each concept is taught as a short **worked-example ladder** (minimal → one step up → real game use, with a *Notice* line per rung); the lesson-count is advisory. Closure note for authors: U04 counting loops are `while`+counter (counting is legal here — `accumulator` is introduced — but `for`/`range` are NOT in this unit; output uses f-strings, not string `+`).
 
 - **Lesson 1 — accumulator, logical-ops (60–90 min).**
   Open on the project thread: the teacher hosts a three-question quiz against the class,
   keeping score on the board — today the machine takes over the scoring.
-  20 min: the straight-line three-question quiz (input, int(), if/elif — all owned since unit 02).
-  20 min: `score = score + 1` — name the ACCUMULATOR pattern out loud; add a visible
-  `questions_asked` counter (counting arrived with unit 03's loops; today it counts
-  the game the class actually cares about).
-  25 min: the streak bonus — right answer AND streak alive earns double; `and`, `or`, and
-  `not` all arrive here — the bonus rule needs `and`, and `not on_streak` powers the
-  coasting-penalty (exercise 7). All three logical operators are genuinely taught.
-  Rest: exercises 1–3.
-  60-MINUTE CUT: drop the `or` variant (it returns in exercise 2); the accumulator
-  and one `and` are the non-negotiable core.
-- **Lesson 2 — conditional-nesting, break-statement (60–90 min).**
-  Open on the thread: yesterday's quiz was fair; finals are dramatic.
-  20 min: the follow-up question — a bonus part asked ONLY if part one was right
-  (an `if` inside an `if`; indent together, trace on the board).
-  30 min: SUDDEN DEATH — a `while` loop over `questions_asked` dispatching three
-  hard-coded questions through an if/elif chain; one wrong answer and `break` ends the
-  round on the spot. Let the drama sell the statement.
+  25 min: the accumulator ladder (`score = score + 1` once → again → inside a `while` loop → two accumulators, score + `questions_asked`). Name the ACCUMULATOR pattern out loud.
+  25 min: the logical-ops ladder (`and` → `or` → `not` → a combined streak-bonus rule). All three operators are genuinely taught, each on its own rung.
+  Rest: the full opening round + exercises 1–3.
+  60-MINUTE CUT: teach ladder rungs 1–2 live, leave the last rung as a "try it".
+- **Lesson 2 — conditional-nesting (60–90 min).**
+  Open on the thread: finals are dramatic — a follow-up unlocks only when part one is right.
+  25 min: the nesting ladder (an `if` inside an `if` → an inner `if`/`else` → the realistic locked-follow-up gate). Indent together; trace on the board.
+  Rest: nesting exercises.
+- **Lesson 3 — break-statement + SUDDEN DEATH (60–90 min).**
+  Open on the thread: one wrong answer ends everything.
+  25 min: the `break` ladder (leave a `while` loop at a fixed point → break on a wrong-answer condition → the full SUDDEN DEATH round with an `if`/`elif`/`else` dispatch). Let the drama sell the statement.
   Rest: exercises; play each other's shows.
-  60-MINUTE CUT: build sudden death with two questions instead of three; the remix
-  exercise restores the third.
+  60-MINUTE CUT: build sudden death with two questions instead of three; the remix exercise restores the third.
 
 Practices reappearance: boolean and type-conversion run through every scoring check
 (`int(input(...))`, True/False talk); loop-counter drives sudden death's dispatch and

@@ -86,7 +86,29 @@ strings preferred. Set `manifest.yaml` `lessons: 3` and update teacher-notes `##
 
 ## Post-Execution Report
 
-_(filled at Phase C)_
+**Shipped:** worked-example ladders for U04 (Quiz Show) and U06 (Secret Codes) — rollout batch 1 of the
+plan-031 standard.
+
+**U04** `lesson.ipynb` 15 → 36 cells (15 code, 2 `no-exec`), 3 lesson sections (accumulator+logical-ops →
+conditional-nesting → break+SUDDEN DEATH). Ladders: accumulator 4 rungs (set→add→add→while-loop counter→two
+accumulators), logical-ops 4 (`and`→`or`→`not`→combined — fixes the prior gap where `not` had no code cell),
+conditional-nesting 3 (if-in-if→inner if/else→locked follow-up), break 3 (fixed point→on a condition→sudden
+death). **All loop rungs are `while`+counter (accumulator legal in U04); NO `for`/`range`/`string-slice`; all
+output via f-strings (no string `+`, since `string-concat` is not in U04's union).** teacher-notes → 3
+lessons; manifest `lessons: 3`.
+
+**U06** `lesson.ipynb` 27 → 49 cells (21 code, 2 `no-exec`), 3 lesson sections (index/slice/methods →
+ATBASH decode + `in` → Caesar encoder). Ladders: string-index 4 (`[0]`→more→`[-1]`→in a loop), string-slice 4
+(one-increment `[1:4]`→`[:2]`→`[2:]`→`[::-1]`), string-methods 5 (`.lower`→`.upper`→`.strip`→`.replace`→
+chained — **only these four taught methods**), in-operator 3 (membership→False cases→inside a loop). The
+ATBASH/Caesar game cells are preserved as the realistic rungs.
+
+**Phase C / verification:** `ci-local.sh` ALL GREEN. coverage-map U04/U06 `lessons: 3` (= manifests; book1
+total 34 → 36 ≤ 44); syllabus arc-table + figures updated (28 unit lessons, 36 total). concept-scan clean
+(no for/range/slice/string-`+` in U04; only the four methods in U06; no unknown methods); exec-lessons runs
+every non-`no-exec` rung clean; closure audit clean. Concepts/exercises/solutions/checkpoints unchanged.
+
+**Deviations:** none.
 
 ## Plan Review
 

@@ -10,29 +10,24 @@ Success looks like: every student encodes a message their neighbour then decodes
 
 ## Pacing
 
-Budget: two lessons of 60–90 minutes.
+Budget: three lessons of 60–90 minutes. Each concept is a short **worked-example ladder** (minimal → one step up → real cipher use, with a *Notice* per rung); the lesson-count is advisory. The unit teaches exactly four string methods — `.strip()`, `.lower()`, `.upper()`, `.replace()` — and reverse slicing `[::-1]` (no other method/step); the cipher loops use `for`/`range` and string `+`, all owned here.
 
 - **Lesson 1 — string-index, string-slice, string-methods (60–90 min).**
   Open on the hook: the teacher shows an encoded note; the class tries to crack it.
-  20 min: text is a sequence — `word[0]`, `word[-1]`, slices `word[1:4]`, and the reverse
-  slice `word[::-1]` (a one-line reverse cipher!).
-  20 min: cleaning text — `.upper()`, `.lower()`, `.strip()`, `.replace()` — and PRINTing
-  each result to see it.
-  25 min: the ATBASH flip — scan the alphabet with `for position in range(26)` to find a
-  letter's position, then take `letters[25 - position]`. This introduces the position-scan
-  the Caesar cipher will reuse.
-  60-MINUTE CUT: drop Atbash (it returns in Lesson 2's scan); index + slice + methods are core.
-- **Lesson 2 — in-operator + the Caesar build (60–90 min).**
+  20 min: the index ladder (`word[0]` → more positions → `word[-1]` → index in a `for` loop).
+  20 min: the slice ladder (`[1:4]` → `[:2]` → `[2:]` → the reverse slice `[::-1]`, a one-line reverse cipher!).
+  25 min: the methods ladder (`.lower()` → `.upper()` → `.strip()` → `.replace()` → chained), PRINTing each result.
+  60-MINUTE CUT: teach rungs 1–2 of each ladder; leave the last rung as a "try it".
+- **Lesson 2 — the ATBASH decode + in-operator (60–90 min).**
+  Open on the thread: crack the folded note.
+  25 min: the ATBASH flip — scan the alphabet with `for position in range(26)` to find a letter's position, then take `letters[25 - position]`; this introduces the position-scan the Caesar cipher reuses.
+  20 min: the `in` ladder (`"m" in letters` → a space/mark is False → inside a `for` loop to tell letters from marks).
+- **Lesson 3 — the Caesar encoder (60–90 min).**
   Open on the thread: yesterday we READ codes; today we WRITE one only a friend can crack.
-  15 min: membership — `if letter in letters` to leave spaces and punctuation untouched.
-  30 min: the CAESAR cipher as `encode(message, shift)` — lowercase the message first (the
-  case contract), scan `range(26)` for each letter's position, `(position + shift) % 26`,
-  rebuild with `result = result + new_letter`; `decode` shifts back by `26 - shift`.
-  15 min: the deliberate wrap bug — forget the `% 26` and watch `z` shift off the end; read
-  the resulting error/wrong output together.
+  25 min: the CAESAR cipher as `encode(message, shift)` — lowercase first (the case contract), scan `range(26)`, `(position + shift) % 26`, rebuild with `result = result + new_letter`; `decode` shifts back by `26 - shift`.
+  15 min: the deliberate wrap bug — forget `% 26` and watch `z` shift off the end; read the `IndexError` together.
   Rest: the trade-and-decode activity — pairs swap encoded messages and crack each other's.
-  60-MINUTE CUT: skip the wrap-bug demo (the fix-the-caesar exercise covers it); the encode/
-  decode function is the non-negotiable core.
+  60-MINUTE CUT: skip the wrap-bug demo (the fix-the-caesar exercise covers it); the encode/decode function is the non-negotiable core.
 
 Practices reappearance: print runs through every "show your result" step; input is used in
 the encode-my-typed-message exercise; variable/arithmetic/comparison/range-function are the
