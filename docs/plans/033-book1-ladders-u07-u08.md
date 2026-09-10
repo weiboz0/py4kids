@@ -88,7 +88,26 @@ access → loop. Executable rungs with literal dicts. Set `manifest.yaml` `lesso
 
 ## Post-Execution Report
 
-_(filled at Phase C)_
+**Shipped:** worked-example ladders for U07 (High-Score Hall) and U08 (Word Wizard) — rollout batch 2.
+
+**U07** `lesson.ipynb` 35 → 59 cells (24 code, 1 `no-exec`), 3 lesson sections (build → rank → polish).
+Ladders: list-literal 3 (`[]`→items→board), list-index 3 (`[0]`→`[2]`→`[-1]`), list-append 3 (one→again→in a
+loop), list-loop 3 (print each→accumulate a total→`range(len)` entry numbers), builtin-functions 3
+(`len`→`max`→`min`, **no `sum`**), list-sort (`.sort()`→`.sort(reverse=True)`→ranked board with `board_line`,
+**no `sorted()`**). `board_line`/`add_score`/tier/membership/threshold/IndexError preserved as realistic
+rungs/application. teacher-notes + manifest → 3 lessons.
+
+**U08** `lesson.ipynb` 32 → 33 cells (13 code, 1 `no-exec`), 3 lesson sections (phrasebook → walk → count).
+Ladders: dict-literal 3 (one pair→a few→map), dict-access 3 (`d[key]` read→`d[key]=v` add→`.get` default),
+dict-loop 3 (`for key in d`→`.items()`→`translate` helper over a list). **Only dict methods `.get`/`.items`.**
+KeyError demo + count-log + most-common preserved. teacher-notes + manifest → 3 lessons.
+
+**Phase C / verification:** `ci-local.sh` ALL GREEN. coverage-map U07/U08 `lessons: 3` (= manifests; book1
+total 36 → 38 ≤ 44); syllabus arc-table + figures updated (30 unit lessons, 38 total). concept-scan clean
+(no `sum`/`sorted`/`.keys`/`.values` — verified by AST, since scan's sets are global); exec-lessons runs every
+non-`no-exec` rung clean; closure audit clean. Concepts/exercises/solutions/checkpoints unchanged.
+
+**Deviations:** none.
 
 ## Plan Review
 

@@ -1,7 +1,7 @@
 id: unit-08-word-wizard
 kind: unit
 blueprint_version: 1
-lessons: 2
+lessons: 3
 provenance: original
 concepts:
   introduces: [dict-literal, dict-access, dict-loop]

@@ -80,7 +80,7 @@ entries:
 - id: unit-07-high-score-hall
   kind: unit
   title: "High-Score Hall of Fame — lists"
-  lessons: 2
+  lessons: 3
   introduces: [list-literal, list-index, list-append, list-loop, list-sort, builtin-functions]
   requires: [for-loop, variable, def-function, comparison, parameters, return-value]
   practices: [accumulator, f-string, while-loop, string-methods, print, arithmetic, int-type,
@@ -89,7 +89,7 @@ entries:
 - id: unit-08-word-wizard
   kind: unit
   title: "Word Wizard — dictionaries and translation games"
-  lessons: 2
+  lessons: 3
   introduces: [dict-literal, dict-access, dict-loop]
   requires: [list-loop, string-methods, in-operator, def-function, for-loop, parameters, return-value]
   practices: [list-literal, list-append, if-statement, f-string, print, variable, comparison,
