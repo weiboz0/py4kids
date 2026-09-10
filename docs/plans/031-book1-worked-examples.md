@@ -271,13 +271,16 @@ demo unparsable; manifests unchanged; project-first intact). Four findings:
    does (print in cell 2, string-literal named in cell 3). concept-scan (unit-level) passes; [glm] and [fable]
    both verified it as within the sanctioned clause. Reordering would break `print` (it needs a string).
    Keeping the shipped, gate-approved structure.
-4. `[WONTFIX]` **[sol] `import-statement` has no standalone ladder** (the same `import random` repeats while
-   `random-module` advances). `import X` has a single syntactic form — it cannot ladder independently, and
-   U02 imports only `random` (any other module would be untaught). Per the plan's co-taught-pair clause,
-   `import-statement`+`random-module` share one ladder whose progression is carried by `randint`; [glm] and
-   [fable] accepted this. No genuine additional rung exists to add.
+4. `[FIXED]` **[sol] `import-statement` had no standalone rung** (the same `import random` repeated while only
+   `randint` advanced). → On [sol]'s re-review (which ACCEPTED #1 and CONFIRMED #2/#3 fixed), sol gave a
+   concrete, reasonable fix: add a minimal **standalone `import random` rung** (it prints nothing on its own)
+   before the `randint` rungs. Added it — the import→random pair now ladders genuinely: import alone →
+   `randint(1,6)` → change the range → save the pick. (Good pedagogy too: shows `import` by itself does
+   nothing visible.)
 
-U02 now 76 cells / 33 code after the two splits; all book1 checks PASS. Net content-gate state:
-[self]/[glm]/[fable] APPROVE-level with every actionable nit fixed; [sol]'s two actionable findings `[FIXED]`,
-its two structural findings `[WONTFIX]` with rationale (plan-approved + [glm]/[fable]-confirmed). Re-dispatching
-[sol] on the split version to confirm #1/#2.
+### Round 2 — [sol] re-review (HEAD 645fa5e)
+
+[sol]: #2 arithmetic split CONFIRMED FIXED (6 one-increment rungs), #3 comparison split CONFIRMED FIXED (6
+rungs), #1 WONTFIX ACCEPTED (usage-order≠naming-order, matches shipped original). Only #4 remained blocking,
+with a concrete fix — now applied (standalone import rung; U02 → 78 cells / 34 code). All book1 checks PASS.
+Re-confirming [sol] on #4.
