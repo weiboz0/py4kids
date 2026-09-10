@@ -17,13 +17,13 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   20 min: the index ladder (`word[0]` → more positions → `word[-1]` → index in a `for` loop).
   20 min: the slice ladder (`[1:4]` → `[:2]` → `[2:]` → the reverse slice `[::-1]`, a one-line reverse cipher!).
   25 min: the methods ladder (`.lower()` → `.upper()` → `.strip()` → `.replace()` → chained), PRINTing each result.
-  In-class exercises: 1–4 and 8.
+  In-class exercises: 1–3.
   60-MINUTE CUT: teach rungs 1–2 of each ladder; leave the last rung as a "try it".
 - **Lesson 2 — the ATBASH decode + in-operator (60–90 min).**
   Open on the thread: crack the folded note.
   25 min: the ATBASH flip — scan the alphabet with `for position in range(26)` to find a letter's position, then take `letters[25 - position]`; this introduces the position-scan the Caesar cipher reuses.
   20 min: the `in` ladder (`"m" in letters` → a space/mark is False → inside a `for` loop to tell letters from marks).
-  In-class exercises: 5, 9, and 11.
+  In-class exercises: 4, 5, 8, 9, and 11.
 - **Lesson 3 — the Caesar encoder (60–90 min).**
   Open on the thread: yesterday we READ codes; today we WRITE one only a friend can crack.
   25 min: the CAESAR cipher as `encode(message, shift)` — lowercase first (the case contract), scan `range(26)`, `(position + shift) % 26`, rebuild with `result = result + new_letter`; `decode` shifts back by `26 - shift`.
@@ -33,7 +33,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   60-MINUTE CUT: skip the wrap-bug demo (the fix-the-caesar exercise covers it); the encode/decode function is the non-negotiable core.
 
 **Exercise split:** Exercises 1–11 are the in-class core, spread across the three lessons as
-listed above. The notebook's **More Practice (homework)** section contains Challenges 1–2;
+listed above. The notebook's **Challenge** section contains Challenges 1–2;
 these stretch tasks are optional, and no core concept depends on completing them.
 
 `error-messages` has a justified peripheral count exemption: Exercise 7 supplies one focused,
