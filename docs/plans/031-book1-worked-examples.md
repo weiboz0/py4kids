@@ -254,5 +254,30 @@ unchanged, conventions clean. No blocking findings. Nits (all `[FIXED]` unless n
 7. `[WONTFIX]` **[fable] U01 naming rung-3** can't show a live misspelling (the teacher's traceback ritual
    does) — non-blocking; a teacher-notes pointer suffices at rollout.
 
-Solutions re-executed clean after the fixes (U02 now 72 cells / 31 code); all book1 checks PASS. Awaiting
-[sol] on the improved version.
+Solutions re-executed clean after the fixes (U02 now 72 cells / 31 code); all book1 checks PASS.
+
+### Review 4 — [sol] (2026-09-09, HEAD 828f3b4) — REJECT (4 findings)
+
+[sol] executed both lessons and AST-scanned (no counter/accumulator/number leaks; only the broken-quote
+demo unparsable; manifests unchanged; project-first intact). Four findings:
+
+1. `[FIXED]` **[sol] arithmetic rung combined `-` and `*`** (two operators = two increments). → Split into two
+   one-operator rungs; arithmetic is now 6 one-increment rungs (`+`, `-`, `*`, saved numbers, `//`, `%`).
+2. `[FIXED]` **[sol] comparison rung combined `!=` and `>`.** → Split into a `!=` rung and a `>` rung;
+   comparison is now 6 one-increment rungs (`==`, `<`, `!=`, `>`, compare variables, store the boolean).
+3. `[WONTFIX]` **[sol] U01 print rungs use string literals before `string-literal` is "introduced".** This is
+   the *usage-order ≠ naming-order* case the **plan-review gate explicitly sanctioned** (and [sol] re-confirmed
+   that plan at round 3): a `print` rung necessarily contains a `"..."`, exactly as the shipped original U01
+   does (print in cell 2, string-literal named in cell 3). concept-scan (unit-level) passes; [glm] and [fable]
+   both verified it as within the sanctioned clause. Reordering would break `print` (it needs a string).
+   Keeping the shipped, gate-approved structure.
+4. `[WONTFIX]` **[sol] `import-statement` has no standalone ladder** (the same `import random` repeats while
+   `random-module` advances). `import X` has a single syntactic form — it cannot ladder independently, and
+   U02 imports only `random` (any other module would be untaught). Per the plan's co-taught-pair clause,
+   `import-statement`+`random-module` share one ladder whose progression is carried by `randint`; [glm] and
+   [fable] accepted this. No genuine additional rung exists to add.
+
+U02 now 76 cells / 33 code after the two splits; all book1 checks PASS. Net content-gate state:
+[self]/[glm]/[fable] APPROVE-level with every actionable nit fixed; [sol]'s two actionable findings `[FIXED]`,
+its two structural findings `[WONTFIX]` with rationale (plan-approved + [glm]/[fable]-confirmed). Re-dispatching
+[sol] on the split version to confirm #1/#2.
