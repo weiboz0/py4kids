@@ -1,6 +1,6 @@
-# Plan 036 — Book 1 exercise mastery (proficiency completeness) Implementation Plan
+# Plan 037 — Book 1 exercise mastery (proficiency completeness) Implementation Plan
 
-> **Renumbered 022 → 036 (2026-09-10):** rebased onto `main` after the Book-1 worked-example ladder
+> **Renumbered 022 → 036 → 037 (2026-09-10):** (036 was re-taken by a book2 plan on main; bumped to 037.) rebased onto `main` after the Book-1 worked-example ladder
 > plans (031–035) landed; plan number 022 was taken by a Book-2 plan. The ladders changed unit
 > `lesson.ipynb`/`teacher-notes.md`/`assets` and bumped `lessons: 2→3` on units 04/06/07/08/09 — but
 > did NOT touch any `exercises.ipynb`/`solutions.ipynb` or concept `introduces`/`requires`/`practices`,
@@ -159,7 +159,7 @@ through by being un-listed as a phase target.
   newly-required exercise.
 - **Do not touch:** `introduces`/`requires` lists; Book-2 anything; governance files (CLAUDE.md,
   docs/development-workflow.md, docs/content-review-gate.md, docs/architecture/decisions.md).
-- Process (standing): branch `feature/plan-036-book1-exercise-mastery`; no commits while a `[sol]`
+- Process (standing): branch `feature/plan-037-book1-exercise-mastery`; no commits while a `[sol]`
   review is in flight; every `gh` call uses `GH_TOKEN=$(cat .gh-token)`; codex SOLUTION prompts run in
   a SEPARATE fresh session that never sees the statement-authoring outline.
 
@@ -175,11 +175,11 @@ through by being un-listed as a phase target.
 ## Out of scope
 
 - **New automated "listed-but-not-student-exercised" CI check** — the durable guarantee against this
-  class of gap (analogous to 016's `concept-scan`), deliberately deferred to **plan 037 (tooling)**:
+  class of gap (analogous to 016's `concept-scan`), deliberately deferred to **plan 038 (tooling)**:
   building it needs the same false-positive care (trace-only concepts, `stretch` exclusion, `input`/
   `no-exec` handling, OOP method exemptions, asset authorship) and bundling it would make this content
   plan un-reviewable. For THIS plan the bar is reviewer-enforced (Phase V union inventory + content-gate
-  blind-solve), per AGENTS.md pre-tooling prescription. **Risk acknowledged:** until plan 037 lands nothing
+  blind-solve), per AGENTS.md pre-tooling prescription. **Risk acknowledged:** until plan 038 lands nothing
   automatically prevents regression — recorded as a named follow-up in the post-execution report.
 - Rewriting checkpoints/projects wholesale (all checkpoints are correct + self-contained; risk is
   upstream). Reworking ramps/hooks/pacing where the audit found them sound.
@@ -470,7 +470,7 @@ Proficiency (reviewer-enforced — Phase V is NOT met without this):
 **Acceptance criteria:** all Phase 1–8 targets student-exercised in core (proficiency bar) AND every
 touched unit's full union inventoried; solutions assert-backed + headless clean; the enumerated
 metadata reconciliations applied; `ci-local.sh` ALL GREEN incl. `concept-scan`; `pre-merge-guard --pr`
-OK; plan-review + (per-PR) content-review 4-way consensus with no `[OPEN]` blockers; plan-037 recorded
+OK; plan-review + (per-PR) content-review 4-way consensus with no `[OPEN]` blockers; plan-038 recorded
 as a named follow-up in the post-execution report.
 
 ---
@@ -715,6 +715,6 @@ for PR-A. Proceeding to PR.
   here as required.
 - **Verification:** `ci-local.sh` ALL GREEN; `pre-merge-guard` OK. Volume budget: per-unit core
   7/8/10/11 (all ≤16); no notebook cell exceeded the 120 s per-cell timeout; PDF build passed.
-- **Named follow-up:** plan 037 (tooling) — automated "listed-but-not-student-exercised" check — remains
+- **Named follow-up:** plan 038 (tooling) — automated "listed-but-not-student-exercised" check — remains
   the durable guard against regression (out of scope here; reviewer-enforced in the interim).
 - **PR-B (Term 3–4: Phases 4–7 + Phase 8 items 2–6):** not yet started — begins after PR-A merges.
