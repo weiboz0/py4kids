@@ -146,13 +146,18 @@ complexity, and the signature mutant its asserts must kill):
    forced by feasibility, not by a value-differing assert. Complexity: **O(log E)** modular multiplications.
    Asserts: small-`E` correctness cases against a brute `A**E % M` oracle (`2 5 3`→`3`, `20 7 1`→`6`,
    `9 1 0`→`0`, `3 11 0`→`1`, and — crucially — an even/internal-zero-bit exponent `2 5 4`→`1`) PLUS the
-   huge-`E` case (`7 13 1000000000000000000`→`9`). Signature mutants and how each is killed: (a) dropping
-   the `if exponent & 1` guard (always multiply) survives odd/all-ones exponents but is killed at small scale
-   by `2 5 4`→`1` (the guard-drop mutant returns 3, since bits 0 and 1 of E=4 are zero); (b) omitting the
-   per-multiply `% M` (i.e. `answer = answer * current` without reducing) leaves `answer` correct-but-
-   unreduced on small cases yet makes the huge-`E` case infeasible to compute — so it is killed by the huge-`E`
-   assert (feasibility), NOT a small-case value. There is no separate "final `% M`" to omit — the algorithm
-   keeps `answer` reduced every step.
+   huge-`E` case (`7 13 1000000000000000000`→`9`). Signature mutants and how each is killed — both `% M`
+   sites are load-bearing, one by feasibility and one by output value:
+   (a) **guard-drop** (`if exponent & 1` removed → always multiply): survives odd/all-ones exponents but is
+   killed at small scale by `2 5 4`→`1` (the mutant returns 3, since bits 0 and 1 of E=4 are zero).
+   (b) **square-side reduction dropped** (`current = current * current` without `% M`): `current` grows to
+   `A**(2^k)` — astronomically large after ~60 doublings — so the huge-`E` case becomes INFEASIBLE to
+   compute. This is the feasibility-forced mutant, killed by the huge-`E` assert (a no-reduction solver
+   cannot produce output).
+   (c) **answer-side reduction dropped** (`answer = answer * current` without `% M`): stays feasible but
+   leaves `answer` UNREDUCED, so it is killed BY VALUE — `2 5 3` yields 8 (≠3), and huge-`E` yields a raw
+   multi-digit integer (≠9). (There is no separate "final `% M`" — the algorithm keeps `answer` reduced at
+   each step, so the answer-side `% M` IS the reduction the small-case value witnesses.)
 7. **Trace the Traversal** (code-tracing; **set-literal**). The question markdown SHOWS a short fixed BFS
    routine (reproduced verbatim in the question) that seeds `visited = {start}` (a `{...}` **set literal**),
    uses a deque FIFO, appends a dequeued node's neighbours **in the order they appear in that node's
@@ -196,9 +201,9 @@ compares each concept list as SORTED lists, not byte-for-byte; duplicate ids fai
   comprehensions, chained comparison, bare truthiness, base shortcuts, banned imports).
 - **Q6 modular**: confirm the huge-`E` case is present and the reference is O(log E) repeated-squaring with
   `% M` after every multiply/square; confirm no 3-arg `pow`; verify the small-`E` asserts match a brute
-  `A**E % M` oracle; verify the guard-drop mutant (`if exponent & 1` removed) is killed by the internal-
-  zero-bit case `2 5 4`→`1`; and that removing the per-multiply `% M` is caught by the huge-`E` case
-  (feasibility), since it leaves small-case values unchanged.
+  `A**E % M` oracle; verify each mutant dies to the stated witness: guard-drop → `2 5 4`→`1`; square-side
+  `% M` drop (`current = current * current`) → the huge-`E` case (infeasible, no output); answer-side
+  `% M` drop (`answer = answer * current`) → killed by value on `2 5 3` (→8) and huge-`E` (raw integer).
 - **Per-question signature mutants**: confirm each pinned question's asserts kill its named mutant
   (Q1 8-neighbour, Q2 LIFO-overshoot, Q3 disconnected mislabel, Q4 wrong-pointer, Q5 never-shrink,
   Q7 wrong-order trace).
@@ -275,9 +280,26 @@ nit; [sol] (REJECT) added two more precision findings. Dispositions:
 5. `[FIXED]` **[sol] Wording.** "duplicates are normalized" was false (the tool sorts lists, does not
    dedupe; duplicate ids fail a separate check) → corrected. Stale "(Phase C)" cross-reference → "(Phase D)".
 
-### Round 3
+### Round 3 (2026-09-09, HEAD 006d59b) — [glm] APPROVE · [fable] AWN · [sol] REJECT (one shared prose nit)
 
-_(pending — re-dispatch [sol] (REJECT→confirm) + [fable]/[glm] re-confirm on the revised HEAD)_
+[glm] APPROVE (no blockers; guard-drop kill re-verified by execution, 31/31 reconfirmed). [fable] and [sol]
+both re-ran the Q6 mutants numerically and confirmed findings 1 (§4 both files) and 2 (Q7 pin + Big-O)
+RESOLVED, but flagged the SAME residual imprecision in the mutant-(b) prose — [fable] as a non-blocking nit
+("no kill-matrix hole"), [sol] as blocking. Both are right about the fix:
+
+- `[FIXED]` **Q6 mutant-(b) prose mis-attributed which `% M` site feasibility catches.** Dropping the
+  ANSWER-side `% M` (`answer = answer * current`) stays feasible and is killed BY VALUE (`2 5 3`→8,
+  huge-`E`→`50031545098999707`, both ≠ pristine) — NOT by feasibility. The genuinely feasibility-forced
+  mutant is dropping the SQUARE-side `% M` (`current = current * current`), which grows `current` to
+  `A**(2^k)` (~1.6×10¹⁸ bits at E=10¹⁸ → infeasible) while PASSING small cases. → Reworded Phase C and
+  Phase D to name three mutants, each with its correct witness: guard-drop→`2 5 4`, square-side→huge-`E`
+  (feasibility), answer-side→small-case value. Verified all three numerically. (Findings 1 and 2 were
+  `[FIXED]` in round 2 and re-confirmed RESOLVED by [sol] here.)
+
+### Round 4
+
+_(pending — re-dispatch [sol] to confirm the mutant-(b) rewording; [glm]/[fable] already APPROVE/AWN and
+this was their exact nit)_
 
 ## Content Review
 
