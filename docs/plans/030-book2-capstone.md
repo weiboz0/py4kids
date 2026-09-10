@@ -30,8 +30,12 @@ all 17 required concepts. Authoring the project dir ACTIVATES `practice_findings
 - **Concept coverage:** the solutions must GENUINELY exercise all 17 `requires` concepts across the problems
   (`input-parse, complete-search, binary-search, greedy, simulation, prefix-sum, recursion, backtracking,
   deque, graph-repr, bfs, dfs, flood-fill, two-pointers, tree-traversal, sorted-key, set-literal`). `practices`
-  = every additional concept the solutions use (scanner-derived: `grid-2d`, and the Book-1 features), filled
-  after authoring so `concept-scan` passes (used ⊆ requires ∪ practices).
+  = every additional concept the solutions use (scanner-derived), filled after authoring so `concept-scan`
+  passes (used ⊆ requires ∪ practices). This will include at least `grid-2d` (P2/P6), `str-split` (parsing),
+  `tuple` (records/coordinates), `set-ops` (`visited.add` in BFS/flood-fill), plus the Book-1 features
+  actually used (`accumulator, arithmetic, comparison, def-function, elif-else, if-statement, in-operator,
+  list-append, list-literal, logical-ops, nested-loops, parameters, return-value, string-concat,
+  string-literal, type-conversion, while-loop, for-loop`, etc.) — the exact set is derived from `detect()`.
 - **Closure / house rules (everything ≤ U14 is legal):** allowed builtins ONLY
   {len, min, max, sorted, sum, abs, round}. Banned everywhere (scanner-blind → grep/AST): `nonlocal`/`global`,
   `.pop()`, `.index`, `.setdefault`, `+=` (use `x = x + …`), comprehensions, `del`, `.join`,
@@ -60,66 +64,104 @@ all 17 required concepts. Authoring the project dir ACTIVATES `practice_findings
 
 Create `book2/projects/project-03-mock-contest/solutions.ipynb` — one pure `solve(data)` per problem with
 sample + crafted distinguishing asserts (each killing a plausible wrong-solution mutant). **8 problems across
-6 milestone rounds**, pinned. The concept→problem map below covers all 17 required concepts, each with a
-genuine home:
+5 `## Milestone N` rounds** (M1–M5; the `## Make it yours` extension and `## Requirements` checklist are
+SEPARATE brief headings, not milestones). Each problem is a fully-pinned contest contract:
 
 - **M1 Warmups** (P1, P2).
-  - **P1 "Checkpoint Ledger"** (`input-parse`, `prefix-sum`): first line `N`, then `N` integers, then `Q`,
-    then `Q` queries `l r` (1-indexed inclusive). Answer each query with a prefix-sum range total; output the
-    `Q` answers space-separated. Assert distinguishes a prefix off-by-one (correct = `pre[r] - pre[l-1]`).
-    Complexity O(N + Q).
-  - **P2 "Warehouse Robot"** (`simulation`, `grid-2d`): first line `R C`, then `sr sc`, then a move string of
-    `U/D/L/R`; the robot ignores a move that would leave the `R×C` grid; output the final `r c`. Assert
-    distinguishes a missing bounds guard (off-grid) and a wall at the edge. Complexity O(len(moves)).
+  - **P1 "Checkpoint Ledger"** (`input-parse`, `prefix-sum`). Input: line 1 `N`; line 2 `N` integers
+    `a_1..a_N`; line 3 `Q`; then `Q` lines each `l r` (1-indexed, inclusive). Output: the `Q` range sums,
+    space-separated on one line. Constraints: `1 ≤ N ≤ 100000`, `1 ≤ Q ≤ 100000`, `0 ≤ a_i ≤ 10^9`,
+    `1 ≤ l ≤ r ≤ N`. Reference: `pre[0]=0`, `pre[i]=pre[i-1]+a[i]`; answer `pre[r]-pre[l-1]`. Signature
+    mutant: `pre[r]-pre[l]` (off-by-one) — killed by a query with `l = 1`. Complexity O(N + Q).
+  - **P2 "Warehouse Robot"** (`simulation`, `grid-2d`). Input: line 1 `R C`; line 2 `sr sc` (0-indexed start);
+    line 3 a string of `U/D/L/R`. The robot ignores any move that would leave the `R×C` grid (no walls).
+    Output: the final `r c` (space-separated). Constraints: `1 ≤ R, C ≤ 1000`, `0 ≤ sr < R`, `0 ≤ sc < C`,
+    `0 ≤ |moves| ≤ 100000`. Signature mutant: missing bounds guard — killed by a move sequence pushing against
+    an edge (robot must stay put). Complexity O(|moves|).
 - **M2 Search & Pointers** (P3, P4).
-  - **P3 "Split the Load"** (`binary-search`, `greedy`): minimize the maximum truck load — binary-search on
-    the answer, with a greedy left-to-right packing feasibility check that counts trucks and tests ≤ `K`.
-    Assert distinguishes a lo/hi boundary slip and a "fits exactly" tie. Complexity O(N log(sum)).
-  - **P4 "Perfect Pair"** (`two-pointers`, `sorted-key`): `N` records each `(skill, name-index)`; after
-    `sorted(key=named_fn)` (sort by skill), use converging two pointers to find whether two DIFFERENT players'
-    skills sum to exactly `T` — output `YES`/`NO`. Assert distinguishes a wrong-pointer move, a self-pair
-    (`lo == hi`), and a wrong sort key. Complexity O(N log N).
-- **M3 Graphs & Grids** (P5, P6).
-  - **P5 "Evacuation Route"** (`graph-repr`, `bfs`, `deque`, `grid-2d`, `set-literal`): fewest 4-neighbour
-    steps from `S` to `T` on an `R×C` grid with `#` walls, `-1` if unreachable; deque FIFO
-    (`append`/`popleft`, `while len(queue) > 0`), `visited = {start}` (a `{...}` set literal). Assert includes
-    a FIFO-witness (a grid where a LIFO stack overshoots) and an unreachable case. Complexity O(R·C).
-  - **P6 "Flood the Basin"** (`flood-fill`, `recursion`): the size of the LARGEST 4-connected region of `#` in
-    a grid; recursive flood-fill with a `visited` set. Assert distinguishes an 8-neighbour merge and a
-    single-cell region. Complexity O(R·C), `R·C ≤ 400`.
+  - **P3 "Split the Load"** (`binary-search`, `greedy`). Input: line 1 `N K`; line 2 `N` positive integer
+    weights (in order). Split the sequence into at most `K` CONTIGUOUS groups minimizing the maximum group
+    sum; output that minimum. Reference: binary-search the cap in `[max(w), sum(w)]`; greedy left-to-right
+    feasibility counts the groups a cap needs and tests `≤ K`. Constraints: `1 ≤ K ≤ N ≤ 100000`,
+    `1 ≤ w_i ≤ 10^9`. Signature mutant: lo-init `1` instead of `max(w)` (returns a cap below the largest
+    item) and a "fits exactly" tie — asserts include a case whose answer equals a group sum exactly.
+    Complexity O(N · log(sum)).
+  - **P4 "Perfect Pair"** (`two-pointers`, `sorted-key`). Input: line 1 `N T`; then `N` lines each
+    `id skill` (two integers). Store records as `(id, skill)`; sort by skill with a NAMED key
+    (`sorted(records, key=skill_of)`, `def skill_of(rec): return rec[1]` — the natural tuple order is by id,
+    so the key is genuinely needed); converging two pointers decide whether two DIFFERENT players' skills sum
+    to exactly `T`. Output: `YES`/`NO`. Constraints: `2 ≤ N ≤ 100000`, `0 ≤ id ≤ 10^9`, `0 ≤ skill ≤ 10^9`,
+    `0 ≤ T ≤ 2·10^9`. Signature mutants: wrong-pointer move (killed by a YES case needing the correct move),
+    self-pair `lo == hi` (killed by a NO case where the only exact sum is `2·a[i]`), wrong sort key. Complexity
+    O(N log N).
+- **M3 Graphs** (P5, P6).
+  - **P5 "City Network"** (`graph-repr`, `bfs`, `deque`, `set-literal`). Input: line 1 `N M S T` (nodes
+    `1..N`, `M` edges, source `S`, target `T`); then `M` lines each `u v` (an undirected edge). Build an
+    ADJACENCY-LIST dict (`if u not in adj: adj[u] = []`, append BOTH directions); BFS from `S` for the fewest
+    edges (hops) to `T`, or `-1` if unreachable. deque FIFO (`append`/`popleft`, `while len(queue) > 0`),
+    `visited = {S}` (a `{...}` set literal). Output: the hop count or `-1`. Constraints: `1 ≤ N ≤ 100000`,
+    `0 ≤ M ≤ 200000`, `1 ≤ S, T ≤ N`. Signature mutants: LIFO (`pop` vs `popleft`) overshoots on a graph where
+    a stack takes a longer path; an unreachable case (→ `-1`). Complexity O(N + M). (This is the genuine
+    `graph-repr` home — an explicit adjacency list, NOT a grid.)
+  - **P6 "Flood the Basin"** (`flood-fill`, `recursion`, `grid-2d`). Input: line 1 `R C`; then `R` rows of
+    `#`/`.`. Output: the size of the LARGEST 4-connected region of `#` (0 if none). Reference: recursive
+    flood-fill with a `visited` set. Constraints: `1 ≤ R, C`, `R·C ≤ 400` (recursive-grid cap). Signature
+    mutants: 8-neighbour merge (killed by a grid with diagonally-touching regions), a single-cell region.
+    Complexity O(R·C).
 - **M4 Recursion & Backtracking** (P7).
-  - **P7 "Exact Change"** (`recursion`, `backtracking`, `complete-search`): count the subsets of `N` coin
-    values summing to exactly `T`, via include/exclude recursion (try→recurse→undo). Assert distinguishes an
-    include-only (no-backtrack) mutant and a wrong empty-target base case (`T=0` → 1). Complexity O(2^N),
-    `N ≤ 20`.
+  - **P7 "Seating Plan"** (`recursion`, `backtracking`, `complete-search`). Input: a single line `N`. Count
+    the arrangements of people `1..N` in seats `1..N` such that person `p` is NOT in seat `p` (a derangement
+    count), computed by GENUINE backtracking over a shared `used` array: for the current seat try each unused
+    person `p` with `p != seat`, set `used[p] = 1`, recurse, then RESTORE `used[p] = 0`. Output: the count.
+    Constraints: `1 ≤ N ≤ 9` (at most 9! ≈ 3.6·10^5 leaves). Signature mutant: removing the restore
+    (`used[p] = 0`) — the shared state stays marked and the count collapses; killed by e.g. `N=3` → `2`
+    (mutant → a wrong, smaller value). This is the genuine `backtracking` home (mutable shared choice state
+    with mark → recurse → restore). Complexity O(N!).
 - **M5 Trees** (P8).
-  - **P8 "Team Roster"** (`tree-traversal`, `dfs`, `recursion`): a rooted binary tree as parallel arrays
-    (`left[i]`, `right[i]`, `label[i]`, `-1` child sentinel); return the PRE-order label sequence,
-    space-separated. Assert distinguishes pre- vs post-order and the `-1` sentinel base case (guarded with
-    `== -1` before indexing). Complexity O(N).
-- **M6 "Make it yours".** No new required problem — an extension round (see the brief).
+  - **P8 "Team Roster"** (`tree-traversal`, `dfs`, `recursion`). Input: line 1 `N` (nodes `1..N`, node `1` is
+    the root); then `N` lines each `label left right` (`left`/`right` are child node ids in `1..N`, or `-1`
+    for none). Output: the PRE-order label sequence (root, left subtree, right subtree), space-separated.
+    Reference: recursion, base-cased on `child == -1` BEFORE indexing. Constraints: `1 ≤ N ≤ 300` (max depth
+    300 < Python's ~1000 recursion limit — safe; `sys.setrecursionlimit` banned), `0 ≤ label ≤ 10^9`, the
+    input describes a valid rooted binary tree. Signature mutants: pre- vs post-order (killed by an asymmetric
+    tree), a missing `== -1` guard (indexing `arr[-1]` reads the last node). Complexity O(N).
 
-Concept coverage (all 17 `requires`): input-parse→P1, prefix-sum→P1, simulation→P2, binary-search→P3,
-greedy→P3, two-pointers→P4, sorted-key→P4, graph-repr→P5, bfs→P5, deque→P5, set-literal→P5, grid-2d→P2/P5/P6
-(a `practices` concept), flood-fill→P6, recursion→P6/P7/P8, backtracking→P7, complete-search→P7,
-tree-traversal→P8, dfs→P8. Before finalizing, run an ad-hoc `detect()` over the solution cells to confirm the
-AST-features are genuinely used, and reviewer-check the techniques.
+Concept coverage — all 17 `requires`, each with a genuine home: input-parse→P1(+all), prefix-sum→P1,
+simulation→P2, binary-search→P3, greedy→P3, two-pointers→P4, sorted-key→P4, **graph-repr→P5 (adjacency
+list)**, bfs→P5, deque→P5, set-literal→P5, flood-fill→P6, recursion→P6/P7/P8, **backtracking→P7 (mark/restore
+shared state)**, complete-search→P7, tree-traversal→P8, dfs→P8. `grid-2d` (a `practices` concept) →P2/P6.
+Before finalizing, run an ad-hoc `detect()` over the solution cells to confirm the AST-features are genuinely
+used, and reviewer-check the techniques; verify each signature mutant is killed by a distinguishing assert
+(numerically, as in CP4).
 
 ### Phase B — Author `brief.ipynb` + `teacher-notes.md` + `manifest.yaml`
 
 - **`brief.ipynb`:** intro (contest rules + the `solve` contract + a markdown-only submission wrapper), then
-  **6 sequential `## Milestone N`** rounds. M1–M5 present their problems (statement + sample I/O +
-  constraints + the intended technique named), each with an EMPTY student code cell (no solutions). **M6
-  "## Make it yours"** — extension ideas (add a problem, tighten a bound, optimize a solve). A
-  **`## Requirements`** checklist (all 8 problems pass their samples under the `solve` contract; within the
-  time budget). No `## Solution`/solution heading anywhere in the brief.
+  **exactly 5 sequential `## Milestone N` headings** (`## Milestone 1` … `## Milestone 5`) — M1–M5 present
+  their problems (statement + sample I/O + constraints + the intended technique named), each with an EMPTY
+  student code cell (no solutions). Then a SEPARATE, standalone **`## Make it yours`** heading (its own exact
+  line — NOT `## Milestone 6`; the validator's `## Make it yours` check needs the exact line) with extension
+  ideas (add a problem, tighten a bound, optimize a solve), and a SEPARATE **`## Requirements`** checklist
+  (all 8 problems pass their samples under the `solve` contract, within the time budget). No `## Solution`/
+  solution heading anywhere in the brief (`project_milestone_findings` fails on any `SOLUTION_HEADING`).
 - **`teacher-notes.md`:** `## Goals`, `## Pacing` (3 lessons — a timed contest sitting + review),
   `## Common mistakes`, `## Discussion prompts`, `## Differentiation`, **`## Rubric`** (per-problem credit +
-  the per-problem Big-O table + the signature mutant each problem's asserts kill).
-- **`manifest.yaml`:** `id: project-03-mock-contest`, `kind: project`, `lessons: 3`, `introduces: []`,
-  `requires:` the 17 techniques (already in the map), `practices:` the scanner-derived set (`grid-2d` +
-  Book-1 features actually used). Update the `project-03-mock-contest` map entry's `practices` to match
-  (manifest == map as sorted lists).
+  the per-problem Big-O table + the signature mutant each problem's asserts kill). Projects use `## Rubric`,
+  NOT `## Grading`.
+- **`manifest.yaml`** (full schema per `MANIFEST_KEYS` — all six keys required):
+  ```yaml
+  id: project-03-mock-contest
+  kind: project
+  blueprint_version: 1
+  lessons: 3
+  provenance: original
+  concepts:
+    introduces: []
+    requires: [<the 17 techniques already in the map>]
+    practices: [<scanner-derived: grid-2d, str-split, tuple, set-ops + Book-1 features used>]
+  ```
+  Update the `project-03-mock-contest` map entry's `practices` to match (manifest == map compared as sorted
+  lists; duplicates fail separately).
 
 ### Phase C — Verification (named verification phase)
 
@@ -140,7 +182,41 @@ _(filled at Phase C)_
 
 ## Plan Review
 
-_(4-way plan-review gate — consensus before any implementation)_
+### Round 1 (2026-09-09, HEAD fdbd148) — [self] AWN · [fable] AWN · [glm] REJECT · [sol] REJECT
+
+All three externals independently confirmed the project structure/files/headings, the `## Rubric`
+convention, and — crucially — the practice-completeness linchpin (`known`=31 ⊆ pre-capstone practices, so the
+newly-activated `practice_findings` passes). The REJECTs converge on the graph-repr home + pinning; findings:
+
+1. `[FIXED]` **[glm/fable/sol, blocking] `graph-repr` had no genuine home** — P5 "Evacuation Route" was a
+   GRID BFS (neighbours computed inline), never an adjacency list; `graph-repr` (concepts.yaml = "adjacency
+   list") was only artificially covered. → **Recast P5 as "City Network": an explicit edge-list input building
+   `adj = {}` (`if u not in adj: adj[u] = []`, both directions), BFS shortest-hops S→T.** Genuinely homes
+   `graph-repr` + `bfs` + `deque` + `set-literal`; `grid-2d` stays homed by P2 + P6.
+2. `[FIXED]` **[sol, blocking] P7's backtracking witness was weak** — "include-only" (drop the skip branch) is
+   not a missing-undo mutant, so `backtracking` (mark→recurse→undo) was not genuinely exercised. → **Reframed
+   P7 as "Seating Plan": count derangements via GENUINE backtracking over a shared `used` array
+   (mark `used[p]=1` → recurse → RESTORE `used[p]=0`).** Verified numerically: N=3 → 2; the no-restore mutant
+   → 0 (killed by the `N=3`→`2` assert). Still homes `recursion` + `complete-search`.
+3. `[FIXED]` **[all 3] Milestone-count wording was contradictory** ("6 sequential `## Milestone N`" but M6 =
+   "Make it yours"; `## Make it yours` is a SEPARATE required heading, not a milestone). → Pinned to **exactly
+   5 `## Milestone N` (M1–M5)** carrying P1–P8, plus a standalone `## Make it yours` line and a `##
+   Requirements` checklist. 5 ∈ [3,6]; validated against `project_milestone_findings`.
+4. `[FIXED]` **[sol, blocking] Problems were not fully pinned** — several lacked exact I/O/constraints (P1/P2/
+   P3/P4/P5/P6/P8), P2 referenced a nonexistent "wall", P7 lacked positivity, P8 lacked a depth-safe N cap.
+   → Every problem now carries a concrete input/output/constraint contract + a signature mutant; P8 capped
+   `N ≤ 300` (depth < recursion limit; `sys.setrecursionlimit` banned); P2's "wall" removed.
+5. `[FIXED]` **[sol] `practices` note was incomplete** — the solutions also use `str-split`, `tuple`,
+   `set-ops` (detectable features). → Global Constraints + Phase B now list `grid-2d, str-split, tuple,
+   set-ops` + the Book-1 features, derived from `detect()`.
+6. `[FIXED]` **[sol/glm] Phase B manifest sketch omitted required keys** (`blueprint_version`, `provenance`,
+   the nested `concepts:` map). → Phase B now gives the full six-key `MANIFEST_KEYS` schema.
+
+Non-blocking (accepted): [glm] P4's converging two-pointer time budget benefits from bounds (now added).
+
+### Round 2
+
+_(pending — re-dispatch [glm]/[sol] (REJECT→confirm) + [fable] re-confirm on the revised HEAD)_
 
 ## Content Review
 
