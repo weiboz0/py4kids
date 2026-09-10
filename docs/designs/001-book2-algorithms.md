@@ -41,44 +41,55 @@ and a gentle class intro (Book 1 unit 10 — used only incidentally in Book 2, n
 reading `N` then `N` lines, reading a grid), **sets**, **tuples**, `sorted(key=…)`, list
 comprehensions (introduced sparingly), **recursion**, 2D grids, and any complexity vocabulary.
 
-## 3. The `solve(data)` judge contract (binding CI convention)
+## 3. The stdin-first, subprocess-judged contract (binding CI convention)
 
-Contest code reads stdin and prints output, which fights headless CI. Book 2's binding resolution —
-and better pedagogy — is a pure-function contract:
+> **Amended by plan 036 (2026-09-10).** Book 2 originally used a pure-function `solve(data: str) ->
+> str` contract verified by inline asserts. The user found the `solve()` wrapper an extra abstraction
+> barrier (real contest code reads stdin) and chose a stdin-first re-architecture. **Migration is
+> staged, per entry:** an entry is on the NEW model once it ships an `assets/` dir with `.py` solvers;
+> until then it stays on the OLD `solve()`+asserts model (still verified by `exec-solutions` + the
+> ≥3-assert policy). Both models coexist during the rollout.
 
-- Every reference solution exposes **`solve(data: str) -> str`**: it takes the entire problem input
-  as one string and returns the exact output string. Parsing is inside `solve`; there is no
-  `input()` in any executable solution cell.
-- **Verification is inline asserts, token-compared** for whitespace tolerance:
-  `assert solve(SAMPLE1_IN).split() == SAMPLE1_OUT.split()`.
-- **Non-vacuous discipline (carried from Book 1):** asserting only the provided sample is the
-  vacuous-assert trap the Book-1 gates caught. Every problem asserts against the sample **plus ≥1
-  crafted edge/larger case**, so a wrong solution fails. Content gates mutation-check this.
-- The **real-submission wrapper** — `import sys; print(solve(sys.stdin.read()))` — is *shown* (a
-  `no-exec`-tagged cell or teacher note) so students know how to actually submit, but never runs in
-  CI.
-- **Sample input/output are small committed fixtures** (in the entry dir); any runtime scratch is
-  gitignored as in Book 1.
-- Determinism is free (problems are deterministic in their input) — **no `random`/seeding** in
-  Book 2 solutions.
-- **Complexity is taught, not CI-enforced:** each problem's *intended* Big-O is stated in teacher
-  notes; "fast enough" is a taught judgment, with an optional timing demo in a teacher note. CI does
-  not impose time limits.
+The binding contract for a migrated entry:
+
+- **Every reference solution is a real contest `.py` script** in the entry's `assets/` dir: it reads
+  the whole input from stdin (`data = sys.stdin.read()` or line-wise `input()`), computes, and
+  `print`s the exact output. No `solve()` wrapper is required.
+- **Verification is a subprocess judge (`judge-check`):** each solver runs with a committed
+  `assets/<pid>/<k>.in` piped to stdin and its stdout **token-compared** (`split()`) to
+  `assets/<pid>/<k>.out`. **PIDs**: `exN` (from `## Exercise N`), `qN` (`## Question N`), `pN`
+  (`### Problem N`), and lesson solvers `lN` (from `manifest.lessons`).
+- **Non-vacuous discipline (carried from Book 1):** **≥2 fixture pairs per solver** — the stated
+  sample **plus ≥1 crafted edge/larger case** whose decisive value is boundary/last, so a wrong
+  solution fails. Content gates mutation-check this (mutate the `.py`, re-run the fixtures).
+- **Lessons** build each algorithm as a graduated worked-example ladder — executable cells on tiny
+  literal data → the full stdin solver shown as a **`no-exec` cell mirroring its `.py`** (run as
+  `python assets/<pid>.py < assets/<pid>/1.in`) + an edge rung + a complexity note.
+- **`solutions.ipynb`** is a teacher-facing, all-`no-exec` display notebook mirroring each solver
+  `.py` (drift guarded by `judge-check`'s mirror check).
+- **The always-banned, scanner-blind surface** (chained comparison, `[x]*n`, ternary, `+=`,
+  comprehensions, `global`/`nonlocal`, `del`, `itertools`/`Counter`, `.pop`/`.join`/…, non-allowlist
+  builtins) is mechanically enforced by **`source-policy`** over lesson cells + solver `.py`.
+- Determinism is free — **no `random`/seeding**. **Complexity is taught, not CI-enforced** (intended
+  Big-O in teacher notes; no CI time limits).
 
 ## 4. Content-as-code structure (reuses Book 1's machinery)
 
 Each unit keeps the proven file set so existing tooling transfers: `lesson.ipynb` (opens on the
 motivating problem, teaches the technique, works one problem end-to-end), `exercises.ipynb` (the
 laddered problem set; each problem: statement, constraints, sample I/O; `stretch` tags on the
-hardest), `solutions.ipynb` (reference `solve` functions + non-vacuous sample/edge asserts),
-`teacher-notes.md` (six headings incl. `## Rubric`; states each problem's intended complexity, a
-pacing plan, the motivating hook, common mistakes, differentiation), and `manifest.yaml`
-(concept-tagged, map-equal).
+hardest), `solutions.ipynb` (on the new model: a `no-exec` display mirroring each `assets/<pid>.py`
+reference solver — see §3; on the old model: reference `solve` functions + non-vacuous sample/edge
+asserts), `teacher-notes.md` (the **five** `## Goals`/`## Pacing`/`## Common mistakes`/
+`## Discussion prompts`/`## Differentiation` headings for a unit — checkpoints add `## Grading`,
+projects add `## Rubric`; states each problem's intended complexity, a pacing plan, the motivating
+hook, common mistakes, differentiation), and `manifest.yaml` (concept-tagged, map-equal).
 
-- **Checkpoints** = timed mini mock-contests: `## Problem N` blocks (student cells empty), a stated
-  time limit, teacher-run clock; solutions verify via the `solve` contract. Same mechanical rules as
-  Book-1 checkpoints (no solutions in the student file; a deliberate-bug beat, if any, lives in a
-  markdown fence).
+- **Checkpoints** = timed mini mock-contests: `## Question N` blocks (student cells empty), a stated
+  time limit, teacher-run clock; solutions verify via the §3 contract (new model: `assets/qN.py` +
+  fixtures under `judge-check`; old model: the `solve` contract). Same mechanical rules as Book-1
+  checkpoints (no solutions in the student file; a deliberate-bug beat, if any, lives in a markdown
+  fence).
 - **Capstone** = full mock contest (a complete timed mixed problem set) or a student-authored problem
   set with reference solutions + samples. Doubles as the year finale.
 - **Recurring warm-up seam:** boolean-algebra drills and "what-does-this-program-do?" code-tracing
@@ -139,8 +150,9 @@ must learn cross-book resolution:
 Closure-safe ordering; every technique builds only on earlier ones.
 
 **Term 1 — Foundations, logic & search**
-- **U01 Reading the input** — `.split`, int conversion, "read N then N numbers," read a grid; the
-  binding `solve(data)->str` contract.
+- **U01 Reading the input** — `.split`, int conversion, "read N then N numbers," read a grid; reading
+  real stdin and printing output (the §3 stdin-first contract; pre-migration entries still show the
+  `solve(data)` form until re-authored).
 - **U02 Boolean logic & algebra** — truth tables, DeMorgan, short-circuit; seeds the recurring
   code-tracing ("what does this do?") warm-ups.
 - **U03 Complexity — fast enough?** — counting operations, O(n)/O(n²)/O(log n), will-it-finish.
@@ -216,6 +228,7 @@ Book-1 practice.
 
 - Exact per-unit lesson counts (syllabus, in plan 1).
 - Whether list comprehensions get a dedicated micro-lesson or ride inside U04.
-- Whether a shared `tools/`-level "sample judge" helper is worth extracting, or inline asserts
-  suffice (start inline; extract only if duplication hurts).
+- ~~Whether a shared `tools/`-level "sample judge" helper is worth extracting, or inline asserts
+  suffice.~~ **RESOLVED (plan 036):** a subprocess judge (`tools/judge.py`) runs stdin `.py` solvers
+  against committed `.in`/`.out` fixtures — see the amended §3.
 - Final `concepts.yaml` id list (derived + scanner-reconciled per entry, as in Book 1).

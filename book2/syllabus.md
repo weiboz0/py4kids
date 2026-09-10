@@ -11,21 +11,26 @@ import from Book 1 (all of Book 1 precedes Book 2; concept ids are a flat shared
 ids are available as prerequisites without qualification, see `docs/plans/017-book2-infrastructure.md`
 AD-001).
 
-## The `solve(data)` judge contract (binding)
+## The stdin-first, subprocess-judged contract (binding)
 
-Every reference solution is a pure function **`solve(data: str) -> str`**: it takes the entire
-problem input as one string and returns the exact output string. Verification is inline asserts,
-token-compared (`assert solve(SAMPLE_IN).split() == SAMPLE_OUT.split()`), against the sample **plus
-crafted edge/larger cases** (a wrong solution must fail — non-vacuous, as in Book 1). No `input()` in
-executable solution cells; the real-submission wrapper (`import sys; print(solve(sys.stdin.read()))`)
-is shown but never CI-run. Problems are deterministic (no `random`/seeding). Each problem's intended
-Big-O is stated in teacher notes; "fast enough" is taught, not CI-enforced.
+> Amended by plan 036. Migration is **staged per entry** (an entry is on the new model once it ships
+> an `assets/` dir with `.py` solvers); pre-migration entries still use the old `solve(data: str) ->
+> str` + inline-assert form until re-authored.
+
+Every reference solution is a real contest **`.py` script** in the entry's `assets/` dir: it reads
+the whole input from stdin (`data = sys.stdin.read()` / `input()`), computes, and `print`s the exact
+output. Verification is a **subprocess judge** (`judge-check`): each solver runs with a committed
+`assets/<pid>/<k>.in` piped to stdin and its stdout token-compared to `<k>.out`, against the sample
+**plus ≥1 crafted edge/larger case** (a wrong solution must fail — non-vacuous, as in Book 1).
+`solutions.ipynb` is a no-exec display mirroring each `.py`. Problems are deterministic (no
+`random`/seeding). Each problem's intended Big-O is stated in teacher notes; "fast enough" is taught,
+not CI-enforced.
 
 ## Arc at a glance
 
 | entry | kind | lessons | focus |
 |-------|------|---------|-------|
-| `unit-01-reading-the-input` | unit | 2 | input parsing, `.split`, grids, the `solve()` contract |
+| `unit-01-reading-the-input` | unit | 2 | input parsing, `.split`, grids, reading real stdin |
 | `unit-02-boolean-logic` | unit | 2 | boolean algebra, truth tables, code-tracing warm-ups |
 | `unit-03-complexity` | unit | 1 | counting operations, O(n)/O(n²)/O(log n), fast enough? |
 | `unit-04-sets-tuples-sorting` | unit | 2 | sets, tuples, `sorted(key=…)` |
@@ -55,7 +60,8 @@ Big-O is stated in teacher notes; "fast enough" is taught, not CI-enforced.
 ## Assessment format
 
 Checkpoints are **timed mini mock-contests** (6–8 questions, a stated time limit, teacher-run clock),
-verified via the `solve` contract; they assess only already-taught techniques and introduce nothing.
+verified via the §3 contract (new-model `assets/qN.py` + fixtures under `judge-check`, or the old
+`solve` form until migrated); they assess only already-taught techniques and introduce nothing.
 The capstone is a **full mock contest** spanning the year (the finale). Problem sets are generous and
 difficulty-laddered (target ~8–15 problems/unit, hardest `stretch`-tagged) — proficiency through
 volume, mostly solved as self-paced homework.
