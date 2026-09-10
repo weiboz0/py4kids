@@ -214,9 +214,23 @@ newly-activated `practice_findings` passes). The REJECTs converge on the graph-r
 
 Non-blocking (accepted): [glm] P4's converging two-pointer time budget benefits from bounds (now added).
 
-### Round 2
+### Round 2 (2026-09-09, HEAD b5b1ee2) — [fable] APPROVE · [glm] APPROVE WITH NITS · [sol] APPROVE
 
-_(pending — re-dispatch [glm]/[sol] (REJECT→confirm) + [fable] re-confirm on the revised HEAD)_
+All three re-verified against the actual tooling: P5 is a genuine adjacency-list graph BFS; P7 is genuine
+mark→recurse→restore backtracking (all three independently re-traced the derangement mutant: N=3 → 2,
+no-restore → 0); the 5-milestone + `## Make it yours` + `## Requirements` structure validates against
+`project_milestone_findings`; all 17 concepts have genuine homes; the practice-completeness linchpin holds
+(`known`=31 ⊆ pre-capstone practices union). [sol] APPROVE (all 5 Musts resolved). [glm] two non-blocking
+wording nits, folded in: `grid-2d` is genuinely homed by **P6** (a 2D `#`/`.` grid; P2 also operates on grid
+bounds) — it is a `practices` concept, not one of the 17, so coverage is unaffected; and `practices` is
+"scanner-derived for the AST-features, manual for the technique concepts". [fable] one authoring note: P1's
+off-by-one assert needs its `l = 1` case to have `a_1 > 0` (honored at authoring; Phase C mutant-check
+catches it).
+
+### CONSENSUS — plan-review gate CLOSED
+
+[self] APPROVE · [fable] APPROVE · [glm] APPROVE WITH NITS · [sol] APPROVE. Full 4-way blocking consensus,
+zero open findings. Cleared for implementation (Phases A–C).
 
 ## Content Review
 
