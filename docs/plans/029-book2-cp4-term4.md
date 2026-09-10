@@ -381,4 +381,26 @@ errata practice claims verified genuinely exercised. No blocking findings. Nits 
    and also homed by CP1/CP2; no change (matches the plan-review disposition).
 
 Solutions re-executed clean with the three new asserts; all book2 checks PASS at the patched HEAD.
-[self] APPROVE stands. Awaiting [sol] blind-solve on the patched version.
+[self] APPROVE stands.
+
+### Review 4 — [sol] (2026-09-09, patched HEAD 1528531) — APPROVE WITH NITS
+
+Blind-solved all 7 (approaches MATCH the references; a **1,700-case randomized oracle sweep** passed across
+Q1–Q7; all samples match). Every distinguishing assert confirmed non-vacuous by mutant execution — including
+the three newly added ones (Q3 directed-edge→NO, Q4 self-pair→YES, Q5 reset-on-overflow→3) and Q6's
+guard-drop (`2 5 4`) + huge-`E` feasibility. House-rule AST scan clean; empty student cells; unique ids; no
+outputs; six teacher-notes headings. **All 26 CP1/CP2/CP3 errata concept-moves individually verified as
+genuinely exercised** by the checkpoints' existing questions (per-cell citations). Two nits:
+
+7. `[FIXED]` **[sol] solutions.ipynb Question headings carried a `— <title>` suffix** vs CP1–3's bare
+   `## Question N`. → Normalized all 7 to `## Question N` (markdown only; structure/concept-scan re-checked).
+8. `[WONTFIX — misread]` **[sol] "question cells are 24–37 lines, not 6–8."** The 6–8 bound is the QUESTION
+   COUNT per checkpoint (CP4 has 7), not lines per statement; the statements' length (statement + sample +
+   constraints) is expected and matches CP1–3. No violation.
+
+### CONSENSUS — content-review gate CLOSED
+
+[self] APPROVE · [glm] APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] APPROVE WITH NITS. All four
+blind-solved the 7 questions correct; every blocking-class check (correctness, non-vacuous critical asserts,
+house rules, errata honesty) passed; all `[OPEN]` nits `[FIXED]` (or `[WONTFIX]` with reason). `ci-local.sh`
+ALL GREEN + `pre-merge-guard` OK. Cleared for PR + squash-merge.
