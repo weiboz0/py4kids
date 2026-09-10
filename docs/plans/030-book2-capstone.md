@@ -83,9 +83,10 @@ SEPARATE brief headings, not milestones). Each problem is a fully-pinned contest
     weights (in order). Split the sequence into at most `K` CONTIGUOUS groups minimizing the maximum group
     sum; output that minimum. Reference: binary-search the cap in `[max(w), sum(w)]`; greedy left-to-right
     feasibility counts the groups a cap needs and tests `≤ K`. Constraints: `1 ≤ K ≤ N ≤ 100000`,
-    `1 ≤ w_i ≤ 10^9`. Signature mutant: lo-init `1` instead of `max(w)` (returns a cap below the largest
-    item) and a "fits exactly" tie — asserts include a case whose answer equals a group sum exactly.
-    Complexity O(N · log(sum)).
+    `1 ≤ w_i ≤ 10^9`. Signature mutant: a wrong feasibility comparison (`< K` instead of `≤ K`, which over-
+    tightens the cap → `sum(w)`) — killed by the sample (answer 18, mutant 32); asserts also include a "fits
+    exactly" tie. (A `lo=1` init is harmless — the monotone predicate converges regardless — so it is not the
+    guarded mutant.) Complexity O(N · log(sum)).
   - **P4 "Perfect Pair"** (`two-pointers`, `sorted-key`). Input: line 1 `N T`; then `N` lines each
     `id skill` (two integers). Store records as `(id, skill)`; sort by skill with a NAMED key
     (`sorted(records, key=skill_of)`, `def skill_of(rec): return rec[1]` — the natural tuple order is by id,
@@ -261,4 +262,38 @@ zero open findings. Cleared for implementation (Phases A–C).
 
 ## Content Review
 
-_(4-way content-review gate — consensus before PR)_
+### Review 1 — [self] (2026-09-09, HEAD ee61cb0)
+
+**APPROVE.** Verified: all 8 `solve()` execute clean with every assert holding; each signature mutant killed
+numerically (P1 off-by-one → `5 9 0` vs `7 13 3`; P2 no-bounds → `2 2` vs `1 1`; P4 self-pair → `YES` vs
+`NO`; P5 LIFO → `4` vs `2` on the witness graph `6 6 1 6…`; P6 8-neighbour → `2` vs `1`; P7 no-restore → `0`
+vs `2` on `N=3`; P8 post-order → `4 5 2 3 1` vs `1 2 4 5 3`). All 17 required concepts genuinely exercised
+(graph-repr = a real adjacency dict in P5; backtracking = mark/restore in P7; complete-search = P7;
+sorted-key = named `skill_of` key in P4). concept-scan clean (no unknown methods); all book2 checks +
+exec-solutions PASS; **`practice_findings` active and passing (`pre_capstone ⊇ 31`)**. Conventions met (5
+`## Milestone N` + `## Make it yours` + `## Requirements`, no solution heading in the brief; teacher-notes 5
+headings + `## Rubric`; empty student cells; unique ids; no outputs; markdown-only wrapper).
+
+### Reviews 2–3 — [glm] & [fable] (2026-09-09, HEAD ee61cb0)
+
+Both blind-solved all 8 problems independently ([fable] ~2100 randomized oracle cross-checks; [glm] full
+diff) — **all 8 references correct, all samples match**, all specified critical asserts confirmed non-vacuous
+by mutant execution, all 17 required concepts genuinely exercised (graph-repr = real adjacency dict in P5,
+backtracking = mark/restore in P7, complete-search = P7, sorted-key = named `skill_of` in P4). [glm] APPROVE
+WITH NITS. **[fable] REJECT** on two scanner-blind closure violations (correctness itself clean). Findings:
+
+1. `[FIXED]` **[fable, blocking] List repetition** — `used = [0] * (n + 1)` (P7) and `label/left/right =
+   [x] * (n + 1)` (P8) are the banned `[x]*n` construct (scanner-blind: `Mult` → "arithmetic"). → Rebuilt all
+   four arrays with `while`-loop `append` (as every prior solution does). AST-verified 0 list-repetitions.
+2. `[FIXED]` **[fable, blocking] Untaught ternary/`IfExp`** — `moves = lines[2] if len(lines) > 2 else ""`
+   (P2) is the only `IfExp` in either book (untaught, scanner-blind). → Replaced with a 3-line `if`
+   statement. AST-verified 0 `IfExp`.
+3. `[WONTFIX — refuted by measurement] [fable NIT] P1 O(N²) output at N=Q=100000.** Measured the shipped
+   one-concat-per-statement idiom at N=Q=100000: **0.10 s** (CPython in-place-optimizes `out = out + x`), so
+   the O(N+Q) claim holds; no cap needed. (Fable's ~17 s was a reconstructed-solver artifact.)
+4. `[FIXED]` **[glm/fable NIT] teacher-notes typo** "a ret/extension session" → "a retry/extension session".
+5. `[FIXED]` **[glm NIT] plan P3 signature-mutant wording** overstated a `lo`-init mutant (harmless) → reworded
+   to the real feasibility-comparison mutant the assert actually kills.
+
+Solutions re-executed clean after the closure fixes; all book2 checks PASS. [self] APPROVE stands; [glm]
+APPROVE WITH NITS (nits fixed). Awaiting [sol] on the fixed version.

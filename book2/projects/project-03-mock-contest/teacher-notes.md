@@ -19,7 +19,7 @@ By the end of the capstone students can, unaided and under time pressure:
 ## Pacing
 
 Three lessons: **(1)** a timed contest sitting (~60–90 min; students attempt as many of the eight as they
-can), **(2)** a review of the reference solutions and the technique each rewards, **(3)** a ret/extension
+can), **(2)** a review of the reference solutions and the technique each rewards, **(3)** a retry/extension
 session — resubmit fixed solvers and try the "Make it yours" extensions. Suggested weighting: Problems 1–4
 are the accessible core; 5–8 stretch across the harder techniques.
 
