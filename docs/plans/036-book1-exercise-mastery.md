@@ -647,7 +647,29 @@ _4-way gate. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`._
 - `[self]` NIT `[OPEN]` (Nice to Have): confirm the "More Practice" reps land on the homework path in
   teacher-notes for units 03/05 so the in-class 60–90 min path stays tight — verify at PR.
 
-#### Reviews 2–4 — [sol] / [glm] / [fable] (pending)
+#### Reviews 2–4 — [sol] / [glm] / [fable] (2026-09-10) → REJECT (round 1)
+
+All three independently **blind-solved every new/changed exercise with NO solution mismatch**, and
+[glm]/[fable] hand-traced all 8 reference turtle assets to closure — content is CORRECT. All three
+signed off on the unit-02 `string-concat` scanner-derived addition (to be named in the PR description).
+Consolidated `[OPEN]` findings (overlapping across reviewers):
+
+- `[OPEN]` **Must Fix — unit-05 `float-type`=1 & `loop-counter`=2 (need ≥3), no exemption** [sol]/[glm]/[fable]. Raise with a `turn_angle(n)`→`360/n` composition + counter-driven `pensize`.
+- `[OPEN]` **Must Fix — unit-05 starters use `from turtle import …`** (never-shown syntax; forward ref) [fable]. → `import turtle` like unit-03; drop misleading `# turtle-check: open-path`.
+- `[OPEN]` **Must Fix — unit-05 Ex6/10/11 statements tell students to author `assert`** (untaught) [sol]. → student headless checks use `print`; asserts stay solution-only.
+- `[OPEN]` **Must Fix — unit-05 `accumulator` has 0 in-class reps** (all under "More Practice"=homework) [sol]/[glm]/[fable]. → ≥1 accumulator rep in in-class core.
+- `[OPEN]` **Must Fix — turtle solution asserts tautological/disconnected** (u03 Ex1/5/7/8/9; u05 Ex6/10/11) — don't validate the counter/pensize technique [sol]/[glm]/[fable]. → asserts reference the formula.
+- `[OPEN]` **Should Fix — u03 Ex8 uses `backward` (unshown in u03)** [fable]. → name the command in the statement.
+- `[OPEN]` **Should Fix — teacher-notes forward-ref allocations** (u03 Ex1/Ex7 before Lesson-2 concepts; u02 Ex7/Ex8 before if/elif/else) [glm]/[fable]. → reallocate.
+- `[OPEN]` **Should Fix — "More Practice" label on required in-class reps** (u02 Ex7/Ex8) [glm]/[fable]. → remove label (lean in-class core).
+- `[OPEN]` **Should Fix — u05 Ex10/11 underspecified** (`stamp(size)` reuse / choose a size) [fable].
+- `[OPEN]` Nice to Have — u05 `speed(0)` untaught; stale u05 intro text; u05 Ex7 near-copy of lesson beat; per-lesson allocation in teacher-notes.
+
+#### Round-1 reconciliation (2026-09-10)
+
+Dispatched one Codex fix session per unit (05/03/02) applying its findings across exercises +
+solutions + teacher-notes + assets; re-verify `ci-local` + rep counts, then re-review. All findings
+are "cheap edits"; [glm]/[fable] expect APPROVE on the next round.
 
 ## Post-Execution Report
 
