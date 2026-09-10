@@ -301,6 +301,28 @@ Non-blocking, also `[FIXED]`:
 4. `[noted]` **[glm N1]** U03 cells 3/9 Notices name a co-taught pair (`forward`+`right`;
    `penup`/`pendown`) — the plan's intentional co-teaching, accepted on literal reading.
 
-### Round 2 (HEAD pending) — re-dispatched to [sol]/[glm]/[fable]
+### Round 2 (HEAD ab4ebb9) — [glm] APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] REJECT
 
-_(awaiting verdicts)_
+[glm]/[fable] verified B1 fixed (no untaught `speed` in the lesson notebooks or reused ladder assets;
+Ladder A rung 5 one-increment; cells 27/38 mirror their assets; `done()` last in every asset;
+turtle-check GREEN) and APPROVED WITH NITS. [sol] confirmed the mirror fix but REJECTED: the
+untaught-`speed` finding also covers `solutions_l{1,2,3}.py`, which still carried it.
+
+**Scope decision (autopilot):** the three reviewers split on whether pre-existing `speed()` in
+SOLUTION assets is in 035's scope ([glm]/[fable]: out-of-scope / errata-track; [sol]: same finding,
+must fix). Resolved in favor of fixing, because **self-containedness is a project LAW** ("nothing used
+before it is taught") and `speed` is untaught yet appears in asset files students open. Removing a
+single `turtle.speed(...)` line is answer-preserving (speed only sets animation rate; the stub no-ops
+it; a real turtle just draws faster/slower) — a consistency fix, NOT a solution rework — so it does
+not meaningfully breach the plan's "no solutions changes" scope note. Applied across ALL remaining
+U03 + U05 assets for consistency:
+
+- `[FIXED]` **[sol #1 ext]** stripped `turtle.speed(...)` from U03 `solutions_l{1,2,3}.py` and U05
+  `l1_cards.py`, `l2_shapes.py`, `l3_stamps.py`, `solutions_l{1,2,3}.py`, `solutions_challenge2.py`
+  (10 files). No untaught `speed` remains anywhere in either unit; `done()` still last in each.
+- `[FIXED]` **[glm/fable/sol] stale comment** — `l1_square.py:4` "…and how fast the turtle moves" →
+  "Choose how the pen looks."
+
+### Round 3 (HEAD pending) — re-dispatched to [sol]
+
+_(awaiting [sol] round 3)_

@@ -30,7 +30,6 @@ def stamp_gallery(rings, stamps_per_ring):
 
 turtle.color("darkgreen")
 turtle.pensize(2)
-turtle.speed(0)
 
 # This first self-contained call marks the drawing's start position.
 stamp(24)

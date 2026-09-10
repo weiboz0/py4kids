@@ -18,7 +18,6 @@ def flower(size, petal_count):
 
 turtle.color("purple")
 turtle.pensize(2)
-turtle.speed(0)
 
 flower(30, 6)
 

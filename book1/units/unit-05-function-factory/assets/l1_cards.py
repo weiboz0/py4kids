@@ -12,7 +12,6 @@ def stamp(size):
 # Set up the pen for a greeting-card design made from strokes.
 turtle.color("teal")
 turtle.pensize(3)
-turtle.speed(4)
 
 # Draw a closed card border. No text command is needed.
 for edge in range(2):

@@ -17,7 +17,6 @@ def polygon(n, side_length):
 
 turtle.color("purple")
 turtle.pensize(3)
-turtle.speed(4)
 
 # Each function call uses the returned float as its turn angle.
 polygon(3, 90)

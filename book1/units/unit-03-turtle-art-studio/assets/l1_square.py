@@ -1,7 +1,7 @@
 # Bring in Python's turtle drawing tools.
 import turtle
 
-# Choose how the pen looks and how fast the turtle moves.
+# Choose how the pen looks.
 turtle.color("teal")
 turtle.pensize(4)
 

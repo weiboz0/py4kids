@@ -9,7 +9,6 @@ def stamp(size):
 
 turtle.color("teal")
 turtle.pensize(3)
-turtle.speed(4)
 
 for edge in range(2):
     turtle.forward(220)
