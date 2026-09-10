@@ -142,7 +142,31 @@ to the kept assets. Update `teacher-notes.md` `## Pacing` framing (stays 3 lesso
 
 ## Post-Execution Report
 
-_(filled at Phase C)_
+**Status:** Implemented; `scripts/ci-local.sh` ALL GREEN (pre-merge-guard OK, CI_EXIT=0).
+
+- **Phase A — U03 Turtle Art Studio** (`lesson.ipynb` rebuilt 15→40 cells, 12 code — ALL `no-exec`;
+  9 new assets added, 3 existing reused): L1 Ladder A five pen rungs — `forward`+`right` open corner
+  (`l1_corner.py`, `# turtle-check: open-path`) → written-out square (`l1_plain_square.py`) →
+  `penup`/`pendown` travel (`l1_travel.py`) → `color` (`l1_color.py`) → `pensize` (`l1_square.py`).
+  L2 Ladder B four rungs — `for range(4)` square (`l2_square_loop.py`) → `range(3)` int triangle
+  (`l2_triangle.py`) → `angle = 360/n` with `float-type` co-taught (`l2_polygon.py`, n=7) →
+  loop-counter `pensize` (`l2_polygons.py`). L3 Ladder C two nested rungs — two squares/180°
+  (`l3_two_squares.py`) → six-square ring/60° (`l3_rings.py`) → spirograph **"Put it together"**
+  (`l3_spirograph.py`). Every asset closes (or open-path), `done()` last; every lesson turtle cell
+  `no-exec`. teacher-notes `## Pacing` re-synced (stays 3 lessons).
+- **Phase B — U05 Function Factory** (`lesson.ipynb` rebuilt 25→26 cells, 8 code — 7 executable +
+  1 `no-exec`): L1 `def-function` ladder (no-param `blank_card()` → call many) + `parameters` ladder
+  (one param → two params), kept separate. L2 `return-value` ladder (`area(w,h)` → `polygon_points(n)`
+  returning `360/n`, float) + the return-vs-print contrast. L3 `scope` ladder (local/global
+  `pack_card` → `NameError` bug, `no-exec`). Turtle stamp/shape/gallery stay as fenced ```python
+  "Put it together" excerpts tied to the kept `l1_cards`/`l2_shapes`/`l3_stamps` assets. Executable
+  rungs run under `exec-lessons`. teacher-notes `## Pacing` re-synced (stays 3 lessons).
+- **Phase C:** manifests + coverage-map unchanged (both `lessons: 3`); book1 total stays **39**.
+  syllabus ladder parenthetical updated — rollout complete across U01–U10. All CI checks green:
+  `noexec-check` (all U03 turtle + U05 error cells `no-exec`), `turtle-check` (all 12 U03 assets +
+  U05's 4 assets complete, ≥1 pen-down, close/open-path), `exec-lessons` (U05 plain-Python rungs run
+  clean), `concept-scan` (unions + manual lesson-order), coverage/prereq, manifest==map, structure/
+  hygiene, PDF, pre-merge-guard.
 
 ## Plan Review
 

@@ -12,16 +12,23 @@ copy-paste.
 ## Pacing
 
 Budget: three lessons of 60–90 minutes. This is Term 2's capstone concept — functions are
-the year's biggest idea, so it gets three lessons and a gentle plain-Python-first ramp.
+the year's biggest idea, so it gets three lessons and a gentle plain-Python-first ramp. Each
+concept is a short **worked-example ladder** (simplest first, then one step up, with a *Notice*
+per rung); the lesson-count is advisory. Executable rungs are PLAIN PYTHON (they run in the
+notebook); the turtle programs stay as fenced ```python excerpts + runnable `assets/`, framed
+as the "put it together" application, and the `NameError` scope bug is `no-exec`.
 
 - **Lesson 1 — def-function, parameters (60–90 min). FUNCTIONS FIRST IN PLAIN PYTHON.**
   Open on the project thread: a card FACTORY — the same card for the whole class without
-  retyping. Teach `def greeting_card(name):` in plain text output FIRST (no turtle), so the
-  idea lands without window management.
-  20 min: `def` and calling — a function is a machine you build once and run many times.
-  20 min: parameters — the blanks the factory fills (`name`); call it for three classmates.
-  25 min: THEN apply it to turtle — a `stamp` function called in `for side in range(sides)`,
-  where the loop variable sets each stamp's size (assets/l1_cards.py, run from the terminal).
+  retyping. Teach functions in plain text output FIRST (no turtle), so the idea lands without
+  window management.
+  20 min: the `def` ladder — define a NO-parameter `blank_card()` and call it (defining ≠
+  running; the call prints), then call it several times (define once, call many).
+  20 min: the `parameters` ladder — one blank (`greeting_card(name)`), then two blanks
+  (`name, message`); call each for classmates. (Kept separate from `def` so the function idea
+  lands before a blank is added.)
+  25 min: THEN apply it to turtle — `stamp` is a user-defined function called in a loop that
+  sets each stamp's size (fenced excerpt + `assets/l1_cards.py`, run from the terminal).
   60-MINUTE CUT: cut the turtle-stamp application (it returns in exercises); the plain
   `def`/parameter core is non-negotiable. Differentiation protects the turtle part, never
   the core.
