@@ -28,7 +28,8 @@ mock-contest checkpoints + capstone). This plan edits a design doc — permitted
   `^## Question \d+`), **6–8 sequential**; NO stretch tier (a `stretch` tag is a FAIL); teacher-notes needs
   SIX headings = the 5 unit headings + `## Grading`; concept-scan + closure run over BOTH
   `checkpoint.ipynb` and `solutions.ipynb`, exec-solutions over `solutions.ipynb` only, `checkpoint.ipynb`
-  never executed. `manifest` must equal the map entry (introduces/requires/practices).
+  never executed. `manifest` must equal the map entry — the tool compares each concept list as a SORTED set
+  (not byte-for-byte), so order/duplicates are normalized but membership must match.
 - **Checkpoint metadata (CORRECTED — this is the errata):** a checkpoint's `practices` holds the concepts
   its questions genuinely EXERCISE (Book-2 concepts introduced by earlier units + Book-1 concepts);
   `requires` holds only the direct structural parsing prerequisites (kept small, per Book 1). `introduces`
@@ -67,7 +68,7 @@ mock-contest checkpoints + capstone). This plan edits a design doc — permitted
 ### Phase A — CP1–3 practices errata (metadata only)
 
 For each of CP1, CP2, CP3, in BOTH `book2/checkpoints/<cp>/manifest.yaml` AND the matching
-`book2/curriculum/coverage-map.yaml` entry (kept byte-equal), move the Book-2 concepts the checkpoint's
+`book2/curriculum/coverage-map.yaml` entry (kept equal as sorted sets), move the Book-2 concepts the checkpoint's
 questions genuinely exercise from `requires` into `practices`, leaving `requires` = the small parsing
 prerequisites. Target Book-2 concepts to appear in each checkpoint's `practices`:
 
@@ -82,37 +83,88 @@ prerequisites. Target Book-2 concepts to appear in each checkpoint's `practices`
 where a grid is parsed). Re-run coverage/manifest checks; each CP's `practices ⊆ seen` at its position
 holds (all listed concepts are introduced by earlier units).
 
-### Phase B — CP4 "Mock Contest 4" (Term-4 finale) authoring
+### Phase B — Design-001 amendment (§7 and §4)
+
+Edit `docs/designs/001-book2-algorithms.md`:
+- **§7 arc:** change "≈14 units + **3** mock-contest checkpoints + capstone" → "**4** mock-contest
+  checkpoints"; add a **CP4 — Mock Contest 4** entry to the arc list, positioned after U14 and before the
+  capstone, described as the Term-4 finale (grids/graphs + two-pointers).
+- **§4 (contest-realism):** correct the stale "checkpoints are **2–3 problems**" to match the shipped
+  reality and the tooling bound (**6–8 questions**); CP1–CP3 all ship 6–7.
+
+### Phase C — CP4 "Mock Contest 4" (Term-4 finale) authoring
 
 Create `book2/checkpoints/checkpoint-04-mock-contest-4/` with `manifest.yaml`, `checkpoint.ipynb`
 (student, empty cells, `## Question N`), `solutions.ipynb` (blind, pure `solve()`, ≥1 distinguishing
-assert per question incl. mutation-hardened graph/window witnesses), `teacher-notes.md` (six headings incl.
+assert per question incl. mutation-hardened witnesses), `teacher-notes.md` (six headings incl.
 `## Grading`, per-question Big-O, pacing). `lessons: 0.5`.
 
-**7 questions** assessing Term 4 and picking up the three stragglers:
-1. **Grid flood-fill count** (flood-fill, graph-repr as grid) — count/size regions; recursion + `visited`.
-2. **Fewest-steps BFS** (bfs) — deque FIFO shortest path on a grid; FIFO-witness assert (a LIFO mutant
-   returns a longer distance).
-3. **Graph connectivity DFS** (dfs, graph-repr) — adjacency-list dict, recursion with `visited` arg.
-4. **Converging two-pointers** (two-pointers) — pair/closest on a sorted list.
-5. **Sliding window** (two-pointers) — longest/shortest window, incremental running sum, non-negative.
-6. **Path-count mod 1e9+7** (modular-arithmetic + graph-repr/recursion) — count paths in a small DAG/grid,
-   output mod 1000000007; input sized so the unreduced count is infeasible → genuine reduce-as-you-go;
-   brute-force cross-check on small inputs; uses a `{...}` `visited`/seen **set-literal**.
-7. **Trace-the-traversal** (code-tracing + set-literal) — given a short BFS/DFS routine and input, predict
-   its printed output; a `{...}` set literal appears in the traced code and the solver.
+**7 fully-pinned questions** (one concrete contract each — input, output, constraints/ties, intended
+complexity, and the signature mutant its asserts must kill):
+
+1. **Count the Islands** (flood-fill; grid-2d, recursion, **set-literal**). Input: line `R C`, then `R`
+   rows of `#` (land) / `.` (water). Output: the integer count of 4-connected land regions. Reference:
+   recursive flood-fill, `visited` seeded as a `{...}` **set literal** (e.g. `visited = {(r, c)}`), 4-neighbour.
+   Constraints: `1 <= R, C`, `R*C <= 400` (recursive-grid cap). Signature mutant: 8-neighbour (diagonals)
+   merges regions → wrong count; assert includes a grid where two land cells touch only diagonally and must
+   stay separate.
+2. **Fewest Steps** (bfs; grid-2d, deque). Input: `R C`, then `R` rows with one `S`, one `T`, `#` walls,
+   `.` open. Output: fewest 4-neighbour steps `S`→`T`, or `-1` if unreachable. Reference: deque FIFO
+   (`append`/`popleft`, `while len(queue) > 0`), `visited` set, layer distance. Constraints: `R*C <= 2000`
+   (iterative BFS, no recursion cap). Signature mutant: LIFO (`popleft`→`pop`, i.e. a stack) returns a
+   longer distance → a FIFO-witness assert on a grid where a stack overshoots.
+3. **One Network?** (dfs, graph-repr; recursion). Input: `N M`, then `M` lines `u v` (undirected edges,
+   nodes `1..N`). Output: `YES` if every node is reachable from node 1 (one connected component), else `NO`.
+   Reference: adjacency-list plain dict (`if u not in adj: adj[u] = []`), recursive DFS with `visited`
+   passed as an argument. Constraints: `1 <= N <= 300`, `0 <= M <= 2000`. Signature mutant: not marking the
+   start visited / counting only direct neighbours → mislabels a disconnected graph; assert includes a
+   2-component graph (→ `NO`) and a connected one (→ `YES`).
+4. **Exact Budget Pair** (two-pointers). Input: `N T`, then `N` non-negative integer prices. Output: `YES`
+   if some two distinct items sum to EXACTLY `T`, else `NO`. Reference: `sorted()` (plain, numeric — no
+   key), converging `lo`/`hi` (sum too small → `lo = lo + 1`; too big → `hi = hi - 1`). Constraints:
+   `2 <= N <= 100000`, values fit int. Signature mutant: advancing the wrong pointer misses a valid pair;
+   assert includes a case answerable only by the correct pointer move, and a no-pair case (→ `NO`).
+5. **Longest Affordable Streak** (two-pointers / sliding window). Input: `N K`, then `N` non-negative costs.
+   Output: the length of the LONGEST contiguous window with sum `<= K` (0 if none). Reference: grow `right`,
+   shrink `left` while `window_sum > K`, running sum maintained incrementally. Constraints: `1 <= N <=
+   100000`, non-negative values (stated). Signature mutant: never shrinking `left` → over-long window;
+   assert includes an input where an early expensive item forces a shrink.
+6. **Astronomical Power Modulo M** (modular-arithmetic) — mirrors U11 Ex8 (the genuine reduce-as-you-go
+   assessment; NOT a count). Input: `A M E` (non-negative base, positive modulus, non-negative exponent).
+   Output: `A**E mod M` as a non-negative integer, via repeated squaring reducing `% M` after every
+   multiply/square (`answer = answer * current % M`, `current = current * current % M`,
+   `exponent = exponent >> 1`). **3-arg `pow` prohibited**; O(log E) modular multiplications required.
+   Constraints: `0 <= A <= 10^18`, `1 <= M <= 10^18`, `0 <= E <= 10^18`. **Enforcement (genuine):** the
+   huge-`E` sample (`7 13 1000000000000000000` → `9`, from U11) makes an unreduced `A**E` astronomically
+   infeasible to even compute — a no-reduction solution cannot produce output at all, so reduce-as-you-go is
+   forced by feasibility, not by a value-differing assert. Asserts: small-`E` correctness cases against a
+   brute `A**E % M` oracle (`2 5 3`→`3`, `20 7 1`→`6`, `9 1 0`→`0`, `3 11 0`→`1`) PLUS the huge-`E` case.
+   Signature mutants: dropping the `if exponent & 1` guard, or omitting the final `% M`, changes small-`E`
+   values → killed by the brute-checked cases.
+7. **Trace the Traversal** (code-tracing; **set-literal**). The question markdown SHOWS a short fixed BFS
+   routine that seeds `visited = {start}` (a `{...}` **set literal**) and prints each node as it is dequeued;
+   the student predicts the exact printed output for a given input. Input under the judge contract: the
+   graph/queue-start data the shown routine consumes. Output: the exact space-separated visit order the
+   shown routine prints. Reference `solve(data)`: parse the input and REPRODUCE the shown routine (same
+   `{...}` visited literal, same FIFO order) returning its printed order — a pure `solve()` per the
+   contract. Constraints: `N <= 30`. Signature mutant: reading the traversal in the wrong (LIFO) order
+   yields a different sequence → asserts pin the true FIFO order on a graph where FIFO≠LIFO.
 
 **CP4 manifest:** `introduces: []`;
-`requires: [graph-repr, bfs, dfs, flood-fill, two-pointers, input-parse, str-split, grid-2d]`;
+`requires: [input-parse, str-split, grid-2d]` (structural prerequisites);
 `practices: [graph-repr, bfs, dfs, flood-fill, two-pointers, set-literal, modular-arithmetic, code-tracing,
-recursion, deque, sorted-key, input-parse, str-split, grid-2d, tuple, <Book-1 concepts exercised>]`.
-(The five Term-4 concepts appear in BOTH requires and practices — allowed; `practices` is what the
-gate counts. `set-literal`/`modular-arithmetic`/`code-tracing` are the stragglers CP4 exists to home.)
+recursion, deque, <Book-1 concepts genuinely exercised>]`.
+Notes: `sorted-key` and `tuple` are NOT listed for CP4 (Q4 uses plain numeric `sorted()`; no keyed sort) —
+both are already homed by CP1/CP2/CP3, so completeness is unaffected. A concept may appear in both
+`requires` and `practices` (permitted by the tooling and used in Book-1 CP03/CP04); the gate counts only
+`practices`. The eight concepts CP4 is the sole pre-capstone home for — `graph-repr, bfs, dfs, flood-fill,
+two-pointers, set-literal, modular-arithmetic, code-tracing` — each map to a genuine question above.
 
 Add the CP4 row to `book2/curriculum/coverage-map.yaml` (after U14, before `project-03-mock-contest`) and to
-`book2/<...>/syllabus.md` (in map order) — `syllabus_findings` checks the table row + order.
+`book2/syllabus.md` (in map order) — `syllabus_findings` checks the table row and its order. Manifest and
+map entry are kept equal (the tool compares each concept list as a SORTED set, not byte-for-byte).
 
-### Phase C — Verification (named verification phase)
+### Phase D — Verification (named verification phase)
 
 - `scripts/ci-local.sh` ALL GREEN: registry+lint, notebook execution+hygiene, manifest/prereq/coverage/
   stretch, concept-scan (over CP4 checkpoint.ipynb + solutions.ipynb), PDF build (book1-only), pre-merge
@@ -122,16 +174,64 @@ Add the CP4 row to `book2/curriculum/coverage-map.yaml` (after U14, before `proj
   `pre_capstone ⊇ all 31 Book-2 concepts` via an ad-hoc script (so plan 030's capstone will pass).
 - Execute `solutions.ipynb` in a real kernel; every assert holds; run each `solve()` on its STATED sample.
 - AST-grep CP4 for the always-banned scanner-blind traps (nonlocal/global, `.pop(`, `.index`, `+=`,
-  comprehensions, chained comparison, bare truthiness, base shortcuts, banned imports); confirm modular
-  reduction is size-enforced + brute-checked; confirm FIFO/sort mutation-witness asserts kill their mutants.
+  comprehensions, chained comparison, bare truthiness, base shortcuts, banned imports).
+- **Q6 modular**: confirm the huge-`E` case is present and the reference is O(log E) repeated-squaring with
+  `% M` after every multiply; confirm no 3-arg `pow`; verify the small-`E` asserts match a brute
+  `A**E % M` oracle and that dropping the `if exponent & 1` guard or the final `% M` breaks them.
+- **Per-question signature mutants**: confirm each pinned question's asserts kill its named mutant
+  (Q1 8-neighbour, Q2 LIFO-overshoot, Q3 disconnected mislabel, Q4 wrong-pointer, Q5 never-shrink,
+  Q7 wrong-order trace).
+- Confirm `docs/designs/001-book2-algorithms.md` §7 lists CP4 (4 checkpoints) and §4 says 6–8.
 
 ## Post-Execution Report
 
-_(filled at Phase C)_
+_(filled at Phase D)_
 
 ## Plan Review
 
-_(4-way plan-review gate — consensus before any implementation)_
+### Round 1 (2026-09-09, HEAD 5ae3703) — [self] AWN · [fable] AWN · [glm] REJECT · [sol] REJECT
+
+All four independently verified: the 31-concept completeness (`pre_capstone ⊇ known` after Phase A + CP4),
+the requires→practices migration safety (breaks no check — `referenced_concepts`/prereq/`checkpoint_findings`/
+`practice_findings`/`manifest` all neutral to the move), the checkpoint conventions, and the named
+verification phase. The two REJECTs and both AWN sets converge on the same blocking issue (Q6) plus
+pinning/wording. Findings and dispositions:
+
+1. `[FIXED]` **[all four, blocking] Q6 was the plan-027 fake-modular trap.** A "small DAG/grid path count,
+   input sized so the unreduced count is infeasible" is self-contradictory: under the recursive-grid cap
+   (R·C ≤ 400) the exact count is a few-hundred-bit int Python handles instantly, so `% M` at the end always
+   passes — reduce-as-you-go is never forced (Python has no int overflow; a reduce-midway-vs-end assert is
+   impossible). → **Replaced Q6 with "Astronomical Power Modulo M" (modular exponentiation, A^E mod M, E up
+   to 10^18, repeated squaring, 3-arg `pow` banned, O(log E))**, mirroring U11 `u11l0015` + U11 Ex8. This is
+   a GENUINE reduce-as-you-go assessment: an unreduced `A**E` at E=10^18 is astronomically infeasible to
+   compute, so a no-reduction solution cannot even produce output on the huge-E case. `graph-repr`/
+   `recursion` stay covered by Q1/Q3; `set-literal` moves to Q1 (flood-fill `visited = {(r,c)}` literal) and
+   Q7 (traced routine's `{...}`).
+2. `[FIXED]` **[sol+glm, blocking] Questions were alternatives, not pinned contracts.** Q1 (count/size), Q4
+   (pair/closest), Q5 (longest/shortest), Q6 (DAG/grid), Q7 (unspecified routine). → Phase C now pins ONE
+   concrete contract per question (input, output, constraints/ties, intended complexity, and the signature
+   mutant its asserts kill): Q1 count-of-islands, Q4 exact-pair YES/NO, Q5 longest window ≤ K, Q7 the shown
+   fixed BFS routine + exact visit-order output.
+3. `[FIXED]` **[sol, blocking] The design-001 §7 amendment wasn't in the implementation phases.** → Added
+   **Phase B** (edit §7 to 4 checkpoints + add the CP4 arc entry; also correct §4's stale "2–3 problems" to
+   6–8, per [fable] Nit 4). Phase D verifies the design contains CP4.
+4. `[FIXED]` **[fable+glm+sol] CP4 practices listed `sorted-key` and `tuple` with no genuine question home**
+   (Q4 uses plain numeric `sorted()`). → Dropped both from CP4 `practices`; both remain homed by CP1/CP2/CP3,
+   so completeness is unaffected (re-verified 31/31).
+5. `[FIXED]` **[fable Nit 3] Q7 mechanics under the judge contract.** → Q7 now states `solve(data)` parses
+   the shown routine's input and returns its exact printed visit order (a pure `solve()`); asserts pin the
+   true FIFO order on a graph where FIFO≠LIFO.
+6. `[FIXED]` **[sol nits] Wording.** `book2/syllabus.md` (not `book2/<...>/syllabus.md`); "sorted-set
+   equality" not "byte-equal" for manifest==map; requires/practices overlap acknowledged as permitted
+   (Book-1 CP03/CP04) rather than claimed disjoint.
+
+Non-blocking nits noted and accepted (no plan change needed): [fable/glm] CP3 `tuple` and CP2 `sorted-key`
+practice claims are thin-but-genuine (each also homed elsewhere) — the content gate will confirm the actual
+question exercises them. Round 2 re-review pending on the revised plan.
+
+### Round 2
+
+_(pending — re-dispatch [sol]/[glm]/[fable] on the revised HEAD)_
 
 ## Content Review
 
