@@ -183,10 +183,16 @@ explicitly permit only 2 rungs for `comment`."** This is the same logical contra
 difficulty (typically 3; 2 for a trivial concept like `comment`; 4+ for beginner-hard concepts), with
 completeness + gradual pacing as the target, not a quota. No contradiction remains.
 
-### Round 3 / consensus
+### Round 3 — [sol] APPROVE (re-confirm on fixed wording)
 
-_(re-confirming [sol] on the fixed wording; [self] APPROVE, [glm]/[fable] APPROVE WITH NITS all stand with
-every finding `[FIXED]`)_
+[sol]: "APPROVE — the standard says rung count follows concept difficulty, not a quota, and Phase A
+consistently says 'typically 3', '2 for a trivial concept like comment', and '4+' when needed."
+
+### CONSENSUS — plan-review gate CLOSED
+
+[self] APPROVE · [glm] APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] APPROVE. Full 4-way consensus;
+every finding `[FIXED]` (while-loop accumulator trap, closure clarifications, budget headroom, input ladder,
+rung-count wording). Cleared for implementation (Phases A–D).
 
 ## Content Review
 
