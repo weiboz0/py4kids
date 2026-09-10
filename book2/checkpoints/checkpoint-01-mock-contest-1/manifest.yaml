@@ -5,9 +5,9 @@ lessons: 0.5
 provenance: original
 concepts:
   introduces: []
-  requires: [input-parse, str-split, grid-2d, boolean-algebra, complexity, set-ops, tuple,
-             sorted-key, binary-search, complete-search]
-  practices: [accumulator, arithmetic, builtin-functions, comparison, def-function, elif-else,
-              if-statement, in-operator, list-append, list-literal, list-sort, logical-ops,
-              nested-loops, parameters, return-value, string-concat, string-literal,
-              type-conversion, while-loop]
+  requires: [input-parse, str-split]
+  practices: [grid-2d, boolean-algebra, complexity, set-ops, tuple, sorted-key, binary-search,
+              complete-search, accumulator, arithmetic, builtin-functions, comparison, def-function,
+              elif-else, if-statement, in-operator, list-append, list-literal, list-sort, logical-ops,
+              nested-loops, parameters, return-value, string-concat, string-literal, type-conversion,
+              while-loop]

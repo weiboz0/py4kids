@@ -42,6 +42,7 @@ Big-O is stated in teacher notes; "fast enough" is taught, not CI-enforced.
 | `checkpoint-03-mock-contest-3` | checkpoint | 0.5 | Mock Contest 3 (Term 3) |
 | `unit-13-grids-graphs` | unit | 3 | grids, graphs, flood fill, BFS/DFS |
 | `unit-14-two-pointers` | unit | 2 | two pointers / sliding window |
+| `checkpoint-04-mock-contest-4` | checkpoint | 0.5 | Mock Contest 4 (Term 4) |
 | `project-03-mock-contest` | project | 3 | Grand Mock Contest (Year-2 capstone) |
 
 ## Term shape
@@ -49,11 +50,11 @@ Big-O is stated in teacher notes; "fast enough" is taught, not CI-enforced.
 - **Term 1 — Foundations, logic & search:** units 01–05, checkpoint 01.
 - **Term 2 — Greedy, simulation & sums:** units 06–08, checkpoint 02.
 - **Term 3 — Recursion, structures & number sense:** units 09–12, checkpoint 03.
-- **Term 4 — Graphs & Silver taste:** units 13–14, the capstone mock contest.
+- **Term 4 — Graphs & Silver taste:** units 13–14, checkpoint 04, the capstone mock contest.
 
 ## Assessment format
 
-Checkpoints are **timed mini mock-contests** (2–3 problems, a stated time limit, teacher-run clock),
+Checkpoints are **timed mini mock-contests** (6–8 questions, a stated time limit, teacher-run clock),
 verified via the `solve` contract; they assess only already-taught techniques and introduce nothing.
 The capstone is a **full mock contest** spanning the year (the finale). Problem sets are generous and
 difficulty-laddered (target ~8–15 problems/unit, hardest `stretch`-tagged) — proficiency through

@@ -21,7 +21,7 @@ technique that cracks it, then drills a **rich, laddered problem set**. Proficie
 a first-class goal: problem sets are generous (target ~8–15 problems per unit, difficulty-laddered,
 `stretch`-tagged hardest), most solved as self-paced homework.
 
-**Contest realism:** checkpoints are **timed mini mock-contests** (2–3 problems, a real time limit,
+**Contest realism:** checkpoints are **timed mini mock-contests** (6–8 questions, a real time limit,
 teacher-run clock); the capstone is a **full mock contest** spanning the year.
 
 **Non-goals (deferred to a later book):** OOP, software engineering, LISP, regular expressions /
@@ -134,7 +134,7 @@ must learn cross-book resolution:
   It ships with tests (cross-book prereq resolves; a Book-2 entry requiring an un-taught `book1:`
   concept still fails; Book-1 features don't false-flag in Book 2).
 
-## 7. The arc (≈14 units + 3 mock-contest checkpoints + capstone)
+## 7. The arc (≈14 units + 4 mock-contest checkpoints + capstone)
 
 Closure-safe ordering; every technique builds only on earlier ones.
 
@@ -173,6 +173,9 @@ Closure-safe ordering; every technique builds only on earlier ones.
   adjacency-list dicts (degree, connectivity — §5, no class); **flood fill**, **BFS** shortest-steps
   (reuses U10's `deque`), **DFS** reachability (reuses U09 recursion).
 - **U14 Two pointers & sliding window** — sorted two-pointer, window sums/counts.
+- **CP4 — Mock Contest 4.** Term-4 finale: grids/graphs (flood-fill, BFS, DFS, adjacency-list graphs) and
+  two-pointers/sliding-window, plus the pre-capstone practice home for those concepts (and a modular-power
+  problem reprising U11) so every technique is reinforced in a timed contest before the capstone.
 - **Capstone — Full Mock Contest.**
 
 ## 8. Pacing contract (the scope-vs-time reconciliation)

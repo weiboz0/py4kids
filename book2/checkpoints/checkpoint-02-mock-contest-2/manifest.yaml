@@ -5,7 +5,8 @@ lessons: 0.5
 provenance: original
 concepts:
   introduces: []
-  requires: [greedy, simulation, prefix-sum, grid-2d, input-parse, str-split, sorted-key, tuple]
-  practices: [accumulator, arithmetic, builtin-functions, comparison, def-function, elif-else,
-              if-statement, list-append, list-literal, list-sort, logical-ops, nested-loops,
-              parameters, return-value, string-concat, string-literal, type-conversion, while-loop]
+  requires: [input-parse, str-split]
+  practices: [greedy, simulation, prefix-sum, grid-2d, sorted-key, tuple, accumulator, arithmetic,
+              builtin-functions, comparison, def-function, elif-else, if-statement, list-append,
+              list-literal, list-sort, logical-ops, nested-loops, parameters, return-value, string-concat,
+              string-literal, type-conversion, while-loop]
