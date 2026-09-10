@@ -38,10 +38,10 @@ explanation, a ladder of rungs:
 3. **Rung 3 — realistic:** the concept as it appears in real use / combined with earlier concepts, still
    within what has been taught.
 
-**Three rungs is the FLOOR, not a fixed count** — a concept gets as many rungs as completeness + gradual
-pacing require. Simple concepts (e.g. `comment`) may need only 2; harder ones a beginner struggles to
-generalize (e.g. `if-statement`/`elif-else`, `while-loop`, `arithmetic`) get 4+ so that no single rung is a
-leap. Each rung (after the first) carries a one-line **`Notice:`** markdown line naming precisely the one
+**The rung count follows the concept's difficulty — it is not a fixed number.** Most concepts get 3 rungs
+(minimal → one step up → realistic); a beginner-hard concept (`if-statement`/`elif-else`, `while-loop`,
+`arithmetic`) gets 4+ so no single rung is a leap; a trivially simple concept (e.g. `comment`) may need only
+2. The target is completeness + gradual pacing, never a rung quota. Each rung (after the first) carries a one-line **`Notice:`** markdown line naming precisely the one
 thing that changed from the previous rung ("Notice: you can drop in more than one `{…}`"), so the gradual
 progression is explicit and students extract the rule rather than memorize a line. Rungs are short (2–5 code
 lines). A concept a unit only **reuses** gets a single one-line recap + at most one example, not a ladder.
@@ -99,7 +99,7 @@ a sensible intra-cell order, and neither counts as "used before taught".
 Rework `book1/units/unit-01-story-machine/lesson.ipynb`: for each introduced concept
 (`print, comment, string-literal, variable, naming, input, string-concat, f-string`; `run-program` and
 `error-messages` keep their existing framing/single demo), expand the single example into a graduated ladder
-(≥3 rungs; fewer only for a trivial concept like `comment`, more where completeness/gradual pacing need it) +
+(typically 3 rungs; 2 for a trivial concept like `comment`, 4+ where completeness/gradual pacing need it) +
 `Notice:` lines per the standard. All rungs use STRINGS only (no numbers). `input()` rungs and the
 `SyntaxError` demo stay `no-exec`; the rest execute clean. Re-segment the lesson arc into **3 lesson
 sections** (the richer ladders no longer fit two). Update `book1/units/unit-01-story-machine/
@@ -174,9 +174,19 @@ verdict (flaky) — re-dispatched on the fixed HEAD. Dispositions (all `[FIXED]`
 5. `[FIXED]` **wording** — Phase A "keep Lesson One/Two but re-allocate" → "re-segment into 3 lesson
    sections"; Phase C now also updates the stale syllabus "~30 lessons" / "~30–32 class sessions" prose.
 
-### Round 2
+### Round 2 (2026-09-09, HEAD 04e7b7e) — [sol] REJECT (one wording contradiction) → `[FIXED]`
 
-_(pending — [sol] on the fixed HEAD; [glm]/[fable] AWN stands, nits fixed)_
+[sol]'s codex task failed to return a verdict on several attempts this session (infrastructure flakiness);
+the attempt that landed gave: **REJECT — "the ≥3-rung floor is contradictory: the standard and Phase A
+explicitly permit only 2 rungs for `comment`."** This is the same logical contradiction [glm] flagged as N1.
+`[FIXED]`: removed the "floor" framing entirely — the standard and Phase A now say the rung count follows
+difficulty (typically 3; 2 for a trivial concept like `comment`; 4+ for beginner-hard concepts), with
+completeness + gradual pacing as the target, not a quota. No contradiction remains.
+
+### Round 3 / consensus
+
+_(re-confirming [sol] on the fixed wording; [self] APPROVE, [glm]/[fable] APPROVE WITH NITS all stand with
+every finding `[FIXED]`)_
 
 ## Content Review
 
