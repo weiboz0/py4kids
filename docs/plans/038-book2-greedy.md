@@ -68,10 +68,12 @@ keeps 2 lessons and adds rungs within them, but completeness wins over brevity.
 ### Phase A0 — tooling hardening (two small `tools/` additions the pilot exposes)
 
 1. **`tools/judge.py` — lesson-PID inventory fail-closed (Sol blocker).** In `_expected_pids` for a
-   **unit**, derive lesson solver PIDs from the `assets/l\d+\.py` references in `lesson.ipynb`
-   (via `ASSET_REF`), UNION `l1..l{manifest.lessons}`. Every referenced lesson solver is then expected
-   → a missing `lN.py` FAILs judge-check ("missing solver lN.py"). Add a test: a unit whose lesson
-   references `assets/l3.py` with no `l3.py` present FAILs.
+   **unit**, collect the `ASSET_REF` matches in `lesson.ipynb`, **filter to those whose stem matches
+   `l\d+`** (a referenced non-PID helper like `assets/util.py` is NOT promoted — glm nit), and UNION
+   with `l1..l{manifest.lessons}`. Every referenced lesson solver is then expected → a missing `lN.py`
+   FAILs judge-check ("missing solver lN.py"). Tests: (a) a unit whose lesson references `assets/l3.py`
+   with no `l3.py` present FAILs; (b) converse — an `l3.py` that IS present but UNreferenced is still
+   judged via the reserved-stem rule and produces no false "missing" finding (fable N-b).
 2. **`tools/source_policy.py` — mechanical `lambda` ban (glm/fable).** Add `ast.Lambda` → banned
    ("lambda (use a named function)") — a lambda sort key is the likeliest closure slip across the
    rollout, and it is currently scanner-blind. Add a mutation fixture; and re-run the
@@ -177,10 +179,17 @@ counterexamples numerically correct (start-key 1 vs end-key 2; coin `[1,3,4]`/6 
    fail-closed via references; counterexamples are lesson cells not fixtures; equal-end-tie completeness
    item; no-lambda machine-checked); content audit adds the run-lines + wrapper-gone checks.
 
-### Round 2 (HEAD a18fdc8) — re-dispatched to [sol]/[glm]/[fable]
+### Round 2 (HEAD b77e217) — [sol] APPROVE · [glm] APPROVE WITH NITS · [fable] APPROVE WITH NITS
 
-_(awaiting round 2; the l3/l4 fail-open is now closed in judge + a lambda ban added — re-review the two
-tooling hardenings)_
+[sol] confirmed the l3/l4 fail-open is CLOSED (referenced-but-missing `lN.py` → "missing solver"
+in judge-check), the `ast.Lambda` ban is coherent + book2 is lambda-free (0 nodes), and nothing is
+under-specified. [glm]/[fable] re-verified the fixes + both counterexamples. Non-blocking nits, all
+`[FIXED]`: (a) [glm] A0.1 filters ASSET_REF matches to the `l\d+` stem (no helper promotion); (b)
+[fable N-b] A0.1 test adds the converse (present-but-unreferenced `l3.py` → no false "missing"); (c)
+[glm/fable] the stale round-2 header hash corrected.
+
+**CONSENSUS — plan-review gate CLOSED:** [self] APPROVE · [sol] APPROVE · [glm] APPROVE WITH NITS ·
+[fable] APPROVE WITH NITS. No open blockers. Cleared for implementation.
 
 ## Content Review
 
