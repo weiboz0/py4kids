@@ -51,6 +51,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 - Forgetting `reverse=True`, so the "top" of the board is actually the lowest score.
 - Off-the-end indexing: `scores[len(scores)]` is an IndexError — valid positions run `0` to
   `len(scores) - 1`. This is the planned Lesson-3 bug; read the traceback together.
+  The expected final line is `IndexError: list index out of range`.
 - Off-by-one on the numbered board: humans count from 1, so print `position + 1`, not
   `position`.
 - Adding a score to a ranked board and forgetting to re-sort, so the new score sits at the
