@@ -137,7 +137,30 @@ machine-checked); project-first; `## Pacing` == 2 lessons.
 
 ## Post-Execution Report
 
-_(filled at Phase C)_
+**Status:** Implemented Phases A0–C; `scripts/ci-local.sh` ALL GREEN (pending final run confirmation).
+
+- **Phase A0 (tooling, commit 9a0790c):** `judge.py` — a unit's expected lesson PIDs are now
+  `l1..manifest.lessons` UNION the `assets/l\d+\.py` references in `lesson.ipynb` (filtered to the
+  `l\d+` stem), so a referenced-but-missing `lN.py` FAILs judge-check (closes the l3/l4 fail-open).
+  `source_policy.py` — added an `ast.Lambda` ban (named keys only). Tests: referenced-missing FAIL,
+  present-but-unreferenced no-false-miss, lambda ban; U08 unchanged; full-book2 source-policy stays
+  clean; 320 tool tests pass.
+- **Phase A (assets):** 13 stdin `.py` solvers (`l1`–`l4` lesson + `ex1`–`ex9`) transformed from the
+  shipped verified `solve()` bodies (fixing the transform to convert only the top-level `return`, not
+  nested key-function returns), with 62 committed `.in`/`.out` fixtures (≥2/solver, from the shipped
+  mutation-hardened asserts + crafted lesson edges); all 13 validated against their fixtures.
+- **Phase B (content):** `lesson.ipynb` rebuilt to greedy ladders — L1 interval scheduling
+  (sort-by-end → sweep → stdin `l1` "Put it together" → **counterexample rung** greedy-by-start
+  attends 1 vs by-end 2 → equal-end-tie note → complexity), keeping the exchange-argument prose; L2
+  coin change (largest-first → stdin `l2` → **counterexample rung** coins `[1,3,4]`/6 greedy 3 vs
+  optimal 2) + `l3` pairing (with a crossed-vs-sorted **mastery rung**, 53 vs 45) + `l4`
+  cheapest-first (with a budget-sweep **mastery rung**); each full solver a `no-exec` mirror + run
+  line; the old `solve()` submit-wrapper cell DELETED. `solutions.ipynb`: no-exec display mirroring
+  each `exN.py` + a per-exercise `**Notice:**`. `exercises.ipynb` intro rewritten off `solve(data)`.
+  `teacher-notes.md` pacing re-synced (ladders + stdin + both counterexamples; stays 2 lessons).
+- **Phase C (verification):** book2 `judge-check`/`source-policy`/`exec-lessons`/`concept-scan`/
+  coverage/prereq/manifest/structure/hygiene/cell-lint/noexec/stretch all PASS; full `ci-local` green;
+  un-migrated entries stay on the old path.
 
 ## Plan Review
 

@@ -16,7 +16,7 @@ is where their attention should go.
 
 ## Pacing
 
-Two 60–90 minute lessons.
+Two 60–90 minute lessons. Each greedy pattern is a short **worked-example ladder** — the local choice on a tiny hand-traceable case (executable in the notebook on literal data), then the full **stdin** solver shown `no-exec` and run from a terminal (`python assets/l1.py < assets/l1/1.in`; Book 2 now reads stdin/prints stdout — no `solve()` wrapper). BOTH counterexamples are executable rungs (greedy-by-start attends fewer than greedy-by-end; greedy coins `1,3,4` for `6` uses 3 vs the optimal 2), and the pairing (`l3`) and cheapest-first (`l4`) patterns each get an executable mastery rung (crossed-vs-sorted distance; a budget sweep). Reference solvers live as runnable `.py` in `assets/`, judged against committed `.in`/`.out` fixtures.
 
 **Lesson 1 — The greedy pattern.**
 Open with the project hook (fit the most non-overlapping events into a day).
