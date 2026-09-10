@@ -627,8 +627,47 @@ blockers, all nits folded across rounds 1–5. Plan-review gate CLOSED. Proceedi
 
 ## Content Review
 
-_(4-way gate — conducted pre-PR after implementation, per PR. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`.)_
+### PR-A (Term 1–2: units 01, 02, 03, 05 + Phase 8.1 metadata)
+
+_4-way gate. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`._
+
+#### Review 1 — [self] (2026-09-10) → APPROVE WITH NITS
+
+- Verified mechanically: `scripts/ci-local.sh` **ALL GREEN** on the branch (registry+lint, unit
+  tests, notebook exec + hygiene, `manifest`/`coverage`/`prereq`/`concept-scan`/stretch, PDF build,
+  pre-merge guard), and each unit re-verified in a kernel-capable env: `exec-solutions`,
+  `turtle-check`, `structure-check`, `cell-lint`, `hygiene` all PASS (the Codex-sandbox
+  `exec-solutions` "Operation not permitted" was an environment-only socket restriction, re-run GREEN
+  locally).
+- Quantity goal: unit-05 reaches essential ≥5 (def-function 8, parameters 8, return-value 7, scope 7)
+  and others ≥3 (nested-loops/import-statement/turtle-drawing/accumulator = 3); unit-03 flagship makes
+  all five essentials student-authored across 10 core; units 01/02 lean (core 7/8, named gaps closed).
+- Metadata: CP2 drop + unit-05 add of `turtle-drawing` and unit-02 += `string-concat` are
+  closure-clean (introduced earlier; `practices ∩ introduces` empty) and keep all checks GREEN.
+- `[self]` NIT `[OPEN]` (Nice to Have): confirm the "More Practice" reps land on the homework path in
+  teacher-notes for units 03/05 so the in-class 60–90 min path stays tight — verify at PR.
+
+#### Reviews 2–4 — [sol] / [glm] / [fable] (pending)
 
 ## Post-Execution Report
 
-_(Written before PR; records plan-037 as a named follow-up.)_
+### PR-A (2026-09-10) — Term 1–2, implemented; content gate in progress
+
+- **Statements** (Codex/GPT-5.6-sol, per-unit sessions): unit-01 core 6→7 (Ex7 `+` concat, f-string-
+  free); unit-02 6→8 (Ex7 range-width: `- // %` + `if/elif/else` + precedence + `str()`; Ex8
+  boolean-as-value; Challenge-2 numeric-reply fix); unit-03 6→10 (flagship Ex5 authored-`.py` heptagon
+  + turtle-drawing/loop-counter/float/f-string reps + 5 starter assets; Ex7–10 under "More Practice");
+  unit-05 6→11 (accumulator lesson beat + exercise, scope-repair via return/store, return composition,
+  nested-loops+import+turtle-drawing grid `.py` assets).
+- **Solutions** (Codex/GPT-5.6-sol, SEPARATE fresh sessions): all four units' `solutions.ipynb`
+  authored assert-backed; turtle reference programs shipped as `assets/solutions_*.py` (unit-03 ×5,
+  unit-05 ×3); notebooks carry no `import turtle`.
+- **Metadata reconciliations applied:** (Phase 8.1) CP2 drop + unit-05 add `turtle-drawing`.
+  **Conditional scanner-derived addition (per the Global "General rule"):** unit-02 += `string-concat`
+  (its Ex7 solution builds the message with `+`/`str()`; introduced unit-01, closure-clean) — recorded
+  here as required.
+- **Verification:** `ci-local.sh` ALL GREEN; `pre-merge-guard` OK. Volume budget: per-unit core
+  7/8/10/11 (all ≤16); no notebook cell exceeded the 120 s per-cell timeout; PDF build passed.
+- **Named follow-up:** plan 037 (tooling) — automated "listed-but-not-student-exercised" check — remains
+  the durable guard against regression (out of scope here; reviewer-enforced in the interim).
+- **PR-B (Term 3–4: Phases 4–7 + Phase 8 items 2–6):** not yet started — begins after PR-A merges.
