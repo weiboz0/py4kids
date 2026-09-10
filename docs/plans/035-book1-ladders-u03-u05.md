@@ -323,6 +323,12 @@ U03 + U05 assets for consistency:
 - `[FIXED]` **[glm/fable/sol] stale comment** — `l1_square.py:4` "…and how fast the turtle moves" →
   "Choose how the pen looks."
 
-### Round 3 (HEAD pending) — re-dispatched to [sol]
+### Round 3 (HEAD f871fa9) — [sol] APPROVE
 
-_(awaiting [sol] round 3)_
+Verified no untaught `turtle.speed` remains anywhere in either unit's assets; `done()` still last in
+every asset; turtle-check GREEN; lessons/mirrors unchanged.
+
+**CONSENSUS — content-review gate CLOSED:** [self] APPROVE WITH NITS · [sol] APPROVE · [glm] APPROVE
+WITH NITS · [fable] APPROVE WITH NITS. No open blockers. Cleared for PR. (The gate surfaced a
+pre-existing untaught-`speed` convenience in solution assets; resolved in-line here under the
+self-containedness law rather than deferred to errata.)
