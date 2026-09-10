@@ -1,7 +1,7 @@
 id: unit-06-secret-codes
 kind: unit
 blueprint_version: 1
-lessons: 2
+lessons: 3
 provenance: original
 concepts:
   introduces: [string-index, string-slice, string-methods, in-operator]

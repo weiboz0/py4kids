@@ -1,7 +1,7 @@
 # Book 1 — Year 1 Syllabus
 
 Project-first Python fundamentals for middle school students with zero programming experience.
-~34 lessons of 60–90 minutes across one school year (the lesson counts are advisory workload estimates — a teacher pulls in as many worked examples as class time allows).
+~36 lessons of 60–90 minutes across one school year (the lesson counts are advisory workload estimates — a teacher pulls in as many worked examples as class time allows).
 Every unit opens with a project the students want to build; concepts arrive only when the project needs them (decision D-001).
 Machine-readable arc: `curriculum/coverage-map.yaml` against `curriculum/concepts.yaml`.
 Every unit ships stretch ("Challenge") exercises for faster students; core content never depends on them.
@@ -14,11 +14,11 @@ Every unit ships stretch ("Challenge") exercises for faster students; core conte
 | 2 | `unit-02-number-detective` | unit | 4 | The computer picks a secret number — outsmart it in as few guesses as possible. |
 | 3 | `checkpoint-01-first-steps` | checkpoint | 0.5 | Show what you've got: stories and guessing. |
 | 4 | `unit-03-turtle-art-studio` | unit | 3 | Command a robot turtle to draw spirals, stars, and gallery-worthy art. |
-| 5 | `unit-04-quiz-show` | unit | 2 | Host your own quiz show with scores, streaks, and sudden death. |
+| 5 | `unit-04-quiz-show` | unit | 3 | Host your own quiz show with scores, streaks, and sudden death. |
 | 6 | `unit-05-function-factory` | unit | 3 | Package your best tricks into reusable machines — greeting cards and turtle stamps. |
 | 7 | `checkpoint-02-loops-and-functions` | checkpoint | 0.5 | Loops and functions, proven. |
 | 8 | `project-01-arcade-night` | project | 2 | Milestone: design and build your own mini-game; class plays everyone's. |
-| 9 | `unit-06-secret-codes` | unit | 2 | Encrypt messages with ciphers only your friends can crack. |
+| 9 | `unit-06-secret-codes` | unit | 3 | Encrypt messages with ciphers only your friends can crack. |
 | 10 | `unit-07-high-score-hall` | unit | 2 | A Hall of Fame that tracks and sorts every score in the class. |
 | 11 | `unit-08-word-wizard` | unit | 2 | A translator and word-game engine powered by dictionaries. |
 | 12 | `checkpoint-03-data-wrangler` | checkpoint | 0.5 | Strings, lists, and dicts, proven. |
@@ -27,8 +27,8 @@ Every unit ships stretch ("Challenge") exercises for faster students; core conte
 | 15 | `checkpoint-04-year-one-finale` | checkpoint | 0.5 | Files and objects, proven. |
 | 16 | `project-02-grand-adventure` | project | 4 | Capstone: a text adventure (or arcade game) using everything from the year. |
 
-Lesson budget: the map's `lessons` values are advisory workload units summing to 34 — 26 unit lessons + 6 project lessons + 4 half-lesson checkpoints. (Units 01–02 carry worked-example ladders, so they run 3 and 4 lessons respectively; see plan 031.)
-On the calendar this fits ~32–34 class sessions: each checkpoint's half-lesson is absorbed into the session that opens the following entry when the schedule is tight.
+Lesson budget: the map's `lessons` values are advisory workload units summing to 36 — 28 unit lessons + 6 project lessons + 4 half-lesson checkpoints. (Units with worked-example ladders run longer: U01→3, U02→4, U04→3, U06→3 lessons; see plans 031–032, with U03/U05/U07–U10 to follow.)
+On the calendar this fits ~34–36 class sessions: each checkpoint's half-lesson is absorbed into the session that opens the following entry when the schedule is tight.
 Turtle-based lessons (units 03/05) run as `.py` scripts launched from the JupyterLab/VS Code terminal — turtle opens its own window and does not draw inside notebook cells; all other work stays in notebooks.
 
 ## Term shape
