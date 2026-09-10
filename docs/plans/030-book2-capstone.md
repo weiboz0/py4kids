@@ -178,7 +178,34 @@ used, and reviewer-check the techniques; verify each signature mutant is killed 
 
 ## Post-Execution Report
 
-_(filled at Phase C)_
+**Shipped:** `book2/projects/project-03-mock-contest/` — the Year-2 capstone and the FINAL Book-2 map entry.
+With this merged, Book 2 is complete (14 units + 4 checkpoints + capstone).
+
+**Phase A (solutions):** `solutions.ipynb` — 8 pure `solve()` problems, each with sample + distinguishing
+asserts. P1 Checkpoint Ledger (prefix-sum), P2 Warehouse Robot (grid simulation), P3 Split the Load
+(binary-search-on-answer + greedy), P4 Perfect Pair (converging two-pointers, named `skill_of` key), P5 City
+Network (adjacency-list graph BFS, deque FIFO, `visited = {source}` literal), P6 Flood the Basin (recursive
+flood-fill), P7 Seating Plan (derangement count via mark→recurse→restore backtracking), P8 Team Roster
+(recursive pre-order over parallel arrays with `-1` sentinel).
+
+**Phase B (brief + notes + manifest):** `brief.ipynb` — intro + `solve` contract + markdown-only wrapper,
+5 `## Milestone N` rounds (M1–M5) presenting the 8 problems with sample I/O + constraints and empty student
+cells, a standalone `## Make it yours` extension round, and a `## Requirements` checklist; NO solutions in the
+brief. `teacher-notes.md` — five unit headings + `## Rubric` (per-problem Big-O + signature-bug table).
+`manifest.yaml` — full six-key schema; `requires` = the 17 techniques, `practices` = `grid-2d, set-ops,
+str-split, tuple` + the Book-1 features (scanner-derived). Map entry `practices` updated to match.
+
+**Phase C (verification):** all book2 checks PASS (coverage, prereq, concept-scan, manifest, structure,
+hygiene, cell-lint, noexec, stretch, exec-solutions). **`practice_findings` is now ACTIVE (the capstone dir
+exists) and PASSES — `pre_capstone ⊇ all 31 Book-2 concepts`** (the plan's linchpin, proven). Solutions
+execute clean; every assert holds. Signature mutants confirmed killed numerically: P1 off-by-one (`5 9 0` vs
+`7 13 3`), P2 no-bounds (`2 2` vs `1 1` on `2 2/RRDD`), P4 self-pair (`YES` vs `NO`), P5 LIFO (`4` vs `2` on
+the witness graph), P6 8-neighbour (`2` vs `1`), P7 no-restore (`0` vs `2` on `N=3`), P8 post-order
+(`4 5 2 3 1` vs `1 2 4 5 3`). concept-scan clean (no unknown methods; all 17 `requires` + `grid-2d` genuinely
+used).
+
+**Deviations from plan:** none to scope. `import-statement` (the `from collections import deque` wrapper
+artifact) is not listed in `practices` — matching the CP1–CP4 precedent; concept-scan does not flag it.
 
 ## Plan Review
 

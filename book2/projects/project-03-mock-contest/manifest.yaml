@@ -1,0 +1,14 @@
+id: project-03-mock-contest
+kind: project
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: []
+  requires: [input-parse, complete-search, binary-search, greedy, simulation, prefix-sum, recursion,
+             backtracking, deque, graph-repr, bfs, dfs, flood-fill, two-pointers, tree-traversal, sorted-key,
+             set-literal]
+  practices: [grid-2d, set-ops, str-split, tuple, accumulator, arithmetic, builtin-functions, comparison,
+              def-function, dict-literal, elif-else, for-loop, if-statement, in-operator, list-append,
+              list-literal, list-sort, logical-ops, nested-loops, parameters, return-value, string-concat,
+              string-literal, type-conversion, while-loop]
