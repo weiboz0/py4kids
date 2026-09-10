@@ -2,7 +2,7 @@
 
 ## Goals
 
-Students leave able to work with integers and arithmetic, convert typed input with `int()`, import and use `random.randint`, compare values, branch with `if`/`elif`/`else`, and loop with `while` — combined into a guessing game they built.
+Students leave able to work with integers and arithmetic (including `//` and `%`), follow `*`-before-`+` precedence, convert between text and numbers with `int()` and `str()`, import and use `random.randint`, store and print a Boolean value, compare values, branch with `if`/`elif`/`else`, and loop with `while` — combined into a guessing game they built.
 Success looks like: every student's game loops until the correct guess, and students can explain WHY the loop stops.
 
 ## Pacing
@@ -14,10 +14,12 @@ Budget: four lessons of 60–90 minutes. Ten concepts land here — the year's j
   15 min: the integer ladder (a whole number → negatives/zero → number vs look-alike text).
   25 min: the arithmetic ladder (`+` → `-`/`*` → on saved numbers → `//` and `%`).
   20 min: the type-conversion ladder (`int("27")` → `str()` → `int(input(...))`, the bridge from unit 01).
+  Rest: begin the required Exercise 7 range-width report; finish it at the start of Lesson 2 if needed.
 - **Lesson 2 — import-statement, random-module, boolean, comparison (60–90 min).**
   Open on the thread: the machine needs its own secret, and a way to judge a guess.
   20 min: the random ladder (`randint(1,6)` → change the range → save the pick as the secret).
   25 min: the comparison ladder (one `==` → `<` both ways → all four operators → compare saved numbers), with True/False as the boolean answer.
+  Rest: complete the required Exercise 8 truth check so students store and print a Boolean before branching on it.
 - **Lesson 3 — if-statement, elif-else (60–90 min).**
   Open on the thread: the machine has a secret; today it answers one guess.
   20 min: the `if` ladder (one true branch → a false test does nothing → `if`/`else`).
@@ -38,7 +40,12 @@ Practices reappearance: string-literal/naming/comment are exercised throughout t
 ## Common mistakes
 
 - Comparing text to numbers: forgetting `int()` around `input()` (TypeError — a planned traceback-reading moment).
+- Expecting `//` to keep a decimal, or using `/` when the midpoint must be a whole number.
+- Testing even or odd without comparing the `% 2` remainder to zero.
+- Reading `low + high * 2` from left to right instead of doing multiplication first.
+- Joining text to an integer without `str()`.
 - `=` where `==` was meant (SyntaxError inside `if`/`while` — read it together).
+- Putting the words `True` or `False` in quotes instead of storing the Boolean result of a comparison.
 - `elif` chains ordered so "too high" swallows "got it".
 - Infinite loops from asking for input OUTSIDE the loop body — teach "the loop must be able to change its answer".
 - `random.randint(1, 10)` bounds confusion (both ends inclusive).
@@ -46,6 +53,8 @@ Practices reappearance: string-literal/naming/comment are exercised throughout t
 ## Discussion prompts
 
 - Why does the game need `while` and not just many `if`s?
+- What extra evidence does the printed Boolean give you before the word verdict appears?
+- How would parentheses change the value of `low + high * 2`?
 - What's the smartest first guess for 1–100, and why? (Seeds the halving idea without teaching algorithms.)
 - Is the computer "thinking" when it picks a random number?
 
