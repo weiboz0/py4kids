@@ -140,4 +140,32 @@ and metadata is stable. They converge on U07 specifics + a tooling-claim correct
 
 ## Content Review
 
-_(4-way content-review gate — consensus before PR)_
+### Round 1 (2026-09-09, HEAD 1909b46) — [self] APPROVE · [glm] AWN · [fable] AWN · [sol] REJECT
+
+All reviewers AST-verified closure clean (U07 only len/max/min + .append/.sort, no sum/sorted; U08 only
+.get/.items), executable rungs run clean, conventions clean. [glm]/[fable] APPROVED WITH NITS; [sol] REJECTed
+on three pacing jumps (the recurring "realistic rung combines too much" tension — resolved as in batch 1 by a
+focused rung + a separate "put it together" application). Findings:
+
+1. `[FIXED]` **[sol, blocking] U07 list-loop realistic rung jumped** (accumulate → `range(len)` + index +
+   `#{position+1}` numbering at once). → Split into a bridge rung (position iteration, `print(scores[position])`)
+   then the numbered rung (one increment).
+2. `[FIXED]` **[sol, blocking] U07 list-sort realistic rung didn't demonstrate sorting + jumped** (straight to
+   the `board_line` renderer). → Added a focused sort-use rung (`.sort(reverse=True)` → read `scores[0]`/`[1]`
+   as champion/runner-up); `board_line` + `add_score` reframed as "**Put it together**" applications.
+3. `[FIXED]` **[sol, blocking] U08 dict-loop realistic rung looped a LIST, not the dict.** → Replaced with a
+   focused dict-loop rung (loop `.items()` to count the phrasebook's entries); the translate-helper-over-a-list
+   reframed as a "**Put it together**" application.
+4. `[FIXED]` **[glm/sol] U07 teacher-notes "Lesson-2 bug" stale** → "Lesson-3 bug".
+5. `[FIXED]` **[glm] U07 teacher-notes referenced the removed `winner` demo** → reworded to point at the
+   exercises.
+6. `[FIXED]` **[glm] U07 append rung 2 thin** (append a literal again) → now appends a value held in a
+   variable (a genuine increment).
+7. `[FIXED]` **[glm] U07 board_line rung re-declared the list** → now uses the already-sorted `scores` with an
+   honest Notice.
+
+U07 now 63 cells, U08 35 cells; all book1 checks PASS. Re-running ci-local + re-dispatching [sol].
+
+### Round 2
+
+_(pending — [sol] on the fixed HEAD; [glm]/[fable] AWN stands, nits fixed)_

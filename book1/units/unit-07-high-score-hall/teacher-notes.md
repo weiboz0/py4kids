@@ -36,12 +36,12 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   `best` to `None`. `.sort()` rearranges the list in place; just use `scores` afterward.
 - Forgetting `reverse=True`, so the "top" of the board is actually the lowest score.
 - Off-the-end indexing: `scores[len(scores)]` is an IndexError — valid positions run `0` to
-  `len(scores) - 1`. This is the planned Lesson-2 bug; read the traceback together.
+  `len(scores) - 1`. This is the planned Lesson-3 bug; read the traceback together.
 - Off-by-one on the numbered board: humans count from 1, so print `position + 1`, not
   `position`.
 - Adding a score to a ranked board and forgetting to re-sort, so the new score sits at the
   bottom no matter how big it is — `.append()` always adds to the END.
-- Expecting the illustrative `winner` name to be tied to a score — it isn't yet (that needs
+- Expecting the champion-name string demo (now in the exercises, not the lesson)
   dictionaries, Unit 08).
 
 ## Discussion prompts
