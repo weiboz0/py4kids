@@ -49,7 +49,23 @@ as the "put it together" application, and the `NameError` scope bug is `no-exec`
   Rest: scope-trace exercises; the stamp gallery.
 
 Practices reappearance: range-function + loop-counter drive the L1 stamp loop; arithmetic
-+ float-type live in L2's `360/n`; nested-loops is L3's pattern. All reappear in project 01.
++ float-type live in L2's `360/n`; nested-loops + turtle-drawing are L3's stamp-grid pattern;
+a short **accumulator** beat (a running `total` of card-border lengths, returned) sits with return-value.
+All reappear in project 01.
+
+Exercise depth (plan 036): the core set drives each concept to real authoring depth — students
+WRITE `def`/parameters/`return`/scope repeatedly (not just trace), author the accumulator total,
+compose one function's return into another, and write the nested-loop stamp grid as a `.py` asset;
+extra reps beyond the in-class core are labelled "More Practice" (homework).
+
+In-class/homework allocation:
+
+- **Lesson 1:** use Exercise 6 as the loop-and-turtle bridge; students author the qualified
+  `import turtle`, both loops, and the counter-driven pen width in the asset.
+- **Lesson 2:** complete Exercises 3, 4, and 7. Exercise 7 is the required **in-class accumulator**
+  rep: students build and return a running total of card-border lengths.
+- **Lesson 3:** complete Exercises 1, 2, and 5 after scope is taught. Exercises 8–11 sit below the
+  **More Practice** label and are homework; use them in class only when time permits.
 
 ## Common mistakes
 

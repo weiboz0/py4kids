@@ -7,4 +7,4 @@ concepts:
   introduces: [def-function, parameters, return-value, scope]
   requires: [turtle-basics, turtle-drawing, for-loop, variable, f-string]
   practices: [range-function, loop-counter, arithmetic, nested-loops, float-type,
-              accumulator, import-statement, string-literal]
+              accumulator, import-statement, string-literal, turtle-drawing]

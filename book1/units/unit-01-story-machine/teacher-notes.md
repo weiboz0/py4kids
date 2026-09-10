@@ -2,7 +2,7 @@
 
 ## Goals
 
-Students leave able to run a Python program, print text, read simple error messages without panic, store words in named variables, collect input, and assemble text with f-strings.
+Students leave able to run a Python program, print text, read simple error messages without panic, store words in named variables, collect input, and assemble text with string concatenation and f-strings.
 Success looks like: every student runs a Mad-Libs machine they modified themselves, and nobody freezes when a red traceback appears.
 
 ## Pacing
@@ -22,6 +22,7 @@ Budget: three lessons of 60–90 minutes (this is the heaviest introduction load
   20 min: the input ladder (prompt + show → reuse the reply → two questions) — each rung is teacher-run (it waits for typing).
 - **Lesson 3 — string-concat, f-string, and the Story Machine (60–90 min).**
   25 min: the concatenation ladder (`+` two pieces → join several → spaces must be added by hand).
+  Use Exercise 7 as the independent concatenation check before introducing f-strings.
   25 min: the f-string ladder (one `{name}` → several `{names}` → the same name twice) as the nicer way.
   Rest: finish the personal Mad-Libs machine; exercises.
   60-MINUTE CUT (any lesson): teach rungs 1–2 of each ladder live and leave rung 3 as a "try it" — the *Notice* lines let students self-serve the last rung.
@@ -34,6 +35,7 @@ Practices reappearance (none — this is the first unit; every concept here is p
 - `Print` vs `print` (case matters; NameError).
 - Typing a variable name differently at use site than at assignment (NameError — connect to naming conventions).
 - Forgetting quotes around literals, or quoting variable names inside f-string braces.
+- Forgetting the space or punctuation literals in a `+` greeting, or switching to an f-string when an exercise asks for concatenation practice.
 - Expecting `input()` to continue by itself — students must press Enter.
 
 ## Discussion prompts
