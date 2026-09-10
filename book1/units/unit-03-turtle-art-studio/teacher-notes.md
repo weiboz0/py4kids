@@ -33,9 +33,9 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   20 min: Exercises 4 and 6 move from tracing to authored nested-loop plans and repairs.
   Rest: finish the flagship gallery piece; export by screenshot for the classroom wall.
 
-Exercise allocation: Exercise 1 follows the Lesson-1 pen ladder; Exercises 2, 3, and 5 are the Lesson-2 in-class path; Exercises 4 and 6 are the Lesson-3 in-class path.
+Exercise allocation: Exercises 1, 2, 3, and 5 are the Lesson-2 in-class path; Exercises 4 and 6 are the Lesson-3 in-class path.
 This path includes at least one authored repetition of every unit concept, including the required f-string report in Exercise 1.
-Exercises 7–10 are labelled **More Practice** in the notebook and are assigned across the three lessons as homework or independent studio time: Exercise 7 after Lesson 1, Exercises 8 and 10 after Lesson 2, and Exercise 9 after Lesson 3.
+Exercises 7–10 are labelled **More Practice** in the notebook and are assigned as homework or independent studio time: Exercises 7, 8, and 10 after Lesson 2, and Exercise 9 after Lesson 3.
 They provide the remaining proficiency repetitions without crowding the 60–90 minute in-class path.
 
 Practices reappearance: naming (script variables), comment (script headers students edit), run-program (the terminal itself) — all three throughout every lesson; all reappear in unit 04 and beyond.
