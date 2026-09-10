@@ -78,7 +78,8 @@ games differ by design. Judge the BUILD, not a match to a reference.
 1. **Menu loop:** loops until the player quits; each choice routes to a game or exits.
 2. **Game one (function returning points):** takes the player's input, returns an integer
    score for that round — the return is the point.
-3. **Game two (function returning points):** a genuinely different game, same return contract.
+3. **Game two (function returning points):** a genuinely different game; the student writes the
+   `return` statement that sends its score back to the arcade.
 4. **Running total:** score starts at 0 outside the loop, grows by each game's return,
    displays a scoreboard.
 
