@@ -16,9 +16,9 @@ item, quitting safely, and saving and loading the same progress.
 Budget: four lessons of 60–90 minutes; Milestones 4 and 5 share the final lesson.
 
 - **Lesson 1 — Milestone 1: meet the hero.**
-  Goal: every student creates one `Hero` object with a name, health, and inventory, then
-  authors and calls `take_damage(self, amount)`, prints its returned health, and prints the
-  starting stats.
+  Goal: every student creates one `Hero` object with a name, health, and inventory, prints
+  the starting stats first, then authors and calls `take_damage(self, amount)`, stores its
+  return value, and prints that returned health.
   Open with the hook: this is the class's biggest program of the year, and the hero is the
   piece that will travel through every later milestone.
 - **Lesson 2 — Milestone 2: build the world.**
@@ -48,6 +48,7 @@ Budget: four lessons of 60–90 minutes; Milestones 4 and 5 share the final less
 - Forgetting `.strip()` before comparing a loaded string or converting health to an integer.
 - Writing an infinite exploration loop with no quit branch.
 - Typing an attribute name differently in two places, such as a typo in the inventory name.
+- Replacing the Milestone 1 hero with a new `Hero` later instead of preserving its state.
 - Appending to the inventory but never indexing it to retrieve and use an item.
 - Changing the exit dictionary into a nested structure, which no longer matches the brief's
   flat composite-key world.
@@ -76,7 +77,8 @@ award partial credit for a working portion that clearly contributes to that mile
 
 1. **Milestone 1 — Hero (20 points):** one `Hero` class stores the hero's name, health, and
    inventory; the student authors and calls `take_damage(self, amount)`, which subtracts the
-   amount and returns the new `self.health`; and the program displays the starting stats.
+   amount and returns the new `self.health`; and the program displays the starting stats
+   before that call, stores its return value, and displays the returned health.
 2. **Milestone 2 — World (20 points):** the three flat dictionaries preserve the required
    shapes, composite exit keys work, and the starting room description is displayed.
 3. **Milestone 3 — Exploration (20 points):** the loop moves through valid exits, reports an
@@ -85,9 +87,10 @@ award partial credit for a working portion that clearly contributes to that mile
 4. **Milestone 4 — Save and load (20 points):** the fixed line layout is written and read in
    separate file blocks, loaded values have the right types, and all restored values match.
 5. **Milestone 5 — Assemble the Grand Adventure (20 points):** the four scaffolds form one
-   coherent program in which the same hero and state flow through world setup, exploration,
-   item collection, the method and list-index requirements, quitting, saving, and loading;
-   the full path runs without manually replacing values between milestones.
+   coherent program in which the hero created in Milestone 1 is never re-instantiated and
+   its state flows through world setup, exploration, item collection, the method and
+   list-index requirements, quitting, saving, and loading; the full path runs without
+   manually replacing values between milestones.
 
 Traceback readiness is resolved upstream; do not re-derive or separately deduct it in this
 project rubric.
