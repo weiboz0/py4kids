@@ -7,5 +7,5 @@ concepts:
   introduces: [dict-literal, dict-access, dict-loop]
   requires: [list-loop, string-methods, in-operator, def-function, for-loop, parameters, return-value]
   practices: [list-literal, list-append, if-statement, f-string, print, variable, comparison,
-              string-concat, elif-else, arithmetic, int-type, error-messages, input, string-literal,
+              string-concat, elif-else, arithmetic, int-type, error-messages, string-literal,
               boolean, type-conversion, accumulator]
