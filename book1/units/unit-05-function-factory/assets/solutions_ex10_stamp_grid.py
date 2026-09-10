@@ -9,7 +9,6 @@ def stamp(size):
 
 turtle.color("royalblue")
 turtle.pensize(2)
-turtle.speed(0)
 turtle.pendown()
 
 rows = 3
