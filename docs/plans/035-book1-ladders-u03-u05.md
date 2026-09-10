@@ -259,4 +259,48 @@ turtle "Put it together".
 
 ## Content Review
 
-_(4-way content-review gate — consensus before PR)_
+4-way content-review gate (HEAD 4b04257). Verdicts tagged [self]/[sol]/[glm]/[fable].
+
+### [self] APPROVE WITH NITS (2026-09-10)
+
+Audited both notebooks + all 12 U03 assets. CLOSURE ✓ — every U03 rung within the union (turtle
+primitives + for/range/counter/nested/float + import/variable/arithmetic + f-string/string-literal;
+no functions/conditionals/lists/string-methods) and lesson order (basics/drawing → for/range/counter/
+float → nested); U05 executable rungs plain Python (def/parameters/return/scope + print/f-string/
+arithmetic), NameError `no-exec`, turtle fenced. PACING ✓ — Ladder A five one-action pen rungs;
+Ladder B four rungs with `360/n` float co-taught (a pre-float int rung is impossible); Ladder C two
+nested rungs + spirograph "Put it together"; U05 ladders one-increment. TURTLE ASSETS ✓ — every
+asset ends with `turtle.done()` as its last statement, closes (or `l1_corner.py` carries the bare
+`# turtle-check: open-path`), stub API only; turtle-check GREEN. All U03 turtle cells `no-exec`;
+project-first opens; teacher-notes `## Pacing` == 3 lessons each. Nit watched (not blocking): U03
+Ladder B rung 4 notebook cell (reused `l2_polygons` asset) carries L1 scaffolding (color + penup/
+pendown travel) around the counter-pensize increment — all L1-taught reuse, Notice names only the
+counter; flag if a reviewer reads the rung as over-loaded.
+
+### Round 1 (HEAD 4b04257) — [glm] REJECT · [sol] REJECT · [fable] APPROVE WITH NITS
+
+All three verified closure (unions + order, no functions/conditionals/lists in U03), the turtle
+contract (all 12 U03 assets: `done()` last, close or bare open-path, stub API only, ≥1 pen-down —
+`turtle-check` NONE), U05's plain-Python ladders + `no-exec` NameError + fenced "Put it together",
+project-first opens, and 3-lesson pacing. Two blocking findings (both `[FIXED]`):
+
+1. `[FIXED]` **[glm B1 / sol #1 / fable N1] untaught `speed()` in U03 Ladder A rung 5** — cell 14 and
+   `l1_square.py` carried `turtle.speed(3)`, a second pen action the Notice never names and the lesson
+   never teaches. → Removed `turtle.speed(...)` from the rung cell and from all three reused assets
+   (`l1_square`, `l2_polygons`, `l3_spirograph`); `done()` still last; turtle-check still GREEN.
+2. `[FIXED]` **[sol #2 / fable N3 / glm N3] reused-asset mirror drift** — cells 27/38 omitted
+   `pensize(2)` (and the now-removed `speed`) present in `l2_polygons.py`/`l3_spirograph.py`, so a
+   student running the asset saw a different program. → Added `turtle.pensize(2)` to both cells;
+   verified statement-for-statement mirror (ignoring comments) against the assets.
+
+Non-blocking, also `[FIXED]`:
+
+3. `[FIXED]` **[fable N2 / glm N2] U05 "excerpt" labels were paraphrases** — the L1 (`l1_cards`) and L3
+   (`l3_stamps`) fenced blocks are simplified, not verbatim; relabeled "a simplified version of the
+   idea in `assets/…`". (The L2 `l2_shapes` block IS verbatim — kept as "excerpt".)
+4. `[noted]` **[glm N1]** U03 cells 3/9 Notices name a co-taught pair (`forward`+`right`;
+   `penup`/`pendown`) — the plan's intentional co-teaching, accepted on literal reading.
+
+### Round 2 (HEAD pending) — re-dispatched to [sol]/[glm]/[fable]
+
+_(awaiting verdicts)_

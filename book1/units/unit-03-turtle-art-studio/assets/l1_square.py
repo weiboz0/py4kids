@@ -4,7 +4,6 @@ import turtle
 # Choose how the pen looks and how fast the turtle moves.
 turtle.color("teal")
 turtle.pensize(4)
-turtle.speed(3)
 
 # Draw side 1, then turn one square corner.
 turtle.forward(100)

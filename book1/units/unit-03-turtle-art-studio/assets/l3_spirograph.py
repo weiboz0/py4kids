@@ -13,7 +13,6 @@ turn_between_shapes = 15
 # Keep one bold color for the complete design.
 turtle.color("purple")
 turtle.pensize(2)
-turtle.speed(0)
 
 # The outer counter tracks which polygon is being drawn.
 for shape_number in range(shape_count):
