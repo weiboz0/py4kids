@@ -132,4 +132,47 @@ B1 (U10-already-3 double-count) verified FIXED by all three (arithmetic 38→39/
 
 ## Content Review
 
-_(4-way content-review gate — consensus before PR)_
+4-way content-review gate (HEAD d8ff840). Verdicts tagged [self]/[sol]/[glm]/[fable].
+
+### [self] APPROVE WITH NITS (2026-09-10)
+
+Audited both notebooks cell-by-cell. CLOSURE ✓ — every rung stays within its unit's manifest
+union and lesson order (U09 write→read; U10 class→attrs→methods); only `.strip()` string method in
+U09; U10 `play`/`feed`/`pass_time` accumulators + arithmetic + comparison + elif-else all in U10's
+union. COMPLETENESS/PACING ✓ — each ladder graduates one increment per rung; full multi-concept
+programs (U09 `load_scores`+settings search; U10 foods-dict/multi-pet/while-play) are framed
+**"Put it together"** cells, not rungs. PROJECT-FIRST ✓ (both open on the hook). Error demos
+(`FileNotFoundError`, `AttributeError`) `no-exec`. teacher-notes `## Pacing` == lessons (U09=3,
+U10=3). Nits watched (not blocking): U09 file-read rung 4 (`int()`+`.append()`) and U10 `status`
+(if/elif/else + return) each lean on reused scaffolding to stay realistic — each adds a single new
+file/method idea, so within the one-increment bar; flag if an external reviewer reads them as jumps.
+
+### Round 1 (HEAD d8ff840) — [fable] APPROVE WITH NITS · [glm] REJECT · [sol] REJECT
+
+External reviewers confirmed closure (both unions, orders, `.strip()`-only, re-instantiation),
+project-first opens, "Put it together" framing, and pacing counts (U09=3, U10=3). Blocking findings
+(all `[FIXED]`):
+
+1. `[FIXED]` **[sol #3 / glm B1] U10 `methods` ladder not one-increment** — `feed` added a parameter
+   AND a return in one rung; `pass_time` added no new capability as its own rung; `status` bundled
+   decision + print + return. → Rebuilt to a monotone ladder: rung 1 the method concept (two
+   same-shape mutators `play`+`pass_time`), rung 2 `feed` adds only a **parameter** (no return),
+   rung 3 `feed` adds only a **return**, rung 4 `status` adds only a **decision** (print-only,
+   return dropped).
+2. `[FIXED]` **[sol #1] U09 file-read ladder jump** — the final rung created a list, `int()`-
+   converted, and `.append()`-ed at once. → Added an intermediate rung that collects cleaned lines
+   into a LIST of strings (`.append()` only); the final rung's single new step is `int()`.
+3. `[FIXED]` **[sol #2] U10 class+`__init__` rungs read attributes before the attributes ladder** —
+   `print(buddy.name)` externally read an attribute, pre-empting the attributes concept. → The
+   class+`__init__` construction rungs now confirm with a literal `print("Made a new pet!")`; the
+   first external attribute read is the attributes ladder's rung 1.
+4. `[FIXED]` **[fable N1] U09 teacher-notes literal newline** — the `\n` code span was split across a
+   real line break. → Restored to the two-character `\n`.
+5. `[FIXED]` **[glm N1 / fable N2, N3 / sol] Notice over-claims** — U09 write rung-2 Notice trimmed
+   to "one score per line"; U09 int rung Notice names only `int(...)`; U10 `feed`/`status` Notices
+   each now name exactly one new thing. **[fable N4]** U10 attributes rung 1 now reads `happiness`
+   (was a duplicate of the init rung's readback).
+
+### Round 2 (HEAD pending) — re-dispatched to [sol]/[glm]/[fable]
+
+_(awaiting verdicts)_

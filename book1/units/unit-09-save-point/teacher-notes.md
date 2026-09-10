@@ -15,8 +15,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 
 - **Lesson 1 — save to a file (file-write, with-statement) (60–90 min).**
   Open on the hook: a game that forgets everything when you close it is no fun.
-  25 min: the file-write ladder (`with open("savegame.txt", "w") as f: f.write(one line)` → a loop writing several scores → a mixed `settings.txt`). Explain `with` opens the file and closes it automatically; `
-` is the invisible end-of-line; `str(...)` because files hold TEXT.
+  25 min: the file-write ladder (`with open("savegame.txt", "w") as f: f.write(one line)` → a loop writing several scores → a mixed `settings.txt`). Explain `with` opens the file and closes it automatically; `\n` is the invisible end-of-line; `str(...)` because files hold TEXT.
   60-MINUTE CUT: teach rungs 1–2; the settings file can wait.
 - **Lesson 2 — read a file back (file-read) (60–90 min).**
   Open on the thread: yesterday we saved; today we load.
