@@ -21,12 +21,14 @@ Budget: three lessons of 60–90 minutes (objects are a new mental model). Each 
   "scope"; it is object identity — each `Pet(...)` is its own thing.)
   60-MINUTE CUT: one pet is enough for L1; the two-pets independence beat can open L2.
 - **Lesson 2 — methods change a pet (methods) (60–90 min).**
-  Open on the thread: our pet just sits there — let's give it actions. Add methods INSIDE the class,
-  each taking `self`: `feed(self, amount)` lowers `self.hunger` and returns it; `play(self)` raises
-  `self.happiness`; `pass_time(self)` RAISES `self.hunger` (time makes a pet hungry); `status(self)`
-  builds a `mood` with an if/elif/else ladder on `self.hunger` and prints it. Call
-  `buddy.feed(2)`, `buddy.play()`, `buddy.pass_time()`, `buddy.status()`.
-  60-MINUTE CUT: `feed` + `status` are the core; `pass_time`/`play` can be quick.
+  Open on the thread: our pet just sits there — let's give it actions. Grow the class one method at a
+  time, each taking `self`, re-making `buddy` after each change: first the method idea itself with two
+  same-shape mutators — `play(self)` raises `self.happiness`, `pass_time(self)` RAISES `self.hunger`
+  (time makes a pet hungry); then `feed(self, amount)` to add a PARAMETER (lower hunger by `amount`);
+  then give `feed` a `return` so it hands back the new hunger; finally `status(self)` to add a
+  DECISION — an if/elif/else ladder on `self.hunger` that builds a `mood` and prints it. Call
+  `buddy.play()`, `buddy.feed(2)`, `buddy.status()`.
+  60-MINUTE CUT: the method idea (`play`/`pass_time`) + `feed` are the core; `status` can be quick.
 - **Lesson 3 — a little simulation (60–90 min).**
   A `foods` dictionary feeds by name (`buddy.feed(foods["steak"])`). A LIST of pets, grown with
   `.append`, walked with ONE `for pet in pets:` loop giving each a `pass_time()` + `status()`. A

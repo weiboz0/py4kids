@@ -31,7 +31,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   here, but a stray space would break it; strip to be safe and to teach the habit.
 - Using append mode `"a"` instead of `"w"`, so the file GROWS every time you run — always re-save
   the whole list with `"w"`.
-- Reading a file that was never saved → `FileNotFoundError`; save before you load (the Lesson-2
+- Reading a file that was never saved → `FileNotFoundError`; save before you load (the Lesson-3
   bug beat).
 - `int()`-parsing the settings file (which holds words) → `ValueError`; read settings as TEXT and
   search it with `in`, never `int()`.
