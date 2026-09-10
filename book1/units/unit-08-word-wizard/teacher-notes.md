@@ -34,6 +34,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 The notebook's **More Practice** section, Exercises 12–14, is homework after Lesson 3: two varied `+`/`str()` reporting reps, followed by a direct key-only dictionary loop.
 Every concept has at least one in-class rep; homework adds fluency rather than introducing a concept.
 
+**Why one traceback rep is enough here:** `error-messages` is peripheral in this unit; dictionaries drive Word Wizard, while traceback reading is practiced again in other units.
+
 ## Common mistakes
 
 - Reaching for `translations["fish"]` when a key might be missing — that raises a KeyError. Use

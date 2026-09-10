@@ -34,7 +34,8 @@ Exercises 1–9 form the in-class path; the labelled More Practice Exercises 10�
   60-MINUTE CUT: Exercises 6–7 are the core; guide Exercises 8–9 together as the final short closing pair.
 
 Homework More Practice: Exercise 10 proves that a second `"w"` save replaces instead of duplicates, Exercise 11 repeats dictionary save/load through functions, and Exercise 12 repeats a parameterized score loader.
-`error-messages` has one in-class study repetition rather than three because deliberately staging multiple failing loads would be artificial and would not add useful file practice.
+`error-messages` has one in-class student-authored code repetition rather than three because Exercise 9 turns its diagnosed `FileNotFoundError` into a real save-before-load repair, while deliberately staging more failing loads would be artificial and would not add useful file practice.
+The exercises notebook is designed to run top-to-bottom once; Exercise 11 intentionally replaces Ada's `settings.txt` profile with Mina's, so rerunning Exercise 6 afterward changes its result.
 
 ## Common mistakes
 

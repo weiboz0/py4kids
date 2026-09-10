@@ -32,3 +32,4 @@ book1/checkpoints/checkpoint-04-year-one-finale/finale.txt
 
 # project-02 capstone file-I/O runtime scratch (written then read by the save/load milestone; never commit)
 book1/projects/project-02-grand-adventure/adventure_save.txt
+book1/units/unit-09-save-point/dragon_slot.txt
