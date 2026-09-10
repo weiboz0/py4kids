@@ -18,23 +18,33 @@ one — the payoff of "think before you loop."
 
 ## Pacing
 
-Two 60–90 minute lessons.
+Two 60–90 minute lessons. Each concept is a short **worked-example ladder**: the core idea on a tiny array
+you can trace by hand → one step up → the full program that reads the real input from **stdin**. The early
+rungs run live in the notebook (literal data); the full solver is shown `no-exec` and **run from a terminal**
+(`python assets/l1.py < assets/l1/1.in`) — that is the real contest shape, now that Book 2 reads stdin and
+prints stdout (no `solve()` wrapper). Reference solvers live as runnable `.py` in `assets/`, judged against
+committed `.in`/`.out` fixtures.
 
 **Lesson 1 — 1D prefix sums.**
 Open with the hook: answer many range-sum queries over a big array.
-Live-code the naive per-query loop, count its cost (O(n) per query → too slow for many queries), then build
-the prefix array once and answer each query in O(1).
+Live-code the naive per-query loop, count its cost (O(n) per query → too slow for many queries), then walk
+the 1D ladder: build `pre` on a tiny array (`pre[0] = 0`) → one range query `pre[r+1] - pre[l]` → loop
+several queries → the full stdin solver (`assets/l1.py`).
 Hand-trace the index convention on a tiny array so the `pre[r+1] - pre[l]` boundary is concrete.
 Extend to prefix *counts* (how many 1s / how many values in a range) — same idea on a 0/1 or indicator array.
 Class works Exercises 1–4 (range totals, lit-tile counts, target-sum reports, strongest range).
 
 **Lesson 2 — 2D grid prefix sums.**
-Build the 2D prefix grid row by row, then derive the inclusion-exclusion rectangle formula by drawing the
-four overlapping regions.
+Walk the 2D ladder: build the prefix grid on a tiny grid (one extra zero row and column) → one rectangle
+query via the four-term formula → the full stdin solver (`assets/l2.py`). Derive inclusion-exclusion by
+drawing the four overlapping regions.
 Hand-trace one sub-rectangle so the signs are concrete: add the big corner, subtract the two strips, add
 back the doubly-subtracted corner.
 Class works Exercises 5–9 (map rectangle totals, region beacon counts, best survey zone, and the two
 stretch window problems — 8 Best Bounded Candidate Window and 9 Longest Low-Total Streak).
+
+Note on house style: the prefix grid is pre-sized with an **append loop** (the `[0] * n` list-repetition
+idiom is banned book-wide, so the 2D rungs look a little longer — that is expected).
 
 ## Common mistakes
 

@@ -36,28 +36,28 @@ class _DefinedNames(ast.NodeVisitor):
     def __init__(self) -> None:
         self.names: set[str] = set()
 
-    def visit_FunctionDef(self, node):  # noqa: N802
+    def visit_FunctionDef(self, node):
         self.names.add(node.name)
         self.generic_visit(node)
 
     visit_AsyncFunctionDef = visit_FunctionDef
 
-    def visit_ClassDef(self, node):  # noqa: N802
+    def visit_ClassDef(self, node):
         self.names.add(node.name)
         self.generic_visit(node)
 
-    def visit_arg(self, node):  # noqa: N802
+    def visit_arg(self, node):
         self.names.add(node.arg)
 
-    def visit_Name(self, node):  # noqa: N802
+    def visit_Name(self, node):
         if isinstance(node.ctx, ast.Store):
             self.names.add(node.id)
 
-    def visit_Import(self, node):  # noqa: N802
+    def visit_Import(self, node):
         for alias in node.names:
             self.names.add(alias.asname or alias.name.split(".")[0])
 
-    def visit_ImportFrom(self, node):  # noqa: N802
+    def visit_ImportFrom(self, node):
         for alias in node.names:
             self.names.add(alias.asname or alias.name)
 

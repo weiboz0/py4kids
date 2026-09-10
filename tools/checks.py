@@ -4,7 +4,6 @@ from tools.concept_scan import concept_scan_findings
 from tools.curriculum import coverage_findings, prereq_findings
 from tools.fake_turtle import turtle_findings
 from tools.judge import judge_findings
-from tools.source_policy import source_policy_findings
 from tools.notebooks import (
     cell_lint_findings,
     exec_lessons_findings,
@@ -15,6 +14,7 @@ from tools.notebooks import (
     noexec_findings,
     structure_findings,
 )
+from tools.source_policy import source_policy_findings
 
 
 def stretch_findings(root, book, unit=None):

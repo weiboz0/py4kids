@@ -291,7 +291,35 @@ stdin solvers correct on the stated samples; lessons project-first; `## Pacing` 
 
 ## Post-Execution Report
 
-_(filled at Phase D)_
+**Status:** Implemented across Phases A–D; `scripts/ci-local.sh` ALL GREEN (pre-merge-guard OK).
+
+- **Phase A (tooling, commit d9d951e):** `tools/judge.py` (subprocess judge, `input=<str>`+`text=True`,
+  30s, book-scoped to book2, per-kind PID derivation incl. `### Problem N`, ≥2 fixtures/solver,
+  orphan rejection, mirror check) and `tools/source_policy.py` (AST ban checker + pinned builtin
+  allowlist incl. `set`, book-scoped, helper `SyntaxError` surfaced). `notebooks.py`:
+  `is_stdin_model_entry` + per-entry waiver of `_solution_policy_findings`/`exec-solutions` for book2
+  assets-model entries (old-model unchanged); `INTERACTIVE` matches `sys.stdin`; `_assets_reference_findings`
+  extended to unit/checkpoint/project. `fake_turtle.py` skips non-turtle scripts. Registered both
+  checks + wired into `ci-local`. Tests: registry + 28 judge/source-policy tests incl. the
+  full-current-book2 `source-policy==[]` regression; full suite 439→ passing.
+- **Phase B (docs, commit 3b74384):** amended design-001 §3 (stdin-first contract + staged
+  per-entry migration note), §4 (solutions-display + correct 5/6/6 teacher-note headings, checkpoint
+  `## Problem`→`## Question`), §7, §11 (judge decision RESOLVED); rewrote syllabus contract section +
+  U01 arc row + assessment line.
+- **Phase C (U08 pilot):** re-authored `book2/units/unit-08-prefix-sums/` to the stdin model +
+  ladders. `assets/`: 11 stdin `.py` solvers (`l1`,`l2` + `ex1`–`ex9`) each reading stdin / printing
+  stdout, with 40 committed `.in`/`.out` fixture files (≥2/solver, from the original asserts + crafted
+  edges). `lesson.ipynb`: 1D and 2D ladders — executable literal-data rungs (build `pre` → one query →
+  loop queries; build prefix grid → one rectangle) each with a Notice, then the full stdin solver as a
+  `no-exec` "Put it together" cell mirroring `l1.py`/`l2.py`, a run line, edge notes, and
+  `**Complexity:**` lines. `solutions.ipynb`: all-`no-exec` display mirroring each `exN.py`.
+  `teacher-notes.md`: pacing re-synced to the ladders (stays 2 lessons) + the `[x]*n`/append-loop
+  note. `exercises.ipynb` + `manifest.yaml` unchanged (lessons: 2).
+- **Phase D (verification):** `ci-local` ALL GREEN — `judge-check` (all 11 U08 solvers pass ≥2
+  fixtures; PID set complete; mirrors match), `source-policy` (book2 clean incl. U08), `exec-lessons`
+  (ladder rungs run; stdin solvers `no-exec`), `concept-scan`/`coverage`/`prereq`/`manifest`/
+  `structure`/`hygiene`/`cell-lint`/`noexec`/`stretch`, Book-1 PDF build + pre-merge-guard. The 13
+  un-migrated units + 4 checkpoints + capstone stay verified on the OLD `solve()` path.
 
 ## Plan Review
 
