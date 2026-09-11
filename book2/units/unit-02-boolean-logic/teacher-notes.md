@@ -68,5 +68,5 @@ Budget: two lessons of 60–90 minutes each.
 - De Morgan support: use the spoken pattern "flip the connector, flip both facts" and immediately verify it against a truth-table row.
 - Loop support: provide a three-column trace sheet for position, current flag, and remembered Boolean state without supplying solver code.
 - Middle tier: complete Exercises 1–7 and explain one solver's final combined condition to a partner.
-- Fast finishers: complete Exercises 8–9, then invent one additional input row that makes each solver return its opposite sample result.
+- Fast finishers: complete Exercises 8–9, then invent one additional input row that makes each solver print its opposite sample result.
 - Pair check: one student traces and predicts while the other runs the cell, then they switch roles for the next warm-up.
