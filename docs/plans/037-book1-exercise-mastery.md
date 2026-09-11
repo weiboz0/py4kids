@@ -175,11 +175,11 @@ through by being un-listed as a phase target.
 ## Out of scope
 
 - **New automated "listed-but-not-student-exercised" CI check** — the durable guarantee against this
-  class of gap (analogous to 016's `concept-scan`), deliberately deferred to **plan 038 (tooling)**:
+  class of gap (analogous to 016's `concept-scan`), deliberately deferred to **a future tooling plan (next free number)**:
   building it needs the same false-positive care (trace-only concepts, `stretch` exclusion, `input`/
   `no-exec` handling, OOP method exemptions, asset authorship) and bundling it would make this content
   plan un-reviewable. For THIS plan the bar is reviewer-enforced (Phase V union inventory + content-gate
-  blind-solve), per AGENTS.md pre-tooling prescription. **Risk acknowledged:** until plan 038 lands nothing
+  blind-solve), per AGENTS.md pre-tooling prescription. **Risk acknowledged:** until that tooling plan lands nothing
   automatically prevents regression — recorded as a named follow-up in the post-execution report.
 - Rewriting checkpoints/projects wholesale (all checkpoints are correct + self-contained; risk is
   upstream). Reworking ramps/hooks/pacing where the audit found them sound.
@@ -470,7 +470,7 @@ Proficiency (reviewer-enforced — Phase V is NOT met without this):
 **Acceptance criteria:** all Phase 1–8 targets student-exercised in core (proficiency bar) AND every
 touched unit's full union inventoried; solutions assert-backed + headless clean; the enumerated
 metadata reconciliations applied; `ci-local.sh` ALL GREEN incl. `concept-scan`; `pre-merge-guard --pr`
-OK; plan-review + (per-PR) content-review 4-way consensus with no `[OPEN]` blockers; plan-038 recorded
+OK; plan-review + (per-PR) content-review 4-way consensus with no `[OPEN]` blockers; a future tooling plan recorded
 as a named follow-up in the post-execution report.
 
 ---
@@ -774,7 +774,7 @@ this environment). Content-review gate CLOSED for PR-B. Proceeding to PR.
   here as required.
 - **Verification:** `ci-local.sh` ALL GREEN; `pre-merge-guard` OK. Volume budget: per-unit core
   7/8/10/11 (all ≤16); no notebook cell exceeded the 120 s per-cell timeout; PDF build passed.
-- **Named follow-up:** plan 038 (tooling) — automated "listed-but-not-student-exercised" check — remains
+- **Named follow-up:** a future tooling plan (next free number) — automated "listed-but-not-student-exercised" check — remains
   the durable guard against regression (out of scope here; reviewer-enforced in the interim).
 ### PR-B (2026-09-10) — Term 3–4, implemented; content gate in progress
 
@@ -802,4 +802,4 @@ this environment). Content-review gate CLOSED for PR-B. Proceeding to PR.
   run in memory-light groups — book-level checks + `ruff` + `pre-merge-guard` GREEN, per-unit
   `exec-solutions`/`structure`/`turtle` GREEN for all touched entries, PDFs build for all 6 units.
   Per-unit core 10/11/13/14/12/12 (all ≤16).
-- **Named follow-up:** plan 038 (tooling) still the durable regression guard (out of scope).
+- **Named follow-up:** a future tooling plan (next free number) still the durable regression guard (out of scope).
