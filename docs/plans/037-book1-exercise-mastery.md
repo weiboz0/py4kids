@@ -175,11 +175,11 @@ through by being un-listed as a phase target.
 ## Out of scope
 
 - **New automated "listed-but-not-student-exercised" CI check** — the durable guarantee against this
-  class of gap (analogous to 016's `concept-scan`), deliberately deferred to **plan 038 (tooling)**:
+  class of gap (analogous to 016's `concept-scan`), deliberately deferred to **a future tooling plan (next free number)**:
   building it needs the same false-positive care (trace-only concepts, `stretch` exclusion, `input`/
   `no-exec` handling, OOP method exemptions, asset authorship) and bundling it would make this content
   plan un-reviewable. For THIS plan the bar is reviewer-enforced (Phase V union inventory + content-gate
-  blind-solve), per AGENTS.md pre-tooling prescription. **Risk acknowledged:** until plan 038 lands nothing
+  blind-solve), per AGENTS.md pre-tooling prescription. **Risk acknowledged:** until that tooling plan lands nothing
   automatically prevents regression — recorded as a named follow-up in the post-execution report.
 - Rewriting checkpoints/projects wholesale (all checkpoints are correct + self-contained; risk is
   upstream). Reworking ramps/hooks/pacing where the audit found them sound.
@@ -470,7 +470,7 @@ Proficiency (reviewer-enforced — Phase V is NOT met without this):
 **Acceptance criteria:** all Phase 1–8 targets student-exercised in core (proficiency bar) AND every
 touched unit's full union inventoried; solutions assert-backed + headless clean; the enumerated
 metadata reconciliations applied; `ci-local.sh` ALL GREEN incl. `concept-scan`; `pre-merge-guard --pr`
-OK; plan-review + (per-PR) content-review 4-way consensus with no `[OPEN]` blockers; plan-038 recorded
+OK; plan-review + (per-PR) content-review 4-way consensus with no `[OPEN]` blockers; a future tooling plan recorded
 as a named follow-up in the post-execution report.
 
 ---
@@ -694,7 +694,66 @@ wording [fable-N3]. PR-body must name the unit-02 `string-concat` scanner-derive
 
 4-way: [self] APPROVE; [sol]/[glm]/[fable] APPROVE WITH NITS — no `[OPEN]` blockers; all round-1
 findings `[FIXED]`; round-2 cosmetic nits folded. `ci-local.sh` ALL GREEN. Content-review gate CLOSED
-for PR-A. Proceeding to PR.
+for PR-A. Merged as PR #39 (squash `acd5bcc`).
+
+### PR-B (Term 3–4: units 04/06/07/08/09/10 + projects 01/02 + checkpoints CP1/CP3)
+
+_4-way gate. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`._
+
+#### Review 1 — [self] (2026-09-10) → APPROVE WITH NITS
+
+- Mechanical: full `ci-local` OOMs in this environment (whole-repo notebook-exec + PDF spike after
+  Book-2 growth), so ran its checks in memory-light groups — ALL GREEN: book-level
+  `concept-scan`/`coverage`/`prereq`/`manifest`/`stretch`/`cell-lint`/`hygiene`/`turtle`/`noexec`/
+  `structure`, `ruff`, `pre-merge-guard`; per-unit `exec-solutions` + `structure` GREEN for all 6 units
+  + both projects + CP1/CP3 (in a kernel-capable env); PDFs build for all 6 touched units.
+- Quantity goal met per Codex rep-count reports: essentials ≥5, others ≥3, with documented
+  `error-messages` count-exemptions (u06/07/08/09/10) and `input` kept as genuinely student-authored
+  (no-exec cells) rather than dropped — a stronger resolution of Sol's false-practice finding than
+  reconciliation #4's drop (deviation recorded; see below).
+- `[self]` NIT `[OPEN]` (Nice to Have): the `input`-kept deviation from plan reconciliation #4 should be
+  explicitly blessed by the gate; confirm the no-exec `input()` reps read as genuine authoring.
+
+#### Reviews 2–4 — [sol] / [glm] / [fable] (round 1, 2026-09-10)
+
+All three **blind-solved every new/changed exercise with NO mismatch** (61 exercises + checkpoints +
+projects); `[fable]`/`[glm]` mutation-tested the asserts. Verdicts: **[glm] APPROVE WITH NITS, [fable]
+APPROVE WITH NITS (1 Must Fix), [sol] REJECT (8 Must Fix)**. Consolidated `[OPEN]` findings — all now
+`[FIXED]`:
+- `[FIXED]` `input` in units 08 & 09 practices with 0 student reps → **dropped** (map+manifest;
+  RED-safe). Corrects the `[self]` over-broad "keep input for 07–10" note: input is kept only for
+  07/10 (genuinely authored, no-exec) and dropped for 08/09.
+- `[FIXED]` traceback-reading solutions lacked the model answer → added (markdown, not executed) the
+  exact `TypeError` (u04 Ex5), `IndexError` (u07 Ex3), `KeyError: 'fish'` (u08 Ex11), `AttributeError …
+  'hapiness'` (u10 Ex8).
+- `[FIXED]` project-02 exemplar incoherent → single `hero` through all 5 milestones (one `Hero(`), M1
+  calls `take_damage` + prints returned health, M1 prints starting stats before damage; deterministic.
+- `[FIXED]` unit-09 `error-messages` now has a genuine student-authored save-before-load code rep;
+  unit-08 Ex11 plan-rationale prose moved to teacher-notes + count-exemption justification added.
+- `[FIXED]` nits: u06 teacher-notes Ex4/Ex8→Lesson 2 (in-operator) + label; u10 Ex5 `print(...)`;
+  u04 Ex7 / u07 Ex13 tautological asserts → concrete/technique-connected; u07 Ex9 space; u09 Ex4
+  `high_scores` naming + top-to-bottom note; `.gitignore` += `dragon_slot.txt`.
+
+#### Round-1 reconciliation (2026-09-10)
+
+All findings fixed via per-unit Codex fix sessions + inline metadata, each re-verified in a
+kernel-capable env (`exec-solutions`/`structure`/`hygiene`/`cell-lint` GREEN; book-level
+`concept-scan`/`coverage`/`prereq`/`manifest` GREEN). **Re-dispatching [sol] round 2** ([glm]/[fable]
+were APPROVE WITH NITS with their nits now folded — passing verdicts).
+
+#### Reviews — [sol] / [glm] / [fable] (round 2)
+
+- **[sol] → APPROVE WITH NITS.** Verified all 8 Must-Fixes resolved (traceback model answers in
+  markdown; project-02 one-hero + `take_damage` M1; input drops closure-clean). Lone nit (u08 model
+  answer `d["fish"]`→`translations["fish"]`) folded.
+- **[glm] → APPROVE WITH NITS (carried; nits folded).**
+- **[fable] → APPROVE WITH NITS (carried; nits folded).**
+
+#### Content-gate CONSENSUS (2026-09-10) — CLOSED (PR-B)
+
+4-way: [self]/[sol]/[glm]/[fable] all APPROVE WITH NITS — no `[OPEN]` blockers; all round-1 findings
+`[FIXED]`; round-2 nit folded. `ci-local` checks GREEN (run in memory-light groups; full run OOMs in
+this environment). Content-review gate CLOSED for PR-B. Proceeding to PR.
 
 ## Post-Execution Report
 
@@ -715,6 +774,32 @@ for PR-A. Proceeding to PR.
   here as required.
 - **Verification:** `ci-local.sh` ALL GREEN; `pre-merge-guard` OK. Volume budget: per-unit core
   7/8/10/11 (all ≤16); no notebook cell exceeded the 120 s per-cell timeout; PDF build passed.
-- **Named follow-up:** plan 038 (tooling) — automated "listed-but-not-student-exercised" check — remains
+- **Named follow-up:** a future tooling plan (next free number) — automated "listed-but-not-student-exercised" check — remains
   the durable guard against regression (out of scope here; reviewer-enforced in the interim).
-- **PR-B (Term 3–4: Phases 4–7 + Phase 8 items 2–6):** not yet started — begins after PR-A merges.
+### PR-B (2026-09-10) — Term 3–4, implemented; content gate in progress
+
+- **Statements + solutions** (Codex/GPT-5.6-sol, separate sessions per unit): unit-04 7→10 (author `or`
+  from scratch; accumulator/nesting/break depth); unit-06 7→11 (boolean-as-value, two-round traceback
+  Ex7, `elif` classify, two-shift int-type); unit-07 9→13 (`.sort()`-returns-`None`, `while` ×3,
+  IndexError→`scores[-1]`, ascending sort, max/min); unit-08 11→14 (concat/`str()` scoreboard,
+  boolean-as-value, read-KeyError, key-only dict-loop); unit-09 8→12 (student f-string, FileNotFound
+  "save-before-load" study, real `if/else`, `"w"`-vs-`"a"` edge, transfer); unit-10 8→12 (student
+  `list-index`, integrative "Run a Pet Day" full-`Pet` incl. `pass_time`, deepened dict, run-and-read
+  AttributeError). Essentials ≥5, others ≥3 (per Codex counts), `error-messages` count-exempt with
+  justification.
+- **Projects:** project-01 — student authors `return` in Milestone 3 `quick_quiz()` (the return-vs-print
+  hinge). project-02 — Milestone 1 requires a student-authored `Hero.take_damage` method (param+return,
+  graded), Milestone 5 "Assemble the Grand Adventure" is a named graded synthesis milestone, Milestone 3
+  requires a student-authored `list-index`; exemplar deterministic (`seed(4)`).
+- **Checkpoints:** CP1 Q1 now authors a `+` concatenation (earns the `string-concat` tag); CP3 Q6 branch
+  made reachable; CP3 Q8 reads the actual KeyError before `.get`.
+- **Metadata:** unit-09 `practices += elif-else` (introduced unit-02, closure-clean); `.gitignore` +=
+  `overwrite_scores_tmp.txt`. **Deviation from reconciliation #4:** `input` NOT dropped from units
+  07–10 — PR-B statement authoring made it genuinely student-authored (no-exec cells), which resolves
+  Sol's false-practice finding more directly; recorded here per the honesty principle (content gate to
+  bless).
+- **Verification:** full `ci-local` OOMs in this environment (whole-repo memory spike); its checks were
+  run in memory-light groups — book-level checks + `ruff` + `pre-merge-guard` GREEN, per-unit
+  `exec-solutions`/`structure`/`turtle` GREEN for all touched entries, PDFs build for all 6 units.
+  Per-unit core 10/11/13/14/12/12 (all ≤16).
+- **Named follow-up:** a future tooling plan (next free number) still the durable regression guard (out of scope).

@@ -11,18 +11,31 @@ notebook, and loads the same scores back.
 
 ## Pacing
 
-Budget: three lessons of 60–90 minutes. Each concept is a short **worked-example ladder** (minimal → one step up → real save system, with a *Notice* per rung); the lesson-count is advisory. `with-statement` is co-taught (it wraps every file operation); the only string method is `.strip()`. The write rungs must run before the read rungs (the read rungs load the file the write rungs saved).
+Budget: three lessons of 60–90 minutes.
+Each concept is a short **worked-example ladder** (minimal → one step up → real save system, with a *Notice* per rung); the lesson-count is advisory.
+`with-statement` is co-taught (it wraps every file operation); the only string method is `.strip()`.
+The write rungs must run before the read rungs (the read rungs load the file the write rungs saved).
+Exercises 1–9 form the in-class path; the labelled More Practice Exercises 10–12 are homework, and Exercises 13–14 remain optional Challenges.
 
 - **Lesson 1 — save to a file (file-write, with-statement) (60–90 min).**
   Open on the hook: a game that forgets everything when you close it is no fun.
-  25 min: the file-write ladder (`with open("savegame.txt", "w") as f: f.write(one line)` → a loop writing several scores → a mixed `settings.txt`). Explain `with` opens the file and closes it automatically; `\n` is the invisible end-of-line; `str(...)` because files hold TEXT.
-  60-MINUTE CUT: teach rungs 1–2; the settings file can wait.
+  25 min: the file-write ladder (`with open("savegame.txt", "w") as f: f.write(one line)` → a loop writing several scores → a mixed `settings.txt`).
+  Explain `with` opens the file and closes it automatically; `\n` is the invisible end-of-line; `str(...)` because files hold TEXT.
+  In class, complete Exercises 1 and 5.
+  60-MINUTE CUT: complete Exercise 1; begin Exercise 5 next lesson.
 - **Lesson 2 — read a file back (file-read) (60–90 min).**
   Open on the thread: yesterday we saved; today we load.
-  25 min: the file-read ladder (`f.read()` whole file → `for line in f:` print each → `.strip()` a clean line → rebuild a list with `int()` + `.append()`). Stress that `savegame.txt` holds ONLY scores so every line turns back into an integer.
+  25 min: the file-read ladder (`f.read()` whole file → `for line in f:` print each → `.strip()` a clean line → rebuild a list with `int()` + `.append()`).
+  Stress that `savegame.txt` holds ONLY scores so every line turns back into an integer.
+  In class, complete Exercises 2–4, including the required loaded-data f-string in Exercise 4.
 - **Lesson 3 — package the loader (60–90 min).**
-  **Put it together:** wrap the line-by-line loader in a `load_scores(filename)` helper that `return`s the list; read `settings.txt` as text and use `in` to greet the player by name; then the `FileNotFoundError` demo (save first, then load).
-  60-MINUTE CUT: the `load_scores` helper is the core; the settings greeting can be a demo.
+  **Put it together:** first read `settings.txt` as text and run both paths of the name search in Exercise 6, then wrap the saver and loader in the helper functions from Exercise 7.
+  Complete the fixed-score branch in Exercise 8 and finish with the `FileNotFoundError` study in Exercise 9: save first, then load.
+  60-MINUTE CUT: Exercises 6–7 are the core; guide Exercises 8–9 together as the final short closing pair.
+
+Homework More Practice: Exercise 10 proves that a second `"w"` save replaces instead of duplicates, Exercise 11 repeats dictionary save/load through functions, and Exercise 12 repeats a parameterized score loader.
+`error-messages` has one in-class student-authored code repetition rather than three because Exercise 9 turns its diagnosed `FileNotFoundError` into a real save-before-load repair, while deliberately staging more failing loads would be artificial and would not add useful file practice.
+The exercises notebook is designed to run top-to-bottom once; Exercise 11 intentionally replaces Ada's `settings.txt` profile with Mina's, so rerunning Exercise 6 afterward changes its result.
 
 ## Common mistakes
 
@@ -30,7 +43,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 - Forgetting `.strip()` before `int()`, so `int("850\n")` — actually Python tolerates the newline
   here, but a stray space would break it; strip to be safe and to teach the habit.
 - Using append mode `"a"` instead of `"w"`, so the file GROWS every time you run — always re-save
-  the whole list with `"w"`.
+  the whole list with `"w"`; Exercise 10 makes the unchanged first and second file contents visible with `print(...)`.
 - Reading a file that was never saved → `FileNotFoundError`; save before you load (the Lesson-3
   bug beat).
 - `int()`-parsing the settings file (which holds words) → `ValueError`; read settings as TEXT and
@@ -47,7 +60,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 
 - Strugglers: give the write code and have them only do the READ half (open, loop, print) — seeing
   their own saved scores load back is a satisfying win.
-- Fast finishers: the Challenge exercises — highest-saved-score (load then `max`) and add-a-new-high
-  (load, append, re-save). Saving TWO score files and loading whichever the player picks is a good
+- Fast finishers: Exercises 13–14 — highest-saved-score (load then `max`) and add-a-new-high
+  (load, append, re-save). Saving two score files and loading whichever the player picks is a good
   no-new-concepts extension.
-- Middle tier: the save-then-load round-trip via the helper functions before the Challenges.
+- Middle tier: Exercises 10–12 provide extra save/load repetitions before the Challenges.

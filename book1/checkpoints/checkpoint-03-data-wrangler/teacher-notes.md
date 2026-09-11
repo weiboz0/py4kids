@@ -24,8 +24,8 @@ question stands alone.
 - Expecting `.sort()` to hand back a sorted list — it returns `None` and rearranges in place; use
   the list variable afterward.
 - Forgetting `reverse=True`, so "top three" comes out lowest-first.
-- Reaching for `prices["fig"]` on a missing key (a KeyError) instead of `prices.get("fig", 0)` —
-  this is exactly what Q8 checks.
+- Skipping the Q8 traceback diagnosis and jumping straight to `.get()`; require the student to name
+  both `KeyError` and the missing `fig` key before checking the repair.
 - In the Q7 counter, forgetting the `else: counts[word] = 1` first-sighting branch, or counting by
   looping over a dictionary instead of the given word list.
 - Off-by-one on the numbered/indexed output (index 0 is the first item).
@@ -62,14 +62,15 @@ taught tools; partial credit as noted.
   Partial: sorting ascending and reading from the end, or expecting `.sort()` to return a list.
 - **Q6 — price book (5):** `["pear"]` (1), `.get("fig", 0)` default (2), `in` membership print (1),
   3-way MEMBERSHIP branch (1). The branch must use `in` (the taught idiom — a `==` comparison is
-  out of scope) and the `elif`/`else` must be VISIBLE in the code: with `plum` and `pear` both
-  present the branches never run at runtime, so credit rests on the written structure, not output.
+  out of scope). Because `plum` is absent and `pear` is present, the `elif` branch must run and
+  print `2`; code that always takes the first branch does not earn the branch point.
 - **Q7 — count words (5):** `counts = {}` start (1), single loop with the `if`/`else`
   first-sighting counter (3), `.items()` walk printing each pair (1). `counts["cat"] == 3` is the
   key check. Partial: missing the `else` branch, or looping the dict instead of the word list.
-- **Q8 — fix the bug (5):** replaces the crashing `prices["fig"]` with `prices.get("fig", 0)` so it
-  prints safely (5). The statement already names the error (`KeyError: 'fig'`), so there is no
-  separate point for restating it — the credit is the working `.get` fix.
+- **Q8 — read and fix the bug (5):** reads the shown traceback and records `KeyError` plus the
+  missing key `fig` in a comment (2), then replaces the crashing lookup with
+  `prices.get("fig", 0)` so it prints safely (3). A working fix without the diagnosis earns at
+  most 3 points because traceback reading is part of the task.
 
 A student scoring ≥ 28/40 (70%) is solid on the term's data tools; below that, revisit `.get()` vs
 `[]` (Q6/Q8) and the word-counter pattern (Q7) first.
