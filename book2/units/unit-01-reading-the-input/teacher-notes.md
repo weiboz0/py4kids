@@ -28,7 +28,7 @@ The intended complexity for every exercise is linear in the amount of input it p
 
 Budget: two 60–90 minute lessons (parsing first, grids and exact output second).
 
-- **Lesson 1 — the contract, tokens, and N values (60–90 min).**
+- **Lesson 1 — reading stdin, tokens, and N values (60–90 min).**
   - **Hook and the stdin boundary (10 min).** Put the running sample on the board as raw text. Ask
     what the judge pipes to our program on standard input and what exact text it expects back.
     Introduce `data = sys.stdin.read()` as the program boundary used throughout Book 2; the full
@@ -37,7 +37,7 @@ Budget: two 60–90 minute lessons (parsing first, grids and exact output second
     predict the token list, then emphasize that number-looking tokens are still strings until
     converted.
   - **N values and the running solution (20 min).** Trace token positions for `N` followed by `N`
-    integers. Build the sum-and-maximum solver and check its exact returned string.
+    integers. Build the sum-and-maximum stdin solver and check its exact printed output.
   - **Independent practice (15–25 min).** Start everyone on Exercises 1–4 (single-list parsing,
     threshold count, per-line sums, position search). 60-MINUTE CUT: demo Exercise 1 together, assign
     2–4.
@@ -64,8 +64,7 @@ Budget: two 60–90 minute lessons (parsing first, grids and exact output second
 - Reaching for untaught shortcuts such as `.join()` to build output or `.index()` to find a
   target.
   Use string concatenation in a loop for output and a manual loop scan for a position.
-- Printing inside `solve` instead of returning a string, or returning a number instead of the
-  exact requested output text.
+- Printing extra words or a label instead of the exact output text, or the wrong spacing/newline between values.
 
 ## Discussion prompts
 
@@ -85,5 +84,5 @@ Budget: two 60–90 minute lessons (parsing first, grids and exact output second
   to Exercise 7.
 - Fast finishers: complete both stretch exercises and explain aloud how their loop avoids
   double-counting grid corners.
-- Pair check: one student reads the input contract and sample while the other traces the token
+- Pair check: one student reads the input format and sample while the other traces the token
   counter; switch roles before writing code.

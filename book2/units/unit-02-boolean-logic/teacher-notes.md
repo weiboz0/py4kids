@@ -5,7 +5,7 @@
 Students learn to turn gate checks and contest rules into precise Boolean expressions.
 Students should leave able to build and read truth tables, trace `and`/`or`/`not` expressions using Python's precedence, verify both De Morgan transformations, explain short-circuit evaluation, and simplify a Boolean expression without changing its result.
 The recurring predict-then-run warm-ups make code tracing an explicit habit rather than an occasional quiz.
-Every solver follows the Book-2 contract: `solve(data)` receives the whole input string, parses inside the function, and returns exact output text.
+Every solver reads the whole input from stdin (`import sys; data = sys.stdin.read()`), parses it, and prints the exact output text.
 
 For the complexity notes below, `N` means the total amount of input read, including a fixed small input when an exercise has only a few flags.
 
@@ -49,7 +49,7 @@ Budget: two lessons of 60–90 minutes each.
   Have them trace the left side of `and` first and say whether the right side is safe to evaluate.
 - Students may confuse a strict majority with half or more.
   The expression `yes_count * 2 > n` must be false for a tie.
-- Students may print from inside `solve` or return a Boolean value instead of the requested exact text.
+- Students may print a raw Boolean (`True`) or the wrong label instead of the requested exact text (`GRANTED`/`YES`/…).
   Reconnect the decision result to the problem's required output word.
 
 ## Discussion prompts
