@@ -743,9 +743,17 @@ were APPROVE WITH NITS with their nits now folded — passing verdicts).
 
 #### Reviews — [sol] / [glm] / [fable] (round 2)
 
-- **[sol] → (pending round-2)**
+- **[sol] → APPROVE WITH NITS.** Verified all 8 Must-Fixes resolved (traceback model answers in
+  markdown; project-02 one-hero + `take_damage` M1; input drops closure-clean). Lone nit (u08 model
+  answer `d["fish"]`→`translations["fish"]`) folded.
 - **[glm] → APPROVE WITH NITS (carried; nits folded).**
 - **[fable] → APPROVE WITH NITS (carried; nits folded).**
+
+#### Content-gate CONSENSUS (2026-09-10) — CLOSED (PR-B)
+
+4-way: [self]/[sol]/[glm]/[fable] all APPROVE WITH NITS — no `[OPEN]` blockers; all round-1 findings
+`[FIXED]`; round-2 nit folded. `ci-local` checks GREEN (run in memory-light groups; full run OOMs in
+this environment). Content-review gate CLOSED for PR-B. Proceeding to PR.
 
 ## Post-Execution Report
 
