@@ -2,12 +2,11 @@
 
 ## Goals
 
-Students learn the Book-2 judge contract: `solve(data)` receives the whole problem input as
-one string, parses everything inside the function, and returns the exact output string.
-The function does not ask the user for input and does not print its answer.
-At submission time, a small wrapper imports `sys`, reads all standard input, passes that text
-to `solve`, and prints the returned string.
-Students should leave able to use `.split()` for whitespace-separated tokens, convert number
+Students learn the Book-2 input pipeline: a real contest program **reads the whole input from
+standard input** (`import sys; data = sys.stdin.read()`), parses it, and **prints** the exact
+output text. In the lesson they practice the parsing on a literal `data = "..."` string (there is
+no contest input waiting in the notebook); the full solvers read real stdin and are run from a
+terminal with piped input. Students should leave able to use `.split()` for whitespace-separated tokens, convert number
 tokens with `int()`, read `N` followed by `N` values, rebuild an `R` by `C` grid as a list of
 lists, and construct space-separated output with f-strings or a loop.
 
@@ -30,9 +29,10 @@ The intended complexity for every exercise is linear in the amount of input it p
 Budget: two 60–90 minute lessons (parsing first, grids and exact output second).
 
 - **Lesson 1 — the contract, tokens, and N values (60–90 min).**
-  - **Hook and contract (10 min).** Put the running sample on the board as raw text. Ask what the
-    judge gives our program and what exact text it expects back. Introduce `solve(data)` as the
-    boundary used throughout Book 2, and show the `no-exec` submission wrapper once.
+  - **Hook and the stdin boundary (10 min).** Put the running sample on the board as raw text. Ask
+    what the judge pipes to our program on standard input and what exact text it expects back.
+    Introduce `data = sys.stdin.read()` as the program boundary used throughout Book 2; the full
+    solvers are shown `no-exec` and run from a terminal (`python assets/l1.py < assets/l1/1.in`).
   - **Tokens and integers (15 min).** Run the `.split()` and `int()` demonstrations. Have students
     predict the token list, then emphasize that number-looking tokens are still strings until
     converted.
