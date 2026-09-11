@@ -6,7 +6,7 @@ Students learn to treat complexity as a technique for choosing an approach befor
 They count one important repeated operation, recognize the informal growth families O(n), O(n²), and O(log n), and use the largest stated constraint to predict whether an approach will finish.
 They explain why repeatedly halving a numeric range takes O(log n) guesses without turning the lesson into a later unit's search algorithm.
 They compare a direct pair-checking approach with a dictionary-based single pass on the same pair-sum problem.
-Every solver follows the pure `solve(data: str) -> str` contract: parse the whole string inside the function and return output text.
+Every reference solution is a real stdin program in `assets/<name>.py`: read the whole input with `data = sys.stdin.read()`, parse it, and print the exact output text.
 
 The intended approach for every exercise is:
 
@@ -37,10 +37,10 @@ Budget: one 60–90 minute lesson.
 - Ignoring the stated constraints until after choosing or coding an approach.
 - Treating a small sample as proof that an O(n²) approach will finish on the largest allowed input.
 - Assuming Big-O is an exact operation count instead of a description of how work grows.
-- Forgetting that list `.sort()` changes the same list in place and returns `None`, so `x = mylist.sort()` is a bug.
+- Forgetting that list `.sort()` changes the same list in place and gives back `None`, so `x = mylist.sort()` is a bug.
 - Reusing one position twice in the pair-sum exercise instead of requiring two different input positions.
 - Stopping a scan one position early and missing a decisive final value.
-- Printing inside `solve` instead of returning the exact output string.
+- Printing extra, mislabeled, or differently spaced text instead of the exact required output.
 
 ## Discussion prompts
 
