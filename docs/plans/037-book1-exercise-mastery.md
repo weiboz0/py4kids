@@ -714,7 +714,38 @@ _4-way gate. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`._
 - `[self]` NIT `[OPEN]` (Nice to Have): the `input`-kept deviation from plan reconciliation #4 should be
   explicitly blessed by the gate; confirm the no-exec `input()` reps read as genuine authoring.
 
-#### Reviews 2–4 — [sol] / [glm] / [fable] (pending)
+#### Reviews 2–4 — [sol] / [glm] / [fable] (round 1, 2026-09-10)
+
+All three **blind-solved every new/changed exercise with NO mismatch** (61 exercises + checkpoints +
+projects); `[fable]`/`[glm]` mutation-tested the asserts. Verdicts: **[glm] APPROVE WITH NITS, [fable]
+APPROVE WITH NITS (1 Must Fix), [sol] REJECT (8 Must Fix)**. Consolidated `[OPEN]` findings — all now
+`[FIXED]`:
+- `[FIXED]` `input` in units 08 & 09 practices with 0 student reps → **dropped** (map+manifest;
+  RED-safe). Corrects the `[self]` over-broad "keep input for 07–10" note: input is kept only for
+  07/10 (genuinely authored, no-exec) and dropped for 08/09.
+- `[FIXED]` traceback-reading solutions lacked the model answer → added (markdown, not executed) the
+  exact `TypeError` (u04 Ex5), `IndexError` (u07 Ex3), `KeyError: 'fish'` (u08 Ex11), `AttributeError …
+  'hapiness'` (u10 Ex8).
+- `[FIXED]` project-02 exemplar incoherent → single `hero` through all 5 milestones (one `Hero(`), M1
+  calls `take_damage` + prints returned health, M1 prints starting stats before damage; deterministic.
+- `[FIXED]` unit-09 `error-messages` now has a genuine student-authored save-before-load code rep;
+  unit-08 Ex11 plan-rationale prose moved to teacher-notes + count-exemption justification added.
+- `[FIXED]` nits: u06 teacher-notes Ex4/Ex8→Lesson 2 (in-operator) + label; u10 Ex5 `print(...)`;
+  u04 Ex7 / u07 Ex13 tautological asserts → concrete/technique-connected; u07 Ex9 space; u09 Ex4
+  `high_scores` naming + top-to-bottom note; `.gitignore` += `dragon_slot.txt`.
+
+#### Round-1 reconciliation (2026-09-10)
+
+All findings fixed via per-unit Codex fix sessions + inline metadata, each re-verified in a
+kernel-capable env (`exec-solutions`/`structure`/`hygiene`/`cell-lint` GREEN; book-level
+`concept-scan`/`coverage`/`prereq`/`manifest` GREEN). **Re-dispatching [sol] round 2** ([glm]/[fable]
+were APPROVE WITH NITS with their nits now folded — passing verdicts).
+
+#### Reviews — [sol] / [glm] / [fable] (round 2)
+
+- **[sol] → (pending round-2)**
+- **[glm] → APPROVE WITH NITS (carried; nits folded).**
+- **[fable] → APPROVE WITH NITS (carried; nits folded).**
 
 ## Post-Execution Report
 
