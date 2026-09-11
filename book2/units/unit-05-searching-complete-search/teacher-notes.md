@@ -8,7 +8,7 @@ By the end of this unit students can:
 - Implement iterative **binary search** on a sorted list with a correct `lo`/`hi`/`mid` loop,
   and adapt it to *count* matches and to find a *lower-bound* (insertion position).
 - Choose to **sort first**, then search — recognizing sorting as the enabling step.
-- Solve pair/triple problems by **complete search**: fixed-depth nested loops over all
+- Tackle pair/triple problems by **complete search**: fixed-depth nested loops over all
   pairs or triples, and reason about the O(n²)/O(n³) cost from Unit 3.
 - Use **search over the answer**: binary-search the smallest feasible value when the answer is
   monotonic (feasible above a threshold, infeasible below).
