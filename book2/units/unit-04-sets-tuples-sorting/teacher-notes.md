@@ -53,7 +53,7 @@ Class works Exercises 5, 6, 8, 9 (leaderboard, top-K boundary, partner groups, a
 - Why is `x in a_set` so much faster than `x in a_list` for large collections? Where does the speed
   come from, and what do we give up (order)?
 - Exercise 5 asks for score descending but name ascending. Why can't a single number as the key do
-  both? How does returning a tuple solve it?
+  both? How does a compound key that gives back a tuple break the tie?
 - When is a tuple the right container and when would a list be better? What can you do to a list that
   you cannot do to a tuple?
 - Intersection can be written many ways. Which is clearest, and does clarity cost us any speed here?
@@ -65,7 +65,7 @@ Class works Exercises 5, 6, 8, 9 (leaderboard, top-K boundary, partner groups, a
 - **More challenge:** the stretch problems (8 Partner Groups, 9 Allowed Finalists) combine dedup,
   tuple keys, and sorting; ask students to state each solution's Big-O and justify why the constraints
   (up to 10⁵ items) rule out an all-pairs O(n²) approach.
-- **Extension:** have fast finishers re-solve Exercise 2 with the roles reversed (who is in *either*
+- **Extension:** have fast finishers redo Exercise 2 with the roles reversed (who is in *either*
   club) and compare the union code to their intersection code.
 
 ### Big-O per exercise
