@@ -6,7 +6,7 @@ By the end of this unit students can:
 
 - Write a **recursive** function with a correct base case and a recursive case, and trace how the call
   stack unwinds.
-- Recognize when a problem is "make a choice, then solve the smaller rest" and express it recursively.
+- Recognize when a problem is "make a choice, then handle the smaller rest" and express it recursively.
 - Use **backtracking**: extend a partial solution, recurse, and **undo** the choice on the way back —
   counting or generating all valid completions.
 - Evaluate a **nested parenthesized expression** by recursion — find the operator that joins the two sides
@@ -59,7 +59,7 @@ Class works Exercises 5, 6, 7; assign a stretch problem (8 or 9) as an extension
 - In backtracking, why must you undo a choice before trying the next one? Show an input where forgetting to
   undo gives the wrong count.
 - Exercise 5 evaluates a nested expression by recursion, not a loop. What sub-problem does each recursive
-  call solve, and where is the base case?
+  call handle, and where is the base case?
 - These searches are exponential. For Exercise 3 (N-queens), roughly how many placements are examined, and
   why is that acceptable for small N?
 
