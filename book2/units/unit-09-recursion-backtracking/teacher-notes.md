@@ -21,9 +21,10 @@ Three 60–90 minute lessons.
 
 **Lesson 1 — Recursion.**
 Open with a self-similar hook (count-the-ways).
-Live-code the shape: a base case that returns directly, and a recursive case that calls the same function
-on a smaller input. Warm-ups: factorial, sum-of-list, countdown. Hand-trace the call stack for a tiny input
-so "what happens at the base case, then on the way back up" is concrete.
+Live-code the shape: a base case that gives its answer immediately (no further call), and a recursive
+case that calls the same function on a smaller input. Warm-ups: factorial, sum-of-list, countdown.
+Hand-trace the call stack for a tiny input so "what happens at the base case, then on the way back up"
+is concrete.
 Class works Exercise 1 (subset count).
 
 **Lesson 2 — Backtracking.**
@@ -43,7 +44,7 @@ Class works Exercises 5, 6, 7; assign a stretch problem (8 or 9) as an extension
 ## Common mistakes
 
 - **Missing or wrong base case** → infinite recursion (the program never stops). Every recursive function
-  needs a case that returns without recursing.
+  needs a case that answers without recursing.
 - **Forgetting to undo** in backtracking → later branches inherit stale choices and the count is wrong.
 - **The rebind trap:** writing `path = path[:-1]` after `path.append(x)` looks like an undo but only
   rebinds the local variable — the shared list the caller holds is still mutated. Pass `path + [choice]`

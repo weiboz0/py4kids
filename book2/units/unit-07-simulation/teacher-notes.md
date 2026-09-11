@@ -18,22 +18,25 @@ model the state and step it correctly.
 
 Two 60–90 minute lessons.
 
-**Lesson 1 — State and one-step rules.**
-Open with the project hook: a robot on a grid following a string of move commands.
-Model the state (row, col) and apply one move at a time, clamping or wrapping at the walls exactly as the
-problem says.
-Do a second, non-grid example — a tick-by-tick counter that rises and falls with a cap/floor — to show
-that "state" can be a couple of variables.
-Stress hand-tracing the first few steps against the sample.
-Class works Exercises 1–4 (robot, battery ticks, event log, wrap-around dial).
+**Lesson 1 — Model the state, apply every rule in order.**
+Open with the project hook: a robot following a string of commands, where earlier commands change what
+later ones do.
+Then build the ladder on a battery example: parse the starting state, apply ONE capped rule, then apply
+a whole sequence of rules in a loop — clamping to `[0, capacity]` after each step — ending in the
+battery stdin solver.
+Stress that "state" is just a few variables carried forward, and hand-trace the first few steps against
+the sample.
+Class works Exercises 1–4 (museum robot, battery ticks, jumping event log, mood dial).
 
-**Lesson 2 — Grids, automata, and edges.**
-Work a one-step cellular rule (each cell's next value depends on its neighbors) and the classic edge
-question: read all neighbors from the OLD grid before writing the new one.
-Discuss termination: every loop here is bounded (a fixed number of steps, or a walk that must leave the
-grid) — name the bound.
-Class works Exercises 5–9 (tile transformation, edge-light automaton, turn game, and the two grid stretch
-problems).
+**Lesson 2 — Edges & provable termination.**
+Work the edge cases first: clamp a position at a boundary, then the grid-move robot rung whose bounds
+check (`0 <= next < size`) and wall check keep it on legal squares. Then make a loop PROVABLY stop —
+track already-seen states in a LIST (using `in`), or bound the steps — before the event-walk solver,
+whose index only increases so the walk must end.
+Discuss termination explicitly: name the bound for every loop (a fixed step count, an increasing index,
+or a repeat check).
+Class works Exercises 5–9 (neighbor tiles, edge-light automaton, odd-card turn game, and the two grid
+stretch problems).
 
 ## Common mistakes
 
