@@ -152,7 +152,7 @@ Closure-safe ordering; every technique builds only on earlier ones.
 **Term 1 — Foundations, logic & search**
 - **U01 Reading the input** — `.split`, int conversion, "read N then N numbers," read a grid; reading
   real stdin and printing output (the §3 stdin-first contract; pre-migration entries still show the
-  `solve(data)` form until re-authored).
+  `solve(data)` form until re-authored; U01 is the first rollout-batch re-author — plan 039; the pilots U06/U08 already migrated).
 - **U02 Boolean logic & algebra** — truth tables, DeMorgan, short-circuit; seeds the recurring
   code-tracing ("what does this do?") warm-ups.
 - **U03 Complexity — fast enough?** — counting operations, O(n)/O(n²)/O(log n), will-it-finish.
