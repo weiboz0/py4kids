@@ -180,9 +180,39 @@ manifest/coverage-map byte-diff; B7 notes atomic flip; `build_cp.py` marked temp
   stretch tag; `## Grading` + six headings retained; manifests + coverage-map byte-unchanged.
 - **ci-local ALL GREEN**, exit 0.
 
-### Round 1 — external reviewers ([sol]/[glm]/[fable])
+### Round 1 (HEAD 1024f7a) — external reviewers ([sol]/[glm]/[fable])
 
-_(awaiting)_
+All three independently blind-solved all 26 questions (fable wrote 26 independent oracles: union-find
+islands, `pow(a,e,m)`, permutations/combinations, brute-force subset/interval/rectangle, iterative
+preorder) — **all 110 fixtures + 26 samples match**, all 26 mirrors byte-identical, AST closure clean,
+26 diffs vs main are I/O-only, manifests/coverage-map byte-unchanged, conventions + contract sweep
+clean. Named witnesses all confirmed sole-killers: CP4 Q7 directedness (`3 1 1\n2 1`: `1` vs undirected
+`1 2`), CP4 Q2 visited-discipline (unreachable case: `-1` vs no-op-`visited` timeout) + FIFO (`2` vs
+LIFO `8`), CP3 Q4 decisive `0`, CP4 Q3/Q4 both YES+NO.
+
+- **[glm] APPROVE WITH NITS** — CP3 Q1 statement sweep artifact ("after that call prints"); CP4
+  teacher-notes stale "asserts" (×2).
+- **[fable] APPROVE WITH NITS** — same four: CP3 Q5 Notice "recursive" gcd is iterative; CP3 Q1
+  "prints"; CP4 teacher-notes "stated/hidden asserts"; CP4 Q5 missing `0 <= K` bound.
+- **[sol] REJECT** → three Must-Fix: (sol-1) CP3 Q5 Notice "recursive" vs iterative `gcd`; (sol-2)
+  CP4 Q5 statement lacks a `K` bound — negative `K` crashes the reference (window-shrink walks `left`
+  out of range); (sol-3) CP4 teacher-notes still says references run "with the stated asserts".
+
+**Fixes applied (HEAD → next commit), all prose/statement, zero logic change:**
+
+- `[FIXED]` **sol-1 / fable-CP3-1** — CP3 Q5 Notice: "recursive Euclidean `gcd`" → "iterative Euclidean
+  `gcd`" (the helper is `while b != 0`).
+- `[FIXED]` **glm / fable-CP3-2** — CP3 Q1 statement: "un-marks it after that call prints" → "…after
+  that call comes back" (the return-sweep had corrupted "returns").
+- `[FIXED]` **sol-2 / fable-CP4-4** — CP4 Q5 constraints: added `0 <= K` (bounds the input domain so
+  the sliding-window reference is total; a negative `K` previously walked `left` past the end).
+- `[FIXED]` **sol-3 / glm / fable-CP4-3** — CP4 teacher-notes `## Grading`: "runs top-to-bottom clean
+  with the stated asserts" → "each reference is a display-only mirror of a stdin/stdout program in
+  `assets/`, judged by piping each committed input case"; "the hidden asserts enforce" → "the hidden
+  cases enforce".
+
+Re-verification: mirrors still byte-identical (only Notice/statement/teacher-notes prose touched); no
+new `assets/*.py` literal (ASSET_REF clean); ci-local re-run. Round 2 re-dispatched to all three.
 
 ## Post-Execution Report
 

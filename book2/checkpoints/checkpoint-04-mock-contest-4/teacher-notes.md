@@ -59,7 +59,8 @@ against the stated sample; grade from the solutions notebook after the clock sto
 
 ## Grading
 
-Grade from `solutions.ipynb` (every reference runs top-to-bottom clean with the stated asserts). Each
+Grade from `solutions.ipynb` (each reference is a display-only mirror of a stdin/stdout program in
+`assets/`, judged by piping each committed input case to it and comparing the printed output). Each
 question is judged as a stdin-to-stdout program against the sample plus hidden cases; award full credit for
 a correct, in-budget solver, partial credit for a correct approach with a boundary slip (e.g. Q2 giving a
 distance one off, Q3 missing the isolated-node case). Per-question intended complexity:
@@ -74,7 +75,7 @@ distance one off, Q3 missing the isolated-node case). Per-question intended comp
 | 6 | Modular power (repeated squaring) | O(log E) |
 | 7 | BFS trace | O(N + M) |
 
-Signature checks the hidden asserts enforce: Q1 keeps diagonally-touching land separate; Q2's answer is the
+Signature checks the hidden cases enforce: Q1 keeps diagonally-touching land separate; Q2's answer is the
 true FIFO distance (a stack overshoots); Q3 reports `NO` for a disconnected graph; Q4 moves the correct
 pointer; Q5 shrinks the window; Q6 kills a dropped odd-bit guard with an even-exponent case and forces
 reduction via the huge exponent; Q7 prints in FIFO (not stack) order.
