@@ -31,9 +31,9 @@ stack gives wrong distances. Class works **Exercises 2, 3, 4, 5** (Paint One Roo
 Maze Steps; Emergency Exit — a BFS reachability check).
 
 **Lesson 3 — DFS reachability.** Recursive DFS with visited passed as an argument;
-reachability and whether a graph is one connected network. Class works **Exercises 6, 7** (Can the Message
-Travel?; Separate Networks). Assign the stretch problems (8 Largest Meadow, 9 Farthest Delivery) as
-extension.
+answering "is `target` reachable from `start`?" by walking the graph from the source. Class works
+**Exercises 6, 7** (Can the Message Travel?; Separate Networks). Assign the stretch problems (8 Largest
+Meadow, 9 Farthest Delivery) as extension.
 
 ## Common mistakes
 
@@ -75,8 +75,10 @@ extension.
 - **dfs** → Ex 6 (Can the Message Travel?), Ex 7 (Separate Networks — reachability)
 
 Note: Ex 5/6/7 are reachability questions (YES/NO), so their answer does not depend on
-the visit ORDER — the FIFO-vs-LIFO distinction is exercised instead by the shortest-distance problems Ex 4 and
-Ex 9 (whose asserts include a grid/graph where a LIFO traversal gives a longer, wrong distance).
+the visit ORDER — the FIFO-vs-LIFO distinction is exercised instead by the shortest-distance problems: the
+Lesson-2 BFS solver's sample (`l2`, where a LIFO stack reports 8 steps instead of the correct 2) and the
+graded Ex 4 and Ex 9 (whose `.in`/`.out` fixtures include a grid/graph where a LIFO traversal gives a longer,
+wrong distance).
 
 (Stretch: Ex 8 Largest Meadow — flood-fill; Ex 9 Farthest Delivery — BFS.)
 
