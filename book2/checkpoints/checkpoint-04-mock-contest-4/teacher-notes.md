@@ -21,14 +21,14 @@ By the end of this checkpoint students can, under a clock:
 
 One timed session of about **45–60 minutes** (`lessons: 0.5`). Suggested clock: 7 questions, roughly
 6–8 minutes each. Q1–Q3 (grids/graphs) and Q4–Q5 (two pointers) are the core; Q6 (modular power) and Q7
-(trace) are the shortest to code but reward careful reading. Students submit each `solve(data)` and self-check
+(trace) are the shortest to code but reward careful reading. Students run each program and self-check
 against the stated sample; grade from the solutions notebook after the clock stops.
 
 ## Common mistakes
 
 - **Q1/Q2 diagonals:** these are 4-neighbour problems — adding diagonal steps merges regions (Q1) or finds
   illegally short paths (Q2).
-- **Q2 with a LIFO stack:** using a stack instead of a FIFO `deque` (`append` + `popleft`) returns a longer,
+- **Q2 with a LIFO stack:** using a stack instead of a FIFO `deque` (`append` + `popleft`) gives a longer,
   wrong step count. BFS needs FIFO.
 - **Q2/Q3 forgetting `visited`:** an unmarked search loops forever (BFS) or recurses without end (DFS).
 - **Q3 marking too late / only direct neighbours:** mark a node when first reached; recurse through the whole
@@ -59,9 +59,10 @@ against the stated sample; grade from the solutions notebook after the clock sto
 
 ## Grading
 
-Grade from `solutions.ipynb` (every reference runs top-to-bottom clean with the stated asserts). Each
-question is judged on the `solve(data)` contract against the sample plus hidden cases; award full credit for
-a correct, in-budget solver, partial credit for a correct approach with a boundary slip (e.g. Q2 returning a
+Grade from `solutions.ipynb` (each reference is a display-only mirror of a stdin/stdout program in
+`assets/`, judged by piping each committed input case to it and comparing the printed output). Each
+question is judged as a stdin-to-stdout program against the sample plus hidden cases; award full credit for
+a correct, in-budget solver, partial credit for a correct approach with a boundary slip (e.g. Q2 giving a
 distance one off, Q3 missing the isolated-node case). Per-question intended complexity:
 
 | Q | Technique | Intended complexity |
@@ -74,7 +75,7 @@ distance one off, Q3 missing the isolated-node case). Per-question intended comp
 | 6 | Modular power (repeated squaring) | O(log E) |
 | 7 | BFS trace | O(N + M) |
 
-Signature checks the hidden asserts enforce: Q1 keeps diagonally-touching land separate; Q2's answer is the
+Signature checks the hidden cases enforce: Q1 keeps diagonally-touching land separate; Q2's answer is the
 true FIFO distance (a stack overshoots); Q3 reports `NO` for a disconnected graph; Q4 moves the correct
 pointer; Q5 shrinks the window; Q6 kills a dropped odd-bit guard with an even-exponent case and forces
 reduction via the huge exponent; Q7 prints in FIFO (not stack) order.

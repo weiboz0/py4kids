@@ -3,7 +3,7 @@
 ## Goals
 
 This first mock contest checks that students can, under a time limit, pick the right Term-1 tool for
-each problem and implement it cleanly on the `solve(data)` contract:
+each problem and implement it cleanly as a stdin-to-stdout program:
 
 - Parse structured input, including a 2D grid (Unit 1).
 - Combine Boolean flags into a correct decision (Unit 2).
@@ -18,8 +18,9 @@ which technique a problem wants.
 ## Pacing
 
 One timed sitting of about **40 minutes** (the 0.5-lesson weight), then a review block in the next class.
-Suggested flow: 5 minutes to read all six problems and plan an order, ~35 minutes to solve, submitting
-each via the wrapper shown at the top of the contest notebook. Students need not finish all six; encourage
+Suggested flow: 5 minutes to read all six problems and plan an order, ~35 minutes to work through them —
+each answer a complete program that reads the input from `sys.stdin` and prints the result. Students need
+not finish all six; encourage
 banking the questions they are surest of first (Q2 and Q3 are the quickest wins).
 
 ## Common mistakes
@@ -56,7 +57,7 @@ banking the questions they are surest of first (Q2 and Q3 are the quickest wins)
 
 ## Grading
 
-100 points total; a question is full credit only if its `solve` produces the exact required output on the
+100 points total; a question is full credit only if its program produces the exact required output on the
 hidden cases (not just the sample). Suggested split by difficulty:
 
 - Q1 Strongest Column — 15 pts — assesses Unit 1 (grid parsing) — O(R·C).
