@@ -214,6 +214,22 @@ LIFO `8`), CP3 Q4 decisive `0`, CP4 Q3/Q4 both YES+NO.
 Re-verification: mirrors still byte-identical (only Notice/statement/teacher-notes prose touched); no
 new `assets/*.py` literal (ASSET_REF clean); ci-local re-run. Round 2 re-dispatched to all three.
 
+### Round 2 (HEAD 24ec9ff) — CONSENSUS: all four APPROVE ✅
+
+- **[self] APPROVE** — carried from Round 1; all five fixes verified, ci-local ALL GREEN, exit 0.
+- **[glm] APPROVE** — both glm nits `[FIXED]`; sol/fable fixes non-regressed; 110/110 independent
+  oracles match; witnesses mutation-verified; all 26 mirrors byte-identical; all book2 checks PASS.
+- **[fable] APPROVE** — all four findings `[FIXED]` (each re-run): CP3 Q5 iterative, CP3 Q1 "comes
+  back", CP4 grading reworded (no ASSET_REF literal), CP4 Q5 `0 <= K` (reference confirmed total on
+  the domain); 110 fixtures + 26 samples pass, witnesses kill, mirrors byte-identical, manifests
+  unchanged, closure + contract sweep clean.
+- **[sol] APPROVE** — sol-1/sol-2/sol-3 all `[FIXED]`; CP4 Q5 total on domain (2,380 exhaustive small
+  legal cases vs brute-force oracle, 0 errors); 26/26 samples, 110/110 fixtures, 26/26 byte-identical
+  mirrors, witnesses discriminating, closure/contract clean, manifests unchanged.
+
+**Gate CLOSED — 4-way consensus, no `[OPEN]` findings.** Cleared for `pre-merge-guard --pr` → PR →
+squash-merge.
+
 ## Post-Execution Report
 
 **Shipped (HEAD 75ed5c8):** all four Book-2 checkpoints migrated to stdin-first.
