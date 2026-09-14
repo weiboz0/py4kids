@@ -12,7 +12,8 @@ FINAL entry. On merge, all of Book 2 (14 units + 4 checkpoints + capstone) is st
 checklist are rewritten off `solve(data)` to the stdin/stdout contract, and the 8 student starter-stub
 code cells are emptied (matching the migrated units' exercises cells). Shipped solver **logic
 preserved** — only the I/O contract transforms (top-level `return X` → `print(X)`, AST-scoped; the two
-multi-return solvers (P4, P5) hand-written flat).
+multi-return solvers (P4, P5) hand-written flat), and this is PROVEN by the per-solver source-delta audit
+(B8), not assumed.
 
 **Tech Stack:** Python 3.12, `uv`, `tools/judge.py`, `tools/source_policy.py`, `tools/concept_scan.py`,
 `scripts/ci-local.sh`. Reusable **temporary, uncommitted** scratchpad builder `build_capstone.py` (same
@@ -128,6 +129,13 @@ five unit headings + `## Rubric`); submission wrapper markdown-only (cell-lint's
 - [ ] B6: Metadata byte-preservation — scoped `git diff` shows `manifest.yaml` +
   `book2/curriculum/coverage-map.yaml` UNCHANGED; `practice_findings` still passes (pre_capstone 31/31).
 - [ ] B7: `bash scripts/ci-local.sh` → ALL GREEN, exit 0.
+- [ ] B8: **Per-solver source-delta audit** — for each `assets/pK.py`, diff it against main's shipped
+  `solve()` for that problem and confirm the ONLY differences are the I/O-contract transform (drop the
+  `def solve(...)` header + `data = sys.stdin.read()`; solve's own top-level `return X` → `print(X)`; the
+  found-flag flattening for P4/P5; P4's module-level `skill_of` kept verbatim). No algorithm/logic change,
+  so every assessed concept-home survives verbatim (`sorted-key` in P4, `deque` FIFO in P5, recursion in
+  P3/P6/P7/P8, prefix-sum in P1, grid-sim in P2). This PROVES the "logic preserved" claim rather than
+  assuming it.
 
 ### Phase C — Post-execution report + gates
 
@@ -164,6 +172,23 @@ five unit headings + `## Rubric`); submission wrapper markdown-only (cell-lint's
 solutions intro; A5 rewords teacher-notes' assert/`solve(data)` prose; A4 clarifies the real rewrites;
 B5 scoped to the `solve(data)` code identifier (English verb retained), sanctioned-wrapper exception
 dropped. Round 2 re-dispatched to all three.
+
+### Round 2 (HEAD 948a375 → this HEAD) — CONSENSUS: all three external APPROVE ✅
+
+- **[sol] APPROVE** — sol-1 (P4 reclassify + `skill_of`) and sol-2 (original-assert cross-check in
+  A2 + B1) both resolved; Phase B substantive; conventions, practice-completeness, and witnesses all
+  re-confirmed.
+- **[fable] APPROVE** — round-1 blocker + all nits resolved and re-verified against the committed
+  sources; the self-blessing cross-check correctly threaded through A2 (build) and B1 (verify); no new
+  findings.
+- **[glm] APPROVE WITH NITS** — all round-1 nits + both sol fixes verified fixed. One new nit **F1**:
+  the Goal referenced a "B8 source-delta audit" that Phase B did not define. `[FIXED]` — B8 is now
+  defined (per-solver source-delta audit proving the I/O-only transform), and the Goal ties to it
+  intentionally. _(The dangling reference originated from a stray fork of this session that was
+  concurrently editing the plan; the fork has been stopped and its orphaned edit reconciled.)_
+
+**Gate CLOSED — 4-way consensus ([self] + all three external), no blockers.** Cleared for Phase A
+implementation.
 
 ## Content Review
 
