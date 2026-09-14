@@ -163,8 +163,44 @@ manifest/coverage-map byte-diff; B7 notes atomic flip; `build_cp.py` marked temp
 
 ## Content Review
 
-_(pending)_
+### Round 1 (HEAD 75ed5c8) — [self] APPROVE
+
+- **Correctness ✓** — all 26 `assets/qN.py` subprocess-verified against every fixture; all 26
+  question samples in `checkpoint.ipynb` re-run through their solver match (19 CP1–CP3 + 7 CP4).
+- **Non-vacuous fixtures ✓** — judge-check 0 findings; named witnesses kill their mutants: CP4 Q7
+  directedness (`3 1 1\n2 1` → `1`, undirected mutant → `1 2`); CP4 Q2 visited-discipline (no-op
+  `visited.add` mutant times out on the unreachable-region case, pristine prints `-1`); CP3 Q4
+  decisive `0` (`3 5\n1 2 8` → `0`); CP4 Q3/Q4 cover both YES and NO.
+- **Closure ✓** — source-policy 0 findings; logic preserved verbatim (5 multi-return solvers
+  hand-written flat, nested helpers untouched); no banned construct.
+- **Mirrors ✓** — all 26 no-exec cells byte-identical to their `.py` (judge mirror-check).
+- **Contract sweep ✓** — no `solve(data)` / `print(solve(...))` / whole-word `return`/`returns` in
+  checkpoint statements or teacher-notes (English verb "solve" in intros retained; recursion "return"
+  prose reworded to "on the way back"/"gives back"/"comes back"); all 26 student cells empty; no
+  stretch tag; `## Grading` + six headings retained; manifests + coverage-map byte-unchanged.
+- **ci-local ALL GREEN**, exit 0.
+
+### Round 1 — external reviewers ([sol]/[glm]/[fable])
+
+_(awaiting)_
 
 ## Post-Execution Report
 
-_(pending)_
+**Shipped (HEAD 75ed5c8):** all four Book-2 checkpoints migrated to stdin-first.
+
+- **CP1** (6 Q), **CP2** (6 Q), **CP3** (7 Q), **CP4** (7 Q) = 26 questions. Each: `assets/qN.py`
+  (stdin/stdout) + 2–7 `.in`/`.out` fixtures; a no-exec byte-identical mirror + per-question Notice in
+  `solutions.ipynb`; a stdin-rewritten intro + `return`→`print`-swept statements in `checkpoint.ipynb`
+  (student cells empty); teacher-notes reworded off the `solve(data)` contract.
+- **5 multi-return solvers hand-written flat** (I/O-preserving): CP1 Q2 (`is_open` guard → `if/else`),
+  CP3 Q3 (zero-guard → `if/else`), CP4 Q2 (BFS loop-return → found-flag `answer` with
+  `and answer == "-1"`), CP4 Q3 (connectivity guard → `if/else`, nested `walk` verbatim), CP4 Q4
+  (two-pointer loop-return → found-flag). The other 21 went through AST-scoped `to_stdin`.
+- **Crafted witnesses added** for the plan-flagged vacuous hotspots: CP4 Q7 directedness, CP4 Q2
+  visited-discipline (timeout-killer), CP3 Q4 decisive-0, CP4 Q3/Q4 YES+NO.
+- **Deviations from plan:** none functional. One build fix — the solutions intro's literal
+  `assets/qK.py` tripped structure-check's `ASSET_REF` (placeholder-in-prose); reworded to reference
+  the `assets/` folder without a `.py` literal.
+- **Verification:** judge-check 0, source-policy 0, all witnesses mutation-verified, 26/26 samples
+  match, all mirrors byte-identical, manifests/coverage-map byte-unchanged, ci-local ALL GREEN (exit 0).
+- **Scratchpad builder** `build_cp.py` was used and left uncommitted (outside the repo tree).
