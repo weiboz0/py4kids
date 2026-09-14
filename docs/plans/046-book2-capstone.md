@@ -214,9 +214,28 @@ implementation.
 - **Metadata ✓** — `manifest.yaml` + `coverage-map.yaml` byte-unchanged; `practice_findings`
   pre_capstone 31/31. **ci-local ALL GREEN**, exit 0.
 
-### Round 1 — external reviewers ([sol]/[glm]/[fable])
+### Round 1 (HEAD 2dd14c2) — CONSENSUS: all four APPROVE ✅
 
-_(awaiting)_
+All three external reviewers blind-solved all 8 problems (fable + sol wrote independent oracles — DP
+min-max partition, Dijkstra unit-weights, brute-force permutation filter, dict pre-order) and
+confirmed: 30/30 fixtures + 8/8 samples match; the **sol-2 original-assert cross-check** passes (every
+assert-derived `.out` reproduces main's `solve()` RHS — 28/28); the **I/O-only transform** holds
+(AST diff vs `e4400b4` = only the contract transform; P4/P5 found-flag flattening semantically
+equivalent; `skill_of` + nested helpers verbatim); all 8 mirrors byte-identical; closure/source-policy
+clean; all conventions + contract sweep clean; manifest/coverage-map byte-unchanged; pre_capstone 31/31.
+Witnesses mutation-verified as sole-killers (P5 directedness `p5/5` + FIFO `p5/3`, P7 no-restore
+`p7/3`/`p7/4`, P2 bounds all, P8 order `p8/1`/`p8/3`, P4 YES+NO); fable killed 9 additional adversarial
+mutants.
+
+- **[self] APPROVE** — full verification; ci-local ALL GREEN, exit 0.
+- **[glm] APPROVE** — zero findings; all book2 tooling PASS exit 0.
+- **[fable] APPROVE** — zero Must/Should; one `[WONTFIX]` (the pre-existing "five rounds" contest
+  fiction vs `## Milestone N` headings — out of scope per `## Out of scope`).
+- **[sol] APPROVE** — zero findings. (exec-lessons Jupyter-socket error is a subagent-sandbox limit,
+  not a content defect — the authoritative `scripts/ci-local.sh` passes exec-lessons.)
+
+**Gate CLOSED — 4-way consensus, no `[OPEN]` findings.** Cleared for `pre-merge-guard --pr` → PR →
+squash-merge. **On merge: Book 2 is fully stdin-migrated (14 units + 4 checkpoints + capstone).**
 
 ## Post-Execution Report
 
