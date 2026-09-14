@@ -12,7 +12,7 @@ By the end of the capstone students can, unaided and under time pressure:
 - **Read the problem, pick the technique, and pin the data structure** — recognizing a prefix-sum, a
   binary-search-on-the-answer, a two-pointer scan, a BFS, a flood-fill, a backtracking search, or a tree
   traversal from the problem's shape.
-- Implement each cleanly against the `solve(data) -> str` contract, and defend its Big-O against the stated
+- Implement each cleanly as a stdin-to-stdout program, and defend its Big-O against the stated
   constraints ("will it finish in time?").
 - Debug against a sample and reason about the boundary cases that a mock-contest grader will probe.
 
@@ -32,7 +32,7 @@ are the accessible core; 5–8 stretch across the harder techniques.
   feasible cap needs `groups_needed(cap) <= K` (not `< K`).
 - **P4 two-pointer pitfalls:** advance `lo` when the sum is too small, `hi` when too big; stop at `lo < hi`
   so a player is never paired with themselves; sort by the right key.
-- **P5 BFS with a stack:** a LIFO stack instead of a `deque` FIFO queue returns a longer, wrong hop count;
+- **P5 BFS with a stack:** a LIFO stack instead of a `deque` FIFO queue gives a longer, wrong hop count;
   mark a node visited when you enqueue it.
 - **P6 diagonals:** flood-fill is 4-neighbour — counting diagonals merges regions that should stay separate.
 - **P7 forgetting to un-mark:** backtracking must restore `used[p] = 0` after the recursive call, or the
@@ -61,10 +61,11 @@ are the accessible core; 5–8 stretch across the harder techniques.
 
 ## Rubric
 
-Grade from `solutions.ipynb` (every reference runs top-to-bottom clean with its asserts). Each problem is
-judged on the `solve(data)` contract against the sample plus hidden cases: full credit for a correct,
+Grade from `solutions.ipynb` (each reference is a display-only mirror of a stdin/stdout program in
+`assets/`, judged by piping each committed input case to it and comparing the printed output). Each problem
+is judged as a stdin-to-stdout program against the sample plus hidden cases: full credit for a correct,
 in-budget solver; partial credit for a correct approach with a boundary slip. Per-problem intended
-complexity and the signature bug each problem's hidden asserts catch:
+complexity and the signature bug each problem's hidden cases catch:
 
 | # | Technique | Intended complexity | Signature bug caught |
 |---|-----------|---------------------|----------------------|
