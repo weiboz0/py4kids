@@ -2,9 +2,9 @@
 
 ## Goals
 
-A timed mock contest assessing **Term 3** (Units 9–12) on the `solve(data)` contract:
+A timed mock contest assessing **Term 3** (Units 9–12) as stdin-to-stdout programs:
 
-- **Recursion & backtracking** (U09) — a search that marks a choice, recurses, and un-marks on return.
+- **Recursion & backtracking** (U09) — a search that marks a choice, recurses, and un-marks on the way back.
 - **Stacks & postfix evaluation** (U10) — a `deque` used as a stack (`appendleft`/`popleft`).
 - **Number systems & number theory** (U11) — base conversion by hand, bitmask subset enumeration, GCD/LCM,
   the Sieve of Eratosthenes.
@@ -35,14 +35,14 @@ heaviest (a full backtracking search with a correct un-mark). A student who solv
   shift drops or double-counts items. Remember the empty mask (subset sum 0).
 - **Sieve bound (Q6)** — cross off multiples starting at `p*p` and include the endpoint correctly; `N = 49`
   (= 7²) is the case a `<` vs `<=` slip gets wrong.
-- **The `-1` child sentinel in Q7** — test `child == -1` at the TOP of the recursion (return `""`) before
+- **The `-1` child sentinel in Q7** — test `child == -1` at the TOP of the recursion (give back `""`) before
   indexing the arrays. Skip that base case and recursing on child `-1` re-enters the LAST node's children and
   typically recurses forever (`RecursionError`); a non-recursive variant instead reads `arr[-1]` and yields a
   silently wrong answer.
 
 ## Discussion prompts
 
-- Q1: why does the un-mark have to happen *after* the recursive call returns, not before? Show an input where
+- Q1: why does the un-mark have to happen *after* the recursive call comes back, not before? Show an input where
   skipping it over-counts or under-counts.
 - Q2: why is a stack the right structure for postfix evaluation, and what does the stack hold at each step?
 - Q4: the bitmask enumerates all `2^N` subsets. Why must `N` stay small, and how does `mask & (1 << i)` pick
@@ -71,11 +71,11 @@ A passing result is roughly **5 of 7 clean** (≈ 70+).
 | 6 | Primes Up To N | sieve (U11) | 15 |
 | 7 | Pre-order Readout | tree-traversal (U12) | 15 |
 
-Submission wrapper (shown to students; they paste it under a finished `solve`):
+Each answer is a complete stdin-to-stdout program; students read the whole input with:
 
 ```python
 import sys
-print(solve(sys.stdin.read()))
+data = sys.stdin.read()
 ```
 
 ### Big-O per question

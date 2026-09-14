@@ -3,7 +3,7 @@
 ## Goals
 
 The second mock contest checks that students can, under a time limit, diagnose which Term-2 technique a
-problem wants and implement it cleanly on the `solve(data)` contract:
+problem wants and implement it cleanly as a stdin-to-stdout program:
 
 - Make a correct greedy choice by sorting on the right key, then sweeping (Unit 6).
 - Simulate a process step by step — a grid walk and a bounded counter — watching the edges (Unit 7).
@@ -16,7 +16,7 @@ for the tool that fits.
 
 One timed sitting of about **40 minutes** (the 0.5-lesson weight), then a review block next class.
 Suggested flow: 5 minutes to read all six and plan an order (Q2 and Q5 simulations and Q4's budget sweep
-are usually the quickest to bank), ~35 minutes to solve. Students need not finish all six.
+are usually the quickest to bank), ~35 minutes to work through them (each answer a complete program that reads `sys.stdin` and prints the result). Students need not finish all six.
 
 ## Common mistakes
 
@@ -49,7 +49,7 @@ are usually the quickest to bank), ~35 minutes to solve. Students need not finis
 
 ## Grading
 
-100 points total; a question earns full credit only if its `solve` produces the exact required output on
+100 points total; a question earns full credit only if its program produces the exact required output on
 the hidden cases (not just the sample). Suggested split:
 
 - Q1 Festival Stage Schedule — 15 pts — Unit 6 greedy (interval scheduling) — O(n log n).
