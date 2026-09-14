@@ -6,8 +6,9 @@ By the end of this unit students can:
 
 - Convert a number between decimal, **binary**, and **hexadecimal** BY HAND (repeated `% / //` for the digits;
   positional value to parse) — no `bin`/`hex`/`int(s, base)` shortcuts.
-- Use the **bitwise operators** `&` `|` `^` `~` `<<` `>>`, and test / set / clear bit `i` with
-  `x & (1<<i)`, `x | (1<<i)`, `x & ~(1<<i)` — always masking `~` to a stated **finite width** `((1<<w)-1)`.
+- Use the **bitwise operators** `&` `|` `^` `~` `<<` `>>`, and test / set / clear / flip bit `i` with
+  `x & (1<<i)`, `x | (1<<i)`, `x & (full_mask ^ (1<<i))`, `x ^ (1<<i)` — always masking `~` to a stated
+  **finite width** `((1<<w)-1)`.
 - Enumerate every subset of a small set with a **bitmask** (`for mask in range(1<<n)`; `mask & (1<<i)`).
 - Compute the **GCD** with iterative Euclid and the **LCM** as `a // gcd * b`.
 - Build a **sieve of Eratosthenes** (crossing off multiples from `p*p`) to answer prime questions fast.
@@ -49,8 +50,10 @@ Class works Exercises 7, 8 (prime count; power mod M). Assign the stretch proble
   any zero-padding with a `while`/`append` loop.
 - **Infinite-width `~`** — `~x` alone is a negative number; every complement problem fixes a width `w` and
   masks with `((1<<w)-1)`.
-- **Forgetting the final `% M`** — reduce as you go AND reduce the final answer; a missing last `% M` passes
-  small samples and fails large ones.
+- **Skipping the in-loop `% M`** — reduce after EVERY multiply so the running value never grows large.
+  A version that reduces only at the end still prints the right number, but on a huge exponent the
+  un-reduced intermediates become astronomically large and the program times out (Exercise 8 uses
+  `E ≈ 10^18` to make that infeasible). The final `% M` alone is a no-op once you reduce as you go.
 - **Sieve boundary** — cross off from `p*p` and include the bound correctly (`p*p <= n`); an upper bound like
   49 (= 7²) is the case that catches a `<` vs `<=` slip.
 - **Hex digits** — values 10–15 print as `A–F`; forgetting the letter digits corrupts conversions.

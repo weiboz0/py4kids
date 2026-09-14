@@ -63,7 +63,7 @@ the hardest novel reasoning in the unit, so do not pack all six into one session
 - The next-greater scan (Ex 4) looks at each position once yet answers every position. Where does the work
   for a position actually happen, and why is the total still O(N)?
 - Exercise 6 builds a queue out of two stacks. Trace a few commands and explain why moving values across only
-  when the output stack is empty still returns items oldest-first.
+  when the output stack is empty still serves items oldest-first.
 
 ## Differentiation
 
