@@ -5,7 +5,7 @@
 By the end of this unit students can:
 
 - Use **converging two pointers** on a SORTED list — `lo` and `hi` moving inward by comparison — to find a
-  pair summing to a target, count pairs under a threshold, or find the closest pair, in O(n) after sorting.
+  pair summing to a target, count pairs under a threshold, or find the closest pair, in O(n) on an already-sorted list.
 - Use a **sliding window** — `left`/`right` indices over a contiguous run with a running sum/count updated
   INCREMENTALLY — to find the longest or shortest window meeting a condition, in O(n).
 - Explain why both patterns are linear (each pointer only ever moves forward) and why the window
@@ -20,8 +20,9 @@ This is the last Book-2 technique: it turns an O(n²) nested-loop scan into a si
 Two 60–90 minute lessons, core exercises assigned per lesson (stretches optional homework):
 
 **Lesson 1 — Converging two pointers.** On a sorted list, `lo`/`hi` move inward: sum too small → advance
-`lo`; too big → retreat `hi`. Hand-trace a pair search; cover closest-pair and one-way decisions; argue O(n)
-after the O(n log n) sort. Class works **Exercises 1, 2, 3, 4** (Exact Budget Pair; Pairs Below the Alarm;
+`lo`; too big → retreat `hi`. Hand-trace a pair search; cover closest-pair and one-way decisions; argue the
+converging scan is O(n) on an already-sorted list (when a problem hands you UNSORTED data, e.g. Exercise 4,
+an O(n log n) sort comes first). Class works **Exercises 1, 2, 3, 4** (Exact Budget Pair; Pairs Below the Alarm;
 Closest Combined Score; Teammates by Finish Time).
 
 **Lesson 2 — Sliding windows.** Grow `right`, shrink `left` when the window violates its bound, maintaining
@@ -47,7 +48,7 @@ Affordable Windows, 9 Minimum Rescue Boats) as extension.
 
 ## Discussion prompts
 
-- Why do converging two pointers find the answer in O(n) after sorting, when the brute force is O(n²)? What
+- Why do converging two pointers find the answer in O(n) on a sorted list, when the brute force is O(n²)? What
   invariant lets you discard a whole row/column of pairs at each step?
 - In the sliding window, why is it safe to never move `left` backward? What would break if values could be
   negative?
@@ -72,9 +73,9 @@ Affordable Windows, 9 Minimum Rescue Boats) as extension.
 
 ### Big-O per exercise
 
-1. Exact Budget Pair — O(n) after an O(n log n) sort (converging pointers).
-2. Pairs Below the Alarm — O(n) after sort (count pairs as `hi` retreats).
-3. Closest Combined Score — O(n) after sort (track the closest sum).
+1. Exact Budget Pair — O(n) on the already-sorted list (converging pointers; no sort needed).
+2. Pairs Below the Alarm — O(n) on the already-sorted list (count pairs as `hi` retreats).
+3. Closest Combined Score — O(n) on the already-sorted list (track the closest sum).
 4. Teammates by Finish Time — O(n log n) (sort by the finish-time key, then pointers).
 5. Longest Affordable Streak — O(n) (sliding window, sum ≤ K).
 6. Shortest Training Burst — O(n) (sliding window, sum ≥ K).
