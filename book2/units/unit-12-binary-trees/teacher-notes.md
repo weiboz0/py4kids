@@ -8,7 +8,7 @@ By the end of this unit students can:
   meaning "no child") or a dict of nodes — and follow it from a given root index.
 - Write a **recursive traversal** (pre-order, in-order, post-order) and explain how the visit order differs.
 - Use **recursive aggregation** — height/depth, leaf count, and sum/min/max over the whole tree — where the
-  base case returns the identity (an empty subtree contributes nothing).
+  base case gives back the identity (an empty subtree contributes nothing).
 - Work with a **binary search tree (BST)**: the ordering property, recursive search, building one by
   inserting a sequence, and **validating** it with propagated `(low, high)` bounds.
 
