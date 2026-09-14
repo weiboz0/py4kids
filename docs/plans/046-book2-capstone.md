@@ -11,8 +11,8 @@ FINAL entry. On merge, all of Book 2 (14 units + 4 checkpoints + capstone) is st
 `brief.ipynb` keeps its milestone structure; its intro + problem statements + `## Requirements`
 checklist are rewritten off `solve(data)` to the stdin/stdout contract, and the 8 student starter-stub
 code cells are emptied (matching the migrated units' exercises cells). Shipped solver **logic
-preserved** — only the I/O contract transforms (top-level `return X` → `print(X)`, AST-scoped; the one
-multi-return solver hand-written flat).
+preserved** — only the I/O contract transforms (top-level `return X` → `print(X)`, AST-scoped; the two
+multi-return solvers (P4, P5) hand-written flat).
 
 **Tech Stack:** Python 3.12, `uv`, `tools/judge.py`, `tools/source_policy.py`, `tools/concept_scan.py`,
 `scripts/ci-local.sh`. Reusable **temporary, uncommitted** scratchpad builder `build_capstone.py` (same
@@ -81,28 +81,50 @@ five unit headings + `## Rubric`); submission wrapper markdown-only (cell-lint's
   materialized `.in` (trailing newline added to the `.in`, `.out` computed from it); dedupe; drop
   empty-stdout; ensure ≥2 non-vacuous per solver (add a crafted mutation-witness where vacuous — esp.
   P5 BFS FIFO witness and directed/undirected discipline, P7 backtracking no-restore witness, P2 grid
-  wall/edge, P8 pre-order-vs-other-order).
-- [ ] A3: Write `assets/pK.py` + fixtures; rebuild `solutions.ipynb` = `## Problem K` heading +
-  `**Notice:**` (derived from the ACTUAL solver) + no-exec byte-identical mirror
-  (`mirror(pysrc)=pysrc.splitlines(keepends=True)`).
-- [ ] A4: Rewrite `brief.ipynb` intro off `solve(data)` (stdin/stdout, markdown wrapper); sweep
-  `### Problem N` statements `return`→`print` (repair function-return prose); rewrite `## Requirements`
-  to the stdin contract; empty the 8 student code cells; preserve milestones / Make-it-yours.
-- [ ] A5: Sweep `teacher-notes.md` (`solve`/`return` tokens; keep `## Rubric` + six headings).
+  wall/edge, P8 pre-order-vs-other-order; **P4** already carries YES and NO asserts — confirm both
+  survive as a self-pair / wrong-pointer witness).
+  **Cross-check the transform against the ORIGINAL asserts (guards against a buggy transform blessing
+  its own output — gate finding sol-2):** for every fixture derived from an original
+  `assert solve(IN) == OUT`, verify the transformed solver's stdout token-matches the ORIGINAL `OUT`
+  before committing its `.out`. The committed `.out` must reproduce the pre-migration expected answer,
+  not merely whatever the new `.py` happens to print. (Crafted witnesses with no original assert are
+  recomputed from the pristine solver as usual.)
+- [ ] A3: Write `assets/pK.py` + fixtures; rebuild `solutions.ipynb` = an intro rewritten off the
+  `solve(data)`/inline-assert model (to "display-only mirrors of stdin/stdout programs in `assets/`" —
+  the current intro says "one pure `solve(data)` per problem … runs top-to-bottom clean") + per-problem
+  `## Problem K` heading + `**Notice:**` (derived from the ACTUAL solver) + no-exec byte-identical
+  mirror (`mirror(pysrc)=pysrc.splitlines(keepends=True)`).
+- [ ] A4: Rewrite `brief.ipynb` intro off `solve(data)` (stdin/stdout, markdown wrapper — the intro
+  currently shows the `print(solve(sys.stdin.read()))` wrapper). The `### Problem N` statements are
+  ALREADY stdin-phrased ("Print …"/Sample I/O, no `return` prose), so their sweep is near-noop; the real
+  rewrites are the intro, the `## Requirements` pure-`solve(data)`-function checklist line, and any
+  `solve(data)`-adjacent phrasing in `## Make it yours`. Empty the 8 student code cells; preserve the
+  five `## Milestone N` + `## Make it yours` + `## Requirements` headings.
+- [ ] A5: Reword `teacher-notes.md` — the `solve(data)`/inline-assert CODE references (backticked
+  `solve`, `solve(data)`; "runs top-to-bottom clean with its asserts"; "hidden asserts catch" →
+  "display-only mirror judged by piping each committed input case"/"hidden cases catch"); semantic-repair
+  return-value prose ("returns a longer, wrong hop count" → "prints"). Keep `## Rubric` + the six
+  headings. Do NOT touch the English verb "solve"/"solves".
 
 ### Phase B — Verification (REQUIRED)
 
-- [ ] B1: Subprocess-run every `pK.py` against every fixture; stdout matches `.out` exactly.
+- [ ] B1: Subprocess-run every `pK.py` against every fixture; stdout matches `.out` exactly. AND every
+  assert-derived fixture's `.out` token-matches the ORIGINAL pre-migration assert RHS (the shipped
+  asserts are the independent oracle — per A2, so a wrong transform cannot self-bless).
 - [ ] B2: Mutation-test each crafted witness (sole-killer): P5 FIFO + edge-directionality, P7
   no-restore, P2 wall/edge, P8 traversal-order, plus per-problem boundary mutants.
 - [ ] B3: All no-exec mirrors byte-identical to their `.py`; every brief problem sample re-run through
   its solver matches.
 - [ ] B4: AST closure audit over `assets/*.py` (no banned construct; pinned builtins only).
-- [ ] B5: Contract sweep — zero whole-word `return`/`returns`/`returned`/bare `solve` in brief
-  statements/`## Requirements`/`## Make it yours` or teacher-notes (except a sanctioned intro wrapper
-  mention); no solution heading; 3–6 sequential milestones; `## Make it yours` + `## Requirements`
-  present; all 8 student cells empty; no `def solve`/wrapper code cell; no `assets/*.py` literal in
-  prose (ASSET_REF).
+- [ ] B5: Contract sweep — zero references to the `solve(data)` CODE IDENTIFIER (backticked `solve`,
+  `solve(data)`, `print(solve(...))`, `def solve`) and zero return-value/contract `return`/`returns`/
+  `returned` prose in brief statements/`## Requirements`/`## Make it yours`, the solutions intro, or
+  teacher-notes. The English verb "solve"/"solves" ("solve them in any order", "solves all eight") is
+  legitimate contest prose and is RETAINED — the sweep targets the code identifier, not the verb. No
+  `def solve`/wrapper CODE cell anywhere (migrated units carry NO `solve()` wrapper — there is no
+  sanctioned-wrapper exception); no solution heading; 3–6 sequential milestones; `## Make it yours` +
+  `## Requirements` present; all 8 student cells empty; no `assets/*.py`-style literal in prose
+  (ASSET_REF `assets/[\w.-]+\.py`).
 - [ ] B6: Metadata byte-preservation — scoped `git diff` shows `manifest.yaml` +
   `book2/curriculum/coverage-map.yaml` UNCHANGED; `practice_findings` still passes (pre_capstone 31/31).
 - [ ] B7: `bash scripts/ci-local.sh` → ALL GREEN, exit 0.
@@ -120,7 +142,28 @@ five unit headings + `## Rubric`); submission wrapper markdown-only (cell-lint's
 
 ## Plan Review
 
-_(4-way gate — pending dispatch.)_
+### Round 1 — external reviewers ([sol]/[glm]/[fable])
+
+- **[sol] REJECT** — (sol-1) P4 misclassified mechanical: its `solve` has `return "YES"` inside the
+  loop + a top-level `return "NO"`, and a module-level `skill_of` helper — reclassify hand-write-flat,
+  preserve `skill_of`. (sol-2) verification can self-bless a bad transform (A2 generates the `.out` from
+  the transformed `.py`, B1 compares the same solver against it) — cross-check every original assert's
+  RHS against the transformed output.
+- **[glm] APPROVE WITH NITS** — P4 (as corrected) verified; conventions/practice-completeness/witnesses
+  all PASS against tooling. MUST-fix nits: teacher-notes stale "runs top-to-bottom clean with its
+  asserts"/"hidden asserts catch"; the solutions.ipynb intro still describes `solve(data)` + inline
+  asserts; B5 sweep must target the code identifier (not the English verb); drop the sanctioned-wrapper
+  exception; "one" → "two" multi-return solvers.
+- **[fable] REJECT** — (fable-1) same P4 blocker (in-loop `return "YES"` → module-level SyntaxError if
+  transformed mechanically) + note the module-level `skill_of`. Nits: B5 must scope to the code
+  identifier; A4's statement sweep is near-noop (real rewrites = intro, `## Requirements`,
+  Make-it-yours); P5 reverse-edge witness genuinely required; confirm the plan commit is on the branch.
+
+**Fixes applied (this HEAD):** P4 → multi-return hand-write-flat with `skill_of` preserved verbatim
+(inventory + A1); "one" → "two"; A2/B1 add the original-assert cross-check (sol-2); A3 rewrites the
+solutions intro; A5 rewords teacher-notes' assert/`solve(data)` prose; A4 clarifies the real rewrites;
+B5 scoped to the `solve(data)` code identifier (English verb retained), sanctioned-wrapper exception
+dropped. Round 2 re-dispatched to all three.
 
 ## Content Review
 
