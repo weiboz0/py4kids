@@ -192,8 +192,54 @@ implementation.
 
 ## Content Review
 
-_(pending)_
+### Round 1 (HEAD a7c9b9c) — [self] APPROVE
+
+- **Correctness ✓** — all 8 `assets/pN.py` subprocess-verified against every fixture; all 8 brief
+  problem samples re-run through their solver match; the **sol-2 cross-check** confirmed each
+  assert-derived `.out` reproduces the ORIGINAL pre-migration assert RHS (a wrong transform could not
+  self-bless).
+- **Non-vacuous fixtures ✓** — judge-check 0; witnesses mutation-verified as sole-killers: P5
+  directedness (`2 1 1 2\n2 1` → `1`, directed-only mutant → `-1`) + FIFO (`p5/3` `2` vs LIFO `4`); P7
+  no-restore (`p7/3` `2`→`0`, `p7/4` `9`→`1`); P2 no-bounds-guard (all 3 fixtures); P8 traversal-order
+  (`p8/1`, `p8/3`); P4 fixtures cover YES+NO.
+- **Closure ✓** — source-policy 0; **B8 source-delta audit**: every solver's only delta vs main's
+  `solve()` is the I/O-contract transform (P1/P2/P3/P6/P7/P8 = `return X`→`print(X)`; P4/P5 = found-flag
+  flattening), no algorithm change — `sorted-key`/`deque` FIFO/recursion/prefix-sum/grid-sim all verbatim.
+- **Mirrors ✓** — all 8 no-exec cells byte-identical to their `.py`.
+- **Contract sweep ✓** — no `solve(data)`/`print(solve(...))`/whole-word `return`/`returns`/`asserts`
+  in brief statements/`## Requirements`/`## Make it yours`, the solutions intro, or teacher-notes
+  (English verb "solve" retained; P5 "returns a longer hop count" → "gives"). All 8 student cells empty;
+  5 sequential milestones + `## Make it yours` + `## Requirements`; no solution heading; `## Rubric` +
+  six headings; no `assets/*.py` literal in prose.
+- **Metadata ✓** — `manifest.yaml` + `coverage-map.yaml` byte-unchanged; `practice_findings`
+  pre_capstone 31/31. **ci-local ALL GREEN**, exit 0.
+
+### Round 1 — external reviewers ([sol]/[glm]/[fable])
+
+_(awaiting)_
 
 ## Post-Execution Report
 
-_(pending)_
+**Shipped (HEAD a7c9b9c):** the Book-2 capstone `project-03-mock-contest` migrated to stdin-first — the
+FINAL entry. **All of Book 2 (14 units + 4 checkpoints + capstone) is now stdin-first.**
+
+- 8 problems P1–P8 across 5 milestones. Each: `assets/pN.py` (stdin/stdout) + 3–5 `.in`/`.out`
+  fixtures; a no-exec byte-identical mirror + per-problem Notice under `## Problem N` in
+  `solutions.ipynb`; a stdin-rewritten intro + `## Requirements` in `brief.ipynb` (8 student cells
+  emptied); teacher-notes reworded off the `solve(data)` contract (`## Rubric` retained).
+- **P4 + P5 hand-written flat** (both multi-return, found-flag): P4 (Perfect Pair two-pointer,
+  `return "YES"` in loop → `answer` flag; its module-level `skill_of` sort-key kept verbatim), P5 (City
+  Network BFS, `return str(dist)` in loop → `answer` flag). P3/P6/P7/P8 nested helpers untouched;
+  P1/P2 mechanical.
+- **Crafted witness added:** P5 reverse-edge directedness (`p5/5`). All other hot spots witnessed by
+  existing asserts.
+- **Deviations from plan:** none functional. The `### Problem N` statement sweep was a no-op (already
+  stdin-phrased, as A4 anticipated); the substantive rewrites were the two intros, `## Requirements`,
+  and teacher-notes.
+- **Verification:** judge-check 0, source-policy 0, sol-2 cross-check passed, B8 source-delta = I/O-only,
+  all witnesses mutation-verified, 8/8 samples match, 8 mirrors byte-identical, metadata byte-unchanged,
+  ci-local ALL GREEN.
+- **Scratchpad builder** `build_capstone.py` used and left uncommitted.
+- **Process note:** a stray fork of this session ran concurrently on plan 046 (phantom plan edits +
+  commit `8fd2017`); it was detected via `ListAgents`, stopped with `TaskStop`, and its orphaned edits
+  reconciled before the build. No content was affected.
