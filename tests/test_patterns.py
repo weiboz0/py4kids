@@ -512,8 +512,30 @@ def test_patterns_pdf_probe_reports_present_for_valid_pattern_book(pattern_root,
     assert capsys.readouterr().out == "present\n"
 
 
-def test_patterns_pdf_probe_reports_empty_for_valid_empty_book(capsys):
-    assert patterns_doc_main(["--root", str(REPO), "--pdf-probe"]) == 0
+def test_patterns_pdf_probe_reports_empty_for_valid_empty_book(tmp_path, capsys):
+    # A valid book with NO registered techniques probes as "empty". Uses a dedicated
+    # empty fixture (not the real repo, which now registers patterns from Phase B on).
+    from tools.patterns_doc import generated_patterns_text
+
+    _write_yaml(
+        tmp_path / "books.yaml",
+        {
+            "books_version": 1,
+            "books": [{"id": "book1", "number": 1, "root": "book1", "depends_on": []}],
+        },
+    )
+    _write_yaml(
+        tmp_path / "book1/curriculum/concepts.yaml",
+        {"concepts_version": 1, "concepts": [{"id": BASE, "name": "Base", "category": "loops"}]},
+    )
+    _write_yaml(tmp_path / "book1/curriculum/coverage-map.yaml", {"map_version": 1, "entries": []})
+    _write_yaml(tmp_path / "book1/curriculum/patterns-catalog.yaml", {})
+    (tmp_path / "book1/reference").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "book1/reference/patterns.md").write_text(
+        generated_patterns_text(tmp_path), encoding="utf-8"
+    )
+
+    assert patterns_doc_main(["--root", str(tmp_path), "--pdf-probe"]) == 0
     assert capsys.readouterr().out == "empty\n"
 
 
