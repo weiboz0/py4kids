@@ -66,3 +66,19 @@ Give every item the same change, and collect the results in a new sequence.
 | Reappearance | `unit-07-high-score-hall` |
 | Reappearance | `unit-08-word-wizard` |
 | Reappearance | `unit-09-save-point` |
+
+## Scan until found + stop early
+
+Check items one by one; break when found so the program stops working early.
+
+- Pattern id: `linear-search`
+- Enabling concepts: `for-loop`, `break-statement`, `in-operator`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-06-secret-codes` |
+| Reappearance | `unit-07-high-score-hall` |
+| Reappearance | `unit-08-word-wizard` |
+| Reappearance | `unit-09-save-point` |

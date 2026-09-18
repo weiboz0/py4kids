@@ -471,6 +471,28 @@ APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] APPROVE — no open bloc
   criterion (only the transform-each additions, no churn). Review-wording fix, no code change.
 - `[WONTFIX]` [fable] NIT-2 (pre-existing missing cell id) + u07 dedupe observation (design-authorized).
 
+### PR-6 = Phase F (linear-search slice, commit a73dce2 + nit-fix) — 2026-09-18 — CONSENSUS
+
+- **[self] APPROVE · [sol] APPROVE (no findings; AST-audited `break` in all 4 solutions) · [glm]
+  APPROVE WITH NITS · [fable] APPROVE WITH NITS.** No open blockers → **content gate CLOSED**.
+- Reviewers blind-solved: u06→12, u07→1050/not-found, u08→"dog" (value→key), u09→"Mina". u08 kept 2
+  Challenges (Merge + new "Flip the Phrasebook"); break present in every marked locus.
+
+**Dispositions:**
+- `[FIXED]` [fable] NIT-1: u09 student-facing header "More Practice … Exercises 10–13" → "10–14" (Ex14
+  is now core) in exercises + solutions.
+- `[FIXED]` [fable] NIT-3: u06 Spotlight clarified — the lesson's `range(26)` scan has no `break`;
+  Exercise 14 adds it (removes a "where's the break?" moment).
+- `[RECORDED]` [fable] NIT-2: **an additional scanner-derived `practices += comparison` on u09** was
+  needed (the new find-in-file uses `==`), beyond the commit's listed `break-statement`. Closure-clean
+  (`comparison` introduced u02 ≤ u09), General Rule. **Phase-G watch:** the ledger projected `comparison`→u09
+  for find-extreme's best-so-far — it is ALREADY present now, so Phase G must NOT double-add it.
+- `[WONTFIX]` [glm] N2 (u08 teacher-notes "every concept has an in-class rep"): break-statement's in-class
+  rep is the u06 home; the u08 Ex15 appearance is a reappearance correctly routed — the claim concerns
+  u08's own concepts, so no correction needed.
+- `[DEFER]` [fable] NIT-4 (ledger row projects u06=13, now 14): informative; the ledger is refreshed
+  in bulk later (prior slices D/E left it untouched — consistent rollout).
+
 ## Post-Execution Report
 
 ### PR-1 = Phase A (tooling foundation) — 2026-09-18
@@ -579,6 +601,24 @@ builds. Full slice authored by a single Codex session.
 REJECT→APPROVE). Lesson folded into F–H: pace a new home in the lesson that teaches its enablers (not
 just "the first lesson"). [sol]'s round-1 byte-stability REJECT was a review-criterion misread, resolved
 by clarifying "byte-stable" = committed patterns.md == generator output (patterns-doc-check PASS).
+
+### PR-6 = Phase F (linear-search slice) — 2026-09-18
+
+**Shipped:** the `linear-search` slice (heaviest: 4 units + a promotion + a stretch replacement). Home u06
+(new in-class Ex14 scan+`break`, paced Lesson 2 off the `range(26)` scan); core reappearances u07 Ex14
+(new loop+break), u08 Ex15 (PROMOTE Challenge-1 "Reverse Lookup" → core + break; dict value→key one-by-one
+CT contrast), u09 Ex14 (new find-in-file). Scanner-derived `practices`: `break-statement` on
+u06/u07/u08/u09 + `comparison` on u09 (find-in-file `==`) — all closure-clean, General Rule. u08 stretch
+preserved (Merge + new "Flip the Phrasebook"). Catalog row (`for-loop`, `break-statement`, `in-operator`)
++ regenerated patterns.md; teacher-notes pacing for all 4 units.
+
+**Verification (kernel env):** all concept/pattern/notebook checks PASS book1 (u06/u07/u08/u09);
+exec-solutions all 4 units + exec-lessons u06 PASS; Book 2 no regression; pytest 44; ruff clean;
+patterns.pdf builds. Full slice authored by a single Codex session.
+
+**Gates:** content-review 4-way CONSENSUS ([self]/[sol] APPROVE; [glm]/[fable] APPROVE-WITH-NITS, nits
+fixed/dispositioned). **Phase-G watch:** `comparison` is already on u09 — Phase G (find-extreme best-so-far)
+must NOT double-add it.
 
 ---
 
