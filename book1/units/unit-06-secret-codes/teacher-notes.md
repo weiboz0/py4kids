@@ -17,8 +17,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   20 min: the index ladder (`word[0]` → more positions → `word[-1]` → index in a `for` loop).
   20 min: the slice ladder (`[1:4]` → `[:2]` → `[2:]` → the reverse slice `[::-1]`, a one-line reverse cipher!).
   25 min: the methods ladder (`.lower()` → `.upper()` → `.strip()` → `.replace()` → chained), PRINTing each result.
-  In-class exercises: 1–3 and 13 (Exercise 13 is the **transform-each** home: apply the same string-method step to every character and concatenate the results into a new string).
-  Before Exercise 13, run a 2-minute unplugged trace: pass a paper message down the row, have each student transform exactly one character with the same lowercase-and-`a`-to-`@` rule, and join the changed characters into a new message.
+  In-class exercises: 1–3.
   60-MINUTE CUT: teach rungs 1–2 of each ladder; leave the last rung as a "try it".
 - **Lesson 2 — the ATBASH decode + in-operator (60–90 min).**
   Open on the thread: crack the folded note.
@@ -30,11 +29,12 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   25 min: the CAESAR cipher as `encode(message, shift)` — lowercase first (the case contract), scan `range(26)`, `(position + shift) % 26`, rebuild with `result = result + new_letter`; `decode` shifts back by `26 - shift`.
   15 min: the deliberate wrap bug — forget `% 26` and watch `z` shift off the end; read the `IndexError` together.
   Rest: the trade-and-decode activity — pairs swap encoded messages and crack each other's.
-  In-class exercises: 6, 7, and 10.
+  In-class exercises: 6, 7, 10, and 13 (Exercise 13 is the **transform-each** home: apply the same string-method step to every character and concatenate into a new string — it rides straight off the `encode` per-character rebuild).
+  Before Exercise 13, run a 2-minute unplugged trace: pass a paper message down the row, have each student transform exactly one character with the same lowercase-and-`a`-to-`@` rule, and join the changed characters into a new message.
   60-MINUTE CUT: skip the wrap-bug demo (the fix-the-caesar exercise covers it); the encode/decode function is the non-negotiable core.
 
 **Exercise split:** Exercises 1–13 are the in-class core, spread across the three lessons as
-listed above (Exercise 12, the count-by-condition retrieval, rides Lesson 2's `in` ladder; Exercise 13, the transform-each home, rides Lesson 1's methods ladder). The notebook's **Challenge** section contains Challenges 1–2;
+listed above (Exercise 12, the count-by-condition retrieval, rides Lesson 2's `in` ladder; Exercise 13, the transform-each home, rides Lesson 3's `encode` per-character trace). The notebook's **Challenge** section contains Challenges 1–2;
 these stretch tasks are optional, and no core concept depends on completing them.
 
 `error-messages` has a justified peripheral count exemption: Exercise 7 supplies one focused,
