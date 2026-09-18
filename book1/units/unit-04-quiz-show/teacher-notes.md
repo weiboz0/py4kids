@@ -60,7 +60,7 @@ Count exemption: `error-messages` has one genuine authoring repetition in exerci
   trace it and move the line up.
 - `and` where `or` was meant (and vice versa) in the bonus rule — truth-table the bonus
   on the board with class examples, then have students say both accepted spellings in
-  exercise 8 before they write the `or` expression.
+  exercise 10 before they write the `or` expression.
 - Nesting by wishful thinking: the follow-up `if` not indented under its parent, so it
   always runs. Show both indentations side by side.
 - `break` outside any loop (SyntaxError — a planned traceback-reading moment) and

@@ -23,7 +23,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   Open on the thread: crack the folded note.
   25 min: the ATBASH flip — scan the alphabet with `for position in range(26)` to find a letter's position, then take `letters[25 - position]`; this introduces the position-scan the Caesar cipher reuses.
   20 min: the `in` ladder (`"m" in letters` → a space/mark is False → inside a `for` loop to tell letters from marks).
-  In-class exercises: 4, 5, 8, 9, and 11.
+  In-class exercises: 4, 5, 8, 9, 11, and 12 (Exercise 12 is the **count-by-condition** retrieval — keep a `vowel_count`, check each character once against `in "aeiou"`, bump on a match; it rides straight off this `in` ladder).
 - **Lesson 3 — the Caesar encoder (60–90 min).**
   Open on the thread: yesterday we READ codes; today we WRITE one only a friend can crack.
   25 min: the CAESAR cipher as `encode(message, shift)` — lowercase first (the case contract), scan `range(26)`, `(position + shift) % 26`, rebuild with `result = result + new_letter`; `decode` shifts back by `26 - shift`.
@@ -32,8 +32,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   In-class exercises: 6, 7, and 10.
   60-MINUTE CUT: skip the wrap-bug demo (the fix-the-caesar exercise covers it); the encode/decode function is the non-negotiable core.
 
-**Exercise split:** Exercises 1–11 are the in-class core, spread across the three lessons as
-listed above. The notebook's **Challenge** section contains Challenges 1–2;
+**Exercise split:** Exercises 1–12 are the in-class core, spread across the three lessons as
+listed above (Exercise 12, the count-by-condition retrieval, rides Lesson 2's `in` ladder). The notebook's **Challenge** section contains Challenges 1–2;
 these stretch tasks are optional, and no core concept depends on completing them.
 
 `error-messages` has a justified peripheral count exemption: Exercise 7 supplies one focused,
