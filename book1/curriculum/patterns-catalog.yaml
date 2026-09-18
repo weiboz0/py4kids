@@ -13,3 +13,6 @@ transform-each:
 linear-search:
   hook: "Check items one by one; break when found so the program stops working early."
   enabling_concepts: [for-loop, break-statement, in-operator]
+find-extreme:
+  hook: "Keep the best so far while scanning, and remember who, not just the number."
+  enabling_concepts: [list-loop, comparison]

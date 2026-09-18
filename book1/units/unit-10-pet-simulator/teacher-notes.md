@@ -13,10 +13,11 @@ mood change. This is the last unit of Year 1 — the first taste of object-orien
 
 Budget: three lessons of 60–90 minutes (objects are a new mental model). Each concept is a short **worked-example ladder** (minimal → one step up → real simulator, with a *Notice* per rung); the lesson-count is advisory. `class-def` and `__init__` are co-taught; the `methods` ladder GROWS the class one method at a time — re-make the pet (`buddy = Pet(...)`) after each change so it has the new methods. The foods dict, the multi-pet loop, and the while-play loop are the Lesson-3 "put it together" applications, not new concepts.
 
-The **in-class path is Exercises 1–8 and 12**.
+The **in-class path is Exercises 1–8 and 12–14**.
 Exercises 9–11 are the labelled **More Practice** homework tier; they deepen repetition but introduce nothing new.
 Exercise 12 returns to class for the final full-class simulation, so every practiced idea — including `pass_time` and the prompt-only `input()` practice — appears at least once on the in-class path.
-The Challenge exercises 13–14 are optional stretch work and do not carry core coverage.
+Exercises 13–14 stay in class for the multi-pet best-so-far scan and the while-play retrieval.
+The Challenge exercises 15–16 are optional stretch work and do not carry core coverage.
 
 - **Lesson 1 — a class is a blueprint (class-def, __init__, attributes) (60–90 min).**
   Open on the hook: adopt a virtual pet. 20 min: `class Pet:` + `def __init__(self, name):` setting
@@ -43,7 +44,10 @@ The Challenge exercises 13–14 are optional stretch work and do not carry core 
   deliberate AttributeError bug (`buddy.hapiness` — a typo) — read the traceback together and name
   why the attribute must match the one set in `__init__`.
   Use Exercises 5–8 in class, including running the tagged broken cell manually and copying its traceback into the markdown response cell.
-  Finish with Exercise 12, **Run a Pet Day**, in class.
+  After the multi-pet list/object loop enablers, use Exercise 13, **Happiest Pet**, in class.
+  Explicitly require students to keep `best_pet`, not just the highest happiness number, and to
+  update the pet and number together. Use Exercise 14 after the separate while-play loop.
+  Finish the integrated path with Exercise 12, **Run a Pet Day**, in class.
   Assign Exercises 9–11 as More Practice homework after this lesson.
   60-MINUTE CUT: skip the while loop; the pets-list pass is the core.
 
@@ -79,7 +83,7 @@ Everything comes together in the Year-1 capstone.
 
 - Strugglers: give the finished `Pet` class and have them only MAKE pets and CALL methods
   (`buddy = Pet("Buddy"); buddy.feed(2); buddy.status()`) — seeing the stats change is the win.
-- Fast finishers: the Challenge exercises 13–14 — happiest-pet (loop the pets, track the highest happiness
-  with a running best) and play-until-happy (a `while` loop). Adding a new method (a `nap` that
+- Fast finishers: Challenge Exercises 15–16 — a pet talent show and a pet-care list using the
+  existing class, method, dictionary, and list-loop ideas. Adding a new method (a `nap` that
   lowers hunger a little) is a good no-new-concepts extension.
 - Middle tier: writing the `status` mood-ladder method before the Challenges.

@@ -9,7 +9,7 @@ to assemble these into a working arcade leaderboard that crowns a champion.
 This is the first unit where one variable holds a whole collection, not a single value.
 Success looks like: every student builds a scores list, sorts it top-first, and prints a
 numbered "Place N: score" hall of fame.
-Exercises 1–9 form the in-class path; the labelled More Practice Exercises 10–14 are
+Exercises 1–9 and 15 form the in-class path; the labelled More Practice Exercises 10–14 are
 homework after Lesson 3, and the Challenges remain optional stretch work.
 
 ## Pacing
@@ -21,7 +21,12 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   15 min: the list ladder (`[]` → a few items → the scores list) and the index ladder (`[0]` → another → `[-1]`).
   15 min: the append ladder (append one → again → append in a loop) and the list-loop ladder (print each → accumulate a total). Call a `range(len(...))` walk "entry #1, #2…" (POSITION), NOT "place"/"rank" — ranking comes after sorting. Naming them "places" before sorting is the trap.
   20 min: the builtins ladder (`len` → `max` → `min`) plus `average = total / len(scores)` (a decimal — a float).
-  After these ideas have been taught, use Exercise 4 in class. Reserve Exercise 2 for Lesson 2
+  Immediately after the indexed list scan and `max` beat, teach the **Find the best (max / argmax)**
+  spotlight: `max` keeps only the number, while an explicit scan can keep both `best_score` and
+  `best_name`. Do a 2-minute unplugged trace: hold up height cards one at a time and have students
+  keep the tallest seen so far **and whose card it is**. Then use Exercise 15, Champion by name,
+  in class while the scan is fresh.
+  After these ideas have been taught, also use Exercise 4 in class. Reserve Exercise 2 for Lesson 2
   because it sorts, and reserve Exercises 1 and 3 for Lesson 3 because they use membership and
   deliberate traceback reading.
   60-MINUTE CUT: teach ladder rungs 1–2; leave the last rung as a "try it".
@@ -57,6 +62,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   `position`.
 - Adding a score to a ranked board and forgetting to re-sort, so the new score sits at the
   bottom no matter how big it is — `.append()` always adds to the END.
+- Updating `best_score` but forgetting `best_name`, so the winning number and player no longer
+  belong together. In Exercise 15, update both from the same position.
 - Mixing champion names into the score list. Exercise 6 keeps a cleaned name list separate so
   every list has one clear job.
 
@@ -80,7 +87,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 
 ## Exercise split and count note
 
-- **In class:** Exercises 1–9, distributed across the three lessons as described above.
+- **In class:** Exercises 1–9 plus Exercise 15, with Exercise 15 in Lesson 1 immediately after
+  the list-scanning and `max` contrast.
 - **Homework / More Practice:** Exercises 10–14, assigned only after Lesson 3.
 - **Optional stretch:** Challenge 1 and Challenge 2.
 

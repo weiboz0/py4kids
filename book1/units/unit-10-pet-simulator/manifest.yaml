@@ -8,4 +8,5 @@ concepts:
   requires: [def-function, parameters, return-value, dict-access, while-loop]
   practices: [f-string, if-statement, accumulator, list-append, arithmetic, comparison,
               dict-literal, elif-else, for-loop, list-loop, list-literal, list-index, print,
-              variable, string-literal, int-type, error-messages, input, sentinel-loop]
+              variable, string-literal, int-type, error-messages, input, sentinel-loop,
+              find-extreme]
