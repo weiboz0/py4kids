@@ -15,7 +15,7 @@ from tools.notebooks import tags
 
 EXERCISE_HEADING = re.compile(r"^## Exercise \d+\b", re.MULTILINE)
 PATTERN_ID = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
-MARKER_LIKE = re.compile(r"<!--\s*pattern\s*:\s*([^<>]*?)\s*-->")
+MARKER_LIKE = re.compile(r"<!--\s*pattern\b\s*:?\s*([^<>]*?)\s*-->")
 
 
 def _fail(scope: str, detail: str) -> str:
@@ -397,7 +397,7 @@ def technique_spiral_findings(root: Path, book: str, unit: str | None = None) ->
             if not core:
                 findings.append(_fail(str(entry.get("id", "?")), f"{pattern_id}: {reason}"))
                 continue
-            if home_index is None or index >= home_index:
+            if home_index is None or index > home_index:
                 core_practices += 1
         if core_practices < 3:
             findings.append(

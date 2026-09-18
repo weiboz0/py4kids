@@ -1,7 +1,8 @@
 # Book 1 Algorithm-Pattern Reuse Ledger
 
-Source of record for plan 047 (design 002 v7). Generated verbatim from the plan's
-"Appendix — Reuse ledger"; the content gate checks marked exercises against it.
+Source of record for plan 047 (design 002 v7). Derived from the plan's "Appendix — Reuse ledger",
+normalized for tooling (exact registry ids in the enabling-concepts column; `H`/`→` prose prefixes
+dropped) — same 28 loci, actions, and counts. The content gate checks marked exercises against it.
 **No ≤16 exercise-count ceiling** (design §7 v7): "resulting core" is informative pacing data, not a cap.
 New/adapt headings are planned authoring targets (content gate confirms embodiment).
 

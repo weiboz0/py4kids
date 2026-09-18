@@ -556,6 +556,45 @@ def test_book2_only_technique_does_not_affect_book1_spiral(pattern_root):
     assert technique_spiral_findings(pattern_root, "book2") == []
 
 
+def test_pattern_marker_rejects_colonless_comment_on_checkpoint(pattern_root):
+    # A malformed (colon-less) pattern comment must NOT slip past the checkpoint
+    # "no marker" guard by evading MARKER_LIKE. (content-gate [sol] fail-open)
+    entry = next(
+        entry for entry in _map(pattern_root)[1]["entries"] if entry["kind"] == "checkpoint"
+    )
+    path = _entry_dir(pattern_root, entry) / "checkpoint.ipynb"
+    _write_notebook(
+        path,
+        [
+            nbformat.v4.new_markdown_cell("## Question 1"),
+            nbformat.v4.new_markdown_cell(f"<!-- pattern {PATTERN} -->"),
+        ],
+    )
+
+    findings = pattern_marker_findings(pattern_root, "book1")
+
+    assert any("checkpoint may not carry pattern markers" in finding for finding in findings)
+
+
+def test_technique_spiral_excludes_home_self_practice(pattern_root):
+    # Home listing the id in its own `practices` must NOT count as a reappearance;
+    # with only two genuine later practices the spiral must fail <3. (content-gate [sol])
+    path, data = _map(pattern_root)
+    home = data["entries"][0]
+    home["practices"] = [PATTERN]  # home self-practices
+    data["entries"][3]["practices"] = []  # drop one genuine reappearance -> only two remain
+    _write_yaml(path, data)
+    _sync_manifest(pattern_root, home)
+    _sync_manifest(pattern_root, data["entries"][3])
+    # keep notebooks consistent with tags so the home locus stays a valid core home
+    dropped_dir = _entry_dir(pattern_root, data["entries"][3])
+    _write_notebook(dropped_dir / "exercises.ipynb", [])
+
+    findings = technique_spiral_findings(pattern_root, "book1")
+
+    assert any("core pre-capstone non-checkpoint practices (<3)" in finding for finding in findings)
+
+
 def test_real_book_pattern_checks_pass_with_empty_technique_set():
     assert pattern_marker_findings(REPO, "book1") == []
     assert technique_spiral_findings(REPO, "book1") == []

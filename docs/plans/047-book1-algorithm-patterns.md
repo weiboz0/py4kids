@@ -115,9 +115,10 @@ teacher-notes + metadata tags → inline.
 
 1. **Reuse ledger.** The **source of record is this plan's "## Appendix — Reuse ledger"** (produced
    INLINE and approved BEFORE any content phase — see Dispatch note; it already exists in this plan). Phase
-   A **materializes it as the tracked file `book1/curriculum/pattern-ledger.md`** (generated verbatim from
-   the Appendix; the content gate checks against the file — it is a Phase-A deliverable, NOT yet present
-   in earlier commits). Columns per locus: `pattern, entry, exact exercise heading, core/stretch now,
+   A **materializes it as the tracked file `book1/curriculum/pattern-ledger.md`** (derived from the
+   Appendix, normalized for tooling — exact registry ids, prose prefixes dropped — same loci/actions/
+   counts; the content gate checks against the file — it is a Phase-A deliverable, NOT yet present in
+   earlier commits). Columns per locus: `pattern, entry, exact exercise heading, core/stretch now,
    action (reuse-tag/promote/new), enabling concepts, resulting unit core count, stretch-remaining
    (Challenge-exercise count)`. With the ceiling lifted (design §7 v7) the ledger no longer proves a ≤16
    bound; it MUST (a) record each touched unit's resulting core count as informative pacing data (projected
@@ -341,6 +342,51 @@ _(4-way gate — consensus = all four APPROVE / APPROVE WITH NITS, no open block
 ## Content Review
 
 _(4-way gate — pre-PR after implementation, per PR. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`.)_
+
+### PR-1 = Phase A (tooling-only, commit 0cde07e) — 2026-09-18
+
+Tooling-only slice (no student content to blind-solve → this gate is a code review of the 3 checks +
+generator + ledger). Bundles design 002 + plan 047 + Phase A tooling as the foundation PR.
+
+- **[self] → APPROVE.** Read `tools/patterns.py` + `tools/patterns_doc.py` in full. `technique-spiral`
+  and `pattern-marker` implement Phase A.2/A.3 exactly (exactly-one-home; ≥3 core pre-capstone
+  non-checkpoint practices via marker→exercise link + `notebooks.tags` stretch-rejection; marker
+  cardinality + `## Exercise N` adjacency; comment-only vs in-prose; checkpoints carry no tag/marker;
+  manifest==map; capstone via project-02 prefix). Fail-closed on malformed YAML/markers + capstone
+  count≠1 (Codex's own quality-review fixes, verified present). `patterns-doc-check` byte-stable +
+  enabling_concepts resolve to registry ids introduced ≤ home; book1-only; build-pdf guarded (empty
+  no-op, never book2). **Verified in kernel env:** 3 checks PASS book1 / inert book2; pytest 339 passed;
+  ruff clean; inherited concept checks + book2 no regression; build-pdf PASS (patterns.pdf absent). No
+  unit notebook content changed. Verdict: APPROVE. Awaiting [sol]/[glm]/[fable].
+- **[glm] → APPROVE WITH NITS.** Ran pytest (492 passed), ruff clean, 3 checks PASS book1+book2,
+  adversarial probes fail closed. Nits (non-blocking): missing-dir checkpoint tag `continue`s past both
+  checks; ledger "verbatim" is normalized; `--pdf-probe` skips byte-stability; empty `enabling_concepts`
+  allowed.
+- **[fable] → APPROVE WITH NITS.** pytest 339 + ad-hoc adversarial probes; Book-2 safe; empty-set green.
+  Nits: N1 spiral home-as-reappearance (`index >= home_index`); N2 null-YAML-doc reads as empty; N3
+  add project-locus tests in Phase B; N4 `<!-- Pattern:` (capital) ignored; N5 ledger "verbatim".
+- **[sol] → REJECT → (fixes applied, re-review dispatched).** Two `[OPEN]` fail-opens, both fixed in
+  commit below with discriminating tests:
+  - `[FIXED]` **malformed-marker fail-open:** `MARKER_LIKE` required a colon, so a colon-less
+    `<!-- pattern id -->` on a checkpoint evaded the no-marker guard. Broadened the regex to
+    `<!--\s*pattern\b\s*:?\s*(...)-->` — colon-less/bare now match and are flagged invalid (exact=False),
+    so checkpoints reject them and normal entries FAIL "invalid pattern marker". No false positives
+    (`patterns`, prose `note: pattern` unmatched). New test
+    `test_pattern_marker_rejects_colonless_comment_on_checkpoint`.
+  - `[FIXED]` **spiral home-as-reappearance ([sol]+[fable] N1):** `index >= home_index` counted a home
+    self-`practices` tag as a reappearance. Changed to `index > home_index`. New test
+    `test_technique_spiral_excludes_home_self_practice`.
+
+**Nit dispositions (non-blocking):**
+- `[FIXED]` [glm]/[fable] N5 ledger "verbatim" → reworded ledger header + Phase A.1 to "derived/normalized".
+- `[WONTFIX]` [glm] missing-dir checkpoint tag + [fable] N2 null-root-YAML: both are caught upstream —
+  a registered entry with a missing dir, or an empty `concepts.yaml`, fails `manifest-check`/`registry`/
+  `coverage-check` catastrophically before these checks matter; defense-in-depth here isn't worth the
+  loop restructuring, and the strictest reviewer ([sol]) did not raise them.
+- `[WONTFIX]` [fable] N4 `<!-- Pattern:` (capital): the canonical marker is lowercase; a capitalized
+  variant on a *tagged* entry still fails "found 0", and on an untagged entry it is inert prose.
+- `[DEFERRED→Phase B]` [fable] N3: add enabling-intro>home / unregistered-id / project-brief-locus
+  fixtures when project-01 first becomes a real locus (Phase B).
 
 ## Post-Execution Report
 
