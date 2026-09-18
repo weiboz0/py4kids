@@ -4,7 +4,7 @@ blueprint_version: 1
 lessons: 3
 provenance: original
 concepts:
-  introduces: [accumulator, logical-ops, conditional-nesting, break-statement]
+  introduces: [accumulator, logical-ops, conditional-nesting, break-statement, running-total]
   requires: [if-statement, elif-else, while-loop, comparison, input, f-string,
              arithmetic, int-type, variable]
   practices: [boolean, type-conversion, loop-counter, error-messages, string-literal]

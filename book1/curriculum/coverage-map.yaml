@@ -38,7 +38,7 @@ entries:
   kind: unit
   title: "Quiz Show — keeping score"
   lessons: 3
-  introduces: [accumulator, logical-ops, conditional-nesting, break-statement]
+  introduces: [accumulator, logical-ops, conditional-nesting, break-statement, running-total]
   requires: [if-statement, elif-else, while-loop, comparison, input, f-string,
              arithmetic, int-type, variable]
   practices: [boolean, type-conversion, loop-counter, error-messages, string-literal]
@@ -49,7 +49,7 @@ entries:
   introduces: [def-function, parameters, return-value, scope]
   requires: [turtle-basics, turtle-drawing, for-loop, variable, f-string]
   practices: [range-function, loop-counter, arithmetic, nested-loops, float-type,
-              accumulator, import-statement, string-literal, turtle-drawing]
+              accumulator, import-statement, string-literal, turtle-drawing, running-total]
 - id: checkpoint-02-loops-and-functions
   kind: checkpoint
   title: "Checkpoint 2 — Loops and Functions"
@@ -87,7 +87,7 @@ entries:
   practices: [accumulator, f-string, while-loop, string-methods, print, arithmetic, int-type,
               range-function, loop-counter, if-statement, elif-else, string-concat, float-type,
               type-conversion, input, in-operator, error-messages, string-literal, boolean,
-              sentinel-loop]
+              sentinel-loop, running-total]
 - id: unit-08-word-wizard
   kind: unit
   title: "Word Wizard — dictionaries and translation games"
@@ -116,7 +116,8 @@ entries:
   requires: [list-append, string-methods, def-function, for-loop, parameters, return-value]
   practices: [list-loop, dict-access, f-string, in-operator, builtin-functions, dict-literal,
               if-statement, list-literal, print, variable, string-concat, string-literal,
-              type-conversion, int-type, error-messages, elif-else]
+              type-conversion, int-type, error-messages, elif-else, accumulator, arithmetic,
+              running-total]
 - id: unit-10-pet-simulator
   kind: unit
   title: "Pet Simulator — a gentle intro to objects"
