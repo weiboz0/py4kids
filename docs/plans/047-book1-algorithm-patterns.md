@@ -514,6 +514,24 @@ APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] APPROVE — no open bloc
 - `[NO-ACTION]` [fable] NIT-4 (u07 solutions stretch-tag alignment on pre-existing Challenges): benign
   hygiene alignment for `stretch-check` pairing, not a content change.
 
+### PR-8 = Phase H (filter-into-list slice, commit 940f510 + nit-fix) — 2026-09-18 — CONSENSUS (FINAL SLICE)
+
+- **[self] APPROVE · [glm] APPROVE · [fable] APPROVE WITH NITS · [sol] APPROVE WITH NITS.** No open
+  blockers → **content gate CLOSED**.
+- Reviewers blind-solved all four new-list filters: u07→[1050,1310], u08→['dragon','wizard'],
+  u09→[725,1350], u10→[Sunny,Pip]. `builtin-functions`→u08 the only scanner-derived add (no double-adds);
+  all-new so every unit's Challenges are untouched; Book 2 zero-diff.
+
+**Dispositions:**
+- `[FIXED]` [fable] NIT-1/2/3 (wording tidiness): u07 teacher-notes + in-class header reworded so the
+  Spotlight/Ex16 pacing says "after the append ladder" (not "append + list-loop"/"after list scanning");
+  u08 teacher-notes inventory sentence extended to name the new filter rep.
+- `[DEFER→errata/hardening]` [sol] NIT (boundary coverage): u07/u08/u09 filter data lack an item exactly
+  at the inclusive cutoff, so a `>=`→`>` mutation survives their asserts (u10 already has the boundary
+  case, happiness==7). Exercises are correct and gated; adding a boundary item cascades through each
+  unit's data + expected output + solution assert — recorded as an optional test-hardening follow-up
+  rather than churn the final consensus-approved slice.
+
 ## Post-Execution Report
 
 ### PR-1 = Phase A (tooling foundation) — 2026-09-18
@@ -658,6 +676,35 @@ during a self-review loop; verified inline).
 
 **Gates:** content-review 4-way CONSENSUS ([self]/[sol] APPROVE; [glm]/[fable] APPROVE-WITH-NITS). u07 Ex15
 in-class placement WONTFIX (in-class header + teacher-notes pacing, [sol]-validated).
+
+### PR-8 = Phase H (filter-into-list slice) — 2026-09-18 — FINAL SLICE
+
+**Shipped:** the `filter-into-list` slice — "build a NEW list of only the items that pass a test" —
+sequenced LAST (design §8) as it touches all four units u07/u08/u09/u10 with four NEW core exercises.
+Home u07 (new in-class Ex16 "Keep only the qualifying scores"); core reappearances u08 Ex16 "Keep only
+the long words" (`len` filter), u09 Ex16 "Load only the high scores" (file-line filter), u10 Ex15 "List
+the happy pets" (Pet-object filter). Scanner-derived `builtin-functions`→u08 (`len()`); no double-adds;
+all-new so no stretch promotions. Catalog row (`list-append`, `comparison`) + regenerated patterns.md;
+teacher-notes pacing for all 4 units.
+
+**Verification (kernel env):** all concept/pattern/notebook checks PASS book1 (u07/u08/u09/u10);
+exec-solutions all 4 units + exec-lessons u07 PASS; Book 2 no regression; pytest 44; ruff clean;
+patterns.pdf builds. Full slice authored by a single Codex session.
+
+**Gates:** content-review 4-way CONSENSUS. Nits: [fable] wording tidiness fixed; [sol] boundary-coverage
+deferred to optional hardening.
+
+---
+
+## Completion status (2026-09-18)
+
+**All design-002 work COMPLETE.** Design 002 (v7) + plan 047 (v4) + Phase A tooling + all 7 pattern
+slices (B sentinel-loop, C running-total, D count-by-condition, E transform-each, F linear-search,
+G find-extreme, H filter-into-list) are implemented, 4-way content-reviewed to consensus, and merged to
+`main` (PRs #50, #51, #52, #53, #54, #55, #56, #57). Every Book-1 algorithm pattern is registered as a
+`kind: technique` concept, spiralled to ≥3 core non-checkpoint reappearances with student Spotlights, and
+enforced by the three CI checks (`technique-spiral`, `pattern-marker`, `patterns-doc-check`) + the
+delivered `book1/reference/patterns.md` catalog.
 
 ---
 

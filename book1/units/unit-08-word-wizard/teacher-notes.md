@@ -38,7 +38,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 
 **In-class versus homework split:** Exercises 1–11 are the in-class path across the three lessons as allocated above.
 The notebook's **More Practice** section, Exercises 12–16, is homework: Exercises 12–14 follow Lesson 3, and Exercises 15–16 follow Lesson 2's dictionary-loop and result-list work.
-The set provides two varied `+`/`str()` reporting reps, a direct key-only dictionary loop, and a reverse-lookup search that stops early.
+The set provides two varied `+`/`str()` reporting reps, a direct key-only dictionary loop, a reverse-lookup search that stops early, and a filter that keeps only the passing words in a new list.
 Every concept has at least one in-class rep; homework adds fluency rather than introducing a concept.
 
 **Why one traceback rep is enough here:** `error-messages` is peripheral in this unit; dictionaries drive Word Wizard, while traceback reading is practiced again in other units.

@@ -20,7 +20,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   Open on the hook: a messy scrap of paper full of scores — how would a program keep them?
   15 min: the list ladder (`[]` → a few items → the scores list) and the index ladder (`[0]` → another → `[-1]`).
   15 min: the append ladder (append one → again → append in a loop) and the list-loop ladder (print each → accumulate a total). Call a `range(len(...))` walk "entry #1, #2…" (POSITION), NOT "place"/"rank" — ranking comes after sorting. Naming them "places" before sorting is the trap.
-  Immediately after the append and list-loop ladders, teach the **Keep the ones that pass
+  Immediately after the append ladder, teach the **Keep the ones that pass
   (filter)** spotlight: a person can glance through a pile and keep the qualifying cards, but a
   program must check one score at a time and append each passing score to a new list. Do a 2-minute
   unplugged trace: sort a pile of score cards, keeping only the cards that pass the threshold in a
@@ -95,7 +95,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 ## Exercise split and count note
 
 - **In class:** Exercises 1–9 plus Exercises 15–16, with Exercise 15 in Lesson 1 immediately after
-  the list-scanning and `max` contrast and Exercise 16 immediately after append + list-loop.
+  the list-scanning and `max` contrast and Exercise 16 immediately after the append ladder.
 - **Homework / More Practice:** Exercises 10–14, assigned only after Lesson 3.
 - **Optional stretch:** Challenge 1 and Challenge 2.
 
