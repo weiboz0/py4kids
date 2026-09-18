@@ -34,3 +34,19 @@ Keep a named box for the total-so-far, and update it each step.
 | Reappearance | `unit-05-function-factory` |
 | Reappearance | `unit-07-high-score-hall` |
 | Reappearance | `unit-09-save-point` |
+
+## Counting by condition (count)
+
+Keep a counter; check each item once, bump it when it matches. The tally-by-key variation keeps one counter per group.
+
+- Pattern id: `count-by-condition`
+- Enabling concepts: `if-statement`, `comparison`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-04-quiz-show` |
+| Reappearance | `unit-06-secret-codes` |
+| Reappearance | `unit-07-high-score-hall` |
+| Reappearance | `unit-08-word-wizard` |
