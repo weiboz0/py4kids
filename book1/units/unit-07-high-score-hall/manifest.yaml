@@ -8,4 +8,5 @@ concepts:
   requires: [for-loop, variable, def-function, comparison, parameters, return-value]
   practices: [accumulator, f-string, while-loop, string-methods, print, arithmetic, int-type,
               range-function, loop-counter, if-statement, elif-else, string-concat, float-type,
-              type-conversion, input, in-operator, error-messages, string-literal, boolean]
+              type-conversion, input, in-operator, error-messages, string-literal, boolean,
+              sentinel-loop]

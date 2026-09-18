@@ -1,1 +1,3 @@
-{}
+sentinel-loop:
+  hook: "You know when you're done; the program must ask \"done yet?\" every pass."
+  enabling_concepts: [while-loop, comparison]

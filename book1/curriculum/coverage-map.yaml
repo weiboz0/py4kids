@@ -13,7 +13,8 @@ entries:
   title: "Number Detective — the guessing game"
   lessons: 4
   introduces: [int-type, arithmetic, type-conversion, boolean, comparison,
-               if-statement, elif-else, import-statement, random-module, while-loop]
+               if-statement, elif-else, import-statement, random-module, while-loop,
+               sentinel-loop]
   requires: [print, input, variable, f-string]
   practices: [string-literal, naming, comment, run-program, error-messages, string-concat]
 - id: checkpoint-01-first-steps
@@ -68,7 +69,7 @@ entries:
   requires: [def-function, parameters, return-value, while-loop, if-statement, random-module]
   practices: [print, input, f-string, accumulator, logical-ops, loop-counter,
               elif-else, break-statement, comparison, scope, import-statement, random-module,
-              variable, arithmetic, int-type, string-literal]
+              variable, arithmetic, int-type, string-literal, sentinel-loop]
 - id: unit-06-secret-codes
   kind: unit
   title: "Secret Codes — ciphers and string surgery"
@@ -85,7 +86,8 @@ entries:
   requires: [for-loop, variable, def-function, comparison, parameters, return-value]
   practices: [accumulator, f-string, while-loop, string-methods, print, arithmetic, int-type,
               range-function, loop-counter, if-statement, elif-else, string-concat, float-type,
-              type-conversion, input, in-operator, error-messages, string-literal, boolean]
+              type-conversion, input, in-operator, error-messages, string-literal, boolean,
+              sentinel-loop]
 - id: unit-08-word-wizard
   kind: unit
   title: "Word Wizard — dictionaries and translation games"
@@ -123,7 +125,7 @@ entries:
   requires: [def-function, parameters, return-value, dict-access, while-loop]
   practices: [f-string, if-statement, accumulator, list-append, arithmetic, comparison,
               dict-literal, elif-else, for-loop, list-loop, list-literal, list-index, print,
-              variable, string-literal, int-type, error-messages, input]
+              variable, string-literal, int-type, error-messages, input, sentinel-loop]
 - id: checkpoint-04-year-one-finale
   kind: checkpoint
   title: "Checkpoint 4 — Year One Finale"

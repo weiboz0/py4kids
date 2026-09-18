@@ -28,8 +28,11 @@ Budget: four lessons of 60–90 minutes. Ten concepts land here — the year's j
 - **Lesson 4 — while-loop + debugging (60–90 min).**
   Open on the thread: one guess isn't a game; loop until correct.
   30 min: the `while` ladder (loop until a typed sentinel → loop until the guess matches → add an `if` hint inside → the full random game). Every rung is teacher-run (it waits for typing) and counter-free by design.
+  In-class pattern home: Exercise 3 is the **sentinel-loop** home.
+  Before coding, spend 2 minutes on an unplugged trace: everyone flips cards until someone finds the ace — when do you stop?
   20 min: deliberate-bug debugging session (practices error-messages): the forgotten-`int()` bug is in the lesson's broken/fixed pair; the `=`-for-`==` bug is TEACHER-IMPROVISED — type `while guess = secret:` live, let the SyntaxError land, and read it together.
   Rest: play; hand-tally guess counts for the paper leaderboard.
+  Route the Pattern Spotlight identify-prompts in project-01 Milestone 1, unit-07 Exercise 12, and unit-10 Exercise 14 to discussion or homework.
   60-MINUTE CUT (any lesson): teach rungs 1–2 of each ladder live and leave the last rung as a "try it"; the *Notice* lines let students self-serve it.
 
 DELIBERATE OMISSION: there is NO guess counter in this unit — `loop-counter` is introduced in unit 03 (coverage-map contract).

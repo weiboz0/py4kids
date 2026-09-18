@@ -512,8 +512,30 @@ def test_patterns_pdf_probe_reports_present_for_valid_pattern_book(pattern_root,
     assert capsys.readouterr().out == "present\n"
 
 
-def test_patterns_pdf_probe_reports_empty_for_valid_empty_book(capsys):
-    assert patterns_doc_main(["--root", str(REPO), "--pdf-probe"]) == 0
+def test_patterns_pdf_probe_reports_empty_for_valid_empty_book(tmp_path, capsys):
+    # A valid book with NO registered techniques probes as "empty". Uses a dedicated
+    # empty fixture (not the real repo, which now registers patterns from Phase B on).
+    from tools.patterns_doc import generated_patterns_text
+
+    _write_yaml(
+        tmp_path / "books.yaml",
+        {
+            "books_version": 1,
+            "books": [{"id": "book1", "number": 1, "root": "book1", "depends_on": []}],
+        },
+    )
+    _write_yaml(
+        tmp_path / "book1/curriculum/concepts.yaml",
+        {"concepts_version": 1, "concepts": [{"id": BASE, "name": "Base", "category": "loops"}]},
+    )
+    _write_yaml(tmp_path / "book1/curriculum/coverage-map.yaml", {"map_version": 1, "entries": []})
+    _write_yaml(tmp_path / "book1/curriculum/patterns-catalog.yaml", {})
+    (tmp_path / "book1/reference").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "book1/reference/patterns.md").write_text(
+        generated_patterns_text(tmp_path), encoding="utf-8"
+    )
+
+    assert patterns_doc_main(["--root", str(tmp_path), "--pdf-probe"]) == 0
     assert capsys.readouterr().out == "empty\n"
 
 
@@ -595,7 +617,29 @@ def test_technique_spiral_excludes_home_self_practice(pattern_root):
     assert any("core pre-capstone non-checkpoint practices (<3)" in finding for finding in findings)
 
 
-def test_real_book_pattern_checks_pass_with_empty_technique_set():
+def test_patterns_doc_rejects_enabling_concept_introduced_after_home(pattern_root):
+    # A catalog enabling_concept introduced in a LATER entry than the pattern's home
+    # must fail patterns-doc-check (tools/patterns_doc.py intro<=home rule).
+    cpath = pattern_root / "book1/curriculum/concepts.yaml"
+    cdata = yaml.safe_load(cpath.read_text(encoding="utf-8"))
+    cdata["concepts"].append({"id": "late-concept", "name": "Late", "category": "loops"})
+    _write_yaml(cpath, cdata)
+
+    mpath, mdata = _map(pattern_root)
+    mdata["entries"][3]["introduces"] = ["late-concept"]  # unit-04-practice, after home (index 0)
+    _write_yaml(mpath, mdata)
+
+    catp = pattern_root / "book1/curriculum/patterns-catalog.yaml"
+    cat = yaml.safe_load(catp.read_text(encoding="utf-8"))
+    cat[PATTERN]["enabling_concepts"].append("late-concept")
+    _write_yaml(catp, cat)
+
+    findings = patterns_doc_findings(pattern_root, "book1")
+
+    assert any("not introduced by its home" in finding for finding in findings)
+
+
+def test_real_book_pattern_checks_pass_on_real_book():
     assert pattern_marker_findings(REPO, "book1") == []
     assert technique_spiral_findings(REPO, "book1") == []
     assert patterns_doc_findings(REPO, "book1") == []
