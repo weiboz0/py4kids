@@ -74,7 +74,7 @@ promotion precedent), plan 037 (the exercise depth this sits on + its Phase-V vo
   u04 homes (running-total, count-by-condition) are authored **`while`-based and use NO list**
   (`list-literal`/`list-append` are u07 — a real prereq violation, not a scanner-derived add). The u06
   transform-each home builds a **new string** (not a list) for the same reason. Content gate confirms.
-- **Stretch preservation (per `notebooks.py` L537, which counts `stretch`-tagged CELLS ≥2):** the CI floor
+- **Stretch preservation (per `notebooks.py` L536-538, whose L538 fails when `stretch`-tagged CELLS <2):** the CI floor
   is ≥2 tagged cells; per-unit tagged-cell totals vary (audited: u02 5, u04 5, u05 6, u06 6, u07 5, u08 4,
   u09 4, u10 4 — some units also tag a header cell), so the plan tracks the invariant in **Challenge
   *exercises*** (each = the prompt/heading cell **and** its code cell, both tagged). **Target: every
@@ -86,7 +86,9 @@ promotion precedent), plan 037 (the exercise depth this sits on + its Phase-V vo
   Challenges (pedagogical, not a CI necessity). **Mechanics:** a promotion = drop the `stretch` tags from
   the exercise's cells and remove the "**Challenge:**" prompt prefix (u10 Ex13/Ex14 already use
   `## Exercise N` headings; u08 Challenge 1 → retitle `## Exercise 15`); a replacement = a NEW exercise
-  whose heading (`## Challenge N`) and code cell are BOTH `stretch`-tagged. Replacements are
+  with BOTH its heading and code cell `stretch`-tagged, **following the touched unit's own Challenge
+  convention** — u08 keeps `## Challenge N`; u10 keeps `## Exercise N` heading + "**Challenge:**" prefix
+  (which also keeps those cells inside `solutions_structure` heading-pairing). Replacements are
   **status-preserving** (NOT §3 loci; no pattern tag/marker). The ledger's `stretch-remaining` column
   records **Challenge-exercise count** for every touched unit.
 - **Do not touch:** `introduces`/`requires` for regular concepts (technique tags + scanner-derived
@@ -130,8 +132,10 @@ teacher-notes + metadata tags → inline.
    `concepts.yaml` and invoke on the Book-1 tree, so Book-2 techniques are never in scope. Registered in
    `tools/checks.py`; wired into `ci-local`. Green on the empty Book-1 technique set (no patterns yet).
 3. **`pattern-marker`** check — exact rules: for every `(entry, pattern-id)` where the entry
-   `practices`/`introduces` the id, there is **exactly one** `<!-- pattern: <id> -->` markdown cell (an
-   HTML-comment-only markdown cell) in the entry's notebooks, located via `concept_scan.entry_notebooks`
+   `practices`/`introduces` the id, there is **exactly one markdown cell whose source contains
+   `<!-- pattern: <id> -->`** in the entry's notebooks (in `exercises.ipynb` this is a dedicated
+   HTML-comment-only adjacency cell; in `lesson.ipynb`/`brief.ipynb` the comment lives inside the
+   prose-bearing Spotlight cell), located via `concept_scan.entry_notebooks`
    (unit home: `lesson.ipynb` **and** the home `exercises.ipynb`; unit reappearance: `exercises.ipynb`;
    project: `brief.ipynb`). **Cardinality:** duplicate id in one notebook → FAIL; missing marker → FAIL;
    marker for an unregistered/unknown id → FAIL; **checkpoint carrying any pattern tag or marker →
@@ -145,10 +149,14 @@ teacher-notes + metadata tags → inline.
    `book1/reference/patterns.md` from **machine-readable inputs** — the map's technique tags (home +
    reappearances table) plus a small committed data file `book1/curriculum/patterns-catalog.yaml`
    (`{id: {hook, enabling_concepts: [...]}}`) that supplies the prose the schema deliberately does not
-   hold (no new `concepts.yaml` fields — the no-new-schema rule). The check: (a) committed
+   hold (no new `concepts.yaml` fields — the no-new-schema rule). **`enabling_concepts` MUST use exact
+   registry ids** (`if-statement`, `for-loop`, `while-loop`, `in-operator`, `range-function`,
+   `break-statement`, `list-append`, … — NOT the ledger's prose shorthand `if`/`for`/`while`/`in`), or
+   check (c)'s intro≤home resolution fails. The check: (a) committed
    `patterns.md` == generator output (byte-stable); (b) every registered Book-1 technique id appears with
    its `name` (from `concepts.yaml`), `hook`, and `enabling_concepts`; (c) each listed enabling concept
-   is `introduces`d in an entry ≤ the pattern's home. Wire `tools/patterns_doc.py --check` into
+   id resolves in `concepts.yaml` and is `introduces`d in an entry ≤ the pattern's home. Wire
+   `tools/patterns_doc.py --check` into
    `tools/checks.py`; add the catalog to `scripts/build-pdf.sh` (pandoc, like `syllabus.md`), **guarding
    the step so it is a no-op when the Book-1 technique set is empty and never touches Book 2's build**.
 5. **Tests:** pytest with discriminating fault fixtures — duplicate home; practice-before-home; only-two
@@ -186,9 +194,17 @@ per unit (the vertical-slice invariant):
   `comparison` scanner-derived `practices` on u09], u10 Ex13 promote + `best_pet` → **+1
   replacement Challenge exercise in u10** in this slice).
 - **Phase H — `filter-into-list`** (home u07 new; u08/u09/u10 new; `builtin-functions` scanner-derived
-  `practices` on u08 for the `len()` filter; u08's new filter exercise is authored as **Exercise 16**,
-  after the Exercise-15 promoted in Phase F, so `solutions_structure_findings` heading-pairing stays in
-  order) — **LAST** (touches four units in one PR — the largest/riskiest slice; ceiling no longer a factor).
+  `practices` on u08 for the `len()` filter; u08's new filter exercise is numbered **Exercise 16** (next
+  after the Ex15 promoted in Phase F — clean sequential numbering; `solutions_structure_findings` pairs
+  by heading lookup, not position, so this is tidiness not a hard constraint)) — **LAST** (touches four
+  units in one PR — the largest/riskiest slice; ceiling no longer a factor).
+
+**Exercise numbering (content-authoring):** new core exercises take the next sequential `## Exercise N`
+after each unit's current highest core number; where a unit's stretch Challenges sit at the end
+(u09 Ex13/14, u10 Ex13/14), new core slot before them or the Challenge pair is renumbered to remain last
+(a content-gate detail — pairing is per-heading, so either is CI-green). **Spotlight cells in
+`exercises.ipynb` must not use any heading containing "solution"** (case-insensitive) — it trips
+`hygiene_findings`' `SOLUTION_HEADING` guard.
 
 Per-slice acceptance: the pattern's home+≥3 core reappearances embody the design's definition (content
 gate confirms); markers present + adjacency-correct; catalog row generated-clean; the touched unit's
@@ -300,7 +316,27 @@ _(4-way gate — consensus = all four APPROVE / APPROVE WITH NITS, no open block
   record; the file is generated in Phase A, not present in earlier commits).
 - **[sol]/[glm]/[fable] nit:** authority ref corrected v6 → **v7** (Spec line).
 
-### Round 3 — [self] → APPROVE. [sol]/[glm]/[fable] to be re-dispatched on v3.
+### Round 3 (2026-09-18) — CONSENSUS, gate CLOSED
+
+- **[self] → APPROVE · [sol] → APPROVE · [glm] → APPROVE WITH NITS · [fable] → APPROVE WITH NITS.**
+  All round-2 blockers verified resolved against the registry/tools/notebooks; **no open blockers**.
+  [fable] re-verified nothing new goes CI-RED (marker lint-safety, `stretch-check`, `solutions_structure`
+  `\b` word-boundary, Book-2 non-interference via dynamic `dependency_baseline` + per-book `never_flag`).
+  **4-way consensus reached → plan-review gate CLOSED.**
+
+### v4 (2026-09-18) — non-blocking nits folded (no re-review; consensus already met)
+
+- **[glm] N1:** Phase A.4 now requires `patterns-catalog.yaml` `enabling_concepts` to use **exact
+  registry ids** (`if-statement`/`for-loop`/`while-loop`/`in-operator`/…), not the ledger's prose
+  shorthand, so `patterns-doc-check`'s intro≤home resolution succeeds.
+- **[glm] N2 / citation:** stretch-floor citation corrected to `notebooks.py` L536-538 (L538 is the
+  failing `<2` comparison).
+- **[fable] N1:** `pattern-marker` restated as "a markdown cell whose source contains `<!-- pattern: id -->`"
+  (comment-only adjacency cell in `exercises.ipynb`; inside the Spotlight prose cell in lesson/brief).
+- **[fable] N2:** replacement Challenges follow each unit's **local convention** (u08 `## Challenge N`;
+  u10 `## Exercise N` + "**Challenge:**" prefix — keeping those cells in `solutions_structure` pairing).
+- **[fable] N3:** softened the u08 Ex16 "ordering" rationale (pairing is per-heading, not positional);
+  added an exercise-numbering + Spotlight-heading ("no 'solution' in headings") authoring note.
 
 ## Content Review
 
@@ -357,7 +393,7 @@ u09 12/2 · u10 12/2. Project-01 has no `stretch` cells (milestones only).
 **Resulting per-unit core count (projected, informative — not a cap):**
 
 Stretch column = **Challenge-exercise count** (each = a `stretch`-tagged heading/prompt cell + its
-`stretch`-tagged code cell, so ≥2 Challenges ⇒ ≥2 tagged cells, always above the notebooks.py:537 CI floor
+`stretch`-tagged code cell, so ≥2 Challenges ⇒ ≥2 tagged cells, always above the notebooks.py:538 CI floor
 of ≥2 cells).
 
 | unit | baseline core | +new core | resulting core | Challenge exercises after (promote −1, replace +1) |
