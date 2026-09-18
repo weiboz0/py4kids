@@ -98,3 +98,19 @@ Keep the best so far while scanning, and remember who, not just the number.
 | Reappearance | `unit-08-word-wizard` |
 | Reappearance | `unit-09-save-point` |
 | Reappearance | `unit-10-pet-simulator` |
+
+## Keep the ones that pass (filter)
+
+Build a new list that keeps only the items that pass your test.
+
+- Pattern id: `filter-into-list`
+- Enabling concepts: `list-append`, `comparison`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-07-high-score-hall` |
+| Reappearance | `unit-08-word-wizard` |
+| Reappearance | `unit-09-save-point` |
+| Reappearance | `unit-10-pet-simulator` |

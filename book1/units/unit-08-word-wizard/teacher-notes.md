@@ -26,6 +26,9 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   20 min: the dict-loop ladder (`for word in d` keys → `for k, v in d.items()` pairs → a `translate` helper looping a whole list through `.get`). Review building a result list with `.append()` before asking students to collect translations.
   In class, complete Exercises 9–10 after this ladder.
   Assign Exercise 15 as a **linear-search** retrieval after the ladder: dictionary lookup by English key is instant, but finding an English key from a Spanish value requires checking values one by one and stopping when the match is found.
+  Assign Exercise 16, **Keep only the long words**, after the result-list review: students retrieve
+  the filter pattern by checking each word's `len(...)` against a threshold and appending only the
+  passing words to a new list. The variation is words and lengths instead of scores and a score bar.
 - **Lesson 3 — count the word log (60–90 min).**
   20 min: count repeats with one loop (`if word in counts` → grow or start at 1); review integer arithmetic, comparisons, stored booleans, and the accumulator pattern; print each pair with `.items()`; find the most common with a best-so-far loop.
   In class, complete Exercise 5 after the counting beat, then use Exercise 6 as a
@@ -34,7 +37,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   Rest: trade word logs and count each other's; discuss why `counts` must reset to `{}` before a re-count.
 
 **In-class versus homework split:** Exercises 1–11 are the in-class path across the three lessons as allocated above.
-The notebook's **More Practice** section, Exercises 12–15, is homework: Exercises 12–14 follow Lesson 3, and Exercise 15 follows Lesson 2's dictionary-loop work.
+The notebook's **More Practice** section, Exercises 12–16, is homework: Exercises 12–14 follow Lesson 3, and Exercises 15–16 follow Lesson 2's dictionary-loop and result-list work.
 The set provides two varied `+`/`str()` reporting reps, a direct key-only dictionary loop, and a reverse-lookup search that stops early.
 Every concept has at least one in-class rep; homework adds fluency rather than introducing a concept.
 

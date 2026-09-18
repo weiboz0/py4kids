@@ -9,7 +9,7 @@ to assemble these into a working arcade leaderboard that crowns a champion.
 This is the first unit where one variable holds a whole collection, not a single value.
 Success looks like: every student builds a scores list, sorts it top-first, and prints a
 numbered "Place N: score" hall of fame.
-Exercises 1–9 and 15 form the in-class path; the labelled More Practice Exercises 10–14 are
+Exercises 1–9 and 15–16 form the in-class path; the labelled More Practice Exercises 10–14 are
 homework after Lesson 3, and the Challenges remain optional stretch work.
 
 ## Pacing
@@ -20,6 +20,11 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   Open on the hook: a messy scrap of paper full of scores — how would a program keep them?
   15 min: the list ladder (`[]` → a few items → the scores list) and the index ladder (`[0]` → another → `[-1]`).
   15 min: the append ladder (append one → again → append in a loop) and the list-loop ladder (print each → accumulate a total). Call a `range(len(...))` walk "entry #1, #2…" (POSITION), NOT "place"/"rank" — ranking comes after sorting. Naming them "places" before sorting is the trap.
+  Immediately after the append and list-loop ladders, teach the **Keep the ones that pass
+  (filter)** spotlight: a person can glance through a pile and keep the qualifying cards, but a
+  program must check one score at a time and append each passing score to a new list. Do a 2-minute
+  unplugged trace: sort a pile of score cards, keeping only the cards that pass the threshold in a
+  new pile. Then use Exercise 16, Keep only the qualifying scores, in class.
   20 min: the builtins ladder (`len` → `max` → `min`) plus `average = total / len(scores)` (a decimal — a float).
   Immediately after the indexed list scan and `max` beat, teach the **Find the best (max / argmax)**
   spotlight: `max` keeps only the number, while an explicit scan can keep both `best_score` and
@@ -66,6 +71,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   belong together. In Exercise 15, update both from the same position.
 - Mixing champion names into the score list. Exercise 6 keeps a cleaned name list separate so
   every list has one clear job.
+- Appending every score instead of only scores that pass the threshold. In Exercise 16, the
+  `.append()` belongs inside the qualifying `if`, and the original score list stays unchanged.
 
 ## Discussion prompts
 
@@ -87,8 +94,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 
 ## Exercise split and count note
 
-- **In class:** Exercises 1–9 plus Exercise 15, with Exercise 15 in Lesson 1 immediately after
-  the list-scanning and `max` contrast.
+- **In class:** Exercises 1–9 plus Exercises 15–16, with Exercise 15 in Lesson 1 immediately after
+  the list-scanning and `max` contrast and Exercise 16 immediately after append + list-loop.
 - **Homework / More Practice:** Exercises 10–14, assigned only after Lesson 3.
 - **Optional stretch:** Challenge 1 and Challenge 2.
 

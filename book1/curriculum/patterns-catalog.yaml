@@ -16,3 +16,6 @@ linear-search:
 find-extreme:
   hook: "Keep the best so far while scanning, and remember who, not just the number."
   enabling_concepts: [list-loop, comparison]
+filter-into-list:
+  hook: "Build a new list that keeps only the items that pass your test."
+  enabling_concepts: [list-append, comparison]

@@ -10,4 +10,4 @@ concepts:
               if-statement, list-literal, print, variable, string-concat, string-literal,
               type-conversion, int-type, error-messages, elif-else, accumulator, arithmetic,
               running-total, transform-each, comparison, break-statement, linear-search,
-              find-extreme]
+              find-extreme, filter-into-list]

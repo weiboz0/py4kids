@@ -85,7 +85,7 @@ entries:
   title: "High-Score Hall of Fame — lists"
   lessons: 3
   introduces: [list-literal, list-index, list-append, list-loop, list-sort, builtin-functions,
-               find-extreme]
+               find-extreme, filter-into-list]
   requires: [for-loop, variable, def-function, comparison, parameters, return-value]
   practices: [accumulator, f-string, while-loop, string-methods, print, arithmetic, int-type,
               range-function, loop-counter, if-statement, elif-else, string-concat, float-type,
@@ -101,7 +101,7 @@ entries:
   practices: [list-literal, list-append, if-statement, f-string, print, variable, comparison,
               string-concat, elif-else, arithmetic, int-type, error-messages, string-literal,
               boolean, type-conversion, accumulator, count-by-condition, transform-each,
-              break-statement, linear-search, find-extreme]
+              break-statement, linear-search, find-extreme, builtin-functions, filter-into-list]
 - id: checkpoint-03-data-wrangler
   kind: checkpoint
   title: "Checkpoint 3 — Data Wrangler"
@@ -123,7 +123,7 @@ entries:
               if-statement, list-literal, print, variable, string-concat, string-literal,
               type-conversion, int-type, error-messages, elif-else, accumulator, arithmetic,
               running-total, transform-each, comparison, break-statement, linear-search,
-              find-extreme]
+              find-extreme, filter-into-list]
 - id: unit-10-pet-simulator
   kind: unit
   title: "Pet Simulator — a gentle intro to objects"
@@ -133,7 +133,7 @@ entries:
   practices: [f-string, if-statement, accumulator, list-append, arithmetic, comparison,
               dict-literal, elif-else, for-loop, list-loop, list-literal, list-index, print,
               variable, string-literal, int-type, error-messages, input, sentinel-loop,
-              find-extreme]
+              find-extreme, filter-into-list]
 - id: checkpoint-04-year-one-finale
   kind: checkpoint
   title: "Checkpoint 4 — Year One Finale"
