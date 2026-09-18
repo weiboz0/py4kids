@@ -452,6 +452,25 @@ APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] APPROVE — no open bloc
 - `[FIXED]` [fable] nit: reworded the u04 Ex9 solution stand-in comment (prompt fixes the booleans).
 - `[WONTFIX]` [fable] N4 (Spotlight-to-demo gap): consistent with the Phase-C precedent; leave.
 
+### PR-5 = Phase E (transform-each slice, commit b0f36d9 + fix 5b71599) — 2026-09-18 — CONSENSUS
+
+- **[self]/[glm] → APPROVE** ([glm] clean, no nits); **[fable] → APPROVE WITH NITS**; **[sol] → REJECT
+  (round 1) → APPROVE (round 2)**. No open blockers.
+- All reviewers blind-solved: u06→"meet @t noon", u07 dedup, u08 translate, u09 [1375,910,1260].
+
+**Dispositions:**
+- `[FIXED]` **[fable] NIT-1 (within-unit pacing):** u06 Ex13 (transform-each home) was paced in Lesson 1,
+  but its Spotlight is in Lesson 3 and direct string iteration is first modelled in Lesson 2 — moved
+  Ex13's pacing + unplugged trace to Lesson 3 (it rides the `encode` per-character rebuild). Teacher-notes
+  only. **Precedent for F–H: pace a new home in the lesson that actually teaches its enablers, not just
+  "the first lesson".**
+- `[NOT-A-DEFECT]` **[sol] round-1 REJECT (byte-stability):** [sol] read "catalog + patterns.md
+  byte-stable" as "unchanged from main" and flagged the transform-each catalog/patterns.md additions.
+  Clarified: the criterion is "committed patterns.md == generator output" (`patterns-doc-check` PASS);
+  registering a pattern MUST add those rows (as B–D did). [sol] round-2 APPROVED under the corrected
+  criterion (only the transform-each additions, no churn). Review-wording fix, no code change.
+- `[WONTFIX]` [fable] NIT-2 (pre-existing missing cell id) + u07 dedupe observation (design-authorized).
+
 ## Post-Execution Report
 
 ### PR-1 = Phase A (tooling foundation) — 2026-09-18
@@ -543,6 +562,23 @@ builds. Full slice authored by a single Codex session in one clean pass.
 **Gates:** content-review 4-way CONSENSUS ([self]/[glm]/[fable] APPROVE-WITH-NITS; [sol] REJECT→APPROVE
 after the u06 Ex12 pacing fix). Lesson folded into D–H: new core exercises must be entered in the unit's
 teacher-notes pacing/allocation, and teacher-notes exercise-number references must be updated on renumber.
+
+### PR-5 = Phase E (transform-each slice) — 2026-09-18
+
+**Shipped:** the `transform-each` slice. Home u06 (new in-class Ex13 "Do the same to each character" —
+builds a NEW STRING, no list); core reappearances u07 Ex6 (reuse), u08 Ex10 (reuse), u09 Ex3 line→int
+(reuse). No scanner-derived `practices`. Spotlights + markers; catalog row (`for-loop`, `string-methods`)
++ regenerated patterns.md; u06 teacher-notes pace Ex13 in Lesson 3 (rides the Caesar `encode` per-char
+rebuild).
+
+**Verification (kernel env):** all concept/pattern/notebook checks PASS book1 (u06/u07/u08/u09);
+exec-solutions u06 + exec-lessons u06 PASS; Book 2 no regression; pytest 44; ruff clean; patterns.pdf
+builds. Full slice authored by a single Codex session.
+
+**Gates:** content-review 4-way CONSENSUS ([self]/[glm] APPROVE; [fable] APPROVE-WITH-NITS; [sol]
+REJECT→APPROVE). Lesson folded into F–H: pace a new home in the lesson that teaches its enablers (not
+just "the first lesson"). [sol]'s round-1 byte-stability REJECT was a review-criterion misread, resolved
+by clarifying "byte-stable" = committed patterns.md == generator output (patterns-doc-check PASS).
 
 ---
 
