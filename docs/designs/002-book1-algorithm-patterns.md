@@ -1,6 +1,6 @@
 # Design 002 — Book 1 Algorithm-Pattern Thread
 
-**Status:** APPROVED — v6, 2-way design review CLOSED ([sol] APPROVE + [fable] APPROVE, 2026-09-18). Ready for the plan lifecycle.
+**Status:** APPROVED — v7. v6 2-way design review CLOSED ([sol] APPROVE + [fable] APPROVE, 2026-09-18); **v7 (2026-09-18): user-directed relaxation — the ≤16 per-unit exercise-count cap is REMOVED** (no max exercise ceiling). This is a constraint-lifting edit only: no §3 locus is added, dropped, or re-classified, and the honest per-unit counts below are retained as *informative* pacing data, not a cap — so it does not reopen the design review. The §2 *conceptual* depth ceiling (no big-O/sorting/recursion) is unaffected. Ready for the plan lifecycle.
 **Scope:** Book 1 only. Book 2 inherits the technique ids via `dependency_baseline`; it grows its own.
 
 ## 0. Design ↔ plan boundary
@@ -43,7 +43,7 @@ net-new core exercise.
 | `find-extreme` | Find the best (max / argmax) | u07 | keep the *best so far* while scanning — and remember *who*, not just the number | home = **champion-by-name** (parallel names/scores, keep `best_name`+`best_score`, **new**), u08 Ex6 most-common `best_word`/`best_count` (reuse), u09 best-so-far replacing `max()` (**new**), u10 Ex13 happiest-pet (**promote** — add `best_pet`, not just the number) |
 | `linear-search` | Scan until found + stop early | u06 | check items one by one; `break` when found = stop working early | home anchors the lesson's `for position in range(26)` scan + a home exercise that adds the `break` (**new/adapt**), u07 loop+`break` search (**new**), u08 reverse-lookup value→key scan (**promote** — add the `break`; the CT contrast "the dict finds by *name* instantly; by *value* we're back to one-by-one"), u09 find-in-file (**new**) |
 | `transform-each` | Do the same to each (map) | u06 | apply the *same step* to every item, producing a **new sequence** | u07 Ex6 (reuse), u08 Ex10 translate-each (reuse), u09 Ex3 line→int (reuse) |
-| `filter-into-list` | Keep the ones that pass (filter) | u07 | build a **new** list of only the items that pass a test | home = clean filter (**new**); reappearances u08 (**new**), u09 (**new**), u10 (**new**) — all three; each fits ≤16 (§7). No other pre-capstone home exists (project-01 precedes u07; project-02 is the capstone; checkpoints don't tag), so all three are required. |
+| `filter-into-list` | Keep the ones that pass (filter) | u07 | build a **new** list of only the items that pass a test | home = clean filter (**new**); reappearances u08 (**new**), u09 (**new**), u10 (**new**) — all three. No other pre-capstone home exists (project-01 precedes u07; project-02 is the capstone; checkpoints don't tag), so all three are required. |
 | `sentinel-loop` | Repeat until done (sentinel loop) | u02 | *you* know when you're done; the program must ask "done yet?" every pass | project-01 M1 `while choice != "q"` (reuse), u07 Ex12/13 while (reuse), u10 Ex14 `while happiness<10` (**promote**) — 3 pre-capstone entries. **u04 Ex8 excluded** (`while attempts<3` is a counter-bounded retry, not a sentinel — see the embodiment definition); Ex10's `while stops<3` likewise excluded. |
 
 Variations named in the catalog (NOT separate patterns): **tally-by-key** (count per group,
@@ -122,7 +122,12 @@ nbconvert/pandoc, hidden in JupyterLab; hygiene/PDF unaffected.
 
 ## 7. Footprint, pacing & the reuse ledger (honest counts)
 
-Current post-037 core (ceiling 16): u02 8, u03 10, u04 10, u05 11, u06 11, **u07 13, u08 14**, u09 12,
+**No max exercise ceiling** (v7 user directive): the per-unit counts below are honest *pacing* data —
+they inform teacher-notes routing (in-class vs. homework/More-Practice) and the Phase-V volume budget,
+but no unit is capped at a fixed number of core exercises. The reuse ledger still reports each unit's
+resulting core count so pacing stays visible; it no longer has to *prove* any unit stays ≤16.
+
+Current post-037 core: u02 8, u03 10, u04 10, u05 11, u06 11, **u07 13, u08 14**, u09 12,
 u10 12. Corrected against reality:
 - **u09 is the heavy one:** best-so-far, find-in-file, read-and-sum, filter are **new** (Ex4 uses
   `max()`, Ex6 uses `in`, no exercise sums) → u09 12 → **15–16**.
@@ -133,15 +138,16 @@ u10 12. Corrected against reality:
   total + count-by-condition homes may adapt existing scoring exercises; **no sentinel-loop tag** —
   dropped). u10 12 → **15** (promote Ex13 + Ex14 + filter new). u05/u02 no net-new (reuse Ex7; u02 gets
   one lean one-sentence Spotlight only).
-- **Ceiling verified: u07=16, u08=16, u09=16, u10=15** (current core counts + the §3 loci) — every unit
-  is ≤16 as specified, **no relocation needed**, and §3's per-locus reuse/promote/new statuses stand.
-  The **plan's ~28-row ledger re-confirms each unit ≤16** at exact-cell fidelity. If it somehow finds an
-  overflow, the only **status-preserving** lever (it does NOT change or drop any §3 locus) is: one core
-  exercise **embodying two patterns** with two markers (e.g. a u09 read-and-**sum**-then-**filter**),
-  decided at plan time. (Adding, dropping, or re-classifying a §3 locus is out of scope for the plan;
-  the §3 spiral is fixed.) Carry
+- **Projected core counts: u07≈16, u08≈16, u09≈16, u10≈15** (current core counts + the §3 loci) — these
+  are the natural landing points of the §3 loci, **not caps**; §3's per-locus reuse/promote/new statuses
+  stand and no relocation is needed. The **plan's ~28-row ledger records each unit's resulting core
+  count** at exact-cell fidelity (informative pacing data, no longer a ≤16 proof). With the ceiling
+  lifted, a locus the design marked **reuse** purely to conserve unit budget MAY instead be authored as
+  a distinct **new** rep where that teaches better — a plan-time call that still must not add, drop, or
+  re-classify a §3 *locus* (the spiral is fixed); it only changes how an existing locus is realized, and
+  any such choice is recorded in the ledger and confirmed at the content gate. Carry
   plan-037 Phase-V volume thresholds (>2× cells / >30% PDF pages / >25% wall-time = gate finding; 120 s
-  per-cell exec).
+  per-cell exec) as the remaining pacing guardrail.
 - Estimate **+12–16 net-new exercises** (rest is reuse-tag + 3 promotions).
 
 ## 8. Rollout
@@ -151,7 +157,7 @@ is added to `concepts.yaml` only when its home + all ≥3 core reappearances + c
 so `main` is valid at every merge and `technique-spiral` is **never red** (one rule; no SKIP-until
 needed). Phased PRs by term to keep the content gate's blind-solve tractable (batching = plan decision).
 **Sequence the `filter-into-list` slice last** — its vertical slice touches u07+u08+u09+u10 together
-(the three units landing at the 16-core ceiling), so it is the largest/riskiest slice. The plan must
+(four units in one PR), so it is the largest/riskiest slice. The plan must
 **design `pattern-marker` (§5.3) and `technique-spiral`'s stretch-rejection (§5.1) together** — the
 latter needs the marker's tag→cell link to tell whether a locus is stretch.
 
@@ -201,3 +207,10 @@ prerequisite surface once these ids ship (not now). No contradiction with plan 0
   (u08+u09+u10, each ≤16); **`sentinel-loop` drops the u04 Ex8 locus** (counter-bounded retry, violates
   the "NOT counter-bounded" embodiment) → 3 genuine entries (project-01/u07/u10); §7 relocation levers
   rewritten (no spare home); stale `reference/` note + filter-slice-last + marker↔spiral co-design.
+- **v7 (2026-09-18):** user-directed relaxation — **removed the ≤16 per-unit exercise-count ceiling** (no
+  max exercise ceiling). §7 reframed: honest counts retained as informative pacing data, the ledger's
+  ≤16 *proof* mandate dropped (it now just records resulting counts), the dual-marker overflow lever
+  removed (moot), and reuse loci may be realized as new reps where that teaches better (no §3 locus
+  changes). §3 filter-into-list "each fits ≤16" note and §8 "16-core ceiling" rationale updated. The §2
+  conceptual depth ceiling and plan-037 Phase-V volume thresholds are unchanged. Constraint-lifting only
+  → no design re-review required.
