@@ -416,6 +416,26 @@ APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] APPROVE — no open bloc
   home's in-class note + unplugged trace (both in u02 teacher-notes); routing is centralized there.
 - Ledger already records the u07 Ex12 selection (Ex13 excluded as accumulator-bounded).
 
+### PR-3 = Phase C (running-total slice, commit cf0bcc8 + nit-fix) — 2026-09-18 — CONSENSUS
+
+- **[self] → APPROVE** (embodiments = named total-so-far; varied contexts; markers correct).
+- **[sol] → APPROVE WITH NITS** (blind-solved; nit = u09 Ex13 solution should store `score`).
+- **[glm] → APPROVE WITH NITS** (data-flow-verified all loci; nits N1 home-in-class placement, N2 u09
+  heading mismatch, N3 u09 `score`).
+- **[fable] → APPROVE WITH NITS** (blind-solved u04→17/u05→280/u07→2400/u09→2825; pytest 495; nits =
+  u04 stand-in comment, u09 heading, `score` var naming).
+- No open blockers → **content gate CLOSED**.
+
+**Nit dispositions (nit-fix commit):**
+- `[FIXED]` [glm] N1 (home in-class): relocated the u04 running-total home exercise from the "More
+  Practice — homework" section into the in-class block (now Ex8; old Ex8/9/10 → Ex9/10/11 in both
+  exercises + solutions) so the home rep is in-class per the plan constraint. **Precedent for D–H: new
+  home authoring exercises go in the in-class section.**
+- `[FIXED]` [glm] N2 / [fable]: u09 solutions "More Practice … 10–12" → "10–13".
+- `[FIXED]` [glm]/[sol]/[fable] N3: u09 Ex13 solution stores `score = int(line.strip())` per the prompt;
+  u04 running-total solution uses `score` + a stand-in comment (reworded to avoid the literal `input(`
+  token that `structure-check` textually flags — lesson for future solutions).
+
 ## Post-Execution Report
 
 ### PR-1 = Phase A (tooling foundation) — 2026-09-18
@@ -474,6 +494,22 @@ fixed/dispositioned above).
 **Deviation:** u10 solutions authored inline (the Codex solutions session was unreliable under
 environment memory pressure — the statement-side Codex job looped in verification and was cancelled
 after completing its deliverables); mitigated by the gate's 4-way blind-solve of the marked loci.
+
+### PR-3 = Phase C (running-total slice) — 2026-09-18
+
+**Shipped:** the `running-total` slice. Home u04 (new in-class Ex8 "Running total: add the round scores",
+while-based, no list); core reappearances u05 Ex7 (reuse), u07 Ex4 (reuse), u09 (new Ex13 "Sum the saved
+scores" read-and-sum). Scanner-derived `practices` on u09: `accumulator` + `arithmetic` (General Rule).
+Spotlights + markers; catalog row (`accumulator`, `arithmetic`) + regenerated patterns.md; u04
+teacher-notes (in-class home + finger-count unplugged trace).
+
+**Verification (kernel env):** all concept/pattern/notebook checks PASS book1 (u04/u05/u07/u09);
+exec-solutions u04+u09 + exec-lessons u04 PASS; Book 2 no regression; pytest 44 / 495 full; ruff
+(enforced scope) clean; patterns.pdf builds. Full slice authored by a Codex session (statements/
+solutions via internal fresh sub-sessions).
+
+**Gates:** content-review 4-way CONSENSUS ([self]/[sol]/[glm]/[fable]; nits fixed above — notably the
+u04 home relocated in-class, establishing the in-class-home precedent for D–H).
 
 ---
 
