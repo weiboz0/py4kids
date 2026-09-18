@@ -14,6 +14,8 @@ from tools.notebooks import (
     noexec_findings,
     structure_findings,
 )
+from tools.patterns import pattern_marker_findings, technique_spiral_findings
+from tools.patterns_doc import patterns_doc_findings
 from tools.source_policy import source_policy_findings
 
 
@@ -33,6 +35,9 @@ CHECKS = {
     "prereq-check": prereq_findings,
     "coverage-check": coverage_findings,
     "concept-scan": concept_scan_findings,
+    "technique-spiral": technique_spiral_findings,
+    "pattern-marker": pattern_marker_findings,
+    "patterns-doc-check": patterns_doc_findings,
     "stretch-check": stretch_findings,
     "judge-check": judge_findings,
     "source-policy": source_policy_findings,

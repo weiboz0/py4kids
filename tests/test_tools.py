@@ -10,6 +10,7 @@ import yaml
 from tools import cli, notebooks
 from tools.checks import CHECKS
 from tools.curriculum import map_schema_findings
+from tools.patterns_doc import generate_patterns_document
 
 REPO = Path(__file__).resolve().parents[1]
 CHECK_NAMES = (
@@ -24,6 +25,9 @@ CHECK_NAMES = (
     "prereq-check",
     "coverage-check",
     "concept-scan",
+    "technique-spiral",
+    "pattern-marker",
+    "patterns-doc-check",
     "stretch-check",
     "judge-check",
     "source-policy",
@@ -269,6 +273,8 @@ def valid_root(tmp_path):
         "## Rubric\nEvidence.\n",
         encoding="utf-8",
     )
+    _write_yaml(book / "curriculum/patterns-catalog.yaml", {})
+    generate_patterns_document(tmp_path)
     return tmp_path
 
 
@@ -1234,6 +1240,9 @@ def test_ci_local_has_exact_six_real_steps():
         "prereq-check",
         "coverage-check",
         "concept-scan",
+        "technique-spiral",
+        "pattern-marker",
+        "patterns-doc-check",
         "stretch-check",
         "turtle-check",
     ]
@@ -1251,6 +1260,13 @@ def test_pdf_builder_contract():
     assert '--output "$unit_id"' in text
     assert "--pdf-engine=xelatex" in text
     assert "build/handouts" in text
+    assert '[[ "$book" == "book1" ]]' in text
+    assert "--pdf-probe" in text
+    assert 'case "$pattern_state"' in text
+    assert '"empty")' in text
+    assert '"present")' in text
+    assert '"$book_root/reference/patterns.md"' in text
+    assert '"$book_root/build/patterns.pdf"' in text
 
 
 # Fail-closed guards (content-gate glm #1): a typo'd book root or a missing target
@@ -1819,7 +1835,16 @@ def test_checkpoint_target_to_unit_only_check_prints_usage(valid_root, capsys):
     assert "usage: --unit checkpoint id does not apply" in captured.err
 
 
-@pytest.mark.parametrize("check", ["prereq-check", "concept-scan"])
+@pytest.mark.parametrize(
+    "check",
+    [
+        "prereq-check",
+        "concept-scan",
+        "technique-spiral",
+        "pattern-marker",
+        "patterns-doc-check",
+    ],
+)
 def test_book_level_check_with_unit_keeps_usage_exit_two(valid_root, capsys, check):
     code = cli.main(
         [

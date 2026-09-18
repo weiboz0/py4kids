@@ -36,6 +36,9 @@ uv run py4kids-tools --book book1 manifest-check
 uv run py4kids-tools --book book1 prereq-check
 uv run py4kids-tools --book book1 coverage-check
 uv run py4kids-tools --book book1 concept-scan
+uv run py4kids-tools --book book1 technique-spiral
+uv run py4kids-tools --book book1 pattern-marker
+uv run py4kids-tools --book book1 patterns-doc-check
 uv run py4kids-tools --book book1 stretch-check
 uv run py4kids-tools --book book1 turtle-check
 
