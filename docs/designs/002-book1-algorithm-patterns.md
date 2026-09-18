@@ -135,13 +135,14 @@ u10 12. Corrected against reality:
   total + count-by-condition homes may adapt existing scoring exercises; **no sentinel-loop tag** —
   dropped). u10 12 → **15** (promote Ex13 + Ex14 + filter new). u05/u02 no net-new (reuse Ex7; u02 gets
   one lean one-sentence Spotlight only).
-- **Ceiling: u07/u08/u09 land AT 16.** The **plan's ~28-row ledger must prove each unit ≤16.** Since
-  every pattern's spiral now needs all its named entries (no spare home to relocate to), the levers if a
-  unit would exceed 16 are: (a) do u09 best-so-far as an **in-place edit** of Ex4 (`max()`→loop) rather
-  than a new cell; (b) fold u09 best-so-far into stretch Ex13 promoted to core; (c) have one exercise
-  **embody two patterns** with two markers (e.g. a u09 read-and-**sum**-then-**filter**). Any keeps
-  ≤16; the ledger picks per unit. Carry plan-037 Phase-V volume thresholds (>2× cells / >30% PDF pages
-  / >25% wall-time = gate finding; 120 s per-cell exec).
+- **Ceiling verified: u07=16, u08=16, u09=16, u10=15** (current core counts + the §3 loci) — every unit
+  is ≤16 as specified, **no relocation needed**, and §3's per-locus reuse/promote/new statuses stand.
+  The **plan's ~28-row ledger re-confirms each unit ≤16** at exact-cell fidelity. If it somehow finds an
+  overflow, the only **status-preserving** levers (they do NOT change any §3 locus status) are: one core
+  exercise **embodying two patterns** with two markers (e.g. a u09 read-and-**sum**-then-**filter**), or
+  dropping the lowest-value reappearance of an over-spiraled pattern — decided at plan time. Carry
+  plan-037 Phase-V volume thresholds (>2× cells / >30% PDF pages / >25% wall-time = gate finding; 120 s
+  per-cell exec).
 - Estimate **+12–16 net-new exercises** (rest is reuse-tag + 3 promotions).
 
 ## 8. Rollout
