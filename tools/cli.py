@@ -24,7 +24,14 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-BOOK_LEVEL_CHECKS = {"prereq-check", "coverage-check", "concept-scan"}
+BOOK_LEVEL_CHECKS = {
+    "prereq-check",
+    "coverage-check",
+    "concept-scan",
+    "technique-spiral",
+    "pattern-marker",
+    "patterns-doc-check",
+}
 
 
 def main(argv=None):
