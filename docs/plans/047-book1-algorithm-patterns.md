@@ -436,6 +436,22 @@ APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] APPROVE — no open bloc
   u04 running-total solution uses `score` + a stand-in comment (reworded to avoid the literal `input(`
   token that `structure-check` textually flags — lesson for future solutions).
 
+### PR-4 = Phase D (count-by-condition slice, commit 84e3697 + fixes be81fed) — 2026-09-18 — CONSENSUS
+
+- **[self]/[glm]/[fable] → APPROVE (WITH NITS)** (all blind-solved: u04→2, u06→4, u07→1, u08 tally owl=3).
+- **[sol] → REJECT (round 1) → APPROVE (round 2)** — one blocker fixed.
+- No open blockers → **content gate CLOSED**.
+
+**Dispositions:**
+- `[FIXED]` **[sol] blocker:** the new u06 Ex12 (count-by-condition retrieval) had no teacher-notes
+  pacing entry — placed it in Lesson 2 in-class (rides the `in` ladder) + updated the exercise-split
+  count (1–11 → 1–12). Lesson learned: **a new core exercise must be added to the unit's teacher-notes
+  pacing/allocation** (folded into the D–H authoring instructions).
+- `[FIXED]` [glm]/[fable]/[sol] nit: u04 teacher-notes "exercise 8" → "exercise 10" (Accept-either-
+  spelling `or` activity, stale after the two u04 renumberings from Phase C + D).
+- `[FIXED]` [fable] nit: reworded the u04 Ex9 solution stand-in comment (prompt fixes the booleans).
+- `[WONTFIX]` [fable] N4 (Spotlight-to-demo gap): consistent with the Phase-C precedent; leave.
+
 ## Post-Execution Report
 
 ### PR-1 = Phase A (tooling foundation) — 2026-09-18
@@ -510,6 +526,23 @@ solutions via internal fresh sub-sessions).
 
 **Gates:** content-review 4-way CONSENSUS ([self]/[sol]/[glm]/[fable]; nits fixed above — notably the
 u04 home relocated in-class, establishing the in-class-home precedent for D–H).
+
+### PR-4 = Phase D (count-by-condition slice) — 2026-09-18
+
+**Shipped:** the `count-by-condition` slice. Home u04 (new in-class Ex9 "Count the correct answers",
+while-based, no list); core reappearances u06 Ex12 "Count the vowels" (new), u07 Ex5 (reuse), u08 Ex5
+"Count the Words" (reuse — the **tally-by-key** count-per-group variation, named in the catalog).
+No scanner-derived `practices` needed. Spotlights + markers; catalog row + regenerated patterns.md; u04
+teacher-notes (in-class home + hand-raise trace); u06 teacher-notes place Ex12 in Lesson 2. u04
+renumbered (count home = Ex9; homework → Ex10–12); u06 count-vowels = Ex12 before its Challenges.
+
+**Verification (kernel env):** all concept/pattern/notebook checks PASS book1 (u04/u06/u07/u08);
+exec-solutions u04+u06 + exec-lessons u04 PASS; Book 2 no regression; pytest 44; ruff clean; patterns.pdf
+builds. Full slice authored by a single Codex session in one clean pass.
+
+**Gates:** content-review 4-way CONSENSUS ([self]/[glm]/[fable] APPROVE-WITH-NITS; [sol] REJECT→APPROVE
+after the u06 Ex12 pacing fix). Lesson folded into D–H: new core exercises must be entered in the unit's
+teacher-notes pacing/allocation, and teacher-notes exercise-number references must be updated on renumber.
 
 ---
 
