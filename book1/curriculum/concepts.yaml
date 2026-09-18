@@ -36,6 +36,7 @@ concepts:
 - {id: count-by-condition, name: "Counting by condition (count)", category: techniques, kind: technique}
 - {id: transform-each, name: "Do the same to each (map)", category: techniques, kind: technique}
 - {id: linear-search, name: "Scan until found + stop early", category: techniques, kind: technique}
+- {id: find-extreme, name: "Find the best (max / argmax)", category: techniques, kind: technique}
 - {id: import-statement, name: Importing modules, category: modules}
 - {id: random-module, name: "Random numbers (randint/choice)", category: modules}
 - {id: turtle-basics, name: "Turtle setup and movement (forward/turn)", category: graphics}

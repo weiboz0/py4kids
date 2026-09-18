@@ -82,3 +82,19 @@ Check items one by one; break when found so the program stops working early.
 | Reappearance | `unit-07-high-score-hall` |
 | Reappearance | `unit-08-word-wizard` |
 | Reappearance | `unit-09-save-point` |
+
+## Find the best (max / argmax)
+
+Keep the best so far while scanning, and remember who, not just the number.
+
+- Pattern id: `find-extreme`
+- Enabling concepts: `list-loop`, `comparison`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-07-high-score-hall` |
+| Reappearance | `unit-08-word-wizard` |
+| Reappearance | `unit-09-save-point` |
+| Reappearance | `unit-10-pet-simulator` |

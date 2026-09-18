@@ -493,6 +493,27 @@ APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] APPROVE — no open bloc
 - `[DEFER]` [fable] NIT-4 (ledger row projects u06=13, now 14): informative; the ledger is refreshed
   in bulk later (prior slices D/E left it untouched — consistent rollout).
 
+### PR-7 = Phase G (find-extreme slice, commit f13e687 + nit-fix) — 2026-09-18 — CONSENSUS
+
+- **[self] APPROVE · [sol] APPROVE (no findings) · [glm] APPROVE WITH NITS · [fable] APPROVE WITH NITS.**
+  No open blockers → **content gate CLOSED**.
+- Reviewers blind-solved: u07→"Leo 1540", u08→"owl 3", u09→1350 (no `max()`), u10→"Sunny"/best_pet.
+  Confirmed **`comparison` NOT double-added to u09** (already present from Phase F); u10 kept 2 Challenges.
+
+**Dispositions:**
+- `[FIXED]` [fable] NIT-2: titled the u10 replacement Challenge → "## Exercise 16: Pet-Care List"
+  (matches the unit's `Exercise N: Title` convention).
+- `[WONTFIX]` [glm]/[fable] NIT-1 (u07 Ex15 home appended after the homework block rather than physically
+  inside the in-class block): its in-class delivery is established by the "In-Class Pattern Practice"
+  header + teacher-notes pacing ("1–9 and 15"), which **[sol] explicitly validated** (it PASSED the
+  pacing/numbering criterion — the same reviewer that blocked Phase D on a pacing gap). A 5-exercise
+  renumber on a consensus-approved slice carries more risk than the minor linear-reading oddity; the
+  pedagogical "home is in-class" requirement is met.
+- `[WONTFIX]` [glm]/[fable] NIT-3 (u09 keeps value-only, not WHO): design §3 explicitly makes u09 the
+  `max()`-replacing best-so-far variation (value-only), recorded as its variation axis — within authority.
+- `[NO-ACTION]` [fable] NIT-4 (u07 solutions stretch-tag alignment on pre-existing Challenges): benign
+  hygiene alignment for `stretch-check` pairing, not a content change.
+
 ## Post-Execution Report
 
 ### PR-1 = Phase A (tooling foundation) — 2026-09-18
@@ -619,6 +640,24 @@ patterns.pdf builds. Full slice authored by a single Codex session.
 **Gates:** content-review 4-way CONSENSUS ([self]/[sol] APPROVE; [glm]/[fable] APPROVE-WITH-NITS, nits
 fixed/dispositioned). **Phase-G watch:** `comparison` is already on u09 — Phase G (find-extreme best-so-far)
 must NOT double-add it.
+
+### PR-7 = Phase G (find-extreme slice) — 2026-09-18
+
+**Shipped:** the `find-extreme` slice — "keep the best so far while scanning, and remember WHO." Home u07
+(new in-class Ex15 "Champion by name": parallel names+scores, keep best_name+best_score); core
+reappearances u08 Ex6 (reuse best_word/best_count), u09 (new best-so-far, scans without `max()`), u10 Ex13
+"Happiest Pet" (PROMOTE stretch→core + `best_pet`). **No new scanner-derived practices** — u09's
+`comparison` was already added in Phase F and was NOT double-added (Phase-F watch honored). u10 stretch
+preserved (Ex13 promoted; new Ex16 "Pet-Care List" Challenge added). Catalog row (`list-loop`,
+`comparison`) + regenerated patterns.md; teacher-notes pacing for all 4 units.
+
+**Verification (kernel env):** all concept/pattern/notebook checks PASS book1 (u07/u08/u09/u10);
+exec-solutions u07/u09/u10 + exec-lessons u07 PASS; Book 2 no regression; pytest 44/495; ruff clean;
+patterns.pdf builds. Full slice authored by a single Codex session (cancelled after deliverables complete
+during a self-review loop; verified inline).
+
+**Gates:** content-review 4-way CONSENSUS ([self]/[sol] APPROVE; [glm]/[fable] APPROVE-WITH-NITS). u07 Ex15
+in-class placement WONTFIX (in-class header + teacher-notes pacing, [sol]-validated).
 
 ---
 

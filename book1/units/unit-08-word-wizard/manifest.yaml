@@ -9,4 +9,4 @@ concepts:
   practices: [list-literal, list-append, if-statement, f-string, print, variable, comparison,
               string-concat, elif-else, arithmetic, int-type, error-messages, string-literal,
               boolean, type-conversion, accumulator, count-by-condition, transform-each,
-              break-statement, linear-search]
+              break-statement, linear-search, find-extreme]

@@ -9,4 +9,5 @@ concepts:
   practices: [list-loop, dict-access, f-string, in-operator, builtin-functions, dict-literal,
               if-statement, list-literal, print, variable, string-concat, string-literal,
               type-conversion, int-type, error-messages, elif-else, accumulator, arithmetic,
-              running-total, transform-each, comparison, break-statement, linear-search]
+              running-total, transform-each, comparison, break-statement, linear-search,
+              find-extreme]

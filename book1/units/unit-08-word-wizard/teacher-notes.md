@@ -28,7 +28,9 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   Assign Exercise 15 as a **linear-search** retrieval after the ladder: dictionary lookup by English key is instant, but finding an English key from a Spanish value requires checking values one by one and stopping when the match is found.
 - **Lesson 3 — count the word log (60–90 min).**
   20 min: count repeats with one loop (`if word in counts` → grow or start at 1); review integer arithmetic, comparisons, stored booleans, and the accumulator pattern; print each pair with `.items()`; find the most common with a best-so-far loop.
-  In class, complete Exercises 5–7 after these counting and comparison beats.
+  In class, complete Exercise 5 after the counting beat, then use Exercise 6 as a
+  **find-extreme** retrieval: the scan must keep both `best_word` and `best_count`, with
+  dictionary word/count pairs replacing Unit 07's parallel lists. Complete Exercise 7 after it.
   Rest: trade word logs and count each other's; discuss why `counts` must reset to `{}` before a re-count.
 
 **In-class versus homework split:** Exercises 1–11 are the in-class path across the three lessons as allocated above.
