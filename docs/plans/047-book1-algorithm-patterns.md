@@ -13,7 +13,7 @@ authoring and computational-thinking framing.
 `technique-spiral`, `patterns-doc-check`, `pattern-marker` in `tools/`, wired into `ci-local`. Content
 (Spotlights + exercises + solutions) authored by Codex per the AGENTS.md dispatch; tooling by Codex.
 
-**Spec:** `docs/designs/002-book1-algorithm-patterns.md` (v6, 2-way-approved — the authority for the
+**Spec:** `docs/designs/002-book1-algorithm-patterns.md` (v7 — the authority for the
 pattern set, homes, forward-only closure-safe spiral, per-locus reuse/promote/new status, embodiment
 definitions, and CI semantics). Also: `book1/curriculum/{concepts,coverage-map}.yaml`,
 `tools/curriculum.py`/`concept_scan.py`/`notebooks.py`, `scripts/build-pdf.sh`, plan 016 (CI-check
@@ -55,27 +55,42 @@ promotion precedent), plan 037 (the exercise depth this sits on + its Phase-V vo
   exercises are core, non-stretch; each home is in-class; extra reps route to homework/More-Practice in
   teacher-notes; each home gets a 2-minute unplugged trace. Carry plan-037 Phase-V volume thresholds
   (>2× cells / >30% PDF pages / >25% wall-time = gate finding; 120 s per-cell exec).
-- **Concept-closure (scanner-derived `practices`, pre-authorized):** the new pattern exercises exercise
-  regular concepts the target units do not yet list, so `concept-scan` (AST, used-but-unlisted) will go
-  RED unless those concepts are added to the target unit's `practices`. Following the **plan-016 /
-  plan-037 precedent**, these **scanner-derived `practices` additions are pre-authorized** for this plan.
-  Each must be **closure-clean** (the concept is `introduces`d in an entry ≤ the target unit), verified
-  by the inherited `prereq_findings`. Enumerated (all closure-clean):
-  `break-statement` (introduced u04) → add to `practices` of **u07, u08, u09** (linear-search reps with
-  `break`); `accumulator` (introduced u04) + `arithmetic-operators` (≤u02) → **u09** (running-total
-  read-and-sum, new); `comparison-operators` (≤u02) → **u09** (find-extreme best-so-far, new). No
-  `introduces`/`requires` edit for any regular concept; scanner-derived `practices` **only**. The ledger
-  records each addition + its introducing entry; a content-gate reviewer re-runs `concept-scan` per slice.
-- **Stretch preservation (per `notebooks.py` ≥2-stretch rule, L537):** every unit's `exercises.ipynb`
-  must retain **≥2 `stretch`-tagged (Challenge) cells**. Current reality: **every** touched unit has
-  exactly 2. The design's 3 stretch→core **promotions** therefore require status-preserving replacements:
-  **u10** promotes BOTH its stretch cells (Ex13 find-extreme, Ex14 sentinel-loop) → add **+2** new
-  Challenge cells; **u08** promotes Challenge 1 (reverse-lookup) → add **+1** new Challenge cell. These
-  replacements are **status-preserving** (they keep the ≥2 floor; they are NOT §3 loci and carry no
-  pattern tag/marker). Any other unit whose stretch cell is promoted gets the same treatment; the ledger's
-  `stretch-remaining` column proves ≥2 for every touched unit.
-- **Do not touch:** `introduces`/`requires` for regular concepts (technique tags + the enumerated
-  scanner-derived `practices` additions above are the ONLY metadata edits); Book 2 anything; governance
+- **Concept-closure — plan-037-style General Rule (scanner-derived `practices` PRE-AUTHORIZED):** a new
+  pattern exercise may make `concept-scan` (AST; observes lesson + exercises + solutions + assets, not
+  only the new exercise) detect a concept not yet in the entry's union. **General rule (mirrors plan-037):**
+  the implementer MAY add that concept to the entry's `practices` (map + manifest) **iff** it is
+  `introduces`d in an entry ≤ the entry (closure, verified by `prereq_findings`), is NOT in the entry's
+  own `introduces`, and no `introduces`/`requires` changes are made. Every such addition MUST be recorded
+  in the ledger, surfaced in that PR's description AND the content-review gate (not merely the
+  post-execution report), and get reviewer sign-off — not a silent license. **Anticipated set (exact
+  registry ids** from `concepts.yaml` — `arithmetic`/`comparison`, NOT `*-operators`, which are unknown
+  ids that hard-FAIL `referenced_concepts_findings`**):** `break-statement` (intro u04) → `practices` of
+  **u06/u07/u08/u09** (linear-search home u06 adds `break`, plus u07/u08/u09 reps); `accumulator` (u04) +
+  `arithmetic` (u02) → **u09** (running-total read-and-sum); `comparison` (u02) → **u09** (find-extreme
+  best-so-far); `builtin-functions` (intro u07) → **u08** (filter "keep the long words" calls `len()`).
+  This list is the *expected* set; the General Rule bounds any further miss.
+- **New-exercise authoring guards (avoid genuine prereq violations `practices` cannot fix):** u04 has
+  **no `for`/`range`/list** in its union (all loops are counter-bounded `while` + `int(input())`), so the
+  u04 homes (running-total, count-by-condition) are authored **`while`-based and use NO list**
+  (`list-literal`/`list-append` are u07 — a real prereq violation, not a scanner-derived add). The u06
+  transform-each home builds a **new string** (not a list) for the same reason. Content gate confirms.
+- **Stretch preservation (per `notebooks.py` L537, which counts `stretch`-tagged CELLS ≥2):** the CI floor
+  is ≥2 tagged cells; per-unit tagged-cell totals vary (audited: u02 5, u04 5, u05 6, u06 6, u07 5, u08 4,
+  u09 4, u10 4 — some units also tag a header cell), so the plan tracks the invariant in **Challenge
+  *exercises*** (each = the prompt/heading cell **and** its code cell, both tagged). **Target: every
+  touched unit retains ≥2 Challenge exercises** (always ≥2 tagged cells → CI-safe). Promotions & in-slice
+  replacements: **u10** promotes BOTH Challenges (Ex13 find-extreme, Ex14 sentinel-loop) → 2→0 → add **+2
+  replacement Challenge exercises** (Phase B adds 1 when it promotes Ex14; Phase G adds 1 when it promotes
+  Ex13 — so u10 never drops below 2 tagged cells at a merge); **u08** promotes Challenge 1 (reverse-lookup)
+  → 2→1 Challenge (Challenge 2's 2 cells remain → CI still ≥2) → add **+1** replacement to keep 2
+  Challenges (pedagogical, not a CI necessity). **Mechanics:** a promotion = drop the `stretch` tags from
+  the exercise's cells and remove the "**Challenge:**" prompt prefix (u10 Ex13/Ex14 already use
+  `## Exercise N` headings; u08 Challenge 1 → retitle `## Exercise 15`); a replacement = a NEW exercise
+  whose heading (`## Challenge N`) and code cell are BOTH `stretch`-tagged. Replacements are
+  **status-preserving** (NOT §3 loci; no pattern tag/marker). The ledger's `stretch-remaining` column
+  records **Challenge-exercise count** for every touched unit.
+- **Do not touch:** `introduces`/`requires` for regular concepts (technique tags + scanner-derived
+  `practices` additions under the General Rule above are the ONLY metadata edits); Book 2 anything; governance
   files. Standing process: branch `feature/book1-algorithm-patterns`; no commits
   while a `[sol]` review is in flight; `GH_TOKEN=$(cat .gh-token)`; content SOLUTIONS in a separate
   fresh Codex session.
@@ -96,17 +111,16 @@ teacher-notes + metadata tags → inline.
 
 ### Phase A — Ledger + tooling foundation (tooling; ships PR-1, no pattern ids yet)
 
-1. **Reuse ledger** — committed to **`book1/curriculum/pattern-ledger.md`** (a tracked artifact the
-   content gate checks against; NOT plan prose): the ~28-row table — per locus: `pattern, entry, exact
-   exercise heading, core/stretch now, action (reuse-tag/promote/new), enabling concepts, resulting unit
-   core count, stretch-remaining`. **Produced INLINE and approved BEFORE any content phase** (see
-   Dispatch note). With the ceiling lifted (design §7 v7) the ledger no longer proves a ≤16 bound; it
-   MUST (a) record each touched unit's resulting core count as informative pacing data (projected
+1. **Reuse ledger.** The **source of record is this plan's "## Appendix — Reuse ledger"** (produced
+   INLINE and approved BEFORE any content phase — see Dispatch note; it already exists in this plan). Phase
+   A **materializes it as the tracked file `book1/curriculum/pattern-ledger.md`** (generated verbatim from
+   the Appendix; the content gate checks against the file — it is a Phase-A deliverable, NOT yet present
+   in earlier commits). Columns per locus: `pattern, entry, exact exercise heading, core/stretch now,
+   action (reuse-tag/promote/new), enabling concepts, resulting unit core count, stretch-remaining
+   (Challenge-exercise count)`. With the ceiling lifted (design §7 v7) the ledger no longer proves a ≤16
+   bound; it MUST (a) record each touched unit's resulting core count as informative pacing data (projected
    u07≈16, u08≈16, u09≈16, u10≈15), (b) prove every pattern reaches **≥3 core non-checkpoint
-   reappearances**, and (c) record `stretch-remaining` ≥2 for every unit whose stretch cells are touched
-   (see the stretch-preservation constraint below). The verbatim ledger is embedded in this plan's
-   appendix (§Ledger) as the source of record; the committed file is generated from it. Produced FIRST so
-   all later phases build from real cells.
+   reappearances**, and (c) record `stretch-remaining` ≥2 Challenge exercises for every touched unit.
 2. **`technique-spiral`** check in `tools/` (Book-1-scoped): each Book-1 `kind: technique` id is
    `introduces`d once + `practices`d in ≥3 pre-capstone non-checkpoint entries whose marked exercise is
    **core** (not stretch). **Core-detection:** an exercise is stretch iff its prompt cell or its adjacent
@@ -122,8 +136,10 @@ teacher-notes + metadata tags → inline.
    project: `brief.ipynb`). **Cardinality:** duplicate id in one notebook → FAIL; missing marker → FAIL;
    marker for an unregistered/unknown id → FAIL; **checkpoint carrying any pattern tag or marker →
    FAIL**. **Adjacency:** in an `exercises.ipynb` the marker cell is the markdown cell **immediately
-   preceding** the tagged exercise's prompt cell (this is the tag→exercise link `technique-spiral`
-   consumes for core-detection); in `lesson.ipynb`/`brief.ipynb` the marker sits in the Spotlight cell.
+   preceding** the tagged exercise's **prompt cell** — defined as the exercise's **heading-bearing
+   markdown cell** (the `## Exercise N` cell; u02/u05 split heading and body into separate markdown cells,
+   so the marker precedes the heading cell); this is the tag→exercise link `technique-spiral` consumes for
+   core-detection. In `lesson.ipynb`/`brief.ipynb` the marker sits in the Spotlight cell.
    Markers are HTML comments (dropped by nbconvert/pandoc — hygiene/PDF unaffected).
 4. **`patterns-doc-check`** + **catalog generator**: `tools/patterns_doc.py generate` writes
    `book1/reference/patterns.md` from **machine-readable inputs** — the map's technique tags (home +
@@ -157,20 +173,22 @@ Each promoting slice adds its stretch replacement **in the same slice** so every
 per unit (the vertical-slice invariant):
 - **Phase B — `sentinel-loop`** (home u02 Ex3; reappearances project-01 M1, u07 Ex12 [`while` doubling,
   the true sentinel — not Ex13 which is counter/accumulator-bounded], u10 Ex14 promote → **+1 replacement
-  Challenge cell in u10** in this slice).
+  Challenge exercise in u10** in this slice).
 - **Phase C — `running-total`** (home u04; u05 Ex7, u07 Ex4, u09 read-and-sum new; u09 gets
-  `accumulator`+`arithmetic-operators` scanner-derived `practices`).
+  `accumulator`+`arithmetic` scanner-derived `practices`).
 - **Phase D — `count-by-condition`** (home u04; u06 count-matches new, u07 Ex5, u08 Ex5/7 tally-by-key).
 - **Phase E — `transform-each`** (home u06; u07 Ex6, u08 Ex10, u09 Ex3 — all reuse).
 - **Phase F — `linear-search`** (home u06 + break; u07 loop+break new, u08 Challenge-1 reverse-lookup
   promote+break → retitle to Exercise-15 on promotion + move its solution heading, **+1 replacement
-  Challenge cell in u08** in this slice, u09 find-in-file new; `break-statement` scanner-derived
-  `practices` on u07/u08/u09).
+  Challenge exercise in u08** in this slice, u09 find-in-file new; `break-statement` scanner-derived
+  `practices` on **u06/u07/u08/u09**).
 - **Phase G — `find-extreme`** (home u07 champion-by-name new; u08 Ex6, u09 best-so-far new [+
-  `comparison-operators` scanner-derived `practices` on u09], u10 Ex13 promote + `best_pet` → **+1
-  replacement Challenge cell in u10** in this slice).
-- **Phase H — `filter-into-list`** (home u07 new; u08/u09/u10 new) — **LAST** (touches four units in one
-  PR — the largest/riskiest slice; ceiling no longer a factor).
+  `comparison` scanner-derived `practices` on u09], u10 Ex13 promote + `best_pet` → **+1
+  replacement Challenge exercise in u10** in this slice).
+- **Phase H — `filter-into-list`** (home u07 new; u08/u09/u10 new; `builtin-functions` scanner-derived
+  `practices` on u08 for the `len()` filter; u08's new filter exercise is authored as **Exercise 16**,
+  after the Exercise-15 promoted in Phase F, so `solutions_structure_findings` heading-pairing stays in
+  order) — **LAST** (touches four units in one PR — the largest/riskiest slice; ceiling no longer a factor).
 
 Per-slice acceptance: the pattern's home+≥3 core reappearances embody the design's definition (content
 gate confirms); markers present + adjacency-correct; catalog row generated-clean; the touched unit's
@@ -242,7 +260,47 @@ _(4-way gate — consensus = all four APPROVE / APPROVE WITH NITS, no open block
 - **[sol] nits:** Book-2 non-interference fixture added to Phase A.5; Phase V now requires explicit
   plan-037 threshold sign-off + Book-2-stays-green confirmation.
 
-### Round 2 — [self] → APPROVE. [sol]/[glm]/[fable] re-dispatched on v2 (pending).
+### Round 2 (2026-09-18) — verdicts on v2
+
+- **[self] → APPROVE.**
+- **[sol] → REJECT, no blockers** — 2 nits only: stale "v6" authority ref; "2 stretch" conflates
+  exercises with `stretch`-tagged cells (L537 counts cells). Confirmed ceiling-removal clean, stretch
+  invariant holds at every merge, ledger sound.
+- **[glm] → REJECT** — B1a: `arithmetic-operators`/`comparison-operators` are **nonexistent ids**
+  (registry uses `arithmetic`/`comparison`) → would hard-FAIL `referenced_concepts_findings`. B1b:
+  `break-statement` addition **omits u06** (linear-search home u06 adds `break`) → `concept-scan` RED on
+  u06. NITs: per-cell vs per-exercise stretch arithmetic; stale "v6".
+- **[fable] → REJECT** — one blocker: B1 enumeration (same u06 omission + wrong ids as [glm]) **plus**
+  the closed whitelist is fragile — two more near-certain scanner misses: u08 filter calls `len()` →
+  `builtin-functions` (u07, closure-clean); u04 has NO `for`/`range`/list, so u04 homes must be
+  `while`-based and use no list (`list-literal` is u07 = a real prereq violation). Fix: adopt plan-037's
+  open **General Rule** + authoring guards. B2 resolved (nits: track stretch as *exercises* not cells;
+  promotion/replacement mechanics; u08 filter → Ex16). Everything else confirmed sound (≤16 removal,
+  ledger ≥3, Book-2 non-collision, marker lint-safety).
+
+### v3 reconciliation (2026-09-18) — round-2 fixes folded (verified against the registry/notebooks)
+
+- **[glm]/[fable] B1a (verified):** corrected ids to `arithmetic` (concepts.yaml:19) / `comparison`
+  (concepts.yaml:22) in the constraint, Phases C/G, ledger, summary. concept_scan.py emits exactly these.
+- **[glm]/[fable] B1b (verified):** `break-statement` now on **u06/u07/u08/u09** (u06 union lacks it +
+  home adds `break`).
+- **[fable] B1c (verified, adopted):** replaced the closed whitelist with plan-037's **General Rule**
+  (any scanner-derived `practices` add pre-authorized iff closure-clean, not in `introduces`, no
+  `introduces`/`requires` change, recorded in ledger + surfaced in PR/content gate). Added
+  `builtin-functions` (u07) → **u08** (filter `len()`) to the anticipated set; added **authoring guards**
+  (u04 homes `while`-based/no-list; u06 transform-each builds a string) to prevent genuine u07-prereq
+  (`list-literal`) violations `practices` cannot fix.
+- **[glm]/[sol]/[fable] B2 (verified):** tagged-cell totals vary per unit (audited u02 5 … u08 4, u10 4);
+  restated the invariant in **Challenge exercises** (each = 2 tagged cells → always ≥ the CI ≥2-cell
+  floor). Promotion = drop tags + remove "**Challenge:**" prefix; replacement = new `## Challenge N`
+  exercise with both cells tagged. u08 Challenge-1 → Exercise-15 (Phase F); u08 filter → Exercise-16
+  (Phase H) so `solutions_structure_findings` pairing stays ordered.
+- **[fable] nits:** marker "prompt cell" = the heading-bearing markdown cell (u02/u05 split
+  heading/body); `pattern-ledger.md` clarified as a Phase-A deliverable (the Appendix is the source of
+  record; the file is generated in Phase A, not present in earlier commits).
+- **[sol]/[glm]/[fable] nit:** authority ref corrected v6 → **v7** (Spec line).
+
+### Round 3 — [self] → APPROVE. [sol]/[glm]/[fable] to be re-dispatched on v3.
 
 ## Content Review
 
@@ -267,11 +325,11 @@ u09 12/2 · u10 12/2. Project-01 has no `stretch` cells (milestones only).
 
 | pattern | entry | exercise heading | now | action | enabling concepts | slice |
 |---|---|---|---|---|---|---|
-| running-total | u04 (home) | *new* "Running total: add the round scores" | new core | →new | accumulator (u04 co-intro), arithmetic (≤u02) | C |
+| running-total | u04 (home) | *new* "Running total: add the round scores" (`while`-based, no list) | new core | →new | accumulator (u04 co-intro), arithmetic (u02) | C |
 | running-total | u05 | H "Exercise 7" `total_card_borders(n)` | core | reuse | — | C |
 | running-total | u07 | H "Exercise 4 / Total and Average" | core | reuse | — | C |
 | running-total | u09 | *new* "Sum the saved scores" (read-and-sum) | new core | →new | accumulator, arithmetic (both scanner-derived `practices` on u09), file-read (u09) | C |
-| count-by-condition | u04 (home) | *new/adapt* "Count the correct answers" | new core | →new | comparison (≤u02), if (u02) | D |
+| count-by-condition | u04 (home) | *new/adapt* "Count the correct answers" (`while`-based, no list) | new core | →new | comparison (u02), if (u02) | D |
 | count-by-condition | u06 | *new* "Count the vowels" (count-matches) | new core | →new | in-operator (u06), comparison | D |
 | count-by-condition | u07 | H "Exercise 5 / Award a Score Tier" | core | reuse | — | D |
 | count-by-condition | u08 | H "Exercise 5: Count the Words" (tally-by-key) | core | reuse | — | D |
@@ -288,7 +346,7 @@ u09 12/2 · u10 12/2. Project-01 has no `stretch` cells (milestones only).
 | transform-each | u08 | H "Exercise 10: Translate a List" | core | reuse | — | E |
 | transform-each | u09 | H "Exercise 3: Load Scores into a List" (line→int) | core | reuse | — | E |
 | filter-into-list | u07 (home) | *new* "Keep only the qualifying scores" | new core | →new | list-append (u07), comparison | H |
-| filter-into-list | u08 | *new* "Keep only the long words" | new core | →new | list-append, comparison | H |
+| filter-into-list | u08 | *new* "Keep only the long words" (Exercise 16) | new core | →new | list-append, comparison, builtin-functions (`len`, scanner-derived on u08) | H |
 | filter-into-list | u09 | *new* "Load only the high scores" | new core | →new | list-append, comparison, file-read | H |
 | filter-into-list | u10 | *new* "List the happy pets" | new core | →new | list-append, comparison | H |
 | sentinel-loop | u02 (home) | H "Exercise 3" while-until-guessed game | core | reuse-as-home | while (u02), comparison (u02) | B |
@@ -298,20 +356,25 @@ u09 12/2 · u10 12/2. Project-01 has no `stretch` cells (milestones only).
 
 **Resulting per-unit core count (projected, informative — not a cap):**
 
-| unit | baseline core | +new core | resulting core | stretch after (promotions −, replacements +) |
+Stretch column = **Challenge-exercise count** (each = a `stretch`-tagged heading/prompt cell + its
+`stretch`-tagged code cell, so ≥2 Challenges ⇒ ≥2 tagged cells, always above the notebooks.py:537 CI floor
+of ≥2 cells).
+
+| unit | baseline core | +new core | resulting core | Challenge exercises after (promote −1, replace +1) |
 |---|---|---|---|---|
-| u02 | 8 | 0 (sentinel home = reuse Ex3) | 8 | 2 |
-| u04 | 10 | +2 (running-total + count homes) | 12 | 2 |
-| u05 | 11 | 0 (reuse Ex7) | 11 | 2 |
-| u06 | 11 | +2 (count-matches new; linear-search & transform-each homes) | 13 | 2 |
-| u07 | 13 | +3 (find-extreme home, filter home, loop+break) | 16 | 2 |
-| u08 | 14 | +2 (reverse-lookup promote→core, filter new) | 16 | 2 − 1 promote + 1 repl = 2 |
-| u09 | 12 | +4 (read-and-sum, best-so-far, find-in-file, filter — all new) | 16 | 2 |
-| u10 | 12 | +3 (Ex13 promote, Ex14 promote, filter new) | 15 | 2 − 2 promote + 2 repl = 2 |
+| u02 | 8 | 0 (sentinel home = reuse Ex3) | 8 | 2 (unchanged) |
+| u04 | 10 | +2 (running-total + count homes, `while`-based, no list) | 12 | 2 (unchanged) |
+| u05 | 11 | 0 (reuse Ex7) | 11 | 2 (unchanged) |
+| u06 | 11 | +2 (count-matches new; linear-search & transform-each homes) | 13 | 2 (unchanged) |
+| u07 | 13 | +3 (find-extreme home, filter home, loop+break) | 16 | 2 (unchanged) |
+| u08 | 14 | +2 (reverse-lookup promote→core Ex15, filter new Ex16) | 16 | 2 − 1 (Ch1) + 1 (repl) = 2 |
+| u09 | 12 | +4 (read-and-sum, best-so-far, find-in-file, filter — all new) | 16 | 2 (unchanged) |
+| u10 | 12 | +3 (Ex13 promote, Ex14 promote, filter new) | 15 | 2 − 2 (Ex13+Ex14) + 2 (repl) = 2 |
 
 Every pattern reaches **≥3 core non-checkpoint reappearances** (home excluded): running-total u05/u07/u09;
 count-by-condition u06/u07/u08; find-extreme u08/u09/u10; linear-search u07/u08/u09; transform-each
 u07/u08/u09; filter-into-list u08/u09/u10; sentinel-loop project-01/u07/u10. Every touched unit keeps
-`stretch-remaining` ≥2. Scanner-derived `practices` additions (all closure-clean): `break-statement`
-(intro u04) → u07/u08/u09; `accumulator` (u04) + `arithmetic-operators` (≤u02) → u09;
-`comparison-operators` (≤u02) → u09.
+≥2 Challenge exercises (≥2 tagged cells) at every merge. Scanner-derived `practices` additions (exact
+registry ids, all closure-clean, under the General Rule): `break-statement` (intro u04) →
+**u06/u07/u08/u09**; `accumulator` (u04) + `arithmetic` (u02) → u09; `comparison` (u02) → u09;
+`builtin-functions` (u07) → u08 (filter `len()`).
