@@ -138,9 +138,10 @@ u10 12. Corrected against reality:
 - **Ceiling verified: u07=16, u08=16, u09=16, u10=15** (current core counts + the §3 loci) — every unit
   is ≤16 as specified, **no relocation needed**, and §3's per-locus reuse/promote/new statuses stand.
   The **plan's ~28-row ledger re-confirms each unit ≤16** at exact-cell fidelity. If it somehow finds an
-  overflow, the only **status-preserving** levers (they do NOT change any §3 locus status) are: one core
-  exercise **embodying two patterns** with two markers (e.g. a u09 read-and-**sum**-then-**filter**), or
-  dropping the lowest-value reappearance of an over-spiraled pattern — decided at plan time. Carry
+  overflow, the only **status-preserving** lever (it does NOT change or drop any §3 locus) is: one core
+  exercise **embodying two patterns** with two markers (e.g. a u09 read-and-**sum**-then-**filter**),
+  decided at plan time. (Adding, dropping, or re-classifying a §3 locus is out of scope for the plan;
+  the §3 spiral is fixed.) Carry
   plan-037 Phase-V volume thresholds (>2× cells / >30% PDF pages / >25% wall-time = gate finding; 120 s
   per-cell exec).
 - Estimate **+12–16 net-new exercises** (rest is reuse-tag + 3 promotions).
