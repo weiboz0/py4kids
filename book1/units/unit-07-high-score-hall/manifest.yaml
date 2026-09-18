@@ -5,7 +5,7 @@ lessons: 3
 provenance: original
 concepts:
   introduces: [list-literal, list-index, list-append, list-loop, list-sort, builtin-functions,
-               find-extreme]
+               find-extreme, filter-into-list]
   requires: [for-loop, variable, def-function, comparison, parameters, return-value]
   practices: [accumulator, f-string, while-loop, string-methods, print, arithmetic, int-type,
               range-function, loop-counter, if-statement, elif-else, string-concat, float-type,
