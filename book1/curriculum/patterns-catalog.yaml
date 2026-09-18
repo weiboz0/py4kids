@@ -1,3 +1,6 @@
 sentinel-loop:
   hook: "You know when you're done; the program must ask \"done yet?\" every pass."
   enabling_concepts: [while-loop, comparison]
+running-total:
+  hook: "Keep a named box for the total-so-far, and update it each step."
+  enabling_concepts: [accumulator, arithmetic]

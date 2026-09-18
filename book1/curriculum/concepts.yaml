@@ -32,6 +32,7 @@ concepts:
 - {id: accumulator, name: Accumulator pattern, category: loops}
 - {id: nested-loops, name: Nested loops, category: loops}
 - {id: sentinel-loop, name: "Repeat until done (sentinel loop)", category: techniques, kind: technique}
+- {id: running-total, name: "Running total (accumulate)", category: techniques, kind: technique}
 - {id: import-statement, name: Importing modules, category: modules}
 - {id: random-module, name: "Random numbers (randint/choice)", category: modules}
 - {id: turtle-basics, name: "Turtle setup and movement (forward/turn)", category: graphics}
