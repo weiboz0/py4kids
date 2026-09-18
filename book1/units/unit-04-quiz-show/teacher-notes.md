@@ -18,8 +18,9 @@ Budget: three lessons of 60–90 minutes. Each concept is taught as a short **wo
   keeping score on the board — today the machine takes over the scoring.
   25 min: the accumulator ladder (`score = score + 1` once → again → inside a `while` loop → two accumulators, score + `questions_asked`). Name the ACCUMULATOR pattern out loud.
   25 min: the logical-ops ladder (`and` → `or` → `not` → a combined streak-bonus rule). All three operators are genuinely taught, each on its own rung.
-  Rest: the full opening round + exercises 1–2 and the running-total home in exercise 11.
-  Before exercise 11, run a 2-minute unplugged trace: announce three round scores, have students add each score on their fingers, and say the new total-so-far after every round.
+  Rest: the full opening round + exercises 1–2, the running-total home in exercise 8, and the count-by-condition home in exercise 9.
+  Before exercise 8, run a 2-minute unplugged trace: announce three round scores, have students add each score on their fingers, and say the new total-so-far after every round.
+  Before exercise 9, run a second 2-minute unplugged trace: ask three yes/no questions, have classmates raise a hand when the answer is yes, and bump one visible counter for each raised hand.
   60-MINUTE CUT: teach ladder rungs 1–2 live, leave the last rung as a "try it".
 - **Lesson 2 — conditional-nesting (60–90 min).**
   Open on the thread: finals are dramatic — a follow-up unlocks only when part one is right.
@@ -36,15 +37,17 @@ Practices reappearance: boolean and type-conversion run through every scoring ch
 the lightning-round Challenge; error-messages gets a deliberate debugging moment in
 exercise 5. All four reappear in checkpoint 02.
 
-Running-total route: teach the named pattern in class with exercise 11, retrieve it inside a function in Unit 05 exercise 7, retrieve it over a list in Unit 07 exercise 4, then assign Unit 09 exercise 13 after the file-reading lesson to transfer the same total-so-far update to saved-score lines.
+Running-total route: teach the named pattern in class with exercise 8, retrieve it inside a function in Unit 05 exercise 7, retrieve it over a list in Unit 07 exercise 4, then assign Unit 09 exercise 13 after the file-reading lesson to transfer the same total-so-far update to saved-score lines.
+
+Count-by-condition route: teach the named pattern in class with exercise 9, retrieve it over characters in Unit 06 exercise 12, retrieve it over a score list in Unit 07 exercise 5, then use Unit 08 exercise 5 to show the tally-by-key variation: one count per word in a dictionary.
 
 ## Exercise allocation
 
-- **In class:** exercises 1–2 and 11 after the accumulator/logical-ops ladder, exercise 3
+- **In class:** exercises 1–2 and 8–9 after the accumulator/logical-ops ladder, exercise 3
   after conditional nesting, and exercises 4–7 after the `break` ladder.
   This path includes at least one authored repetition of every Unit 04
   `introduces`/`practices` concept.
-- **Homework / More Practice:** exercises 8–10 after Lesson 3; review them at the
+- **Homework / More Practice:** exercises 10–12 after Lesson 3; review them at the
   opening of the next meeting.
 - **Optional stretch:** the two Challenges remain fast-finisher work and do not
   supply any required mastery repetition.
@@ -57,7 +60,7 @@ Count exemption: `error-messages` has one genuine authoring repetition in exerci
   trace it and move the line up.
 - `and` where `or` was meant (and vice versa) in the bonus rule — truth-table the bonus
   on the board with class examples, then have students say both accepted spellings in
-  exercise 8 before they write the `or` expression.
+  exercise 10 before they write the `or` expression.
 - Nesting by wishful thinking: the follow-up `if` not indented under its parent, so it
   always runs. Show both indentations side by side.
 - `break` outside any loop (SyntaxError — a planned traceback-reading moment) and

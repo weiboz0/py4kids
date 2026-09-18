@@ -4,3 +4,6 @@ sentinel-loop:
 running-total:
   hook: "Keep a named box for the total-so-far, and update it each step."
   enabling_concepts: [accumulator, arithmetic]
+count-by-condition:
+  hook: "Keep a counter; check each item once, bump it when it matches. The tally-by-key variation keeps one counter per group."
+  enabling_concepts: [if-statement, comparison]
