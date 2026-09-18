@@ -9,7 +9,7 @@ to assemble these into a working arcade leaderboard that crowns a champion.
 This is the first unit where one variable holds a whole collection, not a single value.
 Success looks like: every student builds a scores list, sorts it top-first, and prints a
 numbered "Place N: score" hall of fame.
-Exercises 1–9 form the in-class path; the labelled More Practice Exercises 10–13 are
+Exercises 1–9 form the in-class path; the labelled More Practice Exercises 10–14 are
 homework after Lesson 3, and the Challenges remain optional stretch work.
 
 ## Pacing
@@ -39,9 +39,10 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   deliberately produce the `IndexError` only with the teacher, read its final line, and then
   write the safe `scores[-1]` fix in the following cell. Exercise 9 is also interactive and
   remains `no-exec`.
-  Assign the labelled More Practice Exercises 10–13 as homework only after Lesson 3: ascending
+  Assign the labelled More Practice Exercises 10–14 as homework only after Lesson 3: ascending
   sort and input report (10), `.sort()` returning `None` (11), threshold doubling (12), and a
-  second list-processing `while` loop (13). Thus no exercise is allocated before its concepts
+  second list-processing `while` loop (13), then the **linear-search** retrieval over scores (14),
+  which scans one by one and stops at the first qualifying score. Thus no exercise is allocated before its concepts
   have appeared in the lesson sequence.
 
 ## Common mistakes
@@ -80,7 +81,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 ## Exercise split and count note
 
 - **In class:** Exercises 1–9, distributed across the three lessons as described above.
-- **Homework / More Practice:** Exercises 10–13, assigned only after Lesson 3.
+- **Homework / More Practice:** Exercises 10–14, assigned only after Lesson 3.
 - **Optional stretch:** Challenge 1 and Challenge 2.
 
 The deliberate traceback in Exercise 3 is the unit's one genuine `error-messages` authoring

@@ -15,7 +15,7 @@ Budget: three lessons of 60–90 minutes.
 Each concept is a short **worked-example ladder** (minimal → one step up → real save system, with a *Notice* per rung); the lesson-count is advisory.
 `with-statement` is co-taught (it wraps every file operation); the only string method is `.strip()`.
 The write rungs must run before the read rungs (the read rungs load the file the write rungs saved).
-Exercises 1–9 form the in-class path; the labelled More Practice Exercises 10–12 are homework, and Exercises 13–14 remain optional Challenges.
+Exercises 1–9 form the in-class path; the labelled More Practice Exercises 10–14 are homework, and Exercises 15–16 remain optional Challenges.
 
 - **Lesson 1 — save to a file (file-write, with-statement) (60–90 min).**
   Open on the hook: a game that forgets everything when you close it is no fun.
@@ -33,7 +33,7 @@ Exercises 1–9 form the in-class path; the labelled More Practice Exercises 10�
   Complete the fixed-score branch in Exercise 8 and finish with the `FileNotFoundError` study in Exercise 9: save first, then load.
   60-MINUTE CUT: Exercises 6–7 are the core; guide Exercises 8–9 together as the final short closing pair.
 
-Homework More Practice: Exercise 10 proves that a second `"w"` save replaces instead of duplicates, Exercise 11 repeats dictionary save/load through functions, and Exercise 12 repeats a parameterized score loader.
+Homework More Practice: Exercise 10 proves that a second `"w"` save replaces instead of duplicates, Exercise 11 repeats dictionary save/load through functions, Exercise 12 repeats a parameterized score loader, Exercise 13 retrieves the running-total pattern over file lines, and Exercise 14 retrieves **linear-search** by scanning saved names one line at a time and stopping when the target is found.
 `error-messages` has one in-class student-authored code repetition rather than three because Exercise 9 turns its diagnosed `FileNotFoundError` into a real save-before-load repair, while deliberately staging more failing loads would be artificial and would not add useful file practice.
 The exercises notebook is designed to run top-to-bottom once; Exercise 11 intentionally replaces Ada's `settings.txt` profile with Mina's, so rerunning Exercise 6 afterward changes its result.
 
@@ -60,7 +60,7 @@ The exercises notebook is designed to run top-to-bottom once; Exercise 11 intent
 
 - Strugglers: give the write code and have them only do the READ half (open, loop, print) — seeing
   their own saved scores load back is a satisfying win.
-- Fast finishers: Exercises 13–14 — highest-saved-score (load then `max`) and add-a-new-high
+- Fast finishers: Exercises 15–16 — highest-saved-score (load then `max`) and add-a-new-high
   (load, append, re-save). Saving two score files and loading whichever the player picks is a good
   no-new-concepts extension.
 - Middle tier: Exercises 10–12 provide extra save/load repetitions before the Challenges.

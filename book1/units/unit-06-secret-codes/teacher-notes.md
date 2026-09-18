@@ -23,7 +23,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   Open on the thread: crack the folded note.
   25 min: the ATBASH flip — scan the alphabet with `for position in range(26)` to find a letter's position, then take `letters[25 - position]`; this introduces the position-scan the Caesar cipher reuses.
   20 min: the `in` ladder (`"m" in letters` → a space/mark is False → inside a `for` loop to tell letters from marks).
-  In-class exercises: 4, 5, 8, 9, 11, and 12 (Exercise 12 is the **count-by-condition** retrieval — keep a `vowel_count`, check each character once against `in "aeiou"`, bump on a match; it rides straight off this `in` ladder).
+  In-class exercises: 4, 5, 8, 9, 11, 12, and 14 (Exercise 12 is the **count-by-condition** retrieval — keep a `vowel_count`, check each character once against `in "aeiou"`, bump on a match; it rides straight off this `in` ladder. Exercise 14 is the **linear-search** home — scan positions one by one and `break` as soon as the target is found).
+  Before Exercise 14, run a 2-minute unplugged trace: flip cards one by one and stop when you find the ace; compare that early stop with checking every remaining card.
 - **Lesson 3 — the Caesar encoder (60–90 min).**
   Open on the thread: yesterday we READ codes; today we WRITE one only a friend can crack.
   25 min: the CAESAR cipher as `encode(message, shift)` — lowercase first (the case contract), scan `range(26)`, `(position + shift) % 26`, rebuild with `result = result + new_letter`; `decode` shifts back by `26 - shift`.
@@ -33,8 +34,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   Before Exercise 13, run a 2-minute unplugged trace: pass a paper message down the row, have each student transform exactly one character with the same lowercase-and-`a`-to-`@` rule, and join the changed characters into a new message.
   60-MINUTE CUT: skip the wrap-bug demo (the fix-the-caesar exercise covers it); the encode/decode function is the non-negotiable core.
 
-**Exercise split:** Exercises 1–13 are the in-class core, spread across the three lessons as
-listed above (Exercise 12, the count-by-condition retrieval, rides Lesson 2's `in` ladder; Exercise 13, the transform-each home, rides Lesson 3's `encode` per-character trace). The notebook's **Challenge** section contains Challenges 1–2;
+**Exercise split:** Exercises 1–14 are the in-class core, spread across the three lessons as
+listed above (Exercises 12 and 14 ride Lesson 2's `in` and alphabet-scan ladder; Exercise 13, the transform-each home, rides Lesson 3's `encode` per-character trace). The notebook's **Challenge** section contains Challenges 1–2;
 these stretch tasks are optional, and no core concept depends on completing them.
 
 `error-messages` has a justified peripheral count exemption: Exercise 7 supplies one focused,
@@ -49,6 +50,8 @@ accumulator, if/elif/else, boolean values, nested loops, and loop counters all c
 into the cipher work.
 
 Transform-each route: teach the named pattern in class with Exercise 13 over the characters in one string, retrieve it in class with cleaned strings in Unit 07 Exercise 6, retrieve it in class with dictionary-produced values in Unit 08 Exercise 10, then use Unit 09 Exercise 3 in class after the file-reading lesson to transform file lines into integers.
+
+Linear-search route: teach the named pattern in class with Exercise 14 over alphabet positions, retrieve it in Unit 07 Exercise 14 with a score list, in Unit 08 Exercise 15 with dictionary values, and in Unit 09 Exercise 14 with file lines.
 
 ## Common mistakes
 

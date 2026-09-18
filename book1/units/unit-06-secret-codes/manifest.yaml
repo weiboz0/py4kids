@@ -4,8 +4,8 @@ blueprint_version: 1
 lessons: 3
 provenance: original
 concepts:
-  introduces: [string-index, string-slice, string-methods, in-operator, transform-each]
+  introduces: [string-index, string-slice, string-methods, in-operator, transform-each, linear-search]
   requires: [for-loop, string-concat, def-function, parameters, return-value]
   practices: [f-string, accumulator, if-statement, loop-counter, print, variable, comparison,
               arithmetic, range-function, int-type, input, elif-else, error-messages, nested-loops,
-              boolean, string-literal, count-by-condition]
+              boolean, string-literal, count-by-condition, break-statement]

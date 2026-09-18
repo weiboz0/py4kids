@@ -10,3 +10,6 @@ count-by-condition:
 transform-each:
   hook: "Give every item the same change, and collect the results in a new sequence."
   enabling_concepts: [for-loop, string-methods]
+linear-search:
+  hook: "Check items one by one; break when found so the program stops working early."
+  enabling_concepts: [for-loop, break-statement, in-operator]
