@@ -1,8 +1,6 @@
 # Design 002 — Book 1 Algorithm-Pattern Thread
 
 **Status:** APPROVED — v6, 2-way design review CLOSED ([sol] APPROVE + [fable] APPROVE, 2026-09-18). Ready for the plan lifecycle.
-v3 addresses the round-2 blockers (schema keys, `requires` semantics, phantom reuse loci). Awaiting
-re-review → plan lifecycle.
 **Scope:** Book 1 only. Book 2 inherits the technique ids via `dependency_baseline`; it grows its own.
 
 ## 0. Design ↔ plan boundary
