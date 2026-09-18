@@ -17,7 +17,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   20 min: the index ladder (`word[0]` → more positions → `word[-1]` → index in a `for` loop).
   20 min: the slice ladder (`[1:4]` → `[:2]` → `[2:]` → the reverse slice `[::-1]`, a one-line reverse cipher!).
   25 min: the methods ladder (`.lower()` → `.upper()` → `.strip()` → `.replace()` → chained), PRINTing each result.
-  In-class exercises: 1–3.
+  In-class exercises: 1–3 and 13 (Exercise 13 is the **transform-each** home: apply the same string-method step to every character and concatenate the results into a new string).
+  Before Exercise 13, run a 2-minute unplugged trace: pass a paper message down the row, have each student transform exactly one character with the same lowercase-and-`a`-to-`@` rule, and join the changed characters into a new message.
   60-MINUTE CUT: teach rungs 1–2 of each ladder; leave the last rung as a "try it".
 - **Lesson 2 — the ATBASH decode + in-operator (60–90 min).**
   Open on the thread: crack the folded note.
@@ -32,8 +33,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   In-class exercises: 6, 7, and 10.
   60-MINUTE CUT: skip the wrap-bug demo (the fix-the-caesar exercise covers it); the encode/decode function is the non-negotiable core.
 
-**Exercise split:** Exercises 1–12 are the in-class core, spread across the three lessons as
-listed above (Exercise 12, the count-by-condition retrieval, rides Lesson 2's `in` ladder). The notebook's **Challenge** section contains Challenges 1–2;
+**Exercise split:** Exercises 1–13 are the in-class core, spread across the three lessons as
+listed above (Exercise 12, the count-by-condition retrieval, rides Lesson 2's `in` ladder; Exercise 13, the transform-each home, rides Lesson 1's methods ladder). The notebook's **Challenge** section contains Challenges 1–2;
 these stretch tasks are optional, and no core concept depends on completing them.
 
 `error-messages` has a justified peripheral count exemption: Exercise 7 supplies one focused,
@@ -46,6 +47,8 @@ the typed-message and character exercises; variable/arithmetic/comparison/range-
 guts of the position scan and shift; two integer shift values are compared directly; f-string,
 accumulator, if/elif/else, boolean values, nested loops, and loop counters all carry earlier learning
 into the cipher work.
+
+Transform-each route: teach the named pattern in class with Exercise 13 over the characters in one string, retrieve it in class with cleaned strings in Unit 07 Exercise 6, retrieve it in class with dictionary-produced values in Unit 08 Exercise 10, then use Unit 09 Exercise 3 in class after the file-reading lesson to transform file lines into integers.
 
 ## Common mistakes
 

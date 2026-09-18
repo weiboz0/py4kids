@@ -50,3 +50,19 @@ Keep a counter; check each item once, bump it when it matches. The tally-by-key 
 | Reappearance | `unit-06-secret-codes` |
 | Reappearance | `unit-07-high-score-hall` |
 | Reappearance | `unit-08-word-wizard` |
+
+## Do the same to each (map)
+
+Give every item the same change, and collect the results in a new sequence.
+
+- Pattern id: `transform-each`
+- Enabling concepts: `for-loop`, `string-methods`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-06-secret-codes` |
+| Reappearance | `unit-07-high-score-hall` |
+| Reappearance | `unit-08-word-wizard` |
+| Reappearance | `unit-09-save-point` |

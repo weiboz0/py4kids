@@ -75,7 +75,7 @@ entries:
   kind: unit
   title: "Secret Codes — ciphers and string surgery"
   lessons: 3
-  introduces: [string-index, string-slice, string-methods, in-operator]
+  introduces: [string-index, string-slice, string-methods, in-operator, transform-each]
   requires: [for-loop, string-concat, def-function, parameters, return-value]
   practices: [f-string, accumulator, if-statement, loop-counter, print, variable, comparison,
               arithmetic, range-function, int-type, input, elif-else, error-messages, nested-loops,
@@ -89,7 +89,7 @@ entries:
   practices: [accumulator, f-string, while-loop, string-methods, print, arithmetic, int-type,
               range-function, loop-counter, if-statement, elif-else, string-concat, float-type,
               type-conversion, input, in-operator, error-messages, string-literal, boolean,
-              sentinel-loop, running-total, count-by-condition]
+              sentinel-loop, running-total, count-by-condition, transform-each]
 - id: unit-08-word-wizard
   kind: unit
   title: "Word Wizard — dictionaries and translation games"
@@ -98,7 +98,7 @@ entries:
   requires: [list-loop, string-methods, in-operator, def-function, for-loop, parameters, return-value]
   practices: [list-literal, list-append, if-statement, f-string, print, variable, comparison,
               string-concat, elif-else, arithmetic, int-type, error-messages, string-literal,
-              boolean, type-conversion, accumulator, count-by-condition]
+              boolean, type-conversion, accumulator, count-by-condition, transform-each]
 - id: checkpoint-03-data-wrangler
   kind: checkpoint
   title: "Checkpoint 3 — Data Wrangler"
@@ -119,7 +119,7 @@ entries:
   practices: [list-loop, dict-access, f-string, in-operator, builtin-functions, dict-literal,
               if-statement, list-literal, print, variable, string-concat, string-literal,
               type-conversion, int-type, error-messages, elif-else, accumulator, arithmetic,
-              running-total]
+              running-total, transform-each]
 - id: unit-10-pet-simulator
   kind: unit
   title: "Pet Simulator — a gentle intro to objects"

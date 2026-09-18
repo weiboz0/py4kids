@@ -7,3 +7,6 @@ running-total:
 count-by-condition:
   hook: "Keep a counter; check each item once, bump it when it matches. The tally-by-key variation keeps one counter per group."
   enabling_concepts: [if-statement, comparison]
+transform-each:
+  hook: "Give every item the same change, and collect the results in a new sequence."
+  enabling_concepts: [for-loop, string-methods]
