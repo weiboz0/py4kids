@@ -392,6 +392,30 @@ generator + ledger). Bundles design 002 + plan 047 + Phase A tooling as the foun
 verified closed, 43 passed, checks green book1+book2, no new issues). Final: [self] APPROVE · [glm]
 APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] APPROVE — no open blockers.
 
+### PR-2 = Phase B (sentinel-loop slice, commit ae44749) — 2026-09-18 — CONSENSUS
+
+- **[self] → APPROVE** (Spotlights + markers correct; embodiments match design §3).
+- **[sol] → APPROVE** (blind-solved all four loci; only a WONTFIX env note — its sandbox blocked
+  exec-solutions so it used an input-trapped plain-Python fallback; all four solution notebooks passed).
+- **[fable] → APPROVE WITH NITS** (blind-solved every locus: all four are true condition-driven
+  sentinels, none counter-bounded; spiral/stretch/integrity green; pytest 43).
+- **[glm] → APPROVE WITH NITS** (embodiments genuine; pytest 446 `-k 'not exec'`; Book 2 zero-diff).
+- No open blockers → **content gate CLOSED**.
+
+**Nit dispositions (commit below):**
+- `[FIXED]` [fable] N1 + [glm] (pedagogy/self-containedness): u02 lesson Spotlight "Unlike a counted
+  loop…" → "Unlike a loop that runs a fixed number of times…" (counted loops are u03; u02 is
+  deliberately counter-free).
+- `[FIXED]` [fable] N3: renamed `test_real_book_..._empty_technique_set` → `..._pass_on_real_book`.
+- `[FIXED]` [fable] N4: added `assert len(pets) >= 3` to the u10 Ex15 solution (unit convention).
+- `[FIXED]` [fable] N2: landed the deferred enabling-concept-introduced-after-home fault fixture
+  (`test_patterns_doc_rejects_enabling_concept_introduced_after_home`).
+- `[WONTFIX]` [glm]/[fable] process: u10 solutions authored inline (env-forced; Codex solutions session
+  unreliable under memory pressure) — mitigated by all reviewers blind-solving the marked loci.
+- `[WONTFIX]` reappearance-unit teacher-notes not individually updated — the plan requires only the
+  home's in-class note + unplugged trace (both in u02 teacher-notes); routing is centralized there.
+- Ledger already records the u07 Ex12 selection (Ex13 excluded as accumulator-bounded).
+
 ## Post-Execution Report
 
 ### PR-1 = Phase A (tooling foundation) — 2026-09-18
@@ -428,6 +452,28 @@ marker detection; spiral home exclusion) — both within Phase A scope.
 
 **Next:** pattern slices B–H (one vertical slice per pattern, filter-into-list last), each self-complete
 so `main` stays green.
+
+### PR-2 = Phase B (sentinel-loop slice) — 2026-09-18
+
+**Shipped:** the `sentinel-loop` vertical slice (commit ae44749 + nit-fix commit). Registered
+`sentinel-loop` (kind: technique); home u02 Ex3 (guess-until-correct) `introduces`; ≥3 core
+non-checkpoint reappearances `practices`d — project-01 M1 (`while choice != "q"`), u07 Ex12 (double
+threshold until > champion), u10 Ex14 "Play Until Happy" (promoted stretch→core). Spotlights + markers
+per design §6; catalog row (`while-loop`, `comparison`) + regenerated patterns.md; u02 teacher-notes
+(in-class home + card-flip unplugged trace). u10 stretch preserved (Ex13 + new Ex15 "Pet Talent Show").
+
+**Verification (kernel env):** all 3 pattern checks + concept-scan/manifest/coverage/prereq/stretch/
+structure/hygiene/cell-lint/noexec PASS book1; exec-solutions (u10) + exec-lessons (u02) PASS; Book 2
+zero-diff + all checks PASS; pytest 44 passed (test_patterns) / 446 `-k 'not exec'`; ruff clean;
+patterns.pdf builds (16 KB). No scanner-derived `practices` needed (sentinel-loop uses only
+while-loop/comparison already in those units' unions).
+
+**Gates:** content-review 4-way CONSENSUS ([self]/[sol] APPROVE; [glm]/[fable] APPROVE WITH NITS; nits
+fixed/dispositioned above).
+
+**Deviation:** u10 solutions authored inline (the Codex solutions session was unreliable under
+environment memory pressure — the statement-side Codex job looped in verification and was cancelled
+after completing its deliverables); mitigated by the gate's 4-way blind-solve of the marked loci.
 
 ---
 
