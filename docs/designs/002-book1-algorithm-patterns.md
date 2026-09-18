@@ -45,8 +45,8 @@ net-new core exercise.
 | `find-extreme` | Find the best (max / argmax) | u07 | keep the *best so far* while scanning — and remember *who*, not just the number | home = **champion-by-name** (parallel names/scores, keep `best_name`+`best_score`, **new**), u08 Ex6 most-common `best_word`/`best_count` (reuse), u09 best-so-far replacing `max()` (**new**), u10 Ex13 happiest-pet (**promote** — add `best_pet`, not just the number) |
 | `linear-search` | Scan until found + stop early | u06 | check items one by one; `break` when found = stop working early | home anchors the lesson's `for position in range(26)` scan + a home exercise that adds the `break` (**new/adapt**), u07 loop+`break` search (**new**), u08 reverse-lookup value→key scan (**promote** — add the `break`; the CT contrast "the dict finds by *name* instantly; by *value* we're back to one-by-one"), u09 find-in-file (**new**) |
 | `transform-each` | Do the same to each (map) | u06 | apply the *same step* to every item, producing a **new sequence** | u07 Ex6 (reuse), u08 Ex10 translate-each (reuse), u09 Ex3 line→int (reuse) |
-| `filter-into-list` | Keep the ones that pass (filter) | u07 | build a **new** list of only the items that pass a test | home = clean filter (**new**); reappearances **new** in two of {u08, u09, u10} (see §7 — placed to respect ceilings) |
-| `sentinel-loop` | Repeat until done (sentinel loop) | u02 | *you* know when you're done; the program must ask "done yet?" every pass | u04 Ex8 `while attempts<3` + `break`-when-accepted (reuse), project-01 M1 (reuse), u07 Ex12/13 while (reuse), u10 Ex14 `while happiness<10` (**promote** — the genuine sentinel; Ex10's `while stops<3` is a counted loop, not this) |
+| `filter-into-list` | Keep the ones that pass (filter) | u07 | build a **new** list of only the items that pass a test | home = clean filter (**new**); reappearances u08 (**new**), u09 (**new**), u10 (**new**) — all three; each fits ≤16 (§7). No other pre-capstone home exists (project-01 precedes u07; project-02 is the capstone; checkpoints don't tag), so all three are required. |
+| `sentinel-loop` | Repeat until done (sentinel loop) | u02 | *you* know when you're done; the program must ask "done yet?" every pass | project-01 M1 `while choice != "q"` (reuse), u07 Ex12/13 while (reuse), u10 Ex14 `while happiness<10` (**promote**) — 3 pre-capstone entries. **u04 Ex8 excluded** (`while attempts<3` is a counter-bounded retry, not a sentinel — see the embodiment definition); Ex10's `while stops<3` likewise excluded. |
 
 Variations named in the catalog (NOT separate patterns): **tally-by-key** (count per group,
 `counts[w]=counts.get(w,0)+1` — the most Book-2-relevant Book 1 shape). (The earlier draft's `all-any`
@@ -115,7 +115,7 @@ nbconvert/pandoc, hidden in JupyterLab; hygiene/PDF unaffected.
 - **Variation axes** — each reappearance differs from every earlier one on ≥1 axis, recorded in its
   Spotlight: data type (numbers→strings→lists→dicts→file lines→objects), packaging
   (inline→function→method), twist (empty / tie / early-stop).
-- **Catalog** — `book1/reference/patterns.md` (dir to be created): the 7 patterns (name, hook, enabling
+- **Catalog** — `book1/reference/patterns.md` (the `reference/` dir already exists, empty): the 7 patterns (name, hook, enabling
   concepts, generated home+reappearances table). Delivered to students via `scripts/build-pdf.sh`
   (pandoc, like `syllabus.md`).
 - **teacher-notes** (in the content dispatch): name the **in-class** appearance (home is always
@@ -126,18 +126,22 @@ nbconvert/pandoc, hidden in JupyterLab; hygiene/PDF unaffected.
 
 Current post-037 core (ceiling 16): u02 8, u03 10, u04 10, u05 11, u06 11, **u07 13, u08 14**, u09 12,
 u10 12. Corrected against reality:
-- **u09 is the heavy one:** best-so-far, find-in-file, read-and-sum are all **new** (Ex4 uses `max()`,
-  Ex6 uses `in`, no exercise sums) → u09 ~12 → **15–16**. §7 (not "+1–2").
-- **u07 → ~16:** champion-by-name + clean-filter + loop-and-break search (3 new).
-- **u08 → ~15–16:** reverse-lookup promote (+1 core) + at most one filter; running-total is **dropped**
-  from u08 (no natural sum — avoids 17).
-- u06 11 → ~13 (count-matches new + linear-search & transform-each homes). u04 10 → ~11–12 (homes may
-  adapt existing scoring exercises). u10 12 → ~14 (promote Ex13 + Ex14). u05/u02 no net-new (reuse Ex7;
-  u02 gets one lean one-sentence Spotlight only).
-- **Ceiling risk:** u07/u08/u09 land AT ~16. The **plan's ~28-row ledger must prove each unit ≤16**; if
-  any exceeds, a `filter-into-list` reappearance relocates (e.g. off u08 to u10) or drops to homework.
-  Carry plan-037 Phase-V volume thresholds (>2× cells / >30% PDF pages / >25% wall-time = gate finding;
-  120 s per-cell exec).
+- **u09 is the heavy one:** best-so-far, find-in-file, read-and-sum, filter are **new** (Ex4 uses
+  `max()`, Ex6 uses `in`, no exercise sums) → u09 12 → **15–16**.
+- **u07 → 16:** champion-by-name + clean-filter home + loop-and-break search (3 new).
+- **u08 → 16:** reverse-lookup promote (+1 core) + filter (+1 new). Running-total is **dropped** from
+  u08 (no natural sum — avoids overflow).
+- u06 11 → ~13 (count-matches new + linear-search & transform-each homes). u04 10 → ~11–12 (running-
+  total + count-by-condition homes may adapt existing scoring exercises; **no sentinel-loop tag** —
+  dropped). u10 12 → **15** (promote Ex13 + Ex14 + filter new). u05/u02 no net-new (reuse Ex7; u02 gets
+  one lean one-sentence Spotlight only).
+- **Ceiling: u07/u08/u09 land AT 16.** The **plan's ~28-row ledger must prove each unit ≤16.** Since
+  every pattern's spiral now needs all its named entries (no spare home to relocate to), the levers if a
+  unit would exceed 16 are: (a) do u09 best-so-far as an **in-place edit** of Ex4 (`max()`→loop) rather
+  than a new cell; (b) fold u09 best-so-far into stretch Ex13 promoted to core; (c) have one exercise
+  **embody two patterns** with two markers (e.g. a u09 read-and-**sum**-then-**filter**). Any keeps
+  ≤16; the ledger picks per unit. Carry plan-037 Phase-V volume thresholds (>2× cells / >30% PDF pages
+  / >25% wall-time = gate finding; 120 s per-cell exec).
 - Estimate **+12–16 net-new exercises** (rest is reuse-tag + 3 promotions).
 
 ## 8. Rollout
@@ -146,6 +150,10 @@ Inherited structural checks are green from PR-1. **Vertical slice per complete p
 is added to `concepts.yaml` only when its home + all ≥3 core reappearances + catalog row land together —
 so `main` is valid at every merge and `technique-spiral` is **never red** (one rule; no SKIP-until
 needed). Phased PRs by term to keep the content gate's blind-solve tractable (batching = plan decision).
+**Sequence the `filter-into-list` slice last** — its vertical slice touches u07+u08+u09+u10 together
+(the three units landing at the 16-core ceiling), so it is the largest/riskiest slice. The plan must
+**design `pattern-marker` (§5.3) and `technique-spiral`'s stretch-rejection (§5.1) together** — the
+latter needs the marker's tag→cell link to tell whether a locus is stretch.
 
 ## 9. Verification (named phase — required)
 
@@ -189,3 +197,7 @@ prerequisite surface once these ids ship (not now). No contradiction with plan 0
   `best_pet`; linear-search u08 add `break`); `technique-spiral` scoped to Book 1 + rejects stretch loci;
   markers map kind→notebook incl. `brief.ipynb`, checkpoints don't tag; `all-any` dropped; footprint
   corrected (u09 heavy; u07/u08/u09 at ceiling → ledger must prove ≤16); design↔plan boundary (§0).
+- **v4 (2026-09-18):** round-3 fixes — `filter-into-list` restored to all three reappearances
+  (u08+u09+u10, each ≤16); **`sentinel-loop` drops the u04 Ex8 locus** (counter-bounded retry, violates
+  the "NOT counter-bounded" embodiment) → 3 genuine entries (project-01/u07/u10); §7 relocation levers
+  rewritten (no spare home); stale `reference/` note + filter-slice-last + marker↔spiral co-design.
