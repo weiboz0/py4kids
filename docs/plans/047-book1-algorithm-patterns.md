@@ -388,9 +388,46 @@ generator + ledger). Bundles design 002 + plan 047 + Phase A tooling as the foun
 - `[DEFERRED→Phase B]` [fable] N3: add enabling-intro>home / unregistered-id / project-brief-locus
   fixtures when project-01 first becomes a real locus (Phase B).
 
+**Round 2 (commit 1ba7503) — CONSENSUS, content gate CLOSED for PR-1.** [sol] → APPROVE (both fail-opens
+verified closed, 43 passed, checks green book1+book2, no new issues). Final: [self] APPROVE · [glm]
+APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] APPROVE — no open blockers.
+
 ## Post-Execution Report
 
-_(Written before PR.)_
+### PR-1 = Phase A (tooling foundation) — 2026-09-18
+
+**Shipped:** design 002 (v7) + plan 047 (v4) + Phase A tooling — the pattern-thread foundation. NO
+pattern ids registered; the book stays pattern-free and every new check is green on the empty set.
+
+**Delivered (commits 0cde07e + 1ba7503):**
+- `tools/patterns.py` — `technique-spiral` + `pattern-marker` checks (Book-1-scoped; exactly-one-home,
+  ≥3 core pre-capstone non-checkpoint practices with home excluded, stretch-rejection, marker
+  cardinality + `## Exercise N` adjacency + comment-only/in-prose, checkpoints carry none, manifest==map,
+  capstone via project-02; fail-closed on malformed YAML/markers + capstone count≠1).
+- `tools/patterns_doc.py` — `patterns-doc-check` + catalog generator (byte-stable; enabling_concepts
+  resolve to registry ids introduced ≤ home; book1-only).
+- `book1/curriculum/patterns-catalog.yaml` (empty), `book1/reference/patterns.md` (empty-but-valid),
+  `book1/curriculum/pattern-ledger.md` (the ~28-row acceptance ledger, normalized from the plan Appendix).
+- `tools/checks.py` + `tools/cli.py` register 3 book-level checks; `scripts/ci-local.sh` wires them
+  book1-only; `scripts/build-pdf.sh` guards the patterns PDF (no-op empty, never book2).
+- `tests/test_patterns.py` — 43 fault fixtures incl. Book-2 non-interference + the 2 content-gate
+  fail-open regression tests.
+
+**Verification (kernel env):** 3 new checks PASS book1 / inert-PASS book2; inherited concept checks +
+book2 no regression; `pytest tests/test_patterns.py tests/test_tools.py` all pass (444 with `-k 'not
+exec'`; the only failures anywhere were the known Jupyter-kernel sandbox socket restriction, which does
+not affect Phase A — no unit notebook content changed); ruff clean; build-pdf PASS with `patterns.pdf`
+correctly absent (empty no-op).
+
+**Gates:** plan-review 4-way CONSENSUS (round-3); content-review 4-way CONSENSUS (round-2). No open
+blockers; nits fixed or dispositioned above.
+
+**Deviations from plan:** none material. Ledger is normalized (exact ids) rather than byte-verbatim from
+the Appendix (recorded). Two fail-open hardening fixes were added during the content gate (colon-less
+marker detection; spiral home exclusion) — both within Phase A scope.
+
+**Next:** pattern slices B–H (one vertical slice per pattern, filter-into-list last), each self-complete
+so `main` stays green.
 
 ---
 
