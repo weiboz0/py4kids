@@ -1,7 +1,7 @@
 # Design 003 — Book 1 Real-Input Norm
 
-**Status:** APPROVED — v2 (v1: plan-050 gate CLOSED, 2026-09-19; v2: plan-052 §3 realistic-data policy,
-2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
+**Status:** APPROVED — v3 (v1: plan-050 gate CLOSED, 2026-09-19; v2: plan-052 §3 realistic-data policy;
+v3: plan-053 §2 checkpoint/brief placement, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
 stdin-first/subprocess-judged).
 
 ## 1. Motivation
@@ -27,8 +27,8 @@ An `input()` cell cannot execute under CI (`nbclient` has no stdin; `tools/noteb
 |---|---|---|
 | **lesson.ipynb** | a **`no-exec` `input()` CODE cell** + a `**Notice:**` (proven: u04 lesson cells 20 & 40) | the fixed-data worked-example ladder (unchanged) |
 | **solutions.ipynb** | a **markdown fenced ```python block``` (NOT a code cell)** | the fixed-data reference solution **code cell with ≥3 non-vacuous asserts** (run by `exec-solutions`) |
-| **checkpoint.ipynb** | markdown fenced block under the `## Question N` | fixed-data solution (in the paired solutions.ipynb) |
-| **brief.ipynb** (projects) | markdown fenced block under the `## Milestone N` (Book-1 briefs are milestone-based — **not** `### Problem N`, which is Book-2) | fixed-data solution |
+| **checkpoint.ipynb** | markdown fenced block in the **paired `solutions.ipynb`** under the mirrored `## Question N` (the student `checkpoint.ipynb` stays solution-free — Content Conventions); where a Question's statement/starter **already reads `input()`**, that statement IS the real-program form and the solutions block is the model answer | fixed-data solution (in the paired solutions.ipynb) |
+| **brief.ipynb** (projects) | markdown fenced block in the **paired `solutions.ipynb`** under the mirrored `## Milestone N` (Book-1 briefs are milestone-based — **not** `### Problem N`, which is Book-2); the student `brief.ipynb` stays solution-free | fixed-data solution |
 
 **Why markdown for non-lessons:** `_solution_policy_findings` bans `input()` in ANY `solutions.ipynb`
 code cell *regardless of `no-exec`* (units/checkpoints/projects); `cell-lint` compiles non-unit `no-exec`
@@ -112,6 +112,11 @@ and `ci-local` is ALL GREEN. Book 2 stays green throughout.
 - **v1 (2026-09-19):** created for plan 050; 4-way plan-review gate CLOSED (3 rounds — resolved: the
   `input()`-in-solutions policy → markdown real-forms; u01 int/str boundary; project `## Milestone N`
   mapping; the 4-unit `input` add set; control-flow closure; real-form validation).
+- **v3 (2026-09-19, plan 053):** §2 checkpoint + brief rows clarified — the real-program form lives in the
+  PAIRED `solutions.ipynb` under the mirrored `## Question N` / `## Milestone N` (the student
+  checkpoint/brief stays solution-free, per Content Conventions); where a Question/Milestone statement or
+  starter already reads `input()`, that IS the real-program form and the solutions block is the model answer.
+  Codifies plan 053's checkpoint-01 placement; cp02–cp04 + projects follow it.
 - **v2 (2026-09-19, plan 052):** §3 realistic-data policy clarified — the binding requirement is
   "not toy"; ≈6–8 elements is the target for lists built fresh, but a unit already using realistic
   multi-element lists (≥4 real values) need not be grown, and "small fixed data" enrichment drills keep
