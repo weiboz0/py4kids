@@ -1,9 +1,9 @@
 # Book 1 Algorithm-Pattern Reuse Ledger
 
-Source of record for plan 047 (design 002 v7). Derived from the plan's "Appendix — Reuse ledger",
+Source of record for plan 047 (design 002 v8). Derived from the plan's "Appendix — Reuse ledger",
 normalized for tooling (exact registry ids in the enabling-concepts column; `H`/`→` prose prefixes
 dropped) — same 28 loci, actions, and counts. The content gate checks marked exercises against it.
-**No ≤16 exercise-count ceiling** (design §7 v7): "resulting core" is informative pacing data, not a cap.
+**No ≤16 exercise-count ceiling** (design §7 v7/v8): "resulting core" is informative pacing data, not a cap.
 New/adapt headings are planned authoring targets (content gate confirms embodiment).
 
 **Baseline core/stretch audited 2026-09-18:** u02 8 core / 2 Challenge · u04 10/2 · u05 11/2 · u06 11/2 ·
@@ -16,7 +16,7 @@ because a Challenge exercise is ≥2 tagged cells; the invariant tracked here is
 | pattern | entry | exercise heading | now | action | enabling concepts | slice |
 |---|---|---|---|---|---|---|
 | running-total | u04 (home) | *new* "Running total: add the round scores" (`while`-based, no list) | new core | new | accumulator (u04 co-intro), arithmetic (u02) | C |
-| running-total | u05 | "Exercise 7" `total_card_borders(n)` | core | reuse | — | C |
+| running-total | u05 | "Exercise 11" `total_card_borders(n)` | core | reuse | — | C |
 | running-total | u07 | "Exercise 4 / Total and Average" | core | reuse | — | C |
 | running-total | u09 | *new* "Sum the saved scores" (read-and-sum) | new core | new | accumulator, arithmetic (scanner-derived on u09), file-read (u09) | C |
 | count-by-condition | u04 (home) | *new/adapt* "Count the correct answers" (`while`-based, no list) | new core | new | comparison (u02), if-statement (u02) | D |
@@ -53,7 +53,7 @@ Challenge column = Challenge-*exercise* count (each ≥2 `stretch`-tagged cells 
 |---|---|---|---|---|
 | u02 | 8 | 0 (sentinel home = reuse Ex3) | 8 | 2 (unchanged) |
 | u04 | 10 | +2 (running-total + count homes, `while`-based, no list) +7 (plan-048 unmarked drills, Ex13–19) | 19 | 2 (unchanged) |
-| u05 | 11 | 0 (reuse Ex7) +9 (plan-048 unmarked function drills, Ex12–20) | 20 | 2 (unchanged) |
+| u05 | 11 | 0 (reuse, now Ex11) +9 (plan-048 unmarked function drills, Ex12–20) | 20 | 2 (unchanged) |
 | u06 | 11 | +2 (count-matches new; linear-search & transform-each homes) | 13 | 2 (unchanged) |
 | u07 | 13 | +3 (find-extreme home, filter home, loop+break) | 16 | 2 (unchanged) |
 | u08 | 14 | +2 (reverse-lookup promote→core Ex15, filter new Ex16) | 16 | 2 − 1 + 1 = 2 |
