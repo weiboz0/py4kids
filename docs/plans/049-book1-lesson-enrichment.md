@@ -347,6 +347,23 @@ SUDDEN DEATH ladder).
 
 **Gate CLOSED — 4-way consensus, no open blockers.** Cleared to merge Phase B.
 
+### Phase C — u06 (linear-search 5-rung + transform-each 3-cell ladders) — CONSENSUS: all four APPROVE ✅
+
+All three externals executed the 9 rungs — linear-search True / F,T,F / 0,1,2 / 1 / 1 / −1, transform-each
+H / HI / HI — confirmed one-increment (R3 counter only, R4 record-match only, R5 break only), closure-clean
+(for/in/break/string-methods/accumulator; NO `len`/`ord`/`chr`/`.split`/`input`; manual `position`), markers
+byte-unchanged/in-prose, manifest+coverage-map byte-unchanged, L1/L2/L3 form. [sol] verified the R4→R5
+last-vs-first distinction with a multi-vowel witness (`idea`: R4 last=3 vs R5 first=0).
+
+- **[self] APPROVE** — ci-local ALL GREEN.
+- **[fable] APPROVE** — fresh-namespace execution; `concept-scan` 0 findings (no General-Rule add).
+- **[sol] APPROVE** — zero findings.
+- **[glm] APPROVE WITH NITS** — two Nice-to-Have: (1) `[FIXED]` R4 Notice now notes it keeps the LATEST
+  match and R5's `break` keeps the FIRST (forward pointer for a curious multi-vowel probe); (2) R3's
+  unused `ch` loop var — `[WONTFIX]` (cosmetic; the loop legitimately counts characters, Notice explains).
+
+**Gate CLOSED — 4-way consensus, no open blockers.** Cleared to merge Phase C.
+
 ## Post-Execution Report
 
 _(appended per slice as it lands.)_
