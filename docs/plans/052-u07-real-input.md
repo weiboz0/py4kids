@@ -385,6 +385,48 @@ four converged on ONE Must-Fix (Ex3 `for position` header), fixed. **Round-1 res
 - → [FIXED] ([fable]#3): Ex21/Ex22 real-forms → "How many waits?" + "Wait {i + 1}: ".
 - → [FIXED] ([fable]#4): Challenge 1 count prompt → "How many scores (at least 3)? ".
 Re-verified: parity holds (modulo prompts), nbformat valid, ci-local green. Re-dispatching [sol] round 2.
+
+#### [sol] content round 2 (2026-09-19)
+- **Verdict**: APPROVE — Ex3 consistent, no stale identifiers, real-form parity holds, no new blocker.
+
+### CONTENT GATE CLOSED (2026-09-19) — 4-way consensus: [self]/[sol] APPROVE, [glm]/[fable] APPROVE WITH NITS
+(all nits FIXED). No open blockers.
+
+## Post-Execution Report
+
+**Status: COMPLETE — u07 full real-input treatment (rollout slice 1, list arm). 2026-09-19.**
+
+### What shipped
+The full u04 treatment applied to `unit-07-high-score-hall`, the first LIST unit, establishing the reusable
+list-arm patterns + the design 003 §3 v2 realistic-data policy:
+- **Real-input forms** per the SHAPE table: read-into-list (two-line append) for list-processing lesson
+  put-it-togethers + exercises; parallel names+scores in ONE loop (find-extreme home, Ex15, Ex17); single-read
+  for the already-interactive Ex4/Ex6/Ex7; Ex3 (IndexError) + Ex8 (`None`-debug) exempt with notes. Lesson:
+  `no-exec` `input()` cells; solutions: 22 markdown fenced real-forms (0 `input()` in solutions code cells).
+  Non-exempt fixed-data statements gained `**Real version:**` cues.
+- **Realistic data (design 003 §3 v2):** grew the <4-element CORE source lists to ≥4 (Ex1→4, Ex7/Ex8→4 [both
+  literals], Challenge 2 both boards→4 / merged 8) with lockstep assert + statement + teacher-notes
+  re-derivation; lesson core (already ≥4) + enrichment Ex10–22 + Spotlight rungs unchanged.
+- **CP-light naming (identifier-scoped):** `best_so_far`→`best`, `position`→`i` (code + markdown identifier
+  refs); the English word "position(s)" in concept-prose preserved. Two-regime naming remark added to
+  teacher-notes (pre-list plural=count; list units plural=list, count=`n`).
+- **Numbered 1-based prompts** (`f"Score {i + 1}: "`, "How many players?"/"How many waits?" where apt).
+- u07 already had `input` → no metadata change.
+
+### Verification
+- All 22 solution twins run + asserts pass; all 27 real-forms (22 solutions markdown + 5 lesson `no-exec`)
+  ast.parse + piped-run reproduce their twins' result lines modulo prompt text (independently confirmed by
+  [self]/[glm]/[fable] runs). Prompts 1..n never 0. AST closure clean; 0 `input()` in solutions code cells.
+- `scripts/ci-local.sh` ALL GREEN; `pre-merge-guard` OK.
+- **Content gate: 4-way, 2 rounds → consensus.** All four converged on one Must-Fix (Ex3 `for position`
+  header, a missed markdown identifier from the rename) — fixed; plus fable Nice prompt-wording fixes.
+- Implementation delegated to codex (gpt-5.6-sol) against the closed plan; verified independently.
+
+### Rollout
+Slice 1 of the design-003 §7 rollout. Next: plan 053 (checkpoint mini-pilot — the non-unit markdown path),
+then the remaining units (u01/u02/u03/u05/u06 list-less; u08/u09/u10 list — `input` metadata add for
+u03/u05/u08/u09) + projects. The list-arm template (read-into-list idiom, SHAPE table, two-regime naming,
+identifier-scoped rename, §3 v2 growth-floor) is now established for u08–u10.
 #### [fable] (pending)
 
 ## Post-Execution Report
