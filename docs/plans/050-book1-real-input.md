@@ -10,7 +10,8 @@
    - **u07–u10 (lists from u07):** realistic FIXED lists (≈6–8 elements, real variety, ties where apt).
    - **u01–u06 (no `list` yet):** a realistic *fixed* dataset needs an ugly N-branch `if/elif`, which reads
      *more* fake — so the exec cell keeps a **modest** fixed dataset and the **`input()` real-program form
-     carries the realism** (arbitrary input size). The one-increment build-up rungs **stay minimal**
+     carries the realism** (in u02–u06, an arbitrary count of values via a sentinel/count loop; **u01 stays
+     fixed-count text prompts, no loop**). The one-increment build-up rungs **stay minimal**
      (realism applies to the put-it-together + exercises only — never the graduated rungs; that protects
      the plans 031–035 / 049 pedagogy).
 
@@ -28,7 +29,7 @@ input(|sys.stdin`). Two checks matter, and they differ by notebook kind:
 - **`cell-lint`** skips `no-exec` code cells **only for `kind=="unit"`**; checkpoint/project `no-exec` code
   cells are still compiled. **`concept-scan`** detects `input()` in any CODE cell (no `no-exec` filter).
 - **Lessons** may carry a `no-exec` `input()` CODE cell — this is a live, green convention already
-  (u04 lesson cells 20/40/50 are exactly that).
+  (u04 lesson cells 20 and 40 are exactly that).
 
 **Resolution (no tooling change):**
 - **Lessons:** the real-program form is a **`no-exec` `input()` CODE cell** (proven convention) + a
@@ -36,8 +37,9 @@ input(|sys.stdin`). Two checks matter, and they differ by notebook kind:
   `practices: [input]` add (map + manifest). Verified set needing the add: **u03, u05, u08, u09** (u01/u02/
   u04/u06/u07/u10 already have it — u04, the pilot, needs none).
 - **`solutions.ipynb`, `checkpoint.ipynb`, `brief.ipynb`:** the real-program form is a **markdown fenced
-  code block** (NOT a code cell) — required by `_solution_policy_findings`, and the exact plan-045
-  submission-wrapper precedent. Because it is markdown, `concept-scan`/`cell-lint`/solution-policy never
+  code block** (NOT a code cell) — for `solutions.ipynb` this is required by `_solution_policy_findings`
+  (bans `input()` in solution code cells); for `checkpoint.ipynb`/`brief.ipynb` by `cell-lint` (non-unit
+  `no-exec` code cells are still compiled) + `concept-scan`. The exact plan-045 submission-wrapper precedent. Because it is markdown, `concept-scan`/`cell-lint`/solution-policy never
   touch it, so **no `input` metadata add is needed for checkpoints/projects**. The **executable
   reference solution stays a fixed-data code cell carrying ≥3 non-vacuous asserts** (run + verified by
   `exec-solutions`) — that is the VALIDATED logic; the markdown real-program form is a thin adapter over
@@ -47,10 +49,13 @@ input(|sys.stdin`). Two checks matter, and they differ by notebook kind:
 
 `no-exec` / markdown real-program code is never run by CI, so malformed or wrong code could pass silently.
 Guardrails: (a) every real-program form is `ast.parse`-checked at authoring; (b) it is **run once with
-piped fixed input** (`printf '…' | python prog.py`) and its output confirmed EQUAL to the paired
-executable fixed-data cell's output — recorded in the slice's post-exec report; (c) the real form's logic
-is line-for-line the fixed-data solution with the fixed values replaced by `input()` reads, so the CI-run
-fixed-data version is the behavioral proof.
+piped fixed input** (`printf '…' | python prog.py`) and its **result line(s)** confirmed equal to the
+paired executable fixed-data cell's output — compared *modulo the `input()` prompt text* (prompts print to
+stdout), recorded in the slice's post-exec report; (c) the real form's logic is line-for-line the
+fixed-data solution with the fixed values replaced by `input()` reads, so the CI-run fixed-data version is
+the behavioral proof. **Drift:** if a later slice edits a fixed-data cell but not its markdown twin, the
+pair diverges silently — the per-PR content gate re-checks the pairing (inherent to the no-tooling-change
+resolution).
 
 ## Global Constraints
 
@@ -66,6 +71,17 @@ fixed-data version is the behavioral proof.
 - **Executable worked examples preserved** (no exec→no-exec conversion). Metadata: no `introduces`/
   `requires`/marker/§3 change; the ONLY permitted change is the General-Rule `practices: [input]` add for
   **u03/u05/u08/u09** (map + manifest, kept in sync). Prereq-closure per unit.
+- **Control-flow closure of the LESSON real-program forms (rollout risk — fable N2).** The `input`-only
+  add set assumes each real form reuses control flow already in its unit's union. `int-type`/
+  `type-conversion`/`sentinel-loop` are in `concept-scan`'s `never_flag`, so `int(input())` is safe
+  everywhere — but **`while-loop` IS flaggable and is absent from u03/u06/u08/u09**. So those units' lesson
+  real forms use a **for/count-loop** idiom (all four have `for-loop`; u08 lacks `range-function` → a
+  read-line/count idiom), NOT a sentinel `while`; add `while-loop` to a unit's `practices` only if a form
+  genuinely needs it. (u04 pilot has both `input` and `while-loop` → unaffected.) Each 051+ slice
+  concept-scans its own forms before commit.
+- **`solutions_structure` raw-markdown scan (N5).** A fenced real-form block inside a unit `solutions.ipynb`
+  must NOT contain a line beginning `## Exercise <digit>` (that check matches raw markdown, un-fenced) —
+  real code never does; noted so authors don't paste a heading-shaped comment.
 - Branch `feature/plan-050-…`; no commits while a `[sol]` review is in flight; `GH_TOKEN=$(cat .gh-token)`;
   run `ci-local` FOREGROUND (`TMPDIR=/dev/shm bash scripts/ci-local.sh`). Do not touch Book 2 / governance.
 
@@ -130,7 +146,8 @@ revision:
 - `[FIXED]` **B2 (all three): `int()`/`str()` are u02, not u01** → u01 real-program forms are TEXT-ONLY;
   per-unit input idiom pinned (u01 fixed prompts no-loop; u02+ sentinel/count loop).
 - `[FIXED]` **checkpoint/project mapping (sol/glm): unspecified** → markdown real-program form under each
-  `## Question N` / `### Problem N`; executable fixed-data solution retained; notebook mapping stated.
+  `## Question N` (checkpoints) / `## Milestone N` (Book-1 project briefs — NOT `### Problem N`, which is
+  Book-2); executable fixed-data solution retained; notebook mapping stated.
 - `[FIXED]` **probe scope (sol/fable): unit-only** → Phase A probe now covers unit + checkpoint + project.
 - `[FIXED]` **N1 metadata (glm/sol): entries lacking `input`** → verified only **u03/u05/u08/u09** need the
   General-Rule `practices:[input]` add (their lesson no-exec code cells); checkpoints/projects use markdown
@@ -144,6 +161,32 @@ revision:
   "arbitrary input size" overclaim removed (u01 pre-loop → fixed prompts).
 
 Round 2 re-dispatched to all three on the revised HEAD.
+
+### Round 2 (HEAD e4319d9) — [glm]/[fable] APPROVE WITH NITS · [sol] REJECT (1 blocker)
+
+All three verified B1's markdown-form resolution is sound *by mechanism* ([fable] ran an in-memory probe:
+a markdown ```` ```python input() ```` block + fixed-data asserted cells passes structure-check/
+concept-scan/cell-lint; the same as a code cell would fail), the 4-unit `input` add set (u03/u05/u08/u09)
+is exactly right, u01 text-only is correct, Phase V is named, scope is clean. Findings, all folded:
+
+- `[FIXED]` **[sol] blocker / [glm]+[fable] nit — project mapping.** Book-1 project briefs are
+  `## Milestone N`-based (zero `### Problem N` — that's Book-2's project-03). Corrected: markdown real-form
+  under `## Question N` (checkpoints) / `## Milestone N` (Book-1 briefs).
+- `[FIXED]` **all three — citation:** "u04 cells 20/40/50" → "cells 20 and 40" (cell 50 is a markdown
+  heading).
+- `[FIXED]` **[glm] — attribution:** the `checkpoint.ipynb`/`brief.ipynb` markdown requirement is enforced
+  by `cell-lint` (non-unit `no-exec` compiled) + `concept-scan`, not `_solution_policy_findings`
+  (solutions-only). Reworded.
+- `[FIXED]` **[glm]/[fable] — "arbitrary input size" contradiction:** scoped to u02–u06 (u01 fixed-count
+  prompts, no loop).
+- `[FIXED]` **[fable] N2 / [glm] risk — control-flow closure:** `while-loop` is `concept-scan`-flaggable and
+  absent from u03/u06/u08/u09 → their lesson real forms use a for/count-loop idiom (not sentinel `while`),
+  add `while-loop` only if needed; `int`/`type-conversion`/`sentinel-loop` are `never_flag`. New constraint.
+- `[FIXED]` **[fable] — validation wording:** compare result line(s) *modulo prompt text*; drift caught by
+  the per-PR content gate. **[fable] N5:** no `## Exercise <digit>` line inside a unit-solutions fenced
+  real-form (raw-markdown scan). New constraint.
+
+Round 3 re-dispatched to all three (the project-mapping blocker + nits folded).
 
 ## Content Review
 
