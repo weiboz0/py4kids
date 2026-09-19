@@ -22,9 +22,9 @@ because a Challenge exercise is ≥2 tagged cells; the invariant tracked here is
 | count-by-condition | u04 (home) | *new/adapt* "Count the correct answers" (`while`-based, no list) | new core | new | comparison (u02), if-statement (u02) | D |
 | count-by-condition | u06 | *new* "Count the vowels" (count-matches) | new core | new | in-operator (u06), comparison | D |
 | count-by-condition | u07 | "Exercise 11 / Award a Score Tier" | core | reuse | — | D |
-| count-by-condition | u08 | "Exercise 5: Count the Words" (tally-by-key) | core | reuse | — | D |
+| count-by-condition | u08 | "Exercise 12: Count the Words" (tally-by-key) | core | reuse | — | D |
 | find-extreme | u07 (home) | *new* "Champion by name" (best_name+best_score) | new core | new | list-loop (u07), comparison | G |
-| find-extreme | u08 | "Exercise 6: Most Common Word" | core | reuse | — | G |
+| find-extreme | u08 | "Exercise 13: Most Common Word" | core | reuse | — | G |
 | find-extreme | u09 | *new* "Highest score by scanning" (best-so-far, no `max()`) | new core | new | comparison (scanner-derived on u09) | G |
 | find-extreme | u10 | "Exercise 13: Happiest Pet" + `best_pet` | stretch | promote | — | G (+1 u10 Challenge replacement) |
 | linear-search | u06 (home) | lesson `for … range(26)` scan + home ex adds `break` | new/adapt core | new/adapt | for-loop (u03), break-statement (u04), in-operator (u06), comparison | F |
@@ -33,7 +33,7 @@ because a Challenge exercise is ≥2 tagged cells; the invariant tracked here is
 | linear-search | u09 | *new* "Find a name in the save file" | new core | new | break-statement (scanner-derived on u09) | F |
 | transform-each | u06 (home) | *new/adapt* "Do the same to each character" (new string) | new core | new/adapt | for-loop (u03), string-methods (u06) | E |
 | transform-each | u07 | "Exercise 12 / Tidy the Champion Names" | core | reuse | — | E |
-| transform-each | u08 | "Exercise 10: Translate a List" | core | reuse | — | E |
+| transform-each | u08 | "Exercise 14: Translate a List" | core | reuse | — | E |
 | transform-each | u09 | "Exercise 3: Load Scores into a List" (line→int) | core | reuse | — | E |
 | filter-into-list | u07 (home) | *new* "Keep only the qualifying scores" | new core | new | list-append (u07), comparison | H |
 | filter-into-list | u08 | *new* "Keep only the long words" (Exercise 16) | new core | new | list-append, comparison, builtin-functions (`len`, scanner-derived on u08) | H |
