@@ -14,77 +14,147 @@ Rollout slice 6 (design 003 §7 — list-less units). u03 teaches turtle drawing
 parameter via `int(input())`, then the unchanged compute + print. Authorities: design 003 v3
 (§2/§3 u01–u06 arm/§6); merged pilots u02/u04 (read-and-compute) + u01. Recurring audits baked in.
 
-## Metadata add (a design-003 §5 REFINEMENT)
+## No lesson change, no metadata change (corrected after round 1)
 
-design 003 §5 lists u03 as needing a `practices:[input]` add. Reading a numeric shape parameter needs
-`n = int(input(...))` → **`int-type` + `type-conversion`** too (both introduced in u02 — prereq-valid in u03,
-but u03's manifest lists neither). So the add is **`practices: [input, int-type, type-conversion]`** (manifest +
-coverage-map, in sync). `input` is category `io`; `int-type`/`type-conversion` are u02 concepts used here — no
-`requires` change (prereq satisfied by u02), no technique/spiral trip. (Flag for the gate: design §5 should note
-u03's add is the 3-concept set, not just `input`.)
+u03's lesson is **all turtle-DRAWING** (12 `no-exec` cells, 0 executable compute cells; the sole "put it
+together" is the spirograph drawing) → there is **no compute capstone to pair with a lesson `input()` form**.
+So u03's real-input treatment lives **entirely in `solutions.ipynb` markdown real-forms + exercise-statement
+cues** (the cp01 pattern, adapted for a unit). Consequences:
+- **NO lesson.ipynb change** (all-drawing lesson; turtle drawings are the reads-nothing/generator class).
+- **NO metadata change.** No u03 CODE cell uses `input`/`int(input())` (markdown real-forms are invisible to
+  concept-scan / prereq / coverage). So the design-§5 `input` add is NOT triggered for u03. **design 003 §5 is
+  amended (v4)** to make the add per-unit-audit-contingent; u03 gets none. (`int-type`/`type-conversion` are
+  `never_flag` and only appear in markdown anyway.)
 
-## The treatment (read-and-compute, compute-and-print unit)
+## The treatment (read-and-compute, solutions-markdown-only)
 
-1. **Real-input forms — all three notebooks:** solutions.ipynb markdown real-forms beside the fixed-data
-   asserted twins; lesson.ipynb complete-task capstones get a `no-exec` `input()` real-form + Notice (audit
-   below); exercises.ipynb statements get `**Real version:**` cues (non-exempt) / `**No real version:**` notes.
-2. **No data growth.** Shape params (`n=7`, `side_count=4`) are realistic, not toy (design 003 §3 u01–u06 arm).
-3. **CP-light naming — near-zero.** `n`, `side_count`, `shape_count`, `side_length`, `angle`, `side_number`,
-   `shape_number` are clean domain nouns. Keep verbatim.
-4. **No numbered prompts.** Each real-form reads ONE shape parameter up front ("How many sides? "), then loops
-   over `range(n)` — no per-iteration read, so no `{i+1}` indices.
-5. **Closure:** real-forms add only `n = int(input(...))` (input + int-type + type-conversion — see metadata)
-   to the existing `for`/`range`/arithmetic/`print`/f-string. **NO `if`/comparison/list/while/sys.stdin** (u03
-   has none of these). Turtle asset `.py` files are NOT touched.
-
-## Lesson both-forms audit (design §1/§8)
-
-u03's lesson has 0 `input()` cells and 12 `no-exec` cells (turtle-DRAWING demos — turtle can't run headless).
-| Lesson content | Status | Action |
-|---|---|---|
-| compute-and-print put-it-together capstone(s) (executable, fixed `n`) | executable only | **ADD a `no-exec` `input()` real-form** (read `n` → same computed/printed output) + Notice, so the complete compute task has both forms |
-| turtle-DRAWING `no-exec` demos (12 cells) | draw, read nothing | **graphics demos — reads-nothing class** (like the dice roller / countdown): a drawing generates output, it doesn't read input; no input real-form. (Turtle-reads-`n` belongs to the asset files, out of scope.) |
-| build-up rungs (single range/loop steps) | executable | rungs — exempt from both-forms parity |
-
-(The exact capstone cell(s) to pair are identified in Phase A from the lesson's "put it together" markers.)
+1. **Real-input forms:** `solutions.ipynb` markdown fenced real-forms beside the fixed-data asserted twins;
+   exercise STATEMENTS get `**Real version:**` cues (non-exempt) / `**No real version:**` notes (exempt).
+2. **No data growth.** Shape params (`n=7`, `side_count=4`) are realistic (design 003 §3 u01–u06 arm).
+3. **CP-light naming — none.** `n`, `side_count`, `shape_count`, `side_length`, `angle` are clean. Keep verbatim.
+4. **No numbered prompts.** Real-forms read the shape parameter(s) up front — **one read per parameter, all up
+   front** ("How many sides? " / "How many shapes? "), then the unchanged loop; no `{i+1}` indices.
+5. **Closure:** real-forms add only `int(input(...))` (int/type-conversion are u02, prereq-valid; markdown so
+   not scanned) to the existing `for`/`range`/arithmetic/`print`/f-string. **NO `if`/comparison/list/while/
+   sys.stdin** (u03 has none; the only comparisons are in `assert` lines, which stay in the twins). Turtle
+   `assets/*.py` files are NOT touched.
 
 ## Per-exercise SHAPE table
 
 | Shape | Exercises | Real-form + statement treatment |
 |---|---|---|
-| **exempt** | Ex2 (range() prediction TABLE — predict counter values without running), Ex4 (nested-loop TRACE table) | predict/trace → NO real-form; `**No real version:**` statement note |
-| **read-and-compute** (fixed shape param → read it) | Ex1, Ex3 (repair the loop count → read the count), Ex5, Ex6 (repair two counts → read them), Ex7, Ex8, Ex9, Ex10, Challenge 1, Challenge 2 | markdown real-form reads `n`/`side_count`/`shape_count` via `int(input(...))` then the unchanged compute+print; statements get a `**Real version:**` cue. (Ex3/Ex6 are "fix the wrong loop number" — after the fix the program computes+prints a count, so the real version reads it; NOT a traceback/SyntaxError debug.) |
+| **exempt** | Ex3 + Ex6 (**fix-the-error** — the graded task is fixing the literal loop count [`range(3)`→`range(4)`, etc.], unrelated to input; reading dissolves the repair — the u01-Ex2/3 class, NOT u02-Ex4 where `int(input)` WAS the fix), Ex8 + Challenge 1 (**predict-the-counters** — the twin hardcodes the counter list as a string literal `"0, 1, 2, 3, 4, 5, 6"`, which a read of `n` would break), Challenge 2 (**on-paper/reads-nothing** — six fixed `turtle.color(...)` strings, no numeric param), and the **prediction/trace TABLE halves** of Ex2/Ex4 | NO real-form for the exempt part; `**No real version:**` statement note (with the one-line rationale) |
+| **read-and-compute** (fixed shape param → read it) | Ex1, Ex5, Ex7, Ex10, Ex9 (**+ a declared one-line print added to its twin** so §6(b) has a result line — sol 19 is currently assert-only), and the **compute-authoring halves of Ex2 + Ex4** (`n=7` loop print / nested `shape_count`/`side_count` print) | markdown real-form reads `n`/`side_count`/`shape_count` via `int(input(...))` then the unchanged compute+print; statement `**Real version:**` cue |
 
-(If a reviewer judges Ex3/Ex6 to be primarily fix-the-error debug, reclassify to exempt — flagged for the gate.
-Turtle-drawing *asset* exercises: the notebook solution cell is compute-and-print, so it takes the
-read-and-compute real-form; the `assets/*.py` drawing files are out of scope.)
+(Ex2/Ex4 are hybrids: the prediction TABLE is exempt; the separate compute-authoring program is read-and-compute.
+The `**No real version:**` note for Ex3/Ex6 records that they are literal-count repairs.)
 
 ## Phases
-### Phase A — apply to u03 (manifest + lesson + exercises + solutions + coverage-map)
-- **manifest.yaml + coverage-map.yaml:** add `practices: [input, int-type, type-conversion]` (in sync).
-- **lesson.ipynb:** add a `no-exec` `input()` real-form (+ Notice) after the compute put-it-together
-  capstone(s); turtle-drawing no-exec demos + build-up rungs untouched.
-- **exercises.ipynb:** `**Real version:**` cues on the read-and-compute exercises + Challenges; `**No real
-  version:**` notes on Ex2/Ex4.
-- **solutions.ipynb:** markdown real-forms per the SHAPE table.
-- No growth, no rename, no numbered prompts. Fenced real-forms must not contain a `## Exercise <digit>` line.
+### Phase A — apply to u03 (exercises + solutions ONLY; + design 003 §5)
+- **NO lesson.ipynb change; NO manifest/coverage-map change** (see above).
+- **exercises.ipynb:** `**Real version:**` cues on Ex1/Ex5/Ex7/Ex9/Ex10 + the compute halves of Ex2/Ex4;
+  `**No real version:**` notes on Ex3/Ex6/Ex8/Ch1/Ch2 (+ the table halves of Ex2/Ex4).
+- **solutions.ipynb:** markdown read-and-compute real-forms per the SHAPE table; add the one declared print to
+  Ex9's twin (so it has a result line).
+- **design 003 §5** amended to v4 (per-unit-audit-contingent input add; u03 gets none) — done in this plan.
+- No growth, no rename, no numbered prompts, **no teacher-notes change**. Fenced real-forms must not contain a
+  `## Exercise <digit>` line.
 
 ### Phase B — verification
-- `ast.parse` + piped-run every real-form + the new lesson no-exec form; result line == fixed-data twin modulo
-  `input()` prompt text (standard §6(a–c); a single up-front read, then the unchanged loop/print).
-- CLOSURE AST scan: only `input`/`int`/`for`/`range`/arithmetic/`print`/f-string; NO `if`/compare/list/while/
-  sys.stdin. `int(input())` is in-union via the metadata add.
-- prereq-check / coverage-check / concept-scan / technique-spiral stay clean after the metadata add.
+- `ast.parse` + piped-run every read-and-compute real-form; result line == fixed-data twin modulo `input()`
+  prompt text (standard §6(a–c); one up-front read per parameter, then the unchanged loop/print). Ex9's twin
+  gains a print → re-run it under `exec-solutions`.
+- CLOSURE AST scan: only `input`/`int`/`for`/`range`/arithmetic/`print`/f-string in real-forms; NO
+  `if`/list/while/`sys.stdin`; **comparisons appear only inside `assert` lines** (record so the scan doesn't
+  false-alarm).
 - 0 `input()` in solutions CODE cells; ≥3 non-vacuous assert cells; no fenced `## Exercise <digit>` line.
-- `scripts/ci-local.sh` ALL GREEN.
+- `scripts/ci-local.sh` ALL GREEN (prereq/coverage/concept-scan unaffected — no metadata change).
 
 ## Out of scope
-- Any Book-1 entry other than u03 (rollout continues per design 003 §7). No design amendment (may flag §5's
-  metadata-set note as a follow-up). Turtle `assets/*.py` drawing files (separate artifact). No data growth.
-  Phase B present.
+- Any Book-1 entry other than u03 (rollout continues per design 003 §7). **design 003 §5 amended → v4** (in
+  scope, this plan). Turtle `assets/*.py` drawing files (separate artifact). No lesson change, no metadata add,
+  no data growth. Phase B present.
 
 ## Plan Review
-_(pending — 4-way.)_
+
+### Round 1 (2026-09-19) — [self] inline; [sol] gpt-5.6-sol; [glm] volcengine-plan/glm-5.3; [fable] Fable 5.
+#### [self] (2026-09-19)
+- **Verdict**: APPROVE
+- Uniform read-and-compute (every solutions cell is compute-and-print with a fixed shape param; turtle drawing
+  in assets/*.py, out of scope); metadata refinement `practices:[input,int-type,type-conversion]` (int(input)
+  needs u02 int concepts; prereq-valid); closure clean (no if/compare/list/while — u03 has none); SHAPE (exempt
+  predict Ex2/Ex4; read-and-compute the rest + Challenges); lesson audit (compute capstones → input real-forms;
+  turtle-drawing no-exec = reads-nothing class; rungs exempt); no growth/rename/numbered-prompts; Phase B present.
+#### [sol] (2026-09-19)
+- **Verdict**: REJECT
+1. `[OPEN]` Must Fix: structural premise too coarse — sol 6 (Ex3) + sol 19 (Ex9) don't print; sol 25 (Ch2) has
+   no numeric shape param; Ex3/Ex6 loop over LITERALS (int(input) would be inert). Re-survey per-cell.
+2. `[OPEN]` Must Fix: Ex2/Ex4 tables are exempt, but each statement ALSO requires a separate headless program
+   (sol 4/8 compute+print from fixed counts) — that coding portion needs a real-form.
+3. `[OPEN]` Must Fix: Ex3/Ex6 are fix-the-error (repair literal loop bounds) — reading removes the graded repair
+   → exempt (No real version), unlike u02 Ex4 where int(input) IS the fix.
+4. `[OPEN]` Must Fix: lesson audit targets a nonexistent compute capstone — the sole "Put it together" (cell 38)
+   is itself a no-exec turtle DRAWING → reads-nothing generator → REMOVE the proposed lesson input-form.
+5. `[OPEN]` Must Fix: Ch2 (conceptual color-command strings, no n/side_count/shape_count) → exempt, not
+   read-and-compute.
+
+#### [glm] (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: REJECT
+1. `[OPEN]` Must Fix: lesson-audit phantom — lesson has ZERO executable cells (all 12 no-exec drawings; capstone
+   38 is a drawing). Fix to "all-drawing → NO lesson input() cell; input practice lands in exercises/solutions
+   real-forms" OR scope creating a compute twin.
+2. `[OPEN]` Must Fix: Ch2 → exempt reads-nothing (no numeric param; six fixed color strings).
+3. `[OPEN]` Should Fix: Ex2/Ex4 are hybrids (predict table + compute-authoring half) — the authoring half needs
+   a real-form (read-and-compute scoped to it); the u04-Ex6 pure-predict precedent doesn't cover hybrids.
+4. `[OPEN]` Should Fix: Ex3/Ex9 print nothing → §6(b) parity vacuous; add a minimal print or document. (glm view:
+   Ex3/Ex6 read-and-compute is defensible — starters run clean with wrong counts, not a traceback debug.)
+5. `[OPEN]` Should Fix: design §5 — the 3-concept set + §5's "u03 gets a lesson input() cell" premise is
+   falsified by the corrected audit; the practices add (if any) anchors on exercises/solutions real-forms.
+   Metadata verified prereq-valid + in sync + no technique trip.
+6. `[OPEN]` Nice: treatment §4 "reads ONE parameter" contradicts two-param exercises; Phase B "lesson no-exec
+   form" moot; teacher-notes silent.
+
+### Round 1 — outcome: REJECT (3 of 4). Fixed → round 2.
+**Round 1 responses (plan revised):**
+- → [FIXED] Lesson phantom ([sol]#4/[glm]#1/[fable]#1): **NO lesson change** — lesson is all-drawing;
+  input practice via solutions markdown real-forms (the cp01 pattern). Both-forms audit removed.
+- → [FIXED] Metadata ([sol]#? /[glm]#5/[fable]#5): **NO metadata add** — no u03 code cell uses input (markdown
+  real-forms invisible to concept-scan); **design 003 §5 amended** to drop u03 from the lesson-input-cell add set
+  (u03 is markdown-only). int-type/type-conversion are never_flag anyway.
+- → [FIXED] Ch2 → exempt reads-nothing ([sol]#5/[glm]#2/[fable]#4).
+- → [FIXED] Ex2/Ex4 → read-and-compute scoped to the authoring half; the prediction/trace TABLE stays exempt
+  ([sol]#2/[glm]#3; [fable]#7 noted the inconsistency).
+- → [FIXED] Ex3/Ex6 → EXEMPT (fix-the-error: the graded task is fixing the literal count, unrelated to input —
+  the u01-Ex2/3 class, NOT u02-Ex4 where int(input) WAS the fix) ([sol]#3/[fable]#2; glm#4 minority
+  read-and-compute noted — flagged for round 2).
+- → [FIXED] Ex9 → read-and-compute with a declared one-line print added to its twin (so §6(b) has a result line).
+- → [FIXED] Ex8/Ch1 → exempt (predict-the-counters, hardcoded counter-string literal).
+- → [FIXED] Nits: treatment §4 reworded ("one read per parameter, all up front"); Phase B lesson-form line
+  removed; teacher-notes "no change" stated; assert-line comparisons recorded for the closure scan.
+Re-dispatching round 2 (lesson/metadata dropped; §5 amended; SHAPE reclassified materially).
+
+#### [fable] (2026-09-19)
+- **Verdict**: REJECT — treatment shape (read-and-compute, assets out of scope, int(input) closure) right, but
+  structural premises wrong in two decision-level places.
+1. `[OPEN]` Must Fix: lesson audit row 1 targets a nonexistent cell — all 12 lesson code cells are no-exec
+   turtle drawings, the sole "Put it together" (cell 38) is the spirograph. Either name a real target — the L2
+   polygon capstone (cell 24/27) or L3 spirograph (38) as a `no-exec` `input()` turtle form reading `n` (oracle:
+   fake_turtle stub, compare computed `angle`; Notice handles the "lives in assets" promise) — OR keep the
+   lesson untouched and drop the "input add is lesson-driven" claim (then the add is pedagogical-only, since
+   concept-scan needs a lesson input() CODE cell to see it).
+2. `[OPEN]` Must Fix: Ex3 (sol 6) + Ex9 (sol 19) have NO print (assert-only) — no §6(b) result line. Ex3 = exempt
+   (fix-the-error). Ex6 same (repair dissolves the bug). Ex9 = add one print to the twin (declared edit) or exempt.
+3. `[OPEN]` Should Fix: Ex8 + Ch1 twins hardcode the counter list as a string literal ("0, 1, 2, 3, 4, 5, 6") —
+   reading `n` breaks it → exempt (predict-the-counters) or rewrite the twin.
+4. `[OPEN]` Must Fix: Ch2 misclassified — no shape param (six literal color strings, on-paper) → exempt.
+5. `[OPEN]` Nice: metadata — int-type/type-conversion are `never_flag` → the 3-set add is pedagogical (coverage
+   honesty), NOT CI-forced; only `input` is CI-relevant, and only if a lesson `no-exec` input() CODE cell exists
+   (ties to #1). State the 3-set is pedagogical.
+6. `[OPEN]` Nice: closure confirmed (no if/while/list; only assert-line comparisons — record so Phase B doesn't
+   false-alarm).
+7. `[OPEN]` Nice: Ex2/Ex4 exemptions defensible (predict-without-running framing; fixed n=7 per the comment) —
+   note the inconsistency with Ex5/Ex10 in the exempt note.
+8. `[OPEN]` Should Fix: Phase B must name the turtle-form oracle (#1) + any twin edits re-run under exec-solutions.
 
 ## Content Review
 _(pending — 4-way.)_

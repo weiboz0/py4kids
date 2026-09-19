@@ -1,7 +1,7 @@
 # Design 003 — Book 1 Real-Input Norm
 
-**Status:** APPROVED — v3 (v1: plan-050 gate CLOSED, 2026-09-19; v2: plan-052 §3 realistic-data policy;
-v3: plan-053 §2 checkpoint/brief placement, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
+**Status:** APPROVED — v4 (v1: plan-050 gate CLOSED; v2: plan-052 §3 realistic-data policy; v3: plan-053 §2
+checkpoint/brief placement + §6d oracle; v4: plan-056 §5 input-add is per-unit-audit-contingent, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
 stdin-first/subprocess-judged).
 
 ## 1. Motivation
@@ -67,11 +67,16 @@ scan `cell_type == "code"` only) — this is the plan-045 submission-wrapper pre
 
 ## 5. Metadata
 
-- No `introduces`/`requires`/marker/§3 change. The ONLY change: a General-Rule `practices: [input]` add
-  (map + manifest, in sync) for the **4 units whose union lacks `input`** and get a lesson `no-exec`
-  `input()` code cell: **u03, u05, u08, u09** (u01/u02/u04/u06/u07/u10 already have `input`).
-  Checkpoints/projects use markdown real-forms → no add (cp02/cp03/cp04 need none). `input` is category
-  `io`, not a technique → the add cannot trip prereq/practice/technique-spiral checks.
+- No `introduces`/`requires`/marker/§3 change. The `practices: [input]` add (map + manifest, in sync) applies
+  **only to a unit whose union lacks `input` AND that actually gets a lesson `no-exec` `input()` CODE cell**
+  (concept-scan reads code cells; markdown real-forms are invisible). Candidate set was u03/u05/u08/u09, but
+  the add is **contingent on the per-unit audit finding a lesson input() code cell**, not automatic:
+  - **u03 (plan 056): NO add** — u03's lesson is all turtle-DRAWING (no compute capstone to pair), so its
+    real-forms live ONLY in `solutions.ipynb` markdown (invisible to concept-scan); no u03 code cell uses
+    `input`, so no metadata change. (u05/u08/u09 decided in their own plans by the same audit.)
+  Checkpoints/projects use markdown real-forms → no add. `input` is category `io`, not a technique → any add
+  cannot trip prereq/practice/technique-spiral checks. (`int-type`/`type-conversion` are `never_flag` too, so a
+  markdown `int(input())` never forces a metadata change.)
 - If a lesson real-form genuinely needs a control-flow concept absent from its unit (e.g. `while-loop`),
   add THAT id too under the General Rule — but §4 avoids this by choosing in-union idioms.
 
@@ -125,6 +130,9 @@ and `ci-local` is ALL GREEN. Book 2 stays green throughout.
   their lists. Under this policy a unit grows only its <4-element core SOURCE lists (u07 [plan 052]: Ex1/Ex7/
   Ex8/Challenge 2), leaving already-realistic core lists + enrichment/rung data untouched; the govern is
   source/input data, not computed result literals.
+- **v4 (2026-09-19, plan 056):** §5 clarified — the `practices:[input]` add is **contingent on a per-unit audit
+  finding a lesson `no-exec` `input()` CODE cell**, not automatic for the u03/u05/u08/u09 candidate set. u03 is
+  all turtle-drawing (real-forms in solutions markdown only, invisible to concept-scan) → NO metadata add.
 - **v3 (2026-09-19, plan 053):** (§2) checkpoint + brief rows clarified — the real-program form lives in the
   PAIRED `solutions.ipynb` under the mirrored `## Question N` / `## Milestone N` (the student
   checkpoint/brief stays solution-free, per Content Conventions); where a Question/Milestone statement or
