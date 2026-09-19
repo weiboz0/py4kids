@@ -1,6 +1,6 @@
 # Design 002 — Book 1 Algorithm-Pattern Thread
 
-**Status:** APPROVED — v9. v6 2-way design review CLOSED ([sol] APPROVE + [fable] APPROVE, 2026-09-18); v7 removed the ≤16 exercise-count cap; v8 (plan 048) made the algorithm track an explicit `## Algorithm Extension` enrichment section; **v9 (2026-09-18, plan 049): the HOME Spotlight in the lesson `## Algorithm Extension` must teach its pattern with a graduated worked-example ladder (code rungs + `**Notice:**` + a put-it-together), consistent with the rest of the lesson — the reappearance Spotlight stays a retrieval one-liner.** v9 adds a mandatory student-facing requirement but adds/drops/re-classifies no §3 locus, so it does not reopen the design review beyond the plan-049 gate; the target end-state is reached unit-by-unit as home units are enriched. The §2 *conceptual* depth ceiling (no big-O/sorting/recursion) is unaffected. Ready for the plan lifecycle.
+**Status:** APPROVED — v9. v6 2-way design review CLOSED ([sol] APPROVE + [fable] APPROVE, 2026-09-18); **v7 (2026-09-18): user-directed relaxation — the ≤16 per-unit exercise-count cap is REMOVED** (no max exercise ceiling). This is a constraint-lifting edit only: no §3 locus is added, dropped, or re-classified, and the honest per-unit counts below are retained as *informative* pacing data, not a cap — so it does not reopen the design review. The §2 *conceptual* depth ceiling (no big-O/sorting/recursion) is unaffected. **v8 (2026-09-18, plan 048):** the algorithm track becomes the explicit end-of-notebook `## Algorithm Extension` enrichment section and "home in-class" is relaxed to enrichment routing (see §6/§13); still no §3 locus added/dropped/re-classified. **v9 (2026-09-18, plan 049): the HOME Spotlight in the lesson `## Algorithm Extension` must teach its pattern with a graduated worked-example ladder (code rungs + `**Notice:**` + a put-it-together), consistent with the rest of the lesson — the reappearance Spotlight stays a retrieval one-liner.** v9 adds a mandatory student-facing requirement but adds/drops/re-classifies no §3 locus (and no `introduces`/`requires` change), so it does not reopen the design review beyond the plan-049 gate; the target end-state is reached unit-by-unit as home units are enriched. Ready for the plan lifecycle.
 **Scope:** Book 1 only. Book 2 inherits the technique ids via `dependency_baseline`; it grows its own.
 
 ## 0. Design ↔ plan boundary
@@ -38,7 +38,7 @@ net-new core exercise.
 
 | id | name (kid + formal) | home | hook (softened, kid-true) | spiral — ≥3 core reappearances (status) |
 |----|------|------|------|------|
-| `running-total` | Running total (accumulate) | u04 | the program needs a *named box* holding the total-so-far, updated each step | u05 Ex7 `total_card_borders` (reuse), u07 Ex4 average (reuse), u09 read-and-sum (**new**) |
+| `running-total` | Running total (accumulate) | u04 | the program needs a *named box* holding the total-so-far, updated each step | u05 Ex11 `total_card_borders` (reuse), u07 Ex4 average (reuse), u09 read-and-sum (**new**) |
 | `count-by-condition` | Counting by condition (count) | u04 | keep a counter; check each item once, bump it when it matches | u06 count-matches (**new**), u07 Ex5 above-threshold (reuse), u08 Ex5/7 **tally-by-key** (reuse; the *count-per-group* variation, named in the catalog) |
 | `find-extreme` | Find the best (max / argmax) | u07 | keep the *best so far* while scanning — and remember *who*, not just the number | home = **champion-by-name** (parallel names/scores, keep `best_name`+`best_score`, **new**), u08 Ex6 most-common `best_word`/`best_count` (reuse), u09 best-so-far replacing `max()` (**new**), u10 Ex13 happiest-pet (**promote** — add `best_pet`, not just the number) |
 | `linear-search` | Scan until found + stop early | u06 | check items one by one; `break` when found = stop working early | home anchors the lesson's `for position in range(26)` scan + a home exercise that adds the `break` (**new/adapt**), u07 loop+`break` search (**new**), u08 reverse-lookup value→key scan (**promote** — add the `break`; the CT contrast "the dict finds by *name* instantly; by *value* we're back to one-by-one"), u09 find-in-file (**new**) |
@@ -154,7 +154,7 @@ u10 12. Corrected against reality:
   u08 (no natural sum — avoids overflow).
 - u06 11 → ~13 (count-matches new + linear-search & transform-each homes). u04 10 → ~11–12 (running-
   total + count-by-condition homes may adapt existing scoring exercises; **no sentinel-loop tag** —
-  dropped). u10 12 → **15** (promote Ex13 + Ex14 + filter new). u05/u02 no net-new (reuse Ex7; u02 gets
+  dropped). u10 12 → **15** (promote Ex13 + Ex14 + filter new). u05/u02 no net-new (reuse the running-total exercise; u02 gets
   one lean one-sentence Spotlight only).
 - **Projected core counts: u07≈16, u08≈16, u09≈16, u10≈15** (current core counts + the §3 loci) — these
   are the natural landing points of the §3 loci, **not caps**; §3's per-locus reuse/promote/new statuses
@@ -216,7 +216,7 @@ prerequisite surface once these ids ship (not now). No contradiction with plan 0
   catalog; ledger mandate.
 - **v3 (2026-09-18):** round-2 fixes — `category: techniques` + formal name in `name` (no new fields);
   corrected `requires` semantics (same-unit enablers co-introduced, not in `requires`); phantom reuse
-  loci corrected against the notebooks (u05 Ex7 reuse; u09 read-and-sum/best-so-far/find-in-file new;
+  loci corrected against the notebooks (u05 running-total reuse; u09 read-and-sum/best-so-far/find-in-file new;
   u08 dropped from running-total; sentinel-loop → u04 Ex8 / promote u10 Ex14; find-extreme u10 add
   `best_pet`; linear-search u08 add `break`); `technique-spiral` scoped to Book 1 + rejects stretch loci;
   markers map kind→notebook incl. `brief.ipynb`, checkpoints don't tag; `all-any` dropped; footprint

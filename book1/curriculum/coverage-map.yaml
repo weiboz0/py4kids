@@ -50,7 +50,8 @@ entries:
   introduces: [def-function, parameters, return-value, scope]
   requires: [turtle-basics, turtle-drawing, for-loop, variable, f-string]
   practices: [range-function, loop-counter, arithmetic, nested-loops, float-type,
-              accumulator, import-statement, string-literal, turtle-drawing, running-total]
+              accumulator, import-statement, string-literal, turtle-drawing, running-total,
+              if-statement, elif-else, comparison, while-loop, break-statement]
 - id: checkpoint-02-loops-and-functions
   kind: checkpoint
   title: "Checkpoint 2 — Loops and Functions"
