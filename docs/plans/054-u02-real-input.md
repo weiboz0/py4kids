@@ -215,7 +215,68 @@ seed), distinct from the seed-injected exercise/challenge oracle. Re-dispatching
 NITS (all folded). No open blockers.
 
 ## Content Review
-_(pending — 4-way.)_
+
+### Round 1 — Phase A (2026-09-19, commit 6313e11). Roster: [self] inline; [sol]; [glm] glm-5.3; [fable].
+Implementation delegated to codex (gpt-5.6-sol) against the closed plan; verified independently.
+#### [self] (2026-09-19)
+- **Verdict**: APPROVE
+- Verified: 3 lesson executable twins added before cells 62/71/86 (outputs "Too high!"/"Correct! Case
+  closed."/"Got it!"); 9 solutions markdown real-forms; Ex5/Ex8 twins seeded `random.seed(4)` (secrets 16/242
+  ≠ first guesses); Ex1 exempt + Ex6/Ex7 statement cues. 0 `input()` in solutions code cells; 10 assert cells;
+  closure AST-clean (no list/for/break/`+=`/sys.stdin); nbformat valid; ci-local ALL GREEN (codex's sandbox
+  socket-denied kernel failures are an environment artifact, not content — my kernel-capable run is green).
+  Pre-existing `DuplicateCellId u2-ex8-*` warning is not from this change.
+#### [sol] (2026-09-19)
+- **Verdict**: APPROVE — no findings.
+#### [glm] (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — same 2 Nice as [fable]: (1) inline `# scripted next guess` comment on the
+  L4/AE twins [FIXED — applied]; (2) Ex8 twin line-order §6(c) drift (output verified identical) [WONTFIX —
+  cosmetic; the twin already carries explanatory comments].
+
+#### [fable] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — blind-solved Ex2/6/7/Ch2 (match); ran all 10 solution cells + 3 lesson twins
+  (62→"Too high!", 73→"Correct! Case closed.", 90→"Got it!") + every real-form (parity/§6(d) all confirmed);
+  seed(4)→16/242/31 (≠ first guesses); all book1 checks exit 0; DuplicateCellId not worsened; cues match u04.
+1. `[OPEN]` Nice: L4 twin (cell 73) + AE twin (cell 90) have `guess = secret` with no inline comment (only the
+   Notice explains) — add `# scripted next guess` so it doesn't read as cheating. → will apply.
+2. `[OPEN]` Nice: Ex8 twin/real-form line order drifts from §6(c) (cosmetic, output identical). → optional.
+3. `[OPEN]` Nice: AE twin ≈ rung 88 (plan-mandated uniformity) — no action.
+#### [fable] (pending)
+
+### CONTENT GATE CLOSED (2026-09-19) — 4-way: [self]/[sol] APPROVE, [glm]/[fable] APPROVE WITH NITS. The one
+convergent Nice ([glm]#1/[fable]#1, inline twin comment) applied; the Ex8 line-order cosmetic WONTFIX (identical
+output). No open blockers.
 
 ## Post-Execution Report
-_(pending.)_
+
+**Status: COMPLETE — u02 number-detective full real-input treatment (list-less). 2026-09-19.**
+
+### What shipped
+- **lesson.ipynb:** 3 executable fixed-data twins (+ Notices) before the `no-exec` input cells 62/71/86 — the
+  one-guess game, the full game ("Correct! Case closed."), and the sentinel PIT ("Got it!") — so every complete
+  interactive task has BOTH forms (design §1/§8). Twins are pinned-secret deterministic with a
+  `# scripted next guess` comment; the plan-049 ladder rungs are unchanged.
+- **solutions.ipynb:** 9 markdown `input()` real-forms (single-read Ex2/3/4/5/8 — Ex4 = the repaired
+  `int(input())` program with the type-problem comment; read-and-compute Ex6/7; Ch1/Ch2). Ex5/Ex8 twins seeded
+  `random.seed(4)` (secrets 16/242 ≠ first guesses; loop body runs) so they assert deterministically; real-forms
+  ship unseeded. Ex1 (dice roller) exempt. 0 `input()` in solutions code cells; 10 assert cells.
+- **exercises.ipynb:** `**Real version:**` cues (Ex6/Ex7) + Ex1 exempt statement note.
+- No metadata change (`input` in `requires`); no data growth (§3 u01–u06 arm); no rename; no numbered prompts.
+
+### Verification
+- All 10 solution asserts pass; 3 lesson twins run under exec-lessons; every real-form ast.parse + piped-run
+  (single-read §6(a-c) parity; random guess-loops Ex5/Ex8/Ch1 + AE-86 §6(d) seed-injected victory+termination;
+  Ch2 §6(c) "Found it: 68!") — independently confirmed by [fable]/[glm].
+- `scripts/ci-local.sh` ALL GREEN; `pre-merge-guard` OK. (Pre-existing `DuplicateCellId u2-ex8-*` warning not
+  worsened; a separate errata candidate if ever addressed.)
+- **Plan-review gate:** 4-way, 3 rounds → consensus (the lesson both-forms twins for 62/71/86 were the sticking
+  point — reviewers correctly enforced design §1/§8). **Content gate:** 4-way → consensus.
+- Implementation delegated to codex (gpt-5.6-sol); verified independently (codex's sandbox socket-denied kernel
+  failures do not apply to the kernel-capable run here).
+
+### Rollout
+Slice 3 done (u04-naming 051, u07 052, cp01 053, u02 054). Remaining (design 003 §7): units u01 (text-only),
+u03 (turtle), u05 (functions), u06 (strings) list-less; u08 (strings), u09 (files), u10 (classes); checkpoints
+cp02–cp04; projects. `input` metadata add for u03/u05/u08/u09. Per-unit shapes vary (turtle/functions/strings/
+files/classes) — survey each; the number/guessing list-less template (u02/u04) + list template (u07) + non-unit
+checkpoint path (cp01) are established.
