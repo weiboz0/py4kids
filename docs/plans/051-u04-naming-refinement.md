@@ -58,12 +58,17 @@ disposition.)
 Per-iteration prompts name the **1-based** index:
 - **1-based loops** (lesson running-total & count real-forms start `r = 1`, `while r <= rounds`) →
   `f"Score for round {r}: "`.
-- **0-based loops** (Ex11 `r = 0` `while r < rounds`; Ex9/Ex12–Ex18 `q = 0`) → `f"Score for round {r + 1}: "`
-  / `f"Answer {q + 1} correct? (yes/no) "`. Arithmetic inside f-string braces is already taught **before u04**
-  (u03 uses `f"…{shape_number + 1}…"`), so `{r + 1}` is in u04's union — control flow stays unchanged.
+- **All 0-based loops** (Ex11/Ex14/Ex17/Ex18 use `r = 0`, `while r < …`; Ex9/Ex12/Ex13/Ex15/Ex16 use `q = 0`) →
+  `f"Score for round {r + 1}: "` / `f"Answer {q + 1} correct? (yes/no) "`.
+- **In-union justification:** u04's `manifest.yaml` `requires` lists **both `f-string` and `arithmetic`**, so
+  `{r + 1}` is a composition of two u04-required concepts — control flow stays unchanged. (There is also a
+  pre-u04 occurrence of the exact form in u03 solutions, `f"…{shape_number + 1}…"`.) **Sanctioned fallback**
+  if a content-gate reviewer objects to arithmetic-in-f-string: precompute `label = r + 1` (plain arithmetic,
+  already in-union) then interpolate plain `{label}` — no plan amendment needed.
 
 Every numbered prompt must therefore display rounds/answers **1..n** (never "round 0"). One-shot prompts
-(single reads: "How many rounds? ", "Starting score: ", "Category: ", etc.) keep their plain text.
+(single reads: "How many rounds? ", "Starting score: ", "Category: ", etc.) keep their plain text; the
+sentinel loop (Ex19, no counter) keeps "Score (0 to stop): ".
 
 ## Phases
 
@@ -79,8 +84,9 @@ its markdown/`no-exec` real-form must stay name-for-name parallel (design 003 §
   names/prompts differ — AND that numbered prompts display **1..n** (never 0).
 - Grep-assert: no `+=`, no `for `/`range(`, no `import sys`, no `.`-string-methods, no `list(`/`[]` collection
   literals introduced anywhere in u04 (AST-level to avoid the "for" -in-prompt-string false positive).
-- **Grep-assert: NO old scheme-table name survives anywhere under `book1/units/unit-04-quiz-show/`** (code,
-  markdown real-forms, statements, teacher-notes) — catches any missed occurrence.
+- **Assert NO old scheme-table name survives anywhere under `book1/units/unit-04-quiz-show/`** (code, markdown
+  real-forms, statements, teacher-notes) — catches any missed occurrence. For `n`, use AST/extracted-source
+  matching (a plain word-boundary grep over `.ipynb` JSON false-positives on `\n` escapes).
 - `scripts/ci-local.sh` ALL GREEN (exec-lessons runs the twins; exec-solutions runs the asserted cells;
   concept-scan/prereq/coverage stay clean — names don't change the concept set).
 
@@ -157,6 +163,33 @@ unit + a checkpoint mini-pilot). No design-003 edit needed (governance-light; §
   lesson's `answer_1/answer_2` typed values.
 - → [FIXED] (Nice — [glm]#3): Phase B parity phrased "result line identical modulo `input()` prompt text".
 - → [FIXED] (Nice — [glm]#4): added the renumbering note (rollout → 052+).
+
+### Round 2 (2026-09-19) — re-review after fix commit 1b33f0a
+
+#### [self] round 2 (2026-09-19)
+- **Verdict**: APPROVE — all round-1 findings resolved: prompt convention specified (1-based `{r}`, 0-based
+  `{r + 1}`/`{q + 1}`; arithmetic-in-f-string confirmed taught in u03); explicit rename table + default
+  keep-verbatim rule from the full inventory; `c1..c5`; teacher-notes sweep + no-old-name grep-assert;
+  author-chosen `rounds` kept with prose reworded; renumbering noted. No new blocker.
+
+#### [sol] round 2 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — Must-Fix resolved, no new blocker.
+1. `[FIXED]` Nice: parenthetical accuracy — Ex14/Ex17/Ex18 use `r = 0`, Ex9/Ex12/Ex13/Ex15/Ex16 use `q = 0`.
+
+#### [glm] round 2 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS
+1. `[FIXED]` Should Fix: cite u04's own `requires: [… f-string, arithmetic …]` (manifest.yaml:9-10) for `{r + 1}`
+   being in-union (composition of two u04 concepts), not the u03-solutions occurrence. Done below.
+2. `[FIXED]` Nice: 0-based parenthetical corrected to "all 0-based counters".
+
+#### [fable] round 2 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — all five round-1 findings confirmed resolved.
+1. `[FIXED]` Nice: recorded the sanctioned in-union fallback (`label = r + 1` then plain `{label}`) should a
+   content-gate reviewer object to arithmetic-in-f-string.
+2. `[FIXED]` Nice: Phase B's "no old name survives" check for `n` must use AST/extracted-source (not
+   word-boundary grep over `.ipynb` JSON — `\n` false-positives). Phase B updated.
+
+### Round 2 — outcome: CONSENSUS — [self] APPROVE; [sol]/[glm]/[fable] APPROVE WITH NITS (all folded). **PLAN-REVIEW GATE CLOSED.**
 
 ## Content Review
 _(pending — 4-way.)_
