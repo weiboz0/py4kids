@@ -37,9 +37,9 @@ Practices reappearance: boolean and type-conversion run through every scoring ch
 the lightning-round Challenge; error-messages gets a deliberate debugging moment in
 exercise 5. All four reappear in checkpoint 02.
 
-Running-total route: name the pattern in class from the lesson Spotlight; Exercise 11 is its home in the Algorithm Extension (run as time permits). Retrieve it inside a function in Unit 05 exercise 11, retrieve it over a list in Unit 07 exercise 4, then assign Unit 09 exercise 13 after the file-reading lesson to transfer the same total-so-far update to saved-score lines.
+Running-total route: name the pattern in class from the lesson Spotlight; Exercise 11 is its home in the Algorithm Extension (run as time permits). Retrieve it inside a function in Unit 05 exercise 11, retrieve it over a list in Unit 07 exercise 10, then assign Unit 09 exercise 13 after the file-reading lesson to transfer the same total-so-far update to saved-score lines.
 
-Count-by-condition route: name the pattern in class from the lesson Spotlight; Exercise 12 is its home in the Algorithm Extension (run as time permits). Retrieve it over characters in Unit 06 exercise 12, retrieve it over a score list in Unit 07 exercise 5, then use Unit 08 exercise 5 to show the tally-by-key variation: one count per word in a dictionary.
+Count-by-condition route: name the pattern in class from the lesson Spotlight; Exercise 12 is its home in the Algorithm Extension (run as time permits). Retrieve it over characters in Unit 06 exercise 12, retrieve it over a score list in Unit 07 exercise 11, then use Unit 08 exercise 5 to show the tally-by-key variation: one count per word in a dictionary.
 
 ## Exercise allocation
 
