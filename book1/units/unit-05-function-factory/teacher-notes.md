@@ -50,7 +50,7 @@ as the "put it together" application, and the `NameError` scope bug is `no-exec`
 
 Practices reappearance: range-function + loop-counter drive the L1 stamp loop; arithmetic
 + float-type live in L2's `360/n`; nested-loops + turtle-drawing are L3's stamp-grid pattern;
-a short **accumulator** beat (a running `total` of card-border lengths, returned) sits with return-value.
+a short **accumulator** beat (a running `total` of card-border lengths, returned) is the running-total pattern's **reuse rep** here (its home is Unit 04), now gathered in the closing Algorithm Extension (Exercise 11).
 All reappear in project 01.
 
 Exercise depth (plan 036): the core set drives each concept to real authoring depth — students
@@ -62,10 +62,32 @@ In-class/homework allocation:
 
 - **Lesson 1:** use Exercise 6 as the loop-and-turtle bridge; students author the qualified
   `import turtle`, both loops, and the counter-driven pen width in the asset.
-- **Lesson 2:** complete Exercises 3, 4, and 7. Exercise 7 is the required **in-class accumulator**
-  rep: students build and return a running total of card-border lengths.
-- **Lesson 3:** complete Exercises 1, 2, and 5 after scope is taught. Exercises 8–11 sit below the
+- **Lesson 2:** complete Exercises 3 and 4. The accumulator-in-a-function rep is now Exercise 11 in
+  the **Algorithm Extension**: name the running-total pattern in class from the lesson Spotlight, and
+  run Exercise 11 as time permits (students build and return a running total of card-border lengths).
+- **Lesson 3:** complete Exercises 1, 2, and 5 after scope is taught. Exercises 7–10 sit below the
   **More Practice** label and are homework; use them in class only when time permits.
+
+## Algorithm Extension (enrichment)
+
+Exercises 11–20 form the unit's **Algorithm Extension** — an explicitly-labelled, end-of-notebook
+enrichment block (design 002 v8), routed as time-permitting / homework / differentiation; it never gates
+the core function work. Every drill is a small **function** that loops with `for i in range(...)` (or a
+`while` loop for the sentinel) — no lists, no `len`/`sum`, data from `range`/formulae.
+
+- **Ex 11** the running-total **reuse** (the pattern's home is Unit 04) — an accumulator built and
+  returned inside a function.
+- **Ex 12** count multiples of 3, **Ex 13** sum the evens, **Ex 14** triangular sum, **Ex 15** average
+  (returns a float).
+- **Ex 16 & Ex 17** are the **same sizes (10, 15, 20, 25, 30), opposite-boundary** pair: Ex 16 *checks
+  before adding* (`stamps_that_fit` / `width_used` → 3 and 45 at limit 60); Ex 17 *adds then checks*
+  (`stamps_to_pass` / `width_when_passed` → 4 and 70). Run them back-to-back so students feel where the
+  check sits relative to the add.
+- **Ex 18** `stamps_to_reach` — a `while` sentinel counting 5-unit stamps up to a target.
+- **Ex 19 & Ex 20** (homework) parameterized conditional count / arithmetic-run sum.
+
+These are extra reps of patterns students have met; assign as many as time allows — the point is repeated
+exposure to the same loop shapes, now wrapped in functions.
 
 ## Common mistakes
 

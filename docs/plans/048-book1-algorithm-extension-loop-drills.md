@@ -339,6 +339,49 @@ worked example makes 16/3 blind-derivable + solution mirrors it; Ex13–18 uncha
 markers / numbering / stretch all intact) · [glm] APPROVE-WITH-NITS · [fable] APPROVE-WITH-NITS (their
 nits folded). All four APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to PR + merge.
 
+### Phase C — u05 function-factory (relocation + 9 unmarked function drills)
+
+**Round 1** — [self] APPROVE · [glm] APPROVE-WITH-NITS · [fable] APPROVE-WITH-NITS · **[sol] REJECT**
+(one [OPEN]). All four blind-solved Ex12–20 to the specified results (3, 12, 15, 2.5, 3/45, 4/70, 6, 4,
+70); closure clean (functions; `for`/`range` or `while` (Ex18); no list/`len`/`sum`/`.split()`/`input(`);
+General-Rule `practices` adds (`if-statement`, `elif-else`, `comparison`, `while-loop`, `break-statement`,
+all introduced ≤ u05) synced in map+manifest, `concept-scan` clean; unmarked contract intact; numbering
+1–20 aligned; volume 42→61 cells (1.45×, < 2×). Findings:
+
+- `[FIXED]` **[sol] [OPEN]** (+ [glm]/[fable] nits) — stale running-total relocation references: the
+  pattern-ledger locus row + count row (`"Exercise 7"` / "reuse Ex7" → **Ex11**), the ledger header
+  "design 002 v7" → v8, and design 002 §3 catalog + §7 + §13-revision refs ("u05 Ex7" → **Ex11** where
+  live; the v3 revision note neutralised to "running-total reuse"). Design status line bumped v7 → **v8**
+  (the v8 amendment merged in Phase A had left the status marker at v7).
+- `[FIXED]` **[fable] [OPEN]** — `exercises.ipynb` Ex10 prose self-referenced "reuse `stamp(size)` from
+  Exercise 10" after the renumber → "from Exercise 9" (old Ex10 grid is now Ex9).
+- `[FIXED]` **[fable] nit** — asset starter header comments said "Student starter for Exercise 10/11"
+  (now off-by-one) → content-descriptive ("…for the stamp-grid/stamp-bands exercise"); filenames kept
+  (stable identifiers, named exactly by the prose; renaming = disproportionate churn).
+- `[FIXED]` **[fable] nit** — u05 teacher-notes "accumulator beat … sits with return-value" clause
+  updated (the Spotlight now sits in the closing Algorithm Extension, Ex11).
+- `[FIXED]` **[fable] nit (optional)** — added a one-line clarifier to Ex16/Ex17 ("Both functions use
+  the same loop over the sizes; only the value you return differs").
+- `[WONTFIX]` **[fable] nit** — loop var `i` (vs the unit's descriptive names): the plan mandates
+  `for i in range(...)`; recorded, no change.
+
+All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes.
+
+**Round 2** — [self] APPROVE; [glm]/[fable] round-1 APPROVE-WITH-NITS stand (folded); **[sol] REJECT** —
+original [OPEN] confirmed resolved (all stale v7/Ex7 refs gone; Ex12–20 blind-solve + all checks pass),
+but flagged ONE regression the round-1 fix introduced:
+
+- `[FIXED]` **[sol] [OPEN] (round 2)** — u05 teacher-notes twice called Exercise 11 "the running-total
+  **home**", contradicting the source-of-record (running-total's home is **u04**; u05 is a **reuse**).
+  Reworded both (teacher-notes.md:53 and the Algorithm-Extension list) to "the running-total pattern's
+  reuse rep (home is Unit 04)". Docs-only; no CI impact.
+
+**Round 3 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** (round 3: regression resolved —
+no "running-total home" phrase remains; teacher-notes framing matches ledger/design; Ex12–20 unchanged,
+numbering 1–20, unmarked contract intact, all read-only checks pass) · [glm] APPROVE-WITH-NITS ·
+[fable] APPROVE-WITH-NITS (folded). All four APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to
+PR + merge.
+
 ## Post-Execution Report
 
 ### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling) — DONE
@@ -382,7 +425,24 @@ nits folded). All four APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to
 - **Verification:** full book1 ci-local checks + exec-solutions/exec-lessons + PDF GREEN; book2 no
   regression. Volume 1.455× cells (< 2×) — no special volume sign-off required.
 
-_(Phases C–I + Phase V report appended as each slice lands.)_
+### Phase C — u05 function-factory — DONE (pending [sol] round-2 confirm + PR)
+
+- **Relocation:** running-total moved into a closing `## Algorithm Extension` H2 section as Exercise 11
+  (marker adjacent); old More-Practice → Ex7–10; lesson running-total Spotlight (marker-free — practiced,
+  not introduced) gathered under a closing `## Algorithm Extension`.
+- **New drills (unmarked, Ex12–20):** all function-packaged — count multiples of 3, sum evens,
+  triangular sum, average (float), the matrix pair (`stamps_that_fit`/`width_used` 3/45 vs
+  `stamps_to_pass`/`width_when_passed` 4/70 on sizes 10..30 ÷ 60), a `while` sentinel `stamps_to_reach`,
+  and two parameterized drills (`count_jumbo_stamps`, `total_ribbon`). Loops are `for i in range(...)` or
+  `while` (Ex18); no list/`len`/`sum`/`input`.
+- **Metadata:** General-Rule scanner-derived `practices` added to map+manifest (introduced ≤ u05):
+  `if-statement`, `elif-else`, `comparison`, `while-loop`, `break-statement`. teacher-notes reframed;
+  ledger resulting-core 11 → 20; design/ledger version + exercise-number refs synced to v8/Ex11; u04
+  cross-ref "Unit 05 exercise 7" → "11".
+- **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 1.45×
+  cells (< 2×) — no special volume sign-off required.
+
+_(Phases D–I + Phase V report appended as each slice lands.)_
 
 ---
 
