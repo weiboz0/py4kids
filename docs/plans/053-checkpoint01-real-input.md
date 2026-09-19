@@ -64,7 +64,8 @@ markdown cell AFTER the Question's code cell (never inject an UNFENCED `## Quest
 
 ### Phase B — verification
 - `ast.parse` + piped-run every markdown real-form. Q3/Q7: result line == fixed-data twin's output **modulo
-  `input()` prompt text**. **Q5 adapted oracle** (its twin proves the CONDITION, not the loop output): the
+  `input()` prompt text**. **Q5 adapted oracle** (design 003 §6(d) — fragment/condition-completion: its twin
+  proves the CONDITION, not the loop output): the
   completed loop, piped a mismatching-then-matching guess sequence, terminates and prints "You found it!"; the
   asserted twin (`keep_guessing = guess != secret` → `True`) proves the condition the question grades.
 - CLOSURE AST scan: no concept outside checkpoint-01's union; no `sys.stdin`.
@@ -146,6 +147,39 @@ Re-dispatching round 2 (design §2 changed).
    (Q3/Q5/Q7). Add a sentence (+ optional design 003 §9 line); cp02–04 copy this precedent.
 4. `[OPEN]` Nice: Q3 solution markdown already states the full `int(input(...))` line inline — fold, don't
    duplicate. Exempt-note placement in solutions (not statement) is deliberate for checkpoints — say so.
+
+### Round 2 (2026-09-19) — re-review after design §2 v3 + Q1-exempt + Q5-reclassify (e386103)
+#### [self] round 2 (2026-09-19)
+- **Verdict**: APPROVE — design 003 §2 v3 resolves the authority conflict (checkpoint real-forms solutions-only,
+  mirrored heading; checkpoint.ipynb solution-free); Q1 exempt → checkpoint.ipynb untouched; Q5 reclassified
+  with adapted oracle; guard attribution corrected. No new blocker.
+#### [sol] round 2 (2026-09-19)
+- **Verdict**: REJECT
+1. `[OPEN]` Must Fix: Q1-exempt + §2 v3 sound, but Q5's adapted oracle conflicts with design 003 §6 (which
+   unconditionally requires result-line parity + line-for-line twin) — amend §6 to define the
+   condition-completion exception + its two-part proof. → [FIXED]: **design 003 §6(d) added (v3)** — twin proves
+   the graded fragment; the completed real-form proves termination + result line. (== [fable] R2 nit, escalated.)
+
+#### [glm] round 2 (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — all 4 round-1 nits verified resolved (design §2 v3, Q1 exempt + checkpoint
+  byte-unchanged, guard re-attribution against the code, Q5 caption). 2 Nice:
+1. `[OPEN]` Nice: §9 revision history reads v1, v3, v2 (v3 inserted before v2) — reorder ascending. → [FIXED].
+2. `[OPEN]` Nice: add a §6 condition-completion allowance so cp02–cp04 don't re-litigate. → [FIXED] via §6(d)
+   (added after glm's e386103 review).
+
+### Round 2 — outcome: REJECT (1 of 4, [sol]; §6 conflict). Fixed via design 003 §6(d) → round 3.
+**Round 2 responses:** [sol]#1 [FIXED] design 003 **§6(d)** added — fragment/condition-completion exception
+(twin proves the graded fragment; completed real-form proves termination + result line); Q5 Phase B cites it.
+[fable] R2 nice == same §6(d) [FIXED]. [glm]#1 [FIXED] §9 reordered v1→v2→v3; [glm]#2 [FIXED] via §6(d).
+Re-dispatching [sol] round 3 (design §6 changed).
+
+#### [fable] round 2 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — all 4 round-1 nits RESOLVED (Q1 exempt + checkpoint.ipynb byte-unchanged;
+  Q5 adapted oracle; design §2 v3 sound + consistent with the "why markdown for non-lessons" para; Q3 fold +
+  exempt-note-in-solutions). Guard attribution corrected. No new blocker.
+1. `[OPEN]` Nice: design 003 §6(b)/(c) has no clause for condition/fragment-completion oracles (Q5's kind);
+   add a one-line §6 addendum so cp02–cp04/projects don't re-derive it ("fragment-completion questions: the
+   twin proves the graded fragment; the piped-run real-form proves termination + result line"). → will fold.
 
 ## Content Review
 _(pending — 4-way.)_

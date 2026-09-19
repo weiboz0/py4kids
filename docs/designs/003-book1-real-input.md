@@ -86,6 +86,13 @@ edits the fixed-data cell but not its twin) is caught by the per-PR content gate
 a fenced real-form must not contain a line starting `## Exercise <digit>` (`solutions_structure` scans raw
 markdown).
 
+(d) **Fragment / condition-completion exception (v3).** When a question grades a FRAGMENT — a boolean
+condition, a single line — rather than a full program, (b)/(c) are adapted: the asserted fixed-data twin
+validates the **graded fragment** (e.g. `keep_guessing = guess != secret` → `True`), and the piped-run
+**completed** real-form validates **termination + result line** (e.g. the guess loop prints `"You found
+it!"`). The twin need not be line-for-line the completed program; the real-form block is captioned as the
+completed program so it is not misread as the fragment. (Origin: checkpoint-01 Q5, plan 053.)
+
 ## 7. Rollout (plans 051+)
 
 Plan 050 ships **design 003 + the u04 pilot** only. Remaining 15 entries roll out unit-by-unit in
@@ -112,14 +119,16 @@ and `ci-local` is ALL GREEN. Book 2 stays green throughout.
 - **v1 (2026-09-19):** created for plan 050; 4-way plan-review gate CLOSED (3 rounds — resolved: the
   `input()`-in-solutions policy → markdown real-forms; u01 int/str boundary; project `## Milestone N`
   mapping; the 4-unit `input` add set; control-flow closure; real-form validation).
-- **v3 (2026-09-19, plan 053):** §2 checkpoint + brief rows clarified — the real-program form lives in the
-  PAIRED `solutions.ipynb` under the mirrored `## Question N` / `## Milestone N` (the student
-  checkpoint/brief stays solution-free, per Content Conventions); where a Question/Milestone statement or
-  starter already reads `input()`, that IS the real-program form and the solutions block is the model answer.
-  Codifies plan 053's checkpoint-01 placement; cp02–cp04 + projects follow it.
 - **v2 (2026-09-19, plan 052):** §3 realistic-data policy clarified — the binding requirement is
   "not toy"; ≈6–8 elements is the target for lists built fresh, but a unit already using realistic
   multi-element lists (≥4 real values) need not be grown, and "small fixed data" enrichment drills keep
   their lists. Under this policy a unit grows only its <4-element core SOURCE lists (u07 [plan 052]: Ex1/Ex7/
   Ex8/Challenge 2), leaving already-realistic core lists + enrichment/rung data untouched; the govern is
   source/input data, not computed result literals.
+- **v3 (2026-09-19, plan 053):** (§2) checkpoint + brief rows clarified — the real-program form lives in the
+  PAIRED `solutions.ipynb` under the mirrored `## Question N` / `## Milestone N` (the student
+  checkpoint/brief stays solution-free, per Content Conventions); where a Question/Milestone statement or
+  starter already reads `input()`, that IS the real-program form and the solutions block is the model answer.
+  (§6d) added a fragment/condition-completion validation exception (twin proves the graded fragment; the
+  completed real-form proves termination + result line). Codifies plan 053's checkpoint-01 placement + Q5
+  oracle; cp02–cp04 + projects follow both.
