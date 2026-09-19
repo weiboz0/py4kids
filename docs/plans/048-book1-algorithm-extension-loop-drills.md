@@ -306,7 +306,31 @@ _(4-way gate — pre-PR after implementation, per PR. Findings `[OPEN]`/`[FIXED]
 
 ## Post-Execution Report
 
-_(Written before PR.)_
+### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling) — DONE
+
+- **Design 002 → v8** committed: §6 gains the `## Algorithm Extension` end-of-notebook structure bullet
+  (H2 section, last core `## Exercise N` before `## Challenge`; lesson Spotlights gathered under a closing
+  `## Algorithm Extension`; numbering + markers unchanged), and the teacher-notes bullet relaxes "home is
+  always in-class" → "extension enrichment routed by teacher-notes" (pattern-*naming* Spotlight stays
+  in-class). §13 gains the v8 entry. **No §3 locus added/dropped/re-classified; §7's "running-total
+  dropped from u08" note preserved.**
+- **Inventory** `docs/proposals/048-loop-drill-inventory.md` already committed (5839477) — the durable,
+  capped source the slices draw from.
+- **CI-safety + exec-order probe (no tooling change needed).** Static read of the tools confirmed the
+  header is invisible to the heading/tag/marker checks: `notebooks.py` `EXERCISE_HEADING` matches only
+  `^## Exercise \d+` and `SOLUTION_HEADING` requires the word "solution"; `patterns.py` `_exercise_link`
+  requires `marker_index + 1` to be the `## Exercise N` cell, so the `## Algorithm Extension` header must
+  (and does) sit *before* the marker. Dynamic probe: a real relocate+renumber of u05's running-total
+  block (Ex7 → end under `## Algorithm Extension`, Ex8–11 → Ex7–10, moved → Ex11) in BOTH
+  `exercises.ipynb` and `solutions.ipynb`, then reverted. Against that arrangement, ALL relevant checks
+  PASS: `structure-check`, `stretch-check`, `hygiene-check`, `pattern-marker` (adjacency preserved),
+  `technique-spiral` (≥3 spiral intact), `patterns-doc-check`, `concept-scan`, and **`exec-solutions`**
+  (moved `def` cell is state-independent → exec order safe). Probe reverted; Phase A ships docs-only.
+- **Slice note for B–I:** the relocation script must preserve each cell's `id` field (the throwaway probe
+  omitted ids → a benign `nbformat` MissingIDFieldWarning); real slices copy/generate ids so notebooks
+  stay normalized.
+
+_(Phases B–I + Phase V report appended as each slice lands.)_
 
 ---
 
