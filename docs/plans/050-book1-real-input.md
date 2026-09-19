@@ -1,110 +1,149 @@
 # Plan 050 — Book 1 Real-Input Norm (hybrid stdin form + realistic data)
 
-**Goal:** Make Book-1 examples and exercises stop looking "fake." Two norms, course-wide:
-1. **Hybrid stdin form (Option A, user-chosen).** Every complete teaching example (each lesson section's
-   "put it together") and every exercise keeps its **executable fixed-data** form (runs live, students
-   see output) AND gains ONE consistent **`no-exec` `input()`-reading "real program"** form — the
-   finished-program shape that reads its data from input. Uses `input()` (introduced u01), **NOT**
-   `sys.stdin` (that is Book 2). `no-exec` because an `input()` cell is interactive (the `INTERACTIVE`
-   rule in `tools/notebooks.py` forces it).
-2. **Realistic exec data (user-directed).** The culminating "put it together" cells and the exercises use
-   realistic, non-trivial datasets — no `n = 3`, no 2-element lists. Handling depends on list availability
-   (user chose **(i)**):
-   - **u07–u10 (lists taught from u07):** realistic FIXED lists (≈6–8 elements, real variety, ties where
-     apt) directly in the exec cells.
-   - **u01–u06 (no `list` yet):** a realistic *fixed* dataset would need an ugly N-branch `if/elif` just to
-     store N values, which reads MORE fake — so the exec cell keeps a **modest** fixed dataset and the
-     **`input()` real-program form carries the realism** (it handles arbitrary input size naturally).
-     The tiny one-increment build-up rungs (R1 = one update, R2 = +one) **stay minimal** — realism
-     applies to the put-it-together and exercises, never the graduated build-up rungs (that would break
-     the plans 031–035 / 049 one-increment pedagogy that cleared its gates).
+**Goal:** Book-1 examples and exercises stop looking "fake." Two norms:
+1. **Hybrid real-input form (Option A, user-chosen).** Keep the **executable fixed-data** worked examples
+   (run live, students see output) AND add ONE consistent **`input()`-reading "real program"** form per
+   complete task (each lesson "put it together") and per exercise. Uses `input()` (introduced u01),
+   **NEVER** `sys.stdin` (that is Book 2).
+2. **Realistic exec data (user-directed).** Culminating "put it together" cells and exercises use
+   realistic, non-trivial data — no `n=3`, no 2-element lists — via **Handling (i)** (user-chosen):
+   - **u07–u10 (lists from u07):** realistic FIXED lists (≈6–8 elements, real variety, ties where apt).
+   - **u01–u06 (no `list` yet):** a realistic *fixed* dataset needs an ugly N-branch `if/elif`, which reads
+     *more* fake — so the exec cell keeps a **modest** fixed dataset and the **`input()` real-program form
+     carries the realism** (arbitrary input size). The one-increment build-up rungs **stay minimal**
+     (realism applies to the put-it-together + exercises only — never the graduated rungs; that protects
+     the plans 031–035 / 049 pedagogy).
 
-**Non-goal / explicitly NOT this plan:** Book-2-style `sys.stdin.read()` + subprocess `judge-check` over
-`.in`/`.out` (that was the rejected "full stdin-first" option — it would make every teaching cell
-`no-exec` and lose executable worked examples). Book 1 stays a notebook course with **executable
-worked examples**; the stdin realism is the *added* `no-exec` real-program form + realistic exec data.
+**Non-goal (rejected option):** Book-2-style `sys.stdin.read()` + subprocess `judge-check` over `.in`/`.out`.
+Book 1 stays a notebook course with **executable worked examples**; the real-input realism is the *added*
+form + realistic exec data.
 
-**Architecture (per complete task):**
-- **Lesson "put it together"** (each L-section and each Algorithm-Extension home): keep the executable
-  fixed-data version (with realistic data per the rule above), then add a `no-exec` `input()` real-program
-  cell + a `**Notice:**` framing it as "the finished program reads its data with `input()`; display-only,
-  run it yourself." The tiny build-up rungs are untouched.
-- **Exercises:** the reference **solution reads `input()`** (a real program) on a realistic sample; a
-  small **executable fixed-data check cell** demonstrates/verifies the logic runs (since the `input()`
-  solution itself is `no-exec`). Student answer cells stay empty. Exercise statements say the program
-  reads its input (values, one per line / as prompted) and prints the result.
-- **Prereq closure:** `input()`/`int()`/`str()` are u01; every real-program form uses only concepts ≤ its
-  unit (no `sys`, no `.split()` unless taught, no list before u07). The `input()` cell is `no-exec`
-  (INTERACTIVE), so `exec-lessons`/`exec-solutions` never run it — no hang.
-- **No metadata churn:** no `introduces`/`requires` change; a scanner-forced regular-concept `practices`
-  add only under the General Rule (expected rare); pattern markers/§3 untouched (this is orthogonal to
-  the algorithm-pattern thread — it adds a real-program form + realistic data, no locus change).
+## The CI constraint that shapes the form (verified by all four reviewers, round 1)
 
-**Spec:** new **`docs/designs/003-book1-real-input.md`** (committed in Phase A) — the authority for the two
-norms + the per-unit realistic-data recipe + the `no-exec` real-program convention; plus
-`tools/notebooks.py` (the `INTERACTIVE`/`no-exec` + exec-lessons/exec-solutions semantics that must stay
-green), and the plans 031–035 / 047–049 worked-example + Algorithm-Extension conventions this builds on.
+An `input()` cell cannot be executed by CI (`nbclient` has no stdin; `tools/notebooks.py` `INTERACTIVE =
+input(|sys.stdin`). Two checks matter, and they differ by notebook kind:
+- **`_solution_policy_findings`** rejects `input()` in **any `solutions.ipynb` code cell regardless of
+  `no-exec`** (units, checkpoints, projects). Only Book-2 stdin-model entries are exempt. → A `input()`
+  reference solution **CODE cell is impossible** in Book 1 without a tooling change.
+- **`cell-lint`** skips `no-exec` code cells **only for `kind=="unit"`**; checkpoint/project `no-exec` code
+  cells are still compiled. **`concept-scan`** detects `input()` in any CODE cell (no `no-exec` filter).
+- **Lessons** may carry a `no-exec` `input()` CODE cell — this is a live, green convention already
+  (u04 lesson cells 20/40/50 are exactly that).
+
+**Resolution (no tooling change):**
+- **Lessons:** the real-program form is a **`no-exec` `input()` CODE cell** (proven convention) + a
+  `**Notice:**`. `concept-scan` sees `input()` → units whose union lacks `input` get a General-Rule
+  `practices: [input]` add (map + manifest). Verified set needing the add: **u03, u05, u08, u09** (u01/u02/
+  u04/u06/u07/u10 already have it — u04, the pilot, needs none).
+- **`solutions.ipynb`, `checkpoint.ipynb`, `brief.ipynb`:** the real-program form is a **markdown fenced
+  code block** (NOT a code cell) — required by `_solution_policy_findings`, and the exact plan-045
+  submission-wrapper precedent. Because it is markdown, `concept-scan`/`cell-lint`/solution-policy never
+  touch it, so **no `input` metadata add is needed for checkpoints/projects**. The **executable
+  reference solution stays a fixed-data code cell carrying ≥3 non-vacuous asserts** (run + verified by
+  `exec-solutions`) — that is the VALIDATED logic; the markdown real-program form is a thin adapter over
+  the same logic (fixed values → `input()`).
+
+## Validation of the real-program forms (reviewer safeguard, round 1)
+
+`no-exec` / markdown real-program code is never run by CI, so malformed or wrong code could pass silently.
+Guardrails: (a) every real-program form is `ast.parse`-checked at authoring; (b) it is **run once with
+piped fixed input** (`printf '…' | python prog.py`) and its output confirmed EQUAL to the paired
+executable fixed-data cell's output — recorded in the slice's post-exec report; (c) the real form's logic
+is line-for-line the fixed-data solution with the fixed values replaced by `input()` reads, so the CI-run
+fixed-data version is the behavioral proof.
 
 ## Global Constraints
 
-- **`input()` idiom only** for reading input (u01-native); NEVER `sys.stdin` / `sys.stdin.read()` in Book 1.
-- **Every `input()`-reading cell is `no-exec`-tagged** (INTERACTIVE); executable cells are `input`-free
-  fixed data. So `exec-lessons`/`exec-solutions` still run clean.
+- **`input()` idiom only** (u01-native); NEVER `sys.stdin`. **u01 real-program forms are TEXT-ONLY** —
+  `int()`/`str()` (type-conversion/int-type) are introduced **u02**, so u01 reads/prints strings only.
+- **Per-unit input idiom** (closure-pinned in design 003): u01 = fixed-count prompts, **no loop**
+  (sentinel-loop is u02); u02+ = sentinel / count loop; u07+ may read into a list.
+- **Real-program form placement:** lesson → `no-exec` `input()` code cell; solutions/checkpoint/brief →
+  **markdown fenced block**; executable fixed-data solution (code cell, ≥3 non-vacuous asserts) is retained
+  and is the validated logic.
 - **Realistic data** on put-it-together + exercises; **build-up rungs stay minimal**; list-less units use
-  Handling (i).
-- **Executable worked examples preserved** — the fixed-data ladders (031–035, 049) are NOT converted to
-  `no-exec`; the real-program form is ADDED alongside.
-- Prereq-closure per unit; no `introduces`/`requires`/marker/§3 change; General-Rule `practices` add only
-  if scanner-forced. Branch `feature/plan-050-…`; no commits while a `[sol]` review is in flight;
-  `GH_TOKEN=$(cat .gh-token)`; run `ci-local` FOREGROUND (`TMPDIR=/dev/shm bash scripts/ci-local.sh`).
-- **Do not touch** Book 2; governance files; the algorithm-pattern markers/loci.
+  Handling (i); realistic fixed lists only u07–u10.
+- **Executable worked examples preserved** (no exec→no-exec conversion). Metadata: no `introduces`/
+  `requires`/marker/§3 change; the ONLY permitted change is the General-Rule `practices: [input]` add for
+  **u03/u05/u08/u09** (map + manifest, kept in sync). Prereq-closure per unit.
+- Branch `feature/plan-050-…`; no commits while a `[sol]` review is in flight; `GH_TOKEN=$(cat .gh-token)`;
+  run `ci-local` FOREGROUND (`TMPDIR=/dev/shm bash scripts/ci-local.sh`). Do not touch Book 2 / governance.
 
 ## Out of scope
 
-- Book-2-style subprocess judging / `.in`-`.out` fixtures / `judge-check` for Book 1 (rejected option).
-- Converting existing executable teaching cells to `no-exec`.
-- New algorithm patterns; checkpoints/projects **content redesign** (they get the same norm applied, but
-  no new questions).
+- Book-2-style subprocess judging / `.in`-`.out` fixtures / `judge-check` for Book 1.
+- Converting existing executable teaching cells to `no-exec`; new checkpoint/project questions.
+- A tooling change to `_solution_policy_findings` (the markdown-form resolution avoids needing one).
 
 ## Phases
 
-Dispatch per AGENTS.md. **Pilot one unit fully first** (like the Book-2 migration), prove the norm + CI,
-then roll out. Each slice keeps `ci-local` GREEN and `main` valid.
+**Plan 050 ships Phase A + Phase B (pilot u04) ONLY.** The rollout across the remaining 15 entries is
+**subsequent plans (051+)**, each a slice through both gates — enumerated in design 003 §rollout so this
+plan is not an open-ended umbrella (avoids plan-scope expansion). Dispatch per AGENTS.md.
 
 ### Phase A — Design 003 + conventions + CI-safety probe (docs, ships first)
-1. Write `docs/designs/003-book1-real-input.md`: the two norms; the `input()`-`no-exec` real-program
-   convention; the realistic-data recipe (u07–u10 fixed lists; u01–u06 Handling (i)); the per-unit
-   closure notes; the acceptance bar (reached unit-by-unit as slices merge).
-2. Probe (throwaway, reverted): add a `no-exec` `input()` cell + a realistic fixed-data exec cell to a
-   unit and confirm `exec-lessons`/`exec-solutions`/`hygiene`/`cell-lint`/`noexec-check`/`concept-scan`/
-   `structure-check` all stay green (the `input()` cell must be stripped by INTERACTIVE→no-exec; the
-   realistic exec cell must run). Ship tooling tolerance + fault fixtures only if a check needs it;
-   expected: none.
-- **Acceptance (A):** design 003 committed; probe green; no tooling change (or it ships fault-tested).
+1. Write `docs/designs/003-book1-real-input.md`: the two norms; the per-kind real-program form
+   (lesson no-exec code cell; solutions/checkpoint/brief markdown); the validation guardrails; the
+   realistic-data recipe + per-unit input idiom + u01 text-only boundary; the **enumerated rollout order**
+   (u01–u03, u05, u06 list-less; u07–u10 lists; then the 4 checkpoints; then the 2 projects — first rollout
+   slice includes one u07–u10 list unit, first checkpoint slice is a mini-pilot); the **u03/u05/u08/u09
+   `input` `practices` adds**; the acceptance bar (reached unit-by-unit).
+2. Probe (throwaway, reverted) covering **all three kinds** — a unit (lesson `no-exec` input() cell +
+   solutions markdown real-form + fixed-data asserted solution), a **checkpoint** (markdown real-form +
+   fixed-data solution), and a **project** (markdown real-form) — and confirm `exec-lessons`,
+   `exec-solutions`, `_solution_policy_findings` (structure-check), `cell-lint` (incl. non-unit),
+   `noexec-check`, `concept-scan`, `hygiene`, `manifest`/`prereq`/`coverage` all stay green. Ship a
+   tooling change only if the probe forces it; expected: none (markdown-form resolution).
+- **Acceptance (A):** design 003 committed; the three-kind probe green; no tooling change (or fault-tested).
 
 ### Phase B — PILOT: u04 quiz-show (full unit)
-Apply both norms to u04 end-to-end: each L-section put-it-together and each Algorithm-Extension home
-put-it-together gains a `no-exec` `input()` real-program form (+ Notice); the executable put-it-togethers
-use realistic-but-modest fixed data (u04 is list-less → Handling (i)); each u04 exercise gets an
-`input()`-reading reference solution + a realistic fixed-data check, statement reworded to "reads its
-input." Build-up rungs untouched; markers/§3 untouched. 4-way content gate; ci-local GREEN.
-
-### Phases C–… — rollout (one plan per 1–2 units / the checkpoints / the projects)
-u01–u03, u05, u06 (list-less, Handling (i)); u07–u10 (realistic fixed lists); the 4 checkpoints; the 2
-projects. Each a slice through both gates; sequence to avoid churn. (Enumerated in design 003 §rollout.)
+Apply both norms to u04 end-to-end: each L-section + Algorithm-Extension-home "put it together" gains a
+`no-exec` `input()` real-program code cell + Notice (u04 already has `input` → no metadata add); exec
+put-it-togethers use realistic-but-modest fixed data (list-less → Handling (i)); each u04 exercise keeps a
+fixed-data asserted reference solution AND gains a markdown `input()` real-program form, statement
+reworded to "reads its input." Build-up rungs untouched; markers/§3 untouched. Validate every real form
+(ast.parse + piped-input run == fixed-data output). 4-way content gate; ci-local ALL GREEN.
 
 ### Phase V — Verification (named, mandatory)
 `uv run pytest -q` green; `scripts/ci-local.sh` ALL GREEN (exec-lessons/exec-solutions run the fixed-data
-cells; no-exec `input()` cells stripped; hygiene/cell-lint/noexec/concept-scan/structure/PDF + pre-merge
-guard). **Pedagogy (reviewer-enforced):** every complete task has an executable fixed-data form AND a
-`no-exec` `input()` real-program form; put-it-together + exercise data is realistic (no `n=3`/2-element
-lists) where the unit's closure allows; build-up rungs stay one-increment; no `sys.stdin`; Book 2 green.
-**Acceptance:** design 003; the norm applied to every in-scope entry (unit-by-unit); ci-local ALL GREEN;
-`pre-merge-guard --pr` OK; plan-review + per-PR content-review 4-way consensus.
+cells; `input()` lesson cells `no-exec`-stripped; markdown real-forms inert; hygiene/cell-lint/noexec/
+concept-scan/structure/manifest/prereq/coverage/PDF + pre-merge guard). **Real-program-form validation**
+(ast.parse + piped-input == fixed-data output) recorded per slice. **Pedagogy (reviewer-enforced):** every
+complete task has an executable fixed-data form AND a real-program `input()` form; put-it-together +
+exercise data realistic where closure allows; build-up rungs one-increment; u01 text-only; no `sys.stdin`;
+Book 2 green. **Acceptance:** design 003 + pilot u04 merged; ci-local ALL GREEN; `pre-merge-guard --pr` OK;
+plan-review + content-review 4-way consensus. Rollout entries follow in plans 051+.
 
 ## Plan Review
 
-_(4-way gate — pending dispatch.)_
+### Round 1 (HEAD 034e9d1) — [glm] REJECT · [sol] REJECT · [fable] APPROVE WITH NITS
+
+All three confirmed the lesson arm is CI-sound/proven, `input()` (not `sys.stdin`) is the right u01 idiom,
+Handling (i) + build-up-rung exemption are sound, and Phase V is named. Blockers, all folded in this
+revision:
+
+- `[FIXED]` **B1 (all three): `input()` in a solutions code cell fails `_solution_policy_findings`
+  regardless of `no-exec`** (empirically verified) → the exercise "solution reads input()" would red every
+  slice; the unit-only probe gave a false green. Resolution: **markdown fenced real-program form** in
+  solutions/checkpoint/brief (no tooling change; plan-045 precedent); executable fixed-data asserted
+  solution retained as the validated logic.
+- `[FIXED]` **B2 (all three): `int()`/`str()` are u02, not u01** → u01 real-program forms are TEXT-ONLY;
+  per-unit input idiom pinned (u01 fixed prompts no-loop; u02+ sentinel/count loop).
+- `[FIXED]` **checkpoint/project mapping (sol/glm): unspecified** → markdown real-program form under each
+  `## Question N` / `### Problem N`; executable fixed-data solution retained; notebook mapping stated.
+- `[FIXED]` **probe scope (sol/fable): unit-only** → Phase A probe now covers unit + checkpoint + project.
+- `[FIXED]` **N1 metadata (glm/sol): entries lacking `input`** → verified only **u03/u05/u08/u09** need the
+  General-Rule `practices:[input]` add (their lesson no-exec code cells); checkpoints/projects use markdown
+  → no add. Enumerated; map+manifest synced.
+- `[FIXED]` **no-exec/markdown real-form validation (sol/fable): could pass CI silently** → ast.parse +
+  piped-input run == fixed-data output, recorded per slice; the fixed-data asserted cell is the CI proof.
+- `[FIXED]` **scope/phasing (sol/glm/fable): "Phases C–…" not enumerated / plan-scope expansion risk** →
+  050 ships A + B (pilot u04) only; rollout enumerated in design 003 as plans 051+ (first rollout slice
+  includes a u07–u10 list unit; first checkpoint = mini-pilot).
+- `[FIXED]` **fable nits:** exercise fixed-data check cells carry ≥3 non-vacuous asserts; u01
+  "arbitrary input size" overclaim removed (u01 pre-loop → fixed prompts).
+
+Round 2 re-dispatched to all three on the revised HEAD.
 
 ## Content Review
 
