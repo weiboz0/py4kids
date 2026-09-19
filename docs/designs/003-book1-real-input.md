@@ -1,7 +1,7 @@
 # Design 003 — Book 1 Real-Input Norm
 
-**Status:** APPROVED — v2 (v1: plan-050 gate CLOSED, 2026-09-19; v2: plan-052 §3 realistic-data policy,
-2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
+**Status:** APPROVED — v3 (v1: plan-050 gate CLOSED, 2026-09-19; v2: plan-052 §3 realistic-data policy;
+v3: plan-053 §2 checkpoint/brief placement, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
 stdin-first/subprocess-judged).
 
 ## 1. Motivation
@@ -27,8 +27,8 @@ An `input()` cell cannot execute under CI (`nbclient` has no stdin; `tools/noteb
 |---|---|---|
 | **lesson.ipynb** | a **`no-exec` `input()` CODE cell** + a `**Notice:**` (proven: u04 lesson cells 20 & 40) | the fixed-data worked-example ladder (unchanged) |
 | **solutions.ipynb** | a **markdown fenced ```python block``` (NOT a code cell)** | the fixed-data reference solution **code cell with ≥3 non-vacuous asserts** (run by `exec-solutions`) |
-| **checkpoint.ipynb** | markdown fenced block under the `## Question N` | fixed-data solution (in the paired solutions.ipynb) |
-| **brief.ipynb** (projects) | markdown fenced block under the `## Milestone N` (Book-1 briefs are milestone-based — **not** `### Problem N`, which is Book-2) | fixed-data solution |
+| **checkpoint.ipynb** | markdown fenced block in the **paired `solutions.ipynb`** under the mirrored `## Question N` (the student `checkpoint.ipynb` stays solution-free — Content Conventions); where a Question's statement/starter **already reads `input()`**, that statement IS the real-program form and the solutions block is the model answer | fixed-data solution (in the paired solutions.ipynb) |
+| **brief.ipynb** (projects) | markdown fenced block in the **paired `solutions.ipynb`** under the mirrored `## Milestone N` (Book-1 briefs are milestone-based — **not** `### Problem N`, which is Book-2); the student `brief.ipynb` stays solution-free | fixed-data solution |
 
 **Why markdown for non-lessons:** `_solution_policy_findings` bans `input()` in ANY `solutions.ipynb`
 code cell *regardless of `no-exec`* (units/checkpoints/projects); `cell-lint` compiles non-unit `no-exec`
@@ -86,6 +86,13 @@ edits the fixed-data cell but not its twin) is caught by the per-PR content gate
 a fenced real-form must not contain a line starting `## Exercise <digit>` (`solutions_structure` scans raw
 markdown).
 
+(d) **Fragment / condition-completion exception (v3).** When a question grades a FRAGMENT — a boolean
+condition, a single line — rather than a full program, (b)/(c) are adapted: the asserted fixed-data twin
+validates the **graded fragment** (e.g. `keep_guessing = guess != secret` → `True`), and the piped-run
+**completed** real-form validates **termination + result line** (e.g. the guess loop prints `"You found
+it!"`). The twin need not be line-for-line the completed program; the real-form block is captioned as the
+completed program so it is not misread as the fragment. (Origin: checkpoint-01 Q5, plan 053.)
+
 ## 7. Rollout (plans 051+)
 
 Plan 050 ships **design 003 + the u04 pilot** only. Remaining 15 entries roll out unit-by-unit in
@@ -118,3 +125,10 @@ and `ci-local` is ALL GREEN. Book 2 stays green throughout.
   their lists. Under this policy a unit grows only its <4-element core SOURCE lists (u07 [plan 052]: Ex1/Ex7/
   Ex8/Challenge 2), leaving already-realistic core lists + enrichment/rung data untouched; the govern is
   source/input data, not computed result literals.
+- **v3 (2026-09-19, plan 053):** (§2) checkpoint + brief rows clarified — the real-program form lives in the
+  PAIRED `solutions.ipynb` under the mirrored `## Question N` / `## Milestone N` (the student
+  checkpoint/brief stays solution-free, per Content Conventions); where a Question/Milestone statement or
+  starter already reads `input()`, that IS the real-program form and the solutions block is the model answer.
+  (§6d) added a fragment/condition-completion validation exception (twin proves the graded fragment; the
+  completed real-form proves termination + result line). Codifies plan 053's checkpoint-01 placement + Q5
+  oracle; cp02–cp04 + projects follow both.
