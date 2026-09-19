@@ -194,7 +194,66 @@ Re-dispatching [sol] round 3 (design §6 changed).
 NITS (all folded). Produced design 003 §2 v3 (checkpoint/brief placement) + §6(d) (fragment-completion oracle).
 
 ## Content Review
-_(pending — 4-way.)_
+
+### Round 1 — Phase A (2026-09-19, commit 61bd69a). Roster: [self] inline; [sol]; [glm] glm-5.3; [fable].
+#### [self] (2026-09-19)
+- **Verdict**: APPROVE
+- Verified: Q3/Q7 real-forms parity-match twins (Q7→"Too high!"); Q5 §6(d) oracle (piped 3,7 → "You found
+  it!"; twin proves the condition); exempt notes on Q1/Q2/Q4/Q6 (in solutions, not the assessment);
+  checkpoint.ipynb byte-unchanged (git diff empty); 0 `input()` in solutions CODE cells; 6 assert cells;
+  closure within checkpoint-01's union; nbformat valid; ci-local ALL GREEN (checkpoint solution-policy/
+  structure path passes with markdown real-forms — the mini-pilot's proof).
+#### [sol] (2026-09-19)
+- **Verdict**: APPROVE — no findings.
+
+### CONTENT GATE CLOSED (2026-09-19) — 4-way: [self]/[sol] APPROVE, [glm]/[fable] APPROVE WITH NITS. All Nice
+folded: exempt notes reworded age-appropriately (no "fixed data on purpose" jargon; Q6 tailored to naming) +
+Q5 real-form blank line restored. No open blockers.
+
+## Post-Execution Report
+
+**Status: COMPLETE — checkpoint-01 real-input mini-pilot (rollout slice 2, non-unit path). 2026-09-19.**
+
+### What shipped
+The real-input treatment applied to `checkpoint-01-first-steps`, proving the **non-unit markdown path**:
+- **solutions.ipynb only** (checkpoint.ipynb byte-unchanged — student assessment stays solution-free, design
+  003 §2 v3): markdown `input()` real-forms under Q3 (one-line count read), Q5 (completed guess loop —
+  §6(d) condition-completion oracle), Q7 (one-guess detective); one-line exempt notes under Q1 (debug/
+  traceback), Q2 (predict), Q4 (trace), Q6 (naming/comment concept).
+- No data growth (list-less realistic scalars), no rename (clean names), no numbered prompts (no sequence),
+  no metadata change (`input` already in `requires`).
+
+### Verification
+- 6 solution code cells' asserts pass; the 3 real-forms parity-match (Q7 → "Too high!"; Q5 → "You found it!"
+  with the twin proving the condition per §6(d); Q3 binds `clue_count`). 0 `input()` in solutions code cells;
+  6 assert cells; checkpoint.ipynb byte-unchanged.
+- `scripts/ci-local.sh` ALL GREEN — the checkpoint cell-lint / solution-policy / structure (heading-mirror)
+  path passes with markdown real-forms. `pre-merge-guard` OK.
+- **Content gate: 4-way → consensus** ([self]/[sol] APPROVE, [glm]/[fable] APPROVE-WITH-NITS, all Nice folded).
+- Produced (plan-review) design 003 **§2 v3** (checkpoint/brief placement) + **§6(d)** (fragment-completion
+  oracle) — cp02–cp04 + projects inherit both.
+
+### Rollout
+Slice 2 done. Remaining (design 003 §7): units u01 (text-only), u02, u03, u05, u06 (list-less); u08, u09, u10
+(list); checkpoints cp02–cp04; projects. `input` metadata add needed for u03/u05/u08/u09. The non-unit
+checkpoint path is now proven for cp02–cp04.
+
+#### [glm] (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS
+1. `[OPEN]` Nice: Q6 exempt note omits "fixed data on purpose" that the other three include — inconsistent
+   wording. → will resolve together with [fable]#1 by rewording all four age-appropriately (Q6 tailored to
+   naming).
+
+#### [fable] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — blind-solved all 7 (match); ran 6 solution cells (asserts pass) + 3
+  real-forms (Q3 binds 6; Q7 → Too high!/Too low!/Case closed!; Q5 terminates + "You found it!", twin proves
+  the condition — §6(d)); exempt notes correct + solutions-only; non-unit path PASS (checkpoint.ipynb diff
+  empty, 7 `## Question` headings intact, hygiene/structure/cell-lint/exec-solutions/concept-scan/prereq PASS);
+  closure clean. (Pre-existing u02 DuplicateCellId warning, not this change.)
+1. `[OPEN]` Nice: exempt-note wording "fixed data on purpose" is jargon for a 12-year-old — reword to "the
+   numbers are typed into the code on purpose — there is no `input()` version". → will apply.
+2. `[OPEN]` Nice: keep Q5's starter blank line between the initial read and `while` (cosmetic). → will apply.
+#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending.)_
