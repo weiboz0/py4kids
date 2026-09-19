@@ -285,6 +285,21 @@ Verdict: APPROVE WITH NITS (all addressable at implementation time). Awaiting [s
   `grep "# Algorithm Extension" | grep -v "## Algorithm Extension"` → empty in both files. No
   substantive change; B1/B2/B3 stay resolved. [sol] round-4 re-dispatched on v2.2.
 
+### Round 4 — CONSENSUS (gate CLOSED)
+
+- **[self] → APPROVE.**
+- **[sol] → APPROVE (round 4)** — re-ran the negative grep on both `docs/plans/048-*.md` and
+  `docs/proposals/048-*.md`: no single-hash literal remains. Confirmed v2.1→v2.2 is documentation-only
+  (plan file only; proposal + design byte-unchanged). Re-confirmed the surviving contracts: unmarked
+  reps (no new markers / technique `practices` tags / §3 loci), `## Algorithm Extension` H2 throughout,
+  content phases B–I each carry a named Phase V, and the v8 amendment preserves §7's "running-total
+  dropped from u08" decision.
+- **[glm] → APPROVE-WITH-NITS** (round 2; nits folded into v2/v2.1).
+- **[fable] → APPROVE-WITH-NITS** (round 1; nits folded).
+
+**4-way consensus: all four APPROVE / APPROVE-WITH-NITS, no open blockers. Plan-review gate CLOSED.**
+Cleared to implement (Phase A → Phases B–I → Phase V per slice).
+
 ## Content Review
 
 _(4-way gate — pre-PR after implementation, per PR. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`.)_
