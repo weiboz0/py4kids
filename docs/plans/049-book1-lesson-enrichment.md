@@ -42,9 +42,9 @@ ready unit / wait. This guarantees each 049 edit builds on 048's merged content 
   so when a unit has two homes each ladder sits between its Spotlight and the next — insert a ladder of
   executable `code` rungs, each followed by a `**Notice:**` markdown cell, then one worked "put it
   together" cell + a closing `**Notice:**`. Each rung adds exactly one idea, exactly like L1/L2/L3.
-  **Rung count is completeness-driven, NOT a fixed cap** (plan 031 rule: as many rungs as the concept
-  needs — typically 2, up to 4 for a harder pattern like find-extreme's first-item seed or the sentinel
-  stop-rule; never fewer than 2 + the put-it-together). The concrete one-increment rung sequence, fixed
+  **Rung count is completeness-driven, NOT capped** (plan 031 rule: as many rungs as the concept needs
+  — 2 is typical; the harder patterns take more, e.g. linear-search and find-extreme each get 3 rungs +
+  the put-it-together; never fewer than 2 + the put-it-together). The concrete one-increment rung sequence, fixed
   data, and expected output for ALL SEVEN home patterns are specified in **## Appendix — Ladder
   specifications** below (so within-unit closure + one-increment pacing are reviewable now, matching the
   implementation-ready detail of plans 031–035).
@@ -90,9 +90,15 @@ code-rung + `**Notice:**` + put-it-together form), `tools/patterns.py`/`tools/no
     the lesson's `range(26)` alphabet scan); no `len` (u07) — use a manual `position` counter.
   - **u07** — `list`/`list-append`/`list-loop`/`len` OK; `find-extreme` seeds from the FIRST item (never
     `best = 0`); no `max`/`min`/`sorted`.
-  - **u02** — `while`/`comparison` only; **the sentinel driver must be a deterministic in-cell value**
-    (e.g. an arithmetic-stepped guess converging to a fixed secret), NOT `input()` — the rung executes
-    under `exec-lessons`, so a `no-exec` tag is FORBIDDEN here (it would silently evade execution).
+  - **u02** — `while`/`comparison`/`random-module` only. CRITICAL: **`accumulator` (`x = x + 1`) is
+    NOT in u02's union** (first introduced in u04) and `concept-scan` detects it on any self-referential
+    reassignment, so the early rungs must NOT step a counter — they teach the sentinel *condition* with
+    `comparison`/`boolean` only (e.g. `guess != secret` evaluating True, then False when they match). The
+    interactive guessing loop is the **`no-exec` put-it-together** (matching the lesson's existing
+    interactive PIT convention — u04 cells 20/40 are `no-exec`): `while guess != secret: guess =
+    int(input(...))` is closure-clean (`input` in u02's `requires`, no `accumulator`, `while`/`comparison`
+    introduced in u02) and, being `no-exec`, is skipped by `exec-lessons`. So u02 is the one home where
+    the put-it-together is `no-exec`; its early rungs still execute.
   Rungs are state-independent (self-contained data), placed AFTER their Spotlight prose cell (and, when a
   unit has two homes, before the next Spotlight) — no earlier cell is affected; preserve/add cell `id`s
   on new cells (avoid nbformat MissingIDFieldWarning).
@@ -142,7 +148,9 @@ graduated ladder — the completeness-driven rung sequence specified in the **##
 specifications** (executable rungs + `**Notice:**` each + a put-it-together cell) teaching that pattern's
 loop shape on the Spotlight's own fixed data, prereq-clean; (c) if teacher-notes describe the extension,
 note the home Spotlight now includes a worked build-up (enrichment, still teacher-routed); (d) keep every
-check GREEN incl. `exec-lessons`; (e) no marker/§3/manifest change (record "no scanner-derived add" or
+check GREEN incl. `exec-lessons`; (e) no marker/§3/`introduces`/`requires` change — a scanner-forced
+regular-concept `practices` add (map + manifest, General Rule) is the SOLE permitted metadata edit,
+expected none (record "no scanner-derived add" or
 the General-Rule add if one is genuinely triggered).
 
 - **Phase B — u04 (running-total, count-by-condition):** 048 Phase B merged → **proceed now.**
@@ -169,8 +177,10 @@ gate consensus.
 
 `uv run pytest -q` green; `scripts/ci-local.sh` ALL GREEN (incl. the 3 pattern checks + concept checks +
 notebook exec/hygiene/cell-lint + PDF + pre-merge guard). **Volume guardrail (plan-037 / design §7,
-per PR):** a slice that trips >2× cells / >30% PDF pages / >25% wall-time (or any cell >120 s) requires
-an EXPLICIT content-gate sign-off recorded in the PR — a home ladder adds ~5–8 cells to a lesson, so
+per PR):** a slice that trips >2× cells / >30% PDF pages / >25% wall-time requires an EXPLICIT
+content-gate sign-off recorded in the PR. (A single cell exceeding **120 s** is a HARD `ci-local`
+FAILURE, not a waivable growth threshold — split or lighten it; ladder rungs are tiny fixed-data cells,
+so this should never trigger.) A home ladder adds ~5–8 cells to a lesson, so
 watch the multi-home units (u04, u06, u07). **No CI check enforces ladder presence or quality** (no
 tooling change ships): the graduated-ladder form, one-increment pacing, and correctness are
 **content-gate-enforced** (reviewers blind-read each rung). **Pedagogy (reviewer-enforced):** every home
@@ -216,6 +226,39 @@ pattern-marker/technique-spiral; exec-lessons runs the rungs). Findings, all fol
   practiced-only Spotlights inside home units (u06/u07) + project-01.
 
 Round 2 re-dispatched to all three on the revised HEAD.
+
+### Round 2 (HEAD 8dfe032/f45dbe5) — [glm]/[fable] APPROVE WITH NITS · [sol] REJECT
+
+- **[glm] APPROVE WITH NITS** — all N1–N8 confirmed folded (hand-traced all 7 appendix outputs correct);
+  sol's 4 blockers resolved; one residual **N9** (`[FIXED]` in f45dbe5): per-slice step (b) still said
+  "2–3-rung" — now defers to the Appendix's completeness-driven count.
+- **[fable] APPROVE WITH NITS** — all round-1 findings + sol blockers resolved (hand-traced all 7 outputs
+  + closure vs coverage-map). Nits `[FIXED]` in f45dbe5: **f-N1** Appendix preamble now states the
+  self-contained "restate prior + one line" rung convention; **f-N2** the two heaviest steps flagged for
+  the content gate. **f-N3** (transform-each "`for` [u03]") cosmetic — no change.
+- **[sol] REJECT** — reviewed 8dfe032 (before the f45dbe5 nit folds); surfaced real content bugs, all
+  now `[FIXED]` in the v3 revision:
+  - `[FIXED]` **metadata contradiction** — per-slice step (e) said "no manifest change" while permitting
+    a General-Rule `practices` add: reworded to "no marker/§3/`introduces`/`requires` change; a
+    scanner-forced regular-concept `practices` add is the SOLE permitted metadata edit, expected none."
+  - `[FIXED]` **rung cap** — dropped the "up to 4" / "2–3-rung" cap language for plan-031's uncapped
+    completeness-driven rule (linear-search + find-extreme now 3 rungs + PIT).
+  - `[FIXED]` **linear-search not one-increment** — inserted an intermediate rung (R2 = walk every char
+    with the `in` test, no stop) between the bare `in` and the scan-with-`break`.
+  - `[FIXED]` **find-extreme incomplete** — the home now retains the WINNER'S NAME (`best_name` +
+    `best_score` over parallel `names`/`scores`, `range(len())`), per the ledger's "Champion by name",
+    not a bare numeric max.
+  - `[FIXED]` **sentinel-loop closure violation (critical)** — `guess = guess + 1`/`tries = tries + 1`
+    trip `accumulator`, which is NOT in u02's union (introduced u04). Rebuilt: executable rungs teach the
+    sentinel CONDITION with `comparison` only (`guess != secret` True → False), and the interactive
+    input-driven loop is the **`no-exec` put-it-together** (matching u04's no-exec PIT convention;
+    closure-clean — `input` in u02, no `accumulator`). Constraint + u02 trap updated accordingly.
+  - `[FIXED]` **120 s nit** — separated: >2×cells/>30%PDF/>25%wall-time need sign-off, but a cell >120 s
+    is a HARD CI failure, not waivable.
+
+All revised ladders re-executed to their stated outputs (linear-search False/True/False, 1, −1;
+find-extreme `Bo 9`; sentinel `True`/`False`). Round 3 re-dispatched to [sol] (+ [glm]/[fable] to
+re-confirm the appendix rewrites).
 
 ## Content Review
 
@@ -265,21 +308,35 @@ counter + `if/elif` dispatch at once) and u06 linear-search R2 (loop + `position
 - **Put-it-together** `word = "hi"` / `result = ""` / `for ch in word: result = result + ch.upper()` →
   `HI`. *Notice:* the loop applies the same transform to every character.
 
-### u06 — linear-search (`for` + `break` + `in`, manual `position` counter; no `len`)
-- **R1** `print("a" in "aeiou")` → `True`. *Notice:* `in` tests one character against the vowels.
-- **R2** scan `word = "cat"` with a `position` counter, `break` at the first vowel → `1`. *Notice:* stop
-  the instant a vowel is found; `position` holds its index.
-- **Put-it-together** scan `word = "myth"` with `found = -1` stand-in (no `None`), `break` on a vowel →
-  `-1`. *Notice:* no vowel, so the `-1` stand-in reports "not found" — search returns early on a hit or
-  falls through to the stand-in.
+### u06 — linear-search (`for` + `break` + `in`, manual `position` counter; no `len`; 3 rungs — harder pattern)
+- **R1** `print("a" in "aeiou")` → `True`. *Notice:* `in` tests ONE character against the vowels.
+- **R2** *(new — walk every character first, no stop yet)* `word = "cat"` / `for ch in word: print(ch in
+  "aeiou")` → `False` / `True` / `False`. *Notice:* run the same `in` test on each character in turn — 'a'
+  is the vowel.
+- **R3** *(add the stop + a position counter)* `word = "cat"` / `position = 0` / `for ch in word: if ch in
+  "aeiou": break` … `position = position + 1` / `print(position)` → `1`. *Notice:* now STOP at the first
+  vowel with `break`; `position` (stepped once per char) holds its index. *(`accumulator` is fine here —
+  introduced u04 ≤ u06.)*
+- **Put-it-together** scan `word = "myth"` with a `found = -1` stand-in (no `None`), `break` on a vowel →
+  `-1`. *Notice:* "myth" has no vowel, so the loop falls through and the `-1` stand-in reports "not found"
+  — a search returns early on a hit or ends with the not-found stand-in.
 
-### u07 — find-extreme (`list`, list-loop, comparison; seed from the FIRST item)
-- **R1** `scores = [3, 9, 5]` / `best = scores[0]` / `print(best)` → `3`. *Notice:* seed `best` from the
-  first item — never `best = 0` (a real score could be lower or all-negative).
-- **R2** compare the next (`if scores[1] > best: best = scores[1]`) → `9`. *Notice:* keep the bigger of
-  the two.
-- **Put-it-together** `for s in scores: if s > best: best = s` over `[3, 9, 5]` → `9`. *Notice:* one pass
-  keeping the biggest-so-far gives the maximum.
+### u07 — find-extreme = "Champion by name" (argmax retaining the WINNER'S NAME; `list`, `range(len())`, comparison; seed from the FIRST item)
+_The home embodiment (per the ledger) tracks `best_name` AND `best_score` together — NOT just a number —
+so the pattern answers "who is the champion?", not merely "what is the top score?"._
+- **R1** `names = ["Ada", "Bo", "Cy"]` / `scores = [3, 9, 5]` / `best_name = names[0]` / `best_score =
+  scores[0]` / `print(best_name, best_score)` → `Ada 3`. *Notice:* seed the champion from the FIRST
+  player — never `best_score = 0` (a real score could be lower / all-negative).
+- **R2** compare the next player and update BOTH together: `if scores[1] > best_score: best_name =
+  names[1]` … `best_score = scores[1]` / `print(best_name, best_score)` → `Bo 9`. *Notice:* a higher score
+  crowns a new champion — update the name and the score as a pair, or the name drifts from the score.
+- **R3** *(the index that ties name↔score)* show reading a player by position: `i = 2` / `print(names[i],
+  scores[i])` → `Cy 5`. *Notice:* `names[i]` and `scores[i]` are the same player — the loop will walk `i`
+  over both lists in step.
+- **Put-it-together** `best_name = names[0]` / `best_score = scores[0]` / `for i in range(len(scores)): if
+  scores[i] > best_score: best_name = names[i]` … `best_score = scores[i]` / `print(best_name,
+  best_score)` over the three players → `Bo 9`. *Notice:* one pass keeps the highest-scoring player's NAME
+  and score — the champion, not just the number.
 
 ### u07 — filter-into-list (`list-append`, comparison)
 - **R1** `kept = []` / `kept.append(9)` / `print(kept)` → `[9]`. *Notice:* start an empty result list and
@@ -289,11 +346,18 @@ counter + `if/elif` dispatch at once) and u06 linear-search R2 (loop + `position
 - **Put-it-together** `for s in [3, 9, 5, 7]: if s >= 5: kept.append(s)` → `[9, 5, 7]`. *Notice:* one pass
   copies just the qualifying scores into the new list.
 
-### u02 — sentinel-loop (`while`, comparison; DETERMINISTIC driver, no `input`, no `no-exec`)
-- **R1** `guess = 3` / `secret = 7` / `print(guess != secret)` → `True`. *Notice:* the loop keeps going
-  while the guess does not equal the secret.
-- **R2** one step (`guess = guess + 1`) → `4`. *Notice:* each try moves the guess closer.
-- **Put-it-together** `secret = 7` / `guess = 1` / `tries = 0` / `while guess != secret: guess = guess +
-  1; tries = tries + 1` / `print(tries)` → `6`. *Notice:* the loop repeats until the sentinel condition
-  (`guess == secret`) is met — a fixed driver, so it runs the same way every time (the graded exercise
-  uses a real `input()` guess; the lesson rung stays deterministic so it executes under CI).
+### u02 — sentinel-loop (`while`/`comparison`; early rungs teach the CONDITION — NO `accumulator`; interactive put-it-together is `no-exec`)
+_u02 has no `accumulator` (first introduced u04) and no counter may be stepped in an executed rung, so the
+executable rungs teach the sentinel **condition** with `comparison` only; the real input-driven loop is
+the `no-exec` put-it-together, matching the lesson's interactive-PIT convention (u04 cells 20/40 are
+`no-exec`)._
+- **R1** `guess = 3` / `secret = 7` / `print(guess != secret)` → `True`. *Notice:* while the guess does
+  NOT equal the secret, the condition is True — the loop keeps going.
+- **R2** `guess = 7` / `secret = 7` / `print(guess != secret)` → `False`. *Notice:* the moment the guess
+  matches, the condition is `False` and the loop STOPS — that match is the sentinel.
+- **Put-it-together** *(`no-exec` — interactive, not run by CI)* `import random` / `secret =
+  random.randint(1, 10)` / `guess = 0` / `while guess != secret: guess = int(input("Guess: "))` /
+  `print("Got it!")`. *Notice:* the loop repeats, reading a new guess each time, until the guess equals
+  the secret — the sentinel that ends it. *(Closure-clean: `input` in u02's `requires`, `random-module`/
+  `while`/`comparison` in u02; NO `accumulator` — `guess = int(input(...))` reassigns from input, not
+  from itself.)*
