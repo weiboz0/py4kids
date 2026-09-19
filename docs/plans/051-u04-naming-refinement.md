@@ -192,7 +192,47 @@ unit + a checkpoint mini-pilot). No design-003 edit needed (governance-light; §
 ### Round 2 — outcome: CONSENSUS — [self] APPROVE; [sol]/[glm]/[fable] APPROVE WITH NITS (all folded). **PLAN-REVIEW GATE CLOSED.**
 
 ## Content Review
-_(pending — 4-way.)_
+
+### Round 1 — Phase A rename (2026-09-19, commit 09d8708)
+Roster: [self] inline; [sol] codex gpt-5.6-sol; [glm] opencode; [fable] Fable 5 — all read-only.
+
+#### [self] (2026-09-19)
+- **Verdict**: APPROVE
+- Verified: (a) CORRECTNESS — all 19 solutions markdown real-forms + 3 lesson `no-exec` forms + all executable
+  twins keep their pre-rename result lines (Ex11→"Total score: 40", Ex12→"Correct answers: 3", Ex13→"Correct:
+  3, wrong: 2", Ex17→"Fitting total: 10; scores added: 2", Ex18 tipping line, lesson RT→16 / count→2, etc.);
+  asserts pass (ci-local exec-solutions). (b) NUMBERED PROMPTS display 1..n, never 0 (0-based → `{r + 1}`/
+  `{q + 1}`, 1-based lesson → `{r}`); arithmetic-in-f-string in-union (u04 requires f-string + arithmetic).
+  (c) CLOSURE AST-clean: no `+=`/`for`/`range`/`len`/`sum`/`list`/string-methods/`import sys` introduced.
+  (d) CONSISTENCY: NO old scheme name survives anywhere under the unit dir (incl. the caught Ex6 solution-note
+  prose `questions_asked`→`asked`); statements + teacher-notes updated. (e) nbformat valid; ci-local ALL GREEN.
+
+#### [sol] (2026-09-19)
+- **Verdict**: REJECT
+1. `[FIXED]` Real-program notes say "works for any `n`" while code uses `rounds`/`answers` — retired scheme
+   name referring to no variable, solutions.ipynb cells 35 (`a9459a59f915`) & 38 (`d4915f59d3c9`). Priority:
+   Must Fix. → Response: reworded to "works for any number of rounds"/"…answers" (same fix [glm]#1/[fable]#1
+   requested); verified no `` `n` `` prose ref remains anywhere in u04. Re-dispatched [sol] round 2 to confirm.
+
+### Round 1 — outcome: REJECT (1 of 4, [sol]); all four converged on the single caption nit. Fixed → [sol] round 2.
+
+#### [glm] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS
+- Verified (no findings beyond #1): blind-solved Ex9/11/13/16/17/18 matched; all real-forms + twins produce
+  byte-identical output pre/post (result lines unchanged, asserts pass); prompts 1..n never 0; AST clean;
+  no old multi-char scheme name survives; statements + teacher-notes match.
+1. `[FIXED]` Stale `n` in the Ex11 (cell 35) and Ex12 (cell 38) real-form CAPTIONS ("works for any `n`") — the
+   code + statements were reworded but these two captions were missed. Priority: Should Fix. → Response: reworded
+   to "works for any number of rounds" / "…answers"; confirmed no `` `n` `` prose ref remains anywhere in the unit.
+
+#### [fable] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS
+- Verified (diffed old-vs-new stdout at 09d8708~1 vs 09d8708): all 22 real-forms + twins + 3 lesson no-exec
+  byte-identical result lines; numbered prompts 1..n never 0 (in-union confirmed: manifest requires f-string +
+  arithmetic, u03 precedent); AST closure clean; no old scheme name survives; statements + teacher-notes:19
+  (`asked`) match; `c1..c5` distinct from lesson `answer_1/2` values. (Out-of-scope note: checkpoint-02 still
+  uses old names — correctly a 051+ follow-up, u04-only plan.)
+1. `[FIXED]` Same as [glm]#1 — Ex11/Ex12 real-form captions "works for any `n`". → Response: reworded (above).
 
 ## Post-Execution Report
 _(pending.)_
