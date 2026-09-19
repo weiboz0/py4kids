@@ -86,4 +86,4 @@ average-of-passers (zero guard), "what place would I be?", and the matrix pair o
 - **Stretch:** every touched unit keeps ≥2 Challenge exercises at every merge.
 - **Scanner-derived `practices`** (exact registry ids, all closure-clean, under the General Rule):
   `break-statement` (intro u04) → u06/u07/u08/u09; `accumulator` (u04) + `arithmetic` (u02) → u09;
-  `comparison` (u02) → u09; `builtin-functions` (u07) → u08.
+  `comparison` (u02) → u09; `builtin-functions` (u07) → u08. **Plan-048 adds:** u05 `if-statement`/`elif-else`/`comparison`/`while-loop`/`break-statement`; u09 `range-function`; u10 `break-statement`.

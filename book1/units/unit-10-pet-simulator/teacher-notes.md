@@ -58,7 +58,7 @@ The Challenge exercises 25–26 are optional stretch work and do not carry core 
 Practices reappearance: `arithmetic`/`int-type`/`accumulator` are the hunger/happiness changes
 (`self.hunger = self.hunger - amount`); `comparison`/`elif-else`/`if-statement` are the mood ladder;
 `dict-literal`/`dict-access` are the foods table; `list-literal`/`list-append`/`list-loop`/`for-loop`/
-`list-index` build and walk the pet list; `while-loop` is the play-until-happy loop; `f-string`/
+`list-index` build and walk the pet list; `while-loop` is the play-until-happy loop; `break-statement` drives the Algorithm-Extension search and feed-budget drills (Ex 18, 22, 23); `f-string`/
 `print`/`variable`/`string-literal` throughout; `error-messages` is the active AttributeError run-read-copy-fix beat.
 Because staging three deliberate failures would be artificial in this gentle unit, `error-messages` has the plan's justified peripheral count exemption: one genuine in-class authoring-and-debugging exercise instead of three.
 `input` is authored only in tagged `no-exec` prompt cells in Exercises 7, 9, and 12; regular executable cells stay input-free.
@@ -74,7 +74,7 @@ Challenges. The pattern beats are named in class; every exercise here (Ex 13–2
 time-permitting / homework / differentiation.
 
 Each new drill is **self-contained**: it defines its own tiny `class Pet` and a small list of pets, then
-loops (`for pet in pets:`), so it runs independently of the rest of the notebook. Long-form accumulation
+loops (`for pet in pets:` — or, for the Ex 22/23 feed-budget pair, one Buddy and `for snack in snacks:`), so it runs independently of the rest of the notebook. Long-form accumulation
 (`x = x + …`) throughout — Book 1 does not teach `+=`.
 
 - **Ex 16** count the hungry pets (> 6 → 2), **Ex 17** team-hunger total (→ 23), **Ex 18** find a pet by
