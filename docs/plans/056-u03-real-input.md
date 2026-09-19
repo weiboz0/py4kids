@@ -1,6 +1,6 @@
 # Plan 056 — u03 turtle-art-studio: full real-input treatment (compute-and-print arm)
 
-**Status:** DRAFT — plan-review gate pending.
+**Status:** PLAN-REVIEW GATE CLOSED (4-way consensus, round 3) — implementation pending.
 **Type:** Content — apply the full treatment to `unit-03-turtle-art-studio`.
 **Branch:** `feature/plan-056-u03-real-input`. **Base:** main @ 580ddf2.
 
@@ -221,8 +221,18 @@ Re-dispatching round 3 ([sol] only; [glm]/[fable] already APPROVE-WITH-NITS with
 3. `[OPEN]` Nice: extend the closure-scan note to "comparisons AND `or`/BoolOp only inside `assert` lines"
    (Ex1/Ex5/Ex7/Ex8 twins carry `assert side_number != 0 or pen_size == 1`).
 
+### Round 3 (2026-09-19) — [sol] re-review after round-2 fixes (1a710bb)
+#### [sol] round 3 (2026-09-19)
+- **Verdict**: APPROVE — no remaining Must/Should. Design consistency resolved (003 §1/§7/§8/§9 v4; cell 38
+  exempt turtle drawing); Motivation matches the SHAPE table and cites v4; Ex9 pin exact (sol 19:
+  `shape_count=4`,`side_count=4` → `drawn_sides=16`,`travel_moves=4` → result `16 4`). Classification,
+  solutions-markdown-only form, no lesson/metadata/data-growth change, Phase B all intact.
+
+### Round 3 — outcome: **PLAN-REVIEW GATE CLOSED** — 4-way consensus:
+[self] APPROVE · [sol] APPROVE · [glm] APPROVE WITH NITS (folded) · [fable] APPROVE WITH NITS (folded). No open blockers.
+
 ## Content Review
-_(pending — 4-way.)_
+_(pending — 4-way, post-implementation.)_
 
 ## Post-Execution Report
 _(pending.)_
