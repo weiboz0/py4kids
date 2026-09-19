@@ -58,7 +58,7 @@ Challenge column = Challenge-*exercise* count (each ≥2 `stretch`-tagged cells 
 | u07 | 13 | +3 (find-extreme home, filter home, loop+break) +6 (plan-048 unmarked drills, Ex17–22) | 22 | 2 (unchanged) |
 | u08 | 14 | +2 (reverse-lookup promote→core Ex15, filter new Ex16) +5 (plan-048 unmarked drills, Ex17–21) | 21 | 2 − 1 + 1 = 2 |
 | u09 | 12 | +4 (read-and-sum, best-so-far, find-in-file, filter — all new) +7 (plan-048 unmarked drills, Ex17–23) | 23 | 2 (unchanged) |
-| u10 | 12 | +3 (Ex13 promote, Ex14 promote, filter new) | 15 | 2 − 2 + 2 = 2 |
+| u10 | 12 | +3 (Ex13 promote, Ex14 promote, filter new) +9 (plan-048 unmarked drills, Ex16–24) | 24 | 2 − 2 + 2 = 2 |
 
 **Plan-048 Algorithm Extension (unmarked reps).** Each pattern-hosting unit's algo exercises are
 relocated into a closing `## Algorithm Extension` section and joined by extra **unmarked** loop-mastery
@@ -86,4 +86,4 @@ average-of-passers (zero guard), "what place would I be?", and the matrix pair o
 - **Stretch:** every touched unit keeps ≥2 Challenge exercises at every merge.
 - **Scanner-derived `practices`** (exact registry ids, all closure-clean, under the General Rule):
   `break-statement` (intro u04) → u06/u07/u08/u09; `accumulator` (u04) + `arithmetic` (u02) → u09;
-  `comparison` (u02) → u09; `builtin-functions` (u07) → u08.
+  `comparison` (u02) → u09; `builtin-functions` (u07) → u08. **Plan-048 adds:** u05 `if-statement`/`elif-else`/`comparison`/`while-loop`/`break-statement`; u09 `range-function`; u10 `break-statement`.

@@ -534,6 +534,39 @@ attributed the order-independent re-save to the *student exercises* rather than 
 correctly scoped to solutions; diff is docs-only) · [glm] APPROVE-WITH-NITS · [fable] APPROVE. All four
 APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to PR + merge.
 
+### Phase H — u10 pet-simulator (header-only relocation + 9 unmarked object-loop drills)
+
+**Round 1** — [self] APPROVE · **[glm] APPROVE-WITH-NITS** · **[fable] REJECT** (1 [OPEN]) ·
+**[sol] REJECT** (2 [OPEN]). All four blind-solved Ex16–24 to spec (2; 23; found; roster; Rex/8 & Mia/3;
+mood tally; 2/2; −1/3/3; [3,3,2,5]); closure clean; numbering 1–26 aligned; markers before Ex13–15;
+Ex25/26 stretch; no cross-ref changes (Ex13/14 unchanged). Notably I pre-fixed two Codex smells before
+committing (a contrived nested `for pet in pets:` over a single Buddy, and `tipping_snack = None` — a
+Book-1 closure trap) → single-loop, `tipping_snack = 0`. The reviewers then converged on the
+statement↔solution mismatches those solution-fixes created:
+
+- `[FIXED]` **[glm]/[fable]/[sol] [OPEN]** — Ex22/Ex23 *statements* still told students to make a `pets`
+  list and use `for pet in pets:` (which forces the forbidden nested loop), contradicting the single-loop
+  solutions. Reworded both statements to "make one `Pet` named Buddy … loop once over the snacks", and
+  fixed the teacher-notes' `for pet in pets:` generalization.
+- `[FIXED]` **[glm]/[sol] [OPEN]** — Ex16/17/21/24 statements say `__init__` stores "only" hunger/mood,
+  but the solutions also stored an unused `name`. Minimized those four solution Pet classes to the stated
+  single attribute (Pet(8)…, Pet("happy")…).
+- `[FIXED]` **[fable] nit** — Ex23 statement now says "start `tipping_snack = 0`" (matching the solution's
+  no-`None` seed).
+- `[FIXED]` **[fable] nit** — ledger scanner-derived-`practices` invariant line extended with the plan-048
+  adds (u05, u09 `range-function`, u10 `break-statement`); u10 teacher-notes "Practices reappearance"
+  now names `break-statement`.
+- `[FIXED]` **[glm]/[fable] nit (pre-existing)** — design §7's v7 count projections are stale vs the
+  ledger; added a note pointing to the ledger as the authoritative post-048 count (u04 19 … u10 24).
+
+All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes; each drill self-contained
+(own `class Pet`), verified standalone.
+
+**Round 2 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** · **[glm] APPROVE** ·
+**[fable] APPROVE** — all three externals confirmed both [OPEN]s resolved (Ex22/23 statements + teacher-notes
+single-loop; Ex16/17/21/24 Pet classes minimized) with no regression; drills verified self-contained
+standalone; pytest 495 passed. Full 4-way APPROVE, no open blockers. Cleared to PR + merge.
+
 ## Post-Execution Report
 
 ### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling) — DONE
@@ -665,7 +698,24 @@ APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to PR + merge.
 - **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 43→58
   cells (1.35×, < 2×).
 
-_(Phases H–I + Phase V report appended as each slice lands.)_
+### Phase H — u10 pet-simulator — DONE (pending round-2 confirm + PR)
+
+- **Relocation (header-only, no renumber):** u10's three pattern exercises (find-extreme Ex13,
+  sentinel-loop Ex14, filter Ex15) already sat last, so a `## Algorithm Extension` H2 header was inserted
+  before Ex13 (markers adjacent; Ex1–15 unchanged; Ex13/14 cross-refs unchanged). Stretch Challenges →
+  Ex25/26. Lesson unchanged (no pattern markers).
+- **New drills (unmarked, Ex16–24):** count hungry, team-hunger sum, find-by-name (found+`break`), roster
+  map, hungriest & least (max & argmin), mood tally-by-key, feed-every-hungry filter-action, and the
+  **downward** matrix pair (Buddy hunger 8, snacks 2/4/3/5 toward floor 0 → check-before-feed 2/2 vs
+  feed-then-check −1/3, tipping snack 3). Each **self-contained** (own `class Pet` + inline pets),
+  single-loop, long-form (no `+=`), no `None`.
+- **Metadata:** General-Rule `practices` add `break-statement` (map+manifest). No cross-ref changes.
+  teacher-notes reframed (in-class Ex1–8,12; Algorithm Extension Ex13–24 enrichment; Challenges Ex25–26);
+  ledger resulting-core 15 → 24.
+- **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 47→65
+  cells (1.38×, < 2×).
+
+_(Phase I + Phase V report appended as each slice lands.)_
 
 ---
 

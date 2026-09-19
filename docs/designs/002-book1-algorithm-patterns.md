@@ -156,6 +156,7 @@ u10 12. Corrected against reality:
   total + count-by-condition homes may adapt existing scoring exercises; **no sentinel-loop tag** —
   dropped). u10 12 → **15** (promote Ex13 + Ex14 + filter new). u05/u02 no net-new (reuse the running-total exercise; u02 gets
   one lean one-sentence Spotlight only).
+- *(Plan 048 note: these v7 projections predate the unmarked Algorithm-Extension drills; the `pattern-ledger.md` resulting-core column is the authoritative post-048 count — u04 19, u05 20, u06 22, u07 22, u08 21, u09 23, u10 24.)*
 - **Projected core counts: u07≈16, u08≈16, u09≈16, u10≈15** (current core counts + the §3 loci) — these
   are the natural landing points of the §3 loci, **not caps**; §3's per-locus reuse/promote/new statuses
   stand and no relocation is needed. The **plan's ~28-row ledger records each unit's resulting core
