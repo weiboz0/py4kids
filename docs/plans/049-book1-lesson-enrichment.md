@@ -81,9 +81,11 @@ code-rung + `**Notice:**` + put-it-together form), `tools/patterns.py`/`tools/no
 
 - **Ladders TEACH one increment per rung**, `**Notice:**` after each, ending in a worked put-it-together
   cell — the exact form of L1/L2/L3 in the same lesson. No big-O/sorting/recursion/two-pointers (Book 2).
-- **Executable + prereq-clean per unit** (exec-lessons runs them): fixed in-cell data, **no `input(`**
-  in any rung; ONLY concepts introduced ≤ the unit (honor each unit's closure exactly as plan 048's
-  drills do — see plan 048's Global-Constraints trap list). Per-home-unit traps:
+- **Executable + prereq-clean per unit** (exec-lessons runs them): fixed in-cell data, **no `input(` in
+  any EXECUTABLE rung** (the SOLE exception is the u02 sentinel put-it-together, which is `no-exec` +
+  interactive by design — see the u02 trap and the Appendix); ONLY concepts introduced ≤ the unit (honor
+  each unit's closure exactly as plan 048's drills do — see plan 048's Global-Constraints trap list).
+  Per-home-unit traps:
   - **u04** — `while`-only (no `for`/`range`/`list`); no `len`/`sum`/`sorted`/`.split()`; fixed values via
     `if/elif` on a counter.
   - **u06** — `for`/`in-operator`/`break`/`string-methods` OK; **no `ord`/`chr`** (letter values only via
@@ -129,9 +131,10 @@ GREEN and `main` valid. **Ordering follows 048's per-unit merges** (048: B u04 �
 
 ### Phase A — Design v9 + ladder conventions + CI/exec probe (docs, ships first)
 
-1. Amend design 002 → **v9**: §6 requires the home Spotlight in the lesson `## Algorithm Extension` to
-   carry a graduated worked-example ladder (code rungs + `**Notice:**` + put-it-together), matching the
-   rest of the lesson; reappearance Spotlight stays a retrieval one-liner; + §13 entry. No §3 change.
+1. Amend design 002 → **v9**: **update the top status header** (currently "APPROVED — v7") to v9; §6
+   requires the home Spotlight in the lesson `## Algorithm Extension` to carry a graduated worked-example
+   ladder (code rungs + `**Notice:**` + put-it-together), matching the rest of the lesson; reappearance
+   Spotlight stays a retrieval one-liner; + §13 revision entry. No §3 change.
 2. Probe (throwaway, reverted): insert a 3-cell ladder after a home Spotlight in u04's lesson and
    confirm ALL checks stay green — `pattern-marker` (marker still in-prose, one-per-introduced, no
    adjacency break), `technique-spiral`, `patterns-doc-check`, `concept-scan`, `exec-lessons` (rungs
@@ -260,6 +263,30 @@ All revised ladders re-executed to their stated outputs (linear-search False/Tru
 find-extreme `Bo 9`; sentinel `True`/`False`). Round 3 re-dispatched to [sol] (+ [glm]/[fable] to
 re-confirm the appendix rewrites).
 
+### Round 3 (HEAD 91d558b) — [fable] APPROVE · [glm] APPROVE WITH NITS · [sol] REJECT (2 [OPEN])
+
+[fable] APPROVE (executed every snippet; confirmed the u02 no-exec PIT is *required*, and sol's rebuild
+correctly supersedes fable's own round-1 f2 nit). [glm] APPROVE WITH NITS (ran `detect()` over all cells
+— zero closure gaps; nits N-A..N-D). [sol] REJECT on two [OPEN] only (all else confirmed resolved). All
+folded on this HEAD:
+
+- `[FIXED]` **[sol] OPEN-1 / [glm] N-A** — linear-search R3 still bundled position-counter + conditional
+  + `break`: SPLIT into R3 (add ONLY the `position` counter, no stop → prints `1`) and R4 (add ONLY
+  `break` → `1`), so each rung is one idea; PIT unchanged (`myth` → `-1`). Content-gate flag reworded —
+  the only remaining heavy step is the u04 running-total PIT; linear-search no longer bundles.
+- `[FIXED]` **[sol] OPEN-2 / [glm] N-B** — stated the u02 `no-exec` interactive-PIT `input` exception in
+  BOTH general rules: the Global-Constraints "no `input` in any EXECUTABLE rung (sole exception: u02
+  sentinel PIT)" and the Appendix preamble "executable rungs are `input`-free — the one exception is the
+  u02 sentinel put-it-together."
+- `[FIXED]` **[glm] N-C** — added an executable deterministic `while` rung to u02 (R3: `guess = 1;
+  secret = 7; while guess != secret: guess = secret; print(guess)` → `7`) so the loop shape IS
+  CI-exercised (no `accumulator` — `guess = secret` is a plain assign); the interactive version stays the
+  `no-exec` PIT.
+- `[FIXED]` **[glm] N-D** — Phase A step 1 now updates design 002's top status header (v7 → v9) alongside
+  the §6/§13 edits.
+
+Re-executed: linear-search R3 → `1`, R4 → `1`; u02 R3 → `7`. Round 4 re-dispatched to all three.
+
 ## Content Review
 
 _(4-way gate — pre-PR after implementation, per PR. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`.)_
@@ -274,15 +301,18 @@ _(appended per slice as it lands.)_
 
 Each ladder is `code` rung → `**Notice:**` → … → a "put it together" `code` rung → closing `**Notice:**`,
 placed right after the home `### Pattern Spotlight` prose cell. All rungs are executable (exec-lessons),
-fixed-data, `input`-free, and within the unit's closure. Rung counts are completeness-driven (plan 031);
-these are the authoring targets — the content gate confirms embodiment and may add a rung where a step is
-too big. Expected outputs are exact. **Rung self-containedness (plans 031–035 convention):** each rung is
-a COMPLETE runnable cell — it RESTATES the prior rung's lines and adds exactly one new line; the shorthand
-below (e.g. R2 "add a second score → 8") means "the R1 code plus that one line," NOT a continuation cell
-that depends on R1's leftover state. The "→ output" shown is the full rung's own output. **Content-gate
-flag:** the two heaviest single steps — u04 running-total put-it-together (introduces `while` + round
-counter + `if/elif` dispatch at once) and u06 linear-search R2 (loop + `position` counter + `in` +
-`break` at once) — the gate should split into an extra rung if a step reads as too big for one increment.
+fixed-data, and within the unit's closure; **executable rungs are `input`-free — the ONE exception is the
+u02 sentinel put-it-together, which is `no-exec` + interactive (uses `input`)**, matching the lesson's
+existing interactive-PIT convention (u04 cells 20/40 are `no-exec`). Rung counts are completeness-driven
+(plan 031); these are the authoring targets — the content gate confirms embodiment and may add a rung
+where a step is too big. Expected outputs are exact. **Rung self-containedness (plans 031–035
+convention):** each rung is a COMPLETE runnable cell — it RESTATES the prior rung's lines and adds exactly
+one new line; the shorthand below (e.g. R2 "add a second score → 8") means "the R1 code plus that one
+line," NOT a continuation cell that depends on R1's leftover state. The "→ output" shown is the full
+rung's own output. **Content-gate flag:** the heaviest single step is the u04 running-total
+put-it-together (introduces `while` + round counter + `if/elif` dispatch at once) — the gate should split
+it into an extra rung if it reads as too big for one increment. (linear-search is now split R1→R2→R3→R4
+so no single rung bundles counter + conditional + `break`.)
 
 ### u04 — running-total (`while`-only, no list)
 - **R1** `total = 0` / `total = total + 5` / `print(total)` → `5`. *Notice:* start the running total at 0,
@@ -308,15 +338,18 @@ counter + `if/elif` dispatch at once) and u06 linear-search R2 (loop + `position
 - **Put-it-together** `word = "hi"` / `result = ""` / `for ch in word: result = result + ch.upper()` →
   `HI`. *Notice:* the loop applies the same transform to every character.
 
-### u06 — linear-search (`for` + `break` + `in`, manual `position` counter; no `len`; 3 rungs — harder pattern)
+### u06 — linear-search (`for` + `break` + `in`, manual `position` counter; no `len`; 4 rungs — harder pattern, one idea each)
 - **R1** `print("a" in "aeiou")` → `True`. *Notice:* `in` tests ONE character against the vowels.
-- **R2** *(new — walk every character first, no stop yet)* `word = "cat"` / `for ch in word: print(ch in
-  "aeiou")` → `False` / `True` / `False`. *Notice:* run the same `in` test on each character in turn — 'a'
-  is the vowel.
-- **R3** *(add the stop + a position counter)* `word = "cat"` / `position = 0` / `for ch in word: if ch in
-  "aeiou": break` … `position = position + 1` / `print(position)` → `1`. *Notice:* now STOP at the first
-  vowel with `break`; `position` (stepped once per char) holds its index. *(`accumulator` is fine here —
-  introduced u04 ≤ u06.)*
+- **R2** *(walk every character, still no stop)* `word = "cat"` / `for ch in word: print(ch in "aeiou")`
+  → `False` / `True` / `False`. *Notice:* run the same `in` test on each character in turn — 'a' is the
+  vowel.
+- **R3** *(add ONLY the position counter — still no stop)* `word = "cat"` / `position = 0` / `for ch in
+  word:` … `if ch in "aeiou": print(position)` … `position = position + 1` → prints `1`. *Notice:* track
+  WHERE we are with a `position` counter stepped once per character; it prints the index of the match
+  (`accumulator` is fine — introduced u04 ≤ u06). The loop still visits every character.
+- **R4** *(add ONLY early-stop)* same scan, now `if ch in "aeiou": break` before `position = position +
+  1`, then `print(position)` → `1`. *Notice:* one new idea — `break` STOPS at the first vowel instead of
+  walking the rest; `position` holds its index.
 - **Put-it-together** scan `word = "myth"` with a `found = -1` stand-in (no `None`), `break` on a vowel →
   `-1`. *Notice:* "myth" has no vowel, so the loop falls through and the `-1` stand-in reports "not found"
   — a search returns early on a hit or ends with the not-found stand-in.
@@ -355,9 +388,14 @@ the `no-exec` put-it-together, matching the lesson's interactive-PIT convention 
   NOT equal the secret, the condition is True — the loop keeps going.
 - **R2** `guess = 7` / `secret = 7` / `print(guess != secret)` → `False`. *Notice:* the moment the guess
   matches, the condition is `False` and the loop STOPS — that match is the sentinel.
+- **R3** *(the loop shape, executable + deterministic — no `accumulator`, no `input`)* `guess = 1` /
+  `secret = 7` / `while guess != secret: guess = secret` / `print(guess)` → `7`. *Notice:* the `while`
+  repeats as long as `guess != secret`; here one pass sets `guess` to the secret, the condition turns
+  `False`, and the loop ends — the sentinel in action. (`guess = secret` is a plain assignment, NOT
+  `accumulator`, so it stays inside u02's closure and runs under CI.)
 - **Put-it-together** *(`no-exec` — interactive, not run by CI)* `import random` / `secret =
   random.randint(1, 10)` / `guess = 0` / `while guess != secret: guess = int(input("Guess: "))` /
-  `print("Got it!")`. *Notice:* the loop repeats, reading a new guess each time, until the guess equals
-  the secret — the sentinel that ends it. *(Closure-clean: `input` in u02's `requires`, `random-module`/
+  `print("Got it!")`. *Notice:* the real game — the loop repeats, reading a new guess each time, until the
+  guess equals the secret (the sentinel that ends it). Interactive, so this cell is `no-exec`. *(Closure-clean: `input` in u02's `requires`, `random-module`/
   `while`/`comparison` in u02; NO `accumulator` — `guess = int(input(...))` reassigns from input, not
   from itself.)*
