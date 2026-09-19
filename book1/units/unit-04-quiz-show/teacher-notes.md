@@ -16,7 +16,7 @@ Budget: three lessons of 60–90 minutes. Each concept is taught as a short **wo
 - **Lesson 1 — accumulator, logical-ops (60–90 min).**
   Open on the project thread: the teacher hosts a three-question quiz against the class,
   keeping score on the board — today the machine takes over the scoring.
-  25 min: the accumulator ladder (`score = score + 1` once → again → inside a `while` loop → two accumulators, score + `questions_asked`). Name the ACCUMULATOR pattern out loud.
+  25 min: the accumulator ladder (`score = score + 1` once → again → inside a `while` loop → two accumulators, score + `asked`). Name the ACCUMULATOR pattern out loud.
   25 min: the logical-ops ladder (`and` → `or` → `not` → a combined streak-bonus rule). All three operators are genuinely taught, each on its own rung.
   Rest: the full opening round + exercises 1–2. NAME the two patterns (running total, counting by condition) from their Spotlights in the closing **Algorithm Extension** lesson section here, while the accumulator is fresh — just the one-line hook each, so every student has met the name. Each Spotlight is now followed by a short **worked-example ladder** (code rungs + Notices → a put-it-together); those ladders, like Exercises 11–12, are **enrichment** (walk through them time-permitting / as homework, not required in-class) so the 60–90 min budget is unchanged — see the Algorithm Extension note below.
   Before Exercise 11 (running total), run a 2-minute unplugged trace: announce three round scores, have students add each score on their fingers, and say the new total-so-far after every round.
