@@ -38,7 +38,7 @@ Authorities: `docs/designs/003-book1-real-input.md` (v3 — §2/§3 v2/§6d); u0
 |---|---|---|
 | L3 cell 62 (`9d417a42`, one-guess game) | `no-exec` input only | **ADD executable twin** before it (pinned `secret`, fixed `guess` → same verdict line) |
 | L4 cell 71 (`0cb62a32`, full game) | `no-exec` input only (L4 has ZERO executable cells) | **ADD executable twin** (pinned `secret`, scripted guesses → "Correct! Case closed.") |
-| AE cell 86 (`7a0ffc200ee3`, sentinel PIT) | executable ladder rungs 80/82/84 adjacent | **Justified via the plan-049 graduated ladder** (executable rungs ARE the executable side; 86 is the interactive real-form) — no new twin |
+| AE cell 86 (`7a0ffc200ee3`, sentinel PIT) | `no-exec` input only (rung 84 prints `7`, NOT 86's "Got it!" — not a parity twin) | **ADD executable twin** before it (pinned `secret`, scripted guess → "Got it!") — uniform with 62/71; the plan-049 ladder rungs 80/82/84 stay as the pattern build-up |
 | L1 (4/6/15/22/24), L2 (35/46/48) | executable teaching, no interactive capstone | no unpaired input task — unchanged |
 | traceback pair 74/76 | debug demo (both no-exec) | a traceback teaching pair, not a "complete task" — unchanged |
 
@@ -66,17 +66,20 @@ no concept outside u02. No metadata change.
 
 ## Phases
 ### Phase A — apply to u02 (lesson + exercises + solutions + teacher-notes)
-- **lesson.ipynb:** add executable fixed-data twins before cells 62 + 71 (Lesson both-forms audit) with a Notice;
-  the no-exec input forms stay as the real forms. AE justified via the ladder.
+- **lesson.ipynb:** add executable fixed-data twins before cells 62 + 71 + 86 (Lesson both-forms audit) with a
+  Notice; the no-exec input forms stay as the real forms. (AE-86 twin: pinned `secret`, scripted guess → "Got
+  it!"; the plan-049 rungs 80/82/84 remain the pattern build-up.)
 - **exercises.ipynb:** add `**Real version:**` cues to Ex6/Ex7 statements; add the exempt note to Ex1's statement.
 - **solutions.ipynb:** markdown real-forms per the SHAPE table (single-read Ex2/Ex3/Ex4/Ex5/Ex8; read-and-compute
   Ex6/Ex7; Ch1/Ch2 interactive); **seed the Ex5/Ex8 twins** (random parity protocol).
 - No growth, no rename, no numbered prompts. Fenced real-forms must not contain a `## Exercise <digit>` line.
 
 ### Phase B — verification
-- `ast.parse` + piped-run every real-form + the 2 new lesson twins; standard §6(a–c) parity (result line ==
-  twin modulo prompt text) for Ex2/Ex3/Ex4/Ex6/Ex7; §6(d) termination+victory-line oracle for the random
-  guess-loops (Ex5/Ex8/Ch1/Ch2, seed-injected per the parity protocol) + the L3/L4 twins.
+- `ast.parse` + piped-run every real-form + the **3 new lesson twins (before cells 62/71/86)**; standard §6(a–c)
+  parity (result line == twin modulo prompt text) for Ex2/Ex3/Ex4/Ex6/Ex7. The 3 lesson twins are
+  **pinned-secret DETERMINISTIC** (run under `exec-lessons`; victory line "Correct! Case closed." / verdict /
+  "Got it!" suffices — no seed). §6(d) termination+victory-line oracle (seed-injected per the parity protocol)
+  for the random *exercise/challenge* guess-loops (Ex5/Ex8/Ch1/Ch2) and the AE-86 real-form.
 - CLOSURE AST scan (no concept outside u02's union; no `sys.stdin`).
 - 0 `input()` in solutions CODE cells; ≥3 non-vacuous assert cells; no fenced `## Exercise <digit>` line;
   lesson executable twins run under `exec-lessons`.
@@ -158,6 +161,45 @@ no concept outside u02. No metadata change.
 - → [FIXED] Nice wording ([glm]#4): removed `attempts` (counters banned in u02); corrected plan-049
   attribution (8 of 9 no-exec cells predate 049); cite §3's u01–u06 arm (not §3 v2).
 Re-dispatching round 2 (lesson twins + statement conventions changed materially).
+
+### Round 2 (2026-09-19) — re-review after fixes (a145471)
+#### [self] round 2 (2026-09-19)
+- **Verdict**: APPROVE — lesson both-forms audit (executable twins for L3-62 + L4-71; AE-86 via the ladder)
+  resolves the design §1/§8 gap; Ex4→single-read, Ex7→standard §6(a-c); exercises.ipynb statement cues +
+  random-parity protocol added; Nice wording fixed. No open blocker.
+#### [sol] round 2 (2026-09-19)
+- **Verdict**: REJECT
+1. `[OPEN]` Must Fix: L3-62/L4-71 twins + Ex7 §6(a-c) + seeded random parity resolved, but **AE-86 remains
+   unpaired** — rung 84 prints `7`, not 86's "Got it!", so it can't satisfy §1/6/8 result-line parity by
+   ladder-adjacency alone. Add an executable fixed-data AE twin (parity with 86) + name its Phase-B check.
+   → [FIXED]: audit AE row now ADDS a twin (uniform with 62/71), not via-ladder.
+
+#### [glm] round 2 (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — all 4 round-1 findings verified resolved (both-forms audit; statement cues;
+  random protocol; Nice wording); cross-reviewer resolutions (Ex4 single-read, Ex7 standard, Ch1/Ch2) confirmed.
+  2 wording Nice:
+1. `[OPEN]` Nice: SHAPE "(statement already reads input())" is figurative for Ex2/3/5/8 (prose directs
+   asking/typing; only Ex4 literally contains `input(`) — classification correct; tighten wording at impl.
+2. `[OPEN]` Nice: Phase B groups the new L3/L4 twins under "§6(d) seed-injected" — they're pinned-secret
+   DETERMINISTIC (exec-lessons run + victory line suffices; no seed) — wording only. → will clarify.
+
+#### [fable] round 2 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — all 5 round-1 items resolved + verified; AE-86-via-ladder sound (design §2
+  ladder row + plan-049 rung 84 as the deterministic executable counterpart); Ch2 trace confirmed
+  ("Found it: 68!" on 2\n1\n2\n3). 3 Nice (fold #1; honor #2/#3 at implementation):
+1. `[OPEN]` Nice: add AE cell 86 to Phase B's §6(d) list (rung 84 prints `7`, not 86's oracle) — verify 86 on
+   its own (seed-inject + wrong-then-right → "Got it!" + termination). → will fold into Phase B.
+2. `[OPEN]` Nice: seed the Ex5/Ex8 twins with an `N` whose secret ≠ the scripted first guess (25/500), so the
+   loop body executes. → implementation.
+3. `[OPEN]` Nice: Ex4's real-form includes the statement-required type-problem comment (complete model answer).
+   → implementation.
+
+### Round 2 — outcome: REJECT (1 of 4, [sol] — AE-86 twin). [glm]/[fable] APPROVE-WITH-NITS. Fixed → [sol] round 3.
+**Round 2 responses:** [sol]#1 [FIXED] AE cell 86 now gets its OWN executable twin (uniform with 62/71),
+not via-ladder — audit + Phase A/B updated. [fable]#1 [FIXED] AE-86 named in Phase B (now has a deterministic
+twin + §6(d) real-form oracle). [fable]#2/#3 → implementation (seed choice; Ex4 comment). [glm]#1/#2 [FIXED]
+wording: SHAPE "already reads input()" figurative note; L3/L4/AE twins are pinned-secret deterministic (no
+seed), distinct from the seed-injected exercise/challenge oracle. Re-dispatching [sol] round 3.
 
 ## Content Review
 _(pending — 4-way.)_
