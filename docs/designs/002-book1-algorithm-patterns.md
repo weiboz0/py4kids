@@ -106,6 +106,17 @@ nbconvert/pandoc, hidden in JupyterLab; hygiene/PDF unaffected.
 
 ## 6. Student-facing form
 
+- **Algorithm-Extension section (v8).** Every unit that hosts pattern content gathers ALL of it — the
+  pattern-tagged exercises **and** the extra unmarked loop-drill reps — into one explicitly-labelled
+  `## Algorithm Extension` section (H2, matching `## Challenge`) at the END of `exercises.ipynb`, placed
+  as the last core `## Exercise N` block immediately before the trailing `## Challenge` (stretch) cells
+  (each unit keeps its own Challenge convention — some units number Challenges `## Challenge N`, others
+  tag them as `stretch` `## Exercise N`). The unit's `lesson.ipynb` likewise gathers its pattern
+  Spotlight(s) under a closing `## Algorithm Extension` markdown section. Numbering stays `## Exercise N`
+  so `structure-check`/`solutions_structure` heading-pairing and `stretch-check` are unaffected; markers
+  stay immediately before their exercise / inside their Spotlight so `pattern-marker`/`technique-spiral`
+  are unaffected. The algo exercises are simply the highest-numbered core exercises. This is the
+  student-facing home the design points to; it is reached unit-by-unit as each migration slice merges.
 - **Spotlight cell** (recurring markdown + marker): home = a short lesson cell + the authoring exercise
   (names the pattern, its hook, "stop early" where relevant); reappearance = a one-liner asking the
   student to *identify* the pattern ("Which pattern? Which variable is the 'so-far'?") — retrieval
@@ -116,9 +127,13 @@ nbconvert/pandoc, hidden in JupyterLab; hygiene/PDF unaffected.
 - **Catalog** — `book1/reference/patterns.md` (the `reference/` dir already exists, empty): the 7 patterns (name, hook, enabling
   concepts, generated home+reappearances table). Delivered to students via `scripts/build-pdf.sh`
   (pandoc, like `syllabus.md`).
-- **teacher-notes** (in the content dispatch): name the **in-class** appearance (home is always
-  in-class), route the rest to homework/More-Practice, and add a **2-minute unplugged trace** per home
-  (e.g. five face-down cards, flip one at a time, find the biggest).
+- **teacher-notes** (in the content dispatch): the `## Algorithm Extension` section is **end-of-lesson
+  enrichment, not required in-class (v8)** — teacher-notes route the whole extension as
+  time-permitting / homework / More-Practice / differentiation. The **exception** that stays read
+  in-class is the lesson-side Spotlight that first *names* each pattern, so later retrieval prose can
+  refer to a name every student has met. (This relaxes the earlier "home is always in-class" rule, which
+  reviewers repeatedly flagged now that the algo track is an explicit extension.) Add a **2-minute
+  unplugged trace** per home (e.g. five face-down cards, flip one at a time, find the biggest).
 
 ## 7. Footprint, pacing & the reuse ledger (honest counts)
 
@@ -214,3 +229,14 @@ prerequisite surface once these ids ship (not now). No contradiction with plan 0
   changes). §3 filter-into-list "each fits ≤16" note and §8 "16-core ceiling" rationale updated. The §2
   conceptual depth ceiling and plan-037 Phase-V volume thresholds are unchanged. Constraint-lifting only
   → no design re-review required.
+- **v8 (2026-09-18):** user-directed restructuring (plan 048) — the algorithm track becomes an explicit
+  end-of-notebook **`## Algorithm Extension`** enrichment section. §6 gains the Algorithm-Extension
+  structure bullet (H2 section, last core `## Exercise N` before `## Challenge`; lesson Spotlights
+  gathered under a closing `## Algorithm Extension`; numbering + markers unchanged so all CI checks stay
+  agnostic), and the teacher-notes bullet **relaxes "home is always in-class" → "extension enrichment
+  routed by teacher-notes"**, keeping only the pattern-*naming* lesson Spotlight in-class. Plan 048 also
+  adds **unmarked** extra loop-drill reps (no `<!-- pattern: id -->` marker, no new technique `practices`
+  tag): **no §3 locus is added, dropped, or re-classified**, and §7's "running-total dropped from u08"
+  note stands (u08's sum rep is unmarked). Constraint-restructuring only → no design re-review beyond the
+  plan-048 gate. The target end-state is reached unit-by-unit as Phases B–I merge; v8 is not "violated"
+  by a not-yet-migrated unit.
