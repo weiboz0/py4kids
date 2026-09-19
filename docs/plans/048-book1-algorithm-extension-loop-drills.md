@@ -485,7 +485,11 @@ The three external reviewers converged on the same two [OPEN]s:
 
 All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes.
 
-**Round 2** — [self] APPROVE (both [OPEN]s + nits [FIXED]); [glm]/[fable]/[sol] re-dispatched on the fixes.
+**Round 2 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** (round 2: both [OPEN]s
+confirmed — no `+=` remains, divider = 9–11; Ex17–21 re-derived) · **[glm] APPROVE-WITH-NITS** (round 2) ·
+**[fable] APPROVE-WITH-NITS** (round 2). A cosmetic residual nit (Ex20 opener left lowercase after the
+nit-1 edit) was capitalized ("Use …"). All four APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to
+PR + merge.
 
 ## Post-Execution Report
 
