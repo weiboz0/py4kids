@@ -260,6 +260,36 @@ Roster dispatched in parallel: [self] inline; [sol] `codex:codex-rescue` (--mode
 ci-local ALL GREEN after fixes; all 24 real-forms (19 solution md + 3 lesson input + 2 new lesson twins are
 executable, validated) reproduce their twins. Re-dispatching all four for round 2 (lesson content changed materially).
 
+### Round 2 — re-review after fix commit 829b7f1 (2026-09-19)
+
+#### Review — [self] round 2 (2026-09-19)
+- **Verdict**: APPROVE
+- Verified: the 2 new lesson executable twins run with no input() and match their input-form result lines
+  (L1 "Score 3 after 2 questions."; L3 "Survived 3 sudden-death questions."), AST closure-clean; Ex12 work
+  cell is `no-exec`; Ex11 "rounds" / Ex12 "five answers" / Ex16 count-read rewordings landed; ci-local ALL GREEN.
+  All five round-1 findings resolved, no regression.
+
+#### Review — [sol] round 2 (2026-09-19)
+- **Verdict**: APPROVE — round-1 REJECT resolved (L1/L3 executable twins present + all findings fixed).
+
+#### Review — [glm] round 2 (2026-09-19)
+- **Verdict**: APPROVE — all five round-1 findings verified FIXED by execution (fresh namespaces): L1/L3 twins
+  run with no input() and are character-identical to their input forms (Score 3 / Survived 3), AST union-clean;
+  Ex12 `no-exec`; Ex11/Ex12/Ex16 rewordings landed. Regression clean: hygiene/structure/noexec/cell-lint/
+  exec-solutions/exec-lessons/manifest/stretch PASS on u04; book1 prereq/coverage/concept-scan/pattern-marker/
+  patterns-doc/technique-spiral PASS; ruff clean; pytest 495 passed. No open blockers.
+
+### Round 2 — outcome: CONSENSUS — [self]/[sol]/[glm]/[fable] all APPROVE. **CONTENT GATE CLOSED.** No open findings.
+
+#### Review — [fable] round 2 (2026-09-19)
+- **Verdict**: APPROVE
+- Verified by execution (fresh namespaces): both new twins run with no input() and print result lines
+  character-identical to their no-exec input forms (L1 "Score 3 after 2 questions."; L3 "Survived 3
+  sudden-death questions."); union-clean (no list/for/range/len/sum/string-methods — spelling tolerance via
+  `== "Pacific" or == "pacific"`). Ex12 work cell `no-exec`; Ex11/Ex12/Ex16 rewordings landed. No regression:
+  all three notebooks execute clean skipping no-exec (solutions' 31 asserts pass), zero stored outputs, zero
+  executable cells with input(). All five round-1 findings RESOLVED.
+
 #### Review — [glm] (2026-09-19)
 - **Verdict**: APPROVE WITH NITS
 - Verified: all 22 real-forms run clean + reproduce twin result lines (Ex11→40, Ex12→3, asserts pass); no
@@ -292,4 +322,37 @@ executable, validated) reproduce their twins. Re-dispatching all four for round 
 
 ## Post-Execution Report
 
-_(pending.)_
+**Status: COMPLETE — Phase A (design 003) + Phase B (u04 pilot) shipped together. 2026-09-19.**
+
+### What shipped
+- **Phase A — design 003** (`docs/designs/003-book1-real-input.md`, commit eeeda19): the authority for the
+  Book-1 real-input norm — two norms (hybrid executable-fixed-data + `input()` real-form; realistic data via
+  Handling (i)), the per-notebook-kind form table (lesson `no-exec` input CODE cell; solutions/checkpoint/
+  brief markdown fenced block), prereq closure (u01 text-only; control-flow caveats), the 4-unit `input`
+  metadata add for the rollout, real-form validation, and the plans-051+ rollout order.
+- **Phase B — u04 pilot** (commits e4df129, 829b7f1): design 003 applied end-to-end to `unit-04-quiz-show`.
+  - **lesson.ipynb:** all FIVE complete tasks now carry BOTH forms — L1 opening-round and L3 SUDDEN-DEATH
+    gained executable fixed-data twins (score 3 / survived 3) beside their pre-existing `no-exec` input forms
+    (round-1 Must-Fix); L2 gate-in-a-gate, the running-total home, and the count-by-condition home each gained
+    a `no-exec` `input()` real-form + Notice. Intro prose fixed so "run it" points at a runnable cell.
+  - **solutions.ipynb:** 19 markdown `input()` real-forms added beside the executable asserted twins; Ex11 exec
+    bumped 3→4 realistic scores (→40), Ex12 3→5 (→3 correct).
+  - **exercises.ipynb:** statements reworded (Ex11/Ex12 "any `n`"; read-and-compute exercises gained
+    "Real version:" notes; Ex12 work cell tagged `no-exec`). Ex6 (paper-trace) and Challenge 2 (countdown)
+    documented as justified no-input exemptions.
+  - u04 already had `input` in its concept union → **no metadata change** required.
+
+### Verification
+- All 24 real-forms validated: 19 solutions markdown + 3 lesson `no-exec` input forms (`ast.parse` + piped-run
+  == fixed-data twin result line, modulo prompt text) + 2 new lesson executable twins (run live, match input forms).
+- `scripts/ci-local.sh` ALL GREEN (twice — after Phase B, and after round-1 fixes); `pre-merge-guard` OK.
+- **Content gate: 4-way, 2 rounds → CONSENSUS.** Round 1: [sol] REJECT (L1/L3 both-forms Must-Fix) + 3×
+  APPROVE-WITH-NITS. Round 2 after fixes: [self]/[sol]/[glm]/[fable] all APPROVE, no open findings.
+
+### Scope / rollout
+- In scope: design 003 + u04 (the list-less unit arm). Out of scope → plans 051+: the remaining 15 Book-1
+  entries. **The first rollout slice (051) SHOULD include one u07–u10 list unit** (to exercise the realistic-
+  fixed-list arm) **and a checkpoint mini-pilot** (to exercise the non-unit markdown/cell-lint path), since the
+  u04 pilot only covers list-less units. The 4 units needing a `practices:[input]` add are u03/u05/u08/u09.
+- Rollout note ([self]#5): plans 051+ should standardize how prominently the `input()` real-form is offered to
+  the student (model-answer for `no-exec` exercises vs. solution-only "Real version:" note for fixed-data drills).
