@@ -334,8 +334,10 @@ sign-off needed). Findings:
 
 All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes.
 
-**Round 2** — [self] APPROVE (all [OPEN]s + nits [FIXED]); [glm]/[fable] round-1 APPROVE-WITH-NITS stand
-(their nits folded). [sol] re-dispatched on the fixes (its sole REJECT [OPEN] resolved).
+**Round 2 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** (round 2: confirmed Ex19
+worked example makes 16/3 blind-derivable + solution mirrors it; Ex13–18 unchanged answers; closure /
+markers / numbering / stretch all intact) · [glm] APPROVE-WITH-NITS · [fable] APPROVE-WITH-NITS (their
+nits folded). All four APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to PR + merge.
 
 ## Post-Execution Report
 
