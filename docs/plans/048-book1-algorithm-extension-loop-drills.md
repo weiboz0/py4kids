@@ -256,20 +256,34 @@ Verdict: APPROVE WITH NITS (all addressable at implementation time). Awaiting [s
   round-1 nits addressed; only two stale-wording nits (Appendix "new tagged loci"; a couple of `#`
   Algorithm-Extension headers). No blockers.
 - **[sol] → REJECT** — but ONLY on the same stale wording (Appendix "new tagged loci" line + remaining
-  single-hash `# Algorithm Extension` at plan 12/186/214/216); B2/B3 confirmed resolved, all substantive
+  single-hash H1 Algorithm-Extension header refs at plan 12/186/214/216); B2/B3 confirmed resolved, all substantive
   nits addressed, relocation CI-safe + Phase V named re-confirmed. No scope/design blocker.
 
 ### v2.1 (2026-09-18) — stale-wording sweep ([glm]/[sol] round-2 nits)
 
 - `[FIXED]` Appendix "u10 object-loops … as new tagged loci" → "as unmarked rep jobs".
-- `[FIXED]` all `` `# Algorithm Extension` `` → `` `## Algorithm Extension` `` (plan lines 12/186/214/216;
-  inventory header rule) — H2 throughout, matching `## Challenge`.
+- `[FIXED]` every H1 Algorithm-Extension header ref converted to the H2 form `## Algorithm Extension`
+  (plan lines 12/186/214/216; inventory header rule) — H2 throughout, matching `## Challenge`.
 - `[FIXED]` inventory's leftover self-correcting aside removed. No substantive change; B1/B2/B3 stay
   resolved. Remaining "tagged loci" strings are the legitimate general-rule text + the "No new tagged
   loci" assertions.
 
-### Round 3 — [self] → APPROVE. [sol] re-dispatched on v2.1 (pending; all its REJECT items were the
-now-fixed wording). [glm]/[fable] round-2/round-1 APPROVE-WITH-NITS stand (their nits folded).
+### Round 3 — [self] → APPROVE. [glm]/[fable] round-2/round-1 APPROVE-WITH-NITS stand (nits folded).
+
+- **[sol] → REJECT (round 3)** — confirmed ALL substantive items resolved (B1/B2/B3; no §3 locus
+  added/dropped/reclassified; §7 running-total-dropped-from-u08 note preserved; relocation CI-safe;
+  Phase V named; no regressions "none found"). Its sole remaining objection: the negative grep still
+  matched two single-hash literals — but those were in THIS Plan Review's own reconciliation prose
+  (lines ~259/265) quoting the old header string to *describe* the fix, which [sol] itself called
+  "historical review text rather than heading specifications." A grep artifact on the change-log, not
+  a header defect.
+
+### v2.2 (2026-09-18) — grep-artifact sweep ([sol] round-3)
+
+- `[FIXED]` Reworded the two reconciliation-note lines (~259/265) so no single-hash `#`+"Algorithm
+  Extension" literal remains anywhere in the plan or the inventory. Verified:
+  `grep "# Algorithm Extension" | grep -v "## Algorithm Extension"` → empty in both files. No
+  substantive change; B1/B2/B3 stay resolved. [sol] round-4 re-dispatched on v2.2.
 
 ## Content Review
 
