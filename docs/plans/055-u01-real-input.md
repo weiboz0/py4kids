@@ -156,7 +156,64 @@ Re-dispatching round 2 (Challenges + Ex1-exempt changed materially).
   L2 rungs sound). Text-only closure holds; random.seed(4) teacher-note correctly parked as errata. No findings.
 
 ## Content Review
-_(pending — 4-way.)_
+
+### Round 1 — Phase A (2026-09-19, commit 7e024af). Roster: [self] inline; [sol]; [glm] glm-5.3; [fable].
+Implementation delegated to codex (gpt-5.6-sol) against the closed plan; verified independently.
+#### [self] (2026-09-19)
+- **Verdict**: APPROVE
+- Verified: lesson twin (before the full Mad-Libs no-exec capstone) prints the fixed-word story; 6 solutions
+  markdown real-forms (interactive Ex5/Ex6/Ch2; read-and-compute Ex4/Ex7/Ch1); TEXT-ONLY closure CLEAN (no
+  `int(`/loop/if/compare/list in any real-form); 0 `input()` in solutions code; 9 assert cells; 3 `**Real
+  version:**` cues (Ex4/Ex7/Ch1) + 3 `**No real version:**` notes (Ex1 reads-nothing card; Ex2/Ex3 debug);
+  nbformat valid; ci-local ALL GREEN (codex's sandbox socket-denied kernel failures are an environment artifact;
+  my kernel-capable run is green).
+#### [sol] (2026-09-19)
+- **Verdict**: APPROVE — no findings.
+#### [glm] (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE — no findings; blind-solved all 9, ran solutions + twin + all 6 real-forms (parity),
+  TEXT-ONLY closure clean, cues verbatim u02 style, independently ran ci-local ALL GREEN.
+
+### CONTENT GATE CLOSED (2026-09-19) — 4-way: [self]/[sol]/[glm] APPROVE, [fable] APPROVE WITH NITS (only the
+pre-existing out-of-scope random.seed(4) errata). No open blockers.
+
+## Post-Execution Report
+
+**Status: COMPLETE — u01 story-machine full real-input treatment (text-only). 2026-09-19.**
+
+### What shipped
+- **lesson.ipynb:** reworded cell 59 + an executable fixed-data twin (+ Notice) before the full Mad-Libs
+  no-exec capstone — prints the same 5-line story with fixed stand-in words (Captain Pickle / moon library /
+  squeaky crown / yodel), so the capstone has BOTH forms (design §1/§8). L2 input rungs (39/41/43) untouched.
+- **solutions.ipynb:** 6 markdown `input()` real-forms — interactive Ex5/Ex6/Ch2 (Ch2 → "🚀 Moon Mission 🚀");
+  read-and-compute Ex4/Ex7 (Ex7 keeps 3 `+` pieces, NO f-string)/Ch1. TEXT-ONLY (no `int(`); 0 `input()` in
+  solutions code; 9 assert cells.
+- **exercises.ipynb:** 3 `**Real version:**` cues (Ex4/Ex7/Ch1) + 3 `**No real version:**` notes (Ex1 = a
+  fixed printed card that reads nothing [generator/no-input class]; Ex2/Ex3 = fix-the-error debug).
+- No metadata change (`input` in `introduces`); no data growth / rename / numbered prompts / teacher-notes change.
+
+### Verification
+- 9 solution asserts pass; lesson twin runs; all 6 real-forms ast.parse + piped-run byte-identical to twins
+  (independently confirmed by [fable]/[glm]); TEXT-ONLY closure clean.
+- `scripts/ci-local.sh` ALL GREEN (mine + [glm]'s independent run); `pre-merge-guard` OK.
+- **Plan-review gate:** 4-way, 2 rounds → consensus (round 1 added the omitted Challenges + reclassified Ex1
+  as the reads-nothing exemption). **Content gate:** 4-way → consensus.
+- Implementation delegated to codex; verified independently (codex's sandbox socket-denied kernel failures do
+  not apply to the kernel-capable run here).
+
+### Rollout
+5 slices merged/closing (u04-naming 051, u07 052, cp01 053, u02 054, u01 055). Remaining (design 003 §7): units
+u03 (turtle), u05 (functions), u06 (strings), u08 (strings), u09 (files), u10 (classes); checkpoints cp02–cp04;
+projects. `input` metadata add for u03/u05/u08/u09. Per-unit shapes vary (turtle/functions/files/classes) —
+survey each; bake in the both-forms audit + SHAPE + Challenges + statement cues up front. Pre-existing u01
+`random.seed(4)` teacher-note is an errata candidate.
+
+#### [fable] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — blind-solved Ex4/Ex7/Ch2 (match); all 9 solution cells + 6 real-forms run,
+  byte-identical parity (Ch2 → "🚀 Moon Mission 🚀"); TEXT-ONLY closure clean (`\bint\(`=0, no if/for/while/list/
+  compare); lesson twin (cell 60) prints the same 5-line story as the no-exec capstone (cell 62); cues accurate.
+1. `[OPEN]` Nice (pre-existing, out-of-scope): solutions cell 1 teacher note's "random.seed(4)" boilerplate —
+   u01 has no random. Already parked as errata; drop whenever the note is next touched. (No action this plan.)
+#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending.)_
