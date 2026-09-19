@@ -75,9 +75,11 @@ resolution).
   add set assumes each real form reuses control flow already in its unit's union. `int-type`/
   `type-conversion`/`sentinel-loop` are in `concept-scan`'s `never_flag`, so `int(input())` is safe
   everywhere — but **`while-loop` IS flaggable and is absent from u03/u06/u08/u09**. So those units' lesson
-  real forms use a **for/count-loop** idiom (all four have `for-loop`; u08 lacks `range-function` → a
-  read-line/count idiom), NOT a sentinel `while`; add `while-loop` to a unit's `practices` only if a form
-  genuinely needs it. (u04 pilot has both `input` and `while-loop` → unaffected.) Each 051+ slice
+  real forms use a **`for`-loop** idiom (all four have `for-loop`; u03/u06/u09 also have `range-function`
+  for a `for i in range(n)` read; **u08 lacks `range-function`** → `for` over a taught iterable — u08 has
+  `list-literal`/`list-loop`/`list-append` — or fixed-count reads), NOT a sentinel `while`; add `while-loop`
+  to a unit's `practices` only if a form genuinely needs it. (u04 pilot has both `input` and `while-loop`
+  → unaffected.) Design 003 pins each unit's exact idiom. Each 051+ slice
   concept-scans its own forms before commit.
 - **`solutions_structure` raw-markdown scan (N5).** A fenced real-form block inside a unit `solutions.ipynb`
   must NOT contain a line beginning `## Exercise <digit>` (that check matches raw markdown, un-fenced) —
@@ -187,6 +189,21 @@ is exactly right, u01 text-only is correct, Phase V is named, scope is clean. Fi
   real-form (raw-markdown scan). New constraint.
 
 Round 3 re-dispatched to all three (the project-mapping blocker + nits folded).
+
+### Round 3 (HEAD 518458e) — CONSENSUS: all four APPROVE / APPROVE WITH NITS ✅ — GATE CLOSED
+
+- **[self] APPROVE.**
+- **[sol] APPROVE** — round-2 blocker (project → `## Milestone N`) fixed and implementable; all six folds
+  verified against the repo; no new blockers.
+- **[fable] APPROVE** — no residual blockers, no nits; every empirical claim re-verified (the N2
+  control-flow set is factually exact: `while-loop` absent from precisely u03/u06/u08/u09; u08's `for`/list
+  idiom is within its union).
+- **[glm] APPROVE WITH NITS** — all six items verified folded; one non-blocking wording nit `[FIXED]`:
+  the u08 idiom line now says `for` over a taught iterable (u08 has list-literal/list-loop/list-append) or
+  fixed-count reads, and defers the exact per-unit idiom to design 003.
+
+**4-way consensus — no open blockers. Plan-review gate CLOSED.** Cleared to implement Phase A (design 003
++ three-kind CI probe) → Phase B (pilot u04); rollout entries in plans 051+.
 
 ## Content Review
 
