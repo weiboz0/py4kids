@@ -383,6 +383,45 @@ manifest+coverage-map byte-unchanged, L1/L2/L3 form.
 **Gate CLOSED — 4-way consensus, no open blockers.** Cleared to merge Phase D. (u02 = Phase E, awaits
 048 Phase I.)
 
+### Phase E — u02 (sentinel-loop ladder — the FINAL home unit) — CONSENSUS: all four APPROVE ✅
+
+048 Phase I (u02, PR #70 — 048's last phase) merged, unblocking u02. All three externals executed the 3
+executable rungs — R1 `True`, R2 `False`, R3 `7` — and AST + concept-scan confirmed **zero `accumulator`
+leak** (the critical u02 closure risk: `guess = secret` reads only `secret`; no counter stepped in an
+executed rung), the interactive input loop is the `no-exec` put-it-together (stripped by exec-lessons,
+closure-clean, matching u04 cells 20/40), marker byte-unchanged/in-prose, manifest+coverage-map
+byte-unchanged, L1/L2/L3 form.
+
+- **[self] APPROVE** — ci-local ALL GREEN.
+- **[fable] APPROVE** — zero findings (AST accumulator scan + exec-lessons run).
+- **[sol] APPROVE** — zero findings.
+- **[glm] APPROVE WITH NITS** — one Should-Fix `[FIXED]`: u02 teacher-notes now notes the Spotlight is
+  followed by a worked ladder that is enrichment (consistent with the u04/u07 notes).
+
+**Gate CLOSED — 4-way consensus, no open blockers.** Cleared to merge Phase E.
+
+## Post-Execution Report
+
+**Plan 049 COMPLETE — all four home units enriched.** Every Book-1 pattern's HOME Spotlight in the
+lesson `## Algorithm Extension` now teaches with a graduated worked-example ladder (code rungs +
+`**Notice:**` each + a put-it-together), matching the L1/L2/L3 form — fixing the prose-only Spotlights
+plan 048 shipped.
+
+- **Phase A** — design 002 → v9 (§6 home-Spotlight ladder requirement + in-class routing). PR #62.
+- **Phase B — u04** — running-total (5→8→16), count-by-condition (1→1→2). PR #63.
+- **Phase C — u06** — linear-search (5 one-idea rungs: in→loop→counter→record→break, PIT −1),
+  transform-each (H→HI→HI). PR #64.
+- **Phase D — u07** — find-extreme "Champion by name" (Ada 3→Bo 9→Cy 5→Bo 9, retains the winner's name),
+  filter-into-list ([9]→[9]→[9,5,7]). PR #66.
+- **Phase E — u02** — sentinel-loop (True→False→while-7→no-exec interactive game). PR #<pending>.
+
+Every phase: 4-way content gate (all APPROVE / APPROVE-WITH-NITS — only cheap teacher-notes/Notice
+clarity nits), ci-local ALL GREEN, squash-merge. Reuse units (u05/u08/u09/u10) + project-01 kept their
+retrieval Spotlights (no ladder, per design §6); u01/u03 exempt. No `introduces`/`requires`/`practices`/
+marker/§3 change anywhere. Sequenced behind the parallel plan-048 rollout per unit (each 049 slice
+followed its unit's 048 slice); tracked 048 B→I to completion. Book-1 lesson enrichment fully consistent
+with the rest of the course.
+
 ## Post-Execution Report
 
 _(appended per slice as it lands.)_
