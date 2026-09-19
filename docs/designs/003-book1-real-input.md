@@ -1,7 +1,8 @@
 # Design 003 — Book 1 Real-Input Norm
 
-**Status:** APPROVED — v1 (plan-050 4-way plan-review gate CLOSED, 2026-09-19). Authority for the
-Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already stdin-first/subprocess-judged).
+**Status:** APPROVED — v2 (v1: plan-050 gate CLOSED, 2026-09-19; v2: plan-052 §3 realistic-data policy,
+2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
+stdin-first/subprocess-judged).
 
 ## 1. Motivation
 
@@ -38,8 +39,14 @@ scan `cell_type == "code"` only) — this is the plan-045 submission-wrapper pre
 
 ## 3. Realistic data (Handling (i))
 
-- **u07–u10 (lists from u07):** realistic FIXED lists (≈6–8 elements, real variety, ties where apt) in the
-  exec cells.
+- **u07–u10 (lists from u07):** culminating exec cells use realistic FIXED lists. The **binding requirement
+  is that data not be *toy*** (`n=3`, 2-element lists, tiny placeholder values); **≈6–8 elements with real
+  variety (ties where apt) is the target for lists being built fresh.** A unit whose culminating lists
+  **already hold realistic multi-element data** (≥4 real values — e.g. real scores) satisfies the requirement
+  and **need not be grown** — growing already-realistic data forces lockstep rewrites of asserts /
+  worked-examples / Notices / teacher-notes for no real gain, so it is not required. Enrichment drills
+  **explicitly framed as "small fixed data"** keep their small lists (an extension of the
+  build-up-rungs-minimal rule). The `input()` real-forms carry arbitrary-count realism regardless.
 - **u01–u06 (no `list` yet):** a realistic *fixed* dataset would need an ugly N-branch `if/elif` — reads
   *more* fake. So the exec cell keeps a **modest** fixed dataset and the **`input()` real-program form
   carries the realism** (u02–u06: an arbitrary count of values; **u01: fixed-count text prompts, no loop**).
@@ -105,3 +112,9 @@ and `ci-local` is ALL GREEN. Book 2 stays green throughout.
 - **v1 (2026-09-19):** created for plan 050; 4-way plan-review gate CLOSED (3 rounds — resolved: the
   `input()`-in-solutions policy → markdown real-forms; u01 int/str boundary; project `## Milestone N`
   mapping; the 4-unit `input` add set; control-flow closure; real-form validation).
+- **v2 (2026-09-19, plan 052):** §3 realistic-data policy clarified — the binding requirement is
+  "not toy"; ≈6–8 elements is the target for lists built fresh, but a unit already using realistic
+  multi-element lists (≥4 real values) need not be grown, and "small fixed data" enrichment drills keep
+  their lists. Under this policy a unit grows only its <4-element core SOURCE lists (u07 [plan 052]: Ex1/Ex7/
+  Ex8/Challenge 2), leaving already-realistic core lists + enrichment/rung data untouched; the govern is
+  source/input data, not computed result literals.

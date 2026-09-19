@@ -7,6 +7,7 @@ with `[...]`, read items by position (`scores[0]`, `scores[-1]`), grow it with `
 walk it with a `for` loop, measure it with `len`/`max`/`min`, and rank it with `.sort()` — and
 to assemble these into a working arcade leaderboard that crowns a champion.
 This is the first unit where one variable holds a whole collection, not a single value.
+Naming convention: list units use the plural noun for the list, `n` for the count, and `i` for the index; pre-list units use the plural noun for the count because there is no list.
 Success looks like: every student builds a scores list, sorts it top-first, and prints a
 numbered "Place N: score" hall of fame.
 Exercises 1–6 form the in-class path; the labelled More Practice Exercises 7–9 are homework after
@@ -70,8 +71,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 - Off-the-end indexing: `scores[len(scores)]` is an IndexError — valid positions run `0` to
   `len(scores) - 1`. This is the planned Lesson-3 bug; read the traceback together.
   The expected final line is `IndexError: list index out of range`.
-- Off-by-one on the numbered board: humans count from 1, so print `position + 1`, not
-  `position`.
+- Off-by-one on the numbered board: humans count from 1, so print `i + 1`, not
+  `i`.
 - Adding a score to a ranked board and forgetting to re-sort, so the new score sits at the
   bottom no matter how big it is — `.append()` always adds to the END.
 - Updating `best_score` but forgetting `best_name`, so the winning number and player no longer
