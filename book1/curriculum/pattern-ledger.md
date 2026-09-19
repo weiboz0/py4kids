@@ -34,7 +34,7 @@ because a Challenge exercise is ≥2 tagged cells; the invariant tracked here is
 | transform-each | u06 (home) | *new/adapt* "Do the same to each character" (new string) | new core | new/adapt | for-loop (u03), string-methods (u06) | E |
 | transform-each | u07 | "Exercise 12 / Tidy the Champion Names" | core | reuse | — | E |
 | transform-each | u08 | "Exercise 14: Translate a List" | core | reuse | — | E |
-| transform-each | u09 | "Exercise 3: Load Scores into a List" (line→int) | core | reuse | — | E |
+| transform-each | u09 | "Exercise 12: Load Scores into a List" (line→int) | core | reuse | — | E |
 | filter-into-list | u07 (home) | *new* "Keep only the qualifying scores" | new core | new | list-append (u07), comparison | H |
 | filter-into-list | u08 | *new* "Keep only the long words" (Exercise 16) | new core | new | list-append, comparison, builtin-functions (`len`, scanner-derived on u08) | H |
 | filter-into-list | u09 | *new* "Load only the high scores" | new core | new | list-append, comparison, file-read | H |
@@ -57,7 +57,7 @@ Challenge column = Challenge-*exercise* count (each ≥2 `stretch`-tagged cells 
 | u06 | 11 | +3 (count-matches new + linear-search & transform-each homes, Ex12–14; plan-047 logged +2 — fable NIT-4 off-by-one, reconciled here) +8 (plan-048 unmarked drills, Ex15–22) | 22 | 2 (unchanged) |
 | u07 | 13 | +3 (find-extreme home, filter home, loop+break) +6 (plan-048 unmarked drills, Ex17–22) | 22 | 2 (unchanged) |
 | u08 | 14 | +2 (reverse-lookup promote→core Ex15, filter new Ex16) +5 (plan-048 unmarked drills, Ex17–21) | 21 | 2 − 1 + 1 = 2 |
-| u09 | 12 | +4 (read-and-sum, best-so-far, find-in-file, filter — all new) | 16 | 2 (unchanged) |
+| u09 | 12 | +4 (read-and-sum, best-so-far, find-in-file, filter — all new) +7 (plan-048 unmarked drills, Ex17–23) | 23 | 2 (unchanged) |
 | u10 | 12 | +3 (Ex13 promote, Ex14 promote, filter new) | 15 | 2 − 2 + 2 = 2 |
 
 **Plan-048 Algorithm Extension (unmarked reps).** Each pattern-hosting unit's algo exercises are
