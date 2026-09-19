@@ -330,7 +330,62 @@ this line are historical round records, intentionally preserved.)
    demo); re-derive Ch2's `assert len(...)` to the new merged length (8 if both grown to 4).
 
 ## Content Review
-_(pending — 4-way.)_
+
+### Round 1 — Phase A (2026-09-19, commit ac3223c)
+Implementation delegated to codex (gpt-5.6-sol) against the closed plan; I verified independently + fixed one
+missed Ex3 markdown identifier ref (`` `position + 1` ``/`` `scores[position]` `` → `i`). Roster: [self] inline;
+[sol] gpt-5.6-sol; [glm] volcengine-plan/glm-5.3; [fable] Fable 5 — all read-only.
+
+#### [self] (2026-09-19)
+- **Verdict**: APPROVE
+- Verified: (a) real-form parity — spot-ran Ex1 (`[700,1250,980,1420,1360]`+`True`), Ex7 single-read
+  (`Entry 5: 1200`), Ch2 (exact 8-element merged board), a parallel form (`Score: 1540`); all match twins,
+  prompts 1-based. (b) CLOSURE AST-clean (no `+=`/`sys.stdin`/new builtin); 0 input() in solutions code cells;
+  no fenced block has a `## Exercise` line. (c) GROWTH — every core source list ≥4 (Ex1/Ex7/Ex8/Ch2 grown;
+  merged 8), fable's cautions honored (Ex1 `new_score=1360` not 1100; Ch2 no dup, `len==8` re-derived).
+  (d) RENAME identifier-scoped — 0 bare `best_so_far`/`position` in code; English "position(s)" prose
+  preserved (14×). (e) nbformat valid; ci-local ALL GREEN.
+- **Correction (per [glm]/[fable] content review):** my initial [self] pass MISSED the Ex3 statement's loop
+  header `` `for position in range(len(scores)):` `` (my markdown grep pattern omitted the `for position` form),
+  so "0 identifier position in markdown" was NOT true at commit ac3223c. The gate caught it; fixed post-ac3223c
+  (header → `for i in range(...)`). Verified 0 identifier `position` in markdown after that fix.
+
+#### [sol] (2026-09-19)
+- **Verdict**: REJECT
+1. `[OPEN]` Must Fix: Ex3 statement (cell `0ffe49bf`) `for position in range(len(scores)):` vs body `i`/
+   `scores[i]` — stale identifier, would leave `i` undefined. → [FIXED] header → `for i in range(...)`.
+
+#### [glm] (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — verified 22 twins + 27 real-form parity, closure, growth/drift, rename,
+  full 24-exercise coverage, two-regime remark, project-first hook (blind-solve sample matched).
+1. `[OPEN]` Must Fix: == [sol]/[fable] Ex3 `for position` header. → [FIXED].
+2. `[OPEN]` Should Fix: [self] round-1 record's "0 identifier position in markdown" was false at ac3223c.
+   → [FIXED]: [self] record annotated with the correction.
+
+#### [fable] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — ran all 24 solutions cells (asserts pass) + all 27 real-forms (parity-match
+  twins modulo prompts); blind-solved 6 (match); closure clean; growth correct (cores ≥4, cautions honored,
+  Ch2 no ties, Ex1 membership not trivially True); rename identifier-scoped + English "position(s)" preserved;
+  teacher-notes naming-regime remark added.
+1. `[FIXED]` Must Fix: Ex3 statement (cell 5) kept the loop header `for position in range(len(scores)):` while
+   the body was fixed to `i`/`scores[i]` — internally contradictory. → Fixed: header now `for i in range(...)`.
+   (My earlier Ex3 markdown fix missed the `for position` form; grep pattern didn't include it.)
+2. `[OPEN]` Nice: Ex15/Ex17 + lesson-79 parallel real-forms open `How many scores? ` but the cue says
+   "players" — use `How many players? `.
+3. `[OPEN]` Nice: Ex21/Ex22 real-forms prompt `Score {i + 1}: ` into a `waiting` list of WAIT values — use
+   `Wait {i + 1}: `.
+4. `[OPEN]` Nice: Challenge 1 real-form indexes `scores[2]` unconditionally → `n<3` IndexError; add a
+   "(at least 3)" prompt/note.
+
+### Content round 1 — outcome: REJECT (1 of 4, [sol]; [glm]/[fable] also flagged the same Ex3 header). All
+four converged on ONE Must-Fix (Ex3 `for position` header), fixed. **Round-1 responses:**
+- → [FIXED] (Ex3 header — [sol]/[glm]#1/[fable]#1): `for position in range(len(scores)):` → `for i in range(...)`.
+- → [FIXED] ([glm]#2): [self] record corrected (the "0 identifier position in markdown" claim was false at ac3223c).
+- → [FIXED] ([fable]#2): Ex15/Ex17 + lesson find-extreme home count prompt "How many scores?" → "How many players?".
+- → [FIXED] ([fable]#3): Ex21/Ex22 real-forms → "How many waits?" + "Wait {i + 1}: ".
+- → [FIXED] ([fable]#4): Challenge 1 count prompt → "How many scores (at least 3)? ".
+Re-verified: parity holds (modulo prompts), nbformat valid, ci-local green. Re-dispatching [sol] round 2.
+#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending.)_
