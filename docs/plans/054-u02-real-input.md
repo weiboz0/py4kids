@@ -79,7 +79,8 @@ no concept outside u02. No metadata change.
   parity (result line == twin modulo prompt text) for Ex2/Ex3/Ex4/Ex6/Ex7. The 3 lesson twins are
   **pinned-secret DETERMINISTIC** (run under `exec-lessons`; victory line "Correct! Case closed." / verdict /
   "Got it!" suffices — no seed). §6(d) termination+victory-line oracle (seed-injected per the parity protocol)
-  for the random *exercise/challenge* guess-loops (Ex5/Ex8/Ch1/Ch2) and the AE-86 real-form.
+  for the random *exercise/challenge* guess-loops (Ex5/Ex8/Ch1) and the AE-86 real-form. **Ch2 is NOT random**
+(binary-search, reads `1/2/3` replies) → §6(c) adapted, deterministic: piped `2\n1\n2\n3` → "Found it: 68!".
 - CLOSURE AST scan (no concept outside u02's union; no `sys.stdin`).
 - 0 `input()` in solutions CODE cells; ≥3 non-vacuous assert cells; no fenced `## Exercise <digit>` line;
   lesson executable twins run under `exec-lessons`.
@@ -200,6 +201,18 @@ not via-ladder — audit + Phase A/B updated. [fable]#1 [FIXED] AE-86 named in P
 twin + §6(d) real-form oracle). [fable]#2/#3 → implementation (seed choice; Ex4 comment). [glm]#1/#2 [FIXED]
 wording: SHAPE "already reads input()" figurative note; L3/L4/AE twins are pinned-secret deterministic (no
 seed), distinct from the seed-injected exercise/challenge oracle. Re-dispatching [sol] round 3.
+
+### Round 3 (2026-09-19) — [sol] re-review after AE-86 twin (4f121e0)
+#### [self] round 3 (2026-09-19)
+- **Verdict**: APPROVE — all 3 complete lesson interactive tasks (cells 62/71/86) now get executable
+  fixed-data twins (uniform); every complete task has both forms per §1/§8. No open blocker.
+#### [sol] round 3 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — AE-86 Must-Fix resolved (cells 62/71/86 each get an executable twin + named
+  Phase-B check; §1/6/8 no blocker). Nice: Ch2 (non-random binary-search) shouldn't sit under the seed-injected
+  §6(d) list → [FIXED] (Phase B now marks Ch2 §6(c)-adapted, deterministic).
+
+### PLAN-REVIEW GATE CLOSED (2026-09-19) — 4-way consensus: [self] APPROVE, [sol]/[glm]/[fable] APPROVE WITH
+NITS (all folded). No open blockers.
 
 ## Content Review
 _(pending — 4-way.)_
