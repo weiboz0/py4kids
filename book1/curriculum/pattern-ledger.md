@@ -56,7 +56,7 @@ Challenge column = Challenge-*exercise* count (each ≥2 `stretch`-tagged cells 
 | u05 | 11 | 0 (reuse, now Ex11) +9 (plan-048 unmarked function drills, Ex12–20) | 20 | 2 (unchanged) |
 | u06 | 11 | +3 (count-matches new + linear-search & transform-each homes, Ex12–14; plan-047 logged +2 — fable NIT-4 off-by-one, reconciled here) +8 (plan-048 unmarked drills, Ex15–22) | 22 | 2 (unchanged) |
 | u07 | 13 | +3 (find-extreme home, filter home, loop+break) +6 (plan-048 unmarked drills, Ex17–22) | 22 | 2 (unchanged) |
-| u08 | 14 | +2 (reverse-lookup promote→core Ex15, filter new Ex16) | 16 | 2 − 1 + 1 = 2 |
+| u08 | 14 | +2 (reverse-lookup promote→core Ex15, filter new Ex16) +5 (plan-048 unmarked drills, Ex17–21) | 21 | 2 − 1 + 1 = 2 |
 | u09 | 12 | +4 (read-and-sum, best-so-far, find-in-file, filter — all new) | 16 | 2 (unchanged) |
 | u10 | 12 | +3 (Ex13 promote, Ex14 promote, filter new) | 15 | 2 − 2 + 2 = 2 |
 
