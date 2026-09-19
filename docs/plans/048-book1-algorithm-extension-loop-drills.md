@@ -418,8 +418,11 @@ intact (3 exercise markers before Ex12/13/14, 2 lesson markers; Ex15–22 unmark
 
 All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes.
 
-**Round 2** — [self] APPROVE (both [OPEN]s + substantive nits [FIXED]); [glm]/[fable] round-1
-APPROVE-WITH-NITS stand (folded); [sol] re-dispatched on the fixes.
+**Round 2 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** (round 2: both [OPEN]s
+resolved — ledger 11+3+8=22 consistent; in-class core = Ex1–11 with Ex12–22 enrichment matching v8 §6;
+Ex15–22 re-derived, found-flag `has_digit`, numbering 1–22, closure/markers/concept-scan all pass) ·
+[glm] APPROVE-WITH-NITS · [fable] APPROVE-WITH-NITS (folded). All four APPROVE / APPROVE-WITH-NITS, no
+open blockers. Cleared to PR + merge.
 
 ## Post-Execution Report
 
