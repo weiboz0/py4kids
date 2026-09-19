@@ -19,15 +19,20 @@ design-003 §7 order. **u07 is slice 1** — the first LIST unit — chosen to e
    ```python block``` in `solutions.ipynb` (input() banned in solutions code cells). Every non-exempt
    fixed-data exercise statement also gains a one-line `**Real version:**` cue (as u04 did); exempt exercises
    carry a one-line note saying why. u07 already has `input` in its concept union → **no metadata change**.
-2. **Realistic data — NO GROWTH for u07 (conforms to design 003 §3 v2).** §3 was amended (v2, this plan) so the
-   binding requirement is "data not *toy*"; ≈6–8 elements is the target for lists built fresh, but a unit
-   already using realistic multi-element lists (≥4 real values) need not be grown, and "small fixed data"
-   enrichment drills keep their lists. u07's core lesson/exercises already use realistic score values (1200,
-   1500, …) in ≥4-element lists, and the only genuinely-small lists (`names=["Ada","Bo","Cy"]`,
-   `scores=[3,9,5,7]`) live in the Algorithm-Extension Spotlights + Ex10–22, explicitly framed as "small fixed
-   data" drills (lesson 63 / ex 21 / sol 19). So **fixed data is unchanged** and this satisfies amended §3;
-   the real-input forms carry the "reads real input" requirement. (Growing would force lockstep rewrites of
-   asserts / worked-examples / Notices / teacher-notes for no gain.)
+2. **Realistic data — grow only the small CORE lists to ≥4 (design 003 §3 v2 floor).** §3 v2: binding
+   requirement is "data not *toy*"; ≈6–8 is the target for fresh lists; already-realistic (≥4) lists need not
+   grow; build-up rungs + explicitly-framed "small fixed data" enrichment drills keep their small lists. Apply
+   to u07:
+   - **Lesson core lists are already realistic** (`[1200,850,990,1500]`, `[1500,1310,1200,990,850]`, …, ≥4) —
+     unchanged.
+   - **Enrichment drills stay small** (§3 v2 exemption): Algorithm-Extension Spotlights (`names=["Ada","Bo","Cy"]`,
+     `scores=[3,9,5,7]`) + Ex10–22 drills (lesson 63 / ex 21 / sol 19 "small fixed data" framing) — unchanged.
+   - **Grow the <4-element CORE exercise lists to ≥4** (core = Ex1–9 + Challenges, not enrichment/rungs):
+     **Ex1** `[700,1250,980]`, **Ex7** & **Ex8** `[900,450,1200]`, **Challenge 2** `scores=[1200,990,1500]` +
+     `second_scores=[1310,700,1050]` → each grown to ≥4 realistic scores, with **lockstep re-derivation** of that
+     exercise's asserts + statement worked-example values + any teacher-notes number (Phase B drift check). The
+     `≥4` test is per **working list** (Ex7 reaches 5 after its append; Ch2 merges to ≥8) — the executable
+     literal itself is grown to ≥4 so no cell ships a 3-element core list.
 3. **CP-light names (Light trim) — full u07 inventory.** "Untouched rungs" means data/pedagogy; **renames apply
    unit-wide** (incl. rung cells). u07's names are already clean and often meaningfully **paired**, so the trim
    is genuinely light:
@@ -35,7 +40,7 @@ design-003 §7 order. **u07 is slice 1** — the first LIST unit — chosen to e
    | Old | New | Note |
    |---|---|---|
    | `best_so_far` | `best` | drop verbose suffix (lesson rung 18 + wherever it appears) |
-   | `position` | `i` | generic list-index loop counter; `i` is already u07's index elsewhere (lesson 69/71) — makes indices consistent. **Appears in CODE (lesson 27/29, sol 6/14, while-index sol 18) AND markdown: Ex3/Ex7/Ex9 STATEMENT backticks, lesson Notice cell 28, teacher-notes 73–74/78 — rename in all of them.** |
+   | `position` | `i` | generic list-index loop counter; `i` is already u07's index elsewhere (lesson 69/71) — makes indices consistent. **Rename ONLY the identifier, never the English word "position(s)" (concept-prose in lesson 8/10/12/30/62, Ex15 statement, tn 6/70/78 must stay).** Identifier sites — CODE: lesson 27/29, sol 6/14, sol 31/35 (Ex15/Ex17 `for position in range`), while-index sol 18; MARKDOWN: Ex3/Ex7/Ex9 statement backticks (`` `position` ``, `scores[position]`, `position + 1`, `position = 0`), lesson Notice 28, teacher-notes 73–74. |
 
    **Kept verbatim** (domain-meaningful or paired — trimming would lose meaning or collide): `place` (a
    *ranking* term passed to `board_line`, not a generic index), `score`/`scores`/`names`/`board`/`kept`, the
@@ -99,19 +104,22 @@ literal list for this prologue and is otherwise line-for-line identical (design 
 Add real-input forms per the SHAPE table (lesson put-it-togethers + Algorithm-Extension homes as `no-exec`
 cells; solutions markdown real-forms); add `**Real version:**` cues to non-exempt fixed-data exercise
 statements + exempt notes to Ex3/Ex8; apply the two renames unit-wide (`best_so_far`→`best`, `position`→`i`);
-add numbered prompts. Sweep `teacher-notes.md` for the renamed variables. **No data growth.** Markers +
-Algorithm-Extension "small fixed data" framing + build-up rungs + all fixed lists untouched.
+add numbered prompts. Sweep `teacher-notes.md` for the renamed identifier. **Grow the <4-element CORE lists**
+(Ex1, Ex7, Ex8, Challenge 2) **to ≥4** realistic scores, re-deriving that exercise's asserts + statement
+worked-examples + teacher-notes numbers in lockstep. Markers + Algorithm-Extension "small fixed data" framing +
+build-up rungs + all **already-≥4 and enrichment** lists untouched.
 
 ### Phase B — verification
 - `ast.parse` + piped-run every real-form + executable twin; each real-form's RESULT line equals its
   fixed-data twin's output **modulo `input()` prompt text**; numbered prompts display 1..n never 0.
-- **Drift check:** since data is unchanged, statement worked-example values == solution assert values ==
-  real-form piped output must already hold (no growth to re-derive) — confirm the real-forms reproduce the
-  existing twin values, and that no `**Real version:**` cue names a value/variable that changed.
+- **Drift check (for the grown cells Ex1/Ex7/Ex8/Ch2):** statement worked-example values == solution assert
+  values == real-form piped output == teacher-notes numbers, all re-derived from the new lists. For unchanged
+  cells, confirm the real-forms reproduce the existing twin values; no `**Real version:**` cue names a changed value.
 - AST-level closure scan: no concept outside u07's union introduced (no `sys.stdin`; no new builtin/idiom).
-- Assert NO old name (`best_so_far`, `position`) survives anywhere under the unit dir — **plain-text grep over
-  `.ipynb` (code + markdown) AND `.md`** (AST alone misses statement/Notice/teacher-notes markdown; `position`
-  appears there per the rename row).
+- Assert NO old **identifier** (`best_so_far`; `position` as a code Name / backticked `` `position` `` /
+  `scores[position]` / `position + 1` / `position = 0`) survives under the unit dir — code via AST, markdown via
+  a grep for those identifier patterns. **The English word "position(s)" in concept-prose is NOT matched** (it
+  stays; only the variable is renamed).
 - `scripts/ci-local.sh` ALL GREEN (exec-lessons runs ladders/twins; exec-solutions runs asserted cells;
   concept-scan/prereq/coverage/pattern-marker/technique-spiral stay clean).
 
@@ -204,6 +212,44 @@ Re-dispatching round 2 (plan materially expanded).
   22 + 2 (read-into-list / parallel Ex15·Ex17 / single-read Ex4·Ex6 / exempt Ex3·Ex8); NO data growth (core
   already realistic, drills deliberately small) removes the lockstep/prose cascade; parallel one-loop + two-line
   append + cite cell 29 + two-regime naming recorded; Phase B drift check retained. No new blocker.
+
+### Round 3 (2026-09-19) — re-review after design-003 §3 v2 amendment (8066682)
+#### [self] round 3 (2026-09-19)
+- **Verdict**: APPROVE — design 003 §3 v2 makes u07's no-growth consistent with the governing design ([sol]#1
+  resolved); Phase B markdown grep + rename markdown scope ([glm]#1/[fable]#2), Ex7 single-read ([fable]#1),
+  Ch2 second_scores ([fable]#3) all folded. No new blocker.
+#### [sol] round 3 (2026-09-19)
+- **Verdict**: REJECT
+1. `[OPEN]` Must Fix: §3 v2 exempts only build-up rungs + explicitly-framed "small fixed data" enrichment, but
+   **Ex8 is core practice** (not enrichment/rung) with a 3-element list `[900,450,1200]` — blanket no-growth is
+   still inconsistent. Grow the small CORE lists to ≥4 (or narrowly reframe without weakening the rule).
+   → Response (round 4): grow the <4-element CORE lists (Ex1 `[700,1250,980]`, Ex7/Ex8 `[900,450,1200]`, Ch2's
+   two 3-lists) to ≥4 realistic scores with lockstep assert/worked-example re-derivation; enrichment Ex10–13 +
+   Spotlight rungs stay small (§3 v2 exemption). `[FIXED — pending round 4]`
+
+#### [glm] round 3 (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — confirms §3 v2 sound + narrowly scoped; verified lesson core lists are
+  realistic 4-value. Nits (== fable R3): 1. identifier-scope the markdown sweep (don't rename English
+  "position(s)" prose); 2. rename row missing sol 31/35; 3. header v1→v2.
+
+#### [fable] round 3 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — round-2 nits resolved; design 003 §3 v2 "sound and not over-broad".
+1. `[OPEN]` Should Fix: `position`→`i` and the Phase-B "no old name" assert must be **identifier-scoped** — the
+   English word "position(s)" is prose in many cells (lesson 8/10/12/28/30/60/62, Ex15 statement, teacher-notes
+   6/70/78) and must NOT be renamed / must not fail the grep. Rename only backticked `` `position` ``,
+   `scores[position]`, `position + 1`, `position = 0`, and code Names. Drop teacher-notes:78 (prose "same
+   position") from the rename row; add solutions cells 31/35 (Ex15/Ex17 `for position in range`).
+2. `[OPEN]` Nice: §3 v2's "≥4 real values" is per-UNIT, not per-cell (Ex7 → 4 after append, Ch2 → 6 merged);
+   state so a content reviewer doesn't re-litigate those cells.
+3. `[OPEN]` Nice: bump design 003 header Status `v1`→`v2` (changelog already records v2).
+
+### Round 3 — outcome: REJECT (1 of 4, [sol] — core <4 lists). Fixed → round 4.
+**Round 3 responses:** [sol]#1 [FIXED r4] grow core <4 lists Ex1/Ex7/Ex8/Ch2 to ≥4 (lockstep re-derivation;
+enrichment/rungs exempt). [fable]#1 / [glm]#1 [FIXED] identifier-scoped rename + Phase-B sweep (English
+"position(s)" prose untouched). [fable]#2 [FIXED] `≥4` clarified per working-list. [fable]#3 / [glm]#3 [FIXED]
+design 003 header → v2. rename row: dropped tn:78 (prose), added sol 31/35. Re-dispatching round 4.
+
+---
 
 #### [sol] round 2 (2026-09-19)
 - **Verdict**: REJECT

@@ -1,7 +1,8 @@
 # Design 003 — Book 1 Real-Input Norm
 
-**Status:** APPROVED — v1 (plan-050 4-way plan-review gate CLOSED, 2026-09-19). Authority for the
-Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already stdin-first/subprocess-judged).
+**Status:** APPROVED — v2 (v1: plan-050 gate CLOSED, 2026-09-19; v2: plan-052 §3 realistic-data policy,
+2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
+stdin-first/subprocess-judged).
 
 ## 1. Motivation
 
