@@ -20,13 +20,19 @@ clearly-labelled **enrichment extension**, not interleaved core.
 - **Enrichment framing:** the extension is end-of-lesson enrichment, **not required in-class**. This
   **relaxes design 002's "home is in-class" rule** (which reviewers repeatedly flagged); teacher-notes
   route the whole extension as time-permitting / homework / differentiation.
-- **New drills:** mostly **unmarked** reps (the one-marker-per-technique-per-unit CI rule stands), plus a
-  few **new tagged loci** where a unit currently lacks a pattern it can now host (running-total in
-  u06/u08/u10; count-by-condition / linear-search / transform-each in u10) — each new locus satisfies
-  the spiral (≥3 core), one marker, a catalog-consistent generation, and a ledger row.
-- **Design amendment:** design 002 → **v8** (§6 student-facing form redefined as the Algorithm Extension
-  section; the in-class-home requirement relaxed to extension-enrichment). Constraint-restructuring only;
-  no §3 pattern locus is dropped or re-classified.
+- **New drills are UNMARKED extra-practice reps** (course-author decision, 2026-09-18): NO
+  `<!-- pattern: id -->` marker, NO new technique `practices` tag, NO new §3 locus. The 7 patterns keep
+  exactly the markers/loci they have from plan 047 (each already meets its ≥3 spiral), so design §3 is
+  untouched. A drill's prose may still ask "which pattern is this?" for retrieval, but it adds no marker.
+- **Bounded inventory:** the authoritative, capped per-unit drill list is
+  `docs/proposals/048-loop-drill-inventory.md` (consolidated from the [fable]+[sol] reviews; ≈50 core
+  drills, per-unit caps). Each slice finalizes its unit's exact list from that file — no open-ended pull.
+- **Design amendment:** design 002 → **v8** — §6 student-facing form redefined as the end-of-notebook
+  `## Algorithm Extension` section, and "home is in-class" relaxed to "extension enrichment routed by
+  teacher-notes" (the lesson-side Spotlight that NAMES each pattern stays read in-class so later
+  retrieval prose refers to a name every student met). Genuinely constraint-restructuring: **no §3 locus
+  is added, dropped, or re-classified** — the new drills are unmarked, and §7's "running-total dropped
+  from u08" note stands (u08 gets only an *unmarked* sum rep).
 
 **Spec:** `docs/designs/002-book1-algorithm-patterns.md` (to be amended to v8 — the pattern-thread
 authority), `docs/plans/047-book1-algorithm-patterns.md` (the shipped thread this restructures + extends),
@@ -94,67 +100,89 @@ session; the content gate blind-solves. Each unit slice keeps `ci-local` GREEN a
 ### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling, ships first)
 
 1. Amend `docs/designs/002-…` to **v8**: §6 redefines the student-facing form as the end-of-notebook
-   `# Algorithm Extension` section (lesson Spotlights + exercises gathered there); relax "home in-class"
-   → "extension enrichment, routed by teacher-notes"; note the numbering/marker rules keep CI green. No
-   §3 locus change → constraint-restructuring, no design re-review beyond the plan gate.
-2. Confirm (with a probe, not a code change) that the CI checks are agnostic to a `# Algorithm Extension`
-   header: `structure-check`/`solutions_structure` pair by `## Exercise N`; `pattern-marker` adjacency is
-   marker→heading regardless of a preceding section header; `stretch-check` counts tagged cells anywhere.
-   If any check needs a tweak to tolerate the section header, that tooling change is part of Phase A
-   (Codex) with fault fixtures; expected: none needed.
-- **Acceptance (A):** design v8 committed; a scratch probe shows a relocated-into-`# Algorithm Extension`
-  arrangement passes all checks; no tooling change required (or the change ships fault-tested).
+   `## Algorithm Extension` section (lesson Spotlights + exercises gathered there); relax "home in-class"
+   → "extension enrichment, routed by teacher-notes" (the pattern-NAMING lesson Spotlight stays read
+   in-class); + §13 revision entry. No §3 locus added/dropped/re-classified (drills are unmarked) →
+   constraint-restructuring, no design re-review beyond the plan gate. **Activation:** v8 describes the
+   target end-state; it is not "violated" by units not yet migrated — the migration completes unit-by-unit
+   across Phases B–I, and v8's structure is the acceptance bar reached when the last slice merges.
+2. Commit the bounded inventory `docs/proposals/048-loop-drill-inventory.md` (already drafted) so slices
+   draw from a durable, capped source.
+3. Confirm (with a probe, not a code change) that the CI checks are agnostic to a `## Algorithm Extension`
+   header AND to relocation: `structure-check`/`solutions_structure` pair by `## Exercise N` (per-heading,
+   not position); `pattern-marker` adjacency is marker→heading regardless of a preceding section header;
+   `stretch-check` counts tagged cells anywhere; **`exec-solutions`/`exec-lessons`** still pass after a
+   relocation (relocated cells must be state-independent — verify no later cell consumes a name a moved
+   cell binds). If any check needs a tweak, that tooling change is part of Phase A (Codex) with fault
+   fixtures; expected: none needed.
+- **Acceptance (A):** design v8 committed; inventory committed; a scratch probe shows a
+  relocated-into-`## Algorithm Extension` arrangement (with renumber) passes all checks incl. exec order;
+  no tooling change required (or the change ships fault-tested).
 
-### Phases B–J — one vertical slice per unit (relocate 047 exercises + add new drills)
+### Phases B–I — one vertical slice per unit (relocate 047 exercises + add unmarked drills)
 
-Per unit, in a single slice: (a) relocate that unit's pattern-tagged exercises (and their markers) into a
-new `# Algorithm Extension` section at the end of `exercises.ipynb` (before `## Challenge`), renumbering
-synced with `solutions.ipynb`; (b) gather the unit's lesson Spotlight(s) under a closing
-`## Algorithm Extension` section in `lesson.ipynb`; (c) author the unit's NEW drills (per the Appendix) in
-that section — new core exercises + any new tagged locus + General-Rule `practices` adds; (d) align
-teacher-notes (reframe the algo block as enrichment, fix all renumbered refs, add unplugged traces for the
-new-locus homes); (e) regenerate `patterns.md`; (f) keep every check GREEN.
+Per unit, in a single slice: (a) relocate that unit's pattern-tagged exercises (and their comment-only
+markers) into a new **`## Algorithm Extension`** (H2, matching `## Challenge`) section at the end of
+`exercises.ipynb`, positioned per the unit's own Challenge convention (047 documents it: some units put
+the algo exercises as the last core `## Exercise N` before `## Challenge` cells; u08 uses `## Challenge N`;
+u09/u10 Challenges are `stretch`-tagged `## Exercise N` — keep each unit's convention), renumbering synced
+with `solutions.ipynb`; (b) gather the unit's lesson Spotlight(s) under a closing `## Algorithm Extension`
+section in `lesson.ipynb` (a Spotlight for a *practiced-only* pattern must carry NO `<!-- pattern: id -->`
+comment — `pattern-marker` only expects a lesson marker for an *introduced* pattern); (c) author the
+unit's NEW drills from `docs/proposals/048-loop-drill-inventory.md` (up to the unit's cap) as **unmarked**
+core exercises + General-Rule scanner-derived `practices` adds (regular concepts only); (d) align
+teacher-notes (reframe the algo block as enrichment) AND fix EVERY renumbered exercise reference in
+teacher-notes, in-notebook prose (lesson + exercises), and `book1/curriculum/pattern-ledger.md`; (e)
+regenerate `patterns.md` (a no-op unless a marker moved) and refresh the ledger's exact-heading rows; (f)
+keep every check GREEN.
 
-- **Phase B — u04 quiz-show:** relocate Ex8/Ex9 (running-total, count-by-condition) into the extension;
-  add the bounded-loop matrix (while-based, fixed/typed values, no list), two-counter count, conditional
-  sum, signed accumulate, opening-streak, true user-sentinel (`no-exec`).
-- **Phase C — u05 function-factory (lightest — most new volume):** its running-total home moves to the
-  extension; add `count_bonus_stamps`/`count_wide_stamps`, `total_even_stamps`/`stamps_in_triangle`/
-  `average_side`, `stamps_that_fit`/`width_used`/`stamps_to_pass`/`width_when_passed` (matrix in a
-  function), `stamps_to_reach`/`stamps_scanned_for` (sentinel-in-function). Scanner-derived: `if-statement`,
-  `comparison`, `break-statement`, `while-loop`.
-- **Phase D — u06 secret-codes:** relocate transform-each/count/linear-search exercises; add running-total
-  home (letter-value sum — a NEW `running-total` tagged locus), find-first-vowel index search, boolean
-  digit search, multi-counter tally, star-the-vowels map, the matrix (letter-value budget, count doubles
-  as a slice index).
-- **Phase E — u07 high-score-hall:** relocate its five algo exercises into the extension; add the MIN/
-  argmin family (rookie-by-name, best+worst, running-max), count-then-average, place/rank count,
-  index/boolean search, numeric map, range/partition filters, the matrix over the waiting list + the
-  `≥`-vs-`>` boundary drill. (Mostly More-Practice tier — u07 already heavy.)
-- **Phase F — u08 word-wizard:** relocate its algo exercises; add running-total (total-of-tally — NEW
-  locus), min/argmin (rarest/shortest word), two-counter known-vs-unknown, tally-by-derived-key,
-  first-unknown search, the matrix (len-budget with an exact-hit boundary).
-- **Phase G — u09 save-point:** relocate its algo exercises; add count + count-then-average (NEW
-  `count-by-condition` locus), min-by-scanning with the init gotcha, line-number search, the matrix over
-  save-file lines, filter-and-re-save.
-- **Phase H — u10 pet-simulator (richest untapped — four NEW loci):** relocate Ex13/Ex14/Ex15; add
-  count-by-condition (hungry pets), running-total (team hunger), linear-search (find pet by name),
-  transform-each (roster of names) as NEW tagged loci, plus min/argmin over objects, mood tally, the
-  matrix (feed-until-budget, downward total), filter-driven feeding.
-- **Phase I — u02 number-detective + project-01:** relocate the sentinel-loop Spotlight/exercise into a
-  lean extension section (u02 stays light — no new drills beyond the relocation); project-01 M1 Spotlight
-  framed as extension prose. Keep u01–u02 lean per the standing exception.
+Renumber scope (from [fable]'s audit — only these are interleaved and shift): u02 Ex3, u04 Ex8/9, u05 Ex7,
+u07 Ex4/5/6/12, u08 Ex5/6/10; u06/u09/u10's pattern exercises already sit last (relocation there is mostly
+adding the section header + new drills).
 
-Per-slice acceptance: the unit's algo content sits in a labelled `# Algorithm Extension` section;
+- **Phase B — u04 quiz-show:** relocate Ex8/Ex9 into the extension; add the ≤7 u04 drills (matrix
+  fit/tip on 4,6,5,7,3, two-counter count, conditional sum, signed accumulate, opening-streak, user
+  sentinel). `while`-only, no `for`/`range`/list.
+- **Phase C — u05 function-factory (lightest):** relocate Ex7; add the ≤9 u05 function-packaged drills
+  (count/sum/matrix/sentinel-in-function). Scanner-derived: `if-statement`, `comparison`, `break-statement`,
+  `while-loop`. No list/string-index (data from `range`/formulae).
+- **Phase D — u06 secret-codes:** relocate its transform-each/count/linear-search exercises; add the ≤8
+  u06 drills (letter-value **unmarked** sum, first-vowel index search, boolean digit search, three-counter
+  tally, star-the-vowels map, the matrix). Letter values come only from the lesson's `range(26)` scan;
+  `ord`/`chr` forbidden.
+- **Phase E — u07 high-score-hall:** relocate its **seven** algo exercises (Ex4, Ex5, Ex6, Ex12, Ex14,
+  Ex15, Ex16) into the extension; add the ≤6 u07 drills (rookie-by-name/best+worst argmin, count-average
+  with zero-guard, place/rank count, index/boolean search, matrix + `≥`-vs-`>` boundary) as **More-Practice**
+  (u07 already 16 core — expect a plan-037 volume sign-off).
+- **Phase F — u08 word-wizard:** relocate its algo exercises; add the ≤5 u08 **unmarked** drills
+  (total-of-tally sum, rarest/shortest argmin, known-vs-unknown two-counter, first-unknown search, matrix)
+  as More-Practice. (u08 running-total stays an unmarked rep — §7's "dropped from u08" note stands.)
+- **Phase G — u09 save-point:** relocate its algo exercises; add the ≤7 u09 drills (count, count-average,
+  min-by-scan + init gotcha, line-number search, matrix, filter-and-re-save) — all **unmarked**.
+- **Phase H — u10 pet-simulator (richest untapped):** relocate Ex13/Ex14/Ex15; add the ≤9 u10 **unmarked**
+  object-loop drills (count hungry, team-hunger sum, find-pet-by-name search, roster map, min/argmin, mood
+  tally, feed-until-budget matrix, filter-feed, cheer-saddest). No new tagged loci.
+- **Phase I — u02 number-detective + project-01:** relocate the u02 sentinel-loop Spotlight/exercise into a
+  lean `## Algorithm Extension` section (no new drills — u02 stays lean); project-01 M1 Spotlight framed as
+  extension prose.
+- **u01 & u03 are EXEMPT:** they host no algorithm-pattern content (no §3 home or reappearance), so they
+  get no Algorithm Extension section. The "every unit" acceptance clause means *every unit that hosts a
+  pattern* — u01/u03 are out of scope and unchanged.
+
+Per-slice acceptance: the unit's algo content sits in a labelled `## Algorithm Extension` section;
 pattern-tagged exercises still embody their design definition (content gate confirms); markers present +
-adjacency-correct; new drills prereq-clean + single-pass; renumber synced exercises↔solutions↔teacher-notes;
-`ci-local` GREEN incl. `technique-spiral`/`pattern-marker`/`patterns-doc-check`/`concept-scan`/`stretch`.
+adjacency-correct; new drills unmarked, prereq-clean + single-pass; renumber synced across
+exercises↔solutions↔teacher-notes↔prose↔ledger; `ci-local` GREEN incl. `technique-spiral`/`pattern-marker`/
+`patterns-doc-check`/`concept-scan`/`stretch`; exec order preserved (relocated cells are state-independent).
 
 ### Phase V — Verification (named, mandatory)
 
 `uv run pytest -q` green; `scripts/ci-local.sh` ALL GREEN (memory-light groups) incl. the 3 pattern checks
 + inherited concept checks + notebook exec/hygiene/cell-lint + PDF (incl. the regenerated catalog) +
-pre-merge guard. Volume budget recorded per unit (plan-037 disposition, per PR). **Proficiency/enrichment
+pre-merge guard. **Volume budget (plan-037 disposition, per PR):** any slice exceeding >2× cells / >30%
+PDF pages / >25% wall-time (or a cell >120 s) requires an EXPLICIT content-gate sign-off recorded in the
+PR (not a silent "recorded") — u05 (11→~20 core) and u04 will very likely trip >2× cells, so a sign-off
+is pre-expected there. **Proficiency/enrichment
 (reviewer-enforced):** every unit has a coherent `# Algorithm Extension` section; each of the 7 patterns
 still has its home + ≥3 core non-checkpoint reappearances; the new drills give each loop job (count / sum
 / search / find-best / map / filter / sentinel + the until-threshold matrix) multiple varied reps across
@@ -164,7 +192,8 @@ the light units. Book 2 stays green throughout.
 loop-drill bank added (both boundary flavours of the until-threshold matrix + min family + conditional
 sum + count-average + index/boolean search + object-loops); design v8; 3 checks green; catalog regenerated;
 `ci-local` ALL GREEN; `pre-merge-guard --pr` OK; plan-review + per-PR content-review 4-way consensus.
-**Rollout:** phased PRs by unit (Phase A first; then B–J), each a complete slice so `main` stays green.
+**Rollout:** phased PRs by unit (Phase A first; then B–I; u01/u03 exempt), each a complete slice so
+`main` stays green.
 
 ---
 
@@ -194,7 +223,34 @@ unit so `main` stays green. NITS/risks for the external reviewers to pressure-te
    genuine prereq violation `practices` can't fix.
 Verdict: APPROVE WITH NITS (all addressable at implementation time). Awaiting [sol]/[glm]/[fable].
 
-### Review 2 — [sol] (pending) · Review 3 — [glm] (pending) · Review 4 — [fable] (pending)
+### Round 1 (2026-09-18) — verdicts on the draft (d572300)
+
+- **[self] APPROVE WITH NITS** · **[fable] APPROVE WITH NITS** · **[glm] REJECT** · **[sol] REJECT**.
+- All four converged on **B1**: the draft claimed "constraint-restructuring only" but added new §3 tagged
+  loci (running-total u06/u08/u10; count/search/map u10), which design §3/§7 forbids a plan from doing
+  (and reversed §7's "running-total dropped from u08"). [sol] added **B2** (u01/u03 unaddressed vs the
+  every-unit contract) and **B3** (exercise bank unbounded / not committed). All CONFIRMED the relocation
+  is CI-safe (no tooling change) and Phase V is properly named.
+
+### v2 reconciliation (2026-09-18) — all findings folded (course author chose "unmarked reps")
+
+- `[FIXED]` **B1:** new drills are now **UNMARKED extra-practice reps** — no new tagged loci, no §3 change;
+  design v8 is genuinely §6 + in-class-relaxation only, and §7's u08 note stands (Architecture; Phases
+  D/F/H reworded; v8 scope tightened).
+- `[FIXED]` **[sol] B2:** u01/u03 explicitly EXEMPT (host no pattern content); the every-unit clause means
+  every pattern-hosting unit; phases are B–I (label corrected).
+- `[FIXED]` **[sol] B3 + [fable] N2:** committed the bounded, capped inventory
+  `docs/proposals/048-loop-drill-inventory.md` (consolidates both banks; per-unit caps ≈50 core total) as
+  the authoritative source; the Appendix now points to it.
+- `[FIXED]` nits: `##` (not `#`) Algorithm-Extension header + per-unit Challenge conventions restated;
+  Phase E marker count corrected to **seven** (Ex4/5/6/12/14/15/16); Phase-A probe includes exec-order;
+  per-slice step (d)/(e) now refresh in-notebook prose + `pattern-ledger.md` exact-heading rows; forbid
+  `ord`/`chr` + "no list/string-index in u05" + "for/range are u03, excluded by choice not closure" added
+  to the constraints/inventory; "zero *scanned* min" clarified; v8 activation-with-migration clause;
+  Phase V restates the explicit volume sign-off (u04/u05 pre-expected to trip >2× cells); lesson-side
+  Spotlight for practiced-only patterns carries NO marker (pattern-marker only expects it for introduces).
+
+### Round 2 — [self] → APPROVE. [glm]/[sol] re-dispatched on v2 (pending); [fable] round-1 AWN nits all folded.
 
 ## Content Review
 
@@ -208,8 +264,10 @@ _(Written before PR.)_
 
 ## Appendix — Exercise inventory (from the [fable] + [sol] reviews, 2026-09-18)
 
-The authoritative per-unit exercise list — to be finalized inline (exact data + expected outputs) before
-each unit slice, following the reviewer proposals. Highlights:
+**The authoritative, bounded per-unit list is the committed `docs/proposals/048-loop-drill-inventory.md`**
+(per-unit caps + the matrix datasets/answers + candidate drills, all UNMARKED). Each slice finalizes its
+unit's exact exercises (data + expected outputs) from that file within its cap. Highlights below for
+orientation:
 
 **Bounded-loop "until-threshold" matrix** (one loop, running total + a stop-rule; both boundary flavours
 as distinct drills), per [fable]'s spec with exact datasets/answers:
