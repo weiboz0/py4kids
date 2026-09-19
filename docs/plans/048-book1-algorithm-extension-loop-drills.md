@@ -491,6 +491,49 @@ confirmed — no `+=` remains, divider = 9–11; Ex17–21 re-derived) · **[glm
 nit-1 edit) was capitalized ("Use …"). All four APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to
 PR + merge.
 
+### Phase G — u09 save-point (relocate 5 pattern exercises + renumber + 7 loop drills)
+
+**Round 1** — [self] APPROVE · **[glm] REJECT** (3 [OPEN]) · **[fable] REJECT** (3 [OPEN]) ·
+**[sol] REJECT** (3 [OPEN]). All four blind-solved Ex17–23 to spec (2; 2825/706.25; 450; pos 2; 2/750;
+3/1475/725; 725); closure clean (no `+=`, long-form; no `sum`/`sorted`/`min`/`input`; Ex19 seeds from
+`scores[0]`); `range-function` General-Rule-added to u09 `practices` (map+manifest) for Ex20's
+`range(len)`; numbering 1–25 aligned; markers before Ex12–16; only transform-each cross-ref changed
+(Ex3→Ex12). u09 is a **stateful file-I/O** unit, so the reviewers converged on exec-order defects:
+
+- `[FIXED]` **[glm]/[sol] [OPEN]** — Ex14 (linear-search over `settings.txt`) was NOT self-contained: it
+  relied on More-Practice Ex10 having written "Mina", so it failed on the in-class→extension path
+  (`exec-solutions` passed only because top-to-bottom ran Ex10 first). Ex14 solution now re-saves its own
+  `settings.txt` (Ada/Mina/Leo) first; verified it passes in isolation. teacher-notes self-containment
+  claim corrected ("re-save the file they read").
+- `[FIXED]` **[fable] [OPEN]** — Ex12 (transform-each) statement said "Expected output `[1375,910,1260]`"
+  but a student reaches it with the ambient `savegame.txt` = `[300,450,725,1350]`; aligned the statement
+  expected output AND the solution to `[300,450,725,1350]` (consistent with Ex13/15/16).
+- `[FIXED]` **[glm]/[fable]/[sol] [OPEN]** — the **solutions** More-Practice divider still said
+  "Exercises 10–16" → "9–11" (I'd fixed only the exercises copy).
+- `[FIXED]` **[glm]/[fable]/[sol] [OPEN]** — Ex7 prose self-referenced "`load_scores` helper from
+  Exercise 7" → **Exercise 6** (where the helper is now defined).
+- `[FIXED]` **[fable] nit** — Ex19 seeding clarifier (why `0` is a safe *max* seed but a fatal *min*
+  seed); en-dash alignment on the exercises divider.
+- `[NOTE]` **[fable]/[glm] nit** — the drills use **inline score lists** (not the inventory's "file-line
+  loops", and drop the filter-and-re-save candidate) to avoid the file-state fragility that bit Ex12; the
+  five relocated reps + core Ex1–8 carry the file-reading skill. Accepted deviation, recorded here.
+
+All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes; Ex14 verified
+order-independent.
+
+**Round 2** — [self] APPROVE · **[fable] APPROVE** · **[glm] APPROVE-WITH-NITS** (all 3 round-1 [OPEN]s
+confirmed resolved) · **[sol] REJECT** — sole remaining [OPEN] was the teacher-notes:56–57 wording that
+attributed the order-independent re-save to the *student exercises* rather than the *solutions*
+(both glm's nit and sol's [OPEN]).
+
+- `[FIXED]` teacher-notes:56–57 reworded: "In the **solutions**, each relocated file-reading exercise
+  re-saves the file it reads first … so the solutions notebook validates cleanly regardless of order. The
+  student exercises notebook is designed to be run top-to-bottom (as the whole stateful unit is) …".
+
+**Round 3 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** (round 3: teacher-notes claim
+correctly scoped to solutions; diff is docs-only) · [glm] APPROVE-WITH-NITS · [fable] APPROVE. All four
+APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to PR + merge.
+
 ## Post-Execution Report
 
 ### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling) — DONE
@@ -600,7 +643,29 @@ PR + merge.
 - **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 44→55
   cells (1.25×, < 2×).
 
-_(Phases G–I + Phase V report appended as each slice lands.)_
+### Phase G — u09 save-point — DONE (pending round-2 confirm + PR)
+
+- **Relocation + renumber:** the five pattern-tagged exercises relocated into a closing `## Algorithm
+  Extension` H2 (transform-each Ex12, running-total Ex13, linear-search Ex14, find-extreme Ex15, filter
+  Ex16); non-algo Ex4–12→Ex3–11; the two `stretch` Challenges → Ex24/25. Only transform-each renumbered
+  (Ex3→Ex12); the other four kept 13–16. Lesson unchanged (no pattern markers).
+- **Exec-order (stateful file-I/O unit):** each relocated file reader re-saves the file it reads first
+  (savegame.txt, or settings.txt for linear-search) → order-independent; Ex12 aligned to the ambient
+  `savegame.txt` = [300,450,725,1350]. New drills use inline score lists (no shared-file reads).
+- **New drills (unmarked, Ex17–23):** count boss-saves, count-average, lowest-by-scan (argmin), position
+  search, first-≥-target search, and the matrix pair on [300,450,725,1350] ÷ 1000 (fit 2/750 vs tip
+  3/1475/725). Long-form accumulation (no `+=`).
+- **Metadata:** General-Rule `practices` add `range-function` (map+manifest, introduced ≤ u09).
+  Cross-refs: transform-each u09 Ex3→Ex12 (u06 tn, design §3, ledger). teacher-notes reframed (in-class
+  Ex1–8, More-Practice Ex9–11, Algorithm Extension Ex12–23, Challenges Ex24–25). ledger resulting-core
+  16 → 23.
+- **Inventory deviation (recorded):** the drills use inline score lists rather than the inventory's
+  "file-line loops", and drop the filter-and-re-save candidate (the matrix pair fills the ≤7 cap) — chosen
+  to avoid file-state fragility; file-reading is carried by the five relocated reps + core Ex1–8.
+- **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 43→58
+  cells (1.35×, < 2×).
+
+_(Phases H–I + Phase V report appended as each slice lands.)_
 
 ---
 

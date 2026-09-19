@@ -124,7 +124,7 @@ entries:
               if-statement, list-literal, print, variable, string-concat, string-literal,
               type-conversion, int-type, error-messages, elif-else, accumulator, arithmetic,
               running-total, transform-each, comparison, break-statement, linear-search,
-              find-extreme, filter-into-list]
+              find-extreme, filter-into-list, range-function]
 - id: unit-10-pet-simulator
   kind: unit
   title: "Pet Simulator — a gentle intro to objects"
