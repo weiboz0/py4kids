@@ -54,7 +54,7 @@ Challenge column = Challenge-*exercise* count (each ≥2 `stretch`-tagged cells 
 | u02 | 8 | 0 (sentinel home = reuse Ex3) | 8 | 2 (unchanged) |
 | u04 | 10 | +2 (running-total + count homes, `while`-based, no list) +7 (plan-048 unmarked drills, Ex13–19) | 19 | 2 (unchanged) |
 | u05 | 11 | 0 (reuse, now Ex11) +9 (plan-048 unmarked function drills, Ex12–20) | 20 | 2 (unchanged) |
-| u06 | 11 | +2 (count-matches new; linear-search & transform-each homes) | 13 | 2 (unchanged) |
+| u06 | 11 | +2 (count-matches new; linear-search & transform-each homes) +8 (plan-048 unmarked drills, Ex15–22) | 21 | 2 (unchanged) |
 | u07 | 13 | +3 (find-extreme home, filter home, loop+break) | 16 | 2 (unchanged) |
 | u08 | 14 | +2 (reverse-lookup promote→core Ex15, filter new Ex16) | 16 | 2 − 1 + 1 = 2 |
 | u09 | 12 | +4 (read-and-sum, best-so-far, find-in-file, filter — all new) | 16 | 2 (unchanged) |
@@ -70,6 +70,9 @@ tally, conditional sum, signed accumulate, opening streak, and the until-thresho
 function-packaged: count/sum/triangle/average, the matrix pair (sizes 10..30 ÷ 60), a `while` sentinel
 (`stamps_to_reach`), and two parameterized drills (scanner-derived `practices` added under the General
 Rule: `if-statement`, `elif-else`, `comparison`, `while-loop`, `break-statement` — all introduced ≤ u05).
+**u06 +8 (Ex15–22)** — character-scan drills: count-a-letter, three-counter tally, first-vowel search
+(`break`), boolean digit search, star-the-vowels map, letter-value sum, and the matrix pair on "secret"
+÷ 30 (fit 3/27/"sec" vs tip 4/45/"r"); no new `practices` adds (all concepts already in u06's union).
 
 ## Invariants proven
 

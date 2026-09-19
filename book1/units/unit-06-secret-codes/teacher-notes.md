@@ -53,6 +53,28 @@ Transform-each route: teach the named pattern in class with Exercise 13 over the
 
 Linear-search route: teach the named pattern in class with Exercise 14 over alphabet positions, retrieve it in Unit 07 Exercise 14 with a score list, in Unit 08 Exercise 15 with dictionary values, and in Unit 09 Exercise 14 with file lines.
 
+## Algorithm Extension (enrichment)
+
+The unit's algorithm work now sits in a labelled **`## Algorithm Extension`** section at the end of the
+notebook (design 002 v8). It opens with the three pattern homes/reappearances taught in class —
+**count-by-condition** (Ex 12, count the vowels), **transform-each** (Ex 13, the `encode` rebuild), and
+the **linear-search** home (Ex 14, scan alphabet positions + `break`) — then eight extra **unmarked**
+character-scan drills (Ex 15–22). The pattern-naming Spotlights stay read in class (Lessons 2–3); the
+extra drills are routed as time-permitting / homework / differentiation and never gate the cipher build.
+
+Every drill scans a string one character at a time — no `len` yet (u06 has none): use `in`, string
+indexing, and the alphabet scan `letters = "abcdefghijklmnopqrstuvwxyz"` for letter values (a=1…z=26);
+never `ord`/`chr`.
+
+- **Ex 15** count one letter, **Ex 16** three counters (letters / spaces / marks), **Ex 17** first-vowel
+  position (manual counter + `break`), **Ex 18** boolean "contains a digit?", **Ex 19** star-the-vowels
+  (build a new string), **Ex 20** letter-value sum (via the alphabet scan).
+- **Ex 21 & Ex 22** are the **same word ("secret"), opposite-boundary** pair ÷ budget 30: Ex 21 *checks
+  before adding* (3 letters fit, total 27, prefix "sec"); Ex 22 *adds then checks* (4 letters, total 45,
+  tipping letter "r"). Run them back-to-back so students feel where the check sits relative to the add.
+
+Extra reps of patterns students have met; assign as many as time allows.
+
 ## Common mistakes
 
 - Off-by-one on slice bounds (`word[1:4]` is characters 1,2,3 — not 4).
