@@ -376,7 +376,11 @@ but flagged ONE regression the round-1 fix introduced:
   Reworded both (teacher-notes.md:53 and the Algorithm-Extension list) to "the running-total pattern's
   reuse rep (home is Unit 04)". Docs-only; no CI impact.
 
-**Round 3** — [self] APPROVE (regression fixed); [glm]/[fable] stand; [sol] re-dispatched.
+**Round 3 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** (round 3: regression resolved —
+no "running-total home" phrase remains; teacher-notes framing matches ledger/design; Ex12–20 unchanged,
+numbering 1–20, unmarked contract intact, all read-only checks pass) · [glm] APPROVE-WITH-NITS ·
+[fable] APPROVE-WITH-NITS (folded). All four APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to
+PR + merge.
 
 ## Post-Execution Report
 
