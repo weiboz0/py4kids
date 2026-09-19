@@ -52,13 +52,21 @@ Challenge column = Challenge-*exercise* count (each ≥2 `stretch`-tagged cells 
 | unit | baseline core | +new core | resulting core | Challenge exercises after |
 |---|---|---|---|---|
 | u02 | 8 | 0 (sentinel home = reuse Ex3) | 8 | 2 (unchanged) |
-| u04 | 10 | +2 (running-total + count homes, `while`-based, no list) | 12 | 2 (unchanged) |
+| u04 | 10 | +2 (running-total + count homes, `while`-based, no list) +7 (plan-048 unmarked drills, Ex13–19) | 19 | 2 (unchanged) |
 | u05 | 11 | 0 (reuse Ex7) | 11 | 2 (unchanged) |
 | u06 | 11 | +2 (count-matches new; linear-search & transform-each homes) | 13 | 2 (unchanged) |
 | u07 | 13 | +3 (find-extreme home, filter home, loop+break) | 16 | 2 (unchanged) |
 | u08 | 14 | +2 (reverse-lookup promote→core Ex15, filter new Ex16) | 16 | 2 − 1 + 1 = 2 |
 | u09 | 12 | +4 (read-and-sum, best-so-far, find-in-file, filter — all new) | 16 | 2 (unchanged) |
 | u10 | 12 | +3 (Ex13 promote, Ex14 promote, filter new) | 15 | 2 − 2 + 2 = 2 |
+
+**Plan-048 Algorithm Extension (unmarked reps).** Each pattern-hosting unit's algo exercises are
+relocated into a closing `## Algorithm Extension` section and joined by extra **unmarked** loop-mastery
+drills (no `<!-- pattern: id -->` marker, no new technique `practices` tag, no new §3 locus). The
+"resulting core" above grows by each unit's drill count as its slice lands; per-unit caps and datasets
+live in `docs/proposals/048-loop-drill-inventory.md`. Landed so far: **u04 +7 (Ex13–19)** — two-counter
+tally, conditional sum, signed accumulate, opening streak, and the until-threshold matrix pair
+(check-before-add / add-then-check on 4,6,5,7,3 ÷ 12) + a sentinel drill.
 
 ## Invariants proven
 
