@@ -115,5 +115,6 @@ and `ci-local` is ALL GREEN. Book 2 stays green throughout.
 - **v2 (2026-09-19, plan 052):** §3 realistic-data policy clarified — the binding requirement is
   "not toy"; ≈6–8 elements is the target for lists built fresh, but a unit already using realistic
   multi-element lists (≥4 real values) need not be grown, and "small fixed data" enrichment drills keep
-  their lists. Codifies u07's no-growth (its core lists are already realistic; growing would force a
-  lockstep assert/worked-example/Notice/teacher-notes cascade).
+  their lists. Under this policy a unit grows only its <4-element core SOURCE lists (u07 [plan 052]: Ex1/Ex7/
+  Ex8/Challenge 2), leaving already-realistic core lists + enrichment/rung data untouched; the govern is
+  source/input data, not computed result literals.

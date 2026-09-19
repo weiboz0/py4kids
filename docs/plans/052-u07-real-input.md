@@ -32,7 +32,9 @@ design-003 §7 order. **u07 is slice 1** — the first LIST unit — chosen to e
      `second_scores=[1310,700,1050]` → each grown to ≥4 realistic scores, with **lockstep re-derivation** of that
      exercise's asserts + statement worked-example values + any teacher-notes number (Phase B drift check). The
      `≥4` test is per **working list** (Ex7 reaches 5 after its append; Ch2 merges to ≥8) — the executable
-     literal itself is grown to ≥4 so no cell ships a 3-element core list.
+     source literal itself is grown to ≥4 so **no core fixed SOURCE/input dataset ships fewer than 4 values**.
+     (Result-literal asserts may still be <4 — e.g. Ex9's `assert bonus_board == [300,450,275]` is fine because
+     its *source* `waiting_scores` is 4-element; §3 governs source/input data, not computed results.)
 3. **CP-light names (Light trim) — full u07 inventory.** "Untouched rungs" means data/pedagogy; **renames apply
    unit-wide** (incl. rung cells). u07's names are already clean and often meaningfully **paired**, so the trim
    is genuinely light:
@@ -113,8 +115,10 @@ build-up rungs + all **already-≥4 and enrichment** lists untouched.
 - `ast.parse` + piped-run every real-form + executable twin; each real-form's RESULT line equals its
   fixed-data twin's output **modulo `input()` prompt text**; numbered prompts display 1..n never 0.
 - **Drift check (for the grown cells Ex1/Ex7/Ex8/Ch2):** statement worked-example values == solution assert
-  values == real-form piped output == teacher-notes numbers, all re-derived from the new lists. For unchanged
-  cells, confirm the real-forms reproduce the existing twin values; no `**Real version:**` cue names a changed value.
+  values == real-form piped output == teacher-notes numbers, all re-derived from the new lists. **Ex8 is
+  real-form-exempt (debug/predict) — statement/asserts/teacher-notes legs only, no piped-output leg.** For
+  unchanged cells, confirm the real-forms reproduce the existing twin values; no `**Real version:**` cue names
+  a changed value.
 - AST-level closure scan: no concept outside u07's union introduced (no `sys.stdin`; no new builtin/idiom).
 - Assert NO old **identifier** (`best_so_far`; `position` as a code Name / backticked `` `position` `` /
   `scores[position]` / `position + 1` / `position = 0`) survives under the unit dir — code via AST, markdown via
@@ -127,9 +131,9 @@ build-up rungs + all **already-≥4 and enrichment** lists untouched.
 - Any Book-1 entry other than u07. **Checkpoint-mini-pilot deferral:** design 003 §7 *SHOULD*-paired the first
   slice with a checkpoint mini-pilot; this plan does u07 alone and the checkpoint follows as plan 053 (author
   scope choice — smaller slices; SHOULD ≠ MUST; the 051 renumbering note already shifted the rollout to 052+).
-- No data growth (see treatment §2). **design 003 §3 amended to v2** (this plan) to codify the realistic-data
-  policy so u07's no-growth conforms — that amendment IS in scope; no other design change. Markers/rungs
-  untouched. Phase B present.
+- Growth is limited to the <4-element CORE source lists (treatment §2: Ex1/Ex7/Ex8/Ch2); already-≥4 core lists,
+  enrichment drills, and build-up rungs are unchanged. **design 003 §3 amended to v2** (this plan) to codify the
+  realistic-data policy — that amendment IS in scope; no other design change. Markers/rungs untouched. Phase B present.
 
 ## Plan Review
 
@@ -285,6 +289,34 @@ conforms); [glm]#1 [FIXED] Phase B plain-text markdown+md grep; [fable]#1 [FIXED
 [FIXED] `position`→`i` markdown scope + Phase B grep (== [glm]#1); [fable]#3 [FIXED] Challenge 2 reads
 `second_scores` (first board fixed); [fable]#4 [FIXED] subsumed by the §3 amendment (u07 conforms; the target
 still applies rollout-wide to fresh lists). **Design 003 §3 amended → round 3 re-review (design changed).**
+
+### Round 4 (2026-09-19) — re-review after core-list growth + identifier-scoping (2a904bd)
+#### [self] round 4 (2026-09-19)
+- **Verdict**: APPROVE — every core (Ex1–9 + Challenges) executable list is now ≥4 (grown Ex1/Ex7/Ex8/Ch2;
+  lesson core already ≥4); enrichment/rungs stay small per §3 v2 → fully consistent with the governing design.
+  Rename + Phase-B sweep identifier-scoped (English "position(s)" prose preserved); header v2. No new blocker.
+#### [sol] round 4 (2026-09-19)
+- **Verdict**: REJECT — substance (core-list growth) ACCEPTED; REJECT is on stale scope text only.
+1. `[OPEN]` Must Fix: stale "No data growth"/"u07's no-growth conforms" text (Out-of-scope) + design v2
+   changelog "Codifies u07's no-growth" contradict the revised treatment §2/Phase A that now grows. Remove/update.
+   → [FIXED]: Out-of-scope now "growth limited to <4 core source lists"; design v2 changelog rewritten; no stale text.
+2. `[OPEN]` Should Fix: narrow "no cell ships a 3-element core list" — Ex9's `assert bonus_board == [300,450,275]`
+   is a 3-element RESULT literal (fine; its source is 4-element). → [FIXED]: reworded to "no core fixed
+   SOURCE/input dataset < 4 values; result literals may be smaller".
+
+#### [glm] round 4 (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — round-3 nits verified resolved; core-list growth sound (closed set, lockstep
+  + scoped drift check, no prose-drift return); [sol]'s Must-Fix (Ex8 core, 3-element) addressed.
+1. `[OPEN]` Nice: Phase B drift chain names "real-form piped output" for all grown cells, but Ex8 is
+   SHAPE-exempt (no real form) — add "(Ex8: statement/asserts/teacher-notes legs only)". → [FIXED].
+
+#### [fable] round 4 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — all round-3 nits resolved; verified the growth is bounded (grown literals
+  occur only in their own statement+solution cells; no lesson/teacher-notes collision) so no cascade. Two Nice
+  implementation cautions (honor at build time):
+1. `[OPEN]` Nice: Ex8 solution has `[900,450,1200]` TWICE (reset step) — grow both literals identically.
+2. `[OPEN]` Nice: value choices — avoid `1100` in Ex1 + cross-board duplicates in Ch2 (ties weaken the sort
+   demo); re-derive Ch2's `assert len(...)` to the new merged length (8 if both grown to 4).
 
 ## Content Review
 _(pending — 4-way.)_
