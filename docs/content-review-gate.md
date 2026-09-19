@@ -9,7 +9,7 @@ The pre-PR quality gate for course content
 |---|----------|----------|-------|
 | 1 | Self-review | active session inline | active session model |
 | 2 | Sol reviewer | `codex:codex-rescue` subagent, fresh and read-only (request `--model gpt-5.6-sol`) | GPT-5.6-sol |
-| 3 | GLM reviewer | `opencode:opencode-review` subagent, fresh and read-only | opencode-go/glm-5.2 |
+| 3 | GLM reviewer | `opencode:opencode-review` subagent, fresh and read-only (pass `--model volcengine-plan/glm-5.3`) | volcengine-plan/glm-5.3 |
 | 4 | Fable reviewer | fresh, read-only Fable 5 subagent (`Agent`, general-purpose) | Fable 5 |
 
 Dispatch 2–4 in parallel with the inline self-review.
