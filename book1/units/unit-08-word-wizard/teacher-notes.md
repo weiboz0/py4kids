@@ -67,8 +67,8 @@ read in class; every exercise here (Ex 12–21) is routed as time-permitting / h
   12, which is why the rule is `<=` not `<`); Ex 21 *adds then checks* (4 words, total 18, tipping word
   "wizard"). Run them back-to-back.
 
-These are extra reps of patterns students have met; being a broad-core unit, they are routed to
-More-Practice/homework so the in-class core stays the phrasebook + counter build.
+These are extra reps of patterns students have met; being a broad-core unit, the Algorithm Extension is
+routed as time-permitting / homework so the in-class core stays the phrasebook + counter build.
 
 **Why one traceback rep is enough here:** `error-messages` is peripheral in this unit; dictionaries drive Word Wizard, while traceback reading is practiced again in other units.
 
