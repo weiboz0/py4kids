@@ -23,20 +23,31 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   Open on the thread: crack the folded note.
   25 min: the ATBASH flip — scan the alphabet with `for position in range(26)` to find a letter's position, then take `letters[25 - position]`; this introduces the position-scan the Caesar cipher reuses.
   20 min: the `in` ladder (`"m" in letters` → a space/mark is False → inside a `for` loop to tell letters from marks).
-  In-class exercises: 4, 5, 8, 9, 11, 12, and 14 (Exercise 12 is the **count-by-condition** retrieval — keep a `vowel_count`, check each character once against `in "aeiou"`, bump on a match; it rides straight off this `in` ladder. Exercise 14 is the **linear-search** home — scan positions one by one and `break` as soon as the target is found).
-  Before Exercise 14, run a 2-minute unplugged trace: flip cards one by one and stop when you find the ace; compare that early stop with checking every remaining card.
+  In-class exercises: 4, 5, 8, 9, and 11. Name the **count-by-condition** and **linear-search** patterns
+  in class from the Lesson 2 Spotlights (gathered in the closing Algorithm Extension); their exercises —
+  Exercise 12 (keep a `vowel_count`, check each character once against `in "aeiou"`, bump on a match) and
+  Exercise 14 (the linear-search home — scan positions one by one and `break` at the target) — live in the
+  Algorithm Extension and run as time permits.
+  Before the linear-search Spotlight (Exercise 14), run a 2-minute unplugged trace: flip cards one by one and stop when you find the ace; compare that early stop with checking every remaining card.
 - **Lesson 3 — the Caesar encoder (60–90 min).**
   Open on the thread: yesterday we READ codes; today we WRITE one only a friend can crack.
   25 min: the CAESAR cipher as `encode(message, shift)` — lowercase first (the case contract), scan `range(26)`, `(position + shift) % 26`, rebuild with `result = result + new_letter`; `decode` shifts back by `26 - shift`.
   15 min: the deliberate wrap bug — forget `% 26` and watch `z` shift off the end; read the `IndexError` together.
   Rest: the trade-and-decode activity — pairs swap encoded messages and crack each other's.
-  In-class exercises: 6, 7, 10, and 13 (Exercise 13 is the **transform-each** home: apply the same string-method step to every character and concatenate into a new string — it rides straight off the `encode` per-character rebuild).
-  Before Exercise 13, run a 2-minute unplugged trace: pass a paper message down the row, have each student transform exactly one character with the same lowercase-and-`a`-to-`@` rule, and join the changed characters into a new message.
+  In-class exercises: 6, 7, and 10. Name the **transform-each** pattern in class from the Lesson 3
+  Spotlight; its home — Exercise 13 (apply the same string step to every character and concatenate into a
+  new string, riding the `encode` per-character rebuild) — lives in the Algorithm Extension and runs as
+  time permits.
+  Before the transform-each Spotlight (Exercise 13), run a 2-minute unplugged trace: pass a paper message down the row, have each student transform exactly one character with the same lowercase-and-`a`-to-`@` rule, and join the changed characters into a new message.
   60-MINUTE CUT: skip the wrap-bug demo (the fix-the-caesar exercise covers it); the encode/decode function is the non-negotiable core.
 
-**Exercise split:** Exercises 1–14 are the in-class core, spread across the three lessons as
-listed above (Exercises 12 and 14 ride Lesson 2's `in` and alphabet-scan ladder; Exercise 13, the transform-each home, rides Lesson 3's `encode` per-character trace). The notebook's **Challenge** section contains Challenges 1–2;
-these stretch tasks are optional, and no core concept depends on completing them.
+**Exercise split:** Exercises 1–11 are the in-class core, spread across the three lessons as listed above.
+The algorithm work — the pattern exercises 12–14 (count-by-condition, transform-each, linear-search)
+plus the extra drills 15–22 — sits in the closing **Algorithm Extension** and is enrichment (see below):
+the naming Spotlights are read in class (Ex12/14 ride Lesson 2's `in`/alphabet-scan ladder; Ex13 rides
+Lesson 3's `encode` per-character trace), but the exercises themselves run as time permits. The notebook's
+**Challenge** section contains Challenges 1–2; these stretch tasks are optional, and no core concept
+depends on completing them.
 
 `error-messages` has a justified peripheral count exemption: Exercise 7 supplies one focused,
 genuine authoring exercise with two run-read-fix rounds. Repeating traceback failures across three
@@ -49,9 +60,31 @@ guts of the position scan and shift; two integer shift values are compared direc
 accumulator, if/elif/else, boolean values, nested loops, and loop counters all carry earlier learning
 into the cipher work.
 
-Transform-each route: teach the named pattern in class with Exercise 13 over the characters in one string, retrieve it in class with cleaned strings in Unit 07 Exercise 6, retrieve it in class with dictionary-produced values in Unit 08 Exercise 10, then use Unit 09 Exercise 3 in class after the file-reading lesson to transform file lines into integers.
+Transform-each route: name the pattern in class from the Lesson 3 Spotlight; Exercise 13 (over the characters in one string) is its home in the Algorithm Extension, run as time permits. Retrieve it in class with cleaned strings in Unit 07 Exercise 6, retrieve it in class with dictionary-produced values in Unit 08 Exercise 10, then use Unit 09 Exercise 3 in class after the file-reading lesson to transform file lines into integers.
 
-Linear-search route: teach the named pattern in class with Exercise 14 over alphabet positions, retrieve it in Unit 07 Exercise 14 with a score list, in Unit 08 Exercise 15 with dictionary values, and in Unit 09 Exercise 14 with file lines.
+Linear-search route: name the pattern in class from the Lesson 2 Spotlight; Exercise 14 (over alphabet positions) is its home in the Algorithm Extension, run as time permits. Retrieve it in Unit 07 Exercise 14 with a score list, in Unit 08 Exercise 15 with dictionary values, and in Unit 09 Exercise 14 with file lines.
+
+## Algorithm Extension (enrichment)
+
+The unit's algorithm work now sits in a labelled **`## Algorithm Extension`** section at the end of the
+notebook (design 002 v8). It opens with the three pattern exercises whose naming Spotlights are read in class (Lessons 2–3) —
+**count-by-condition** (Ex 12, count the vowels), **transform-each** (Ex 13, the `encode` rebuild), and
+the **linear-search** home (Ex 14, scan alphabet positions + `break`) — then eight extra **unmarked**
+character-scan drills (Ex 15–22). Only the naming Spotlights are in-class; every exercise here (Ex 12–22)
+is routed as time-permitting / homework / differentiation and never gates the cipher build.
+
+Every drill scans a string one character at a time — no `len` yet (u06 has none): use `in`, string
+indexing, and the alphabet scan `letters = "abcdefghijklmnopqrstuvwxyz"` for letter values (a=1…z=26);
+never `ord`/`chr`.
+
+- **Ex 15** count one letter, **Ex 16** three counters (letters / spaces / marks), **Ex 17** first-vowel
+  position (manual counter + `break`), **Ex 18** boolean "contains a digit?", **Ex 19** star-the-vowels
+  (build a new string), **Ex 20** letter-value sum (via the alphabet scan).
+- **Ex 21 & Ex 22** are the **same word ("secret"), opposite-boundary** pair ÷ budget 30: Ex 21 *checks
+  before adding* (3 letters fit, total 27, prefix "sec"); Ex 22 *adds then checks* (4 letters, total 45,
+  tipping letter "r"). Run them back-to-back so students feel where the check sits relative to the add.
+
+Extra reps of patterns students have met; assign as many as time allows.
 
 ## Common mistakes
 

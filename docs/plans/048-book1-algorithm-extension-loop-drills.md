@@ -382,6 +382,48 @@ numbering 1–20, unmarked contract intact, all read-only checks pass) · [glm] 
 [fable] APPROVE-WITH-NITS (folded). All four APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to
 PR + merge.
 
+### Phase D — u06 secret-codes (header-only relocation + 8 unmarked character-scan drills)
+
+**Round 1** — [self] APPROVE · [glm] APPROVE-WITH-NITS · [fable] APPROVE-WITH-NITS (no [OPEN]) ·
+**[sol] REJECT** (2 [OPEN]). All four blind-solved Ex15–22 to spec (3; 5/1/2; pos 3; T/F; c*t/h*ll*; 6;
+fit 3/27/"sec"; tip 4/45/"r"); closure clean (string scans; no `len`/`.split`/`ord`/`chr`/`sum`/lists;
+letter values via the alphabet scan); NO renumber (Ex1–14 byte-identical to main); unmarked contract
+intact (3 exercise markers before Ex12/13/14, 2 lesson markers; Ex15–22 unmarked); concept-scan clean
+(no `practices` adds). Findings:
+
+- `[FIXED]` **[sol] [OPEN] + [glm] nit** — ledger u06 resulting-core said 21 but the notebook has 22
+  `## Exercise` headings. Reconciled to **22** (11 baseline + 3 real 047 adds, Ex12–14 — plan-047 logged
+  +2, the pre-existing fable NIT-4 off-by-one — + 8 plan-048 drills).
+- `[FIXED]` **[sol] [OPEN]** — u06 teacher-notes still routed the pattern exercises Ex12–14 as **in-class**,
+  contradicting design v8 (the whole Algorithm Extension is enrichment; only the lesson-side naming
+  Spotlight is in-class). Reframed like u04/u05: in-class core is now Ex1–11; the naming Spotlights are
+  read in class (riding the L2 `in`/alphabet-scan and L3 `encode` ladders), and every Algorithm-Extension
+  exercise (Ex12–22) runs as time-permitting / homework / differentiation.
+- `[FIXED]` **[glm]/[fable] nit** — exercises `## Challenge` intro "after the fourteen in-class core
+  exercises" → number-free "after the earlier exercises" (matches u04/u05).
+- `[FIXED]` **[fable] N3 + [glm] micro-nit** — Ex18 `has_digit` solution rewritten to the taught
+  found-flag idiom (`found = False … found = True; break … return found`, mirroring the Ex14/Ex17
+  linear-search shape) with `assert has_digit(...)` / `assert not has_digit(...)` (dropped `== True`/`== False`).
+- `[FIXED]` **[fable] N4** — Ex16/Ex21/Ex22 solution `print(a, b, c)` multi-arg prints → f-strings (the
+  unit's own convention).
+- `[FIXED]` **[fable] N1** — Ex21 prose `secret[:count]` → `"secret"[:count]` (a bare `secret` identifier
+  would `NameError`; the slice is on the string literal).
+- `[FIXED]` **[fable] N5** — the lesson `## Algorithm Extension` framing line now describes the gathered
+  **Spotlights** (not "drills", which live in exercises).
+- `[FIXED]` **[fable] N6** — teacher-notes pacing bullets now say the naming Spotlights are read in class
+  and point to the Algorithm-Extension exercises (subsumed by the enrichment reframe).
+- `[WONTFIX]` **[fable] N2** — leaving Ex17–20 statement function names unfixed / not re-worded: they
+  blind-solved unambiguously for all four reviewers; changing already-verified statement wording adds risk
+  for no correctness gain.
+
+All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes.
+
+**Round 2 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** (round 2: both [OPEN]s
+resolved — ledger 11+3+8=22 consistent; in-class core = Ex1–11 with Ex12–22 enrichment matching v8 §6;
+Ex15–22 re-derived, found-flag `has_digit`, numbering 1–22, closure/markers/concept-scan all pass) ·
+[glm] APPROVE-WITH-NITS · [fable] APPROVE-WITH-NITS (folded). All four APPROVE / APPROVE-WITH-NITS, no
+open blockers. Cleared to PR + merge.
+
 ## Post-Execution Report
 
 ### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling) — DONE
@@ -442,7 +484,23 @@ PR + merge.
 - **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 1.45×
   cells (< 2×) — no special volume sign-off required.
 
-_(Phases D–I + Phase V report appended as each slice lands.)_
+### Phase D — u06 secret-codes — DONE (pending [sol] round-2 confirm + PR)
+
+- **Relocation (no renumber):** u06's pattern exercises already sat last (count-by-condition Ex12,
+  transform-each Ex13, linear-search Ex14), so only a `## Algorithm Extension` H2 header was inserted
+  before Ex12 in exercises + solutions; Ex1–14 unchanged. Lesson gathered its two introduced-pattern
+  Spotlights (linear-search, transform-each; markers in-prose) under a closing `## Algorithm Extension`.
+- **New drills (unmarked, Ex15–22):** count-a-letter, three-counter tally (letters/spaces/marks),
+  first-vowel search (`break`), boolean digit search, star-the-vowels map, letter-value sum (alphabet
+  scan), and the matrix pair on "secret" ÷ 30 (fit 3/27/"sec" vs tip 4/45/"r"). All `for`-over-string
+  scans; no `len`/`ord`/`chr`/`sum`/`.split()`/lists; letter values via the `range(26)` alphabet scan.
+- **Metadata:** `concept-scan` needed **no** scanner-derived `practices` adds (all concepts already in
+  u06's union). teacher-notes reframed (in-class core = Ex1–11; Algorithm Extension Ex12–22 enrichment);
+  ledger resulting-core reconciled to 22.
+- **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 54→71
+  cells (1.31×, < 2×).
+
+_(Phases E–I + Phase V report appended as each slice lands.)_
 
 ---
 
