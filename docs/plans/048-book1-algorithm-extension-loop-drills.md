@@ -424,6 +424,37 @@ Ex15–22 re-derived, found-flag `has_digit`, numbering 1–22, closure/markers/
 [glm] APPROVE-WITH-NITS · [fable] APPROVE-WITH-NITS (folded). All four APPROVE / APPROVE-WITH-NITS, no
 open blockers. Cleared to PR + merge.
 
+### Phase E — u07 high-score-hall (relocate 7 pattern exercises + renumber + 6 list drills)
+
+**Round 1** — [self] APPROVE · [fable] APPROVE-WITH-NITS (no [OPEN]) · **[glm] REJECT** (1 [OPEN]) ·
+**[sol] REJECT** (3 [OPEN]). All four blind-solved Ex17–22 to spec (Zoe/650; 1050/720; 3/900.0; place 3;
+fit 2/750; tip 3/1025/275); closure clean (list loops; `len`/`max`/`min`/`.append()`/`.sort()`; no
+`sum`/`sorted`/`.split()`/`input`; min seeded from first item); the 16-exercise renumber verified aligned
+across both notebooks + markers (Ex10–16) + design §3 + ledger + u04/u06 teacher-notes. Findings:
+
+- `[FIXED]` **[glm]+[sol] [OPEN]** — stale cross-ref `unit-02-number-detective/teacher-notes.md:35`
+  "unit-07 Exercise 12" (sentinel-loop) → **Exercise 13**. (My earlier sweep used the "unit 07" spelling
+  and missed the "unit-07" hyphen form; glm's broader grep caught it. Confirmed no other hyphen-form
+  stale refs remain for u04/u05/u07.)
+- `[FIXED]` **[sol] [OPEN]** — Challenge 1 solution asserted `scores[:3] == [...]` — **list slicing**,
+  untaught in u07 (`list-slice` is unregistered → undetected by concept-scan). Pre-existing on `main`
+  (only in the assert; the solution logic already uses `scores[0/1/2]`); replaced with three list-index
+  asserts. Closure fix folded into the slice.
+- `[FIXED]` **[sol] [OPEN] + [fable] N3** — Ex19's required zero-passer branch was unverified; added a
+  second guard-exercising assert (impossible pass mark → average 0).
+- `[FIXED]` **[fable] N2** — Ex17 statement now says to seed `rookie_name`/`rookie_score` from the first
+  item (never 0), plus a Common-mistakes bullet on seeding minima from the first item (Ex15/17/18).
+- `[FIXED]` **[sol] nit 4** — Ex21/Ex22 worked-example variable names (`total_used`, `tipping_total`)
+  drifted from the solutions' `fit_total`/`tip_total`; reworded to state values, no prescribed names.
+- `[WONTFIX]` **[fable] N1** (lesson Spotlight order/pointer) — the closing-section order matches the
+  exercise order (Ex15 find-extreme, Ex16 filter) and teacher-notes route the in-class timing; and
+  **[glm] nits** (design §7 v7-era "u07→16" projection, superseded by the ledger's 22; defensive guards).
+
+All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes.
+
+**Round 2** — [self] APPROVE (all [OPEN]s + substantive nits [FIXED]); [fable] round-1 APPROVE-WITH-NITS
+stands (folded); [glm] + [sol] re-dispatched on the fixes.
+
 ## Post-Execution Report
 
 ### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling) — DONE
@@ -500,7 +531,24 @@ open blockers. Cleared to PR + merge.
 - **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 54→71
   cells (1.31×, < 2×).
 
-_(Phases E–I + Phase V report appended as each slice lands.)_
+### Phase E — u07 high-score-hall — DONE (pending [glm]+[sol] round-2 confirm + PR)
+
+- **Relocation + renumber (16 exercises):** the seven pattern-tagged exercises relocated into a closing
+  `## Algorithm Extension` H2 section as Ex10–16 (spiral order, markers adjacent); the nine non-algo
+  exercises renumbered to Ex1–9; the In-Class-Pattern-Practice divider dropped, More-Practice divider
+  reworded. Lesson gathered its find-extreme + filter Spotlights under a closing `## Algorithm Extension`.
+- **New drills (unmarked, Ex17–22):** rookie-by-name (argmin), best+worst one-pass, average-of-passers
+  (zero guard), "what place would I be?", and the matrix pair on the waiting list [300,450,275,600] ÷
+  1000 (fit 2/750 vs tip 3/1025/275). All list loops; no `sum`/`sorted`/`input`; minima seeded from the
+  first item.
+- **Cross-refs (renumber):** u04/u06/u02 teacher-notes, design §3 catalog, and ledger rows all updated
+  to the new numbering (running-total u07 Ex10, count Ex11, transform-each Ex12, sentinel Ex13;
+  find-extreme/filter/linear-search unchanged at 15/16/14). teacher-notes reframed (in-class core Ex1–6,
+  More-Practice Ex7–9, Algorithm Extension Ex10–22 enrichment). ledger resulting-core 16 → 22.
+- **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 48→60
+  cells (1.25×, < 2×). A pre-existing list-slice closure issue in Challenge 1's assert was fixed here.
+
+_(Phases F–I + Phase V report appended as each slice lands.)_
 
 ---
 

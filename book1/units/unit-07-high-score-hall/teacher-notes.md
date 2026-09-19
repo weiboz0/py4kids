@@ -74,6 +74,8 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   bottom no matter how big it is — `.append()` always adds to the END.
 - Updating `best_score` but forgetting `best_name`, so the winning number and player no longer
   belong together. In Exercise 15, update both from the same position.
+- Seeding a minimum (or maximum) at `0` in the scan drills — `rookie_score = 0` makes 0 always
+  "win" and returns the wrong player. Seed from the FIRST score/name instead (Exercises 15, 17, 18).
 - Mixing champion names into the score list. Exercise 12 keeps a cleaned name list separate so
   every list has one clear job.
 - Appending every score instead of only scores that pass the threshold. In Exercise 16, the
