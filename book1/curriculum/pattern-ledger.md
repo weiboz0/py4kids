@@ -77,6 +77,19 @@ Rule: `if-statement`, `elif-else`, `comparison`, `while-loop`, `break-statement`
 average-of-passers (zero guard), "what place would I be?", and the matrix pair on the waiting list
 [300,450,275,600] ÷ 1000 (fit 2/750 vs tip 3/1025/275); the 7 pattern exercises relocated into the
 `## Algorithm Extension` and renumbered Ex10–16; no new `practices` adds.
+**u08 +5 (Ex17–21)** — dict/list drills (More-Practice): total-of-tally (unmarked sum — §7 keeps u08
+running-total-free), rarest-word argmin, known-vs-unknown two-counter, and the word-length matrix pair
+on owl/dragon/cat/wizard/sun ÷ 12 (exact-hit 3/12 vs tip 4/18/"wizard"); 5 pattern exercises relocated
+Ex12–16. **u09 +7 (Ex17–23)** — save-data drills on inline lists (self-contained): count boss-saves,
+count-average, lowest-by-scan argmin, position search, first-≥-target search, and the matrix pair on
+[300,450,725,1350] ÷ 1000 (fit 2/750 vs tip 3/1475/725); 5 pattern exercises relocated (transform-each
+Ex3→Ex12; running-total/linear-search/find-extreme/filter kept 13–16); General-Rule add `range-function`.
+**u10 +9 (Ex16–24)** — object-loop drills (self-contained, own `class Pet`): count hungry, team-hunger
+sum, find-by-name search, roster map, hungriest/least (max & argmin), mood tally-by-key,
+feed-every-hungry filter-action, and the DOWNWARD matrix pair (Buddy hunger 8, snacks 2/4/3/5 →
+check-before-feed 2/2 vs feed-then-check −1/3); header-only relocation (Ex13–15 kept); General-Rule add
+`break-statement`. **u02 (relocation-only, stays lean)** — sentinel-loop home Ex3→Ex8 in a lean
+`## Algorithm Extension`; no new drills; project-01 M1 sentinel Spotlight framed as extension prose.
 
 ## Invariants proven
 
