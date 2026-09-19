@@ -327,6 +327,26 @@ Cleared to implement (Phase A → Phase B u04 + Phase C u06, both 048-ready → 
 
 _(4-way gate — pre-PR after implementation, per PR. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`.)_
 
+### Phase B — u04 (running-total + count-by-condition ladders) — CONSENSUS: all four APPROVE ✅
+
+All three externals independently executed the 6 rungs — running-total 5/8/16, count-by-condition 1/1/2
+— confirmed one-increment, closure-clean (while-only; `accumulator` in u04's union; no
+`for`/`range`/`list`/`len`/`sum`/`.split`/`input`), markers unchanged/in-prose, manifest+coverage-map
+byte-unchanged, and the L1/L2/L3 form. [glm] ran all 12 book1 checks PASS. [fable] + [sol] accepted the
+running-total PIT bundling (its `while`+`if/elif` scaffold was already taught in the same lesson's
+SUDDEN DEATH ladder).
+
+- **[self] APPROVE** — ci-local ALL GREEN, exit 0.
+- **[fable] APPROVE** — zero findings.
+- **[sol] APPROVE** — zero findings.
+- **[glm] APPROVE WITH NITS** — one Should-Fix `[FIXED]`: u04 teacher-notes line 21 still said "Read the
+  two Pattern Spotlights ... here" though each Spotlight now carries a 6-cell enrichment ladder →
+  reworded to "NAME the two patterns from their Spotlights (one-line hook each) in-class; the worked
+  ladders that follow are enrichment (time-permitting / homework), 60–90 min budget unchanged" (design
+  v9 in-class routing).
+
+**Gate CLOSED — 4-way consensus, no open blockers.** Cleared to merge Phase B.
+
 ## Post-Execution Report
 
 _(appended per slice as it lands.)_
