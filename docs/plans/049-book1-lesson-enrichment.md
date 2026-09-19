@@ -94,8 +94,9 @@ code-rung + `**Notice:**` + put-it-together form), `tools/patterns.py`/`tools/no
     `best = 0`); no `max`/`min`/`sorted`.
   - **u02** — `while`/`comparison`/`random-module` only. CRITICAL: **`accumulator` (`x = x + 1`) is
     NOT in u02's union** (first introduced in u04) and `concept-scan` detects it on any self-referential
-    reassignment, so the early rungs must NOT step a counter — they teach the sentinel *condition* with
-    `comparison`/`boolean` only (e.g. `guess != secret` evaluating True, then False when they match). The
+    reassignment, so no executed rung may STEP a counter — the executable rungs teach the sentinel
+    *condition* with `comparison` (True then False when the guess matches) plus one deterministic `while`
+    rung that ends the loop with a plain `guess = secret` assignment (NOT `accumulator`). The
     interactive guessing loop is the **`no-exec` put-it-together** (matching the lesson's existing
     interactive PIT convention — u04 cells 20/40 are `no-exec`): `while guess != secret: guess =
     int(input(...))` is closure-clean (`input` in u02's `requires`, no `accumulator`, `while`/`comparison`
@@ -287,6 +288,26 @@ folded on this HEAD:
 
 Re-executed: linear-search R3 → `1`, R4 → `1`; u02 R3 → `7`. Round 4 re-dispatched to all three.
 
+### Round 4 (HEAD 2af052c) — [glm]/[fable] APPROVE WITH NITS · [sol] REJECT (1 [OPEN])
+
+[glm] APPROVE WITH NITS (N-A..N-D confirmed folded, `detect()` clean, no regression; N-E cosmetic — no
+change). [fable] APPROVE WITH NITS (executed every snippet; verified u02 R3 closure via the detector;
+f4-N1/f4-N2 cosmetic). [sol] REJECT on ONE [OPEN]: linear-search R3 still bundled the position counter +
+a new conditional (not "one new line"). Folded on this HEAD:
+
+- `[FIXED]` **[sol] OPEN (linear-search one-increment)** — fully decomposed to 5 one-idea rungs:
+  R1 `in`-test → R2 loop the test → **R3 add ONLY the `position` counter** (prints `0`/`1`/`2`, no
+  conditional) → **R4 add ONLY recording the match** in a `found = -1` var via `if` (→ `1`) → **R5 add
+  ONLY `break`** (→ `1`) → PIT (`myth` → `-1`). Re-executed: R3 `0/1/2`, R4 `1`, R5 `1`, PIT `-1`.
+- `[FIXED]` **convention wording (sol's literalism)** — "adds exactly one new line" → "adds exactly ONE
+  NEW IDEA (one concept; usually one line, occasionally two inseparable ones — a counter's init+increment,
+  or recording a match via an `if`)", matching the plans 031–035 precedent [glm]/[fable] verified.
+- `[FIXED]` **[fable] f4-N1** — the stale u02 "condition with `comparison` only" wording (Global trap +
+  Appendix preamble) now names the executable `while` rung R3 (`guess = secret`, no `accumulator`).
+- **[glm] N-E / [fable] f4-N2** — cosmetic (`print` placement) — WONTFIX; the split resolves the substance.
+
+Round 5 re-dispatched to all three (linear-search is now 5 rungs).
+
 ## Content Review
 
 _(4-way gate — pre-PR after implementation, per PR. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`.)_
@@ -307,11 +328,14 @@ existing interactive-PIT convention (u04 cells 20/40 are `no-exec`). Rung counts
 (plan 031); these are the authoring targets — the content gate confirms embodiment and may add a rung
 where a step is too big. Expected outputs are exact. **Rung self-containedness (plans 031–035
 convention):** each rung is a COMPLETE runnable cell — it RESTATES the prior rung's lines and adds exactly
-one new line; the shorthand below (e.g. R2 "add a second score → 8") means "the R1 code plus that one
-line," NOT a continuation cell that depends on R1's leftover state. The "→ output" shown is the full
-rung's own output. **Content-gate flag:** the heaviest single step is the u04 running-total
+ONE NEW IDEA (one concept per rung; usually one line, occasionally two that are inseparable — a counter's
+`= 0` init plus its `+ 1` increment, or recording a match in a `found` variable via an `if`). The
+shorthand below (e.g. R2 "add a second score → 8") means "the prior rung's code plus that one idea," NOT
+a continuation cell depending on the prior rung's leftover state. The "→ output" shown is the full rung's
+own output. **Content-gate flag:** the heaviest single step is the u04 running-total
 put-it-together (introduces `while` + round counter + `if/elif` dispatch at once) — the gate should split
-it into an extra rung if it reads as too big for one increment. (linear-search is now split R1→R2→R3→R4
+it into an extra rung if it reads as too big for one increment. (linear-search is now split
+R1→R2→R3→R4→R5, one idea each — test → loop → counter → record-match → break —
 so no single rung bundles counter + conditional + `break`.)
 
 ### u04 — running-total (`while`-only, no list)
@@ -338,21 +362,21 @@ so no single rung bundles counter + conditional + `break`.)
 - **Put-it-together** `word = "hi"` / `result = ""` / `for ch in word: result = result + ch.upper()` →
   `HI`. *Notice:* the loop applies the same transform to every character.
 
-### u06 — linear-search (`for` + `break` + `in`, manual `position` counter; no `len`; 4 rungs — harder pattern, one idea each)
+### u06 — linear-search (`for` + `break` + `in`, manual `position` counter; no `len`; 5 rungs — the hardest pattern, ONE idea per rung)
 - **R1** `print("a" in "aeiou")` → `True`. *Notice:* `in` tests ONE character against the vowels.
-- **R2** *(walk every character, still no stop)* `word = "cat"` / `for ch in word: print(ch in "aeiou")`
-  → `False` / `True` / `False`. *Notice:* run the same `in` test on each character in turn — 'a' is the
-  vowel.
-- **R3** *(add ONLY the position counter — still no stop)* `word = "cat"` / `position = 0` / `for ch in
-  word:` … `if ch in "aeiou": print(position)` … `position = position + 1` → prints `1`. *Notice:* track
-  WHERE we are with a `position` counter stepped once per character; it prints the index of the match
-  (`accumulator` is fine — introduced u04 ≤ u06). The loop still visits every character.
-- **R4** *(add ONLY early-stop)* same scan, now `if ch in "aeiou": break` before `position = position +
-  1`, then `print(position)` → `1`. *Notice:* one new idea — `break` STOPS at the first vowel instead of
-  walking the rest; `position` holds its index.
-- **Put-it-together** scan `word = "myth"` with a `found = -1` stand-in (no `None`), `break` on a vowel →
-  `-1`. *Notice:* "myth" has no vowel, so the loop falls through and the `-1` stand-in reports "not found"
-  — a search returns early on a hit or ends with the not-found stand-in.
+- **R2** *(new idea: the loop)* `word = "cat"` / `for ch in word: print(ch in "aeiou")` → `False` /
+  `True` / `False`. *Notice:* run the same `in` test on each character in turn — 'a' is the vowel.
+- **R3** *(new idea: a position counter — no conditional, no stop)* `word = "cat"` / `position = 0` /
+  `for ch in word: print(position)` … `position = position + 1` → `0` / `1` / `2`. *Notice:* a `position`
+  counter, stepped once per character, tracks WHERE we are (`accumulator` is fine — introduced u04 ≤ u06).
+- **R4** *(new idea: record the matching position)* add `found = -1` and, in the loop, `if ch in
+  "aeiou": found = position`; after the loop `print(found)` → `1`. *Notice:* instead of printing every
+  step, remember the index of the vowel in `found` (a `-1` stand-in for "none yet", no `None`).
+- **R5** *(new idea: stop early — exactly one added line)* add `break` right after `found = position` →
+  `1`. *Notice:* `break` STOPS at the FIRST vowel instead of scanning the rest; same index, less work.
+- **Put-it-together** scan `word = "myth"` (no vowel) → `found` stays `-1` → `-1`. *Notice:* the loop
+  falls through and the `-1` stand-in reports "not found" — a search returns early on a hit or ends with
+  the not-found stand-in.
 
 ### u07 — find-extreme = "Champion by name" (argmax retaining the WINNER'S NAME; `list`, `range(len())`, comparison; seed from the FIRST item)
 _The home embodiment (per the ledger) tracks `best_name` AND `best_score` together — NOT just a number —
@@ -381,9 +405,10 @@ so the pattern answers "who is the champion?", not merely "what is the top score
 
 ### u02 — sentinel-loop (`while`/`comparison`; early rungs teach the CONDITION — NO `accumulator`; interactive put-it-together is `no-exec`)
 _u02 has no `accumulator` (first introduced u04) and no counter may be stepped in an executed rung, so the
-executable rungs teach the sentinel **condition** with `comparison` only; the real input-driven loop is
-the `no-exec` put-it-together, matching the lesson's interactive-PIT convention (u04 cells 20/40 are
-`no-exec`)._
+executable rungs teach the sentinel **condition** with `comparison` (R1/R2) and end the loop with a plain
+`guess = secret` assignment in one executable `while` rung (R3, no `accumulator`); the real input-driven
+loop is the `no-exec` put-it-together, matching the lesson's interactive-PIT convention (u04 cells 20/40
+are `no-exec`)._
 - **R1** `guess = 3` / `secret = 7` / `print(guess != secret)` → `True`. *Notice:* while the guess does
   NOT equal the secret, the condition is True — the loop keeps going.
 - **R2** `guess = 7` / `secret = 7` / `print(guess != secret)` → `False`. *Notice:* the moment the guess
