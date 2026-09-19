@@ -367,8 +367,16 @@ all introduced ≤ u05) synced in map+manifest, `concept-scan` clean; unmarked c
 
 All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes.
 
-**Round 2** — [self] APPROVE (all [OPEN]s + substantive nits [FIXED]); [glm]/[fable] round-1
-APPROVE-WITH-NITS stand (folded); [sol] re-dispatched on the fixes.
+**Round 2** — [self] APPROVE; [glm]/[fable] round-1 APPROVE-WITH-NITS stand (folded); **[sol] REJECT** —
+original [OPEN] confirmed resolved (all stale v7/Ex7 refs gone; Ex12–20 blind-solve + all checks pass),
+but flagged ONE regression the round-1 fix introduced:
+
+- `[FIXED]` **[sol] [OPEN] (round 2)** — u05 teacher-notes twice called Exercise 11 "the running-total
+  **home**", contradicting the source-of-record (running-total's home is **u04**; u05 is a **reuse**).
+  Reworded both (teacher-notes.md:53 and the Algorithm-Extension list) to "the running-total pattern's
+  reuse rep (home is Unit 04)". Docs-only; no CI impact.
+
+**Round 3** — [self] APPROVE (regression fixed); [glm]/[fable] stand; [sol] re-dispatched.
 
 ## Post-Execution Report
 

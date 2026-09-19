@@ -50,7 +50,7 @@ as the "put it together" application, and the `NameError` scope bug is `no-exec`
 
 Practices reappearance: range-function + loop-counter drive the L1 stamp loop; arithmetic
 + float-type live in L2's `360/n`; nested-loops + turtle-drawing are L3's stamp-grid pattern;
-a short **accumulator** beat (a running `total` of card-border lengths, returned) is the running-total home, now gathered in the closing Algorithm Extension (Exercise 11).
+a short **accumulator** beat (a running `total` of card-border lengths, returned) is the running-total pattern's **reuse rep** here (its home is Unit 04), now gathered in the closing Algorithm Extension (Exercise 11).
 All reappear in project 01.
 
 Exercise depth (plan 036): the core set drives each concept to real authoring depth — students
@@ -75,7 +75,8 @@ enrichment block (design 002 v8), routed as time-permitting / homework / differe
 the core function work. Every drill is a small **function** that loops with `for i in range(...)` (or a
 `while` loop for the sentinel) — no lists, no `len`/`sum`, data from `range`/formulae.
 
-- **Ex 11** the running-total home — an accumulator built and returned inside a function.
+- **Ex 11** the running-total **reuse** (the pattern's home is Unit 04) — an accumulator built and
+  returned inside a function.
 - **Ex 12** count multiples of 3, **Ex 13** sum the evens, **Ex 14** triangular sum, **Ex 15** average
   (returns a float).
 - **Ex 16 & Ex 17** are the **same sizes (10, 15, 20, 25, 30), opposite-boundary** pair: Ex 16 *checks
