@@ -452,8 +452,11 @@ across both notebooks + markers (Ex10–16) + design §3 + ledger + u04/u06 teac
 
 All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes.
 
-**Round 2** — [self] APPROVE (all [OPEN]s + substantive nits [FIXED]); [fable] round-1 APPROVE-WITH-NITS
-stands (folded); [glm] + [sol] re-dispatched on the fixes.
+**Round 2 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[glm] APPROVE** (round 2: [OPEN] resolved, full
+cross-ref sweep clean, no regressions) · **[sol] APPROVE** (round 2: all 3 [OPEN]s confirmed fixed — u02
+ref = Ex13, no list-slice remains, Ex19 zero-guard asserted; Ex17–22 re-derived; numbering/markers/closure
+all pass) · [fable] APPROVE-WITH-NITS (folded). All four APPROVE / APPROVE-WITH-NITS, no open blockers.
+Cleared to PR + merge.
 
 ## Post-Execution Report
 
