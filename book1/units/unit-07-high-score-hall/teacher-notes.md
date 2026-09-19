@@ -11,7 +11,9 @@ Success looks like: every student builds a scores list, sorts it top-first, and 
 numbered "Place N: score" hall of fame.
 Exercises 1–6 form the in-class path; the labelled More Practice Exercises 7–9 are homework after
 Lesson 3; the **Algorithm Extension** (Exercises 10–22 — the seven pattern reps plus six loop drills) is
-optional enrichment, with only the find-extreme and filter naming Spotlights read in class; and the
+optional enrichment, with only the find-extreme and filter naming Spotlights read in class (each Spotlight
+is now followed by a short worked-example ladder — code rungs + Notices → a put-it-together — that is part
+of the same time-permitting/homework enrichment, not required in-class); and the
 Challenges remain optional stretch work.
 
 ## Pacing
