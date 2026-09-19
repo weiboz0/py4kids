@@ -181,6 +181,18 @@ Re-dispatching [sol] round 3 (design §6 changed).
    add a one-line §6 addendum so cp02–cp04/projects don't re-derive it ("fragment-completion questions: the
    twin proves the graded fragment; the piped-run real-form proves termination + result line"). → will fold.
 
+### Round 3 (2026-09-19) — [sol] re-review after design §6(d) (7991d0b)
+#### [self] round 3 (2026-09-19)
+- **Verdict**: APPROVE — design 003 §6(d) makes Q5's condition-completion oracle design-sanctioned; plan now
+  fully consistent with design 003 (§2 v3 placement, §3 v2 no-growth, §6d oracle). [glm]/[fable] nits (§9 order,
+  §6 clause) folded. No open blocker.
+#### [sol] round 3 (2026-09-19)
+- **Verdict**: APPROVE — §6(d) design-sanctions Q5's two-part oracle, narrowly limited to fragment-grading;
+  consistent with §2 v3 + §3 v2. No blocker.
+
+### PLAN-REVIEW GATE CLOSED (2026-09-19) — 4-way consensus: [self]/[sol] APPROVE, [glm]/[fable] APPROVE WITH
+NITS (all folded). Produced design 003 §2 v3 (checkpoint/brief placement) + §6(d) (fragment-completion oracle).
+
 ## Content Review
 _(pending — 4-way.)_
 
