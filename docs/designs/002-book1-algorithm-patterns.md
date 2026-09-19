@@ -1,6 +1,6 @@
 # Design 002 — Book 1 Algorithm-Pattern Thread
 
-**Status:** APPROVED — v8. v6 2-way design review CLOSED ([sol] APPROVE + [fable] APPROVE, 2026-09-18); **v7 (2026-09-18): user-directed relaxation — the ≤16 per-unit exercise-count cap is REMOVED** (no max exercise ceiling). This is a constraint-lifting edit only: no §3 locus is added, dropped, or re-classified, and the honest per-unit counts below are retained as *informative* pacing data, not a cap — so it does not reopen the design review. The §2 *conceptual* depth ceiling (no big-O/sorting/recursion) is unaffected. **v8 (2026-09-18, plan 048):** the algorithm track becomes the explicit end-of-notebook `## Algorithm Extension` enrichment section and "home in-class" is relaxed to enrichment routing (see §6/§13); still no §3 locus added/dropped/re-classified. Ready for the plan lifecycle.
+**Status:** APPROVED — v9. v6 2-way design review CLOSED ([sol] APPROVE + [fable] APPROVE, 2026-09-18); **v7 (2026-09-18): user-directed relaxation — the ≤16 per-unit exercise-count cap is REMOVED** (no max exercise ceiling). This is a constraint-lifting edit only: no §3 locus is added, dropped, or re-classified, and the honest per-unit counts below are retained as *informative* pacing data, not a cap — so it does not reopen the design review. The §2 *conceptual* depth ceiling (no big-O/sorting/recursion) is unaffected. **v8 (2026-09-18, plan 048):** the algorithm track becomes the explicit end-of-notebook `## Algorithm Extension` enrichment section and "home in-class" is relaxed to enrichment routing (see §6/§13); still no §3 locus added/dropped/re-classified. **v9 (2026-09-18, plan 049): the HOME Spotlight in the lesson `## Algorithm Extension` must teach its pattern with a graduated worked-example ladder (code rungs + `**Notice:**` + a put-it-together), consistent with the rest of the lesson — the reappearance Spotlight stays a retrieval one-liner.** v9 adds a mandatory student-facing requirement but adds/drops/re-classifies no §3 locus (and no `introduces`/`requires` change), so it does not reopen the design review beyond the plan-049 gate; the target end-state is reached unit-by-unit as home units are enriched. Ready for the plan lifecycle.
 **Scope:** Book 1 only. Book 2 inherits the technique ids via `dependency_baseline`; it grows its own.
 
 ## 0. Design ↔ plan boundary
@@ -117,10 +117,13 @@ nbconvert/pandoc, hidden in JupyterLab; hygiene/PDF unaffected.
   stay immediately before their exercise / inside their Spotlight so `pattern-marker`/`technique-spiral`
   are unaffected. The algo exercises are simply the highest-numbered core exercises. This is the
   student-facing home the design points to; it is reached unit-by-unit as each migration slice merges.
-- **Spotlight cell** (recurring markdown + marker): home = a short lesson cell + the authoring exercise
-  (names the pattern, its hook, "stop early" where relevant); reappearance = a one-liner asking the
-  student to *identify* the pattern ("Which pattern? Which variable is the 'so-far'?") — retrieval
-  practice.
+- **Spotlight cell** (recurring markdown + marker): home = a short lesson cell (names the pattern, its
+  hook, "stop early" where relevant) **followed by a graduated worked-example ladder (v9): 2+ executable
+  `code` rungs, each with a `**Notice:**`, adding one idea at a time and ending in a "put it together"
+  cell — the same teaching form as the rest of the lesson (L1/L2/L3, plans 031–035)** — plus the
+  authoring exercise. The pattern-*naming* prose stays read in-class; the ladder is teacher-routed
+  enrichment. reappearance = a one-liner asking the student to *identify* the pattern ("Which pattern?
+  Which variable is the 'so-far'?") — retrieval practice, NO ladder.
 - **Variation axes** — each reappearance differs from every earlier one on ≥1 axis, recorded in its
   Spotlight: data type (numbers→strings→lists→dicts→file lines→objects), packaging
   (inline→function→method), twist (empty / tie / early-stop).
@@ -240,3 +243,13 @@ prerequisite surface once these ids ship (not now). No contradiction with plan 0
   note stands (u08's sum rep is unmarked). Constraint-restructuring only → no design re-review beyond the
   plan-048 gate. The target end-state is reached unit-by-unit as Phases B–I merge; v8 is not "violated"
   by a not-yet-migrated unit.
+- **v9 (2026-09-18):** user-directed enrichment (plan 049) — the **HOME** Spotlight in the lesson
+  `## Algorithm Extension` must teach its pattern with a **graduated worked-example ladder** (executable
+  `code` rungs + `**Notice:**` each + a put-it-together), the same form as L1/L2/L3 (plans 031–035),
+  because plan 048 shipped the home Spotlights as prose-only, inconsistent with the rest of Book 1. §6
+  "Spotlight cell" updated. The pattern-naming prose stays in-class; the ladder is teacher-routed
+  enrichment (60–90 min pacing unchanged). Reappearance Spotlights stay retrieval one-liners (NO ladder);
+  reuse units (u05/u08/u09/u10) + project-01 unchanged; u01/u03 exempt. Adds a mandatory student-facing
+  requirement but **no §3 locus is added, dropped, or re-classified** and no `introduces`/`requires`
+  change — so no design re-review beyond the plan-049 gate. Reached unit-by-unit as each home unit's
+  slice merges (sequenced behind the corresponding plan-048 slice); homes = u04, u06, u07, u02.
