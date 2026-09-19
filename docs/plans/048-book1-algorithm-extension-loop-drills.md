@@ -521,7 +521,17 @@ PR + merge.
 All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes; Ex14 verified
 order-independent.
 
-**Round 2** — [self] APPROVE (all [OPEN]s + substantive nits [FIXED]); [glm]/[fable]/[sol] re-dispatched.
+**Round 2** — [self] APPROVE · **[fable] APPROVE** · **[glm] APPROVE-WITH-NITS** (all 3 round-1 [OPEN]s
+confirmed resolved) · **[sol] REJECT** — sole remaining [OPEN] was the teacher-notes:56–57 wording that
+attributed the order-independent re-save to the *student exercises* rather than the *solutions*
+(both glm's nit and sol's [OPEN]).
+
+- `[FIXED]` teacher-notes:56–57 reworded: "In the **solutions**, each relocated file-reading exercise
+  re-saves the file it reads first … so the solutions notebook validates cleanly regardless of order. The
+  student exercises notebook is designed to be run top-to-bottom (as the whole stateful unit is) …".
+
+**Round 3** — [self] APPROVE; [glm] APPROVE-WITH-NITS + [fable] APPROVE stand; [sol] re-dispatched on the
+reworded claim.
 
 ## Post-Execution Report
 

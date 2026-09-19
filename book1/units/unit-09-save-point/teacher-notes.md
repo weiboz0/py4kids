@@ -53,8 +53,10 @@ running-total (Ex 13, sum the saves), linear-search (Ex 14, find a name and stop
 are named in class; every exercise here (Ex 12–23) is routed as time-permitting / homework /
 differentiation.
 
-The five relocated file-reading exercises each **re-save the file they read first** (savegame.txt, or
-settings.txt for the linear-search drill) so they run independently of exercise order (the notebook is otherwise stateful). The seven new drills work on an
+In the **solutions**, each relocated file-reading exercise re-saves the file it reads first (savegame.txt,
+or settings.txt for the linear-search drill), so the solutions notebook validates cleanly regardless of
+order. The student exercises notebook is designed to be run top-to-bottom (as the whole stateful unit is),
+where the earlier save cells establish each file before the extension reads it. The seven new drills work on an
 **inline list** of already-loaded scores (the file-reading skill is exercised by the relocated reps and
 the core), keeping each drill self-contained and single-pass:
 
