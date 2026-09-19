@@ -6,9 +6,8 @@ the plan-048 unit slices draw from; each slice finalizes its unit's exact list (
 outputs) at slice start and records it in the PR.
 
 **Rules for every drill here (from plan 048 Global Constraints):**
-- Single-pass, linear. Lives in the unit's `# Algorithm Extension` … wait — the section header is
-  `## Algorithm Extension` (H2, matches `## Challenge`); algo exercises are core `## Exercise N` (the
-  highest-numbered), before the unit's Challenge cells.
+- Single-pass, linear. Lives in the unit's `## Algorithm Extension` section (H2, matches `## Challenge`);
+  algo exercises are core `## Exercise N` (the highest-numbered), before the unit's Challenge cells.
 - **UNMARKED** — these are extra-practice reps, NOT new tagged pattern loci (no `<!-- pattern: id -->`).
   Their Spotlight/prose may still ask "which pattern is this?" but they add no marker and no
   `practices` technique tag. (The 7 patterns already meet their ≥3 spiral from plan 047.)

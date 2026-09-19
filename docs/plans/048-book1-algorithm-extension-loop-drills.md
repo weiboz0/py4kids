@@ -9,7 +9,7 @@ focused on the loop-light units (u04, u05, u06, u09, u10). The algorithm track b
 clearly-labelled **enrichment extension**, not interleaved core.
 
 **Architecture:**
-- **Student-facing structure (new):** every unit's `exercises.ipynb` ends with a `# Algorithm Extension`
+- **Student-facing structure (new):** every unit's `exercises.ipynb` ends with a `## Algorithm Extension`
   header; all pattern-tagged exercises (relocated from their interleaved positions) plus the new drills
   live there, as the last `## Exercise N` before the trailing `## Challenge` (stretch) cells. Numbering
   stays `## Exercise N` (so `structure-check`/`solutions_structure` heading-pairing and `stretch-check`
@@ -183,7 +183,7 @@ pre-merge guard. **Volume budget (plan-037 disposition, per PR):** any slice exc
 PDF pages / >25% wall-time (or a cell >120 s) requires an EXPLICIT content-gate sign-off recorded in the
 PR (not a silent "recorded") — u05 (11→~20 core) and u04 will very likely trip >2× cells, so a sign-off
 is pre-expected there. **Proficiency/enrichment
-(reviewer-enforced):** every unit has a coherent `# Algorithm Extension` section; each of the 7 patterns
+(reviewer-enforced):** every unit has a coherent `## Algorithm Extension` section; each of the 7 patterns
 still has its home + ≥3 core non-checkpoint reappearances; the new drills give each loop job (count / sum
 / search / find-best / map / filter / sentinel + the until-threshold matrix) multiple varied reps across
 the light units. Book 2 stays green throughout.
@@ -211,9 +211,9 @@ technique + stretch-preservation + numbering discipline are all carried from the
 unit so `main` stays green. NITS/risks for the external reviewers to pressure-test:
 1. **Relocation CI-safety (biggest risk):** moving interleaved 047 exercises to the end + renumbering must
    keep `structure-check`/`solutions_structure` heading-pairing, `pattern-marker` adjacency, `stretch`
-   counts, and `concept-scan` all green. Phase A's probe must prove a `# Algorithm Extension` header cell
+   counts, and `concept-scan` all green. Phase A's probe must prove a `## Algorithm Extension` header cell
    is inert to every check BEFORE any unit slice; if not, Phase A ships the tooling tolerance + fixtures.
-2. **Marker adjacency after a section header:** confirm a `# Algorithm Extension` markdown cell sitting
+2. **Marker adjacency after a section header:** confirm a `## Algorithm Extension` markdown cell sitting
    between the last core exercise and the first algo marker does not break the "marker immediately precedes
    the `## Exercise N` heading" rule (the marker still precedes its heading; the section header precedes
    the marker — should be fine, but verify in Phase A).
@@ -250,7 +250,26 @@ Verdict: APPROVE WITH NITS (all addressable at implementation time). Awaiting [s
   Phase V restates the explicit volume sign-off (u04/u05 pre-expected to trip >2× cells); lesson-side
   Spotlight for practiced-only patterns carries NO marker (pattern-marker only expects it for introduces).
 
-### Round 2 — [self] → APPROVE. [glm]/[sol] re-dispatched on v2 (pending); [fable] round-1 AWN nits all folded.
+### Round 2 (2026-09-18) — verdicts on v2 (7658c3d)
+
+- **[glm] → APPROVE WITH NITS** — B1 substantively resolved (unmarked reps, §7 u08 note preserved); all
+  round-1 nits addressed; only two stale-wording nits (Appendix "new tagged loci"; a couple of `#`
+  Algorithm-Extension headers). No blockers.
+- **[sol] → REJECT** — but ONLY on the same stale wording (Appendix "new tagged loci" line + remaining
+  single-hash `# Algorithm Extension` at plan 12/186/214/216); B2/B3 confirmed resolved, all substantive
+  nits addressed, relocation CI-safe + Phase V named re-confirmed. No scope/design blocker.
+
+### v2.1 (2026-09-18) — stale-wording sweep ([glm]/[sol] round-2 nits)
+
+- `[FIXED]` Appendix "u10 object-loops … as new tagged loci" → "as unmarked rep jobs".
+- `[FIXED]` all `` `# Algorithm Extension` `` → `` `## Algorithm Extension` `` (plan lines 12/186/214/216;
+  inventory header rule) — H2 throughout, matching `## Challenge`.
+- `[FIXED]` inventory's leftover self-correcting aside removed. No substantive change; B1/B2/B3 stay
+  resolved. Remaining "tagged loci" strings are the legitimate general-rule text + the "No new tagged
+  loci" assertions.
+
+### Round 3 — [self] → APPROVE. [sol] re-dispatched on v2.1 (pending; all its REJECT items were the
+now-fixed wording). [glm]/[fable] round-2/round-1 APPROVE-WITH-NITS stand (their nits folded).
 
 ## Content Review
 
@@ -284,7 +303,7 @@ as distinct drills), per [fable]'s spec with exact datasets/answers:
 **Other jobs** (both reviewers): MIN/argmin family (u07 rookie-by-name/best+worst/running-max; u08 rarest/
 shortest; u09 lowest-by-scan + init gotcha; u10 hungriest/least-hungry) — the book currently has zero min;
 conditional sum + count-then-average; search returning an index vs a boolean vs "not found"; two-counter
-tallies; numeric map; two-way partition; and u10 object-loops (count/sum/search/map as new tagged loci).
+tallies; numeric map; two-way partition; and u10 object-loops (count/sum/search/map as unmarked rep jobs).
 
 **Lightest units (priority for new volume):** u05 > u10 > u06 > u04; u07/u08/u09 reps route to the
 extension's More-Practice tier (already at 16 core). Full proposal banks: [fable] ~89 items + matrix
