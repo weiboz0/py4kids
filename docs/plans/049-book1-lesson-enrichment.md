@@ -364,6 +364,25 @@ last-vs-first distinction with a multi-vowel witness (`idea`: R4 last=3 vs R5 fi
 
 **Gate CLOSED — 4-way consensus, no open blockers.** Cleared to merge Phase C.
 
+### Phase D — u07 (find-extreme "Champion by name" 4-rung + filter-into-list 3-cell) — CONSENSUS: all four APPROVE ✅
+
+All three externals blind-solved the 7 rungs — find-extreme Ada 3 / Bo 9 / Cy 5 / Bo 9 (retains the
+winner's NAME per design §3 / ledger "Champion by name", not a bare max), filter [9] / [9] / [9,5,7] —
+confirmed one-increment, closure-clean (list/list-append/list-loop/range/len/comparison; NO
+max/min/sorted; `best_name = names[i]` not accumulator), markers byte-unchanged/in-prose,
+manifest+coverage-map byte-unchanged, L1/L2/L3 form.
+
+- **[self] APPROVE** — ci-local ALL GREEN.
+- **[fable] APPROVE** — zero findings (isolated + full-run execution).
+- **[sol] APPROVE** — zero findings.
+- **[glm] APPROVE WITH NITS** — two Nice-to-Have: (1) R3 (the `i`-index bridge) departs from strict
+  restate-prior wording but is verbatim the Appendix's "index that ties name↔score" — `[WONTFIX]` (glm:
+  "no change required"); (2) `[FIXED]` u07 teacher-notes now notes each naming Spotlight is followed by a
+  worked-example ladder that is part of the enrichment (not required in-class).
+
+**Gate CLOSED — 4-way consensus, no open blockers.** Cleared to merge Phase D. (u02 = Phase E, awaits
+048 Phase I.)
+
 ## Post-Execution Report
 
 _(appended per slice as it lands.)_
