@@ -53,7 +53,7 @@ Challenge column = Challenge-*exercise* count (each ≥2 `stretch`-tagged cells 
 |---|---|---|---|---|
 | u02 | 8 | 0 (sentinel home = reuse Ex3) | 8 | 2 (unchanged) |
 | u04 | 10 | +2 (running-total + count homes, `while`-based, no list) +7 (plan-048 unmarked drills, Ex13–19) | 19 | 2 (unchanged) |
-| u05 | 11 | 0 (reuse Ex7) | 11 | 2 (unchanged) |
+| u05 | 11 | 0 (reuse Ex7) +9 (plan-048 unmarked function drills, Ex12–20) | 20 | 2 (unchanged) |
 | u06 | 11 | +2 (count-matches new; linear-search & transform-each homes) | 13 | 2 (unchanged) |
 | u07 | 13 | +3 (find-extreme home, filter home, loop+break) | 16 | 2 (unchanged) |
 | u08 | 14 | +2 (reverse-lookup promote→core Ex15, filter new Ex16) | 16 | 2 − 1 + 1 = 2 |
@@ -66,7 +66,10 @@ drills (no `<!-- pattern: id -->` marker, no new technique `practices` tag, no n
 "resulting core" above grows by each unit's drill count as its slice lands; per-unit caps and datasets
 live in `docs/proposals/048-loop-drill-inventory.md`. Landed so far: **u04 +7 (Ex13–19)** — two-counter
 tally, conditional sum, signed accumulate, opening streak, and the until-threshold matrix pair
-(check-before-add / add-then-check on 4,6,5,7,3 ÷ 12) + a sentinel drill.
+(check-before-add / add-then-check on 4,6,5,7,3 ÷ 12) + a sentinel drill. **u05 +9 (Ex12–20)** — all
+function-packaged: count/sum/triangle/average, the matrix pair (sizes 10..30 ÷ 60), a `while` sentinel
+(`stamps_to_reach`), and two parameterized drills (scanner-derived `practices` added under the General
+Rule: `if-statement`, `elif-else`, `comparison`, `while-loop`, `break-statement` — all introduced ≤ u05).
 
 ## Invariants proven
 
