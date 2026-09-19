@@ -19,15 +19,15 @@ design-003 §7 order. **u07 is slice 1** — the first LIST unit — chosen to e
    ```python block``` in `solutions.ipynb` (input() banned in solutions code cells). Every non-exempt
    fixed-data exercise statement also gains a one-line `**Real version:**` cue (as u04 did); exempt exercises
    carry a one-line note saying why. u07 already has `input` in its concept union → **no metadata change**.
-2. **Realistic data — NO GROWTH for u07 (deliberate).** design 003 §3 targets toy data (`n=3`, 2-element
-   lists). u07's core lesson/exercises already use realistic score values (1200, 1500, …) in ≥4-element lists,
-   and the only genuinely-small lists (`names=["Ada","Bo","Cy"]`, `scores=[3,9,5,7]`) live in the
-   Algorithm-Extension Spotlights + Ex10–22, which are **explicitly framed as "small fixed data" enrichment
-   drills** (lesson 63 / ex 21 / sol 19 headers) with locked worked-example values, asserts, Notices, and
-   teacher-notes numbers. Growing them would fight that framing and force error-prone lockstep rewrites for no
-   gain against the actual "toy data" concern. So **fixed data is unchanged**; the real-input forms carry the
-   "reads real input" requirement. (If a future reviewer wants 6–8-element core lists, that is a separate
-   change with its own drift check.)
+2. **Realistic data — NO GROWTH for u07 (conforms to design 003 §3 v2).** §3 was amended (v2, this plan) so the
+   binding requirement is "data not *toy*"; ≈6–8 elements is the target for lists built fresh, but a unit
+   already using realistic multi-element lists (≥4 real values) need not be grown, and "small fixed data"
+   enrichment drills keep their lists. u07's core lesson/exercises already use realistic score values (1200,
+   1500, …) in ≥4-element lists, and the only genuinely-small lists (`names=["Ada","Bo","Cy"]`,
+   `scores=[3,9,5,7]`) live in the Algorithm-Extension Spotlights + Ex10–22, explicitly framed as "small fixed
+   data" drills (lesson 63 / ex 21 / sol 19). So **fixed data is unchanged** and this satisfies amended §3;
+   the real-input forms carry the "reads real input" requirement. (Growing would force lockstep rewrites of
+   asserts / worked-examples / Notices / teacher-notes for no gain.)
 3. **CP-light names (Light trim) — full u07 inventory.** "Untouched rungs" means data/pedagogy; **renames apply
    unit-wide** (incl. rung cells). u07's names are already clean and often meaningfully **paired**, so the trim
    is genuinely light:
@@ -35,7 +35,7 @@ design-003 §7 order. **u07 is slice 1** — the first LIST unit — chosen to e
    | Old | New | Note |
    |---|---|---|
    | `best_so_far` | `best` | drop verbose suffix (lesson rung 18 + wherever it appears) |
-   | `position` | `i` | generic list-index loop counter (lesson 27/29, sol 6/14, while-index sol 18); `i` is already u07's index elsewhere (lesson 69/71) — makes indices consistent |
+   | `position` | `i` | generic list-index loop counter; `i` is already u07's index elsewhere (lesson 69/71) — makes indices consistent. **Appears in CODE (lesson 27/29, sol 6/14, while-index sol 18) AND markdown: Ex3/Ex7/Ex9 STATEMENT backticks, lesson Notice cell 28, teacher-notes 73–74/78 — rename in all of them.** |
 
    **Kept verbatim** (domain-meaningful or paired — trimming would lose meaning or collide): `place` (a
    *ranking* term passed to `board_line`, not a generic index), `score`/`scores`/`names`/`board`/`kept`, the
@@ -58,9 +58,10 @@ design-003 §7 order. **u07 is slice 1** — the first LIST unit — chosen to e
 
 | Shape | Exercises | Real-form |
 |---|---|---|
-| **read-into-list** | Ex1, Ex2, Ex5, Ex7, Ex9, Ex10, Ex11, Ex12 (names), Ex13, Ex14, Ex16, Ex18, Ex19, Ex20, Ex21, Ex22, Challenge 1, Challenge 2 | `n = int(input("How many scores? "))` + `for i in range(n):` reading one value per pass into the list (two-line append, below), then the unchanged body |
+| **read-into-list** | Ex1, Ex2, Ex5, Ex9, Ex10, Ex11, Ex12 (names), Ex13, Ex14, Ex16, Ex18, Ex19, Ex20, Ex21, Ex22, Challenge 1 | `n = int(input("How many scores? "))` + `for i in range(n):` reading one value per pass into the list (two-line append, below), then the unchanged body |
 | **read-into-parallel-lists** | Ex15 (Champion by name), Ex17 (Rookie by name) | ONE `for i in range(n)` loop reading BOTH per pass: `names.append(input(f"Name {i + 1}: "))` then `scores.append(int(input(f"Score {i + 1}: ")))` — never two loops / `zip` |
-| **single-read** (already interactive, reads ONE value) | Ex4 (add my score), Ex6 (guard one score) | statement is already the real program; real-form mirrors it with one `int(input(...))`, no list prologue |
+| **read-into-list (one of two lists)** | Challenge 2 (merge two boards) | keep the first board FIXED; read `second_scores` with the `n`/`i` prologue, then the unchanged merge — preserves the "one loop to merge" goal |
+| **single-read** (already `no-exec` interactive, reads ONE value) | Ex4 (add my score), Ex6 (guard one score), Ex7 (name + one score, append to fixed board) | statement is already the real program; real-form mirrors it with one/two `input(...)` reads, no list prologue and no `**Real version:**` cue |
 | **exempt** (debug/predict — input would defeat it) | Ex3 (Read an IndexError / predict), Ex8 (Why did `best` become `None`) | NO real-form; statement carries a one-line note ("a trace/debug exercise — fixed data on purpose, no input version") |
 
 Lesson: L1/L2/L3 put-it-togethers get read-into-list `no-exec` forms; the **find-extreme** Algorithm-Extension
@@ -108,7 +109,9 @@ Algorithm-Extension "small fixed data" framing + build-up rungs + all fixed list
   real-form piped output must already hold (no growth to re-derive) — confirm the real-forms reproduce the
   existing twin values, and that no `**Real version:**` cue names a value/variable that changed.
 - AST-level closure scan: no concept outside u07's union introduced (no `sys.stdin`; no new builtin/idiom).
-- Assert NO old name (`best_so_far`, `position` as a bare Name) survives anywhere under the unit dir (AST).
+- Assert NO old name (`best_so_far`, `position`) survives anywhere under the unit dir — **plain-text grep over
+  `.ipynb` (code + markdown) AND `.md`** (AST alone misses statement/Notice/teacher-notes markdown; `position`
+  appears there per the rename row).
 - `scripts/ci-local.sh` ALL GREEN (exec-lessons runs ladders/twins; exec-solutions runs asserted cells;
   concept-scan/prereq/coverage/pattern-marker/technique-spiral stay clean).
 
@@ -116,7 +119,9 @@ Algorithm-Extension "small fixed data" framing + build-up rungs + all fixed list
 - Any Book-1 entry other than u07. **Checkpoint-mini-pilot deferral:** design 003 §7 *SHOULD*-paired the first
   slice with a checkpoint mini-pilot; this plan does u07 alone and the checkpoint follows as plan 053 (author
   scope choice — smaller slices; SHOULD ≠ MUST; the 051 renumbering note already shifted the rollout to 052+).
-- No data growth (see treatment §2); design 003 (no amendment); markers/rungs untouched. Phase B present.
+- No data growth (see treatment §2). **design 003 §3 amended to v2** (this plan) to codify the realistic-data
+  policy so u07's no-growth conforms — that amendment IS in scope; no other design change. Markers/rungs
+  untouched. Phase B present.
 
 ## Plan Review
 
@@ -191,6 +196,49 @@ Algorithm-Extension "small fixed data" framing + build-up rungs + all fixed list
 - → [FIXED] (glm#4): checkpoint-mini-pilot deferral recorded as an author scope choice in Out of scope.
 
 Re-dispatching round 2 (plan materially expanded).
+
+### Round 2 (2026-09-19) — re-review after revision 0dcae2d
+
+#### [self] round 2 (2026-09-19)
+- **Verdict**: APPROVE — rename table + kept-verbatim inventory added; per-exercise SHAPE table covers all
+  22 + 2 (read-into-list / parallel Ex15·Ex17 / single-read Ex4·Ex6 / exempt Ex3·Ex8); NO data growth (core
+  already realistic, drills deliberately small) removes the lockstep/prose cascade; parallel one-loop + two-line
+  append + cite cell 29 + two-regime naming recorded; Phase B drift check retained. No new blocker.
+
+#### [sol] round 2 (2026-09-19)
+- **Verdict**: REJECT
+1. `[OPEN]` Must Fix: "NO GROWTH" contradicts design 003 §3's explicit ≈6–8-element requirement for u07–u10
+   while claiming no design amendment — either conform the exercise data OR amend the governing design.
+   → Response: **amended design 003 §3 → v2** (binding requirement = "not toy"; ≈6–8 is the target for
+   fresh lists; already-realistic units need not grow; drills keep small data). u07's no-growth now CONFORMS
+   to amended §3 (its lists are already realistic ≥4-value; drills protected). `[FIXED]`
+
+#### [glm] round 2 (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — confirms no-growth "an acceptable, well-reasoned deviation"; SHAPE table
+  complete; rename table resolves the ambiguity.
+1. `[OPEN]` Nice: Phase B's no-old-name assert is AST/code-only, but `position` appears in markdown (Ex9
+   statement backticks, teacher-notes 73–74/78) — add a plain-text sweep over the unit dir. → Response:
+   Phase B now greps `.ipynb` (code+markdown) + `.md`; rename row lists the markdown sites. `[FIXED]`
+
+#### [fable] round 2 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — all 9 round-1 findings resolved (Ex3/Ex8 confirmed the only exemptions;
+  no-growth accepted for u07 as a sound §3 reading; rename table, SHAPE table, parallel one-loop, two-line
+  append, cell-29 cite, two-regime rule all present). New nits:
+1. `[OPEN]` Should Fix: Ex7 is already `no-exec` interactive (reads a name + ONE score) → move it to the
+   **single-read** row (not read-into-list); no list prologue / `**Real version:**` cue.
+2. `[OPEN]` Should Fix: `position`→`i` also reaches STATEMENT markdown + teacher-notes (Ex3/Ex7/Ex9 statements,
+   lesson Notice 28, teacher-notes 73–74); add these to the rename scope and make Phase B's "no old name" sweep
+   a plain-text grep over `.ipynb` markdown + `.md` (AST can't see markdown).
+3. `[OPEN]` Nice: Challenge 2 (two lists) — real-form reads `second_scores` with `n`/`i`, keeps the first board
+   fixed (preserves the "one loop to merge" goal).
+4. `[OPEN]` Nice: record one explicit sentence that u07 waives §3's "≈6–8 elements, ties where apt" target by
+   author choice (signals u08/u09/u10 whether the target applies rollout-wide).
+
+**Round 2 responses:** all folded — [sol]#1 [FIXED] via **design 003 §3 → v2** amendment (u07 no-growth now
+conforms); [glm]#1 [FIXED] Phase B plain-text markdown+md grep; [fable]#1 [FIXED] Ex7 → single-read; [fable]#2
+[FIXED] `position`→`i` markdown scope + Phase B grep (== [glm]#1); [fable]#3 [FIXED] Challenge 2 reads
+`second_scores` (first board fixed); [fable]#4 [FIXED] subsumed by the §3 amendment (u07 conforms; the target
+still applies rollout-wide to fresh lists). **Design 003 §3 amended → round 3 re-review (design changed).**
 
 ## Content Review
 _(pending — 4-way.)_
