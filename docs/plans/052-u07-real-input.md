@@ -295,6 +295,17 @@ still applies rollout-wide to fresh lists). **Design 003 §3 amended → round 3
 - **Verdict**: APPROVE — every core (Ex1–9 + Challenges) executable list is now ≥4 (grown Ex1/Ex7/Ex8/Ch2;
   lesson core already ≥4); enrichment/rungs stay small per §3 v2 → fully consistent with the governing design.
   Rename + Phase-B sweep identifier-scoped (English "position(s)" prose preserved); header v2. No new blocker.
+### Round 5 (2026-09-19) — [sol] re-review after stale-text fix (605dde7)
+#### [sol] round 5 (2026-09-19)
+- **Verdict**: APPROVE — stale "no-growth" text removed from authoritative sections; source-vs-result
+  distinction correct; plan internally consistent + consistent with design 003 §3 v2.
+
+### PLAN-REVIEW GATE CLOSED (2026-09-19) — 4-way consensus: [self] APPROVE, [sol] APPROVE (r5), [glm] APPROVE
+WITH NITS (folded), [fable] APPROVE WITH NITS (folded). No open blockers. (Residual "no-growth" mentions below
+this line are historical round records, intentionally preserved.)
+
+---
+
 #### [sol] round 4 (2026-09-19)
 - **Verdict**: REJECT — substance (core-list growth) ACCEPTED; REJECT is on stale scope text only.
 1. `[OPEN]` Must Fix: stale "No data growth"/"u07's no-growth conforms" text (Out-of-scope) + design v2
