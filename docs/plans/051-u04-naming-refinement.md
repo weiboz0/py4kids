@@ -234,5 +234,45 @@ Roster: [self] inline; [sol] codex gpt-5.6-sol; [glm] opencode; [fable] Fable 5 
   uses old names — correctly a 051+ follow-up, u04-only plan.)
 1. `[FIXED]` Same as [glm]#1 — Ex11/Ex12 real-form captions "works for any `n`". → Response: reworded (above).
 
+### Round 2 — [sol] re-review after caption fix (commit e6c6183)
+#### [sol] round 2 (2026-09-19)
+- **Verdict**: APPROVE — Must-Fix caption resolved; no `n`/old scheme name survives; no new blocker.
+
+### Round 2 — outcome: CONSENSUS — [self] APPROVE; [sol] APPROVE (R2); [glm]/[fable] APPROVE WITH NITS (sole
+caption nit FIXED). **CONTENT GATE CLOSED.** No open findings.
+
 ## Post-Execution Report
-_(pending.)_
+
+**Status: COMPLETE — plan 051 (u04 CP-light rename + numbered score prompts). 2026-09-19.**
+
+### What shipped
+Author-directed post-merge refinement of `unit-04-quiz-show` (the plan-050 real-input pilot). Two changes,
+**names + prompt strings only** — control flow unchanged (`while` + `total = total + score`; no `+=`, `for`,
+`range`, `sys.stdin`, list, or string methods introduced):
+1. **Light-trim variable names** across lesson + exercises + solutions + teacher-notes: `round_number`→`r`,
+   `question_number`→`q`, `entry_number`→`i`, `questions_asked`→`asked`, `answer_correct`→`correct`,
+   `correct_count`→`count` (Ex12) / `right`+`wrong` (Ex13), `answer_N_correct`→`c1..c5`, `streak_alive`→`alive`,
+   `sudden_death_score`→`score`, `first_correct`/`second_correct`→`first`/`second`,
+   `third_answer_message_shown`→`shown`, and the real-forms' count `n`→`rounds`/`answers`/`scores` (author's
+   explicit Light-trim pick; the `n` statement/caption prose reworded to "any number of rounds/answers").
+   Default rule: every other identifier kept verbatim.
+2. **Numbered per-iteration prompts:** 1-based lesson loops → `f"Score for round {r}: "`; 0-based exercise
+   loops → `f"Score for round {r + 1}: "` / `f"Answer {q + 1} correct? (yes/no) "` (arithmetic-in-f-string is
+   in-union: u04 `requires` f-string + arithmetic, u03 precedent). Prompts display 1..n, never 0.
+
+### Verification
+- Behavior-preserving: all 19 solutions markdown real-forms + 3 lesson `no-exec` forms + 2 lesson executable
+  twins + every asserted twin produce byte-identical result lines pre/post rename (validated ast.parse +
+  piped-run; independently diffed old-vs-new by [fable]). Numbered prompts confirmed 1..n.
+- AST closure scan clean; no old scheme-table name survives anywhere under the unit dir (incl. the caught Ex6
+  solution-note prose and the Ex11/Ex12 real-form captions).
+- `scripts/ci-local.sh` ALL GREEN; `pre-merge-guard` OK.
+- **Content gate: 4-way, 2 rounds → CONSENSUS.** R1: [sol] REJECT + [glm]/[fable] APPROVE-WITH-NITS — all four
+  converged on ONE nit (the "any `n`" captions). R2 after fix: all APPROVE / APPROVE-WITH-NITS.
+
+### Scope / follow-ups
+- u04 only (author's scope choice); no design-003 amendment. Renumbering: design 003 §7's narrative "051 =
+  first rollout slice" shifts to **plans 052+**.
+- Noted for 052+ (out of scope here): `checkpoint-02-loops-and-functions` still uses the old verbose names;
+  align it when the real-input rollout reaches checkpoints. The real-input rollout itself (u07–u10 list unit +
+  checkpoint mini-pilot, `input` adds for u03/u05/u08/u09) remains as plan 050 left it.
