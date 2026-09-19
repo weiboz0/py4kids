@@ -304,6 +304,39 @@ Cleared to implement (Phase A → Phases B–I → Phase V per slice).
 
 _(4-way gate — pre-PR after implementation, per PR. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`.)_
 
+### Phase B — u04 quiz-show (relocation + 7 unmarked drills)
+
+**Round 1** — [self] APPROVE-WITH-NITS · [glm] APPROVE-WITH-NITS · [fable] APPROVE-WITH-NITS ·
+**[sol] REJECT** (one [OPEN]). Blind-solve of Ex13–18 matched all four reviewers (Ex13 3/2, Ex14 18,
+Ex15 4, Ex16 3, Ex17 10/2, Ex18 15/3); closure clean (`while`-only, no `for`/`range`/list/`len`/`sum`/
+`.split()`, no `input(` in solutions); unmarked contract intact (only running-total/count marked, before
+Ex11/Ex12); numbering 1–19 aligned; ledger resulting-core 19; volume 33→48 cells (1.455× < 2×, no
+sign-off needed). Findings:
+
+- `[FIXED]` **[sol] [OPEN]** — Ex19 gave no score sequence yet the solution asserted total 16 **and**
+  count 3 (not blind-derivable). Statement now carries a *worked example* ("entering 5, 3, 8, then 0 adds
+  3 scores for a total of 16"), so 16/3 are derivable; also added `int(input(...))`.
+- `[FIXED]` **[glm]/[fable] [OPEN]** — teacher-notes stale renumber: the or-spellings "Accept either
+  spelling" exercise moved old Ex10 → **Ex8**; the Common-mistakes reference updated 10 → 8.
+- `[FIXED]` **[self]/[fable] [OPEN]** — exercises `## Challenge` intro "after the twelve core exercises"
+  → number-free "after the earlier exercises" (u04 now has 19).
+- `[FIXED]` **[glm]/[fable] nit** — Ex13–18 statements said "Create five … variables" but solutions
+  inline via `if`/`elif` (the Ex11 running-total precedent); reworded to "step through the five fixed
+  values …" to match, and unified "counter-controlled" → "counter-bounded" (the design/house term).
+- `[FIXED]` **[fable] nit** — Ex19 solution used a counter-bounded loop; restructured to the true
+  sentinel shape (`while True:` + `break` on the 0 entry) so it models what the interactive exercise asks.
+- `[FIXED]` **[fable] nit** — teacher-notes running-total/count "routes" reworded ("name in class from
+  the Spotlight; Exercise 11/12 is its home in the Algorithm Extension") and the in-class coverage claim
+  qualified for those two enrichment homes.
+- `[FIXED]` **[glm]/[fable] nit** — added a student-facing framing line under `## Algorithm Extension`
+  (exercises + lesson): "Extra loop practice — optional enrichment …".
+- `[FIXED]` **[fable] note** — Phase B post-execution report added below.
+
+All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes.
+
+**Round 2** — [self] APPROVE (all [OPEN]s + nits [FIXED]); [glm]/[fable] round-1 APPROVE-WITH-NITS stand
+(their nits folded). [sol] re-dispatched on the fixes (its sole REJECT [OPEN] resolved).
+
 ## Post-Execution Report
 
 ### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling) — DONE
@@ -330,7 +363,24 @@ _(4-way gate — pre-PR after implementation, per PR. Findings `[OPEN]`/`[FIXED]
   omitted ids → a benign `nbformat` MissingIDFieldWarning); real slices copy/generate ids so notebooks
   stay normalized.
 
-_(Phases B–I + Phase V report appended as each slice lands.)_
+### Phase B — u04 quiz-show — DONE (pending [sol] round-2 confirm + PR)
+
+- **Relocation:** running-total + count-by-condition moved into a closing `## Algorithm Extension` H2
+  section as Exercises 11–12 (markers preserved, adjacent to their headings); old More-Practice → Ex8–10;
+  renumbered in document order across exercises↔solutions; lesson Spotlights gathered under a closing
+  `## Algorithm Extension`.
+- **New drills (unmarked, Ex13–19):** two-counter tally, conditional sum (≥5 → 18), signed accumulate
+  (+2/−1 → 4), opening streak (`break` → 3), the until-threshold matrix pair on 4,6,5,7,3 ÷ 12
+  (check-before-add 10/2 vs add-then-check 15/3), and a sentinel-until-0 drill (Ex19, `no-exec`,
+  simulated solution → 16/3). All `while`-only, u04 closure clean. Statements + solutions authored by
+  separate Codex (gpt-5.6-sol) sessions from the shared inventory spec; content gate blind-solved.
+- **Metadata:** `concept-scan` needed **no** scanner-derived `practices` adds (drills reuse u04's
+  existing concept union); manifest untouched. teacher-notes reframed (Algorithm Extension enrichment;
+  every renumber ref fixed); pattern-ledger resulting-core 12 → 19 + plan-048 note.
+- **Verification:** full book1 ci-local checks + exec-solutions/exec-lessons + PDF GREEN; book2 no
+  regression. Volume 1.455× cells (< 2×) — no special volume sign-off required.
+
+_(Phases C–I + Phase V report appended as each slice lands.)_
 
 ---
 

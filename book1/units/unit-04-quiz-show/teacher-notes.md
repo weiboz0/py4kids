@@ -37,9 +37,9 @@ Practices reappearance: boolean and type-conversion run through every scoring ch
 the lightning-round Challenge; error-messages gets a deliberate debugging moment in
 exercise 5. All four reappear in checkpoint 02.
 
-Running-total route: teach the named pattern in class with Exercise 11, retrieve it inside a function in Unit 05 exercise 7, retrieve it over a list in Unit 07 exercise 4, then assign Unit 09 exercise 13 after the file-reading lesson to transfer the same total-so-far update to saved-score lines.
+Running-total route: name the pattern in class from the lesson Spotlight; Exercise 11 is its home in the Algorithm Extension (run as time permits). Retrieve it inside a function in Unit 05 exercise 7, retrieve it over a list in Unit 07 exercise 4, then assign Unit 09 exercise 13 after the file-reading lesson to transfer the same total-so-far update to saved-score lines.
 
-Count-by-condition route: teach the named pattern in class with Exercise 12, retrieve it over characters in Unit 06 exercise 12, retrieve it over a score list in Unit 07 exercise 5, then use Unit 08 exercise 5 to show the tally-by-key variation: one count per word in a dictionary.
+Count-by-condition route: name the pattern in class from the lesson Spotlight; Exercise 12 is its home in the Algorithm Extension (run as time permits). Retrieve it over characters in Unit 06 exercise 12, retrieve it over a score list in Unit 07 exercise 5, then use Unit 08 exercise 5 to show the tally-by-key variation: one count per word in a dictionary.
 
 ## Exercise allocation
 
@@ -47,8 +47,9 @@ Count-by-condition route: teach the named pattern in class with Exercise 12, ret
   after conditional nesting, and exercises 4–7 after the `break` ladder. The running-total and
   count-by-condition homes now sit in the **Algorithm Extension** (Exercises 11–12); name both
   patterns in class from the lesson Spotlights and run Exercises 11–12 as time permits.
-  This path includes at least one authored repetition of every Unit 04
-  `introduces`/`practices` concept.
+  This in-class path reps every Unit 04 `introduces`/`practices` concept at least once,
+  except `running-total` and `count-by-condition`, whose homes now live in the
+  Algorithm Extension (Exercises 11–12) — named in class, practised there.
 - **Homework / More Practice:** exercises 8–10 after Lesson 3; review them at the
   opening of the next meeting.
 - **Algorithm Extension (enrichment):** Exercises 11–19 — the two pattern homes plus seven
@@ -86,7 +87,7 @@ repeated, low-stakes exposure to the same loop shapes.
   trace it and move the line up.
 - `and` where `or` was meant (and vice versa) in the bonus rule — truth-table the bonus
   on the board with class examples, then have students say both accepted spellings in
-  exercise 10 before they write the `or` expression.
+  exercise 8 before they write the `or` expression.
 - Nesting by wishful thinking: the follow-up `if` not indented under its parent, so it
   always runs. Show both indentations side by side.
 - `break` outside any loop (SyntaxError — a planned traceback-reading moment) and
