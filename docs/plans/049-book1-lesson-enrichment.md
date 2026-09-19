@@ -137,8 +137,9 @@ GREEN and `main` valid. **Ordering follows 048's per-unit merges** (048: B u04 �
 ### Phases B–E — one slice per HOME unit (author the ladders), gated on the unit's 048 slice
 
 Per home unit, in a single slice: (a) confirm the unit's `## Algorithm Extension` lesson section is on
-`main` (its 048 slice merged); (b) after each home `### Pattern Spotlight: X` cell, author a 2–3-rung
-graduated ladder (executable rungs + `**Notice:**` each + a put-it-together cell) teaching that pattern's
+`main` (its 048 slice merged); (b) after each home `### Pattern Spotlight: X` cell, author its
+graduated ladder — the completeness-driven rung sequence specified in the **## Appendix — Ladder
+specifications** (executable rungs + `**Notice:**` each + a put-it-together cell) teaching that pattern's
 loop shape on the Spotlight's own fixed data, prereq-clean; (c) if teacher-notes describe the extension,
 note the home Spotlight now includes a worked build-up (enrichment, still teacher-routed); (d) keep every
 check GREEN incl. `exec-lessons`; (e) no marker/§3/manifest change (record "no scanner-derived add" or
@@ -232,7 +233,13 @@ Each ladder is `code` rung → `**Notice:**` → … → a "put it together" `co
 placed right after the home `### Pattern Spotlight` prose cell. All rungs are executable (exec-lessons),
 fixed-data, `input`-free, and within the unit's closure. Rung counts are completeness-driven (plan 031);
 these are the authoring targets — the content gate confirms embodiment and may add a rung where a step is
-too big. Expected outputs are exact.
+too big. Expected outputs are exact. **Rung self-containedness (plans 031–035 convention):** each rung is
+a COMPLETE runnable cell — it RESTATES the prior rung's lines and adds exactly one new line; the shorthand
+below (e.g. R2 "add a second score → 8") means "the R1 code plus that one line," NOT a continuation cell
+that depends on R1's leftover state. The "→ output" shown is the full rung's own output. **Content-gate
+flag:** the two heaviest single steps — u04 running-total put-it-together (introduces `while` + round
+counter + `if/elif` dispatch at once) and u06 linear-search R2 (loop + `position` counter + `in` +
+`break` at once) — the gate should split into an extra rung if a step reads as too big for one increment.
 
 ### u04 — running-total (`while`-only, no list)
 - **R1** `total = 0` / `total = total + 5` / `print(total)` → `5`. *Notice:* start the running total at 0,
