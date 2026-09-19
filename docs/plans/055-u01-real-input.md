@@ -138,6 +138,23 @@ Re-dispatching round 2 (Challenges + Ex1-exempt changed materially).
 6. `[OPEN]` Nice: Ex7 real-form keeps the constraint (exactly three `+` pieces, NO f-string):
    `name = input("Your name: ")` / `greeting = "Hello, " + name + "!"` / `print(greeting)`.
 
+### Round 2 (2026-09-19) — re-review after fixes (806bf55)
+#### [self] round 2 (2026-09-19)
+- **Verdict**: APPROVE — Challenges added (Ch1 read-and-compute, Ch2 interactive); Ex1 exempt via the
+  reads-no-external-input/generator class; L2 39/41/43 reframed as build-up rungs (only cell 60 gets a twin);
+  label/placement/constraint nits folded. No open blocker.
+#### [sol] round 2 (2026-09-19)
+- **Verdict**: APPROVE — Challenges + Ex1-exempt + L2-rung reframe all resolved.
+#### [glm] round 2 (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE — all round-1 findings verified resolved (Challenges; Ex1 reads-nothing exemption with
+  u02-dice/u04-countdown precedent; L2 rung exemption design-grounded; teacher-notes no-change; errata parked).
+
+### PLAN-REVIEW GATE CLOSED (2026-09-19) — 4-way consensus: [self]/[sol]/[glm]/[fable] all APPROVE. No blockers.
+#### [fable] round 2 (2026-09-19)
+- **Verdict**: APPROVE — all 6 round-1 items verified resolved against the notebooks (Challenges row; Ex1
+  exempt reads-nothing; `**No real version:**` label; cell-60 twin §6(c)-able; Ex5 player_name; Ex7 constraint;
+  L2 rungs sound). Text-only closure holds; random.seed(4) teacher-note correctly parked as errata. No findings.
+
 ## Content Review
 _(pending — 4-way.)_
 
