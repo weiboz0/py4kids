@@ -567,6 +567,28 @@ All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes; e
 single-loop; Ex16/17/21/24 Pet classes minimized) with no regression; drills verified self-contained
 standalone; pytest 495 passed. Full 4-way APPROVE, no open blockers. Cleared to PR + merge.
 
+### Phase I — u02 number-detective + project-01 (relocation-only, no new drills)
+
+**Round 1 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[glm] APPROVE-WITH-NITS** · **[fable]
+APPROVE-WITH-NITS** · **[sol] APPROVE-WITH-NITS** (sandbox-only exec nit — no content findings). u02 stays
+**lean** (memory [[exercise-sets-favor-volume]]: units 01–02 stay lean): the sentinel-loop home exercise
+moved into a lean `## Algorithm Extension` (Ex3→Ex8; non-sentinel Ex4–8→Ex3–7), the lesson sentinel
+Spotlight gathered under a closing `## Algorithm Extension`, and **no new drills** added. project-01 M1's
+sentinel Spotlight framed as extension prose. Cross-refs: ledger sentinel row "Exercise 3"→"Exercise 8";
+u02 teacher-notes (Ex7/8→Ex6/7; sentinel home = Ex8). All book1 checks + exec + PDF GREEN; book2 no
+regression. Nits (all fixed):
+
+- `[FIXED]` **[glm] should-fix / [fable] OPEN-1** — the project-01 M1 framing sentence I added *named* the
+  pattern (defeating the "which pattern is this?" retrieval prompt) and spoiled u07/u10; reworded to a
+  spoiler-free "one of the reusable algorithm-extension patterns … its home is an earlier unit, and it
+  returns in later ones."
+- `[FIXED]` **[glm]/[fable] nit** — u02 lesson `## Algorithm Extension` intro said "gathered here at the
+  end of the unit" (false in the lesson); reworded ("read in class; its exercise is the last one in the
+  exercises notebook"), and the exercises/solutions frame simplified.
+- `[FIXED]` **[glm] nit** — relocated sentinel cell ids (`*-ex3`) renamed to `*-ex8`.
+- `[FIXED]` **[fable] nit-4** — the ledger "Landed so far" note (had only u04–u07) reconciled to add
+  u08/u09/u10 and the u02 relocation.
+
 ## Post-Execution Report
 
 ### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling) — DONE
@@ -715,7 +737,49 @@ standalone; pytest 495 passed. Full 4-way APPROVE, no open blockers. Cleared to 
 - **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 47→65
   cells (1.38×, < 2×).
 
-_(Phase I + Phase V report appended as each slice lands.)_
+### Phase I — u02 number-detective + project-01 — DONE (pending gate + PR)
+
+- **Relocation (lean, no new drills):** u02's sentinel-loop home exercise moved into a lean
+  `## Algorithm Extension` H2 (Ex3→Ex8, marker adjacent; non-sentinel Ex4–8→Ex3–7); lesson sentinel
+  Spotlight gathered under a closing `## Algorithm Extension`. **u02 stays lean** — no extra drills.
+- **project-01:** M1's sentinel-loop Spotlight framed as extension prose (marker unchanged).
+- **Cross-refs:** ledger sentinel row Ex3→Ex8 + resulting-core note; u02 teacher-notes renumbered
+  (Ex7/8→Ex6/7) and sentinel-home reframed to Ex8/Algorithm Extension. Design §3 references u02 by name
+  (no exercise number) — unchanged.
+- **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Resulting-core
+  stays 8 (relocation-only).
+
+### Phase V — Verification (final, plan-wide)
+
+With Phase I (u02) this plan is **complete** — all phases A–I merged to `main` (PRs #58, #59, #60, #61,
+#65, #67, #68, #69, and the u02 PR). Final state:
+
+- **Design:** 002 amended to v8 (explicit `## Algorithm Extension` enrichment section; "home in-class"
+  relaxed to enrichment routing); §3 pattern loci unchanged (drills are unmarked); §7 "running-total
+  dropped from u08" preserved. (The file is at v9 from the parallel plan-049 lesson-ladder effort, which
+  coexists cleanly.)
+- **Every pattern-hosting unit** now has a labelled `## Algorithm Extension` section holding its relocated
+  pattern exercises **plus unmarked loop-mastery drills**. Per-unit resulting core (informative): u02 8
+  (lean, relocation-only), u04 19, u05 20, u06 22, u07 22, u08 21, u09 23, u10 24. Total **+51 new
+  unmarked drills** across u04–u10 (7+9+8+6+5+7+9), u02 relocation-only.
+- **The until-threshold matrix** ("sum/count that fits" check-before-add vs "sum/count until it tips"
+  add-then-check, on identical data) ships in every drill-bearing unit as a deliberate repetition-with-
+  variety pair — upward budgets (u04–u09) and a **downward** floor (u10) — alongside count / conditional-
+  sum / count-average / argmin / search / map / filter / sentinel reps.
+- **Contracts held:** the 7 §3 patterns keep their homes + ≥3 core reappearances (`technique-spiral`
+  green); the new drills are **unmarked** (no `<!-- pattern: id -->`, no new technique `practices` tag);
+  scanner-derived regular-concept `practices` added under the General Rule only (u05 if-statement/elif-else/
+  comparison/while-loop/break-statement; u09 range-function; u10 break-statement; map==manifest).
+- **Verification:** `scripts/ci-local.sh`-equivalent checks (hygiene/structure/noexec/cell-lint/manifest/
+  prereq/coverage/concept-scan/technique-spiral/pattern-marker/patterns-doc-check/stretch/turtle +
+  exec-solutions/exec-lessons) GREEN on `main` after every slice; PDF builds; `pytest` 495 passing; each
+  slice ≤2× cells (no volume sign-off tripped); Book 2 no regression throughout. u01/u03 exempt (host no
+  pattern content).
+- **Content gates:** every slice reached 4-way consensus ([self]/[sol]/[glm]/[fable]); recurring findings
+  (blind-solvability of interactive drills, hyphen/space cross-ref forms, `+=`/`None`/list-slice/nested-loop
+  closure traps, exec-order/file-state self-containment, home-vs-reuse framing) are recorded per phase above.
+
+**Acceptance: MET.** All algorithm-extension sections implemented, gated, and merged; `main` green.
 
 ---
 
