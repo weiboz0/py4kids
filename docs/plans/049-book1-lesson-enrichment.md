@@ -43,8 +43,8 @@ ready unit / wait. This guarantees each 049 edit builds on 048's merged content 
   executable `code` rungs, each followed by a `**Notice:**` markdown cell, then one worked "put it
   together" cell + a closing `**Notice:**`. Each rung adds exactly one idea, exactly like L1/L2/L3.
   **Rung count is completeness-driven, NOT capped** (plan 031 rule: as many rungs as the concept needs
-  — 2 is typical; the harder patterns take more, e.g. linear-search and find-extreme each get 3 rungs +
-  the put-it-together; never fewer than 2 + the put-it-together). The concrete one-increment rung sequence, fixed
+  — 2 is typical; the harder patterns take more, e.g. linear-search gets 5 rungs and find-extreme 3, each
+  + the put-it-together; never fewer than 2 + the put-it-together). The concrete one-increment rung sequence, fixed
   data, and expected output for ALL SEVEN home patterns are specified in **## Appendix — Ladder
   specifications** below (so within-unit closure + one-increment pacing are reviewable now, matching the
   implementation-ready detail of plans 031–035).
@@ -307,6 +307,21 @@ a new conditional (not "one new line"). Folded on this HEAD:
 - **[glm] N-E / [fable] f4-N2** — cosmetic (`print` placement) — WONTFIX; the split resolves the substance.
 
 Round 5 re-dispatched to all three (linear-search is now 5 rungs).
+
+### Round 5 (HEAD 9d46332) — CONSENSUS: all four APPROVE / APPROVE WITH NITS ✅ — GATE CLOSED
+
+- **[self] APPROVE** — all findings folded; every ladder re-executed to its stated output.
+- **[glm] APPROVE WITH NITS** — 5-rung linear-search verified rung-by-rung + `detect()` closure-clean;
+  pytest 50 passed, all pattern/coverage/prereq checks PASS; no regression. Nit **N-F** (`[FIXED]`):
+  line 46 "3 rungs" stale → "linear-search gets 5 rungs and find-extreme 3".
+- **[fable] APPROVE** — executed every rung (R1 True, R2 F/T/F, R3 0/1/2, R4 1, R5 1, PIT −1); one idea
+  per rung genuinely satisfied; no regression.
+- **[sol] APPROVE WITH NITS** — the split resolves its round-4 one-increment objection; confirmed R4
+  (found-init + guarded assign) is ONE idea under the corrected rule and the plan 031/034/035 precedent
+  (inseparable init+update accepted). Only nit = N-F (`[FIXED]`).
+
+**4-way consensus: all four APPROVE / APPROVE WITH NITS, no open blockers. Plan-review gate CLOSED.**
+Cleared to implement (Phase A → Phase B u04 + Phase C u06, both 048-ready → Phases D/E as 048 advances).
 
 ## Content Review
 
