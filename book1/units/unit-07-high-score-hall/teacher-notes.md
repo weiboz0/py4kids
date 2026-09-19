@@ -9,8 +9,10 @@ to assemble these into a working arcade leaderboard that crowns a champion.
 This is the first unit where one variable holds a whole collection, not a single value.
 Success looks like: every student builds a scores list, sorts it top-first, and prints a
 numbered "Place N: score" hall of fame.
-Exercises 1–9 and 15–16 form the in-class path; the labelled More Practice Exercises 10–14 are
-homework after Lesson 3, and the Challenges remain optional stretch work.
+Exercises 1–6 form the in-class path; the labelled More Practice Exercises 7–9 are homework after
+Lesson 3; the **Algorithm Extension** (Exercises 10–22 — the seven pattern reps plus six loop drills) is
+optional enrichment, with only the find-extreme and filter naming Spotlights read in class; and the
+Challenges remain optional stretch work.
 
 ## Pacing
 
@@ -24,14 +26,16 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   (filter)** spotlight: a person can glance through a pile and keep the qualifying cards, but a
   program must check one score at a time and append each passing score to a new list. Do a 2-minute
   unplugged trace: sort a pile of score cards, keeping only the cards that pass the threshold in a
-  new pile. Then use Exercise 16, Keep only the qualifying scores, in class.
+  new pile. The **filter** pattern's home is Exercise 16 in the closing Algorithm Extension — name it in class from this Spotlight, and run Exercise 16 as time permits.
   20 min: the builtins ladder (`len` → `max` → `min`) plus `average = total / len(scores)` (a decimal — a float).
   Immediately after the indexed list scan and `max` beat, teach the **Find the best (max / argmax)**
   spotlight: `max` keeps only the number, while an explicit scan can keep both `best_score` and
   `best_name`. Do a 2-minute unplugged trace: hold up height cards one at a time and have students
-  keep the tallest seen so far **and whose card it is**. Then use Exercise 15, Champion by name,
-  in class while the scan is fresh.
-  After these ideas have been taught, also use Exercise 4 in class. Reserve Exercise 2 for Lesson 2
+  keep the tallest seen so far **and whose card it is**. The **find-extreme** pattern's home is
+  Exercise 15 in the closing Algorithm Extension — name it in class from this Spotlight while the scan is
+  fresh, and run Exercise 15 as time permits.
+  The running-total reuse (now Exercise 10 in the Algorithm Extension) rides this list-loop accumulate
+  beat — run it as time permits too. Reserve Exercise 2 for Lesson 2
   because it sorts, and reserve Exercises 1 and 3 for Lesson 3 because they use membership and
   deliberate traceback reading.
   60-MINUTE CUT: teach ladder rungs 1–2; leave the last rung as a "try it".
@@ -39,20 +43,21 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   Open on the thread: yesterday we LISTED scores; today we RANK them.
   20 min: the sort ladder (`.sort()` low→high → `.sort(reverse=True)` top-first → print with a `board_line` helper). Emphasize `.sort()` changes the list IN PLACE and returns `None` (contrast Unit 06's string rebuild).
   20 min: `add_score` appends then re-sorts so the hall stays ranked.
-  After the sort and helper ladders, use Exercises 2, 7, and 8 in class. Exercise 7's
+  After the sort and helper ladders, use Exercises 2, 4, and 5 in class. Exercise 4's
   interactive cell stays `no-exec`; students run it themselves and supply a score.
 - **Lesson 3 — polish the hall (tiers, membership, a doubling threshold) (60–90 min).**
   20 min: a gold/silver/bronze tier with `if`/`elif`/`else`; guard a duplicate with `if score in scores`.
   15 min: a `while` loop doubling a qualifying threshold; then the deliberate `IndexError` (`scores[len(scores)]`) — read the traceback together.
   After tiers, membership, `while`, and the deliberate traceback have all been taught, use
-  Exercises 1, 3, 5, 6, and 9 in class. Exercise 3's first blank cell is `no-exec`: students
+  Exercises 1, 3, and 6 in class. Exercise 3's first blank cell is `no-exec`: students
   deliberately produce the `IndexError` only with the teacher, read its final line, and then
-  write the safe `scores[-1]` fix in the following cell. Exercise 9 is also interactive and
+  write the safe `scores[-1]` fix in the following cell. Exercise 6 is also interactive and
   remains `no-exec`.
-  Assign the labelled More Practice Exercises 10–14 as homework only after Lesson 3: ascending
-  sort and input report (10), `.sort()` returning `None` (11), threshold doubling (12), and a
-  second list-processing `while` loop (13), then the **linear-search** retrieval over scores (14),
-  which scans one by one and stops at the first qualifying score. Thus no exercise is allocated before its concepts
+  Assign the labelled More Practice Exercises 7–9 as homework only after Lesson 3: ascending
+  sort and input report (7), `.sort()` returning `None` (8), and a second list-processing `while`
+  loop (9). The count-by-condition, transform-each, sentinel-loop, and linear-search reappearances
+  now live in the Algorithm Extension (Exercises 11, 12, 13, 14) — see below; the naming beats ride
+  the lessons but their exercises run as time permits. Thus no exercise is allocated before its concepts
   have appeared in the lesson sequence.
 
 ## Common mistakes
@@ -69,7 +74,9 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
   bottom no matter how big it is — `.append()` always adds to the END.
 - Updating `best_score` but forgetting `best_name`, so the winning number and player no longer
   belong together. In Exercise 15, update both from the same position.
-- Mixing champion names into the score list. Exercise 6 keeps a cleaned name list separate so
+- Seeding a minimum (or maximum) at `0` in the scan drills — `rookie_score = 0` makes 0 always
+  "win" and returns the wrong player. Seed from the FIRST score/name instead (Exercises 15, 17, 18).
+- Mixing champion names into the score list. Exercise 12 keeps a cleaned name list separate so
   every list has one clear job.
 - Appending every score instead of only scores that pass the threshold. In Exercise 16, the
   `.append()` belongs inside the qualifying `if`, and the original score list stays unchanged.
@@ -94,12 +101,40 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 
 ## Exercise split and count note
 
-- **In class:** Exercises 1–9 plus Exercises 15–16, with Exercise 15 in Lesson 1 immediately after
-  the list-scanning and `max` contrast and Exercise 16 immediately after the append ladder.
-- **Homework / More Practice:** Exercises 10–14, assigned only after Lesson 3.
+- **In class:** Exercises 1–6. The find-extreme and filter naming Spotlights are read in Lesson 1
+  (immediately after the `max` contrast and the append ladder), but their home exercises now live in the
+  Algorithm Extension.
+- **Homework / More Practice:** Exercises 7–9, assigned only after Lesson 3.
+- **Algorithm Extension (enrichment):** Exercises 10–22 — the seven relocated pattern exercises
+  (running-total, count-by-condition, transform-each, sentinel-loop, linear-search, find-extreme,
+  filter-into-list) plus six new unmarked loop drills; routed as time-permitting / homework /
+  differentiation (see the Algorithm Extension section below).
 - **Optional stretch:** Challenge 1 and Challenge 2.
 
 The deliberate traceback in Exercise 3 is the unit's one genuine `error-messages` authoring
 rep. It has a justified peripheral count exemption: repeatedly staging raising list accesses
 would be artificial, while traceback reading is practiced again across later units. The raising
 cell is tagged `no-exec`, and students fix it in a separate safe cell.
+
+## Algorithm Extension (enrichment)
+
+The unit's algorithm track sits in a labelled **`## Algorithm Extension`** section at the end of the
+notebook (design 002 v8). It gathers the seven pattern reps — running-total (Ex 10), count-by-condition
+(Ex 11), transform-each (Ex 12), sentinel-loop (Ex 13), linear-search (Ex 14), the **find-extreme** home
+(Ex 15, champion by name), and the **filter-into-list** home (Ex 16, keep only the qualifying scores) —
+then six new **unmarked** list drills (Ex 17–22). Only the find-extreme and filter naming Spotlights are
+read in class (Lesson 1); every exercise here (Ex 10–22) is routed as time-permitting / homework /
+differentiation and never gates the core board build.
+
+Every drill loops over a real list (`len`/`max`/`min`/`.append()` available; accumulate totals with a
+loop — no `sum`):
+
+- **Ex 17** rookie by name (argmin, keep `rookie_name`+`rookie_score` → "Zoe"/650), **Ex 18** best & worst
+  in one pass (1050 / 720), **Ex 19** average of the passers with a zero-count guard (3 passers → 900.0),
+  **Ex 20** "what place would I be?" (count scores above mine, rank = count + 1 → place 3).
+- **Ex 21 & Ex 22** are the **same list ([300, 450, 275, 600]), opposite-boundary** pair ÷ budget 1000:
+  Ex 21 *checks before adding* (2 fit, total 750); Ex 22 *adds then checks* (3 added, total 1025, tipping
+  wait 275). Run them back-to-back so students feel where the check sits relative to the add.
+
+These are extra reps of patterns students have met; being the broadest-core unit, they are routed mostly
+to More-Practice/homework so the in-class core stays the board build.

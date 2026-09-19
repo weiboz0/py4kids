@@ -17,11 +17,11 @@ because a Challenge exercise is ≥2 tagged cells; the invariant tracked here is
 |---|---|---|---|---|---|---|
 | running-total | u04 (home) | *new* "Running total: add the round scores" (`while`-based, no list) | new core | new | accumulator (u04 co-intro), arithmetic (u02) | C |
 | running-total | u05 | "Exercise 11" `total_card_borders(n)` | core | reuse | — | C |
-| running-total | u07 | "Exercise 4 / Total and Average" | core | reuse | — | C |
+| running-total | u07 | "Exercise 10 / Total and Average" | core | reuse | — | C |
 | running-total | u09 | *new* "Sum the saved scores" (read-and-sum) | new core | new | accumulator, arithmetic (scanner-derived on u09), file-read (u09) | C |
 | count-by-condition | u04 (home) | *new/adapt* "Count the correct answers" (`while`-based, no list) | new core | new | comparison (u02), if-statement (u02) | D |
 | count-by-condition | u06 | *new* "Count the vowels" (count-matches) | new core | new | in-operator (u06), comparison | D |
-| count-by-condition | u07 | "Exercise 5 / Award a Score Tier" | core | reuse | — | D |
+| count-by-condition | u07 | "Exercise 11 / Award a Score Tier" | core | reuse | — | D |
 | count-by-condition | u08 | "Exercise 5: Count the Words" (tally-by-key) | core | reuse | — | D |
 | find-extreme | u07 (home) | *new* "Champion by name" (best_name+best_score) | new core | new | list-loop (u07), comparison | G |
 | find-extreme | u08 | "Exercise 6: Most Common Word" | core | reuse | — | G |
@@ -32,7 +32,7 @@ because a Challenge exercise is ≥2 tagged cells; the invariant tracked here is
 | linear-search | u08 | "Challenge 1: Reverse Lookup" → "Exercise 15" + `break` | stretch | promote | break-statement (scanner-derived on u08) | F (+1 u08 Challenge replacement) |
 | linear-search | u09 | *new* "Find a name in the save file" | new core | new | break-statement (scanner-derived on u09) | F |
 | transform-each | u06 (home) | *new/adapt* "Do the same to each character" (new string) | new core | new/adapt | for-loop (u03), string-methods (u06) | E |
-| transform-each | u07 | "Exercise 6 / Tidy the Champion Names" | core | reuse | — | E |
+| transform-each | u07 | "Exercise 12 / Tidy the Champion Names" | core | reuse | — | E |
 | transform-each | u08 | "Exercise 10: Translate a List" | core | reuse | — | E |
 | transform-each | u09 | "Exercise 3: Load Scores into a List" (line→int) | core | reuse | — | E |
 | filter-into-list | u07 (home) | *new* "Keep only the qualifying scores" | new core | new | list-append (u07), comparison | H |
@@ -41,7 +41,7 @@ because a Challenge exercise is ≥2 tagged cells; the invariant tracked here is
 | filter-into-list | u10 | *new* "List the happy pets" | new core | new | list-append, comparison | H |
 | sentinel-loop | u02 (home) | "Exercise 3" while-until-guessed game | core | reuse-as-home | while-loop (u02), comparison (u02) | B |
 | sentinel-loop | project-01 | M1 `while choice != "q"` menu | core | reuse | — | B |
-| sentinel-loop | u07 | "Exercise 12: Double the Qualifying Threshold" (`while`, true sentinel) | core | reuse | — | B |
+| sentinel-loop | u07 | "Exercise 13: Double the Qualifying Threshold" (`while`, true sentinel) | core | reuse | — | B |
 | sentinel-loop | u10 | "Exercise 14: Play Until Happy" (`while happiness<10`) | stretch | promote | — | B (+1 u10 Challenge replacement) |
 
 ## Resulting per-unit core count (projected, informative — not a cap)
@@ -55,7 +55,7 @@ Challenge column = Challenge-*exercise* count (each ≥2 `stretch`-tagged cells 
 | u04 | 10 | +2 (running-total + count homes, `while`-based, no list) +7 (plan-048 unmarked drills, Ex13–19) | 19 | 2 (unchanged) |
 | u05 | 11 | 0 (reuse, now Ex11) +9 (plan-048 unmarked function drills, Ex12–20) | 20 | 2 (unchanged) |
 | u06 | 11 | +3 (count-matches new + linear-search & transform-each homes, Ex12–14; plan-047 logged +2 — fable NIT-4 off-by-one, reconciled here) +8 (plan-048 unmarked drills, Ex15–22) | 22 | 2 (unchanged) |
-| u07 | 13 | +3 (find-extreme home, filter home, loop+break) | 16 | 2 (unchanged) |
+| u07 | 13 | +3 (find-extreme home, filter home, loop+break) +6 (plan-048 unmarked drills, Ex17–22) | 22 | 2 (unchanged) |
 | u08 | 14 | +2 (reverse-lookup promote→core Ex15, filter new Ex16) | 16 | 2 − 1 + 1 = 2 |
 | u09 | 12 | +4 (read-and-sum, best-so-far, find-in-file, filter — all new) | 16 | 2 (unchanged) |
 | u10 | 12 | +3 (Ex13 promote, Ex14 promote, filter new) | 15 | 2 − 2 + 2 = 2 |
@@ -73,6 +73,10 @@ Rule: `if-statement`, `elif-else`, `comparison`, `while-loop`, `break-statement`
 **u06 +8 (Ex15–22)** — character-scan drills: count-a-letter, three-counter tally, first-vowel search
 (`break`), boolean digit search, star-the-vowels map, letter-value sum, and the matrix pair on "secret"
 ÷ 30 (fit 3/27/"sec" vs tip 4/45/"r"); no new `practices` adds (all concepts already in u06's union).
+**u07 +6 (Ex17–22)** — list drills (More-Practice tier): rookie-by-name argmin, best+worst one-pass,
+average-of-passers (zero guard), "what place would I be?", and the matrix pair on the waiting list
+[300,450,275,600] ÷ 1000 (fit 2/750 vs tip 3/1025/275); the 7 pattern exercises relocated into the
+`## Algorithm Extension` and renumbered Ex10–16; no new `practices` adds.
 
 ## Invariants proven
 

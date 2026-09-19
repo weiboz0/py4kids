@@ -60,7 +60,7 @@ guts of the position scan and shift; two integer shift values are compared direc
 accumulator, if/elif/else, boolean values, nested loops, and loop counters all carry earlier learning
 into the cipher work.
 
-Transform-each route: name the pattern in class from the Lesson 3 Spotlight; Exercise 13 (over the characters in one string) is its home in the Algorithm Extension, run as time permits. Retrieve it in class with cleaned strings in Unit 07 Exercise 6, retrieve it in class with dictionary-produced values in Unit 08 Exercise 10, then use Unit 09 Exercise 3 in class after the file-reading lesson to transform file lines into integers.
+Transform-each route: name the pattern in class from the Lesson 3 Spotlight; Exercise 13 (over the characters in one string) is its home in the Algorithm Extension, run as time permits. Retrieve it in class with cleaned strings in Unit 07 Exercise 12, retrieve it in class with dictionary-produced values in Unit 08 Exercise 10, then use Unit 09 Exercise 3 in class after the file-reading lesson to transform file lines into integers.
 
 Linear-search route: name the pattern in class from the Lesson 2 Spotlight; Exercise 14 (over alphabet positions) is its home in the Algorithm Extension, run as time permits. Retrieve it in Unit 07 Exercise 14 with a score list, in Unit 08 Exercise 15 with dictionary values, and in Unit 09 Exercise 14 with file lines.
 
