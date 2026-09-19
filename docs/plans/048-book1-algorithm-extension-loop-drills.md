@@ -458,6 +458,39 @@ ref = Ex13, no list-slice remains, Ex19 zero-guard asserted; Ex17–22 re-derive
 all pass) · [fable] APPROVE-WITH-NITS (folded). All four APPROVE / APPROVE-WITH-NITS, no open blockers.
 Cleared to PR + merge.
 
+### Phase F — u08 word-wizard (relocate 5 pattern exercises + renumber + 5 dict/list drills)
+
+**Round 1** — [self] APPROVE · **[glm] REJECT** (1 [OPEN]) · **[fable] REJECT** (2 [OPEN]) ·
+**[sol] REJECT** (2 [OPEN]). All four blind-solved Ex17–21 to spec (total 6; rarest fox/1; known 2/unknown
+1; fit 3/12 exact-hit; tip 4/18/"wizard"); closure otherwise clean; the 5-exercise relocation + renumber
+verified aligned across notebooks + markers (Ex12–16) + design §3 + ledger + u04/u06 teacher-notes.
+The three external reviewers converged on the same two [OPEN]s:
+
+- `[FIXED]` **[glm] F1 + [fable] OPEN-2 + [sol] [OPEN]** — the More-Practice divider still read "Exercises
+  12–16" (my relocation's reword regex assumed "12–14" and silently missed the "12–16" en-dash form).
+  Corrected to "Exercises 9–11" + the Algorithm-Extension pointer sentence.
+- `[FIXED]` **[fable] OPEN-1 + [sol] [OPEN]** — the Codex solutions used `+=` (augmented assignment) in
+  Ex17/19/20/21 (7 lines) — **untaught in Book 1** (appears nowhere else; `concept-scan` doesn't model it,
+  so reviewer-enforced). Rewritten to the taught long form `x = x + …`. (Verified u04–u07 drills used no
+  `+=` — isolated to u08.)
+- `[FIXED]` **[fable] nit-1** — Ex20 opened "Same words, same budget, different rule:" but is the first of
+  the pair; removed (kept the contrast wording on Ex21).
+- `[FIXED]` **[fable] nit-2** — Ex18 argmin seeding had no route on a dict; added a hint ("use a boolean
+  `first_pair = True` and flip it after the first turn").
+- `[FIXED]` **[fable] nit-3** — teacher-notes "routed to More-Practice/homework" → "the Algorithm
+  Extension is routed as time-permitting / homework".
+- `[NOTE]` **[fable] nit-4** — shipped both matrix flavours (S-fit + S-tip) instead of the "first-unknown
+  search" candidate, within the ≤5 cap (finalized within cap; the search rep is covered by the relocated
+  linear-search Ex15).
+
+All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes.
+
+**Round 2 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** (round 2: both [OPEN]s
+confirmed — no `+=` remains, divider = 9–11; Ex17–21 re-derived) · **[glm] APPROVE-WITH-NITS** (round 2) ·
+**[fable] APPROVE-WITH-NITS** (round 2). A cosmetic residual nit (Ex20 opener left lowercase after the
+nit-1 edit) was capitalized ("Use …"). All four APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to
+PR + merge.
+
 ## Post-Execution Report
 
 ### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling) — DONE
@@ -551,7 +584,23 @@ Cleared to PR + merge.
 - **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 48→60
   cells (1.25×, < 2×). A pre-existing list-slice closure issue in Challenge 1's assert was fixed here.
 
-_(Phases F–I + Phase V report appended as each slice lands.)_
+### Phase F — u08 word-wizard — DONE (pending round-2 confirm + PR)
+
+- **Relocation + renumber:** the five pattern-tagged exercises relocated into a closing `## Algorithm
+  Extension` H2 as Ex12–16 (count-by-condition, find-extreme, transform-each, linear-search, filter;
+  markers adjacent); non-algo renumbered to Ex1–11. u08 has no lesson pattern markers (all reuse) → lesson
+  unchanged.
+- **New drills (unmarked, Ex17–21):** total-of-tally (unmarked accumulator — u08 stays running-total-free
+  per §7), rarest-word (argmin, seed from first pair), known-vs-unknown (two-counter), and the word-length
+  matrix pair on owl/dragon/cat/wizard/sun ÷ 12 (exact-hit fit 3/12 vs tip 4/18/"wizard"). Dict-loop/items,
+  `len`, `in`; no `sum`/`sorted`/`min`/`input`; **long-form accumulation only (no `+=`)**.
+- **Cross-refs:** u04/u06 teacher-notes, design §3, ledger updated (count u08 Ex12, find-extreme Ex13,
+  transform-each Ex14; linear-search/filter unchanged 15/16). teacher-notes reframed (in-class Ex1–8,
+  More-Practice Ex9–11, Algorithm Extension Ex12–21 enrichment). ledger resulting-core 16 → 21.
+- **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 44→55
+  cells (1.25×, < 2×).
+
+_(Phases G–I + Phase V report appended as each slice lands.)_
 
 ---
 
