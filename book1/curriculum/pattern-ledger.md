@@ -39,7 +39,7 @@ because a Challenge exercise is ≥2 tagged cells; the invariant tracked here is
 | filter-into-list | u08 | *new* "Keep only the long words" (Exercise 16) | new core | new | list-append, comparison, builtin-functions (`len`, scanner-derived on u08) | H |
 | filter-into-list | u09 | *new* "Load only the high scores" | new core | new | list-append, comparison, file-read | H |
 | filter-into-list | u10 | *new* "List the happy pets" | new core | new | list-append, comparison | H |
-| sentinel-loop | u02 (home) | "Exercise 3" while-until-guessed game | core | reuse-as-home | while-loop (u02), comparison (u02) | B |
+| sentinel-loop | u02 (home) | "Exercise 8" while-until-guessed game | core | reuse-as-home | while-loop (u02), comparison (u02) | B |
 | sentinel-loop | project-01 | M1 `while choice != "q"` menu | core | reuse | — | B |
 | sentinel-loop | u07 | "Exercise 13: Double the Qualifying Threshold" (`while`, true sentinel) | core | reuse | — | B |
 | sentinel-loop | u10 | "Exercise 14: Play Until Happy" (`while happiness<10`) | stretch | promote | — | B (+1 u10 Challenge replacement) |
@@ -51,7 +51,7 @@ Challenge column = Challenge-*exercise* count (each ≥2 `stretch`-tagged cells 
 
 | unit | baseline core | +new core | resulting core | Challenge exercises after |
 |---|---|---|---|---|
-| u02 | 8 | 0 (sentinel home = reuse Ex3) | 8 | 2 (unchanged) |
+| u02 | 8 | 0 (sentinel home relocated to Ex8; no new drills — u02 stays lean) | 8 | 2 (unchanged) |
 | u04 | 10 | +2 (running-total + count homes, `while`-based, no list) +7 (plan-048 unmarked drills, Ex13–19) | 19 | 2 (unchanged) |
 | u05 | 11 | 0 (reuse, now Ex11) +9 (plan-048 unmarked function drills, Ex12–20) | 20 | 2 (unchanged) |
 | u06 | 11 | +3 (count-matches new + linear-search & transform-each homes, Ex12–14; plan-047 logged +2 — fable NIT-4 off-by-one, reconciled here) +8 (plan-048 unmarked drills, Ex15–22) | 22 | 2 (unchanged) |

@@ -567,6 +567,16 @@ All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes; e
 single-loop; Ex16/17/21/24 Pet classes minimized) with no regression; drills verified self-contained
 standalone; pytest 495 passed. Full 4-way APPROVE, no open blockers. Cleared to PR + merge.
 
+### Phase I — u02 number-detective + project-01 (relocation-only, no new drills)
+
+**Round 1** — [self] APPROVE; [sol]/[glm]/[fable] dispatched. u02 stays **lean** (memory
+[[exercise-sets-favor-volume]]: units 01–02 stay lean): the sentinel-loop home exercise moved into a lean
+`## Algorithm Extension` (Ex3→Ex8; non-sentinel Ex4–8→Ex3–7), the lesson sentinel Spotlight gathered under
+a closing `## Algorithm Extension`, and **no new drills** added. project-01 M1's sentinel Spotlight framed
+as extension prose (linking to the u02 home + u07/u10 reappearances; marker unchanged). Cross-refs updated:
+ledger sentinel-loop row "Exercise 3"→"Exercise 8"; u02 teacher-notes (Ex7/8→Ex6/7; sentinel home = Ex8,
+Algorithm Extension). All book1 checks + exec + PDF GREEN; book2 no regression.
+
 ## Post-Execution Report
 
 ### Phase A — Design v8 + Algorithm-Extension conventions (docs/tooling) — DONE
@@ -715,7 +725,19 @@ standalone; pytest 495 passed. Full 4-way APPROVE, no open blockers. Cleared to 
 - **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Volume 47→65
   cells (1.38×, < 2×).
 
-_(Phase I + Phase V report appended as each slice lands.)_
+### Phase I — u02 number-detective + project-01 — DONE (pending gate + PR)
+
+- **Relocation (lean, no new drills):** u02's sentinel-loop home exercise moved into a lean
+  `## Algorithm Extension` H2 (Ex3→Ex8, marker adjacent; non-sentinel Ex4–8→Ex3–7); lesson sentinel
+  Spotlight gathered under a closing `## Algorithm Extension`. **u02 stays lean** — no extra drills.
+- **project-01:** M1's sentinel-loop Spotlight framed as extension prose (marker unchanged).
+- **Cross-refs:** ledger sentinel row Ex3→Ex8 + resulting-core note; u02 teacher-notes renumbered
+  (Ex7/8→Ex6/7) and sentinel-home reframed to Ex8/Algorithm Extension. Design §3 references u02 by name
+  (no exercise number) — unchanged.
+- **Verification:** full book1 ci-local checks + exec + PDF GREEN; book2 no regression. Resulting-core
+  stays 8 (relocation-only).
+
+_(Phase V final report appended after all slices merge.)_
 
 ---
 

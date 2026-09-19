@@ -24,11 +24,13 @@ Budget: four lessons of 60–90 minutes. Ten concepts land here — the year's j
   Open on the thread: the machine has a secret; today it answers one guess.
   20 min: the `if` ladder (one true branch → a false test does nothing → `if`/`else`).
   25 min: the `elif` ladder (three-way verdict → first-True-wins → the one-guess detective with a real input).
-  Rest: complete the in-class branching path with Exercise 2, then the required Exercise 7 range-width report and Exercise 8 truth check. Start these only after the `if`/`elif`/`else` ladders above.
+  Rest: complete the in-class branching path with Exercise 2, then the required Exercise 6 range-width report and Exercise 7 truth check. Start these only after the `if`/`elif`/`else` ladders above.
 - **Lesson 4 — while-loop + debugging (60–90 min).**
   Open on the thread: one guess isn't a game; loop until correct.
   30 min: the `while` ladder (loop until a typed sentinel → loop until the guess matches → add an `if` hint inside → the full random game). Every rung is teacher-run (it waits for typing) and counter-free by design.
-  In-class pattern home: Exercise 3 is the **sentinel-loop** home.
+  In-class pattern home: the **sentinel-loop** home is Exercise 8, now gathered in the closing
+  **Algorithm Extension** section — name the pattern in class from the lesson Spotlight and run Exercise 8
+  there (u02 adds no extra drills; it stays lean).
   Before coding, spend 2 minutes on an unplugged trace: everyone flips cards until someone finds the ace — when do you stop?
   20 min: deliberate-bug debugging session (practices error-messages): the forgotten-`int()` bug is in the lesson's broken/fixed pair; the `=`-for-`==` bug is TEACHER-IMPROVISED — type `while guess = secret:` live, let the SyntaxError land, and read it together.
   Rest: play; hand-tally guess counts for the paper leaderboard.
