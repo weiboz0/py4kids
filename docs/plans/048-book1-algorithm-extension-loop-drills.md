@@ -562,7 +562,10 @@ statement↔solution mismatches those solution-fixes created:
 All book1 checks + exec-solutions/exec-lessons + PDF re-run GREEN after fixes; each drill self-contained
 (own `class Pet`), verified standalone.
 
-**Round 2** — [self] APPROVE (all [OPEN]s + nits [FIXED]); [glm]/[fable]/[sol] re-dispatched on the fixes.
+**Round 2 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** · **[glm] APPROVE** ·
+**[fable] APPROVE** — all three externals confirmed both [OPEN]s resolved (Ex22/23 statements + teacher-notes
+single-loop; Ex16/17/21/24 Pet classes minimized) with no regression; drills verified self-contained
+standalone; pytest 495 passed. Full 4-way APPROVE, no open blockers. Cleared to PR + merge.
 
 ## Post-Execution Report
 
