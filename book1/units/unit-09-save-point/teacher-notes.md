@@ -53,13 +53,13 @@ running-total (Ex 13, sum the saves), linear-search (Ex 14, find a name and stop
 are named in class; every exercise here (Ex 12–23) is routed as time-permitting / homework /
 differentiation.
 
-The five relocated file-reading exercises each **re-save their own `savegame.txt` first** so they run
-independently of exercise order (the notebook is otherwise stateful). The seven new drills work on an
+The five relocated file-reading exercises each **re-save the file they read first** (savegame.txt, or
+settings.txt for the linear-search drill) so they run independently of exercise order (the notebook is otherwise stateful). The seven new drills work on an
 **inline list** of already-loaded scores (the file-reading skill is exercised by the relocated reps and
 the core), keeping each drill self-contained and single-pass:
 
 - **Ex 17** count boss-level saves (≥ 1000 → 2), **Ex 18** average of the saves (2825 ÷ 4 = 706.25),
-  **Ex 19** lowest save (argmin, seed from the first → 450), **Ex 20** which save holds my score
+  **Ex 19** lowest save (argmin, seed from the FIRST score — `0` is safe as a *max* seed for positive scores, e.g. Ex 15, but fatal as a *min* seed, since 0 would always win → 450), **Ex 20** which save holds my score
   (position search + `break` → 2), **Ex 23** first save ≥ target (search + `break` → 725).
 - **Ex 21 & Ex 22** are the **same list ([300, 450, 725, 1350]), opposite-boundary** pair ÷ 1000: Ex 21
   *checks before adding* (2 fit, total 750); Ex 22 *adds then checks* (3 added, total 1475, tipping save
