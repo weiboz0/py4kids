@@ -530,8 +530,9 @@ attributed the order-independent re-save to the *student exercises* rather than 
   re-saves the file it reads first … so the solutions notebook validates cleanly regardless of order. The
   student exercises notebook is designed to be run top-to-bottom (as the whole stateful unit is) …".
 
-**Round 3** — [self] APPROVE; [glm] APPROVE-WITH-NITS + [fable] APPROVE stand; [sol] re-dispatched on the
-reworded claim.
+**Round 3 — CONSENSUS (gate CLOSED).** [self] APPROVE · **[sol] APPROVE** (round 3: teacher-notes claim
+correctly scoped to solutions; diff is docs-only) · [glm] APPROVE-WITH-NITS · [fable] APPROVE. All four
+APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared to PR + merge.
 
 ## Post-Execution Report
 
