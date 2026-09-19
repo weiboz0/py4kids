@@ -6,13 +6,22 @@
 
 ## Motivation
 
-Rollout slice 6 (design 003 §7 — list-less units). u03 teaches turtle drawing via `for`/`range`/nested-loops.
-**Key structural finding:** every `solutions.ipynb` cell is **compute-and-print with a fixed shape parameter**
-(`n=7`, `side_count=4`, `shape_count=3`, `side_length`) — it computes loop counts / `angle = 360 / n` and
-`print`s them; the actual turtle DRAWING lives in separate `assets/*.py` files (validated by structure-check,
-**out of the notebook real-input scope**). So the treatment is a uniform **read-and-compute**: read the shape
-parameter via `int(input())`, then the unchanged compute + print. Authorities: design 003 v3
-(§2/§3 u01–u06 arm/§6); merged pilots u02/u04 (read-and-compute) + u01. Recurring audits baked in.
+Rollout slice 6 (design 003 §7 — list-less units). u03 teaches turtle drawing via `for`/`range`/nested-loops,
+and is the **hardest fit** for the norm: its lesson is 12 `no-exec` turtle DRAWINGS (0 compute capstones) and
+the turtle drawing itself lives in separate `assets/*.py` files (structure-check-validated, **out of the
+notebook real-input scope**). Treatment is decided by a **per-exercise audit, not a uniform rule** (design
+003 **v4** authority): each exercise is classified by what it grades —
+- **reads-nothing / generator → exempt** (design §1/§8 v4): the lesson's all-drawing capstones, the
+  fix-the-error literal-count repairs (Ex3/Ex6), the predict-the-counters twins (Ex8/Ch1), the on-paper
+  color-string task (Ch2), and the prediction-TABLE halves of Ex2/Ex4 — no real-form.
+- **read-and-compute** (the remainder — Ex1/Ex5/Ex7/Ex10, Ex9, and the compute-authoring halves of Ex2/Ex4):
+  the solution cell reads its shape parameter (`input(...)`, wrapped in `int()` when numeric) then runs the
+  unchanged compute + `print`.
+
+Because the lesson is all-drawing, u03's real-forms live **entirely in `solutions.ipynb` markdown** (the cp01
+pattern) — **no lesson change, no metadata add** (§5/§8 v4 reads-nothing exemption). Authorities: design 003
+**v4** (§1/§8 exemption, §5 per-unit audit, §2/§3 u01–u06 arm, §6); merged pilots u02/u04 (read-and-compute)
++ u01 + cp01 (solutions-markdown-only). Recurring audits baked in.
 
 ## No lesson change, no metadata change (corrected after round 1)
 
@@ -34,9 +43,12 @@ cues** (the cp01 pattern, adapted for a unit). Consequences:
 3. **CP-light naming — none.** `n`, `side_count`, `shape_count`, `side_length`, `angle` are clean. Keep verbatim.
 4. **No numbered prompts.** Real-forms read the shape parameter(s) up front — **one read per parameter, all up
    front** ("How many sides? " / "How many shapes? "), then the unchanged loop; no `{i+1}` indices.
-5. **Closure:** real-forms add only `int(input(...))` (int/type-conversion are u02, prereq-valid; markdown so
-   not scanned) to the existing `for`/`range`/arithmetic/`print`/f-string. **NO `if`/comparison/list/while/
-   sys.stdin** (u03 has none; the only comparisons are in `assert` lines, which stay in the twins). Turtle
+5. **Read the parameter with `input(...)`, wrapped in `int()` only when numeric.** Numeric shape params
+   (`n`, `side_count`, `shape_count`) → `int(input(...))` (int/type-conversion are u02, prereq-valid; markdown
+   so not scanned); a STRING param (Ex7's `color_name`) → plain `input(...)`, no `int()`. Real-forms add only
+   this to the existing `for`/`range`/arithmetic/`print`/f-string. **NO `if`/comparison/list/while/sys.stdin**
+   (u03 has none; the only comparisons — and any `or`/BoolOp, e.g. `assert side_number != 0 or pen_size == 1`
+   in the Ex1/Ex5/Ex7/Ex8 twins — appear ONLY inside `assert` lines, which stay in the twins). Turtle
    `assets/*.py` files are NOT touched.
 
 ## Per-exercise SHAPE table
@@ -44,7 +56,7 @@ cues** (the cp01 pattern, adapted for a unit). Consequences:
 | Shape | Exercises | Real-form + statement treatment |
 |---|---|---|
 | **exempt** | Ex3 + Ex6 (**fix-the-error** — the graded task is fixing the literal loop count [`range(3)`→`range(4)`, etc.], unrelated to input; reading dissolves the repair — the u01-Ex2/3 class, NOT u02-Ex4 where `int(input)` WAS the fix), Ex8 + Challenge 1 (**predict-the-counters** — the twin hardcodes the counter list as a string literal `"0, 1, 2, 3, 4, 5, 6"`, which a read of `n` would break), Challenge 2 (**on-paper/reads-nothing** — six fixed `turtle.color(...)` strings, no numeric param), and the **prediction/trace TABLE halves** of Ex2/Ex4 | NO real-form for the exempt part; `**No real version:**` statement note (with the one-line rationale) |
-| **read-and-compute** (fixed shape param → read it) | Ex1, Ex5, Ex7, Ex10, Ex9 (**+ a declared one-line print added to its twin** so §6(b) has a result line — sol 19 is currently assert-only), and the **compute-authoring halves of Ex2 + Ex4** (`n=7` loop print / nested `shape_count`/`side_count` print) | markdown real-form reads `n`/`side_count`/`shape_count` via `int(input(...))` then the unchanged compute+print; statement `**Real version:**` cue |
+| **read-and-compute** (fixed shape param → read it) | Ex1, Ex5, Ex7, Ex10, Ex9 (**+ a declared print `print(drawn_sides, travel_moves)` added to its twin** so §6(b) has a result line — sol 19 is currently assert-only; expected result line **`16 4`** on the fixed data; the markdown twin must mirror this exact print + line), and the **compute-authoring halves of Ex2 + Ex4** (`n=7` loop print / nested `shape_count`/`side_count` print) | markdown real-form reads its shape parameter with `input(...)` (wrapped in `int()` when numeric — Ex7's `color_name` is a STRING → plain `input(...)`, no `int()`) then the unchanged compute+print; statement `**Real version:**` cue (Ex9's statement is script-only → its cue anchors to the twin: "**Real version:** — see the solution", naming `print(drawn_sides, travel_moves)`) |
 
 (Ex2/Ex4 are hybrids: the prediction TABLE is exempt; the separate compute-authoring program is read-and-compute.
 The `**No real version:**` note for Ex3/Ex6 records that they are literal-count repairs.)
@@ -52,8 +64,10 @@ The `**No real version:**` note for Ex3/Ex6 records that they are literal-count 
 ## Phases
 ### Phase A — apply to u03 (exercises + solutions ONLY; + design 003 §5)
 - **NO lesson.ipynb change; NO manifest/coverage-map change** (see above).
-- **exercises.ipynb:** `**Real version:**` cues on Ex1/Ex5/Ex7/Ex9/Ex10 + the compute halves of Ex2/Ex4;
-  `**No real version:**` notes on Ex3/Ex6/Ex8/Ch1/Ch2 (+ the table halves of Ex2/Ex4).
+- **exercises.ipynb:** `**Real version:**` cues on Ex1/Ex5/Ex7/Ex9/Ex10; `**No real version:**` notes on
+  Ex3/Ex6/Ex8/Ch1/Ch2. **Ex2/Ex4 are hybrids → carry BOTH, each half-labeled** so the authoring cue isn't
+  skipped: `**Real version:** … for the program` (the compute-authoring half) + `**No real version:** … for
+  the prediction table` (the predict-table half).
 - **solutions.ipynb:** markdown read-and-compute real-forms per the SHAPE table; add the one declared print to
   Ex9's twin (so it has a result line).
 - **design 003 §5** amended to v4 (per-unit-audit-contingent input add; u03 gets none) — done in this plan.
@@ -65,8 +79,8 @@ The `**No real version:**` note for Ex3/Ex6 records that they are literal-count 
   prompt text (standard §6(a–c); one up-front read per parameter, then the unchanged loop/print). Ex9's twin
   gains a print → re-run it under `exec-solutions`.
 - CLOSURE AST scan: only `input`/`int`/`for`/`range`/arithmetic/`print`/f-string in real-forms; NO
-  `if`/list/while/`sys.stdin`; **comparisons appear only inside `assert` lines** (record so the scan doesn't
-  false-alarm).
+  `if`/list/while/`sys.stdin`; **comparisons AND `or`/BoolOp appear only inside `assert` lines** (e.g.
+  `assert side_number != 0 or pen_size == 1`) — record so the scan doesn't false-alarm on the twins.
 - 0 `input()` in solutions CODE cells; ≥3 non-vacuous assert cells; no fenced `## Exercise <digit>` line.
 - `scripts/ci-local.sh` ALL GREEN (prereq/coverage/concept-scan unaffected — no metadata change).
 
@@ -155,6 +169,57 @@ Re-dispatching round 2 (lesson/metadata dropped; §5 amended; SHAPE reclassified
 7. `[OPEN]` Nice: Ex2/Ex4 exemptions defensible (predict-without-running framing; fixed n=7 per the comment) —
    note the inconsistency with Ex5/Ex10 in the exempt note.
 8. `[OPEN]` Should Fix: Phase B must name the turtle-form oracle (#1) + any twin edits re-run under exec-solutions.
+
+### Round 2 (2026-09-19) — re-review after fixes (0619a62)
+#### [self] round 2 (2026-09-19)
+- **Verdict**: APPROVE — solutions-markdown-only (no lesson/metadata change) + design 003 §5→v4 resolve the
+  phantom-lesson + metadata Must-Fixes; SHAPE reclassified (exempt Ex3/Ex6/Ex8/Ch1/Ch2 + Ex2/Ex4 tables;
+  read-and-compute Ex1/Ex5/Ex7/Ex10/Ex9[+print] + Ex2/Ex4 authoring halves). No open blocker.
+#### [sol] round 2 (2026-09-19)
+- **Verdict**: REJECT
+1. `[OPEN]` Must Fix: design-003 consistency — §5 (v4) now says u03 gets no lesson-input/metadata, but §7 still
+   lists "input add: u03" and §8 still requires every complete task (incl. lesson cell 38 spirograph capstone)
+   to have a lesson input() form. Reconcile §7 + **codify the reads-nothing/generator exemption in §1/§8**.
+2. `[OPEN]` Must Fix: plan Motivation (lines 10–15) still says "every solution cell prints / uniform
+   read-and-compute / design v3" — contradicts the corrected SHAPE. Rewrite to the per-exercise audit + v4.
+3. `[OPEN]` Should Fix: Ex9's "one declared print" must pin the exact `print(...)` + expected result line (§6b).
+
+### Round 2 — outcome: REJECT (1 of 4, [sol]); [glm]/[fable] APPROVE-WITH-NITS (Ex3/Ex6 exempt now consensus).
+Fixed → round 3.
+**Round 2 responses (plan + design revised):**
+- → [FIXED] [sol]#1 (design consistency): **design 003 amended** — §1/§8 codify the **reads-nothing/generator
+  exemption** (turtle drawing / generator / countdown / fixed printed card have no real-program form; the
+  both-forms rule applies only to input-shaped tasks); §7 rollout `input`-add notes reconciled to defer to the
+  §5 per-unit audit (u03 gets none); header + v4 revision entry updated. u03's cell-38 spirograph capstone is
+  now explicitly exempt (all-drawing), so no lesson input form is required.
+- → [FIXED] [sol]#2 (Motivation): rewrote lines 9–15 to the **per-exercise audit + v4** authority — dropped
+  "every solution cell prints", "uniform read-and-compute", and the v3 citation.
+- → [FIXED] [sol]#3 / [fable]#2 (Ex9 pin): pinned the exact declared print `print(drawn_sides, travel_moves)`
+  and expected result line **`16 4`** in the SHAPE table; the markdown twin must mirror both.
+- → [FIXED] [glm] Nice (Ex2/Ex4 half-labeled cues): Phase A now specifies BOTH cues, each labeled by half
+  ("… for the program" / "… for the prediction table").
+- → [FIXED] [fable]#1 (Ex7 string param): treatment §5 reworded — `input(...)` wrapped in `int()` only when
+  numeric; Ex7's `color_name` is a STRING → plain `input(...)`.
+- → [FIXED] [fable]#3 (closure-scan note): extended to "comparisons AND `or`/BoolOp only inside `assert` lines".
+Re-dispatching round 3 ([sol] only; [glm]/[fable] already APPROVE-WITH-NITS with nits folded).
+
+#### [glm] round 2 (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — all round-1 findings resolved; §5 v4 sound; **accepts Ex3/Ex6 exempt and
+  withdraws its round-1 read-and-compute minority view** (the graded repair is the literal count; a read
+  dissolves it; u01-Ex2/3 class). No new blocker.
+1. `[OPEN]` Nice: Ex2/Ex4 hybrid statements carry BOTH a `**Real version:**` cue (authoring half) and a
+   `**No real version:**` note (prediction-table half) — word each to name its half ("…for the prediction
+   table" / "…for the program") so a student doesn't skip the authoring cue.
+
+#### [fable] round 2 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — all 8 round-1 findings verified resolved; §5 v4 sound (no governance file
+  touched); Ex9 declared print sound (result line `16 4`). 3 plan-wording Nice (fold):
+1. `[OPEN]` Nice: Ex7's `color_name` is a STRING → real-form reads it with plain `input(...)` (not `int()`);
+   clarify treatment §5 ("read the parameter with `input(...)`, wrapped in `int()` only when numeric").
+2. `[OPEN]` Nice: Ex9 statement is script-only → its cue anchors to the twin ("— see the solution") + name the
+   declared print (e.g. `print(drawn_sides, travel_moves)`) so Phase B's expected line is unambiguous.
+3. `[OPEN]` Nice: extend the closure-scan note to "comparisons AND `or`/BoolOp only inside `assert` lines"
+   (Ex1/Ex5/Ex7/Ex8 twins carry `assert side_number != 0 or pen_size == 1`).
 
 ## Content Review
 _(pending — 4-way.)_

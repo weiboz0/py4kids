@@ -1,7 +1,7 @@
 # Design 003 — Book 1 Real-Input Norm
 
 **Status:** APPROVED — v4 (v1: plan-050 gate CLOSED; v2: plan-052 §3 realistic-data policy; v3: plan-053 §2
-checkpoint/brief placement + §6d oracle; v4: plan-056 §5 input-add is per-unit-audit-contingent, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
+checkpoint/brief placement + §6d oracle; v4: plan-056 §5 input-add per-unit-audit-contingent + §1/§8 reads-nothing/generator exemption + §7 reconciled, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
 stdin-first/subprocess-judged).
 
 ## 1. Motivation
@@ -12,11 +12,19 @@ examples** (the plans 031–035 / 049 pedagogy) and **without** Book-2's `sys.st
 judging (explicitly rejected by the course author after comparing options):
 
 1. **Hybrid real-input form.** Every *complete task* (each lesson "put it together") and every exercise
-   keeps its **executable fixed-data** form (runs live in the notebook — students see output) **and** gains
-   one consistent **`input()`-reading "real program"** form. The idiom is **`input()`** (introduced u01),
-   never `sys.stdin`.
+   that **processes input-shaped data** keeps its **executable fixed-data** form (runs live in the
+   notebook — students see output) **and** gains one consistent **`input()`-reading "real program"** form.
+   The idiom is **`input()`** (introduced u01), never `sys.stdin`.
 2. **Realistic exec data.** Culminating put-it-together cells and exercises use realistic, non-trivial
    data — no `n = 3`, no 2-element lists.
+
+**Reads-nothing / generator exemption.** A complete task that produces its output *without reading any
+external input* — a **turtle drawing**, a random **generator** (dice roller), a **countdown**, a **fixed
+printed card/receipt** — has **no real-program form to add** (there is nothing to read) and satisfies the
+norm with its executable form alone. The both-forms rule (clause 1, §8) applies only to input-shaped
+tasks. A unit whose lesson capstones are *all* reads-nothing/generator (e.g. u03, all turtle drawings)
+therefore adds **no lesson `input()` cell and no metadata** (§5); its real-forms, where any exercise *does*
+process input-shaped data, live only in `solutions.ipynb` markdown.
 
 ## 2. The form, by notebook kind (CI-forced)
 
@@ -103,8 +111,9 @@ completed program so it is not misread as the fragment. (Origin: checkpoint-01 Q
 Plan 050 ships **design 003 + the u04 pilot** only. Remaining 15 entries roll out unit-by-unit in
 subsequent plans, each through both 4-way gates, `ci-local` GREEN per slice:
 
-1. **Units, list-less (Handling (i)):** u01 (text-only, no loop), u02, u03, u05, u06. (`input` add: u03, u05.)
-2. **Units, lists (realistic fixed lists):** u07, u08, u09, u10. (`input` add: u08, u09.)
+1. **Units, list-less (Handling (i)):** u01 (text-only, no loop), u02, u03, u05, u06. (`input` add: **per the
+   §5 per-unit audit**, not automatic — u03 gets **none** (all-drawing lesson; solutions-markdown-only).)
+2. **Units, lists (realistic fixed lists):** u07, u08, u09, u10. (`input` add: per the §5 per-unit audit.)
 3. **Checkpoints:** cp01–cp04 (markdown real-forms; no `input` add).
 4. **Projects:** project-01, project-02 (markdown real-forms under `## Milestone N`).
 
@@ -115,10 +124,12 @@ u04 pilot only covers the list-less unit arm.
 ## 8. Acceptance
 
 Reached unit-by-unit as each slice merges. A unit/checkpoint/project satisfies design 003 when every
-complete task has BOTH an executable fixed-data form (CI-run, asserted where applicable) AND a real-program
-`input()` form (no-exec code cell in lessons; markdown elsewhere), put-it-together + exercise data is
-realistic where closure allows, build-up rungs stay one-increment, u01 is text-only, no `sys.stdin`,
-and `ci-local` is ALL GREEN. Book 2 stays green throughout.
+complete task **that processes input-shaped data** has BOTH an executable fixed-data form (CI-run, asserted
+where applicable) AND a real-program `input()` form (no-exec code cell in lessons; markdown elsewhere) —
+while **reads-nothing/generator tasks (§1: turtle drawings, generators, fixed printed cards) have the
+executable form only** — put-it-together + exercise data is realistic where closure allows, build-up rungs
+stay one-increment, u01 is text-only, no `sys.stdin`, and `ci-local` is ALL GREEN. Book 2 stays green
+throughout.
 
 ## 9. Revision history
 - **v1 (2026-09-19):** created for plan 050; 4-way plan-review gate CLOSED (3 rounds — resolved: the
@@ -130,9 +141,13 @@ and `ci-local` is ALL GREEN. Book 2 stays green throughout.
   their lists. Under this policy a unit grows only its <4-element core SOURCE lists (u07 [plan 052]: Ex1/Ex7/
   Ex8/Challenge 2), leaving already-realistic core lists + enrichment/rung data untouched; the govern is
   source/input data, not computed result literals.
-- **v4 (2026-09-19, plan 056):** §5 clarified — the `practices:[input]` add is **contingent on a per-unit audit
+- **v4 (2026-09-19, plan 056):** (§5) the `practices:[input]` add is **contingent on a per-unit audit
   finding a lesson `no-exec` `input()` CODE cell**, not automatic for the u03/u05/u08/u09 candidate set. u03 is
   all turtle-drawing (real-forms in solutions markdown only, invisible to concept-scan) → NO metadata add.
+  (§1/§8) codified the **reads-nothing/generator exemption**: a task that produces output without reading
+  external input (turtle drawing, generator, countdown, fixed printed card) has no real-program form and
+  satisfies the norm with its executable form alone; the both-forms rule applies only to input-shaped tasks.
+  (§7) reconciled the rollout `input`-add notes to defer to the §5 per-unit audit (u03 gets none).
 - **v3 (2026-09-19, plan 053):** (§2) checkpoint + brief rows clarified — the real-program form lives in the
   PAIRED `solutions.ipynb` under the mirrored `## Question N` / `## Milestone N` (the student
   checkpoint/brief stays solution-free, per Content Conventions); where a Question/Milestone statement or
