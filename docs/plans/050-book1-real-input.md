@@ -207,7 +207,88 @@ Round 3 re-dispatched to all three (the project-mapping blocker + nits folded).
 
 ## Content Review
 
-_(pending per slice.)_
+### Round 1 — Phase B pilot u04 (2026-09-19)
+
+Roster dispatched in parallel: [self] inline; [sol] `codex:codex-rescue` (--model gpt-5.6-sol --fresh, read-only);
+[glm] `opencode:opencode-review`; [fable] Fable 5 (`Agent`, general-purpose), all read-only.
+
+#### Review — [self] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS
+1. `[self]` Closure: AST-level scan of all 22 new real-forms (19 solutions markdown, 3 lesson `no-exec`) —
+   NO `for`/`list`/`range`/`len`/`sum`/string-method/`def`; only input, int(input), `==` (incl. string),
+   and/or/not, while, break, nested if, f-strings. Clean. Priority: (verified, no action).
+2. `[self]` CI-safety: 0 solutions CODE cells contain `input()`; 0 markdown real-forms contain a
+   `^## Exercise` line; `ci-local` ALL GREEN (exec-solutions runs the asserted twins incl. Ex11→40, Ex12→3).
+   Priority: (verified, no action).
+3. `[self]` Correctness: all 22 real-forms `ast.parse` + piped-run to their fixed-data twin's result line
+   (modulo prompt text). Priority: (verified, no action).
+4. `[FIXED-N/A]` Exemptions: Ex6 (paper-trace "Predict the score") and Challenge 2 (countdown) documented
+   as no-input by design — input() would defeat a prediction / a countdown reads nothing. Justified.
+   Priority: Nice to Have (rollout should keep this exemption class explicit in design 003 §4 — already implied).
+5. `[OPEN]` Asymmetry (rollout note, not a u04 blocker): for the read-and-accumulate exercises whose student
+   cell is `no-exec` (Ex11), the input() form IS the model answer; for the fixed-data ladder drills
+   (Ex13–18) the student writes the fixed-data version and the real-form is shown only in the solution via a
+   "Real version:" note. Both satisfy design 003 §8, but plans 051+ should standardize how prominently the
+   real-form is offered to the student. Priority: Nice to Have.
+
+#### Review — [sol] (2026-09-19 — codex gpt-5.6-sol, task-mu8q4hig-yacrlw)
+- **Verdict**: REJECT
+1. `[OPEN]` lesson.ipynb L1 (cell 20 `65f4180b`) and L3 (cell 42 `d3d0be05`) are complete `no-exec` input
+   programs with no executable fixed-data twin of the same logic/result line; adjacent rungs are only partial
+   build-ups. Violates design 003's both-forms requirement for the full pilot. Priority: Must Fix. (== [glm] #4, escalated)
+2. `[OPEN]` exercises.ipynb Ex12 work cell (`u04-count-correct-work`) untagged though rewritten Ex12 requires
+   an input-reading program (Ex11 cell 25 is `no-exec`). Priority: Should Fix. (== [fable]#1 / [glm]#1)
+3. `[OPEN]` exercises.ipynb Ex11 (`u04-ex11`) says a "round" contains any number of "questions" but then
+   defines `n` as rounds. Priority: Should Fix. (== [glm]#2)
+4. `[OPEN]` exercises.ipynb Ex12 (`u04-count-correct-heading`) "not just 3 answers" leftover. Priority: Nice to Have. (== [fable]#2)
+5. `[OPEN]` exercises.ipynb Ex16 (`bb5c58d03be5`) real note omits the leading count read. Priority: Nice to Have. (== [fable]#3 / [glm]#3)
+
+### Round 1 — outcome: REJECT (1 of 4, [sol]). Fix → re-review (round 2).
+
+**Round 1 responses (commit after e4df129):**
+- → Response [FIXED] ([sol]#1 / [glm]#4 — Must Fix): added executable fixed-data twins for the L1 opening-round
+  and L3 SUDDEN-DEATH put-it-togethers (fixed stand-in answers), each placed before its `no-exec` input form
+  with a Notice; reworded the intro prose so "run it" now points at the runnable twin (fixes the prior
+  run-a-no-exec-cell contradiction). Twins run: "Score 3 after 2 questions." / "Survived 3 sudden-death
+  questions." — matching their input-version result lines. All three lesson sections + L1/L3 now carry BOTH forms.
+- → Response [FIXED] ([sol]#2 / [fable]#1 / [glm]#1 — Should Fix): tagged Ex12 work cell `u04-count-correct-work` `no-exec`.
+- → Response [FIXED] ([sol]#3 / [glm]#2 — Should Fix): Ex11 statement now "A quiz can have any number of rounds."
+- → Response [FIXED] ([sol]#4 / [fable]#2 — Nice): Ex12 "not just 3 answers" → "not just the five answers in the checked example."
+- → Response [FIXED] ([sol]#5 / [fable]#3 / [glm]#3 — Nice): Ex16 real-version note now mentions the leading count read.
+- → Response [FIXED] ([self]#5 — Nice, rollout note): folded into design 003 §7 guidance for plans 051+ (no u04 change).
+
+ci-local ALL GREEN after fixes; all 24 real-forms (19 solution md + 3 lesson input + 2 new lesson twins are
+executable, validated) reproduce their twins. Re-dispatching all four for round 2 (lesson content changed materially).
+
+#### Review — [glm] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS
+- Verified: all 22 real-forms run clean + reproduce twin result lines (Ex11→40, Ex12→3, asserts pass); no
+  closure violations; exemptions justified; 0 input() in solutions code cells; no fenced real-form starts
+  `## Exercise`; targeted hygiene/structure/noexec/cell-lint/exec-solutions/exec-lessons/manifest/prereq/
+  coverage/concept-scan/stretch all PASS; blind solves matched.
+1. `[OPEN]` exercises.ipynb Ex12 work cell 28 untagged while its statement is now input-native (sibling Ex11
+   cell 25 is `no-exec`). Tag cell 28 `no-exec`. Priority: Should Fix. (== [fable] #1)
+2. `[OPEN]` exercises.ipynb Ex11 cell 24: "A quiz round can have any number of questions" conflates questions
+   with rounds; reword to "A quiz can have any number of rounds." Priority: Nice to Have.
+3. `[OPEN]` Ex16 real-program note omits the leading count read (real-form opens with `n = int(input(...))`);
+   sibling Ex13/14/15/17/18 notes mention it. Priority: Nice to Have. (== [fable] #3)
+4. `[OPEN]` lesson.ipynb L1 (cell 20) and L3 (cell 40) put-it-togethers carry ONLY the `no-exec` input()
+   form, with no executable fixed-data twin of the same task — unlike the newly paired L2/running-total/
+   count. Pre-existing, but short of design 003's "both forms". Priority: Nice to Have.
+
+#### Review — [fable] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS
+- Verification: blind-solved Ex6/9/11/12/16/17/18 (all match); ran all 21 asserted cells (pass, incl. Ex11→40,
+  Ex12→3); all 22 real-forms ast.parse + piped-run identical to twins; closure clean (u04 union only); 0
+  solutions code cells with input(); 0 real-forms with `## Exercise`; exemptions (Ex6 trace, Challenge 2
+  countdown) justified.
+1. `[OPEN]` exercises.ipynb Ex12 answer cell (cell 28) missing `no-exec` tag — its rewrite to an input()
+   "any n" program should carry the tag like Ex11's cell 25. Empty so CI passes today, but breaks the
+   design-003 convention. Priority: Should Fix.
+2. `[OPEN]` exercises.ipynb Ex12 statement trailing "not just 3 answers" is a leftover from the old
+   fixed-data statement (twin now uses 5). Priority: Nice to Have.
+3. `[OPEN]` exercises.ipynb Ex16 "Real version:" note omits that the real form first reads the answer count
+   (its real-form opens with `n = int(input(...))`); sibling notes on Ex13/14/15/17/18 mention it. Priority: Nice to Have.
 
 ## Post-Execution Report
 
