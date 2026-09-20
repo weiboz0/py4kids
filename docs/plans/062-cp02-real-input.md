@@ -270,5 +270,36 @@ lines; closure; hygiene 0-input/8-headings/11-asserts; scope `git diff` clean) E
 - `[WONTFIX]` [fable] N3 (Q4 numbered class) — resolved by the class-3 reword above.
 - `[WONTFIX]` [fable] N6 / [glm] notes — pre-existing/plan-conformant, no action.
 
+#### [sol] round 2 (2026-09-20) — re-verify on e571d70
+**APPROVE — `[OPEN]` RESOLVED.** Q4 now names class 3 (sound on-paper fixed-code reasoning). Q2/Q3/Q8 parse,
+1/1/3 independent reads, loop/defs + §6c blank lines preserved, parity `4`→`10` / `Maya`→`Hello, Maya!` /
+`yes/no/yes`→`2`. 0 input() in code cells; checkpoint.ipynb/manifest.yaml/teacher-notes.md byte-unchanged.
+
+### Content-review outcome: **FULL 4-way consensus.** [self] APPROVE · [glm] APPROVE · [fable] APPROVE-WITH-NITS
+(all folded) · [sol] APPROVE (round 2, `[OPEN]` resolved). No open blockers. Gate CLOSED → PR.
+
 ## Post-Execution Report
-_(pending)_
+
+**Status: COMPLETE.** Checkpoint 02 (loops-and-functions) received the design-003 real-input treatment via the
+checkpoint markdown path. Second checkpoint done (after cp01); rollout continues to cp03, cp04, then projects.
+
+**What shipped** (branch `feature/plan-062-cp02-real-input`, `solutions.ipynb` only, +8 markdown cells):
+- 3 real-forms — Q2 (§6d fragment: read the `while`-accumulator upper bound `n`, sum `1..n`, twin asserts
+  `total==10`/`count==5` prove the completed blanks); Q3 (functions arm: read one name for `greeting`, global
+  `player_name` avoids shadowing the param); Q8 (functions arm: read three yes/no answers via `== "yes"` for
+  `score_round`, three distinct reads).
+- 5 exemption notes (Q1/Q4/Q5/Q6/Q7) with the design-prescribed `**No real version:**` prefix naming the v6
+  class — Q1/Q5/Q6 class 3 (predict/trace), Q4 class 3 (on-paper fixed-code reasoning), Q7 class 3 + class 1.
+- **No metadata change** (markdown real-forms invisible to concept-scan; design §5 / cp01 precedent). No lists
+  → §3 N/A. `checkpoint.ipynb` / `manifest.yaml` / `teacher-notes.md` byte-unchanged.
+
+**Gate history**: plan-review FULL 4-way consensus (all APPROVE / APPROVE-WITH-NITS; [glm] empirical, no
+timeout) → implementation (5591763) → content-review round 1 ([self]/[glm] APPROVE, [fable] APPROVE-WITH-NITS,
+[sol] REJECT on the Q4 §8 class-naming `[OPEN]`) → round-2 fixes (325ebdd: Q4→class 3 + 4 [fable] nits) →
+[sol] re-verify APPROVE → 4-way consensus.
+
+**Verification**: `scripts/ci-local.sh` ALL GREEN; parity 3/3 modulo prompt; 0 `input()` in code cells;
+heading-mirror intact (8 `## Question N`); scope invariant `git diff --quiet` clean; `pre-merge-guard --pr`.
+
+**Follow-ups**: none for cp02. Design note for cp03/cp04: the "explain/analyze fixed code" question type maps to
+class 3 (predict/trace) for the §8 note — settled here, no design amendment needed.
