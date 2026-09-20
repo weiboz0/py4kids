@@ -19,7 +19,7 @@ All 10 Book-1 units (u01–u10) + cp01 + cp02 already carry the norm.
 cp03 real-forms use only concepts already in the union (`string-index`, `string-slice`, `string-methods`,
 `in-operator`, `list-literal`, `list-index`, `list-append`, `list-loop`, `list-sort`, `builtin-functions`,
 `dict-literal`, `dict-access`, `dict-loop`, `for-loop`, `if-statement`, `boolean`, `accumulator`, `arithmetic`,
-`int-type`, `elif-else`, `f-string`, `string-literal`).
+`int-type`, `elif-else`, `f-string`, `string-literal`, `print`, `variable`, `error-messages`).
 `input` is authored only in `solutions.ipynb` **markdown** → no `practices:[input]` add (design §5; cp01/cp02
 precedent). No `.split()` (Book-2). `int()` = type-conversion is in-union (`int-type`).
 
@@ -61,8 +61,11 @@ fixed-reference-fixture, which is the correct and non-awkward outcome.
 - **Q5**: fixed-count read of 4 scores, then unchanged `scores.sort(reverse=True)` / print `[0]`,`[1]`,`[2]`.
 - **Q7**: `words = [input("Word 1? "), input("Word 2? "), input("Word 3? "), input("Word 4? "), input("Word 5? ")]` then the unchanged counting loop + `.items()` report.
 
-Each real-form reads every distinct fixed value (Q3 three, Q4/Q5 four, Q7 five; Q1/Q2 one). Captions: cp01-style
-parenthetical after `**The real program**`.
+Each real-form reads every distinct SOURCE value (Q3 three scores, Q4/Q5 four, Q7 five words; Q1/Q2 one string);
+task CONSTANTS stay fixed (Q3's `append(100)` operand — the appended value is part of the task structure, not
+source data, cp01-Q7 `secret=8` precedent). Q1's caption asks for a word ≥5 letters (so `[2:5]` is meaningful
+and `[0]`/`[-1]` never hit empty input — [fable] fb / [sol] N2). Captions: cp01-style parenthetical after
+`**The real program**`.
 
 ## Data growth (§3) — constrained by the byte-frozen checkpoint
 
@@ -91,8 +94,8 @@ expected to be a no-op — verify grep shows no stale `input` claim).
   coverage, PDF build, pre-merge guard.
 - Real-form validation: `ast.parse` each fenced block + piped-run, compare the COMPUTED result line(s) to the
   executable twin MODULO prompt text — Q1 `wizardry`→`w y zar yrdraziw`; Q2 the frozen phrase→`True`;
-  Q3 `88/92/75`→`88`,`100`; Q4 `88/92/75/100`→…`355`; Q5 `88/92/75/100`→`100`,`92`,`88`; Q7 `cat/dog/cat/bird/cat`
-  →`cat 3`,`dog 1`,`bird 1`.
+  Q3 `88/92/75`→`88`,`100`; Q4 `88/92/75/100`→`88`,`92`,`75`,`100`,`4`,`100`,`75`,`355` (8 lines); Q5
+  `88/92/75/100`→`100`,`92`,`88`; Q7 `cat/dog/cat/bird/cat`→`cat 3`,`dog 1`,`bird 1`.
 - Confirm 0 `input()` in any `solutions.ipynb` **code** cell (real-forms are markdown).
 - Scope invariant: `git diff --quiet` for checkpoint.ipynb, manifest.yaml, teacher-notes.md (plan 062 precedent).
 
@@ -128,8 +131,34 @@ adequate. Nits (non-blocking):
 - (fb) Q1 real-form: empty input → `word[0]` IndexError; caption should ask for a word ≥5 letters (matches
   cp02's usage-hint captions). → FOLD in implementation (Phase A).
 
-#### [sol] (pending)
-#### [glm] (pending — opencode)
+#### [glm] (2026-09-20)
+**APPROVE WITH NITS — no open blockers.** All 6 oracles verified by ACTUAL piped execution (Q1→`w y zar
+yrdraziw`, Q2→`True`, Q3→88/100, Q4→…355, Q5→100/92/88, Q7→cat 3/dog 1/bird 1). Q6 fixture-exempt confirmed
+(twin asserts `branch_taken=="pear"`; arbitrary reads break the lookup + branch; v6 §1 "per-plan coverage
+choice"). Q8 valid class-2. Fixed-count idiom = only in-union option (no range/while), matches u08 line 206.
+Metadata NONE correct (scan code cells only). §3-N/A right (frozen checkpoint; count forced by §6b/c). Heading-
+mirror robust (notebooks.py:191 strips fences). Nits (cosmetic, no revision round required):
+- (g1) demonstrator framing — same as [fable] fa (FOLDED); [glm]'s tighter grounds: the §1 rule is per-unit,
+  u08 owns Book-1's dict demonstrators (solutions 296–300), checkpoints aren't bound.
+- (g2) Metadata union enumeration omits `print`/`variable`/`error-messages` — add for completeness. → FOLD.
+- (g3) Q4 Phase-B oracle abbreviated (`…355`) — spell out all 8 lines for a self-contained check. → FOLD.
+- (g4) "reads every distinct fixed value" — distinguish SOURCE data (read) from task CONSTANTS kept fixed
+  (Q3's append operand `100`, cp01-Q7 precedent). → FOLD (wording).
+
+#### [sol] (2026-09-20)
+**APPROVE WITH NITS.** Verified parity by fresh execution (Q1 `w y zar yrdraziw`, Q2 `True`, Q3 88/100, Q4
+88/92/75/100/4/100/75/355, Q5 100/92/88, Q7 cat 3/dog 1/bird 1). Q6 properly class-4 (question fixes keys
+pear/apple/plum; solution asserts the `pear` branch — arbitrary keys break it). Q8 valid class-2 (fix reads no
+input). Fixed-count idiom correct (no range/while); counts confirmed against frozen cells (3/4/4/5). Closure
+pass; metadata correct; §3-N/A correct; CI heading-mirror guarded; Phase B adequate.
+- N1 (demonstrator framing) — same as [fable] fa / [glm] g1: state the rule is INAPPLICABLE here (per-unit;
+  u08 owns Book-1's dict demonstrators), not "satisfied by Q7". → FOLDED.
+- N2 (Q1 caption) — same as [fable] fb: ask for a non-empty word, ≥5 letters, so `[2:5]` stays meaningful. →
+  FOLD in implementation.
+
+### Round 1 — outcome: **FULL 4-way plan-review consensus.** [self] APPROVE · [fable]/[glm]/[sol]
+APPROVE-WITH-NITS · no open blockers. All nits folded (demonstrator wording reworded; g2/g3/g4 cosmetic below;
+Q1 caption ≥5 letters applied in Phase A). Gate CLOSED → implementation.
 
 ## Content Review
 _(pending)_
