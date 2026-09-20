@@ -30,13 +30,13 @@ cp02 real-forms use only concepts already in the checkpoint's `requires`/`practi
 
 | Q | Prompt kind | Class (v6) | Treatment |
 |---|-------------|-----------|-----------|
-| Q1 | Trace a `for range(4)` loop, predict output | **predict/trace** (class 3) | EXEMPT — solutions note |
+| Q1 | Trace a `for range(4)` loop, predict output | **predict/trace** (class 3) | EXEMPT — `**No real version:**` note (class 3) |
 | Q2 | Complete two `while`-accumulator blanks (sum 1→4) | fragment-completion → **read-and-compute** | REAL-FORM — read the upper bound `n`, sum `1..n` with the completed `while` (§6d oracle) |
 | Q3 | Write `greeting(name)`, call + store + print | **read-and-compute** (functions arm) | REAL-FORM — read one name (string `input()`), `greeting(name)` unchanged |
-| Q4 | Read two fns, explain `return` vs `print` | **read-and-explain** (class 3 predict/trace) | EXEMPT — solutions note |
-| Q5 | Trace scopes, predict two output lines | **predict/trace** (class 3) | EXEMPT — solutions note |
-| Q6 | Trace `if/elif/else` ladder, predict message | **predict/trace** (class 3) | EXEMPT — solutions note |
-| Q7 | Turtle trace/predict ("do not run this code") | **predict/trace + reads-nothing** (class 3/1) | EXEMPT — solutions note |
+| Q4 | Read two fns, explain `return` vs `print` | **read-and-explain / static code interpretation** (outside the both-forms rule; class-3 kin) | EXEMPT — `**No real version:**` note (static code interpretation, no student-authored input program) |
+| Q5 | Trace scopes, predict two output lines | **predict/trace** (class 3) | EXEMPT — `**No real version:**` note (class 3) |
+| Q6 | Trace `if/elif/else` ladder, predict message | **predict/trace** (class 3) | EXEMPT — `**No real version:**` note (class 3) |
+| Q7 | Turtle trace/predict ("do not run this code") | **predict/trace + reads-nothing** (class 3 + class 1) | EXEMPT — `**No real version:**` note (trace/predict of a turtle drawing) |
 | Q8 | Build `score_round(3 bools)`, call + print | **read-and-compute** (functions arm) | REAL-FORM — read three yes/no answers via `== "yes"`, `score_round(...)` unchanged |
 
 **3 real-forms (Q2, Q3, Q8); 5 exempt (Q1, Q4, Q5, Q6, Q7).**
@@ -98,9 +98,14 @@ to grow; §3 does not apply.
 
 For each of Q2/Q3/Q8: add a markdown cell immediately AFTER the executable solution cell, containing
 `**The real program**` + a fenced ```python``` block per the spec above.
-For each of Q1/Q4/Q5/Q6/Q7: add a one-line exemption note in the solutions markdown (why no real-form:
-predict/trace / read-and-explain / reads-nothing).
+For each of Q1/Q4/Q5/Q6/Q7: add a one-line exemption note in the solutions markdown using the design-prescribed
+**`**No real version:**` prefix that NAMES the v6 class** ([sol] s4 / [fable] n1,n2) — Q1/Q5/Q6 class 3
+(predict/trace), Q4 static code interpretation (outside the both-forms rule — no student-authored input
+program), Q7 trace/predict of a turtle drawing (class 3 + class 1 reads-nothing).
 `checkpoint.ipynb` and `manifest.yaml` are NOT touched (byte-unchanged).
+**teacher-notes.md audit ([fable] n3 / [sol] s3): grep confirms ZERO `input` mentions → the audit is a
+foreseeable no-op; teacher-notes.md is expected to stay byte-unchanged** (edit only if an actual stale
+statement is found, which none is).
 
 ### Phase B — verification
 
@@ -110,11 +115,15 @@ predict/trace / read-and-explain / reads-nothing).
 - Real-form validation: `ast.parse` each fenced block + piped-run, compare the result line to its executable
   twin MODULO prompt text (Q2 `n=4`→`10`; Q3 name→`Hello, <name>!`; Q8 `yes/no/yes`→`2`).
 - Confirm 0 `input()` in any `solutions.ipynb` **code** cell (real-forms are markdown).
+- **Scope invariant ([sol] s2, plan 053 precedent):** assert an EMPTY diff for the student file and metadata —
+  `git diff --quiet -- book1/checkpoints/checkpoint-02-loops-and-functions/checkpoint.ipynb` and the same for
+  `manifest.yaml` (and `teacher-notes.md`) — CI alone does not prove byte-identity.
 
 ## Out of scope
 
-- No new questions, no difficulty change, no checkpoint.ipynb edit, no metadata/teacher-notes change beyond
-  what the norm requires (teacher-notes only if it makes a now-stale claim about input — audit in Phase A).
+- No new questions, no difficulty change, no checkpoint.ipynb edit, no metadata change. teacher-notes.md is
+  audit-only ([sol] s3): grep shows zero `input` mentions, so no edit is expected; it stays byte-unchanged
+  unless an actual stale statement is identified (none is). Only `solutions.ipynb` is modified.
 - **Verification exemption:** this is a checkpoint-content plan; Phase B is the named verification phase
   (ci-local + real-form parity), no separate test suite.
 - cp03/cp04 and projects are separate plans.
@@ -133,9 +142,41 @@ checkpoint). One self-watch folded into Phase A: exemption notes must append to 
 never introduce a bare `## Question <digit>` markdown heading (checkpoint_solutions mirror hazard). No
 `.split()`; `input() == "yes"` is in-union (comparison + string-literal + boolean).
 
-#### [sol] (pending)
+#### [fable] (2026-09-20)
+**APPROVE WITH NITS.** All 8 classifications correct/none unclassified; Q4 is a genuine class-3 exemption
+(graded act is reasoning about fixed code, nothing input-shaped — same as cp01 Q6). Pedagogy OK: cp02 sits
+after u01–u05; `input(...) == "yes"` → Boolean is the core u04 quiz-show idiom (23 `== "yes"` in u04 exercises;
+u04 solutions real-forms already bind it), so Q8 is taught/practised/precedented. All 3 real-forms use only
+manifest-union ids; no `.split()`, no lists; metadata-NONE consistent with §5. Q2 preserves the assessed
+blanks (twin `total==10`/`count==5`; real-form changes only `4`→`n`); §6d oracle applied correctly. Phase B is
+a named verification phase; `## Out of scope` states the checkpoint exemption. No blockers.
+Nits (wording/consistency, to fold in Phase A):
+- (n1) name the **v6 class** in each exemption note (Q4 = predict/trace class 3, not "read-and-explain";
+  Q7 = trace/predict of a turtle drawing, class 3 + class 1) — design §8 wants the note to name the class.
+- (n2) pick the exemption-note STYLE: cp01's actual notes are italic sentences (accepted precedent), not the
+  design's literal `**No real version:**` label — state which Phase A uses so the content gate can't split.
+- (n3) teacher-notes.md has ZERO `input` mentions (grep) → the Phase-A audit is a foreseeable no-op; say so.
+
+#### [sol] (2026-09-20)
+**APPROVE WITH NITS.** No substantive curriculum/parity/metadata/CI blocker. SHAPE correct (Q1/Q5/Q6/Q7
+predict-trace exempt; Q2 valid §6d fragment generalizing only `4`→`n`; Q3/Q8 real-forms; Q4 rightly no
+real-form — graded work is static code interpretation, adding an input adapter would change the assessed task).
+Prereq closure sound (all in-union; `input(...) == "yes"` appropriate + already used in u04; no `.split()`/list/
+dict/method). Metadata correct (no input add — real-forms are fenced markdown). Multi-value satisfied (Q8 three
+independent reads; Q2 reads only the input-shaped bound; `0`/`1` are structural initializers). Parity oracles
+sufficient (Q2 `4`→`10`, twin asserts total==10/count==5; Q3 `Maya`→`Hello, Maya!`; Q8 `yes/no/yes`→`2`).
+Heading-mirror hazard correctly guarded. Phase B adequate. Nits (folded below):
+- (s1) Q4 taxonomy label imprecise — class 3 §1 literally describes predict/trace of fixed OUTPUT; name Q4
+  "read-and-explain / static code interpretation" and clarify it falls outside the both-forms applicability rule
+  (same substance as [fable] n1).
+- (s2) Phase B should require an explicit EMPTY DIFF for `checkpoint.ipynb` AND `manifest.yaml` (plan 053
+  precedent) — CI alone does not prove the byte-identical scope invariant.
+- (s3) Out-of-scope teacher-notes allowance slightly conflicts with the solutions-only contract → make it
+  audit-only unless a real stale statement is found ([fable] n3: grep shows none).
+- (s4) Phase A should explicitly require the design-prescribed `**No real version:**` prefix on exemption
+  notes (resolves [fable] n2's style question — adopt the design label + name the class).
+
 #### [glm] (pending — opencode)
-#### [fable] (pending)
 
 ## Content Review
 _(pending)_
