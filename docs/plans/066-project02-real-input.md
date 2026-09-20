@@ -177,9 +177,30 @@ match to the M5 assert cell; exactly one randint. Metadata NONE (input already i
 `.split()`; **no dict-READ idiom** (world dicts are authored) so the design-§4 bug is not in play. adventure_save.txt
 gitignored (.gitignore:34) → byte-invariant check, scratch-cwd validation. Phase B named. Closure clean.
 
+#### [fable] (2026-09-20)
+**APPROVE WITH NITS.** Independently validated (fresh scratch cwd, seed(4), piped `Ada`+`east/west/east/east/q`):
+one randint→2 (no event), health 17, `current=="river"`, inventory `["sword","shield"]`, save bytes
+`Ada\n17\nsword\nshield\n`, final line exact — parity with the M5 assert cell. Shape/mapping sound (one block
+under existing `## Milestone 5`, matches project-01; M1/M3 brief starters §2 brief-row; M2 class 4; M4
+files-are-real). Pedagogy good; whole build realized; reference class/helpers untouched. Phase B proper. Nits
+(none blocking):
+- N1: real form silently re-describes the room on a bad direction (`move` returns `current`), vs brief M3's
+  "You can't go that way." → add `if next_room == current: print("You can't go that way.")` (keeps `move`
+  unchanged; the parity path never hits it). → FOLD (brief-M3 fidelity).
+- N2: quitting before collecting → `hero.inventory[0]` IndexError → caption half-sentence "collect at least one
+  item before quitting, as Milestone 3 requires" (not a guard). → FOLD (caption).
+- N3: caption should mention `apply_event` and that `random` is imported in the top `seed-adventure` cell (the
+  block calls `random.randint` without its own import). → FOLD (caption).
+- N4: a roll of 1 in a real run applies 3 silent damage — consistent with `apply_event`; WONTFIX (optionally
+  note the trap is silent/optional). → leave.
+- N5: design §1/§8 wants class-4 exempts to carry a `**No real version:**` note; M2 is handled via the M5
+  caption (project-01 precedent — M2 is a consumed component, not a standalone task). → FOLD: state in the plan
+  that no separate `## Milestone 2` note is added, so the content gate doesn't raise it.
+- N6: real form omits `print(f"Starting inventory: {hero.inventory}")` (in brief M1 / solutions cell 3). → FOLD
+  (add for fidelity; prints `[]`, no state change, parity unaffected).
+
 #### [sol] (pending)
 #### [glm] (pending — opencode)
-#### [fable] (pending)
 
 ## Content Review
 _(pending)_
