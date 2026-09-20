@@ -210,7 +210,21 @@ on a lesson input() code cell checkpoints can't have). CI hazard correctly guard
 implementation-quality and folded into Phase A/B below. Gate CLOSED → proceed to implementation.
 
 ## Content Review
-_(pending)_
+
+### Round 1 (2026-09-20) — on implementation commit 5591763. [self] inline; [sol]/[glm]/[fable] dispatched.
+
+#### [self] (2026-09-20)
+**APPROVE.** Verified on 5591763: 3 real-forms (cp2-q2/q3/q8-real) + 5 exemption notes (cp2-q1/q4/q5/q6/q7-
+no-real) added to solutions.ipynb only. Parity modulo prompt PASS 3/3 (Q2 n=4→10; Q3 Maya→Hello, Maya!;
+Q8 yes/no/yes→2; endswith-verified). Hygiene: 0 `input()` in any code cell; exactly 8 top-level `## Question N`
+headings (mirror intact); 8 assert cells preserved (≥3 floor). Scope invariant: `git diff --quiet` clean for
+checkpoint.ipynb, manifest.yaml, teacher-notes.md. Folded nits present: exemption notes use `**No real
+version:**` + italic class-naming clause; Q2 has a §6d caption; §6c blank lines preserved (two blanks between
+`def` and driver in Q3/Q8). No `.split()`; `input()=="yes"` in-union. ci-local ALL GREEN.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending)_
