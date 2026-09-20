@@ -183,6 +183,16 @@ whose BLOCKERs (finale.txt) were ALREADY fixed in HEAD before [sol] ran, plus a 
 Q3 byte-compare NIT-6 (both now folded). Re-dispatching [sol] on the corrected plan to convert REJECT→APPROVE
 before implementing (no 3-of-4 shortcut on a REJECT).
 
+#### [sol] round 2 (2026-09-20) — re-verify on 381b41d
+**APPROVE.** All four findings RESOLVED: (5+7) finale.txt identified as gitignored artifact, scratch-cwd probe +
+exact byte-compare (not git diff); (6) Phase B asserts bytes `40\n90\n20\n`; (1) Q7 rationale corrected (guarded
+lookup, exempt as fixture/coverage-choice with Q6 the demonstrator); (2) Q6 uses the §4 sequence idiom.
+Reconfirmed unchanged: 8 classifications, closure, metadata NONE, counts (Q3=3/Q6=2), heading-mirror, §3-N/A,
+Phase B named.
+
+### Round 1 — FINAL outcome: **FULL 4-way plan-review consensus.** [self]/[fable]/[glm]/[sol] APPROVE (all nits
+folded; [sol] REJECT→APPROVE after Q7-rationale + Q3-byte-compare folds). Gate CLOSED → implementation.
+
 ## Content Review
 _(pending)_
 
