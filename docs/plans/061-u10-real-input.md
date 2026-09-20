@@ -230,8 +230,16 @@ user before merge). This is documented, not a fabricated verdict — [glm]'s pla
   contracts above; remaining indexed forms now carry stated minimums.
 
 ci-local ALL GREEN on e05d7d8; 0 input() in executable code cells.
-Re-verify: [sol] re-dispatched on e05d7d8 (confirm Must+Should resolved). [glm] to be re-dispatched on
-e05d7d8 once the round-1 opencode run (against 18abe54) clears — no duplicate.
+Re-verify (on e05d7d8; HEAD is plan-doc commit 9dbdf3f, unit files unchanged from e05d7d8 — confirmed `git diff --quiet` clean):
+- **[sol] APPROVE** — all round-1 findings PASS: Ex9 for-loop print (twin 5 pets `[3,3,3,3,3]`, 5 asserts
+  pass; real-form no indexed print), all 4 min-input contracts stated, 28/28 form equivalence, no `.split()`,
+  `int(input())` only where taught, 0 input() in executable cells, §3 five-pet lists intact, all 3 [fable]
+  nits confirmed fixed.
+- **[glm]**: round-1 opencode run (against stale 18abe54) TIMED OUT (SIGTERM 1200s, 6th opencode timeout
+  this session); re-dispatched fresh on e05d7d8 — verdict pending. If this attempt also times out → surface
+  the outage to the user before merge (no 3-of-4 merge).
+
+Content-gate tally: [self] APPROVE · [fable] APPROVE-WITH-NITS (all FIXED) · [sol] APPROVE · [glm] pending.
 
 #### [glm] (pending — opencode)
 
