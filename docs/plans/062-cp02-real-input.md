@@ -33,7 +33,7 @@ cp02 real-forms use only concepts already in the checkpoint's `requires`/`practi
 | Q1 | Trace a `for range(4)` loop, predict output | **predict/trace** (class 3) | EXEMPT — `**No real version:**` note (class 3) |
 | Q2 | Complete two `while`-accumulator blanks (sum 1→4) | fragment-completion → **read-and-compute** | REAL-FORM — read the upper bound `n`, sum `1..n` with the completed `while` (§6d oracle) |
 | Q3 | Write `greeting(name)`, call + store + print | **read-and-compute** (functions arm) | REAL-FORM — read one name (string `input()`), `greeting(name)` unchanged |
-| Q4 | Read two fns, explain `return` vs `print` | **read-and-explain / static code interpretation** (outside the both-forms rule; class-3 kin) | EXEMPT — `**No real version:**` note (static code interpretation, no student-authored input program) |
+| Q4 | Read two fns, explain `return` vs `print` | **predict/trace (class 3)** — on-paper reasoning about fixed code (which fn returns vs prints), no input to read | EXEMPT — `**No real version:**` note naming class 3 (content-gate round-2 resolution of [sol] §8 `[OPEN]`) |
 | Q5 | Trace scopes, predict two output lines | **predict/trace** (class 3) | EXEMPT — `**No real version:**` note (class 3) |
 | Q6 | Trace `if/elif/else` ladder, predict message | **predict/trace** (class 3) | EXEMPT — `**No real version:**` note (class 3) |
 | Q7 | Turtle trace/predict ("do not run this code") | **predict/trace + reads-nothing** (class 3 + class 1) | EXEMPT — `**No real version:**` note (trace/predict of a turtle drawing) |
