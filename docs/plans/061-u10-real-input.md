@@ -184,7 +184,40 @@ Autopilot decision (user "keep going", tool outage not content concern): **proce
 user before merge). This is documented, not a fabricated verdict — [glm]'s plan-review verdict is simply absent.
 
 ## Content Review
-_(pending — 4-way, post-implementation; [glm] participation REQUIRED here — retry opencode.)_
+
+4-way, on the implementation commit 18abe54. Tags [self]/[sol]/[glm]/[fable]. ([glm]/opencode required here.)
+
+#### [self] (2026-09-20)
+- **Verdict**: APPROVE. Verified: 0 `input()` in solutions CODE cells; 25 `**Real version:**` + 1 `**No real
+  version:**` (Ex8) + 25 `**The real program**` blocks (consistent); Ex7 model USES the read name; closure clean
+  (no `.split()`/`range`/`while True`; sentinel = `while name != "":`); Ex18 prints the READ target; the 4 core
+  pet-lists grown to 5. ci-local ALL GREEN both books (exec-solutions/exec-lessons PASS — kernel ran the grown
+  twins + 3 new no-exec capstones). NO metadata change; diff = the 3 notebooks only.
+
+#### [fable] (2026-09-20)
+- **Verdict**: APPROVE WITH NITS — no blocker; verified BY EXECUTION (28 real-forms parse + piped-parity vs
+  grown twins; §3 growth 4 lists→5 with lockstep asserts/statements; closure clean [no range/.split/while-const];
+  metadata untouched; 25 cues/1 No-real/25 blocks; book1 static checks OK). 3 OPEN nits (to FOLD) + 1 WONTFIX:
+  1. `[OPEN]` Should: **teacher-notes.md lines 18/64 now STALE** — say input is only in Ex7/9/12 prompt cells, but
+     the lesson now has 3 no-exec input() real-forms + Ex7/9/12 are complete programs + 25 solutions real-forms.
+     2-line fix (line 18 → "real-program input() form"; line 64 → describe the L3 + Ex7/9/12 no-exec real-forms +
+     solutions markdown). (Plan scoped teacher-notes "no change" — that assumed nothing went stale.)
+  2. `[OPEN]` Nice: Ex16/17/21/24 real-forms reuse `name` for a hunger/mood value → rename to `hunger`/`mood`.
+  3. `[OPEN]` Nice: Ex7 real-form `fixed_name` → `name` (misnomer for a typed value).
+  4. `[WONTFIX]`: index-dependent lines (pets[4] etc.) IndexError if fewer typed — inherent to §6c; optional
+     cue "type at least five names" on Ex9/Ex11.
+
+#### [sol] (2026-09-20)
+- **Verdict**: REJECT (28-form AST/parity, closure, growth, metadata, cues, hygiene otherwise pass). 1 Must + 1 Should:
+1. `[OPEN]` Must: Ex9 real-form (sol 26) indexes `pets[0..4]` but the exercise says "print EVERY resulting
+   hunger" + reads an arbitrary count → 6 names lose one, 4 crash. Fix the STATEMENT (ex 22) + fixed twin (sol 25)
+   + real-form to print via `for pet in pets:`.
+2. `[OPEN]` Should: minimum-input contracts — Ex5 (≥2), Ex11 (≥5), Ex13 (≥1), Ex20 (≥1) index/seed and can crash
+   after a blank; state the minimum in the exercise statements.
+
+### Content-review round 2 — fixes (fold [sol] Must+Should + [fable] 3 nits) → re-verify.
+
+#### [glm] (pending — opencode)
 
 ## Post-Execution Report
 _(pending.)_

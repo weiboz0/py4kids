@@ -15,7 +15,7 @@ Budget: three lessons of 60–90 minutes (objects are a new mental model). Each 
 
 The **in-class path is Exercises 1–8 and 12**.
 Exercises 9–11 are the labelled **More Practice** homework tier; they deepen repetition but introduce nothing new.
-Exercise 12 returns to class for the final full-class simulation, so every practiced idea — including `pass_time` and the prompt-only `input()` practice — appears at least once on the in-class path.
+Exercise 12 returns to class for the final full-class simulation, so every practiced idea — including `pass_time` and the `input()` real-program practice — appears at least once on the in-class path.
 The **Algorithm Extension** (Exercises 13–24) is optional enrichment: the three pattern reps
 (find-extreme Ex13, sentinel-loop Ex14, filter Ex15 — named in class) plus nine new unmarked object-loop
 drills, routed as time-permitting / homework / differentiation.
@@ -61,7 +61,7 @@ Practices reappearance: `arithmetic`/`int-type`/`accumulator` are the hunger/hap
 `list-index` build and walk the pet list; `while-loop` is the play-until-happy loop; `break-statement` drives the Algorithm-Extension search and feed-budget drills (Ex 18, 22, 23); `f-string`/
 `print`/`variable`/`string-literal` throughout; `error-messages` is the active AttributeError run-read-copy-fix beat.
 Because staging three deliberate failures would be artificial in this gentle unit, `error-messages` has the plan's justified peripheral count exemption: one genuine in-class authoring-and-debugging exercise instead of three.
-`input` is authored only in tagged `no-exec` prompt cells in Exercises 7, 9, and 12; regular executable cells stay input-free.
+`input` follows the design-003 real-program norm: every input-shaped exercise carries an executable fixed-data twin plus one `input()` "real version" that the student writes in a tagged `no-exec` cell (the model answer is the markdown **The real program** block in `solutions.ipynb`). All executable cells across lesson, exercises, and solutions stay input-free so they run unattended.
 Everything comes together in the Year-1 capstone.
 
 ## Algorithm Extension (enrichment)
