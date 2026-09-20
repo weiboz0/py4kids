@@ -1,6 +1,6 @@
 # Plan 058 — u06 secret-codes: full real-input treatment (strings/cipher read-and-compute arm)
 
-**Status:** DRAFT — plan-review gate pending.
+**Status:** PLAN-REVIEW GATE CLOSED (4-way consensus) — implementation pending.
 **Type:** Content — apply the full real-input treatment (design 003 v5) to `unit-06-secret-codes`.
 **Branch:** `feature/plan-058-u06-real-input`. **Base:** main @ 4111526.
 
@@ -211,7 +211,20 @@ Re-dispatching round 2.
   resolved, no other regressions. → `[FIXED]`: line 118 rewritten to "reads message + both shifts, computed
   labels (supersedes keep-shifts-fixed)". Re-confirming [sol] round 3.
 
-#### [glm] round 2 (pending)
+#### [glm] round 2 (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — all 6 round-1 findings verified FIXED against the files; Ex10 read-both
+  confirmed (twin prints 5 computed lines, reproduced exactly piping 3/5; "moves farther" is a comment/written
+  question, not a printed claim). 2 non-blocking findings, **both already resolved in commit 87eeff4** (which
+  post-dated [glm]'s dad6ccf review): (1) stale Ex10 line 118 → fixed to read-both; (2) Ex10 first/slice labels
+  → the five-line clarification names them. No open blockers.
+
+#### [sol] round 3 (2026-09-19)
+- **Verdict**: APPROVE — the Out-of-scope note now reads "Ex10 reads message + both shifts, computed labels";
+  SHAPE row + Phase B consistent. No remaining contradiction.
+
+### PLAN-REVIEW GATE CLOSED (2026-09-19) — 4-way consensus:
+[self] APPROVE · [sol] APPROVE (round 3) · [glm] APPROVE WITH NITS (nits resolved in 87eeff4) · [fable] APPROVE
+(round 2). No open blockers.
 
 ## Content Review
 _(pending — 4-way, post-implementation.)_
