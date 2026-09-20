@@ -67,7 +67,7 @@ reproduces the line (the u05-Ex3 rule).
 | Shape | Exercises | Real-form / treatment |
 |---|---|---|
 | **read-and-compute — inline** (read the word/message, unchanged compute+print) | Ex1 reverse [str], Ex2 first/last [str; keep positional `[1:4]`], Ex3 middle [str; positional], Ex4 shout [str], Ex12 count-vowels [str], Ex13 map-each [str], Ex14 find-letter-stop-early [read `target` [str]; `letters` alphabet stays a fixed constant], Ex16 letters/spaces/marks [str], Ex17 first-vowel-pos [str], Ex21 fit-the-budget [read `word` [str] + `budget` **`int(input())`**], Ex22 until-budget-tips [`word` [str] + `budget` **`int(input())`**], Challenge 1 keyword-check [`message` + `keyword`, 2 str] | `**The real program**` markdown block + `**Real version:**` statement cue |
-| **read-and-compute — function** | Ex10 compare-two-shifts [**read `message` [str] + `shift_one` + `shift_two` (2× `int(input())`)**; encode return-only → `print(f"Shift {shift_one}: {encode(message, shift_one)}")` / same for `shift_two` — **computed labels** reproduce "Shift 3:"/"Shift 5:" exactly when piping 3/5; any "which shift moved farther" observation is the exercise's written question or computed, NOT a hardcoded universal claim], Ex11 atbash-decode [`message` str; return-only], Ex15 count_letter [`message`+`letter`, 2 str; return-only], Ex18 has_digit [**2 codes** — twin prints two lines; read 2 codes, print `f"{code} has a digit: {has_digit(code)}"` for each], Ex19 star_vowels [**2 messages** — twin prints both on one line; read 2 messages, `print(star_vowels(m1), star_vowels(m2))`], Ex20 letter_value_sum [`word` str; return-only], Challenge 2 two_step [`message` str + `shift` **`int(input())`**; **block must DEFINE `encode` itself** (two_step calls it) so it runs standalone] | `**The real program**` block (def unchanged) + `**Real version:**` cue |
+| **read-and-compute — function** | Ex10 compare-two-shifts [**read `message` [str] + `shift_one` + `shift_two` (2× `int(input())`)**; encode return-only. The twin (sol cell 21) prints **FIVE** computed lines — `Shift {s}:`×2, `Same output: {…}`, and two `Shift {s} first: {out[0]}, slice: {out[:3]}` lines — the real-form reproduces ALL FIVE with **computed labels** (piping "Secret zoo!",3,5 → exact); any "moves farther" note is a code COMMENT in the twin, not a printed line], Ex11 atbash-decode [`message` str; return-only], Ex15 count_letter [`message`+`letter`, 2 str; return-only], Ex18 has_digit [**2 codes** — twin prints two lines; read 2 codes, print `f"{code} has a digit: {has_digit(code)}"` for each], Ex19 star_vowels [**2 messages** — twin prints both on one line; read 2 messages, `print(star_vowels(m1), star_vowels(m2))`], Ex20 letter_value_sum [`word` str; return-only], Challenge 2 two_step [`message` str + `shift` **`int(input())`**; **block must DEFINE `encode` itself** (two_step calls it) so it runs standalone] | `**The real program**` block (def unchanged) + `**Real version:**` cue |
 | **interactive / single-read — statement ALREADY reads `input()`** (design §2: the statement IS the real-program form) | Ex5 is-it-a-vowel, Ex6 encode-typed-message [reads `message`; `shift = 3` stays a fixed literal, NOT read], Ex8 secret-word-report, Ex9 classify-code-character [function PRINTS → BARE call] | solutions gain a `**The real program**` model-answer block (reads `input()`); **NO `**Real version:**` cue** on the statement (it is already a real program) |
 | **exempt — debug/fix-the-error** (design §1 v5 class 2) | Ex7 fix-the-Caesar-wrap (two `no-exec` buggy cells → IndexError → repair to `% 26` / `last_position = 25`; the repair is the graded task) | NO real-form; `**No real version:**` note (debug/fix-the-error) |
 
@@ -115,7 +115,8 @@ data is untouched.
   data growth, no rename. Phase B present.
 - **Reviewer judgment flagged:** Ex14 (searches a fixed alphabet constant; only `target` is input-shaped) —
   classified read-and-compute (read `target`); a reviewer may argue it is a pure fixed-constant algorithm drill
-  (exec-only). Ex10's keep-shifts-fixed decision (read message only) is the value-coupled-narrative fix.
+  (exec-only). Ex10 reads `message` + both shifts (`shift_one`/`shift_two`) with computed labels (resolved in
+  round 1 — see the SHAPE row + Phase B; supersedes the initial keep-shifts-fixed idea).
 
 ## Plan Review
 
@@ -195,6 +196,22 @@ data is untouched.
   ([glm]#5/[fable]#4); L3 cells identified by content ([glm]#6); L1 "one-new-idea graduated rungs" ([sol]#5);
   Ex13 cue "for the fixed message only" ([fable] Nice #5).
 Re-dispatching round 2.
+
+### Round 2 (2026-09-19) — re-review after round-1 fixes (dad6ccf)
+#### [fable] round 2 (2026-09-19)
+- **Verdict**: APPROVE — all 5 round-1 findings verified resolved; Ex10 read-both-shifts sound (the "moves
+  farther" note is a code COMMENT, not a printed line → no parity issue). 1 non-blocking nit FOLDED:
+  Ex10's twin (sol cell 21) prints FIVE computed lines (Shift×2 / Same output / two first+slice) — the SHAPE
+  row now enumerates all five with computed labels (the universal rule + Phase B already required reproducing
+  every line). No regressions.
+
+#### [sol] round 2 (2026-09-19)
+- **Verdict**: REJECT — sole finding: the Out-of-scope reviewer-judgment note (line 118) still said "Ex10 keeps
+  shifts fixed / reads message only", contradicting the revised SHAPE + Phase B. All other round-1 findings
+  resolved, no other regressions. → `[FIXED]`: line 118 rewritten to "reads message + both shifts, computed
+  labels (supersedes keep-shifts-fixed)". Re-confirming [sol] round 3.
+
+#### [glm] round 2 (pending)
 
 ## Content Review
 _(pending — 4-way, post-implementation.)_
