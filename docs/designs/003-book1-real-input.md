@@ -37,14 +37,17 @@ applied across u01–u06; class 4 added in v6 for u08):
    "predict the exact output"); replacing the fixed values with `input()` would defeat the prediction.
 4. **Fixed-reference-fixture (v6)** — the input-shaped data is a **pre-authored dict/table used as reference or
    lookup data**, and the graded skill is a **transform or report *over* that fixture** (format it, merge two,
-   flip it, total it, find its extreme) rather than *obtaining* it, AND reconstructing the fixture from input
-   would require out-of-union control flow (e.g. a unit lacking `range-function`/`while-loop`). Then the task
-   is exempt (executable-only). **Designated-demonstrator rule:** so the structure-read idiom (§4) is *shown at
-   least once* rather than never, the plan **names ≥1 representative fixture task per fixture value-type** to
-   carry a structure-read real-form (e.g. u08: one string-valued phrasebook walk + one int-valued tally
-   find-extreme); every other fixture task is class-4 exempt. (The designated demonstrators are a coverage
-   choice, not a property of the task — sibling tasks of the same shape are exempt.) (Origin: u08 word-wizard,
-   plan 059, user-ratified "split"; wording per the 4-way gate.)
+   flip it, total it, find its extreme) rather than *obtaining* it. Such a task is exempt (executable-only)
+   **UNLESS it is a designated demonstrator (below)**. Rationale: the fixture is authored reference data the
+   student is given, not data they collect — so re-reading it from input is not the graded act, and repeating a
+   structure-read across every fixture task is mechanical noise. **Designated-demonstrator rule:** so the
+   structure-read idiom (§4) is *shown at least once* per unit, the plan **names ≥1 representative fixture task
+   per fixture value-type** to carry a structure-read real-form (u08: one string-valued phrasebook walk [Ex7] +
+   one int-valued tally find-extreme [Ex13]); every OTHER fixture task of that shape is exempt. (Whether a
+   fixture task is exempt is a per-plan coverage choice, not a property of the task; the designated few carry
+   the real-form via the unit's structure-read idiom — for u08 a **fixed-count dict-read**
+   `d[input(...)] = input(...)` ×N (§4) — and the rest are exempt.) (Origin: u08 word-wizard, plan 059,
+   user-ratified fixed-count reads; wording per the 4-way gate.)
 
 A **hybrid** task (one part input-shaped, one part exempt — e.g. u03 Ex2/Ex4: a compute-authoring program +
 a prediction table) gets a real-form for the input-shaped part and a `**No real version:**` note for the
@@ -98,13 +101,13 @@ scan `cell_type == "code"` only) — this is the plan-045 submission-wrapper pre
 - **u07–u10:** may read into a list.
 - **Read-into-list / read-into-dict idioms (v6):** a unit reading a *variable-count* structure must use an
   idiom in its union. With `range-function` → `for i in range(n)`; with a sentinel and `while-loop` → sentinel
-  loop; **lacking BOTH `range` and `while` (u08)** → read one line and split: a **list** via
-  `items = input("...").split()`, a **dict** via the **pair-split** idiom `for pair in input("...").split():`
-  then `parts = pair.split(":")` / `d[parts[0]] = parts[1]` (or `int(parts[1])`) — **no assignment-unpacking**
-  (statement-level `k, v = …` is never taught in Book 1). **`.split()` is NOT the `string-methods` concept**
-  (that is upper/lower/strip/replace) — it is its own **`str-split`**, which must be registered + **introduced in
-  the unit's union** before use (introduced u08, plan 059). A unit lacking `str-split` (and `range`/`while`) uses
-  **fixed-count reads** instead (`items = [input(...), input(...), …]`; `d[input(...)] = input(...)` ×N).
+  loop; **lacking BOTH `range` and `while` (u08)** → **fixed-count reads**: a **list** as a literal of reads
+  `items = [input("Item 1? "), input("Item 2? "), …]` (or a fixed sequence of `.append(input(...))`), a **dict**
+  as a fixed sequence `d[input("Key? ")] = input("Value? ")` ×N — matching the paired twin's fixed length. This
+  keeps `str-split`/`.split()` (a **Book-2** concept, not Book-1's `string-methods`=upper/lower/strip/replace) out
+  of Book 1: the real-form reads a fixed number of items rather than an arbitrary-count split. (Considered and
+  rejected for Book 1: registering `str-split` collides with Book 2's ownership + needs a shared-tool change —
+  plan 059, user-ratified fixed-count.)
 
 ## 5. Metadata
 
@@ -167,14 +170,13 @@ throughout.
 
 ## 9. Revision history
 - **v6 (2026-09-19, plan 059):** §1 added a fourth exempt class — **fixed-reference-fixture** (a task that
-  transforms/reports over a pre-authored dict/table used as lookup data, where rebuilding the fixture from
-  input needs out-of-union control flow), with a **designated-demonstrator rule** (the plan names ≥1
-  representative fixture task per value-type to carry a structure-read real-form; the rest exempt). §4 added
-  the range/while-less **read-into-list (`.split()`) / read-into-dict (pair-split)** idioms and clarified that
-  **`.split()` is its own concept `str-split`** (NOT the `string-methods` upper/lower/strip/replace concept),
-  which must be registered + introduced in the unit's union (introduced u08); fixed-count reads are the fallback
-  where `str-split` is absent. User-ratified teaching `.split()` in u08 (option b) + the exempt/demonstrator
-  split; the 4-way gate ratifies wording.
+  transforms/reports over a pre-authored dict/table the student is *given* as lookup data, rather than obtains),
+  with a **designated-demonstrator rule** (the plan names ≥1 representative fixture task per value-type to carry
+  a structure-read real-form; the rest exempt). §4 gave the range/while-less **fixed-count read** idioms
+  (list literal of reads / fixed sequence of `d[input()]=input()`). Note: `.split()`/`str-split` is a **Book-2**
+  concept; the user ratified **fixed-count reads for u08** (option a) over teaching `.split()` in Book 1 (which
+  would collide with Book 2's `str-split` ownership + require a shared-tool change). Book 1 remains split-free;
+  design stays Book-1-only. 4-way gate ratifies wording.
 - **v5 (2026-09-19, plan 057):** §1/§8 codified the **full exemption taxonomy** — the three settled classes a
   task may be exempt under (reads-nothing/generator; debug/fix-the-error, unless the fix itself reads input;
   predict/trace), plus the hybrid rule. Makes explicit the convention applied across u01–u04 (the reviewer
