@@ -1,6 +1,6 @@
 # Plan 060 — u09 save-point: full real-input treatment (files: file-is-real reads + value real-forms)
 
-**Status:** PLAN-REVIEW GATE CLOSED (4-way consensus) — implementation pending.
+**Status:** COMPLETE — both gates CLOSED (4-way); ci-local ALL GREEN (both books); ready to merge.
 **Type:** Content — apply the full real-input treatment (design 003 v6) to `unit-09-save-point`.
 **Branch:** `feature/plan-060-u09-real-input`. **Base:** main @ 14a9081.
 
@@ -230,7 +230,63 @@ No open blockers. (Novel file-unit fork user-ratified: "files-are-real for reads
 the 4 core <4-element score lists + its ripple chain is in scope.)
 
 ## Content Review
-_(pending — 4-way, post-implementation.)_
+
+4-way, on the implementation commit 3d74af4. Tags [self]/[sol]/[glm]/[fable].
+
+#### [self] (2026-09-20)
+- **Verdict**: APPROVE. Verified: 24 `**Real version:**` cues (9 file-read notes + 15 real-form) + 1 `**No real
+  version:**` (Ex8) + 15 `**The real program**` blocks — counts consistent. §3 ripple consistent: NO stale
+  old-chain refs (`[300,450,725]`/"3 scores"); Ex6 grew to `[300,450,725,1200,900]`, Ex7 statement + starter
+  updated to "6 scores total". NO `.split()`/while leak. ci-local ALL GREEN both books (exec-solutions/exec-
+  lessons PASS — kernel ran the grown twins + the new no-exec file-write cell). 0 input() in solution code cells.
+
+#### [fable] (2026-09-20)
+- **Verdict**: APPROVE WITH NITS — no Must-Fix; verified BY EXECUTION (lesson + solutions run clean, 25 asserts
+  pass; 16/16 real-forms parity with grown values incl. Ex7/Ex25 grown-chain harness + Ex14 settings.txt; §3
+  ripple fully consistent incl. Ex13 `4925` sum; closure clean [only append/strip/write/read, no .split/while];
+  both books' static checks pass; 5-file scope; 0 input() in solution code cells). 2 WONTFIX Nice: lesson rung
+  print now `f"Saved {len(scores)} scores."` (prereq-safe, len/f-string in-union); lists grew to 5 (satisfies
+  binding ≥4; §3's 6–8 is a target not a floor).
+
+#### [sol] (2026-09-20)
+- **Verdict**: APPROVE — no `[OPEN]` findings (§3 growth+ripple, real-form parity, closure, metadata scope,
+  file-read notes, hygiene all verified on commit 3d74af4).
+
+#### [glm] (2026-09-20, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE (retry — the first invocation timed out; re-run on 3d74af4). No `[OPEN]`. Verified by
+  execution: §3 growth+ripple complete (all readers on the grown chain; Ex13 sum 4925; zero stale old-chain
+  refs); 16/16 real-form piped parity; closure clean (no .split/while); metadata input-only + 5-file scope;
+  24 cues/1 No-real/15 blocks; both books ALL GREEN; blind-solved every expected value. 2 WONTFIX Nice (concur
+  with [fable]): lesson `f"{len(scores)}"` print; grew to 5 (satisfies binding ≥4).
+
+### Content-review gate — outcome: **CLOSED** — 4-way consensus:
+[self] APPROVE · [sol] APPROVE · [fable] APPROVE WITH NITS (2 WONTFIX) · [glm] APPROVE. No `[OPEN]` findings.
 
 ## Post-Execution Report
-_(pending.)_
+
+**Shipped (2026-09-20).** u09 save-point given the full real-input treatment (design 003 v6), **files-are-real
+for reads (lighter)** — Book 1's only file unit; user-ratified.
+
+**What changed (5 files):**
+- `lesson.ipynb`: L1 loop-write capstone gained a `no-exec input()` fixed-count real-form (reads the grown
+  scores → write) + Notice; 2 L3 file-read capstones gained file-is-real `**Real version:**` notes.
+- `solutions.ipynb`: 15 `**The real program**` real-forms (Ex14 hybrid query-read; 7 value/save incl. Ex9
+  read-into-list; 7 in-memory read-into-list via `for i in range(n)`) + §3-grown twins.
+- `exercises.ipynb`: 24 `**Real version:**` cues (9 file-is-real notes + 15 real-form) + 1 `**No real
+  version:**` (Ex8 debug/fix-the-error) + the §3 statement-side ripple updates.
+- **§3 data growth:** the 4 core <4-element score lists grew to 5 (lesson `[…1430,760]`, Ex1, Ex6
+  `[300,450,725,1200,900]`, Ex9), with the savegame-chain ripple propagated to every reader (Ex2/Ex3, Ex7/Ex11/
+  Ex12–16/Ex24/Ex25, lesson) — asserts/outputs/statements in lockstep. Enrichment Ex17–23 in-memory lists small.
+- `manifest.yaml` + `coverage-map.yaml`: `input` added to `practices` (in sync). No new design class (per user).
+
+**Verification:** `scripts/ci-local.sh` ALL GREEN — 493 passed / 2 skipped; exec-solutions + exec-lessons PASS
+(kernel ran the grown twins + the new no-exec file-write cell); concept-scan/coverage/prereq GREEN **both books**
+(no `.split()`/Book-2 impact); PDF + guard OK. All 16 real-forms piped-run-match (Ex7/Ex24/Ex25 grown-chain
+harness; Ex14 settings.txt). 0 `input()` in solution CODE cells.
+
+**Gates:** plan-review CLOSED (4-way, 2 rounds — [sol] caught the §3 data-growth gap); content-review CLOSED
+(4-way; [glm] retry after a tooling timeout).
+
+**Rollout status (design 003 §7):** merged — u04, u07, cp01, u02, u01, u03, u05, u06, u08, **u09 (files)**.
+Remaining: **u10 (classes)**; checkpoints cp02–cp04; projects. u09 established the **file-is-real-for-reads**
+treatment (citable precedent for cp03/cp04/projects) + confirmed §3 growth applies to core file-backed lists.
