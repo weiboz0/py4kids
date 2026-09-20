@@ -239,9 +239,45 @@ Re-verify (on e05d7d8; HEAD is plan-doc commit 9dbdf3f, unit files unchanged fro
   this session); re-dispatched fresh on e05d7d8 — verdict pending. If this attempt also times out → surface
   the outage to the user before merge (no 3-of-4 merge).
 
-Content-gate tally: [self] APPROVE · [fable] APPROVE-WITH-NITS (all FIXED) · [sol] APPROVE · [glm] pending.
+Content-gate tally: [self] APPROVE · [fable] APPROVE-WITH-NITS (all FIXED) · [sol] APPROVE · [glm] OUTAGE.
 
-#### [glm] (pending — opencode)
+#### [glm] — TOOLING OUTAGE (not a verdict)
+opencode (volcengine-plan/glm-5.3) timed out (SIGTERM after 1200s) on BOTH content-gate attempts —
+round 1 against the pre-fix commit 18abe54, and the re-dispatch against the fixed commit e05d7d8. This is
+the 7th opencode timeout this session; opencode has been persistently unavailable throughout. No content
+verdict could be obtained from [glm].
+
+### Content-review outcome: **3-of-4 consensus** — [self] APPROVE · [fable] APPROVE (all nits FIXED) · [sol] APPROVE · [glm] opencode OUTAGE.
+Full 4-way consensus was unobtainable due to the [glm]/opencode outage. Per the CRITICAL-RULES pause
+requirement, the 3-of-4 merge decision was surfaced to the user as a genuine judgment fork
+(`AskUserQuestion`) rather than taken by autopilot; **the user authorized merging 3-of-4 with the outage
+documented** (2026-09-20). [sol]'s re-verify was a full independent content review (28/28 form-parity,
+blind-solve spot checks, prereq closure, hygiene, §3 growth, all fixes confirmed), so three independent
+reviewers cleared the content. Gate CLOSED on user authorization.
 
 ## Post-Execution Report
-_(pending.)_
+
+**Status: COMPLETE.** u10 (pet-simulator) — the final Book-1 unit — received the design-003 real-input
+treatment and merged, completing the real-input norm across all ten Book-1 units.
+
+**What shipped** (branch `feature/plan-061-u10-real-input`):
+- 25 exercise real-forms + 3 lesson no-exec capstones, each an `input()`-reading "real program" twin of an
+  executable fixed-data cell. Idiom: taught blank-name sentinel (`name = input(...)` / `while name != "":`),
+  NO range, NO `while True:/break`, NO `.split()` (Book-2). Classes are constructed-and-driven from read input.
+- NO metadata change (`input` already in the unit's concept union; markdown real-forms are invisible to
+  concept-scan/solution-policy, which scan code cells).
+- §3 data growth: 4 core pet-lists grown to 5 (lesson, Ex5, Ex9, Ex11).
+
+**Gate history**: plan-review 3-of-4 (glm opencode outage) → implementation (codex, 18abe54) → content-review
+round 1 ([sol] REJECT: Ex9 indexed-print Must + 4 min-input-contract Should; [fable] APPROVE-WITH-3-NITS) →
+round-2 fixes (e05d7d8: Ex9 `for pet in pets:` print in statement+twin+real-form; min-input contracts on
+Ex5/11/13/20; Ex7 `fixed_name`→`name`; Ex16/17/24 `name`→`hunger`, Ex21 `name`→`mood`; teacher-notes 18/64)
+→ content-review round 2: [self]/[fable]/[sol] APPROVE, [glm] opencode OUTAGE → 3-of-4 merge on user
+authorization.
+
+**Verification**: `scripts/ci-local.sh` ALL GREEN on the fixed commit; 0 `input()` in executable code cells;
+`pre-merge-guard --pr` clean.
+
+**Follow-ups**: none for u10. Rollout continues to checkpoints (cp02–cp04) then projects (project-01/02).
+The persistent opencode/[glm] outage should be watched; if it recurs at future gates, the same
+surface-to-user path applies.
