@@ -119,7 +119,9 @@ Challenge 2 (4).**
 
 ### Phase A — apply to u05 (lesson + exercises + solutions + metadata + coverage-map)
 - **lesson.ipynb:** add a `no-exec` `input()` real-form + `**Notice:**` after each of cells 9, 15, 20, 28
-  (per the both-forms table). Do NOT alter the executable capstones or the build-up rungs.
+  after each of the compute-capstone cells (currently 9, **13** [`area`, not `polygon_points` 15], 20, 28 —
+  reference by CONTENT, indices shift on insert), per the both-forms table. Do NOT alter the executable
+  capstones or the build-up rungs (incl. `polygon_points` cell 15).
 - **exercises.ipynb:** `**Real version:**` cue on the 18 read-and-compute exercises (Ex1, Ex3, Ex4, Ex6, Ex8,
   Ex9, Ex10, Ex11–Ex20, Challenge 1); `**No real version:**` note (naming the exempt class) on Ex2/Ex7
   (fix-the-error), Ex5 (trace-and-predict), Challenge 2 (turtle-drawing + predict). (Ex4 cue: state both `w`
@@ -250,8 +252,9 @@ Re-dispatching round 2.
 #### [fable] round 2 (2026-09-19)
 - **Verdict**: APPROVE WITH NITS — all 6 round-1 findings resolved, nothing regressed (verified per item vs the
   notebooks + design v5). 4 non-blocking polish, all FOLDED:
-1. `[FIXED]` Should: L2 cell-15 real-form would hardcode "square"/"seven-sided" while reading `n` → genericized
-   to `f"A {n}-sided shape turns {turn} degrees."` (named §6c label deviation; record in post-exec report).
+1. `[FIXED]` Should: L2 cell-15 real-form would hardcode "square"/"seven-sided" while reading `n`.
+   (Genericization was tried, then SUPERSEDED in round 2 by switching the L2 capstone to `area` — see Round 2
+   responses; `area` reproduces its output line-for-line with exact parity, no deviation.)
 2. `[FIXED]` Nit: Algo-Ext shell keeps the twin's intermediate var (`three_stamp_total = …; print(…)`).
 3. `[FIXED]` Nit: version strings — design Status → v5; plan Type → v5.
 4. `[FIXED]` Nit: Phase A now spells the Ex3 cue (`number` read with `float(input())`, f-string `{number}`).
@@ -287,6 +290,23 @@ Re-dispatching round 2.
 - → [FIXED] [fable] R2 #1/#2/#4 already folded (L2 now moot; Algo-Ext keeps intermediate var; Ex3 cue spelled).
 - → [FIXED] [glm] cosmetic: design §9 v5 "/u03" redundancy trimmed.
 Re-dispatching round 3 (L2→area is a both-forms-table change — all three re-verify).
+
+### Round 3 (2026-09-19) — re-verify after round-2 fixes (ba4586e)
+#### [fable] round 3 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — L2→area cleanly resolves the label-drift (verified: `area(7,4.5)`→
+  `"The card area is 31.5 square units."`, real-form reads w,h floats → identical line, no deviation);
+  Motivation now per-task call shell; all R2 nits folded; 18/4 split + taxonomy + closure + Phase B intact.
+1. `[FIXED]` Nit: Phase A named stale cells "9, 15, 20, 28" → corrected to 9, **13**, 20, 28 (+ reference-by-content).
+2. `[FIXED]` Cosmetic: annotated the [fable] R2 Should #1 record as superseded by the L2→area switch.
+
+#### [sol] round 3 (2026-09-19)
+- **Verdict**: REJECT — sole finding: Phase A line 121 still named stale targets "9, 15, 20, 28" (risk of
+  adding a real-form to the `polygon_points` rung). The three substantive round-2 fixes otherwise verify
+  correctly; 18/4 split, v5 taxonomy, closure, metadata, Phase B intact.
+  → `[FIXED]`: Phase A corrected to "9, **13**, 20, 28" + reference-by-content (same fix as [fable] R3 #1;
+  reviewed on ba4586e before the fix was applied). Re-confirming [sol] round 4.
+
+#### [glm] round 3 (pending)
 
 ## Content Review
 _(pending — 4-way, post-implementation.)_
