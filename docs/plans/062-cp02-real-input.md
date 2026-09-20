@@ -120,7 +120,22 @@ predict/trace / read-and-explain / reads-nothing).
 - cp03/cp04 and projects are separate plans.
 
 ## Plan Review
-_(pending)_
+
+### Round 1 (2026-09-20) — [self] inline; [sol] gpt-5.6-sol; [glm] volcengine-plan/glm-5.3; [fable] Fable 5.
+
+#### [self] (2026-09-20)
+**APPROVE.** Classifications hold: Q1/Q5/Q6/Q7 predict-trace, Q4 read-and-explain → exempt (class 3);
+Q2/Q3/Q8 real-forms. Q2 is a valid §6d fragment (the real-form keeps the exact assessed blanks
+`total = total + count` / `count = count + 1`, generalizing only the fixed bound `4`→`n`). Q3/Q8 follow the
+functions arm (def unchanged; distinct reads — Q8 reads all three; bare `print` for return-value fns).
+Metadata NONE correct (markdown-only real-forms invisible to concept-scan; cp01 precedent). §3 N/A (list-less
+checkpoint). One self-watch folded into Phase A: exemption notes must append to the EXISTING solution area,
+never introduce a bare `## Question <digit>` markdown heading (checkpoint_solutions mirror hazard). No
+`.split()`; `input() == "yes"` is in-union (comparison + string-literal + boolean).
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Content Review
 _(pending)_
