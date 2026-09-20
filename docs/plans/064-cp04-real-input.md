@@ -107,7 +107,23 @@ notes audit expected no-op).
 - Projects (project-01, project-02) are separate plans — the last rollout slice after cp04.
 
 ## Plan Review
-_(pending)_
+
+### Round 1 (2026-09-20) — [self] inline; [sol] gpt-5.6-sol; [glm] volcengine-plan/glm-5.3; [fable] Fable 5.
+
+#### [self] (2026-09-20)
+**APPROVE.** Q1/Q2 class construct-and-drive read-and-compute (Q2 multi-value: name + heal amount); Q3 save
+read-and-compute (fixed-count 3 scores → write); Q6 dict read-and-compute (generic `.items()` iterate — safe to
+read arbitrary dict). Q4/Q5 files-are-real (u09) — the correct call for a checkpoint's file-read pipeline
+(Q4 reads finale.txt; Q5 sorts the loaded data), no awkward input() form. Q7 EXEMPT fixed-reference-fixture
+(class 4 — hardcoded `sword`/`shield` lookups + branch break on arbitrary reads, like cp03 Q6); Q8 EXEMPT class 2
+(fix reads no input). The Q6-real-form vs Q7-exempt split is principled (generic-iterate vs hardcoded-key).
+Fixed-count idiom correct (no range/while). Metadata NONE. finale.txt stays byte-unchanged (Q3 twin writes the
+same 40/90/20); added to the Phase-B scope check. §3 N/A (frozen). No `.split()`. Phase B is the named
+verification phase.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Content Review
 _(pending)_
