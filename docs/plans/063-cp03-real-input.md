@@ -161,7 +161,21 @@ APPROVE-WITH-NITS · no open blockers. All nits folded (demonstrator wording rew
 Q1 caption ≥5 letters applied in Phase A). Gate CLOSED → implementation.
 
 ## Content Review
-_(pending)_
+
+### Round 1 (2026-09-20) — on implementation commit 2c5e98e. [self] inline; [sol]/[glm]/[fable] dispatched.
+
+#### [self] (2026-09-20)
+**APPROVE.** Verified on 2c5e98e: 6 real-forms (cp3-q1/q2/q3/q4/q5/q7-real) + 2 exemption notes
+(cp3-q6/q8-no-real) added to solutions.ipynb only. Parity 6/6 modulo prompt (Q1 `w y zar yrdraziw`, Q2 `True`,
+Q3 88/100, Q4 88/92/75/100/4/100/75/355, Q5 100/92/88, Q7 cat 3/dog 1/bird 1). Fixed-count reads match frozen
+counts (3/4/4/5); Q3 append(100) constant kept. Q1 caption asks for a word ≥5 letters. Hygiene: 0 `input()` in
+code cells; exactly 8 `## Question N` headings (mirror intact); 8 assert cells. Scope invariant clean
+(checkpoint/manifest/teacher-notes byte-unchanged). Exemption notes name the class (Q6 class 4, Q8 class 2). No
+`.split()`; `int(input())` in-union. ci-local ALL GREEN.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending)_
