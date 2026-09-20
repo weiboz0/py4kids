@@ -214,7 +214,22 @@ interactive twin + concept-list/scope-command folds). [sol] re-verify reproduced
 rounds, one randint each. Gate CLOSED → implementation.
 
 ## Content Review
-_(pending)_
+
+### Round 1 (2026-09-20) — on implementation commit eeae8c3. [self] inline; [sol]/[glm]/[fable] dispatched.
+
+#### [self] (2026-09-20)
+**APPROVE.** One markdown cell (`arcade-real-program-m4`) appended: `## Milestone 4` + `**The real program**` +
+the interactive-arcade fenced block, calling the unchanged reference functions. Parity VALIDATED in a fresh
+process (seed(4)→secret 2, piped `1/2/2/2/1/q` → `Final score: 9 points in 2 rounds.`, one randint). Hygiene: 0
+`input()` in code cells (real form is markdown); reference fns + fixed driver + asserts unchanged and execute
+first; `## Milestone 4` in solutions harmless (project_milestone_findings reads brief.ipynb only). Scope
+(merge-base): only solutions.ipynb changed; brief/manifest/teacher-notes byte-unchanged. Closure clean (no
+`.split()`/int()); f"" house style matches brief M4. Caption accurate (uses fns above; input-in-driver vs
+in-function; M1–M3 real forms are brief starters). ci-local ALL GREEN.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending)_
