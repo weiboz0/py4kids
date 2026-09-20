@@ -50,41 +50,51 @@ injects the seed to reproduce the fixed driver's outcome.
 
 ### Real-form specification (solutions markdown, after the `fixed-arcade-driver` cell)
 
-`**The real program**` (caption: the interactive arcade — reads the menu and each game's input):
+`**The real program**` — caption ([fable] nit 1, explaining input placement): "the interactive arcade — the
+menu, both games, and the scoreboard reading real input. Your arcade reads the guess/answers INSIDE
+`lucky_guess()`/`quick_quiz()`; this reference reads them in the driver and passes them in, so the very same
+functions work in the fixed driver above and here." Code uses the project's `f""` house style so it matches the
+brief's M4 scaffold line-for-line:
 ```python
 score = 0
 rounds_played = 0
-choice = ""
+choice = f""
 
-while choice != "q":
-    print("--- ARCADE NIGHT ---")
-    print("1: Lucky Guess")
-    print("2: Quick Quiz")
-    print("q: Quit")
-    choice = input("Choose a game: ")
+while choice != f"q":
+    print(f"--- ARCADE NIGHT ---")
+    print(f"1: Lucky Guess")
+    print(f"2: Quick Quiz")
+    print(f"q: Quit")
+    choice = input(f"Choose a game: ")
 
-    if choice == "1":
-        guess = input("Pick an integer from 1 through 5: ")
+    if choice == f"1":
+        guess = input(f"Pick an integer from 1 through 5: ")
         score = score + lucky_guess(guess)
         rounds_played = rounds_played + 1
-    elif choice == "2":
-        answer_one = input("Which is larger: 1) 8 or 2) 12? ")
-        answer_two = input("Which is even: 1) 6 or 2) 7? ")
+    elif choice == f"2":
+        answer_one = input(f"Which is larger: 1) 8 or 2) 12? ")
+        answer_two = input(f"Which is even: 1) 6 or 2) 7? ")
         score = score + quick_quiz(answer_one, answer_two)
         rounds_played = rounds_played + 1
-    elif choice == "q":
-        print("The arcade is closing.")
+    elif choice == f"q":
+        print(f"The arcade is closing.")
         break
     else:
-        print("Choose 1, 2, or q.")
+        print(f"Choose 1, 2, or q.")
 
-    if choice == "1" or choice == "2":
+    if choice == f"1" or choice == f"2":
         print(f"Score: {score} points after {rounds_played} rounds.")
 
 print(f"Final score: {score} points in {rounds_played} rounds.")
 ```
 This reads every input the arcade needs (menu choice each round, the guess, the two quiz answers) and calls the
-unchanged reference functions. It is the input()-reading twin of the scripted `fixed-arcade-driver`.
+unchanged reference functions. **§6c note ([fable] nit 2):** the real form mirrors the BRIEF's M4
+`arcade-scoreboard-scaffold` structure (real `while choice != "q"` menu loop), NOT the `fixed-arcade-driver`
+whose `while True:` + scripted `choice = f"2"` reassignments + `lucky_points`/`quiz_points` temporaries are CI
+scripting scaffolding. **Placement ([fable] nit 4):** project-01's solutions have no `## Milestone N` headings
+(they use `## Lucky Guess` / `## Quick Quiz` / `## Fixed arcade driver`), so the block goes under
+`## Fixed arcade driver` as the M4-integrating twin — this is a project-01-specific mapping and does NOT set a
+"no Milestone heading" precedent for project-02 (whose solutions already use `## Milestone N`).
 
 ## Data growth (§3) — N/A
 
@@ -104,10 +114,12 @@ no-op — the ci-note already describes the split, verify no stale claim).
 
 - ci-local ALL GREEN (`TMPDIR=/dev/shm bash scripts/ci-local.sh`): registry+lint, notebook execution+hygiene,
   manifest/prereq/coverage, PDF build, pre-merge guard.
-- Real-form validation: `ast.parse` the fenced block; then run it with `random.seed(4)` injected + the reference
-  functions defined, piped `1\n2\n2\n2\n1\nq\n` (choose 1, guess `2`, choose 2, answers `2`/`1`, quit) →
-  reproduces the fixed driver's outcome: `lucky_guess("2")==5`, `quick_quiz("2","1")==4`, final line
-  `Final score: 9 points in 2 rounds.` (parity with `check-final-score`'s `score==9`, `rounds_played==2`).
+- Real-form validation: `ast.parse` the fenced block; then run it in a FRESH process ([fable] nit 3 — seed
+  consumption: running it after the fixed driver in the same interpreter would consume the first `randint` draw
+  and spuriously fail) with `random.seed(4)` injected + the reference functions defined, piped
+  `1\n2\n2\n2\n1\nq\n` (choose 1, guess `2`, choose 2, answers `2`/`1`, quit) → reproduces the fixed driver's
+  outcome: `lucky_guess("2")==5`, `quick_quiz("2","1")==4`, final line `Final score: 9 points in 2 rounds.`
+  (parity with `check-final-score`'s `score==9`, `rounds_played==2`).
 - Confirm 0 `input()` in any `solutions.ipynb` **code** cell (the real form is markdown; the reference functions
   and fixed driver remain input-free and CI-runnable).
 - Scope invariant: `git diff --quiet` for brief.ipynb, manifest.yaml, teacher-notes.md.
@@ -134,9 +146,23 @@ already in manifest + markdown-only). Closure clean (while/sentinel-loop, input,
 accumulator, f-string; no `.split()`; no int() — string compares). §3 N/A. Phase B named (ci-local + seeded
 piped-parity + 0-input-in-code-cells + scope `git diff`).
 
+#### [fable] (2026-09-20)
+**APPROVE WITH NITS.** One-integrated-form shape HOLDS (brief presents M1–M4 as one artifact; M4 subsumes the
+menu + both games; per-game blocks would just copy the brief; §2 brief-row says a Milestone starter that already
+reads input() IS its real form → the driver is the only piece not yet visible in solutions). Ran the spec block
+in a fresh process with seed(4) + reference fns, piped `1/2/2/2/1/q` → `Score: 5…`/`Score: 9…`/`The arcade is
+closing.`/`Final score: 9 points in 2 rounds.` — exact parity. Closure clean (union-only, no int()/`.split()`).
+Nits (all FOLDED into the plan):
+- nit 1: caption should explain input-in-driver vs input-in-function → folded into the caption.
+- nit 2 (§6c): the real form mirrors the BRIEF's M4 scaffold, not the `while True` fixed driver (scripting is CI
+  artifact) → folded into the SHAPE §6c note.
+- nit 3: Phase-B validation must run in a FRESH process (seed consumption) → folded into Phase B.
+- nit 4: note the `## Fixed arcade driver` placement in lieu of `## Milestone N` (project-02 has milestone
+  headings; project-01 doesn't) → folded into the SHAPE placement note.
+Plus adopted the brief's `f""` house style in the real-form code for visual match (optional style note).
+
 #### [sol] (pending)
 #### [glm] (pending — opencode)
-#### [fable] (pending)
 
 ## Content Review
 _(pending)_
