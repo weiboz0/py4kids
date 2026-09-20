@@ -22,8 +22,8 @@ judging (explicitly rejected by the course author after comparing options):
 
 **Exemptions — which tasks get NO real-program form (v5).** The both-forms rule (clause 1, §8) applies only
 to tasks that **process input-shaped data**. A task is EXEMPT (executable form only, plus a
-`**No real version:**` note naming the class) when it falls in one of three settled classes, applied across
-u01–u04:
+`**No real version:**` note naming the class) when it falls in one of **four** settled classes (classes 1–3
+applied across u01–u06; class 4 added in v6 for u08):
 1. **Reads-nothing / generator** — produces output *without reading any external input*: a **turtle
    drawing**, a random **generator** (dice roller), a **countdown**, a **fixed printed card/receipt**. There
    is nothing to read. A unit whose lesson capstones are *all* this class (e.g. u03, all turtle drawings)
@@ -39,10 +39,12 @@ u01–u04:
    lookup data**, and the graded skill is a **transform or report *over* that fixture** (format it, merge two,
    flip it, total it, find its extreme) rather than *obtaining* it, AND reconstructing the fixture from input
    would require out-of-union control flow (e.g. a unit lacking `range-function`/`while-loop`). Then the task
-   is exempt (executable-only). **EXCEPTION:** where **building the structure from user-supplied data is
-   itself the pedagogically central act**, it is NOT exempt — give it the structure-read real-form for that
-   unit's idiom (for a range/while-less unit, the pair-split idiom in §4). (Origin: u08 word-wizard, plan 059,
-   user-ratified "split: exempt the pure transforms, teach the central dict-reads".)
+   is exempt (executable-only). **Designated-demonstrator rule:** so the structure-read idiom (§4) is *shown at
+   least once* rather than never, the plan **names ≥1 representative fixture task per fixture value-type** to
+   carry a structure-read real-form (e.g. u08: one string-valued phrasebook walk + one int-valued tally
+   find-extreme); every other fixture task is class-4 exempt. (The designated demonstrators are a coverage
+   choice, not a property of the task — sibling tasks of the same shape are exempt.) (Origin: u08 word-wizard,
+   plan 059, user-ratified "split"; wording per the 4-way gate.)
 
 A **hybrid** task (one part input-shaped, one part exempt — e.g. u03 Ex2/Ex4: a compute-authoring program +
 a prediction table) gets a real-form for the input-shaped part and a `**No real version:**` note for the
@@ -98,8 +100,11 @@ scan `cell_type == "code"` only) — this is the plan-045 submission-wrapper pre
   idiom in its union. With `range-function` → `for i in range(n)`; with a sentinel and `while-loop` → sentinel
   loop; **lacking BOTH `range` and `while` (u08)** → read one line and split: a **list** via
   `items = input("...").split()`, a **dict** via the **pair-split** idiom `for pair in input("...").split():`
-  then `parts = pair.split(":")` / `d[parts[0]] = parts[1]` (or `int(parts[1])`) — **no tuple-unpacking** unless
-  multiple-assignment is in the unit's union. `.split()` is `string-methods` (in-union wherever strings are taught).
+  then `parts = pair.split(":")` / `d[parts[0]] = parts[1]` (or `int(parts[1])`) — **no assignment-unpacking**
+  (statement-level `k, v = …` is never taught in Book 1). **`.split()` is NOT the `string-methods` concept**
+  (that is upper/lower/strip/replace) — it is its own **`str-split`**, which must be registered + **introduced in
+  the unit's union** before use (introduced u08, plan 059). A unit lacking `str-split` (and `range`/`while`) uses
+  **fixed-count reads** instead (`items = [input(...), input(...), …]`; `d[input(...)] = input(...)` ×N).
 
 ## 5. Metadata
 
@@ -163,10 +168,13 @@ throughout.
 ## 9. Revision history
 - **v6 (2026-09-19, plan 059):** §1 added a fourth exempt class — **fixed-reference-fixture** (a task that
   transforms/reports over a pre-authored dict/table used as lookup data, where rebuilding the fixture from
-  input needs out-of-union control flow; EXCEPT where building the structure from user data is the central
-  act → real-form). §4 added the range/while-less **read-into-list (`.split()`) / read-into-dict (pair-split)**
-  idioms. User-ratified the u08 split (exempt the 7 pure dict transforms; pair-split real-forms for the 2
-  central dict-reads); the 4-way gate ratifies wording.
+  input needs out-of-union control flow), with a **designated-demonstrator rule** (the plan names ≥1
+  representative fixture task per value-type to carry a structure-read real-form; the rest exempt). §4 added
+  the range/while-less **read-into-list (`.split()`) / read-into-dict (pair-split)** idioms and clarified that
+  **`.split()` is its own concept `str-split`** (NOT the `string-methods` upper/lower/strip/replace concept),
+  which must be registered + introduced in the unit's union (introduced u08); fixed-count reads are the fallback
+  where `str-split` is absent. User-ratified teaching `.split()` in u08 (option b) + the exempt/demonstrator
+  split; the 4-way gate ratifies wording.
 - **v5 (2026-09-19, plan 057):** §1/§8 codified the **full exemption taxonomy** — the three settled classes a
   task may be exempt under (reads-nothing/generator; debug/fix-the-error, unless the fix itself reads input;
   predict/trace), plus the hybrid rule. Makes explicit the convention applied across u01–u04 (the reviewer
