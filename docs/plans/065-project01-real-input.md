@@ -120,7 +120,23 @@ no-op — the ci-note already describes the split, verify no stale claim).
 - project-02 (grand-adventure) is a separate plan — the final rollout slice.
 
 ## Plan Review
-_(pending)_
+
+### Round 1 (2026-09-20) — [self] inline; [sol] gpt-5.6-sol; [glm] volcengine-plan/glm-5.3; [fable] Fable 5.
+
+#### [self] (2026-09-20)
+**APPROVE.** One integrated real-form (the interactive arcade) is the faithful representation of a project — an
+integrated capstone build, not independent exercises; the driver reads every input (menu loop, guess, two quiz
+answers) and calls the UNCHANGED reference param functions, covering M1–M4. Seeded parity VALIDATED locally: with
+`random.seed(4)` secret=2, so piped `1/2/2/2/1/q` → `lucky_guess("2")==5`, `quick_quiz("2","1")==4`, final
+`Final score: 9 points in 2 rounds.` (matches the fixed driver's `score==9`, `rounds_played==2`); both fixed and
+real forms call `lucky_guess` exactly once → one `randint`, so the seed reproduces. Metadata NONE (`input`
+already in manifest + markdown-only). Closure clean (while/sentinel-loop, input, if/elif/else, break, calls,
+accumulator, f-string; no `.split()`; no int() — string compares). §3 N/A. Phase B named (ci-local + seeded
+piped-parity + 0-input-in-code-cells + scope `git diff`).
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Content Review
 _(pending)_
