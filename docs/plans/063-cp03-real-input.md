@@ -100,7 +100,22 @@ expected to be a no-op — verify grep shows no stale `input` claim).
 - cp04 and projects are separate plans.
 
 ## Plan Review
-_(pending)_
+
+### Round 1 (2026-09-20) — [self] inline; [sol] gpt-5.6-sol; [glm] volcengine-plan/glm-5.3; [fable] Fable 5.
+
+#### [self] (2026-09-20)
+**APPROVE.** Q1/Q2 string read-and-compute; Q3/Q4/Q5 list read-and-compute (fixed-count 3/4/4); Q7 list→dict
+read-and-compute (fixed-count 5). Q6 EXEMPT as fixed-reference-fixture (class 4) — the key judgment call, sound:
+`prices["pear"]` and the `"apple"/"plum" in prices` branch hardcode fixture keys, so reading arbitrary prices
+would break the assessed lookups; the designated-demonstrator rule is met by Q7 (dict construction-from-input).
+Q8 EXEMPT class 2 (fix reads no input). Fixed-count read idiom correct (no range/while in union; u08 precedent).
+Metadata NONE (markdown path). §3 N/A — the checkpoint is byte-frozen, so source counts can't grow without
+editing the assessment; real-forms mirror frozen counts. No `.split()`; `int(input())` in-union (`int-type`).
+Phase B is the named verification phase incl. the heading-mirror guard + scope `git diff --quiet`.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Content Review
 _(pending)_
