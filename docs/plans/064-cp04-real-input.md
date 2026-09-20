@@ -40,15 +40,18 @@ cp04's union has **no `range-function` and no `while-loop`**, so read-into-list 
 | Q4 | read finale.txt line-by-line → `loaded`, print | **files-are-real** (u09) | `**Real version:**` note — the file IS real input; NO `input()` form |
 | Q5 | sort `loaded` desc, print top (no `max`) | **files-are-real** (u09, continuation) | `**Real version:**` note — sorts data loaded from the real file in Q4; NO `input()` form |
 | Q6 | `inventory={…}` → `for item,count in .items()` print | **read-and-compute** (dict, generic iterate) | REAL-FORM — fixed-count dict read (2 entries), then unchanged `.items()` loop |
-| Q7 | `"sword" in inventory`, `if "shield"` branch | **fixed-reference-fixture** (class 4) | EXEMPT — `**No real version:**` note; the checks hardcode keys, arbitrary reads break `inventory["shield"]` + the branch |
+| Q7 | `"sword" in inventory`, `if "shield"` branch | **fixed-reference-fixture** (class 4) | EXEMPT — `**No real version:**` note; a pre-authored lookup table — the graded skill is guarded membership/lookup over a GIVEN dict, and its asserted output (`True`, `no shield`) depends on that specific fixture. (Q7 GUARDS `inventory["shield"]` with `if "shield" in inventory`, so it wouldn't crash on other data; it's exempt because it's a fixture and Q6 is the chosen dict demonstrator, NOT because arbitrary reads break it — [sol] NIT-1.) |
 | Q8 | KeyError traceback → name + guard with `if in` | **debug/fix-the-error** (class 2) | EXEMPT — `**No real version:**` note; the fix reads no input |
 
 **4 real-forms (Q1, Q2, Q3, Q6); 2 files-are-real notes (Q4, Q5); 2 exempt notes (Q7 class 4, Q8 class 2).**
 
-Dict value-type: Q6 (generic `.items()` iteration — safe to read an arbitrary dict) is the **read-and-compute
-demonstrator** for cp04; Q7 (hardcoded `sword`/`shield` lookups) is the fixed-reference-fixture. The exempt vs
-real-form split for a dict question turns on whether it hardcodes keys (cp03-Q6 & cp04-Q7 hardcode → exempt;
-cp04-Q6 iterates generically → real-form) — consistent, principled.
+Dict value-type: Q6 (generic `.items()` iteration — naturally reads any dict and reports it) is the chosen
+**read-and-compute demonstrator** for cp04; Q7 is a **fixed-reference-fixture** — the graded skill is guarded
+membership/lookup over a GIVEN table, and its asserted output (`True`, `no shield`) is a property of that
+specific fixture. Q7 is exempt as a per-plan coverage choice (§1 designated-demonstrator: Q6 already carries the
+dict demonstrator), NOT because it would crash on other data — its `inventory["shield"]` is guarded by
+`if "shield" in inventory` ([sol] NIT-1 correction). (Contrast cp03-Q6, whose UNGUARDED `prices["pear"]` genuinely
+would crash on arbitrary reads — a different, also-valid reason for that fixture's exemption.)
 
 ### Real-form specifications (solutions markdown; §6c preserve twin structure + blank lines; asserts/scaffolding dropped)
 
@@ -100,8 +103,10 @@ during `exec-solutions`; the plan adds no code that writes it, and its post-CI b
   coverage, PDF build, pre-merge guard. (Q3 twin writes finale.txt with the same 40/90/20, so no diff.)
 - Real-form validation: `ast.parse` each fenced block + piped-run **in a SCRATCH cwd** ($TMPDIR — [fable] NIT-2,
   so the Q3 write never clobbers the checkpoint-dir `finale.txt`), compare COMPUTED result line(s) to the twin
-  MODULO prompt text — Q1 `Ada`→`Ada`,`10`; Q2 `Ada`/`3`→`13`; Q3 `40/90/20`→writes a scratch `finale.txt`
-  whose bytes are `40\n90\n20\n` (temp read → `[40, 90, 20]`); Q6 `sword`/`1`/`potion`/`3`→`sword: 1`,`potion: 3`.
+  MODULO prompt text — Q1 `Ada`→`Ada`,`10`; Q2 `Ada`/`3`→`13`; Q6 `sword`/`1`/`potion`/`3`→`sword: 1`,`potion: 3`.
+  Q3's oracle is a DIRECT BYTE COMPARE ([sol] NIT-6): run it on `40/90/20` in a scratch cwd, then assert the
+  written `finale.txt` bytes equal exactly `40\n90\n20\n` (not merely a reread into `[40,90,20]`, which would
+  miss stray whitespace / leading zeros / blank lines).
 - Confirm 0 `input()` in any `solutions.ipynb` **code** cell (real-forms are markdown).
 - Scope invariant: `git diff --quiet` for checkpoint.ipynb, manifest.yaml, teacher-notes.md (tracked files);
   and `finale.txt` (gitignored) bytes remain `40\n90\n20\n` after CI ([fable] NIT-1 — a `cmp`/byte check, since
@@ -160,7 +165,23 @@ heading-mirror safe (notebooks.py:164-196 strips fences); §3-N/A right. Nits (r
 - g3 (optional): caption hints — Q2 "a whole number" for the amount; Q6 "two different items" (duplicate key
   collapses) → FOLD in implementation.
 
-#### [sol] (pending)
+#### [sol] (2026-09-20) — reviewed stale draft 5d7222c (pre-fold)
+**REJECT** on the draft. Assessed against current HEAD:
+- BLOCKER 5 + 7 (finale.txt gitignored → git-diff vacuous; needs scratch-cwd probe + byte-compare to
+  `40\n90\n20\n`): **already resolved** by the [fable] NIT-1/NIT-2 folds (66a21ca) — the current plan states
+  exactly this.
+- NIT 2 (Q6 → §4 sequence idiom): already folded.
+- NIT 6 (Q3 oracle should be a direct byte-compare, not reread-into-ints): FOLDED — Phase B now asserts the
+  written bytes equal `40\n90\n20\n`.
+- **NIT 1 (valid new catch): the Q7 "hardcoded keys break arbitrary reads" rationale is FALSE** — Q7 guards
+  `inventory["shield"]` with `if "shield" in inventory`, so it wouldn't crash. Correct rationale: Q7 is a
+  pre-authored lookup fixture (guarded membership/lookup over a GIVEN table), exempt as the per-plan
+  coverage choice (Q6 is the dict demonstrator). FOLDED into the SHAPE row + dict paragraph.
+
+### Round 1 — outcome: [self]/[fable]/[glm] APPROVE (with nits, all folded); [sol] REJECT on the STALE draft
+whose BLOCKERs (finale.txt) were ALREADY fixed in HEAD before [sol] ran, plus a valid Q7-rationale NIT-1 and the
+Q3 byte-compare NIT-6 (both now folded). Re-dispatching [sol] on the corrected plan to convert REJECT→APPROVE
+before implementing (no 3-of-4 shortcut on a REJECT).
 
 ## Content Review
 _(pending)_
