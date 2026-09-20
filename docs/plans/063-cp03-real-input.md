@@ -44,9 +44,13 @@ idiom** (u08 precedent): a list literal of N `input()` reads matching the frozen
 
 **6 real-forms (Q1, Q2, Q3, Q4, Q5, Q7); 2 exempt (Q6 fixed-reference-fixture, Q8 debug).**
 
-Designated-demonstrator (§1): the dict value-type's construction-from-input is demonstrated by **Q7** (reads a
-word list, builds `counts`); Q6 (a given lookup table) is therefore exempt as a fixed-reference-fixture — the
-representative-per-value-type rule is satisfied.
+Designated-demonstrator (§1) — honest accounting ([fable] plan-review nit a): cp03's ONLY dict fixture task is
+Q6, and it CANNOT be a structure-read demonstrator without breaking its hardcoded-key logic (`prices["pear"]`,
+the `in` branch), so **cp03 carries no dict structure-read real-form**. Dict *construction from input* is still
+shown by Q7 (reads a word list → builds `counts`), but Q7 is a list-read, not a §4 dict structure-read
+(`d[input()] = input()`). The §1 designated-demonstrator rule is **per-unit**, and Book-1's dict structure-read
+demonstrators already live in u08 (Ex7/Ex13, plan 059) — cp03 need not add one. Q6 is therefore exempt as a
+fixed-reference-fixture, which is the correct and non-awkward outcome.
 
 ### Real-form specifications (solutions markdown, mirrored heading; §6c preserve twin structure + blank lines)
 
@@ -113,9 +117,19 @@ Metadata NONE (markdown path). §3 N/A — the checkpoint is byte-frozen, so sou
 editing the assessment; real-forms mirror frozen counts. No `.split()`; `int(input())` in-union (`int-type`).
 Phase B is the named verification phase incl. the heading-mirror guard + scope `git diff --quiet`.
 
+#### [fable] (2026-09-20)
+**APPROVE WITH NITS.** Validated all 8 classifications (Q6 fixture-exempt confirmed via the `branch_taken=="pear"`
+assert + hardcoded keys; Q8 class-2 fix reads nothing); pipe-ran Q1/Q2/Q7 → `w y zar yrdraziw`/`True`/`cat 3,
+dog 1, bird 1` match twins; closure clean (int-type never_flag, no `.split()`/range/while); §3-N/A sound; Phase B
+adequate. Nits (non-blocking):
+- (fa) designated-demonstrator wording overstated — Q7 is a list-read that builds a dict, not a §4 dict
+  structure-read; cp03 carries no dict structure-read (Q6 can't be one), and Book-1's dict demonstrators are
+  u08 Ex7/Ex13. → FOLDED into the SHAPE section (reworded).
+- (fb) Q1 real-form: empty input → `word[0]` IndexError; caption should ask for a word ≥5 letters (matches
+  cp02's usage-hint captions). → FOLD in implementation (Phase A).
+
 #### [sol] (pending)
 #### [glm] (pending — opencode)
-#### [fable] (pending)
 
 ## Content Review
 _(pending)_
