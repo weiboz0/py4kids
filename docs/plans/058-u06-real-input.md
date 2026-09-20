@@ -1,6 +1,6 @@
 # Plan 058 — u06 secret-codes: full real-input treatment (strings/cipher read-and-compute arm)
 
-**Status:** PLAN-REVIEW GATE CLOSED (4-way consensus) — implementation pending.
+**Status:** COMPLETE — both gates CLOSED (4-way); ci-local ALL GREEN; ready to merge.
 **Type:** Content — apply the full real-input treatment (design 003 v5) to `unit-06-secret-codes`.
 **Branch:** `feature/plan-058-u06-real-input`. **Base:** main @ 4111526.
 
@@ -267,9 +267,37 @@ Re-dispatching round 2.
   improvement that does not affect anything [glm] verified.) 1 `[WONTFIX]` out-of-scope: pre-existing u02
   non-unique cell ids (`u2-ex8-*`) — nbformat warning, checks still PASS, future cleanup.
 
-### Content-review gate — outcome: [self]/[glm]/[fable] APPROVE; [sol] REJECT→fixed (L3 parity one-line),
-re-confirming [sol]. Gate closes on [sol]'s re-confirm. (Pre-existing u02 DuplicateCellId noted for a future
-cleanup plan.)
+#### [sol] re-confirm (2026-09-19)
+- **Verdict**: APPROVE — L3 real-form final line now `print(coded_message)`; piping "Meet me at 4!" reproduces
+  the twin's `phhw ph dw 4!` exactly. Nothing else regressed.
+
+### Content-review gate — outcome: **CLOSED** — 4-way consensus:
+[self] APPROVE · [sol] APPROVE (after the L3 parity one-line fix) · [glm] APPROVE · [fable] APPROVE. No `[OPEN]`
+findings remain. (Pre-existing u02 `DuplicateCellId` noted for a future cleanup plan — out of scope here.)
 
 ## Post-Execution Report
-_(pending.)_
+
+**Shipped (2026-09-19).** u06 secret-codes given the full real-input treatment (design 003 v5): strings/cipher
+read-and-compute arm (functions + inline), **no metadata change** (`input`/`int-type` already in the union).
+
+**What changed (3 notebooks):**
+- `lesson.ipynb` (70→73 cells, additive): new L2 decode `no-exec input()` real-form + Notice (after the trace
+  prompt); L3 gains its missing Notice; **content-gate correction** — the pre-existing L3 real-form's
+  `print(f"Send this code: …")` → `print(coded_message)` (§6 parity with its twin). No other merged cell edited.
+- `solutions.ipynb`: 23 `**The real program**` markdown real-forms (per-task call shell; Ex10 reads msg + 2
+  shifts → 5 computed-label lines; Ex18 2 codes; Ex19 2 messages one line; Ex5/6/8/9 model answers; Ch2
+  self-contained `encode`; value-coupled labels kept as computed expressions).
+- `exercises.ipynb`: 19 `**Real version:**` cues + 1 `**No real version:**` (Ex7 debug/fix-the-error).
+
+**Verification:** `scripts/ci-local.sh` ALL GREEN — 493 passed / 2 skipped; exec-solutions + exec-lessons PASS
+(kernel validated the new L2 no-exec cell + Notices); manifest/prereq/coverage/concept-scan/technique-spiral
+PASS (no metadata change); PDF + guard OK. All 25 real-forms piped-run-match their twins (multi-value forms
+reproduce every line; Ex5/Ex9 per-representative). 0 `input()` in solutions CODE cells; no fenced `## Exercise
+<digit>`.
+
+**Gates:** plan-review CLOSED (4-way, 3 rounds); content-review CLOSED (4-way; 1 L3-parity fix).
+
+**Rollout status (design 003 §7):** merged — u04, u07 (list), cp01, u02, u01, u03 (turtle), u05 (functions),
+**u06 (strings/ciphers)**. Remaining: u08 (word-wizard), u09 (files), u10 (classes); checkpoints cp02–cp04;
+projects. u06 confirmed the functions + inline list-less arms compose cleanly, and that a unit already carrying
+`input` in its union needs no metadata add (only the per-unit lesson-gap audit + Notices).
