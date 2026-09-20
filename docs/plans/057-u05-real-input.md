@@ -14,7 +14,7 @@ compute-and-print cells: Ex6/Ex9/Ex10, the u03 pattern). Treatment by **per-exer
   twin's **exact call+print structure** with **one `input(...)` read per distinct fixed VALUE** (a twin that
   calls twice reads both calls' args and prints both results — the u04 20→22 precedent) — a **bare call** for
   functions that PRINT their own output, `print(func(args))` only for return-only functions. Type per value:
-  **string → plain `input(...)`**; **int → `int(input(...))`**; **float (e.g. `area`'s `2.5`/`4.5`) →
+  **string → plain `input(...)`**; **int → `int(input(...))`**; **float (e.g. lesson `area(7, 4.5)` / Ex4 `area(8, 2.5)`) →
   `float(input(...))`** (`float-type` is in u05's union). Labeled prompts, no `{i}` index (u05 has no lists).
 - **Headless-compute read-and-compute** (Ex6/Ex9/Ex10 — no `def`, fixed shape param → counts): read the
   param(s), then the unchanged compute + print (the u03 arm).
@@ -118,9 +118,9 @@ Challenge 2 (4).**
 ## Phases
 
 ### Phase A — apply to u05 (lesson + exercises + solutions + metadata + coverage-map)
-- **lesson.ipynb:** add a `no-exec` `input()` real-form + `**Notice:**` after each of cells 9, 15, 20, 28
-  after each of the compute-capstone cells (currently 9, **13** [`area`, not `polygon_points` 15], 20, 28 —
-  reference by CONTENT, indices shift on insert), per the both-forms table. Do NOT alter the executable
+- **lesson.ipynb:** add a `no-exec` `input()` real-form + `**Notice:**` after each of the compute-capstone
+  cells — currently **9, 13, 20, 28** (L2 capstone is `area` at cell **13**, NOT `polygon_points` at 15;
+  reference by CONTENT, since indices shift on insert), per the both-forms table. Do NOT alter the executable
   capstones or the build-up rungs (incl. `polygon_points` cell 15).
 - **exercises.ipynb:** `**Real version:**` cue on the 18 read-and-compute exercises (Ex1, Ex3, Ex4, Ex6, Ex8,
   Ex9, Ex10, Ex11–Ex20, Challenge 1); `**No real version:**` note (naming the exempt class) on Ex2/Ex7
@@ -306,7 +306,19 @@ Re-dispatching round 3 (L2→area is a both-forms-table change — all three re-
   → `[FIXED]`: Phase A corrected to "9, **13**, 20, 28" + reference-by-content (same fix as [fable] R3 #1;
   reviewed on ba4586e before the fix was applied). Re-confirming [sol] round 4.
 
-#### [glm] round 3 (pending)
+#### [glm] round 3 (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — all 4 verification points confirmed (area exact §6c parity; polygon_points
+  rung sound; Motivation = per-task call shell; no round-2 regressions). 2 findings, both stale/imprecise:
+1. `[FIXED]` Should: Phase A stale "9, **15**, 20, 28" → corrected to "9, 13, 20, 28" (same as [sol]/[fable] R3).
+2. `[FIXED]` Nit: Motivation float example "`area`'s `2.5`/`4.5`" imprecise → "lesson `area(7, 4.5)` / Ex4 `area(8, 2.5)`".
+
+#### [sol] round 4 (2026-09-19)
+- **Verdict**: REJECT — the round-3 fix had APPENDED the corrected "9, 13, 20, 28" while leaving the stale
+  "9, 15, 20, 28" first line, so both appeared. → `[FIXED]`: Phase A rewritten to one clean line "9, 13, 20, 28"
+  (the stale text now survives only in these review-record quotes). Re-confirming [sol] round 5.
+
+### Round 3 — outcome: [glm] APPROVE-WITH-NITS, [fable] APPROVE-WITH-NITS (nits folded); [sol] R4 REJECT on a
+duplicated-line artifact of the R3 fix, now cleanly corrected. Re-dispatching [sol] round 5 (single-line confirm).
 
 ## Content Review
 _(pending — 4-way, post-implementation.)_
