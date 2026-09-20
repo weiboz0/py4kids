@@ -268,7 +268,35 @@ No open blockers. (Journey: 3 user forks [exempt/teach dict-fixtures → teach .
 fixed-count reads; design 003 → v6 [fixed-reference-fixture + designated-demonstrator + fixed-count idiom].)
 
 ## Content Review
-_(pending — 4-way, post-implementation.)_
+
+4-way, on the implementation commit ee61176. Tags [self]/[sol]/[glm]/[fable].
+
+#### [self] (2026-09-19)
+- **Verdict**: APPROVE. Verified the load-bearing constraint: **ZERO `.split(`** in any solutions/lesson cell.
+  Ex7 (sol 20) + Ex13 (sol 36) are clean fixed-count dict-reads (explicit `word=input(); v=input(); d[word]=v`
+  triples; Ex13 `n=int(input())`; NO `.split()`; the `for k,v in d.items()` is the taught dict-loop for-target,
+  not statement-level unpacking). L2 (les 27, no-exec) + L3 fixed-count word lists. Diff = exactly the 5 scoped
+  files (no str-split/concepts.yaml/Book-2/u09/concept_scan/teacher-notes). ci-local ALL GREEN — both books
+  (concept-scan/coverage/prereq PASS; exec-solutions/exec-lessons PASS). 0 input() in solution CODE cells.
+
+#### [fable] (2026-09-19)
+- **Verdict**: REJECT → (after fix) APPROVE. 1 Must-Fix: Ex4 real-form (sol 11) used `word.replace('b','B',1)`
+  — the **3-arg `.replace(old,new,count)` is untaught in Book 1** (only 2-arg taught, u06) AND a contrived hack
+  to reproduce the twin's hardcoded prose literal "Bird". → `[FIXED]`: replaced with the plain computed
+  `print(f"{word} means {translations[word]}.")` (value-coupled-label rule — the twin's capital "B" is prose,
+  not data; §6b parity holds modulo that case). Everything else verified clean (all 16 real-forms parse +
+  match twins; closure NO .split()/range/while/unpacking; metadata input-only, 5-file scope; 14 cues + 9 exempt
+  notes; 0 input() in solution code cells; 23 asserts; both books green). WONTFIX nits: Ex7/Ex13 scratch names;
+  Ex14 two-lines-collapsed (output-identical, plan-specified).
+
+#### [sol] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — all checks pass at ee61176 (16/16 AST + piped parity, closure, metadata,
+  scope, exemptions, cues, hygiene). 1 Should-Fix: same Ex4 `.replace('b','B',1)` (corrupts input, e.g. rabbit
+  → raBbit) → resolve by lowercasing the twin's prose "Bird"→"bird" + printing `{word}`. → `[FIXED]`: real-form
+  now prints `{word}` (done for [fable]#1) AND the Ex4 twin (sol 10) prose "Bird"→"bird" for EXACT §6b parity
+  (no assert on that line; exec-solutions unaffected).
+
+#### [glm] (pending)
 
 ## Post-Execution Report
 _(pending.)_
