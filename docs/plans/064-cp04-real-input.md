@@ -210,9 +210,71 @@ checkpoint.ipynb/manifest.yaml/teacher-notes.md byte-unchanged; finale.txt (giti
 Files-are-real notes (Q4/Q5) per u09; exempt notes name the class (Q7 class 4 fixture, Q8 class 2 debug) with the
 corrected Q7 rationale. No `.split()`; `int(input())` in-union. ci-local ALL GREEN.
 
-#### [sol] (pending)
-#### [glm] (pending — opencode)
-#### [fable] (pending)
+#### [fable] (2026-09-20)
+**APPROVE WITH NITS — no `[OPEN]`.** Pipe-ran Q3 (writes byte-identical finale.txt) + Q6 (`bow/2/arrow/12`→
+`bow: 2`,`arrow: 12`, prompt order Item→Count correct); confirmed the **Q6 explicit-variable form is correct AND
+necessary** (the §4 `d[k]=v` idiom evaluates RHS first → would prompt "Count?" first and crash int() on the item
+name). Q1/Q2 line-for-line twins. Files-are-real notes (Q4 credits Q3 writer, Q5 credits Q4 loader) match u09;
+Q7 names class 4 with the corrected fixture/coverage rationale (does NOT claim a crash — lookup is guarded); Q8
+names class 2. Coverage complete. Nits (`[WONTFIX]`-eligible cosmetic):
+- Q7 note "guarded membership and lookup" → "a membership test and a guarded lookup" (precision). → FOLD.
+- Q6 caption: optionally append "type two different names, or the second overwrites the first". → FOLD.
+- **Out-of-scope observation (design follow-up, not a plan-064 finding):** design 003 §4/§1 document the dict
+  fixed-count idiom as `d[input("Key? ")] = input("Value? ")`, which is MISLEADING (RHS-first eval prompts
+  "Value?" before "Key?") and was never actually shipped (u08 uses the list-literal form; cp04 uses explicit
+  vars). Recommend amending the design §4 text in a future docs slice. → logged in the Post-Execution Report.
+
+#### [glm] (2026-09-20)
+**APPROVE — 0 `[OPEN]`, 20/20 probes.** Piped parity in scratch cwds: Q1 Ada→Ada,10; Q2→13; Q6 sword/1/potion/3
+→sword: 1,potion: 3; Q3 byte-compare finale.txt==`40\n90\n20\n`. **Q6 eval-order fix confirmed empirically** —
+reproduced the §4-idiom crash (`ValueError: ... 'sword'`), shipped explicit-var form survives natural order.
+§6c twin structure preserved (blank lines, counts 3/2). Q4/Q5 files-are-real match u09 wording. Q7 class 4
+(corrected guarded-lookup rationale) + Q8 class 2 named. Closure clean (union-only, no `.split()`/range/while;
+input markdown-only → no metadata). Hygiene: 0 input() in code cells, 8 `## Question N` headings, 7 asserts
+preserved. Scope: solutions.ipynb only; checkpoint/manifest/teacher-notes unchanged; finale.txt bytes intact
+(xxd). Caption hints folded (Q2 whole-number, Q6 two different items). One `[WONTFIX]` (out of scope): design §4
+dict idiom hazard — future design revision, no action here (matches [fable]).
+
+#### [sol] (2026-09-20)
+**APPROVE — 0 `[OPEN]`, 0 `[WONTFIX]`.** Blind-solved 4/4 (match); exact executions Q1 Ada,10 / Q2 13 / Q6
+sword: 1,potion: 3 / Q3 wrote `b"40\n90\n20\n"`. Q6 explicit-var form present, unsafe form absent, natural order
+no crash. §6c preserved. Q4/Q5 files-are-real (u09); Q7 class 4 (Q6 demonstrator) / Q8 class 2 named. No
+`.split()`; prereq/coverage/concept-scan pass. Hygiene: 0 input() in code cells, 8 headings, 7 asserts, 16 prior
+cells preserved. checkpoint/manifest/teacher-notes unchanged; finale.txt exactly 9 bytes `40\n90\n20\n`.
+
+### Content-review outcome: **FULL 4-way consensus.** [self]/[glm]/[sol] APPROVE · [fable] APPROVE-WITH-NITS
+(0 `[OPEN]`). No open blockers. [fable]'s 2 cosmetic nits folded post-consensus (Q7 "a membership test and a
+guarded lookup"; Q6 caption overwrite hint); ci-local re-verified GREEN. Gate CLOSED → PR.
 
 ## Post-Execution Report
-_(pending)_
+
+**Status: COMPLETE.** Checkpoint 04 (year-one-finale: classes/files/dicts) received the design-003 real-input
+treatment via the checkpoint markdown path. **This completes ALL FOUR Book-1 checkpoints (cp01–cp04).**
+
+**What shipped** (branch `feature/plan-064-cp04-real-input`, `solutions.ipynb` only, +8 markdown cells):
+- 4 real-forms — Q1/Q2 (read name / name+heal amount → construct-and-drive `Hero`), Q3 (fixed-count read 3
+  scores → write finale.txt), Q6 (read 2 item/count pairs via EXPLICIT variables → iterate `.items()`).
+- 2 files-are-real notes (u09 precedent) — Q4 (pure file-read of finale.txt), Q5 (sort the file-loaded data).
+- 2 exempt notes — Q7 fixed-reference-fixture (class 4; guarded lookup over a given table, Q6 is the dict
+  demonstrator — NOT a crash-avoidance), Q8 debug/fix-the-error (class 2).
+- **No metadata change**; §3 N/A (frozen). `checkpoint.ipynb`/`manifest.yaml`/`teacher-notes.md` byte-unchanged;
+  `finale.txt` (gitignored) bytes stay `40\n90\n20\n`.
+
+**Notable correctness find (implementation):** Q6's dict read uses EXPLICIT variable reads, NOT the design §4
+sequence idiom `inventory[input("Item? ")] = int(input("Count? "))` — Python evaluates the `int()` RHS before the
+subscript key, so that idiom prompts "Count?" first and crashes `int()` on the item name. Confirmed by all four
+reviewers (empirically reproduced by [glm]/[fable]/[sol]).
+
+**Gate history**: plan-review FULL 4-way consensus ([sol] REJECT→APPROVE after folding a gitignored-finale.txt
+scope correction, Q7-rationale, Q3-byte-compare, Q6-idiom nits) → implementation (8d50610; Q6 eval-order fix) →
+content-review FULL 4-way consensus (0 `[OPEN]`) → 2 cosmetic folds.
+
+**Verification**: `scripts/ci-local.sh` ALL GREEN; parity 4/4 (Q3 byte-compare); 0 `input()` in code cells;
+heading-mirror intact (8 `## Question N`); scope invariant clean; finale.txt bytes intact; `pre-merge-guard --pr`.
+
+**Follow-up (out of scope here; both [fable] and [glm] flagged):** design `003-book1-real-input.md` §4/§1
+document the dict fixed-count idiom as `d[input("Key? ")] = input("Value? ")`, which is MISLEADING — Python's
+RHS-first evaluation prompts "Value?" before "Key?" (and crashes with `int()` values). No shipped content uses it
+(u08 uses the list-literal form; cp04 uses explicit vars). A future small docs slice should amend §4/§1 to make
+the explicit-variable form canonical for non-string dict values. Relevant to the upcoming projects if they read
+dicts.
