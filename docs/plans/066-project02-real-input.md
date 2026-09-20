@@ -41,34 +41,40 @@ Per-milestone mapping (stated in the block's caption):
 - **M1** (reads the hero name) — real form is the brief M1 starter (§2 brief-row); shown integrated in the M5
   block (`Hero(input("Name your hero: "))` + `take_damage(3)`).
 - **M2** (three flat world dicts + `describe`/`move` helpers) — **fixed-reference-fixture** (class 4): the world
-  is authored reference data, not read; the helpers are pure param functions (no input). Used, not read, in the
-  real form. No real form of its own.
+  is authored reference data, not read; the helpers are pure param functions (no input). Carries a
+  `**No real version:**` note under `## Milestone 2` naming class 4 ([sol] BLOCKER 1, design §8). Used, not read,
+  in the M5 real form.
 - **M3** (reads directions in the exploration loop) — real form is the brief M3 starter (§2 brief-row); shown
   integrated in the M5 block (the interactive `while` loop reading directions).
 - **M4** (file save/load) — **files-are-real** (u09): the save writes the real playthrough's hero and the load
-  reads the real `adventure_save.txt`; the integrated M5 block does this round-trip with real input. No separate
-  input() form.
+  reads the real `adventure_save.txt`. Carries a `**Real version:**` files-are-real note under `## Milestone 4`
+  ([sol] BLOCKER 1, u09 precedent); the M5 block does the round-trip with real input. No separate input() form.
 - **M5** (assemble) — the integrated `**The real program**` block itself.
 
 **§6 relationship (project-01 reading).** The real form is NOT a §6c line-for-line twin of the scripted driver —
 an interactive `while`-input exploration loop has NO CI-runnable line-for-line twin (`input()` can't run in CI).
-The scripted driver + save/load + M5 asserts are the **§6a state-contract CI proof** (they pin `roll==2`,
-`hero.health==17`, `inventory==["sword","shield"]`, `current=="river"`, `save_file_contents=="Ada\n17\nsword\nshield\n"`);
-the real form's interactive structure is validated by **§6b execution parity** (Phase B pipes the name + the
-scripted directions and checks the same final state + save-file bytes).
+The scripted driver + save/load + M5 assert cell are the **executable fixed-data twin** (asserts pin `roll==2`,
+`hero.health==17`, `inventory==["sword","shield"]`, `current=="river"`,
+`save_file_contents=="Ada\n17\nsword\nshield\n"`, and `adventure_summary=="Ada finished with 17 health and found
+sword."`). Validation: **§6a** = `ast.parse` of the block; **§6b** = execution parity — Phase B pipes the name +
+scripted directions and checks the same final state, the save-file bytes, AND the same
+`adventure_summary` RESULT LINE ([sol] BLOCKER 2 — the real form ends by printing that identical summary).
 
 ### Real-form specification (solutions markdown, appended after the `assembled-adventure` cell, under `## Milestone 5`)
 
 `**The real program**` — caption: "the whole adventure reading real input, using the `Hero` class, world dicts,
-and helpers defined above. Milestones 1 and 3 read input in the brief starters (the name and the directions);
-this reference shows them assembled and interactive. Milestone 2's world dicts are fixed reference data, and
-Milestone 4's save/load round-trips this playthrough through the real `adventure_save.txt`." Uses project-02's
-house style (plain `"..."` for non-interpolated strings, `f"..."` only for interpolation):
+and helpers (`describe`/`move`/`apply_event`/`pick_up`) defined above; `random` is imported in the top
+`seed-adventure` cell ([fable] N3). Milestones 1 and 3 read input in the brief starters (the name and the
+directions); this reference shows them assembled and interactive. Milestone 2's world dicts are fixed reference
+data, and Milestone 4's save/load round-trips this playthrough through the real `adventure_save.txt`. Collect at
+least one item before quitting, as Milestone 3 requires, so the inventory index has something to show ([fable]
+N2)." Uses project-02's house style (plain `"..."` for non-interpolated strings, `f"..."` only for interpolation):
 ```python
 hero_name = input("Name your hero: ")
 hero = Hero(hero_name)
 print(f"Starting hero: {hero.name}")
 print(f"Starting health: {hero.health}")
+print(f"Starting inventory: {hero.inventory}")
 health_after_damage = hero.take_damage(3)
 print(f"Health after damage: {health_after_damage}")
 
@@ -84,6 +90,8 @@ while True:
     if next_room == "quit":
         print("Your hero rests for now.")
         break
+    if next_room == current:
+        print("You can't go that way.")
     current = next_room
     if current in room_items:
         item = room_items[current]
@@ -115,8 +123,12 @@ with open("adventure_save.txt", "r") as save_file:
             loaded_items.append(cleaned_line)
         line_number = line_number + 1
 
-print(f"Saved and loaded {loaded_name} with {loaded_health} health and {loaded_items}.")
+adventure_summary = f"{loaded_name} finished with {loaded_health} health and found {first_collected_item}."
+print(adventure_summary)
 ```
+(N1: the `if next_room == current:` message is only reached on an invalid direction; the parity path
+`east/west/east/east/q` never triggers it. N6: `Starting inventory` print restored. BLOCKER 2: the block now ends
+with the SAME `adventure_summary` line the M5 fixed cell prints/asserts.)
 Uses the reference `Hero`/`describe`/`move`/`apply_event`/`pick_up`/dicts defined in the cells above
 (non-self-contained, like project-01's block). It reads every input the adventure needs (name + directions) and
 does the real file round-trip. **Validated (fresh scratch cwd, `random.seed(4)`, piped `Ada` + `east/west/east/
@@ -132,25 +144,36 @@ rooms"); they are not toy SOURCE data read from input. §3 realism-growth does n
 
 ### Phase A — apply to project-02 solutions.ipynb (markdown only; NO brief.ipynb / manifest / metadata / adventure_save.txt change)
 
-Append ONE `**The real program**` markdown cell after the `assembled-adventure` code cell (end of notebook, under
-the existing `## Milestone 5` heading — project-02 solutions already have `## Milestone 1..5`, so no new heading).
-The block is the integrated interactive adventure per spec, in project-02's house style. `brief.ipynb`,
-`manifest.yaml`, `teacher-notes.md` are NOT touched (byte-unchanged; teacher-notes audit expected no-op).
+Three markdown edits to `solutions.ipynb` (only):
+1. Append ONE `**The real program**` markdown cell after the `assembled-adventure` code cell (end of notebook,
+   under the existing `## Milestone 5` heading — no new heading needed). The block is the integrated interactive
+   adventure per spec, in project-02's house style.
+2. Under `## Milestone 2` (after the `flat-world` code cell): a `**No real version:**` note naming class 4
+   (fixed-reference-fixture — the world dicts are authored reference data; `describe`/`move` are pure helpers)
+   ([sol] BLOCKER 1).
+3. Under `## Milestone 4` (after the `save-and-load` code cell): a `**Real version:**` files-are-real note
+   (the save/load round-trips the real playthrough through the real `adventure_save.txt`; no input() form)
+   ([sol] BLOCKER 1, u09).
+4. Extend the `reference-intro` cell with a one-sentence forward pointer ("the interactive version is shown under
+   `## Milestone 5` at the end") to match project-01's intro pointer ([glm] NIT-1).
+`brief.ipynb`, `manifest.yaml`, `teacher-notes.md` are NOT touched (byte-unchanged; teacher-notes audit no-op).
 
 ### Phase B — verification
 
 - ci-local ALL GREEN (`TMPDIR=/dev/shm bash scripts/ci-local.sh`): registry+lint, notebook execution+hygiene,
   manifest/prereq/coverage, PDF build, pre-merge guard.
-- Real-form validation ([sol]/[glm] fresh-process rule from project-01): `ast.parse` the block; run it in a
-  FRESH process in a SCRATCH cwd (so its `adventure_save.txt` write never clobbers the checkpoint/project-dir
-  artifact) with `random.seed(4)` injected + the reference `Hero`/dicts/helpers defined, piped
-  `Ada\neast\nwest\neast\neast\nq\n` → final state health 17 / `current=="river"` / inventory
-  `["sword","shield"]`, and the written save file bytes equal `Ada\n17\nsword\nshield\n` (matches the M5 assert
-  `save_file_contents == "Ada\n17\nsword\nshield\n"`). Exactly one `randint` call (roll=2), matching the fixed
-  driver.
-- Confirm 0 `input()` in any `solutions.ipynb` **code** cell (the real form is markdown).
-- Scope invariant (merge-base, project-01 precedent): `git diff --quiet $(git merge-base HEAD main)..HEAD -- <p>`
-  for brief.ipynb, manifest.yaml, teacher-notes.md. `adventure_save.txt` is a **gitignored** artifact
+- Real-form validation ([sol]/[glm] fresh-process rule from project-01): `ast.parse` the block (§6a); run it in a
+  FRESH process in a SCRATCH cwd (so its `adventure_save.txt` write never clobbers the project-dir artifact) with
+  `random.seed(4)` injected + the reference `Hero`/dicts/helpers defined, piped `Ada\neast\nwest\neast\neast\nq\n`
+  → (§6b) final state health 17 / `current=="river"` / inventory `["sword","shield"]`; the written save file
+  bytes equal `Ada\n17\nsword\nshield\n`; AND the final printed RESULT LINE equals
+  `Ada finished with 17 health and found sword.` (identical to the M5 fixed cell's `adventure_summary` — [sol]
+  BLOCKER 2). Exactly one `randint` call (roll=2), matching the fixed driver.
+- Confirm 0 `input()` in any `solutions.ipynb` **code** cell (the real form + all three notes are markdown).
+- Scope invariant ([sol] BLOCKER 3 — NAME-LIST ALLOWLIST): `git diff --name-only $(git merge-base HEAD main)..HEAD`
+  must equal EXACTLY `docs/plans/066-project02-real-input.md` and
+  `book1/projects/project-02-grand-adventure/solutions.ipynb` (proves NO other tracked file changed, not merely
+  that brief/manifest/teacher-notes are unchanged). `adventure_save.txt` is a **gitignored** artifact
   (.gitignore:34) regenerated by the M4/M5 solution cells; its post-CI bytes stay `Ada\n17\nsword\nshield\n`
   (byte check, not git diff — git can't diff an ignored file).
 
@@ -214,7 +237,26 @@ plan only; Phase B enforces byte-unchanged. Nits:
   fidelity. → FOLD. (Also flags the SHAPE prose says `Hero(input(...))` while the spec block uses the two-line
   `hero_name = input(...)` form — trivial; the two-line form matching the brief is kept.)
 
-#### [sol] (pending)
+#### [sol] (2026-09-20) — reviewed stale draft 9dde674
+**REJECT** (3 BLOCKERs). Seeded parity, fidelity, closure, metadata, gitignored-file handling all PASS.
+Resolution:
+- `[OPEN]` BLOCKER 1 — per-task cue notes: design §8 wants M2 to carry a `**No real version:**
+  fixed-reference-fixture (class 4)` note; u09 wants M4 to carry a `**Real version:**` files-are-real note. The
+  M5 caption alone doesn't satisfy the per-task cues, and project-02 solutions HAVE `## Milestone 2`/`## Milestone
+  4` headings. RESOLVED: add the two cue notes under those headings (still ONE real-program block under M5). This
+  supersedes [fable] N5 (caption-only) — [sol]'s per-task-cue reading is correct for a milestone-organized project.
+- `[OPEN]` BLOCKER 2 — §6b result-line parity: the fixed M5 cell prints/asserts
+  `adventure_summary == "Ada finished with 17 health and found sword."`, but the draft's real form ended with a
+  DIFFERENT line. RESOLVED: the real form now ends by computing + printing the SAME
+  `adventure_summary = f"{loaded_name} finished with {loaded_health} health and found {first_collected_item}."`,
+  so §6b result-line parity is exact. (Also fixed wording: §6a is `ast.parse`; the scripted driver + asserts are
+  the executable fixed-data twin / M5 assert proof, not a "§6a proof".)
+- `[OPEN]` BLOCKER 3 — scope check: RESOLVED: Phase B now uses a merge-base NAME-LIST ALLOWLIST requiring the
+  changed set to be exactly {the plan file, solutions.ipynb}, plus the separate gitignored-file byte check.
+Re-verifying [sol] on the reworked plan (no 3-of-4 shortcut on a REJECT).
+
+### Round 1 — status: [self]/[fable]/[glm] APPROVE (nits folded); [sol] REJECT on stale draft → resolution folded
+(M2/M4 cue notes; adventure_summary result-line parity + §6a wording; name-list allowlist scope). [sol] re-verify pending.
 
 ## Content Review
 _(pending)_
