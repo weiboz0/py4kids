@@ -25,16 +25,31 @@ All 10 Book-1 units + all 4 checkpoints already carry the norm.
 
 `input` is ALREADY in project-01's manifest `practices`, and the real-form is markdown-only anyway → no add
 (design §5). No `.split()` (Book-2). The real driver uses only union concepts (`while-loop`/`sentinel-loop`,
-`input`, `if`/`elif`/`else`, `break-statement`, function calls, `accumulator`, `comparison`, `f-string`,
-`print`, `variable`, `string-literal`).
+`input`, `if`/`elif`/`else`, `break-statement`, function calls, `accumulator`, `comparison`, `logical-ops` (the
+`or` in the scoreboard condition), `loop-counter`, `arithmetic`, `f-string`, `print`, `variable`,
+`string-literal`) — [sol] #4 completeness; no `int()` (string compares).
 
 ## SHAPE — one integrated real-form (the interactive arcade)
 
-A project is an INTEGRATED capstone build, not a set of independent exercises. Its one input-shaped "program"
-is the whole arcade: the menu loop (M1) reads choices; game 1 (M2) reads a guess; game 2 (M3) reads two answers;
-the scoreboard (M4) accumulates. The scripted **Fixed arcade driver** (`fixed-arcade-driver`, scripts
-`1`→`2`→`q`) is the executable fixed-data twin; its **real form** is the interactive driver that reads the menu
-choice and each game's input, calling the UNCHANGED reference param functions.
+A project is an INTEGRATED capstone build, not a set of independent exercises. Per **design §2 brief-row / v3**,
+where a Milestone starter already reads `input()` that starter IS its real-program form — so M1–M4's real forms
+already live in the brief's input()-reading scaffolds ([glm] nit A, [sol] BLOCKER-1 mapping). The one piece not
+yet visible in the solutions is the **integrated M4 arcade** (menu loop + both games + scoreboard). So the real
+form is placed under a **`## Milestone 4`** heading in solutions (mirroring the brief's `## Milestone 4`, per §2;
+solutions milestone headings are unconstrained — `project_milestone_findings` reads brief.ipynb only), and M1–M3
+map to their brief starters.
+
+**§6 relationship (the [sol] BLOCKER-2 resolution).** The real form is NOT a §6c line-for-line twin of the
+scripted `fixed-arcade-driver` — an interactive menu loop (sentinel `while choice != "q"`, menu prints, `input()`
+at loop top, explicit `q`, invalid-choice branch, conditional scoreboard) has NO CI-runnable line-for-line twin
+(`input()` can't run in CI). Instead:
+- the real form is the **brief M4 scaffold** twin (§2 brief-row — the interactive starter IS the real form),
+  completed and calling the reference param functions;
+- the `fixed-arcade-driver` is the **§6a return-contract CI proof** (its asserts pin the scored branches:
+  quick_quiz's three branches + lucky_guess's match; `while True` + scripted `choice` transitions +
+  `lucky_points`/`quiz_points` temporaries are CI scripting, not real structure);
+- the real form's interactive structure is validated by **§6b execution parity** (Phase B pipes real input
+  through it and checks the scoreboard reproduces the fixed driver's score).
 
 - The reference functions `lucky_guess(guess)` / `quick_quiz(answer_one, answer_two)` stay as the validated
   fixed-data twins (they take fixed values as params; the fixed driver + asserts pin all branches). The real
@@ -48,13 +63,13 @@ choice and each game's input, calling the UNCHANGED reference param functions.
 + asserts are CI scaffolding (u02 seeded-twin precedent); the real form ships UNSEEDED, and Phase-B validation
 injects the seed to reproduce the fixed driver's outcome.
 
-### Real-form specification (solutions markdown, after the `fixed-arcade-driver` cell)
+### Real-form specification (solutions markdown, after the `fixed-arcade-driver` cell + asserts)
 
-`**The real program**` — caption ([fable] nit 1, explaining input placement): "the interactive arcade — the
-menu, both games, and the scoreboard reading real input. Your arcade reads the guess/answers INSIDE
-`lucky_guess()`/`quick_quiz()`; this reference reads them in the driver and passes them in, so the very same
-functions work in the fixed driver above and here." Code uses the project's `f""` house style so it matches the
-brief's M4 scaffold line-for-line:
+Add a `## Milestone 4` markdown heading (mirroring the brief), then the real-form block. Caption ([fable] nit 1
++ [glm] nit B): "the interactive arcade — the menu, both games, and the scoreboard reading real input, using the
+`lucky_guess`/`quick_quiz` defined above. Your arcade reads the guess/answers INSIDE the game functions; this
+reference reads them in the driver and passes them in, so the very same functions work in the fixed driver above
+and here." Code uses the project's `f""` house style so it matches the brief's M4 scaffold line-for-line:
 ```python
 score = 0
 rounds_played = 0
@@ -91,10 +106,10 @@ This reads every input the arcade needs (menu choice each round, the guess, the 
 unchanged reference functions. **§6c note ([fable] nit 2):** the real form mirrors the BRIEF's M4
 `arcade-scoreboard-scaffold` structure (real `while choice != "q"` menu loop), NOT the `fixed-arcade-driver`
 whose `while True:` + scripted `choice = f"2"` reassignments + `lucky_points`/`quiz_points` temporaries are CI
-scripting scaffolding. **Placement ([fable] nit 4):** project-01's solutions have no `## Milestone N` headings
-(they use `## Lucky Guess` / `## Quick Quiz` / `## Fixed arcade driver`), so the block goes under
-`## Fixed arcade driver` as the M4-integrating twin — this is a project-01-specific mapping and does NOT set a
-"no Milestone heading" precedent for project-02 (whose solutions already use `## Milestone N`).
+scripting scaffolding. **Placement ([sol] BLOCKER 1):** the block sits under a NEW `## Milestone 4` heading in
+solutions (mirroring the brief's `## Milestone 4`, per design §2), added after the `check-*` assert cells. The
+component headings (`## Lucky Guess`/`## Quick Quiz`/`## Fixed arcade driver`) stay; M1–M3's real forms are the
+brief input()-reading starters (§2 brief-row). project-02 (solutions already `## Milestone N`) is unaffected.
 
 ## Data growth (§3) — N/A
 
@@ -104,9 +119,11 @@ Project-01 has no data lists; it is a functions + control-flow + random game. §
 
 ### Phase A — apply to project-01 solutions.ipynb (markdown only; NO brief.ipynb / manifest / metadata change)
 
-Add one `**The real program**` markdown cell immediately AFTER the `fixed-arcade-driver` code cell (before the
-`check-*` assert cells), containing the interactive arcade driver per spec (§6c: same menu/branch/scoreboard
-structure as the fixed driver + the brief scaffold, with the scripted choices replaced by `input()` reads).
+Add a `## Milestone 4` markdown heading + a `**The real program**` markdown cell AFTER the `check-final-score`
+assert cell (end of the notebook), containing the interactive arcade driver per spec (mirrors the brief M4
+scaffold structure — menu/branch/scoreboard — reading `input()`, calling the reference functions defined above).
+Placing it at the end keeps the reference functions + fixed driver + asserts executing first (the block is
+markdown, so it never executes in CI regardless).
 `brief.ipynb`, `manifest.yaml`, `teacher-notes.md` are NOT touched (byte-unchanged; teacher-notes audit expected
 no-op — the ci-note already describes the split, verify no stale claim).
 
@@ -122,7 +139,9 @@ no-op — the ci-note already describes the split, verify no stale claim).
   (parity with `check-final-score`'s `score==9`, `rounds_played==2`).
 - Confirm 0 `input()` in any `solutions.ipynb` **code** cell (the real form is markdown; the reference functions
   and fixed driver remain input-free and CI-runnable).
-- Scope invariant: `git diff --quiet` for brief.ipynb, manifest.yaml, teacher-notes.md.
+- Scope invariant ([sol] #6 — bare `git diff --quiet` can pass after staging/commit): compare against the
+  merge-base — `git diff --quiet $(git merge-base HEAD main)..HEAD -- <path>` — for brief.ipynb, manifest.yaml,
+  teacher-notes.md, proving only solutions.ipynb changed across the branch.
 
 ## Out of scope
 
@@ -161,8 +180,36 @@ Nits (all FOLDED into the plan):
   headings; project-01 doesn't) → folded into the SHAPE placement note.
 Plus adopted the brief's `f""` house style in the real-form code for visual match (optional style note).
 
-#### [sol] (pending)
-#### [glm] (pending — opencode)
+#### [glm] (2026-09-20)
+**APPROVE WITH NITS** (no blockers). Verified parity empirically (fresh seed(4)→secret 2→lucky_guess("2")=5,
+quick_quiz("2","1")=4, piped 1/2/2/2/1/q → Final score: 9 in 2 rounds; one randint each). ONE integrated
+real-form right — per design §2 v3, all four brief starters already read input() so they ARE the per-milestone
+real forms; per-game solutions blocks would duplicate the starters + create unvalidated third copies with a
+divergent signature (`def lucky_guess():` vs asserted `lucky_guess(guess)`) = drift risk. §6c holds at the driver
+level (real mirrors brief M4 with param calls; fixed driver's else-as-quit is unreachable scripting). Closure
+clean; metadata NONE; Phase B adequate. Nits: (A) cite the §2 v3 "starter-is-the-real-form" clause explicitly;
+(B) caption should note the block uses the `lucky_guess`/`quick_quiz` defined above (non-self-contained). → both FOLDED.
+
+#### [sol] (2026-09-20) — reviewed stale draft 1375a3d (pre-folds)
+**REJECT** (2 BLOCKERs). Resolution:
+- `[OPEN]` BLOCKER 1 — placement: design §2 brief-row says the real form goes under the mirrored `## Milestone N`,
+  but the draft placed it under `## Fixed arcade driver`. RESOLVED: add a `## Milestone 4` heading in solutions
+  for the real-form block; note M1–M3 real forms are the brief input()-reading starters (§2 brief-row). Safe —
+  `project_milestone_findings` reads brief.ipynb only (notebooks.py:737); solutions headings are unconstrained.
+- `[OPEN]` BLOCKER 2 — §6c twin: the real driver (sentinel loop, menu prints, invalid branch) is NOT the fixed
+  driver (`while True`, scripted) with values→reads, and the asserts pin the 3 quiz branches but not lucky_guess's
+  miss branch / the menu's invalid branch. RESOLVED by the correct design reading (the "approved exception" [sol]
+  asked for): a project's integrated real form is the **brief M4 scaffold** twin per §2 brief-row (the interactive
+  starter IS the real form), NOT a §6c line-for-line twin of the fixed driver — an interactive menu loop has no
+  CI-runnable line-for-line twin (input() can't run in CI). Its structure is validated by **§6b execution parity**
+  (piped run reproduces the scoreboard); the fixed driver is the §6a return-contract CI proof (asserts pin the
+  scored branches). Plan SHAPE/Phase-B reworded to state this.
+- [sol] also: concept summary incomplete (add `logical-ops`/`loop-counter`/`arithmetic`) → FOLDED; Phase-B scope
+  command should compare against merge-base, not bare `git diff --quiet` → FOLDED.
+Re-verifying [sol] on the reworded plan (no 3-of-4 shortcut on a REJECT).
+
+### Round 1 — status: [self]/[glm]/[fable] APPROVE (nits folded); [sol] REJECT on stale draft → resolution folded
+(add `## Milestone 4` heading; §2-brief-row/§6b reframing; concept-list + scope-command). [sol] re-verify pending.
 
 ## Content Review
 _(pending)_
