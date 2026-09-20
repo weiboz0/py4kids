@@ -1,7 +1,8 @@
 # Design 003 — Book 1 Real-Input Norm
 
-**Status:** APPROVED — v4 (v1: plan-050 gate CLOSED; v2: plan-052 §3 realistic-data policy; v3: plan-053 §2
-checkpoint/brief placement + §6d oracle; v4: plan-056 §5 input-add per-unit-audit-contingent + §1/§8 reads-nothing/generator exemption + §7 reconciled, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
+**Status:** APPROVED — v5 (v1: plan-050 gate CLOSED; v2: plan-052 §3 realistic-data policy; v3: plan-053 §2
+checkpoint/brief placement + §6d oracle; v4: plan-056 §5 input-add per-unit-audit-contingent + §1/§8 reads-nothing/generator exemption + §7 reconciled;
+v5: plan-057 §1/§8 full exemption taxonomy [reads-nothing/generator + debug/fix-the-error + predict/trace], 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
 stdin-first/subprocess-judged).
 
 ## 1. Motivation
@@ -18,13 +19,25 @@ judging (explicitly rejected by the course author after comparing options):
 2. **Realistic exec data.** Culminating put-it-together cells and exercises use realistic, non-trivial
    data — no `n = 3`, no 2-element lists.
 
-**Reads-nothing / generator exemption.** A complete task that produces its output *without reading any
-external input* — a **turtle drawing**, a random **generator** (dice roller), a **countdown**, a **fixed
-printed card/receipt** — has **no real-program form to add** (there is nothing to read) and satisfies the
-norm with its executable form alone. The both-forms rule (clause 1, §8) applies only to input-shaped
-tasks. A unit whose lesson capstones are *all* reads-nothing/generator (e.g. u03, all turtle drawings)
-therefore adds **no lesson `input()` cell and no metadata** (§5); its real-forms, where any exercise *does*
-process input-shaped data, live only in `solutions.ipynb` markdown.
+**Exemptions — which tasks get NO real-program form (v5).** The both-forms rule (clause 1, §8) applies only
+to tasks that **process input-shaped data**. A task is EXEMPT (executable form only, plus a
+`**No real version:**` note naming the class) when it falls in one of three settled classes, applied across
+u01–u04:
+1. **Reads-nothing / generator** — produces output *without reading any external input*: a **turtle
+   drawing**, a random **generator** (dice roller), a **countdown**, a **fixed printed card/receipt**. There
+   is nothing to read. A unit whose lesson capstones are *all* this class (e.g. u03, all turtle drawings)
+   adds **no lesson `input()` cell and no metadata** (§5); its real-forms — where an exercise *does* process
+   input-shaped data — live only in `solutions.ipynb` markdown.
+2. **Debug / fix-the-error** — the graded task is *repairing* the code (a wrong literal, a missing parameter,
+   a scope/`NameError` fix); the fix IS the answer, and reading input does not dissolve it. **Exception:** if
+   the repair *itself* is to read input (e.g. u02 Ex4, where `int(input())` was the fix), it is NOT exempt —
+   it is a single-read real task.
+3. **Predict / trace** — the graded task is predicting or hand-tracing the *fixed* output ("trace on paper",
+   "predict the exact output"); replacing the fixed values with `input()` would defeat the prediction.
+
+A **hybrid** task (one part input-shaped, one part exempt — e.g. u03 Ex2/Ex4: a compute-authoring program +
+a prediction table) gets a real-form for the input-shaped part and a `**No real version:**` note for the
+exempt part, each cue labeled by which half it governs.
 
 ## 2. The form, by notebook kind (CI-forced)
 
@@ -126,12 +139,17 @@ u04 pilot only covers the list-less unit arm.
 Reached unit-by-unit as each slice merges. A unit/checkpoint/project satisfies design 003 when every
 complete task **that processes input-shaped data** has BOTH an executable fixed-data form (CI-run, asserted
 where applicable) AND a real-program `input()` form (no-exec code cell in lessons; markdown elsewhere) —
-while **reads-nothing/generator tasks (§1: turtle drawings, generators, fixed printed cards) have the
-executable form only** — put-it-together + exercise data is realistic where closure allows, build-up rungs
+while **the §1 exempt classes (reads-nothing/generator, debug/fix-the-error, predict/trace) have the
+executable form only, with a `**No real version:**` note naming the class** — put-it-together + exercise
+data is realistic where closure allows, build-up rungs
 stay one-increment, u01 is text-only, no `sys.stdin`, and `ci-local` is ALL GREEN. Book 2 stays green
 throughout.
 
 ## 9. Revision history
+- **v5 (2026-09-19, plan 057):** §1/§8 codified the **full exemption taxonomy** — the three settled classes a
+  task may be exempt under (reads-nothing/generator; debug/fix-the-error, unless the fix itself reads input;
+  predict/trace), plus the hybrid rule. Makes explicit the convention applied across u01–u04 (the reviewer
+  gate had split on whether debug/predict tasks were exempt because v4 named only the reads-nothing class).
 - **v1 (2026-09-19):** created for plan 050; 4-way plan-review gate CLOSED (3 rounds — resolved: the
   `input()`-in-solutions policy → markdown real-forms; u01 int/str boundary; project `## Milestone N`
   mapping; the 4-unit `input` add set; control-flow closure; real-form validation).

@@ -8,4 +8,4 @@ concepts:
   requires: [turtle-basics, turtle-drawing, for-loop, variable, f-string]
   practices: [range-function, loop-counter, arithmetic, nested-loops, float-type,
               accumulator, import-statement, string-literal, turtle-drawing, running-total,
-              if-statement, elif-else, comparison, while-loop, break-statement]
+              if-statement, elif-else, comparison, while-loop, break-statement, input]
