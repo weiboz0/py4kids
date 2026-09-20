@@ -98,10 +98,16 @@ to grow; §3 does not apply.
 
 For each of Q2/Q3/Q8: add a markdown cell immediately AFTER the executable solution cell, containing
 `**The real program**` + a fenced ```python``` block per the spec above.
-For each of Q1/Q4/Q5/Q6/Q7: add a one-line exemption note in the solutions markdown using the design-prescribed
-**`**No real version:**` prefix that NAMES the v6 class** ([sol] s4 / [fable] n1,n2) — Q1/Q5/Q6 class 3
-(predict/trace), Q4 static code interpretation (outside the both-forms rule — no student-authored input
-program), Q7 trace/predict of a turtle drawing (class 3 + class 1 reads-nothing).
+For each of Q2/Q3/Q8 real-forms: give the block a §6d/§6c-clean form — a `**The real program**` label; for Q2
+a one-line §6d caption naming it as the completed program ([glm] g4, cp01 Q5 pattern); PRESERVE the executable
+twin's blank lines verbatim inside the fenced block, incl. the two blank lines between `def…` and the driver
+in Q3/Q8 ([glm] g5, §6c line-for-line).
+For each of Q1/Q4/Q5/Q6/Q7: add the exemption note as the design-prescribed **`**No real version:**` prefix +
+an italic cp01-style clause that NAMES the v6 class** ([sol] s4 + [glm] g3 + [fable] n1,n2 reconciled) —
+e.g. `**No real version:** _A trace/predict question (class 3) — there is no `input()` version._` Q1/Q5/Q6
+class 3 (predict/trace); Q4 static code interpretation (outside the both-forms rule — the graded act is a
+concept explanation, no student-authored input program); Q7 trace/predict of a turtle drawing (class 3 +
+class 1 reads-nothing).
 `checkpoint.ipynb` and `manifest.yaml` are NOT touched (byte-unchanged).
 **teacher-notes.md audit ([fable] n3 / [sol] s3): grep confirms ZERO `input` mentions → the audit is a
 foreseeable no-op; teacher-notes.md is expected to stay byte-unchanged** (edit only if an actual stale
@@ -112,8 +118,10 @@ statement is found, which none is).
 - ci-local ALL GREEN (`TMPDIR=/dev/shm bash scripts/ci-local.sh`): registry+lint, notebook execution+hygiene
   (checkpoint_solutions heading mirror intact — new markdown headings must be FENCED, never a bare
   `## Question <digit>`), manifest/prereq/coverage, PDF build, pre-merge guard.
-- Real-form validation: `ast.parse` each fenced block + piped-run, compare the result line to its executable
-  twin MODULO prompt text (Q2 `n=4`→`10`; Q3 name→`Hello, <name>!`; Q8 `yes/no/yes`→`2`).
+- Real-form validation: `ast.parse` each fenced block + piped-run, compare the **computed result line ONLY**
+  to its executable twin MODULO prompt text ([glm] g2 — Q2's twin also prints an explanation line; compare the
+  `10`, not full stdout). Pin every parity input incl. Q3's name ([glm] g1): Q2 `n=4`→`10`; Q3 `Maya`→
+  `Hello, Maya!`; Q8 `yes/no/yes`→`2`.
 - Confirm 0 `input()` in any `solutions.ipynb` **code** cell (real-forms are markdown).
 - **Scope invariant ([sol] s2, plan 053 precedent):** assert an EMPTY diff for the student file and metadata —
   `git diff --quiet -- book1/checkpoints/checkpoint-02-loops-and-functions/checkpoint.ipynb` and the same for
@@ -176,7 +184,30 @@ Heading-mirror hazard correctly guarded. Phase B adequate. Nits (folded below):
 - (s4) Phase A should explicitly require the design-prescribed `**No real version:**` prefix on exemption
   notes (resolves [fable] n2's style question — adopt the design label + name the class).
 
-#### [glm] (pending — opencode)
+#### [glm] (2026-09-20)
+**APPROVE WITH NITS.** Verified against notebooks/manifest/design-v6/tools-source/cp01, and EMPIRICALLY ran
+all 3 real-forms with piped input (Q2 `4`→`10`, n=10→55; Q3 `Maya`→`Hello, Maya!`; Q8 `yes/no/yes`→`2`,
+no/no/no→0; all `ast.parse` clean). Classifications correct (Q4 exempt = concept explanation, cp01-Q6
+precedent; Q2 valid §6d fragment even though it grades two lines — design "e.g." is illustrative; terminates
+for all int n incl. n≤0). Prereq closure clean (verified concept-scan reads code cells only,
+concept_scan.py:500; `input()=="yes"` in-union no methods). Metadata NONE correct (design §5; add is contingent
+on a lesson input() code cell checkpoints can't have). CI hazard correctly guarded (verified
+`_markdown_heading_occurrences` strips fences, notebooks.py:196; hazard is an UNFENCED bare `## Question
+<digit>`, :670; ≥3-assert floor holds at 8). §3 N/A right; teacher-notes a verified no-op; §8 coverage complete
+(Q2/Q3/Q8 the only non-exempt tasks). Non-blocking nits (folded into Phase A/B):
+- (g1) pin Q3's parity name (`Maya`) in Phase B, like Q2/Q8.
+- (g2) state Q2 parity targets the COMPUTED RESULT LINE only (twin stdout has 10 + an explanation print) so a
+  naive full-stdout compare doesn't false-fail.
+- (g3) exempt-note wording — cp01's ratified house style is an italic sentence ("… there is no `input()`
+  version."). RESOLUTION (reconciles [sol] s4): use the design-prescribed **`**No real version:**` prefix +
+  an italic cp01-style clause naming the class** — satisfies the design's literal label AND cp01 precedent.
+- (g4) give Q2's real-form a §6d caption naming it as the completed program (cp01 Q5 pattern).
+- (g5) §6c line-for-line: PRESERVE the twins' blank lines inside the fenced blocks (cp01's content gate fixed
+  exactly this) — keep the two blank lines between `def` and the driver in Q3/Q8.
+
+### Round 1 — outcome: **FULL 4-way plan-review consensus.** [self] APPROVE · [fable] APPROVE-WITH-NITS ·
+[sol] APPROVE-WITH-NITS · [glm] APPROVE-WITH-NITS. No open blockers; all nits are plan-wording /
+implementation-quality and folded into Phase A/B below. Gate CLOSED → proceed to implementation.
 
 ## Content Review
 _(pending)_
