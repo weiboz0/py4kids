@@ -1,8 +1,9 @@
 # Design 003 — Book 1 Real-Input Norm
 
-**Status:** APPROVED — v5 (v1: plan-050 gate CLOSED; v2: plan-052 §3 realistic-data policy; v3: plan-053 §2
+**Status:** APPROVED — v6 (v1: plan-050 gate CLOSED; v2: plan-052 §3 realistic-data policy; v3: plan-053 §2
 checkpoint/brief placement + §6d oracle; v4: plan-056 §5 input-add per-unit-audit-contingent + §1/§8 reads-nothing/generator exemption + §7 reconciled;
-v5: plan-057 §1/§8 full exemption taxonomy [reads-nothing/generator + debug/fix-the-error + predict/trace], 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
+v5: plan-057 §1/§8 full exemption taxonomy [reads-nothing/generator + debug/fix-the-error + predict/trace];
+v6: plan-059 §1 fixed-reference-fixture exemption + §4 pair-split dict-read idiom, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
 stdin-first/subprocess-judged).
 
 ## 1. Motivation
@@ -34,6 +35,14 @@ u01–u04:
    it is a single-read real task.
 3. **Predict / trace** — the graded task is predicting or hand-tracing the *fixed* output ("trace on paper",
    "predict the exact output"); replacing the fixed values with `input()` would defeat the prediction.
+4. **Fixed-reference-fixture (v6)** — the input-shaped data is a **pre-authored dict/table used as reference or
+   lookup data**, and the graded skill is a **transform or report *over* that fixture** (format it, merge two,
+   flip it, total it, find its extreme) rather than *obtaining* it, AND reconstructing the fixture from input
+   would require out-of-union control flow (e.g. a unit lacking `range-function`/`while-loop`). Then the task
+   is exempt (executable-only). **EXCEPTION:** where **building the structure from user-supplied data is
+   itself the pedagogically central act**, it is NOT exempt — give it the structure-read real-form for that
+   unit's idiom (for a range/while-less unit, the pair-split idiom in §4). (Origin: u08 word-wizard, plan 059,
+   user-ratified "split: exempt the pure transforms, teach the central dict-reads".)
 
 A **hybrid** task (one part input-shaped, one part exempt — e.g. u03 Ex2/Ex4: a compute-authoring program +
 a prediction table) gets a real-form for the input-shaped part and a `**No real version:**` note for the
@@ -85,6 +94,12 @@ scan `cell_type == "code"` only) — this is the plan-045 submission-wrapper pre
   list-literal/list-loop/list-append] or fixed-count reads), not a sentinel `while`. (`int-type`/
   `type-conversion`/`sentinel-loop` are in `never_flag`, so `int(input())` is always safe.)
 - **u07–u10:** may read into a list.
+- **Read-into-list / read-into-dict idioms (v6):** a unit reading a *variable-count* structure must use an
+  idiom in its union. With `range-function` → `for i in range(n)`; with a sentinel and `while-loop` → sentinel
+  loop; **lacking BOTH `range` and `while` (u08)** → read one line and split: a **list** via
+  `items = input("...").split()`, a **dict** via the **pair-split** idiom `for pair in input("...").split():`
+  then `parts = pair.split(":")` / `d[parts[0]] = parts[1]` (or `int(parts[1])`) — **no tuple-unpacking** unless
+  multiple-assignment is in the unit's union. `.split()` is `string-methods` (in-union wherever strings are taught).
 
 ## 5. Metadata
 
@@ -139,13 +154,19 @@ u04 pilot only covers the list-less unit arm.
 Reached unit-by-unit as each slice merges. A unit/checkpoint/project satisfies design 003 when every
 complete task **that processes input-shaped data** has BOTH an executable fixed-data form (CI-run, asserted
 where applicable) AND a real-program `input()` form (no-exec code cell in lessons; markdown elsewhere) —
-while **the §1 exempt classes (reads-nothing/generator, debug/fix-the-error, predict/trace) have the
-executable form only, with a `**No real version:**` note naming the class** — put-it-together + exercise
+while **the §1 exempt classes (reads-nothing/generator, debug/fix-the-error, predict/trace,
+fixed-reference-fixture) have the executable form only, with a `**No real version:**` note naming the class** — put-it-together + exercise
 data is realistic where closure allows, build-up rungs
 stay one-increment, u01 is text-only, no `sys.stdin`, and `ci-local` is ALL GREEN. Book 2 stays green
 throughout.
 
 ## 9. Revision history
+- **v6 (2026-09-19, plan 059):** §1 added a fourth exempt class — **fixed-reference-fixture** (a task that
+  transforms/reports over a pre-authored dict/table used as lookup data, where rebuilding the fixture from
+  input needs out-of-union control flow; EXCEPT where building the structure from user data is the central
+  act → real-form). §4 added the range/while-less **read-into-list (`.split()`) / read-into-dict (pair-split)**
+  idioms. User-ratified the u08 split (exempt the 7 pure dict transforms; pair-split real-forms for the 2
+  central dict-reads); the 4-way gate ratifies wording.
 - **v5 (2026-09-19, plan 057):** §1/§8 codified the **full exemption taxonomy** — the three settled classes a
   task may be exempt under (reads-nothing/generator; debug/fix-the-error, unless the fix itself reads input;
   predict/trace), plus the hybrid rule. Makes explicit the convention applied across u01–u04 (the reviewer
