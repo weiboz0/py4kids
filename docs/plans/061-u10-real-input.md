@@ -215,7 +215,23 @@ user before merge). This is documented, not a fabricated verdict — [glm]'s pla
 2. `[OPEN]` Should: minimum-input contracts — Ex5 (≥2), Ex11 (≥5), Ex13 (≥1), Ex20 (≥1) index/seed and can crash
    after a blank; state the minimum in the exercise statements.
 
-### Content-review round 2 — fixes (fold [sol] Must+Should + [fable] 3 nits) → re-verify.
+### Content-review round 2 — fixes (commit e05d7d8; fold [sol] Must+Should + [fable] 3 nits) → re-verify.
+
+- `[FIXED]` [sol] Must: Ex9 statement (ex `29dbfcff`), fixed twin (sol `8add0b84`), and real-form
+  (sol `u10-sol-real-09`) now print every hunger via a second `for pet in pets:` loop (no hardcoded
+  `pets[0..4]`); twin's 5 asserts unchanged (5 pets, each ==3).
+- `[FIXED]` [sol] Should: minimum-input contracts stated in the Real-version notes — Ex5 ≥2 (`7067fd3f`),
+  Ex11 ≥5 (`4871eefe`), Ex13 ≥1 (`c368d34e`), Ex20 ≥1 (`a200c0de0001`); prereq-valid, no validation code.
+- `[FIXED]` [fable] nit 1: teacher-notes lines 18/64 rewritten (design-003 real-program twins across the
+  unit, not only Ex7/9/12).
+- `[FIXED]` [fable] nit 2: Ex16/17/24 read var `name`→`hunger`, Ex21 `name`→`mood` (match the value read).
+- `[FIXED]` [fable] nit 3: Ex7 real-form `fixed_name`→`name`.
+- `[WONTFIX]` [fable] index-IndexError (general): superseded by the Ex9 for-loop + the four min-input
+  contracts above; remaining indexed forms now carry stated minimums.
+
+ci-local ALL GREEN on e05d7d8; 0 input() in executable code cells.
+Re-verify: [sol] re-dispatched on e05d7d8 (confirm Must+Should resolved). [glm] to be re-dispatched on
+e05d7d8 once the round-1 opencode run (against 18abe54) clears — no duplicate.
 
 #### [glm] (pending — opencode)
 
