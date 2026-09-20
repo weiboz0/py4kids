@@ -1,6 +1,6 @@
 # Plan 057 — u05 function-factory: full real-input treatment (functions read-and-compute arm)
 
-**Status:** PLAN-REVIEW GATE CLOSED (4-way consensus, round 5) — implementation pending.
+**Status:** COMPLETE — both gates CLOSED (4-way); ci-local ALL GREEN; ready to merge.
 **Type:** Content — apply the full real-input treatment (design 003 v5) to `unit-05-function-factory`.
 **Branch:** `feature/plan-057-u05-real-input`. **Base:** main @ 0111f31.
 
@@ -328,7 +328,70 @@ duplicated-line artifact of the R3 fix, now cleanly corrected. Re-dispatching [s
 No open blockers. (design 003 → v5 codified the exemption taxonomy en route.)
 
 ## Content Review
-_(pending — 4-way, post-implementation.)_
+
+4-way, on the implementation commit 4bb3ae0. Tags [self]/[sol]/[glm]/[fable].
+
+#### [self] (2026-09-19)
+- **Verdict**: APPROVE. Spot-checked the bug-prone real-forms: Ex1 (sol 4 — 2 reads/2 calls, return-only,
+  prints both); Ex3 (sol 9 — `number = float(input())`, f-string `{number}`/`{doubled_score}` → `Doubling 2.5
+  gives 5.0.`); Ex4 (sol 12 — w,h both `float(input())` → `20.0`); Challenge 1 (sol 64 — name_badge print-inside
+  → BARE calls, 4 reads / 2 badges, no spurious `None`). Lesson greeting_card real-form (cell 10) `no-exec` +
+  bare calls, 4 reads. All 4 exempt notes present, each naming its v5 class (Ex2/Ex7 fix-the-error, Ex5
+  trace-predict, Ch2 reads-nothing). Metadata `input` add in sync (manifest + coverage-map). ci-local ALL GREEN
+  (493 passed; exec-solutions + exec-lessons PASS — kernel validated the no-exec lesson cells + metadata add).
+
+#### [fable] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — all 22 real-forms verified (ast.parse + piped-run parity, bare calls for
+  print-fns, float typing, polygon_points byte-identical); exemptions + 18/4 cues + metadata sync + hygiene all
+  green. 3 findings:
+1. `[FIXED]` Nice: Ex1 real-form (sol cell 4) `maya_message`/`leo_message` → `first_message`/`second_message`
+   (matches the `first_*`/`second_*` pattern in lesson 10 + sol 64; output unchanged, no twin edit).
+2. `[WONTFIX]` by-spec: lesson cell 35 keeps `three_stamp_total` while reading arbitrary input — the plan
+   explicitly mandates keeping the twin's intermediate var (both-forms Algo-Ext row). No change.
+3. `[OPEN]` Nice: inserted Notice cells sit next to the ladder's original Notice (two consecutive) — matches
+   the u04 precedent → acceptable; WONTFIX (no polish pass touching these cells).
+
+#### [sol] (2026-09-19)
+- **Verdict**: APPROVE — no findings (pinned-blob AST + output-parity + closure + hygiene + remaining static
+  gates all pass on commit 4bb3ae0).
+
+#### [glm] (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE WITH NITS — 0 `[OPEN]`; 22/22 real-forms parity-MATCH (own harness), read-count = one
+  input per distinct fixed value, bare calls verified, polygon_points byte-identical, exemptions + 18/4 cues +
+  metadata sync + closure/hygiene all green; re-ran u05 + book1 static checks (incl. exec-solutions/exec-lessons)
+  ALL PASS. 2 `[WONTFIX]` nits (intermediate-var names `three_stamp_total` / — now Ex1 renamed, see [fable]#1;
+  the lesson cell-35 `three_stamp_total` stays per the plan's §6c mandate — candidate for a future cosmetic slice).
+
+### Content-review gate — outcome: **CLOSED** — 4-way consensus:
+[self] APPROVE · [sol] APPROVE · [glm] APPROVE WITH NITS (0 open) · [fable] APPROVE WITH NITS (1 nit folded;
+2 WONTFIX per §6c mandate/u04 precedent). No `[OPEN]` findings remain.
 
 ## Post-Execution Report
-_(pending.)_
+
+**Shipped (2026-09-19).** u05 function-factory given the full real-input treatment (design 003 **v5**):
+functions read-and-compute arm, per-task call shells, `input` metadata add.
+
+**What changed (5 files):**
+- `lesson.ipynb`: 4 `no-exec` `input()` compute-capstone real-forms + Notices (greeting_card [bare call, 4
+  reads/2 cards], area [w,h float], pack_card [scope], total_stamp_size [int]); executable capstones + rungs
+  (incl. `polygon_points`) byte-identical.
+- `solutions.ipynb`: 18 markdown read-and-compute real-forms (per-task call shell: one read per distinct fixed
+  value, twin's exact call/print, bare call for print-fns; Ex3 float `{number}`; Ex1/Ch1 multi-call).
+- `exercises.ipynb`: 18 `**Real version:**` cues + 4 `**No real version:**` notes naming the v5 exempt class
+  (Ex2/Ex7 fix-the-error, Ex5 trace-predict, Ch2 reads-nothing drawing).
+- `manifest.yaml` + `coverage-map.yaml`: `input` appended to `practices` (in sync; io category, prereq-valid).
+- `docs/designs/003-book1-real-input.md` → **v5**: §1/§8 codified the full 3-class exemption taxonomy
+  (reads-nothing/generator · debug/fix-the-error · predict/trace) + hybrid rule (resolved the round-1 gate split).
+
+**Verification:** `scripts/ci-local.sh` ALL GREEN — 493 passed / 2 skipped; exec-solutions + exec-lessons PASS
+(kernel validated the no-exec lesson cells + `input` metadata add); manifest/prereq/coverage/concept-scan/
+technique-spiral PASS; PDF + guard OK. All 22 real-forms piped-run-match their twins' computed-output lines.
+Hygiene: 0 `input()` in solutions CODE cells; 22 non-vacuous assert cells; no fenced `## Exercise <digit>`.
+
+**Gates:** plan-review CLOSED (4-way, 5 rounds; design → v5 en route); content-review CLOSED (4-way consensus).
+
+**Rollout status (design 003 §7):** merged — u04, u07 (list), cp01, u02, u01, u03 (turtle), **u05 (functions)**.
+Remaining: u06 (strings), u08 (word-wizard), u09 (files), u10 (classes); checkpoints cp02–cp04; projects.
+u05 established the **functions arm** (per-task call shell, bare-call-for-print-fns, read-per-distinct-value)
+and the **compute-ladder-capstone rule** (turtle put-it-togethers exempt; top executable rung gets the form)
+that u06/u08/u09/u10 will reuse.
