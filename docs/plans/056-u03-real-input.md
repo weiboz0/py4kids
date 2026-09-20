@@ -232,7 +232,74 @@ Re-dispatching round 3 ([sol] only; [glm]/[fable] already APPROVE-WITH-NITS with
 [self] APPROVE · [sol] APPROVE · [glm] APPROVE WITH NITS (folded) · [fable] APPROVE WITH NITS (folded). No open blockers.
 
 ## Content Review
-_(pending — 4-way, post-implementation.)_
+
+4-way, on the implementation commit 9ddd324. Tags [self]/[sol]/[glm]/[fable].
+
+#### [self] (2026-09-19)
+- **Verdict**: APPROVE. Verified each of the 7 real-forms (sol cells 3/6/11/14/20/25/28) is line-for-line its
+  fixed-data twin (cells 2/5/10/13/19/24/27) with the fixed shape value → `input()` read and asserts dropped;
+  piped-run result lines match (Ex1 `4 sides of 80 steps`; Ex9 `16 4`; etc.). Ex7 reads the STRING `color_name`
+  with plain `input(...)` (no `int()`); Ex9's twin now ends `print(drawn_sides, travel_moves)` → `16 4`,
+  mirrored in the real-form. Closure clean — real-forms use only input/int/for/range/arithmetic/print/f-string;
+  the only comparisons/`or` are in twin `assert` lines. 7 `**Real version:**` cues (Ex9 twin-anchored) + 7
+  `**No real version:**` notes; Ex2/Ex4 hybrids carry BOTH, half-labeled ("for the program" / "for the
+  prediction/trace table"). Hygiene: 0 `input()` in solution CODE cells, 12 non-vacuous assert cells, no fenced
+  `## Exercise <digit>` line, lesson/manifest/teacher-notes unchanged. ci-local ALL GREEN.
+
+#### [fable] (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — all 6 duty areas PASS (mechanical: ast.parse + piped-run-vs-twin +
+  ancestor-based closure scan + hygiene). 3 cosmetic Nice:
+1. `[WONTFIX]` Nice: Ex1 (sol md 3) + Ex7 (sol md 20) trailing `for` loop assigns unused `pen_size` — §6(c)
+   line-for-line mirroring justifies keeping it (the twin uses it in asserts / the script uses it for
+   `turtle.pensize`). WONTFIX (mirroring law); a matched comment in both twin+real-form is optional polish.
+2. `[FIXED]` Nice: Ex9 cue (ex 27) stray em-dash removed → "**Real version:** See the solution, …".
+3. `[FIXED]` Nice: Ex8 note (ex 24) "This part…" → "This task…".
+
+#### [sol] (2026-09-19)
+- **Verdict**: APPROVE — no `[OPEN]`/`[FIXED]`/`[WONTFIX]` findings (blind-pass content-review of commit 9ddd324).
+
+#### [glm] (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE — no `[OPEN]` findings; verified all 7 real-forms AST-parse + piped-run-match twins
+  (Ex9 `16 4`), reads up front, closure clean (Compare/BoolOp only in twin asserts), exemptions honest,
+  cues correct + hybrids half-labeled, hygiene clean; re-ran u03+book1 checks incl. exec-solutions — ALL PASS.
+  2 `[WONTFIX]` Nice (both accurate-as-written / pre-existing, no change): Ex8 note names only the prediction
+  half (the script-build half is separately reads-nothing-exempt); Ch1/Ch2 twins' assert counts (CI rule is
+  notebook-aggregate, those cells untouched).
+
+### Content-review gate — outcome: **CLOSED** — 4-way consensus:
+[self] APPROVE · [sol] APPROVE · [glm] APPROVE · [fable] APPROVE WITH NITS (2 cosmetic nits FIXED in this
+slice; 1 WONTFIX per §6(c) mirroring). No `[OPEN]` findings remain.
 
 ## Post-Execution Report
-_(pending.)_
+
+**Shipped (2026-09-19).** u03 turtle-art-studio given the full real-input treatment, **solutions-markdown-only**
+(design 003 v4 reads-nothing/generator exemption): no lesson, metadata, data, or teacher-notes change.
+
+**What changed (2 notebooks):**
+- `solutions.ipynb`: 7 markdown read-and-compute real-forms added (cells 3/6/11/14/20/25/28 = Ex1, Ex2-authoring,
+  Ex4-authoring, Ex5, Ex7, Ex9, Ex10); Ex9's fixed twin (cell 24) gained one declared print
+  `print(drawn_sides, travel_moves)` → result line **`16 4`**. Each real-form is line-for-line its fixed-data
+  twin with the fixed shape value → `input()` read (numeric → `int(input(...))`; Ex7's string `color_name` →
+  plain `input(...)`), asserts dropped.
+- `exercises.ipynb`: 7 `**Real version:**` cues (Ex1/Ex5/Ex7/Ex10 + Ex2/Ex4 authoring halves; Ex9 twin-anchored)
+  + 7 `**No real version:**` notes (Ex3/Ex6 fix-the-error, Ex8/Ch1 predict-the-counters, Ch2 on-paper, +
+  Ex2/Ex4 prediction/trace-table halves). Ex2/Ex4 hybrids carry BOTH cues, each half-labeled.
+- `docs/designs/003-book1-real-input.md` → **v4**: §5 input-add per-unit-audit-contingent; §1/§8 codify the
+  reads-nothing/generator exemption; §7 rollout reconciled.
+
+**Verification (design §6, this kernel-capable environment):**
+- `scripts/ci-local.sh` ALL GREEN — 493 passed / 2 skipped; registry+lint, notebook structure + `exec-solutions`
+  PASS (re-runs the Ex9 twin with its new print), curriculum/manifest/prereq/coverage/concept-scan/stretch,
+  PDF build, pre-merge-guard all PASS. (Metadata/prereq/coverage unaffected — no manifest change.)
+- Piped-run parity confirmed for all 7 real-forms (result lines: Ex1 `4 sides of 80 steps`; Ex2 7 lines of
+  `k 51.42857142857143`; Ex4 12 `shape side` label lines; Ex5 `51.42…`/7 counter lines/`7 sides of 70 steps`;
+  Ex7 `3 sides of 90 steps in green`; Ex9 `16 4`; Ex10 15 `shape/side/stroke` lines) — each == its twin's
+  stdout modulo `input()` prompt text.
+- Hygiene: 0 `input()` in any solutions CODE cell; 12 non-vacuous assert cells; no fenced `## Exercise <digit>`
+  line; lesson/manifest/teacher-notes/assets untouched.
+
+**Gates:** plan-review CLOSED (4-way, 3 rounds); content-review CLOSED (4-way consensus; 2 cosmetic nits folded).
+
+**Rollout status (design 003 §7):** merged — u04 (naming), u07 (list arm), cp01 (checkpoint), u02, u01, **u03**.
+Remaining: u05, u06, u08, u09, u10; checkpoints cp02–cp04; projects. (u03 established the
+solutions-markdown-only recipe for a reads-nothing/generator-lesson unit.)
