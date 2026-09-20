@@ -1,6 +1,6 @@
 # Plan 059 — u08 word-wizard: full real-input treatment (dicts + lists + strings)
 
-**Status:** PLAN-REVIEW GATE CLOSED (4-way consensus, option-(a) fixed-count redraft) — implementation pending.
+**Status:** COMPLETE — both gates CLOSED (4-way); ci-local ALL GREEN (both books); ready to merge.
 **Type:** Content — apply the full real-input treatment (design 003 v6) to `unit-08-word-wizard`.
 **Branch:** `feature/plan-059-u08-real-input`. **Base:** main @ aaf21f2.
 
@@ -296,7 +296,44 @@ fixed-count reads; design 003 → v6 [fixed-reference-fixture + designated-demon
   now prints `{word}` (done for [fable]#1) AND the Ex4 twin (sol 10) prose "Bird"→"bird" for EXACT §6b parity
   (no assert on that line; exec-solutions unaffected).
 
-#### [glm] (pending)
+#### [glm] (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE (retry — the first invocation timed out; re-run on 763d091). No `[OPEN]`. All 16 real-forms
+  parse + exact piped parity; closure clean (0 `split` repo-wide in u08; no 3-arg `.replace`; taught methods only);
+  metadata input-only + 5-file scope; 14 Real + 9 No-real cues; 0 input() in solution code cells; 46 asserts;
+  both books green. Verified the Ex4 fix (computed `{word}` + twin "Bird"→"bird" → exact parity). WONTFIX:
+  Ex7/Ex13 scratch names, Ex14 two-line collapse (both output-identical).
+
+### Content-review gate — outcome: **CLOSED** — 4-way consensus:
+[self] APPROVE · [sol] APPROVE WITH NITS · [fable] APPROVE (Ex4 Must-Fix applied) · [glm] APPROVE. No `[OPEN]`
+findings. (Pre-existing u02 `DuplicateCellId` noise noted, out of scope.)
 
 ## Post-Execution Report
-_(pending.)_
+
+**Shipped (2026-09-19).** u08 word-wizard given the full real-input treatment (design 003 **v6**), **OPTION A =
+fixed-count reads** — Book-1-only, no `.split()`/str-split/Book-2/tooling change.
+
+**What changed (5 files):**
+- `lesson.ipynb` (additive): 2 `no-exec input()` fixed-count word-list capstone real-forms + Notices (L2
+  translate; L3 count, placed at end of L3).
+- `solutions.ipynb`: 14 `**The real program**` real-forms (7 word-list `[input(),…]`; 5 single/few incl. Ex3
+  two-reads + Ex4; 2 fixed-count dict-reads Ex7/Ex13) + one Ex4 twin prose lowercase ("Bird"→"bird") for exact
+  parity (content-gate fix — the initial Ex4 real-form's untaught 3-arg `.replace` hack was replaced by the
+  computed `{word}`).
+- `exercises.ipynb`: 14 `**Real version:**` cues + 9 `**No real version:**` notes (Ex1 reads-nothing, Ex8
+  debug/predict, 7 fixed-reference-fixture).
+- `manifest.yaml` + `coverage-map.yaml`: `input` added to `practices` (in sync).
+- `docs/designs/003-book1-real-input.md` → **v6**: §1 fixed-reference-fixture exemption + designated-demonstrator
+  rule; §4 fixed-count read idiom; four exempt classes. Book-1-only preserved.
+
+**Verification:** `scripts/ci-local.sh` ALL GREEN — 493 passed / 2 skipped; exec-solutions + exec-lessons PASS;
+**concept-scan/coverage-check/prereq-check GREEN for BOTH books** (fixed-count avoided the Book-2 `str-split`
+collision entirely); PDF + guard OK. All 16 real-forms piped-run-match twins (Ex4 exact after the twin lowercase);
+0 `input()` in solutions CODE cells; no fenced `## Exercise <digit>`.
+
+**Gates:** plan-review CLOSED (4-way; 3 user forks [exempt/teach dict-fixtures → teach .split() → Book-2
+collision] → fixed-count; design → v6). Content-review CLOSED (4-way; 1 Ex4 untaught-`.replace` fix).
+
+**Rollout status (design 003 §7):** merged — u04, u07, cp01, u02, u01, u03, u05, u06, **u08 (dicts/lists/strings)**.
+Remaining: u09 (files), u10 (classes); checkpoints cp02–cp04; projects. u08 established the **fixed-reference-
+fixture exemption + designated-demonstrator rule** and the **fixed-count read idiom** for range/while/str-split-
+less units, and confirmed `.split()` stays a Book-2-only concept.
