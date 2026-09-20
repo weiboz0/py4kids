@@ -1,6 +1,6 @@
 # Design 003 — Book 1 Real-Input Norm
 
-**Status:** APPROVED — v4 (v1: plan-050 gate CLOSED; v2: plan-052 §3 realistic-data policy; v3: plan-053 §2
+**Status:** APPROVED — v5 (v1: plan-050 gate CLOSED; v2: plan-052 §3 realistic-data policy; v3: plan-053 §2
 checkpoint/brief placement + §6d oracle; v4: plan-056 §5 input-add per-unit-audit-contingent + §1/§8 reads-nothing/generator exemption + §7 reconciled;
 v5: plan-057 §1/§8 full exemption taxonomy [reads-nothing/generator + debug/fix-the-error + predict/trace], 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
 stdin-first/subprocess-judged).
@@ -148,7 +148,7 @@ throughout.
 ## 9. Revision history
 - **v5 (2026-09-19, plan 057):** §1/§8 codified the **full exemption taxonomy** — the three settled classes a
   task may be exempt under (reads-nothing/generator; debug/fix-the-error, unless the fix itself reads input;
-  predict/trace), plus the hybrid rule. Makes explicit the convention applied across u01–u04/u03 (the reviewer
+  predict/trace), plus the hybrid rule. Makes explicit the convention applied across u01–u04 (the reviewer
   gate had split on whether debug/predict tasks were exempt because v4 named only the reads-nothing class).
 - **v1 (2026-09-19):** created for plan 050; 4-way plan-review gate CLOSED (3 rounds — resolved: the
   `input()`-in-solutions policy → markdown real-forms; u01 int/str boundary; project `## Milestone N`

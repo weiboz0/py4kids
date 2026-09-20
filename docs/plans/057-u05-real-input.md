@@ -1,20 +1,21 @@
 # Plan 057 — u05 function-factory: full real-input treatment (functions read-and-compute arm)
 
 **Status:** DRAFT — plan-review gate pending.
-**Type:** Content — apply the full real-input treatment (design 003 v4) to `unit-05-function-factory`.
+**Type:** Content — apply the full real-input treatment (design 003 v5) to `unit-05-function-factory`.
 **Branch:** `feature/plan-057-u05-real-input`. **Base:** main @ 0111f31.
 
 ## Motivation
 
 Rollout slice 7 (design 003 §7 — list-less units). u05 introduces `def`/`parameters`/`return`/`scope`; its
 solutions are **functions called with fixed arguments + asserts** (plus a few headless turtle-count
-compute-and-print cells: Ex6/Ex9/Ex10, the u03 pattern). Treatment by **per-exercise audit** (design 003 v4):
+compute-and-print cells: Ex6/Ex9/Ex10, the u03 pattern). Treatment by **per-exercise audit** (design 003 v5):
 
-- **Functions read-and-compute (the norm here):** keep the `def … return` **unchanged**, READ the
-  argument(s) up front, then **call the function and print the result**. Type per parameter:
+- **Functions read-and-compute (the norm here):** keep the `def … return` **unchanged**, then reproduce the
+  twin's **exact call+print structure** with **one `input(...)` read per distinct fixed VALUE** (a twin that
+  calls twice reads both calls' args and prints both results — the u04 20→22 precedent) — a **bare call** for
+  functions that PRINT their own output, `print(func(args))` only for return-only functions. Type per value:
   **string → plain `input(...)`**; **int → `int(input(...))`**; **float (e.g. `area`'s `2.5`/`4.5`) →
-  `float(input(...))`** (`float-type` is in u05's union). One read per parameter, labeled prompts (no `{i}`
-  index — u05 has no lists).
+  `float(input(...))`** (`float-type` is in u05's union). Labeled prompts, no `{i}` index (u05 has no lists).
 - **Headless-compute read-and-compute** (Ex6/Ex9/Ex10 — no `def`, fixed shape param → counts): read the
   param(s), then the unchanged compute + print (the u03 arm).
 - **Exempt** (design §1/§8 **v5** exemption taxonomy): Ex2/Ex7 (**debug/fix-the-error** — missing-parameter /
@@ -58,14 +59,17 @@ reading **one input per distinct fixed VALUE** (the u04 cells 20→22 precedent 
 | Lesson | Compute capstone (by content) | Twin calls | Real-form reads | Idiom / output to mirror |
 |---|---|---|---|---|
 | L1 (card factory) | `greeting_card(name, message)` (cell currently 9) | 2 calls (Ada/"Well done", Sam/"Happy birthday") | **4 reads** (name+message ×2) | plain `input(...)` ×4; **bare call** (fn PRINTS the card — no `print(...)` wrap); 2 cards of output |
-| L2 (return) | `polygon_points(n)` (cell 15) | 2 calls (4, 7) | **2 reads** (n ×2) | `int(input(...))` ×2; mirror the labeled lines "A square turns …", "A seven-sided shape turns …" (return-only fn → the existing `print(f"…{turn}…")`) |
+| L2 (return) | `area(w, h)` (cell currently 13) | 1 call (7, 4.5) | **2 reads** (w, h — both float) | `float(input(...))` ×2; return-only → `card_area = area(w, h)` then the unchanged `message = f"The card area is {card_area} square units."` / `print(message)`. Line-for-line the twin (7→read, 4.5→read); EXACT §6c parity, no value-specific label |
 | L3 (scope) | `pack_card(name)` (cell 20) | 1 call (Ari) | **1 read** (name) | plain `input(...)`; keep the fn's internal `print(factory_name)` + mirror `print(f"Packed: {first_card}")` |
-| Algorithm Extension | `total_stamp_size(number_of_stamps)` (cell 28) | 1 call (3) | **1 read** (int) | `int(input(...))`; return-only → `print(total_stamp_size(...))` |
+| Algorithm Extension | `total_stamp_size(number_of_stamps)` (cell 28) | 1 call (3) | **1 read** (int) | `int(input(...))`; keep the twin's intermediate var: `three_stamp_total = total_stamp_size(...)` then `print(three_stamp_total)` (mirror the twin's exact call+print) |
 
-**Build-up rungs (exempt from both-forms):** L1 cells 2/4/7 (`blank_card`, single-param `greeting_card`),
-L2 cell 13 (`area` — the first `return` example, before the polygon capstone). Rungs teach one increment;
-only the compute capstone per lesson carries both forms (the plans 031–035/049 pedagogy; design §3).
-Reference cells by CONTENT during implementation — each inserted real-form shifts the later indices.
+**Build-up rungs (exempt from both-forms):** L1 cells 2/4/7 (`blank_card`, single-param `greeting_card`);
+L2 `polygon_points(n)` (cell 15) — its two-shape demo prints value-specific labels ("A square …",
+"A seven-sided …") that a general input program can't reproduce, so it stays an executable illustration/rung,
+not a real-form capstone (this is why `area`, whose output has no value-specific word, is the L2 compute
+capstone). Rungs teach one increment; only the compute capstone per lesson carries both forms (the plans
+031–035/049 pedagogy; design §3). Reference cells by CONTENT during implementation — each inserted real-form
+shifts the later indices.
 
 ## Per-exercise SHAPE table
 
@@ -119,7 +123,9 @@ Challenge 2 (4).**
 - **exercises.ipynb:** `**Real version:**` cue on the 18 read-and-compute exercises (Ex1, Ex3, Ex4, Ex6, Ex8,
   Ex9, Ex10, Ex11–Ex20, Challenge 1); `**No real version:**` note (naming the exempt class) on Ex2/Ex7
   (fix-the-error), Ex5 (trace-and-predict), Challenge 2 (turtle-drawing + predict). (Ex4 cue: state both `w`
-  and `h` are read with `float(input())`, so `8.0 * 2.5` prints `20.0` — matches the twin's assert.)
+  and `h` are read with `float(input())`, so `8.0 * 2.5` prints `20.0` — matches the twin's assert. Ex3 cue:
+  `number` is read with `float(input())` and the f-string uses `{number}` — do NOT re-quote the literal
+  `Doubling 2.5 gives 5.0.` from the statement.)
 - **solutions.ipynb:** markdown real-forms per the SHAPE table + per-task call shell (unchanged `def`/compute
   + one read per distinct fixed value + the twin's exact call/print), placed after each exercise's asserted
   twin. NO real-form under Ex2/Ex5/Ex7/Challenge 2. Fenced real-forms must not contain a line starting
@@ -239,6 +245,48 @@ Challenge 2 (4).**
 - → [FIXED] Nits: prereq gloss corrected (map-order/u01; float-type in-union not never_flag); closure list adds
   accumulator/string-literal; Notice wording verbatim; cells referenced by content. Errata (asset off-by-one) parked.
 Re-dispatching round 2.
+
+### Round 2 (2026-09-19) — re-review after round-1 fixes (d378e1a)
+#### [fable] round 2 (2026-09-19)
+- **Verdict**: APPROVE WITH NITS — all 6 round-1 findings resolved, nothing regressed (verified per item vs the
+  notebooks + design v5). 4 non-blocking polish, all FOLDED:
+1. `[FIXED]` Should: L2 cell-15 real-form would hardcode "square"/"seven-sided" while reading `n` → genericized
+   to `f"A {n}-sided shape turns {turn} degrees."` (named §6c label deviation; record in post-exec report).
+2. `[FIXED]` Nit: Algo-Ext shell keeps the twin's intermediate var (`three_stamp_total = …; print(…)`).
+3. `[FIXED]` Nit: version strings — design Status → v5; plan Type → v5.
+4. `[FIXED]` Nit: Phase A now spells the Ex3 cue (`number` read with `float(input())`, f-string `{number}`).
+
+#### [sol] round 2 (2026-09-19)
+- **Verdict**: REJECT (Ex3 float, exemption taxonomy, 18/4 split, turtle exemptions, closure, metadata all sound):
+1. `[OPEN]` Must: Motivation still carries the rejected "one read per parameter → print the result" recipe —
+   contradicts the per-task call shell later. Rewrite the Motivation bullet.
+2. `[OPEN]` Must: the L2 label genericization (`f"A {n}-sided shape turns …"`) violates §6b exact parity — the
+   twin prints "A square …"/"A seven-sided …"; §6 does not authorize the deviation. → **Resolution: switch the
+   L2 capstone to `area` (cell 13)** (genericizes with EXACT parity, no value-specific word); `polygon_points`
+   (15) → return build-up rung. Removes the deviation entirely (supersedes [fable] R2 Should #1).
+3. `[OPEN]` Nit: Motivation line 11 still cites design 003 v4 → v5.
+
+#### [glm] round 2 (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE — all 6 round-1 findings verified FIXED against the twins + tooling (read-count, Ex3
+  float, bare-call rule, Phase B computed-output-lines, prereq gloss, closure list); the round-1 exemption
+  conflict RESOLVED via design v5 (18/4 split cross-checked across all 22 tasks). No open blockers.
+  (Reviewed the `polygon_points`-capstone version; the round-2 L2→`area` switch below is strictly cleaner —
+  exact parity, no deviation — so it does not reopen anything [glm] flagged.) Cosmetic: design §9 v5 prose
+  "u01–u04/u03" — the "/u03" is redundant.
+
+### Round 2 — outcome: REJECT (1 of 4, [sol]); [glm] APPROVE, [fable] APPROVE-WITH-NITS. Fixed → round 3.
+**Round 2 responses (plan + design revised):**
+- → [FIXED] [sol]#1 (Motivation recipe): rewrote the Motivation "Functions read-and-compute" bullet to the
+  per-task call shell (exact call+print structure, one read per distinct fixed VALUE, bare call for print-fns);
+  dropped "one read per parameter" / "call and print the result".
+- → [FIXED] [sol]#2 (L2 label parity): **switched the L2 compute capstone from `polygon_points` (15) to
+  `area` (13)** — `area`'s output `"The card area is {card_area} square units."` genericizes with EXACT §6c
+  parity (no value-specific word); `polygon_points` (15) → executable rung (its "square"/"seven-sided" labels
+  can't be reproduced by a general input program). This supersedes the [fable] R2 genericization Should.
+- → [FIXED] [sol]#3 nit + [fable] R2 #3: version strings → v5 (design Status + plan Type + Motivation).
+- → [FIXED] [fable] R2 #1/#2/#4 already folded (L2 now moot; Algo-Ext keeps intermediate var; Ex3 cue spelled).
+- → [FIXED] [glm] cosmetic: design §9 v5 "/u03" redundancy trimmed.
+Re-dispatching round 3 (L2→area is a both-forms-table change — all three re-verify).
 
 ## Content Review
 _(pending — 4-way, post-implementation.)_
