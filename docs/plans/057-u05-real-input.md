@@ -1,6 +1,6 @@
 # Plan 057 — u05 function-factory: full real-input treatment (functions read-and-compute arm)
 
-**Status:** DRAFT — plan-review gate pending.
+**Status:** PLAN-REVIEW GATE CLOSED (4-way consensus, round 5) — implementation pending.
 **Type:** Content — apply the full real-input treatment (design 003 v5) to `unit-05-function-factory`.
 **Branch:** `feature/plan-057-u05-real-input`. **Base:** main @ 0111f31.
 
@@ -319,6 +319,13 @@ Re-dispatching round 3 (L2→area is a both-forms-table change — all three re-
 
 ### Round 3 — outcome: [glm] APPROVE-WITH-NITS, [fable] APPROVE-WITH-NITS (nits folded); [sol] R4 REJECT on a
 duplicated-line artifact of the R3 fix, now cleanly corrected. Re-dispatching [sol] round 5 (single-line confirm).
+
+#### [sol] round 5 (2026-09-19)
+- **Verdict**: APPROVE — Phase A now names the capstone cells once as "9, 13, 20, 28"; no residual stale text.
+
+### PLAN-REVIEW GATE CLOSED (2026-09-19) — 4-way consensus:
+[self] APPROVE · [sol] APPROVE (round 5) · [glm] APPROVE WITH NITS (folded) · [fable] APPROVE WITH NITS (folded).
+No open blockers. (design 003 → v5 codified the exemption taxonomy en route.)
 
 ## Content Review
 _(pending — 4-way, post-implementation.)_
