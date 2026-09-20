@@ -3,7 +3,7 @@
 **Status:** APPROVED — v6 (v1: plan-050 gate CLOSED; v2: plan-052 §3 realistic-data policy; v3: plan-053 §2
 checkpoint/brief placement + §6d oracle; v4: plan-056 §5 input-add per-unit-audit-contingent + §1/§8 reads-nothing/generator exemption + §7 reconciled;
 v5: plan-057 §1/§8 full exemption taxonomy [reads-nothing/generator + debug/fix-the-error + predict/trace];
-v6: plan-059 §1 fixed-reference-fixture exemption + §4 pair-split dict-read idiom, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
+v6: plan-059 §1 fixed-reference-fixture exemption + designated-demonstrator + §4 fixed-count read idiom, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
 stdin-first/subprocess-judged).
 
 ## 1. Motivation
@@ -81,7 +81,8 @@ scan `cell_type == "code"` only) — this is the plan-045 submission-wrapper pre
   and **need not be grown** — growing already-realistic data forces lockstep rewrites of asserts /
   worked-examples / Notices / teacher-notes for no real gain, so it is not required. Enrichment drills
   **explicitly framed as "small fixed data"** keep their small lists (an extension of the
-  build-up-rungs-minimal rule). The `input()` real-forms carry arbitrary-count realism regardless.
+  build-up-rungs-minimal rule). The `input()` real-forms carry arbitrary-count realism regardless — EXCEPT
+range/while-less units (u08), whose real-forms read a **fixed count** (§4 fixed-count reads).
 - **u01–u06 (no `list` yet):** a realistic *fixed* dataset would need an ugly N-branch `if/elif` — reads
   *more* fake. So the exec cell keeps a **modest** fixed dataset and the **`input()` real-program form
   carries the realism** (u02–u06: an arbitrary count of values; **u01: fixed-count text prompts, no loop**).

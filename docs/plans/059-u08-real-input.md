@@ -1,6 +1,6 @@
 # Plan 059 — u08 word-wizard: full real-input treatment (dicts + lists + strings)
 
-**Status:** DRAFT — plan-review gate pending.
+**Status:** PLAN-REVIEW GATE CLOSED (4-way consensus, option-(a) fixed-count redraft) — implementation pending.
 **Type:** Content — apply the full real-input treatment (design 003 v6) to `unit-08-word-wizard`.
 **Branch:** `feature/plan-059-u08-real-input`. **Base:** main @ aaf21f2.
 
@@ -72,7 +72,9 @@ lesson cells are rungs (exempt). NO new teaching rungs (fixed-count reads use on
 | L1 rungs + the `no-exec` KeyError debug cell | — | rungs / debug → exempt |
 
 Both new no-exec input() cells build a fixed-count word list — the reads match the twin's list, so §6b parity
-holds (pipe the twin's words). Identify cells by CONTENT.
+holds (pipe the twin's words). Identify cells by CONTENT. **Placement note:** the L3 count-the-log capstone is
+the FIRST rung of the L3 ladder (its Notice cell precedes the label/most-common rungs) — place the new no-exec
+cell + Notice at the END of L3 (after the last given-counts rung) so the ladder stays one-increment; implementer's call.
 
 ## Per-exercise SHAPE table (21 exercises + 2 challenges)
 
@@ -82,14 +84,15 @@ expressions). Solution cell indices from the survey.
 
 | Shape | Tasks | Real-form / treatment |
 |---|---|---|
-| **read-and-compute — word list** (**fixed-count** `[input(...), input(...), …]` matching the twin's list length) | Ex5 grow-the-log, Ex12 count-the-words, Ex14 translate-a-list (fn return-only → `translated.append(translate(word, translations))`), Ex16 keep-long-words (**keep `minimum_length=5` FIXED**), Ex19 known/unknown, Ex20 lengths-that-fit (**keep `budget=12` FIXED**), Ex21 lengths-until-tips (**keep `budget=12` FIXED**) | `**The real program**` block + `**Real version:**` cue. GOTCHA(c): Ex5/Ex12 hard-code dict keys in comparisons (`counts["cat"]>counts["dog"]`, `counts["owl"]>counts["fox"]`) → use `.get(k,0)` so a read log can't KeyError |
+| **read-and-compute — word list** (**fixed-count** `[input(...), input(...), …]` matching the twin's list length) | Ex5 grow-the-log, Ex12 count-the-words, Ex14 translate-a-list (fn return-only → `translated.append(translate(word, translations))`), Ex16 keep-long-words (**keep `minimum_length=5` FIXED**), Ex19 known/unknown, Ex20 lengths-that-fit (**keep `budget=12` FIXED**), Ex21 lengths-until-tips (**keep `budget=12` FIXED**) | `**The real program**` block + `**Real version:**` cue. GOTCHA(c): Ex5/Ex12 hard-code dict keys in comparisons (`counts["cat"]>counts["dog"]`, `counts["owl"]>counts["fox"]`) → use `.get(k,0)` so a read log can't KeyError. Ex5 twin also has `new_word = "cat"` in addition to its
+`words` list → the real-form **reads `new_word` too** (one input per distinct fixed value; a separate `input("New word? ")`) |
 | **read-and-compute — single / few explicit reads** (twin is NOT a loop → plain `input()`, one per distinct value) | Ex2 safe-lookup (`word=input`; `.get(word,"???")`), Ex6 tidy-then-translate (`raw_word=input`; `.strip().lower()`), Ex15 reverse-lookup (read the `target`; fixed phrasebook loop+break), **Ex3 in-the-book** (twin is TWO sequential single-word checks, NOT a loop → **two plain `input()` reads**, one a hit + one a miss — do NOT `.split()`-loop it, §6c), Ex4 add-a-word (`word`+`meaning`→`translations[word]=meaning`; keep `new_words=1` fixed) | block + cue |
 | **fixed-count dict-read** (designated demonstrators, §1 class 4) | Ex7 print-every-pair (build the phrasebook via `d={}` + N `k=input(); v=input(); d[k]=v` matching the twin's dict, then `.items()` walk), Ex13 most-common-word (build counts via N `word=input(); n=int(input()); counts[word]=n`, then find-extreme) | `**The real program**` block (fixed-count dict-read, dict-access; NO `.split()`, NO `k,v=`) + `**Real version:**` cue |
 | **exempt — reads-nothing/generator** (§1 class 1) | Ex1 build-a-phrasebook (dict-literal IS the graded artifact) | `**No real version:**` (reads-nothing) |
 | **exempt — debug/fix-the-error + predict/trace** (§1 class 2+3 hybrid) | Ex8 fix-the-KeyError (part 1 explain traceback = predict/trace; part 2 repair bracket→`.get` = debug/fix, fix is not reading input) | `**No real version:**` naming both |
 | **exempt — fixed-reference-fixture** (§1 class 4 v6; pure transform/report of a given dict) | Ex9 scoreboard-lines, Ex10 visit-labels, Ex11 walk-the-keys, Ex17 total-of-tally, Ex18 rarest-word, Challenge 1 merge-two-phrasebooks, Challenge 2 flip-the-phrasebook | `**No real version:**` (fixed-reference-fixture — authored lookup data; the transform is the graded skill) |
 
-**Counts:** 14 read-and-compute (6 word-list-loop + 5 single/few + 1 [Ex4] + 2 pair-split) · 9 exempt (Ex1
+**Counts:** 14 read-and-compute (7 word-list fixed-count + 5 single/few [incl Ex4] + 2 fixed-count dict-read) · 9 exempt (Ex1
 reads-nothing, Ex8 debug/predict, 7 fixed-reference-fixture). = 23. (Ex3/Ex4 grouped into the single/few row.)
 
 ## Phases
@@ -232,6 +235,37 @@ in-union **fixed-count reads** (list via `[input(...), input(...), …]`; dict v
 ×N); Ex7/Ex13 stay demonstrators via fixed-count dict-read (honoring fork-1 "teach some"); metadata = `input`
 add only; design v6 shrinks to the fixed-reference-fixture exemption + designated-demonstrator + fixed-count
 read idiom (str-split apparatus removed). Fold cp04 wording + practice-check→coverage-check. Then re-gate (round 3).
+
+### Round 3 (2026-09-19) — re-review of the option-(a) fixed-count redraft (b4e0f3c)
+#### [fable] round 3
+- **Verdict**: APPROVE WITH NITS — round-2 Book-2 blocker fully resolved (diff touches only the two docs; no
+  str-split/Book-2/tooling/cross-unit change; Book-1-only preserved; no global-uniqueness collision). Fixed-count
+  idiom in-union; metadata = input add only; design v6 coherent (four classes, fixed-reference-fixture +
+  designated-demonstrator, fixed-count §4, no out-of-union precondition); SHAPE 14/9 matches notebooks; Phase B
+  present + correct (coverage-check runs practice_findings). 5 nits — 4 FOLDED (design Status "pair-split"→
+  "fixed-count"; §3 arbitrary-count caveat for u08; plan counts "2 pair-split"→"2 fixed-count dict-read"; Ex5
+  new_word clarification), 1 noted (L3 placement — put the no-exec cell at END of L3, implementer's call).
+
+#### [sol] round 3
+- **Verdict**: APPROVE WITH NITS — no blocker (option a in-union, Book-1-only, metadata adds only `input`,
+  design v6 coherent, Phase B correct). 2 nits FOLDED: counts arithmetic (7 word-list + 5 single/few [incl Ex4]
+  + 2 dict-read = 14, was double-counting Ex4); Ex5 `new_word` resolved to READ it (contract-consistent).
+
+#### [glm] round 3
+- **Verdict**: APPROVE WITH NITS — all 6 points confirmed (M1 resolved, no str-split anywhere; fixed-count
+  in-union; input add only; design v6 coherent [no out-of-union residue]; SHAPE 14/9 vs twins; Phase B correct);
+  ratified the Ex7/Ex13 per-value-type demonstrator split. Its 3 nits (counts parenthetical; Status header
+  "pair-split"; §3 arbitrary-count caveat) were ALL already folded in the commits post-dating its review.
+
+#### [self] round 3 (2026-09-19)
+- **Verdict**: APPROVE — concur with the option-(a) redraft (supersedes my round-1 verdict, which was on the
+  pair-split/.split() version). Fixed-count reads, input add only, Book-1-only, design v6 coherent; all
+  round-3 nits folded.
+
+### PLAN-REVIEW GATE CLOSED (2026-09-19) — 4-way consensus on the option-(a) redraft:
+[self] APPROVE · [sol] APPROVE WITH NITS · [glm] APPROVE WITH NITS · [fable] APPROVE WITH NITS (all nits folded).
+No open blockers. (Journey: 3 user forks [exempt/teach dict-fixtures → teach .split() → Book-2 collision] →
+fixed-count reads; design 003 → v6 [fixed-reference-fixture + designated-demonstrator + fixed-count idiom].)
 
 ## Content Review
 _(pending — 4-way, post-implementation.)_
