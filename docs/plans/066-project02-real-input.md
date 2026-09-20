@@ -267,7 +267,24 @@ folded; [sol] REJECT→APPROVE after M2/M4 cue notes + §6b result-line parity +
 CLOSED → implementation.
 
 ## Content Review
-_(pending)_
+
+### Round 1 (2026-09-20) — on implementation commit fba89cc. [self] inline; [sol]/[glm]/[fable] dispatched.
+
+#### [self] (2026-09-20)
+**APPROVE.** 4 markdown edits: integrated M5 real-form (`adventure-real-program-m5`), M2 class-4
+`**No real version:**` note (`adventure-m2-no-real`), M4 `**Real version:**` files-are-real note
+(`adventure-m4-real-note`), reference-intro forward pointer. Parity MATCH (fresh scratch cwd, seed(4), piped
+`Ada`+`east/west/east/east/q`): roll=2, health 17, `current=="river"`, inventory `["sword","shield"]`, save bytes
+`Ada\n17\nsword\nshield\n`, final line `Ada finished with 17 health and found sword.` = the M5 fixed cell's
+`adventure_summary` (§6b result-line parity). Hygiene: 0 `input()` in code cells; reference cells + asserts run
+clean in order (ci-local GREEN); block is markdown (no CI exec); `## Milestone 5` pre-existed (no new heading).
+Scope (merge-base name-list allowlist): changed set = plan + solutions.ipynb only; brief/manifest/teacher-notes
+byte-unchanged; adventure_save.txt (gitignored) bytes intact. Closure clean (no `.split()`, no dict-read idiom);
+metadata NONE. ci-local ALL GREEN.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending)_
