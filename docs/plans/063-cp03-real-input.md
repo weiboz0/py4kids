@@ -173,9 +173,63 @@ code cells; exactly 8 `## Question N` headings (mirror intact); 8 assert cells. 
 (checkpoint/manifest/teacher-notes byte-unchanged). Exemption notes name the class (Q6 class 4, Q8 class 2). No
 `.split()`; `int(input())` in-union. ci-local ALL GREEN.
 
-#### [sol] (pending)
-#### [glm] (pending — opencode)
-#### [fable] (pending)
+#### [fable] (2026-09-20)
+**APPROVE WITH NITS — 0 `[OPEN]`.** Independently `ast.parse`d + pipe-ran all 6 real-forms; result lines match
+the asserted twins modulo prompt (Q1 `w y zar yrdraziw`, Q2 `True`, Q3 88/100, Q4 …355, Q5 100/92/88, Q7 cat 3/
+dog 1/bird 1); each is line-for-line its twin with only the literal→reads and asserts dropped (§6c). Closure
+clean (all union concepts; `int-type` never_flag; no `.split()`); fixed-count counts match (3/4/4/5); Q7
+`counts={}` correctly stays a literal (built, not read). Q6/Q8 exemption notes correct + name the class. Scope
+diff shows solutions.ipynb only (+115). Nits (all `[WONTFIX]`-grade cosmetic):
+- Q2 caption could add "(try typing spaces around it)" to make the `.strip()` step visible. → FOLD (cheap
+  clarity gain).
+- Q1 empty-entry IndexError already handled by the ≥5-letters caption — no change.
+- Q6 note is one long sentence — could split. → optional.
+
+#### [glm] (2026-09-20)
+**APPROVE WITH NITS — 0 `[OPEN]`.** Piped-run 6/6 PASS (Q1 `w y zar yrdraziw`, Q2 `True`, Q3 88/100, Q4 8-line
+…355, Q5 100/92/88, Q7 cat 3/dog 1/bird 1); all `ast.parse` clean. §6c diffs: each real-form = twin with exactly
+two deltas (source-literal→fixed-count reads, asserts dropped); Q3 append(100)/Q4 total=0/Q7 counts={} stay
+fixed; counts 3/4/4/5. Closure PASS (no `.split()`/range/while/sys.stdin; `int(input())` in-union; input
+markdown-only → no metadata add; concept/prereq/coverage/manifest re-run PASS). Multi-value PASS. Q6/Q8
+exemption notes name the class + genuinely exempt. Hygiene: 0 input() in code cells, 8 `## Question N` headings,
+8 assert cells byte-preserved (+115/−0 pure insertions). Scope `git diff --quiet` clean. Nits:
+- `[WONTFIX]` n1: Q2 caption thinner than cp02's usage-hint style — suggest typing spaces/comma to make
+  `.strip()`/`.replace()` visible ([fable] flagged same). → FOLD (cheap).
+- `[WONTFIX]` n2: Q4/Q5 read line ~110 chars, but §6c line-for-line forces it. Not a defect.
+
+#### [sol] (2026-09-20)
+**APPROVE — 0 `[OPEN]`, 0 `[WONTFIX]`.** Blind-solved all 6 real-forms (match); piped parity exact (Q1
+`w y zar yrdraziw`, Q2 `True`, Q3 88/100, Q4 8 lines→355, Q5 100/92/88, Q7 cat 3/dog 1/bird 1). §6c AST-confirmed
+(read counts 1/1/3/4/4/5; Q3 append(100) fixed). Closure clean (no `.split()`/range/while; `int(input())`
+authorized). Q6 class-4 + Q8 class-2 exemptions correct. Hygiene: 0 input() in code cells, 8 headings, 8 asserts
+preserved. Scope `git diff --quiet` clean.
+
+### Content-review outcome: **FULL 4-way consensus.** [self] APPROVE · [sol] APPROVE · [fable]/[glm]
+APPROVE-WITH-NITS (0 `[OPEN]`). No open blockers. Shared cosmetic nit folded post-consensus: Q2 caption now
+suggests typing spaces/comma so `.strip()`/`.replace()` do visible work (ci-local re-verified GREEN). Gate CLOSED → PR.
 
 ## Post-Execution Report
-_(pending)_
+
+**Status: COMPLETE.** Checkpoint 03 (data-wrangler: strings/lists/dicts) received the design-003 real-input
+treatment via the checkpoint markdown path. Third checkpoint done (after cp01/cp02).
+
+**What shipped** (branch `feature/plan-063-cp03-real-input`, `solutions.ipynb` only, +8 markdown cells):
+- 6 real-forms — Q1/Q2 (read one string), Q3 (fixed-count read 3 scores + append 100), Q4/Q5 (read 4 scores),
+  Q7 (read 5 words → counts dict). Fixed-count read idiom (cp03 union has no range/while; u08 precedent). Q1
+  caption asks for a word ≥5 letters; Q2 caption prompts spaces/comma to exercise `.strip()`/`.replace()`.
+- 2 exemption notes — Q6 fixed-reference-fixture (class 4; the price table's specific keys drive the lookups +
+  membership branch, arbitrary reads would break `prices["pear"]`), Q8 debug/fix-the-error (class 2).
+- **No metadata change** (markdown real-forms invisible to concept-scan; design §5). §3 growth N/A — the
+  checkpoint is byte-frozen (real-forms mirror frozen counts). `checkpoint.ipynb`/`manifest.yaml`/
+  `teacher-notes.md` byte-unchanged.
+
+**Gate history**: plan-review FULL 4-way consensus (all APPROVE / APPROVE-WITH-NITS; [sol]/[glm] verified parity
+by execution; folded demonstrator-framing wording + cosmetic nits) → implementation (2c5e98e) → content-review
+FULL 4-way consensus (0 `[OPEN]`; [self]/[sol] APPROVE, [fable]/[glm] APPROVE-WITH-NITS) → Q2 caption nit folded.
+
+**Verification**: `scripts/ci-local.sh` ALL GREEN; parity 6/6 modulo prompt; 0 `input()` in code cells;
+heading-mirror intact (8 `## Question N`); scope invariant clean; `pre-merge-guard --pr`.
+
+**Follow-ups**: none for cp03. cp04 (year-one-finale) is next — it has a `finale.txt`, so the u09
+**files-are-real** precedent (file-read tasks norm-satisfied by a `**Real version:**` note, no input form) may
+apply to any file-reading question there.
