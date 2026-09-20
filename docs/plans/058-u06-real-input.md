@@ -45,8 +45,10 @@ its no-exec cell with a Notice. The audit finds **two lesson touches** (both add
    **standalone for the piped-run**: include `letters = "abcdefghijklmnopqrstuvwxyz"` (cell 31 defines it).
    Follow it with a `**Notice:** (It reads live input, so it does not run here.)` markdown cell. Single read,
    NO loop over the input → `for`/`while` closure not implicated.
-2. **L3:** add ONE `**Notice:** (It reads live input, so it does not run here.)` markdown cell after cell 47
-   (a NEW cell — does not edit the merged code cells 41/43/45/47).
+2. **L3:** add ONE `**Notice:** (It reads live input, so it does not run here.)` markdown cell after the L3
+   `input()` real-form. **Content-gate correction (round 1):** the pre-existing L3 real-form printed
+   `f"Send this code: {coded_message}"` — a §6 parity mismatch with the twin's bare `print(coded_message)`;
+   its final line was changed to `print(coded_message)` (the ONLY L3 code-cell edit; cells 41/43/45 untouched).
 
 Identify all cells by CONTENT (the L2 insert shifts later indices by +2). Do NOT edit L1, the L3 code cells
 (41/43/45/47), the `in`-operator demo cells, or the Algorithm-Extension ladders.
@@ -227,7 +229,47 @@ Re-dispatching round 2.
 (round 2). No open blockers.
 
 ## Content Review
-_(pending — 4-way, post-implementation.)_
+
+4-way, on the implementation commit ea82640. Tags [self]/[sol]/[glm]/[fable].
+
+#### [self] (2026-09-19)
+- **Verdict**: APPROVE. Spot-checked the bug-prone real-forms + new lesson cells: Ex10 (sol 30 — reads
+  message + 2 int shifts, reproduces all FIVE computed-label lines); Ex18 (sol 55 — 2 codes, computed labels);
+  Ex19 (sol 58 — 2 messages, one combined `print(star_vowels(m1), star_vowels(m2))`); L2 real-form (les 33 —
+  `no-exec`, standalone `letters="…"`, for-loop decode, single read); both Notices (les 34/50) exact. 0
+  `input()` in any solution CODE cell. No metadata change; L2 real-form + L3 Notice are additive (pre-existing
+  cells unchanged). ci-local ALL GREEN (493 passed; exec-solutions + exec-lessons PASS — kernel validated the
+  new no-exec cell).
+
+#### [fable] (2026-09-19)
+- **Verdict**: APPROVE — no `[OPEN]` findings (mechanical: ast.parse + closure AST walk + piped-run parity per
+  real-form). All 25 real-forms parse + match twins (Ex10 5 lines; Ex18/Ex19 multi-read; Ex5/Ex9
+  per-representative first segment; Ch2 standalone encode → `!edc`; value-coupled labels all computed). Lesson
+  70→73 cells, added [33,34,50] only, pre-existing cells identical; 19 Real cues + 1 Ex7 No-real; metadata zero
+  diff; 0 input() in solutions code cells, 24 non-vacuous assert cells, no fenced `## Exercise <digit>`. Ready for PR.
+
+#### [sol] (2026-09-19)
+- **Verdict**: REJECT — 1 Must Fix (all other checks passed):
+1. `[OPEN]` Must: the PRE-EXISTING L3 no-exec real-form (lesson cell 49) printed `f"Send this code:
+   {coded_message}"` while its executable twin (cell 45) prints the bare `coded_message` → §6 parity mismatch
+   (real-form output `Send this code: phhw ph dw 4!` ≠ twin `phhw ph dw 4!`).
+   → `[FIXED]`: changed cell 49's final line to `print(coded_message)` (now line-for-line the twin). This is a
+   gate-driven one-line correction to a pre-existing merged no-exec cell (the L3 input form predates the
+   systematic norm) — amends the plan's "do NOT touch L3 code cells" note for this cell only; no other L3 edit.
+   Re-confirming [sol].
+
+#### [glm] (2026-09-19, volcengine-plan/glm-5.3)
+- **Verdict**: APPROVE — no defects; verified all 24 forms (ast.parse + closure + piped parity; Ex5/Ex9
+  per-representative; Ch2 standalone; value-coupled labels computed), lesson additive (only [33,34,50]), 19
+  Real + 1 No-real cues, metadata untouched, 0 input() in solutions code cells; re-ran book1 checks incl.
+  exec-solutions/exec-lessons — ALL PASS; blind-solve cross-check matched twins. (Reviewed ea82640 — did not
+  flag the L3 "Send this code:" form that [sol] Must-Fixed; the round-1 parity correction is a strict
+  improvement that does not affect anything [glm] verified.) 1 `[WONTFIX]` out-of-scope: pre-existing u02
+  non-unique cell ids (`u2-ex8-*`) — nbformat warning, checks still PASS, future cleanup.
+
+### Content-review gate — outcome: [self]/[glm]/[fable] APPROVE; [sol] REJECT→fixed (L3 parity one-line),
+re-confirming [sol]. Gate closes on [sol]'s re-confirm. (Pre-existing u02 DuplicateCellId noted for a future
+cleanup plan.)
 
 ## Post-Execution Report
 _(pending.)_
