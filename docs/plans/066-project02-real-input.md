@@ -199,8 +199,22 @@ files-are-real). Pedagogy good; whole build realized; reference class/helpers un
 - N6: real form omits `print(f"Starting inventory: {hero.inventory}")` (in brief M1 / solutions cell 3). → FOLD
   (add for fidelity; prints `[]`, no state change, parity unaffected).
 
+#### [glm] (2026-09-20)
+**APPROVE WITH NITS.** All 7 checks verified; independently reran parity in a fresh scratch cwd (seed(4), piped
+`Ada`+`east/west/east/east/q`): roll=2, health 17, river, `["sword","shield"]`, save bytes `Ada\n17\nsword\nshield\n`,
+exactly one randint `[(1,6)]`. Shape/mapping sound (append under existing `## Milestone 5`, no new heading —
+correctly different from project-01; M1/M3 brief starters §2 brief-row; M2 class 4; M4 files-are-real). Closure
+clean; NO dict-READ idiom so the §4 hazard genuinely not in play (deferral correctly scoped out). Metadata NONE.
+Save-file byte-handling correct (gitignored, byte-compare not git-diff, scratch-cwd). Scope: merge-base diff =
+plan only; Phase B enforces byte-unchanged. Nits:
+- NIT-1 (consistency): project-01's solutions intro carries a forward pointer to its real form; project-02's
+  `reference-intro` has none → add a one-sentence pointer ("the interactive version is under `## Milestone 5`").
+  → FOLD.
+- NIT-2 (= [fable] N6): block omits the M1 `print(f"Starting inventory: {hero.inventory}")` line → add for
+  fidelity. → FOLD. (Also flags the SHAPE prose says `Hero(input(...))` while the spec block uses the two-line
+  `hero_name = input(...)` form — trivial; the two-line form matching the brief is kept.)
+
 #### [sol] (pending)
-#### [glm] (pending — opencode)
 
 ## Content Review
 _(pending)_
