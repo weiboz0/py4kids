@@ -227,9 +227,70 @@ first; `## Milestone 4` in solutions harmless (project_milestone_findings reads 
 `.split()`/int()); f"" house style matches brief M4. Caption accurate (uses fns above; input-in-driver vs
 in-function; M1–M3 real forms are brief starters). ci-local ALL GREEN.
 
-#### [sol] (pending)
-#### [glm] (pending — opencode)
-#### [fable] (pending)
+#### [fable] (2026-09-20)
+**APPROVE WITH NITS — no `[OPEN]`.** Diff vs main is exactly solutions.ipynb (+1 markdown cell) + the plan;
+brief/manifest/teacher-notes untouched. Simulated the block against the UNCHANGED reference functions with
+seed(4) + stubbed input (incl. an invalid choice + quit): menu re-shows, both games play, invalid prints
+"Choose 1, 2, or q." without bumping rounds, `q` closes; piped `1/2/2/2/1/q`→`Final score: 9 points in 2
+rounds.` (§6b parity, one randint per lucky_guess). `## Milestone 4` can't trip project_milestone_findings
+(brief-only, notebooks.py:730). Caption covers all three points (uses fns above; input-in-driver vs in-function;
+M1–M3 = brief starters). Reference functions unchanged. Nits (non-blocking):
+- nit 1: caption is one dense 50-word sentence → split into two for a Year-One reader. → FOLD.
+- nit 2: `arcade-ci-note` is now slightly stale (doesn't mention the interactive form now shown under
+  `## Milestone 4`) → add one clause pointing there. → FOLD (still solutions.ipynb).
+- nit 3: caption hyphen `1-3` → en-dash `1–3` (house style). → FOLD.
+- nit 4: pre-existing `choice = f"1"`/`f""` empty-f-string quirk — out of scope, do NOT touch.
+
+#### [sol] (2026-09-20)
+**APPROVE — 0 `[OPEN]`, 0 `[WONTFIX]`.** Parity: fresh subprocess, seed(4), piped `1/2/2/2/1/q` → exit 0, final
+line exactly `Final score: 9 points in 2 rounds.`, exactly one randint (runtime + static). Fidelity: all 4 input
+prompts match brief M1–M3; menu read inside the sentinel loop; calls unchanged `lucky_guess`/`quick_quiz` once
+each. Closure: AST found only union constructs, no `.split()`/int(), all 19 literals `f""`. Metadata NONE
+correct. Hygiene: 0 input() in code cells; every pre-existing cell unchanged; all solution cells + 8 asserts
+exit 0; project_solutions/project_milestone both `[]` (milestone check reads brief only). Scope: vs merge-base
+5bcae13, only solutions.ipynb + the plan changed; brief/manifest/teacher-notes SHA-256 byte-identical. Caption
+accurate.
+
+#### [glm] (2026-09-20)
+**APPROVE WITH NITS — 0 `[OPEN]`.** Ran `ci-local` ALL GREEN (all 6 steps incl. exec-solutions + guard). Parity
+PASS in a fresh process (secret=2, Jackpot 5 + Two-correct 4, final `Final score: 9 points in 2 rounds.`, one
+randint). Fidelity: 4 prompts byte-match brief, mirrors arcade-scoreboard-scaffold, calls unchanged param fns,
+tokenize-verified `f""`. Closure clean; metadata NONE; hygiene PASS (also exercised CI-invisible branches: invalid
+→ "Choose 1, 2, or q." no round bump; quit-only → 0/0). Scope: merge-base diff = solutions.ipynb (+1 cell) +
+plan. Same 3 fold-level nits as [fable] (caption density, ci-note pointer, hyphen).
+
+### Content-review outcome: **FULL 4-way consensus.** [self]/[sol] APPROVE · [fable]/[glm] APPROVE-WITH-NITS
+(0 `[OPEN]`). Shared 3 nits folded post-consensus (caption split into two sentences + en-dash `1–3`; ci-note now
+points to the `## Milestone 4` interactive form); ci-local re-verified GREEN. Gate CLOSED → PR.
 
 ## Post-Execution Report
-_(pending)_
+
+**Status: COMPLETE.** Project 01 (arcade-night) received the design-003 real-input treatment. First of the two
+Book-1 projects.
+
+**What shipped** (branch `feature/plan-065-project01-real-input`, `solutions.ipynb` only, +1 markdown cell + a
+one-clause ci-note update):
+- ONE integrated `**The real program**` block under a new `## Milestone 4` heading (mirrors the brief per §2
+  brief-row) — the interactive arcade: sentinel menu loop reads the choice, game 1 reads the guess, game 2 reads
+  two answers, scoreboard accumulates; calls the UNCHANGED reference param functions `lucky_guess(guess)` /
+  `quick_quiz(answer_one, answer_two)`. M1–M3 real forms are the brief's input()-reading starters.
+- **No metadata change** (`input` already in the manifest; markdown-only). §3 N/A (no data lists).
+  `brief.ipynb`/`manifest.yaml`/`teacher-notes.md` byte-unchanged.
+
+**Design reading (the [sol] plan-review resolution):** a project's integrated real form is the **brief-milestone
+scaffold twin** (§2 brief-row — the interactive starter IS the real form), NOT a §6c line-for-line twin of the
+scripted fixed driver (an interactive menu loop has no CI-runnable line-for-line twin). The `fixed-arcade-driver`
+is the §6a return-contract CI proof (asserts pin the scored branches); §6b execution parity validates the
+interactive structure. This generalizes to project-02.
+
+**Gate history**: plan-review FULL 4-way consensus ([sol] REJECT→APPROVE after adding the `## Milestone 4`
+heading + the §2-brief-row/§6b reframing) → implementation (eeae8c3) → content-review FULL 4-way consensus
+(0 `[OPEN]`) → 3 cosmetic folds.
+
+**Verification**: `scripts/ci-local.sh` ALL GREEN; seeded parity (fresh process, seed(4)) → `Final score: 9
+points in 2 rounds.`; 0 `input()` in code cells; `## Milestone 4` in solutions harmless (milestone check reads
+brief); scope invariant (merge-base) clean; `pre-merge-guard --pr`.
+
+**Follow-up:** the design-§4 dict-idiom fix flagged in plan 064 remains open (relevant if project-02 reads dicts;
+use explicit-variable reads). project-02 (grand-adventure, has `adventure_save.txt`) is the final rollout slice —
+apply the files-are-real precedent for file reads and this project's integrated-real-form / §2-brief-row reading.
