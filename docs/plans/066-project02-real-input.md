@@ -144,7 +144,7 @@ rooms"); they are not toy SOURCE data read from input. §3 realism-growth does n
 
 ### Phase A — apply to project-02 solutions.ipynb (markdown only; NO brief.ipynb / manifest / metadata / adventure_save.txt change)
 
-Three markdown edits to `solutions.ipynb` (only):
+Four markdown edits to `solutions.ipynb` (only):
 1. Append ONE `**The real program**` markdown cell after the `assembled-adventure` code cell (end of notebook,
    under the existing `## Milestone 5` heading — no new heading needed). The block is the integrated interactive
    adventure per spec, in project-02's house style.
@@ -255,8 +255,16 @@ Resolution:
   changed set to be exactly {the plan file, solutions.ipynb}, plus the separate gitignored-file byte check.
 Re-verifying [sol] on the reworked plan (no 3-of-4 shortcut on a REJECT).
 
-### Round 1 — status: [self]/[fable]/[glm] APPROVE (nits folded); [sol] REJECT on stale draft → resolution folded
-(M2/M4 cue notes; adventure_summary result-line parity + §6a wording; name-list allowlist scope). [sol] re-verify pending.
+#### [sol] round 2 (2026-09-20) — re-verify on 501d90b
+**APPROVE WITH NITS.** All 3 BLOCKERs RESOLVED (M2/M4 cue notes under existing headings; real form ends with the
+identical `adventure_summary` + Phase-B result-line check; name-list allowlist scope + §6a/§6b wording). Re-ran
+the fenced form: one randint→2, health 17, river, `["sword","shield"]`, save bytes exact, result line matches the
+M5 assert; unchanged reference fns; no `.split()`/dict-read; metadata NONE. NIT: Phase A said "Three" edits but
+listed four → fixed to "Four".
+
+### Round 1 — FINAL outcome: **FULL 4-way plan-review consensus.** [self]/[fable]/[glm]/[sol] APPROVE (all nits
+folded; [sol] REJECT→APPROVE after M2/M4 cue notes + §6b result-line parity + name-list allowlist scope). Gate
+CLOSED → implementation.
 
 ## Content Review
 _(pending)_
