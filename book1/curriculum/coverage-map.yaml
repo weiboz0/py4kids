@@ -102,7 +102,8 @@ entries:
   practices: [list-literal, list-append, if-statement, f-string, print, variable, comparison,
               string-concat, elif-else, arithmetic, int-type, error-messages, string-literal,
               boolean, type-conversion, accumulator, count-by-condition, transform-each,
-              break-statement, linear-search, find-extreme, builtin-functions, filter-into-list]
+              break-statement, linear-search, find-extreme, builtin-functions, filter-into-list,
+              input]
 - id: checkpoint-03-data-wrangler
   kind: checkpoint
   title: "Checkpoint 3 — Data Wrangler"
