@@ -60,11 +60,14 @@ would crash on arbitrary reads — a different, also-valid reason for that fixtu
   `hero.heal(amount)`; print returned value. Two distinct reads (multi-value reads-every-value).
 - **Q3**: `scores = [int(input("Score 1? ")), int(input("Score 2? ")), int(input("Score 3? "))]`; then the
   unchanged `with open("finale.txt", "w") as f: for score in scores: f.write(str(score) + "\n")`.
-- **Q6** (§4 canonical dict sequence idiom, [fable] NIT-3): `inventory = {}` then
-  `inventory[input("Item 1? ")] = int(input("Count 1? "))` and
-  `inventory[input("Item 2? ")] = int(input("Count 2? "))`; then the unchanged
-  `for item, count in inventory.items(): print(f"{item}: {count}")` (the twin's `lines` accumulator is assert
-  scaffolding → dropped, like dropped asserts).
+- **Q6** (explicit-variable reads — CORRECTNESS fix found at implementation): the §4 sequence idiom
+  `inventory[input("Item 1? ")] = int(input("Count 1? "))` is UNSAFE for an int-valued dict — Python evaluates
+  the RHS `int(input("Count 1? "))` BEFORE the subscript key, so it reads the item name into `int()` and crashes
+  (`ValueError`). The §4 form is safe only for STRING values (u08's `d[input()]=input()`). So Q6 reads into
+  explicit variables in natural order, then assigns:
+  `inventory = {}`; `item1 = input("Item 1? ")`; `count1 = int(input("Count 1? "))`; `inventory[item1] = count1`
+  (×2); then the unchanged `for item, count in inventory.items(): print(f"{item}: {count}")` (the twin's `lines`
+  accumulator is assert scaffolding → dropped). Verified: `sword/1/potion/3` → `sword: 1`, `potion: 3`.
 
 Each real-form reads every distinct SOURCE value (Q1 one name; Q2 name+amount; Q3 three scores; Q6 two item/count
 pairs). Captions: cp01-style parenthetical after `**The real program**`, with usage hints ([glm] g3): Q2 "a
