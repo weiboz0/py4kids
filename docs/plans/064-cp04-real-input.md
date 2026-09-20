@@ -197,7 +197,22 @@ Phase B named.
 folded; [sol] REJECT→APPROVE after Q7-rationale + Q3-byte-compare folds). Gate CLOSED → implementation.
 
 ## Content Review
-_(pending)_
+
+### Round 1 (2026-09-20) — on implementation commit 8d50610. [self] inline; [sol]/[glm]/[fable] dispatched.
+
+#### [self] (2026-09-20)
+**APPROVE.** 4 real-forms (cp4-q1/q2/q3/q6-real) + 2 files-are-real notes (cp4-q4/q5-real-note) + 2 exempt notes
+(cp4-q7/q8-no-real) added to solutions.ipynb only. Parity: Q1 Ada→Ada,10; Q2 Ada/3→13; Q6 sword/1/potion/3→
+sword: 1,potion: 3; Q3 byte-compare (scratch cwd) → finale.txt == `40\n90\n20\n`. **Q6 explicit-variable reads
+verified NOT to crash on natural order** (the §4 sequence idiom would — int() RHS evaluates before the key).
+Hygiene: 0 input() in code cells; 8 `## Question N` headings (mirror intact); asserts preserved. Scope:
+checkpoint.ipynb/manifest.yaml/teacher-notes.md byte-unchanged; finale.txt (gitignored) bytes intact after CI.
+Files-are-real notes (Q4/Q5) per u09; exempt notes name the class (Q7 class 4 fixture, Q8 class 2 debug) with the
+corrected Q7 rationale. No `.split()`; `int(input())` in-union. ci-local ALL GREEN.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending)_
