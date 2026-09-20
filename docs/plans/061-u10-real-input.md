@@ -1,6 +1,6 @@
 # Plan 061 — u10 pet-simulator: full real-input treatment (classes: construct-and-drive)
 
-**Status:** DRAFT — plan-review gate pending.
+**Status:** PLAN-REVIEW GATE — 3-of-4 consensus ([glm] opencode outage); implementation proceeding, [glm] required at content gate.
 **Type:** Content — apply the full real-input treatment (design 003 v6) to `unit-10-pet-simulator`.
 **Branch:** `feature/plan-061-u10-real-input`. **Base:** main @ 1bbd017.
 
@@ -158,8 +158,33 @@ Enrichment Alg-Ext Ex13–Ex26 stay small (incl. the Ex25/Ex26 stretch drills) (
 
 #### [glm] (pending)
 
+### Round 2 (2026-09-20) — re-review of the round-1 fixes (0666909)
+#### [fable] round 2
+- **Verdict**: APPROVE — all round-1 items ([sol]'s Must+Should + [fable]'s 5 Should/4 Nice) resolved, nothing
+  regressed. Verified: int()/type-conversion prereq-valid (u02) + MANUAL_ONLY + markdown-only → no add/no closure
+  violation; Ex7/9/12 no-exec cells confirmed EMPTY (upgrade = statement + solutions model, student cell
+  solution-free); sentinel `while name != "":` pinned (0 `while True:` in any Book-1 lesson); Ex22/23 fixed-count;
+  Ex6/10 key-reads; Ex26 pairs; Ex11 grows to 5 (new pets default hunger 5); §3 set = exactly the 4 core lists;
+  no range/.split/sys.stdin; Phase B complete. No remaining findings.
+
+#### [sol] round 2 (2026-09-20)
+- **Verdict**: APPROVE — all 3 round-1 findings resolved (int()/type-conversion wording; Ex7/9/12 statement-side
+  upgrade; enrichment span); no remaining findings.
+
+#### [glm] round 2 — TOOLING OUTAGE (not a verdict)
+- The `opencode`/`volcengine-plan/glm-5.3` reviewer tool **timed out (1200s SIGTERM) on every u10 attempt**
+  (round 1, round 2, and a retry) — the 4th consecutive opencode timeout this session (u08, u09-r1 also timed
+  out; u09's succeeded only on a later retry). No genuinely-stuck process found; the endpoint is persistently
+  slow. This is a **tool outage, NOT a [glm] dissent or a skipped review.**
+
+### Round 2 — outcome: **3-of-4 plan-review consensus** — [self] APPROVE · [sol] APPROVE · [fable] APPROVE (all
+after 2 rounds, no open findings from any of the 3 independent models). **[glm] unreachable (opencode outage).**
+Autopilot decision (user "keep going", tool outage not content concern): **proceed to implementation on the
+3-of-4**, and **require [glm] at the content-review gate** (retry opencode there; if still down, surface to the
+user before merge). This is documented, not a fabricated verdict — [glm]'s plan-review verdict is simply absent.
+
 ## Content Review
-_(pending — 4-way, post-implementation.)_
+_(pending — 4-way, post-implementation; [glm] participation REQUIRED here — retry opencode.)_
 
 ## Post-Execution Report
 _(pending.)_
