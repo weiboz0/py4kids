@@ -208,8 +208,10 @@ clean; metadata NONE; Phase B adequate. Nits: (A) cite the §2 v3 "starter-is-th
   command should compare against merge-base, not bare `git diff --quiet` → FOLDED.
 Re-verifying [sol] on the reworded plan (no 3-of-4 shortcut on a REJECT).
 
-### Round 1 — status: [self]/[glm]/[fable] APPROVE (nits folded); [sol] REJECT on stale draft → resolution folded
-(add `## Milestone 4` heading; §2-brief-row/§6b reframing; concept-list + scope-command). [sol] re-verify pending.
+### Round 1 — FINAL outcome: **FULL 4-way plan-review consensus.** [self]/[glm]/[fable]/[sol] APPROVE (all nits
+folded; [sol] REJECT→APPROVE after adding the `## Milestone 4` heading + the §2-brief-row/§6b reframing of the
+interactive twin + concept-list/scope-command folds). [sol] re-verify reproduced seed(4)→secret 2→score 9 in 2
+rounds, one randint each. Gate CLOSED → implementation.
 
 ## Content Review
 _(pending)_
