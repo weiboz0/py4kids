@@ -21,7 +21,7 @@ cp04 real-forms use only concepts already in the union (`class-def`, `init-metho
 `file-read`, `file-write`, `with-statement`, `dict-literal`, `dict-access`, `dict-loop`, `list-literal`,
 `list-append`, `list-index`, `list-sort`, `for-loop`, `list-loop`, `if-statement`, `in-operator`, `int-type`,
 `type-conversion`, `string-concat`, `string-methods`, `f-string`, `print`, `variable`, `boolean`,
-`error-messages`, `return-value`, `parameters`).
+`error-messages`, `return-value`, `parameters`, `arithmetic`, `string-literal`).
 `input` is authored only in `solutions.ipynb` **markdown** → no `practices:[input]` add (design §5; cp01–cp03
 precedent). No `.split()` (Book-2).
 
@@ -64,7 +64,8 @@ cp04-Q6 iterates generically → real-form) — consistent, principled.
   scaffolding → dropped, like dropped asserts).
 
 Each real-form reads every distinct SOURCE value (Q1 one name; Q2 name+amount; Q3 three scores; Q6 two item/count
-pairs). Captions: cp01-style parenthetical after `**The real program**`.
+pairs). Captions: cp01-style parenthetical after `**The real program**`, with usage hints ([glm] g3): Q2 "a
+whole number" for the heal amount; Q6 "two different items" (a duplicate key would collapse).
 
 ### files-are-real notes (Q4, Q5 — u09 precedent, NOT a v6 exempt class)
 
@@ -144,8 +145,22 @@ loop; Q6 keeps `.items()`; note dict-literal evaluates key-before-value so promp
   `inventory[input("Item 1? ")] = int(input("Count 1? "))` ×2) rather than a dict-literal-of-reads; reuses the
   design/u08 idiom and reads more clearly for a middle-schooler. → spec updated.
 
+#### [glm] (2026-09-20)
+**APPROVE WITH NITS — no open blockers.** Classifications 8/8 correct (verified parity by own piped execution:
+Q1 Ada→Ada,10; Q2→13; Q3 writes [40,90,20]; Q6 sword/1/potion/3→"sword: 1","potion: 3"). Q3 matches u09
+value/save row; Q4/Q5 files-are-real (Q5 pure continuation, no query unlike u09 Ex14 hybrid); Q6-real vs
+Q7-exempt principled (Q6 = u08-Ex7 demonstrator shape). Fixed-count correct; closure pass; metadata NONE;
+heading-mirror safe (notebooks.py:164-196 strips fences); §3-N/A right. Nits (reviewed pre-fold draft):
+- g1 (Q6 dict literal-of-reads vs §4 sequence) — SUPERSEDED: already switched Q6 to the §4 sequence idiom per
+  [fable] NIT-3.
+- g4 (Q3 piped-run in temp dir) — SUPERSEDED: already pinned scratch-cwd per [fable] NIT-2. (Also: [fable] NIT-1
+  corrected the finale.txt invariant to a byte-compare since it's gitignored — supersedes [glm]'s git-diff note.)
+- g2: union enumeration omits `arithmetic`/`string-literal` (both in the manifest union, used by real-forms) →
+  FOLD (completeness).
+- g3 (optional): caption hints — Q2 "a whole number" for the amount; Q6 "two different items" (duplicate key
+  collapses) → FOLD in implementation.
+
 #### [sol] (pending)
-#### [glm] (pending — opencode)
 
 ## Content Review
 _(pending)_
