@@ -222,9 +222,53 @@ checkpoint.ipynb, manifest.yaml, teacher-notes.md. Folded nits present: exemptio
 version:**` + italic class-naming clause; Q2 has a §6d caption; §6c blank lines preserved (two blanks between
 `def` and driver in Q3/Q8). No `.split()`; `input()=="yes"` in-union. ci-local ALL GREEN.
 
-#### [sol] (pending)
-#### [glm] (pending — opencode)
-#### [fable] (pending)
+#### [fable] (2026-09-20)
+**APPROVE WITH NITS — no `[OPEN]` blockers.** All 3 real-forms parse/run under piped input, line-for-line the
+asserted twins with only fixed values→reads (§6c); all 5 exemptions correctly classified; student
+checkpoint.ipynb/manifest.yaml/teacher-notes.md unchanged (§2/§5). Q8's `input(...) == "yes"`→Boolean is the
+u04 quiz idiom (`correct = answer == 3` in u04 lesson), age-appropriate. Q2 keeps both blanks verbatim
+(4→n); explanation print rightly dropped. Nits (none blocking):
+- N1 `[WONTFIX-acceptable]` Q3 `name = input(...)` shadows the param `name`; on a checkpoint whose Q5 assesses
+  global-vs-local scope, a distinct name (e.g. `player_name`) avoids a "which name?" question. → FOLD (cheap,
+  pedagogically apt here).
+- N2 `[WONTFIX-acceptable]` Q8 case-sensitivity (`"Yes"`→False); `.lower()` is u06 (out of union) so `== "yes"`
+  is the correct in-union choice — add a one-clause "type exactly `yes`" caption. → FOLD (caption only).
+- N3 `[WONTFIX]` Q4 note has no numbered class — deliberately settled as "read-and-explain / static code
+  interpretation"; clear as written. → keep.
+- N4 `[nit]` Q2 prompt `"Add 1 up to which number?"` slightly ambiguous → clearer wording. → FOLD.
+- N5 `[nit]` Q3/Q8 bare `**The real program**` vs cp01's parenthetical caption → add short captions. → FOLD.
+- N6 `[out of scope, pre-existing]` `ci-note` mentions `random.seed(4)` though cp02 uses no random. → keep
+  (not this plan).
+
+#### [glm] (2026-09-20)
+**APPROVE — no `[OPEN]` findings.** Empirical: parity 3/3 (Q2 `4`→10, Q3 Maya→Hello, Maya!, Q8 yes/no/yes→2;
+edges n=10→55/n≤0 terminates, no/no/no→0, yes/yes/yes→3; all `ast.parse` clean). §6c unified diffs show ONLY
+fixed-value→read swaps, assessed blanks untouched, blank lines intact, Q2 §6d caption present. Prereq closure
+clean (no `.split()`/list/dict; `input()=="yes"` verified as the u04 quiz idiom, 6+ occurrences). Multi-value
+PASS (Q8 three distinct reads). All 5 exemption notes correct + class-naming. Hygiene: 0 input() in code cells,
+exactly 8 `## Question N` headings (mirror intact), 8 assert cells (≥3). Scope: `git diff --quiet` clean for
+checkpoint.ipynb/manifest.yaml/teacher-notes.md; commit is +107/−0 on solutions.ipynb only. Two `[WONTFIX]`
+nice-to-haves (Q3/Q8 caption, Q4 class label) — both plan-conformant, no action. Consensus-ready.
+
+#### [sol] (2026-09-20)
+**REJECT — 1 `[OPEN]`.** All checks passed (blind-solves 3/3 match; parity; §6c line-for-line incl. blank
+lines; closure; hygiene 0-input/8-headings/11-asserts; scope `git diff` clean) EXCEPT:
+- `[OPEN]` Must: Q4's exemption note (`cp2-q4-no-real`) says "read-and-explain / static code interpretation" —
+  neither a design-003 v6 class name nor number, but §8 requires the note to name a ratified §1 class. Resolve
+  by mapping Q4 to a ratified class (class 3, predict/trace) OR amend the design to authorize the category.
+
+### Content-review round 2 — fixes (fold [sol] `[OPEN]` + [fable] cheap nits) → re-verify.
+- `[FIXED]` [sol] `[OPEN]`: reworded Q4's note to name **class 3 (predict/trace)** — Q4 is on-paper reasoning
+  about fixed code without running it (which fn returns vs prints), the essence of class 3; satisfies §8, no
+  design edit. (Supersedes [sol]'s plan-review s1 "static code interpretation" label, which §8 disallows as a
+  note class; the description is kept, only the class is now named.) SHAPE table Q4 reconciled to class 3.
+- `[FIXED]` [fable] N1: Q3 real-form global `name`→`player_name` (avoids shadowing the `name` param on a
+  scope-assessing checkpoint).
+- `[FIXED]` [fable] N2: Q8 caption adds "type exactly `yes`" (case-sensitivity, `.lower()` is u06/out-of-union).
+- `[FIXED]` [fable] N4: Q2 prompt `"Add 1 up to which number?"`→`"Add up to which number?"` (clearer).
+- `[FIXED]` [fable] N5: Q3/Q8 gain cp01-style parenthetical captions after `**The real program**`.
+- `[WONTFIX]` [fable] N3 (Q4 numbered class) — resolved by the class-3 reword above.
+- `[WONTFIX]` [fable] N6 / [glm] notes — pre-existing/plan-conformant, no action.
 
 ## Post-Execution Report
 _(pending)_
