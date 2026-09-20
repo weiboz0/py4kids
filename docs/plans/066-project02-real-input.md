@@ -163,7 +163,23 @@ The block is the integrated interactive adventure per spec, in project-02's hous
   dict-read idiom (the world dicts are authored, not read).
 
 ## Plan Review
-_(pending)_
+
+### Round 1 (2026-09-20) — [self] inline; [sol] gpt-5.6-sol; [glm] volcengine-plan/glm-5.3; [fable] Fable 5.
+
+#### [self] (2026-09-20)
+**APPROVE.** One integrated real form under the EXISTING `## Milestone 5` mirrors project-01 (integrated capstone;
+solutions already milestone-organized so no new heading). Mapping sound: M1/M3 real forms are the brief starters
+(§2 brief-row), M2 fixed-reference-fixture (authored world dicts + pure helpers), M4 files-are-real (u09). §6c
+N/A (interactive loop, no CI-runnable line-for-line twin) → §6b execution parity + §6a state-contract asserts.
+Parity VALIDATED locally (fresh scratch cwd, seed(4), piped `Ada`+`east/west/east/east/q`): roll=2 (no event),
+health 17, `current=="river"`, inventory `["sword","shield"]`, save bytes `Ada\n17\nsword\nshield\n` — exact
+match to the M5 assert cell; exactly one randint. Metadata NONE (input already in manifest + markdown-only). No
+`.split()`; **no dict-READ idiom** (world dicts are authored) so the design-§4 bug is not in play. adventure_save.txt
+gitignored (.gitignore:34) → byte-invariant check, scratch-cwd validation. Phase B named. Closure clean.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Content Review
 _(pending)_
