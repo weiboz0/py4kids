@@ -282,9 +282,68 @@ Scope (merge-base name-list allowlist): changed set = plan + solutions.ipynb onl
 byte-unchanged; adventure_save.txt (gitignored) bytes intact. Closure clean (no `.split()`, no dict-read idiom);
 metadata NONE. ci-local ALL GREEN.
 
-#### [sol] (pending)
-#### [glm] (pending — opencode)
-#### [fable] (pending)
+#### [fable] (2026-09-20)
+**APPROVE WITH NITS — 0 `[OPEN]`.** `ast.parse` OK; validated parity in BOTH orderings (isolated fresh seed(4)
+AND appended-after-all-fixed-cells — seed-4 sequence 2,3,1,6; fixed driver consumes the 2, real form draws the 3
+→ no damage) → final line `Ada finished with 17 health and found sword.` both times; invalid direction prints
+"You can't go that way." and stays; quit-before-collect IndexError is caption-pre-empted. Fidelity PASS (linear
+Year-One-readable program, brief prompts/messages matched, reference fns unchanged). M2 class-4 note + M4
+files-are-real note correctly placed; intro pointer matches project-01. brief/manifest/teacher-notes untouched.
+Nits (all `[WONTFIX]`): NIT-1 quit-before-collect IndexError (caption pre-empts; graded contract requires a
+collected item); NIT-3 omits brief's "You travel to…" line (cosmetic, top-of-turn line covers it); NIT-4
+`next_room==current` would misreport a student-added self-loop exit (none in the reference world; theoretical);
+OBS brief health 100 vs reference 20 (pre-existing, brief invites personalizing). NIT-2 (cheap fold): M4 note
+"your actual playthrough's hero" → "the hero from this run" (tighter for the reference context). → FOLD NIT-2.
+
+#### [glm] (2026-09-20)
+**APPROVE — 0 `[OPEN]`.** Ran `ci-local` ALL GREEN (6 stages incl. guard). Parity reran (fresh scratch cwd,
+seed(4)): one randint→2, health 17, river, `["sword","shield"]`, save bytes exact, final line = M5
+`adventure_summary` (solutions.ipynb:270). Confirmed seed(4) sequence `[2,3,1,6]` so the block is safe even
+copy-pasted after a full run (draws 3, no event). Fidelity PASS (brief prompts/messages, unchanged reference
+fns, §6c-N/A + §6b-parity reading sound). M2 class-4 + M4 files-are-real notes accurate/placed. Closure clean
+(no `.split()`, no dict-read). Metadata NONE. Hygiene: 0 input() in code cells, 4 new markdown cells, `## Milestone
+5` pre-existed. Scope: name-list allowlist = {plan, solutions.ipynb}; brief/manifest/teacher-notes 0-line diff;
+adventure_save.txt gitignored, bytes intact. Nits (`[WONTFIX]`): M4 wording (= [fable] NIT-2 fold); self-loop
+edge (none in reference world).
+
+#### [sol] (2026-09-20)
+**APPROVE — 0 `[OPEN]`, 0 `[WONTFIX]`.** Parity PASS (fresh /dev/shm, seed 4, one randint→2, health 17, river,
+`["sword","shield"]`, file bytes hex `4164610a31370a73776f72640a736869656c640a` = `Ada\n17\nsword\nshield\n`,
+final line `Ada finished with 17 health and found sword.` matching every M5 assert). Fidelity/§6 sound
+(project-01 interpretation). M2 class-4 + M4 files-are-real notes accurate. Closure PASS (2 input(), 1 randint,
+0 `.split()`, 0 input-to-dict). Metadata: 6 code cells byte-equivalent; manifest/coverage-map byte-unchanged.
+Hygiene: 0 input() in code cells; all reference cells exit 0; one pre-existing `## Milestone 5`. Scope: exact
+2-file allowlist; brief/manifest/teacher-notes blob-identical; adventure_save.txt bytes intact.
+
+### Content-review outcome: **FULL 4-way consensus.** [self]/[glm]/[sol] APPROVE · [fable] APPROVE-WITH-NITS
+(0 `[OPEN]`). [fable] NIT-2 folded post-consensus (M4 note "your actual playthrough's hero" → "the hero from
+this run"); ci-local re-verified GREEN. Gate CLOSED → PR.
 
 ## Post-Execution Report
-_(pending)_
+
+**Status: COMPLETE.** Project 02 (grand-adventure) received the design-003 real-input treatment. **This is the
+FINAL entry — the design-003 real-input norm now covers ALL of Book 1: 10 units (u01–u10), 4 checkpoints
+(cp01–cp04), and both projects (project-01, project-02).**
+
+**What shipped** (branch `feature/plan-066-project02-real-input`, `solutions.ipynb` only, 4 markdown edits):
+- One integrated `**The real program**` block under the existing `## Milestone 5` — the interactive assembled
+  adventure (reads the hero name + directions), calling the UNCHANGED reference `Hero`/`describe`/`move`/
+  `apply_event`/`pick_up`, ending with the same `adventure_summary` line the M5 fixed cell asserts.
+- `## Milestone 2`: `**No real version:**` class-4 fixed-reference-fixture note (authored world dicts + pure
+  helpers). `## Milestone 4`: `**Real version:**` files-are-real note (real save/load round-trip).
+- `reference-intro`: forward pointer to the `## Milestone 5` interactive form.
+- M1/M3 real forms are the brief's input()-reading starters (§2 brief-row). **No metadata change** (`input`
+  already in manifest; markdown-only). `brief.ipynb`/`manifest.yaml`/`teacher-notes.md` byte-unchanged;
+  `adventure_save.txt` (gitignored) bytes stay `Ada\n17\nsword\nshield\n`.
+
+**Gate history**: plan-review FULL 4-way consensus ([sol] REJECT→APPROVE after M2/M4 cue notes + §6b
+result-line parity + name-list allowlist scope) → implementation (fba89cc) → content-review FULL 4-way
+consensus (0 `[OPEN]`) → 1 cosmetic fold.
+
+**Verification**: `scripts/ci-local.sh` ALL GREEN; seeded parity (fresh scratch cwd, seed(4)) reproduces the M5
+assert state + `adventure_summary`; 0 `input()` in code cells; scope name-list allowlist = plan + solutions.ipynb;
+adventure_save.txt bytes intact; `pre-merge-guard --pr`.
+
+**Rollout complete.** Remaining follow-up (separate future docs slice, flagged in plan 064): amend design-003
+§4's dict fixed-count idiom text to the explicit-variable form for non-string values (the buggy
+`d[input()]=int(input())` — not used by any shipped content).
