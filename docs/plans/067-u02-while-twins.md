@@ -29,9 +29,10 @@ So the multi-pass script must use only u02 concepts.
    Terminates with probability 1 (expected ~10 trips on 1–10); no `accumulator`.
 2. **Scripted player** (`if-statement`/`elif-else`/`comparison`):
    an `if/elif/else` chain maps the current guess to the next scripted guess
-   (`if guess == 50: guess = 25 / elif guess == 25: guess = 40 / else: guess = 37`).
+   (`if guess == 50: guess = 25 / elif guess == 25: guess = 40 / else: guess = secret`).
    Assigning a constant is not read-modify-write, so no `accumulator`.
-   The final `else` always assigns the secret, so the loop cannot run forever.
+   The final `else` always assigns the variable `secret` — never a literal — in the lesson cells too ([fable] N2),
+   so the loop cannot run forever even if a student edits `secret = 7` to another number.
    **It MUST be one `if/elif/else` chain, never separate `if`s** — with separate `if`s, 50 → 25 would immediately match
    `if guess == 25` in the same pass and skip a guess ([fable] check 1).
    (Solutions Ch2 uses separate `if`s safely only because it sets `reply`, not the tested variable — not a template.)
@@ -46,15 +47,15 @@ So the multi-pass script must use only u02 concepts.
 | lesson L4 Notice | `u02-l4-fixed-notice` (74) | "the fixed follow-up guess…" | names the scripted guesses and that the loop repeats once per wrong guess |
 | lesson AE rung | `dfe1ea40e81f` (88) | `guess = secret`, prints guess (1 pass) | computer-guesser: starts with `import random` (the cell has none today; a student may run it cold), `secret = 7`, `guess = 0` (a value that can never be the secret, so the loop always runs — consistent with cells 90/92), prints every guess so the TRIPS ARE VISIBLE, then `Got it!` |
 | lesson AE Notice | `a7ea18f50f76` (89) | "here one pass sets `guess` to the secret…" | the loop repeats an unknown number of times; run it again and the count changes; the match is the sentinel |
-| lesson AE twin | `u02-ae-fixed-twin` (90) — the cell the author pasted | `guess = secret` (1 silent pass) | **deterministic scripted player** ([sol] finding 3): `secret = 7`, `guess = 0`, body = `if guess == 0: guess = 3 / elif guess == 3: guess = 9 / else: guess = 7` then `print(guess)` (stands in for the typed guess the player would see on screen), then `print("Got it!")` → prints `3`, `9`, `7`, `Got it!` — 3 visible passes, finite by construction |
-| lesson AE Notice | `u02-ae-fixed-notice` (91) | "the scripted follow-up reaches the sentinel…" | a scripted player guesses 3, 9, then 7; the body runs once per wrong guess; same `Got it!` result line as the real game below, which swaps the scripted lines for one `input()` line |
+| lesson AE twin | `u02-ae-fixed-twin` (90) — the cell the author pasted | `guess = secret` (1 silent pass) | **deterministic scripted player** ([sol] finding 3): `secret = 7`, `guess = 0`, body = `if guess == 0: guess = 3 / elif guess == 3: guess = 9 / else: guess = secret` then `print(guess)` (there so you can WATCH the guesses; the real game has no such line because you see what you type), then `print("Got it!")` → prints `3`, `9`, `7`, `Got it!` — 3 visible passes, finite by construction |
+| lesson AE Notice | `u02-ae-fixed-notice` (91) | "the scripted follow-up reaches the sentinel…" | a scripted player guesses 3, 9, then 7; the body runs once per GUESS (three trips — the scripted "read" sits inside the body, like `input()` in cell 92); same `Got it!` result line as the real game below, which swaps the scripted lines for one `input()` line |
 | solutions Ex3 (two-player) | `u2-ex4-code` (idx 8) | 50 → `player_b_guess = player_a_secret` | scripted Player B 50 → 75 → 63 (secret 63): `Too low, Player B!`, `Too high, Player B!`, correct; assert unchanged ([fable] B1) |
 | solutions Ex5 (treasure) | `u2-ex6-code` (idx 14) | 25 → `guessed_depth = secret_depth` | scripted 25 → 10 → secret (seed 4 → 16): `Too deep!`, `Too shallow!`, found; final `else` assigns `secret_depth`; assert unchanged ([fable] B1) |
 | solutions Ex8 | the SECOND cell with id `u2-ex8-code` — idx 24, "Number Detective 1–1,000" (the id is duplicated at idx 20; pre-existing, NOT fixed here — follow-up) | 500 → `guess = secret` | scripted player 500 → 250 → 240 → secret (seed 4 → 242): `Too high!`, `Too high!`, `Too low!`, correct; final `else: guess = secret` keeps it seed-proof; assert unchanged |
 | solutions Ch1 (stretch) | `u2-ch1-code` | 50 → `guess = secret` | scripted player 50 → 35 → secret (seed 4 → 31): `cold…`, `HOT!`, `Got it!` (both hints); assert unchanged |
 
 **teacher-notes.md ([fable] B2 — my first audit was wrong):** line 34 calls the Spotlight ladder's loop "a deterministic `while` rung" —
-reword to a computer-guesser rung whose trip count changes every run, and add the tip "run it several times and tally the trips"
+reword to name BOTH new rungs ([fable] N3): "comparison rungs → a computer-guesser `while` rung (trip count changes each run) → a scripted-player twin → the display-only interactive game", and add the tip "run it several times and tally the trips"
 (ties to the existing flip-cards-until-the-ace unplugged trace).
 Line 30 says "Every rung is teacher-run (it waits for typing)" — untrue since plan 054 added the executable twin; correct it in the same edit.
 
@@ -64,7 +65,7 @@ cell 89 says nobody — not even the programmer — knows the trip count ahead o
 cell 91 says a scripted player guesses 3, 9, 7 and the real game below replaces those lines with one `input()` line.
 **Division of labour ([sol] finding 3):** cell 88 is a teaching RUNG, not a design-003 twin — the unseeded computer-guesser shows that the trip count is unknown
 (a lucky first-try match, ~10% of runs, is part of the lesson: "run it again"); cell 90 is the design-003 TWIN of cell 92 and is fully deterministic and finite.
-The twin's per-trip `print(guess)` is a pedagogy print standing in for the typed guess echoed on screen; §6b compares the computed RESULT line only
+The twin's per-trip `print(guess)` is a pedagogy print (so students can watch the guesses); §6b compares the computed RESULT line only
 (u05 precedent: pedagogy prints are excluded from parity).
 
 Unchanged: all `no-exec` real `input()` forms, all markdown real-program blocks, exercises.ipynb statements,
@@ -122,7 +123,13 @@ Termination: scripted chains end in an `else` that assigns the secret; the compu
 probability 1 (expected ~10 trips). §6b result lines unchanged. Seeded secrets verified: seed 4 → 242 (1..1000)
 and 31 (1..100), so the Ex8 chain prints high/high/low and the Ch1 chain prints cold/HOT. No metadata change.
 
-#### [fable] (2026-09-21)
+#### [fable] round 2 (2026-09-21) — on 4a3d7ac
+**APPROVE WITH NITS.** B1, B2 and every nit RESOLVED; the 88/90 split judged sound and better than the first draft
+(visible repetition in both cells; cell 90 is the closest twin↔real-form match in the unit). New nits, all FOLDED:
+N1 cell 90 body runs once per GUESS not per wrong guess; N2 lesson chains end `else: guess = secret` (tinker-proof, no literal);
+N3 teacher-notes:34 names both new rungs; Notice 91 says the per-trip print is for watching the guesses.
+
+#### [fable] round 1 (2026-09-21)
 **REJECT (revise and resubmit)** — the idioms are sound; two factual misses, both now FOLDED:
 - B1: two more one-pass loops were unscoped — solutions `u2-ex4-code` (Exercise 3, `player_b_guess = player_a_secret`)
   and `u2-ex6-code` (Exercise 5, `guessed_depth = secret_depth`); my grep matched only `guess = secret`.
