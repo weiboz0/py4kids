@@ -126,9 +126,15 @@ typing", not "input()" — the policy check tools/notebooks.py:279 is a raw-text
 comment; caught during Phase B, reworded). ci-local ALL GREEN; scope = plan + u07 solutions.ipynb + exercises.ipynb;
 exercise statement + real-block caption name the 990/1200/850/1310 playthrough; ids unchanged.
 
+#### [fable] (2026-09-21)
+**APPROVE WITH NITS — 0 `[OPEN]`.** Executed `solution-9-code`: `True` + 3× retry + "still 1500", asserts pass; output
+matches the statement + caption promise for the 990→1200→850→1310 playthrough; §6b real-form differs only in prompts.
+Pedagogy genuine (3 honest re-tests; the comment + blank line keep the fake-input chain distinct from the real champion
+if/else). Statement/caption coherent; work cell `ee669daf` empty/no-exec/0-outputs; ids unchanged; teacher-notes accurate.
+Nits (optional): N1 caption puts "then" in code font (`` `990, 1200, 850, then 1310` ``) → use `` `990`, `1200`, `850`, then `1310` `` → FOLD; N2 bare final `else` vs named `elif` → keep (standard catch-all, u02 precedent).
+
 #### [sol] (pending)
 #### [glm] (pending — opencode)
-#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending)_
