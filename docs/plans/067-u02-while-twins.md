@@ -141,7 +141,13 @@ separating comment between the hint `if/else` and the scripted chain; cell 88 st
 specific Notice content; 88-visible / 90-parity division of labour; unseeded-random recorded as a deliberate
 design-003 deviation; Ex8 target pinned to idx 24 (duplicated id is pre-existing, out of scope); record max trip count.
 
-#### [sol] (2026-09-21) — reviewed first draft b19df66
+#### [sol] round 2 (2026-09-21) — on 4a3d7ac
+**APPROVE WITH NITS.** All four Must-Fix findings RESOLVED (7-cell inventory; teacher-notes in scope; rung-88 random / twin-90 deterministic split
+accepted, with `print(guess)` accepted as a pedagogy print under the u05 rule; six-pair real-form parity in Phase B). Chains executed with the stated
+outputs, no concept-scan gaps. Its three nits (once-per-guess wording, `else: guess = secret` in lesson chains, teacher-notes names both rungs)
+are identical to [fable] N1–N3 and were already folded at 6aed441.
+
+#### [sol] round 1 (2026-09-21) — reviewed first draft b19df66
 **REJECT.** Findings 1 (Ex3/Ex5 twins missed) and 2 (teacher-notes lines 30/34) = [fable] B1/B2, already folded. New, both FOLDED:
 - finding 3: the random idiom has a 10% one-pass chance, cell 90 would stay silent (repetition invisible), and its run time is unbounded →
   cell 90 (the design-003 twin, and the very cell the author pasted) is now a DETERMINISTIC scripted player that prints each guess (3, 9, 7);
