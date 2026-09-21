@@ -77,7 +77,20 @@ solutions keep their existing `random.seed(4)` + asserts.
 - **Verification phase:** Phase B is the named verification phase.
 
 ## Plan Review
-_(pending)_
+
+### Round 1 (2026-09-21) — [self] inline; [sol] gpt-5.6-sol; [glm] volcengine-plan/glm-5.3; [fable] Fable 5.
+
+#### [self] (2026-09-21)
+**APPROVE.** Order check: `randint` first used at lesson cell 31, `elif` at 58, `while` at 67 — all before the
+targets (73, 88, 90), so nothing is used before it is taught. `guess = random.randint(...)` and constant
+assignments inside `if/elif` are not read-modify-write, so `visit_Assign` cannot flag `accumulator`.
+Termination: scripted chains end in an `else` that assigns the secret; the computer-guesser hits 1-of-10 with
+probability 1 (expected ~10 trips). §6b result lines unchanged. Seeded secrets verified: seed 4 → 242 (1..1000)
+and 31 (1..100), so the Ex8 chain prints high/high/low and the Ch1 chain prints cold/HOT. No metadata change.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Content Review
 _(pending)_
