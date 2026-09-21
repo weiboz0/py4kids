@@ -155,7 +155,16 @@ are identical to [fable] N1–N3 and were already folded at 6aed441.
 - finding 4: Phase B lacked design-§6 real-form parity execution → added piped twin↔real-form runs for all six pairs; cells 88 states `import random`.
 Closure PASS (randint taught cells 31–32, elif 57–59; no accumulator/loop-counter flag). cp01 Q5 confirmed NOT a missed twin (§6d condition form).
 Re-verify pending.
-#### [glm] (2026-09-21) — reviewed first draft b19df66
+#### [glm] round 2 (2026-09-21) — on 4a3d7ac
+**APPROVE.** Every prior finding RESOLVED. Scanner on the revised cell 90 + Ex3/Ex5 chains: gaps NONE, accumulator False; cell 90 prints exactly
+`3, 9, 7, Got it!`. Ran the new Phase-B items: piped real-form parity MATCHES on all six pairs (lesson pairs need a seed hunt so the real form's
+draw equals the twin's fixed secret: seed 115 → 37 on 1..100, seed 0 → 7 on 1..10); AST single-chain check passes. Fresh sweep of every u02 `while`
+cell found no further one-pass loops.
+
+### Plan-review outcome: **FULL 4-way consensus** — [self] APPROVE · [glm] APPROVE · [sol]/[fable] APPROVE-WITH-NITS (all folded).
+Round 1 was 3× REJECT on a completeness gap (two missed solution cells + stale teacher-notes) and the random-twin guarantee; round 2 clean. Gate CLOSED.
+
+#### [glm] round 1 (2026-09-21) — reviewed first draft b19df66
 **REJECT** on the same completeness gap ([fable] B1/B2 = Ex3/Ex5 cells + teacher-notes:34) — already FOLDED.
 Verified with the repo scanner: `concept_scan.detect()` on every proposed source → gaps NONE, unknown methods NONE, accumulator False;
 `randint` in TAUGHT_METHODS; seed 4 → 242 / 31; L4 chain prints the 4 predicted lines; 200 simulated computer-guesser runs → max 58 trips;
