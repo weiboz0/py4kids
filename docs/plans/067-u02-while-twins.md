@@ -203,7 +203,39 @@ hygiene/noexec/structure/cell-lint pass; changed cells exactly lesson 73/74/88/8
 - `[OPEN]` N1: teacher-notes:34 "trip count changes each run" is too absolute (two runs can tie) → "can change each run". → FOLD.
 - `[WONTFIX]` duplicated `u2-ex8-code` id — pre-existing, out of scope.
 
-#### [glm] (pending — opencode)
+#### [glm] (2026-09-21)
+**APPROVE WITH NITS — nothing `[OPEN]`.** All 7 cells executed (asserts pass); cell 88 200/200 terminated, max 68 trips, 26 lucky one-trip runs;
+scanner: gaps NONE / unknown methods NONE / accumulator False on every source; AST 6/6 single chains ending in the secret variable;
+six parity pairs MATCH (seed 115→37, seed 0→7 independently confirmed); grep of the unit for one-pass/deterministic/follow-up prose → zero;
+scope exact, idx-20 cell byte-identical; independent `ci-local` ALL GREEN.
+- `[WONTFIX]`→folded anyway: Notice 74 "swaps the scripted lines for one `input()` line" describes only the loop-body swap → now says "inside the loop".
+
+### Content-review outcome: **FULL 4-way consensus** — [self] APPROVE · [sol]/[glm]/[fable] APPROVE-WITH-NITS, nothing blocking.
+Folded post-consensus (wording only, ci-local re-verified GREEN): blank line before the scripted-player comment in cell 73;
+Notices 74/91 explain that the last scripted line `guess = secret` is the player finally getting it right; Notice 89 phrasing;
+teacher-notes "can change each run" + the tally tip as its own sentence; Notice 74 "inside the loop". Gate CLOSED → PR.
 
 ## Post-Execution Report
-_(pending)_
+
+**Status: COMPLETE.** Answers the author's feedback that u02's executable `while` twins were "too edge case" to showcase a while loop.
+
+**What shipped** (u02 `lesson.ipynb`, `solutions.ipynb`, `teacher-notes.md` only; ids unchanged; no metadata change):
+- Every executable guessing-game `while` loop in the unit now runs SEVERAL visible passes — 7 code cells:
+  lesson L4 twin (50→25→40→37), AE rung (unseeded computer-guesser printing each guess — unknown trip count),
+  AE twin — the cell the author pasted (0→3→9→7, prints each guess), and solutions Ex3/Ex5/Ex8/Ch1 (each shows both hints).
+- Idiom: one `if/elif/else` "scripted player" chain whose final `else` assigns the secret VARIABLE, so it always terminates even if a
+  student edits the secret. `guess = guess + 1` was never an option — concept-scan flags it as the untaught `accumulator`.
+- 3 Notices reworded; teacher-notes lines 30/34 corrected + a "tally the trips" tip.
+
+**Gate history:** plan-review round 1 = 3× REJECT (my grep matched only `guess = secret` and missed the Ex3/Ex5 solutions, whose variables are
+named differently; my teacher-notes audit was wrong; [sol] rejected a random design-003 twin as non-deterministic) → round 2 full consensus.
+Content-review = full consensus in one round, wording nits only.
+
+**Verification:** `scripts/ci-local.sh` ALL GREEN (concept-scan PASS — no accumulator/list/range); standalone outputs as predicted;
+cell 88 terminated in every run across four independent 200-run batches (max 46–68 trips); AST single-chain check 6/6;
+§6b real-form piped parity MATCHES on all six twin↔real pairs (result lines unchanged from plan 054); scope = plan + the three u02 files.
+
+**Lesson learned:** when hunting a defect CLASS, search by structure (every `while` cell), not by one spelling of it.
+
+**Follow-up (not started):** u07 `solution-9-code` has the same one-pass shape (`while new_score in scores:` retries once with a fixed 1310).
+Also still open from plans 064/066: the design-003 §4 dict-read idiom docs fix; and the pre-existing duplicated cell id `u2-ex8-code` in u02 solutions.
