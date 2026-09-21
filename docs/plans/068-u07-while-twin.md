@@ -29,7 +29,7 @@ The board is `[1500, 1200, 990, 850]`; script three already-present retries then
 
 | Cell | Now | After |
 |---|---|---|
-| solutions `solution-9-code` (idx 16) | `new_score = 1310` (1 pass) | scripted chain `if new_score == 990: new_score = 1200 / elif new_score == 1200: new_score = 850 / else: new_score = 1310` → the loop prints "already on the board" **3 times** (for 990, 1200, 850) before 1310 exits |
+| solutions `solution-9-code` (idx 16) | `new_score = 1310` (1 pass) | a separating comment `# scripted player: the next score to try (stands in for input())` ([fable] N1 — the loop already holds a real `if/else` champion check right after, so the comment keeps the stand-in visibly distinct) then the scripted chain `if new_score == 990: new_score = 1200 / elif new_score == 1200: new_score = 850 / else: new_score = 1310` → the loop prints "already on the board" **3 times** (for 990, 1200, 850) before 1310 exits |
 | exercises `dfc665d7` (Exercise 6 statement) | "try 990 and then 1310." | "try 990, 1200, 850, then 1310 — the first three are already on the board, so the loop asks again each time." |
 
 **End state unchanged**, so the asserts are untouched: after the loop `new_score == 1310`; `scores.append(1310)`
@@ -44,7 +44,7 @@ no `accumulator` (constant assigns; and u07 practices `accumulator` anyway), no 
 
 The paired real-program markdown block (`solutions.ipynb` idx 17, id `b05200000005`) reads `new_score` with
 `int(input("New score: ").strip())` on the first read and on each retry — it is UNCHANGED (it already handles
-any number of retries). Piped `990\n1200\n850\n1310`, it reproduces the twin's output line-for-line
+any number of retries). Piped `990\n1200\n850\n1310`, it reproduces the twin's output line-for-line (its intro caption is extended to name the playthrough `try 990, 1200, 850, then 1310` for cue-consistency with the exercise statement — [fable] N2)
 (the `print(new_score in scores)` → `True`, three "already on the board" lines, then "The champion is still
 1500."). Result-line parity preserved.
 
@@ -87,9 +87,17 @@ assign — all in u07 union, no accumulator flag. End state unchanged so asserts
 updated to match the new playthrough. No metadata/teacher-notes change (audit: Lesson-3 note doesn't cite the
 990/1310 values).
 
+#### [fable] (2026-09-21)
+**APPROVE WITH NITS.** Executed the proposed cell: `True` + 3× retry message + "The champion is still 1500.", all three
+asserts survive. Structural sweep confirmed independently (only `solution-9-code` is one-pass; lesson f9ae6759 = 8 passes,
+Ex13 = 3, Ex12 = 8). Chain must be single if/elif/else (else 990→1200 skips a retry — plan-067 trap; Phase B AST-checks it).
+Statement update correct + work cell `ee669daf` untouched; §6b parity holds on the unchanged real block; closure clean.
+"Champion still 1500" is the better choice (landing 1310 in 2nd place also shows the sort). Nits:
+- N1 (fold): add the plan-067 separating comment above the chain (a real `if/else` champion check sits right after it). → FOLDED into the plan + implementation.
+- N2 (optional): name the playthrough in the real-program block's intro caption. → FOLDED (light caption tweak).
+
 #### [sol] (pending)
 #### [glm] (pending — opencode)
-#### [fable] (pending)
 
 ## Content Review
 _(pending)_
