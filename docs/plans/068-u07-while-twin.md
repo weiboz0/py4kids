@@ -115,7 +115,20 @@ predates the fix; no in-union alternative preserves the pinned asserts) — stru
 ### Plan-review outcome: **FULL 4-way consensus** — [self] APPROVE · [sol] APPROVE · [glm] APPROVE · [fable] APPROVE-WITH-NITS (N1/N2 folded). Gate CLOSED → implementation.
 
 ## Content Review
-_(pending)_
+
+### Round 1 (2026-09-21) — on implementation commit a901499. [self] inline; [sol]/[glm]/[fable] dispatched.
+
+#### [self] (2026-09-21)
+**APPROVE.** Executed: `solution-9-code` prints `True` + 3× "already on the board" + "The champion is still 1500.",
+all three asserts pass; loop body is one if/elif/else. Real-form piped `990/1200/850/1310` MATCHES the twin
+(prompts stripped). 0 `input(` text in any solutions code cell (the separating comment says "stands in for
+typing", not "input()" — the policy check tools/notebooks.py:279 is a raw-text regex that would flag even a
+comment; caught during Phase B, reworded). ci-local ALL GREEN; scope = plan + u07 solutions.ipynb + exercises.ipynb;
+exercise statement + real-block caption name the 990/1200/850/1310 playthrough; ids unchanged.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending)_
