@@ -27,12 +27,13 @@ Budget: four lessons of 60–90 minutes. Ten concepts land here — the year's j
   Rest: complete the in-class branching path with Exercise 2, then the required Exercise 6 range-width report and Exercise 7 truth check. Start these only after the `if`/`elif`/`else` ladders above.
 - **Lesson 4 — while-loop + debugging (60–90 min).**
   Open on the thread: one guess isn't a game; loop until correct.
-  30 min: the `while` ladder (loop until a typed sentinel → loop until the guess matches → add an `if` hint inside → the full random game). Every rung is teacher-run (it waits for typing) and counter-free by design.
+  30 min: the `while` ladder (loop until a typed sentinel → loop until the guess matches → add an `if` hint inside → the full random game). The typed rungs are teacher-run (they wait for typing); the scripted-player twin runs by itself and shows three trips with both hints. Every rung is counter-free by design.
   In-class pattern home: the **sentinel-loop** home is Exercise 8, now gathered in the closing
   **Algorithm Extension** section — name the pattern in class from the lesson Spotlight and run Exercise 8
   there (u02 adds no extra drills; it stays lean). The Spotlight is now followed by a short
-  worked-example ladder (comparison rungs → a deterministic `while` rung → the display-only interactive
-  game); like Exercise 8, that ladder is time-permitting/homework enrichment, not required in-class.
+  worked-example ladder (comparison rungs → a computer-guesser `while` rung (trip count can change each run) →
+  a scripted-player twin → the display-only interactive game); like Exercise 8, that ladder is time-permitting/homework enrichment, not required in-class.
+  Tip: run the computer-guesser rung several times and have students tally the trips on paper.
   Before coding, spend 2 minutes on an unplugged trace: everyone flips cards until someone finds the ace — when do you stop?
   20 min: deliberate-bug debugging session (practices error-messages): the forgotten-`int()` bug is in the lesson's broken/fixed pair; the `=`-for-`==` bug is TEACHER-IMPROVISED — type `while guess = secret:` live, let the SyntaxError land, and read it together.
   Rest: play; hand-tally guess counts for the paper leaderboard.
