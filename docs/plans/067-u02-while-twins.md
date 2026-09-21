@@ -173,7 +173,20 @@ New, FOLDED: the Out-of-scope claim "other units already iterate" was wrong for 
 post-exec report must record that plan-054 parity carries over (result lines unchanged); cell 88 `import random` and the Ex8 idx-24 pin were already folded.
 
 ## Content Review
-_(pending)_
+
+### Round 1 (2026-09-21) — on implementation commit 2e7c686. [self] inline; [sol]/[glm]/[fable] dispatched.
+
+#### [self] (2026-09-21)
+**APPROVE.** Phase B executed: cell 73 prints `Too high!/Too low!/Too high!/Correct! Case closed.`; cell 90 prints `3/9/7/Got it!`;
+cell 88 terminated in 200/200 runs (max 66 trips; 25 one-trip runs — the ~10% lucky case the Notice covers);
+Ex3 low/high, Ex5 deep/shallow, Ex8 high/high/low, Ch1 cold/HOT, all asserts pass.
+AST: all six scripted chains are a single `if/elif/else` whose final `else` assigns the secret VARIABLE.
+Real-form piped parity MATCHES on all six pairs (73↔75 with seed→37, 90↔92 with seed→7, Ex3/Ex5/Ex8/Ch1 ↔ markdown blocks).
+ci-local ALL GREEN (concept-scan PASS — no accumulator/list/range). Scope = the three u02 files; ids unchanged; idx-20 Exercise 7 cell untouched.
+
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending)_
