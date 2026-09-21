@@ -96,7 +96,13 @@ Statement update correct + work cell `ee669daf` untouched; §6b parity holds on 
 - N1 (fold): add the plan-067 separating comment above the chain (a real `if/else` champion check sits right after it). → FOLDED into the plan + implementation.
 - N2 (optional): name the playthrough in the real-program block's intro caption. → FOLDED (light caption tweak).
 
-#### [sol] (pending)
+#### [sol] (2026-09-21)
+**APPROVE** — no findings. Confirmed exactly 4 executable u07 while cells (f9ae6759=8, solution-9-code=1 defect,
+solution-13-code=3, solution-12-code=8; exercises has none); trace 990→1200→850→1310 gives 3 messages, end state
++ 3 asserts unchanged; in-memory scan of the full cell → no accumulator/unknown-method/used-but-unlisted; §6b
+piped parity exact after removing `New score: `; statement update necessary not scope creep, work cell stays
+empty no-exec; pedagogy-improvement classification correct, teacher-notes accurate; Phase B adequate.
+
 #### [glm] (pending — opencode)
 
 ## Content Review
