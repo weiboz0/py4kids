@@ -87,6 +87,7 @@ solutions keep their existing `random.seed(4)` + asserts.
 ### Phase A — edit the 7 code cells + 3 Notices + teacher-notes lines 30/34 (lesson.ipynb, solutions.ipynb, teacher-notes.md only)
 
 ### Phase B — verification
+- Post-exec report records §6b parity (result lines unchanged from plan 054, re-executed per the parity item below).
 - `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN
   (concept-scan proves no `accumulator`/list/`range` crept in; exec-lessons/exec-solutions prove termination).
 - Run each changed cell standalone: cell 73 prints exactly the 4 expected lines; cells 88/90 terminate and end with `Got it!`
@@ -102,8 +103,9 @@ solutions keep their existing `random.seed(4)` + asserts.
 
 ## Out of scope
 
-- No new concept, no exercise-statement change, no metadata change, no other unit
-  (other units' twins use taught loops/lists and already iterate).
+- No new concept, no exercise-statement change, no metadata change, no other unit.
+  **Known follow-up ([glm] §5):** u07 `solution-9-code` has the same defect class (`while new_score in scores:` retries once with a fixed `1310`).
+  Every other Book-1 `while` cell iterates genuinely (u04/u05/u10, cp02, project-01/02). u07 is a separate small plan — this one answers the u02 feedback.
 - The duplicated cell id `u2-ex8-code`/`u2-ex8-heading` in solutions.ipynb (idx 20 and 24) is pre-existing; ids stay unchanged here — separate cleanup.
 - Not an erratum (nothing was wrong or broken — a pedagogy improvement), so no `ERRATA.md` entry.
 - **Verification phase:** Phase B is the named verification phase.
@@ -140,7 +142,13 @@ design-003 deviation; Ex8 target pinned to idx 24 (duplicated id is pre-existing
 - finding 4: Phase B lacked design-§6 real-form parity execution → added piped twin↔real-form runs for all six pairs; cells 88 states `import random`.
 Closure PASS (randint taught cells 31–32, elif 57–59; no accumulator/loop-counter flag). cp01 Q5 confirmed NOT a missed twin (§6d condition form).
 Re-verify pending.
-#### [glm] (pending — opencode)
+#### [glm] (2026-09-21) — reviewed first draft b19df66
+**REJECT** on the same completeness gap ([fable] B1/B2 = Ex3/Ex5 cells + teacher-notes:34) — already FOLDED.
+Verified with the repo scanner: `concept_scan.detect()` on every proposed source → gaps NONE, unknown methods NONE, accumulator False;
+`randint` in TAUGHT_METHODS; seed 4 → 242 / 31; L4 chain prints the 4 predicted lines; 200 simulated computer-guesser runs → max 58 trips;
+unseeded lesson random is CI-safe (exec-lessons compares no output, lesson has no asserts, PDF build converts exercises only).
+New, FOLDED: the Out-of-scope claim "other units already iterate" was wrong for u07 `solution-9-code` → reworded + logged as a follow-up;
+post-exec report must record that plan-054 parity carries over (result lines unchanged); cell 88 `import random` and the Ex8 idx-24 pin were already folded.
 
 ## Content Review
 _(pending)_
