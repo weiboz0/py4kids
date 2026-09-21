@@ -103,7 +103,16 @@ solution-13-code=3, solution-12-code=8; exercises has none); trace 990→1200→
 piped parity exact after removing `New score: `; statement update necessary not scope creep, work cell stays
 empty no-exec; pedagogy-improvement classification correct, teacher-notes accurate; Phase B adequate.
 
-#### [glm] (pending — opencode)
+#### [glm] (2026-09-21)
+**APPROVE** — no blockers. Independent AST enumeration of every code cell in all 3 u07 notebooks: exactly 4 executable
+while cells (f9ae6759=8, solution-9-code=1 defect, solution-13-code=3, solution-12-code=8; exercises has zero). Executed
+the revised cell: 3 passes, 3 messages, end state + asserts unchanged. concept_scan.detect → gaps NONE / accumulator
+False / unknown methods NONE. §6b piped parity BYTE-IDENTICAL after stripping prompts. Statement update required (not
+scope creep). Erratum call, verification phase, teacher-notes audit, CI-safety, misnamed-id note all sound.
+Non-blocking observation: final `else` assigns the literal 1310 (no "secret variable" exists here; the same edit-hazard
+predates the fix; no in-union alternative preserves the pinned asserts) — structurally inapplicable, not a regression.
+
+### Plan-review outcome: **FULL 4-way consensus** — [self] APPROVE · [sol] APPROVE · [glm] APPROVE · [fable] APPROVE-WITH-NITS (N1/N2 folded). Gate CLOSED → implementation.
 
 ## Content Review
 _(pending)_
