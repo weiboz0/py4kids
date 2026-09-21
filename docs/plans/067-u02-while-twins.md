@@ -195,7 +195,14 @@ their unchanged statements; teacher-notes accurate; grep of the unit finds no st
 - N5 teacher-notes "tally the trips" tip as its own sentence. → FOLD.
 - N4 `[WONTFIX]` capitalization "Scripted player" (solutions comments start a sentence) vs "scripted player" (lesson, mid-comment).
 
-#### [sol] (pending)
+#### [sol] (2026-09-21)
+**APPROVE WITH NITS.** Standalone outputs match; cell 88 200/200 runs end `7`/`Got it!` (max 46 trips); AST: every scripted loop has exactly one
+mutating chain ending in an assignment of the secret variable; all six piped parity pairs match after prompt removal; concept-scan PASS
+(no accumulator/list/range; randint cell 31, elif cell 58); blind-solve confirms Ex3/Ex5/Ex8/Ch1 still satisfy their statements;
+hygiene/noexec/structure/cell-lint pass; changed cells exactly lesson 73/74/88/89/90/91 + solutions 8/14/24/27; idx-20 cell unchanged.
+- `[OPEN]` N1: teacher-notes:34 "trip count changes each run" is too absolute (two runs can tie) → "can change each run". → FOLD.
+- `[WONTFIX]` duplicated `u2-ex8-code` id — pre-existing, out of scope.
+
 #### [glm] (pending — opencode)
 
 ## Post-Execution Report
