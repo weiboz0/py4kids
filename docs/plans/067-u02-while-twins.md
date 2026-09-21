@@ -184,9 +184,19 @@ AST: all six scripted chains are a single `if/elif/else` whose final `else` assi
 Real-form piped parity MATCHES on all six pairs (73↔75 with seed→37, 90↔92 with seed→7, Ex3/Ex5/Ex8/Ch1 ↔ markdown blocks).
 ci-local ALL GREEN (concept-scan PASS — no accumulator/list/range). Scope = the three u02 files; ids unchanged; idx-20 Exercise 7 cell untouched.
 
+#### [fable] (2026-09-21)
+**APPROVE WITH NITS — nothing `[OPEN]`.** Ran all 7 changed cells (outputs as predicted; every solution chain shows both hints);
+traced cells 73/90 with an EDITED secret — both still terminate via `else: guess = secret`. Notices 74/89/91 accurate; solutions still answer
+their unchanged statements; teacher-notes accurate; grep of the unit finds no stale "deterministic"/"one pass" prose. Nits:
+- N1 blank line before the `# scripted player` comment in cell 73 (separates "give the hint" from "pick the next guess"). → FOLD.
+- N2 Notices 74/91 name the last guess as 37/7 while the code reads `guess = secret` — add a half-clause ("the last scripted line,
+  `guess = secret`, is the player finally getting it right"). → FOLD.
+- N3 Notice 89 "not a fixed number of lines" → smoother wording. → FOLD.
+- N5 teacher-notes "tally the trips" tip as its own sentence. → FOLD.
+- N4 `[WONTFIX]` capitalization "Scripted player" (solutions comments start a sentence) vs "scripted player" (lesson, mid-comment).
+
 #### [sol] (pending)
 #### [glm] (pending — opencode)
-#### [fable] (pending)
 
 ## Post-Execution Report
 _(pending)_
