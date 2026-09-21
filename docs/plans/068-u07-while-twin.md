@@ -141,6 +141,13 @@ input()` (shipped: `typing`) and the heading said "1 solution cell" (the caption
 reconciled the plan text to the shipped implementation (comment → "typing" + the raw-regex reason; heading → 2
 solution cells). No notebook change. Re-verifying [sol] on the reconciled plan.
 
+#### [sol] round 2 (2026-09-21) — on 42add05
+**APPROVE.** Prior doc-drift RESOLVED: plan "After" now matches `stands in for typing` + documents the raw-regex reason;
+heading says "2 solution cells + 1 exercise statement"; only notebook delta since a901499 is the markdown caption code-font.
+Fresh exec rc 0, True + 3 retries + "still 1500", asserts pass; 0 code-cell input() hits; §6b piped parity matches.
+
+### Content-review outcome: **FULL 4-way consensus** — [self]/[glm]/[sol] APPROVE · [fable] APPROVE-WITH-NITS (N1 folded, N2 kept). Gate CLOSED → PR.
+
 #### [glm] (2026-09-21)
 **APPROVE** — no blockers, no nits (reviewed a901499; the later caption code-font fold is cosmetic markdown, parity unaffected).
 Exec twin: `True` + 3× retry + "still 1500", asserts hold. Scanner gaps NONE / accumulator not detected / unknown methods ∅.
@@ -150,4 +157,23 @@ coherent; work cell empty/no-exec; no stale "990 and then 1310" anywhere. Scope 
 `[WONTFIX]` pre-existing misnamed id `solution-9-code` — already logged, ids unchanged here.
 
 ## Post-Execution Report
-_(pending)_
+
+**Status: COMPLETE.** The u07 follow-up flagged in plan 067 — the last one-pass `while` twin in Book 1's units.
+
+**What shipped** (u07 `solutions.ipynb` + `exercises.ipynb` only; ids unchanged; no metadata/teacher-notes change):
+- `solution-9-code` (Exercise 6 "Guard Against a Repeated Score"): the `while new_score in scores` retry was a single
+  `new_score = 1310` (one pass). Now a scripted-player `if/elif/else` chain `990 → 1200 → 850 → 1310` (all but the last are
+  on the board `[1500,1200,990,850]`) prints "That score is already on the board. Try again." **3 times** before exiting.
+  End state and the three asserts are unchanged.
+- Exercise 6 statement (`dfc665d7`) + real-program caption (`b05200000005`): suggested playthrough updated
+  "try 990 and then 1310" → "try 990, 1200, 850, then 1310" so the student's own run also shows repetition.
+
+**Gate history:** plan-review FULL 4-way consensus (all APPROVE; [fable] N1/N2 folded). Content-review FULL 4-way consensus
+([sol] REJECT→APPROVE on a plan-vs-implementation doc-drift only; implementation was correct throughout).
+
+**Verification:** `scripts/ci-local.sh` ALL GREEN; twin prints True + 3× retry + "still 1500", asserts pass; loop body is one
+`if/elif/else` with an off-board final `else`; §6b real-form piped `990/1200/850/1310` byte-identical modulo prompts;
+scope = plan + the two u07 notebooks.
+
+**Reusable gotcha:** the solutions-policy `input()` ban (tools/notebooks.py:279) is a raw-text regex `\binput\s*\(` — it flags
+the substring even inside a code COMMENT. Scripted-player comments must say "typing", not "input()".
