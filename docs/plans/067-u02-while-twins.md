@@ -22,7 +22,7 @@ So the multi-pass script must use only u02 concepts.
 
 ## The two idioms (both inside u02's union)
 
-1. **Computer-guesser** (`random-module`, introduced in u02 before `while-loop`):
+1. **Computer-guesser — rung cell 88 ONLY** (`random-module`, introduced in u02 before `while-loop`):
    `guess = random.randint(1, 10)` inside the loop.
    The loop runs an UNKNOWN number of trips until the sentinel — the real reason `while` exists —
    and it is line-for-line the real `input()` game with the read replaced by a random guess.
@@ -46,8 +46,8 @@ So the multi-pass script must use only u02 concepts.
 | lesson L4 Notice | `u02-l4-fixed-notice` (74) | "the fixed follow-up guess…" | names the scripted guesses and that the loop repeats once per wrong guess |
 | lesson AE rung | `dfe1ea40e81f` (88) | `guess = secret`, prints guess (1 pass) | computer-guesser: starts with `import random` (the cell has none today; a student may run it cold), `secret = 7`, `guess = 0` (a value that can never be the secret, so the loop always runs — consistent with cells 90/92), prints every guess so the TRIPS ARE VISIBLE, then `Got it!` |
 | lesson AE Notice | `a7ea18f50f76` (89) | "here one pass sets `guess` to the secret…" | the loop repeats an unknown number of times; run it again and the count changes; the match is the sentinel |
-| lesson AE twin | `u02-ae-fixed-twin` (90) | `guess = secret` (1 silent pass) | line-for-line the real game (cell 92): `secret = random.randint(1, 10)`, `guess = 0`, loop body `guess = random.randint(1, 10)`, `print("Got it!")` |
-| lesson AE Notice | `u02-ae-fixed-notice` (91) | "the scripted follow-up reaches the sentinel…" | the computer's random guesses stand in for the typing player; same result line as the real game below |
+| lesson AE twin | `u02-ae-fixed-twin` (90) — the cell the author pasted | `guess = secret` (1 silent pass) | **deterministic scripted player** ([sol] finding 3): `secret = 7`, `guess = 0`, body = `if guess == 0: guess = 3 / elif guess == 3: guess = 9 / else: guess = 7` then `print(guess)` (stands in for the typed guess the player would see on screen), then `print("Got it!")` → prints `3`, `9`, `7`, `Got it!` — 3 visible passes, finite by construction |
+| lesson AE Notice | `u02-ae-fixed-notice` (91) | "the scripted follow-up reaches the sentinel…" | a scripted player guesses 3, 9, then 7; the body runs once per wrong guess; same `Got it!` result line as the real game below, which swaps the scripted lines for one `input()` line |
 | solutions Ex3 (two-player) | `u2-ex4-code` (idx 8) | 50 → `player_b_guess = player_a_secret` | scripted Player B 50 → 75 → 63 (secret 63): `Too low, Player B!`, `Too high, Player B!`, correct; assert unchanged ([fable] B1) |
 | solutions Ex5 (treasure) | `u2-ex6-code` (idx 14) | 25 → `guessed_depth = secret_depth` | scripted 25 → 10 → secret (seed 4 → 16): `Too deep!`, `Too shallow!`, found; final `else` assigns `secret_depth`; assert unchanged ([fable] B1) |
 | solutions Ex8 | the SECOND cell with id `u2-ex8-code` — idx 24, "Number Detective 1–1,000" (the id is duplicated at idx 20; pre-existing, NOT fixed here — follow-up) | 500 → `guess = secret` | scripted player 500 → 250 → 240 → secret (seed 4 → 242): `Too high!`, `Too high!`, `Too low!`, correct; final `else: guess = secret` keeps it seed-proof; assert unchanged |
@@ -61,9 +61,11 @@ Line 30 says "Every rung is teacher-run (it waits for typing)" — untrue since 
 Notice content ([fable] check 3): cell 74 says a self-running notebook cannot wait for typing, so a scripted player guesses 50, 25, 40, 37,
 the body runs once per wrong guess (three times), and the real game below swaps the scripted lines for one `input()` line;
 cell 89 says nobody — not even the programmer — knows the trip count ahead of time, run it again and count, and that is why it is a `while`;
-cell 91 says the random guess stands in for the typing player, the loop is silent like the real game's body, and cell 88 above shows the trips.
-**Division of labour:** cell 88 makes the trips VISIBLE (fixed secret, prints each guess); cell 90 is the silent §6b PARITY twin of cell 92 —
-deliberately similar, not redundant.
+cell 91 says a scripted player guesses 3, 9, 7 and the real game below replaces those lines with one `input()` line.
+**Division of labour ([sol] finding 3):** cell 88 is a teaching RUNG, not a design-003 twin — the unseeded computer-guesser shows that the trip count is unknown
+(a lucky first-try match, ~10% of runs, is part of the lesson: "run it again"); cell 90 is the design-003 TWIN of cell 92 and is fully deterministic and finite.
+The twin's per-trip `print(guess)` is a pedagogy print standing in for the typed guess echoed on screen; §6b compares the computed RESULT line only
+(u05 precedent: pedagogy prints are excluded from parity).
 
 Unchanged: all `no-exec` real `input()` forms, all markdown real-program blocks, exercises.ipynb statements,
 manifest/coverage-map (no concept added — `random-module`, `elif-else`, `comparison` are already introduced by u02).
@@ -74,8 +76,10 @@ Solutions Ch2 already runs a genuine multi-pass scripted loop — untouched.
 §6(b) result-line parity is preserved: every twin still ends on the same result line as its real form
 (`Correct! Case closed.` / `Got it!` / the Ex8 and Ch1 final lines).
 Twins still run unattended with no `input()`.
-**Deliberate deviation:** the two AE computer-guesser cells are no longer strictly "fixed-data" twins — they are unseeded random.
-Accepted because lesson cells carry no asserts, termination has probability 1, and the lesson never teaches `random.seed`;
+Every design-003 TWIN (cells 73, 90, and the four solutions) is deterministic and finite by construction (final `else` assigns the secret).
+**One deliberate non-twin:** rung cell 88 is unseeded random. Its run time has no finite bound in theory, but `P(trips > n) = 0.9^n`
+(`n=200` → 7e-10; exceeding the 120 s exec-lessons timeout would need ~1e8 trips, probability 0 for all practical purposes).
+Accepted because it is a rung (no asserts, no parity obligation) and the lesson never teaches `random.seed`;
 solutions keep their existing `random.seed(4)` + asserts.
 
 ## Phases
@@ -89,6 +93,10 @@ solutions keep their existing `random.seed(4)` + asserts.
   (repeat 200× to exercise the random path and RECORD the maximum trip count seen);
   Ex3/Ex5/Ex8/Ch1 each print their expected hint sequence (both hints) and pass their asserts;
   AST check that every scripted chain is a single `if/elif/else` (no sibling `if`s on the tested variable).
+- **Real-form parity execution ([sol] finding 4, design §6):** for every changed twin↔real-form pair, `ast.parse` the real form and run it in a
+  fresh process with piped guesses that replay the twin's scripted sequence (injecting `random.seed` where the real form draws the secret,
+  and piping the drawn secret as the final guess), then compare hint lines + the final result line with the twin:
+  lesson 73↔75 and 90↔92; solutions Ex3, Ex5, Ex8, Ch1 ↔ their markdown `**The real program**` blocks.
 - Scope allowlist: `git diff --name-only $(git merge-base HEAD main)..HEAD` =
   this plan + u02 `lesson.ipynb` + u02 `solutions.ipynb` + u02 `teacher-notes.md`.
 
@@ -124,7 +132,14 @@ separating comment between the hint `if/else` and the scripted chain; cell 88 st
 specific Notice content; 88-visible / 90-parity division of labour; unseeded-random recorded as a deliberate
 design-003 deviation; Ex8 target pinned to idx 24 (duplicated id is pre-existing, out of scope); record max trip count.
 
-#### [sol] (pending)
+#### [sol] (2026-09-21) — reviewed first draft b19df66
+**REJECT.** Findings 1 (Ex3/Ex5 twins missed) and 2 (teacher-notes lines 30/34) = [fable] B1/B2, already folded. New, both FOLDED:
+- finding 3: the random idiom has a 10% one-pass chance, cell 90 would stay silent (repetition invisible), and its run time is unbounded →
+  cell 90 (the design-003 twin, and the very cell the author pasted) is now a DETERMINISTIC scripted player that prints each guess (3, 9, 7);
+  the random computer-guesser survives only as rung cell 88, documented as a deliberate non-twin with its probability bound.
+- finding 4: Phase B lacked design-§6 real-form parity execution → added piped twin↔real-form runs for all six pairs; cells 88 states `import random`.
+Closure PASS (randint taught cells 31–32, elif 57–59; no accumulator/loop-counter flag). cp01 Q5 confirmed NOT a missed twin (§6d condition form).
+Re-verify pending.
 #### [glm] (pending — opencode)
 
 ## Content Review
