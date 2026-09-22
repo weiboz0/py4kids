@@ -20,12 +20,16 @@ student notebooks; no `input()` in graded cells). Book 1b stays `buildout: true`
 **unit-02-numbers-and-arithmetic** — `lessons: 3`
 - introduces: `[int-type, float-type, arithmetic, type-conversion, boolean, comparison]`
 - requires: `[print, variable, input, f-string]`
-- practices: `[string-literal, naming, comment, error-messages, run-program, string-concat, for-loop]`
-  - **`for-loop` is the deliberate FORWARD tag** (design §5: U02 is the first unit to demonstrate the
-    forward-reaching `practices:` convention — its own example is "a small loop inside a numbers-unit
-    problem"). U02's lesson carries ONE "peek ahead" example that sums several given numbers with a
-    `for` loop to motivate the loops unit; it is lesson-only (NOT a core exercise; [fable] r1 #7 keeps
-    `if`/loops out of U02 core). This makes the shipped U01 teacher-notes pointer true.
+- practices: `[string-literal, naming, comment, error-messages, run-program, string-concat, for-loop, range-function, accumulator]`
+  - **`for-loop`/`range-function`/`accumulator` are the deliberate FORWARD tags** (design §5: U02 is the
+    first unit to demonstrate the forward-reaching `practices:` convention — its own example is "a small
+    loop inside a numbers-unit problem"). U02's lesson carries ONE **boxed "Peek ahead — not needed for
+    the exercises"** example that sums `range(1, 101)` into a running `total` (expected `5050`) — a case
+    where writing it out by hand is visibly absurd, so the loop earns its keep ([fable] r2). It uses
+    `for` + `range` + the accumulator idiom (`total = total + n`), all honestly tagged; it is lesson-only
+    (NOT a core exercise; [fable] r1 #7 keeps `if`/loops out of U02 core), carries a one-line English
+    gloss ("for each number `n` from 1 to 100, add it to `total`"), and students never modify it
+    (teacher-notes: "read it aloud, don't teach it"). This makes the shipped U01 pointer true.
 
 **unit-03-decisions** — `lessons: 3`
 - introduces: `[logical-ops, if-statement, elif-else, conditional-nesting]`
@@ -45,7 +49,7 @@ student notebooks; no `input()` in graded cells). Book 1b stays `buildout: true`
 
 Closure (strict over `requires`): U02 requires ⊆ U01; U03 requires ⊆ U01∪U02; checkpoint requires ⊆
 U01–U03. No entry practices its own introductions. `prereq-check` (fastforward) validates `requires`
-only; `coverage-check`/`checkpoint-check` validate the rest.
+only; `coverage-check` (which runs `checkpoint_findings`) validates the rest.
 
 ### Design §6 practice-coverage record (manual, per-plan)
 
@@ -58,9 +62,10 @@ capstone practice-coverage anchor stays dormant until the Algorithm Challenge (s
 ## Authoring guardrails (Phase C/D) — folded from plan-review [fable]/[glm] r1
 
 **U02 (numbers):**
-- **No `round`/`min`/`max`/`abs`** ([fable] #1/#3, [glm] #3): they are `builtin-functions` (U07) and the
-  scanner tags them; fastforward won't flag them in a unit, so the *plan* forbids them. Rounding/change
-  = integer `//` and `%`; "distance"/sign = subtraction + comparison.
+- **No `round`/`min`/`max`/`abs`/`sum`/`len`** ([fable] #1/#3/r2, [glm] #3): all are `builtin-functions`
+  (U07) in the scanner's `BUILTINS`; fastforward won't flag them in a unit, so the *plan* forbids them.
+  Rounding/change = integer `//` and `%`; "distance"/sign = subtraction + comparison; the peek-ahead sum
+  uses the accumulator idiom (`total = total + n`), never `sum(...)`.
 - **Pin float output** ([fable] #2): expected output shows exactly what Python prints — `10 / 2` → `5.0`,
   `(3+4+5)/3` → `4.0`, `7/2` → `3.5`. Choose given values that land on `.0`/`.5`; never `1/3` or
   `0.1+0.2`; NO `:.2f` format specs. A **Notice** pins "`/` always gives a float, `//` gives an int".
@@ -70,8 +75,8 @@ capstone practice-coverage anchor stays dormant until the Algorithm Challenge (s
   fixed with `str()` / f-string; pair with `"3" + "4"` → `"34"` vs `3 + 4` → `7` (motivates `int()` on
   given text, e.g. `age_text = "12"`).
 - **Keep `if` out of core** ([fable] #7): "compare two numbers" PRINTS the boolean
-  (`print(a > b)` / `f"Is {n} even? {n % 2 == 0}"`), never an `if`; the `for`-loop peek-ahead is the only
-  forward reach and is lesson-only.
+  (`print(a > b)` / `f"Is {n} even? {n % 2 == 0}"`), never an `if`; the boxed `for`-loop peek-ahead
+  (using `for` + `range` + accumulator, all tagged) is the only forward reach in U02 and is lesson-only.
 - Digit exercises state the operand range ("a two-digit number"); `int("12")` samples show the quotes ([fable] #10).
 
 **U03 (decisions):**
@@ -83,11 +88,20 @@ capstone practice-coverage anchor stays dormant until the Algorithm Challenge (s
   pre-explained ("divisible by 4, except centuries, except every 400"), samples 1900/2000/2024; opener
   tests a single given year (pre-loop; separate `if`s if several).
 - **input try-it** ([glm] #4): reuse the U01 Ex8 pattern — a fenced "try `input()` yourself" markdown
-  snippet + a fixed-value stand-in in the graded cell; no `input()` in graded/solution code.
+  snippet + a fixed-value stand-in in the graded cell.
 
 **Both / checkpoint:** core ≤7 exercises per unit ([fable] #9), design §3 "logic puzzles" go in Challenge
-only; each teacher-notes carries a "60-MINUTE CUT" line (U01 precedent). The checkpoint is un-themed,
-mixes U01–U03, assesses only introduced concepts, and is solution-free like a unit's exercises.
+only; each teacher-notes carries a "60-MINUTE CUT" line (U01 precedent). The **try-it / fixed-value
+stand-in pattern applies wherever a lesson shows `input()` live**; no `input()` in ANY graded or solution
+code cell (both units) ([glm] r2). The checkpoint is un-themed, mixes U01–U03, assesses only introduced
+concepts, and is solution-free like a unit's exercises. **Checkpoint strict-scan traps** ([fable] r2 —
+checkpoints keep the strict per-entry allowed set, NOT the fastforward unit allowance): checkpoint code
+uses **no self-referential reassignment (`x = x + …`, `+=` → `accumulator`), no loops, no lists, and no
+builtins beyond `print`/`int`/`float`/`str`**. **Checkpoint mix** ([fable] r2): 6–8 problems with a
+declared balance — ≈2 U01 (output / f-string / variables), 2–3 U02 (arithmetic / type-conversion /
+float-output), 2–3 U03 (incl. one order-sensitive `elif` ladder and one `and`/`or` range test), plus one
+traceback-reading item — so the checkpoint genuinely exercises every id it claims to practice, and the
+grading notes key each problem to its concept(s).
 
 ## Phases
 
@@ -148,8 +162,21 @@ leap-year formula; `if` out of U02 core; practice bookkeeping via the checkpoint
 mini-CP wording).
 
 ### Round 2 (2026-09-22) — revised with the checkpoint, the `for-loop` forward tag, the §6 record, and
-the authoring guardrails. Re-dispatching [sol]/[glm]/[fable].
-_(Awaiting round-2 verdicts.)_
+the authoring guardrails.
+- **[sol]** — **APPROVE WITH NITS.** Both blockers verified resolved (forward tag legal/lesson-only;
+  checkpoint schema-correct + strict + §6 record satisfies design). Nits FOLDED: dropped the non-existent
+  `checkpoint-check`; the summing peek also uses `accumulator` → tagged (`for-loop`/`range-function`/
+  `accumulator`) and wording fixed.
+- **[glm]** (volcengine-plan/glm-5.3) — **APPROVE WITH NITS.** Verified GREEN + mutation-tested (forward
+  tag in `requires` → FAIL; checkpoint practicing an untaught id → FAIL; non-empty checkpoint introduces
+  → FAIL). Nits FOLDED: `checkpoint-check` wording; input try-it clause broadened to Phase C.
+- **[fable]** — **APPROVE WITH NITS.** All 10 round-1 guardrails confirmed captured. Nits FOLDED: builtin
+  ban extended to `sum`/`len`; peek-ahead made to "earn its keep" (sum `range(1,101)`→5050, boxed, gloss,
+  read-aloud) with honest tags; checkpoint strict-scan traps + 6–8 declared-mix guidance added.
+
+### Plan-review outcome: **FULL 4-way consensus** — [self] APPROVE · [sol]/[glm]/[fable] APPROVE WITH NITS,
+all nits folded, no open blockers. Two rounds (round 1 = 2× REJECT on the U02 forward-tag + missing
+checkpoint/§6; round 2 clean). Gate CLOSED → implementation (Phases B–E).
 
 ## Content Review
 
