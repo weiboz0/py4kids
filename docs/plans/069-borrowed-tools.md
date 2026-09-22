@@ -319,7 +319,17 @@ dispatched); dependency_baseline(book1) empty so reverse-graph dependent check w
 - B5: Phase D must add the map↔manifest auxiliary-VALUE mismatch mutation (only the invariant + version-mismatch
   are present today).
 
-#### [glm] round 3 — pending
+#### [glm] round 3 (2026-09-21)
+**APPROVE WITH NITS** — B1 resolved (empirically: exactly 20 input-fences, 0 SyntaxErrors, 0 `.split()` in book1
+→ empty-migration Phase E green); the 4 must-fold residuals were identical to [sol]'s and are now folded.
+
+#### [sol] round 4 / final (2026-09-21)
+**APPROVE** — all 4 round-3 residuals confirmed resolved (B1a K2-mechanism-empty-table, B1b k2-exceptions.yaml in
+allowlist, B1c per-statement lock, B5 map↔manifest value-mismatch + `1+n` operand-swap).
+
+### Plan-review outcome: **FULL 4-way consensus** — [self]/[sol] APPROVE · [fable]/[glm] APPROVE-WITH-NITS (all
+folded). 3 review rounds (r1 bundled draft → restructured to tooling-only per user Q4; r2/r3 tightened the tooling
+contract). Gate CLOSED → Phase A (governance wording surfaced to the user for sign-off before merge).
 
 ## Content Review
 _(pending)_
