@@ -95,6 +95,10 @@ introduction → practice → checkpoint → syllabus, per `coverage_findings`):
   fails, and exceeding the lesson *upper* bound STILL fails (relaxation is completeness/lower-bound only).
 - fastforward scan boundary: an unlisted **detectable** concept is accepted in a **unit** entry but
   **rejected in a checkpoint AND in a project**, untaught-method detection still firing in all three.
+- **fastforward prereq boundary** ([sol]-r3): in a fastforward fixture, a not-yet-introduced concept in a
+  unit's **`requires`** STILL fails `prereq_findings`, while the **same** concept in **`practices`**
+  PASSES — proving the new branch drops only `practices`, not both fields (`curriculum.py:227` currently
+  checks `requires | practices` together, so an impl that exempts both must be caught here).
 - uniqueness: the `variant_of` exemption applies **only** when an id's owner-set ⊆ {variant, parent} — a
   triple collision (id also defined by `book2`) STILL fails ([glm]-r1).
 `syllabus_findings` needs no code change (matches only pipe-delimited rows) — Book 1b's `syllabus.md`
@@ -322,9 +326,23 @@ prove narrow scope (duplicate-intro / upper-bound still fail under buildout; sca
 checkpoints+projects-no; triple-collision fails); `.gitkeep` + `input()`-in-markdown-only + notebook floors
 pinned; buildout is the explicit flag (non-circular). No open [self] blockers.
 
-### Round 3 (2026-09-21) — revised for round-2 folds. Re-dispatching [sol] only (the sole round-2 REJECT;
-its blockers were additive integration/test precision that do not change the approach [glm]/[fable] approved).
-_(Awaiting [sol] on the round-3 commit.)_
+### Round 3 (2026-09-21) — on commit af5992b. Re-dispatched [sol] only (the sole round-2 REJECT).
+
+#### [sol] round 3 — **REJECT** (round-2 B1/B2, terminology, .gitkeep, input() all verified resolved;
+one residual blocker):
+- B3 residual: the mutation set proved buildout completeness/upper-bound + scan boundary + triple-collision,
+  but did NOT mandate a test for the **fastforward prereq** relaxation — `prereq_findings`
+  (`curriculum.py:227`) checks `requires | practices` together, and the plan adds a branch dropping only
+  `practices`; the existing strict-fixture test (`test_tools.py:1198-1217`) can't detect an impl that
+  exempts BOTH fields, and U01 can't cover it (U02 is the first forward-practice site). → **FOLDED:** added a
+  fastforward-prereq-boundary mutation test (forward concept in `requires` still fails; same in `practices`
+  passes).
+[sol] round 3 explicitly re-verified B1 (no registry test red between phases; pinned order safe — no
+monotonic/sorting assertion in test_books.py), B2 (all check spellings match `checks.py:26-44`;
+build-pdf.sh generic; test_tools.py:1227 is the CI-contract test), and the .gitkeep / no-input() folds.
+
+### Round 4 (2026-09-21) — added the fastforward-prereq-boundary mutation test. Re-dispatching [sol] only.
+_(Awaiting [sol] on the round-4 commit.)_
 
 ## Content Review
 
