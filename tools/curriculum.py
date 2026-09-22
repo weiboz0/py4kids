@@ -259,7 +259,9 @@ def prereq_findings(root: Path, book: str, unit: str | None = None) -> list[str]
         return schema_findings
     findings = []
     seen = dependency_baseline(root, book)
-    ordered_fields = (
+    # Which fields must close over already-introduced concepts. Fastforward books check
+    # `requires` only (a unit's core teaching); `practices` may reach forward. Not an ordering.
+    checked_fields = (
         ("requires",)
         if prereq_policy(root, book) == "fastforward"
         else ("requires", "practices")
@@ -267,7 +269,7 @@ def prereq_findings(root: Path, book: str, unit: str | None = None) -> list[str]
     for entry in _map_data(root, book).get("entries", []):
         missing = {
             concept
-            for field in ordered_fields
+            for field in checked_fields
             for concept in entry.get(field, [])
         } - seen
         if missing:

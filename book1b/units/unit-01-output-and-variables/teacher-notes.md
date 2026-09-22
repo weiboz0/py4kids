@@ -40,11 +40,21 @@ the *Notice* lines let students self-serve it.
 
 ## Exercises — core vs. extra vs. challenge
 
-The bank is intentionally large (12 exercises); it is partitioned so a single lesson still fits 60–90 min:
-- **Core (Exercises 1–6):** every student completes these in class — they exercise all ten concepts on
-  the fact-card family of problems (welcome sign, labeled card, keyboard-filled card).
-- **Extra practice (Exercises 7–10):** variety for fast finishers or homework.
-- **Challenges (Exercises 11–12):** optional stretch; no core exercise depends on them.
+The bank is intentionally large (13 exercises); it is partitioned so a single lesson still fits 60–90 min:
+- **Core (Exercises 1–7):** every student completes these in class — output, comments, string literals,
+  concatenation, f-strings, reading a traceback (Ex6), and — importantly — **writing their own named
+  variables** (Ex7, "Club Meeting Reminder": the student chooses the names and writes the assignments,
+  not just the `print`).
+- **Extra practice (Exercises 8–11):** variety for fast finishers or homework. Ex8 ("Fixed-Value
+  Greeting") is where the `input()` idea is practiced in the graded, notebook-safe way (a fixed value
+  stands in for typing). For a genuine hands-on `input()`, use the "try it yourself" snippet in the
+  exercises intro — students type it into a NEW cell and run it live with you; graded cells never call
+  `input()`.
+- **Challenges (Exercises 12–13):** optional stretch; no core exercise depends on them. Ex12 practices
+  **reassignment** (reuse the same variables for the second badge); Ex13 is a two-bug error hunt.
+
+`input()` itself is taught live in Lesson 2 and tried by hand (above); the core set does not grade it,
+so do run the live `input()` demo — it is the most engaging moment in the unit.
 
 Every exercise uses the **pre-function form** — given fixed values, produce an exact output — because
 functions are not taught until Unit 07.
@@ -55,7 +65,9 @@ demonstrated** — no forward tags are needed here.)
 ## Common mistakes
 
 - Forgetting the quotes around a string literal (`NameError`) — a planned traceback-reading moment.
-- Joining text to a non-string with `+` (`TypeError`) — everything in a `+` chain must be text.
+- Adding a space in the wrong place (or forgetting one) inside a `+` chain — everything joined with `+`
+  must be text, and the spaces are yours to add. (The `TypeError` from joining text to a *number* waits
+  for Unit 02, where numbers arrive.)
 - Vague variable names (`a`, `thing`) that make the card code unreadable a week later.
 - Expecting `#` comments to appear in the output — they are for humans, not the program.
 - Overwriting a saved value by accident and wondering why the card changed.
@@ -72,5 +84,5 @@ demonstrated** — no forward tags are needed here.)
 
 - Strugglers: give the fact-card code with the values blanked out and have them fill in and run it —
   seeing the card change from their own values is the win.
-- Fast finishers: Extra practice (7–10), then the Challenges (11–12).
+- Fast finishers: Extra practice (8–11), then the Challenges (12–13).
 - Middle tier: rewrite one `+`-joined line as an f-string and confirm identical output.

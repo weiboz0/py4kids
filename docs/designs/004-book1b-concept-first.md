@@ -213,14 +213,20 @@ Every exercise is a **self-contained problem** with:
 - a **testable solution** whose form depends on whether functions have been taught yet:
   - **Before U07 (`def-function`)** — the *pre-function* form: the exercise is stated as "given these
     values, produce this exact output"; `input()` is replaced by **fixed sample values** in
-    `solutions.ipynb`; and the solution `assert`s the assembled string/number against the expected
-    result (exactly Book 1 U01's pattern, e.g. `assert story == "…"`). U01, the template unit, uses
-    this form.
+    `solutions.ipynb`. The solution **mirrors the student's visible form** (the same separate `print`
+    calls a student writes — never an untaught `"\n"`-joined string or multi-line join as the shown
+    answer), and **asserts the produced output line by line** against the expected text (a 4-line card
+    → 4 line asserts; a 1-line answer → 1). A "repair the error" exercise shows the *directly repaired
+    instruction*, with any assert added separately — the reference answer must model the operation the
+    student was asked to do.
   - **From U07 on** — the *function* form: the solution defines the function and asserts it against
-    several cases, fixed seeds where random.
-- **Per-exercise assertion rigor** ("several cases per exercise") is a **content-gate authoring rule**
-  verified by reviewers, not a CI guarantee — `notebooks.py` only enforces ≥3 assert-bearing cells
-  across the whole notebook (see §6).
+    **several distinct input cases**, fixed seeds where random.
+- **Assertion rigor is a content-gate authoring rule** (reviewers verify it; `notebooks.py` only
+  enforces ≥3 assert-bearing cells notebook-wide, see §6). Its meaning is form-dependent: the
+  **pre-function** form asserts every line of the one deterministic expected output (there is a single
+  fixed-input case, so per-line asserts ARE the "several" — not several distinct inputs); the
+  **function** form asserts several distinct inputs. Turtle exercises are exempt (verified by execution
+  + `turtle-check`).
 - **Turtle exercises are exempt from the assert rule.** A drawing cannot be asserted; turtle `.py`
   assets (U06, and the turtle practice sites in U07/U08) are verified by execution + `turtle-check`
   (the `fake_turtle` harness), exactly as in Book 1 — not by output assertions.

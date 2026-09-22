@@ -148,12 +148,13 @@ but U01 needs little of it.
   labels, and formatting. ≥2 `stretch` ("Challenge") exercises; core never depends on them. NO solutions,
   no executed outputs.
 - **solutions.ipynb** — runs top-to-bottom clean with fixed seeds, using the **pre-function form** (U01
-  is before U07/`def-function`, design §7): each exercise is "given these values, produce this exact
-  output", `input()` is replaced by fixed sample values, and the solution `assert`s the assembled
-  string/number (e.g. `assert fact_sheet == "…"`). Several cases per exercise (a content-gate rule — the
-  CI floor is only ≥3 assert-bearing cells notebook-wide, design §6). **No `input()` in ANY solutions
-  code cell** — `_solution_policy_findings` flags `input(` tag-blind (`notebooks.py:278-280`); real
-  `input()` forms live only in markdown, as in Book 1 ([glm]-r1 nit 6).
+  is before U07/`def-function`, design §7). Each solution **mirrors the student's visible form** — the
+  same separate `print` calls, never an untaught `"\n"`-joined string or multi-line join as the shown
+  answer — and **asserts the produced output line by line** against the exact expected text (a 4-line
+  card → 4 line asserts). A "repair the error" exercise shows the *directly repaired instruction*, with
+  the assert added separately. **No `input()` in ANY solutions code cell** — `_solution_policy_findings`
+  flags `input(` tag-blind (`notebooks.py:278-280`); real `input()` forms live only in markdown, as in
+  Book 1 ([glm]-r1 nit 6). Per-line asserts are the pre-function reading of "assertion rigor" (design §7).
 - **Notebook structure floors to pin for the fresh Codex session** ([glm]-r1 nit 7): `exercises.ipynb`
   has **≥6 `## Exercise N` headings** in the exact format (`notebooks.py:533-535`) and **no**
   "Solution"-like headings (`notebooks.py:500-513`); `solutions.ipynb` **mirrors every exercise heading**
@@ -372,7 +373,33 @@ used beyond U01's introduces; `input()` appears only in markdown; no arithmetic/
 original. Tooling reviewed in Phase A/B (fixture + mutation tests green; Book 1/Book 2 unchanged; full
 ci-local ALL GREEN across the three books). No open [self] findings.
 
-_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable].)_
+### Review 1 — [fable] (2026-09-22) — **APPROVE WITH NITS** (no Must Fix). Blind-solved 12/12 exact match.
+1. `[FIXED]` Ex12 broken line has two spaces → literal repair mismatches; and SyntaxError precedes NameError so "repair the first error" misleads. Should Fix. → one space + reworded to iterative "fix the error the traceback shows first, re-run, fix the next".
+2. `[FIXED]` Students never author a variable (all prefilled). Should Fix. → added a core exercise where the student writes their own named variables + assignment.
+3. `[FIXED]` CI-speak in student text; students never actually run `input()`. Should Fix. → de-jargoned lesson text + added a hands-on "try `input()` in a new cell with your teacher" guidance.
+4. `[FIXED]` Undefined "traceback"/"operator"/"assignment". → defined on first use.
+5. `[FIXED]` Solutions use untaught `\n`/multi-line as the shown answer; asserts one case. Should Fix. → solutions re-authored to mirror the student `print` form with per-line asserts (design §7 clarified).
+6. `[FIXED]` Challenge 1 easier than core Ex8. Nice. → reworked to practice reassignment.
+7. `[FIXED]` teacher-notes inaccuracies (core doesn't touch input/naming; no keyboard-card in core; forward TypeError). → teacher-notes rewritten to match the revised set.
+8. `[FIXED]` Engagement "make it yours". Nice. → explicit make-it-yours step in the final build.
+9. `[FIXED]` "no list/loop" untaught-noise in student text. Nice. → removed from student-facing text.
+
+### Review 1 — [glm] (2026-09-22, volcengine-plan/glm-5.3) — **APPROVE WITH NITS**. Blind-solved 12/12; ci-local ALL GREEN.
+1. `[FIXED]` Solutions Ex8/10/11 use untaught `\n`/multi-line as the visible path. Should Fix. → (same fix as [fable] 5).
+2. `[FIXED]` Ex12 "first error" wording. Nice. → reworded.
+3. `[FIXED]` Ex8 given values identical to lesson final build (verbatim retype). Nice. → varied the values.
+4. `[FIXED]` Record the pre-function one-assert reading vs design §6. Nice. → design §7 now defines per-line asserts as the pre-function rigor; §6/§7 reconciled.
+5. `[FIXED]` `curriculum.py` `ordered_fields` misnames the logic. Nice. → renamed `checked_fields` + comment.
+
+### Review 1 — [sol] (2026-09-22, gpt-5.6-sol) — **REJECT**. Blind-solved 12/12 correct outputs; blockers on the assertion contract.
+1. `[FIXED]` **Must Fix** — every exercise asserts one case; the design/plan "several cases per exercise" contract is unmet. → **Contract clarified** (design §7): for the pre-function form there is ONE deterministic fixed-input case, so rigor = asserting the expected output **line by line** (a 4-line card → 4 asserts); "several distinct input cases" is the FUNCTION-form rule (U07+). Both [fable] and [glm] endorsed this reading. Solutions re-authored to per-line asserts, satisfying it concretely.
+2. `[FIXED]` Ex6 solution rewrites the instruction (`result = …`) instead of repairing it. Should Fix. → solutions now show the directly repaired instruction, assert separately.
+3. `[FIXED]` teacher-notes overclaim (core touches all 10 / "keyboard-filled card") + no real `input()` practice. Should Fix. → teacher-notes corrected + hands-on `input()` guidance added.
+
+### Content-review round 1 outcome: 3× APPROVE-WITH-NITS ([self]/[fable]/[glm]) + 1 REJECT ([sol], Must Fix on the assertion contract). All findings folded (notebooks re-authored + design §7 contract clarified + tooling rename + teacher-notes). Re-review round 2 dispatched.
+
+### Round 2 (2026-09-22) — after folding all round-1 content findings.
+_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable] on the revised commit.)_
 
 ## Post-Execution Report
 
