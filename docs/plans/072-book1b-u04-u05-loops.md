@@ -197,7 +197,21 @@ adaptation, honest metadata, lesson outline). Gate CLOSED → implementation.
 
 ## Content Review
 
-_(4-way content-review gate — filled before PR.)_
+Scope: U04 + U05 + checkpoint-02 content (lessons/exercises/solutions/checkpoint/teacher-notes/manifests).
+Commit 722b64a. Tooling unchanged since plan 070.
+
+### Review 1 — [self] (2026-09-22) — **APPROVE.**
+Full `ci-local.sh` ALL GREEN (three books): `exec-solutions` passes so every exercise's asserts hold
+(correctness) incl. the loop STATE asserts; `exec-lessons` runs both lessons incl. the 5050 reproduction
+and the tagged NameError/infinite-loop beats. Structural audit: U04 11 exercises / 6 stretch, U05 11 / 6,
+checkpoint 7 `## Question` (6–8); solutions mirror all headings (11/11/7) with a non-vacuous assert each;
+no `input()` and no `+=` in any code cell; U04 has no `for`/`range` (while-only); no executed outputs, no
+"Solution" headings, every cell has an id. Guardrails verified present: reassignment rung, infinite-loop
+`no-exec` beat + interrupt Notice, off-by-one + `NameError` traceback beats, sentinel (Collatz / `while
+True`+break) with `steps` as the printed summary, string-accumulation rows (no `end=`/`sep=`), primality
+flag with n ≥ 2, nested-classify (`conditional-nesting`). Openings are problems. No open [self] findings.
+
+_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable].)_
 
 ## Post-Execution Report
 
