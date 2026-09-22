@@ -13,7 +13,7 @@ question backgrounds"; "no budget cap for # of exercises."
 Book 1b is a concept-first, story-light Year-1 edition covering the **same 62 concepts** as Book 1,
 authored fresh with mini-CP / LeetCode-style problems.
 This plan lays the foundation and proves the whole pipeline end-to-end:
-the three book-aware tooling changes fastforward needs, the `book1b/` scaffolding, and **U01 authored
+the book-aware tooling changes fastforward needs (Tooling A–D), the `book1b/` scaffolding, and **U01 authored
 completely** as the template every later unit follows.
 Units U02–U13, the checkpoints, and the end-of-book Algorithm Challenge land in follow-on content
 plans (070+), each adding its own coverage-map entry as it ships.
@@ -60,26 +60,45 @@ existing suite staying green.
   untaught-*method* check runs for every entry. Book 1 keeps its per-unit set.
 
 **D. Build & registry integration** (without these, a partial Book 1b fails ci-local immediately —
-[sol]/[fable] blocker):
-- `scripts/ci-local.sh`: the registry assertion (`ci-local.sh:15`, currently `["book1","book2"]`)
-  accepts `book1b`; add a Book 1b invocation block mirroring the Book 1 curriculum + notebook-execution
-  + hygiene + manifest steps **minus** the Book-1-only pattern checks; build Book 1b PDFs
-  (`scripts/build-pdf.sh` gains a `book1b` path if needed).
+[sol]/[fable]/[glm] blocker). These edits land in **Phase B together with the `books.yaml` change**, so
+the registry test never asserts a book that does not yet exist ([sol]-r2 B1):
+- `scripts/ci-local.sh`: the registry assertion (`ci-local.sh:15-18`) accepts the new exact registry;
+  add a Book 1b invocation block mirroring the Book 1 curriculum + notebook + turtle + hygiene + manifest
+  steps **minus** the Book-1-only pattern checks. The block is **existence-guarded (`[ -d book1b ]`)**
+  because the CLI checks *fail closed* on a missing root (`notebooks.py:80-83`); before `book1b/` exists
+  it is a labelled `SKIP (plan 069)`.
+- **PDF build:** `scripts/build-pdf.sh` is already `--book`-generic; only its pattern-doc probe is
+  book1-gated (`build-pdf.sh:22`), so ci-local invokes it for `book1b` unchanged (no build-pdf edit).
 - `scripts/pre-merge-guard.sh`: the collision loop (`pre-merge-guard.sh:77`) iterates `book1b` too.
-- `tests/test_books.py`: the two-book registry assertion (`test_books.py:12`) is updated to include `book1b`.
+- `tests/test_books.py`: update the registry assertion (`test_books.py:12-18`) — **all** of ids,
+  numbers, roots, and positional `depends_on`, in the pinned order **`["book1","book1b","book2"]`**,
+  numbers **`[1,1,2]`** (book1b is Year 1, grouped with its sibling; book2 stays last so its
+  `depends_on: [book1]` position is unaffected).
+- `tests/test_tools.py`: extend the CI-contract test (`test_tools.py:1227`, which currently asserts only
+  the Book 1 PDF invocation) to assert the Book 1b invocation block.
 
-**Book 1b ci-local check matrix** (what runs for `book1b`, all via `python -m tools.cli --book book1b <check>`):
-concepts-schema, coverage/map-schema, uniqueness (variant-exempt), introduction (buildout-relaxed),
-prereq (fastforward), lesson-budget (buildout-relaxed lower), practice, checkpoint, syllabus,
-concept-scan (unit-fastforward), manifest, notebook-execution, notebook-hygiene, stretch, PDF build.
-**Not run:** pattern-marker / technique-spiral / patterns-doc (hard-gated to `book1`).
+**Book 1b ci-local check matrix** — the **actual CLI check names** ([sol]-r2 B2 / [fable]-r2 / [glm]-r2),
+each `python -m tools.cli --book book1b <name>` (both `--book` and a check name are required; `cli.py:21`).
+`coverage-check` is a composite (concepts-schema → uniqueness → map-schema → lesson-budget → referenced →
+introduction → practice → checkpoint → syllabus, per `coverage_findings`):
+`coverage-check`, `prereq-check`, `concept-scan`, `manifest-check`, `structure-check`, `hygiene-check`,
+`cell-lint`, `noexec-check`, `stretch-check`, `exec-solutions`, `exec-lessons`, `turtle-check`, + PDF build.
+**Not run for book1b:** pattern-marker / technique-spiral / patterns-doc (hard-gated `if book != "book1"`;
+`patterns.py:201,339`, `patterns_doc.py:163,177`).
 
 **Tests** (`tests/`): fixture roots for a variant pair, a fastforward book, and a buildout book, plus
-**mutation tests** — deleting an introduction from a strict (non-buildout) fixture still fails
-`introduction_findings`; deleting enough lessons still fails `lesson_budget_findings`; the same deletions
-in a `buildout: true` fixture do NOT fail. `syllabus_findings` needs no code change (matches only
-pipe-delimited rows) — but Book 1b's `syllabus.md` lists the planned-unit roadmap as **prose, not a
-table** (authoring rule, Phase B).
+**mutation tests proving the relaxation is NARROW** ([sol]-r2 B3), not a disabled check:
+- strict (unflagged) fixture: deleting an introduction still fails `introduction_findings`; deleting
+  enough lessons still fails `lesson_budget_findings` (these are the existing `test_tools.py`
+  never-introduced case ~1094/1130 and the `test_book2_tooling` lesson-budget case — must stay green).
+- `buildout: true` fixture: those two deletions do NOT fail — **but** a *duplicate* introduction STILL
+  fails, and exceeding the lesson *upper* bound STILL fails (relaxation is completeness/lower-bound only).
+- fastforward scan boundary: an unlisted **detectable** concept is accepted in a **unit** entry but
+  **rejected in a checkpoint AND in a project**, untaught-method detection still firing in all three.
+- uniqueness: the `variant_of` exemption applies **only** when an id's owner-set ⊆ {variant, parent} — a
+  triple collision (id also defined by `book2`) STILL fails ([glm]-r1).
+`syllabus_findings` needs no code change (matches only pipe-delimited rows) — Book 1b's `syllabus.md`
+lists the planned-unit roadmap as **prose, not a table** (authoring rule, Phase B).
 
 ## Scaffolding (`book1b/`)
 
@@ -97,13 +116,18 @@ book1b/
 │   ├── solutions.ipynb
 │   ├── teacher-notes.md
 │   └── assets/                 # seeded generators only if a dataset is needed
-├── checkpoints/                # (empty until a checkpoint plan)
-├── projects/                   # (empty until the Algorithm Challenge plan)
+├── checkpoints/.gitkeep        # empty dir needs .gitkeep to survive git (book1/book2 convention)
+├── projects/.gitkeep           # empty dir needs .gitkeep (else fail-closed dir checks break on clone)
 ├── reference/                  # concept-index stub
 ├── docs/                       # learner-facing stub
 └── build/                      # gitignored
 ```
-`books.yaml` gains the `book1b` entry. `.gitignore` covers `book1b/build/` (as for Book 1).
+`books.yaml` gains the `book1b` entry (order `["book1","book1b","book2"]`).
+**`.gitkeep`** placeholders in `checkpoints/` and `projects/` are mandatory: git does not track empty
+dirs, so without them a fresh clone fails `test_book_roots_have_required_layout` and every fail-closed
+dir check (`notebooks.py:100-105,116-122`), even though Phase V passes locally ([glm] blocker).
+No `.gitignore` edit is needed — the unanchored `build/` / `*.pdf` patterns already cover
+`book1b/build/` at any depth ([glm]); it is dropped from scope.
 
 ## U01 — Output & Variables (the template unit)
 
@@ -123,8 +147,13 @@ but U01 needs little of it.
   is before U07/`def-function`, design §7): each exercise is "given these values, produce this exact
   output", `input()` is replaced by fixed sample values, and the solution `assert`s the assembled
   string/number (e.g. `assert fact_sheet == "…"`). Several cases per exercise (a content-gate rule — the
-  CI floor is only ≥3 assert-bearing cells notebook-wide, design §6). No `input()` in executable cells
-  (prompt-only forms tagged `no-exec`, per design 003 where applicable).
+  CI floor is only ≥3 assert-bearing cells notebook-wide, design §6). **No `input()` in ANY solutions
+  code cell** — `_solution_policy_findings` flags `input(` tag-blind (`notebooks.py:278-280`); real
+  `input()` forms live only in markdown, as in Book 1 ([glm]-r1 nit 6).
+- **Notebook structure floors to pin for the fresh Codex session** ([glm]-r1 nit 7): `exercises.ipynb`
+  has **≥6 `## Exercise N` headings** in the exact format (`notebooks.py:533-535`) and **no**
+  "Solution"-like headings (`notebooks.py:500-513`); `solutions.ipynb` **mirrors every exercise heading**
+  with code beneath it (`notebooks.py:560-579`).
 - **teacher-notes.md** — goals, 60–90 min pacing, the opening problem, common mistakes, discussion
   prompts, differentiation, and a **core-set vs. extra-practice partition** of the exercise bank so a
   lesson stays 60–90 min even though the bank is large (design §7; the exercise-volume + lean-early-units
@@ -138,34 +167,44 @@ statements' outline; teacher-notes inline. Cross-model verification is the conte
 
 ## Phases
 
-### Phase A — book-aware tooling + build/registry integration + tests
-`tools/books.py`, `tools/curriculum.py`, `tools/concept_scan.py` (relaxations A–C);
-`scripts/ci-local.sh`, `scripts/pre-merge-guard.sh`, `scripts/build-pdf.sh`, `tests/test_books.py`
-(integration D); `tests/` fixtures + new cases + **mutation tests**.
-Verification: `pytest` (new + mutation cases pass; full existing suite green — Book 1/Book 2 unchanged);
-`bash scripts/ci-local.sh` still green on the current two-book repo before any book1b/ content exists
-(registry now *accepts* book1b but book1b is absent, so its block is a no-op / clean SKIP).
+**Phase-sequencing note ([sol]-r2 B1):** the registry change (`books.yaml`) and the registry-asserting
+edits (`tests/test_books.py`, `tests/test_tools.py`, `scripts/ci-local.sh` registry line) must land in the
+**same** phase, or the updated tests go red between phases. Phase A is therefore pure tooling with
+**self-contained fixtures** (it never edits the real registry or the real registry tests); Phase B makes
+the registry change and all registry-coupled edits together.
 
-### Phase B — registry + `book1b/` scaffolding + catalog + syllabus + U01 coverage-map entry
-`books.yaml` (book1b entry with `buildout: true`), `book1b/` tree, `concepts.yaml` (identical to Book 1),
-`coverage-map.yaml` (U01, `lessons: 3`), `syllabus.md` (table = shipped entries; roadmap of planned
-units + the Algorithm Challenge as **prose**), `reference/`+`docs/` stubs, `.gitignore` (`book1b/build/`).
-Verification: `python -m tools.cli --book book1b <check>` GREEN for each curriculum check (concepts/map
-schema, uniqueness-exempt, introduction buildout-relaxed, prereq-fastforward, lesson-budget, practice,
-checkpoint, syllabus).
+### Phase A — book-aware tooling + fixture tests (no real-registry edits)
+`tools/books.py`, `tools/curriculum.py`, `tools/concept_scan.py` (relaxations A–C) + `tests/` **fixture**
+roots (variant pair / fastforward / buildout) + new cases + the **narrow-scope mutation tests** (Tooling D).
+Verification: `pytest` (new + mutation cases pass; **full existing suite green, Book 1/Book 2 unchanged** —
+this is why Phase A touches no real registry or registry test); `bash scripts/ci-local.sh` still green on
+the untouched two-book repo.
+
+### Phase B — registry + integration edits + `book1b/` scaffolding + catalog + syllabus + U01 map entry
+Together (so registry asserts stay green): `books.yaml` (book1b entry, `buildout: true`, order
+`["book1","book1b","book2"]`); the integration-D edits (`ci-local.sh` registry + existence-guarded book1b
+block, `pre-merge-guard.sh`, `tests/test_books.py`, `tests/test_tools.py` CI-contract); the `book1b/` tree
+with `.gitkeep`s; `concepts.yaml` (content-identical to Book 1); `coverage-map.yaml` (U01, `lessons: 3`);
+`syllabus.md` (table = shipped entries; roadmap of planned units + the Algorithm Challenge as **prose**);
+`reference/`+`docs/` stubs.
+Verification: `python -m tools.cli --book book1b coverage-check` and `... prereq-check` GREEN (these
+composites exercise concepts/map schema, uniqueness-exempt, introduction buildout-relaxed, lesson-budget,
+practice, checkpoint, syllabus, and fastforward ordering); `pytest` green (registry tests now expect the
+three-book registry).
 
 ### Phase C — U01 authored end-to-end
 manifest + lesson + exercises + solutions + teacher-notes (+ seeded assets if needed), via the dispatch above.
 
 ### Phase V — verification
 - `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN across Book 1, Book 2, and Book 1b
-  (registry+lint, unit tests, notebook execution + hygiene, manifest/prereq/coverage/stretch, PDF build,
-  pre-merge guard). No false SKIP.
+  (registry+lint, unit tests, notebook execution + hygiene, manifest/prereq/coverage/stretch/turtle,
+  PDF build, pre-merge guard). No false SKIP.
 - U01 `solutions.ipynb` executes top-to-bottom clean; every exercise's asserts pass; `exercises.ipynb`
   is solution-free with no executed outputs; ≥2 `stretch` cells present; opening cell is a problem, not drill.
 - Scope allowlist: `git diff --name-only $(git merge-base HEAD main)..HEAD` = this plan + design 004 +
-  `tools/{books,curriculum,concept_scan}.py` + `scripts/{ci-local,pre-merge-guard,build-pdf}.sh` +
-  `tests/` additions + `books.yaml` + `.gitignore` + the `book1b/` tree.
+  `tools/{books,curriculum,concept_scan}.py` + `scripts/{ci-local,pre-merge-guard}.sh` +
+  `tests/{test_books,test_tools}.py` + new `tests/` fixtures + `books.yaml` + the `book1b/` tree
+  (incl. `checkpoints/.gitkeep`, `projects/.gitkeep`). **No `.gitignore` / `build-pdf.sh` edit** (both no-ops).
 
 ## Out of scope
 
@@ -235,8 +274,57 @@ Two blockers + nits, all FOLDED:
 `--model volcengine-plan/glm-5.3` (an out-of-date AGENTS.md copy at dispatch time); its verdict does not
 count toward consensus. Re-dispatched correctly in round 2.
 
-### Round 2 (2026-09-21) — revised plan/design after folding all round-1 findings.
-_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable] on the revised commit.)_
+**SUPERSEDED-TERMINOLOGY NOTE:** the round-1 `[self]` (and the round-1 `[sol]`/`[glm]` REJECTs) reason via
+a derived `is_complete_book` predicate. That is **superseded** by the explicit `buildout: true` config flag
+([sol]-r2 B2 / [glm]-r2) — a derived predicate is circular (it would disable the very check it gates). The
+normative requirement is the explicit flag in the Tooling section; those historical entries stand as record.
+
+### Round 2 (2026-09-21) — on commit 634cd14 (round-1 folds). [glm] on volcengine-plan/glm-5.3.
+
+#### [fable] round 2 — **APPROVE WITH NITS.**
+Both round-1 blockers resolved; all 8 round-1 nits confirmed present; mechanically re-verified the §3
+table is a true 62-id partition. 8 new nits, ALL FOLDED: real CLI check names (coverage-check/prereq-check
+composites); add turtle-check (+ structure/noexec/cell-lint) to the matrix; explicit `[ -d book1b ]` guard
++ `SKIP (plan 069)` label + pinned registry order; §11 "Tooling A–D" wording; carve turtle exercises out of
+the §7 assert rule (verified by execution + turtle-check) and extend §8 to U06 + turtle practice sites;
+U12 file concepts need a practice site like U13's (post-U13 checkpoint / U13 background); U02 sets the
+fastforward-tagging convention (U01 needs little); add a round-2 [self].
+
+#### [glm] round 2 (volcengine-plan/glm-5.3) — **APPROVE WITH NITS.**
+Verified all four round-1 folds against the real code (integration sites, non-circular buildout flag,
+unit-only scan, spine 62-once + order incl. U08 requires import-statement). 4 nits, ALL FOLDED: `.gitkeep`
+in checkpoints/ + projects/ (git can't track empty dirs — else fresh-clone failure invisible to Phase V);
+turtle-check (+ structure/noexec/cell-lint) in the matrix; `[ -d book1b ]` existence guard + pinned
+registry order `["book1","book1b","book2"]` / numbers `[1,1,2]`; `.gitignore` item is a no-op (dropped);
+AGENTS.md "two independently complete roots" needs the deferred human-governance update (§9).
+
+#### [sol] round 2 — **REJECT** (round-1 B3/B4 resolved; approach validated; 3 integration/test blockers + 1 nit, ALL FOLDED).
+- B1 (phase sequencing): Phase A edited `test_books.py` then required green, but Phase B adds book1b to
+  `books.yaml` → test red between phases. → Phases re-sequenced: Phase A is pure tooling + **fixtures only**;
+  Phase B lands the registry change + all registry-coupled edits together. Update ALL test_books assertions
+  + exact order.
+- B2 (matrix not executable CLI): → matrix rewritten with real CLI names; turtle-check added; CI-contract
+  test (`test_tools.py:1227`) extended; corrected — build-pdf.sh is already generic (no edit).
+- B3 (mutation tests too loose): → added narrow-scope cases (duplicate-intro still fails in buildout;
+  lesson UPPER still fails in buildout; fastforward accepted in units, rejected in checkpoints AND projects,
+  untaught-method still live).
+- nit (stale `is_complete_book` in historical [self]): → superseded-terminology note added above.
+
+#### Delayed [glm] round 1 (default model — does NOT count toward consensus) — surfaced 3 NEW valid items, FOLDED:
+`.gitkeep` (= [glm]-r2 nit 1); solutions `input()` convention (no `input(` in any solutions code cell,
+`notebooks.py:278-280`); U01 notebook floors (≥6 exercise headings, no Solution headings, solutions mirror
+headings) + the uniqueness triple-collision test.
+
+#### [self] round 2 (2026-09-21) — **APPROVE.**
+Re-reviewed the revised plan against the code paths [sol]/[glm]/[fable] cited: phases re-sequenced so no
+registry test is red between phases; check matrix uses real CLI names + turtle-check; mutation tests now
+prove narrow scope (duplicate-intro / upper-bound still fail under buildout; scan boundary units-yes /
+checkpoints+projects-no; triple-collision fails); `.gitkeep` + `input()`-in-markdown-only + notebook floors
+pinned; buildout is the explicit flag (non-circular). No open [self] blockers.
+
+### Round 3 (2026-09-21) — revised for round-2 folds. Re-dispatching [sol] only (the sole round-2 REJECT;
+its blockers were additive integration/test precision that do not change the approach [glm]/[fable] approved).
+_(Awaiting [sol] on the round-3 commit.)_
 
 ## Content Review
 

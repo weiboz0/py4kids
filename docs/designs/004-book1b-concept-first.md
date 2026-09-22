@@ -66,9 +66,11 @@ unintroduced concept — only *examples/practice* may reach forward under fastfo
 
 Checkpoints (un-themed concept-mastery) are interleaved after U03, U05, U08, and U11; a **mandatory**
 checkpoint follows U13 (final numbering fixed as units land). The post-U13 checkpoint is not optional:
-U13's four OOP introductions (`class-def`, `init-method`, `attributes`, `methods`) have no later unit,
-so that checkpoint is their only practice site before the end-of-book challenge (see §6 practice
-coverage).
+U12's file concepts (`file-read`, `file-write`, `with-statement`) and U13's four OOP introductions
+(`class-def`, `init-method`, `attributes`, `methods`) have no later *unit*, so the post-U13 checkpoint
+must practice **both** U12 and U13 — it is their only practice site before the end-of-book challenge (see
+§6). U13's backgrounds accordingly include a `Counter`/`Point` that **saves and loads itself to a file**,
+giving file I/O a natural reuse inside U13 as well.
 The single `project` entry is a **non-themed** end-of-book **Algorithm Challenge**
 (`project-01-algorithm-challenge`): an integrative problem set that doubles as the CI anchor for
 full practice-coverage (see §6). It is not a narrative capstone; it appears in the syllabus roadmap
@@ -129,6 +131,10 @@ Book 1's closure traps (no `+=` before it's taught, min/argmin seeding, etc.) ar
 choices, not fastforward concerns; Book 1b authors still write age-appropriate code, but they are
 free to introduce a helper concept early when a real problem calls for it.
 
+U01 needs almost no fastforward, so **U02 is the first unit to demonstrate the forward-reaching
+`practices:` tagging convention** (declaring a not-yet-introduced concept a unit's content uses) that
+later units copy; U01's teacher-notes carry a one-line pointer to it.
+
 ## 6. Coverage and verification model
 
 Book 1b runs the same `scripts/ci-local.sh` gate. **Four curriculum checks are made book-aware**, plus
@@ -161,14 +167,17 @@ net runs for every entry.
 but the roster is stated so nothing is expected of Book 1b there.
 
 **Build & registry integration** (folded from plan review — these are the reason a partial Book 1b
-would otherwise fail immediately):
-- `scripts/ci-local.sh`: the registry assertion (currently `== ["book1","book2"]`) accepts `book1b`;
-  a Book 1b invocation block mirrors the Book 1 curriculum/notebook/hygiene/manifest steps (minus the
-  Book-1-only pattern checks) and builds Book 1b PDFs.
+would otherwise fail immediately; exact CLI check names + phase sequencing live in the plan):
+- `scripts/ci-local.sh`: the registry assertion (currently `== ["book1","book2"]`) accepts the
+  three-book registry; an **existence-guarded** (`[ -d book1b ]`) Book 1b block mirrors the Book 1
+  curriculum + notebook + **turtle-check** + hygiene + manifest steps (minus the Book-1-only pattern
+  checks). `scripts/build-pdf.sh` is already `--book`-generic (only its pattern-doc probe is book1-gated),
+  so it is invoked for `book1b` unchanged.
 - `scripts/pre-merge-guard.sh`: the collision loop iterates `book1b` too.
-- `tests/test_books.py`: the two-book registry assertion is updated to include `book1b`.
+- `tests/test_books.py` + `tests/test_tools.py`: the registry assertion and the CI-contract test are
+  updated for the three-book registry (all of ids/numbers/roots/positional deps, pinned order).
 - All curriculum invocations use `python -m tools.cli --book book1b <check>` (both `--book` and a check
-  name are required).
+  name are required); `coverage-check`/`prereq-check` are the composites that exercise the curriculum rules.
 
 **Syllabus** (`syllabus_findings`): matches only pipe-delimited table rows, so Book 1b's `syllabus.md`
 lists shipped entries as a table and the **roadmap of planned units as prose** (never a
@@ -212,6 +221,9 @@ Every exercise is a **self-contained problem** with:
 - **Per-exercise assertion rigor** ("several cases per exercise") is a **content-gate authoring rule**
   verified by reviewers, not a CI guarantee — `notebooks.py` only enforces ≥3 assert-bearing cells
   across the whole notebook (see §6).
+- **Turtle exercises are exempt from the assert rule.** A drawing cannot be asserted; turtle `.py`
+  assets (U06, and the turtle practice sites in U07/U08) are verified by execution + `turtle-check`
+  (the `fake_turtle` harness), exactly as in Book 1 — not by output assertions.
 
 Exercises favor **volume and variety** — no per-unit cap — and ladder from a minimal case to a
 realistic one. To protect the fragile early-lesson pacing, U01–U02 teacher-notes **partition** the
@@ -230,15 +242,19 @@ authority (design 002); the seven technique concepts are taught within their nat
 `checkpoints/`, `projects/` (the single Algorithm Challenge), `reference/`, `docs/`, `build/`.
 Each unit ships `manifest.yaml`, `lesson.ipynb` (opens with a motivating problem), `exercises.ipynb`
 (solution-free), `solutions.ipynb` (clean, seeded), `teacher-notes.md`, and `assets/`.
-Turtle units (U06) run as `.py` scripts from the terminal, exactly as Book 1's turtle units do.
+Turtle work — U06 and the turtle practice sites in U07/U08 — runs as `.py` scripts from the terminal,
+exactly as Book 1's turtle units do (verified by `turtle-check`). Empty `checkpoints/` and `projects/`
+directories carry a `.gitkeep` (git does not track empty dirs; Book 1/Book 2 use the same convention).
 
 ## 9. Governance and decision record
 
 Adding a book root and relaxing two Book-1 laws (for Book 1b only) is an architectural decision.
 This design is the record; an ADR stub in `docs/architecture/decisions.md` (governance-locked,
 human-reviewed) should note "Book 1b — concept-first variant; fastforward + concept-first framing
-are book-scoped relaxations." That edit is deferred to human review per AGENTS.md unless the user
-asks for it inline.
+are book-scoped relaxations." Two other governance-locked edits are likewise **deferred to human
+review** (per AGENTS.md, unless the user asks inline): AGENTS.md's "two independently complete roots"
+sentence (now three) and any content-review-gate wording for the Book 1b engagement criterion (§6). The
+tooling and content this plan ships do not touch those files.
 
 ## 10. Out of scope
 
@@ -249,9 +265,10 @@ asks for it inline.
 
 ## 11. Rollout
 
-- **Plan 069 — Foundation:** registry entry, `book1b/` skeleton, full catalog, syllabus, empty-but-
-  valid coverage-map, the three book-aware tooling changes (+ tests), ci-local integration, and
-  **U01 authored end-to-end** as the template all later units follow. Verification phase required.
+- **Plan 069 — Foundation:** registry entry, `book1b/` skeleton, full catalog, syllabus, a valid
+  U01-only coverage-map, the book-aware tooling changes (plan Tooling A–D + tests), ci-local/registry
+  integration, and **U01 authored end-to-end** as the template all later units follow. Verification
+  phase required.
 - **Plans 070+ — per-unit content:** one plan per unit (or small batch), each adding the unit's
   coverage-map entry + notebooks + teacher notes + checkpoint where due, through the 4-way content
   gate. The Algorithm Challenge project lands last.
