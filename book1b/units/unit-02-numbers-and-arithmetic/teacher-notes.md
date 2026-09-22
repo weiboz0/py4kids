@@ -22,7 +22,8 @@ twist → realistic, with a *Notice* per rung).
   raises `TypeError`; fix with `str()` or an f-string. Contrast `"3" + "4"` → `"34"` with `3 + 4` → `7`,
   which is exactly why `int()` on typed text (`int("12")`) matters.
 - **Lesson 3 — Ask Number Questions (boolean, comparison).** Compare values and *print the Boolean*
-  (`print(n % 2 == 0)`), split the digits of a two-digit number (`n // 10`, `n % 10`), then the
+  (`print(first_score >= second_score)`, and all six operators `< <= > >= == !=`), split the digits of a
+  two-digit number (`n // 10`, `n % 10`), then the
   **Final build**. End with the boxed **"Peek ahead — not needed for the exercises"** cell that sums
   `1..100` with a `for` loop (→ `5050`): **read it aloud, do not teach it** — it just shows why loops
   (Unit 04/05) exist. Students never modify it.

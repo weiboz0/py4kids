@@ -52,5 +52,5 @@ order — use it to teach ordering. All pre-function; `input()` only via the try
 ## Differentiation
 
 - Strugglers: give a fill-in-the-branches skeleton (the conditions written, the verdicts blank).
-- Fast finishers: Extra (8), then the Challenges (9–10).
+- Fast finishers: Extra (8), then the Challenges (9–11).
 - Middle tier: rewrite a nested `if` as an `elif` ladder and confirm identical verdicts.

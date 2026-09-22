@@ -34,14 +34,17 @@ student notebooks; no `input()` in graded cells). Book 1b stays `buildout: true`
 **unit-03-decisions** — `lessons: 3`
 - introduces: `[logical-ops, if-statement, elif-else, conditional-nesting]`
 - requires: `[boolean, comparison, arithmetic, variable, print]`
-- practices: `[int-type, type-conversion, float-type, f-string, string-literal, naming, input]`
+- practices: `[int-type, type-conversion, f-string, string-literal, naming, input]`
+  _(content-review fold: `float-type` dropped — U03 has no float; checkpoint Q4 covers it.)_
 
 **checkpoint-01-foundations** — `kind: checkpoint`, `lessons: 0.5`
 - introduces: `[]`
-- requires: `[print, variable, if-statement, comparison, arithmetic]`
+- requires: `[print, variable, if-statement, elif-else, comparison, logical-ops, arithmetic,
+  type-conversion, float-type, f-string, string-concat]`
 - practices: `[print, variable, comparison, boolean, arithmetic, int-type, float-type, type-conversion,
-  if-statement, elif-else, logical-ops, conditional-nesting, f-string, string-literal, string-concat,
-  naming, comment, run-program, error-messages, input]`
+  if-statement, elif-else, logical-ops, f-string, string-literal, string-concat, naming, error-messages]`
+  _(content-review fold: `requires` expanded to the real prereqs; `practices` trimmed to what Q1–Q7 use
+  — `conditional-nesting`/`input`/`comment`/`run-program` removed as unbacked.)_
   - The checkpoint is where the FOUNDATIONAL concepts (`print`/`variable`/`comparison`/`boolean`/
     `arithmetic`/the control ids) get their `practices:` tag — exactly how Book 1's checkpoints anchor
     coverage. Checkpoints stay STRICT (fastforward does not apply): every practiced id is introduced by
@@ -218,8 +221,44 @@ metadata gaps, ALL FOLDED:
 ### Content-review round 1 outcome: 1 APPROVE-WITH-NITS + 2 REJECT; all findings folded (notebooks +
 metadata + teacher-notes). Full ci-local ALL GREEN after the fold. Re-review round 2 dispatched.
 
-### Round 2 (2026-09-22) — after folding all round-1 content findings.
-_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable] on the revised commit.)_
+### Round 2 (2026-09-22) — on commit c32eda9 (round-1 folds).
+- **[sol]** — **APPROVE WITH NITS.** All 5 round-1 findings RESOLVED (verified line-by-line); Q6 blind-solve
+  matched; no `[OPEN]`. Nits FOLDED: U03 notes "Challenges 9–10"→"9–11"; the plan's coverage-map *prose*
+  was stale vs the corrected shipped manifests → updated above.
+- **[glm]** (volcengine-plan/glm-5.3) — **APPROVE WITH NITS.** All folds verified; full ci-local ALL GREEN
+  (three books, PDFs, guard). Nit FOLDED: checkpoint notes "5.0 (Q4)"→"10.0 (Q4)".
+- **[fable]** — **APPROVE WITH NITS.** All 5 folds confirmed; blind solves match; no new bad precedent.
+  Nits FOLDED: U03 Differentiation "9–10"→"9–11"; U02 pacing `%` example → a real comparison example.
+  Notes (recorded for U04+ authors): keep 3-rung ladders; don't tag every preview as `practices`.
+
+### Content-review outcome: **FULL 4-way consensus** — [self] APPROVE · [sol]/[glm]/[fable] APPROVE WITH
+NITS, all nits folded, no `[OPEN]`. Two rounds (round 1 = 2× REJECT on teaching-contract/metadata gaps;
+round 2 clean). Gate CLOSED → PR.
+
+## Post-Execution Report
+
+**Status: COMPLETE** (pending PR + squash-merge). Adds Book 1b Units 02–03 + Checkpoint 01, cloning the
+U01 template.
+
+**What shipped:**
+- **U02 Numbers & Arithmetic:** problem-first lesson (h:m opener; all six comparison operators; the
+  `str()`/TypeError beat; `/` vs `//` Notice; boxed `for`-loop peek-ahead → 5050), 10 mini-CP pre-function
+  exercises (core 1–7 / extra 8 / Challenges 9–10), per-line-assert solutions.
+- **U03 Decisions:** problem-first lesson (`and`/`or`/`not` taught before use; `=`→`==` SyntaxError beat;
+  top-down `elif`; parenthesized leap-year), 11 exercises (order-sensitive Medal Ladder; `not` Challenge),
+  solutions.
+- **checkpoint-01-foundations:** 7 visible `## Question` items mixing U01–U03, strict (no loops/lists/
+  accumulator/builtins beyond print/int/float/str), solutions mirror all 7; teacher-notes with `## Grading`.
+- Coverage-map + syllabus + manifests; metadata honest to content (post content-gate fold).
+
+**Gate history:** plan-review = 2 rounds (added the U02 `for-loop` forward-tag demo + the post-U03
+checkpoint + §6 record + 10 authoring guardrails). Content-review = 2 rounds (1 APPROVE-WITH-NITS + 2
+REJECT on teaching-contract/metadata → folded: taught all six comparisons + `not`; fixed checkpoint
+headings/`==True`/peek-box; trimmed metadata to content).
+
+**Verification:** full `scripts/ci-local.sh` **ALL GREEN** across Book 1, Book 2, Book 1b.
+
+**Follow-on:** U04–U13 + the remaining checkpoints + the Algorithm Challenge in plans 072+.
 
 ## Post-Execution Report
 

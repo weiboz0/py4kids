@@ -29,7 +29,7 @@ The seven questions and the concept each targets:
 
 ## Common mistakes
 
-- `/` printing `5.0` where a student expected `5` (Q4) — `/` always gives a float.
+- `/` printing `10.0` where a student expected `10` (Q4) — `/` always gives a float.
 - Ordering the Q5 `elif` ladder broad-test-first, so the verdict is wrong.
 - `=` vs `==` inside a condition.
 - On Q7, reading the *first* line of the traceback instead of the final error line.
