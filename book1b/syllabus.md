@@ -48,7 +48,9 @@ The **Algorithm Challenge** (a non-themed integrative problem set) closes the ye
 
 ## Shipped so far
 
-_(none yet — Unit 01 lands in plan 069 Phase C; this section becomes the arc table as entries land.)_
+| entry | kind | lessons | the hook |
+|---|---|---|---|
+| `unit-01-output-and-variables` | unit | 3 | Fill a club "fact card" from a few saved values — output, variables, and your first programs. |
 
 ## Rules this syllabus is bound by
 

@@ -4,4 +4,12 @@ map_version: 1
 # end-of-book Algorithm Challenge follow in plans 070+. The full 62-concept catalog ships
 # up front in concepts.yaml (content-identical to Book 1); every concept is introduced
 # exactly once across the units as they land. Design: docs/designs/004-book1b-concept-first.md.
-entries: []
+entries:
+- id: unit-01-output-and-variables
+  kind: unit
+  title: "Output & Variables — your first programs"
+  lessons: 3
+  introduces: [run-program, print, comment, string-literal, variable, naming, input,
+               string-concat, f-string, error-messages]
+  requires: []
+  practices: []
