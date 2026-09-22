@@ -220,7 +220,25 @@ re-review needed if folded):
 Confirmed sound: book2:str-split resolution (book2 registers str-split + depends_on book1); mechanism fully
 judgeable by synthetic fixtures (nothing needs a real example); K2 honesty; checkpoints/projects strict.
 
-#### [sol] (pending)
+#### [sol] round 2 (2026-09-21)
+**REJECT** — narrowed to precise tooling-contract gaps (B2/B3/B4/item6/item7 RESOLVED). To fold, then re-verify:
+- B1 (K2) not resolved: (a) inconsistency — 069 ships the K2 MECHANISM with an EMPTY production table (proven by
+  synthetic fixtures); the u02 cell-ID rows are added in 070 (reword the "one case ships now" line). (b)
+  `code_sources()` must extract the notebook's real `cell["id"]` — K2 keys on it, not the index. (c) "registers as
+  BOTH" is FALSE for the scanner: `loop-counter` is MANUAL_ONLY (never emitted), only `accumulator` is emitted
+  (concept_scan.py:222) — so K2 AUTHORIZES the emitted `accumulator` and DECLARES both ids for curriculum honesty
+  (loop-counter is never flagged anyway).
+- G1 (blocking): the "reject K1 AST node outside a GIVEN region" rule would wrongly reject the planned u08
+  real-form cell → qualify GIVEN-regions as **exercise-only**; lesson `demo`/solution `real-form` cells authorize
+  via cell tag + declaration alone (no GIVEN region).
+- G2 (blocking): "paired solution" undefined → define a deterministic PAIRING KEY (a stable task/cell id shared by
+  the exercise scaffold and its solution) for the byte-identical GIVEN-region check; no positional pairing.
+- B5 gaps: `auxiliary` disjointness must compare after normalizing the `book1:` prefix (= [fable] precision);
+  Phase D must add malformed/duplicate `py4kids_auxiliary`, zero/multiple/wrong role, declared-but-unused +
+  MANUAL_ONLY-exempt, TWO K1 tools in one cell (budget enforcement), map↔manifest version + auxiliary-field
+  mismatch, and missing/duplicate pairing-id mutations.
+Phase E scope claim confirmed correct (empty migration edits manifests + coverage-map, not notebook cells).
+
 #### [glm] (pending — opencode)
 
 ## Content Review
