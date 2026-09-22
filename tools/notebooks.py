@@ -14,6 +14,8 @@ import nbformat
 import yaml
 from nbclient import NotebookClient
 
+from tools.curriculum import auxiliary_schema_details
+
 REQUIRED_FILES = (
     "manifest.yaml",
     "lesson.ipynb",
@@ -34,6 +36,10 @@ PROJECT_REQUIRED_FILES = (
     "teacher-notes.md",
 )
 MANIFEST_KEYS = {"id", "kind", "blueprint_version", "lessons", "concepts", "provenance"}
+MANIFEST_CONCEPT_KEYS = {
+    1: {"introduces", "requires", "practices"},
+    2: {"introduces", "requires", "practices", "auxiliary"},
+}
 NOTES_HEADINGS = (
     "## Goals",
     "## Pacing",
@@ -399,6 +405,11 @@ def manifest_findings(root: Path, book: str, unit: str | None = None) -> list[st
         return [_fail(book, "coverage-map entries must be a list")]
     if any(not isinstance(entry, dict) for entry in map_entries):
         return [_fail(book, "coverage-map entries must be mappings")]
+    map_version = data.get("map_version")
+    if map_version not in MANIFEST_CONCEPT_KEYS:
+        return [_fail(book, "coverage-map map_version must be 1 or 2")]
+    if map_version == 2 and book != "book1":
+        return [_fail(book, "map_version 2 is only supported for book1")]
     for index, entry in enumerate(map_entries):
         if not isinstance(entry.get("id"), str):
             return [_fail(book, f"coverage-map entry {index} id must be a string")]
@@ -417,8 +428,20 @@ def manifest_findings(root: Path, book: str, unit: str | None = None) -> list[st
             continue
         if manifest["kind"] != expected_kind:
             findings.append(_fail(content_dir.name, f"kind must be {expected_kind}"))
-        if manifest["blueprint_version"] != 1:
-            findings.append(_fail(content_dir.name, "blueprint_version must be 1"))
+        blueprint_version = manifest["blueprint_version"]
+        if blueprint_version != map_version:
+            if map_version == 1:
+                findings.append(
+                    _fail(content_dir.name, "blueprint_version must be 1")
+                )
+            else:
+                findings.append(
+                    _fail(
+                        content_dir.name,
+                        f"blueprint_version {blueprint_version} differs from "
+                        f"coverage-map map_version {map_version}",
+                    )
+                )
         if manifest["provenance"] != "original":
             findings.append(_fail(content_dir.name, "provenance must be original"))
         if manifest["id"] != content_dir.name:
@@ -436,7 +459,7 @@ def manifest_findings(root: Path, book: str, unit: str | None = None) -> list[st
         if not isinstance(concepts, dict):
             findings.append(_fail(content_dir.name, "manifest concepts must be a mapping"))
             continue
-        if set(concepts) != {"introduces", "requires", "practices"}:
+        if set(concepts) != MANIFEST_CONCEPT_KEYS[map_version]:
             findings.append(_fail(content_dir.name, f"concept keys {set(concepts)}"))
             continue
         for field in ("introduces", "requires", "practices"):
@@ -469,6 +492,32 @@ def manifest_findings(root: Path, book: str, unit: str | None = None) -> list[st
                 continue
             if sorted(concepts[field]) != sorted(map_values):
                 findings.append(_fail(content_dir.name, f"{field} differs from coverage map"))
+        if map_version == 2:
+            manifest_auxiliary_entry = {
+                "kind": expected_kind,
+                **concepts,
+            }
+            findings.extend(
+                _fail(content_dir.name, detail)
+                for detail in auxiliary_schema_details(manifest_auxiliary_entry)
+            )
+            map_auxiliary_details = auxiliary_schema_details(entry)
+            findings.extend(
+                _fail(book, f"coverage-map {entry.get('id')}.{detail}")
+                for detail in map_auxiliary_details
+            )
+            manifest_auxiliary = concepts["auxiliary"]
+            map_auxiliary = entry.get("auxiliary")
+            if (
+                isinstance(manifest_auxiliary, list)
+                and all(isinstance(value, str) for value in manifest_auxiliary)
+                and isinstance(map_auxiliary, list)
+                and all(isinstance(value, str) for value in map_auxiliary)
+                and sorted(manifest_auxiliary) != sorted(map_auxiliary)
+            ):
+                findings.append(
+                    _fail(content_dir.name, "auxiliary differs from coverage map")
+                )
     return findings
 
 

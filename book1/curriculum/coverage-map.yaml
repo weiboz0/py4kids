@@ -1,4 +1,4 @@
-map_version: 1
+map_version: 2
 entries:
 - id: unit-01-story-machine
   kind: unit
@@ -8,6 +8,7 @@ entries:
                string-concat, f-string, error-messages]
   requires: []
   practices: []
+  auxiliary: []
 - id: unit-02-number-detective
   kind: unit
   title: "Number Detective — the guessing game"
@@ -17,6 +18,7 @@ entries:
                sentinel-loop]
   requires: [print, input, variable, f-string]
   practices: [string-literal, naming, comment, run-program, error-messages, string-concat]
+  auxiliary: []
 - id: checkpoint-01-first-steps
   kind: checkpoint
   title: "Checkpoint 1 — First Steps"
@@ -26,6 +28,7 @@ entries:
   practices: [print, comment, string-literal, variable, naming, input, string-concat, f-string,
               int-type, arithmetic, type-conversion, boolean, comparison, if-statement,
               elif-else, while-loop, error-messages]
+  auxiliary: []
 - id: unit-03-turtle-art-studio
   kind: unit
   title: "Turtle Art Studio — drawing with loops"
@@ -34,6 +37,7 @@ entries:
                nested-loops, float-type]
   requires: [import-statement, variable, arithmetic]
   practices: [naming, comment, run-program, f-string, string-literal]
+  auxiliary: []
 - id: unit-04-quiz-show
   kind: unit
   title: "Quiz Show — keeping score"
@@ -43,6 +47,7 @@ entries:
   requires: [if-statement, elif-else, while-loop, comparison, input, f-string,
              arithmetic, int-type, variable]
   practices: [boolean, type-conversion, loop-counter, error-messages, string-literal]
+  auxiliary: []
 - id: unit-05-function-factory
   kind: unit
   title: "Function Factory — greeting cards and turtle stamps"
@@ -52,6 +57,7 @@ entries:
   practices: [range-function, loop-counter, arithmetic, nested-loops, float-type,
               accumulator, import-statement, string-literal, turtle-drawing, running-total,
               if-statement, elif-else, comparison, while-loop, break-statement, input]
+  auxiliary: []
 - id: checkpoint-02-loops-and-functions
   kind: checkpoint
   title: "Checkpoint 2 — Loops and Functions"
@@ -63,6 +69,7 @@ entries:
               turtle-basics, print, variable, comparison, arithmetic,
               if-statement, elif-else, boolean, int-type, loop-counter, f-string,
               string-literal]
+  auxiliary: []
 - id: project-01-arcade-night
   kind: project
   title: "Arcade Night — build your own mini-game"
@@ -72,6 +79,7 @@ entries:
   practices: [print, input, f-string, accumulator, logical-ops, loop-counter,
               elif-else, break-statement, comparison, scope, import-statement, random-module,
               variable, arithmetic, int-type, string-literal, sentinel-loop]
+  auxiliary: []
 - id: unit-06-secret-codes
   kind: unit
   title: "Secret Codes — ciphers and string surgery"
@@ -81,6 +89,7 @@ entries:
   practices: [f-string, accumulator, if-statement, loop-counter, print, variable, comparison,
               arithmetic, range-function, int-type, input, elif-else, error-messages, nested-loops,
               boolean, string-literal, count-by-condition, break-statement]
+  auxiliary: []
 - id: unit-07-high-score-hall
   kind: unit
   title: "High-Score Hall of Fame — lists"
@@ -93,6 +102,7 @@ entries:
               type-conversion, input, in-operator, error-messages, string-literal, boolean,
               sentinel-loop, running-total, count-by-condition, transform-each, break-statement,
               linear-search]
+  auxiliary: []
 - id: unit-08-word-wizard
   kind: unit
   title: "Word Wizard — dictionaries and translation games"
@@ -104,6 +114,7 @@ entries:
               boolean, type-conversion, accumulator, count-by-condition, transform-each,
               break-statement, linear-search, find-extreme, builtin-functions, filter-into-list,
               input]
+  auxiliary: []
 - id: checkpoint-03-data-wrangler
   kind: checkpoint
   title: "Checkpoint 3 — Data Wrangler"
@@ -115,6 +126,7 @@ entries:
               dict-literal, dict-access, dict-loop, for-loop, print, variable, f-string,
               string-literal, if-statement, boolean, accumulator, arithmetic, int-type,
               elif-else, error-messages]
+  auxiliary: []
 - id: unit-09-save-point
   kind: unit
   title: "Save Point — files that remember"
@@ -126,6 +138,7 @@ entries:
               type-conversion, int-type, error-messages, elif-else, accumulator, arithmetic,
               running-total, transform-each, comparison, break-statement, linear-search,
               find-extreme, filter-into-list, range-function, input]
+  auxiliary: []
 - id: unit-10-pet-simulator
   kind: unit
   title: "Pet Simulator — a gentle intro to objects"
@@ -136,6 +149,7 @@ entries:
               dict-literal, elif-else, for-loop, list-loop, list-literal, list-index, print,
               variable, string-literal, int-type, error-messages, input, sentinel-loop,
               find-extreme, filter-into-list, break-statement]
+  auxiliary: []
 - id: checkpoint-04-year-one-finale
   kind: checkpoint
   title: "Checkpoint 4 — Year One Finale"
@@ -148,6 +162,7 @@ entries:
               for-loop, list-loop, if-statement, in-operator, arithmetic, int-type,
               type-conversion, string-concat, string-literal, string-methods, f-string,
               print, variable, boolean, error-messages, accumulator, elif-else]
+  auxiliary: []
 - id: project-02-grand-adventure
   kind: project
   title: "Grand Adventure — the Year 1 capstone"
@@ -163,3 +178,4 @@ entries:
               return-value, scope, list-literal, list-index, list-append, list-loop,
               builtin-functions, dict-literal, dict-access, file-read, file-write,
               with-statement, class-def, init-method, attributes, methods]
+  auxiliary: []

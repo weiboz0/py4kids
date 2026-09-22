@@ -1,6 +1,6 @@
 id: unit-08-word-wizard
 kind: unit
-blueprint_version: 1
+blueprint_version: 2
 lessons: 3
 provenance: original
 concepts:
@@ -11,3 +11,4 @@ concepts:
               boolean, type-conversion, accumulator, count-by-condition, transform-each,
               break-statement, linear-search, find-extreme, builtin-functions, filter-into-list,
               input]
+  auxiliary: []

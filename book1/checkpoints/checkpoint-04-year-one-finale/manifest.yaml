@@ -1,6 +1,6 @@
 id: checkpoint-04-year-one-finale
 kind: checkpoint
-blueprint_version: 1
+blueprint_version: 2
 lessons: 0.5
 provenance: original
 concepts:
@@ -12,3 +12,4 @@ concepts:
               for-loop, list-loop, if-statement, in-operator, arithmetic, int-type,
               type-conversion, string-concat, string-literal, string-methods, f-string,
               print, variable, boolean, error-messages, accumulator, elif-else]
+  auxiliary: []

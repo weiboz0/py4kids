@@ -335,4 +335,41 @@ contract). Gate CLOSED → Phase A (governance wording surfaced to the user for 
 _(pending)_
 
 ## Post-Execution Report
-_(pending)_
+
+### 2026-09-22 — Phases B–D
+
+Implemented the mechanism-only scope with no changes to existing Book-1 notebook cells.
+
+- **Phase B:** migrated the Book-1 coverage map and all 16 Book-1 manifests to schema v2 with empty
+  `auxiliary: []` declarations; kept Book 2 on schema v1; added version-dispatched, fail-closed map and manifest
+  validation for presence, grammar, duplicates, normalized overlap, strict checkpoint/project emptiness,
+  blueprint/map agreement, and manifest/map value agreement.
+- **Phase C:** made prerequisite validation enforce later Book-1 homes and registered transitive-dependent Book-2
+  owners without advancing `seen` or earning practice/coverage/spiral credit; made concept-scan cell-aware with
+  real cell IDs, per-block authorization, borrowed-only markdown scanning, global `book2:str-split` ownership,
+  contextual roles, exact GIVEN-region pairing by `py4kids_task_id`, the one-tool budget, and the closed,
+  per-statement K2 exception loader. Added `book1/curriculum/k2-exceptions.yaml` at version 1 with an empty table.
+- **Phase D:** added the three promised fixture shapes under `tests/fixtures/borrowed_tools/` and the full K1, K2,
+  metadata/schema, prerequisite-edge, byte-identity, ID-not-position, and Book-2-isolation mutation matrix in
+  `tests/test_borrowed_tools_{scan,prereq}.py`, plus version-dispatch locks in the existing test modules.
+
+Verification evidence:
+
+- `PATH=/tmp/py4kids-plan069-bin:$PATH PY4KIDS_CI=1 .venv/bin/python -m pytest -q -k 'not exec'`:
+  **583 passed, 48 deselected**. The temporary shim only supplies the existing `uv run ruff` call used by
+  `cell-lint`; it changes no repository file.
+- Ruff, Book-1 and Book-2 manifest/prerequisite/coverage/concept scans, Book-1 technique spiral, all remaining
+  non-kernel structure/content checks, Book-2 judge/source policy, PDF build, `git diff --check`, and
+  `scripts/pre-merge-guard.sh`: **PASS**.
+- `TMPDIR=/dev/shm bash scripts/ci-local.sh` cannot start in this sandbox because its command PATH omits the
+  installed `/home/chris/.local/bin/uv`. With that path restored plus a writable offline uv cache, CI step 1
+  passes and step 2 reaches **618 passed, 2 skipped, 11 failed**; every failure is a Jupyter kernel
+  `socket()` `PermissionError: [Errno 1] Operation not permitted`. The script then stops by design.
+- `git diff --name-only -- 'book1/**/*.ipynb'` is empty. The only new notebooks are synthetic files under
+  `tests/fixtures/borrowed_tools/`.
+
+All planned implementation work is complete. Native `exec-lessons` / `exec-solutions` verification is the only
+uncompleted gate in this write sandbox and must be rerun by the orchestrator in its kernel-capable environment.
+The requested commit could not be created because this sandbox mounts `.git` read-only; `git add` failed with
+`Unable to create '.git/index.lock': Read-only file system`. The scoped changes remain unstaged on the requested
+feature branch for the orchestrator to commit after rerunning the native execution gate.

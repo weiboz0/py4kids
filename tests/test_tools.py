@@ -615,6 +615,19 @@ def _manifest_map_field(root, field):
     _write_yaml(path, data)
 
 
+def _upgrade_book1_fixture_to_schema_v2(root):
+    map_path, coverage = _map(root)
+    coverage["map_version"] = 2
+    for entry in coverage["entries"]:
+        entry["auxiliary"] = []
+    _write_yaml(map_path, coverage)
+    for manifest_path in (root / "book1").glob("*/**/manifest.yaml"):
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+        manifest["blueprint_version"] = 2
+        manifest["concepts"]["auxiliary"] = []
+        _write_yaml(manifest_path, manifest)
+
+
 MANIFEST_CASES = [
     ("keys", _manifest_keys, "manifest keys"),
     ("kind", lambda r: _manifest_mutation(r, "kind", "project"), "kind must be unit"),
@@ -695,6 +708,316 @@ def test_manifest_concept_list_members_must_be_ids(valid_root, capsys):
     assert output == (
         "FAIL: unit-01-story-machine: manifest concepts.introduces must be a list of ids\n"
     )
+
+
+def test_schema_v2_map_and_manifests_pass(valid_root, capsys):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 0, output
+    assert output == "manifest-check: PASS\n"
+    assert map_schema_findings(valid_root, "book1") == []
+
+
+def test_schema_v2_is_rejected_for_book2(valid_root, capsys):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    (valid_root / "book1").rename(valid_root / "book2")
+
+    expected = "FAIL: book2: map_version 2 is only supported for book1"
+    assert map_schema_findings(valid_root, "book2") == [expected]
+    code, output = _run(valid_root, "manifest-check", capsys, book="book2")
+    assert code == 1
+    assert output == expected + "\n"
+
+
+def test_schema_v1_map_forbids_auxiliary(valid_root):
+    path, data = _map(valid_root)
+    data["entries"][0]["auxiliary"] = []
+    _write_yaml(path, data)
+    assert map_schema_findings(valid_root, "book1") == [
+        "FAIL: book1: bad entry keys in unit-01-story-machine"
+    ]
+
+
+def test_schema_v2_map_requires_auxiliary_on_every_entry(valid_root):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, data = _map(valid_root)
+    del data["entries"][0]["auxiliary"]
+    _write_yaml(path, data)
+    assert map_schema_findings(valid_root, "book1") == [
+        "FAIL: book1: bad entry keys in unit-01-story-machine"
+    ]
+
+
+@pytest.mark.parametrize("field", ["introduces", "requires", "practices"])
+def test_schema_v2_map_malformed_inherited_field_returns_finding(valid_root, field):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, data = _map(valid_root)
+    data["entries"][0][field] = None
+    _write_yaml(path, data)
+    assert map_schema_findings(valid_root, "book1") == [
+        f"FAIL: book1: unit-01-story-machine.{field} must be a list of ids"
+    ]
+
+
+def test_schema_v2_map_unhashable_kind_returns_finding(valid_root):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, data = _map(valid_root)
+    data["entries"][0]["kind"] = []
+    _write_yaml(path, data)
+    assert map_schema_findings(valid_root, "book1") == [
+        "FAIL: book1: bad entry id: unit-01-story-machine"
+    ]
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("book1:concept-05", None),
+        ("concept-05", "must contain qualified ids"),
+        ("book3:concept-05", "must contain qualified ids"),
+        (["book1:concept-05", "book1:concept-05"], "has duplicates"),
+    ],
+)
+def test_schema_v2_map_validates_auxiliary_ids(valid_root, value, expected):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, data = _map(valid_root)
+    data["entries"][0]["auxiliary"] = value if isinstance(value, list) else [value]
+    _write_yaml(path, data)
+    findings = map_schema_findings(valid_root, "book1")
+    if expected is None:
+        assert findings == []
+    else:
+        assert len(findings) == 1
+        assert expected in findings[0]
+
+
+@pytest.mark.parametrize("value", [None, "book1:concept-05", [1]])
+def test_schema_v2_map_auxiliary_must_be_a_list_of_strings(valid_root, value):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, data = _map(valid_root)
+    data["entries"][0]["auxiliary"] = value
+    _write_yaml(path, data)
+    assert map_schema_findings(valid_root, "book1") == [
+        (
+            "FAIL: book1: unit-01-story-machine.auxiliary must be a list of "
+            "qualified ids"
+        )
+    ]
+
+
+@pytest.mark.parametrize("field", ["introduces", "requires", "practices"])
+def test_schema_v2_map_normalizes_book1_auxiliary_overlap(valid_root, field):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, data = _map(valid_root)
+    entry = data["entries"][1]
+    entry["auxiliary"] = [f"book1:{entry[field][0]}"]
+    _write_yaml(path, data)
+    findings = map_schema_findings(valid_root, "book1")
+    assert len(findings) == 1
+    assert "auxiliary overlaps introduces/requires/practices" in findings[0]
+
+
+@pytest.mark.parametrize("kind", ["checkpoint", "project"])
+def test_schema_v2_map_rejects_nonempty_checkpoint_or_project_auxiliary(
+    valid_root, kind
+):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, data = _map(valid_root)
+    entry = next(entry for entry in data["entries"] if entry["kind"] == kind)
+    entry["auxiliary"] = ["book1:concept-00"]
+    _write_yaml(path, data)
+    findings = map_schema_findings(valid_root, "book1")
+    assert len(findings) == 1
+    assert f"{entry['id']}.auxiliary must be empty" in findings[0]
+
+
+def test_manifest_rejects_v1_blueprint_under_v2_map(valid_root, capsys):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _manifest_mutation(valid_root, "blueprint_version", 1)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert output == (
+        "FAIL: unit-01-story-machine: blueprint_version 1 differs from "
+        "coverage-map map_version 2\n"
+    )
+
+
+def test_manifest_rejects_v2_blueprint_under_v1_map(valid_root, capsys):
+    _manifest_mutation(valid_root, "blueprint_version", 2)
+    path, manifest = _manifest(valid_root)
+    manifest["concepts"]["auxiliary"] = []
+    _write_yaml(path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    lines = output.splitlines()
+    assert lines[0] == "FAIL: unit-01-story-machine: blueprint_version must be 1"
+    assert len(lines) == 2
+    assert lines[1].startswith("FAIL: unit-01-story-machine: concept keys ")
+
+
+def test_schema_v1_manifest_version_failure_preserves_other_legacy_checks(
+    valid_root, capsys
+):
+    path, manifest = _manifest(valid_root)
+    manifest["blueprint_version"] = 2
+    manifest["provenance"] = "unknown"
+    _write_yaml(path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert output == (
+        "FAIL: unit-01-story-machine: blueprint_version must be 1\n"
+        "FAIL: unit-01-story-machine: provenance must be original\n"
+    )
+
+
+def test_schema_v1_manifest_forbids_auxiliary(valid_root, capsys):
+    path, manifest = _manifest(valid_root)
+    manifest["concepts"]["auxiliary"] = []
+    _write_yaml(path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert "concept keys" in output
+
+
+def test_schema_v2_manifest_requires_auxiliary(valid_root, capsys):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, manifest = _manifest(valid_root)
+    del manifest["concepts"]["auxiliary"]
+    _write_yaml(path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert "concept keys" in output
+
+
+@pytest.mark.parametrize("field", ["introduces", "requires", "practices"])
+def test_schema_v2_manifest_malformed_inherited_field_returns_finding(
+    valid_root, capsys, field
+):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, manifest = _manifest(valid_root)
+    manifest["concepts"][field] = None
+    _write_yaml(path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert output == (
+        f"FAIL: unit-01-story-machine: manifest concepts.{field} must be a list\n"
+    )
+
+
+@pytest.mark.parametrize("field", ["introduces", "requires", "practices"])
+def test_schema_v2_manifest_malformed_map_field_returns_finding(
+    valid_root, capsys, field
+):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, coverage = _map(valid_root)
+    coverage["entries"][0][field] = None
+    _write_yaml(path, coverage)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert output == (
+        f"FAIL: book1: coverage-map unit-01-story-machine.{field} must be a list\n"
+    )
+
+
+def test_schema_v2_manifest_unhashable_map_kind_returns_finding(valid_root, capsys):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, coverage = _map(valid_root)
+    coverage["entries"][0]["kind"] = []
+    _write_yaml(path, coverage)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert output == (
+        "FAIL: unit-01-story-machine: kind differs from coverage map\n"
+    )
+
+
+def test_schema_v2_manifest_auxiliary_must_match_map(valid_root, capsys):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    map_path, coverage = _map(valid_root)
+    coverage["entries"][0]["auxiliary"] = ["book1:concept-05"]
+    _write_yaml(map_path, coverage)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert output == (
+        "FAIL: unit-01-story-machine: auxiliary differs from coverage map\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("book1:concept-05", None),
+        ("concept-05", "must contain qualified ids"),
+        (["book1:concept-05", "book1:concept-05"], "has duplicates"),
+    ],
+)
+def test_schema_v2_manifest_validates_auxiliary_ids(
+    valid_root, capsys, value, expected
+):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    map_path, coverage = _map(valid_root)
+    manifest_path, manifest = _manifest(valid_root)
+    auxiliary = value if isinstance(value, list) else [value]
+    coverage["entries"][0]["auxiliary"] = auxiliary
+    manifest["concepts"]["auxiliary"] = auxiliary
+    _write_yaml(map_path, coverage)
+    _write_yaml(manifest_path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    if expected is None:
+        assert code == 0, output
+    else:
+        assert code == 1
+        assert expected in output
+
+
+@pytest.mark.parametrize("value", [None, "book1:concept-05", [1]])
+def test_schema_v2_manifest_auxiliary_must_be_a_list_of_strings(
+    valid_root, capsys, value
+):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    path, manifest = _manifest(valid_root)
+    manifest["concepts"]["auxiliary"] = value
+    _write_yaml(path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert output == (
+        "FAIL: unit-01-story-machine: auxiliary must be a list of qualified ids\n"
+    )
+
+
+def test_schema_v2_manifest_normalizes_book1_auxiliary_overlap(valid_root, capsys):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    map_path, coverage = _map(valid_root)
+    manifest_path, manifest = _manifest(valid_root)
+    concept_id = coverage["entries"][0]["introduces"][0]
+    auxiliary = [f"book1:{concept_id}"]
+    coverage["entries"][0]["auxiliary"] = auxiliary
+    manifest["concepts"]["auxiliary"] = auxiliary
+    _write_yaml(map_path, coverage)
+    _write_yaml(manifest_path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert "auxiliary overlaps introduces/requires/practices" in output
+
+
+@pytest.mark.parametrize("kind", ["checkpoint", "project"])
+def test_schema_v2_manifest_rejects_nonempty_checkpoint_or_project_auxiliary(
+    valid_root, capsys, kind
+):
+    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    map_path, coverage = _map(valid_root)
+    entry = next(entry for entry in coverage["entries"] if entry["kind"] == kind)
+    entry["auxiliary"] = ["book1:concept-00"]
+    _write_yaml(map_path, coverage)
+    manifest_path = next(
+        (valid_root / "book1" / f"{kind}s").glob("*/manifest.yaml")
+    )
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest["concepts"]["auxiliary"] = ["book1:concept-00"]
+    _write_yaml(manifest_path, manifest)
+    code, output = _run(valid_root, "manifest-check", capsys)
+    assert code == 1
+    assert f"{entry['id']}: auxiliary must be empty" in output
 
 
 def test_hygiene_output_one_fault(valid_root, capsys):
@@ -910,7 +1233,9 @@ def test_turtle_open_path_text_inside_string_does_not_waive_closure(valid_root, 
 def _coverage_version(root, key):
     path = root / f"book1/curriculum/{key}.yaml"
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    data["concepts_version" if key == "concepts" else "map_version"] = 2
+    data["concepts_version" if key == "concepts" else "map_version"] = (
+        2 if key == "concepts" else 3
+    )
     _write_yaml(path, data)
 
 
@@ -1047,7 +1372,11 @@ COVERAGE_CASES = [
         "unknown category",
     ),
     ("concept-kebab", lambda r: _replace_concept_id(r, "Not Kebab"), "non-kebab concept id"),
-    ("map-version", lambda r: _coverage_version(r, "coverage-map"), "map_version must be 1"),
+    (
+        "map-version",
+        lambda r: _coverage_version(r, "coverage-map"),
+        "map_version must be 1 or 2",
+    ),
     (
         "map-duplicate",
         lambda r: _map_mutation(r, lambda es: es[1].update(id=es[0]["id"])),

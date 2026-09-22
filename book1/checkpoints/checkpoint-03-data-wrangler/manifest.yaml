@@ -1,6 +1,6 @@
 id: checkpoint-03-data-wrangler
 kind: checkpoint
-blueprint_version: 1
+blueprint_version: 2
 lessons: 0.5
 provenance: original
 concepts:
@@ -11,3 +11,4 @@ concepts:
               dict-literal, dict-access, dict-loop, for-loop, print, variable, f-string,
               string-literal, if-statement, boolean, accumulator, arithmetic, int-type,
               elif-else, error-messages]
+  auxiliary: []
