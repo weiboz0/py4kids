@@ -21,38 +21,65 @@ plans (070+), each adding its own coverage-map entry as it ships.
 ## Design decisions this plan implements (from design 004)
 
 - **Variant registry:** `book1b` registers with `variant_of: book1`, `prereq_policy: fastforward`,
-  `concept_minimum: 40`, `lesson_budget: [30, 90]`, `depends_on: []` (self-contained).
+  `buildout: true`, `concept_minimum: 40`, `lesson_budget: [30, 60]`, `depends_on: []` (self-contained).
 - **Full catalog up front, incremental coverage-map:** `book1b/curriculum/concepts.yaml` is identical
   to Book 1's 62-concept catalog; `coverage-map.yaml` lists only authored entries (this plan: U01).
-- **Fastforward:** `requires` strict, `practices`/content may reach forward, checkpoint alignment strict.
+- **Fastforward:** `requires` strict, `practices`/**unit** content may reach forward; checkpoint and
+  project content stay strict.
+- **Spine fix (plan review):** `import-statement` is introduced in **U06** (turtle — `import turtle` is
+  its natural motivation), not U08; U08 introduces only `random-module` with `requires: [import-statement]`.
+  `comparison` is introduced in **U02** (even/odd needs `n % 2 == 0`), not U03.
 
-## Tooling changes (the three book-aware relaxations + one sync check)
+## Tooling changes (dispatch to `codex:codex-rescue`, GPT-5.6-sol, per the agent-dispatch table)
 
-All changes are **book-scoped by config** — Book 1 and Book 2 behavior is unchanged (verified by the
-existing suite staying green).
+All relaxations are **book-scoped by an EXPLICIT config flag** — Book 1 and Book 2 carry no such flag
+and are strict by default. Regression is proven by **mutation tests** (below), not merely by the
+existing suite staying green.
 
-1. `tools/books.py`: read optional `variant_of` (str) and `prereq_policy` (str); add helper
-   `is_complete_book(root, book) -> bool` (complete iff every catalog id is introduced by some
-   coverage-map entry). `concept_minimum` and `lesson_budget` are already config-honored.
-2. `tools/curriculum.py`:
-   - `global_concept_uniqueness_findings`: skip id collisions between a book and its `variant_of`
-     target (both directions), and **assert the variant's `concepts.yaml` is content-identical to its
-     parent's** (new finding if they diverge).
-   - `introduction_findings`: always enforce "introduced at most once"; enforce "every catalog concept
-     introduced" only when `is_complete_book` is true (Book 1 stays strict).
-   - `prereq_findings`: when `prereq_policy == "fastforward"`, validate closure over `requires` only
-     (drop `practices` from the ordering check). `requires` and checkpoint alignment stay strict.
-   - `lesson_budget_findings`: enforce the configured *upper* bound always; enforce the *lower* bound
-     only when `is_complete_book` (a buildout book must not fail for a small lesson total).
-3. `tools/concept_scan.py`: for a fastforward book, a unit's allowed set is the whole catalog
-   (`union |= registered`), so a fastforwarded concept is not "used-but-unlisted". The untaught-*method*
-   check still runs. Book 1 keeps its per-unit set.
+**A. `tools/books.py`**
+- Read optional `variant_of` (str), `prereq_policy` (str), and `buildout` (bool).
+- Add `is_buildout(root, book) -> bool` reading the **explicit** `buildout` flag (default False). Do
+  NOT derive it from "is everything introduced" — that predicate is self-referential and would disable
+  the very checks it gates (plan-review [sol] blocker 2). `concept_minimum`/`lesson_budget` already honored.
 
-`syllabus_findings` needs no change (it matches only pipe-delimited rows) — but Book 1b's `syllabus.md`
-must list the roadmap of planned units as **prose, not a table** (authoring rule, Phase B).
+**B. `tools/curriculum.py`**
+- `global_concept_uniqueness_findings`: skip id collisions between a book and its `variant_of` target
+  (both directions); **assert the variant's `concepts.yaml` is content-identical to its parent's**
+  (new finding if they diverge).
+- `introduction_findings`: always enforce "introduced at most once"; enforce "every catalog concept
+  introduced" only when `not is_buildout(root, book)`.
+- `prereq_findings`: when `prereq_policy == "fastforward"`, validate closure over `requires` only (drop
+  `practices` from the ordering check). `requires` stays strict. `checkpoint_findings` is **untouched**.
+- `lesson_budget_findings`: enforce the *upper* bound always; enforce the *lower* bound only when
+  `not is_buildout(root, book)`.
 
-Each change ships with unit tests under `tests/` (fixture book roots: a variant pair, a fastforward
-book, and a buildout book), plus a regression assertion that Book 1's checks are unchanged.
+**C. `tools/concept_scan.py`**
+- For a `prereq_policy == "fastforward"` book, apply the whole-catalog allowance (`union |= registered`)
+  **only when `entry["kind"] == "unit"`**. Checkpoints and projects keep the strict per-entry set
+  ([sol] blocker 3 — otherwise a checkpoint could use an unintroduced concept undetected). The
+  untaught-*method* check runs for every entry. Book 1 keeps its per-unit set.
+
+**D. Build & registry integration** (without these, a partial Book 1b fails ci-local immediately —
+[sol]/[fable] blocker):
+- `scripts/ci-local.sh`: the registry assertion (`ci-local.sh:15`, currently `["book1","book2"]`)
+  accepts `book1b`; add a Book 1b invocation block mirroring the Book 1 curriculum + notebook-execution
+  + hygiene + manifest steps **minus** the Book-1-only pattern checks; build Book 1b PDFs
+  (`scripts/build-pdf.sh` gains a `book1b` path if needed).
+- `scripts/pre-merge-guard.sh`: the collision loop (`pre-merge-guard.sh:77`) iterates `book1b` too.
+- `tests/test_books.py`: the two-book registry assertion (`test_books.py:12`) is updated to include `book1b`.
+
+**Book 1b ci-local check matrix** (what runs for `book1b`, all via `python -m tools.cli --book book1b <check>`):
+concepts-schema, coverage/map-schema, uniqueness (variant-exempt), introduction (buildout-relaxed),
+prereq (fastforward), lesson-budget (buildout-relaxed lower), practice, checkpoint, syllabus,
+concept-scan (unit-fastforward), manifest, notebook-execution, notebook-hygiene, stretch, PDF build.
+**Not run:** pattern-marker / technique-spiral / patterns-doc (hard-gated to `book1`).
+
+**Tests** (`tests/`): fixture roots for a variant pair, a fastforward book, and a buildout book, plus
+**mutation tests** — deleting an introduction from a strict (non-buildout) fixture still fails
+`introduction_findings`; deleting enough lessons still fails `lesson_budget_findings`; the same deletions
+in a `buildout: true` fixture do NOT fail. `syllabus_findings` needs no code change (matches only
+pipe-delimited rows) — but Book 1b's `syllabus.md` lists the planned-unit roadmap as **prose, not a
+table** (authoring rule, Phase B).
 
 ## Scaffolding (`book1b/`)
 
@@ -81,20 +108,27 @@ book1b/
 ## U01 — Output & Variables (the template unit)
 
 Introduces: run-program, print, comment, string-literal, variable, naming, input, string-concat,
-f-string, error-messages. Requires: none. Fastforward is available but U01 needs little of it.
+f-string, error-messages. Requires: none. `lessons: 3` (matches Book 1 U01). Fastforward is available
+but U01 needs little of it.
 
 - **lesson.ipynb** opens with a concrete problem ("print a tidy fact sheet the computer fills in from a
   few values"), teaches each concept on a short worked-example ladder (minimal → one twist → realistic),
-  and stays story-light.
+  and stays story-light. The opening cell poses a genuine problem with a visible payoff, never concept
+  exposition (design §6 engagement criterion).
 - **exercises.ipynb** — mini-CP / LeetCode style, **volume favored**: each exercise has a simple
   background, a precise spec, and ≥1 worked sample (input → expected output). Backgrounds from math,
   labels, and formatting. ≥2 `stretch` ("Challenge") exercises; core never depends on them. NO solutions,
   no executed outputs.
-- **solutions.ipynb** — runs top-to-bottom clean with fixed seeds; every exercise's solution asserts
-  ≥3 non-vacuous cases; no `input()` in executable cells (prompt-only forms tagged `no-exec`, per
-  design 003's real-input convention where applicable).
+- **solutions.ipynb** — runs top-to-bottom clean with fixed seeds, using the **pre-function form** (U01
+  is before U07/`def-function`, design §7): each exercise is "given these values, produce this exact
+  output", `input()` is replaced by fixed sample values, and the solution `assert`s the assembled
+  string/number (e.g. `assert fact_sheet == "…"`). Several cases per exercise (a content-gate rule — the
+  CI floor is only ≥3 assert-bearing cells notebook-wide, design §6). No `input()` in executable cells
+  (prompt-only forms tagged `no-exec`, per design 003 where applicable).
 - **teacher-notes.md** — goals, 60–90 min pacing, the opening problem, common mistakes, discussion
-  prompts, differentiation.
+  prompts, differentiation, and a **core-set vs. extra-practice partition** of the exercise bank so a
+  lesson stays 60–90 min even though the bank is large (design §7; the exercise-volume + lean-early-units
+  balance).
 - **manifest.yaml** — `introduces`/`requires`/`practices` matching the coverage-map entry; provenance
   original; blueprint version.
 
@@ -104,15 +138,21 @@ statements' outline; teacher-notes inline. Cross-model verification is the conte
 
 ## Phases
 
-### Phase A — book-aware tooling + tests
-`tools/books.py`, `tools/curriculum.py`, `tools/concept_scan.py` + `tests/` fixtures and cases.
-Verification: `pytest` (new cases pass; full existing suite green — Book 1/Book 2 unchanged).
+### Phase A — book-aware tooling + build/registry integration + tests
+`tools/books.py`, `tools/curriculum.py`, `tools/concept_scan.py` (relaxations A–C);
+`scripts/ci-local.sh`, `scripts/pre-merge-guard.sh`, `scripts/build-pdf.sh`, `tests/test_books.py`
+(integration D); `tests/` fixtures + new cases + **mutation tests**.
+Verification: `pytest` (new + mutation cases pass; full existing suite green — Book 1/Book 2 unchanged);
+`bash scripts/ci-local.sh` still green on the current two-book repo before any book1b/ content exists
+(registry now *accepts* book1b but book1b is absent, so its block is a no-op / clean SKIP).
 
 ### Phase B — registry + `book1b/` scaffolding + catalog + syllabus + U01 coverage-map entry
-`books.yaml`, `book1b/` tree, `concepts.yaml` (identical to Book 1), `coverage-map.yaml` (U01),
-`syllabus.md`, `reference/`+`docs/` stubs, `.gitignore`.
-Verification: `python -m tools.cli` curriculum checks GREEN for `book1b` (schema, uniqueness-exempt,
-introduction-in-buildout, prereq-fastforward, syllabus).
+`books.yaml` (book1b entry with `buildout: true`), `book1b/` tree, `concepts.yaml` (identical to Book 1),
+`coverage-map.yaml` (U01, `lessons: 3`), `syllabus.md` (table = shipped entries; roadmap of planned
+units + the Algorithm Challenge as **prose**), `reference/`+`docs/` stubs, `.gitignore` (`book1b/build/`).
+Verification: `python -m tools.cli --book book1b <check>` GREEN for each curriculum check (concepts/map
+schema, uniqueness-exempt, introduction buildout-relaxed, prereq-fastforward, lesson-budget, practice,
+checkpoint, syllabus).
 
 ### Phase C — U01 authored end-to-end
 manifest + lesson + exercises + solutions + teacher-notes (+ seeded assets if needed), via the dispatch above.
@@ -120,11 +160,12 @@ manifest + lesson + exercises + solutions + teacher-notes (+ seeded assets if ne
 ### Phase V — verification
 - `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN across Book 1, Book 2, and Book 1b
   (registry+lint, unit tests, notebook execution + hygiene, manifest/prereq/coverage/stretch, PDF build,
-  pre-merge guard). Any book1b check with no authored content prints no false SKIP.
+  pre-merge guard). No false SKIP.
 - U01 `solutions.ipynb` executes top-to-bottom clean; every exercise's asserts pass; `exercises.ipynb`
-  is solution-free with no executed outputs; ≥2 `stretch` cells present.
+  is solution-free with no executed outputs; ≥2 `stretch` cells present; opening cell is a problem, not drill.
 - Scope allowlist: `git diff --name-only $(git merge-base HEAD main)..HEAD` = this plan + design 004 +
-  the three `tools/` files + `tests/` additions + `books.yaml` + `.gitignore` + the `book1b/` tree.
+  `tools/{books,curriculum,concept_scan}.py` + `scripts/{ci-local,pre-merge-guard,build-pdf}.sh` +
+  `tests/` additions + `books.yaml` + `.gitignore` + the `book1b/` tree.
 
 ## Out of scope
 
@@ -162,8 +203,40 @@ U05 requires while-loop/accumulator/loop-counter ⊆ U04; U13 requires def/param
 requires nothing, so it is authorable immediately. Phase V is the named verification phase (U01 is a
 unit). Book 1 and Book 2 stay strict/complete, so all relaxations are inert for them (regression test
 mandated in Phase A). No open blockers.
+**[self] correction (round 1):** my "checked all 13 units" was wrong on U06 — `import turtle` makes
+`import-statement` a *core* U06 dependency, not an incidental fastforward. Fixed (import-statement→U06).
 
-_(Awaiting [sol] / [glm] / [fable].)_
+#### [sol] round 1 (2026-09-21) — gpt-5.6-sol, read-only. **REJECT.**
+Four blockers + two nits, all FOLDED:
+- B1 (ci-local integration): `ci-local.sh:15` registry `== ["book1","book2"]`, per-book invocations
+  (27/45), PDF book1-only (61); `tests/test_books.py:12`; `pre-merge-guard.sh:77`; Phase B's bare
+  `python -m tools.cli` needs `--book`+check (`cli.py:21`). → new Tooling section **D** + check matrix;
+  Phase A/B/V + scope allowlist updated.
+- B2 (`is_complete_book` circular — would disable the missing-introduction + lesson-lower checks, incl.
+  for Book 1/2): → replaced with an **explicit** `buildout: true` flag + `is_buildout` helper +
+  **mutation tests** proving strict books still fail on a deleted introduction / lessons.
+- B3 (`union |= registered` breaks checkpoint content-alignment — `concept_scan` scans checkpoints):
+  → the allowance now applies to **unit** entries only; checkpoints/projects strict (design §5/§6).
+- B4 (U06 `import-statement` ordering) = [fable] B1 → folded.
+- N5 verification phase present (Phase V) — confirmed. N6 (`notebooks.py` floor is notebook-wide, not
+  per-exercise) → per-exercise rigor stated as a content-gate rule (design §6/§7).
+
+#### [fable] round 1 (2026-09-21) — Fable 5, read-only. **REJECT** (would APPROVE on the fold).
+Two blockers + nits, all FOLDED:
+- B1 (U06 `import-statement`) → import-statement moved to U06; U08 = random-module requires it.
+- B2 (ci-local.sh registry hard-fails + no book1b block; allowlist excluded it) → Tooling D + allowlist.
+- Nits: comparison→U02 (even/odd needs `n%2==0`); pre-function mini-CP form for U01 (design §7);
+  post-U13 checkpoint **mandatory** (§3/§6); turtle practice sites (U07 `draw_polygon`, U08 turtle
+  random walk); §6 "three vs four checks" + pattern-checks inert-for-book1b; U11 background avoids
+  untaught `join`; U01 `lessons: 3` + core/extra split; Algorithm Challenge in syllabus roadmap;
+  lesson_budget upper tightened to 60; engagement criterion restated for book1b (§6).
+
+#### [glm] round 1 — dispatched via `opencode:opencode-review` but WITHOUT the mandated
+`--model volcengine-plan/glm-5.3` (an out-of-date AGENTS.md copy at dispatch time); its verdict does not
+count toward consensus. Re-dispatched correctly in round 2.
+
+### Round 2 (2026-09-21) — revised plan/design after folding all round-1 findings.
+_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable] on the revised commit.)_
 
 ## Content Review
 
