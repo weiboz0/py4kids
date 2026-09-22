@@ -1,277 +1,207 @@
-# Plan 069 — "Borrowed tools": a narrow auxiliary-concept exception + pilot (u02 / u04 / u08)
+# Plan 069 — "Borrowed tools" MECHANISM: policy + schema v2 + cell-aware scanner + tests (no content)
 
-**Origin:** author directive (2026-09-21): "Book 1 currently strictly follows the learning order of concepts,
-making some examples and exercises limited to learned concepts at that point; relax this constraint to allow
-future concepts in examples as auxiliary tools" — i.e., make examples/exercises more realistic (less toy feel).
-**Advisory review:** sol (codex) + fable (Fable) surveyed all of Book 1 and converged on the design below.
-**User decisions (AskUserQuestion, 2026-09-21):** (1) scope = *mechanism + pilot* (broad enrichment deferred to
-follow-ups); (2) *lift* the u02 "don't count your guesses" ban; (3) pilot = *u04 + u08*.
+**Origin:** author directive (2026-09-21) to relax Book 1's strict prereq-closure so examples/exercises feel less
+toy-like, by allowing future concepts as auxiliary "borrowed tools". **Advisory review:** sol + fable surveyed
+Book 1 and converged on the design. **User decisions:** (Q1) scope = mechanism + pilot; (Q2) *lift* u02's
+"don't count your guesses" ban; (Q3) pilot = u04 + u08; (Q4, after review) **split tooling from pilot content**.
 
-Design authority created by this plan: **`docs/designs/004-borrowed-tools.md`** (the "borrowed-tools" norm,
-sibling of design 003). Related: [[twins-must-showcase-the-concept]], design 003 (real-input), design 000.
+**This plan (069) ships the MECHANISM ONLY** — governance + design docs + schema v2 + the cell-aware scanner +
+a synthetic mutation-test suite + an empty `auxiliary: []` metadata migration. **No student-facing content
+changes.** The u04/u08 pilot and the u02 counting-ban lift land in **follow-up plan 070**, which inherits the
+design settled here. This split is per [sol]'s plan-review (self-proving tooling via synthetic fixtures, cleanly
+reviewable) and the user's Q4 choice.
+
+Creates design authority **`docs/designs/004-borrowed-tools.md`**. Related: [[twins-must-showcase-the-concept]],
+design 003 (real-input), design 000. Round-1 review (below) was on a bundled draft; the plan was restructured to
+tooling-only per consensus.
 
 ## Motivation
 
-Today a CRITICAL RULE enforces strict prereq closure — "nothing may be used before the unit that introduces it"
-(`prereq_findings` in `tools/curriculum.py:227`; `concept_scan` flags any concept used in a code cell outside a
-unit's `introduces ∪ requires ∪ practices` union). The reviewers found toy-feel has **three sources**:
-1. **Genuine future concepts** (lists/`len` before u07; `.split()`, owned by Book 2, in u08) — needs a new
-   mechanism to let them appear as *given* black boxes.
-2. **Over-restriction of ALREADY-taught concepts** (u04 avoids `for`/`range` although u03 taught them; "do not
-   use…" statement bans) — needs no new mechanism, only removing the bans.
-3. **CI-executability substitutes** (scripted-player twins) — already addressed by design 003 / plans 067–068.
+Strict prereq closure — "nothing may be used before the unit that introduces it" (`prereq_findings`
+curriculum.py:227; `concept_scan` flags any concept used in a code cell outside a unit's
+`introduces ∪ requires ∪ practices` union) — forces toy examples. The "borrowed tool" exception lets a future
+concept appear as GIVEN, contract-only code the student never writes or is assessed on, earning no teaching
+credit. This plan builds and proves the machinery; content follows in 070.
 
-This plan builds the mechanism for (1), and applies both (1) and a scoped slice of (2) to a **pilot** (u04, u08)
-plus the user-approved u02 counting-ban lift. Broad enrichment and the full over-restriction sweep are **deferred
-to phased follow-up plans** once the pilot proves the mechanism.
-
-## The design — the "borrowed tool" exception (goes in design 004)
+## The design (→ `docs/designs/004-borrowed-tools.md`)
 
 **Core rule.** A future concept may appear in CORE material only as an explicitly-marked **borrowed tool**: given
-machinery in a lesson demo or an exercise scaffold that the student *reads, consumes the output of, or calls* —
-never authors, completes, selects, repairs, traces, or explains. It earns **no** teaching credit and never
-advances teach order. Checkpoints and projects stay strict (`auxiliary: []`).
+machinery in a lesson demo or exercise scaffold the student *reads, consumes the output of, or calls* — never
+authors, completes, selects, repairs, traces, or explains. It earns **no** teaching credit and **never** advances
+teach order. Checkpoints and projects stay strict (`auxiliary: []`).
 
-**Two exception kinds** (both narrow):
-- **(K1) Borrowed black-box tool** — a future *tool* concept used as given code the student does NOT write:
-  a list literal as inert given data, `.split()` in a given input adapter, `len()`/`max()`/`round()` as an
-  opaque call, a supplied helper `next_scripted_guess()`. Appears only inside a **GIVEN region** (exercise) or a
-  `demo`/`real-form`-tagged cell (lesson/solution). The student's authored lines use taught concepts only.
+**Two exception kinds:**
+- **(K1) Borrowed black-box tool** — a future *tool* used as given code the student does NOT write (a list
+  literal as inert given data; `.split()` in a given input adapter; `len`/`max`/`round` as an opaque call; a
+  supplied helper). Appears only inside a **GIVEN region** (exercise) or a `demo`/`real-form`-tagged cell
+  (lesson/solution). The student's authored lines use taught concepts only.
+  - **Loop-header carve-out ([sol] B2 / [fable] N2):** a `for x in <given collection>:` header that only
+    *delivers* a given collection's items is a **data-delivery idiom** (like `input()`), not "control-flow that
+    determines the solution". It is legal ONLY when it sits inside the GIVEN region and the student writes the
+    loop **body** (which carries the taught concept). A given list literal + its delivering `for x in <it>:`
+    header count as **ONE composite borrowed tool** ([fable] N1); declare only the *detectable* id
+    (`book1:list-literal`) — `list-loop` is `MANUAL_ONLY` (concept_scan.py:37), invisible to the scanner, so it
+    is NOT declared and is exempt from the "declared-but-unused" finding.
 - **(K2) Composed-from-taught** — a construct built ENTIRELY from already-taught primitives that the registry
-  merely *names* as a later concept, which the student MAY write. The only sanctioned instance in this plan is
-  u02 counting: `guesses = guesses + 1` is variable-reassignment (u02 cells 29–30) + arithmetic (u02 cell 15);
-  the registry pattern-detects it as `accumulator` (owned by u04). The later unit still formally introduces and
-  assesses the *named technique*. **(K2) is deliberately narrow** — allowed only when every token is taught and
-  the future unit still owns the named pattern; it is the user's explicit direction, overriding sol's "keep the
-  paper tally" position (recorded so the gate does not re-litigate it).
+  merely *names* as a later concept, which the student MAY write. **Represented as a CLOSED, non-extensible
+  exception table ([sol] B1)**, NOT a general "anything composed" rule (that would be a spine-sized hole). A K2
+  entry is `{cell-id, concept-ids, exact-AST-form}`; the scanner authorizes it only when ALL match. The single
+  K2 case this mechanism ships (its u02 *content* is deferred to plan 070) is the guess counter: concept ids
+  `{book1:loop-counter, book1:accumulator}` (it registers as BOTH — `loop-counter` u03, `accumulator` u04,
+  concept_scan.py:223–244), role `composed`, AST form **`name = name + 1`** ONLY (plain-Name target, literal `1`,
+  `+`; NOT `+=`, alternate operator, subscript, attribute, or any other form). K2 verifies its primitives are
+  already taught, never adds either concept to `seen`/practice/coverage/spiral, and is disjoint from
+  checkpoints/projects. Any mutation of entry/concept/cell/role/AST-form fails.
 
-**Eligibility test (K1).** A construct is a borrowed tool only if a reviewer could replace it with its resulting
+**Eligibility test (K1):** a construct is a borrowed tool only if a reviewer could replace it with its resulting
 value (or a named helper call) without changing what the learner must reason about, write, debug, or receive
 credit for.
 
-**Never eligible to lead** (spine-protection denylist — an auxiliary may not COMPUTE the assessed skill):
-find-extreme → `max`/`min`; running-total → `sum`; count-by-condition → `.count`; list-sort → `sorted`;
-linear-search → `in`/`.index`; transform-each → comprehensions; plus: the unit's own `introduces` before its
-lesson; anything the rubric names or a correct solution must author/select/modify/explain/trace; control-flow
-that determines the solution (`if`, loops, `break`, `def`/`return`, classes); mutation when mutation is the skill
-(`.append`, `.sort`, dict/attr assignment, file writes); error-producing syntax in debug/trace tasks; and ANY
-auxiliary use in a checkpoint or project.
+**Never eligible to lead** (spine-protection denylist — auxiliary may not COMPUTE the assessed skill):
+find-extreme→`max`/`min`; running-total→`sum`; count-by-condition→`.count`; list-sort→`sorted`;
+linear-search→`in`/`.index`; transform-each→comprehensions; the unit's own `introduces` before its lesson;
+anything the rubric names or a solution must author/select/modify/explain/trace; control-flow that determines the
+solution (`if`, loops [except the delivery carve-out], `break`, `def`/`return`, classes); mutation when mutation
+is the skill (`.append`, `.sort`, dict/attr assignment, file writes); error syntax in debug/trace tasks; and ANY
+auxiliary in a checkpoint/project. **Already-taught concepts are NOT auxiliaries** — they belong in
+`requires`/`practices` (e.g. u04 needs `for-loop` there; source-2 cleanup, plan 070).
 
-**Budget — "one new idea, one borrowed tool" per cell.** At most ONE borrowed tool per code cell; it must (a) be
-a single call/literal with a self-describing name, (b) not sit on the line carrying the taught concept, (c) be
-replaceable by a fixed value without changing what the cell teaches, (d) never appear in a graduated build-up
-rung (the plans-031–035/049 one-increment ladders stay pure). The same tool reused across a unit counts as one.
+**Budget — "one new idea, one borrowed tool" per cell:** ≤ ONE borrowed tool per code cell; it must (a) be a
+single call/literal (or the one list+delivery-header composite) with a self-describing name, (b) not sit on the
+line carrying the taught concept, (c) be replaceable by a fixed value without changing what the cell teaches,
+(d) **never appear in a graduated one-increment build-up rung** (a culminating *put-it-together* cell is not a
+build-up rung, but to avoid ambiguity the pilot targets exercises, not lesson ladder rungs — [sol] B2). Same tool
+reused across a unit counts as one.
 
-**Borrowed tool ≠ stretch/preview.** Stretch is optional and the student MAY write the future construct (design
-000 mixed-ability rule). A borrowed tool may support a CORE task but is supplied and contract-only; if a task
-says "change this / write another / fix this call / explain how it works", it is a preview, not a borrowed tool.
+**Borrowed tool ≠ stretch/preview:** stretch is optional and the student MAY write the future construct; a
+borrowed tool supports a CORE task but is supplied and contract-only. "Change this / write another / fix / explain"
+⇒ it is a preview, not a borrowed tool.
 
-**Marking convention** (learner-facing; extends the existing `**Notice:**` style):
-- First local use gets a rendered callout — three beats, ≤~25 words: *what it does* (concrete) · *"you'll own it
-  in Unit N"* (a promise) · *"borrow it like `randint`"* (anchor to a trusted tool). Example:
-  > **Borrowed tool — ready-made data:** `scores = [4, 6, 5, 7, 3]` is a **list**: one name holding all five
-  > scores in order. You'll build and change lists yourself in Unit 7 — for now, borrow it like `randint`.
-- Later uses get a 5-word inline comment: `scores = [4, 6, 5, 7, 3]   # borrowed: a list (Unit 7)`.
-- **Never** "advanced", "don't worry", "just trust", "you don't need to understand" (each implies something to
-  fear). "Borrow" / "own" is the whole metaphor. Do not over-mark (that is how u07's repeated "Real version:"
-  note went invisible).
-- Replace taxonomy bans with positive scoping: not "Do not use a list/`for`/functions" but
-  "This exercise checks that YOU keep the running total — the list is given; the loop and the total are your job."
-- Exercise scaffolds delimit the supplied source with GIVEN-region markers:
-  ```python
-  # GIVEN TOOL — do not edit
-  scores = [4, 6, 5, 7, 3]
-  # your work begins below
-  ```
-- Teacher notes get a "Borrowed tools in this unit" block naming the assessed spine and stating the tool earns no
-  credit ("Same as `randint` — someone wrote it for us; in Unit N we open the box").
+**Marking convention** (learner-facing; extends `**Notice:**`): first local use gets a three-beat callout (≤~25
+words): *what it does* · *"you'll own it in Unit N"* (Book-2 variant: *"next year, in Book 2, you'll open this
+box"* — [fable] N6) · *"borrow it like `randint`"*. Later uses get a 5-word inline comment. **Never** "advanced /
+don't worry / just trust / you don't need to understand". Positive scoping replaces "do not use…" bans. Exercise
+scaffolds delimit the given source with GIVEN-region markers (`# GIVEN TOOL — do not edit` … `# your work begins
+below`). Teacher notes get a "Borrowed tools in this unit" block (assessed spine + "earns no credit").
 
-## Representation + tooling
+## Governance / design amendments (Phase A; human-reviewed — exact wording surfaced for sign-off)
 
-**Schema v2 (Book 1 only; Book 2 stays v1 until it migrates intentionally).** Add an `auxiliary:` field to every
-Book-1 coverage-map entry and mirrored unit manifest (checkpoints/projects: `auxiliary: []`). Entries reference
-auxiliaries with **qualified ids** — `book1:list-literal`, `book2:str-split` — while `introduces`/`requires`/
-`practices` keep raw ids. Cells that use a borrowed tool carry cell metadata `tags:[auxiliary, <role>]` (role ∈
-`demo` | `given` | `real-form`) and `py4kids_auxiliary:[book1:list-literal, …]`. Neither the entry declaration
-nor the cell tag alone makes code pass — both are required.
+- **`AGENTS.md`** "Self-containedness is law" → add the borrowed-tool carve-out (used-before-taught permitted ONLY
+  as a marked, given, no-credit borrowed tool per design 004; taught-before-**assessed** unchanged;
+  checkpoints/projects strict).
+- **`docs/designs/000-project-design.md` §2** → same carve-out + pointer to 004.
+- **NEW `docs/designs/004-borrowed-tools.md`** → the full norm above (K1/K2, loop-header carve-out, closed K2
+  table, eligibility, denylist, budget, marking, tooling contract, checkpoint/project exclusion, revision log).
+- **`docs/designs/003-book1-real-input.md` v7 ([sol] B4 / [fable] N4):** §4 — fixed-count reads stay the DEFAULT
+  idiom, but `.split()` is permitted as a `book2:str-split` borrowed tool per design 004; §2/§5 — solution/lesson
+  **real-form markdown fences are now scanned** for auxiliaries (previously deliberately invisible); §6 — add a
+  **borrowed-data-twin clause** ([fable] N7): when a fixed-data twin's data is a borrowed list, §6b/§6c parity is
+  judged on the loop **body + result line** (not line-for-line loop head), like the §6d fragment oracle, so a
+  `for score in scores:` twin may pair with a counted `while`/`input()` real form; §9 revision entry.
 
-**`prereq_findings` (curriculum.py:227) changes:**
-1. Keep computing missing normal concepts from `(requires ∪ practices) − seen`; **exclude** `auxiliary`.
-2. **Never** add `auxiliary` ids to `seen` (only `introduces` advances teach order, line ~243 — unchanged).
-3. `auxiliary` must be disjoint from `introduces`/`requires`/`practices`.
-4. `book1:<id>` auxiliary: the concept's home introduction must be *later* than this entry (if already taught it
-   belongs in `requires`/`practices`). `book2:<id>`: require a registered Book-2 owner + forward relationship
-   (Book 2 depends on Book 1, not vice-versa) — a qualified forward reference that grants **no** ownership/credit
-   (this is how `.split()` is used in u08 WITHOUT registering `str-split` in Book 1, avoiding the
-   `global_concept_uniqueness_findings` collision, curriculum.py:52).
-5. Reject non-empty `auxiliary` on checkpoints and projects.
-6. Exclude `auxiliary` from `practice_findings`, checkpoint coverage, technique-spiral, and "only capstone
-   practices" calculations.
+## Schema v2 + tooling (Phases B–C)
 
-**`concept_scan` (concept_scan.py) — cell-aware:**
-- `code_sources()` (~:428) yields (path, cell index, source, tags, declared auxiliary ids, role) instead of bare
-  strings; stop aggregating one entry-wide `used` set before authorization (~:484–495).
-- Per source block: `normal_allowed = baseline ∪ introduces ∪ requires ∪ practices`;
-  `block_allowed = normal_allowed ∪ that_block's_declared_auxiliary`. A future concept used OUTSIDE its tagged
-  block still fails.
-- New findings: undeclared cell auxiliary id; declared-but-unused; unauthorized role tag; auxiliary AST node
-  outside a GIVEN region (exercises); GIVEN region mismatched between an exercise and its paired solution.
-- Global recognition: detect raw `.split()`/`str-split` regardless of the active book, then resolve authorization
-  against `book2:str-split` (today it is only recognized when the active book registers it — concept_scan.py:73).
-- **Scan fenced Python inside `real-form`-tagged markdown cells** (design 003 deliberately made solution markdown
-  invisible; without this, u08 could use `.split()` in a real-program block with no enforcement — design 003 §2).
+**Schema v2 ([sol] B5).** Book 1 becomes `map_version: 2` and every Book-1 manifest `blueprint_version: 2`;
+validators are **version-dispatched**; **Book 2 stays v1** unchanged. v2 adds an `auxiliary:` field to every
+Book-1 coverage-map entry and mirrored unit manifest (checkpoints/projects: `auxiliary: []`, and non-empty is
+rejected). Auxiliaries use **qualified ids** (`book1:list-literal`, `book2:str-split`);
+`introduces`/`requires`/`practices` keep raw ids. Grammar/validation: qualified-id form, no duplicates,
+`auxiliary` disjoint from the three raw fields, manifest↔map `auxiliary` equality. **This plan sets
+`auxiliary: []` everywhere (empty migration) — a pure metadata change that keeps ci-local green.**
 
-**Mutation tests (must accompany the tooling):** same-book future concept passes ONLY inside a declared+tagged
-GIVEN region; removing the cell tag fails; removing the entry declaration fails; moving the construct outside the
-GIVEN region fails; a later entry cannot treat the auxiliary as taught; auxiliary earns no practice/spiral credit;
-checkpoint/project auxiliary declarations fail; an untagged `.split()` in a Python markdown fence fails;
-`book2:str-split` passes without duplicating the registry id; exercise and solution GIVEN regions must be
-byte-identical.
+**Cell metadata (used by content in 070; validated now).** A borrowed-tool cell carries `tags:[auxiliary,
+<role>]` with role ∈ `demo` | `given` | `real-form` | `composed` (exactly one), and `py4kids_auxiliary:[<qualified
+ids>]`. Neither the entry declaration nor the cell tag alone authorizes; both are required. Malformed metadata
+and >1 role fail.
 
-## Governance / design amendments (human-reviewed — surfaced for sign-off)
+**`prereq_findings` (curriculum.py:227):** exclude `auxiliary` from `(requires ∪ practices) − seen`; never add
+`auxiliary` to `seen`; `book1:<id>` home-intro must be *later* than the entry (else it belongs in
+requires/practices); `book2:<id>` must have a registered Book-2 owner that is a transitive **dependent** of Book 1
+([sol] item 6 — `dependency_baseline(book1)` is empty, so check the cross-book graph directly, books.yaml:8);
+reject non-empty `auxiliary` on checkpoints/projects; exclude `auxiliary` from `practice_findings`, checkpoint
+coverage, technique-spiral, uniqueness, and the "only-capstone-practices" calc.
 
-Proposed exact wording is in Phase A; these edits are normally human-reviewed but are covered by this directive.
-- **`AGENTS.md`** "Self-containedness is law" bullet → add the borrowed-tool carve-out (used-before-taught is
-  permitted ONLY as a marked, given, no-credit borrowed tool per design 004; taught-before-**assessed** is
-  unchanged; checkpoints/projects stay strict).
-- **`docs/designs/000-project-design.md` §2** (prereq-closure / mixed-ability) → same carve-out + pointer to 004.
-- **New `docs/designs/004-borrowed-tools.md`** → the full norm above (policy, K1/K2, eligibility, denylist,
-  budget, marking, tooling contract, checkpoint/project exclusion).
+**`concept_scan` — cell-aware ([sol] B2/B3, item 6):**
+- `code_sources()` (~:428) yields (path, cell index, source, tags, declared auxiliary ids, role); drop the
+  entry-wide pre-authorization `used` union (~:484–495) for per-block authorization:
+  `block_allowed = baseline ∪ introduces ∪ requires ∪ practices ∪ this-block's-declared-auxiliary`; a future
+  concept used OUTSIDE its tagged block still fails. (Entry-wide two-pass helper-definition collection retained.)
+- **Parse EVERY Python fence** in governed notebooks — code cells AND markdown fences — then use tags/declarations
+  only for *authorization* ([sol] B3 fixes the "scan only tagged fences yet untagged must fail" contradiction).
+  A `SyntaxError` in a governed fence now **fails** (not silent `continue`, concept_scan.py:499). Checkpoint/
+  project solution fences are included.
+- **Global `.split()` recognition:** detect raw `.split()`→`str-split` regardless of active book, resolve to its
+  unique qualified owner `book2:str-split`, and **suppress the double "untaught method split" finding** when
+  authorized (concept_scan.py:73/373); untagged/unauthorized `.split()` still fails; no `str-split` is registered
+  in Book 1 (avoids `global_concept_uniqueness_findings`, curriculum.py:52).
+- New findings: undeclared cell auxiliary id; declared-but-unused (MANUAL_ONLY ids exempt — [fable] N1); K1
+  auxiliary AST node outside a GIVEN region; GIVEN region not byte-identical between an exercise and its paired
+  solution; K2 authorization only for an exact `{cell-id, concept-ids, AST-form, role:composed}` table match.
+- The `real-form` cell tag does not exist yet ([fable] N9) — Phase C introduces it (coexists with `no-exec`;
+  markdown cells carry `tags`).
 
-## Pilot content
+## Synthetic mutation-test suite (Phase D — proves the tooling WITHOUT real content)
 
-**u02 — lift the counting ban (K2, user-approved).** Drop "do not count your guesses / tally on paper" from
-lesson cell 66 and exercises cells 0 / Ex3 / Ch1 / Ch2; let students write `guesses = guesses + 1`. Add a light
-Notice: "This counting trick is called an **accumulator** — Unit 4 makes it official." Declare
-`auxiliary:[book1:accumulator]` on u02 with the K2 rationale. The u04 accumulator lesson/assessment is unchanged
-(it still formally introduces the named technique). No change to u02's existing while-twins (plan 067).
-
-**u04 — lists as given data (K1) + drop over-restriction (source 2).** Convert the counter-keyed 5-way if/elif
-dispatch that stands in for a 5-element list into a GIVEN list + given `for` iteration, leaving the accumulator /
-count / `break` body for the student. Pilot slice (sol's recommendation): **lesson cells 54 and 63**, and **one
-of Exercises 14–18** (Ex14 "Add only the passing rounds" is the cleanest — `scores = [4,6,5,7,3]`, student writes
-`if score >= 5: total = total + score`). Reword its statement to the Given:/Your job: split; drop the "do not use
-a list/`for`/`range`/functions" bans (note: `for`/`range` are already-taught u03 concepts — removing those bans
-is source-2 cleanup that needs no auxiliary; only the list literal is a borrowed tool). Declare
-`auxiliary:[book1:list-literal, book1:list-loop]` on u04. Solutions keep the GIVEN region byte-identical and do
-the graded work with taught concepts (asserts unchanged, e.g. Ex14 `assert total == 18`). The design-003 real
-`input()` form is UNCHANGED — the twin and the real form now differ only in where the data comes from (honest).
-
-**u08 — `.split()` as a given input adapter (K1, the hard case).** Replace one fixed-count read in a lesson cell
-(cell 27 or 36) and one solution real-form block (e.g. cell 14 or 33) with a marked
-`words = input(...).split()` adapter (lists + list-loops are already taught by u08, so only `.split()` leads).
-Declare `auxiliary:[book2:str-split]` on u08. This exercises BOTH the code-cell path and the markdown real-form
-path and the cross-book owner rule. `.split()` is NOT registered in Book 1.
+Tiny fixture notebooks/manifests under `tests/fixtures/` (not Book-1 content) exercising:
+- **K1:** future concept passes ONLY inside a declared+tagged GIVEN region; remove the cell tag → fail; remove the
+  entry declaration → fail; move the construct outside the GIVEN region → fail; a later entry cannot treat it as
+  taught (`seen` unchanged); no practice/spiral credit; checkpoint & project `auxiliary` declarations → fail;
+  untagged `.split()` in a Python markdown fence → fail; `book2:str-split` passes without duplicating the
+  registry id; exercise vs solution GIVEN regions must be byte-identical; a `SyntaxError` fence → fail.
+- **K2 negative matrix:** only the exact `name = name + 1` in the named cell with role `composed` and the two
+  declared ids passes; `+=`, alternate operator, subscript/attribute target, a different cell, a different
+  concept, or a missing role each → fail; no `seen`/practice/coverage credit.
+- **Book-2 isolation:** Book 2 (v1) behavior unchanged; a non-vacuous Book2→Book1 same-process test that extending
+  the Book-1 profile does not leak recognition globally.
 
 ## Phases
+- **A** — governance + design docs (AGENTS.md, design 000 §2, new design 004, design 003 v7). Exact wording drafted
+  and surfaced to the user before merge.
+- **B** — schema v2 validators (version-dispatched) + the empty `auxiliary: []` migration across every Book-1 map
+  entry + manifest; Book 2 stays v1.
+- **C** — `prereq_findings` + cell-aware `concept_scan` (parse-all-fences, global `.split()`, roles incl.
+  `real-form`/`composed`, K2 closed table, cross-book dependent check).
+- **D** — synthetic mutation-test suite (above); wire into ci-local.
+- **E** — verification.
 
-### Phase A — design + governance (docs only)
-Write `docs/designs/004-borrowed-tools.md`; amend `AGENTS.md` + `docs/designs/000` with the carve-out (exact
-wording drafted here and surfaced to the user for sign-off before merge).
+### Phase E — verification
+- `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN after the empty migration (pure metadata; no content moved).
+- The full mutation matrix passes (each removal/mutation breaks as designed); Book-2 v1 regression green.
+- `git diff --name-only $(git merge-base HEAD main)..HEAD` = this plan + AGENTS.md + design 000 + design 004 +
+  design 003 + `tools/{curriculum,concept_scan,notebooks}.py` + `tests/**` + every Book-1 `manifest.yaml` +
+  `book1/curriculum/coverage-map.yaml`. **No `book1/units/**/*.ipynb` content cell changes** (0 lesson/exercise/
+  solution cell edits — this plan changes no examples).
 
-### Phase B — tooling + tests
-Schema v2 `auxiliary:` field (map-schema + manifest-schema validators); `prereq_findings` changes; `concept_scan`
-cell-aware redesign + markdown-real-form scanning + global `.split()` recognition + `book2:` qualified refs; add
-`auxiliary: []` to every Book-1 map entry + manifest (no content change); the full mutation-test suite. ci-local
-stays green with `auxiliary: []` everywhere (pure metadata migration).
-
-### Phase C — pilot content
-u02 counting-ban lift; u04 lists-as-given-data (lesson 54/63 + Ex14) with the bans dropped; u08 `.split()` adapter
-(one lesson cell + one real-form). Each borrowed tool marked per the convention; GIVEN regions byte-identical
-between exercise and solution.
-
-### Phase D — verification
-`TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN. Mutation tests pass (each removal breaks as designed).
-Standalone-run each changed solution cell (asserts pass). §6b real-form parity preserved for u04/u08 twins.
-Targeted checks: the student never authors an auxiliary in the pilot exercises; removing a tag/declaration/GIVEN
-marker fails; checkpoints/projects still reject `auxiliary`. Scope allowlist = the plan + design 004 + AGENTS.md +
-design 000 + the tooling files + u02/u04/u08 notebooks + manifests + coverage-map.
-
-## Out of scope (deferred follow-ups)
-
-- Broad example/exercise enrichment across the other units (u01, u03 colors, u05, u06, u07, u09, projects) — a
-  phased rollout AFTER the pilot proves the mechanism (like the design-003 rollout).
-- The full "stop over-restricting already-taught concepts" sweep beyond the u04 pilot slice.
-- Book-2 schema migration to v2; checkpoints/projects gaining any auxiliary (they stay strict).
-- Spine cases the reviewers said MUST NOT be relaxed: u01's zero-baseline; u03 unrolled-square→loop; u06 manual
-  alphabet scan → `.index`; u07 find-extreme → `max`/records; u09 file ops hidden by helpers; any trace/predict/
-  debug task; GIVEN-region markers on lesson/solution demos (v1 uses cell tags there; exercises use GIVEN regions).
-- Not an erratum (nothing is wrong today — a realism/pedagogy improvement).
-- **Verification phase:** Phase D is the named verification phase (this plan ships tooling + pilot content, both
-  verified there).
+## Out of scope
+- **ALL student-facing content changes** → plan 070 (u04 lists-as-given-data + drop over-restriction bans; u08
+  `.split()` adapter; u02 counting-ban lift + K2 table entries + teacher-notes). 070 inherits design 004/003-v7.
+- Broad enrichment rollout across other units (phased follow-ups after the pilot).
+- Book-2 schema migration; checkpoints/projects gaining any auxiliary (stay strict).
+- Spine cases that must NOT be relaxed (u01 baseline; u03 unrolled-square→loop; u06 manual scan→`.index`; u07
+  find-extreme→`max`; u09 file helpers; trace/predict/debug tasks).
+- Not an erratum (a realism/pedagogy improvement). **Verification phase:** Phase E.
 
 ## Plan Review
 
-### Round 1 (2026-09-21) — [self] inline; [sol] gpt-5.6-sol; [glm] volcengine-plan/glm-5.3; [fable] Fable 5.
+### Round 1 (2026-09-21) — on the bundled draft (28d8306). [self]/[sol]/[fable] reviewed; [glm] timed out.
+[self] APPROVE-with-open-questions · [fable] APPROVE-WITH-NITS (N1–N9) · [sol] REJECT (5 BLOCKERs + split
+recommendation) · [glm] opencode TIMEOUT (no verdict). Consensus: restructure to **tooling-only** (this plan) +
+a pilot-content follow-up (plan 070); user confirmed the split (Q4). All BLOCKERs/nits folded into the design +
+tooling contract above. Round-1 verdicts are preserved in git history (commits 218c49e / 015153c).
 
+### Round 2 (2026-09-21) — [self] inline; [sol]/[glm]/[fable] on the restructured tooling-only plan.
 #### [self] (2026-09-21)
-**APPROVE (with open questions for the gate).** Synthesizes both advisory reports + the three user decisions.
-Design spine is sound: borrowed-tool = given/contract-only, never authored/assessed; spine-protection denylist;
-one-tool budget; checkpoints/projects strict; qualified `book2:str-split` forward-ref avoids the uniqueness
-collision; markdown real-form scanning closes the design-003 blind spot. Self-flagged for gate scrutiny:
-(1) SIZE — governance + schema v2 + concept_scan redesign + 3-unit pilot in one plan; is this reviewable, or
-should Phase B tooling and Phase C content split? (2) K2 (u02 `x=x+1` "composed-from-taught") is the contentious
-piece — sol argued keep the ban; it's the user's explicit call, flagged so the gate doesn't re-litigate the
-DECISION but should still check the MECHANISM (how concept_scan stops flagging student-written `accumulator` in
-u02 without a GIVEN region — K2 waives the given-only rule, which needs a clean tooling story). (3) GIVEN-region
-byte-identical exercise↔solution enforcement — confirm feasible. (4) governance wording (Phase A) needs the
-exact `AGENTS.md`/design-000 text before merge (surfaced to user).
+**APPROVE.** Restructured to mechanism-only per consensus. Folded: [sol] B1 (K2 closed cell-id/AST table),
+B2 (loop-header carve-out + list-literal-only declaration + `for-loop`→requires is 070's content concern +
+exercises-not-rungs), B3 (parse-all-fences, SyntaxError fails, checkpoint fences), B4 (design 003 v7), B5 (schema
+v2 map_version:2/blueprint_version:2 version-dispatched), item 6 (cross-book transitive-dependent + global
+`.split()` recognition + Book-2 isolation test), item 7 (split). Folded [fable] N1 (one composite tool +
+MANUAL_ONLY exempt), N2, N3 (both K2 ids + composed role), N4, N6, N7 (§6 borrowed-data-twin clause), N9
+(real-form tag). Empty migration keeps ci-local green; pilot content deferred to 070.
 
-#### [fable] (2026-09-21)
-**APPROVE WITH NITS** — design faithfully carries the guardrails; pilot is the right first step; keep it one plan
-(the pilot IS the mutation test). Required fixes (fold before Phase B/C):
-- N1: one-tool budget violated by u04 declaring `list-literal`+`list-loop` → define "a ready-made list + `for x in
-  <it>:`" as ONE composite tool; exempt MANUAL_ONLY ids (list-loop) from the "declared-but-unused" finding.
-- N2: denylist forbids "loops as solution control-flow" but the pilot GIVES a `for` header → carve out that a
-  header delivering given items is a data-delivery idiom (like input()) that sits INSIDE the GIVEN region; the
-  loop BODY stays the student's; budget clause (b) holds because the body lines carry the taught concept.
-- N3: K2 underspecified — `guesses = guesses + 1` registers as BOTH `loop-counter` (u03) AND `accumulator` (u04)
-  → declare both; K2 student-WRITES it (no GIVEN region) → needs a `composed` role exempt from GIVEN-region +
-  declared-but-unused, still zero credit, still checkpoint/project-disjoint; u02 teacher-notes state counter-free
-  design → update.
-- N4: design 003 must ALSO be amended (v7: §4 fixed-count stays DEFAULT but `.split()` allowed as book2:str-split
-  borrowed tool; §2/§5 real-form markdown now scanned; §9 entry) → add to governance list; teacher-notes
-  (u02/u04) must be in the allowlist + Phase C.
-Nits: N5 Ex14 has no "do not use" ban — it is OVER-PRESCRIPTIVE ("counter-bounded while + if/elif chain"); that
-sentence is the rewrite target; Ex15-18 carry the same sentence, state they STAY as-is in the pilot. N6 u08
-promise "own it in Book 2" is 2 years out → "next year, in Book 2, you'll open this box" + a Book-2 callout
-variant. N7 (important) the "real form UNCHANGED, differs only in data source" claim is contradictory — the new
-`for` twin breaks design 003 §6c line-for-line parity with the `while`/input() real form; PICK one: (i) keep the
-while/input() real form + amend design 003 §6 with a "borrowed-data twin" clause (parity on body + result line,
-like §6d) [fable recommends], or (ii) fixed-count `[int(input()),…]` + same `for`. N8 u04 map entry lacks
-`for-loop`/`range-function` in requires/practices → add `for-loop` (and range if used) to u04 practices or
-concept_scan fails the source-2 cleanup. N9 the `real-form` cell tag does not exist yet → Phase B introduces it
-(coexists with `no-exec`; markdown cells carry `tags`).
-
-#### [sol] (2026-09-21)
-**REJECT** — 5 BLOCKERs (all valid; caught a factual error: "u02 cells 29-30" = import-random rung, not
-reassignment). To fold:
-- B1 K2 unenforceable + hides `loop-counter` (not just accumulator). → CLOSED non-extensible exception table
-  keyed by NAMED u02 cell ids: permit only {book1:loop-counter, book1:accumulator}, role `composed`, ONLY the AST
-  form `name = name + 1` (plain name, literal 1; no +=/alt-op/subscript/attr); verify primitives taught; never
-  add to seen/practice/coverage/spiral; mutation of entry/concept/cell/role/AST fails.
-- B2 u04 pilot self-violates: lesson 54/63 are graduated RUNGS (auxiliaries banned there — [sol]/[fable] even
-  disagree if top rung counts); given `for score in scores:` is `list-loop` (assessed-control vs never-authored
-  tension) and is MANUAL_ONLY so unverifiable; u04 lacks `for-loop` in its union (concept_scan authorizes the
-  entry union, not cumulative seen). → resolve: pilot u04 in the EXERCISE (Ex14) only, NOT lesson rungs; declare
-  only `book1:list-literal` (detectable); add `for-loop` to u04 `requires` (source-2, already taught, NOT
-  auxiliary); the `for` header sits in the GIVEN region (student writes the body). Ex14 has no ban — its
-  counter-bounded-while/dispatch PRESCRIPTION is the rewrite target (= [fable] N5).
-- B3 markdown scan self-contradictory (untagged fence can't fail if never parsed). → parse EVERY python fence in
-  governed notebooks; tag/declaration only authorize; SyntaxError fails (not silent continue, concept_scan.py:499);
-  include checkpoint/project fences.
-- B4 governance omits design 003 (mandates fixed-count + Book-1 .split()-free) + teacher-notes. → design 003 v7
-  amendment (= [fable] N4) + teacher-notes in scope.
-- B5 schema v2 underspecified. → Book 1 `map_version: 2` + `blueprint_version: 2`, version-dispatched, Book 2 v1;
-  regressions proving practice/coverage/spiral/uniqueness/judge/structure ignore the field; qualified-ID grammar,
-  role-exactly-one, entry↔cell agreement, malformed-metadata tests.
-- (item 6, sound) cross-book: resolver must verify owner is a transitive DEPENDENT (book2 depends on book1);
-  dependency_baseline(book1) is empty so can't; scanner recognizes raw `.split()`→str-split→qualified owner,
-  suppress the double "untaught method" finding, untagged still fails; add a Book2→Book1 isolation test.
-- (item 7) SPLIT Phase B (tooling + synthetic fixtures + empty migration) from Phase C (pilot content); isolate
-  u02/K2. CONFLICTS with [fable]'s one-plan — reconcilable via synthetic fixtures proving the tooling.
-Phase D must add: K2 negative matrix, all-fence markdown mutations, malformed-metadata, list-loop enforcement if
-retained, Book-2 v1/isolation regressions, piped parity for the chosen u08 fence.
+#### [sol] (pending)
+#### [glm] (pending — opencode)
+#### [fable] (pending)
 
 ## Content Review
 _(pending)_
