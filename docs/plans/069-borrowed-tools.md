@@ -305,6 +305,9 @@ Verified sound: empty migration ci-local-green (only map_schema/manifest read th
 dispatched); dependency_baseline(book1) empty so reverse-graph dependent check works; book2:str-split end-to-end
 (owner book2 unit-01, depends_on book1); K2 ids correct; Phase-E scope claim correct.
 
+### Round 3 (2026-09-21) — re-verify [sol] + [glm] REJECTs (all round-2 findings folded; [fable] r2 nits folded, no re-review needed).
+#### [sol] round 3 / [glm] round 3 — pending
+
 ## Content Review
 _(pending)_
 
