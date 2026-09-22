@@ -1,89 +1,155 @@
-# Plan 071 — Book 1b Units 02 (Numbers & Arithmetic) + 03 (Decisions)
+# Plan 071 — Book 1b Units 02 (Numbers & Arithmetic) + 03 (Decisions) + Checkpoint 01
 
 **Origin:** Book 1b buildout (standing directive 2026-09-22, "full book 1b implementation").
-**Design:** `docs/designs/005-book1b-concept-first.md` §3 (unit table), §5 (fastforward), §7 (mini-CP form).
+**Design:** `docs/designs/005-book1b-concept-first.md` §3 (unit table + checkpoint boundaries), §5
+(fastforward + U02 forward-tag convention), §6 (per-plan practice-coverage rule), §7 (mini-CP form).
 **Template:** Unit 01 (`book1b/units/unit-01-output-and-variables/`, plan 070) — clone its shape exactly.
 
 ## Scope
 
-Author two adjacent concept-family units, each cloning the U01 template (problem-first lesson;
-mini-CP pre-function exercises; per-line-assert solutions mirroring the student form; teacher-notes with
-core/extra/Challenge partition; ≥2 Challenge exercises; solution-free student notebooks; no `input()` in
-solutions code). Both are pre-function (no `def` until U07). Add each unit's coverage-map entry + syllabus
-arc-table row + manifest. Book 1b stays `buildout: true`.
+Author two adjacent pre-function concept-family units **and their checkpoint** (U03 is a checkpoint
+boundary, design §3; the rollout requires the checkpoint "where due", design §11 / [sol]+[glm] r1):
+- **U02 — Numbers & Arithmetic**, **U03 — Decisions**, **checkpoint-01 — Foundations** (assesses U01–U03).
+
+Each unit clones the U01 template (problem-first lesson; mini-CP pre-function exercises; per-line-assert
+solutions in the house form; teacher-notes with core/extra/Challenge partition; ≥2 Challenge; solution-free
+student notebooks; no `input()` in graded cells). Book 1b stays `buildout: true`.
 
 ## Coverage-map entries (the contract)
 
 **unit-02-numbers-and-arithmetic** — `lessons: 3`
 - introduces: `[int-type, float-type, arithmetic, type-conversion, boolean, comparison]`
 - requires: `[print, variable, input, f-string]`
-- practices: `[string-literal, naming, comment, error-messages, run-program, string-concat]`
+- practices: `[string-literal, naming, comment, error-messages, run-program, string-concat, for-loop]`
+  - **`for-loop` is the deliberate FORWARD tag** (design §5: U02 is the first unit to demonstrate the
+    forward-reaching `practices:` convention — its own example is "a small loop inside a numbers-unit
+    problem"). U02's lesson carries ONE "peek ahead" example that sums several given numbers with a
+    `for` loop to motivate the loops unit; it is lesson-only (NOT a core exercise; [fable] r1 #7 keeps
+    `if`/loops out of U02 core). This makes the shipped U01 teacher-notes pointer true.
 
 **unit-03-decisions** — `lessons: 3`
 - introduces: `[logical-ops, if-statement, elif-else, conditional-nesting]`
 - requires: `[boolean, comparison, arithmetic, variable, print]`
-- practices: `[int-type, type-conversion, f-string, string-literal, input, naming]`
+- practices: `[int-type, type-conversion, float-type, f-string, string-literal, naming, input]`
 
-Closure (strict over `requires`): U02 requires ⊆ U01; U03 requires ⊆ U01∪U02 (`comparison`/`boolean`/
-`arithmetic` are U02). No entry practices its own introductions. `prereq-check` (fastforward) validates
-`requires` only; `coverage-check` validates the rest.
+**checkpoint-01-foundations** — `kind: checkpoint`, `lessons: 0.5`
+- introduces: `[]`
+- requires: `[print, variable, if-statement, comparison, arithmetic]`
+- practices: `[print, variable, comparison, boolean, arithmetic, int-type, float-type, type-conversion,
+  if-statement, elif-else, logical-ops, conditional-nesting, f-string, string-literal, string-concat,
+  naming, comment, run-program, error-messages, input]`
+  - The checkpoint is where the FOUNDATIONAL concepts (`print`/`variable`/`comparison`/`boolean`/
+    `arithmetic`/the control ids) get their `practices:` tag — exactly how Book 1's checkpoints anchor
+    coverage. Checkpoints stay STRICT (fastforward does not apply): every practiced id is introduced by
+    U01–U03, so `checkpoint_findings` passes.
 
-## Problem backgrounds (mini-CP, simple; design §3)
+Closure (strict over `requires`): U02 requires ⊆ U01; U03 requires ⊆ U01∪U02; checkpoint requires ⊆
+U01–U03. No entry practices its own introductions. `prereq-check` (fastforward) validates `requires`
+only; `coverage-check`/`checkpoint-check` validate the rest.
 
-- **U02 (numbers as math):** even/odd via `n % 2 == 0`, digit extraction (`//`, `%`), sum/average of a
-  few given numbers, unit conversion (minutes→h:m), rounding/`//` change-making, compare two numbers →
-  a boolean verdict, `int()`/`float()` conversions from given text. Fastforward is available but light.
-- **U03 (branching):** classify a given value — leap-year test (`and`/`or`/`not`), triangle type from
-  three sides, letter grade from a score, sign of a number, in-range check, smallest-of-three (nested
-  `if`), a simple FizzBuzz-for-one-number. Given values → exact printed verdict.
+### Design §6 practice-coverage record (manual, per-plan)
 
-Exercises favor volume (no cap); ≥2 Challenge each; core/extra/Challenge partition documented in
-teacher-notes so a lesson still fits 60–90 min. Repair/error exercises (if any) show the literal fix.
+After U01–U03 + checkpoint-01, every concept introduced through U03 is practiced at least once (the
+checkpoint's `practices:` covers the foundational io/data/control ids; U02/U03 practices cover the
+string/number reinforcers; `for-loop` is a forward tag, not yet due). Concepts introduced *after* U03
+(loops, functions, strings, collections, files, oop) are practiced by their own later units/plans; the
+capstone practice-coverage anchor stays dormant until the Algorithm Challenge (still `buildout: true`).
+
+## Authoring guardrails (Phase C/D) — folded from plan-review [fable]/[glm] r1
+
+**U02 (numbers):**
+- **No `round`/`min`/`max`/`abs`** ([fable] #1/#3, [glm] #3): they are `builtin-functions` (U07) and the
+  scanner tags them; fastforward won't flag them in a unit, so the *plan* forbids them. Rounding/change
+  = integer `//` and `%`; "distance"/sign = subtraction + comparison.
+- **Pin float output** ([fable] #2): expected output shows exactly what Python prints — `10 / 2` → `5.0`,
+  `(3+4+5)/3` → `4.0`, `7/2` → `3.5`. Choose given values that land on `.0`/`.5`; never `1/3` or
+  `0.1+0.2`; NO `:.2f` format specs. A **Notice** pins "`/` always gives a float, `//` gives an int".
+- **`//` and `%` on non-negative operands only** ([fable] #3); negatives appear only in comparison/sign
+  exercises. **Opening hook** = minutes→h:m (`135 // 60`, `135 % 60`) or digit-splitting — never "here is `int`".
+- **Traceback beat** ([fable] #4): `print("Age: " + 12)` → `TypeError: can only concatenate str … to str`,
+  fixed with `str()` / f-string; pair with `"3" + "4"` → `"34"` vs `3 + 4` → `7` (motivates `int()` on
+  given text, e.g. `age_text = "12"`).
+- **Keep `if` out of core** ([fable] #7): "compare two numbers" PRINTS the boolean
+  (`print(a > b)` / `f"Is {n} even? {n % 2 == 0}"`), never an `if`; the `for`-loop peek-ahead is the only
+  forward reach and is lesson-only.
+- Digit exercises state the operand range ("a two-digit number"); `int("12")` samples show the quotes ([fable] #10).
+
+**U03 (decisions):**
+- **Traceback beat** ([fable] #5): `if score = 90:` → `SyntaxError` (`=` vs `==`), fixed to `==`.
+- **elif ordering** ([fable] #5): grade ladder top-down (`>= 90` first), triangle equilateral-before-isosceles;
+  ≥1 exercise whose expected output is only correct with the right `elif` order + a Notice on why.
+- **In-range** via `x >= 0 and x <= 10` (logical-ops' job); chained `0 <= x <= 10` only as a Notice.
+- **Leap year** ([fable] #6): parenthesized `(year % 4 == 0 and year % 100 != 0) or year % 400 == 0`,
+  pre-explained ("divisible by 4, except centuries, except every 400"), samples 1900/2000/2024; opener
+  tests a single given year (pre-loop; separate `if`s if several).
+- **input try-it** ([glm] #4): reuse the U01 Ex8 pattern — a fenced "try `input()` yourself" markdown
+  snippet + a fixed-value stand-in in the graded cell; no `input()` in graded/solution code.
+
+**Both / checkpoint:** core ≤7 exercises per unit ([fable] #9), design §3 "logic puzzles" go in Challenge
+only; each teacher-notes carries a "60-MINUTE CUT" line (U01 precedent). The checkpoint is un-themed,
+mixes U01–U03, assesses only introduced concepts, and is solution-free like a unit's exercises.
 
 ## Phases
 
 ### Phase A — plan-review gate (4-way). No implementation until consensus.
 
 ### Phase B — contracts
-`book1b/curriculum/coverage-map.yaml` (append the two entries), `book1b/syllabus.md` (append two
-arc-table rows in map order), and a `manifest.yaml` per unit. `python -m tools.cli --book book1b
-coverage-check` + `prereq-check` GREEN.
+Append the three entries to `book1b/curriculum/coverage-map.yaml`; add three `syllabus.md` arc-table rows
+(map order); create `manifest.yaml` per unit + the checkpoint. `--book book1b coverage-check` +
+`prereq-check` GREEN.
 
-### Phase C — statements (Codex, gpt-5.6-sol): each unit's `lesson.ipynb` + `exercises.ipynb`
-Problem-first lesson (opening cell = a real problem, not drill; per-concept worked-example ladders;
-a deliberate broken/fixed traceback beat reusing `error-messages`). Exercises: ≥8 each, mini-CP
-pre-function form, ≥2 `stretch` Challenge, no solutions/outputs/"Solution" headings, no `input()` in code.
+### Phase C — statements (Codex, gpt-5.6-sol)
+Per unit: `lesson.ipynb` + `exercises.ipynb` (problem-first, worked-example ladders, the named traceback
+beats, ≥8 mini-CP pre-function exercises, ≥2 `stretch` Challenge, no solutions/outputs/"Solution"
+headings, no `input()` in code). Checkpoint: `checkpoint.ipynb` (student-facing mixed U01–U03 problems,
+no solutions/outputs). Follow every Authoring guardrail above.
 
-### Phase D — solutions (SEPARATE fresh Codex, gpt-5.6-sol): each unit's `solutions.ipynb`
-House form: capture each output line in a named variable, print it, assert it (repair exercises show the
-literal fix, assert separately). Mirror every `## Exercise N`. Runs clean; no `input()` in code.
+### Phase D — solutions (SEPARATE fresh Codex, gpt-5.6-sol)
+`solutions.ipynb` per unit AND for the checkpoint, house form (capture line → print → assert; repair
+exercises show the literal fix). Mirror every `## Exercise N`; runs clean; no `input()` in code.
 
 ### Phase E — teacher-notes (inline) + verification
-`teacher-notes.md` per unit (goals, 60–90 min pacing, core/extra/Challenge partition, common mistakes,
-discussion prompts, differentiation). **Verification:** full `TMPDIR=/dev/shm bash scripts/ci-local.sh`
-ALL GREEN across the three books; both units' `exec-solutions` clean + asserts pass; exercises
-solution-free/output-free; ≥2 stretch each; opening cells are problems. Scope allowlist = this plan +
-the two `book1b/units/unit-0{2,3}-*/` trees + `book1b/curriculum/coverage-map.yaml` + `book1b/syllabus.md`.
+`teacher-notes.md` per unit (checkpoint gets grading notes): goals, 60–90 min pacing + 60-MINUTE CUT,
+core/extra/Challenge partition, common mistakes, discussion prompts, differentiation. **Verification:**
+full `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN across the three books; both units' + the
+checkpoint's `exec-solutions` clean + asserts pass; exercises/checkpoint solution-free/output-free; ≥2
+stretch per unit; opening cells are problems; the U02 `for`-loop peek-ahead executes. Scope allowlist =
+this plan + `book1b/units/unit-0{2,3}-*/` + `book1b/checkpoints/checkpoint-01-foundations/` +
+`book1b/curriculum/coverage-map.yaml` + `book1b/syllabus.md`.
 
 ## Out of scope
 
-- U04–U13, checkpoints, Algorithm Challenge — later plans (072+).
+- U04–U13, the later checkpoints, and the Algorithm Challenge — later plans (072+).
 - No tooling changes (plan 070 shipped them); no Book 1/Book 2 changes; no governance-file edits.
-- Not an erratum. **Verification phase:** Phase E is the named verification phase (units → required).
+- Not an erratum. **Verification phase:** Phase E is the named verification phase (units + checkpoint → required).
 
 ## Plan Review
 
-### Round 1 (2026-09-22) — [self] inline; [sol]/[glm]/[fable] dispatched parallel.
+### Round 1 (2026-09-22) — [self] APPROVE (see below); [sol] REJECT; [glm] REJECT; [fable] APPROVE WITH NITS.
 
-#### [self] — **APPROVE.**
-Closure verified in listed order: U02 `requires` ⊆ U01 introduces; U03 `requires` (`boolean`/`comparison`/
-`arithmetic`/`variable`/`print`) ⊆ U01∪U02. Neither entry practices its own introductions; all practices
-are earlier concepts. All 62 catalog concepts stay introduced-once (U02 adds the 6 numbers/compare, U03
-the 4 control ids; consistent with design 005 §3 incl. `comparison`→U02). Both units are pre-function
-(no `def`) and clone the U01 template (problem-first, mini-CP, house solution form). Phase E is the named
-verification phase (units → required). No tooling/governance/Book-1/2 changes. No open blockers.
+#### [self] round 1 — APPROVE (superseded by the round-1 folds: the original draft omitted the U02
+forward tag, the post-U03 checkpoint, and the authoring guardrails; all now folded).
 
-_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable].)_
+#### [sol] round 1 — **REJECT**, both blockers FOLDED:
+1. U02 must demonstrate the forward-reaching `practices:` convention (design §5) → U02 `practices` now
+   includes `for-loop` (a lesson-only peek-ahead sum), making the shipped U01 pointer true.
+2. Post-U03 checkpoint deferred though U03 is a checkpoint boundary → **checkpoint-01-foundations added to
+   this plan's scope**. (Closure/partition/template all PASS per [sol].)
+
+#### [glm] round 1 — **REJECT**, both blockers FOLDED (tooling verified GREEN + mutation-tested by [glm]):
+1. Same U02 forward-tag blocker → `for-loop` forward tag added.
+2. Design §6 per-plan practice-coverage absent + U03 under-tags → checkpoint-01 now carries the
+   foundational-concept `practices:`; the **§6 practice-coverage record** above is added. Nits folded:
+   "rounding" disambiguated (`//`/`%`, no builtins); input try-it pattern pinned (guardrails).
+
+#### [fable] round 1 — **APPROVE WITH NITS**, all 10 guardrails FOLDED into "Authoring guardrails" above
+(no builtins; float output pinned; `//`/`%` non-negative; named U02/U03 traceback beats; elif ordering;
+leap-year formula; `if` out of U02 core; practice bookkeeping via the checkpoint; core ≤7 + 60-min cut;
+mini-CP wording).
+
+### Round 2 (2026-09-22) — revised with the checkpoint, the `for-loop` forward tag, the §6 record, and
+the authoring guardrails. Re-dispatching [sol]/[glm]/[fable].
+_(Awaiting round-2 verdicts.)_
 
 ## Content Review
 
