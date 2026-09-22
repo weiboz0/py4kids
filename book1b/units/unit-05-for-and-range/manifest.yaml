@@ -1,0 +1,10 @@
+id: unit-05-for-and-range
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [for-loop, range-function, nested-loops]
+  requires: [while-loop, accumulator, loop-counter, arithmetic, comparison, if-statement, variable, print]
+  practices: [running-total, count-by-condition, accumulator, boolean, elif-else, conditional-nesting,
+              break-statement, string-concat, int-type, f-string, string-literal, naming]

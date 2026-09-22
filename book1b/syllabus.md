@@ -54,6 +54,9 @@ The **Algorithm Challenge** (a non-themed integrative problem set) closes the ye
 | `unit-02-numbers-and-arithmetic` | unit | 3 | Make the computer do the math — integers, floats, `//`/`%`, conversions, and True/False comparisons. |
 | `unit-03-decisions` | unit | 3 | Teach the computer to choose — `if`/`elif`/`else` and `and`/`or`/`not` on leap years, grades, and more. |
 | `checkpoint-01-foundations` | checkpoint | 0.5 | Prove output, numbers, and decisions on a mixed problem set. |
+| `unit-04-loops-and-counting` | unit | 3 | Teach the computer to repeat and count — `while`, counters, accumulators, and stop-when-done. |
+| `unit-05-for-and-range` | unit | 3 | Count with `for`/`range` and stack loops for tables and triangles. |
+| `checkpoint-02-loops` | checkpoint | 0.5 | Prove `while`, `for`/`range`, and counting on a mixed loop problem set. |
 
 ## Rules this syllabus is bound by
 
