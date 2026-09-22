@@ -217,9 +217,34 @@ u02 without a GIVEN region — K2 waives the given-only rule, which needs a clea
 byte-identical exercise↔solution enforcement — confirm feasible. (4) governance wording (Phase A) needs the
 exact `AGENTS.md`/design-000 text before merge (surfaced to user).
 
+#### [fable] (2026-09-21)
+**APPROVE WITH NITS** — design faithfully carries the guardrails; pilot is the right first step; keep it one plan
+(the pilot IS the mutation test). Required fixes (fold before Phase B/C):
+- N1: one-tool budget violated by u04 declaring `list-literal`+`list-loop` → define "a ready-made list + `for x in
+  <it>:`" as ONE composite tool; exempt MANUAL_ONLY ids (list-loop) from the "declared-but-unused" finding.
+- N2: denylist forbids "loops as solution control-flow" but the pilot GIVES a `for` header → carve out that a
+  header delivering given items is a data-delivery idiom (like input()) that sits INSIDE the GIVEN region; the
+  loop BODY stays the student's; budget clause (b) holds because the body lines carry the taught concept.
+- N3: K2 underspecified — `guesses = guesses + 1` registers as BOTH `loop-counter` (u03) AND `accumulator` (u04)
+  → declare both; K2 student-WRITES it (no GIVEN region) → needs a `composed` role exempt from GIVEN-region +
+  declared-but-unused, still zero credit, still checkpoint/project-disjoint; u02 teacher-notes state counter-free
+  design → update.
+- N4: design 003 must ALSO be amended (v7: §4 fixed-count stays DEFAULT but `.split()` allowed as book2:str-split
+  borrowed tool; §2/§5 real-form markdown now scanned; §9 entry) → add to governance list; teacher-notes
+  (u02/u04) must be in the allowlist + Phase C.
+Nits: N5 Ex14 has no "do not use" ban — it is OVER-PRESCRIPTIVE ("counter-bounded while + if/elif chain"); that
+sentence is the rewrite target; Ex15-18 carry the same sentence, state they STAY as-is in the pilot. N6 u08
+promise "own it in Book 2" is 2 years out → "next year, in Book 2, you'll open this box" + a Book-2 callout
+variant. N7 (important) the "real form UNCHANGED, differs only in data source" claim is contradictory — the new
+`for` twin breaks design 003 §6c line-for-line parity with the `while`/input() real form; PICK one: (i) keep the
+while/input() real form + amend design 003 §6 with a "borrowed-data twin" clause (parity on body + result line,
+like §6d) [fable recommends], or (ii) fixed-count `[int(input()),…]` + same `for`. N8 u04 map entry lacks
+`for-loop`/`range-function` in requires/practices → add `for-loop` (and range if used) to u04 practices or
+concept_scan fails the source-2 cleanup. N9 the `real-form` cell tag does not exist yet → Phase B introduces it
+(coexists with `no-exec`; markdown cells carry `tags`).
+
 #### [sol] (pending)
 #### [glm] (pending — opencode)
-#### [fable] (pending)
 
 ## Content Review
 _(pending)_
