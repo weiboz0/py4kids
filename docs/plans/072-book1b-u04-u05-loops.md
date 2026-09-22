@@ -185,8 +185,15 @@ checkpoints get NO fastforward allowance, so `concept_scan` would flag it used-b
 `string-concat` added to checkpoint-02 `practices`** (introduced U01, legal). [sol] confirmed the U04
 traceback beat + cp02 `while True/break` sentinel closed the round-2 blockers; closure/backing otherwise PASS.
 
-### Round 4 (2026-09-22) — added `string-concat` to checkpoint-02. Re-dispatching [sol].
-_(Awaiting [sol] on the round-4 commit.)_
+### Round 4 (2026-09-22) — on 04fa9be. [sol] **APPROVE** — string-concat gap closed; whole checkpoint mix
+re-scanned (no detectable concept unlisted); closure/strictness/no-self-practice all clean.
+
+### Plan-review outcome: **FULL 4-way consensus** — [self] APPROVE · [sol] APPROVE · [glm]/[fable] APPROVE
+WITH NITS (all folded). Four rounds (loops are concept-rich): r1 = 2× REJECT on §6 practice coverage
+(conditional-nesting/sentinel-loop) + missing §6 record; r2 = [sol] REJECT on metadata honesty
+(error-messages/break-statement unbacked); r3 = [sol] REJECT on strict-scan string-concat; r4 clean. The
+depth produced a thorough authoring spec (`+=` rule, sentinel/nested definitions, house-form loop-output
+adaptation, honest metadata, lesson outline). Gate CLOSED → implementation.
 
 ## Content Review
 
