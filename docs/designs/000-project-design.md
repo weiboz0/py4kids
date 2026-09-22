@@ -77,9 +77,13 @@ The exact Book 1 unit list is authored in the first curriculum plan, not fixed h
 ### Self-containedness (law, as in usaaio)
 
 The student baseline is zero programming + middle-school math.
-- **Prereq closure:** nothing may be used before the unit that `introduces:` it.
-- **Practice coverage:** every introduced concept has exercises.
-- **Assessment alignment:** checkpoints test only what has been taught.
+- **Prereq closure:** nothing may be used before the unit that `introduces:` it —
+  **except a marked, given "borrowed tool"** (a future concept the student reads or calls but never
+  writes or is assessed on, earning no teaching credit and never advancing teach order). See
+  `docs/designs/004-borrowed-tools.md`.
+- **Practice coverage:** every introduced concept has exercises. (Borrowed tools earn no coverage credit.)
+- **Assessment alignment:** checkpoints test only what has been taught; **checkpoints and projects carry no
+  borrowed tools.** Taught-before-assessed is never relaxed.
 These are CI checks once the verification tooling lands; until then reviewers enforce
 them manually.
 
