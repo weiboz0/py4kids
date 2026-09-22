@@ -199,9 +199,29 @@ v2 map_version:2/blueprint_version:2 version-dispatched), item 6 (cross-book tra
 MANUAL_ONLY exempt), N2, N3 (both K2 ids + composed role), N4, N6, N7 (§6 borrowed-data-twin clause), N9
 (real-form tag). Empty migration keeps ci-local green; pilot content deferred to 070.
 
+#### [fable] round 2 (2026-09-21)
+**APPROVE WITH NITS** — N1–N9 verified resolved; restructure STRENGTHENED the design. New nits (text folds, no
+re-review needed if folded):
+- N10: the `Given:`/`Your job:` exercise-statement framing dropped out — restore it in design 004's marking
+  convention (070 inherits it). → FOLD.
+- N11 (concrete/required): parse-all-fences is RETROACTIVE — 22 existing Book-1 markdown fences flag `input`
+  used-but-unlisted (u03 solutions; cp02/cp03/cp04 solutions — the design-003 §5 deliberately-invisible
+  real-forms; 0 SyntaxErrors). Phase B empty migration must ALSO add `practices:[input]` to u03/cp02/cp03/cp04
+  (map+manifest in sync); design 003 v7 §5 must state the per-unit-audit contingency is superseded (markdown
+  real-forms now visible → declare under the General Rule); make explicit the entry-wide two-pass `defined_names`
+  collects from markdown fences AND code cells (else method false-positives fire). Still pure metadata; Phase E
+  can't be green otherwise. → FOLD.
+- N12: synthetic fixtures should mirror the 3 real shapes (exercise+solution GIVEN region byte-identical; lesson
+  no-exec+real-form CODE cell; solutions markdown real-form fence). → FOLD.
+- N13: callout wording is K1-shaped ("borrow it") — wrong for K2 (the kid BUILT it; "Unit 4 NAMES it"); add a K2
+  naming-variant callout + explicitly exempt `composed` from the GIVEN-region requirement. → FOLD.
+- precision: `auxiliary` disjointness compares after stripping the `book1:` prefix; "`book1:<id>` home-intro later
+  than the entry" uses MAP order, not registry order. → FOLD.
+Confirmed sound: book2:str-split resolution (book2 registers str-split + depends_on book1); mechanism fully
+judgeable by synthetic fixtures (nothing needs a real example); K2 honesty; checkpoints/projects strict.
+
 #### [sol] (pending)
 #### [glm] (pending — opencode)
-#### [fable] (pending)
 
 ## Content Review
 _(pending)_
