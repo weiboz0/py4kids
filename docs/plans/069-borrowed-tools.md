@@ -243,8 +243,35 @@ like §6d) [fable recommends], or (ii) fixed-count `[int(input()),…]` + same `
 concept_scan fails the source-2 cleanup. N9 the `real-form` cell tag does not exist yet → Phase B introduces it
 (coexists with `no-exec`; markdown cells carry `tags`).
 
-#### [sol] (pending)
-#### [glm] (pending — opencode)
+#### [sol] (2026-09-21)
+**REJECT** — 5 BLOCKERs (all valid; caught a factual error: "u02 cells 29-30" = import-random rung, not
+reassignment). To fold:
+- B1 K2 unenforceable + hides `loop-counter` (not just accumulator). → CLOSED non-extensible exception table
+  keyed by NAMED u02 cell ids: permit only {book1:loop-counter, book1:accumulator}, role `composed`, ONLY the AST
+  form `name = name + 1` (plain name, literal 1; no +=/alt-op/subscript/attr); verify primitives taught; never
+  add to seen/practice/coverage/spiral; mutation of entry/concept/cell/role/AST fails.
+- B2 u04 pilot self-violates: lesson 54/63 are graduated RUNGS (auxiliaries banned there — [sol]/[fable] even
+  disagree if top rung counts); given `for score in scores:` is `list-loop` (assessed-control vs never-authored
+  tension) and is MANUAL_ONLY so unverifiable; u04 lacks `for-loop` in its union (concept_scan authorizes the
+  entry union, not cumulative seen). → resolve: pilot u04 in the EXERCISE (Ex14) only, NOT lesson rungs; declare
+  only `book1:list-literal` (detectable); add `for-loop` to u04 `requires` (source-2, already taught, NOT
+  auxiliary); the `for` header sits in the GIVEN region (student writes the body). Ex14 has no ban — its
+  counter-bounded-while/dispatch PRESCRIPTION is the rewrite target (= [fable] N5).
+- B3 markdown scan self-contradictory (untagged fence can't fail if never parsed). → parse EVERY python fence in
+  governed notebooks; tag/declaration only authorize; SyntaxError fails (not silent continue, concept_scan.py:499);
+  include checkpoint/project fences.
+- B4 governance omits design 003 (mandates fixed-count + Book-1 .split()-free) + teacher-notes. → design 003 v7
+  amendment (= [fable] N4) + teacher-notes in scope.
+- B5 schema v2 underspecified. → Book 1 `map_version: 2` + `blueprint_version: 2`, version-dispatched, Book 2 v1;
+  regressions proving practice/coverage/spiral/uniqueness/judge/structure ignore the field; qualified-ID grammar,
+  role-exactly-one, entry↔cell agreement, malformed-metadata tests.
+- (item 6, sound) cross-book: resolver must verify owner is a transitive DEPENDENT (book2 depends on book1);
+  dependency_baseline(book1) is empty so can't; scanner recognizes raw `.split()`→str-split→qualified owner,
+  suppress the double "untaught method" finding, untagged still fails; add a Book2→Book1 isolation test.
+- (item 7) SPLIT Phase B (tooling + synthetic fixtures + empty migration) from Phase C (pilot content); isolate
+  u02/K2. CONFLICTS with [fable]'s one-plan — reconcilable via synthetic fixtures proving the tooling.
+Phase D must add: K2 negative matrix, all-fence markdown mutations, malformed-metadata, list-loop enforcement if
+retained, Book-2 v1/isolation regressions, piped parity for the chosen u08 fence.
 
 ## Content Review
 _(pending)_
