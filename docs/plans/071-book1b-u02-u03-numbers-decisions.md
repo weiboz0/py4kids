@@ -194,7 +194,32 @@ U02 opens on h:m, prints Booleans (no `if` in core), TypeError beat present, flo
 and the order-sensitive Medal Ladder; checkpoint is strict (no loops/lists/accumulator/builtins beyond
 print/int/float/str). Openings are problems, not drill. No open [self] findings.
 
-_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable].)_
+### Round 1 verdicts (2026-09-22) — [fable] APPROVE WITH NITS; [glm] REJECT; [sol] REJECT.
+All three blind-solved 27/27 exact matches; every CI check passed. REJECTs were on teaching-contract /
+metadata gaps, ALL FOLDED:
+- `[FIXED]` **Must** U02 taught only `>`/`==`/`!=` — `<`/`<=`/`>=` untaught though `comparison` is
+  introduced there and U03 uses them ([sol]#1). → U02 lesson comparison rung now teaches all six
+  operators; a core exercise uses `>=`.
+- `[FIXED]` **Must** `not` never taught in U03 ([sol]#2, [glm]#1, [fable]#2). → `not` rung + Notice in the
+  logical-operators section, and Challenge 3 "Closed Sign" (`not is_open`) practices it.
+- `[FIXED]` **Must** unbacked practice metadata ([sol]#3, [fable]#6, [glm]#4): U03 `practices` claimed
+  `float-type` (no float) → dropped; checkpoint claimed `conditional-nesting`/`input`/`comment`/
+  `run-program` (unused) → trimmed to used ids, and `requires` expanded to the real prereqs
+  (elif-else/logical-ops/type-conversion/float-type/f-string/string-concat). (comment/run-program are
+  practiced by U02; input by U03's try-it; conditional-nesting deferred to U04+ per §6.)
+- `[FIXED]` **Must** checkpoint headings were visible `## Exercise N` + hidden `<!-- ## Question N -->`
+  comments ([glm]#2). → visible `## Question N`, comments removed (checkpoint + solutions).
+- `[FIXED]` U02 peek-ahead box `+>` diff residue ([fable]#1/[sol]#5) → `>`. Checkpoint Q6 `== True`
+  ([fable]#4) → `(has_pass or has_invitation)`. U03 lesson reordered so logical-ops precede the triangle
+  `elif` rung ([fable]#3). Teacher-notes drift corrected across all three ([sol]#4, [fable]#5, [glm]#3).
+- Nice-to-haves deferred/noted: real multi-line traceback for Q7, moving the leap-year expression to
+  Lesson 3, Q4 "sum divided by 2" wording — recorded; not blocking.
+
+### Content-review round 1 outcome: 1 APPROVE-WITH-NITS + 2 REJECT; all findings folded (notebooks +
+metadata + teacher-notes). Full ci-local ALL GREEN after the fold. Re-review round 2 dispatched.
+
+### Round 2 (2026-09-22) — after folding all round-1 content findings.
+_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable] on the revised commit.)_
 
 ## Post-Execution Report
 

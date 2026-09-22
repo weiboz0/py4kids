@@ -32,9 +32,10 @@ lines let students self-serve it.
 
 ## Exercises — core vs. extra vs. challenge
 
-Core (Exercises 1–7): Supply Total, Trip Time (h:m), Equal Share (average → a float), Next-Year Age,
-Compare Two Scores (prints a Boolean, no `if`), Two-Digit Report (digit split), Repair the Age Label
-(the TypeError beat). Extra (Exercise 8): Fixed-Value Price. Challenges (9–10): Reverse Two Digits,
+Core (Exercises 1–7): Supply Total, Trip Time (h:m), Equal Share (a fair-share division → a float),
+Next-Year Age, Compare Two Scores (prints Booleans with the comparison operators, no `if`), Two-Digit
+Report (digit split), Repair the Age Label (the TypeError beat). The comparison rung in the lesson shows
+all six operators (`< <= > >= == !=`). Extra (Exercise 8): Fixed-Value Price. Challenges (9–10): Reverse Two Digits,
 Three-Digit Places. No core exercise depends on a Challenge. All pre-function (no `def`); `input()` is
 practiced only via the "try it yourself" snippet + a fixed stand-in — graded cells never call `input()`.
 

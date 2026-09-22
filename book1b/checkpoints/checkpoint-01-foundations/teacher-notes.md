@@ -18,12 +18,14 @@ questions in order (Q1–Q4 are the gentle output/number items; Q5–Q7 are the 
 items). Reserve the last 10 minutes to read Q7's traceback together as a class if time is tight.
 The seven questions and the concept each targets:
 1. **Name Card** — output + variables + f-string (U01).
-2. **Labeled Item** — a comment + two labeled print lines (U01).
+2. **Labeled Item** — a single labeled line built with `+` string concatenation (U01).
 3. **Hours and Minutes** — `//` and `%` on a given number of minutes (U02).
 4. **Converted Average** — `int()` on typed values, `/` → a float shown exactly (U02).
 5. **Ordered Score Ladder** — an `if`/`elif`/`else` ladder only correct top-down (U03).
-6. **Range and Entry Test** — an `and`/`or` condition printing a Boolean verdict (U02 compare + U03 logic).
-7. **Read the Final Traceback Line** — read a broken snippet's traceback and name the error/line (U01–U02).
+6. **Range and Entry Test** — an `and`/`or` condition that prints `Entry approved` / `Entry denied`
+   (U02 comparison + U03 logic).
+7. **Read the Final Traceback Line** — read a broken snippet's traceback and name the error *type* on
+   its final line (U01–U02 `error-messages`).
 
 ## Common mistakes
 

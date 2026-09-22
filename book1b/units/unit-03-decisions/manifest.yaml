@@ -6,4 +6,4 @@ provenance: original
 concepts:
   introduces: [logical-ops, if-statement, elif-else, conditional-nesting]
   requires: [boolean, comparison, arithmetic, variable, print]
-  practices: [int-type, type-conversion, float-type, f-string, string-literal, naming, input]
+  practices: [int-type, type-conversion, f-string, string-literal, naming, input]
