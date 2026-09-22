@@ -180,7 +180,21 @@ checkpoint/§6; round 2 clean). Gate CLOSED → implementation (Phases B–E).
 
 ## Content Review
 
-_(4-way content-review gate — filled before PR.)_
+Scope: U02 + U03 + checkpoint-01 content (lessons/exercises/solutions/checkpoint/teacher-notes/manifests).
+Commit 82503a0. Tooling unchanged since plan 070 (no code review needed this round).
+
+### Review 1 — [self] (2026-09-22) — **APPROVE.**
+Verified via full `ci-local.sh` ALL GREEN (three books) — `exec-solutions` passes, so every exercise's
+per-line asserts hold (correctness) and `exec-lessons` runs both lessons incl. the 5050 peek-ahead.
+Structural audit: U02 10 exercises / 6 stretch; U03 10 / 6; checkpoint 7 `## Question` (in 6–8);
+solutions mirror all headings (10/10/7) with a non-vacuous assert each; no `input()` in any graded/
+solution code; no executed outputs; no "Solution" headings; every cell has an id. Guardrails honored:
+U02 opens on h:m, prints Booleans (no `if` in core), TypeError beat present, floats shown as `5.0`, the
+`for`-loop peek is boxed/lesson-only with `for`/`range`/`accumulator` tagged; U03 has the `=`→`==` beat
+and the order-sensitive Medal Ladder; checkpoint is strict (no loops/lists/accumulator/builtins beyond
+print/int/float/str). Openings are problems, not drill. No open [self] findings.
+
+_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable].)_
 
 ## Post-Execution Report
 
