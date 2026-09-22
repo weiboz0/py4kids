@@ -536,6 +536,82 @@ Name; audit the other 7 detectable feature ids for analogous bare-identifier ove
 (validate fence-less declared markdown cells), N2 (dependent-feature registry-collision guard/clarity), N3 (subtract
 `defined_names` from the GIVEN-scoped borrowed-method additions). Each gets a regression test.
 
+### Round-2 resolution (fix commit f166a5e; codex GPT-5.6-sol; 2026-09-22)
+All in `tools/concept_scan.py` + tests. `TMPDIR=/dev/shm bash scripts/ci-local.sh` → ALL GREEN; 113 focused tests
+pass; live book1/book2 scans `[]`; bare-deque probe `[]` while `deque(...)` still detected.
+- [sol] r2 #1 (deque FP) → `[FIXED]` — `visit_Name` deque trigger removed; `book2:deque` now recognized only via a
+  `deque(...)` call / `<x>.deque` attribute (+ existing `.appendleft()`/`.popleft()`). 7-feature bare-identifier
+  audit: none over-detect. Tests `test_bare_deque_identifier_is_not_a_borrowed_tool`,
+  `test_undeclared_deque_constructor_is_a_borrowed_tool`, `test_attributed_deque_constructor_is_detected`.
+- [fable] r2 N1 → `[FIXED]` — fence-less governed markdown cells carrying auxiliary metadata emit an empty block so
+  metadata + unused checks run (`test_fenceless_declared_markdown_cell_reports_unused_auxiliary`).
+- [fable] r2 N2 → `[FIXED]` — `_dependent_feature_owners` excludes ids also registered in the scanned book (defers
+  to local concept, fail-closed) (`test_scanned_book_concept_wins_dependent_registry_collision`).
+- [fable] r2 N3 → `[FIXED]` — post-GIVEN borrowed-method additions exclude entry-defined names
+  (`test_entry_defined_borrowed_method_is_not_untaught_outside_given`).
+
+### Re-review round 3 — [self] (2026-09-22)
+- **Verdict**: APPROVE
+Read `git diff b7eb731 f166a5e`. All four fixes structurally correct (deque call/attr-only; N1 empty-block only when
+`not fences and has_auxiliary_metadata` so a fenced declared cell is unaffected; N2 `registered`-exclusion guard
+fail-closed; N3 `defined_names` exclusion doesn't over-suppress a genuinely untaught method). Verified live: bare
+`deque` not a feature, `deque()` still detected; ci-local ALL GREEN.
+
+### Re-review round 3 — [fable] (2026-09-22)
+- **Verdict**: APPROVE (no blocking findings)
+Probed each fix via scratchpad fixtures; `uv run ruff` clean; full `uv run pytest` 651 passed; focused scan module
+95 passed; live book1/book2 scans `[]`. N1 RESOLVED (empty block flows through metadata + unused checks; no
+over-flag on fenced declared cells or plain prose; empty-block cell-id only tightens the K2 `count==1` fail-closed
+check, and K2 matching stays code-block-only — no hole). N2 RESOLVED (collision id gets local `used-but-unlisted`
+wording, fail-closed; genuine future concept cannot slip). N3 RESOLVED (entry-defined method not reported outside
+GIVEN; a genuinely untaught method still reported; concept-level GIVEN containment via `_borrowed_occurrences`
+unweakened). Deque RESOLVED (bare name `[]`; `deque(...)`/`collections.deque(...)` still detected).
+- Pre-existing, non-blocking (NOT introduced by f166a5e; old `visit_Name` had the same gap) → `[WONTFIX]`-deferred
+  optional follow-up: an aliased `from collections import deque as dq; dq()` is not name-recognized (no
+  `visit_ImportFrom` hook for `collections.deque`); fails closed via `import-statement`/`list-append` in practice,
+  contrived in student Book-1 code, reviewer-catchable. fable: "Not required for this gate." Tracked with the other
+  Book-2 detector-hardening follow-ups.
+
+### Re-review round 3 — [sol] (2026-09-22)
+- **Verdict**: REJECT
+Deque bare-name FP confirmed RESOLVED (`deque = 1; print(deque)` → `[]`; `deque()`/`collections.deque()`/
+`.appendleft()`/`.popleft()` still flagged). 7-feature bare-identifier audit clean; collision guard sound; round-1
+Must-Fixes + N1 intact. Two NEW findings:
+1. `[OPEN]` Must Fix — `concept_scan.py:424` standalone `<x>.deque` attribute fails open: `queue_type =
+   collections.deque` (type referenced, not called) → `[]`. Detection recognizes attributed `deque` only as a call
+   target; a bare attribute access slips.
+2. `[OPEN]` Must Fix — `concept_scan.py:1310` the [fable]-N3 fix (exclude entry-`defined_names` from post-GIVEN
+   borrowed-method additions) is a fail-OPEN: `defined_names` is entry-global + name-based, so an unrelated
+   `def add(value)` suppresses a genuine `set().add()` used OUTSIDE the GIVEN region (probe emitted neither
+   `untaught method add` nor `outside the GIVEN region`).
+
+### Author disposition (round 3 → fix pass, 2026-09-22)
+Round-3 verdicts: [self] APPROVE · [fable] APPROVE · [sol] REJECT (2 new) · [glm] final attempt pending.
+Both [sol] findings are genuine latent precision holes (no shipped-content impact — auxiliary is empty). Note:
+finding #2 was introduced by MY choice to fold [fable]'s "Trivial" N3 — over-folding a fail-closed nit created a
+fail-open. Resolution: (a) recognize `book2:deque` on a bare `<x>.deque` attribute access (visit_Attribute), not
+only in call position; (b) REVERT the N3 exclusion — the post-GIVEN loop targets METHOD calls (`obj.add()`), which
+never resolve to a standalone `def add(value)`, so a borrowed method used outside GIVEN must be flagged regardless
+of `defined_names`; [fable] round-2 N3 → `[WONTFIX]` (misguided: method-vs-function conflation; its concern was
+fail-closed, reverting removes sol's fail-open). Both get regression tests. This is a bounded, converging fix — no
+open design questions remain.
+
+### Re-review round 3 — [glm] (2026-09-22)
+- **Verdict**: APPROVE WITH NITS (completed — no timeout this round; [glm] is functional, so NO 3-of-4 user decision
+  is required after all)
+Verified all four f166a5e changes correct via focused suites (101+18 pass incl. 6 new regressions) + AST/scan
+probes; no new fail-open or FP introduced by the commit. Three nits:
+1. `[OPEN]` Low — same N3 residual as [sol] round-3 #2 (entry-defined method name silences a genuine borrowed-method
+   misuse outside GIVEN on an untyped receiver). Being fixed by the N3 revert (fix pass 3).
+2. `[OPEN]` Low (informational) — if a future colliding local concept id has `kind: technique` or is MANUAL_ONLY,
+   both the borrow path and the local path go silent. No live book1∩book2 collision exists; future-registration
+   hazard only. → `[WONTFIX]`-note (documented hazard; unreachable today).
+3. `[OPEN]` Informational (PRE-EXISTING, not introduced by f166a5e) — `collections.deque()` in a declared GIVEN
+   region also emits `untaught method deque` (the method branch doesn't know `deque`-as-attribute is the feature);
+   `from collections import deque; deque()` is clean. Adjacent to fix pass 3's new `<x>.deque` attribute
+   recognition — fix pass 3 must ensure an AUTHORIZED deque doesn't feature+untaught-method double-flag (verify on
+   landing); otherwise a documented follow-up.
+
 ## Post-Execution Report
 
 ### 2026-09-22 — Phases B–D

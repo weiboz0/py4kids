@@ -1699,7 +1699,7 @@ def test_exercise_method_authorization_is_limited_to_given_region(tmp_path):
     )
 
 
-def test_entry_defined_borrowed_method_is_not_untaught_outside_given(tmp_path):
+def test_entry_defined_name_does_not_authorize_borrowed_method_outside_given(tmp_path):
     root = _scanner_root(tmp_path)
     _register_book2_set_ops(root)
     _set_entry(root, auxiliary=["book2:set-ops"])
@@ -1708,9 +1708,11 @@ def test_entry_defined_borrowed_method_is_not_untaught_outside_given(tmp_path):
         "values = set()\n"
         "values.add(1)\n"
         "# your work begins below\n"
-        "def add(self, value):\n"
+        "def add(value):\n"
         "    pass\n"
-        "item.add(2)\n"
+        "other = set()\n"
+        "alias = other\n"
+        "alias.add(2)\n"
     )
     _write_notebook(
         root / "book1/units/unit-01-fixture/exercises.ipynb",
@@ -1725,10 +1727,7 @@ def test_entry_defined_borrowed_method_is_not_untaught_outside_given(tmp_path):
         ],
     )
 
-    assert not any(
-        "untaught method add" in finding
-        for finding in concept_scan_findings(root, "book1")
-    )
+    assert any("untaught method add" in finding for finding in concept_scan_findings(root, "book1"))
 
 
 def test_bare_deque_identifier_is_not_a_borrowed_tool(tmp_path):
@@ -1740,6 +1739,22 @@ def test_bare_deque_identifier_is_not_a_borrowed_tool(tmp_path):
     )
 
     assert concept_scan_findings(root, "book1") == []
+
+
+def test_undeclared_deque_attribute_is_a_borrowed_tool(tmp_path):
+    root = _scanner_root(tmp_path)
+    _register_book2_feature(root, "deque")
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        [_cell("queue_type = collections.deque", cell_id="deque-attribute")],
+    )
+
+    assert concept_scan_findings(root, "book1") == [
+        (
+            "FAIL: unit-01-fixture: lesson.ipynb cell deque-attribute: "
+            "undeclared borrowed tool book2:deque"
+        )
+    ]
 
 
 def test_undeclared_deque_constructor_is_a_borrowed_tool(tmp_path):

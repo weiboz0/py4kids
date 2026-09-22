@@ -419,6 +419,8 @@ def detect(
                 add_feature("set-ops")
             if node.attr in {"appendleft", "popleft"}:
                 add_feature("deque")
+            if node.attr == "deque":
+                add_feature("deque")
             self.generic_visit(node)
 
         def visit_Call(self, node):
@@ -1307,7 +1309,7 @@ def concept_scan_findings(
                             and region[1] < getattr(node, "lineno", 0) < region[2]
                             and getattr(node, "end_lineno", 0) < region[2]
                         )
-                        if not method_inside and node.func.attr not in defined_names:
+                        if not method_inside:
                             methods.add(node.func.attr)
                     for raw, node in _borrowed_occurrences(
                         tree, registered=entry_registered, profile=block_profile
