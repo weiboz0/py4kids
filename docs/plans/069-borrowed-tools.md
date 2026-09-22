@@ -306,7 +306,17 @@ dispatched); dependency_baseline(book1) empty so reverse-graph dependent check w
 (owner book2 unit-01, depends_on book1); K2 ids correct; Phase-E scope claim correct.
 
 ### Round 3 (2026-09-21) — re-verify [sol] + [glm] REJECTs (all round-2 findings folded; [fable] r2 nits folded, no re-review needed).
-#### [sol] round 3 / [glm] round 3 — pending
+#### [sol] round 3 (2026-09-21)
+**REJECT** — G1/G2/[glm]-B1-markdown all RESOLVED; 4 tiny text fixes remain:
+- B1a: the K2 paragraph still reads as if the guess-counter case "ships" — reword to "the MECHANISM ships (empty
+  production table); the u02 rows come in 070".
+- B1b: Phase-E changed-file allowlist must include the new `book1/curriculum/k2-exceptions.yaml`.
+- B1c: Phase D must add the explicit per-statement LOCK — one valid K2 statement PLUS a second non-matching
+  accumulator statement in the SAME cell → fail (proves per-statement, not cell-wide, authorization).
+- B5: Phase D must add the map↔manifest auxiliary-VALUE mismatch mutation (only the invariant + version-mismatch
+  are present today).
+
+#### [glm] round 3 — pending
 
 ## Content Review
 _(pending)_
