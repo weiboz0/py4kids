@@ -341,8 +341,18 @@ one residual blocker):
 monotonic/sorting assertion in test_books.py), B2 (all check spellings match `checks.py:26-44`;
 build-pdf.sh generic; test_tools.py:1227 is the CI-contract test), and the .gitkeep / no-input() folds.
 
-### Round 4 (2026-09-21) — added the fastforward-prereq-boundary mutation test. Re-dispatching [sol] only.
-_(Awaiting [sol] on the round-4 commit.)_
+### Round 4 (2026-09-21) — on commit d89d064.
+
+#### [sol] round 4 — **APPROVE.** B3 closed (the added test requires the forward `requires` case to fail
+and the `practices` case to pass, catching an impl that exempts neither or both fields); all prior
+round-2/round-3 blockers remain resolved; no other blocker.
+
+### Plan-review outcome: **FULL 4-way consensus** — [self] APPROVE · [sol] APPROVE ·
+[glm] (volcengine-plan/glm-5.3) APPROVE WITH NITS · [fable] APPROVE WITH NITS. No open blockers.
+Four rounds: round 1 (2× REJECT) fixed the spine (import-statement→U06), the circular buildout predicate,
+the checkpoint content-scan leak, and the ci-local/registry integration; round 2 ([sol] REJECT) fixed
+phase sequencing, CLI-name accuracy, and narrow-scope mutation tests + the empty-dir/.gitkeep and
+input()-convention traps; rounds 3–4 closed the fastforward-prereq mutation-test gap. Gate CLOSED → implementation.
 
 ## Content Review
 
