@@ -421,12 +421,14 @@ def detect(
                 add_feature("deque")
             self.generic_visit(node)
 
-        def visit_Name(self, node):
-            if node.id == "deque":
-                add_feature("deque")
-
         def visit_Call(self, node):
             f = node.func
+            if (
+                isinstance(f, ast.Name) and f.id == "deque"
+            ) or (
+                isinstance(f, ast.Attribute) and f.attr == "deque"
+            ):
+                add_feature("deque")
             if isinstance(f, ast.Attribute):
                 # a method call x.name(...) — flag names that map to no taught concept
                 recv = f.value
@@ -629,6 +631,16 @@ def _notebook_blocks(
                 blocks.append(
                     _Block(source=fence, block_kind="markdown", **common)
                 )
+            has_auxiliary_metadata = common["has_declaration"] or (
+                isinstance(tags, list)
+                and any(
+                    isinstance(tag, str)
+                    and (tag == "auxiliary" or tag in AUXILIARY_ROLES)
+                    for tag in tags
+                )
+            )
+            if not fences and has_auxiliary_metadata:
+                blocks.append(_Block(source="", block_kind="markdown", **common))
     return blocks, issues
 
 
@@ -799,8 +811,10 @@ def _declared_owner_concepts(root: Path, auxiliary: set[str]) -> list[dict]:
     return selected
 
 
-def _dependent_feature_owners(root: Path, book: str) -> dict[str, str]:
-    """Map detectable feature ids to books that transitively depend on ``book``."""
+def _dependent_feature_owners(
+    root: Path, book: str, registered: set[str]
+) -> dict[str, str]:
+    """Map dependent feature ids that are not local to the scanned book."""
     registry = book_entries(root)
 
     def depends_on(candidate: str) -> bool:
@@ -835,6 +849,7 @@ def _dependent_feature_owners(root: Path, book: str) -> dict[str, str]:
                 isinstance(concept, dict)
                 and isinstance(concept.get("id"), str)
                 and concept.get("kind") != "technique"
+                and concept["id"] not in registered
             ):
                 owners.setdefault(concept["id"], owner)
     return owners
@@ -981,7 +996,7 @@ def concept_scan_findings(
         return _legacy_scan_findings(
             root, book, cmap["entries"], registered, profile, baseline
         )
-    dependent_feature_owners = _dependent_feature_owners(root, book)
+    dependent_feature_owners = _dependent_feature_owners(root, book, registered)
     dirs = {
         "unit": book_dir / "units",
         "checkpoint": book_dir / "checkpoints",
@@ -1292,7 +1307,7 @@ def concept_scan_findings(
                             and region[1] < getattr(node, "lineno", 0) < region[2]
                             and getattr(node, "end_lineno", 0) < region[2]
                         )
-                        if not method_inside:
+                        if not method_inside and node.func.attr not in defined_names:
                             methods.add(node.func.attr)
                     for raw, node in _borrowed_occurrences(
                         tree, registered=entry_registered, profile=block_profile

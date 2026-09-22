@@ -473,6 +473,69 @@ regressions (≥1 per Must-Fix). Codex's own TDD review caught + fixed two extra
 - [fable] #10 → `[WONTFIX]` — asset double-read is a harmless micro-perf nit; left as-is.
 All `[OPEN]` findings resolved (FIXED or WONTFIX-with-reason). Re-review round (4-way) follows on the fixed tree.
 
+### Re-review round 2 — [self] (2026-09-22)
+- **Verdict**: APPROVE
+Read the full `git diff 7d34f91 b7eb731 -- tools/concept_scan.py`. All three [sol] Must-Fixes are structurally
+closed: (1) the entry-wide `entry_profile` is removed — each block now uses `block_profile` from only its own
+validated `declared`, and exercise GIVEN-region method enforcement adds any borrowed method used OUTSIDE the region
+back to `methods`; (2) `_is_accumulator_statement` + both candidate collections now include `AnnAssign`/`NamedExpr`,
+with a `value is None` guard so annotation-only `m: int` is not an accumulator; (3) the solutions branch computes
+`region` first and only requires `task_id`/pairing when a GIVEN region is present, so a standalone real-form solution
+code cell authorizes by tag+declaration alone. [fable] #2 generalizes str-split into `_dependent_feature_owners`
+(book2 feature ids, kind≠technique); codex added a `visit_Tuple` guard so Book-1-owned `for k,v in d.items()` and
+`return a,b` are not mis-flagged as `book2:tuple` (the reason ci-local stayed green). Verified NO double-finding
+regression from removing `methods.discard("split")`: `taught_methods` gains `split` whenever str-split is registered
+(concept_scan.py:94), and str-split is always registered now, so `.split()` never enters `unknown_methods` — it
+emits the `str-split` concept and flows through the single general "undeclared borrowed tool" path; authorized
+str-split fixtures are among the 107 passing tests. `TMPDIR=/dev/shm bash scripts/ci-local.sh` → ALL GREEN.
+No new holes found in the delta.
+
+### Re-review round 2 — [fable] (2026-09-22)
+- **Verdict**: APPROVE WITH NITS
+Read the full delta + current file end-to-end; ran a 25-scenario scratchpad probe calling `concept_scan_findings`
+directly; `tests/test_borrowed_tools_scan.py` 89 passed; real `concept_scan_findings(repo,"book1")` and `"book2"`
+both `[]`; verified book1∩book2 concept ids = ∅ and no Book-2 id collides with MANUAL_ONLY. All 3 prior Should-Fixes
+RESOLVED (method-profile now per-cell incl. GIVEN-scoped method enforcement; Book-2 syntax closure over the 8
+detectable feature ids with no over-flag and no fail-open on wrong-id; multi-fence markdown aggregation emits exactly
+one unused finding). Nice-to-Haves #4/#5/#6/#9 RESOLVED; #7 WONTFIX reasoning confirmed SOUND (located the two
+intentional Unit-1 broken no-exec cells: exercises cell `exercise-two-broken`, lesson cell `8a9940ed`). Three new
+non-blocking nits (all fail-closed or fail-silent-narrow):
+1. `[OPEN]` Low (pre-existing) — a markdown cell tagged `auxiliary`/`real-form` with `py4kids_auxiliary` but ZERO
+   python fences produces no `_Block`, so its metadata/declaration is never validated (only caught by the entry-level
+   #9 check when no other cell declares the id). No untaught code slips (there is no fence to authorize). Suggest
+   emitting one empty markdown block for a governed markdown cell carrying auxiliary metadata.
+2. `[OPEN]` Low (latent) — `_dependent_feature_owners` (~824) doesn't exclude ids also registered in the scanned
+   book; today book1∩book2=∅ so unreachable, and a future collision fails LOUD (fail-closed) but with misleading
+   text. A one-line guard / explicit registry-collision finding would self-explain.
+3. `[OPEN]` Trivial — the exercise borrowed-method loop (~1283) adds to `methods` after `methods -= defined_names`,
+   so an entry-defined `def add` called as `obj.add()` outside GIVEN would be reported. Fail-closed; asymmetry note.
+
+### Re-review round 2 — [sol] (2026-09-22)
+- **Verdict**: REJECT
+All three prior Must-Fixes confirmed RESOLVED by adversarial probe (cell-local method auth incl. same-cell
+below-GIVEN; K2 rejects annotated + walrus second accumulators, standalone `m: int` clean; solution real-form with
+no GIVEN region passes, GIVEN-whitespace mismatch still fails). ONE new blocking finding:
+1. `[OPEN]` Must Fix — `concept_scan.py:424,~1126` the generalized dependent-feature recognition treats every bare
+   `Name("deque")` as use of `book2:deque` regardless of binding. Valid Book-1 code `deque = 1` / `print(deque)`
+   now emits `undeclared borrowed tool book2:deque` (returned `[]` at 7d34f91) — a newly introduced CI false
+   positive violating the scanner's precision-first contract. (The opposite-direction miss `import deque as Queue`
+   predates the delta; out of scope.) Confirmed live: `detect("deque = 1\nprint(deque)")` → used includes `deque`.
+
+### Re-review round 2 — [glm] (2026-09-22)
+- **Verdict**: NO VERDICT (opencode timed out after 1200 s, SIGTERM — again; [glm]/opencode has now mechanically
+  failed BOTH round 1 and round 2 despite a tightened single-commit prompt). Per [[book1-real-input]], a 3-of-4
+  merge on [self]+[sol]+[fable] consensus requires explicit user OK; that decision will be surfaced at the final
+  consensus point if [glm] remains the sole blocker.
+
+### Author disposition (round 2 → fix pass, 2026-09-22)
+Round-2 verdicts: [self] APPROVE · [fable] APPROVE WITH NITS (N1–N3, non-blocking, fail-closed) · [sol] REJECT
+(deque false positive, blocking) · [glm] pending. [sol]'s deque finding is a genuine precision regression (bare-Name
+`visit_Name` trigger at :424, previously gated out for Book 1). Folding as one codex pass: the deque fix (recognize
+`book2:deque` only via a `deque(...)` call / attribute + the existing `appendleft`/`popleft` methods, NOT a bare
+Name; audit the other 7 detectable feature ids for analogous bare-identifier over-detection) plus [fable] N1
+(validate fence-less declared markdown cells), N2 (dependent-feature registry-collision guard/clarity), N3 (subtract
+`defined_names` from the GIVEN-scoped borrowed-method additions). Each gets a regression test.
+
 ## Post-Execution Report
 
 ### 2026-09-22 — Phases B–D

@@ -7,7 +7,13 @@ import nbformat
 import pytest
 import yaml
 
-from tools.concept_scan import code_sources, concept_scan_findings, entry_notebooks
+from tools.concept_scan import (
+    code_sources,
+    concept_scan_findings,
+    detect,
+    entry_notebooks,
+    scanner_profile,
+)
 from tools.curriculum import prereq_findings
 
 FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "borrowed_tools"
@@ -895,6 +901,29 @@ def test_markdown_unused_check_aggregates_all_fences_in_cell(tmp_path):
     assert concept_scan_findings(root, "book1") == []
 
 
+def test_fenceless_declared_markdown_cell_reports_unused_auxiliary(tmp_path):
+    root = _scanner_root(tmp_path, auxiliary=["book2:str-split"])
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        [
+            _cell(
+                "This real form is missing its Python fence.",
+                cell_id="fenceless-real-form",
+                cell_type="markdown",
+                tags=["auxiliary", "real-form"],
+                auxiliary=["book2:str-split"],
+            )
+        ],
+    )
+
+    assert concept_scan_findings(root, "book1") == [
+        (
+            "FAIL: unit-01-fixture: solutions.ipynb cell fenceless-real-form: "
+            "declared auxiliary book2:str-split is unused"
+        )
+    ]
+
+
 def test_markdown_manual_only_future_concept_is_not_flagged(tmp_path):
     root = _scanner_root(tmp_path)
     concepts_path = root / "book1/curriculum/concepts.yaml"
@@ -1668,6 +1697,97 @@ def test_exercise_method_authorization_is_limited_to_given_region(tmp_path):
         "exercises.ipynb cell set-exercise: untaught method remove" in finding
         for finding in concept_scan_findings(root, "book1")
     )
+
+
+def test_entry_defined_borrowed_method_is_not_untaught_outside_given(tmp_path):
+    root = _scanner_root(tmp_path)
+    _register_book2_set_ops(root)
+    _set_entry(root, auxiliary=["book2:set-ops"])
+    source = (
+        "# GIVEN TOOL — do not edit\n"
+        "values = set()\n"
+        "values.add(1)\n"
+        "# your work begins below\n"
+        "def add(self, value):\n"
+        "    pass\n"
+        "item.add(2)\n"
+    )
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        [
+            _cell(
+                source,
+                cell_id="entry-defined-add",
+                tags=["auxiliary", "given"],
+                auxiliary=["book2:set-ops"],
+                task_id="set-task",
+            )
+        ],
+    )
+
+    assert not any(
+        "untaught method add" in finding
+        for finding in concept_scan_findings(root, "book1")
+    )
+
+
+def test_bare_deque_identifier_is_not_a_borrowed_tool(tmp_path):
+    root = _scanner_root(tmp_path)
+    _register_book2_feature(root, "deque")
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        [_cell("deque = 1\nprint(deque)", cell_id="deque-variable")],
+    )
+
+    assert concept_scan_findings(root, "book1") == []
+
+
+def test_undeclared_deque_constructor_is_a_borrowed_tool(tmp_path):
+    root = _scanner_root(tmp_path)
+    _register_book2_feature(root, "deque")
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        [_cell("queue = deque()", cell_id="deque-constructor")],
+    )
+
+    assert concept_scan_findings(root, "book1") == [
+        (
+            "FAIL: unit-01-fixture: lesson.ipynb cell deque-constructor: "
+            "undeclared borrowed tool book2:deque"
+        )
+    ]
+
+
+def test_attributed_deque_constructor_is_detected():
+    used, _methods = detect(
+        ast.parse("queue = collections.deque()"),
+        registered_concepts={"deque"},
+        profile=scanner_profile([]),
+    )
+
+    assert "deque" in used
+
+
+def test_scanned_book_concept_wins_dependent_registry_collision(tmp_path):
+    root = _scanner_root(tmp_path)
+    _register_book2_feature(root, "deque")
+    concepts_path = root / "book1/curriculum/concepts.yaml"
+    concepts = yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
+    concepts["concepts"].append(
+        {"id": "deque", "name": "deque", "category": "data", "kind": "feature"}
+    )
+    _write_yaml(concepts_path, concepts)
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        [_cell("queue = deque()", cell_id="local-deque")],
+    )
+
+    assert concept_scan_findings(root, "book1") == [
+        (
+            "FAIL: unit-01-fixture: lesson.ipynb cell local-deque: "
+            "used-but-unlisted concept deque"
+        )
+    ]
 
 
 def test_dependent_book_feature_requires_cell_declaration(tmp_path):
