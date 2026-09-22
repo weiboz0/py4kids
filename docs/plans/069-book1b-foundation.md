@@ -398,8 +398,60 @@ ci-local ALL GREEN across the three books). No open [self] findings.
 
 ### Content-review round 1 outcome: 3× APPROVE-WITH-NITS ([self]/[fable]/[glm]) + 1 REJECT ([sol], Must Fix on the assertion contract). All findings folded (notebooks re-authored + design §7 contract clarified + tooling rename + teacher-notes). Re-review round 2 dispatched.
 
-### Round 2 (2026-09-22) — after folding all round-1 content findings.
-_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable] on the revised commit.)_
+### Round 2 (2026-09-22) — on commit 06955cc (round-1 folds).
+- **[sol]** — **APPROVE.** No Must-Fix / Should-Fix / nits; blind-solved the changed set (Ex7/9/12/13)
+  exact match; confirmed the pre-function assertion contract is now unambiguous and repair exercises
+  show the directly repaired instruction. (Its exec checks were sandbox-blocked; verified GREEN in the
+  orchestrator's unsandboxed env + full ci-local.)
+- **[glm]** (volcengine-plan/glm-5.3) — **APPROVE.** All four folds verified; blind-solved Ex7/12/13;
+  ran `pytest` (507 passed, incl. Book1/Book2 regression + mutation tests) and all 12 book1b checks
+  unsandboxed (real kernel PASS); no Book1/Book2 regression.
+- **[fable]** — **APPROVE WITH NITS.** 13/13 blind match; all nine round-1 folds verified; judged a sound
+  template. Six Nice-to-haves, **all [FIXED]**: N1 residual "automatic checks" jargon → reworded in
+  lesson + exercises; N2 Ex7 placeholders → already concrete (moot); N3 "do not define functions" →
+  dropped from student text; N4 teacher-notes input-snippet pointer → fixed to Ex8/Lesson 2; N5 Lesson-3
+  "join text to text" aside → reworded; N6 solution-form → **house form locked** in design §7 (capture
+  line → print → assert; repair exercises show the literal fix).
+
+### Content-review outcome: **FULL 4-way consensus** — [self] APPROVE · [sol] APPROVE · [glm] APPROVE ·
+[fable] APPROVE WITH NITS (all nits [FIXED]). No `[OPEN]` items. Two rounds: round 1 = 1 REJECT ([sol],
+assertion-contract Must-Fix) + 3 APPROVE-WITH-NITS; round 2 clean after the fold. Gate CLOSED → PR.
+
+## Post-Execution Report
+
+**Status: COMPLETE** (pending PR + squash-merge). Plan 069 lays the Book 1b foundation and ships Unit 01
+as the template all later units clone.
+
+**What shipped:**
+- **Tooling (Phase A):** `tools/books.py` (`variant_of`/`prereq_policy`/`is_buildout`), `tools/curriculum.py`
+  (variant-pair uniqueness exemption + catalog-identity; buildout-gated introduction-completeness &
+  lesson-lower-bound; fastforward `requires`-only prereq), `tools/concept_scan.py` (whole-catalog
+  allowance for UNIT entries only). `tests/test_book1b_tooling.py`: fixture + **narrow-scope mutation
+  tests** proving relaxations don't over-reach (triple-collision, duplicate-intro, upper-bound,
+  forward-`requires`, checkpoint/project scan). All book-scoped by explicit flags → Book 1/Book 2 strict.
+- **Registry + integration (Phase B):** `books.yaml` book1b entry (`variant_of: book1`, `prereq_policy:
+  fastforward`, `buildout: true`, order `["book1","book1b","book2"]`); `book1b/` tree (full 62-concept
+  catalog content-identical to Book 1, empty→U01 coverage-map, syllabus, reference/docs stubs, `.gitkeep`s);
+  `ci-local.sh` book1b block (existence-guarded, no Book-1-only pattern checks) + PDF; `pre-merge-guard.sh`;
+  `test_books.py` + `test_tools.py` CI-contract.
+- **Unit 01 (Phase C):** "Output & Variables" — lesson (problem-first fact-card, 3 ladder-lessons + a
+  deliberate traceback beat, "make it yours"), 13 mini-CP exercises (core 1–7 incl. a student-authors-
+  variables exercise / extra 8–11 / Challenges 12–13, 2 Challenge exercises), solutions mirroring the
+  student form with per-line asserts, teacher-notes, manifest. Statements & solutions authored in
+  SEPARATE fresh Codex (GPT-5.6-sol) sessions.
+
+**Gate history:** plan-review = 4 rounds to full consensus (spine fix U06 `import`, circular-buildout →
+explicit flag, checkpoint scan leak, ci-local/registry integration, fastforward-prereq mutation test).
+Content-review = 2 rounds ([sol] REJECT on the assertion-contract ambiguity → design §7 now defines
+pre-function rigor as per-line asserts; solutions re-authored to mirror the student form).
+
+**Verification:** full `scripts/ci-local.sh` **ALL GREEN** across Book 1, Book 2, Book 1b (registry+lint,
+pytest 507, notebook exec+hygiene, manifest/prereq/coverage/stretch/turtle, PDF, pre-merge guard).
+
+**Follow-on:** Units 02–13, checkpoints, and the end-of-book Algorithm Challenge land in plans 070+, each
+adding its coverage-map entry + notebooks through the 4-way content gate, cloning U01's shape and design §7.
+Book 1b stays in `buildout: true` until the Algorithm Challenge lands (which re-enables the full
+practice-coverage anchor).
 
 ## Post-Execution Report
 

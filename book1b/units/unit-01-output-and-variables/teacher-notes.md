@@ -31,8 +31,8 @@ load — so each is taught as a short **worked-example ladder** (minimal → one
   stand in for typing, so those cells never call `input()` — that is the house convention.
 - **Lesson 3 — Assemble the Card (string-concat, f-string, error-messages).**
   Thread: put the saved details together into the card.
-  Build a line with `+` (and notice you must join text to text), then rebuild it more readably with an
-  f-string. Finish with the **deliberate broken/fixed** cell: run the broken version, read the traceback
+  Build a line with `+` (all the pieces are text here; joining text to a number waits for Unit 02),
+  then rebuild it more readably with an f-string. Finish with the **deliberate broken/fixed** cell: run the broken version, read the traceback
   together, name the fix. End on the **Final build** — the whole card assembled from the saved values.
 
 60-MINUTE CUT (any lesson): teach rungs 1–2 of each ladder live and leave the last rung as a "try it";
@@ -47,9 +47,9 @@ The bank is intentionally large (13 exercises); it is partitioned so a single le
   not just the `print`).
 - **Extra practice (Exercises 8–11):** variety for fast finishers or homework. Ex8 ("Fixed-Value
   Greeting") is where the `input()` idea is practiced in the graded, notebook-safe way (a fixed value
-  stands in for typing). For a genuine hands-on `input()`, use the "try it yourself" snippet in the
-  exercises intro — students type it into a NEW cell and run it live with you; graded cells never call
-  `input()`.
+  stands in for typing). For a genuine hands-on `input()`, use the "try it yourself" snippet in Ex8
+  (mirrored by the live demo in Lesson 2) — students type it into a NEW cell and run it live with you;
+  graded cells never call `input()`.
 - **Challenges (Exercises 12–13):** optional stretch; no core exercise depends on them. Ex12 practices
   **reassignment** (reuse the same variables for the second badge); Ex13 is a two-bug error hunt.
 

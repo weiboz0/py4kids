@@ -216,9 +216,12 @@ Every exercise is a **self-contained problem** with:
     `solutions.ipynb`. The solution **mirrors the student's visible form** (the same separate `print`
     calls a student writes — never an untaught `"\n"`-joined string or multi-line join as the shown
     answer), and **asserts the produced output line by line** against the expected text (a 4-line card
-    → 4 line asserts; a 1-line answer → 1). A "repair the error" exercise shows the *directly repaired
-    instruction*, with any assert added separately — the reference answer must model the operation the
-    student was asked to do.
+    → 4 line asserts; a 1-line answer → 1). **House form** (locked at U01 so U02–U13 clone one shape):
+    capture each output line in a named variable, print it, then assert that variable
+    (`line_1 = f"…"; print(line_1); assert line_1 == "…"`) — one source of truth, so the asserted text
+    is exactly the printed text. A "repair the error" exercise is the one exception: it shows the
+    *directly repaired instruction* verbatim (the point is seeing the fix), with the assert on a
+    separately built copy — the reference answer must model the operation the student was asked to do.
   - **From U07 on** — the *function* form: the solution defines the function and asserts it against
     **several distinct input cases**, fixed seeds where random.
 - **Assertion rigor is a content-gate authoring rule** (reviewers verify it; `notebooks.py` only
