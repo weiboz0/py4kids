@@ -1,6 +1,6 @@
 id: unit-03-turtle-art-studio
 kind: unit
-blueprint_version: 1
+blueprint_version: 2
 lessons: 3
 provenance: original
 concepts:
@@ -8,3 +8,4 @@ concepts:
                nested-loops, float-type]
   requires: [import-statement, variable, arithmetic]
   practices: [naming, comment, run-program, f-string, string-literal]
+  auxiliary: []

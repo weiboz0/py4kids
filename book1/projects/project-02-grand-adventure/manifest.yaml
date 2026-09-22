@@ -1,6 +1,6 @@
 id: project-02-grand-adventure
 kind: project
-blueprint_version: 1
+blueprint_version: 2
 lessons: 4
 provenance: original
 concepts:
@@ -15,3 +15,4 @@ concepts:
               return-value, scope, list-literal, list-index, list-append, list-loop,
               builtin-functions, dict-literal, dict-access, file-read, file-write,
               with-statement, class-def, init-method, attributes, methods]
+  auxiliary: []

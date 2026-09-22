@@ -1,6 +1,6 @@
 id: unit-07-high-score-hall
 kind: unit
-blueprint_version: 1
+blueprint_version: 2
 lessons: 3
 provenance: original
 concepts:
@@ -12,3 +12,4 @@ concepts:
               type-conversion, input, in-operator, error-messages, string-literal, boolean,
               sentinel-loop, running-total, count-by-condition, transform-each, break-statement,
               linear-search]
+  auxiliary: []

@@ -1,0 +1,14 @@
+blueprint_version: 2
+id: unit-01-fixture
+kind: unit
+title: Borrowed split solution-fence fixture
+lessons: 1
+concepts:
+  introduces:
+    - print
+    - string-literal
+  requires: []
+  practices: []
+  auxiliary:
+    - book2:str-split
+provenance: original

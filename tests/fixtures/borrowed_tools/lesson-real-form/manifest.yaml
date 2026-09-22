@@ -1,0 +1,15 @@
+blueprint_version: 2
+id: unit-01-fixture
+kind: unit
+title: Borrowed split lesson real-form fixture
+lessons: 1
+concepts:
+  introduces:
+    - print
+    - string-literal
+  requires:
+    - input
+  practices: []
+  auxiliary:
+    - book2:str-split
+provenance: original

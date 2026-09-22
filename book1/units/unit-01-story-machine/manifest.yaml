@@ -1,6 +1,6 @@
 id: unit-01-story-machine
 kind: unit
-blueprint_version: 1
+blueprint_version: 2
 lessons: 3
 provenance: original
 concepts:
@@ -8,3 +8,4 @@ concepts:
                string-concat, f-string, error-messages]
   requires: []
   practices: []
+  auxiliary: []
