@@ -28,7 +28,9 @@ Book 1b stays `buildout: true`.
 - requires: `[print, variable, while-loop, for-loop, range-function, accumulator, if-statement, comparison, arithmetic, f-string]`
 - practices: `[print, variable, while-loop, break-statement, loop-counter, accumulator, running-total,
   count-by-condition, sentinel-loop, for-loop, range-function, nested-loops, if-statement, elif-else,
-  comparison, boolean, arithmetic, int-type, f-string, string-literal]`
+  comparison, boolean, arithmetic, int-type, f-string, string-literal, string-concat]`
+  - `string-concat` is included because the nested times-table builds each row with `row = row + f"{…} "`
+    (strict scan: checkpoints get NO fastforward allowance, so every detectable concept must be listed).
   - Checkpoints stay STRICT (no fastforward): every id is introduced by U01–U05, so `checkpoint_findings`
     passes. Loops are NOW taught, so checkpoint-02 uses them — but no lists (U10), no builtins (`sum`/`len`, U07).
 
@@ -177,9 +179,14 @@ loop-specific guardrails). Closure/partition were correct.
   ORDER (plain-condition first, then `while True`+break); U05 L2 orders primality LAST (60-min-cut casualty);
   primality spec `n ≥ 2`; the sentinel `steps` counter is the printed summary (one source of truth).
 
-### Round 3 (2026-09-22) — added the two mandated beats + nit folds. Re-dispatching [sol] only (sole round-2
-REJECT; [glm]/[fable] APPROVE-WITH-NITS with nits folded).
-_(Awaiting [sol] on the round-3 commit.)_
+### Round 3 (2026-09-22) — on 1a644ce. [sol] REJECT: both round-2 blockers CLOSED, but a NEW strict-scan
+catch — checkpoint-02's nested times-table builds rows with `row = row + f"{…} "` (`string-concat`), and
+checkpoints get NO fastforward allowance, so `concept_scan` would flag it used-but-unlisted. → **FOLDED:
+`string-concat` added to checkpoint-02 `practices`** (introduced U01, legal). [sol] confirmed the U04
+traceback beat + cp02 `while True/break` sentinel closed the round-2 blockers; closure/backing otherwise PASS.
+
+### Round 4 (2026-09-22) — added `string-concat` to checkpoint-02. Re-dispatching [sol].
+_(Awaiting [sol] on the round-4 commit.)_
 
 ## Content Review
 
