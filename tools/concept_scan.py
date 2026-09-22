@@ -29,7 +29,7 @@ from pathlib import Path
 
 import yaml
 
-from tools.books import book_entries, book_path, dependency_baseline
+from tools.books import book_entries, book_path, dependency_baseline, prereq_policy
 
 # Concepts we do NOT flag as violations: not detectable from code, or too fuzzy
 # to assert confidently. These stay reviewer-manual.
@@ -911,6 +911,9 @@ def _legacy_scan_findings(
 ) -> list[str]:
     """Preserve schema-v1 concept-scan behavior and finding text byte-for-byte."""
     book_dir = book_path(root, book)
+    # Fastforward books (e.g. book1b) let a UNIT's content reach forward to any catalog concept
+    # (design 004 §5/§6); checkpoints and projects keep the strict per-entry allowed set.
+    fastforward = prereq_policy(root, book) == "fastforward"
     dirs = {
         "unit": book_dir / "units",
         "checkpoint": book_dir / "checkpoints",
@@ -933,6 +936,8 @@ def _legacy_scan_findings(
             | set(entry.get("practices", []) or [])
             | baseline
         )
+        if fastforward and kind == "unit":
+            allowed |= registered
         used: set[str] = set()
         methods: set[str] = set()
         defined_names: set[str] = set()

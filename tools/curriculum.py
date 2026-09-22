@@ -12,7 +12,10 @@ from tools.books import (
     book_path,
     concept_minimum,
     dependency_baseline,
+    is_buildout,
     lesson_budget,
+    prereq_policy,
+    variant_of,
 )
 
 CATEGORIES = {
@@ -73,25 +76,48 @@ def _curriculum(root: Path, book: str) -> Path:
 
 def global_concept_uniqueness_findings(root: Path) -> list[str]:
     """Report concept ids defined by more than one registered book."""
+    registered = book_entries(root)
     owners: dict[str, set[str]] = {}
-    for registered_book in book_entries(root):
+    catalogs: dict[str, object] = {}
+    for registered_book in registered:
         path = _curriculum(root, registered_book) / "concepts.yaml"
         if not path.is_file():
             continue
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        catalogs[registered_book] = data
         if not isinstance(data, dict) or not isinstance(data.get("concepts"), list):
             continue
         for concept in data["concepts"]:
             if isinstance(concept, dict) and isinstance(concept.get("id"), str):
                 owners.setdefault(concept["id"], set()).add(registered_book)
-    return [
+    def is_variant_pair(books: set[str]) -> bool:
+        return any(
+            parent in registered and books <= {candidate, parent}
+            for candidate in books
+            if (parent := variant_of(root, candidate)) is not None
+        )
+
+    findings = [
         _fail(
             "books",
             f"concept id {concept_id!r} is defined in multiple books: {sorted(books)}",
         )
         for concept_id, books in sorted(owners.items())
-        if len(books) > 1
+        if len(books) > 1 and not is_variant_pair(books)
     ]
+    missing = object()
+    for registered_book in sorted(registered):
+        parent = variant_of(root, registered_book)
+        if parent in registered and catalogs.get(registered_book, missing) != catalogs.get(
+            parent, missing
+        ):
+            findings.append(
+                _fail(
+                    "books",
+                    f"variant {registered_book!r} concepts.yaml differs from parent {parent!r}",
+                )
+            )
+    return findings
 
 
 def _concept_data(root: Path, book: str):
@@ -237,7 +263,9 @@ def lesson_budget_findings(root: Path, book: str) -> list[str]:
         return []
     total = sum(entry["lessons"] for entry in entries)
     minimum, maximum = lesson_budget(root, book)
-    if total < minimum or (maximum is not None and total > maximum):
+    below_minimum = total < minimum and not is_buildout(root, book)
+    above_maximum = maximum is not None and total > maximum
+    if below_minimum or above_maximum:
         bound = f"{minimum:g}+" if maximum is None else f"{minimum:g}-{maximum:g}"
         return [_fail(book, f"lesson budget {total:g} outside {bound}")]
     return []
@@ -274,7 +302,7 @@ def introduction_findings(root: Path, book: str) -> list[str]:
     if len(introduced) != len(set(introduced)):
         findings.append(_fail(book, "concept introduced twice"))
     missing = known - set(introduced)
-    if set(introduced) != known:
+    if not is_buildout(root, book) and set(introduced) != known:
         findings.append(_fail(book, f"never introduced: {sorted(missing)}"))
     return findings
 
@@ -386,8 +414,19 @@ def prereq_findings(root: Path, book: str, unit: str | None = None) -> list[str]
     if map_data.get("map_version") == 2:
         findings.extend(_auxiliary_prereq_findings(root, book, entries))
     seen = dependency_baseline(root, book)
+    # Which fields must close over already-introduced concepts. Fastforward books check
+    # `requires` only (a unit's core teaching); `practices` may reach forward. Not an ordering.
+    checked_fields = (
+        ("requires",)
+        if prereq_policy(root, book) == "fastforward"
+        else ("requires", "practices")
+    )
     for entry in entries:
-        missing = (set(entry.get("requires", [])) | set(entry.get("practices", []))) - seen
+        missing = {
+            concept
+            for field in checked_fields
+            for concept in entry.get(field, [])
+        } - seen
         if missing:
             findings.append(
                 _fail(

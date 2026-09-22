@@ -1,0 +1,10 @@
+id: unit-01-output-and-variables
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [run-program, print, comment, string-literal, variable, naming, input,
+               string-concat, f-string, error-messages]
+  requires: []
+  practices: []
