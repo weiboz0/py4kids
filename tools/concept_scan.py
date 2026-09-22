@@ -29,7 +29,7 @@ from pathlib import Path
 
 import yaml
 
-from tools.books import book_path, dependency_baseline
+from tools.books import book_entries, book_path, dependency_baseline
 
 # Concepts we do NOT flag as violations: not detectable from code, or too fuzzy
 # to assert confidently. These stay reviewer-manual.
@@ -302,7 +302,20 @@ def detect(
             self.generic_visit(node)
 
         def visit_Tuple(self, node):
-            add_feature("tuple")
+            parent = parents.get(node)
+            is_dict_items_target = (
+                isinstance(node.ctx, ast.Store)
+                and isinstance(parent, ast.For)
+                and parent.target is node
+                and isinstance(parent.iter, ast.Call)
+                and isinstance(parent.iter.func, ast.Attribute)
+                and parent.iter.func.attr == "items"
+            )
+            # Book 1 already owns these two tuple-shaped forms through its
+            # dict-loop and return-value concepts. Standalone tuple syntax
+            # remains a dependent-book feature and is detected globally.
+            if not is_dict_items_target and not isinstance(parent, ast.Return):
+                add_feature("tuple")
             self.generic_visit(node)
 
         def visit_ListComp(self, node):
@@ -523,7 +536,7 @@ def _source(value: object) -> tuple[str, bool]:
     return "", False
 
 
-def _python_fences(source: str) -> tuple[list[str], bool]:
+def _python_fences(source: str) -> tuple[list[str], str | None]:
     fences: list[str] = []
     active: tuple[str, int, bool, list[str]] | None = None
     for line in source.splitlines(keepends=True):
@@ -538,7 +551,7 @@ def _python_fences(source: str) -> tuple[list[str], bool]:
             active = (
                 delimiter[0],
                 len(delimiter),
-                first_token in {"python", "py"},
+                first_token in {"python", "py", "python3", "py3"},
                 [],
             )
             continue
@@ -559,7 +572,9 @@ def _python_fences(source: str) -> tuple[list[str], bool]:
             active = None
         elif is_python:
             body.append(line)
-    return fences, active is not None and active[2]
+    if active is None:
+        return fences, None
+    return fences, "python" if active[2] else "non-python"
 
 
 def _notebook_blocks(
@@ -605,9 +620,11 @@ def _notebook_blocks(
         if cell_type == "code":
             blocks.append(_Block(source=source, block_kind="code", **common))
         else:
-            fences, unclosed = _python_fences(source)
-            if unclosed:
-                issues.append(f"{path.name} cell {identity}: unclosed python fence")
+            fences, unclosed_kind = _python_fences(source)
+            if unclosed_kind:
+                issues.append(
+                    f"{path.name} cell {identity}: unclosed {unclosed_kind} fence"
+                )
             for fence in fences:
                 blocks.append(
                     _Block(source=fence, block_kind="markdown", **common)
@@ -664,7 +681,15 @@ def _given_region(source: str) -> tuple[str, int, int] | None:
 def _is_accumulator_statement(node: ast.AST) -> bool:
     if isinstance(node, ast.AugAssign):
         return True
-    if not isinstance(node, ast.Assign):
+    if isinstance(node, ast.Assign):
+        raw_targets = node.targets
+        value = node.value
+    elif isinstance(node, (ast.AnnAssign, ast.NamedExpr)):
+        raw_targets = [node.target]
+        value = node.value
+    else:
+        return False
+    if value is None:
         return False
 
     def base_name(target: ast.AST) -> str | None:
@@ -676,12 +701,12 @@ def _is_accumulator_statement(node: ast.AST) -> bool:
             return ast.unparse(target)
         return None
 
-    targets = {base_name(target) for target in node.targets}
+    targets = {base_name(target) for target in raw_targets}
     targets.discard(None)
-    names = {child.id for child in ast.walk(node.value) if isinstance(child, ast.Name)}
+    names = {child.id for child in ast.walk(value) if isinstance(child, ast.Name)}
     names |= {
         ast.unparse(child)
-        for child in ast.walk(node.value)
+        for child in ast.walk(value)
         if isinstance(child, ast.Attribute)
     }
     return bool(targets & names)
@@ -772,6 +797,47 @@ def _declared_owner_concepts(root: Path, auxiliary: set[str]) -> list[dict]:
             and concept["id"] in by_owner[owner]
         )
     return selected
+
+
+def _dependent_feature_owners(root: Path, book: str) -> dict[str, str]:
+    """Map detectable feature ids to books that transitively depend on ``book``."""
+    registry = book_entries(root)
+
+    def depends_on(candidate: str) -> bool:
+        pending = [candidate]
+        visited: set[str] = set()
+        while pending:
+            current = pending.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+            dependencies = registry.get(current, {}).get("depends_on", []) or []
+            if book in dependencies:
+                return True
+            pending.extend(
+                dependency
+                for dependency in dependencies
+                if isinstance(dependency, str) and dependency in registry
+            )
+        return False
+
+    owners: dict[str, str] = {}
+    for owner in sorted(registry):
+        if owner == book or not depends_on(owner):
+            continue
+        path = book_path(root, owner) / "curriculum" / "concepts.yaml"
+        if not path.is_file():
+            continue
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        rows = data.get("concepts", []) if isinstance(data, dict) else []
+        for concept in rows:
+            if (
+                isinstance(concept, dict)
+                and isinstance(concept.get("id"), str)
+                and concept.get("kind") != "technique"
+            ):
+                owners.setdefault(concept["id"], owner)
+    return owners
 
 
 def _metadata_findings(
@@ -915,6 +981,7 @@ def concept_scan_findings(
         return _legacy_scan_findings(
             root, book, cmap["entries"], registered, profile, baseline
         )
+    dependent_feature_owners = _dependent_feature_owners(root, book)
     dirs = {
         "unit": book_dir / "units",
         "checkpoint": book_dir / "checkpoints",
@@ -1013,7 +1080,7 @@ def concept_scan_findings(
             accumulator_nodes = [
                 node
                 for node in ast.walk(tree)
-                if isinstance(node, (ast.Assign, ast.AugAssign))
+                if isinstance(node, (ast.Assign, ast.AugAssign, ast.AnnAssign, ast.NamedExpr))
                 and _is_accumulator_statement(node)
             ]
             matches = (
@@ -1051,9 +1118,6 @@ def concept_scan_findings(
         entry_auxiliary = {
             qid for qid in (entry.get("auxiliary", []) or []) if isinstance(qid, str)
         }
-        entry_profile = scanner_profile(
-            concepts + _declared_owner_concepts(root, entry_auxiliary)
-        )
         future_concepts = {
             concept_id
             for concept_id, home_index in home_indexes.items()
@@ -1061,7 +1125,7 @@ def concept_scan_findings(
         }
         entry_registered = (
             registered
-            | {"str-split"}
+            | set(dependent_feature_owners)
             | {qid.split(":", 1)[-1] for qid in entry_auxiliary if ":" in qid}
         )
         parsed = parsed_by_entry.get(eid, [])
@@ -1073,62 +1137,106 @@ def concept_scan_findings(
 
         exercise_cells: dict[str, list[tuple[_Block, str | None]]] = {}
         solution_cells: dict[str, list[tuple[_Block, str | None]]] = {}
+        metadata_by_cell: dict[tuple[Path, int], set[str]] = {}
+        markdown_used_by_cell: dict[tuple[Path, int], set[str]] = {}
+        declared_by_cells: set[str] = set()
+        scanned: list[
+            tuple[_Block, ast.AST, set[str], ScanProfile, set[str], set[str]]
+        ] = []
         for block, tree in parsed:
-            metadata_errors: list[str] = []
-            declared: set[str] = set()
-            if book == "book1" and block.block_kind != "asset":
-                metadata_errors, declared = _metadata_findings(
-                    eid, block, entry_auxiliary
-                )
-                findings.extend(metadata_errors)
+            cell_key = (block.path, block.cell_index)
+            if cell_key in metadata_by_cell:
+                declared = metadata_by_cell[cell_key]
+            else:
+                metadata_errors: list[str] = []
+                declared = set()
+                if book == "book1" and block.block_kind != "asset":
+                    metadata_errors, declared = _metadata_findings(
+                        eid, block, entry_auxiliary
+                    )
+                    findings.extend(metadata_errors)
+                metadata_by_cell[cell_key] = declared
+                declared_by_cells |= declared
+            block_profile = scanner_profile(
+                concepts + _declared_owner_concepts(root, declared)
+            )
             used, methods = detect(
-                tree, registered_concepts=entry_registered, profile=entry_profile
+                tree, registered_concepts=entry_registered, profile=block_profile
             )
             methods -= defined_names
+            scanned.append((block, tree, declared, block_profile, used, methods))
+            if block.block_kind == "markdown":
+                markdown_used_by_cell.setdefault(cell_key, set()).update(used)
+
+        for qid in sorted(entry_auxiliary - declared_by_cells):
+            findings.append(
+                f"FAIL: {eid}: entry auxiliary {qid} is not declared by any cell"
+            )
+
+        checked_cell_metadata: set[tuple[Path, int]] = set()
+        for block, tree, declared, block_profile, used, methods in scanned:
+            cell_key = (block.path, block.cell_index)
             raw_declared = {qid.split(":", 1)[-1] for qid in declared}
+            declaration_used = (
+                markdown_used_by_cell[cell_key]
+                if block.block_kind == "markdown"
+                else used
+            )
             used_borrowed = {
                 raw
-                for raw in used
-                if raw in raw_declared and raw not in entry_profile.never_flag
+                for raw in declaration_used
+                if raw in raw_declared and raw not in block_profile.never_flag
             }
-            for raw in sorted(raw_declared - used_borrowed - entry_profile.never_flag):
-                findings.append(
-                    f"FAIL: {eid}: {_where(block)}: declared auxiliary "
-                    f"{_qualified(raw, declared) or raw} is unused"
-                )
+            first_block_for_cell = cell_key not in checked_cell_metadata
+            if first_block_for_cell:
+                checked_cell_metadata.add(cell_key)
+                for raw in sorted(
+                    raw_declared - used_borrowed - block_profile.never_flag
+                ):
+                    findings.append(
+                        f"FAIL: {eid}: {_where(block)}: declared auxiliary "
+                        f"{_qualified(raw, declared) or raw} is unused"
+                    )
 
-            is_k1 = bool(raw_declared) and block.role != "composed"
-            if kind == "unit" and is_k1:
-                if block.path.name == "exercises.ipynb" and block.role != "given":
+                is_k1 = bool(raw_declared) and block.role != "composed"
+                if kind == "unit" and is_k1:
+                    if block.path.name == "exercises.ipynb" and block.role != "given":
+                        findings.append(
+                            f"FAIL: {eid}: {_where(block)}: exercise auxiliary "
+                            "cell must use role given"
+                        )
+                    elif (
+                        block.path.name == "solutions.ipynb"
+                        and block.role != "real-form"
+                    ):
+                        findings.append(
+                            f"FAIL: {eid}: {_where(block)}: solution auxiliary "
+                            "cell must use role real-form"
+                        )
+                    elif (
+                        block.path.name == "lesson.ipynb"
+                        and block.role not in {"demo", "real-form"}
+                    ):
+                        findings.append(
+                            f"FAIL: {eid}: {_where(block)}: lesson auxiliary cell must "
+                            "use role demo or real-form"
+                        )
+
+            for raw in sorted(set(used) & set(dependent_feature_owners)):
+                if raw not in raw_declared:
                     findings.append(
-                        f"FAIL: {eid}: {_where(block)}: exercise auxiliary "
-                        "cell must use role given"
+                        f"FAIL: {eid}: {_where(block)}: undeclared borrowed tool "
+                        f"{dependent_feature_owners[raw]}:{raw}"
                     )
-                elif (
-                    block.path.name == "solutions.ipynb"
-                    and block.role != "real-form"
-                ):
-                    findings.append(
-                        f"FAIL: {eid}: {_where(block)}: solution auxiliary "
-                        "cell must use role real-form"
-                    )
-                elif (
-                    block.path.name == "lesson.ipynb"
-                    and block.role not in {"demo", "real-form"}
-                ):
-                    findings.append(
-                        f"FAIL: {eid}: {_where(block)}: lesson auxiliary cell must "
-                        "use role demo or real-form"
-                    )
+                    used.discard(raw)
 
             if block.block_kind == "markdown":
                 borrowed_raw = {
                     raw
                     for raw in used
-                    if raw == "str-split"
-                    or raw in future_concepts
+                    if raw in future_concepts
                     or any(qid.endswith(f":{raw}") for qid in entry_auxiliary)
-                }
+                } - block_profile.never_flag
                 for raw in sorted(borrowed_raw - raw_declared):
                     qid = _qualified(raw, entry_auxiliary)
                     if qid is None and raw in future_concepts:
@@ -1147,7 +1255,7 @@ def concept_scan_findings(
             accumulator_nodes = [
                 node
                 for node in ast.walk(tree)
-                if isinstance(node, (ast.Assign, ast.AugAssign))
+                if isinstance(node, (ast.Assign, ast.AugAssign, ast.AnnAssign, ast.NamedExpr))
                 and _is_accumulator_statement(node)
             ]
             matching_rows = [
@@ -1169,8 +1277,25 @@ def concept_scan_findings(
             if kind == "unit" and block.path.name == "exercises.ipynb":
                 region = _given_region(block.source)
                 if block.role != "composed":
+                    borrowed_methods = (
+                        block_profile.taught_methods - profile.taught_methods
+                    )
+                    for node in ast.walk(tree):
+                        if not (
+                            isinstance(node, ast.Call)
+                            and isinstance(node.func, ast.Attribute)
+                            and node.func.attr in borrowed_methods
+                        ):
+                            continue
+                        method_inside = (
+                            region is not None
+                            and region[1] < getattr(node, "lineno", 0) < region[2]
+                            and getattr(node, "end_lineno", 0) < region[2]
+                        )
+                        if not method_inside:
+                            methods.add(node.func.attr)
                     for raw, node in _borrowed_occurrences(
-                        tree, registered=entry_registered, profile=entry_profile
+                        tree, registered=entry_registered, profile=block_profile
                     ):
                         if raw not in raw_declared:
                             continue
@@ -1197,31 +1322,19 @@ def concept_scan_findings(
                         )
             elif kind == "unit" and block.path.name == "solutions.ipynb":
                 if raw_declared and block.role != "composed":
-                    task_id = block.task_id
-                    if isinstance(task_id, str) and task_id:
-                        region = _given_region(block.source)
-                        solution_cells.setdefault(task_id, []).append(
-                            (block, region[0] if region else None)
-                        )
-                    else:
-                        findings.append(
-                            f"FAIL: {eid}: {_where(block)}: auxiliary solution cell "
-                            "requires py4kids_task_id"
-                        )
-            # `.split()` is reported as one borrowed-tool failure in Book 1,
-            # and its generic unknown-method duplicate is suppressed only when
-            # the declaration fully authorizes this block.
-            if book == "book1" and "str-split" in used:
-                if "str-split" not in raw_declared:
-                    findings.append(
-                        f"FAIL: {eid}: {_where(block)}: undeclared borrowed tool "
-                        "book2:str-split"
-                    )
-                    used.discard("str-split")
-                elif "str-split" in block_allowed:
-                    methods.discard("split")
-
-            gaps = sorted((used - block_allowed) - entry_profile.never_flag)
+                    region = _given_region(block.source)
+                    if region is not None:
+                        task_id = block.task_id
+                        if isinstance(task_id, str) and task_id:
+                            solution_cells.setdefault(task_id, []).append(
+                                (block, region[0])
+                            )
+                        else:
+                            findings.append(
+                                f"FAIL: {eid}: {_where(block)}: auxiliary solution cell "
+                                "requires py4kids_task_id"
+                            )
+            gaps = sorted((used - block_allowed) - block_profile.never_flag)
             findings.extend(
                 f"FAIL: {eid}: {_where(block)}: used-but-unlisted concept {concept}"
                 for concept in gaps

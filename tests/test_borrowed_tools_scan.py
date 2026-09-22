@@ -228,18 +228,22 @@ def _write_k2(root: Path, rows: list[dict]) -> None:
     )
 
 
-def _register_book2_set_ops(root: Path) -> None:
+def _register_book2_feature(root: Path, concept_id: str) -> None:
     path = root / "book2/curriculum/concepts.yaml"
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     data["concepts"].append(
         {
-            "id": "set-ops",
-            "name": "set-ops",
+            "id": concept_id,
+            "name": concept_id,
             "category": "data",
             "kind": "feature",
         }
     )
     _write_yaml(path, data)
+
+
+def _register_book2_set_ops(root: Path) -> None:
+    _register_book2_feature(root, "set-ops")
 
 
 def _k2_row(cell_id: str = "counter") -> dict:
@@ -501,6 +505,10 @@ def test_markdown_declaration_removal_fails_for_future_book1_concept(tmp_path):
 
     assert concept_scan_findings(root, "book1") == [
         (
+            "FAIL: unit-01-fixture: entry auxiliary book1:list-literal "
+            "is not declared by any cell"
+        ),
+        (
             "FAIL: unit-01-fixture: solutions.ipynb cell removed-cell-declaration: "
             "undeclared borrowed tool book1:list-literal"
         )
@@ -644,6 +652,47 @@ def test_unclosed_python_markdown_fence_fails_closed(tmp_path):
     assert concept_scan_findings(root, "book1") == [
         ("FAIL: unit-01-fixture: lesson.ipynb cell unclosed-fence: unclosed python fence")
     ]
+
+
+def test_unclosed_non_python_markdown_fence_fails_closed(tmp_path):
+    root = _scanner_root(tmp_path)
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        [
+            _cell(
+                "```text\nnot closed\n```python\nwords = text.split()",
+                cell_id="unclosed-text-fence",
+                cell_type="markdown",
+            )
+        ],
+    )
+
+    assert concept_scan_findings(root, "book1") == [
+        (
+            "FAIL: unit-01-fixture: lesson.ipynb cell unclosed-text-fence: "
+            "unclosed non-python fence"
+        )
+    ]
+
+
+@pytest.mark.parametrize("language", ["python3", "py3"])
+def test_python3_markdown_fence_is_scanned_for_borrowed_tools(tmp_path, language):
+    root = _scanner_root(tmp_path)
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        [
+            _cell(
+                f"```{language}\nwords = text.split()\n```",
+                cell_id=f"{language}-fence",
+                cell_type="markdown",
+            )
+        ],
+    )
+
+    assert any(
+        "undeclared borrowed tool book2:str-split" in finding
+        for finding in concept_scan_findings(root, "book1")
+    )
 
 
 def test_malformed_unhashable_tags_return_finding(tmp_path):
@@ -813,6 +862,73 @@ def test_detectable_declared_but_unused_fails_and_manual_only_is_exempt(tmp_path
     findings = concept_scan_findings(root, "book1")
     assert any("book1:list-literal is unused" in finding for finding in findings)
     assert not any("loop-counter is unused" in finding for finding in findings)
+
+
+def test_entry_auxiliary_must_be_declared_by_a_cell(tmp_path):
+    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
+    (root / "book1/units/unit-01-fixture").mkdir(parents=True)
+
+    assert concept_scan_findings(root, "book1") == [
+        (
+            "FAIL: unit-01-fixture: entry auxiliary book1:list-literal "
+            "is not declared by any cell"
+        )
+    ]
+
+
+def test_markdown_unused_check_aggregates_all_fences_in_cell(tmp_path):
+    root = _scanner_root(tmp_path, auxiliary=["book2:str-split"])
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        [
+            _cell(
+                "```python\nprint('fixed form')\n```\n\n"
+                "```python\nwords = text.split()\n```",
+                cell_id="two-real-form-fences",
+                cell_type="markdown",
+                tags=["auxiliary", "real-form"],
+                auxiliary=["book2:str-split"],
+            )
+        ],
+    )
+
+    assert concept_scan_findings(root, "book1") == []
+
+
+def test_markdown_manual_only_future_concept_is_not_flagged(tmp_path):
+    root = _scanner_root(tmp_path)
+    concepts_path = root / "book1/curriculum/concepts.yaml"
+    concepts = yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
+    concepts["concepts"].append(
+        {"id": "type-conversion", "name": "type-conversion", "category": "data"}
+    )
+    _write_yaml(concepts_path, concepts)
+    map_path, coverage = _map(root)
+    coverage["entries"].append(
+        {
+            "id": "unit-02-future-home",
+            "kind": "unit",
+            "title": "Future home",
+            "lessons": 1,
+            "introduces": ["type-conversion"],
+            "requires": [],
+            "practices": [],
+            "auxiliary": [],
+        }
+    )
+    _write_yaml(map_path, coverage)
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        [
+            _cell(
+                "```python\nvalue = int('1')\n```",
+                cell_id="manual-only-fence",
+                cell_type="markdown",
+            )
+        ],
+    )
+
+    assert concept_scan_findings(root, "book1") == []
 
 
 def test_two_detectable_tools_exceed_cell_budget(tmp_path):
@@ -1027,6 +1143,23 @@ def test_solution_auxiliary_cell_requires_pairing_id(tmp_path):
     )
 
 
+def test_solution_real_form_without_given_region_needs_no_pairing_id(tmp_path):
+    root = _scanner_root(tmp_path, auxiliary=["book2:str-split"])
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        [
+            _cell(
+                "words = text.split()",
+                cell_id="standalone-real-form",
+                tags=["auxiliary", "real-form"],
+                auxiliary=["book2:str-split"],
+            )
+        ],
+    )
+
+    assert concept_scan_findings(root, "book1") == []
+
+
 def test_exercise_auxiliary_cell_requires_pairing_id(tmp_path):
     root = _scanner_root(tmp_path)
     unit = _install_fixture_shape(root, "given-pair")
@@ -1167,6 +1300,31 @@ def test_k2_authorization_is_per_statement(tmp_path):
         "used-but-unlisted concept accumulator" in finding
         for finding in concept_scan_findings(root, "book1")
     )
+
+
+@pytest.mark.parametrize(
+    "second_statement",
+    ["m: int = m + 1", "(m := m + 1)"],
+    ids=["annotated-assignment", "named-expression"],
+)
+def test_k2_rejects_non_exact_accumulator_node_types(tmp_path, second_statement):
+    root = _scanner_root(tmp_path)
+    _install_k2_case(root, f"n = n + 1\n{second_statement}")
+
+    assert any(
+        "used-but-unlisted concept accumulator" in finding
+        for finding in concept_scan_findings(root, "book1")
+    )
+
+
+def test_annotation_only_statement_is_not_an_accumulator(tmp_path):
+    root = _scanner_root(tmp_path)
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        [_cell("m: int", cell_id="annotation-only")],
+    )
+
+    assert concept_scan_findings(root, "book1") == []
 
 
 def test_k2_row_with_missing_cell_id_fails_closed(tmp_path):
@@ -1452,9 +1610,121 @@ def test_cross_book_set_ops_still_fails_in_undeclared_sibling_block(tmp_path):
     )
 
     assert any(
-        "lesson.ipynb cell undeclared-set: used-but-unlisted concept set-ops" in finding
+        "lesson.ipynb cell undeclared-set: undeclared borrowed tool book2:set-ops"
+        in finding
         for finding in concept_scan_findings(root, "book1")
     )
+
+
+def test_method_profile_authorization_is_cell_local(tmp_path):
+    root = _scanner_root(tmp_path)
+    _register_book2_set_ops(root)
+    _set_entry(root, auxiliary=["book2:set-ops"])
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        [
+            _cell(
+                "# GIVEN TOOL — do not edit\n"
+                "values = set()\n"
+                "values.remove(1)\n"
+                "# your work begins below\n",
+                cell_id="declared-set-method",
+                tags=["auxiliary", "demo"],
+                auxiliary=["book2:set-ops"],
+            ),
+            _cell("other.remove(2)", cell_id="undeclared-set-method"),
+        ],
+    )
+
+    assert any(
+        "lesson.ipynb cell undeclared-set-method: untaught method remove" in finding
+        for finding in concept_scan_findings(root, "book1")
+    )
+
+
+def test_exercise_method_authorization_is_limited_to_given_region(tmp_path):
+    root = _scanner_root(tmp_path)
+    _install_paired_set_ops(root)
+    given = (
+        "# GIVEN TOOL — do not edit\n"
+        "values = set()\n"
+        "values.remove(1)\n"
+        "# your work begins below\n"
+    )
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        [
+            _cell(
+                given + "other.remove(2)\n",
+                cell_id="set-exercise",
+                tags=["auxiliary", "given"],
+                auxiliary=["book2:set-ops"],
+                task_id="set-task",
+            )
+        ],
+    )
+
+    assert any(
+        "exercises.ipynb cell set-exercise: untaught method remove" in finding
+        for finding in concept_scan_findings(root, "book1")
+    )
+
+
+def test_dependent_book_feature_requires_cell_declaration(tmp_path):
+    root = _scanner_root(tmp_path)
+    _register_book2_feature(root, "comprehension")
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        [_cell("copies = [n for n in values]", cell_id="undeclared-comprehension")],
+    )
+
+    assert any(
+        "lesson.ipynb cell undeclared-comprehension: undeclared borrowed tool "
+        "book2:comprehension" in finding
+        for finding in concept_scan_findings(root, "book1")
+    )
+
+
+def test_dependent_book_feature_is_authorized_in_paired_given_region(tmp_path):
+    root = _scanner_root(tmp_path)
+    _register_book2_feature(root, "comprehension")
+    _set_entry(
+        root,
+        auxiliary=["book2:comprehension"],
+        introduces=["print", "string-literal"],
+    )
+    source = (
+        "# GIVEN TOOL — do not edit\n"
+        "copies = [n for n in values]\n"
+        "# your work begins below\n"
+        "print(copies)\n"
+    )
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        [
+            _cell(
+                source,
+                cell_id="given-comprehension",
+                tags=["auxiliary", "given"],
+                auxiliary=["book2:comprehension"],
+                task_id="comprehension-task",
+            )
+        ],
+    )
+    _write_notebook(
+        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        [
+            _cell(
+                source,
+                cell_id="solution-comprehension",
+                tags=["auxiliary", "real-form"],
+                auxiliary=["book2:comprehension"],
+                task_id="comprehension-task",
+            )
+        ],
+    )
+
+    assert concept_scan_findings(root, "book1") == []
 
 
 def test_book1_auxiliary_profile_cannot_leak_into_later_book2_v1_scan(tmp_path):

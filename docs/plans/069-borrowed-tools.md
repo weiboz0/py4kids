@@ -332,7 +332,146 @@ folded). 3 review rounds (r1 bundled draft → restructured to tooling-only per 
 contract). Gate CLOSED → Phase A (governance wording surfaced to the user for sign-off before merge).
 
 ## Content Review
-_(pending)_
+
+4-way gate on the TOOLING (plan 069 ships no notebook content; per `docs/content-review-gate.md`, tooling changes
+get a conventional code review by the same roster). Reviewers audit commit `7d34f91` (Phases B–D) against
+`docs/designs/004-borrowed-tools.md §8`.
+
+### Review 1 — [self] (2026-09-22)
+- **Verdict**: APPROVE
+Read the full diff of `tools/curriculum.py`, `tools/notebooks.py`, `tools/concept_scan.py` (not just the tests) and
+confirmed each design-004 §8 clause:
+1. Schema v2 is fail-closed and version-dispatched — `map_schema_findings`/`manifest_findings` reject a v2 manifest
+   under a v1 map and vice-versa (`blueprint_version != map_version`), v2 requires `auxiliary` on every entry
+   (`MAP_ENTRY_KEYS`/`MANIFEST_CONCEPT_KEYS` exact-set), v1 forbids it, `map_version 2` is book1-only,
+   checkpoints/projects reject non-empty `auxiliary`, `auxiliary` is disjoint from introduces/requires/practices
+   after stripping `book1:`, and manifest↔map auxiliary values must agree.
+2. `_auxiliary_prereq_findings` excludes `auxiliary` from `(requires∪practices)−seen`, never adds it to `seen`,
+   requires a book1 aux home strictly LATER than the entry in MAP order (`home_index <= index` fails), and requires
+   a book2 aux to resolve to a registered Book-2 owner that is a transitive DEPENDENT of Book 1.
+3. `concept_scan` is cell-aware; **markdown Python fences are scanned ONLY for borrowed tools** — the markdown
+   branch flags undeclared borrowed tools then `continue`s BEFORE the general `used − block_allowed` closure, which
+   therefore stays code-cell-only (design-003 §5 real-form-markdown invisibility preserved). SyntaxError in a fence
+   still fails; backtick+tilde+indented+language-attributed fences parse (`_python_fences`). An undeclared FUTURE
+   Book-1 concept in a fence fails by map order (`future_concepts`).
+4. `.split()` → `book2:str-split` recognized globally; the duplicate "untaught method split" is suppressed only when
+   the block is authorized; undeclared/untagged `.split()` still fails.
+5. K2 loader is closed/non-extensible (`_load_k2` fixes keys, concept-id set, `exact-ast-form == "name = name + 1"`,
+   role `composed`), authorization is PER STATEMENT (`_exact_counter_statement` requires `name = name + 1` exactly —
+   `type(x) is int` excludes bool, rejects `+=`, `1 + n`, subscript/attr; a second non-matching accumulator
+   statement in the cell defeats `all(_exact_counter_statement)` → the cell fails), and a stale/duplicate cell-id
+   fails closed (`all_cell_ids.count(...) != 1`). Shipped table is empty.
+6. One-tool budget enforced (`_metadata_findings`: >1 detectable id → fail; MANUAL_ONLY excluded). GIVEN regions are
+   byte-identical, paired by `py4kids_task_id` not position, and GIVEN enforcement is exercise-only; lesson demo /
+   solution real-form authorize by tag+declaration.
+7. Book 2 (v1) routes to `_legacy_scan_findings`, preserving pre-069 behavior and finding text byte-for-byte.
+Verification: `TMPDIR=/dev/shm bash scripts/ci-local.sh` → **ALL GREEN** in this kernel-capable env (the codex
+build sandbox's 11 Jupyter `socket()` failures were pure sandbox artifacts — cleared here); 93 borrowed-tools tests
+pass; full non-execution suite green.
+Nit (Nice-to-Have, non-blocking): the exercise GIVEN path calls `detect()` twice per block (once for `used`, once via
+`_borrowed_occurrences`); a minor efficiency cost only.
+
+### Review 2 — [fable] (2026-09-22)
+- **Verdict**: APPROVE WITH NITS
+Verified §8 items 1–6 in code (not just tests); ran the four touched test modules (478 passed) and direct scanner
+probes. Confirmed markdown-borrowed-only `continue`, fail-closed schema/K2/prereq, byte-identity GIVEN pairing, and
+the v1 legacy path. Also flagged the markdown scan is *stricter* than §8 (future Book-1 concepts flagged) — a good
+fail-closed deviation to record in design 004's revision history.
+1. `[OPEN]` Should Fix — `concept_scan.py:~1054` entry-wide method-profile widening is **fail-open**: a
+   method-bearing borrowed concept (e.g. `book2:set-ops`) declared on one cell adds its methods (`.remove` etc.) to
+   the untaught-method whitelist for EVERY block of the entry, so an undeclared sibling cell using that method passes
+   silently. Fix: compute unknown-methods per block against only that block's declared owner concepts.
+2. `[OPEN]` Should Fix — Book-2 **syntax** features (comprehension, tuple-unpack, set literal) are invisible in
+   Book-1 code cells because `add_feature` gates on `entry_registered`; an undeclared comprehension in a Book-1 cell
+   yields no finding, though §4 denylists comprehensions. Pre-069 behavior, but 069 claims closure over borrowed
+   Book-2 tools. Fix: for v2 books, treat the dependent book's *feature* ids like `str-split` (global recognition +
+   required declaration).
+3. `[OPEN]` Should Fix — `concept_scan.py:~1088` per-fence "declared auxiliary … is unused" on multi-fence markdown
+   cells: metadata is per cell but a `_Block` is emitted per fence, so a two-`python`-fence real-form cell where only
+   the second uses `.split()` fails on the first. Latent (0 such cells today) but blocks the design-003 "fixed-data
+   + real form in one markdown cell" shape. Fix: aggregate `used` across a cell's fences before the unused check.
+4. `[OPEN]` Nice to Have — markdown future-concept branch (~1124) doesn't subtract `never_flag`, so `int()`/`True`
+   in a fence would fail as `book1:type-conversion`/`boolean` though the same code cell is exempt. Filter through
+   `never_flag`.
+5. `[OPEN]` Nice to Have — fences with info `python3`/`py3`/`{.python}`/none are not scanned; an author could hide
+   `.split()` in a bare fence. (No live slip: 222 untagged fences hold only text/output.)
+6. `[OPEN]` Nice to Have — an unclosed NON-python fence swallows later python fences in the cell; report any unclosed
+   fence, not only python ones.
+7. `[OPEN]` Nice to Have — a `no-exec` unit code cell with a SyntaxError is silently dropped from closure; a
+   deliberately unparsable no-exec cell routes around the scanner. Require no-exec cells to parse, or emit a finding.
+8. `[OPEN]` Nice to Have — K2 cell-ids must be book-globally-unique (fail-closed, good), but Book 1 reuses 105 ids
+   across notebooks and has 2 true within-notebook duplicates (u02 solutions `u2-ex8-heading`/`u2-ex8-code`);
+   document the uniqueness requirement + add a separate nbformat-duplicate hygiene check.
+9. `[OPEN]` Nice to Have — an entry-level `auxiliary` id no cell declares is never flagged (only cell-level unused
+   is), yet it widens `entry_registered`/profile. Add an entry-level "declared by entry, by no cell" finding.
+10. `[OPEN]` Nice to Have — asset `.py` is read twice (source + parse); harmless.
+
+### Review 3 — [sol] (2026-09-22)
+- **Verdict**: REJECT
+Adversarial probes reproduced three gaps (138 borrowed-tool/prereq/pattern tests pass; the probes below are the
+holes those tests miss).
+1. `[OPEN]` Must Fix — `concept_scan.py:~1054` entry-level auxiliary widens the untaught-method whitelist for every
+   cell in the entry. Declaring `book2:set-ops` on one cell lets an undeclared sibling's `other.remove(2)` pass
+   silently (detection only emits `set-ops` for a statically-recognized set receiver). Violates cell-local
+   authorization. **(Same as [fable] #1 — corroborated.)**
+2. `[OPEN]` Must Fix — `concept_scan.py:~664,~1147` K2 is not fully per-statement / exact-form: candidate collection
+   considers only `Assign`/`AugAssign`, so an annotated (`m: int = m + 1`) or walrus (`(m := m + 1)`) second
+   accumulator is never examined — the valid first statement authorizes cell-level `accumulator` while the
+   non-matching second slips. Violates "`name = name + 1` only; any second non-matching accumulator fails".
+3. `[OPEN]` Must Fix — `concept_scan.py:~1198,~1234` every auxiliary SOLUTION code cell is forced to carry
+   `py4kids_task_id` and an exercise partner; a standalone `auxiliary, real-form` solution code cell with authorized
+   `.split()` fails "requires py4kids_task_id". §8 says solution real-form authorizes via tag+declaration alone
+   (pairing is exercise-GIVEN-only); markdown real-forms already bypass this, so authorization is representation-
+   dependent. Contract violation.
+
+### Review 4 — [glm] (2026-09-22)
+- **Verdict**: NO VERDICT (opencode invocation timed out after 1200 s, SIGTERM — known [glm]/opencode flakiness;
+  see [[book1-real-input]]). Re-dispatched in the re-review round. If it fails again at the final consensus point,
+  the 3-of-4 merge decision goes to the user (as at the u10 content gate).
+
+### Author disposition (round 1 → fix pass, 2026-09-22)
+Pre-fix probe: **0** Book-1 code cells use comprehensions / tuple-unpacking / set literals / dict-comps (AST scan),
+so [fable] #2 (globally recognize Book-2 syntax features) is a safe, no-false-positive closure — folding it.
+Folding as code fixes (codex, tooling dispatch): [sol] #1/#2/#3 (Must), [fable] #1 (=[sol] #1), #2, #3 (Should),
+and cheap/safe Nice-to-Haves #4 (never_flag in markdown branch), #5 (accept `python3`/`py3` info strings), #6
+(report unclosed non-python fences), #7 (flag no-exec code cells with SyntaxError), #9 (entry-declared-but-no-cell).
+Deferring with reason: [fable] #8 second half (a general nbformat within-notebook duplicate-cell-id hygiene check,
+incl. the pre-existing u02 `u2-ex8-*` duplicates) is a distinct hygiene concern → tracked follow-up, not 069; the
+K2 book-global-uniqueness *requirement* is documented in design 004 §8. [fable] #10 (asset double-read) folded if
+trivial. Each Must-Fix gets a dedicated regression test.
+
+### Round-1 resolution (fix commit; codex GPT-5.6-sol per tooling dispatch; 2026-09-22)
+All changes confined to `tools/concept_scan.py` + `tests/test_borrowed_tools_scan.py` (no notebook/manifest/map
+edits). `TMPDIR=/dev/shm bash scripts/ci-local.sh` → **ALL GREEN**; 107 borrowed-tools tests pass; 12 new
+regressions (≥1 per Must-Fix). Codex's own TDD review caught + fixed two extra edge cases (annotation-only
+`m: int = ...` is not an accumulator; a same-cell exercise authorization leak).
+- [sol] #1 / [fable] #1 → `[FIXED]` — method-whitelist widening is now per validated cell (owner-concept method
+  profile scoped to the declaring cell, plus GIVEN-region method enforcement in exercises). Tests
+  `test_method_profile_authorization_is_cell_local`, `test_exercise_method_authorization_is_limited_to_given_region`.
+- [sol] #2 → `[FIXED]` — accumulator-candidate collection now includes `AnnAssign` + `NamedExpr` (walrus) at both
+  sites; any non-exact second accumulator fails the cell; annotation-only assignment is not an accumulator. Tests
+  `test_k2_rejects_non_exact_accumulator_node_types`, `test_annotation_only_statement_is_not_an_accumulator`.
+- [sol] #3 → `[FIXED]` — solution real-form CODE cells authorize by tag+declaration alone; task_id/pairing required
+  only when the solution cell contains a GIVEN region. Test
+  `test_solution_real_form_without_given_region_needs_no_pairing_id`.
+- [fable] #2 → `[FIXED]` — for v2 books the dependent book's feature ids (kind≠technique) are globally recognized in
+  detection and must be declared as borrowed tools (undeclared comprehension/tuple/set in a Book-1 cell now fails).
+  Verified 0 false positives (0 existing Book-1 cells use these). Tests
+  `test_dependent_book_feature_requires_cell_declaration`, `test_dependent_book_feature_is_authorized_in_paired_given_region`.
+- [fable] #3 → `[FIXED]` — markdown `used` is aggregated across a cell's python fences before the unused check.
+  Test `test_markdown_unused_check_aggregates_all_fences_in_cell`.
+- [fable] #4 → `[FIXED]` — markdown future-concept branch subtracts `never_flag` (`test_markdown_manual_only_future_concept_is_not_flagged`).
+- [fable] #5 → `[FIXED]` — `python3`/`py3` fence info strings are scanned (`test_python3_markdown_fence_is_scanned_for_borrowed_tools`).
+- [fable] #6 → `[FIXED]` — unclosed non-python fences fail closed (`test_unclosed_non_python_markdown_fence_fails_closed`).
+- [fable] #7 → `[WONTFIX]` — flagging a `no-exec` code cell with a SyntaxError would break valid shipped content:
+  Unit 1 *intentionally* ships two `no-exec` SyntaxError cells for debug/predict-the-error lessons. Correct skip.
+- [fable] #8 → `[FIXED]` (first half: K2 cell-ids must be book-globally-unique — already enforced fail-closed;
+  requirement documented) / `[WONTFIX]`-deferred (second half: a general nbformat within-notebook duplicate-cell-id
+  hygiene check, incl. pre-existing u02 `u2-ex8-*` dups — distinct follow-up, out of 069 mechanism scope).
+- [fable] #9 → `[FIXED]` — entry-level "declared by entry, by no cell" auxiliary finding added
+  (`test_entry_auxiliary_must_be_declared_by_a_cell`).
+- [fable] #10 → `[WONTFIX]` — asset double-read is a harmless micro-perf nit; left as-is.
+All `[OPEN]` findings resolved (FIXED or WONTFIX-with-reason). Re-review round (4-way) follows on the fixed tree.
 
 ## Post-Execution Report
 
