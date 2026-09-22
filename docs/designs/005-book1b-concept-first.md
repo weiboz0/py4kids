@@ -1,4 +1,4 @@
-# Design 004 — Book 1b: a concept-first, story-light variant of Book 1
+# Design 005 — Book 1b: a concept-first, story-light variant of Book 1
 
 Status: proposed (2026-09-21).
 Governs the architecture of a new book root, `book1b/`, and the tooling changes that support it.
@@ -274,11 +274,11 @@ tooling and content this plan ships do not touch those files.
 
 ## 11. Rollout
 
-- **Plan 069 — Foundation:** registry entry, `book1b/` skeleton, full catalog, syllabus, a valid
+- **Plan 070 — Foundation:** registry entry, `book1b/` skeleton, full catalog, syllabus, a valid
   U01-only coverage-map, the book-aware tooling changes (plan Tooling A–D + tests), ci-local/registry
   integration, and **U01 authored end-to-end** as the template all later units follow. Verification
   phase required.
-- **Plans 070+ — per-unit content:** one plan per unit (or small batch), each adding the unit's
+- **Plans 071+ — per-unit content:** one plan per unit (or small batch), each adding the unit's
   coverage-map entry + notebooks + teacher notes + checkpoint where due, through the 4-way content
   gate. The Algorithm Challenge project lands last.
 

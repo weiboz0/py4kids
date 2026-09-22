@@ -7,7 +7,7 @@ rather than themed projects, with rigorous mastery built through **real problem-
 simple (counting-style) algorithms, turtle geometry, and puzzles.
 Exercises are **mini-CP / LeetCode-style** (a precise spec, worked sample input→output, testable
 solutions) with simple, accessible backgrounds, and there is no cap on how many a unit may carry.
-Full design: `../docs/designs/004-book1b-concept-first.md`.
+Full design: `../docs/designs/005-book1b-concept-first.md`.
 
 Book 1b is an independent, self-contained root — a *variant* of Book 1, not a dependent of it —
 so a teacher can run either book as a complete Year-1 course.

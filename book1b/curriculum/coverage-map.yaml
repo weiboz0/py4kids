@@ -1,9 +1,9 @@
 map_version: 1
 # Book 1b is in buildout (see books.yaml `buildout: true`): this map grows one entry per
-# content plan. Unit 01 lands in plan 069 Phase C; Units 02-13, the checkpoints, and the
-# end-of-book Algorithm Challenge follow in plans 070+. The full 62-concept catalog ships
+# content plan. Unit 01 lands in plan 070 Phase C; Units 02-13, the checkpoints, and the
+# end-of-book Algorithm Challenge follow in plans 071+. The full 62-concept catalog ships
 # up front in concepts.yaml (content-identical to Book 1); every concept is introduced
-# exactly once across the units as they land. Design: docs/designs/004-book1b-concept-first.md.
+# exactly once across the units as they land. Design: docs/designs/005-book1b-concept-first.md.
 entries:
 - id: unit-01-output-and-variables
   kind: unit

@@ -1,4 +1,4 @@
-# Plan 069 — Book 1b foundation: registry, fastforward tooling, scaffolding, and U01 template
+# Plan 070 — Book 1b foundation: registry, fastforward tooling, scaffolding, and U01 template
 
 **Origin:** author request (2026-09-21): "work on a book1b, a different version of book 1 with the same
 scope of content coverage … organized around concepts … weaken the verbose story, and focus on the
@@ -6,7 +6,7 @@ language concepts with real problem solving practices in math, simple algo or ot
 student's interest." Follow-ups: fastforward concepts before they are taught to make examples real;
 draw from math / simple algo / turtle / other; exercises "mini cp and leetcode style but with simple
 question backgrounds"; "no budget cap for # of exercises."
-**Design:** `docs/designs/004-book1b-concept-first.md`.
+**Design:** `docs/designs/005-book1b-concept-first.md`.
 
 ## Motivation
 
@@ -16,9 +16,9 @@ This plan lays the foundation and proves the whole pipeline end-to-end:
 the book-aware tooling changes fastforward needs (Tooling A–D), the `book1b/` scaffolding, and **U01 authored
 completely** as the template every later unit follows.
 Units U02–U13, the checkpoints, and the end-of-book Algorithm Challenge land in follow-on content
-plans (070+), each adding its own coverage-map entry as it ships.
+plans (071+), each adding its own coverage-map entry as it ships.
 
-## Design decisions this plan implements (from design 004)
+## Design decisions this plan implements (from design 005)
 
 - **Variant registry:** `book1b` registers with `variant_of: book1`, `prereq_policy: fastforward`,
   `buildout: true`, `concept_minimum: 40`, `lesson_budget: [30, 60]`, `depends_on: []` (self-contained).
@@ -66,7 +66,7 @@ the registry test never asserts a book that does not yet exist ([sol]-r2 B1):
   add a Book 1b invocation block mirroring the Book 1 curriculum + notebook + turtle + hygiene + manifest
   steps **minus** the Book-1-only pattern checks. The block is **existence-guarded (`[ -d book1b ]`)**
   because the CLI checks *fail closed* on a missing root (`notebooks.py:80-83`); before `book1b/` exists
-  it is a labelled `SKIP (plan 069)`.
+  it is a labelled `SKIP (plan 070)`.
 - **PDF build:** `scripts/build-pdf.sh` is already `--book`-generic; only its pattern-doc probe is
   book1-gated (`build-pdf.sh:22`), so ci-local invokes it for `book1b` unchanged (no build-pdf edit).
 - `scripts/pre-merge-guard.sh`: the collision loop (`pre-merge-guard.sh:77`) iterates `book1b` too.
@@ -206,14 +206,14 @@ manifest + lesson + exercises + solutions + teacher-notes (+ seeded assets if ne
   PDF build, pre-merge guard). No false SKIP.
 - U01 `solutions.ipynb` executes top-to-bottom clean; every exercise's asserts pass; `exercises.ipynb`
   is solution-free with no executed outputs; ≥2 `stretch` cells present; opening cell is a problem, not drill.
-- Scope allowlist: `git diff --name-only $(git merge-base HEAD main)..HEAD` = this plan + design 004 +
+- Scope allowlist: `git diff --name-only $(git merge-base HEAD main)..HEAD` = this plan + design 005 +
   `tools/{books,curriculum,concept_scan}.py` + `scripts/{ci-local,pre-merge-guard}.sh` +
   `tests/{test_books,test_tools}.py` + new `tests/` fixtures + `books.yaml` + the `book1b/` tree
   (incl. `checkpoints/.gitkeep`, `projects/.gitkeep`). **No `.gitignore` / `build-pdf.sh` edit** (both no-ops).
 
 ## Out of scope
 
-- **U02–U13 content, the checkpoints, and the Algorithm Challenge project** — follow-on plans 070+.
+- **U02–U13 content, the checkpoints, and the Algorithm Challenge project** — follow-on plans 071+.
   This plan authors only U01 (plus all scaffolding and tooling), so the "capstone practices everything"
   coverage guarantee (design §6) activates only when the Algorithm Challenge lands; Book 1b is
   legitimately in buildout until then.
@@ -290,7 +290,7 @@ normative requirement is the explicit flag in the Tooling section; those histori
 Both round-1 blockers resolved; all 8 round-1 nits confirmed present; mechanically re-verified the §3
 table is a true 62-id partition. 8 new nits, ALL FOLDED: real CLI check names (coverage-check/prereq-check
 composites); add turtle-check (+ structure/noexec/cell-lint) to the matrix; explicit `[ -d book1b ]` guard
-+ `SKIP (plan 069)` label + pinned registry order; §11 "Tooling A–D" wording; carve turtle exercises out of
++ `SKIP (plan 070)` label + pinned registry order; §11 "Tooling A–D" wording; carve turtle exercises out of
 the §7 assert rule (verified by execution + turtle-check) and extend §8 to U06 + turtle practice sites;
 U12 file concepts need a practice site like U13's (post-U13 checkpoint / U13 background); U02 sets the
 fastforward-tagging convention (U01 needs little); add a round-2 [self].
@@ -419,7 +419,7 @@ assertion-contract Must-Fix) + 3 APPROVE-WITH-NITS; round 2 clean after the fold
 
 ## Post-Execution Report
 
-**Status: COMPLETE** (pending PR + squash-merge). Plan 069 lays the Book 1b foundation and ships Unit 01
+**Status: COMPLETE** (pending PR + squash-merge). Plan 070 lays the Book 1b foundation and ships Unit 01
 as the template all later units clone.
 
 **What shipped:**
@@ -448,7 +448,7 @@ pre-function rigor as per-line asserts; solutions re-authored to mirror the stud
 **Verification:** full `scripts/ci-local.sh` **ALL GREEN** across Book 1, Book 2, Book 1b (registry+lint,
 pytest 507, notebook exec+hygiene, manifest/prereq/coverage/stretch/turtle, PDF, pre-merge guard).
 
-**Follow-on:** Units 02–13, checkpoints, and the end-of-book Algorithm Challenge land in plans 070+, each
+**Follow-on:** Units 02–13, checkpoints, and the end-of-book Algorithm Challenge land in plans 071+, each
 adding its coverage-map entry + notebooks through the 4-way content gate, cloning U01's shape and design §7.
 Book 1b stays in `buildout: true` until the Algorithm Challenge lands (which re-enables the full
 practice-coverage anchor).
