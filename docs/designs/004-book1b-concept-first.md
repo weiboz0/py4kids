@@ -128,6 +128,17 @@ Book 1b runs the same `scripts/ci-local.sh` gate; three curriculum checks are ma
    not-yet-authored remainder. Book 1 stays strict (it is complete).
 3. **Prereq closure** (`prereq_findings`): under `prereq_policy: fastforward`, validate `requires`
    strictly and **skip `practices`** for ordering (existence still checked elsewhere).
+4. **Lesson budget** (`lesson_budget_findings`): enforce the configured *upper* bound always, but the
+   *lower* bound only for **complete** books — a buildout book with a handful of authored entries must
+   not fail for a small lesson total. Book 1's bound stays fully enforced (it is complete).
+
+**Content scan** (`concept_scan.py`): for a fastforward book, a unit's allowed-concept set is the whole
+catalog (`union |= registered`), so a fastforwarded concept in a cell is not "used-but-unlisted". The
+untaught-*method* safety net (catches typos / untaught library methods) still runs unchanged.
+
+**Syllabus** (`syllabus_findings`): the check matches only pipe-delimited table rows, so Book 1b's
+`syllabus.md` lists shipped entries as a table and the **roadmap of planned units as prose** (never a
+`| ` + backtick-slug + ` |` row) — no tooling change, an authoring rule.
 
 Full **practice coverage** (every concept practiced beyond its introduction) is anchored by the
 end-of-book `project-01-algorithm-challenge`: the existing capstone check

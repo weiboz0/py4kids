@@ -31,20 +31,25 @@ plans (070+), each adding its own coverage-map entry as it ships.
 All changes are **book-scoped by config** — Book 1 and Book 2 behavior is unchanged (verified by the
 existing suite staying green).
 
-1. `tools/books.py`: read optional `variant_of` (str), `prereq_policy` (str), and treat a book whose
-   coverage-map introduces a strict subset of its catalog as "in buildout" (helper
-   `is_complete_book(root, book) -> bool`: complete iff every catalog id is introduced). `concept_minimum`
-   and `lesson_budget` are already config-honored.
+1. `tools/books.py`: read optional `variant_of` (str) and `prereq_policy` (str); add helper
+   `is_complete_book(root, book) -> bool` (complete iff every catalog id is introduced by some
+   coverage-map entry). `concept_minimum` and `lesson_budget` are already config-honored.
 2. `tools/curriculum.py`:
    - `global_concept_uniqueness_findings`: skip id collisions between a book and its `variant_of`
-     target (both directions), and **assert the variant's `concepts.yaml` is byte-for-content identical
-     to its parent's** (new finding if they diverge).
+     target (both directions), and **assert the variant's `concepts.yaml` is content-identical to its
+     parent's** (new finding if they diverge).
    - `introduction_findings`: always enforce "introduced at most once"; enforce "every catalog concept
      introduced" only when `is_complete_book` is true (Book 1 stays strict).
    - `prereq_findings`: when `prereq_policy == "fastforward"`, validate closure over `requires` only
      (drop `practices` from the ordering check). `requires` and checkpoint alignment stay strict.
-3. `tools/concept_scan.py`: for a fastforward book, the allowed-concept set for a unit's content is the
-   **whole catalog** (a fastforwarded concept is not "used-but-unlisted"). Book 1 keeps its per-unit set.
+   - `lesson_budget_findings`: enforce the configured *upper* bound always; enforce the *lower* bound
+     only when `is_complete_book` (a buildout book must not fail for a small lesson total).
+3. `tools/concept_scan.py`: for a fastforward book, a unit's allowed set is the whole catalog
+   (`union |= registered`), so a fastforwarded concept is not "used-but-unlisted". The untaught-*method*
+   check still runs. Book 1 keeps its per-unit set.
+
+`syllabus_findings` needs no change (it matches only pipe-delimited rows) — but Book 1b's `syllabus.md`
+must list the roadmap of planned units as **prose, not a table** (authoring rule, Phase B).
 
 Each change ships with unit tests under `tests/` (fixture book roots: a variant pair, a fastforward
 book, and a buildout book), plus a regression assertion that Book 1's checks are unchanged.
@@ -135,7 +140,30 @@ manifest + lesson + exercises + solutions + teacher-notes (+ seeded assets if ne
 
 ## Plan Review
 
-_(4-way plan-review gate — filled by the gate; consensus required before Phase A.)_
+### Round 1 (2026-09-21) — [self] inline; [sol] gpt-5.6-sol; [glm] opencode; [fable] Fable 5 (dispatched parallel).
+
+#### [self] (2026-09-21)
+**APPROVE.** I verified every tooling integration point against the actual source before writing the plan:
+- `curriculum.py` `global_concept_uniqueness_findings` iterates all registered books and flags any id in
+  >1 book — so book1b (a full 62-id catalog copy) needs the `variant_of` exemption; confirmed.
+- `referenced_concepts_findings` needs no change (book1b `own`=62, `depends_on: []` ⇒ empty baseline;
+  introduces ⊆ own, requires/practices ⊆ own — existence holds under fastforward).
+- `introduction_findings` "never introduced" would fail a buildout coverage-map ⇒ gate behind
+  `is_complete_book`; "introduced twice" stays.
+- `prereq_findings` currently rejects requires|practices before introduction ⇒ fastforward drops
+  practices, keeps requires + (separately) checkpoint alignment strict.
+- `lesson_budget_findings` sums entry lessons ⇒ a buildout book fails the lower bound ⇒ gate the lower
+  bound behind `is_complete_book` (caught in self-review, folded).
+- `concept_scan.py` per-entry `union` + `gaps = used - union` ⇒ fastforward sets `union |= registered`;
+  untaught-method net retained.
+- `syllabus_findings` matches only pipe-delimited rows ⇒ roadmap must be prose (folded as an authoring rule).
+Spine closure over `requires` is satisfiable in order (checked all 13 units: e.g. U02 requires ⊆ U01;
+U05 requires while-loop/accumulator/loop-counter ⊆ U04; U13 requires def/params/return ⊆ U07). U01
+requires nothing, so it is authorable immediately. Phase V is the named verification phase (U01 is a
+unit). Book 1 and Book 2 stay strict/complete, so all relaxations are inert for them (regression test
+mandated in Phase A). No open blockers.
+
+_(Awaiting [sol] / [glm] / [fable].)_
 
 ## Content Review
 
