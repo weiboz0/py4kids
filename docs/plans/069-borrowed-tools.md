@@ -239,7 +239,30 @@ judgeable by synthetic fixtures (nothing needs a real example); K2 honesty; chec
   mismatch, and missing/duplicate pairing-id mutations.
 Phase E scope claim confirmed correct (empty migration edits manifests + coverage-map, not notebook cells).
 
-#### [glm] (pending — opencode)
+#### [glm] round 2 (2026-09-21)
+**REJECT** — one blocker (B1); "everything else approve-quality"; verified end-to-end vs code. Fold:
+- B1 (blocker, SUPERSEDES [fable] N11): applying the FULL closure to markdown fences breaks Phase E — 20 existing
+  fences (u03/cp02/cp03/cp04) fail on `input`, 15 in checkpoints where the plan FORBIDS edits (no in-plan remedy).
+  Fix: markdown fences are parsed for SyntaxError and scanned ONLY for BORROWED TOOLS (declared auxiliary ids +
+  globally-recognized tools like `.split()`); the general used-but-unlisted closure stays CODE-CELL-ONLY,
+  preserving design-003 §5 invisibility (NO `practices:[input]` adds, NO checkpoint edits). Define "governed" +
+  add locking test "a markdown fence using a taught-but-unlisted concept (input) does NOT fail". [fable] N11's
+  practices-add approach is DROPPED.
+- N1: existing v1-hardcoded tests (test_tools.py:623-624/913/1050; v1 fixtures in test_patterns/concept_scan/
+  book2) → Phase B owns updating them to version-dispatch (locked tests).
+- N2: K2 authorization is PER-STATEMENT (cell-level would let a 2nd non-matching accumulator in the same cell
+  slip) → add that mutation.
+- N3: state the K2 table's storage location + amendment path; a table entry whose cell-id doesn't exist fails
+  CLOSED (forces 069 to ship an EMPTY production table; = [sol] B1a).
+- N4: add operand-swap `n = 1 + n` to the K2 negative matrix.
+- N5: state where `auxiliary` lives in the manifest (top-level vs under `concepts`); a v2 manifest under a v1 map
+  (or vice-versa) fails; v2 requires `auxiliary`, v1 forbids it.
+- N6: the "≤1 borrowed tool per cell" budget has NO tooling finding → state it is CI-enforced via
+  `py4kids_auxiliary` length (≤1 detectable id) or explicitly reviewer-manual.
+- design 003 v7 §9 entry must say it SUPERSEDES v6's `.split()` rejection (this plan IS the shared-tool change).
+Verified sound: empty migration ci-local-green (only map_schema/manifest read the changed surfaces, version-
+dispatched); dependency_baseline(book1) empty so reverse-graph dependent check works; book2:str-split end-to-end
+(owner book2 unit-01, depends_on book1); K2 ids correct; Phase-E scope claim correct.
 
 ## Content Review
 _(pending)_
