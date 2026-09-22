@@ -612,6 +612,45 @@ probes; no new fail-open or FP introduced by the commit. Three nits:
    recognition — fix pass 3 must ensure an AUTHORIZED deque doesn't feature+untaught-method double-flag (verify on
    landing); otherwise a documented follow-up.
 
+### Round-3 resolution (fix commit 3d46f50; codex GPT-5.6-sol; 2026-09-22)
+`tools/concept_scan.py` + tests. 114 focused tests pass; live book1/book2 `[]`; `ci-local` ALL GREEN.
+- [sol] r3 #1 → `[FIXED]` — `visit_Attribute` registers `book2:deque` for any `<x>.deque` access; bare-Name `deque`
+  stays clean. `test_undeclared_deque_attribute_is_a_borrowed_tool`.
+- [sol] r3 #2 / [glm] r3 nit 1 → `[FIXED]` — reverted the N3 exclusion; a borrowed method outside GIVEN is flagged
+  regardless of `defined_names`. Test replaced by `test_entry_defined_name_does_not_authorize_borrowed_method_outside_given`.
+- [fable] r2 N3 → `[WONTFIX]` (superseded — its fail-closed concern created a fail-open; reverted).
+- [glm] r3 nit 2 → `[WONTFIX]` — future registry-collision + technique/MANUAL_ONLY silence; unreachable
+  (book1∩book2=∅); documented hazard.
+- [glm] r3 nit 3 → `[WONTFIX]`-deferred — verified live: an AUTHORIZED `collections.deque()` still also emits
+  "untaught method deque" (pre-existing; `deque()` spelling is clean). Not reachable in shipped (empty auxiliary) or
+  plan-070 content (list-literal + `.split()`). Tracked with the Book-2 detector-hardening follow-ups.
+Round-4 verification dispatched on 3d46f50 (all four).
+
+### Re-review round 4 — final verification on 3d46f50 (2026-09-22)
+- **[self]**: APPROVE — verified live: `queue_type = collections.deque` → `undeclared borrowed tool book2:deque`;
+  `deque = 1`/`print(deque)` → clean; unrelated `def add` + `alias.add(2)` outside GIVEN → `untaught method add`;
+  ci-local ALL GREEN.
+- **[fable]**: APPROVE (no new findings) — confirmed the N3 revert cannot over-flag a genuine function call
+  (post-GIVEN loop handles only `ast.Attribute` method calls, never bare `add(...)`), and `.deque` attribute
+  recognition lives in `visit_Attribute` so a bare-Name `deque=1` never reaches it. 96/96 scan tests pass. Noted the
+  already-deferred `collections.deque()` double-emit as non-blocking, not re-raised.
+- **[sol]**: APPROVE — both round-3 findings RESOLVED (`queue_type = collections.deque` → `undeclared borrowed
+  tool book2:deque`; bare-name probes `deque=1`/`print(deque)`/`x=deque`/`f(deque)` all `[]`; unrelated `def add` +
+  `alias.add(2)` outside GIVEN → `untaught method add`, genuine inside-GIVEN `set().add()` clean). 114 focused tests
+  pass; live book1/book2 `[]`. No new blocking findings.
+
+### Content-review outcome: **FULL 4-way consensus** on `3d46f50` — [self]/[sol]/[fable]/[glm] all APPROVE
+4 rounds (r1 REJECT×1 + nits → r2 REJECT×1 + nits → r3 REJECT×1 → r4 clean). All `[OPEN]` findings resolved
+(FIXED or WONTFIX-with-reason). [glm] timed out in r1+r2 (opencode flakiness) but completed r3+r4, so no 3-of-4
+user decision was needed. Deferred (documented, non-shipped) follow-ups for a future Book-2 detector-hardening
+slice: aliased `collections.deque as X` import recognition; authorized `collections.deque()` untaught-method
+double-emit; registry-collision `technique`/MANUAL_ONLY silence; general within-notebook duplicate-cell-id nbformat
+hygiene check. Gate CLOSED.
+- **[glm]**: APPROVE (no new findings) — both hunks correct; `.deque` attribute FP class is the same accepted
+  name-collision as the existing `appendleft`/`popleft` lines (no new FP), and the N3 revert restores accepted
+  pre-round-2 semantics with `defined_names` still live in the general untaught-method path. Deferred
+  `collections.deque()` double-emit noted, not re-raised.
+
 ## Post-Execution Report
 
 ### 2026-09-22 — Phases B–D
@@ -651,3 +690,20 @@ uncompleted gate in this write sandbox and must be rerun by the orchestrator in 
 The requested commit could not be created because this sandbox mounts `.git` read-only; `git add` failed with
 `Unable to create '.git/index.lock': Read-only file system`. The scoped changes remain unstaged on the requested
 feature branch for the orchestrator to commit after rerunning the native execution gate.
+
+### 2026-09-22 — Finalization (orchestrator, kernel-capable env)
+
+Committed Phases B–D as `7d34f91` after re-running the native execution gate here: `TMPDIR=/dev/shm bash
+scripts/ci-local.sh` → **ALL GREEN** (the codex build sandbox's 11 Jupyter `socket()` failures were pure sandbox
+artifacts). Then took the plan through the 4-way content-review gate (tooling code review per
+`docs/content-review-gate.md`), folding findings across 4 rounds:
+- `7d34f91` — Phases B–D mechanism (schema v2 + cell-aware scanner + empty K2 table + mutation matrix).
+- `b7eb731` — round-1 fixes ([sol] 3 Must-Fix: cell-local method auth, K2 AnnAssign/walrus, solution real-form;
+  [fable] Should-Fix: Book-2 syntax closure, multi-fence markdown; + safe nits).
+- `f166a5e` — round-2 fixes ([sol] deque bare-name false positive; [fable] N1/N2/N3).
+- `3d46f50` — round-3 fixes ([sol] `<x>.deque` attribute fail-open; revert of the N3 exclusion fail-open).
+
+Final state: **FULL 4-way content consensus on `3d46f50`**; `ci-local` ALL GREEN; live book1/book2 concept scans
+`[]`; borrowed-tools test suite green; ZERO changes to existing notebook content (mechanism-only). No `[OPEN]`
+findings remain. The listed detector-hardening items are documented, non-shipped, non-plan-070 follow-ups.
+Ready for PR + `pre-merge-guard --pr` + squash-merge. The visible "less-toy" example rewrites remain plan 070.
