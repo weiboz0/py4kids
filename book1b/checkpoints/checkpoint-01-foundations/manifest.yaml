@@ -1,0 +1,11 @@
+id: checkpoint-01-foundations
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+concepts:
+  introduces: []
+  requires: [print, variable, if-statement, comparison, arithmetic]
+  practices: [print, variable, comparison, boolean, arithmetic, int-type, float-type, type-conversion,
+              if-statement, elif-else, logical-ops, conditional-nesting, f-string, string-literal,
+              string-concat, naming, comment, run-program, error-messages, input]

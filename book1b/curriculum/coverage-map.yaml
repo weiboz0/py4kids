@@ -13,3 +13,27 @@ entries:
                string-concat, f-string, error-messages]
   requires: []
   practices: []
+- id: unit-02-numbers-and-arithmetic
+  kind: unit
+  title: "Numbers & Arithmetic — integers, floats, and comparisons"
+  lessons: 3
+  introduces: [int-type, float-type, arithmetic, type-conversion, boolean, comparison]
+  requires: [print, variable, input, f-string]
+  practices: [string-literal, naming, comment, error-messages, run-program, string-concat,
+              for-loop, range-function, accumulator]
+- id: unit-03-decisions
+  kind: unit
+  title: "Decisions — if, elif, else, and logic"
+  lessons: 3
+  introduces: [logical-ops, if-statement, elif-else, conditional-nesting]
+  requires: [boolean, comparison, arithmetic, variable, print]
+  practices: [int-type, type-conversion, float-type, f-string, string-literal, naming, input]
+- id: checkpoint-01-foundations
+  kind: checkpoint
+  title: "Checkpoint 1 — Foundations (output, numbers, decisions)"
+  lessons: 0.5
+  introduces: []
+  requires: [print, variable, if-statement, comparison, arithmetic]
+  practices: [print, variable, comparison, boolean, arithmetic, int-type, float-type, type-conversion,
+              if-statement, elif-else, logical-ops, conditional-nesting, f-string, string-literal,
+              string-concat, naming, comment, run-program, error-messages, input]
