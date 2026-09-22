@@ -1,6 +1,6 @@
 id: unit-10-pet-simulator
 kind: unit
-blueprint_version: 1
+blueprint_version: 2
 lessons: 3
 provenance: original
 concepts:
@@ -10,3 +10,4 @@ concepts:
               dict-literal, elif-else, for-loop, list-loop, list-literal, list-index, print,
               variable, string-literal, int-type, error-messages, input, sentinel-loop,
               find-extreme, filter-into-list, break-statement]
+  auxiliary: []

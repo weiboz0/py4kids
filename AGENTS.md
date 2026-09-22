@@ -33,8 +33,12 @@ gates, autopilot through merge) tailored for course-content development.
 - **Self-containedness is law.** The student baseline is ZERO programming experience plus
   typical middle-school math.
   Nothing may be used before it is taught (prereq closure), nothing taught without practice
-  (coverage), nothing assessed that was not taught. These are CI checks once plan 003 lands;
-  until then reviewers enforce them manually.
+  (coverage), nothing **assessed** that was not taught.
+  **Narrow exception (design 004):** a future concept may appear as a marked, *given*
+  **"borrowed tool"** — code the student reads or calls but never writes or is assessed on —
+  earning no teaching credit and never advancing teach order; **checkpoints and projects stay
+  strict** (no borrowed tools). **Taught-before-assessed is never relaxed.**
+  These are CI checks; reviewers enforce the judgment calls (which tool is safe as a black box).
 - **Project-first is law.** Every unit opens with its project/problem hook;
   a unit that opens with concept drill is a gate-blocking finding.
 - **Always run `scripts/ci-local.sh` before merge — local is the gate.**

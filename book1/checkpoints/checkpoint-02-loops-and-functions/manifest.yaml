@@ -1,6 +1,6 @@
 id: checkpoint-02-loops-and-functions
 kind: checkpoint
-blueprint_version: 1
+blueprint_version: 2
 lessons: 0.5
 provenance: original
 concepts:
@@ -11,3 +11,4 @@ concepts:
               turtle-basics, print, variable, comparison, arithmetic,
               if-statement, elif-else, boolean, int-type, loop-counter, f-string,
               string-literal]
+  auxiliary: []

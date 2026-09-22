@@ -1,6 +1,6 @@
 id: unit-06-secret-codes
 kind: unit
-blueprint_version: 1
+blueprint_version: 2
 lessons: 3
 provenance: original
 concepts:
@@ -9,3 +9,4 @@ concepts:
   practices: [f-string, accumulator, if-statement, loop-counter, print, variable, comparison,
               arithmetic, range-function, int-type, input, elif-else, error-messages, nested-loops,
               boolean, string-literal, count-by-condition, break-statement]
+  auxiliary: []

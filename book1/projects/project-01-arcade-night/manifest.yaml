@@ -1,6 +1,6 @@
 id: project-01-arcade-night
 kind: project
-blueprint_version: 1
+blueprint_version: 2
 lessons: 2
 provenance: original
 concepts:
@@ -9,3 +9,4 @@ concepts:
   practices: [print, input, f-string, accumulator, logical-ops, loop-counter,
               elif-else, break-statement, comparison, scope, import-statement, random-module,
               variable, arithmetic, int-type, string-literal, sentinel-loop]
+  auxiliary: []

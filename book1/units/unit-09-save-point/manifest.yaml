@@ -1,6 +1,6 @@
 id: unit-09-save-point
 kind: unit
-blueprint_version: 1
+blueprint_version: 2
 lessons: 3
 provenance: original
 concepts:
@@ -11,3 +11,4 @@ concepts:
               type-conversion, int-type, error-messages, elif-else, accumulator, arithmetic,
               running-total, transform-each, comparison, break-statement, linear-search,
               find-extreme, filter-into-list, range-function, input]
+  auxiliary: []

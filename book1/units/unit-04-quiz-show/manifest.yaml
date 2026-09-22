@@ -1,6 +1,6 @@
 id: unit-04-quiz-show
 kind: unit
-blueprint_version: 1
+blueprint_version: 2
 lessons: 3
 provenance: original
 concepts:
@@ -9,3 +9,4 @@ concepts:
   requires: [if-statement, elif-else, while-loop, comparison, input, f-string,
              arithmetic, int-type, variable]
   practices: [boolean, type-conversion, loop-counter, error-messages, string-literal]
+  auxiliary: []

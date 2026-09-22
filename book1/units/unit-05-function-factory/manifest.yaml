@@ -1,6 +1,6 @@
 id: unit-05-function-factory
 kind: unit
-blueprint_version: 1
+blueprint_version: 2
 lessons: 3
 provenance: original
 concepts:
@@ -9,3 +9,4 @@ concepts:
   practices: [range-function, loop-counter, arithmetic, nested-loops, float-type,
               accumulator, import-statement, string-literal, turtle-drawing, running-total,
               if-statement, elif-else, comparison, while-loop, break-statement, input]
+  auxiliary: []

@@ -176,6 +176,42 @@ def test_complete_pattern_fixture_passes_all_checks(pattern_root):
     assert patterns_doc_findings(pattern_root, "book1") == []
 
 
+def test_technique_spiral_ignores_auxiliary_occurrences(pattern_root):
+    borrowed = "borrowed-pattern"
+    concepts_path = pattern_root / "book1/curriculum/concepts.yaml"
+    concepts = yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
+    concepts["concepts"].append(
+        {
+            "id": borrowed,
+            "name": "Borrowed pattern",
+            "category": "techniques",
+            "kind": "technique",
+        }
+    )
+    _write_yaml(concepts_path, concepts)
+
+    path, data = _map(pattern_root)
+    capstone = next(entry for entry in data["entries"] if entry["kind"] == "project")
+    capstone["introduces"].append(borrowed)
+    _write_yaml(path, data)
+    brief_path, brief = _notebook(pattern_root, capstone["id"], "brief.ipynb")
+    brief.cells[0].source += f"\n<!-- pattern: {borrowed} -->"
+    nbformat.write(brief, brief_path)
+    baseline = technique_spiral_findings(pattern_root, "book1")
+
+    path, data = _map(pattern_root)
+    data["map_version"] = 2
+    for entry in data["entries"]:
+        entry["auxiliary"] = []
+    for entry in data["entries"][:3]:
+        entry["auxiliary"] = [f"book1:{borrowed}"]
+    _write_yaml(path, data)
+
+    assert sum(bool(entry["auxiliary"]) for entry in data["entries"]) == 3
+    assert any(f"{borrowed}: 0 core pre-capstone" in finding for finding in baseline)
+    assert technique_spiral_findings(pattern_root, "book1") == baseline
+
+
 def test_generated_patterns_doc_has_map_derived_where_table(pattern_root):
     text = (pattern_root / "book1/reference/patterns.md").read_text(encoding="utf-8")
 

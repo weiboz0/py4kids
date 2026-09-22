@@ -1,6 +1,6 @@
 id: unit-02-number-detective
 kind: unit
-blueprint_version: 1
+blueprint_version: 2
 lessons: 4
 provenance: original
 concepts:
@@ -9,3 +9,4 @@ concepts:
                sentinel-loop]
   requires: [print, input, variable, f-string]
   practices: [string-literal, naming, comment, run-program, error-messages, string-concat]
+  auxiliary: []

@@ -3,7 +3,10 @@
 **Status:** APPROVED — v6 (v1: plan-050 gate CLOSED; v2: plan-052 §3 realistic-data policy; v3: plan-053 §2
 checkpoint/brief placement + §6d oracle; v4: plan-056 §5 input-add per-unit-audit-contingent + §1/§8 reads-nothing/generator exemption + §7 reconciled;
 v5: plan-057 §1/§8 full exemption taxonomy [reads-nothing/generator + debug/fix-the-error + predict/trace];
-v6: plan-059 §1 fixed-reference-fixture exemption + designated-demonstrator + §4 fixed-count read idiom, 2026-09-19). Authority for the Book-1 "real-input" norm. Book 1 only; Book 2 is unaffected (it is already
+v6: plan-059 §1 fixed-reference-fixture exemption + designated-demonstrator + §4 fixed-count read idiom, 2026-09-19;
+v7: plan-069 §4 `.split()` allowed as a `book2:str-split` borrowed tool (design 004) + §5 real-form markdown now
+scanned for borrowed tools + §6 borrowed-data-twin parity clause, 2026-09-21). Authority for the Book-1
+"real-input" norm. Book 1 only; Book 2 is unaffected (it is already
 stdin-first/subprocess-judged).
 
 ## 1. Motivation
@@ -106,15 +109,22 @@ range/while-less units (u08), whose real-forms read a **fixed count** (§4 fixed
   `items = [input("Item 1? "), input("Item 2? "), …]` (or a fixed sequence of `.append(input(...))`), a **dict**
   as a fixed sequence `d[input("Key? ")] = input("Value? ")` ×N — matching the paired twin's fixed length. This
   keeps `str-split`/`.split()` (a **Book-2** concept, not Book-1's `string-methods`=upper/lower/strip/replace) out
-  of Book 1: the real-form reads a fixed number of items rather than an arbitrary-count split. (Considered and
-  rejected for Book 1: registering `str-split` collides with Book 2's ownership + needs a shared-tool change —
-  plan 059, user-ratified fixed-count.)
+  of Book 1: the real-form reads a fixed number of items rather than an arbitrary-count split.
+- **v7 update (plan 069):** fixed-count reads remain the **default** idiom. `.split()` is now permitted, but ONLY
+  as a marked **borrowed tool** (`book2:str-split`, per design 004) in a given input adapter — never authored or
+  assessed. v6's "registering `str-split` collides with Book 2 + needs a shared-tool change" rejection is
+  **superseded**: plan 069 IS that shared-tool change — `.split()` is recognized globally and resolved to Book 2's
+  qualified owner without registering it in Book 1, so there is no ownership collision.
 
 ## 5. Metadata
 
+- **v7 note (plan 069):** real-form markdown fences are now scanned by concept-scan, but ONLY for **borrowed
+  tools** (a declared/globally-recognized tool such as `.split()`); the GENERAL used-but-unlisted closure stays
+  **code-cell-only**, so the deliberate invisibility of real-form markdown to the general closure — and every
+  `practices:[input]` decision below — is UNCHANGED. No new `practices` adds arise from v7.
 - No `introduces`/`requires`/marker/§3 change. The `practices: [input]` add (map + manifest, in sync) applies
   **only to a unit whose union lacks `input` AND that actually gets a lesson `no-exec` `input()` CODE cell**
-  (concept-scan reads code cells; markdown real-forms are invisible). Candidate set was u03/u05/u08/u09, but
+  (concept-scan reads code cells; markdown real-forms are invisible to the general closure). Candidate set was u03/u05/u08/u09, but
   the add is **contingent on the per-unit audit finding a lesson input() code cell**, not automatic:
   - **u03 (plan 056): NO add** — u03's lesson is all turtle-DRAWING (no compute capstone to pair), so its
     real-forms live ONLY in `solutions.ipynb` markdown (invisible to concept-scan); no u03 code cell uses
@@ -143,6 +153,13 @@ validates the **graded fragment** (e.g. `keep_guessing = guess != secret` → `T
 it!"`). The twin need not be line-for-line the completed program; the real-form block is captioned as the
 completed program so it is not misread as the fragment. (Origin: checkpoint-01 Q5, plan 053.)
 
+(e) **Borrowed-data-twin exception (v7, plan 069).** When a fixed-data twin's data is a **borrowed list** (design
+004 K1) — e.g. the twin is `for score in scores:` over a given `scores = [...]` while the real form reads an
+arbitrary count with `while`/`input()` — (c) line-for-line parity does not apply (the loop heads differ). Instead,
+like §6d, parity is judged on the loop **body + the result line**: the asserted fixed-data twin proves the body
+logic, and the piped-run real form proves termination + the same result line. The real-form caption notes the
+data source differs (a given list vs a counted read loop).
+
 ## 7. Rollout (plans 051+)
 
 Plan 050 ships **design 003 + the u04 pilot** only. Remaining 15 entries roll out unit-by-unit in
@@ -170,6 +187,14 @@ stay one-increment, u01 is text-only, no `sys.stdin`, and `ci-local` is ALL GREE
 throughout.
 
 ## 9. Revision history
+- **v7 (2026-09-21, plan 069):** §4 — fixed-count reads stay the **default**, but `.split()` is now permitted as a
+  `book2:str-split` **borrowed tool** (design 004), recognized globally + resolved to Book 2's owner without
+  registering it in Book 1 — this **supersedes** v6's `.split()` rejection ("collides with Book 2 + needs a
+  shared-tool change"; plan 069 IS that change). §5 — real-form markdown fences are now scanned, but ONLY for
+  borrowed tools; the general used-but-unlisted closure stays code-cell-only, so real-form markdown remains
+  invisible to it and every prior `practices:[input]` decision is unchanged. §6(e) — borrowed-data-twin parity
+  clause (body + result line, like §6d) so a `for`-over-given-list twin may pair with a counted `while`/`input()`
+  real form.
 - **v6 (2026-09-19, plan 059):** §1 added a fourth exempt class — **fixed-reference-fixture** (a task that
   transforms/reports over a pre-authored dict/table the student is *given* as lookup data, rather than obtains),
   with a **designated-demonstrator rule** (the plan names ≥1 representative fixture task per value-type to carry

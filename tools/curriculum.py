@@ -39,6 +39,28 @@ ENTRY_PATTERNS = {
     "project": r"^project-[0-9]{2}-[a-z0-9-]+$",
     "checkpoint": r"^checkpoint-[0-9]{2}-[a-z0-9-]+$",
 }
+MAP_ENTRY_KEYS = {
+    1: {
+        "id",
+        "kind",
+        "title",
+        "lessons",
+        "introduces",
+        "requires",
+        "practices",
+    },
+    2: {
+        "id",
+        "kind",
+        "title",
+        "lessons",
+        "introduces",
+        "requires",
+        "practices",
+        "auxiliary",
+    },
+}
+QUALIFIED_CONCEPT_ID = re.compile(r"^book[12]:[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
 def _fail(book: str, detail: str) -> str:
@@ -84,6 +106,39 @@ def _map_data(root: Path, book: str):
 
 def _has_duplicates(values: list[object]) -> bool:
     return any(value in values[:index] for index, value in enumerate(values))
+
+
+def auxiliary_schema_details(entry: dict) -> list[str]:
+    """Return schema-v2 auxiliary errors without attaching a book/entry scope."""
+    values = entry.get("auxiliary")
+    if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+        return ["auxiliary must be a list of qualified ids"]
+
+    details = []
+    if not all(QUALIFIED_CONCEPT_ID.fullmatch(value) for value in values):
+        details.append("auxiliary must contain qualified ids")
+    if _has_duplicates(values):
+        details.append("auxiliary has duplicates")
+    kind = entry.get("kind")
+    if isinstance(kind, str) and kind in {"checkpoint", "project"} and values:
+        details.append("auxiliary must be empty")
+        return details
+
+    raw = set()
+    for field in ("introduces", "requires", "practices"):
+        field_values = entry.get(field)
+        if isinstance(field_values, list):
+            raw.update(value for value in field_values if isinstance(value, str))
+    normalized = {
+        value.removeprefix("book1:") if value.startswith("book1:") else value
+        for value in values
+    }
+    overlap = normalized & raw
+    if overlap:
+        details.append(
+            "auxiliary overlaps introduces/requires/practices: " f"{sorted(overlap)}"
+        )
+    return details
 
 
 def concepts_schema_findings(root: Path, book: str) -> list[str]:
@@ -138,21 +193,16 @@ def map_schema_findings(root: Path, book: str) -> list[str]:
         return [_fail(book, f"coverage-map entry {index} must be a mapping") for index in malformed]
 
     findings = []
-    if data.get("map_version") != 1:
-        findings.append(_fail(book, "map_version must be 1"))
+    map_version = data.get("map_version")
+    if map_version not in MAP_ENTRY_KEYS:
+        return [_fail(book, "map_version must be 1 or 2")]
+    if map_version == 2 and book != "book1":
+        return [_fail(book, "map_version 2 is only supported for book1")]
     ids = [entry.get("id") for entry in entries]
     if _has_duplicates(ids):
         findings.append(_fail(book, "duplicate entry ids"))
     for entry in entries:
-        if set(entry) != {
-            "id",
-            "kind",
-            "title",
-            "lessons",
-            "introduces",
-            "requires",
-            "practices",
-        }:
+        if set(entry) != MAP_ENTRY_KEYS[map_version]:
             findings.append(_fail(book, f"bad entry keys in {entry.get('id', entry)}"))
             continue
         kind = entry["kind"]
@@ -167,6 +217,11 @@ def map_schema_findings(root: Path, book: str) -> list[str]:
             values = entry[field]
             if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
                 findings.append(_fail(book, f"{entry['id']}.{field} must be a list of ids"))
+        if map_version == 2:
+            findings.extend(
+                _fail(book, f"{entry['id']}.{detail}")
+                for detail in auxiliary_schema_details(entry)
+            )
     return findings
 
 
@@ -224,14 +279,114 @@ def introduction_findings(root: Path, book: str) -> list[str]:
     return findings
 
 
+def _is_transitive_dependent(root: Path, candidate: str, dependency: str) -> bool:
+    """Return whether candidate depends on dependency by walking books.yaml."""
+    registry = book_entries(root)
+    if candidate not in registry or dependency not in registry:
+        return False
+
+    pending = [candidate]
+    visited: set[str] = set()
+    while pending:
+        current = pending.pop()
+        if current in visited:
+            continue
+        visited.add(current)
+        depends_on = registry.get(current, {}).get("depends_on", [])
+        if not isinstance(depends_on, list):
+            continue
+        dependencies = [value for value in depends_on if isinstance(value, str)]
+        if dependency in dependencies:
+            return True
+        pending.extend(value for value in dependencies if value in registry)
+    return False
+
+
+def _registered_concepts(root: Path, book: str) -> set[str]:
+    """Return ids owned by a registered book, failing closed on malformed data."""
+    if book not in book_entries(root):
+        return set()
+    path = _curriculum(root, book) / "concepts.yaml"
+    if not path.is_file():
+        return set()
+    try:
+        if concepts_schema_findings(root, book):
+            return set()
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (KeyError, OSError, TypeError, yaml.YAMLError):
+        return set()
+    if not isinstance(data, dict) or not isinstance(data.get("concepts"), list):
+        return set()
+    return {
+        concept["id"]
+        for concept in data["concepts"]
+        if isinstance(concept, dict) and isinstance(concept.get("id"), str)
+    }
+
+
+def _auxiliary_prereq_findings(
+    root: Path, book: str, entries: list[dict]
+) -> list[str]:
+    """Validate that schema-v2 borrowed tools come from a future owner."""
+    home_positions: dict[str, int] = {}
+    for index, entry in enumerate(entries):
+        for concept_id in entry.get("introduces", []):
+            home_positions.setdefault(concept_id, index)
+
+    book2_concepts = _registered_concepts(root, "book2")
+    book2_is_dependent = _is_transitive_dependent(root, "book2", book)
+    findings = []
+    for index, entry in enumerate(entries):
+        entry_id = entry.get("id", "?")
+        for qualified_id in entry.get("auxiliary", []):
+            owner, concept_id = qualified_id.split(":", 1)
+            if owner == "book1":
+                home_index = home_positions.get(concept_id)
+                if home_index is None:
+                    findings.append(
+                        _fail(
+                            book,
+                            f"{entry_id}.auxiliary {qualified_id} has no home introduction",
+                        )
+                    )
+                elif home_index <= index:
+                    findings.append(
+                        _fail(
+                            book,
+                            f"{entry_id}.auxiliary {qualified_id} must have a later home "
+                            "introduction",
+                        )
+                    )
+            elif concept_id not in book2_concepts:
+                findings.append(
+                    _fail(
+                        book,
+                        f"{entry_id}.auxiliary {qualified_id} has no registered owner",
+                    )
+                )
+            elif not book2_is_dependent:
+                findings.append(
+                    _fail(
+                        book,
+                        f"{entry_id}.auxiliary {qualified_id} owner book2 is not a "
+                        f"transitive dependent of {book}",
+                    )
+                )
+    return findings
+
+
 def prereq_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
     del unit
     schema_findings = map_schema_findings(root, book)
     if schema_findings:
         return schema_findings
     findings = []
+    map_data = _map_data(root, book)
+    entries = map_data.get("entries", [])
+    if map_data.get("map_version") == 2:
+        findings.extend(_auxiliary_prereq_findings(root, book, entries))
     seen = dependency_baseline(root, book)
-    for entry in _map_data(root, book).get("entries", []):
+    for entry in entries:
         missing = (set(entry.get("requires", [])) | set(entry.get("practices", []))) - seen
         if missing:
             findings.append(
