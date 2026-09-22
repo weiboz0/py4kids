@@ -32,6 +32,21 @@ def book_path(root: Path, book: str) -> Path:
     return Path(root).resolve() / relative
 
 
+def variant_of(root: Path, book: str) -> str | None:
+    configured = book_entry(root, book).get("variant_of")
+    return configured if isinstance(configured, str) else None
+
+
+def prereq_policy(root: Path, book: str) -> str | None:
+    configured = book_entry(root, book).get("prereq_policy")
+    return configured if isinstance(configured, str) else None
+
+
+def is_buildout(root: Path, book: str) -> bool:
+    configured = book_entry(root, book).get("buildout", False)
+    return configured if isinstance(configured, bool) else False
+
+
 def introduced_concepts(root: Path, book: str) -> set[str]:
     path = book_path(root, book) / "curriculum" / "coverage-map.yaml"
     if not path.is_file():

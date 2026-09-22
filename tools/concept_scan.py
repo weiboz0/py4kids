@@ -28,7 +28,7 @@ from pathlib import Path
 
 import yaml
 
-from tools.books import book_path, dependency_baseline
+from tools.books import book_path, dependency_baseline, prereq_policy
 
 # Concepts we do NOT flag as violations: not detectable from code, or too fuzzy
 # to assert confidently. These stay reviewer-manual.
@@ -475,6 +475,7 @@ def concept_scan_findings(
     }
     profile = scanner_profile(concepts)
     baseline = dependency_baseline(root, book)
+    fastforward = prereq_policy(root, book) == "fastforward"
     dirs = {
         "unit": book_dir / "units",
         "checkpoint": book_dir / "checkpoints",
@@ -493,6 +494,8 @@ def concept_scan_findings(
             | set(entry.get("practices", []) or [])
             | baseline
         )
+        if fastforward and kind == "unit":
+            union |= registered
         used = set()
         methods = set()
         defined_names = set()  # functions + class methods defined in this entry's notebooks
