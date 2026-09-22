@@ -45,8 +45,8 @@ teach order. Checkpoints and projects stay strict (`auxiliary: []`).
 - **(K2) Composed-from-taught** — a construct built ENTIRELY from already-taught primitives that the registry
   merely *names* as a later concept, which the student MAY write. **Represented as a CLOSED, non-extensible
   exception table ([sol] B1)**, NOT a general "anything composed" rule (that would be a spine-sized hole). A K2
-  entry is `{cell-id, concept-ids, exact-AST-form}`; the scanner authorizes it only when ALL match. The single
-  K2 case this mechanism ships (its u02 *content* is deferred to plan 070) is the guess counter. The pattern is
+  entry is `{cell-id, concept-ids, exact-AST-form}`; the scanner authorizes it only when ALL match. 069 ships the K2 MECHANISM with an EMPTY production table; the one real case it will hold — added in plan 070,
+  not here — is the guess counter. The pattern is
   curricularly BOTH `loop-counter` (u03) and `accumulator` (u04), but the scanner EMITS only `accumulator`
   (`loop-counter` is MANUAL_ONLY, never emitted — concept_scan.py:222/41), so K2 AUTHORIZES the emitted
   `accumulator` and DECLARES both ids `{book1:loop-counter, book1:accumulator}` for curriculum honesty. Role
@@ -178,15 +178,18 @@ solutions MARKDOWN `real-form` fence — exercising:
   untagged `.split()` in a Python markdown fence → fail; `book2:str-split` passes without duplicating the
   registry id; exercise vs solution GIVEN regions must be byte-identical; a `SyntaxError` fence → fail.
 - **K2 negative matrix:** only the exact `name = name + 1` in the named cell with role `composed` and the two
-  declared ids passes; `+=`, alternate operator, subscript/attribute target, a different cell, a different
-  concept, or a missing role each → fail; no `seen`/practice/coverage credit.
+  declared ids passes; `+=`, the `n = 1 + n` operand-swap, an alternate operator, a subscript/attribute target, a
+  different cell, a different concept, or a missing role each → fail; **per-statement lock** — one valid K2
+  statement PLUS a second, non-matching `accumulator` statement in the SAME cell → the cell still fails (proves
+  authorization is per-statement, not cell-wide); no `seen`/practice/coverage credit.
 - **Book-2 isolation:** Book 2 (v1) behavior unchanged; a non-vacuous Book2→Book1 same-process test that extending
   the Book-1 profile does not leak recognition globally.
 - **Markdown-scope lock ([glm] B1):** a markdown Python fence using a taught-but-unlisted concept (e.g. `input`)
   does NOT fail; an untagged/undeclared `.split()` in a markdown fence DOES fail.
 - **Schema/metadata ([sol] B5 / [glm] N5/N6):** malformed/duplicate/unqualified `py4kids_auxiliary`; zero /
   multiple / wrong role; `auxiliary` overlapping requires/practices (after prefix-normalize); v2-manifest-under-v1-map
-  (and vice-versa); >1 detectable auxiliary id in one cell (budget) → fail; a missing/duplicate pairing id → fail.
+  (and vice-versa); a map↔manifest auxiliary-VALUE mismatch (same entry, different `auxiliary` lists) → fail;
+  >1 detectable auxiliary id in one cell (budget) → fail; a missing/duplicate pairing id → fail.
 - **prereq edges:** `book1:<id>` home-intro NOT later than the entry → fail; `book2:<id>` owner missing or not a
   transitive dependent of book1 → fail; declared-but-unused (with MANUAL_ONLY exemption verified).
 - **Existing v1 tests ([glm] N1):** update the v1-hardcoded assertions (test_tools.py:623-624/913/1050; the v1
@@ -210,7 +213,7 @@ solutions MARKDOWN `real-form` fence — exercising:
 - The full mutation matrix passes (each removal/mutation breaks as designed); Book-2 v1 regression green.
 - `git diff --name-only $(git merge-base HEAD main)..HEAD` = this plan + AGENTS.md + design 000 + design 004 +
   design 003 + `tools/{curriculum,concept_scan,notebooks}.py` + `tests/**` + every Book-1 `manifest.yaml` +
-  `book1/curriculum/coverage-map.yaml`. **No `book1/units/**/*.ipynb` content cell changes** (0 lesson/exercise/
+  `book1/curriculum/coverage-map.yaml` + the new `book1/curriculum/k2-exceptions.yaml` (empty table). **No `book1/units/**/*.ipynb` content cell changes** (0 lesson/exercise/
   solution cell edits — this plan changes no examples).
 
 ## Out of scope
