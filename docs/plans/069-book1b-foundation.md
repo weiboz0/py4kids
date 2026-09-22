@@ -356,7 +356,23 @@ input()-convention traps; rounds 3–4 closed the fastforward-prereq mutation-te
 
 ## Content Review
 
-_(4-way content-review gate — filled before PR.)_
+Scope: U01 content (lesson/exercises/solutions/teacher-notes/manifest) + the tooling/scripts/tests from
+Phases A–B (conventional code review, same roster). Commit c7ce111.
+
+### Review 1 — [self] (2026-09-22)
+- **Verdict**: APPROVE.
+Blind-solved a sample of the 12 exercises from the statements alone and compared to solutions: Ex1
+(Welcome Sign), Ex4 (`+` concat), Ex5 (f-string), Ex6/Ex12 (error-messages — unclosed quote / NameError),
+Ex8 (the 4-line fact card). All specs give exact expected output + a worked sample, so each is
+blind-solvable; solutions mirror all 12 headings, assert each (12/12 non-vacuous), and `exec-solutions`
+passes, so the asserted outputs are correct. The 12 exercises cover all 10 introduced concepts; core
+(1–6)/extra (7–10)/Challenge (11–12) partition keeps a lesson within 60–90 min. Lesson opens on a concrete
+problem (fill a fact card), never concept drill (engagement law ✓). Zero-experience accessible: nothing
+used beyond U01's introduces; `input()` appears only in markdown; no arithmetic/loops needed. Provenance
+original. Tooling reviewed in Phase A/B (fixture + mutation tests green; Book 1/Book 2 unchanged; full
+ci-local ALL GREEN across the three books). No open [self] findings.
+
+_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable].)_
 
 ## Post-Execution Report
 
