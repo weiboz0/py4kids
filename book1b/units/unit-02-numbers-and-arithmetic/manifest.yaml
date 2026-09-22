@@ -1,0 +1,10 @@
+id: unit-02-numbers-and-arithmetic
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [int-type, float-type, arithmetic, type-conversion, boolean, comparison]
+  requires: [print, variable, input, f-string]
+  practices: [string-literal, naming, comment, error-messages, run-program, string-concat,
+              for-loop, range-function, accumulator]

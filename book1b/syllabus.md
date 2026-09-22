@@ -51,6 +51,9 @@ The **Algorithm Challenge** (a non-themed integrative problem set) closes the ye
 | entry | kind | lessons | the hook |
 |---|---|---|---|
 | `unit-01-output-and-variables` | unit | 3 | Fill a club "fact card" from a few saved values — output, variables, and your first programs. |
+| `unit-02-numbers-and-arithmetic` | unit | 3 | Make the computer do the math — integers, floats, `//`/`%`, conversions, and True/False comparisons. |
+| `unit-03-decisions` | unit | 3 | Teach the computer to choose — `if`/`elif`/`else` and `and`/`or`/`not` on leap years, grades, and more. |
+| `checkpoint-01-foundations` | checkpoint | 0.5 | Prove output, numbers, and decisions on a mixed problem set. |
 
 ## Rules this syllabus is bound by
 

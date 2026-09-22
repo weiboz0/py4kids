@@ -1,0 +1,9 @@
+id: unit-03-decisions
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [logical-ops, if-statement, elif-else, conditional-nesting]
+  requires: [boolean, comparison, arithmetic, variable, print]
+  practices: [int-type, type-conversion, f-string, string-literal, naming, input]
