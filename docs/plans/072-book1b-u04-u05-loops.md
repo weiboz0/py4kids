@@ -42,8 +42,8 @@ After U01–U05 + checkpoint-02, every one of the 30 concepts introduced through
 - **`conditional-nesting`** (U03, previously deferred) → **U05** nested-classify exercise (`if` inside `if`
   inside a `for`).
 - **`sentinel-loop`** (U04) → **checkpoint-02** "repeat until a computed stop value" question (Collatz-style).
-- U04's `while-loop`/`break`/`loop-counter`/`accumulator`/`running-total`/`count-by-condition` → practiced in
-  U05 and checkpoint-02. `string-concat` (U01) → U05 row-building (`row = row + "*"`). `logical-ops` (U03),
+- U04's `while-loop`/`break`/`loop-counter`/`accumulator`/`running-total`/`count-by-condition` → practiced by
+  U05 and/or checkpoint-02 (each ≥ once; `while-loop`/`loop-counter` by checkpoint-02). `string-concat` (U01) → U05 row-building (`row = row + "*"`). `logical-ops` (U03),
   `float-type`/`type-conversion` (U02), `input`/`run-program` (U01) remain practiced by earlier
   units/checkpoint-01 (unchanged). U05's `for`/`range`/`nested-loops` → checkpoint-02.
 The capstone practice-coverage anchor stays dormant (buildout) until the Algorithm Challenge.
@@ -72,8 +72,9 @@ The capstone practice-coverage anchor stays dormant (buildout) until the Algorit
 - **Printing:** no `end=` / `sep=` / format specs (`:3`, `:.2f`). Same-line/tabular output is built by
   **string accumulation** — inner loop does `row = row + "*"` (or `row = row + f"{i*j} "`), then `print(row)`
   once after the inner loop (this is also the clearest nested-loop teaching, and makes each row assertable).
-  `"*" * i` string-repetition is NOT catalog — use the inner-loop accumulation for core; allow `"*" * i`
-  only as a Notice/Challenge shortcut *after* the nested version.
+  `"*" * i` string-repetition is **not taught in U01** (the catalog's `string-concat` reads "…and
+  repetition", but U01 never used `*` on a string) — core uses the inner-loop accumulation; allow
+  `"*" * i` only as a Notice/Challenge shortcut *after* the nested version.
 - **House solution form for loop output** (design §7 was locked for straight-line code): prefer exercises
   whose graded output is a **single summary line after the loop** (`Steps: 111`, `Sum: 5050`, `Count: 47`)
   asserted in house form, AND assert the loop **state** (`assert total == 5050`). For multi-line output,
@@ -93,32 +94,41 @@ The capstone practice-coverage anchor stays dormant (buildout) until the Algorit
 - **Concept beats to pin:** factorial initializes `product = 1` (not 0) with a Notice (n ≤ 10);
   GCD-by-subtraction teacher-note intuition ("any common divisor of a and b divides a − b") + a trace for
   (48, 18), positive operands, `%`-Euclid Challenge-only; **primality** (U05) uses a boolean **flag**
-  (`is_prime = True; … is_prime = False; break`) taught as a rung with a Notice, and the `range(2, 2)`-empty
-  edge for `n == 2`; **digit-sum** (a `while` peeling `n % 10`, `n // 10`) is included as the bridge from U02's
-  digit split. **`boolean`** is practiced via the primality flag / a printed comparison; **`elif-else`** via a
-  FizzBuzz-over-`range` exercise (U05) and count-by-condition tiers (U04); **`comment`** via commented loop code.
+  (`is_prime = True; … is_prime = False; break`) taught as a rung with a Notice, the spec states **n ≥ 2**
+  (so authors need not handle 0/1) and the `range(2, 2)`-empty edge for `n == 2` is noted; **digit-sum** (a
+  `while` peeling `n % 10`, `n // 10`) is included as the bridge from U02's digit split. **`boolean`** is
+  practiced via the primality flag / a printed comparison; **`elif-else`** via a FizzBuzz-over-`range`
+  exercise (U05) and count-by-condition tiers (U04); **`comment`** via commented loop code.
+- **`error-messages` is backed by a real traceback beat in U04** (mandatory, [sol]/[glm] r2): a broken/fixed
+  cell that uses `total` before `total = 0` → `NameError` — read the traceback, add the initializer. This
+  is DISTINCT from the infinite-loop LOGIC beat (that cell is `no-exec`, produces non-termination, not a
+  traceback). U02's light traceback beat is the precedent.
 - `//`/`%` non-negative; floats printed exactly; pre-function (no `def`); ≥8 exercises/unit, **core ≤7** +
   extra + ≥2 Challenge; solution-free student notebooks, no outputs, no `input()` in graded code (fenced
   try-it only); unique cell ids; problem-first openings; 60-MINUTE CUT line in each teacher-notes.
 - **checkpoint-02 mix** (6–8 questions, declared so grading keys each to its concept(s)): ≈2 U01–U03 recap
-  (one `elif` ladder, one `//`/`%` or traceback); **≥1 `while` with a counter or `break`**; **≥1 sentinel
-  "repeat-until"** (Collatz-style — backs `sentinel-loop`); **≥1 `for`/`range` running-total**; **≥1
-  count-by-condition over a range**; **≥1 nested-loop** (times table via `row` accumulation). Strict (no
-  lists/builtins). Grading names the `while`-counter and the `for`-running-total as the pass-bar items.
+  (one `elif` ladder, one `//`/`%` item — NOT a traceback, since `error-messages` is not a cp02 tag);
+  **≥1 `while` with a counter**; **≥1 sentinel "repeat-until" using `while True: … break`** (Collatz-style
+  — backs BOTH `sentinel-loop` AND `break-statement`, both mandatory); **≥1 `for`/`range` running-total`;
+  **≥1 count-by-condition over a range**; **≥1 nested-loop** (times table via `row` accumulation). Strict
+  (no lists/builtins). Grading names the `while`-counter and the `for`-running-total as the pass-bar items.
 
 ## Lesson-by-lesson outline (so 7 U04 intros don't all land in L1)
 
-- **U04:** L1 `while` + `loop-counter` + the infinite-loop and off-by-one beats (reassignment rung first);
-  L2 `accumulator` → running-total (the 5050 cash-in) → count-by-condition (elif tiers); L3 `break` +
-  sentinel (Collatz/`while True`+break) + Final build.
-- **U05:** L1 `for`/`range` (reproduce 5050) + `range` bounds Notice; L2 accumulate/count over `range` +
-  primality with the flag + `break` + FizzBuzz (elif); L3 nested loops → times table / number triangle
-  (row accumulation) + a nested-classify exercise (`conditional-nesting`) + Final build.
+- **U04:** L1 `while` + `loop-counter` + the reassignment rung + the infinite-loop `no-exec` beat + the
+  off-by-one and `NameError`-traceback beats; L2 `accumulator` → running-total (the 5050 cash-in) →
+  count-by-condition (elif tiers); L3 sentinel — **plain-condition sentinel first (`while n != 1`), THEN
+  `while True: … break`** as the exit-from-the-middle rung (the `steps` counter is BOTH the loop control
+  and the printed summary `Steps: N` — one source of truth, design §7) + Final build.
+- **U05:** L1 `for`/`range` (reproduce 5050) + `range` bounds Notice; L2 accumulate/count over `range` →
+  FizzBuzz (elif) → **primality LAST** (flag + `break` + n ≥ 2 / empty-`range` edge — the natural
+  60-minute-cut casualty); L3 nested loops → times table / number triangle (row accumulation) + a
+  nested-classify exercise (`conditional-nesting`) + Final build.
 
 ## Phases
 
 ### Phase A — plan-review gate (4-way). No implementation until consensus.
-### Phase B — contracts: append the 3 coverage-map entries + 3 syllabus rows + 3 manifests; `--book book1b coverage-check` + `prereq-check` GREEN.
+### Phase B — contracts: append the 3 coverage-map entries (each the exact 7-key set incl. `kind`+`title`+`lessons`, cloning the U01–U03 entry shape) + 3 syllabus rows + 3 manifests; `--book book1b coverage-check` + `prereq-check` GREEN.
 ### Phase C — statements (Codex, gpt-5.6-sol): each unit's lesson+exercises; checkpoint.ipynb. Follow every guardrail + the outline.
 ### Phase D — solutions (SEPARATE fresh Codex): each unit's + the checkpoint's solutions.ipynb (house form incl. the loop-output adaptation; mirror headings).
 ### Phase E — teacher-notes (inline) + verification: `teacher-notes.md` per unit + checkpoint grading notes;
@@ -155,9 +165,21 @@ FOLDED:
 #### [self] round 1 — APPROVE (superseded by the folds above: original draft omitted the §6 record + the
 loop-specific guardrails). Closure/partition were correct.
 
-### Round 2 (2026-09-22) — revised with the §6 record, honest metadata, the full guardrail set, the lesson
-outline, and the declared checkpoint mix. Re-dispatching [sol]/[glm]/[fable].
-_(Awaiting round-2 verdicts.)_
+### Round 2 (2026-09-22) — on d60c334. [fable] APPROVE WITH NITS; [glm] APPROVE WITH NITS; [sol] REJECT.
+§6 fix CONFIRMED by all three (mutation-tested by [glm]). Remaining folded:
+- **[sol] blockers (metadata honesty):** U04 `error-messages` had no traceback beat → **mandated a real
+  `NameError`-from-uninitialized-`total` beat** (guardrails); checkpoint-02 `break-statement` could go unused
+  → **sentinel question mandated as `while True: … break`** (backs both `sentinel-loop` and `break-statement`).
+- **[glm] nits:** cp02 recap "traceback" option removed (pinned to `//`/`%`, since `error-messages` is not a
+  cp02 tag); §6-record wording clarified (checkpoint-02 alone practices `while-loop`/`loop-counter`); Phase B
+  now states the exact 7-key entry shape (`kind`+`title`).
+- **[fable] nits:** `"*"*i` wording (catalog "and repetition" unfulfilled → core-forbidden); sentinel rung
+  ORDER (plain-condition first, then `while True`+break); U05 L2 orders primality LAST (60-min-cut casualty);
+  primality spec `n ≥ 2`; the sentinel `steps` counter is the printed summary (one source of truth).
+
+### Round 3 (2026-09-22) — added the two mandated beats + nit folds. Re-dispatching [sol] only (sole round-2
+REJECT; [glm]/[fable] APPROVE-WITH-NITS with nits folded).
+_(Awaiting [sol] on the round-3 commit.)_
 
 ## Content Review
 
