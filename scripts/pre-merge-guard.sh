@@ -74,7 +74,7 @@ for directory in ("docs/proposals", "docs/designs", "docs/plans", "docs/reviews"
     }
     duplicate_numbers(directory, names, r"^[0-9]{3}(?=-)")
 
-for book_id in ("book1", "book2"):
+for book_id in ("book1", "book1b", "book2"):
     for kind, pattern in (
         ("units", r"^unit-[0-9]{2}(?=-)"),
         ("projects", r"^project-[0-9]{2}(?=-)"),

@@ -1251,6 +1251,33 @@ def test_ci_local_has_exact_six_real_steps():
     assert "bash scripts/build-pdf.sh --book book1" in text
 
 
+def test_ci_local_covers_book1b():
+    """Book 1b is registered and its ci-local block runs the Book-1-style checks (minus the
+    Book-1-only pattern checks), existence-guarded, plus its own PDF build."""
+    text = (REPO / "scripts/ci-local.sh").read_text(encoding="utf-8")
+    assert 'ids != ["book1", "book1b", "book2"]' in text
+    assert "[ -d book1b ]" in text
+    for check in (
+        "coverage-check",
+        "prereq-check",
+        "concept-scan",
+        "manifest-check",
+        "structure-check",
+        "hygiene-check",
+        "cell-lint",
+        "noexec-check",
+        "stretch-check",
+        "turtle-check",
+        "exec-solutions",
+        "exec-lessons",
+    ):
+        assert f"--book book1b {check}" in text
+    # Book-1-only pattern checks must NOT run for book1b
+    for pattern_check in ("technique-spiral", "pattern-marker", "patterns-doc-check"):
+        assert f"--book book1b {pattern_check}" not in text
+    assert "bash scripts/build-pdf.sh --book book1b" in text
+
+
 def test_pdf_builder_contract():
     text = (REPO / "scripts/build-pdf.sh").read_text(encoding="utf-8")
     config = text.index("JUPYTER_CONFIG_DIR")

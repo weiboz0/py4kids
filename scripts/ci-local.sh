@@ -14,9 +14,9 @@ import yaml
 
 catalog = yaml.safe_load(open("books.yaml", encoding="utf-8"))
 ids = [book["id"] for book in catalog["books"]]
-if ids != ["book1", "book2"]:
+if ids != ["book1", "book1b", "book2"]:
     sys.exit(f"FAIL: unexpected book registry: {ids}")
-print("registry: book1 -> book2")
+print("registry: book1 -> book1b -> book2")
 PY
 uv run ruff check tools/ tests/ scripts/
 
@@ -58,8 +58,29 @@ uv run py4kids-tools --book book2 exec-lessons
 uv run py4kids-tools --book book2 judge-check
 uv run py4kids-tools --book book2 source-policy
 
+# Book 1b: concept-first variant in buildout (fastforward + buildout relaxations key on its per-book
+# flags). Per-entry checks iterate existing dirs, so they cover authored units and are inert for
+# unauthored entries. Existence-guarded so this block is a no-op until book1b/ exists. No Book-1-only
+# pattern checks (technique-spiral/pattern-marker/patterns-doc are hard-gated to book1); no book2-only
+# judge-check/source-policy.
+if [ -d book1b ]; then
+  uv run py4kids-tools --book book1b coverage-check
+  uv run py4kids-tools --book book1b prereq-check
+  uv run py4kids-tools --book book1b concept-scan
+  uv run py4kids-tools --book book1b manifest-check
+  uv run py4kids-tools --book book1b structure-check
+  uv run py4kids-tools --book book1b hygiene-check
+  uv run py4kids-tools --book book1b cell-lint
+  uv run py4kids-tools --book book1b noexec-check
+  uv run py4kids-tools --book book1b stretch-check
+  uv run py4kids-tools --book book1b turtle-check
+  uv run py4kids-tools --book book1b exec-solutions
+  uv run py4kids-tools --book book1b exec-lessons
+fi
+
 step "5/6 PDF build"
 bash scripts/build-pdf.sh --book book1
+[ -d book1b ] && bash scripts/build-pdf.sh --book book1b
 
 step "6/6 pre-merge guard"
 bash scripts/pre-merge-guard.sh
