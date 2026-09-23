@@ -237,9 +237,15 @@ ALL GREEN after the fold. Re-review round 2 dispatched.
   duplicated U05 Ex6's 4×4 → cp02 Q7 changed to **5×5** (distinct); cp02 Q4 shared a lesson value → n=9 (Steps 19).
 - **[glm]** — **no verdict** (opencode invocation timed out at 20 min). Re-run in round 3.
 
-### Round 3 (2026-09-22) — de-duplicated Ex11 + cp02 Q4/Q7. Re-dispatching [sol] (round-2 REJECT) and
-[glm] (round-2 invocation timeout); [fable] APPROVE-WITH-NITS with nits folded.
-_(Awaiting [sol] / [glm] on the round-3 commit.)_
+### Round 3 (2026-09-22) — on 193f841. [sol] REJECT; [glm] APPROVE WITH NITS (both 29/29 blind, 11/11 checks).
+Same 3 findings from both, FOLDED: U04 Ex11 heading said "Probe Mission 27" but code is n=19 → retitled
+"…19" (exercises + solutions + teacher-notes); cp02 Q7 5×5 duplicated the U05 lesson Final build → changed
+to **6×6** (U05 uses only 3×3/4×4/5×5) + teacher-notes ("Six-by-Six", fast-finisher note). Full ci-local
+ALL GREEN after the fold.
+
+### Round 4 (2026-09-22) — Ex11/Q7 de-dup complete. Re-dispatching [sol] (sole round-3 REJECT);
+[glm]/[fable] round-3 both said "approve once these fold".
+_(Awaiting [sol] on the round-4 commit.)_
 
 ## Post-Execution Report
 
