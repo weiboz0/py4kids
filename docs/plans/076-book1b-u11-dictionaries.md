@@ -61,15 +61,16 @@ Plan 077 MUST list these three in U12/U13 practices; plan 078 then verifies full
 ## Tooling pins (enforcement tiers — same model as plan 075)
 
 - **CI-enforced (concept-scan):** dict methods = ONLY `items`/`keys`/`values`/`get` (DICT_METHODS,
-  concept_scan.py:64); any other `.name(...)` flagged untaught. Built-ins ⊆ {len,min,max,sum,sorted,abs,round}
-  and **no `key=` argument** on `max`/`min`/`sorted` (`sorted(key=)` is scanner-flagged; `max(d, key=d.get)`
-  is untaught and would defeat the `find-extreme` practice site); list methods ⊆ {append,sort}; string methods
-  ⊆ {upper,lower,strip,replace}.
+  concept_scan.py:64); any other `.name(...)` flagged untaught. Built-ins ⊆ {len,min,max,sum,sorted,abs,round};
+  **no `key=` argument** on `max`/`min`/`sorted` — NOT scanner-flagged in Book 1b (the `sorted-key` feature is
+  unregistered, so `add_feature` no-ops), so this is a tier-C ban caught ONLY by the Phase-E audit;
+  `max(d, key=d.get)` is untaught and would defeat the `find-extreme` practice site. List methods ⊆
+  {append,sort}; string methods ⊆ {upper,lower,strip,replace}.
 - **Detected vs MANUAL_ONLY (corrected per [sol]/[glm]):** `dict-literal` IS detected (`{}`, visit_Dict,
-  :296-298); `dict-loop` IS detected only via `.items`/`.keys`/`.values` (:404-405) — a plain `for k in d:`
-  emits no dict-loop; **`dict-access` is MANUAL_ONLY** (concept_scan.py:41 — a dict subscript emits no
-  concept, and `.get` adds none), credited by the manifest tag and reviewer-verified (like string-index/
-  list-index in plan 075).
+  :296-298); `dict-loop` IS detected from the bare `.items`/`.keys`/`.values` ATTRIBUTE access
+  (concept_scan.py:397-405), NOT from the loop itself — a plain `for k in d:` emits no dict-loop; **`dict-access`
+  is MANUAL_ONLY** (concept_scan.py:41 — a dict subscript emits no concept, and `.get` adds none), credited by
+  the manifest tag and reviewer-verified (like string-index/list-index in plan 075).
 - **NOT scanner-flagged in Book 1b (enforced by reviewers + my Phase-E static AST/grep audit):** `ord`/`chr`,
   comprehensions (incl. DICT comprehensions `{k: v for …}`), tuple/multiple ASSIGNMENT statements (`a, b = …`),
   step slices, and `collections`/`defaultdict` (the untaught-method net misses a bare-Name call + a
@@ -120,7 +121,8 @@ motivation for a labelled tally — BEFORE the first `{}` is explained.
 ### Checkpoint 04 (after U11, strict, no turtle, no fastforward)
 6–7 VISIBLE `## Question N`. Mix: build/read a lookup dict; a `d.get`-with-default question; a frequency-map
 tally; a loop-over-`items` sum or count; the most-common-key (`find-extreme` over items); an `elif`/lookup
-question; and one that combines a list with a dict (e.g. tally a list of words). Strict — only concepts ≤ U11;
+question; and one that combines a list with a dict (e.g. tally a list of words, reading `words[i]` by index so
+the question is a genuine `list-index` site — cp04 is the only pre-078 practice site for `list-index`). Strict — only concepts ≤ U11;
 NO `ord`/`chr`/comprehensions/tuple-assignment; dict methods ⊆ {items,keys,values,get}. teacher-notes has
 `## Grading` (two named pass-bar items: build-and-read-a-dict; tally-with-the-missing-key-idiom) + the full
 heading set + `## Discussion prompts`.
@@ -180,10 +182,18 @@ metadata/tooling accuracy + the practice-coverage ledger. Folded:
 - `[FIXED]` ([glm]5/[fable]N4) cp04 discipline expanded (avoid range/sorted/append/string-methods/slices/
   while/+concat; no `key=` on max/min/sorted); ([glm]6) Phase-E audit += `collections`/`defaultdict`.
 
-### Round 2 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
-**[self] APPROVE** — metadata/tier claims corrected; the practice-coverage debt is now an explicit ledger
-with landing sites; cp04 strict-scan discipline expanded; `for k,v in items()` exemption pinned.
-_(Awaiting [sol]/[glm]/[fable] round-2 verdicts.)_
+### Round 2 (2026-09-23) — [self] APPROVE; [fable] APPROVE; [glm] APPROVE WITH NITS; [sol] REJECT (accuracy).
+All three r1 blockers verified resolved by [sol]/[glm]. Remaining folds:
+- `[FIXED]` ([sol]2) §Tooling pins accuracy: `dict-loop` detected from the bare `.items`/`.keys`/`.values`
+  ATTRIBUTE (concept_scan.py:397-405), not the loop; `sorted(key=)`/`max`/`min` `key=` is NOT scanner-flagged
+  in Book 1b (unregistered `sorted-key` feature) → tier-C, Phase-E-audit-only.
+- `[FIXED]` ([glm] new nit) cp04's list+dict combine question reads `words[i]` by index — a genuine
+  `list-index` site (cp04 is its only pre-078 practice site).
+
+### Round 3 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
+**[self] APPROVE** — the two accuracy/coverage nits folded; contract + ledger + tier claims now all match the
+tooling.
+_(Awaiting [sol]/[glm]/[fable] round-3 verdicts.)_
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
