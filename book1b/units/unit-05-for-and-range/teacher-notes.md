@@ -31,7 +31,7 @@ Budget: three lessons of 60–90 minutes; ladders with a *Notice* per rung.
 ## Exercises — core vs. extra vs. challenge
 
 Core (1–7): The 5050 Total, Stop-Bound Inspector (range bounds), Divisible-by-Four Census, FizzBuzz Board
-(elif), Prime-Flag Test (primality), Three-by-Three Times Table (nested), Nested Classification Count
+(elif), Prime-Flag Test (primality), Four-by-Four Times Table (nested), Nested Classification Count
 (`conditional-nesting`). Extra (8–9): Growing Signal Triangle, Factorial over a Range. Challenges (10–11):
 Step-Range Total, Count the Primes. No core exercise depends on a Challenge. Pre-function; `x = x + 1` only;
 same-line/tabular output via string accumulation (no `end=`/`sep=`/format specs, no `"*" * i` in core).
