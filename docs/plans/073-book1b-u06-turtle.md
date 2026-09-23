@@ -247,4 +247,22 @@ _(4-way content-review gate — filled before PR.)_
 
 ## Post-Execution Report
 
-_(Filled before shipping.)_
+**Status: implemented, ci-local ALL GREEN (2026-09-23). Content-review gate next.**
+
+Shipped `book1b/units/unit-06-turtle-geometry/`:
+- **Phase B (contracts):** coverage-map entry + manifest + syllabus row; `coverage-check`/`prereq-check`
+  GREEN; 30→33 introduced-once, no duplicate introductions, requires/practices all introduced ≤ U06.
+- **Phase C (statements + assets, Codex gpt-5.6-sol):** `lesson.ipynb` (34 cells, 9 no-exec turtle demos —
+  L1 Move & Draw + gallery teaser + first-terminal-encounter + NameError/can't-open-file notices; L2 Any
+  Polygon `360 / n` core rule, n=7 core rung, `//` contrast Notice, `720 / n` star; L3 ring + growing spiral
+  + gallery), `exercises.ipynb` (9 exercises: 7 core + 2 stretch), 9 lesson assets + 9 exercise starters.
+- **Phase D (solutions, SEPARATE fresh Codex):** `solutions.ipynb` (headless companions, NO `import turtle`,
+  84 non-vacuous asserts, all 9 exercises mirrored, `//` only in the Ex9 gap contrast) + 9 `solutions_ex*.py`.
+- **Phase E (teacher-notes inline + verification):** `teacher-notes.md` (full heading set + value plan +
+  beginner traps). `TMPDIR=/dev/shm bash scripts/ci-local.sh` → **ALL GREEN** (registry/lint, unit tests,
+  notebook exec + hygiene, manifest/prereq/coverage/stretch, turtle-check, structure-check, PDF build,
+  pre-merge-guard). AST audit over all 27 assets: ALL CLEAN (module-level only; `360 / n` never `//` in
+  drawn assets; no banned methods; exactly one terminal `turtle.done()`, no `exitonclick`; closure or
+  `# turtle-check: open-path`).
+
+Values are distinct per exercise/rung (value plan in teacher-notes). No deviations from the approved plan.
