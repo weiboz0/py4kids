@@ -1,0 +1,15 @@
+id: checkpoint-05-files-and-objects
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+concepts:
+  introduces: []
+  requires: [print, variable, def-function, parameters, return-value, file-read, file-write, with-statement,
+             class-def, init-method, attributes, methods, for-loop, list-append, string-methods, type-conversion,
+             if-statement, elif-else, comparison, boolean, arithmetic, int-type, float-type, f-string, string-literal]
+  practices: [print, variable, def-function, parameters, return-value, file-read, file-write, with-statement,
+              class-def, init-method, attributes, methods, linear-search, string-slice, for-loop, list-append,
+              list-literal, string-methods, type-conversion, if-statement, elif-else, comparison, boolean,
+              arithmetic, count-by-condition, accumulator, builtin-functions, int-type, float-type, f-string,
+              string-literal]
