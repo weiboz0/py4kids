@@ -229,8 +229,17 @@ All three blind-solved 29/29 exact; all CI checks pass. Findings FOLDED (commit 
 ### Content-review round 1 outcome: 2 APPROVE-WITH-NITS + 1 REJECT; all findings folded. Full ci-local
 ALL GREEN after the fold. Re-review round 2 dispatched.
 
-### Round 2 (2026-09-22) — after folding all round-1 content findings.
-_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable] on the revised commit.)_
+### Round 2 (2026-09-22) — on 33a02d2.
+- **[sol]** — **REJECT.** Round-1 majors all RESOLVED; residual: U04 Ex11 still `n=27`/`Steps: 111`
+  (duplicated the lesson Final build) + a stale U05 teacher-notes title. **FOLDED** (212c741): Ex11 → n=19
+  (Steps 20); U05 notes Ex6 title → Four-by-Four.
+- **[fable]** — **APPROVE WITH NITS.** Folds confirmed, Q4 WONTFIX accepted, CI green. Nits FOLDED: cp02 Q7
+  duplicated U05 Ex6's 4×4 → cp02 Q7 changed to **5×5** (distinct); cp02 Q4 shared a lesson value → n=9 (Steps 19).
+- **[glm]** — **no verdict** (opencode invocation timed out at 20 min). Re-run in round 3.
+
+### Round 3 (2026-09-22) — de-duplicated Ex11 + cp02 Q4/Q7. Re-dispatching [sol] (round-2 REJECT) and
+[glm] (round-2 invocation timeout); [fable] APPROVE-WITH-NITS with nits folded.
+_(Awaiting [sol] / [glm] on the round-3 commit.)_
 
 ## Post-Execution Report
 
