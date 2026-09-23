@@ -213,7 +213,11 @@ deferred-practice-debt sites all confirmed real. Dispositions (folded):
 - `[FIXED]` ([fable]) teacher-notes: 60-min cut reconciled (Ex6 group-by → fast-finisher under the cut);
   value plan Ex4 now lists the tie sample.
 
-_(Round-2 re-review after the fold.)_
+### Round 2 (2026-09-23) — CONSENSUS. [self] APPROVE; [sol] APPROVE; [glm] APPROVE; [fable] APPROVE.
+All round-1 findings verified resolved (Ex4 tie assert catches a `>=` regression; list-of-lists + int-key
+teaching landed; cp04 Q6 placement pinned); AST audits clean; tooling green; ci-local ALL GREEN. No `[OPEN]`
+items. One optional [fable] polish folded: dropped the untaught "comprehension" jargon from the leaderboard
+lesson cell. **Content-review gate PASSED.**
 
 ## Post-Execution Report
 
