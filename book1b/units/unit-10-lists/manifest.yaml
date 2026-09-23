@@ -1,0 +1,11 @@
+id: unit-10-lists
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [list-literal, list-index, list-append, list-loop, list-sort, find-extreme, filter-into-list]
+  requires: [def-function, parameters, return-value, for-loop, range-function, if-statement, comparison,
+             boolean, arithmetic, variable, print]
+  practices: [builtin-functions, in-operator, accumulator, running-total, count-by-condition, loop-counter,
+              f-string, int-type, float-type, comment, naming]
