@@ -197,4 +197,22 @@ tags are reviewer-verified, not CI-detected).
 _(4-way content-review gate — filled before PR.)_
 
 ## Post-Execution Report
-_(Filled before shipping.)_
+
+**Status: implemented, ci-local ALL GREEN (2026-09-23). Content-review gate next.**
+
+- **Phase B:** coverage-map entries (U09/U10) + 2 manifests + 2 syllabus rows; coverage-check/prereq-check
+  GREEN; 39→52 introduced-once, no dupes, no forward requires.
+- **Phase C (Codex ×2):** U09 `lesson.ipynb` (index/slice; the four methods + membership; palindrome
+  index-walk; core transform-each + linear-search; Caesar stretch helper-first) + `exercises.ipynb` (9,
+  function form, 2 stretch). U10 `lesson.ipynb` (build/read both loop forms; sort/sorted + find-extreme
+  best=nums[0]/argmax + sort()→None trap; filter + prefix sums) + `exercises.ipynb` (9).
+- **Phase D (SEPARATE fresh Codex ×2):** U09/U10 `solutions.ipynb` (function form, 41/37 non-vacuous
+  asserts; no forbidden methods/builtins/forms).
+- **Phase E:** teacher-notes for both units (full heading sets + concrete `## Value plan (sample inputs)`
+  inventories). `TMPDIR=/dev/shm bash scripts/ci-local.sh` → **ALL GREEN** (concept-scan, exec-solutions,
+  notebook exec+hygiene, manifest/prereq/coverage/stretch, PDF, pre-merge-guard). Static AST audit clean:
+  string methods ⊆ {upper,lower,strip,replace}; list methods ⊆ {append,sort}; builtins ⊆
+  {len,min,max,sum,sorted,abs,round,print,int,float,str,range}; no `ord`/`chr`; no comprehensions; no
+  tuple/multiple assignment; no step slices; no list slices in U10.
+
+No deviations from the approved plan.
