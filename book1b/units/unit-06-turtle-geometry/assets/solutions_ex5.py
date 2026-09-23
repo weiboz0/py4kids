@@ -6,13 +6,13 @@ turtle.penup()
 turtle.forward(39)
 turtle.pendown()
 
-# Set up the square map symbol.
-n = 4
-side = 46
+# Set up the octagonal map symbol.
+n = 8
+side = 44
 angle = 360 / n
 turtle.pencolor("crimson")
 
-# Draw four equal sides from the new starting point.
+# Draw eight equal sides from the new starting point.
 for corner in range(n):
     turtle.forward(side)
     turtle.left(angle)

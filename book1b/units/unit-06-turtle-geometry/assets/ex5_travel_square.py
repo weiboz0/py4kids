@@ -1,4 +1,4 @@
-# Student task: travel with the pen up, then draw the crimson 46-step square from Exercise 5.
+# Student task: travel with the pen up, then draw the crimson 44-step octagon from Exercise 5.
 import turtle
 
 n = 4

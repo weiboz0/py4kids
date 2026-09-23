@@ -2,7 +2,7 @@
 
 ## Goals
 
-Students leave able to import a module (`import turtle`), drive the turtle with `forward`/`backward` and
+Students leave able to import a module (`import turtle`), drive the turtle with `forward` and
 `left`/`right`, lift and lower the pen (`penup`/`pendown`), and set the pen's look (`pencolor`/`color`,
 `pensize`).
 The mathematical core is the exterior-angle rule: a regular n-gon turns `360 / n` at each corner, written
@@ -60,16 +60,18 @@ In Lesson 3 run the ring live and leave the growing spiral as a "try it."
 
 Core (1–7): Courtyard Square (`n=4`, side 62, royalblue), Trail-Sign Triangle (`n=3`, side 74, forestgreen,
 120° — the outside angle, not 60°), Festival Pentagon (`n=5`, side 68, orchid, `pensize` 4), Decimal-Turn
-Heptagon (`n=7`, side 57, darkorange — the float-angle rung, total turn 360°), Move Then Mark (travel 39,
-then `n=4` side 46 crimson square), Nine-Hexagon Wheel (`n=6` side 41 turquoise, `shape_count=9`, 40° between
-shapes, 54 pen-down moves — the nested loop), Growing Radar Spiral (`side=11`, `step=6`, 14 moves, maroon,
-open-path, accumulator ends at 95, does NOT close).
+Heptagon (`n=7`, side 57, darkorange — the float-angle rung; the student states `360 / 7` before running and
+reads it back with a `print`, total turn 360°), Move Then Mark (travel 39, then an OCTAGON `n=8` side 44
+crimson, 45° turns, 8 pen-down moves), Nine-Hexagon Wheel (`n=6` side 41 turquoise, `shape_count=9`, 40°
+between shapes, 54 pen-down moves — the nested loop), Growing Radar Spiral (`side=11`, `step=6`, 14 moves,
+maroon, open-path, accumulator ends at 95, does NOT close).
 Challenges (8–9, tagged `stretch`): Five-Point Star (`n=5`, side 96, goldenrod, `angle = 720 / n = 144°`,
-total turn 720°); The Three-Degree Gap (draw the honest heptagon with `n=7`, side 53, magenta, `360 / n`,
-then in notes predict what `turtle.left(360 // 7)` would draw — 51° turns, 357° total, a 3° gap, does not
-close).
-Every exercise uses a distinct `(n, side, colour)` and its own checkable number, distinct from the lesson
-rungs and from each other.
+total turn 720°); The Eight-Degree Gap (draw the honest eleven-sided shape with `n=11`, side 34, magenta,
+`360 / n` ≈ 32.73°, total turn 360°, closes; then predict what `turtle.left(360 // 11)` would draw —
+`360 // 11 = 32`, `11 × 32 = 352`, an 8° gap, does NOT close).
+Every core exercise uses a distinct polygon `n` (4, 3, 5, 7, 8, 6) with a distinct `(side, colour)`; the two
+challenges are a star (`720 / n`) and an eleven-sided almost-shape, distinct from the lesson rungs and from
+each other in shape, size, colour, and checkable number.
 No core exercise depends on a challenge; all angles use `/`, never `//`, in the drawn assets.
 
 ## Common mistakes
@@ -98,7 +100,7 @@ No core exercise depends on a challenge; all angles use `/`, never `//`, in the 
 
 - Strugglers: give the outer loop of the ring and have them write only the inner polygon loop; keep them on
   polygons whose `360 / n` is a whole number (square, triangle, hexagon) before the heptagon.
-- Fast finishers: the two Challenges (star, the three-degree gap), then extend the gallery with another
+- Fast finishers: the two Challenges (star, the eight-degree gap), then extend the gallery with another
   polygon or a second ring at a new colour.
 - Middle tier: change one polygon's `n` and predict the new turn angle and total-turn before running, then
   confirm the drawing closes.

@@ -1,7 +1,7 @@
 # Bring in Python's turtle drawing tools.
 import turtle
 
-# A loop repeats one side and one turn four times.
+# Each trip traces one square edge and aims the turtle toward the next corner.
 n = 4
 side = 73
 angle = 360 / n

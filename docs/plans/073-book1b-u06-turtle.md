@@ -243,7 +243,41 @@ side/shape/pen-down counts + integer `n`/`side`); solutions.ipynb spec asserts c
 
 ## Content Review
 
-_(4-way content-review gate — filled before PR.)_
+### Round 1 (2026-09-23) — [self] APPROVE; [glm] APPROVE WITH NITS; [fable] APPROVE WITH NITS; [sol] REJECT.
+All four blind-solved 9/9 with zero correctness mismatches; project-first hook confirmed; ci-local ALL GREEN.
+One REJECT ([sol]) on value-distinctness; the rest are nits. Dispositions:
+
+**Value-distinctness ([sol]#1 Must Fix):** partially valid.
+- `[FIXED]` Ex1/Ex5 were both squares (n=4); Ex5 → travel + **octagon** (n=8, 45°). Ex4/Ex9 were both
+  heptagons (n=7, reusing the lesson's n=7); Ex9 → an **eleven-sided shape** (n=11), which also enlarges the
+  `//` gap to a visible 8° (addresses [fable]#1). This removes both exact-shape repeats and the lesson-number reuse.
+- `[WONTFIX]` Ex3 pentagon (n=5) vs Ex8 star (n=5): distinct angle (72°/144°), total turn (360°/720°) and
+  drawing; "5" is intrinsic to a five-point star. Same-shape core polygons necessarily share that shape's
+  angle with any lesson example, but sides/colours/contexts differ so no answer can be transcribed — the
+  distinctness rule (no copyable values) holds. [glm]/[fable] both judged distinctness satisfied.
+
+**Provenance ([sol]#4 Should Fix):** `[WONTFIX]` — `tools/notebooks.py:445-446` MANDATES `provenance:
+original` for every unit and `adapted-from` is not a valid `MANIFEST_KEYS` entry, so the proposed fix would
+fail CI. Measured overlap with Book 1 u03 is 9 six-word sequences, ALL mechanical (run-command file paths,
+the "ends where it started" checkable convention, a generic square description) — no substantive content
+reuse; [glm] and [fable] independently judged it original. Reworded the couple of generic echoes anyway.
+
+**Backward in Goals ([sol]#2 / [glm]#2 / [fable]#5):** `[FIXED]` — removed `backward` from teacher-notes Goals.
+
+**Ex9 "in your notes" has no response location ([sol]#3):** `[FIXED]` — added a markdown prediction/response
+cell in exercises.ipynb for the `//`-gap comparison.
+
+**"Expected output" lists un-printed values ([fable]#2 Should Fix):** `[FIXED]` — relabelled "Check
+yourself:" and added `print()` of the key verifiable numbers (Ex7 accumulator `print(side)`→95, Ex4 angle),
+so the claims are observable in the terminal.
+
+**Nice-to-haves:** `[FIXED]` starter-comment colours aligned to specs ([fable]#3); one-sentence glosses for
+`pencolor`/`pensize` (L1) and `bgcolor`/`speed(0)` (gallery) ([glm]#1/[fable]#4); `left(92)`/`left(91)`
+motivated ([fable]#6); Ex4 now asks the student to state the angle before running ([fable]#7).
+`[self]` (verification, [sol]#5): the native `exec-solutions` DID pass in the main env (full ci-local ALL
+GREEN); [sol]'s sandbox couldn't run `uv`, so this is a sandbox limitation, not a content defect.
+
+_(Round-2 re-review after the fold below.)_
 
 ## Post-Execution Report
 

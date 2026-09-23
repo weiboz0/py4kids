@@ -1,4 +1,4 @@
-# Student task: draw the magenta 53-step heptagon experiment and explain its 3-degree gap.
+# Student task: draw the magenta 34-step eleven-sided experiment and explain its 8-degree gap.
 import turtle
 
 n = 4

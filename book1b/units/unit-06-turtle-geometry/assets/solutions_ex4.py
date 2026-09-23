@@ -6,6 +6,7 @@ n = 7
 side = 57
 angle = 360 / n
 turtle.pencolor("darkorange")
+print(angle)
 
 # angle is a float, and all seven turns total 360 degrees.
 for corner in range(n):

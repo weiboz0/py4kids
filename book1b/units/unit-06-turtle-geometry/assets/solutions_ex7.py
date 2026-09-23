@@ -14,4 +14,5 @@ for side_number in range(move_count):
     turtle.left(92)
     side = side + step
 
+print(side)
 turtle.done()

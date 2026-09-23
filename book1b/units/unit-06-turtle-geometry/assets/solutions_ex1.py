@@ -7,7 +7,7 @@ side = 62
 angle = 360 / n
 turtle.pencolor("royalblue")
 
-# Repeat one equal move and one equal turn for every side.
+# Each trip traces one courtyard edge and aims the turtle toward the next corner.
 for corner in range(n):
     turtle.forward(side)
     turtle.left(angle)

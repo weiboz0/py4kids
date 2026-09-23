@@ -4,6 +4,7 @@ import turtle
 n = 4
 side = 19
 angle = 360 / n
+print(angle)
 turtle.pencolor("dimgray")
 
 for corner in range(n):
