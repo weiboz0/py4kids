@@ -25,10 +25,11 @@ random), NOT the pre-function per-line-output form used in U01–U06. Book 1b st
 - introduces: `[def-function, parameters, return-value, scope, builtin-functions]`
 - requires: `[for-loop, range-function, while-loop, arithmetic, comparison, boolean, if-statement, variable, print]`
 - practices: `[import-statement, turtle-basics, turtle-drawing, loop-counter, accumulator, running-total,
-  int-type, float-type, comment, naming]`
+  int-type, float-type, error-messages, comment, naming]`
   (Dropped `nested-loops`/`count-by-condition` — no named site; `draw_polygon` is a single loop. Each kept
   tag has a named site in the outline: `loop-counter` (the loops in `is_prime`/`gcd`), `accumulator` (`fib`),
-  `running-total` (`sum_to_n` contrasted with the `sum()` builtin), int/float returns, comments/names.)
+  `running-total` (`sum_to_n` contrasted with the `sum()` builtin), int/float returns, `error-messages` (L1's
+  print-vs-return `TypeError … NoneType` reading callback — [sol] r2), comments/names.)
 
 **unit-08-randomness** — `kind: unit`, `title: "Randomness — the random module, dice, and simulation"`, `lessons: 3`
 - introduces: `[random-module]`
@@ -45,11 +46,13 @@ random), NOT the pre-function per-line-output form used in U01–U06. Book 1b st
 - practices: `[print, variable, def-function, parameters, return-value, scope, builtin-functions, random-module,
   import-statement, type-conversion, for-loop, range-function, while-loop, loop-counter, accumulator,
   running-total, count-by-condition, if-statement, elif-else, comparison, boolean, arithmetic, int-type,
-  float-type, f-string]`
-  (**Strict-scan closure ([sol]/[glm]):** the seeded-random question's `import random` detects BOTH
-  `import-statement` and `random-module`; `int()`/`str()` in a question detects `type-conversion` — both must
-  be listed since checkpoints get no fastforward. Dropped `break-statement` (no `while … break` sentinel
-  question planned). `count-by-condition` is kept — a "count how many of 1..n are prime" function question backs it.)
+  float-type, f-string, string-literal]`
+  (**Strict-scan closure ([sol]/[glm]):** checkpoints get NO fastforward, so EVERY scanner-detected concept
+  must be listed. The seeded-random question's `import random` detects BOTH `import-statement` and
+  `random-module`; `int()`/`str()`/`float()` detects `type-conversion`; a literal-bearing f-string detects
+  BOTH `f-string` AND `string-literal` (concept_scan.py:14-15,279-285) — so `string-literal` is listed.
+  Dropped `break-statement` (no `while … break` sentinel question planned). `count-by-condition` is kept — a
+  `count_primes(n)` function question backs it.)
 
 Closure: every `requires` is introduced ≤ its entry (def-function/parameters/return-value/scope/
 builtin-functions in U07; random-module in U08; the rest in U01–U06). U07's turtle `practices` are exactly
@@ -70,10 +73,10 @@ returns, comments/names. No self-practice: neither unit lists its own introducti
 
 Student exercises are stated as "define `f(...)` meeting this spec" with worked sample calls
 (`f(3, 74) → …`). `solutions.ipynb` DEFINES the function and asserts it against **several distinct input
-cases** (not per-line output). **Random exercises MUST seed with exactly `import random` +
+cases** (not per-line output). **Random exercises MUST seed with `import random` +
 `random.seed(4)` (module style) before the first random use** — `_solution_policy_findings`
-(notebooks.py:231-328, run on U08 AND cp03 solutions) hard-fails any other seed value and bans
-`from random import …`. `notebooks.py` also enforces ≥3 assert-bearing cells notebook-wide; per-exercise
+(notebooks.py:231-328, run on U08 AND cp03 solutions) requires a preceding `random.seed(4)` (literal int 4)
+before the first random attribute and bans `from random import …` (an authoring pin uses seed 4 and nothing else). `notebooks.py` also enforces ≥3 assert-bearing cells notebook-wide; per-exercise
 "several distinct cases" is the content-gate authoring rule. NO `input()` in graded/solution cells. Solutions run
 top-to-bottom clean; student notebooks stay solution-free with NO executed outputs; every cell has a unique id.
 
@@ -113,7 +116,9 @@ strings-as-sequences anywhere in U07 (U09/U10); every example stays on already-t
 - **L2 — Functions that Compute (`return-value` deepened + `builtin-functions`).** `is_prime(n)`,
   `gcd(a, b)` (Euclid `while` — `loop-counter`), `fib(n)` (`accumulator`), `sum_to_n(n)` (`running-total`)
   contrasted with `sum(range(1, n + 1))`; then the built-ins `max(a,b)`/`min(a,b,c)`/`sum`/`abs`/`round` as
-  named number tools (NO `len`/`sorted`), each contrasted with the hand loop.
+  named number tools (NO `len`/`sorted`), each contrasted with the hand loop. **`fib` uses a temp variable
+  (`nxt = a + b; a = b; b = nxt`), NEVER tuple assignment `a, b = b, a + b`** (multiple/tuple assignment is
+  untaught — [fable] r2). The 60-min cut names `gcd` (Euclid, the least intuitive) as the item to defer/stretch.
 - **L3 — Scope (`scope`) + the `draw_polygon(n, side)` turtle practice site.** Local vs global names; a
   parameter is a local name; why a function can't see a caller's loop variable; return a result instead of
   reaching out. `draw_polygon(n, side)` is the scope APPLICATION — `n`/`side`/`angle = 360 / n` are local
@@ -125,11 +130,15 @@ strings-as-sequences anywhere in U07 (U09/U10); every example stays on already-t
 - **L1 — Chance (`random-module`).** `import random`; `random.randint(a, b)` and `random.choice(range(...))`
   (argument is a `range`, never a list — lists are U10); **`random.seed(4)` for reproducibility** (and why
   tests seed). A dice/coin game. (NO `random.random()`/`uniform`/`randrange` — the scanner permits only
-  `seed`/`randint`/`choice`, concept_scan.py:53.)
-- **L2 — Simulate & Estimate.** Count outcomes over many trials (running-total/count-by-condition in a
-  seeded function); a Monte-Carlo estimate done with `randint` on an integer grid — e.g. π/4 ≈ fraction of
-  `(x, y)` with `x = random.randint(0, 1000)`, `y = random.randint(0, 1000)`, `x*x + y*y <= 1000*1000`
-  (squares + `<=` are U02 math; `×4` gives π). Everything packaged as seeded functions.
+  `seed`/`randint`/`choice`, concept_scan.py:55.)
+- **L2 — Simulate & Estimate.** Count outcomes over many trials in a seeded function — a trial tally uses
+  the `accumulator` (`total = total + 1`) and `count-by-condition`; report the result with the built-ins
+  `round`/`max` (`builtin-functions` site). Then a Monte-Carlo estimate with `randint` on an integer grid,
+  motivated by a **picture** (a quarter-circle inside a square: the fraction of random points landing inside
+  the quarter-circle ≈ its area ratio π/4, so `×4` gives π — draw it / use the U06 turtle intuition, don't
+  leave the `×4` as magic): `x = random.randint(0, 1000)`, `y = random.randint(0, 1000)` (each axis has 1001
+  possible values, not a "1000×1000 grid"), count `x*x + y*y <= 1000*1000` (squares + `<=` are U02 math).
+  Everything packaged as seeded functions.
 - **L3 — Random Turtle Walk.** The turtle practice site: fixed step + a random left/right turn chosen by
   `random.randint(0, 1)`, `random.seed(4)`, `# turtle-check: open-path`.
 60-min cut per lesson noted in teacher-notes.
@@ -138,8 +147,9 @@ strings-as-sequences anywhere in U07 (U09/U10); every example stays on already-t
 6–7 VISIBLE `## Question N`. Mix: define-a-function questions (a small `is_prime`/`gcd`-style; a
 parameterized formula; a `sum_to_n` running-total function), a `count_primes(n)` count-by-condition
 function, an `elif` ladder inside a function, one built-in-function question (`max`/`min`/`sum`/`abs`/`round`
-on numbers/ranges), and ONE seeded-random question (`import random` + `random.seed(4)`, then a function whose
-asserted result is deterministic). Strict scan: only concepts ≤ U08; NO lists/dicts/strings-as-sequences/
+on numbers/ranges), and ONE seeded-random question whose STATEMENT tells the student to call `random.seed(4)`
+before their function's first random use (so the blind-solve reproduces the asserted, deterministic value —
+matches notebooks.py:323-328). Strict scan: only concepts ≤ U08; NO lists/dicts/strings-as-sequences/
 files/classes; built-ins limited to those taught (`print`/`int`/`float`/`str` + the U07 number set, no
 `len`/`sorted`). teacher-notes has `## Grading` (naming TWO pass-bar items: *define-and-return* and
 *call-and-use-the-result*, mirroring cp02) + the full heading set.
@@ -153,7 +163,8 @@ teacher-notes so the gate can check.
 
 ### Phase A — plan-review gate (4-way). No implementation until consensus.
 ### Phase B — contracts: 3 coverage-map entries (7-key) + 2 unit manifests + 1 checkpoint manifest + 3 syllabus rows; `--book book1b coverage-check` + `prereq-check` GREEN.
-### Phase C — statements + assets (Codex): U07 + U08 lesson.ipynb (function form; no-exec turtle demos for the practice sites) + exercises.ipynb + cp03 questions + turtle assets (lN_*/ex*_* .py). Per unit: **≥8 exercises, core ≤7, ≥2 `stretch` Challenge** (notebooks.py:583-587; design §7). exN turtle starters are valid CLOSED placeholders (≥1 pen-down), per the U06 rule. Pin: function form (define-a-function specs with worked sample calls); the number-only builtin set (max/min/sum/abs/round, NO len/sorted); module-level turtle + `360 / n` (never `//`) + closure/`# turtle-check: open-path`; random uses ONLY `randint`/`choice(range(...))` (NO `random.random`) and `import random` + `random.seed(4)`.
+### Phase C — statements + assets (Codex): U07 + U08 lesson.ipynb (function form; no-exec turtle demos for the practice sites) + exercises.ipynb + cp03 questions + turtle assets (lN_*/ex*_* .py). Per unit: **≥8 exercises, core ≤7, ≥2 `stretch` Challenge** (the ≥6-heading + ≥2-stretch floor is
+notebooks.py:583-587; ≥8/core≤7 is the plans-071–073 house convention — [glm] r2). exN turtle starters are valid CLOSED placeholders (≥1 pen-down), per the U06 rule. Pin: function form (define-a-function specs with worked sample calls); the number-only builtin set (max/min/sum/abs/round, NO len/sorted); module-level turtle + `360 / n` (never `//`) + closure/`# turtle-check: open-path`; random uses ONLY `randint`/`choice(range(...))` (NO `random.random`) and `import random` + `random.seed(4)`.
 ### Phase D — solutions (SEPARATE fresh Codex): U07/U08 solutions.ipynb (function form: define + assert several distinct cases; NO `import turtle`; ≥3 assert cells; random solutions begin `import random` + `random.seed(4)` before first random use, no `from random import`) + cp03 solutions + turtle `assets/solutions_*.py`; verify `turtle-check` + `exec-solutions`.
 ### Phase E — teacher-notes (inline, all three) + verification: full `TMPDIR=/dev/shm bash scripts/ci-local.sh`
 ALL GREEN (registry/lint, unit tests, notebook exec+hygiene, manifest/prereq/coverage/stretch,
@@ -181,7 +192,7 @@ Phases C/D.
 **[fable] APPROVE WITH NITS; [sol] REJECT; [glm] REJECT.** All blockers are verified tooling-closure facts
 (the reviewers cited exact tool lines). Folded ALL of them:
 - `[FIXED]` **random API** ([sol]/[fable]): dropped `random.random()`/`uniform`/`randrange` (scanner permits
-  only `seed`/`randint`/`choice`, concept_scan.py:53); Monte-Carlo now uses `randint` on an integer grid.
+  only `seed`/`randint`/`choice`, concept_scan.py:55); Monte-Carlo now uses `randint` on an integer grid.
 - `[FIXED]` **seed(4)** ([sol]/[glm]/[fable]): pinned `import random` + `random.seed(4)` before first random
   use in all U08/cp03 solutions; banned `from random import` (notebooks.py:231-328).
 - `[FIXED]` **cp03 strict-scan closure** ([sol]): added `import-statement` (the random question imports
@@ -203,10 +214,26 @@ Phases C/D.
 - `[FIXED]` **§6 record reword** ([glm]): U08 realizes U07 intros via `requires`; U07 named sites listed.
 - `[FIXED]` **U07 hook** ([fable]/[glm]): reframed from "refactor" to a genuine tool with a visible payoff.
 
-### Round 2 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
-**[self] APPROVE** — all blockers folded against the cited tool lines; closure + honesty re-checked
-(cp03 now lists import-statement/type-conversion; U07 practices all have sites; no random.random; seed 4).
-_(Awaiting [sol]/[glm]/[fable] round-2 verdicts.)_
+### Round 2 (2026-09-23) — [self] APPROVE; [fable] APPROVE WITH NITS; [glm] APPROVE WITH NITS; [sol] REJECT.
+All 5 round-1 blockers verified resolved by all three externals. [sol] found two more strict-scan-closure
+gaps; [glm]/[fable] added non-blocking nits. Folded:
+- `[FIXED]` ([sol]) cp03 `f-string` without `string-literal`: literal-bearing f-strings detect BOTH
+  (concept_scan.py:14-15,279-285); added `string-literal` to cp03 requires+practices.
+- `[FIXED]` ([sol]) U07 `error-messages` missing: L1's print-vs-return `TypeError` reading callback genuinely
+  practices it (MANUAL_ONLY concept); added to U07 practices.
+- `[FIXED]` ([sol] nit) seed wording corrected (requires a preceding `random.seed(4)`; bans `from random import`).
+- `[FIXED]` ([glm]) Phase C citation: ≥6-heading+≥2-stretch is notebooks.py:583-587; ≥8/core≤7 is the
+  plans-071–073 convention. `:53`→`:55` allowlist citation.
+- `[FIXED]` ([glm]) U08 named sites: `accumulator` (trial tally `total = total + 1`), `builtin-functions`
+  (`round`/`max` in the estimate report) named in L2.
+- `[FIXED]` ([fable]) `fib` uses a temp var (no tuple assignment `a, b = b, a + b` — untaught); 60-min cut
+  names `gcd` as deferrable; Monte-Carlo gets the quarter-circle π/4 picture + "1001 values/axis, not a
+  1000×1000 grid"; cp03 seeded question STATEMENT tells the student to `random.seed(4)` first.
+
+### Round 3 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
+**[self] APPROVE** — the two [sol] closure gaps closed (cp03 lists string-literal; U07 lists error-messages);
+all nits folded; % confirmed taught in U02 (is_prime/gcd dependency).
+_(Awaiting [sol]/[glm]/[fable] round-3 verdicts.)_
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
