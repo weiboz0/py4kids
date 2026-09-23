@@ -21,7 +21,8 @@ Budget: three lessons of 60–90 minutes.
   inside a function), report it as a percentage (`round`), then a Monte-Carlo estimate of π: throw random
   points into a square and count how many land inside the quarter-circle (`x*x + y*y <= 1000*1000`); the
   fraction inside is about π/4, so multiply by 4. **The estimate is close to, not exactly, π** (about 3.1,
-  not 3.14159) — more trials bring it closer. (Each axis has 1001 possible values; it is not a "1000×1000
+  not 3.14159) — more trials bring it closer ON AVERAGE, but not monotonically (a larger run can score
+  worse than a smaller one). (Each axis has 1001 possible values; it is not a "1000×1000
   grid.")
 - **Lesson 3 — Random Turtle Walk.** A turtle that steps forward and turns left or right based on
   `random.randint(0, 1)`, seeded so the drawing is reproducible; run as `assets/*.py` from the terminal
@@ -45,7 +46,8 @@ against its deterministic result; the turtle walk is checked by running it.
   do not match — seed with `random.seed(4)` first.
 - Assuming `random.randint(1, 6)` excludes 6 — both ends are included.
 - Passing a list to `random.choice` — use a `range(...)` (lists come later).
-- Expecting a simulated estimate to equal the exact value; more trials → closer, never perfectly exact.
+- Expecting a simulated estimate to equal the exact value, or to improve on EVERY increase in trials; more
+  trials help on average (and never make it perfectly exact), but the improvement is not monotonic.
 - In the random walk: running from the wrong directory, or expecting the drawing to close (it is an open
   path and carries the `# turtle-check: open-path` marker).
 
@@ -64,3 +66,15 @@ against its deterministic result; the turtle walk is checked by running it.
   length (still seeded).
 - Middle tier: change the number of trials in a simulation and predict how the estimate's stability changes,
   then confirm.
+
+## Value plan (sample inputs)
+
+- Exercise 1 — `roll_total(rolls)`: `4`, `7`, `10`.
+- Exercise 2 — `count_heads(flips)`: `6`, `14`, `20`.
+- Exercise 3 — `bonus_score(rounds)`: `5`, `8`, `12`.
+- Exercise 4 — `count_targets(trials, target)`: `(12, 3)`, `(30, 6)`, `(50, 1)`.
+- Exercise 5 — `even_percent(trials)`: `10`, `25`, `100`.
+- Exercise 6 — `estimate_pi(trials)`: `20`, `200`, `2000`.
+- Exercise 7 — random-walk real program (no function call): seed `4`, `step = 31`, `move_count = 20`.
+- Exercise 8 — `highest_roll(trials)`: `3`, `10`, `30`.
+- Exercise 9 — `count_multiples(trials, n)`: `(10, 4)`, `(25, 5)`, `(40, 3)`.

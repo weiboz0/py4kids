@@ -8,8 +8,7 @@ def draw_polygon(n, side):
     turtle.pendown()
     for corner in range(n):
         turtle.forward(side)
-        turtle.left(360 / n)
-    assert abs(n * angle - 360) < 1e-6
+        turtle.left(angle)
 
 
 turtle.pencolor("teal")

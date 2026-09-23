@@ -251,7 +251,37 @@ question. [fable] note folded (Monte-Carlo estimate ≈ π, not exact).
 "Monte-Carlo ≈ π, not exactly" line in the student-facing L2 prose too, not only teacher-notes.
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+### Round 1 (2026-09-23) — [self] APPROVE; [glm] APPROVE WITH NITS; [fable] APPROVE WITH NITS; [sol] REJECT.
+Blind solves: [fable] 71/71 sample calls match; [glm] 25/25 items match; all tooling (turtle-check,
+structure-check, concept-scan, exec-solutions ×3) PASS. One REJECT ([sol], value-distinctness + a fragile
+assert). Dispositions (folded):
+- `[FIXED]` ([sol] Must Fix) U08 Ex6 Monte-Carlo asserts use exact `==` → tolerance `abs(est-exp) < 1e-9`
+  (consistent with "≈ not exact").
+- `[FIXED]` ([sol] Must Fix) value-distinctness: varied the reused sample inputs `ticket_cost(4)`,
+  `count_heads(12)`, and cp03 `is_prime(2/17)`/`sum_to_n(1/6)` so exercise/checkpoint inputs differ from the
+  lesson and each other. ([glm] judged distinctness already held; the change satisfies [sol] at no cost.)
+- `[FIXED]` ([sol]/[glm] Should Fix) added a `## Value plan (sample inputs)` inventory to all three
+  teacher-notes (the plan promised it).
+- `[FIXED]` ([sol]/[fable] Should Fix) U07 scope prose false claim ("a function cannot see a caller's
+  variable" — false at module level) reworded to "should take what it needs via parameters"; added the
+  concrete `print(angle)` → `NameError` demo in L3; fixed the same claim in teacher-notes' discussion prompt
+  (draw_polygon returns `None`).
+- `[FIXED]` ([fable] Should Fix) U08 quarter-circle picture was a straight diagonal (implies ×2) → redrawn
+  curved + "arc bulges out → ≈78.5% = π/4, so ×4".
+- `[FIXED]` ([fable] Should Fix) U07 teacher-notes gained the Jupyter print-vs-return trap (bare last-line
+  call displays the value whether it returns or prints).
+- `[FIXED]` ([sol] Should Fix) U08 teacher-notes "more trials necessarily closer" → "closer on average, not
+  monotonic" (matches the lesson).
+- `[FIXED]` ([glm]/[fable]) `solutions_ex7_polygon_tool.py` uses `turtle.left(angle)` and drops the
+  student-visible in-function `assert … 1e-6`; the headless companion asserts non-vacuous values.
+- `[FIXED]` nits: `len` one-sentence preview (U07 L2); randint-vs-choice + two-arg `round` notes (U08);
+  cp03 Q5 shows `"Gold"` quoted, Q2 uses a temp var, redundant top-level seed removed; U07 second 60-min cut.
+- `[WONTFIX]` ([sol]/[glm] Nice-to-Have) native-exec sandbox limitation (my ci-local ran native
+  exec-solutions ALL GREEN); the "missing checkpoint lesson.ipynb" is a review-scope artifact (checkpoints
+  ship `checkpoint.ipynb`, structure-check passes).
+
+_(Round-2 re-review after the fold.)_
 
 ## Post-Execution Report
 

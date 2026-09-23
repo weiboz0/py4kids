@@ -55,3 +55,13 @@ is wrong (e.g. prints instead of returns) at half, noting the fix.
   the `elif` ladder; treat Q4/Q6/Q7 as reach.
 - Fast finishers: after Q7, ask them to re-run it with a different seed and explain why the count changes but
   the method does not.
+
+## Value plan (sample inputs)
+
+- Question 1 — `is_prime(n)`: `1`, `9`, `19`.
+- Question 2 — `travel_cost(km_text, rate_text)`: `("8", "1.25")`, `("15", "0.8")`, `("0", "2.5")`.
+- Question 3 — `sum_to_n(n)`: `3`, `7`, `20`.
+- Question 4 — `count_primes(n)`: `5`, `10`, `20`.
+- Question 5 — `award_level(points)`: `93`, `74`, `58`, `30`.
+- Question 6 — `balanced_score(a, b, c)`: `(8, 12, 10)`, `(20, 5, 11)`, `(7, 7, 7)`.
+- Question 7 — `count_high_rolls(trials)`: `5`, `12`, `30`.
