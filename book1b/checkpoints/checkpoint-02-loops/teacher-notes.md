@@ -8,7 +8,7 @@ recap of decisions (`elif`) and integer math (`//`/`%`). It introduces nothing n
 has been taught. Students work solo; it is solution-free like a unit's exercises.
 
 Loops ARE allowed now (unlike Checkpoint 01), but the checkpoint stays otherwise strict: **no lists, no
-functions, and no built-ins beyond `print`/`int`/`float`/`str`** — sums/counts use the accumulator idiom
+functions, and no built-ins beyond `print`/`int`/`float`/`str`** (`range` is used by the loops) — sums/counts use the accumulator idiom
 (`total = total + n`), never `sum(...)`.
 
 ## Pacing
@@ -27,8 +27,9 @@ Budget: half a lesson (~30–45 minutes). Hand out after Unit 05. The seven ques
 - Ordering the Q1 ladder broad-first so the verdict is wrong.
 - `range` bounds in Q5/Q6 (`range(1, 5)` gives 1–4); off-by-one in the Q3 `while` counter.
 - Forgetting the `break` (Q4) or a wrong stop condition — an accidental infinite loop; know how to interrupt.
-- Q7 indentation: the inner `row = row + …` at 8 spaces, `print(row)` at 4.
-- Byte-exact output: spaces between table entries, the float `.0`, capitals, punctuation.
+- Q7 indentation: build the row's text with string accumulation deeper inside the inner loop, then print
+  it once after the inner loop (the accumulation is indented more than the print).
+- Byte-exact output: the single spaces between table entries, capitals, and punctuation all count.
 
 ## Discussion prompts
 
@@ -45,5 +46,6 @@ math is right but the spacing is off.
 
 ## Differentiation
 
-- Strugglers: Q1–Q3 (recap + one `while`) as the pass bar; treat Q4–Q7 as reach.
+- Strugglers: prioritize Q1–Q3 and Q5 — the recap items plus the two pass-bar loops (Q3 while-counter,
+  Q5 for-total), which the grading rubric requires; treat Q4/Q6/Q7 as reach.
 - Fast finishers: ask them to extend Q7 to a 5×5 table or add a running total to Q6.

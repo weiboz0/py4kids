@@ -25,10 +25,12 @@ Budget: three lessons of 60–90 minutes; worked-example ladders with a *Notice*
   to Unit 02's 5050 peek ("you saw this — now you write it"). Build a running total, then count how many
   values pass a test (elif tiers).
 - **Lesson 3 — Stop at a Computed Goal (`break`, `sentinel-loop`).** Plain-condition sentinel first
-  (`while n != 1` — Collatz steps; `while n > 0` — digit peel), THEN `while True: … break` as the
-  exit-from-the-middle shape. The `steps` counter is both the control and the printed summary. Final build.
+  (`while n != 1` — Collatz steps), THEN `while True: … break` as the exit-from-the-middle shape. The loop
+  is controlled by `n` / the `break` condition; the `steps` counter counts the passes and supplies the
+  printed summary (`Steps: N`). Final build. (Digit-peel `while n != 0` is taught in Lesson 2.)
 
-60-MINUTE CUT (any lesson): teach rungs 1–2 live, leave the last as a "try it".
+60-MINUTE CUT: L1 — keep the reassignment rung, the counter loop, and the infinite-loop/off-by-one beats
+live; run the `NameError` beat as a "try it". L2 — cut the digit-sum rung. L3 — cut the GCD extra.
 
 ## Exercises — core vs. extra vs. challenge
 
