@@ -39,26 +39,52 @@ arithmetic/type-conversion U02, variable/print/string-literal/f-string U01). U10
 dicts 3 / files 3 / objects 4).
 
 ### Design §6 practice-coverage record
-U10 practices U09's `in-operator` (membership tests in filters/searches). Both units practice the U07
-`builtin-functions` — U09 via `len` (finally taught for real, per the plan-074 preview), U10 via
-`len`/`min`/`max`/`sum`/`sorted` on lists. Every `practices` tag has a named site in the outline (below);
-no unit lists its own introductions in `practices`.
+U10 practices U09's `in-operator` (membership in filters/searches). Named sites for every practice tag:
+- **U09** — `builtin-functions` (`len` in palindrome/vowel-count), `count-by-condition` (vowel count,
+  `count_char`), `accumulator`/`string-concat` (the `transform-each` string builder), `loop-counter` (the
+  index-walk `range` loops), `f-string` (result reports), `int-type` (counts/positions), `type-conversion`
+  (`str()` in a report), `elif-else` (a classify-the-char branch), `comment`/`naming` (throughout).
+- **U10** — `builtin-functions` (`len`/`min`/`max`/`sum`/`sorted`), `in-operator` (membership filter),
+  `accumulator`/`running-total` (prefix sums), `count-by-condition` (count items passing a test),
+  `loop-counter` (index loops/argmax), `f-string`, `int-type`, `float-type` (the average in above-average
+  filtering), `comment`/`naming`.
+No unit lists its own introductions in `practices`.
 
-## Tooling pins (CI-verified — the risk areas)
+## Tooling pins (with their ACTUAL enforcement — corrected per [sol]/[glm] r1)
 
-- **String methods are the taught subset ONLY: `upper`, `lower`, `strip`, `replace`** (concept_scan.py:63
-  `STRING_METHODS`). Do NOT use `split`/`join`/`find`/`index`/`count`/`startswith`/`endswith`/`format`/
-  `title`/`isdigit`/etc. — the scanner flags any other `.name(...)` as an untaught method
-  (concept_scan.py:50-64, `.index` "nearly leaked into unit-06").
-- **List methods are `append` and `sort` ONLY.** No `insert`/`remove`/`pop`/`extend`/`index`/`count`/
-  `reverse`. `list-sort` is `list.sort()` (in place); `sorted(...)` is the builtin (returns a new list).
-- **Built-ins now available: `len`, `min`, `max`, `sum`, `sorted`** (BUILTINS, concept_scan.py:64) — `len`
-  on strings/lists, `min`/`max`/`sum`/`sorted` on lists (U10). Still NO other builtins.
-- **NO `ord`/`chr`** (untaught, not in BUILTINS) — the Caesar cipher shifts via an **alphabet string** +
-  `linear-search` for a letter's position + `%` (mod) + `string-index`, never character codes.
-- **NO dicts (U11), files (U12), classes (U13)**; no tuple/multiple assignment; no comprehensions
-  (`[... for ...]`) — build lists with `append` in a `for` loop (`transform-each`/`filter-into-list` are
-  written as explicit loops, not comprehensions).
+Three tiers of enforcement — do not conflate them:
+
+**A. CI-enforced by `concept-scan` (a violation FAILS ci-local):**
+- **String methods = the taught subset ONLY: `upper`, `lower`, `strip`, `replace`** (`STRING_METHODS`,
+  concept_scan.py:62). Any other `.name(...)` (`split`/`join`/`find`/`index`/`count`/`startswith`/`title`/
+  `isdigit`/…) is flagged "untaught method" (concept_scan.py:50-64, 438-441 — `.index` "nearly leaked into
+  unit-06").
+- **List methods = `append`, `sort` ONLY** (TAUGHT_METHODS, concept_scan.py:52). No `insert`/`remove`/`pop`/
+  `extend`/`index`/`count`/`reverse` (all flagged untaught).
+- **Detected concepts:** `string-slice`/list-slice → `string-slice` (Subscript+Slice, :337-340 — the scanner
+  CANNOT tell string from list slices, so a **list slice scans as `string-slice`**); `string-methods`
+  (:398-399); `in-operator` (:201-204); `list-literal` (:292-294); `list-append`/`list-sort`/`sorted`
+  (:400-403, 451-452). Builtins map to `builtin-functions`.
+
+**B. MANUAL_ONLY — declared + reviewer-verified, NOT scanner-detected** (concept_scan.py:40-42, and the four
+technique concepts are `never_flag`, concepts.yaml:34-40): **`string-index`, `list-index`, `list-loop`**
+(a subscript `s[i]` emits no index concept; `for x in items` emits only `for-loop`), plus `transform-each`/
+`linear-search`/`find-extreme`/`filter-into-list`. Their introductions are credited by the manifest/
+coverage-map tag (curriculum.py at-most-once check), not by detection — so the coverage claim is honest, but
+reviewers (not CI) confirm the concept is genuinely present.
+
+**C. NOT flagged by Book 1b's schema-v1 scan at all — enforced by the content-gate reviewers + my Phase-E
+static audit (grep/AST), NOT ci-local:** `ord`/`chr` (bare calls, no detector); **comprehensions**
+(`[… for …]` / set / dict / generator — `add_feature` no-ops against the 62-concept catalog); **tuple/multiple
+assignment**. The stricter source policy is Book-2-only (source_policy.py). So these MUST be caught by review
+and the Phase-E audit — do NOT rely on the scanner.
+
+**Positive rules:** built-ins available = `len`, `min`, `max`, `sum`, `sorted` (+ the already-taught `abs`/
+`round`), nothing else (BUILTINS, concept_scan.py:63); `len` on strings (U09) and lists (U10), `min`/`max`/
+`sum`/`sorted` on lists (U10). Caesar shifts via an **alphabet string** + `linear-search` + `%` (mod) +
+`string-index` — never `ord`/`chr`. `transform-each`/`filter-into-list` are explicit `append` loops, never
+comprehensions. **NO list slices in U10** (they scan as `string-slice`, which U10 does not introduce).
+NO dicts (U11)/files (U12)/classes (U13).
 - Function form: solutions define the function + assert **several distinct input cases**; ≥3 non-vacuous
   assert cells per `solutions.ipynb`; no `input()` in graded/solution cells; unique cell ids; student
   notebooks solution-free with NO executed outputs.
@@ -71,23 +97,38 @@ no unit lists its own introductions in `practices`.
   first/last initial, a substring.
 - **L2 — Clean and test (`string-methods`, `in-operator`).** The taught methods `upper`/`lower`/`strip`/
   `replace` (case-fold before comparing; trim input; swap a substring); `"a" in word` membership. A
-  **palindrome** check (compare a cleaned string to its reverse-by-slice or index-walk) and a **vowel count**
-  (`count-by-condition` with `ch in "aeiou"`).
-- **L3 — Transform and search (`transform-each`, `linear-search`).** Build a NEW string character by
-  character in a loop (`transform-each` via `+`/accumulator) — a **Caesar cipher** using an alphabet string:
-  find each letter's position with a `linear-search` loop, shift by `(pos + k) % 26`, index back into the
-  alphabet. A `linear-search` that returns the first index of a target (or -1). A **char-frequency** count.
-60-min cut per lesson in teacher-notes (Caesar is the natural L3 cut casualty → stretch).
+  **palindrome** check by **index-walk** (`for i in range(len(s) // 2): if s[i] != s[len(s)-1-i]: return False`)
+  — uses only `string-index` + `for`/`range` + `len`; do NOT teach `s[::-1]` (step slices are never
+  introduced; if shown at all, only as an aside after the loop). A **vowel count** (`count-by-condition` with
+  `ch in "aeiou"`).
+- **L3 — Transform and search (`transform-each`, `linear-search`).** CORE (independent of Caesar, so the cut
+  never leaves these concepts unpractised): a simple **`transform-each`** that builds a NEW string char by
+  char in a loop (`remove_vowels`/`double_letters`/`censor` via `+`/`string-concat` accumulator), and a CORE
+  **`linear-search`** `position(text, ch)` (return `i` inside the loop, `-1` after). Then **char frequency**
+  as `count_char(text, ch)` (count-by-condition) plus a printed alphabet-scan table (a 26×n nested loop —
+  NOT a frequency map; a map needs dicts, U11). "Most common letter" is `find-extreme` (U10) — keep it out of
+  U09 core (offer as a stretch, tagging `find-extreme` in practices via fastforward, or defer to U10).
+  **Stretch — Caesar cipher**, written HELPER-FIRST composing the core pieces: `position(alphabet, ch)`
+  (linear-search) then `shift(message, k)` = `message.lower()`, for each char shift a letter by
+  `(pos + k) % 26` and index back into the alphabet, passing non-letters through unchanged (the `-1` branch);
+  `k >= 0`. (The one-nested-loop-with-inline-mod version is too hard — that is why Caesar is stretch, not core.)
+60-min cut per lesson in teacher-notes (Caesar is the L3 cut casualty → already stretch).
 
 ### U10 Lists (3 lessons, problem-first, function form)
 - **L1 — Build and read (`list-literal`, `list-index`, `list-append`, `list-loop`).** `[3, 1, 2]`; `nums[0]`;
-  `nums.append(x)`; `for x in nums`. Build a list with `append` in a loop; `len(nums)`; `sum(nums)`.
-- **L2 — Order and choose (`list-sort`, `find-extreme`).** `nums.sort()` (in place) vs `sorted(nums)` (new
-  list); `min`/`max` builtins vs a hand-written **find-extreme** loop (track the best so far); why the loop
-  generalizes (find the longest word, the highest score).
+  `nums.append(x)`. Teach BOTH loop forms: `for x in nums` (value) AND `for i in range(len(nums))` (index —
+  needed for argmax and "compare with the previous item"). Build a list with `append` in a loop; `len(nums)`;
+  `sum(nums)`.
+- **L2 — Order and choose (`list-sort`, `find-extreme`).** `nums.sort()` (in place, returns `None`) vs
+  `sorted(nums)` (new list) — pin the **`scores = nums.sort()` → `None` trap** (the U10 twin of U07's
+  print-vs-return). `min`/`max` builtins vs a hand-written **find-extreme** loop: seed `best = nums[0]`
+  (NOT `0` — negative-value trap), assume "the list has at least one item" (state it in every extreme/average
+  spec). The loop earns its keep via **argmax** — the position of the max, or the longest word — since
+  `max(words, key=len)` is untaught, so "longest word" is unsolvable without the index loop.
 - **L3 — Filter and combine (`filter-into-list`).** Build a new list of the items that pass a test
   (`filter-into-list` via `append` inside an `if` in a loop — NOT a comprehension); **prefix sums** (a running
-  total appended each step). Put it together (e.g. keep the above-average scores).
+  total appended each step — `running-total` from U04). Put it together (e.g. keep the above-average scores,
+  using `sum`/`len` for the average → `float-type`).
 60-min cut per lesson in teacher-notes.
 
 ## Value plan
@@ -102,8 +143,12 @@ list the (function, sample inputs) inventory in each unit's teacher-notes so the
 ### Phase D — solutions (SEPARATE fresh Codex): U09/U10 solutions.ipynb (function form: define + assert several distinct cases; ≥3 assert cells; NO forbidden methods/builtins). Verify `exec-solutions`.
 ### Phase E — teacher-notes (inline, both) + verification: full `TMPDIR=/dev/shm bash scripts/ci-local.sh`
 ALL GREEN (registry/lint, unit tests, notebook exec+hygiene, manifest/prereq/coverage/stretch, concept-scan,
-PDF, pre-merge-guard). Static audit: no string/list methods outside the taught subsets; no `ord`/`chr`; no
-comprehensions; no tuple assignment. Scope allowlist = this plan + the U09/U10 trees + coverage-map + syllabus.
+PDF, pre-merge-guard). **Static AST/grep audit (the real enforcement for the tier-C forms ci-local does NOT
+catch in Book 1b):** no `.method` outside `{upper,lower,strip,replace,append,sort}`; no builtins outside
+`{len,min,max,sum,sorted,abs,round,print,int,float,str,range}`; no `ord`/`chr`; no comprehensions
+(`ListComp`/`SetComp`/`DictComp`/`GeneratorExp`); no tuple/multiple assignment; no step slices (`s[::…]`);
+no list slices in U10; Caesar uses the alphabet+linear-search+`%` form (no `ord`/`chr`). Scope allowlist =
+this plan + the U09/U10 trees + coverage-map + syllabus.
 
 ## Out of scope
 - U11–U13, cp04/cp05, Algorithm Challenge — plans 076+. No tooling/stub changes; no governance/Book-1/2 changes.
@@ -118,7 +163,32 @@ self-practice; 39→52 introduced-once, no duplicate introductions. Named verifi
 units. Risk areas pinned in Phase C: string methods = upper/lower/strip/replace only; list methods =
 append/sort only; builtins len/min/max/sum/sorted; NO ord/chr (Caesar via alphabet + linear-search + mod);
 NO comprehensions (build lists with append loops); function form.
-_(Awaiting [sol]/[glm]/[fable].)_
+
+**[fable] APPROVE WITH NITS; [glm] APPROVE WITH NITS; [sol] REJECT.** All agree the contract closes (39→52,
+no dupes/self-practice) and the domains are achievable; the REJECT is on my inaccurate CI-enforcement claims.
+Folded:
+- `[FIXED]` ([sol]/[glm]) rewrote §Tooling pins into three enforcement tiers: **A** CI-enforced by
+  concept-scan (methods subsets; slice/method/in-operator/list-literal/append/sort detection; a list slice
+  scans as `string-slice`); **B** MANUAL_ONLY (`string-index`/`list-index`/`list-loop` + the four technique
+  concepts — declared/reviewer-verified, not detected); **C** NOT scanner-flagged in Book 1b (`ord`/`chr`,
+  comprehensions, tuple assignment) → enforced by reviewers + my Phase-E static audit. Fixed citations
+  (`STRING_METHODS`:62, `BUILTINS`:63). Pinned "no list slices in U10".
+- `[FIXED]` ([sol]/[glm]) Phase-E static audit strengthened to grep/AST for the tier-C forms (the real
+  enforcement) + methods/builtins outside the taught sets + step slices + U10 list slices.
+- `[FIXED]` ([fable]1-2) U09 L3 gains CORE `transform-each` (`remove_vowels`/`double`/`censor`) + CORE
+  `linear-search` (`position`) independent of Caesar; Caesar is stretch, helper-first (`position`+`shift`,
+  lowercase, k≥0, non-letters pass through).
+- `[FIXED]` ([fable]3) palindrome via index-walk, not `s[::-1]`.
+- `[FIXED]` ([fable]4/[glm]) char frequency = `count_char(text, ch)` + a printed alphabet-scan table (no
+  frequency map/dict); "most common letter" kept out of U09 core (find-extreme is U10).
+- `[FIXED]` ([fable]5) U10 find-extreme: `best = nums[0]`, "≥1 item", argmax variant, `sort()`→`None` trap.
+- `[FIXED]` ([fable]6) U10 L1 teaches both loop forms.
+- `[FIXED]` ([fable]7) §6 record now names a site for every practice tag.
+
+### Round 2 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
+**[self] APPROVE** — tooling claims corrected to their true enforcement tiers; Phase-E audit is now the
+explicit enforcement for the forms ci-local misses; all pedagogy pins folded.
+_(Awaiting [sol]/[glm]/[fable] round-2 verdicts.)_
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
