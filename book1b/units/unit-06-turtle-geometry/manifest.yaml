@@ -1,0 +1,10 @@
+id: unit-06-turtle-geometry
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [import-statement, turtle-basics, turtle-drawing]
+  requires: [for-loop, range-function, arithmetic, variable]
+  practices: [nested-loops, loop-counter, accumulator, int-type, float-type, comment, naming,
+              run-program, error-messages]

@@ -64,3 +64,11 @@ entries:
   practices: [print, variable, while-loop, break-statement, loop-counter, accumulator, running-total,
               count-by-condition, sentinel-loop, for-loop, range-function, nested-loops, if-statement,
               elif-else, comparison, boolean, arithmetic, int-type, f-string, string-literal, string-concat]
+- id: unit-06-turtle-geometry
+  kind: unit
+  title: "Turtle Geometry — drawing with loops and angles"
+  lessons: 3
+  introduces: [import-statement, turtle-basics, turtle-drawing]
+  requires: [for-loop, range-function, arithmetic, variable]
+  practices: [nested-loops, loop-counter, accumulator, int-type, float-type, comment, naming,
+              run-program, error-messages]
