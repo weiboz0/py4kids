@@ -28,7 +28,7 @@ A unit cannot practice its OWN introductions, so U06's three intros (`import-sta
 walk) per design §3 — deferred, not claimed here. U06 ADDS practice sites for earlier intros:
 `nested-loops` (rings/spirals), `loop-counter` (side/shape counters), `accumulator` (growing spiral
 `side = side + step`), `float-type` (the polygon angle `360 / n`, e.g. `360 / 7 = 51.428…`),
-`int-type` (integer `total_turn`, side/shape/pen-down counts in the headless companions),
+`int-type` (integer side/shape/pen-down counts and integer `n`/`side` in the headless companions),
 `error-messages` (the wrong-directory `can't open file` and the missing-`turtle.`-prefix `NameError`,
 read as callbacks), `comment`/`naming` (the asset-script convention), `run-program` (the terminal run —
 this unit's core activity). Every practiced concept is introduced ≤ U06 (float-type/int-type U02,
@@ -59,14 +59,15 @@ asset the student runs in the terminal, so a turtle import in an exercise notebo
   headings, ≥8 exercises, core ≤7, ≥2 `stretch` Challenge. Code cells (if any) are HEADLESS (no `import turtle`).
 - **solutions.ipynb** — mirrors every `## Exercise N`. Per exercise: a **markdown fenced block** "The real
   program (`assets/solutions_*.py`)" showing the turtle code, AND a **headless companion code cell** that
-  computes the math (`angle = 360 / n`, `total_turn = n * angle` — asserted `== 360.0` for closed shapes,
-  side/shape/pen-down counts as ints, ends-at-start bool) with **asserts** (≥3 non-vacuous assert cells
+  computes the math (`angle = 360 / n`; `total_turn = n * angle` is a FLOAT, so assert closure with a
+  tolerance — `abs(total_turn - 360) < 1e-6` — NOT `== 360.0`, which is unreliable across n; side/shape/
+  pen-down counts as ints, ends-at-start bool) with **asserts** (≥3 non-vacuous assert cells
   notebook-wide; NO `import turtle`). This is where "angles as
   math" is written down and blind-solved by the gate roster; turtle-drawing correctness is verified by
   `turtle-check` on the `.py`.
 - **teacher-notes.md** — Goals / Pacing (per-lesson 60-MIN CUTs) / Common mistakes / Discussion prompts /
   Differentiation. (Asset presence is enforced by `structure-check`: `layout_findings` requires an `assets/`
-  dir when `turtle-basics` appears (notebooks.py:348-356), and `_assets_reference_findings` requires every
+  dir when `turtle-basics` appears (notebooks.py:348-357), and `_assets_reference_findings` requires every
   referenced `assets/*.py` to exist and compile (notebooks.py:367-392) — NOT `manifest-check`.)
 - **manifest.yaml** — matches the coverage-map entry.
 
@@ -152,9 +153,10 @@ Each lesson rung / exercise / Challenge uses a DISTINCT `(n, side, color)` and i
 ### Phase E — teacher-notes (inline) + verification: full `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN
 across the three books (esp. `turtle-check`, `structure-check` incl. the GUI-import + ≥3-assert rules,
 `exec-lessons` skipping no-exec turtle cells, `stretch-check`, layout/asset presence, PDF). **AST/static audit:**
-every `assets/*.py` uses only the pinned method subset, ends with exactly one terminal `turtle.done()` (no
-`exitonclick()`), and either closes its path or carries `# turtle-check: open-path`. Scope allowlist = this
-plan + the U06 tree + coverage-map + syllabus.
+every `assets/*.py` uses only the pinned method subset, uses module-level style only (no `turtle.Turtle()`/
+`Screen()`), uses **`/` not `//` in any angle computation** (guards against silently reintroducing the
+rejected rule), ends with exactly one terminal `turtle.done()` (no `exitonclick()`), and either closes its
+path or carries `# turtle-check: open-path`. Scope allowlist = this plan + the U06 tree + coverage-map + syllabus.
 
 ## Out of scope
 - U07–U13, checkpoints, Algorithm Challenge — plans 074+. No tooling/stub extension, no governance/Book-1/2 changes.
@@ -228,7 +230,16 @@ leave students with a wrong general rule that U07's `draw_polygon` inherits.
   notebooks.py:631); asset-presence citation completed (`layout_findings` 348-356 + `_assets_reference_findings`
   367-392).
 
-_(Awaiting [sol]/[glm]/[fable] round-3 verdicts.)_
+### Round 3 (2026-09-23) — CONSENSUS. All four APPROVE / APPROVE WITH NITS, no blockers.
+- **[self] APPROVE** — the fold is a clean improvement: honest `360 / n` core rule, metadata backed by real content, no regression.
+- **[sol] APPROVE WITH NITS** — angle fold correct; metadata honest; format intact; requires-closure + Phase E explicit. NIT: `total_turn` is a float, so "integer total_turn"/`== 360.0` is inaccurate — use tolerance.
+- **[glm] APPROVE** — no nits; empirically swept n=3..9999 confirming `360 / n` closes ≪ 1e-6; all metadata honest (9 practices ≤ U06, 30→33 introduced-once, no self-practice); no format regression.
+- **[fable] APPROVE WITH NITS** — blocker + all r2 nits confirmed resolved. NITs: (1) same float `total_turn` wording; (2) add "no `//` in `assets/*.py` angle computation" to the Phase-E audit.
+
+**Round-3 nit fold (applied 2026-09-23):** §6 record `int-type` no longer rests on `total_turn` (now
+side/shape/pen-down counts + integer `n`/`side`); solutions.ipynb spec asserts closure with tolerance
+(`abs(total_turn - 360) < 1e-6`), not `== 360.0`; Phase-E audit adds "`/` not `//` in angle computation"
++ module-level-only; `layout_findings` citation 348-356→348-357 ([glm] immaterial note). **Gate PASSED.**
 
 ## Content Review
 
