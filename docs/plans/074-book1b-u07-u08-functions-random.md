@@ -254,4 +254,24 @@ question. [fable] note folded (Monte-Carlo estimate ≈ π, not exact).
 _(4-way content-review gate — filled before PR.)_
 
 ## Post-Execution Report
-_(Filled before shipping.)_
+
+**Status: implemented, ci-local ALL GREEN (2026-09-23). Content-review gate next.**
+
+- **Phase B (contracts):** 3 coverage-map entries (U07/U08/cp03) + 2 unit manifests + 1 checkpoint manifest +
+  3 syllabus rows; coverage-check/prereq-check GREEN; 33→39 introduced-once, no dupes, no forward requires.
+- **Phase C (statements + assets, Codex ×2):** U07 `lesson.ipynb` (Define & Call + print-vs-return TypeError
+  Notice; is_prime/gcd/fib[temp var]/sum_to_n + number builtins; Scope + draw_polygon) + `exercises.ipynb`
+  (9, function form, 2 stretch) + assets (l3_draw_polygon, ex7 starter). U08 `lesson.ipynb` (Chance/Simulate
+  & Estimate/Random Walk; seed(4); Monte-Carlo π grid ≈3.1 with the quarter-circle picture) + `exercises.ipynb`
+  (9) + assets (l3_random_walk [open-path], ex7 starter). cp03 `checkpoint.ipynb` (7 visible Questions,
+  function form, seed(4) in the random question statement, scope via define-and-return).
+- **Phase D (solutions, SEPARATE fresh Codex ×2):** U07/U08/cp03 `solutions.ipynb` (function form, define +
+  assert several distinct cases; NO `import turtle`; 33/38/24 non-vacuous asserts; `random.seed(4)` before
+  first random use, no `from random import`) + 2 turtle `solutions_*.py`.
+- **Phase E (teacher-notes inline + verification):** teacher-notes for U07/U08/cp03 (full heading sets; cp03
+  has `## Grading` with two named pass-bar items). `TMPDIR=/dev/shm bash scripts/ci-local.sh` → **ALL GREEN**
+  (registry/lint, unit tests, notebook exec + hygiene, manifest/prereq/coverage/stretch, concept-scan,
+  turtle-check, checkpoint questions, PDF, pre-merge-guard). Static audit clean: no `//`/`random.random`/
+  tuple-assignment/`len`/`sorted`; module-level turtle; seed 4; random walk open-path.
+
+No deviations from the approved plan.
