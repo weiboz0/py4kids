@@ -57,6 +57,7 @@ The **Algorithm Challenge** (a non-themed integrative problem set) closes the ye
 | `unit-04-loops-and-counting` | unit | 3 | Teach the computer to repeat and count — `while`, counters, accumulators, and stop-when-done. |
 | `unit-05-for-and-range` | unit | 3 | Count with `for`/`range` and stack loops for tables and triangles. |
 | `checkpoint-02-loops` | checkpoint | 0.5 | Prove `while`, `for`/`range`, and counting on a mixed loop problem set. |
+| `unit-06-turtle-geometry` | unit | 3 | Draw with code — `import turtle`, movement, and polygons as angles (`360 / n`) with loops. |
 
 ## Rules this syllabus is bound by
 
