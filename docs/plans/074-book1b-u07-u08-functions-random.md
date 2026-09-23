@@ -281,7 +281,14 @@ assert). Dispositions (folded):
   exec-solutions ALL GREEN); the "missing checkpoint lesson.ipynb" is a review-scope artifact (checkpoints
   ship `checkpoint.ipynb`, structure-check passes).
 
-_(Round-2 re-review after the fold.)_
+### Round 2 (2026-09-23) — CONSENSUS. [self] APPROVE; [sol] APPROVE; [glm] APPROVE WITH NITS; [fable] APPROVE.
+All round-1 Must/Should findings verified resolved (blind re-solves match; all tooling PASS). No `[OPEN]`
+items. Two residual non-blocking cosmetic nits folded for polish: cp03 Q5 worked-call block now quotes all
+four returns (`"Silver"`/`"Bronze"`/`"Keep practicing"`, not just `"Gold"`); the U07 L3 scope demo cell
+reframed so `draw_polygon` is clearly defined in context (the `.py`), leaving only the intended
+`print(angle)` → `NameError` — ci-local ALL GREEN after both.
+
+**Content-review gate PASSED (4-way consensus).** Proceeding to PR.
 
 ## Post-Execution Report
 
