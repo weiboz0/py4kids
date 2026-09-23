@@ -277,7 +277,18 @@ motivated ([fable]#6); Ex4 now asks the student to state the angle before runnin
 `[self]` (verification, [sol]#5): the native `exec-solutions` DID pass in the main env (full ci-local ALL
 GREEN); [sol]'s sandbox couldn't run `uv`, so this is a sandbox limitation, not a content defect.
 
-_(Round-2 re-review after the fold below.)_
+### Round 2 (2026-09-23) — CONSENSUS. [self] APPROVE; [glm] APPROVE; [fable] APPROVE; [sol] APPROVE WITH NITS.
+All four blind re-solved the changed exercises (Ex5 octagon, Ex9 eleven-sided) with zero mismatches; the
+value-distinctness blocker is RESOLVED (core n now 4/3/5/7/8/6, distinct); provenance WONTFIX confirmed
+acceptable (all three externals verified `notebooks.py:38/426/445` mandate `provenance: original`). No `[OPEN]`
+Must/Should findings remain. Nits folded:
+- `[FIXED]` ([sol]/[glm]/[fable]) Ex5 starter renamed `ex5_travel_square.py` → `ex5_travel_octagon.py`
+  (references updated; structure-check PASS).
+- `[FIXED]` ([fable]) Ex9 starter comment "explain its 8-degree gap" → "the shortcut's 8-degree gap".
+- `[WONTFIX]` colour/color spelling drift (cosmetic; Python identifiers unaffected) and the optional Ex9
+  fast-finisher enrichment ([fable], out of the approved scope).
+
+**Content-review gate PASSED (4-way consensus).** Proceeding to PR.
 
 ## Post-Execution Report
 
