@@ -48,6 +48,12 @@ comprehensions; only `append`/`sort` list methods are used.
 - Modifying `nums` while looping over it, or expecting `sorted(nums)` to change `nums` (it does not).
 - Reaching for an untaught method (`insert`/`remove`/`pop`/`index`/`count`) or a comprehension — build with
   `append` in a loop.
+- **Silent wraparound in round-to-round changes:** writing `for i in range(len(scores))` instead of
+  `range(1, len(scores))` makes `scores[i] - scores[i-1]` compute `scores[0] - scores[-1]` on the first pass
+  — no error, just a wrong extra value, because `-1` wraps to the last item (exactly the negative index U09
+  taught). Start the range at 1.
+- Using `//` for an average (`sum(nums) // len(nums)`) drops the fraction — use `/` for the true average in
+  "above the average".
 
 ## Discussion prompts
 

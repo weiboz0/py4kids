@@ -194,7 +194,32 @@ Phase-C authoring notes ([fable] r2): if the "most common letter" stretch is wri
 tags are reviewer-verified, not CI-detected).
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+### Round 1 (2026-09-23) — [self] APPROVE; [glm] APPROVE WITH NITS; [fable] APPROVE WITH NITS; [sol] REJECT.
+Blind solves matched ([fable] 14/14, [glm] 18/18); all tooling PASS; reviewers confirmed NO tier-C forms
+(ord/chr/comprehensions/tuple-assignment/step-slices/list-slices) and only the taught method/builtin subsets.
+One REJECT ([sol]) on two P2 metadata items. Dispositions (folded):
+- `[FIXED]` ([fable] Should Fix) U09 lesson now teaches `for ch in text` (string iteration — the first
+  non-`range` for-loop in Book 1b) before its first use, with the value-vs-index contrast; and explains
+  method chaining (`strip().lower()`).
+- `[FIXED]` ([fable]/[glm]) U10 solutions Ex1 returns `[scores[0], len(scores), sum(scores)]` directly (was a
+  loop over a list literal).
+- `[FIXED]` ([fable]/[glm]) U10 lesson adds a sentence that `in` tests whole-item list membership (vs U09's
+  substring/char membership).
+- `[FIXED]` ([glm]) U10 Ex9 worked input changed (was `["green","blue","gold"]`, 2/3 shared with the lesson).
+- `[FIXED]` ([fable] Should Fix) U10 teacher-notes gain the silent-wraparound trap (`range(len)` vs
+  `range(1,len)` → `scores[-1]` wraps) and the `//`-average trap.
+- `[FIXED]` ([sol]1/[fable]6b) U09 Differentiation no longer previews `find-extreme` ("most common vowel");
+  reworded to within-U09 extensions (case-insensitive / ignore punctuation) — keeps U09 self-contained, so
+  `find-extreme` stays out of U09 practices.
+- `[FIXED]` ([sol]2/[glm]) U09 value-plan Ex7/Ex9 now enumerate concrete inputs
+  (`count_char("pepper","z")`, `print_alphabet_scan("Bee")`; `position(…,"q")`, `shift("Code 9!",2)` etc.).
+- `[FIXED]` ([fable]6) U09 teacher-notes drift (Pacing L3 → `double_letters`; "letter→count map needs a
+  dictionary"); ([fable]7) Caesar foregrounded in the U09 hook.
+- `[WONTFIX]` ([sol]3) native-exec sandbox limitation — my ci-local ran `exec-solutions` natively ALL GREEN
+  (same precedent as prior plans).
+
+_(Round-2 re-review after the fold.)_
 
 ## Post-Execution Report
 

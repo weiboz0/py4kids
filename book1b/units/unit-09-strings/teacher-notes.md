@@ -21,9 +21,10 @@ Budget: three lessons of 60–90 minutes.
   index-walk** (`for i in range(len(s)//2): if s[i] != s[len(s)-1-i]: return False`) — NOT `s[::-1]` (step
   slices are never taught). Vowel count by condition. A classify-the-character function (`elif` ladder).
 - **Lesson 3 — Transform and Search (`transform-each`, `linear-search`).** Build a new string with `+` in a
-  loop (`mask the vowels`, `alternating case`); a `linear-search` `position(text, ch)` returning the first
-  index or -1; a char-frequency report as `count_char(text, ch)` plus a printed alphabet scan (a table needs
-  a dictionary — Unit 11 — so we print instead of storing).
+  loop (the lesson's `double_letters`; masking and alternating case are the exercises); a `linear-search`
+  `position(text, ch)` returning the first index or -1; a char-frequency report as `count_char(text, ch)`
+  plus a printed alphabet scan (a letter→count MAP needs a dictionary — Unit 11 — so we print each count
+  instead of storing them).
 
 **60-minute cut:** Lesson 3's Caesar shift is the cut casualty (already a Challenge); keep the core
 `transform-each` and `linear-search`.
@@ -59,9 +60,10 @@ not taught).
 
 - Strugglers: Core 1–4 (index/slice, methods, palindrome, classify); give the loop header and have them fill
   the body.
-- Fast finishers: the two Challenges (alternating case, Caesar), then extend `count_char` into a "which
-  vowel is most common" (a `find-extreme`, previews Unit 10).
-- Middle tier: rewrite the palindrome to also ignore spaces (a `replace(" ", "")` before the walk).
+- Fast finishers: the two Challenges (alternating case, Caesar), then extend `count_char` to be
+  case-insensitive (`text.lower()` first) or to ignore a chosen punctuation mark via `replace`.
+- Middle tier: extend the palindrome to also ignore punctuation (`replace("!", "")`/`replace(",", "")`
+  before the walk), or count vowels per word rather than per string.
 
 ## Value plan (sample inputs)
 
@@ -73,6 +75,7 @@ several distinct cases per function.
 - Ex4 `classify_char`: `"U"`, `"m"`, `"7"`.
 - Ex5 `mask_vowels`: `"Rocket"`, `"SKY"`, `"A-OK!"`.
 - Ex6 `position`: `("banana","n")`, `("cocoa","o")`, `("planet","x")` (absent → -1).
-- Ex7 `count_char`: `("pepper","p")` and further cases in the solution.
+- Ex7 `count_char`: `("pepper","p")`→3, `("pepper","z")`→0; `print_alphabet_scan("Bee")` prints the scan.
 - Ex8 (stretch) `alternating_case`: `"python"`, `"moon base"`, `"A1b2!"`.
-- Ex9 (stretch) Caesar `shift`: several `(message, k)` pairs with wraparound and non-letters, seeded by spec.
+- Ex9 (stretch) `position("abcdefghijklmnopqrstuvwxyz","q")`→16; Caesar `shift`: `("Code 9!",2)`→`"eqfg 9!"`,
+  `("XYZ",3)`→`"abc"` (wraparound), `("stay",0)`→`"stay"`.
