@@ -1,0 +1,12 @@
+id: unit-11-dictionaries
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [dict-literal, dict-access, dict-loop]
+  requires: [def-function, parameters, return-value, for-loop, list-loop, in-operator, if-statement,
+             elif-else, comparison, boolean, arithmetic, variable, print]
+  practices: [list-literal, list-append, list-sort, filter-into-list, string-index, string-methods,
+              count-by-condition, accumulator, builtin-functions, find-extreme, int-type, f-string,
+              comment, naming]

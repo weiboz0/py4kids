@@ -1,0 +1,14 @@
+id: checkpoint-04-dictionaries
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+concepts:
+  introduces: []
+  requires: [print, variable, def-function, parameters, return-value, dict-literal, dict-access, dict-loop,
+             in-operator, for-loop, list-loop, list-literal, if-statement, elif-else, comparison, boolean,
+             arithmetic, builtin-functions, f-string, string-literal, type-conversion]
+  practices: [print, variable, def-function, parameters, return-value, dict-literal, dict-access, dict-loop,
+              in-operator, for-loop, list-loop, list-literal, list-index, if-statement, elif-else, comparison,
+              boolean, arithmetic, count-by-condition, accumulator, builtin-functions, find-extreme, int-type,
+              f-string, string-literal, type-conversion]

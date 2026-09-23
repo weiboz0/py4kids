@@ -121,8 +121,9 @@ motivation for a labelled tally — BEFORE the first `{}` is explained.
 ### Checkpoint 04 (after U11, strict, no turtle, no fastforward)
 6–7 VISIBLE `## Question N`. Mix: build/read a lookup dict; a `d.get`-with-default question; a frequency-map
 tally; a loop-over-`items` sum or count; the most-common-key (`find-extreme` over items); an `elif`/lookup
-question; and one that combines a list with a dict (e.g. tally a list of words, reading `words[i]` by index so
-the question is a genuine `list-index` site — cp04 is the only pre-078 practice site for `list-index`). Strict — only concepts ≤ U11;
+question; and one that combines a list with a dict (tally a list of words with `for w in words`, and also read
+a word by POSITION — `words[0]`/`words[-1]`, or `words[n]` for a given `n` — a genuine `list-index` site with
+NO `range` loop; cp04 is the only pre-078 practice site for `list-index`). Strict — only concepts ≤ U11;
 NO `ord`/`chr`/comprehensions/tuple-assignment; dict methods ⊆ {items,keys,values,get}. teacher-notes has
 `## Grading` (two named pass-bar items: build-and-read-a-dict; tally-with-the-missing-key-idiom) + the full
 heading set + `## Discussion prompts`.
@@ -191,9 +192,9 @@ All three r1 blockers verified resolved by [sol]/[glm]. Remaining folds:
   `list-index` site (cp04 is its only pre-078 practice site).
 
 ### Round 3 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
-**[self] APPROVE** — the two accuracy/coverage nits folded; contract + ledger + tier claims now all match the
-tooling.
-_(Awaiting [sol]/[glm]/[fable] round-3 verdicts.)_
+**CONSENSUS — [self] APPROVE; [sol] APPROVE; [glm] APPROVE; [fable] APPROVE.** All blockers/nits resolved
+across 3 rounds ([fable]'s r3 range-in-list-index nit fixed by making the cp04 site positional). Contract +
+practice-coverage-debt ledger + tier claims all match the tooling. No open findings. **Plan-review gate PASSED.**
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
