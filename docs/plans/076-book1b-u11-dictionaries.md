@@ -18,9 +18,9 @@ No turtle. Book 1b stays `buildout: true`.
 **unit-11-dictionaries** — `kind: unit`, `title: "Dictionaries — key/value maps, lookups, and tallies"`, `lessons: 3`
 - introduces: `[dict-literal, dict-access, dict-loop]`
 - requires: `[def-function, parameters, return-value, for-loop, list-loop, in-operator, if-statement,
-  comparison, boolean, arithmetic, variable, print]`
-- practices: `[list-literal, list-append, string-methods, count-by-condition, accumulator, builtin-functions,
-  find-extreme, int-type, f-string, comment, naming]`
+  elif-else, comparison, boolean, arithmetic, variable, print]`
+- practices: `[list-literal, list-append, list-sort, filter-into-list, string-index, string-methods,
+  count-by-condition, accumulator, builtin-functions, find-extreme, int-type, f-string, comment, naming]`
 
 **checkpoint-04-dictionaries** — `kind: checkpoint`, `title: "Checkpoint 4 — Dictionaries & Collections"`, `lessons: 0.5`
 - introduces: `[]`
@@ -29,52 +29,92 @@ No turtle. Book 1b stays `buildout: true`.
   builtin-functions, f-string, string-literal, type-conversion]`
 - practices: `[print, variable, def-function, parameters, return-value, dict-literal, dict-access, dict-loop,
   in-operator, for-loop, list-loop, list-literal, list-index, if-statement, elif-else, comparison, boolean,
-  arithmetic, count-by-condition, accumulator, builtin-functions, int-type, f-string, string-literal,
-  type-conversion]`
+  arithmetic, count-by-condition, accumulator, builtin-functions, find-extreme, int-type, f-string,
+  string-literal, type-conversion]`
 
 Closure: U11 requires ⊆ U01–U10 (def/params/return U07, for-loop U05, list-loop U10, in-operator U09, if U03,
 comparison/boolean/arithmetic U02, variable/print U01). cp04 requires/practices ⊆ U01–U11 (checkpoints get NO
 fastforward — every concept a question uses is listed). No self-practice. After this plan: 52 → 55
 introduced-once (adds the 3 dict concepts; cp04 introduces none). 7 remain (files 3 / objects 4).
 
-### Design §6 practice-coverage record
-U11 practices earlier concepts at genuine sites: `list-literal`/`list-append` (group-by builds a list as each
-value), `string-methods` (`lower()` before keying), `count-by-condition`/`accumulator` (tallies/frequency
-maps), `builtin-functions` (`len`/`max`/`sorted` over keys/values), `find-extreme` (the most-common key via a
-loop over items), `int-type` (counts), `f-string`/`comment`/`naming`. cp04 anchors the U01–U11 foundational
-practices (Book-1 checkpoint style). No unit lists its own introductions in `practices`.
+### Design §6 practice-coverage record (ledger — the full-practice anchor activates when 078 leaves buildout)
+U11 practice sites (named): `string-index` (`word[0]` in group-by-first-letter), `list-literal`/`list-append`
+(group-by builds a list per key), `filter-into-list` (keys whose value passes a test → a list),
+`list-sort`/`builtin-functions` (a sorted leaderboard of scores; `len`/`max` over keys/values),
+`string-methods` (`lower()` before keying), `count-by-condition`/`accumulator` (tallies/frequency maps),
+`find-extreme` (most-common key via a loop over `items()`), `int-type` (counts), `f-string`/`comment`/`naming`.
+cp04 anchors the U01–U11 foundational practices (incl. `find-extreme` in its most-common-key question).
+No unit lists its own introductions in `practices`.
+
+**Deferred practice-coverage debt (the coverage anchor counts NON-capstone practices only, curriculum.py:462-473 —
+so these MUST be practiced in a unit/checkpoint before 078 leaves buildout):**
+| introduced concept | intro | landing practice site |
+|---|---|---|
+| `string-index` | U09 | **U11 (this plan)** — `word[0]` group-by |
+| `list-sort` | U10 | **U11 (this plan)** — sorted leaderboard |
+| `filter-into-list` | U10 | **U11 (this plan)** — keys→list filter |
+| `transform-each` | U09 | **U12 (plan 077)** — transform each line read from a file |
+| `linear-search` | U09 | **U12 (plan 077)** — find the first line matching in a file |
+| `string-slice` | U09 | **U13 (plan 077)** — slice a field/attribute string |
+Plan 077 MUST list these three in U12/U13 practices; plan 078 then verifies full coverage out of buildout.
 
 ## Tooling pins (enforcement tiers — same model as plan 075)
 
 - **CI-enforced (concept-scan):** dict methods = ONLY `items`/`keys`/`values`/`get` (DICT_METHODS,
-  concept_scan.py:64); any other `.name(...)` flagged untaught. `dict-literal`/`dict-access`/`dict-loop`
-  detected from `{}`/subscript-on-dict/`.items()` looping (reviewers confirm the concept is genuinely present;
-  some dict facets are declaration + reviewer-verified). Built-ins ⊆ {len,min,max,sum,sorted,abs,round};
-  list methods ⊆ {append,sort}; string methods ⊆ {upper,lower,strip,replace}.
+  concept_scan.py:64); any other `.name(...)` flagged untaught. Built-ins ⊆ {len,min,max,sum,sorted,abs,round}
+  and **no `key=` argument** on `max`/`min`/`sorted` (`sorted(key=)` is scanner-flagged; `max(d, key=d.get)`
+  is untaught and would defeat the `find-extreme` practice site); list methods ⊆ {append,sort}; string methods
+  ⊆ {upper,lower,strip,replace}.
+- **Detected vs MANUAL_ONLY (corrected per [sol]/[glm]):** `dict-literal` IS detected (`{}`, visit_Dict,
+  :296-298); `dict-loop` IS detected only via `.items`/`.keys`/`.values` (:404-405) — a plain `for k in d:`
+  emits no dict-loop; **`dict-access` is MANUAL_ONLY** (concept_scan.py:41 — a dict subscript emits no
+  concept, and `.get` adds none), credited by the manifest tag and reviewer-verified (like string-index/
+  list-index in plan 075).
 - **NOT scanner-flagged in Book 1b (enforced by reviewers + my Phase-E static AST/grep audit):** `ord`/`chr`,
-  comprehensions (incl. DICT comprehensions `{k: v for …}`), tuple/multiple assignment, step slices.
-  **Build dicts by assignment in a loop (`d[k] = …`), never a dict comprehension.**
-- **`d[key] += 1` is multiple-assignment-free but uses `+=`** — `+=` is the `accumulator` idiom taught from
-  U04 (allowed). Prefer the explicit `d[k] = d[k] + 1` if a reviewer flags `+=`; both are fine post-U04.
-  The **missing-key idiom** is `if k in d: d[k] = d[k] + 1` / `else: d[k] = 1` (or `d.get(k, 0)`), taught
-  explicitly — never `collections`/`defaultdict` (untaught modules).
-- **cp04 strict discipline** (no fastforward): join text with f-strings (list `string-literal` since
-  literal-bearing f-strings detect both); list `type-conversion` if `int()`/`str()` used; list `logical-ops`
-  only if a question uses `and`/`or` (else avoid them). No `ord`/`chr`/comprehensions/tuple-assignment.
+  comprehensions (incl. DICT comprehensions `{k: v for …}`), tuple/multiple ASSIGNMENT statements (`a, b = …`),
+  step slices, and `collections`/`defaultdict` (the untaught-method net misses a bare-Name call + a
+  `from collections import …`). **Build dicts by assignment in a loop (`d[k] = …`), never a dict comprehension.**
+  **EXEMPT:** `for key, value in d.items()` — the two-name for-target is NOT a banned assignment (the scanner
+  exempts it, :304-319; it is the taught `dict-loop` form). The Phase-E audit flags only `ast.Assign` with a
+  Tuple target, never `ast.For` targets.
+- **`+=`** is the `accumulator` idiom (U04, allowed); prefer explicit `d[k] = d[k] + 1`. The **missing-key
+  idiom** is taught PRIMARY as `if k in d: d[k] = d[k] + 1` / `else: d[k] = 1` (reuses `in-operator`+`else`),
+  with `d.get(k, 0) + 1` shown as the shortcut — never `collections`/`defaultdict`. Group-by uses ONLY the
+  explicit `if letter in groups: groups[letter].append(w)` / `else: groups[letter] = [w]` — never
+  `groups.get(letter, []).append(w)` (that returns `None`/drops the word).
+- **cp04 strict discipline** (no fastforward — checkpoint allowed set = requires∪practices): join text with
+  f-strings only (list `string-literal`, already listed), NO `+` string-concat; iterate collections directly
+  (`for x in items`/`for k in d`/`for k, v in d.items()`) — NO `range`, `sorted`, `.append`, string methods,
+  slices, or `while` (each would be a detected-but-unlisted concept: range-function/list-sort/list-append/
+  string-methods/string-slice/while-loop). Include `type-conversion` (listed) only for `int()`/`str()`. No
+  `and`/`or` (avoids `logical-ops`), no `ord`/`chr`/comprehensions/tuple-assignment. `find-extreme` (listed
+  in practices) backs the most-common-key question.
 - Function form: solutions define the function + assert several distinct cases; ≥3 non-vacuous assert cells;
   no `input()`; unique cell ids; student notebooks solution-free with NO executed outputs.
 
 ## Teaching outline
 
+**Problem-first opener** (design §6 engagement; like U10's "score board"): open L1 with a concrete payoff,
+e.g. "given this list of votes, which option won and by how many?" / "which word appears most often?" — the
+motivation for a labelled tally — BEFORE the first `{}` is explained.
+
 ### U11 Dictionaries (3 lessons, problem-first, function form)
 - **L1 — Key/Value Maps (`dict-literal`, `dict-access`).** A dict as a labelled lookup: `{"gold": 3, …}`;
-  read with `d[key]`; the **`KeyError` trap** for a missing key and the safe `d.get(key, default)`; add/update
-  with `d[key] = value`; `key in d` membership. A lookup table (e.g. Roman-numeral values, price list).
-- **L2 — Loop over a Dictionary (`dict-loop`).** `for key in d`, `for key, value in d.items()`; `d.keys()`/
-  `d.values()`; sum the values; find the key with the largest value (a `find-extreme` over `d.items()`).
-- **L3 — Build Maps from Data.** A **frequency map** / tally (count items with the missing-key idiom or
-  `d.get(k, 0) + 1`); a **group-by-first-letter** (each value is a LIST built with `append`). Put it together
-  (e.g. a word-length tally, a vote counter).
+  read with `d[key]`; `key in d` tests **keys, not values** (state this — top misconception); the
+  **`KeyError` trap** shown as a FENCED MARKDOWN traceback block (NOT an executed cell — no `try/except` is
+  taught, and lesson cells run in CI), immediately followed by the safe `d.get(key, default)` cell; add/update
+  with `d[key] = value`. A lookup table (e.g. Roman-numeral values, price list).
+- **L2 — Loop over a Dictionary (`dict-loop`).** `for key in d`; then **`for key, value in d.items()`
+  presented explicitly as "two loop names, one per pair"** (accept `for key in d: value = d[key]` as an
+  equivalent student form); `d.keys()`/`d.values()`; sum the values; find the key with the largest value (a
+  `find-extreme` over `d.items()`) — **spec a unique maximum or "if tied, the first key wins"** (a strict `>`
+  loop over items yields insertion-order first).
+- **L3 — Build Maps from Data.** A **frequency map** / tally: teach the missing-key idiom PRIMARY as
+  `if k in d: d[k] = d[k] + 1` / `else: d[k] = 1`, with `d.get(k, 0) + 1` as the shortcut. A
+  **group-by-first-letter** (`word[0]` → `string-index`; each value is a LIST built with the EXPLICIT
+  `if letter in groups: groups[letter].append(w)` / `else: groups[letter] = [w]` — never
+  `groups.get(letter, []).append(w)`, which returns `None`); lists keep words in input order. A sorted
+  leaderboard (`list-sort`) and a keys-passing-a-test filter (`filter-into-list`). Put it together.
 60-min cut per lesson in teacher-notes.
 
 ### Checkpoint 04 (after U11, strict, no turtle, no fastforward)
@@ -98,8 +138,12 @@ Distinct input cases per exercise/question, distinct from lesson examples and ea
 ### Phase E — teacher-notes (inline, both) + verification: full `TMPDIR=/dev/shm bash scripts/ci-local.sh`
 ALL GREEN (registry/lint, unit tests, notebook exec+hygiene, manifest/prereq/coverage/stretch, concept-scan,
 checkpoint questions, PDF, pre-merge-guard). Static AST/grep audit: dict/list/string methods within the
-taught subsets; builtins within the set; no `ord`/`chr`; no comprehensions (incl. dict comprehensions); no
-tuple/multiple assignment; no step slices. Scope allowlist = this plan + the U11/cp04 trees + coverage-map + syllabus.
+taught subsets; builtins within the set and NO `key=` arg; no `ord`/`chr`; no `collections`/`defaultdict`
+(bare-Name call OR `from collections import …` — the scanner misses these); no comprehensions (incl. dict
+comprehensions); no tuple/multiple ASSIGNMENT statements (`ast.Assign` with a Tuple target) — but the
+`for key, value in d.items()` for-target is EXEMPT (not flagged); no step slices; cp04 has no
+`range`/`sorted`/`.append`/string-methods/slices/`while`/`+`-concat. Scope allowlist = this plan + the
+U11/cp04 trees + coverage-map + syllabus.
 
 ## Out of scope
 - U12/U13, cp05, Algorithm Challenge — plans 077+. No tooling/stub changes; no governance/Book-1/2 changes.
@@ -115,7 +159,31 @@ dupes. Named verification phase (E) covers unit + checkpoint. Risks pinned: dict
 get}; build dicts by loop-assignment (no dict comprehensions); missing-key idiom (no defaultdict); cp04
 strict-scan closure (string-literal with f-string; type-conversion if int/str; logical-ops only if used);
 tier-C forms (ord/chr/comprehensions/tuple-assignment) enforced by reviewers + Phase-E audit.
-_(Awaiting [sol]/[glm]/[fable].)_
+
+**[fable] APPROVE WITH NITS; [sol] REJECT; [glm] REJECT.** All agree closure holds; the rejects are on
+metadata/tooling accuracy + the practice-coverage ledger. Folded:
+- `[FIXED]` ([sol]1/[glm]B1) cp04 declares `find-extreme` (its most-common-key question) — added to cp04 practices.
+- `[FIXED]` ([glm]B2 — the big catch) added the **Design §6 deferred-practice-debt table**: U11 now practices
+  `string-index`/`list-sort`/`filter-into-list` at named sites; `transform-each`/`linear-search`/`string-slice`
+  are assigned landing sites in U12/U13 (plan 077) — because the coverage anchor counts non-capstone practices
+  only (curriculum.py:462-473), these must be practiced before 078 leaves buildout.
+- `[FIXED]` ([glm]B3) `string-index` added to U11 practices (group-by `word[0]`).
+- `[FIXED]` ([sol]2/[glm]4) re-tiered dict detection: `dict-literal` detected (`{}`), `dict-loop` via
+  `.items`/`.keys`/`.values` only, **`dict-access` MANUAL_ONLY** (subscript/`.get` emit no concept).
+- `[FIXED]` ([sol]3/[glm]6) `for key, value in d.items()` explicitly EXEMPTED from the tuple-assignment ban
+  (scanner-exempt; the taught dict-loop form); Phase-E audit flags only `ast.Assign` tuple targets.
+- `[FIXED]` ([glm]7) `elif-else` added to U11 requires (missing-key idiom's `else`).
+- `[FIXED]` ([fable]N1) group-by uses the explicit `if letter in groups … else` form (no `get([]).append`
+  trap); missing-key idiom taught PRIMARY as `if k in d … else`, `get` as shortcut.
+- `[FIXED]` ([fable]N2) concrete problem-first opener pinned; ([fable]N3) `KeyError` as a fenced markdown
+  traceback (not executed) + "`key in d` tests keys, not values"; ([fable]N5) tie-breaking + group-by order specs.
+- `[FIXED]` ([glm]5/[fable]N4) cp04 discipline expanded (avoid range/sorted/append/string-methods/slices/
+  while/+concat; no `key=` on max/min/sorted); ([glm]6) Phase-E audit += `collections`/`defaultdict`.
+
+### Round 2 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
+**[self] APPROVE** — metadata/tier claims corrected; the practice-coverage debt is now an explicit ledger
+with landing sites; cp04 strict-scan discipline expanded; `for k,v in items()` exemption pinned.
+_(Awaiting [sol]/[glm]/[fable] round-2 verdicts.)_
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
