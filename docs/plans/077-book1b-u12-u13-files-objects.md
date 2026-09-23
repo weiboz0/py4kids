@@ -31,7 +31,7 @@ entry; plan 078 then verifies full coverage out of buildout.
 - requires: `[def-function, parameters, return-value, for-loop, list-append, string-methods, if-statement,
   comparison, arithmetic, type-conversion, variable, print]`
 - practices: `[transform-each, linear-search, list-literal, builtin-functions, running-total,
-  count-by-condition, find-extreme, accumulator, int-type, f-string, in-operator, comment, naming]`
+  count-by-condition, find-extreme, accumulator, int-type, f-string, comment, naming]`
 
 **unit-13-objects** — `kind: unit`, `title: "Objects — classes, __init__, attributes, and methods"`, `lessons: 3`
 - introduces: `[class-def, init-method, attributes, methods]`
@@ -44,11 +44,11 @@ entry; plan 078 then verifies full coverage out of buildout.
 - introduces: `[]`
 - requires: `[print, variable, def-function, parameters, return-value, file-read, file-write, with-statement,
   class-def, init-method, attributes, methods, for-loop, list-append, string-methods, type-conversion,
-  if-statement, elif-else, comparison, boolean, arithmetic, f-string, string-literal]`
+  if-statement, elif-else, comparison, boolean, arithmetic, int-type, float-type, f-string, string-literal]`
 - practices: `[print, variable, def-function, parameters, return-value, file-read, file-write, with-statement,
   class-def, init-method, attributes, methods, linear-search, string-slice, for-loop, list-append, list-literal,
   string-methods, type-conversion, if-statement, elif-else, comparison, boolean, arithmetic, count-by-condition,
-  accumulator, builtin-functions, int-type, f-string, string-literal]`
+  accumulator, builtin-functions, int-type, float-type, f-string, string-literal]`
   (**[sol] blocker:** cp05's outline assesses `linear-search` (search lines) and `string-slice` (slice an
   attribute) — `string-slice` is scanner-detected so it MUST be listed; `linear-search` is added for honesty.)
 
@@ -85,17 +85,20 @@ attributes/methods).
 - **FILE I/O SAFETY (clone Book 1 u09-save-point EXACTLY):** every file drill is SELF-CONTAINED — a setup cell
   (or the function itself) WRITES the file with known content before reading it, so `exec-solutions`/
   `exec-lessons` are idempotent and order-independent. **Scratch `.txt` files are NEVER committed — they are
-  runtime scratch, `.gitignore`d** (matching book1 `.gitignore:25-35`): add the U12/U13/cp05 scratch paths to
+  runtime scratch, `.gitignore`d** (matching the root `.gitignore:25-35`): add the U12/U13/cp05 scratch paths to
   `.gitignore` with a "never commit" comment. Use relative paths (CWD = content dir at exec, notebooks.py:1000)
   and a per-exercise filename (`ex3_scores.txt`, `q4_records.txt`, …) so lesson/exercise/solution runs don't
-  collide. Content is written in-cell (no opaque blobs, design §8): `with open(path, "w") as f: f.write(...)`
-  then `with open(path) as f: ...`. **Write lines with f-strings (`f.write(f"{x}\n")`), NEVER `str(x) + "\n"`**
+  collide. Content is written in-cell (no opaque blobs, design §8): `with open(path, "w") as f: f.write(...)`.
+  **Read sites use the explicit mode `with open(path, "r") as f: …`** so the scanner credits `file-read`
+  (bare `open(path)` emits only `with-statement`; `file-read` needs `.read*` or the `"r"` mode — [fable]N11).
+  **Write lines with f-strings (`f.write(f"{x}\n")`), NEVER `str(x) + "\n"`**
   (the Book-1 `+`-concat idiom would emit `string-concat`). There is no CI "untracked files" check → the
   Phase-E audit asserts manually that exec leaves the working tree clean (all scratch gitignored).
 - **cp05 strict avoid-list (no fastforward; every detected concept must be in requires∪practices):** write
   files with f-strings (no `string-concat`); search lines with `==`/`string-methods` (NO `in-operator`); NO
-  `break`, `and`/`or` (`logical-ops`), `range`, `sorted` (`list-sort`) — none are needed by the question mix,
-  and each is a detected-but-unlisted concept that would fail the checkpoint scan.
+  `break`, `and`/`or` (`logical-ops`), `range`, `sorted` (`list-sort`), `while` (`while-loop`) — none are needed
+  by the question mix, and each is a detected-but-unlisted concept that would fail the checkpoint scan.
+  (`float-type` and `int-type` ARE listed, so `**0.5`/float results are fine.)
 - Function form: solutions define the function/class + assert several distinct cases (round-trip save/load
   asserts for files; construct-then-check + attribute-after-call for objects); ≥3 non-vacuous assert cells;
   no `input()`; unique cell ids; student notebooks solution-free with NO executed outputs.
@@ -164,7 +167,7 @@ Distinct inputs per exercise/question, distinct from lesson examples and each ot
 
 ### Phase A — plan-review gate (4-way). No implementation until consensus.
 ### Phase B — contracts: 3 coverage-map entries + 2 unit manifests + 1 checkpoint manifest + 3 syllabus rows; `--book book1b coverage-check` + `prereq-check` GREEN.
-### Phase C — statements + assets (Codex): U12 + U13 lesson.ipynb + exercises.ipynb + cp05 checkpoint.ipynb + a `.gitignore` block adding the U12/U13/cp05 runtime scratch `.txt` paths (per-exercise filenames; "never commit", cloning book1 `.gitignore:25-35`). Per unit ≥8 exercises (core ≤7, ≥2 stretch); cp05 7 visible `## Question N`. Pin: function form; files written in-cell with f-string lines (self-contained setup, NEVER `str(x)+"\n"`); file methods ⊆ {read,readlines,readline,write,close}; classes limited to `class`+`__init__`+methods+`self.attr` (NO inheritance/dunders-beyond-`__init__`/decorators, distance via `**0.5`, module-level `load_*` returns a new object); no ord/chr/collections/comprehensions/tuple-assignment; cp05 avoid-list (no in-operator/break/and-or/range/sorted).
+### Phase C — statements + assets (Codex): U12 + U13 lesson.ipynb + exercises.ipynb + cp05 checkpoint.ipynb + a `.gitignore` block adding the U12/U13/cp05 runtime scratch `.txt` paths (per-exercise filenames; "never commit", cloning the root `.gitignore:25-35`). Per unit ≥8 exercises (core ≤7, ≥2 stretch); cp05 7 visible `## Question N`. Pin: function form; files written in-cell with f-string lines (self-contained setup, NEVER `str(x)+"\n"`); file methods ⊆ {read,readlines,readline,write,close}; classes limited to `class`+`__init__`+methods+`self.attr` (NO inheritance/dunders-beyond-`__init__`/decorators, distance via `**0.5`, module-level `load_*` returns a new object); no ord/chr/collections/comprehensions/tuple-assignment; cp05 avoid-list (no in-operator/break/and-or/range/sorted).
 ### Phase D — solutions (SEPARATE fresh Codex): U12 + U13 + cp05 solutions.ipynb (function/class form; round-trip file asserts; ≥3 assert cells; no forbidden forms). Verify `exec-solutions`.
 ### Phase E — teacher-notes (inline, all three) + verification: full `TMPDIR=/dev/shm bash scripts/ci-local.sh`
 ALL GREEN (registry/lint, unit tests, notebook exec+hygiene incl. no stray untracked files, manifest/prereq/
@@ -222,11 +225,18 @@ practice-coverage (the 078 anchor's unpracticed set = ∅). Folded:
 - `[WONTFIX/record]` ([fable]N7 vs [glm]3) file concepts stay in U13 `practices` (design §3 frames U13's file
   I/O as REUSE; closure holds; cp05 also practices them) — NOT moved to requires.
 
-### Round 2 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
-**[self] APPROVE** — cp05 lists linear-search+string-slice; fixtures gitignored (not committed) per the
-verified house convention; class/distance/slice/loader/`with`/`self` pins corrected; cp05 avoid-list closes
-its strict scan.
-_(Awaiting [sol]/[glm]/[fable] round-2 verdicts.)_
+### Round 2 (2026-09-23) — CONSENSUS. [self] APPROVE; [sol] APPROVE; [glm] APPROVE WITH NITS; [fable] APPROVE WITH NITS.
+[sol]'s r1 blocker resolved; both externals independently re-verified the anchor (unpracticed = ∅) and the
+gitignore reversal. No blockers. The remaining nits are Phase-C pins, all folded (both reviewers said
+consensus-ready, no re-dispatch needed):
+- `[FIXED]` ([fable]N10/[glm]N2) `float-type` added to cp05 requires+practices (float literals emit float-type,
+  concept_scan.py:288) so `**0.5`/float results don't fail the strict scan; `while-loop` added to the cp05
+  avoid-list.
+- `[FIXED]` ([fable]N11) read sites pinned to `open(path, "r")` so `file-read` is scanner-credited.
+- `[FIXED]` ([fable]N12) dropped the hollow `in-operator` from U12 practices (the search uses `==`).
+- `[FIXED]` ([glm]N1) wording → "root `.gitignore:25-35`".
+
+**Plan-review gate PASSED (4-way consensus).**
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
