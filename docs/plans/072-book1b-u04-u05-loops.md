@@ -211,7 +211,26 @@ no `input()` and no `+=` in any code cell; U04 has no `for`/`range` (while-only)
 True`+break) with `steps` as the printed summary, string-accumulation rows (no `end=`/`sep=`), primality
 flag with n ≥ 2, nested-classify (`conditional-nesting`). Openings are problems. No open [self] findings.
 
-_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable].)_
+### Round 1 verdicts (2026-09-22) — [fable] APPROVE WITH NITS; [glm] APPROVE WITH NITS; [sol] REJECT.
+All three blind-solved 29/29 exact; all CI checks pass. Findings FOLDED (commit 61e3acb):
+- `[FIXED]` **[sol] major** U04 Ex2 (Repair) solution asserted only final state, not the printed lines →
+  now captures + asserts the output (house loop-output form).
+- `[FIXED]` **[glm]** value duplication — exercises reused lesson rungs' values → varied given values +
+  recomputed outputs + solutions (U04 E3/E6/E7/E8/E9/E11; U05 E3/E4/E5/E6/E8).
+- `[FIXED]` **[sol] major** cp02 teacher-notes grading vs differentiation contradiction (Q5 required but
+  struggler path excluded it) → struggler pass bar now Q1–Q3 + Q5.
+- `[FIXED]` teacher-notes accuracy: cp02 `row_text`/`range`/float-`.0`; U04 60-min-cut specified; U04 L3
+  "steps counts not controls" + digit-peel is Lesson 2; U04 Ex6 "positive"; U05 FizzBuzz Notice reworded.
+- `[WONTFIX]` **[fable]** cp02 Q4 `while True/break` shape core-practiced: it is taught in the U04 lesson
+  (non-stretch) + the Final build and `break` is practiced non-stretch in U05 Ex5, so the checkpoint
+  assesses taught material; "core never depends on stretch" governs a unit's exercises, not the checkpoint.
+- `[WONTFIX]` ladder-label drift (Minimal/One-twist/Realistic): optional past U03; the ladders exist unlabeled.
+
+### Content-review round 1 outcome: 2 APPROVE-WITH-NITS + 1 REJECT; all findings folded. Full ci-local
+ALL GREEN after the fold. Re-review round 2 dispatched.
+
+### Round 2 (2026-09-22) — after folding all round-1 content findings.
+_(Awaiting [sol] / [glm] (volcengine-plan/glm-5.3) / [fable] on the revised commit.)_
 
 ## Post-Execution Report
 
