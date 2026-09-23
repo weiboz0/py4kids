@@ -61,6 +61,8 @@ The **Algorithm Challenge** (a non-themed integrative problem set) closes the ye
 | `unit-07-functions` | unit | 3 | Package logic into functions — `def`, parameters, `return`, scope, and Python's built-in tools. |
 | `unit-08-randomness` | unit | 3 | Roll dice and simulate — the `random` module, seeding, and Monte-Carlo estimates. |
 | `checkpoint-03-functions-and-randomness` | checkpoint | 0.5 | Prove functions and randomness on a mixed problem set. |
+| `unit-09-strings` | unit | 3 | Work with text — indexing, slicing, the core string methods, membership, transforming, and searching. |
+| `unit-10-lists` | unit | 3 | Collect and process data — build, index, loop, sort, find the best, and filter lists. |
 
 ## Rules this syllabus is bound by
 

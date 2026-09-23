@@ -101,3 +101,21 @@ entries:
               import-statement, type-conversion, for-loop, range-function, while-loop, loop-counter, accumulator,
               running-total, count-by-condition, if-statement, elif-else, comparison, boolean, arithmetic,
               int-type, float-type]
+- id: unit-09-strings
+  kind: unit
+  title: "Strings — indexing, slicing, methods, and search"
+  lessons: 3
+  introduces: [string-index, string-slice, string-methods, in-operator, transform-each, linear-search]
+  requires: [def-function, parameters, return-value, for-loop, range-function, if-statement, comparison,
+             boolean, arithmetic, variable, print, string-literal]
+  practices: [f-string, string-concat, accumulator, count-by-condition, loop-counter, builtin-functions,
+              int-type, type-conversion, elif-else, comment, naming]
+- id: unit-10-lists
+  kind: unit
+  title: "Lists — build, index, loop, sort, find, and filter"
+  lessons: 3
+  introduces: [list-literal, list-index, list-append, list-loop, list-sort, find-extreme, filter-into-list]
+  requires: [def-function, parameters, return-value, for-loop, range-function, if-statement, comparison,
+             boolean, arithmetic, variable, print]
+  practices: [builtin-functions, in-operator, accumulator, running-total, count-by-condition, loop-counter,
+              f-string, int-type, float-type, comment, naming]

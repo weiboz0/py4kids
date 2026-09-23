@@ -186,9 +186,12 @@ Folded:
 - `[FIXED]` ([fable]7) §6 record now names a site for every practice tag.
 
 ### Round 2 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
-**[self] APPROVE** — tooling claims corrected to their true enforcement tiers; Phase-E audit is now the
-explicit enforcement for the forms ci-local misses; all pedagogy pins folded.
-_(Awaiting [sol]/[glm]/[fable] round-2 verdicts.)_
+**CONSENSUS — [self] APPROVE; [sol] APPROVE; [glm] APPROVE; [fable] APPROVE.** All r1 blockers/nits resolved
+(tooling claims corrected to true enforcement tiers; Phase-E audit is the explicit enforcement for the
+forms ci-local misses; all pedagogy pins folded). No open findings. **Plan-review gate PASSED.**
+Phase-C authoring notes ([fable] r2): if the "most common letter" stretch is written in U09, add
+`find-extreme` to U09 practices then; ensure the `elif-else` practice site lands in a CORE exercise (tier-B/C
+tags are reviewer-verified, not CI-detected).
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
