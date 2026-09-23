@@ -1,0 +1,14 @@
+id: checkpoint-03-functions-and-randomness
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+concepts:
+  introduces: []
+  requires: [print, variable, def-function, parameters, return-value, random-module, import-statement,
+             type-conversion, for-loop, range-function, while-loop, if-statement, elif-else, comparison,
+             boolean, arithmetic, builtin-functions, f-string, string-literal]
+  practices: [print, variable, def-function, parameters, return-value, scope, builtin-functions, random-module,
+              import-statement, type-conversion, for-loop, range-function, while-loop, loop-counter, accumulator,
+              running-total, count-by-condition, if-statement, elif-else, comparison, boolean, arithmetic,
+              int-type, float-type]
