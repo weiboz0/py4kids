@@ -242,4 +242,26 @@ consensus-ready, no re-dispatch needed):
 _(4-way content-review gate — filled before PR.)_
 
 ## Post-Execution Report
-_(Filled before shipping.)_
+
+**Status: implemented, ci-local ALL GREEN (2026-09-23). Content-review gate next.**
+
+- **Phase B:** 3 coverage-map entries + 2 unit manifests + 1 checkpoint manifest + 3 syllabus rows + a
+  `.gitignore` scratch block (dir-scoped `.txt` globs); coverage-check/prereq-check GREEN; 55→62
+  introduced-once — **ALL 62 catalog concepts now introduced**.
+- **Phase C (Codex ×2):** U12 `lesson.ipynb` (write/read + `with`-contrast; for-line stats; transform-each +
+  linear-search records) + `exercises.ipynb` (9, self-contained file drills, `open(path,"r")` reads,
+  f-string writes); U13 `lesson.ipynb` (class/`__init__`/`self.attr` + identity beat; methods incl.
+  `describe()` f-string + genuine `string-slice`; module-level `load_*` persistence) + `exercises.ipynb` (9);
+  cp05 `checkpoint.ipynb` (7 Questions covering files + OOP).
+- **Phase D (SEPARATE fresh Codex):** U12/U13/cp05 `solutions.ipynb` (function/class form; 27/58/37
+  non-vacuous asserts; no forbidden forms).
+- **Phase E:** teacher-notes for U12/U13/cp05 (full heading sets; cp05 `## Grading` + two pass-bar items +
+  concrete value inventories). `TMPDIR=/dev/shm bash scripts/ci-local.sh` → **ALL GREEN** (concept-scan,
+  exec-solutions ×3, checkpoint questions, notebook exec+hygiene, manifest/prereq/coverage/stretch, PDF,
+  pre-merge-guard). Static AST audit clean: file/dict/list/string methods within subsets; builtins in-set +
+  no `key=`; NO inheritance/dunders-beyond-`__init__`/decorators/`math`/comprehensions/`ord`/`chr`/
+  collections/tuple-assignment/step-slices; cp05 no while/bool-ops/range/sorted/`+`-concat/`in`. Working tree
+  clean — every scratch `.txt` is gitignored (no new untracked files after exec).
+
+No deviations from the approved plan. This closes Book 1b's content: all 62 concepts introduced and practiced
+in a non-capstone entry — plan 078 (Algorithm Challenge) can leave `buildout` with the full coverage anchor GREEN.
