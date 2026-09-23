@@ -17,7 +17,7 @@ encounter). Next checkpoint is after U08, so none here. Book 1b stays `buildout:
 **unit-06-turtle-geometry** — `kind: unit`, `title: "Turtle Geometry — drawing with loops and angles"`, `lessons: 3`
 - introduces: `[import-statement, turtle-basics, turtle-drawing]`
 - requires: `[for-loop, range-function, arithmetic, variable]`
-- practices: `[nested-loops, loop-counter, accumulator, int-type, comment, naming, run-program]`
+- practices: `[nested-loops, loop-counter, accumulator, int-type, float-type, comment, naming, run-program, error-messages]`
 
 Closure: requires ⊆ U01–U05 (for-loop/range U05, arithmetic U02, variable U01); `import-statement`
 introduced here (design §3/§5). No self-practice. 30→33 introduced-once.
@@ -27,16 +27,23 @@ A unit cannot practice its OWN introductions, so U06's three intros (`import-sta
 `turtle-drawing`) get their later practice sites in **U07** (`draw_polygon`) and **U08** (turtle random
 walk) per design §3 — deferred, not claimed here. U06 ADDS practice sites for earlier intros:
 `nested-loops` (rings/spirals), `loop-counter` (side/shape counters), `accumulator` (growing spiral
-`side = side + step`), `int-type` (`360 // n`), `comment`/`naming` (the asset-script convention),
-`run-program` (the terminal run — this unit's core activity). All 30 pre-U06 introductions remain
-practiced (plan-072 record). Capstone anchor dormant (buildout).
+`side = side + step`), `float-type` (the polygon angle `360 / n`, e.g. `360 / 7 = 51.428…`),
+`int-type` (integer `total_turn`, side/shape/pen-down counts in the headless companions),
+`error-messages` (the wrong-directory `can't open file` and the missing-`turtle.`-prefix `NameError`,
+read as callbacks), `comment`/`naming` (the asset-script convention), `run-program` (the terminal run —
+this unit's core activity). Every practiced concept is introduced ≤ U06 (float-type/int-type U02,
+error-messages/comment/naming/run-program U01, nested-loops U05, loop-counter/accumulator U04). All 30
+pre-U06 introductions remain practiced (plan-072 record). Capstone anchor dormant (buildout).
 
 ## File structure (clone Book 1 `unit-03-turtle-art-studio` EXACTLY)
 
 Turtle CODE lives ONLY in `assets/*.py` (run headless by `turtle-check` via the `fake_turtle` stub) and in
-`lesson.ipynb` **`no-exec`-tagged** cells. **No `import turtle` anywhere in `exercises.ipynb` or
-`solutions.ipynb` code cells** — `_solution_policy_findings` flags it "solutions import a GUI" regardless of
-`no-exec` (notebooks.py:287), and requires **≥3 non-vacuous assert cells** notebook-wide (notebooks.py:281-283).
+`lesson.ipynb` **`no-exec`-tagged** cells. **`solutions.ipynb` code cells carry no `import turtle`** —
+`_solution_policy_findings` (notebooks.py:631, solutions.ipynb ONLY) flags a GUI import regardless of
+`no-exec` (notebooks.py:287) and requires **≥3 non-vacuous assert cells** notebook-wide (notebooks.py:281-283).
+**`exercises.ipynb` code cells also carry no `import turtle`** — this one is an AUTHORING rule, NOT a CI check
+(exercises are never executed; `_solution_policy_findings` does not scan them): the turtle program is a `.py`
+asset the student runs in the terminal, so a turtle import in an exercise notebook cell would be dead/misleading.
 
 - **assets/lN_*.py** — lesson turtle scripts (`import turtle`, draw one thing, one terminal `turtle.done()`).
 - **assets/exN_*.py** — exercise STARTER scripts: a VALID CLOSED placeholder that already draws (≥1 pen-down
@@ -47,26 +54,34 @@ Turtle CODE lives ONLY in `assets/*.py` (run headless by `turtle-check` via the 
   headless cells (the "angles as math" computation) may run. Problem-first opening (see below).
 - **exercises.ipynb** — mini-CP statements: `## Exercise N` / `### Title` / background / **Specification** /
   a **checkable "expected output"** for a drawing = the shape named PLUS a checkable number (n, side, the
-  turn angle `360 // n`, total turn, pen-down-move count, "ends where it started: yes/no") / which
+  turn angle `360 / n`, total turn, pen-down-move count, "ends where it started: yes/no") / which
   `assets/exN_*.py` to complete and run in the terminal. Solution-free, NO executed outputs, NO "Solution"
   headings, ≥8 exercises, core ≤7, ≥2 `stretch` Challenge. Code cells (if any) are HEADLESS (no `import turtle`).
 - **solutions.ipynb** — mirrors every `## Exercise N`. Per exercise: a **markdown fenced block** "The real
   program (`assets/solutions_*.py`)" showing the turtle code, AND a **headless companion code cell** that
-  computes the math (`angle = 360 // n`, `total_turn = n * angle`, side/shape counts, ends-at-start bool)
-  with **asserts** (≥3 non-vacuous assert cells notebook-wide; NO `import turtle`). This is where "angles as
+  computes the math (`angle = 360 / n`, `total_turn = n * angle` — asserted `== 360.0` for closed shapes,
+  side/shape/pen-down counts as ints, ends-at-start bool) with **asserts** (≥3 non-vacuous assert cells
+  notebook-wide; NO `import turtle`). This is where "angles as
   math" is written down and blind-solved by the gate roster; turtle-drawing correctness is verified by
   `turtle-check` on the `.py`.
 - **teacher-notes.md** — Goals / Pacing (per-lesson 60-MIN CUTs) / Common mistakes / Discussion prompts /
-  Differentiation. (Asset presence is enforced by `structure-check`/`layout_findings` (notebooks.py:348-356),
-  not `manifest-check`.)
+  Differentiation. (Asset presence is enforced by `structure-check`: `layout_findings` requires an `assets/`
+  dir when `turtle-basics` appears (notebooks.py:348-356), and `_assets_reference_findings` requires every
+  referenced `assets/*.py` to exist and compile (notebooks.py:367-392) — NOT `manifest-check`.)
 - **manifest.yaml** — matches the coverage-map entry.
 
-## Turtle API — PIN to the `fake_turtle` stub subset (turtle-check executes every asset)
+## Turtle API — a fixed **subset** of the `fake_turtle` stub (turtle-check executes every asset)
 
+**Module-level style ONLY:** `import turtle` then `turtle.forward(...)` etc. — NO `t = turtle.Turtle()`
+and NO `screen = turtle.Screen()` (the stub exposes `Turtle`/`Screen` at fake_turtle.py:102-124, but
+objects/attributes are Book 2; module-level matches the u03 template).
 Use ONLY: `forward`, `backward`, `left`, `right`, `penup`, `pendown`, `pencolor`, `color`, `pensize`,
 `speed`, `bgcolor`, and one terminal `done()`. **Do NOT use** `begin_fill`/`end_fill`/`fillcolor`, `circle`,
-`goto`, `setheading`, `dot`, `stamp`, `hideturtle`, `shape`, `setup`, `title`, `width`, `up`, `down`,
-`exitonclick` — the stub lacks them → `AttributeError` → turtle-check FAIL. So **`turtle-drawing` = pen
+`goto`, `setheading`, `dot`, `stamp`, `hideturtle`, `shape`, `setup`, `title`, `width`, `up`, `down` — the
+stub genuinely lacks these (fake_turtle.py:50-95 defines no such module fns) → `AttributeError` →
+turtle-check FAIL. **`exitonclick` is the one exception:** the stub HAS it as a no-op (fake_turtle.py:98), so
+it would NOT fail turtle-check — we still ban it by CONVENTION and use one terminal `done()` (matching Book 1
+u03); Phase E audits this statically, since the tooling can't. So **`turtle-drawing` = pen
 color (`pencolor`/`color`) + `pensize` + shapes drawn with `forward`/turn — NO fill, NO circle.** Use `left`
 consistently (a Notice states `left(90)` mirrors `right(90)`). Loop variable is a real name (`corner`,
 `side_number`, `shape`) — NOT `_` (never taught).
@@ -74,38 +89,54 @@ consistently (a Notice states `left(90)` mirrors `right(90)`). Loop variable is 
 ## Path-closure contract (fake_turtle.py:207-220)
 
 Every `assets/*.py` must EITHER close its path (end at the draw-start position AND total heading change ≡ 0
-mod 360) OR carry the exact comment `# turtle-check: open-path`. Also: ≥1 pen-down move; < 10,000 moves.
-- Polygons: `n × (360 // n)` — use n | 360 so it's exactly 360 (closes). Rings: `shapes × between_turn == 360`.
-  Stars: 5-point uses `720 // 5 == 144`, and `5 × 144 == 720 ≡ 0 (mod 360)` — closes.
+mod 360, both within the tooling's 1e-6 tolerance, fake_turtle.py:211-215) OR carry the exact comment
+`# turtle-check: open-path`. Also: ≥1 pen-down move; < 10,000 moves.
+- Polygons: `n × (360 / n) == 360` for ANY n ≥ 3 — the float angle closes within tolerance (empirically
+  verified: n=7 with `left(360 / n)` ends at ~(1e-13, 2e-14), total turn 360.0000000000001, both < 1e-6;
+  Book 1 `u03/assets/l2_polygon.py` ships `360 / n` with n=7 and passes CI). **`//` is NOT required for
+  closure** — that was the round-1 error. Rings: `shapes × between_turn == 360`. Stars: 5-point uses
+  `720 / 5 == 144.0`, and `5 × 144 ≡ 0 (mod 360)` — closes.
 - The **growing spiral** (L3) and any open corner do NOT close → carry `# turtle-check: open-path`
   (Book 1 `assets/l1_corner.py` precedent). exN STARTERS draw a closed placeholder (so they pass too).
 
 ## Teaching ("angles as math")
 
-- **Lesson 1 — Move & Draw (import-statement, turtle-basics).** Problem-first opener: "the turtle only knows
-  forward and turn — what turn makes a triangle? a pentagon? Predict, then run." `import turtle`,
-  `forward`/`left`/`right`, `penup`/`pendown`; a square by hand, then with a `for` loop. **FIRST TERMINAL
-  ENCOUNTER (~15 min, budget it like Book 1 u03):** File → New → Terminal, `cd` to the unit dir,
-  `python assets/l1_square.py`, edit-save-rerun; expect to repeat twice.
-- **Lesson 2 — Any Polygon (turtle-drawing).** The exterior-angle insight: a regular n-gon turns `360 // n`
-  each corner (`for corner in range(n): forward(side); left(360 // n)`), + `pencolor`/`pensize` (NO fill).
-  **The `//` moment (own it):** `//` is exact only when n divides 360; a Notice shows `360 // 7 = 51`,
-  `7 × 51 = 357 ≠ 360` → the 7-gon would NOT close (that's when you'd use `/`, taught U02) — a Challenge
-  "predict what `n = 7` with `//` draws, then fix it" turns the trap into the unit's best math moment.
-  Stars need `720 // n` (5 → 144, "two full turns").
+- **Lesson 1 — Move & Draw (import-statement, turtle-basics).** Problem-first opener (u03 move): the teacher
+  runs the L3 gallery script as a 30-second teaser — "we'll build this; today, the first shape." Then L1's
+  OWN reachable payoff: "the turtle only knows forward and turn — what turn makes a square? Predict, then
+  run." `import turtle`, `forward`/`left`/`right`, `penup`/`pendown` (a travel-without-drawing rung); a
+  square by hand, then with a `for` loop. **FIRST TERMINAL ENCOUNTER (~15 min, budget it like Book 1 u03):**
+  File → New → Terminal, `cd` to the unit dir, `python assets/l1_square.py`, edit-save-rerun; expect to
+  repeat twice. (The exterior-angle payoff for *any* polygon is L2.)
+- **Lesson 2 — Any Polygon (turtle-drawing).** The exterior-angle insight, taught as the GENERAL rule with
+  true division: a regular n-gon turns `360 / n` each corner
+  (`for corner in range(n): forward(side); left(360 / n)`), + `pencolor`/`pensize` (NO fill). **n=7 is a CORE
+  predict-then-run rung, not a Challenge:** `360 / 7 = 51.428…`, "the turtle turns by a decimal just the
+  same," and the heptagon closes — mirroring Book 1 u03's non-negotiable-core discovery. `float-type` (U02)
+  is what makes the rule honest for every n. **`//` is a CONTRAST Notice only:** "`360 // n` is a
+  whole-number shortcut that lands on the same angle ONLY when n divides 360 (3/4/5/6/8/9/10/12); for n=7,
+  `360 // 7 = 51` and `7 × 51 = 357 ≠ 360`, so the shape wouldn't close — that's why we use `/`." The n=7
+  Challenge becomes **"predict what `left(360 // 7)` draws and explain the gap,"** never the place the
+  correct rule first appears. Stars use `720 / n` (5 → 144.0, "two full turns").
 - **Lesson 3 — Patterns with Nested Loops (nested-loops).** A ring of polygons (`for shape … : draw; left`),
   then a growing spiral (`side = side + step` — `accumulator`; open-path marker). Gallery Final build.
 
-Per-lesson 60-MIN CUT: L1 square + polygon loop live (leave the terminal-rerun as "try it"); L2 the polygon
-loop is non-negotiable core (drop color/pensize flourishes); L3 ring live, growing spiral as "try it".
+Per-lesson 60-MIN CUT: L1 keep the square loop AND the edit-save-rerun live (that terminal run IS this
+unit's core `run-program` activity, introduced this lesson — never cut it); drop the `penup`/`pendown`
+travel rung instead. L2 the `360 / n` polygon loop is non-negotiable core (drop color/pensize flourishes,
+defer the n=7 contrast Notice). L3 ring live, growing spiral as "try it".
 
 ## Beginner traps (teacher-notes Common mistakes + lesson Notices)
 
-Running from the wrong directory (`can't open file` — an `error-messages` callback); the turtle window opens
-BEHIND JupyterLab; closing the window ends the script (re-run, don't rescue); forgetting the turn → a
-straight line; forgetting `forward` → a spinning turtle; **exterior vs interior angle** (a triangle turns
-120, not 60 — let the wrong prediction happen, then fix it); `left` vs `right` mirror; `penup` without
-`pendown` (nothing draws); missing `turtle.done()` (window flashes and vanishes); `range(n)` gives 0..n-1.
+**Calling `forward(100)` without the `turtle.` prefix after `import turtle` → `NameError`** (THE trap of the
+introduced concept — module-level import means every call is `turtle.forward`; read the error, add the
+prefix; an `error-messages` callback); running from the wrong directory (`can't open file` — a second
+`error-messages` callback); putting `turtle.done()` INSIDE the loop (draw stalls after one side) — it goes
+once, at the very end; the turtle window opens BEHIND JupyterLab; closing the window ends the script (re-run,
+don't rescue); forgetting the turn → a straight line; forgetting `forward` → a spinning turtle; **exterior
+vs interior angle** (a triangle turns 120, not 60 — let the wrong prediction happen, then fix it); `left` vs
+`right` mirror; `penup` without `pendown` (nothing draws); missing final `turtle.done()` (window flashes and
+vanishes); `range(n)` gives 0..n-1.
 
 ## Value plan (per plan-072 lesson)
 
@@ -116,7 +147,7 @@ Each lesson rung / exercise / Challenge uses a DISTINCT `(n, side, color)` and i
 
 ### Phase A — plan-review gate (4-way). No implementation until consensus.
 ### Phase B — contracts: coverage-map entry (7-key: kind/title/lessons + introduces/requires/practices) + syllabus row + manifest; `--book book1b coverage-check` + `prereq-check` GREEN.
-### Phase C — statements + assets (Codex): lesson.ipynb (no-exec turtle demos) + exercises.ipynb + assets/lN_*.py + assets/exN_*.py starters (closed placeholders). Pin the API subset + closure rule.
+### Phase C — statements + assets (Codex): lesson.ipynb (no-exec turtle demos) + exercises.ipynb + assets/lN_*.py + assets/exN_*.py starters (closed placeholders). Pin: module-level API subset + `360 / n` angle + closure rule; include an error-reading Notice (missing-`turtle.`-prefix `NameError`, wrong-dir `can't open file`) so the `error-messages` practice is real.
 ### Phase D — solutions (SEPARATE fresh Codex): solutions.ipynb (markdown "real program" blocks + headless-companion asserts, NO `import turtle`, ≥3 assert cells) + assets/solutions_*.py; verify `turtle-check` passes on all scripts.
 ### Phase E — teacher-notes (inline) + verification: full `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN
 across the three books (esp. `turtle-check`, `structure-check` incl. the GUI-import + ≥3-assert rules,
@@ -149,8 +180,55 @@ above:
   Challenge (stars 720//n); per-lesson cuts; "expected output" = shape + checkable number; named loop var;
   value plan; metadata `practices += accumulator, run-program`.
 
-### Round 2 (2026-09-23) — rewritten to the correct turtle format. Re-dispatching [sol]/[glm]/[fable].
-_(Awaiting round-2 verdicts.)_
+### Round 2 (2026-09-23) — rewritten to the correct turtle format. Re-dispatched [sol]/[glm]/[fable].
+
+**[self] APPROVE WITH NITS.** Re-verified the fold against the tooling:
+- fake_turtle.py:50-124 confirms the supported module-level set = forward/backward/left/right/penup/pendown/
+  pensize/pencolor/color/speed/bgcolor/done (+ `exitonclick` and `Screen`/`Turtle` as no-ops); the plan's
+  banned list (fill/circle/goto/setheading/dot/stamp/hideturtle/shape/setup/title/width/up/down) is exactly
+  the unsupported set. **Self-caught nit (FIXED):** the draft wrongly claimed `exitonclick` would
+  `AttributeError` — it is a no-op (fake_turtle.py:98); corrected to "banned by u03 convention, not by the
+  stub," Phase E audits it statically.
+- fake_turtle.py:147/200-219 confirms the closure contract (marker `# turtle-check: open-path`, >=1 pen-down,
+  <10000 moves, position+heading closure) as the plan states.
+- notebooks.py `_solution_policy_findings` (GUI-import ban + >=3 non-vacuous asserts) is satisfied by the
+  headless-companion solutions.ipynb spec.
+- Contract: requires ⊆ U01–U05 (closure holds); introduces = the 3 new; practices honest; §6 record no longer
+  self-practices; named verification phase (E) present.
+
+**[sol] APPROVE** — curriculum contract sound; no turtle API mismatch (and confirmed the `exitonclick` fix
+reads correctly); closure contract + closed-starter requirement correct; solutions format satisfies policy
+(headless companions exceed the 3-assert minimum); Phase E is the named verification phase; no evident later
+content-gate blocker.
+
+**[glm] APPROVE WITH NITS** — no blockers; three wording/citation nits, ALL FOLDED (below).
+
+**[fable] REJECT** — one blocker + nits, all folded (below). The blocker is a genuine catch: `360 // n` as
+the CANONICAL polygon rule is mathematically dishonest and its tooling rationale was false — [fable] ran the
+stub and showed `left(360 / n)` closes a 7-gon within the 1e-6 tolerance, and Book 1 `u03/l2_polygon.py`
+already ships `360 / n` with n=7 passing CI. Teaching `//` as core (fixed only in a `stretch` Challenge) would
+leave students with a wrong general rule that U07's `draw_polygon` inherits.
+
+### Round-2 fold (applied 2026-09-23; re-dispatching round 3)
+- **[fable] BLOCKER — angle rule.** `angle = 360 / n` is now the taught CORE rule (true division); **n=7 is a
+  core predict-then-run rung** (`51.428…`, closes), mirroring u03's non-negotiable-core discovery. `//`
+  demoted to a CONTRAST Notice ("whole-number shortcut, exact only when n | 360"); the n=7 Challenge is now
+  "predict what `left(360 // 7)` draws + explain the gap." `practices += float-type` (the float angle) and
+  `int-type` kept honest via `total_turn`/counts in the headless companions; closure bullet reworded (`/`
+  closes within tolerance; `//` NOT required). Stars use `720 / n`.
+- **[fable] nits:** beginner traps += missing-`turtle.`-prefix `NameError` (THE trap of the introduced
+  concept) and `done()`-inside-loop; `practices += error-messages` (two error-reading callbacks, Phase C now
+  requires an error Notice); L1 60-min cut fixed (keep edit-save-rerun = the `run-program` core; drop the
+  `penup`/`pendown` travel rung — the polygon loop is L2); L1 gains a u03-style L3-gallery teaser so L1 has
+  its own reachable payoff; module-level style pinned (`turtle.forward`, no `t = turtle.Turtle()` — objects
+  are Book 2).
+- **[glm] nits:** `exitonclick` mechanism reworded (stub HAS it as a no-op; banned by convention, Phase-E
+  audited) — the "PIN to subset" heading now reads "a fixed subset"; exercises.ipynb no-turtle-import
+  clarified as an AUTHORING rule (NOT CI — `_solution_policy_findings` scans solutions.ipynb only,
+  notebooks.py:631); asset-presence citation completed (`layout_findings` 348-356 + `_assets_reference_findings`
+  367-392).
+
+_(Awaiting [sol]/[glm]/[fable] round-3 verdicts.)_
 
 ## Content Review
 
