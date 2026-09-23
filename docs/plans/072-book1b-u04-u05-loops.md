@@ -243,9 +243,40 @@ Same 3 findings from both, FOLDED: U04 Ex11 heading said "Probe Mission 27" but 
 to **6×6** (U05 uses only 3×3/4×4/5×5) + teacher-notes ("Six-by-Six", fast-finisher note). Full ci-local
 ALL GREEN after the fold.
 
-### Round 4 (2026-09-22) — Ex11/Q7 de-dup complete. Re-dispatching [sol] (sole round-3 REJECT);
-[glm]/[fable] round-3 both said "approve once these fold".
-_(Awaiting [sol] on the round-4 commit.)_
+### Round 4 (2026-09-22) — on f6724f8. [sol] **APPROVE** — all 3 findings resolved (Ex11 "…19"; cp02 Q7
+6×6 distinct from every U05 table; no lesson-rung duplication); full check sweep clean.
+
+### Content-review outcome: **FULL 4-way consensus** — [self] APPROVE · [sol] APPROVE · [glm]/[fable]
+APPROVE WITH NITS (all folded), no `[OPEN]`. Four rounds (value de-duplication whack-a-mole): r1 = 1 REJECT
+(Ex2 asserted only state; value duplication; cp02 grading contradiction); r2 = [sol] REJECT (Ex11 still
+n=27); r3 = [sol] REJECT (cp02 Q7 5×5 hit the lesson); r4 clean. Gate CLOSED → PR.
+
+## Post-Execution Report
+
+**Status: COMPLETE** (pending PR + squash-merge). Adds Book 1b Units 04–05 + Checkpoint 02.
+
+**What shipped:**
+- **U04 Loops & Counting** (`while`-only): problem-first lesson (reassignment rung; infinite-loop `no-exec`
+  beat + interrupt Notice; off-by-one + `NameError` traceback beats; running-total 5050 cash-in; sentinel
+  plain-condition-then-`while True`/break); 11 mini-CP exercises (core 1–7); solutions asserting output +
+  loop state; teacher-notes.
+- **U05 For & Range**: reproduces the 5050 sum with `for`/`range`; range-bounds, FizzBuzz (elif), primality
+  flag (n ≥ 2, `range(2,2)` edge), nested times-table via row accumulation, nested-classify
+  (`conditional-nesting`); 11 exercises; solutions; teacher-notes.
+- **checkpoint-02-loops**: 7 `## Question` items (while-counter, `while True`/break Collatz sentinel,
+  for-total, count-by-condition, 6×6 nested table + elif/`//`%` recap), strict; solutions mirror all 7;
+  teacher-notes with `## Grading`.
+- Coverage-map + syllabus + manifests; metadata honest to content. 30/62 concepts introduced (through U05).
+
+**Gate history:** plan-review = 4 rounds (loops are concept-rich: §6 coverage, the full loop-guardrail set,
+metadata honesty, strict-scan `string-concat`). Content-review = 4 rounds (all 29/29 blind-solve correct;
+the rounds fixed an assert-only-on-state gap, exercise/checkpoint value duplication, and teacher-notes drift).
+
+**Verification:** full `scripts/ci-local.sh` ALL GREEN across Book 1, Book 2, Book 1b.
+
+**Follow-on:** U06 Turtle → U13 Objects + checkpoints (U08, U11, post-U13) + the Algorithm Challenge (plans 073+).
+**Durable lesson (for U06+):** pick exercise AND checkpoint values distinct from the lesson rungs and from
+each other UP FRONT — the round-2/3 churn here was value-duplication that a value plan would have prevented.
 
 ## Post-Execution Report
 
