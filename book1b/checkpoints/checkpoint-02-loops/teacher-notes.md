@@ -20,7 +20,7 @@ Budget: half a lesson (~30–45 minutes). Hand out after Unit 05. The seven ques
 4. **Collatz Repeat-Until** — a sentinel `while True: … break` that counts steps to 1 (U04 sentinel + break).
 5. **For-Total Pass Bar** — a `for`/`range` running total (U05). *Pass-bar item.*
 6. **Count by Condition** — count matches across a range (U04/U05 technique).
-7. **Four-by-Four Times Table** — nested loops building each row by string accumulation (U05).
+7. **Six-by-Six Times Table** — nested loops building each row by string accumulation (U05).
 
 ## Common mistakes
 
@@ -48,4 +48,4 @@ math is right but the spacing is off.
 
 - Strugglers: prioritize Q1–Q3 and Q5 — the recap items plus the two pass-bar loops (Q3 while-counter,
   Q5 for-total), which the grading rubric requires; treat Q4/Q6/Q7 as reach.
-- Fast finishers: ask them to extend Q7 to a 5×5 table or add a running total to Q6.
+- Fast finishers: ask them to extend Q7's grid by another row and column, or add a running total to Q6.

@@ -37,7 +37,7 @@ live; run the `NameError` beat as a "try it". L2 — cut the digit-sum rung. L3 
 Core (1–7): Training-Lap Counter, Repair the Last Number (off-by-one), Fundraiser Running Total,
 Multiples-of-Four Count, Factorial Machine, Digit-Sum Scanner, Computed Stop: Collatz Steps (sentinel).
 Extra (8–9): Shared-Tile Size (GCD-by-subtraction), Score-Tier Census. Challenges (10–11): Remainder GCD,
-Probe Mission 27. No core exercise depends on a Challenge. Pre-function; `x = x + 1` only (never `+=`);
+Probe Mission 19. No core exercise depends on a Challenge. Pre-function; `x = x + 1` only (never `+=`);
 `while`-only (no `for`/`range` yet). `input()` only via a fenced try-it, never in graded code.
 
 ## Common mistakes
