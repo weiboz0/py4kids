@@ -26,7 +26,8 @@ won and by how many?") before the first `{}` — the motivation for a labelled t
   each value a LIST built with the explicit `if letter in d: d[letter].append(w)` / `else: d[letter] = [w]`);
   a sorted leaderboard and a keys-passing-a-test filter.
 
-**60-minute cut:** Lesson 3's group-by (dict of lists) is the reach; keep the frequency tally as core.
+**60-minute cut:** in Lesson 3 keep the frequency tally live; group-by (dict of lists, Ex6 First-Letter
+Shelves) is the reach — under the cut, move Ex6 to the fast-finisher tier and teach it only if time allows.
 
 ## Exercises — core vs. extra vs. challenge
 
@@ -69,7 +70,8 @@ several distinct cases (dict equality is order-independent).
 - Ex1 `day_hours`: `"Earth"`→24, `"Mars"`→25.
 - Ex2 `snack_count`: `({"apple":5,"cracker":8},"apple")`→5, `(…,"banana")`→0.
 - Ex3 `total_supplies`: `{"pens":9,"paper":20,"tape":2}`→31, `{"clips":7}`→7.
-- Ex4 `busiest_station`: `{"Oak":12,"Pine":19,"Elm":8}`→"Pine", `{"North":4}`→"North".
+- Ex4 `busiest_station`: `{"Oak":12,"Pine":19,"Elm":8}`→"Pine", `{"North":4}`→"North", and the tie
+  `{"Red":7,"Blue":7,"Gold":3}`→"Red" (first tied key wins).
 - Ex5 `word_counts`: `["Cloud","rain","cloud"]`→`{"cloud":2,"rain":1}`; `["GO","go","Go","stop"]`→`{"go":3,"stop":1}`.
 - Ex6 `shelve_by_first`: `["cat","crow","dog","camel"]`→`{"c":["cat","crow","camel"],"d":["dog"]}`.
 - Ex7 `score_board`: `{"Mia":14,"Leo":9,"Zoe":18}`→`[[9,"Leo"],[14,"Mia"],[18,"Zoe"]]`.

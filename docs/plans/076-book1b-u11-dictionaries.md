@@ -197,7 +197,23 @@ across 3 rounds ([fable]'s r3 range-in-list-index nit fixed by making the cp04 s
 practice-coverage-debt ledger + tier claims all match the tooling. No open findings. **Plan-review gate PASSED.**
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+### Round 1 (2026-09-23) — [self] APPROVE; [sol] APPROVE WITH NITS; [glm] APPROVE WITH NITS; [fable] APPROVE WITH NITS.
+No REJECT. Blind solves matched (all 9 U11 + 7 cp04); all tooling PASS; AST audits clean; metadata honest;
+deferred-practice-debt sites all confirmed real. Dispositions (folded):
+- `[FIXED]` ([sol]/[glm]/[fable]) Ex4 tie: added the statement's worked tie assert
+  `busiest_station({"Red":7,"Blue":7,"Gold":3}) == "Red"` so a `>=` regression can't pass.
+- `[FIXED]` ([fable]) list-of-lists + `.sort()`-compares-first-item taught in the leaderboard lesson (new
+  construct in Book 1b — stated, not assumed).
+- `[FIXED]` ([fable]) taught-before-assessed: added an INTEGER-key lookup example to U11 L1 (cp04 Q6 uses int
+  keys); `{}` named as "the empty dictionary" in L1.
+- `[FIXED]` ([glm]) cp04 Q6 pins "after the function definition" for the save+print location.
+- `[FIXED]` ([fable]) wording: group-by anti-pattern made concrete/moved out of the student cell; "view"
+  jargon replaced.
+- `[FIXED]` ([fable]) teacher-notes: 60-min cut reconciled (Ex6 group-by → fast-finisher under the cut);
+  value plan Ex4 now lists the tie sample.
+
+_(Round-2 re-review after the fold.)_
 
 ## Post-Execution Report
 
