@@ -58,6 +58,9 @@ The **Algorithm Challenge** (a non-themed integrative problem set) closes the ye
 | `unit-05-for-and-range` | unit | 3 | Count with `for`/`range` and stack loops for tables and triangles. |
 | `checkpoint-02-loops` | checkpoint | 0.5 | Prove `while`, `for`/`range`, and counting on a mixed loop problem set. |
 | `unit-06-turtle-geometry` | unit | 3 | Draw with code — `import turtle`, movement, and polygons as angles (`360 / n`) with loops. |
+| `unit-07-functions` | unit | 3 | Package logic into functions — `def`, parameters, `return`, scope, and Python's built-in tools. |
+| `unit-08-randomness` | unit | 3 | Roll dice and simulate — the `random` module, seeding, and Monte-Carlo estimates. |
+| `checkpoint-03-functions-and-randomness` | checkpoint | 0.5 | Prove functions and randomness on a mixed problem set. |
 
 ## Rules this syllabus is bound by
 

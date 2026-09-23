@@ -72,3 +72,32 @@ entries:
   requires: [for-loop, range-function, arithmetic, variable]
   practices: [nested-loops, loop-counter, accumulator, int-type, float-type, comment, naming,
               run-program, error-messages]
+- id: unit-07-functions
+  kind: unit
+  title: "Functions — def, parameters, return, and built-ins"
+  lessons: 3
+  introduces: [def-function, parameters, return-value, scope, builtin-functions]
+  requires: [for-loop, range-function, while-loop, arithmetic, comparison, boolean, if-statement, variable, print]
+  practices: [import-statement, turtle-basics, turtle-drawing, loop-counter, accumulator, running-total,
+              int-type, float-type, error-messages, comment, naming]
+- id: unit-08-randomness
+  kind: unit
+  title: "Randomness — the random module, dice, and simulation"
+  lessons: 3
+  introduces: [random-module]
+  requires: [import-statement, def-function, parameters, return-value, for-loop, range-function, arithmetic,
+             comparison, if-statement, boolean, variable, print]
+  practices: [turtle-basics, turtle-drawing, builtin-functions, running-total, count-by-condition,
+              accumulator, int-type, float-type, scope, comment, naming]
+- id: checkpoint-03-functions-and-randomness
+  kind: checkpoint
+  title: "Checkpoint 3 — Functions & Randomness"
+  lessons: 0.5
+  introduces: []
+  requires: [print, variable, def-function, parameters, return-value, random-module, import-statement,
+             type-conversion, for-loop, range-function, while-loop, if-statement, elif-else, comparison,
+             boolean, arithmetic, builtin-functions, f-string, string-literal]
+  practices: [print, variable, def-function, parameters, return-value, scope, builtin-functions, random-module,
+              import-statement, type-conversion, for-loop, range-function, while-loop, loop-counter, accumulator,
+              running-total, count-by-condition, if-statement, elif-else, comparison, boolean, arithmetic,
+              int-type, float-type]

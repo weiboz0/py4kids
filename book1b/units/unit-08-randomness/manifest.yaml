@@ -1,0 +1,11 @@
+id: unit-08-randomness
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [random-module]
+  requires: [import-statement, def-function, parameters, return-value, for-loop, range-function, arithmetic,
+             comparison, if-statement, boolean, variable, print]
+  practices: [turtle-basics, turtle-drawing, builtin-functions, running-total, count-by-condition,
+              accumulator, int-type, float-type, scope, comment, naming]

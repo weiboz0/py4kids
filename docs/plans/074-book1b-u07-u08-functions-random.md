@@ -246,9 +246,9 @@ boolean operators) to avoid unlisted `string-concat`/`logical-ops`; `scope` back
 question. [fable] note folded (Monte-Carlo estimate ≈ π, not exact).
 
 ### Round 4 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
-**[self] APPROVE** — cp03 requires now carries f-string + string-literal (union unchanged); all r3 nits
-folded. Contract closure + honesty re-verified.
-_(Awaiting [sol]/[glm]/[fable] round-4 verdicts.)_
+**CONSENSUS — [self] APPROVE; [sol] APPROVE; [glm] APPROVE; [fable] APPROVE.** All blockers resolved across
+4 rounds; no open findings. **Plan-review gate PASSED.** Phase-C authoring note ([fable] r4): put the
+"Monte-Carlo ≈ π, not exactly" line in the student-facing L2 prose too, not only teacher-notes.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
