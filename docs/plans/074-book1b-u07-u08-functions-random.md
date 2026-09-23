@@ -42,17 +42,21 @@ random), NOT the pre-function per-line-output form used in U01–U06. Book 1b st
 - introduces: `[]`
 - requires: `[print, variable, def-function, parameters, return-value, random-module, import-statement,
   type-conversion, for-loop, range-function, while-loop, if-statement, elif-else, comparison, boolean,
-  arithmetic, builtin-functions]`
+  arithmetic, builtin-functions, f-string, string-literal]`
 - practices: `[print, variable, def-function, parameters, return-value, scope, builtin-functions, random-module,
   import-statement, type-conversion, for-loop, range-function, while-loop, loop-counter, accumulator,
   running-total, count-by-condition, if-statement, elif-else, comparison, boolean, arithmetic, int-type,
-  float-type, f-string, string-literal]`
-  (**Strict-scan closure ([sol]/[glm]):** checkpoints get NO fastforward, so EVERY scanner-detected concept
-  must be listed. The seeded-random question's `import random` detects BOTH `import-statement` and
-  `random-module`; `int()`/`str()`/`float()` detects `type-conversion`; a literal-bearing f-string detects
-  BOTH `f-string` AND `string-literal` (concept_scan.py:14-15,279-285) — so `string-literal` is listed.
-  Dropped `break-statement` (no `while … break` sentinel question planned). `count-by-condition` is kept — a
-  `count_primes(n)` function question backs it.)
+  float-type]`
+  (**Strict-scan closure ([sol]/[glm]):** the checkpoint allowed set is `requires ∪ practices`
+  (concept_scan.py:934-936; checkpoints get NO fastforward). The seeded-random question's `import random`
+  detects BOTH `import-statement` and `random-module`; `int()`/`str()`/`float()` detects `type-conversion`;
+  a literal-bearing f-string detects BOTH `f-string` AND `string-literal` (concept_scan.py:14-15,279-285) —
+  both are placed in `requires` (the "real prereqs" convention, matching shipped cp01/cp02 which put
+  `f-string` in requires) and so are NOT duplicated here. Dropped `break-statement` (no `while … break`
+  sentinel). `count_primes(n)` backs `count-by-condition`. **Phase C cp03 pin:** join text with f-strings
+  only (NO `+` string-concat) and use NO boolean operators (`and`/`or`) — avoids detecting unlisted
+  `string-concat`/`logical-ops` ([glm] r3); the `scope` tag is backed by a define-and-return question whose
+  body uses a local name ([fable] r3).)
 
 Closure: every `requires` is introduced ≤ its entry (def-function/parameters/return-value/scope/
 builtin-functions in U07; random-module in U08; the rest in U01–U06). U07's turtle `practices` are exactly
@@ -129,16 +133,16 @@ strings-as-sequences anywhere in U07 (U09/U10); every example stays on already-t
 ### U08 Randomness (3 lessons, problem-first)
 - **L1 — Chance (`random-module`).** `import random`; `random.randint(a, b)` and `random.choice(range(...))`
   (argument is a `range`, never a list — lists are U10); **`random.seed(4)` for reproducibility** (and why
-  tests seed). A dice/coin game. (NO `random.random()`/`uniform`/`randrange` — the scanner permits only
-  `seed`/`randint`/`choice`, concept_scan.py:55.)
+  tests seed). A dice/coin game that keeps a **cumulative score across rolls** (`running-total` site — [glm] r3).
+  (NO `random.random()`/`uniform`/`randrange` — the scanner permits only `seed`/`randint`/`choice`, concept_scan.py:55.)
 - **L2 — Simulate & Estimate.** Count outcomes over many trials in a seeded function — a trial tally uses
   the `accumulator` (`total = total + 1`) and `count-by-condition`; report the result with the built-ins
   `round`/`max` (`builtin-functions` site). Then a Monte-Carlo estimate with `randint` on an integer grid,
   motivated by a **picture** (a quarter-circle inside a square: the fraction of random points landing inside
   the quarter-circle ≈ its area ratio π/4, so `×4` gives π — draw it / use the U06 turtle intuition, don't
   leave the `×4` as magic): `x = random.randint(0, 1000)`, `y = random.randint(0, 1000)` (each axis has 1001
-  possible values, not a "1000×1000 grid"), count `x*x + y*y <= 1000*1000` (squares + `<=` are U02 math).
-  Everything packaged as seeded functions.
+  possible values, not a "1000×1000 grid"), count `x*x + y*y <= 1000*1000` (squares + `<=` are U02 math). Teacher-notes state the estimate is CLOSE TO,
+  not exactly, π (more trials → closer), so students expect ~3.1, not 3.14159. Everything packaged as seeded functions.
 - **L3 — Random Turtle Walk.** The turtle practice site: fixed step + a random left/right turn chosen by
   `random.randint(0, 1)`, `random.seed(4)`, `# turtle-check: open-path`.
 60-min cut per lesson noted in teacher-notes.
@@ -218,7 +222,7 @@ Phases C/D.
 All 5 round-1 blockers verified resolved by all three externals. [sol] found two more strict-scan-closure
 gaps; [glm]/[fable] added non-blocking nits. Folded:
 - `[FIXED]` ([sol]) cp03 `f-string` without `string-literal`: literal-bearing f-strings detect BOTH
-  (concept_scan.py:14-15,279-285); added `string-literal` to cp03 requires+practices.
+  (concept_scan.py:14-15,279-285); `string-literal` (and `f-string`) placed in cp03 `requires` in round 3.
 - `[FIXED]` ([sol]) U07 `error-messages` missing: L1's print-vs-return `TypeError` reading callback genuinely
   practices it (MANUAL_ONLY concept); added to U07 practices.
 - `[FIXED]` ([sol] nit) seed wording corrected (requires a preceding `random.seed(4)`; bans `from random import`).
@@ -230,10 +234,21 @@ gaps; [glm]/[fable] added non-blocking nits. Folded:
   names `gcd` as deferrable; Monte-Carlo gets the quarter-circle π/4 picture + "1001 values/axis, not a
   1000×1000 grid"; cp03 seeded question STATEMENT tells the student to `random.seed(4)` first.
 
-### Round 3 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
-**[self] APPROVE** — the two [sol] closure gaps closed (cp03 lists string-literal; U07 lists error-messages);
-all nits folded; % confirmed taught in U02 (is_prime/gcd dependency).
-_(Awaiting [sol]/[glm]/[fable] round-3 verdicts.)_
+### Round 3 (2026-09-23) — [self] APPROVE; [fable] APPROVE; [glm] APPROVE WITH NITS; [sol] REJECT (narrow).
+[sol]'s U07 `error-messages` fix confirmed RESOLVED; its one remaining finding: `string-literal` was in cp03
+`practices` but not `requires`, mismatching my r2 fold-note ("requires+practices"). Verified the checkpoint
+allowed set is `requires ∪ practices` (concept_scan.py:934-936) — so practices-only already closes the scan
+(cp01/cp02 ship `string-literal` practices-only and pass). To satisfy [sol] AND [glm]'s "f-string→requires
+prereq convention" without cross-field duplication, moved BOTH `f-string` and `string-literal` into cp03
+`requires` and removed them from `practices`. [glm] nits folded: fold-note corrected; U08 L1 names the
+`running-total` site (cumulative dice score); Phase C cp03 pin added (f-strings only, no `+` concat, no
+boolean operators) to avoid unlisted `string-concat`/`logical-ops`; `scope` backed by a define-and-return
+question. [fable] note folded (Monte-Carlo estimate ≈ π, not exact).
+
+### Round 4 (2026-09-23) — re-dispatched [sol]/[glm]/[fable].
+**[self] APPROVE** — cp03 requires now carries f-string + string-literal (union unchanged); all r3 nits
+folded. Contract closure + honesty re-verified.
+_(Awaiting [sol]/[glm]/[fable] round-4 verdicts.)_
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
