@@ -200,4 +200,23 @@ practice-coverage-debt ledger + tier claims all match the tooling. No open findi
 _(4-way content-review gate — filled before PR.)_
 
 ## Post-Execution Report
-_(Filled before shipping.)_
+
+**Status: implemented, ci-local ALL GREEN (2026-09-23). Content-review gate next.**
+
+- **Phase B:** coverage-map entries (U11 + cp04) + 2 manifests + 2 syllabus rows; coverage-check/prereq-check
+  GREEN; 52→55 introduced-once, no dupes.
+- **Phase C (Codex):** U11 `lesson.ipynb` (problem-first opener; dict-literal/access, `key in d` tests keys,
+  `KeyError` fenced markdown + `get`; dict-loop `items()`; most-common `find-extreme`; missing-key tally;
+  explicit group-by; leaderboard sort; keys filter) + `exercises.ipynb` (9, 2 stretch); cp04 `checkpoint.ipynb`
+  (7 Questions; the list+dict question reads `words[0]` positionally).
+- **Phase D (SEPARATE fresh Codex):** U11 + cp04 `solutions.ipynb` (function form; 27/21 non-vacuous asserts;
+  no forbidden methods/forms; winner asserts use unique maxima).
+- **Phase E:** teacher-notes for U11 + cp04 (full heading sets; cp04 `## Grading` with two named pass-bar
+  items + concrete value inventories). `TMPDIR=/dev/shm bash scripts/ci-local.sh` → **ALL GREEN**
+  (concept-scan, exec-solutions, checkpoint questions, notebook exec+hygiene, manifest/prereq/coverage/stretch,
+  PDF, pre-merge-guard). Static AST audit clean: dict methods ⊆ {items,keys,values,get}, list ⊆ {append,sort},
+  string ⊆ {upper,lower,strip,replace}, builtins in-set + no `key=`; no `ord`/`chr`/`collections`/
+  comprehensions/tuple-assignment/step-slices; cp04 no range/sorted/while/bool-ops/+concat.
+
+No deviations from the approved plan. (Design §6 deferred-practice-debt: `transform-each`/`linear-search`/
+`string-slice` land in U12/U13 — plan 077 must list them.)
