@@ -63,7 +63,7 @@ lesson (L1 read a temperature → `celsius_to_f`; L2 read n → `is_prime`; L3 r
 | Bar with a Default | MP | `bar(5)` → `"#####"`, `bar(3, "=")` → `"==="` | ASCII art |
 | Fix the Scope Bug | MP | broken (`no-exec`): `def set_total():` / `    total = 12` / `def show():` / `    print(total)` / `set_total()` / `show()` → `NameError: name 'total' is not defined`; repaired: `set_total` returns 12 and `show(total)` takes a parameter → prints `12` (No real version) | debug & repair |
 | Challenge: Month Calendar | S | `month_calendar(30, 3)` → header `"Su Mo Tu We Th Fr Sa"` + week rows of `f"{d:2}"` cells joined by single spaces, the first row starting after 3 blank cells (`"  "` each); no trailing spaces | calendar, layout |
-| Challenge: Collatz Length | S | `collatz_steps(27)` is the lesson's — use `longest_collatz_below(20)` → start 18 or 19 (whichever first reaches the max 20 steps; spec says "the smallest start") | number theory |
+| Challenge: Longest Collatz | S | `longest_collatz_below(20)` → 18 (the smallest start below 20 with the most steps, 20), calling a `collatz_steps(n)` helper | number theory |
 
 ## U08 — Randomness (all seeded values computed with the exact call order stated)
 
