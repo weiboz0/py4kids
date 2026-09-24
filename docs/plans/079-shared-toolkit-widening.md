@@ -29,7 +29,8 @@ First plan of the Book 1b enrichment initiative.
     Book 1 cell that explicitly declares `book2:str-split` — its per-cell profile
     `scanner_profile(concepts + _declared_owner_concepts(...))` ~L1182-1184 carries `str-split`, so
     design-004 semantics and the checked-in real-form fixtures are preserved);
-    `else: used.add("string-methods")`. The key is the **profile**, never `registered_concepts`
+    `elif "split" in active_profile.taught_methods: used.add("string-methods")` (gated, so a profile
+    without `string-methods` — e.g. a test fixture catalog — never emits an unregistered concept). The key is the **profile**, never `registered_concepts`
     (the Book 1 v2 path's `entry_registered` includes Book 2 dependent-feature owners, ~L1148-1152 /
     ~L816-855, which is exactly why a Book 1 fence resolves to `book2:str-split` today).
     Do not key on `"split" in taught_methods` (always true for Book 1/1b after this plan).
@@ -63,21 +64,24 @@ identical edits keep it green; no tool, test or PDF consumes these display names
 
 ### 3. Tests
 
-**Tests expected to CHANGE** (prototype-identified; each re-expressed with the new expectation):
+**Tests expected to CHANGE** — [fable]'s round-2 prototype: exactly **5 tests / 7 cases** fail as-is.
+The `_scanner_root` fixture catalog (`tests/test_borrowed_tools_scan.py:83-92`) does NOT register
+`string-methods`, and this plan keeps it that way, so the widening is inert there; only the targeted
+tests below change:
 
 | test | new expectation |
 |---|---|
 | `test_borrowed_tools_scan.py::test_markdown_general_closure_ignores_input_but_rejects_undeclared_split` (~L425) | fixture registers `string-methods` with a LATER home (pattern: `_add_future_list_home` ~L453); fence `words = input().split()` in the earlier entry → `undeclared borrowed tool book1:string-methods`; add a positive twin at/after the home → no finding |
-| `::test_v1_book1_split_preserves_exact_legacy_finding` (~L728) | `split` now reports `used-but-unlisted concept string-methods` (not untaught method) |
-| `::test_unauthorized_split_keeps_untaught_method_finding` (~L1487) | rename/re-express: undeclared `split` resolves to `string-methods` closure |
+| `::test_unauthorized_split_keeps_untaught_method_finding` (~L1487) | keep its `untaught method split` assertion (fixture has no `string-methods`); drop only the `book2:str-split` assertion |
 | `::test_split_rejects_wrong_book_owner_declaration` (~L1499) | metadata finding still fires; drop the `book2:str-split` undeclared assertion |
 | `::test_attributed_python_fence_scans_undeclared_split` (~L531, 2 params) | fence `split` resolves via `string-methods` (future-home fixture) |
 | `::test_python3_markdown_fence_is_scanned_for_borrowed_tools` (~L680, 2 params) | same |
-| `::test_method_profile_authorization_is_cell_local` (~L1648) | `other.remove(2)` in a Book 1 cell is no longer "untaught"; assert the new attribution (`list-append` closure) — or switch the fixture's probe method to a still-untaught one (`discard`) to keep testing cell-locality; pick the latter and say so in the test docstring |
-| `::test_exercise_method_authorization_is_limited_to_given_region` (~L1674) | same treatment (probe with `discard`) |
 
 **Tests that MUST keep passing unchanged** (regression guard, prototype-verified with the
-profile-keyed mechanism): `test_checked_in_borrowed_tool_shape_passes_cleanly`,
+profile-keyed mechanism): `test_v1_book1_split_preserves_exact_legacy_finding`,
+`test_method_profile_authorization_is_cell_local`,
+`test_exercise_method_authorization_is_limited_to_given_region` (all three stay as-is because the
+fixture catalog lacks `string-methods`), `test_checked_in_borrowed_tool_shape_passes_cleanly`,
 `test_authorized_book2_split_in_markdown_passes_without_duplicate_registry_id`,
 `test_solution_real_form_without_given_region_needs_no_pairing_id`,
 `test_markdown_unused_check_aggregates_all_fences_in_cell`, the checked-in
@@ -167,3 +171,13 @@ _(4-way content-review gate — filled before PR.)_
 
 ## Post-Execution Report
 _(filled before merge.)_
+
+### Round 2 — verdicts (HEAD 7510ae2)
+
+- `[self]` APPROVE.
+- `[sol]` APPROVE — all six r1 items resolved; no new findings (no shipped `.index()` anywhere).
+- `[fable]` APPROVE WITH NITS — re-prototyped: 5 tests / 7 cases fail (a strict subset of the table),
+  641 pass; static checks PASS for all three books; no Book 2 leak; end-to-end enforcement verified on a
+  real strict checkpoint. Nits: correct the test table (3 rows unchanged because the fixture catalog
+  lacks `string-methods`); gate the `split` else-branch; say which assertion each split test keeps.
+  **All three nits folded** (table corrected, `elif` gate, per-test assertion choice).
