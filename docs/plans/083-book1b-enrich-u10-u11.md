@@ -91,7 +91,8 @@ implementation starts only after 082 merges. If 082 were abandoned, U10 rung 4 w
    a list of strings as a picture
    (`board = ["#..", ".#.", "..#"]`, `print(board[2][2])`); then a `no-exec` cell reading a grid (first
    line the row count, then one row per line). The `u10l046` lead-in stays above `u10l047`.
-6. **Lesson 2 real-input cell (D3: one per lesson):** a `no-exec` cell after the `sorted` section reads
+6. **Lesson 2 real-input cell (D3: one per lesson — U10 has three lessons: L1 rung 4's two cells, L2
+   this cell, L3 rung 5's grid-reading cell; Phase E counts 3/3):** a `no-exec` cell after the `sorted` section reads
    one line of numbers and prints them in order.
 
 **Shipped text to rewrite:** `u10e001` intro ("Core work is Exercises 1–7. Exercises 8–9 are optional
@@ -127,9 +128,9 @@ the new sections), the Challenge count (71) and the **Value plan** (75–88) lis
 | Is It Sorted? | MP | `is_sorted([2, 5, 5, 9])` → True, `([4, 1, 6])` → False (`numbers == sorted(numbers)`) | sorting |
 | Long Words | MP | `long_words(["sled", "umbrella", "sky", "lantern"], 5)` → `['umbrella', 'lantern']` (`len(word) >= minimum`) | filtering, text |
 | Common Elements | MP | `common([3, 8, 5, 12], [5, 3, 7])` → `[3, 5]` (order of the first list) | filtering |
-| Class Average | MP | `average_of([12, 15, 9, 20])` → 14.0 with a hand-written total loop (no `sum`); the stand-in and real program (reads `n` then `n` lines) print `f"Average: {average}"` → `Average: 14.0` |
-| Fix the String Sum | MP | broken: `parts = "4 5".split()` / `print(sum(parts))` → `TypeError: unsupported operand type(s) for +: 'int' and 'str'`; repaired: a loop appends `int(part)` to `numbers`, then `print(sum(numbers))` → `9` (No real version) | debug & repair, parsing | statistics |
-| Challenge: Vertical Bar Chart | S | `vertical_bars([3, 1, 2])` → `"#..\n#.#\n###"` (`top = max(values)`; `for i in range(top):` with `level = top - i`; `#` when the value reaches the level, else `.`) | ASCII art |
+| Class Average | MP | `average_of([12, 15, 9, 20])` → 14.0 with a hand-written total loop (no `sum`); the stand-in and real program (reads `n` then `n` lines) print `f"Average: {average}"` → `Average: 14.0` | statistics |
+| Fix the String Sum | MP | broken: `parts = "4 5".split()` / `print(sum(parts))` → `TypeError: unsupported operand type(s) for +: 'int' and 'str'`; repaired: a loop appends `int(part)` to `numbers`, then `print(sum(numbers))` → `9` (No real version) | debug & repair, parsing |
+| Challenge: Vertical Bar Chart | S | `vertical_bars([2, 4, 1])` → `".#.\n.#.\n##.\n###"` (`top = max(values)`; `for i in range(top):` with `level = top - i`; `#` when the value reaches the level, else `.`) | ASCII art |
 | Challenge: Minesweeper Counts | S | `mine_counts(["*..", "...", ".*."])` → `['*10', '221', '1*1']` (each non-mine cell becomes its count of the 8 neighbours holding `*`; bounds checked with `0 <= r < rows` chained comparisons) | grid & board |
 | Challenge: Game of Life Step | S | `life_step(["...", "###", "..."])` → `['.#.', '.#.', '.#.']` (live cell survives with 2 or 3 live neighbours; dead cell with exactly 3 becomes live) | grid & board, simulation |
 | Challenge: Selection Sort | S | `selection_sort([29, 10, 14, 37, 13])` → `[10, 13, 14, 29, 37]` by hand (for each position find the smallest remaining position, swap through a temporary variable; no `sort`/`sorted`) | sorting |
@@ -149,13 +150,13 @@ the new sections), the Challenge count (71) and the **Value plan** (75–88) lis
    (`for ch in "melon":` → five keys, each 1) — the tally over a string, before the `get` shortcut.
 4. **New rung after `u11l035`:** `print(tally_with_get(["a", "b"]) == {"b": 1, "a": 1})` → `True` —
    two dictionaries are equal when they hold the same pairs, whatever the order.
-6. **In "Loop through the keys" (after `u11l019`):** a rung that builds `order = {}` by adding
+5. **In "Loop through the keys" (after `u11l019`):** a rung that builds `order = {}` by adding
    `"zinc"`, then `"iron"`, then `"gold"` and loops over it — the keys come back **in the order they
    were added** (the rule Letter Tally Chart relies on).
-7. **D3 — one real-input `no-exec` cell per lesson:** L1 reads a planet name and looks it up in the
-   `u11l015`-style table; L2 reads a minimum and prints the players at or above it; L3's two cells
-   are in rung 5.
-5. **New section before `u11l044`: "Read records"** — `record = "Rin 12"` / `parts = record.split()`
+6. **D3 — one real-input `no-exec` cell per lesson:** L1 reads a Roman symbol (`I`, `V` or `X`) and looks
+   it up in `u11l015`'s table; L2 reads a minimum and prints the players at or above it; L3's two cells
+   are in rung 7.
+7. **New section before `u11l044`: "Read records"** — `record = "Rin 12"` / `parts = record.split()`
    / `scores[parts[0]] = int(parts[1])`; then two `no-exec` real-input cells: read one line of words
    and tally it; read `n`, then `n` lines of `name score`.
 
@@ -170,9 +171,9 @@ Challenges" (line 62) and the **Value plan** (66–79) listing every new fixture
 |---|---|---|---|
 | Morse Encoder | C | code table `{"A": ".-", "E": ".", "N": "-.", "O": "---", "S": "...", "T": "-"}` given in the spec; `to_morse("NOTE")` → `"-. --- - ."`, `to_morse("SOS")` → `"... --- ..."` (a list of codes, then `" ".join`) | encoding |
 | Roman Numeral Value | C | values `{"I": 1, "V": 5, "X": 10, "L": 50, "C": 100}`; `roman_to_int("XLII")` → 42, `("LXIX")` → 69 (subtract a value that is smaller than the next one) | sequences & bases |
-| Letter Tally Chart | C | `tally_chart("papaya")` → `"p ##\na ###\ny #"` (rows in first-appearance order — taught by U11 rung 6; each row `f"{ch} " + "#" * count`) | ASCII art, tallies |
+| Letter Tally Chart | C | `tally_chart("papaya")` → `"p ##\na ###\ny #"` (rows in first-appearance order — taught by U11 rung 5; each row `f"{ch} " + "#" * count`) | ASCII art, tallies |
 | Invert a Dictionary | MP | `invert({"cold": "C", "warm": "W", "hot": "H"})` → `{'C': 'cold', 'W': 'warm', 'H': 'hot'}` (values are unique) | encoding |
-| Anagram by Tally | MP | `is_anagram("listen", "silent")` → True, `("robot", "boost")` → False (two tallies compared with `==`) | text |
+| Anagram by Tally | MP | `is_anagram("listen", "silent")` → True, `("cider", "crumb")` → False (two tallies compared with `==`) | text |
 | Price Lookup Total | MP | `cart_total({"pen": 3, "pad": 5, "ink": 12}, ["pen", "ink", "pen"])` → 18; real reads the item names on one line | aggregation |
 | Luhn Check Digit | MP | `luhn_valid("79927398713")` → True, `("79927398710")` → False (from the right, double every second digit, subtract 9 when over 9, total % 10 == 0) | number theory, validation |
 | Scores from Records | MP | `parse_records(["Rin 12", "Oto 7", "Rin 5"])` → `{'Rin': 17, 'Oto': 7}` (`split`, `int(parts[1])`, add to an existing key); real reads `n` then `n` record lines | parsing, aggregation |
@@ -216,7 +217,7 @@ program.
 - **U10 practices:** `builtin-functions` ≥10; `in-operator` 5 (Keep Approved Values, Remove
   Duplicates, Common Elements, Find the Seat, Fix the Missing Value); `accumulator`/`running-total` ≥3
   (Ex 6, Magic Square Check, Class Average); `count-by-condition` 3 (Mode, Minesweeper Counts, Game of
-  Life Step); `loop-counter` ≥3; `f-string` 3 (stand-in code of Bar Chart, Median, Class Average — plus Statistics Report);
+  Life Step); `f-string` 3 (stand-in code of Bar Chart, Median, Class Average — plus Statistics Report);
   `error-messages` 3 (Fix the Index Error, Fix the Missing Value, Fix the String Sum);
   `float-type` 3 (Median, Class Average, Statistics Report); `loop-counter` 3 (Mode's inner `count`, Minesweeper Counts' and Game of Life
   Step's neighbour counts); `comment` 3 (purpose comments in the Ex 8–10 stand-ins, counted in solutions.ipynb); `int-type`,
@@ -243,8 +244,8 @@ Rule: `practices` gains a concept only with ≥3 named reps; a concept used by f
   parsing; `join`: Bar Chart, Grid Printer, Vertical Bar Chart), `string-index` (Tic-Tac-Toe Winner,
   Minesweeper Counts, Game of Life Step), `string-concat` (Bar Chart, Grid Printer, Vertical Bar Chart,
   Minesweeper Counts), `nested-loops` (Mode, Grid Printer, Minesweeper Counts, Game of Life Step,
-  Selection Sort), `error-messages` (the three repairs), `float-type` (Median, Class Average,
-  Statistics Report). **U10 `requires` +=** `while-loop` (Reverse in Place only), `logical-ops`
+  Selection Sort), `error-messages` (the three repairs) (`float-type` is already a U10 practice — Median, Class
+  Average, Statistics Report keep it honest). **U10 `requires` +=** `while-loop` (Reverse in Place only), `logical-ops`
   (Minesweeper bounds only if the scanner sees `and`), `string-slice` (lesson slices; no exercise needs
   one).
 - **U11 `practices` +=** `input`, `type-conversion` (every real program; Scores from Records, Luhn
@@ -316,8 +317,16 @@ U12–U13, checkpoints, syllabus refresh (plan 084); tooling.
   collisions with shipped Book 1b replaced before review.
 - Nits folded before dispatch: U10 Ex 4 is a write-the-function spec, so it keeps a real program;
   Second Largest pins its seed (`best = min(numbers)`, no `None`).
-- Watch items for reviewers: U10 grows 9 → 36 and U11 9 → 28 (volume is the standing preference);
+- Watch items for reviewers: U10 grows 9 → 37 and U11 9 → 28 (volume is the standing preference);
   list slices scan as `string-slice` (a practices delta, not a new concept).
+
+### Round 2 — [fable] APPROVE WITH NITS (folded)
+
+- `[FIXED]` Vertical Bar Chart `[2, 4, 1]` → `".#.\n.#.\n##.\n###"` (no longer copies `u10l003`'s
+  `[3, 1, 2]`); Anagram's false case `("cider", "crumb")` (`robot` is a checkpoint-04 fixture); U11 L1
+  real-input cell reads a Roman symbol (planets belong to U11 Ex 1); U10 D3 count stated (3 lessons,
+  3/3); U11 rungs renumbered 1–7 in order; cosmetics (duplicate `loop-counter`, `float-type` already
+  practised, genre cells, the `[self]` count).
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
