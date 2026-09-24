@@ -323,6 +323,24 @@ Consensus: **NOT reached** (1 REJECT). All findings folded (this commit); round 
 
 ci-local: ALL GREEN after fold.
 
+### Round 2 — verdicts (HEAD 433e748)
+
+- `[self]` APPROVE — both `[sol]` Must-Fix folded; ci-local GREEN.
+- `[fable]` APPROVE — P4 fixture swap executes clean (hand-traced `[2,6,6]+[6,10]=[2,6,6,6,10]`, grep 0
+  collisions); all r1 nits confirmed folded; full book1b CI slice PASS; no regressions.
+- `[sol]` **REJECT** — MF2 (P4) RESOLVED; MF1 residual: the reworded checklist said "the function, which
+  only reads," inaccurate for P11 (whose function writes `out_path`). No new blockers.
+- `[glm]` — round-1 APPROVE WITH NITS carried forward (its `[OPEN]` arithmetic typo fixed; wording nit
+  folded; manifest-honesty/anchor verification unaffected by the fold).
+
+Consensus: **NOT reached** (1 REJECT — a one-line checklist wording residual). Folded; round 3 confirms `[sol]`.
+
+### Round 2 — fold
+
+- `[FIXED]` checklist (brief `p01b029`): "the function, which only reads" → names each function precisely
+  (`word_counts_from_file`/`most_common_word` read; `running_totals_to_file` reads input, writes output)
+  (`[sol]` MF1 residual). structure-check + hygiene-check PASS.
+
 ## Post-Execution Report
 
 **Status: implemented, ci-local ALL GREEN + pytest 664 passed (2026-09-23). Content-review gate next.**
