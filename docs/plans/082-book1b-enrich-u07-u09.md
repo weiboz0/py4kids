@@ -218,7 +218,7 @@ shipped tag that cannot reach 3 (design 005 fastforward), recorded in the post-e
   `elif-else` 3 (Ex 4, File Type, Valid PIN); `accumulator`/`count-by-condition`/`loop-counter` ≥3
   (Word Count, Run-Length Encoding, Common Letters, Spam Check); `builtin-functions` ≥3 (`len` in Valid
   PIN, Center Text, Ends of a Word); `int-type`/`type-conversion` 3 (Safe Number `int`, Run-Length
-  Encoding `str(count)`, Center Text's integer padding); `comment` 3 (Word Count, Initials, Valid PIN);
+  Encoding `str(count)`, shipped Ex 1 Badge Line's `str(len(code))`); `comment` 3 (Word Count, Initials, Valid PIN);
   `naming` ≥3.
 
 ## Metadata deltas (manifest + coverage-map, identically; confirmed by Phase E's honesty scan)
@@ -244,7 +244,7 @@ shipped tag that cannot reach 3 (design 005 fastforward), recorded in the post-e
 - **Phase D (inline):** teacher-notes (incl. D9 genre notes and the rewrites above), metadata deltas.
 - **Phase E (audits first, ci-local last):** toolkit AST audit of every cell, fence and turtle asset;
   the exercise-contract + fence-parity audit (plan 080's script — every fence is EXECUTED with its pinned Sample input and its stdout compared to Expected output and the stand-in); turtle command-trace check (Random
-  Polygon 4 pen-down; Random Color Row 16 pen-down + 4 travels + `backward(120)`, colors `rgrb`; Polygon
+  Polygon 4 pen-down; Random Color Row 16 pen-down + 4 travels + `backward(120)`, colors `rgrb` — `fake_turtle.state()` does not record colors, so the companion wraps `turtle.pencolor` with a small recording spy (as U06's ring check does) to assert the sequence; Polygon
   Row 18 pen-down + `backward(210)`; Star Function 5 pen-down); fixture/value-use audit; manifest ↔
   coverage-map diff + honesty scan; depth + genre tables; `scripts/ci-local.sh`; post-execution report.
 
@@ -321,6 +321,16 @@ U10+ (plans 083–084); checkpoints (084); tooling.
 - `[FIXED]` lesson rungs renamed (`sum_of_squares`/`square`, `rule(n, symbol="-")`); the exercise is
   now Rounded Fahrenheit; toolkit notes `sum(range(...))` and `len(line.split())`; `u09l008` added to
   the U09 rewrite list.
+
+### Round 3 — CONSENSUS
+
+- `[sol]` APPROVE WITH NITS (r3) — all blockers resolved; outputs recomputed. Nits folded: U09
+  `type-conversion` third rep is Badge Line's `str(len(code))`; the `rgrb` colour assertion uses a
+  `pencolor` recording spy.
+- `[fable]` APPROVE WITH NITS (r2, nits folded) · `[glm]` APPROVE WITH NITS (r1, nits folded) ·
+  `[self]` APPROVE WITH NITS.
+
+**Consensus reached — implementation may start after plan 081 merges.**
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
