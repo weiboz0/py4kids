@@ -72,7 +72,7 @@ the guessing-game cell are good self-serve rungs.
 
 No core exercise depends on a More Practice or Challenge exercise.
 
-**Real versions.** Every exercise except the four repairs has a Real version. U04's real programs are
+**Real versions.** Every exercise except the five repairs (2 and 20–23) has a Real version. U04's real programs are
 **sentinel loops** — the unit's own concept: Fundraiser Running Total and Score-Tier Census keep reading
 numbers until a `0` line (`while True:` + `break`); the others read their starting value(s) one per line.
 The Guessing Robot's real program reads the secret and prints the same transcript. Graded solution cells
