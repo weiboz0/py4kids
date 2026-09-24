@@ -65,9 +65,9 @@ uses the longer form" → now introduces `+=` as the shorthand taught in Lesson 
 
 | # | title | kind | fixture → exact output | depth |
 |---|---|---|---|---|
-| 12 | Countdown Liftoff | C | `start = 5` → `5` `4` `3` `2` `1` `Liftoff!` (6 lines) | while, loop-counter |
-| 13 | Count the Digits | C | `n = 90210` → `Digits: 5` | loop-counter |
-| 14 | Reverse a Number | C | `n = 3721` → `Reversed: 1273` | accumulator |
+| 12 | Countdown Liftoff | C | `start = 5` → `5` `4` `3` `2` `1` `Liftoff!` (6 lines; requires a purpose comment) | while, loop-counter |
+| 13 | Count the Digits | C | `n = 90210` → `Digits: 5` (requires a purpose comment) | loop-counter |
+| 14 | Reverse a Number | C | `n = 3721` → `Reversed: 1273` (requires a purpose comment) | accumulator |
 | 15 | Palindrome Number | MP | `n = 12321` → `12321 is a palindrome` (statement: save the original in `original` before peeling digits) | accumulator, if |
 | 16 | Doubling Past a Limit | MP | `value = 5`, `limit = 500` → `640 after 7 doublings` (`while True` + `break`) | break, loop-counter, sentinel-loop |
 | 17 | Sum of Even Digits | MP | `n = 482615` → `Even digits: 4` / `Even-digit sum: 20` | running-total, count-by-condition |
@@ -123,7 +123,7 @@ U05 teacher-notes line 36 ("`x = x + 1` only" → either form, `+=` taught in U0
 | 14 | Right-Aligned Triangle | C | `height = 4` → `   *` / `  **` / ` ***` / `****` | string-concat |
 | 15 | Checkerboard | MP | 4×4, `(row + col) % 2` → `#.#.` / `.#.#` / `#.#.` / `.#.#` | nested-loops |
 | 16 | Pyramid | MP | `height = 4` → `   *` / `  ***` / ` *****` / `*******` | string-concat |
-| 17 | Diamond | MP | `size = 3` → `  *` / ` ***` / `*****` / ` ***` / `  *` | nested-loops |
+| 17 | Diamond | MP | `size = 3` → `  *` / ` ***` / `*****` / ` ***` / `  *` (rows from `" " * (s - r) + "*" * (2 * r - 1)`) | string-concat |
 | 18 | Tree with Trunk | MP | `height = 4` → the 4-row pyramid + trunk row `   |` | string-concat |
 | 19 | Floyd's Triangle | MP | 4 rows → `1` / `2 3` / `4 5 6` / `7 8 9 10` | nested-loops, loop-counter |
 | 20 | Skip the Sevens | MP | 1..20 skipping multiples of 7 with `continue` → `Sum: 189` | continue, running-total |
@@ -157,12 +157,12 @@ closes or carries `# turtle-check: open-path`):
 | 10 | Row of Squares | C | 4 squares of side 40; after EACH square (4 times) pen up, `forward(60)`, pen down (nested loops); finally pen up + `backward(240)` back to the start (closed) |
 | 11 | Dashed Line | C | 24 alternating 10-step segments (`for i in range(24)`), pen down when `i % 2 == 0`; `dashes = dashes + 1` only on the 12 pen-down segments → prints `Dashes: 12` (`# turtle-check: open-path`) |
 | 12 | Color-Alternating Ring | MP | 8 squares around a point, `pencolor` chosen by `if`/`elif`/`else` on `i % 3` (0 → red, 1 → blue, else green); accumulates `turned = turned + 45` and a counter `count = count + 1`, printing `Turned: 360` and `Squares: 8` |
-| 13 | Growing Squares | MP | 5 squares sharing a corner, sides 20, 40, 60, 80, 100 grown with `side = side + 20` (required) |
+| 13 | Growing Squares | MP | 5 squares sharing a corner, sides 20, 40, 60, 80, 100 grown with `side = side + 20` (required); counts `drawn = drawn + 1` and prints `Squares: 5` |
 | 14 | Seven-Point Star | MP | 7 points, turn `3 * 360 / 7` each time (true division, never rounded — 154 leaves a 2° gap) |
 | 18 | Fix the Indentation | MP | the statement shows a loop whose body line is not indented and its `IndentationError`; the repaired `ex18` asset draws a closed pentagon of side 60 (`360 / 5` turns) (No real version) |
 | 16 | Fix the Misspelled Command | MP | the statement shows `turtle.foward(50)` and its `AttributeError`; the student's `ex16` asset is the repaired closed square of side 50 (No real version) |
 | 17 | Fix the Missing Import | MP | the statement shows a script without `import turtle` and its `NameError`; the repaired `ex17` asset draws a closed triangle of side 70 (No real version) |
-| 15 | Challenge: Grid of Squares | S | 3×3 grid of side-30 squares, travel 45 (nested loops); the statement states the pen-up return path back to the start (closed) |
+| 15 | Challenge: Grid of Squares | S | 3×3 grid of side-30 squares, travel 45 (nested loops); the statement states the pen-up return path back to the start (closed); counts `squares = squares + 1` and prints `Squares: 9` |
 
 ## Depth rule (as plan 080, U04–U06 thresholds: introduced ≥5, practiced ≥3)
 
@@ -222,15 +222,15 @@ accumulation, debug/repair. All ≥ 4.
 | unit | concept | existing | + new | projected | need |
 |---|---|---|---|---|---|
 | U04 | while-loop, accumulator | 11 / 10 | +16 | 27 / ≥20 | 5 |
-| U04 | break-statement | 1 (Ex 11) | +2 (Doubling, First Square) + sentinel fences Ex 3, Ex 9 | 5 | 5 |
+| U04 | break-statement | 1 (Ex 11) | +3 (Doubling, First Square, Guessing Robot) + sentinel fences Ex 3, Ex 9 | 6 | 5 |
 | U04 | loop-counter | ≥4 (Ex 1, 4, 7, 11) | +5 (Digits, Doubling, Star Bar, Savings, Guessing Robot; Countdown's value decreases, so no credit) | ≥9 | 5 |
-| U04 | sentinel-loop | 2 (Ex 7, 11) | +2 (Doubling, Collatz Peak) + fences Ex 3, 9 | 6 | 5 |
-| U04 | running-total | 2 (Ex 3, 6) | +3 (Even Digits, Savings, Powers) | 5 | 5 |
+| U04 | sentinel-loop | 2 (Ex 7, 11) | +4 (Doubling, Collatz Peak, Guessing Robot, Triangular Numbers) + fences Ex 3, 9 | 8 | 5 |
+| U04 | running-total | 2 (Ex 3, 6) | +4 (Even Digits, Savings, Powers, Triangular Numbers) | 6 | 5 |
 | U04 | count-by-condition | 2 (Ex 4, 9) | +3 (Even Digits, Odd Digits, Lucky Sevens) | 5 | 5 |
 | U04 practices | error-messages | 0 (Ex 2 is an off-by-one repair with no error message) | +3 (Missing Starting Value `NameError`, Missing Colon `SyntaxError`, Unindented Body `IndentationError`; Fix the Infinite Loop is a debug exercise without a traceback, so no credit) | 3 | 3 |
 | U04 practices | comment | 0 required | +3 (Countdown, Digits, Reverse require a purpose comment) | 3 | 3 |
 | U05 | for-loop, range-function | 11 | +15 | 26 | 5 |
-| U05 | nested-loops | 3 | +9 (Hollow Box, Checkerboard, Diamond, Floyd, Times Table, Primes, Pythagorean Triples, Coin Combinations, Pascal) | 12 | 5 |
+| U05 | nested-loops | 3 | +8 (Hollow Box, Checkerboard, Floyd, Times Table, Primes, Pythagorean Triples, Coin Combinations, Pascal) | 11 | 5 |
 | U05 practices | conditional-nesting | 1 (Ex 7) | +2 (Hollow Box, Leap Years) | 3 | 3 |
 | U05 practices | break-statement | 2 (Ex 5, 11) | +2 (Skip the Sevens `continue`, Primes) | 4 | 3 |
 | U05 practices | running-total / count-by-condition | 2 (Ex 1, 10) / 2 (Ex 3, 7) | +3 (Skip the Sevens, Multiples of 3 or 5, Perfect Number) / +3 (Divisor Count, Leap Years, Coin Combinations) | 5 / 5 | 3 |
@@ -238,7 +238,7 @@ accumulation, debug/repair. All ≥ 4.
 | U06 practices | nested-loops | 1 (Ex 6) | +3 (Row, Ring, Grid) | 4 | 3 |
 | U06 practices | accumulator | 1 (Ex 7) | +2 (Ring `turned`, Growing Squares side) | 3 | 3 |
 | U06 practices | error-messages | 0 (Ex 9 is a predict/explain task, not a repair) | +3 (Misspelled Command, Missing Import, Indentation) | 3 | 3 |
-| U06 practices | loop-counter | 0 (for-variables are not counters) | +3 (Ring `count`, Dashed Line `dashes = dashes + 1`, Grid `squares = squares + 1`) | 3 | 3 |
+| U06 practices | loop-counter | 0 (for-variables are not counters) | +3 (Ring `count`, Grid `squares`, Growing Squares `drawn`; Dashed Line's conditional `dashes` counts as count-by-condition) | 3 | 3 |
 
 ## Phases
 
@@ -285,6 +285,13 @@ U01–U03 (plan 080), U07+ (plans 082–084), checkpoints (084), tooling.
 - **User direction (2026-09-24):** genre coverage (design 006 D9) folded — U04 Triangular Numbers,
   Decimal to Binary, Guessing Robot, Count the Steps; U05 Pythagorean Triples, Chickens and Rabbits,
   Coin Combinations, Pascal's Triangle.
+
+### Round 2 — [fable] APPROVE WITH NITS (folded)
+
+- `[FIXED]` depth rows aligned with the exercise tables (U04 break 6, sentinel 8, running-total 6);
+  purpose-comment requirement written into the three U04 rows; Diamond credited `string-concat`
+  (U05 nested 11); Grid prints `Squares: 9` and Growing Squares prints `Squares: 5`, so every
+  counter is used; Dashed Line's conditional counter reclassified as count-by-condition.
 
 ### Round 2 — [sol] REJECT (folded)
 
