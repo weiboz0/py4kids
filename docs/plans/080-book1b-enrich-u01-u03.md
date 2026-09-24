@@ -161,7 +161,23 @@ If any U03 art uses string `+`/`*`, add `string-concat` to U03 `practices` (mani
 
 New core/MP exercises are inserted **before** each unit's existing Challenge exercises, and every
 exercise is renumbered so Challenges stay last; statements, solutions (headings mirror) and
-teacher-notes use the same final numbers. The `#` column in the tables above is provisional.
+teacher-notes use the same final numbers. The `#` column in the tables above is provisional; the
+**binding final order** is below. More Practice titles are prefixed `More Practice: `; Challenges
+keep `Challenge N: ` and the `stretch` tag.
+
+- **U01 (20):** 1–11 existing core · 12 Comma Print · 13 Room Sign · 14 Escape Poem ·
+  15 MP Predict the Output · 16 MP Swap Two Values · 17 MP Fix the NameError · 18 MP Triple-Quote
+  Cat · 19 Challenge 1: Two Member Badges (was 12) · 20 Challenge 2: Error Detective Card (was 13).
+- **U02 (23):** 1–8 existing core · 9 Coin Change · 10 Seconds Breakdown · 11 Boolean Report ·
+  12 MP Three-Digit Sum · 13 MP Power Pair · 14 MP Clock Arithmetic · 15 MP Progress Bar ·
+  16 MP Box Banner · 17 MP Precedence Predictions · 18 MP Read the ValueError ·
+  19 Challenge 1: Reverse Two Digits (was 9) · 20 Challenge 2: Three-Digit Places (was 10) ·
+  21 Challenge 3: The 1089 Trick · 22 Challenge 4: Receipt Line · 23 Challenge 5: Framed Title.
+- **U03 (21):** 1–8 existing core · 9 FizzBuzz for One Number · 10 Largest of Three ·
+  11 MP Order Three Numbers · 12 MP Rock-Paper-Scissors Judge · 13 MP Quadrant Finder ·
+  14 MP Valid Triangle · 15 MP Traffic Light Art · 16 MP Mood Face ·
+  17 Challenge 1: Triangle Logic Puzzle (was 9) · 18 Challenge 2: Leap-Year Logic Puzzle (was 10) ·
+  19 Challenge 3: Closed Sign (was 11) · 20 Challenge 4: Ticket Price · 21 Challenge 5: Valid Clock Time.
 
 ## Depth rule (D7, made precise for this plan)
 
@@ -198,6 +214,8 @@ manual attribution; "+" = new exercises from the tables):
 | U03 | conditional-nesting | 1 (Ex 7) | +4 (RPS, Quadrant, Ticket, Clock) | 5 | 5 |
 | U03 practices | f-string | 2 | +4 (Largest, Order, Quadrant, Ticket) | 6 | 3 |
 | U03 practices | type-conversion, input | 1 / 0 | + numeric real-program fences | ≥10 | 3 |
+| U02 practices | string-literal, naming, run-program | 9 / all / all | +13 | ≥20 | 2 |
+| U03 practices | int-type, string-literal, naming | all numeric / 11 / all | +10 | ≥18 | 3 |
 
 ## Phases
 
@@ -291,6 +309,15 @@ Checkpoint real-version notes (plan 084); U04+ units; tooling changes.
 - `[FIXED]` dropped `3fe905d22497` from the affected-anchor list; named the `u03l034` →
   `u03l034a` lead-in anchor and the rung-6 position.
 - `[FIXED]` U03 fixtures varied: Mood Face 72, Valid Triangle 2/5/9 (no shared small ints).
+
+### Round 3 — verdicts — CONSENSUS
+
+- `[self]` APPROVE. `[glm]` APPROVE (round 2). `[fable]` APPROVE WITH NITS (folded above).
+- `[sol]` APPROVE WITH NITS — all five round-2 items resolved; nit: make the depth matrix exhaustive
+  over the manifests → `[FIXED]` (U02/U03 trivially-satisfied practice rows added).
+- Binding final exercise numbering added (Numbering section) so statement and solution sessions agree.
+
+**Consensus: REACHED** — cleared for implementation.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
