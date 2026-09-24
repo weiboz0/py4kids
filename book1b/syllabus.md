@@ -71,6 +71,28 @@ The **Algorithm Challenge** (a non-themed integrative problem set) closes the ye
 | `checkpoint-05-files-and-objects` | checkpoint | 0.5 | Prove files and objects on a mixed problem set (the mandatory final checkpoint). |
 | `project-01-algorithm-challenge` | project | 2 | The year-end Algorithm Challenge — an integrative, non-themed problem set (primes, searching, tallies, files, a class). |
 
+## Enrichment (design 006, plans 079–084)
+
+A 2026 enrichment pass (`../docs/designs/006-book1b-enrichment.md`) strengthened every unit without changing
+the 62-concept catalog.
+- **Gentler ladders.** Each lesson code cell adds one new idea; dense multi-idea cells were split into
+  worked-example rungs, each with its own lead-in and a *Notice*.
+- **Real programs.** Every exercise that takes input ends with a **Real version** note, and its solution
+  shows the same program reading stdin with a bare `input()` (contest style), with a sample input and the
+  expected output. Repair, trace, and turtle exercises say **No real version** instead. Checkpoint
+  questions carry ungraded real-version notes as well.
+- **Wider toolkit (plan 079, both books).** `split`/`join`/`find`/`startswith`/`endswith`/`isdigit`/`isalpha`,
+  `insert`/`pop`/`remove`/`index`, and `continue` are now taught facets of existing concepts.
+- **Filled facets.** `print(a, b)`, `sep`/`end`, escapes, string repetition, `**`, precedence, `+=`, `round`,
+  chained comparisons, `range` steps, `continue`, default parameters, composition, negative indexes, open
+  slices and `[::-1]`, list equality, nested-list grids, file append mode, lists and dicts as attributes.
+- **Variety and volume.** ASCII art runs as a thread from Unit 01 to Unit 13 (banners, the full pattern
+  ladder, shape functions, dice faces, word frames, grids, tally charts, text maps, `draw()` methods), and
+  each unit's set touches at least four problem genres (number theory, simulation, ciphers, text layout,
+  grids and boards, statistics, calendar and time, state machines, debug and repair, and more).
+  Exercise counts after enrichment: Unit 01 20, 02 23, 03 21, 04 34, 05 31, 06 18, 07 32, 08 20, 09 29,
+  10 37, 11 28, 12 28, 13 24 — each split into core, **More Practice**, and **Challenge** tiers.
+
 ## Rules this syllabus is bound by
 
 - Prereq closure over `requires` (strict): a unit's core teaching never depends on a concept introduced later.

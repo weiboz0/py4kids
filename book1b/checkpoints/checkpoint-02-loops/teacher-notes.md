@@ -22,6 +22,14 @@ Budget: half a lesson (~30–45 minutes). Hand out after Unit 05. The seven ques
 6. **Count by Condition** — count matches across a range (U04/U05 technique).
 7. **Six-by-Six Times Table** — nested loops building each row by string accumulation (U05).
 
+## Real-version notes (design 006, plan 084)
+
+Each question now ends with an ungraded **Real version** note (only Checkpoint 01's traceback-reading
+question has none). Graded answers still use the fixed given values and never call `input()`; the
+solutions notebook shows each real program — the same work reading stdin with a bare `input()`, the way a
+contest problem does — with a sample input and its expected output. Use one or two as a warm-up after the
+checkpoint, typing the sample input live.
+
 ## Common mistakes
 
 - Ordering the Q1 ladder broad-first so the verdict is wrong.

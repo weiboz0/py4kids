@@ -6,6 +6,8 @@ provenance: original
 concepts:
   introduces: [class-def, init-method, attributes, methods]
   requires: [def-function, parameters, return-value, arithmetic, comparison, boolean, if-statement,
-             variable, print]
-  practices: [string-slice, file-read, file-write, with-statement, f-string, int-type, float-type,
-              type-conversion, comment, naming]
+             variable, print, string-slice, dict-literal, dict-access, in-operator, range-function,
+             string-methods, find-extreme, nested-loops, error-messages, list-index, dict-loop,
+             string-concat, accumulator, string-literal, builtin-functions]
+  practices: [file-read, file-write, with-statement, f-string, int-type, float-type, type-conversion,
+              comment, naming, input, list-append, elif-else, list-loop, for-loop, list-literal]

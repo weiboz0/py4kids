@@ -24,6 +24,14 @@ Budget: half a lesson (~30–45 minutes). Hand out after Unit 11. The seven ques
 7. **First-Word Report** (`first_word_report`) — tally a list of words AND read `words[0]` by position, then
    report `"word: n of total"` (U10 list-index + U11 tally).
 
+## Real-version notes (design 006, plan 084)
+
+Each question now ends with an ungraded **Real version** note (only Checkpoint 01's traceback-reading
+question has none). Graded answers still use the fixed given values and never call `input()`; the
+solutions notebook shows each real program — the same work reading stdin with a bare `input()`, the way a
+contest problem does — with a sample input and its expected output. Use one or two as a warm-up after the
+checkpoint, typing the sample input live.
+
 ## Common mistakes
 
 - `d[key]` on a missing key raises `KeyError` — use `d.get(key, 0)` (Q2) or check `key in d`.
