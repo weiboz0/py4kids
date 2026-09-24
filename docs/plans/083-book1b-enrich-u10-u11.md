@@ -239,14 +239,16 @@ program.
   Chart, Most Frequent Letter); `accumulator` ≥3 (Ex 3, Price Lookup Total, Luhn Check Digit, Vote
   Percentages); `f-string` 3 (Word Winner Report, Report Card rows `f"{name} {average}"`, Letter Tally
   Chart's rows); `builtin-functions` ≥3; `comment` 3 (purpose comments
-  required in Ex 8–10 — Morse Encoder, Roman Numeral Value, Letter Tally Chart — pinned in their rows); `int-type`/`naming` ≥3.
+  required in Ex 8–10 — Morse Encoder, Roman Numeral Value, Letter Tally Chart — by the exercise-wide
+  purpose-comment rule of the Ex 8–10 statements, as in plans 080–082); `int-type`/`naming` ≥3.
 
 ## Metadata deltas (manifest + coverage-map, identically; confirmed by Phase E's honesty scan)
 
 Rule: `practices` gains a concept only with ≥3 named reps; a concept used by fewer goes in `requires`.
 
-- **U10 `practices` +=** `input`, `type-conversion` (every real program's fence; stand-ins: Numbers on One
-  Line, Fix the String Sum), `string-methods` (`split`: Numbers on One Line, Fix the String Sum, Queue at
+- **U10 `practices` +=** `input` (every real program's fence), `type-conversion` (the numeric fences — Numbers on
+  One Line, Second Largest, Median, Class Average, … — and the stand-ins of Numbers on One Line and Fix the
+  String Sum), `string-methods` (`split`: Numbers on One Line, Fix the String Sum, Queue at
   the Counter's fence; `join`: Bar Chart, Grid Printer, Vertical Bar Chart), `string-index` (Tic-Tac-Toe Winner,
   Minesweeper Counts, Game of Life Step), `string-concat` (Bar Chart, Grid Printer, Vertical Bar Chart,
   Minesweeper Counts), `nested-loops` (Mode, Grid Printer, Minesweeper Counts, Game of Life Step,
@@ -353,6 +355,11 @@ U12–U13, checkpoints, syllabus refresh (plan 084); tooling.
 - `[FIXED]` the insertion-order rung's third key is `"neon"` (`"gold"` is shipped in `u11l003`).
 - `[FIXED]` the U11 Lesson 2 real-input cell now uses only Lesson 1–2 patterns (build a dict from
   records, total it with the keys loop).
+
+### Round 4 — [sol] APPROVE WITH NITS (folded)
+
+- `[FIXED]` `type-conversion` reps named as the numeric fences (text-only programs do not count); U11
+  comment reps tied to the Ex 8–10 statements' purpose-comment requirement.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
