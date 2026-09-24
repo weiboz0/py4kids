@@ -39,8 +39,9 @@ leave the π estimate as a "try it"; it is the least essential and the most math
 
 ## Exercises — core vs. More Practice vs. challenge
 
-20 exercises. Every exercise that uses randomness is a **seeded function** (`random.seed(4)` before the first random
-call) asserted against its deterministic result.
+20 exercises. Every exercise that uses randomness seeds with `random.seed(4)` before the first random call: the
+non-turtle ones are **seeded functions** asserted against their deterministic results; the turtle
+exercises (7, 16, 17) are seeded module-level scripts checked by replaying them headlessly.
 
 - **Core (1–10):** Dice Total, Heads Counter, Bonus-Round Score, Target Roll Counter, Even-Roll Percentage,
   Quarter-Circle Estimate, **Rescue-Robot Random Walk** (turtle), plus **Die Face Art** (8: `die_face(5)` →
