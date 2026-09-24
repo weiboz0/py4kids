@@ -76,7 +76,7 @@ implementation starts only after 082 merges. If 082 were abandoned, U10 rung 4 w
    removes the first match; `.index(value)` finds a position — plus a Notice that `remove`/`index`
    raise `ValueError` when the value is missing, so guard with `in`.
 3. **Slices on lists:** two rungs — `print(scores[1:3])` (a slice is a new list), then
-   `print(scores[::-1])` (a new reversed list; the original is unchanged) — placed after the position loop (`u10l011`–`u10l013`).
+   `print(scores[::-1])` (a new reversed list; the original is unchanged) — placed after the position loop (`u10l011`–`u10l013`) and before rung 4's new section.
 4. **New section at the end of Lesson 1: "Read several numbers on one line"** — rungs:
    `line = "7 3 8"` / `parts = line.split()` / `print(parts)` (a list of strings); `print(int(parts[0])
    + int(parts[1]))` → 10; then a loop that appends `int(part)` for every piece into `numbers`.
