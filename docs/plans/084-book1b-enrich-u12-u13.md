@@ -153,7 +153,9 @@ gains one sentence: "Each question ends with a **Real version** note: the soluti
 program reading its values with `input()`, the way a contest problem does — it is not graded." Each
 question gets exactly one closing `**Real version:**` / `**No real version:**` line; question text,
 points and answers are otherwise unchanged. Each Real version gets a `**The real program**` fence in the
-checkpoint's `solutions.ipynb` with the pinned **Sample input** / **Expected output** below. Fences are
+checkpoint's `solutions.ipynb` with the pinned **Sample input** / **Expected output** below. The only **No real version** is CP01 Q7 (it
+reads a traceback — D3's trace exception); CP02 Q6's fixed interval becomes a real version that reads
+its last round number. Fences are
 **strict**: only concepts taught up to and including the last unit the checkpoint assesses (CP01 → U03,
 CP02 → U05, CP03 → U08, CP04 → U11, CP05 → U13), no borrowed tools; `input` is a U01 concept, so every
 checkpoint may use it. CP04's fences use `split` (U09) and list indexing `parts[1]` (U10), inside its
@@ -175,8 +177,8 @@ it and print the result.
 | CP02 Q3 | `9` | `Count: 9` |
 | CP02 Q4 | `9` | `Steps: 19` |
 | CP02 Q5 | `20` | `Sum: 210` |
-| CP02 Q6 | **No real version** (a fixed interval, no given value) | — |
-| CP02 Q7 | `6` | the six table rows `1 2 3 4 5 6` … `6 12 18 24 30 36` |
+| CP02 Q6 | `50` (the last round number; the loop runs `range(1, last + 1)`) | `Count: 7` |
+| CP02 Q7 | `6` | `1 2 3 4 5 6` / `2 4 6 8 10 12` / `3 6 9 12 15 18` / `4 8 12 16 20 24` / `5 10 15 20 25 30` / `6 12 18 24 30 36` (six lines, exactly) |
 | CP03 Q1 | `19` | `True` |
 | CP03 Q2 | `8` / `1.25` (text passed to `travel_cost`) | `Trip cost: $13.5` |
 | CP03 Q3 | `20` | `210` |
@@ -239,8 +241,9 @@ the widened toolkit (079). Roadmap text is unchanged.
 ## Metadata deltas (manifest + coverage-map; ≥3 named exercise reps → `practices`, fewer → `requires`)
 
 The rule is applied to the concepts this plan's new work touches; shipped `requires` tags that the
-existing exercises already use heavily (U12 `list-append`, `for-loop`) are left as shipped, and U12
-`list-loop` is added to `requires` (every `save_*` loops over its list).
+existing exercises already use heavily (U12 `list-append`, `for-loop`) are left as shipped. U12
+`list-loop` goes to **`practices`** with named reps: Append a Late Score (saves its list with a loop),
+Save a Text Map (loops the rows), Event Log (loops the events) — and it joins the D7 reconciliation.
 
 - **U12 `practices` +=** `input`, `type-conversion` (the real programs that read numbers — ≥3; stand-ins: Ex 2's
   `int(line.strip())` etc.), `string-methods` is already required — `split(",")`, `startswith`, `upper`
@@ -326,7 +329,7 @@ Tooling; Book 1; the project (`project-01-algorithm-challenge`) — its brief al
   Best Team pins its seed.
 - `[FIXED]` checkpoints: introductions gain a "not graded" Real-version sentence (graded cells keep
   "Do not use `input()`"); all 35 questions pinned with input shape, Sample input and Expected output;
-  No real version for CP01 Q7 and CP02 Q6.
+  No real version for CP01 Q7 only (a traceback-reading question — D3's trace exception).
 - `[FIXED]` counting rule stated (stand-ins + executed fences; lesson rungs never count); Words in a File
   → **Long Words in a File** (a conditional count, 4); U12 `string-concat`, `float-type`, `elif-else`,
   `list-sort`, `list-index`, `error-messages` → `requires`; U13 `list-append` reps pinned (Playlist, Draw a
@@ -359,6 +362,14 @@ Tooling; Book 1; the project (`project-01-algorithm-challenge`) — its brief al
   asserted value in its pinned printed form), since CP03–CP05 solution cells assert rather than print.
 - `[FIXED]` a single-idea **dictionary-as-attribute** rung (`Scoreboard`) precedes Stockroom.
 - `[FIXED]` the `float-type` note describes semantic reps, not scanner inference.
+
+### Round 3 — [sol] REJECT (folded)
+
+- `[FIXED]` CP02 Q7's Expected output pins all six rows byte-exactly.
+- `[FIXED]` CP02 Q6 gets a real version (reads the last round number `50` → `Count: 7`); CP01 Q7 is the
+  only No real version (D3's trace exception).
+- `[FIXED]` U12 `list-loop` → `practices` with three named reps (Append a Late Score, Save a Text Map,
+  Event Log), included in the D7 reconciliation.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
