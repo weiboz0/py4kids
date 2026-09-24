@@ -45,7 +45,7 @@ depth rule, fence parity).
   until a `0` line (`while True:` + `break`). Lesson `no-exec` cells may show prompts.
 - **ASCII art:** no backslashes; each row asserted exactly (trailing spaces never emitted).
 - **Values:** tables below are binding; distinctive literals unique across shipped Book 1b
-  (grep-verified: 90210, 3721, 12321, 482615, 73185, 58193, 31375, 233168, 768 all unused).
+  (grep-verified: 90210, 3721, 12321, 482615, 73185, 58193, 31375, 233168 all unused).
 
 ## U04 — Loops & Counting
 
@@ -75,14 +75,14 @@ uses the longer form" → now introduces `+=` as the shorthand taught in Lesson 
 | 19 | Largest Digit | MP | `n = 58193` → `Largest digit: 9` | best-so-far |
 | 20 | Loop-Built Star Bar | MP | `n = 7` → `Stars: *******` built by `bar = bar + "*"` in a `while` loop | string-concat, loop-counter |
 | 21 | First Square Over 300 | MP | → `18 squared is 324` (`break` inside `while n <= 100:`) | break |
-| 22 | Fix the Infinite Loop | MP | given a `while` whose counter never changes → repaired (No real version) | error-messages |
-| 23 | Fix the Missing Starting Value | MP | given `total = total + n` with no initializer (NameError) → repaired (No real version) | error-messages |
+| 22 | Fix the Infinite Loop | MP | broken (`no-exec`): `count = 0` / `while count < 5:` / `    print(count)` (never advances); repaired: add `count = count + 1` in the body → prints `0` `1` `2` `3` `4` (No real version) | error-messages |
+| 23 | Fix the Missing Starting Value | MP | broken (`no-exec`): `n = 1` / `while n <= 4:` / `    total = total + n` / `    n = n + 1` / `print(total)` → `NameError: name 'total' is not defined`; repaired: `total = 0` before the loop → `10` (No real version) | error-messages |
 | 24 | Challenge: Collatz Peak | S | `n = 15` → `Peak: 160` | best-so-far, sentinel-loop |
 | 26 | Lucky Sevens | MP | `n = 707172` → `Sevens: 3` | count-by-condition |
 | 27 | Savings Streak | MP | deposits start at 10 and grow by 5 each week for 8 weeks → `Week 8 total: 220` | running-total, loop-counter |
 | 28 | Triangular Numbers | MP | running totals 1, 1+2, … below 50 → `1 3 6 10 15 21 28 36 45` (genre: sequences) | running-total, sentinel-loop |
 | 29 | Decimal to Binary | MP | `n = 37` → `100101` by repeated `// 2`, prepending `str(n % 2)` (genre: number bases) | accumulator, string-concat, type-conversion |
-| 30 | Guessing Robot | MP | secret 42 in 1..100, always guess the middle → `Guesses: 50 25 37 43 40 41 42` / `Found 42 in 7 guesses` (genre: games). Real version: a human guessing game reading guesses until correct and printing `Too high` / `Too low` / `Correct!` | sentinel-loop, break, loop-counter |
+| 30 | Guessing Robot | MP | secret 42 in 1..100, always guess the middle → `Guesses: 50 25 37 43 40 41 42` / `Found 42 in 7 guesses` (genre: games). Real version reads the SECRET and runs the same robot (identical transcript — D3 parity); the human-player version is a lesson `no-exec` cell in L3 instead | sentinel-loop, break, loop-counter |
 | 31 | Challenge: Count the Steps | S | GCD of 270 and 192 both ways → `Subtraction steps: 10` / `Remainder steps: 4` / `GCD: 6` (genre: tracing & efficiency) | loop-counter |
 | 25 | Challenge: Powers of Two | S | → `2^0 = 1` … `2^7 = 128` (8 lines) then `Total: 255` | while, running-total |
 
@@ -107,7 +107,8 @@ Existing Ex 1 (a word-for-word copy of `u05l004`) is rewritten as **Triangle Num
 `n = 250` → `Total: 31375`.
 **Shipped text that must be rewritten:** `u05l010` ("Keep that third form as a Notice or Challenge
 for now" → the step form is now taught), `u05l024` ("This is the final Lesson Two rung"), U05 Ex 10
-statement ("the Challenge-only three-argument form" → an easy Challenge that uses a now-taught form).
+statement ("the Challenge-only three-argument form" → an easy Challenge that uses a now-taught form),
+U05 teacher-notes line 36 ("`x = x + 1` only" → either form, `+=` taught in U04).
 
 **New exercises:**
 
@@ -137,8 +138,10 @@ statement ("the Challenge-only three-argument form" → an easy Challenge that u
 
 **Rungs:** (1) move the section "Travel without drawing" (`u06l008`–`u06l010`, including its run Notice)
 after "Replace repetition with a loop" (`u06l011`–`u06l012`), so the loop is taught before a travel cell uses it;
-(2) before the ring (`u06l027`): a new asset `l3_two_squares.py` — two squares by hand with a turn
-between them — then the nested ring.
+(2) before the ring (`u06l027`): a new asset `l3_two_squares.py` — a side-60 square, `left(90)`,
+a second side-60 square, then `right(90)` to restore the heading (closed: position and heading
+return) — then the nested ring; (3) cell `u06l013` says "loop variable", not "loop counter", for
+`side_number` (a for-variable is not a counter).
 
 **New exercises** (each: statement cell + starter asset `exN_*.py` + solution asset
 `solutions_exN.py` + headless companion code cell with ≥3 asserts, per the U06 format; each asset
@@ -146,11 +149,12 @@ closes or carries `# turtle-check: open-path`):
 
 | # | title | kind | spec |
 |---|---|---|---|
-| 10 | Row of Squares | C | 4 squares of side 40 in a row, pen up to travel 60 between them (nested loops); returns to start with pen up + `backward(240)` (closed) |
-| 11 | Dashed Line | C | 12 dashes of 10 with 10-step gaps, pen chosen by `i % 2`, counting `dashes = dashes + 1` and printing `Dashes: 12` (`# turtle-check: open-path`) |
+| 10 | Row of Squares | C | 4 squares of side 40; after EACH square (4 times) pen up, `forward(60)`, pen down (nested loops); finally pen up + `backward(240)` back to the start (closed) |
+| 11 | Dashed Line | C | 24 alternating 10-step segments (`for i in range(24)`), pen down when `i % 2 == 0`; `dashes = dashes + 1` only on the 12 pen-down segments → prints `Dashes: 12` (`# turtle-check: open-path`) |
 | 12 | Color-Alternating Ring | MP | 8 squares around a point, `pencolor` chosen by `if`/`elif`/`else` on `i % 3` (0 → red, 1 → blue, else green); accumulates `turned = turned + 45` and a counter `count = count + 1`, printing `Turned: 360` and `Squares: 8` |
 | 13 | Growing Squares | MP | 5 squares sharing a corner, sides 20, 40, 60, 80, 100 grown with `side = side + 20` (required) |
 | 14 | Seven-Point Star | MP | 7 points, turn `3 * 360 / 7` each time (true division, never rounded — 154 leaves a 2° gap) |
+| 18 | Fix the Indentation | MP | the statement shows a loop whose body line is not indented and its `IndentationError`; the repaired `ex18` asset draws a closed pentagon of side 60 (`360 / 5` turns) (No real version) |
 | 16 | Fix the Misspelled Command | MP | the statement shows `turtle.foward(50)` and its `AttributeError`; the student's `ex16` asset is the repaired closed square of side 50 (No real version) |
 | 17 | Fix the Missing Import | MP | the statement shows a script without `import turtle` and its `NameError`; the repaired `ex17` asset draws a closed triangle of side 70 (No real version) |
 | 15 | Challenge: Grid of Squares | S | 3×3 grid of side-30 squares, travel 45 (nested loops); the statement states the pen-up return path back to the start (closed) |
@@ -177,21 +181,21 @@ accumulation, debug/repair. All ≥ 4.
 |---|---|---|---|---|---|
 | U04 | while-loop, accumulator | 11 / 10 | +16 | 27 / ≥20 | 5 |
 | U04 | break-statement | 1 (Ex 11) | +2 (Doubling, First Square) + sentinel fences Ex 3, Ex 9 | 5 | 5 |
-| U04 | loop-counter | ≥4 (Ex 1, 4, 7, 11) | +6 (Countdown, Digits, Doubling, Star Bar, Savings, Guessing Robot) | ≥10 | 5 |
+| U04 | loop-counter | ≥4 (Ex 1, 4, 7, 11) | +5 (Digits, Doubling, Star Bar, Savings, Guessing Robot; Countdown's value decreases, so no credit) | ≥9 | 5 |
 | U04 | sentinel-loop | 2 (Ex 7, 11) | +2 (Doubling, Collatz Peak) + fences Ex 3, 9 | 6 | 5 |
 | U04 | running-total | 2 (Ex 3, 6) | +3 (Even Digits, Savings, Powers) | 5 | 5 |
 | U04 | count-by-condition | 2 (Ex 4, 9) | +3 (Even Digits, Odd Digits, Lucky Sevens) | 5 | 5 |
 | U04 practices | error-messages | 1 (Ex 2) | +2 (Infinite Loop, Missing Start) | 3 | 3 |
 | U04 practices | comment | 0 required | +3 (Countdown, Digits, Reverse require a purpose comment) | 3 | 3 |
 | U05 | for-loop, range-function | 11 | +15 | 26 | 5 |
-| U05 | nested-loops | 3 | +6 (Hollow Box, Checkerboard, Diamond, Floyd, Times Table, Primes) | 9 | 5 |
+| U05 | nested-loops | 3 | +9 (Hollow Box, Checkerboard, Diamond, Floyd, Times Table, Primes, Pythagorean Triples, Coin Combinations, Pascal) | 12 | 5 |
 | U05 practices | conditional-nesting | 1 (Ex 7) | +2 (Hollow Box, Leap Years) | 3 | 3 |
 | U05 practices | break-statement | 2 (Ex 5, 11) | +2 (Skip the Sevens `continue`, Primes) | 4 | 3 |
-| U05 practices | running-total / count-by-condition | 2 (Ex 1, 10) / 2 | +4 / +4 | 6 / 6 | 3 |
+| U05 practices | running-total / count-by-condition | 2 (Ex 1, 10) / 2 (Ex 3, 7) | +3 (Skip the Sevens, Multiples of 3 or 5, Perfect Number) / +3 (Divisor Count, Leap Years, Coin Combinations) | 5 / 5 | 3 |
 | U06 | import-statement, turtle-basics, turtle-drawing | 9 | +8 | 17 | 5 |
 | U06 practices | nested-loops | 1 (Ex 6) | +3 (Row, Ring, Grid) | 4 | 3 |
 | U06 practices | accumulator | 1 (Ex 7) | +2 (Ring `turned`, Growing Squares side) | 3 | 3 |
-| U06 practices | error-messages | 1 (Ex 9 gap) | +2 (Misspelled Command, Missing Import) | 3 | 3 |
+| U06 practices | error-messages | 0 (Ex 9 is a predict/explain task, not a repair) | +3 (Misspelled Command, Missing Import, Indentation) | 3 | 3 |
 | U06 practices | loop-counter | 0 (for-variables are not counters) | +3 (Ring `count`, Dashed Line `dashes = dashes + 1`, Grid `squares = squares + 1`) | 3 | 3 |
 
 ## Phases
@@ -204,9 +208,19 @@ accumulation, debug/repair. All ≥ 4.
   values, common mistakes: `continue` in `while`, off-by-one in `range` step, trailing spaces in art,
   forgetting to reset the row string); manifests + coverage-map honesty (e.g. U05 practices
   `string-concat` already; add any newly used concept).
-- **Phase E — VERIFICATION:** ci-local ALL GREEN (incl. `turtle-check`); AST audit of every code
-  cell, fence and U06 asset against the per-unit toolkit; fence parity (run each fence with its
-  Sample input); depth table; cell/page deltas; post-execution report.
+- **Phase E — VERIFICATION** (specialized audits FIRST; `scripts/ci-local.sh` LAST, and re-run after
+  any audit-driven correction):
+  1. AST audit of every code cell, fence and U06 asset against the per-unit toolkit.
+  2. Fence parity: run each fence with its Sample input; stdout must equal Expected output and the
+     stand-in's asserted lines.
+  3. **U06 command-trace check:** replay every new/changed asset through `tools/fake_turtle` with a
+     trace recorder and compare the recorded moves, turns, pen transitions, colors and stdout with
+     the exercise contract (e.g. 4 squares + 4 travels + `backward(240)`; exactly 12 pen-down dashes;
+     the ring's color cycle; `Turned: 360` / `Squares: 8`); `turtle-check` alone cannot see these.
+  4. **Fixture/value-use audit:** every value in the tables is used by its exercise, and no counter
+     or variable exists only to inflate depth credit.
+  5. Depth + genre tables; cell/page deltas.
+  6. `scripts/ci-local.sh` ALL GREEN (final); post-execution report.
 
 ## Out of scope
 
@@ -225,9 +239,24 @@ U01–U03 (plan 080), U07+ (plans 082–084), checkpoints (084), tooling.
   arithmetic corrected; Leap Years spells out its own nesting.
 - `[FIXED]` nits: Hollow Box nesting shape, Growing Squares `side = side + 20`, return paths, save the
   original in Palindrome, Doubling start varied (5 → 640 in 7), unrounded star angle.
+- `[sol]` round 1 **REJECT** (fold below).
 - **User direction (2026-09-24):** genre coverage (design 006 D9) folded — U04 Triangular Numbers,
   Decimal to Binary, Guessing Robot, Count the Steps; U05 Pythagorean Triples, Chickens and Rabbits,
   Coin Combinations, Pascal's Triangle.
+
+### Round 1 — [sol] fold
+
+- `[FIXED]` Guessing Robot real version reads the secret and runs the same robot (D3 parity); the
+  human-player game moves to a U04 L3 `no-exec` lesson cell.
+- `[FIXED]` U04 repair exercises pin the broken program and the repaired output.
+- `[FIXED]` U06: third real repair (Fix the Indentation) → `error-messages` 3; `l3_two_squares.py`
+  restores its heading; Row of Squares travels after each square then `backward(240)`; Dashed Line
+  runs 24 segments counting 12 dashes; `u06l013` says "loop variable".
+- `[FIXED]` stray `768` removed; U05 teacher-notes line 36 added to the rewrites; depth rows
+  recomputed exercise-by-exercise (U04 loop-counter +5; U05 nested +9, running-total and
+  count-by-condition 5/5).
+- `[FIXED]` Phase E: audits first, ci-local last (re-run after corrections); U06 instrumented
+  command-trace check; fixture/value-use audit.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
