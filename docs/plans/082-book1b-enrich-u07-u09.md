@@ -333,7 +333,52 @@ U10+ (plans 083–084); checkpoints (084); tooling.
 **Consensus reached — implementation may start after plan 081 merges.**
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+### Round 1 — verdicts (HEAD a4c6071)
+
+- `[self]` APPROVE WITH NITS — Phase E audit 0 findings; all notebooks execute through the CI executor;
+  teacher-notes value plans renumbered; the U07 60-minute-cut claim about `gcd` corrected (core Ex 10
+  now needs it).
+- `[fable]` APPROVE WITH NITS — blind-solved 26 exercises, ran all 68 fences, replayed the four new turtle
+  solutions; findings: missing lead-in above `u08l007` (Should Fix), histogram reseeding note, predict
+  starters, Pig Turn update order, Bar default convention, Challenge heading style.
+- `[glm]` APPROVE WITH NITS — blind-solved 7; U08 `if-statement` delta; Month Calendar blank-cell padding
+  style.
+- `[sol]` **REJECT** — malformed Sample-input fence in `u09sol-ex1-real`; the U08 notes' "every non-turtle
+  exercise is seeded" claim.
+
+### Round 1 — fold
+
+- `[FIXED]` `u09sol-ex1-real` closing fence on its own line.
+- `[FIXED]` U08 notes: "every exercise that uses randomness is seeded"; reseeding-per-total equivalence.
+- `[FIXED]` U08 lesson: lead-in `u08l050` above `u08l007`; heading "Choose from a range or a string".
+- `[FIXED]` U07 predict starters ask for a written prediction; Bar with a Default's Real version names the
+  empty-line default; Pig Turn states add-then-test.
+- `[WONTFIX]` U09 "Challenge 1:" headings — the numbered form matches U04–U06 and the shipped U09 cells.
+- `[WONTFIX]` Month Calendar blank padding `row + "   "` — byte-identical output.
+- `[WONTFIX]` U08 `if-statement`: already declared in U08 `requires` (shipped); the honesty scan passes,
+  so the planned `practices` tag is not duplicated.
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Status: implemented; Phase E audits clean; ci-local ALL GREEN (2026-09-24).**
+
+- **Execution:** Codex gpt-6-sol via direct `codex exec` in the main checkout (statements and solutions in
+  separate fresh sessions); branch rebased onto `main` after plan 081 merged.
+- **Phase B:** rungs as planned (U07 print-only functions, early `return`, composition, `len` on a
+  string, default parameter; U08 import/seed/randint rungs, `choice("HT")`, one fixed point before π;
+  U09 positive/negative index, open slices, `[::-1]`, one method per rung, the widened methods, index loop
+  and one mirror pair before the palindrome); every listed shipped sentence rewritten; `no-exec`
+  real-input cells U07 4, U08 3, U09 3. Exercises U07 9 → 32, U08 9 → 20, U09 9 → 29 in the binding order.
+- **Phase C:** stand-ins + asserts; 68 real-program fences; four new turtle solution assets with
+  fake-turtle companions (the colour row uses a `pencolor` spy).
+- **Phase D:** teacher-notes U07–U09 (pacing, partitions, common mistakes, D9 ideas, value plans
+  renumbered); metadata deltas applied to manifests and `coverage-map.yaml` together (U07 +string-concat,
+  elif-else, input, type-conversion; U08 +input, type-conversion, elif-else, string-concat, while-loop,
+  −scope; U09 +input).
+- **Phase E:** contract + fence-parity audit 0 findings (every fence executed); toolkit AST audit clean
+  (no lists/dicts/tuple assignment; `split` never subscripted; `[::-1]` the only step slice); seeded
+  values and turtle traces re-verified independently by `[fable]` and `[sol]`; `scripts/ci-local.sh`
+  ALL GREEN.
+- **Deltas:** 64 new exercises, ~50 new lesson cells, 4 new turtle solution assets.
+
