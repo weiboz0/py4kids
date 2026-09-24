@@ -10,7 +10,7 @@ concepts:
 - {id: string-concat, name: String concatenation and repetition, category: strings}
 - {id: string-index, name: String indexing, category: strings}
 - {id: string-slice, name: String slicing, category: strings}
-- {id: string-methods, name: "String methods (upper/lower/strip/replace)", category: strings}
+- {id: string-methods, name: "String methods (case, strip/replace, split/join, find, is-tests)", category: strings}
 - {id: in-operator, name: Membership testing with in, category: strings}
 - {id: variable, name: Variables and assignment, category: data}
 - {id: naming, name: Naming conventions, category: data}
@@ -25,7 +25,7 @@ concepts:
 - {id: elif-else, name: elif and else branches, category: control}
 - {id: conditional-nesting, name: Nested conditionals, category: control}
 - {id: while-loop, name: while loops, category: loops}
-- {id: break-statement, name: Exiting loops with break, category: loops}
+- {id: break-statement, name: "Loop control (break/continue)", category: loops}
 - {id: for-loop, name: for loops, category: loops}
 - {id: range-function, name: The range function, category: loops}
 - {id: loop-counter, name: Counter variables, category: loops}
@@ -48,8 +48,8 @@ concepts:
 - {id: scope, name: Local vs global scope, category: functions}
 - {id: builtin-functions, name: "Built-in functions (len/min/max)", category: functions}
 - {id: list-literal, name: Creating lists, category: collections}
-- {id: list-index, name: List indexing, category: collections}
-- {id: list-append, name: Growing lists with append, category: collections}
+- {id: list-index, name: "List indexing (and .index)", category: collections}
+- {id: list-append, name: "Growing and changing lists (append/insert/pop/remove)", category: collections}
 - {id: list-loop, name: Looping over lists, category: collections}
 - {id: list-sort, name: Sorting lists with the sort method, category: collections}
 - {id: dict-literal, name: Creating dictionaries, category: collections}

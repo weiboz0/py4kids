@@ -37,7 +37,7 @@ MANUAL_ONLY = {
     "run-program", "comment", "error-messages", "naming", "scope",
     "loop-counter", "type-conversion",  # accumulator now DETECTED (removed from MANUAL_ONLY)
     "boolean",  # detectable partially; too many false negatives to assert absence
-    "list-index", "dict-access",  # subscript ambiguity vs string-index
+    "dict-access",  # subscript ambiguity vs string-index
     "string-index",               # subscript-index ambiguity vs list/dict
     "list-loop",                  # for-over-collection: type unknown
     "int-type",                   # bare int constants are everywhere; low signal
@@ -60,6 +60,11 @@ TAUGHT_METHODS = {
     "width", "pensize", "setup", "title", "exitonclick", "up", "down",
 }
 STRING_METHODS = {"upper", "lower", "strip", "replace"}  # the TAUGHT subset only
+# `count` is intentionally absent: AST cannot distinguish str.count from list.count.
+WIDENED_METHODS = {
+    "split", "join", "isdigit", "isalpha", "find", "startswith", "endswith",
+    "pop", "insert", "remove", "index",
+}
 BUILTINS = {"len", "min", "max", "sorted", "sum", "abs", "round"}
 DICT_METHODS = {"items", "keys", "values", "get"}
 AUXILIARY_ROLES = {"demo", "given", "real-form", "composed"}
@@ -74,6 +79,7 @@ class ScanProfile:
     taught_methods: frozenset[str]
     builtins: frozenset[str]
     never_flag: frozenset[str]
+    features: frozenset[str] = frozenset()
 
 
 def scanner_profile(concepts: list[dict]) -> ScanProfile:
@@ -91,6 +97,8 @@ def scanner_profile(concepts: list[dict]) -> ScanProfile:
         and isinstance(concept.get("id"), str)
     }
     taught_methods = set(TAUGHT_METHODS)
+    if "string-methods" in registered:
+        taught_methods.update(WIDENED_METHODS)
     if "str-split" in registered:
         taught_methods.add("split")
     if "set-ops" in registered:
@@ -101,6 +109,7 @@ def scanner_profile(concepts: list[dict]) -> ScanProfile:
         taught_methods=frozenset(taught_methods),
         builtins=frozenset(BUILTINS),
         never_flag=frozenset(set(MANUAL_ONLY) | techniques),
+        features=frozenset(registered),
     )
 
 
@@ -113,7 +122,7 @@ def detect(
 ) -> tuple[set[str], set[str]]:
     """Return (concept ids used, unknown method names) — high-confidence only."""
     registered = set() if registered_concepts is None else set(registered_concepts)
-    active_profile = profile or scanner_profile([])
+    active_profile = profile or scanner_profile([{"id": r} for r in registered])
     current_node: ast.AST | None = None
 
     class _DetectedConcepts(set):
@@ -196,6 +205,9 @@ def detect(
             self.generic_visit(node)
 
         def visit_Break(self, node):
+            used.add("break-statement")
+
+        def visit_Continue(self, node):
             used.add("break-statement")
 
         def visit_Compare(self, node):
@@ -397,6 +409,12 @@ def detect(
         def visit_Attribute(self, node):
             if node.attr in STRING_METHODS:
                 used.add("string-methods")
+            if (
+                node.attr
+                in {"join", "isdigit", "isalpha", "find", "startswith", "endswith"}
+                and node.attr in active_profile.taught_methods
+            ):
+                used.add("string-methods")
             if node.attr == "append":
                 used.add("list-append")
             if node.attr == "sort":
@@ -409,14 +427,34 @@ def detect(
                 used.add("file-read")
             if node.attr == "write":
                 used.add("file-write")
-            if node.attr == "split":
+            if node.attr == "split" and "str-split" in active_profile.features:
                 add_feature("str-split")
+            elif node.attr == "split" and "split" in active_profile.taught_methods:
+                used.add("string-methods")
+            receiver_is_set = is_set_expression(node.value) or (
+                isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Name)
+                and node.value.func.id == "set"
+            )
+            widened = "string-methods" in active_profile.features  # Book 1 / Book 1b only
             if (
                 node.attr in {"add", "discard", "remove"}
-                and isinstance(node.value, ast.Name)
-                and node.value.id in set_names
+                and receiver_is_set
+                and "set-ops" in registered
             ):
                 add_feature("set-ops")
+            # A set receiver in a book without set-ops, or an untracked set receiver
+            # (for example, a parameter), is conservatively attributed to Book 1's
+            # list-changing concept; likewise str.index -> list-index and dict.pop ->
+            # list-append (stricter, never looser).
+            elif (
+                widened
+                and node.attr in {"pop", "insert", "remove"}
+                and node.attr in active_profile.taught_methods
+            ):
+                used.add("list-append")
+            if widened and node.attr == "index" and node.attr in active_profile.taught_methods:
+                used.add("list-index")
             if node.attr in {"appendleft", "popleft"}:
                 add_feature("deque")
             if node.attr == "deque":
