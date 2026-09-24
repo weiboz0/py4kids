@@ -52,8 +52,11 @@ implementation starts only after 082 merges. If 082 were abandoned, U10 rung 4 w
 - **Values:** every new fixture below is grepped against shipped Book 1b content (Phase E); the
   author already replaced `banana`, `Ana`/`Bo`, `pear`, `cocoa`, `apple`, `fig`, `kite`, `north`, `Dee`,
   `cat` and `drum` (all shipped elsewhere in Book 1b), and no exercise reuses a lesson rung's values.
-- **Scanner-visible reps:** depth counts come from the **solutions notebook stand-in code** (which the
-  scanner reads), never from markdown fences; f-string and comment reps are pinned in stand-in code.
+- **Counting rule (as plans 080–082):** scanner closure reads code cells only; the **D7 depth audit counts
+  distinct exercises from the solutions' stand-in code AND their executed real-program fences** (a fence
+  is a rep only for the concepts it actually uses; `input` and the reading-side `type-conversion` reps
+  come from fences, since solution code cells may never call `input()`). f-string and comment reps are
+  pinned in stand-in code. Phase E prints the per-concept table from this combined audit.
 - **A concept used by fewer than 3 exercises goes in `requires`, not `practices`** (plan 081's rule for
   U06), so the honesty scan never meets an undeclared concept.
 
@@ -239,13 +242,13 @@ program.
 
 Rule: `practices` gains a concept only with ≥3 named reps; a concept used by fewer goes in `requires`.
 
-- **U10 `practices` +=** `input`, `type-conversion` (every real program; Numbers on One Line, Fix the
-  String Sum), `string-methods` (`split`: Numbers on One Line, Fix the String Sum, Class Average's
-  parsing; `join`: Bar Chart, Grid Printer, Vertical Bar Chart), `string-index` (Tic-Tac-Toe Winner,
+- **U10 `practices` +=** `input`, `type-conversion` (every real program's fence; stand-ins: Numbers on One
+  Line, Fix the String Sum), `string-methods` (`split`: Numbers on One Line, Fix the String Sum, Queue at
+  the Counter's fence; `join`: Bar Chart, Grid Printer, Vertical Bar Chart), `string-index` (Tic-Tac-Toe Winner,
   Minesweeper Counts, Game of Life Step), `string-concat` (Bar Chart, Grid Printer, Vertical Bar Chart,
   Minesweeper Counts), `nested-loops` (Mode, Grid Printer, Minesweeper Counts, Game of Life Step,
-  Selection Sort), `error-messages` (the three repairs) (`float-type` is already a U10 practice — Median, Class
-  Average, Statistics Report keep it honest). **U10 `requires` +=** `while-loop` (Reverse in Place only), `logical-ops`
+  Selection Sort), `error-messages` (the three repairs). (`float-type` is already a shipped U10 practice,
+  not a delta — Median, Class Average and Statistics Report keep it honest.) **U10 `requires` +=** `while-loop` (Reverse in Place only), `logical-ops`
   (Minesweeper bounds only if the scanner sees `and`), `string-slice` (lesson slices; no exercise needs
   one).
 - **U11 `practices` +=** `input`, `type-conversion` (every real program; Scores from Records, Luhn
@@ -327,6 +330,13 @@ U12–U13, checkpoints, syllabus refresh (plan 084); tooling.
   real-input cell reads a Roman symbol (planets belong to U11 Ex 1); U10 D3 count stated (3 lessons,
   3/3); U11 rungs renumbered 1–7 in order; cosmetics (duplicate `loop-counter`, `float-type` already
   practised, genre cells, the `[self]` count).
+
+### Round 2 — [sol] REJECT (folded)
+
+- `[FIXED]` counting rule stated once: closure from code cells; D7 depth from stand-ins **plus executed
+  fences** (the source of the `input` reps); Phase E prints the combined table.
+- `[FIXED]` Class Average's `n`-then-`n`-lines input is not a `split` rep (Queue at the Counter's fence
+  is); `float-type` is noted as a shipped practice, not a delta.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
