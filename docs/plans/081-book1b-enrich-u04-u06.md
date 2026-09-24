@@ -84,6 +84,8 @@ uses the longer form" → now introduces `+=` as the shorthand taught in Lesson 
 | 29 | Decimal to Binary | MP | `n = 37` → `100101` by repeated `// 2`, prepending `str(n % 2)` (genre: number bases) | accumulator, string-concat, type-conversion |
 | 30 | Guessing Robot | MP | secret 42 in 1..100, always guess the middle → `Guesses: 50 25 37 43 40 41 42` / `Found 42 in 7 guesses` (genre: games). Real version reads the SECRET and runs the same robot (identical transcript — D3 parity); the human-player version is a lesson `no-exec` cell in L3 instead | sentinel-loop, break, loop-counter |
 | 31 | Challenge: Count the Steps | S | GCD of 270 and 192 both ways → `Subtraction steps: 10` / `Remainder steps: 4` / `GCD: 6` (genre: tracing & efficiency) | loop-counter |
+| 33 | Fix the Missing Colon | MP | broken (`no-exec`): `n = 3` / `while n > 0` / `    print(n)` / `    n = n - 1` → `SyntaxError: expected ':'`; repaired (colon added) prints `3` `2` `1` (No real version) | error-messages |
+| 34 | Fix the Unindented Body | MP | broken (`no-exec`): `total = 0` / `n = 1` / `while n <= 3:` / `total = total + n` / `n = n + 1` (body not indented) → `IndentationError: expected an indented block after 'while' statement`; repaired (both body lines indented, then `print(total)`) prints `6` (No real version) | error-messages |
 | 32 | Countdown Bars | MP | `start = 4` → `4 ####` / `3 ###` / `2 ##` / `1 #` (`while` + `"#" * n`; genre: ASCII art) | string-concat, while |
 | 25 | Challenge: Powers of Two | S | → `2^0 = 1` … `2^7 = 128` (8 lines) then `Total: 255` | while, running-total |
 
@@ -101,8 +103,9 @@ row string of stars (`row = row + "*"`) before the first nested loop `u05l026`; 
 triangle" (`u05l031`–`u05l033`) before "A multiplication table" (`u05l028`–`u05l030`); (6) before
 the table: a single-loop number row `1 2 3 4 5`; (7) after the triangle: the `"*" * r` one-liner
 version + Notice (loop-built vs repetition); (8) Notice: `print(piece, end="")` then `print()`;
-(9) new section "ASCII pattern ladder" before the final build: right-aligned triangle
-`" " * (h - r) + "*" * r`, then centered pyramid `" " * (h - r) + "*" * (2 * r - 1)`;
+(9) new section "ASCII pattern ladder" before the final build, in design D4's order: inverted
+triangle (`for r in range(h, 0, -1)`), then right-aligned triangle `" " * (h - r) + "*" * r`, then
+centered pyramid `" " * (h - r) + "*" * (2 * r - 1)`;
 (10) three `no-exec` real-input cells (see above).
 Existing Ex 1 (a word-for-word copy of `u05l004`) is rewritten as **Triangle Number**:
 `n = 250` → `Total: 31375`.
@@ -172,18 +175,21 @@ not required). `conditional-nesting` = an `If` inside an `If`. Shortfalls are fi
 
 ## Binding final exercise order (Challenges last; `More Practice: ` prefix; tables above are provisional)
 
-- **U04 (32):** 1–9 existing core · 10 Countdown Liftoff · 11 Count the Digits · 12 Reverse a Number ·
-  13–27 MP: Palindrome Number, Doubling Past a Limit, Sum of Even Digits, Count the Odd Digits, Largest
+- **U04 (34):** 1–9 existing core · 10 Countdown Liftoff · 11 Count the Digits · 12 Reverse a Number ·
+  13–29 MP: Palindrome Number, Doubling Past a Limit, Sum of Even Digits, Count the Odd Digits, Largest
   Digit, Loop-Built Star Bar, First Square Over 300, Fix the Infinite Loop, Fix the Missing Starting
-  Value, Lucky Sevens, Savings Streak, Triangular Numbers, Decimal to Binary, Guessing Robot, Countdown
-  Bars · 28–32 Challenges: Remainder GCD (was 10), Probe Mission 19 (was 11), Collatz Peak, Powers of
-  Two, Count the Steps.
-- **U05 (31):** 1–9 existing core (Ex 1 rewritten as Triangle Number) · 10 Countdown by Twos · 11 Hollow
-  Box · 12 Right-Aligned Triangle · 13–26 MP: Checkerboard, Pyramid, Diamond, Tree with Trunk, Floyd's
-  Triangle, Skip the Sevens, Multiples of 3 or 5, Perfect Number Check, Divisor Count, Leap Years in a
-  Range, Pythagorean Triples, Chickens and Rabbits, Coin Combinations, Inverted Triangle ·
-  27–31 Challenges: Step-Range Total (was 10), Count the Primes (was 11), Aligned Times Table, Primes up
-  to 50, Pascal's Triangle.
+  Value, Fix the Missing Colon, Fix the Unindented Body, Lucky Sevens, Savings Streak, Triangular
+  Numbers, Decimal to Binary, Guessing Robot, Countdown Bars · 30–34 Challenges: Remainder GCD (was 10),
+  Probe Mission 19 (was 11), Collatz Peak, Powers of Two, Count the Steps.
+- **U05 (31):** 1–9 existing core (Ex 1 rewritten as Triangle Number; Ex 8 Growing Signal Triangle is
+  the right triangle) · 10 Countdown by Twos · 11 Inverted Triangle · 12 Right-Aligned Triangle ·
+  13 Hollow Box · 14–26 MP: Checkerboard, Pyramid, Diamond, Tree with Trunk, Floyd's Triangle, Skip the
+  Sevens, Multiples of 3 or 5, Perfect Number Check, Divisor Count, Leap Years in a Range, Pythagorean
+  Triples, Chickens and Rabbits, Coin Combinations · 27–31 Challenges: Step-Range Total (was 10), Count
+  the Primes (was 11), Aligned Times Table, Primes up to 50, Pascal's Triangle.
+  The art exercises 8 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 follow design D4's ladder order
+  (right triangle → inverted → right-aligned → hollow box → checkerboard → pyramid → diamond → tree →
+  Floyd).
 - **U06 (18):** 1–7 existing core · 8 Row of Squares · 9 Dashed Line · 10–15 MP: Color-Alternating Ring,
   Growing Squares, Seven-Point Star, Fix the Misspelled Command, Fix the Missing Import, Fix the
   Indentation · 16–18 Challenges: Five-Point Star (was 8), The Eight-Degree Gap (was 9), Grid of Squares.
@@ -221,7 +227,7 @@ accumulation, debug/repair. All ≥ 4.
 | U04 | sentinel-loop | 2 (Ex 7, 11) | +2 (Doubling, Collatz Peak) + fences Ex 3, 9 | 6 | 5 |
 | U04 | running-total | 2 (Ex 3, 6) | +3 (Even Digits, Savings, Powers) | 5 | 5 |
 | U04 | count-by-condition | 2 (Ex 4, 9) | +3 (Even Digits, Odd Digits, Lucky Sevens) | 5 | 5 |
-| U04 practices | error-messages | 1 (Ex 2) | +2 (Infinite Loop, Missing Start) | 3 | 3 |
+| U04 practices | error-messages | 0 (Ex 2 is an off-by-one repair with no error message) | +3 (Missing Starting Value `NameError`, Missing Colon `SyntaxError`, Unindented Body `IndentationError`; Fix the Infinite Loop is a debug exercise without a traceback, so no credit) | 3 | 3 |
 | U04 practices | comment | 0 required | +3 (Countdown, Digits, Reverse require a purpose comment) | 3 | 3 |
 | U05 | for-loop, range-function | 11 | +15 | 26 | 5 |
 | U05 | nested-loops | 3 | +9 (Hollow Box, Checkerboard, Diamond, Floyd, Times Table, Primes, Pythagorean Triples, Coin Combinations, Pascal) | 12 | 5 |
@@ -279,6 +285,14 @@ U01–U03 (plan 080), U07+ (plans 082–084), checkpoints (084), tooling.
 - **User direction (2026-09-24):** genre coverage (design 006 D9) folded — U04 Triangular Numbers,
   Decimal to Binary, Guessing Robot, Count the Steps; U05 Pythagorean Triples, Chickens and Rabbits,
   Coin Combinations, Pascal's Triangle.
+
+### Round 2 — [sol] REJECT (folded)
+
+- `[FIXED]` U04 `error-messages`: two repairs with pinned tracebacks added (Missing Colon `SyntaxError`,
+  Unindented Body `IndentationError`); credit now counts only exercises with a real error message
+  (3). Fix the Infinite Loop stays as a debug exercise without credit. U04 grows to 34.
+- `[FIXED]` U05 art exercises and the lesson's ASCII-ladder rungs follow design D4's order (inverted
+  before right-aligned before hollow box …); binding order updated.
 
 ### Round 1 — [glm] APPROVE WITH NITS (folded)
 
