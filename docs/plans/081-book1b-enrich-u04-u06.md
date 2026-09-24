@@ -358,5 +358,39 @@ U01–U03 (plan 080), U07+ (plans 082–084), checkpoints (084), tooling.
 Post-fold: Phase E audit 0 findings (U04–U06); lesson/solution notebooks execute through the CI
 executor; structure / hygiene / concept-scan / cell-lint pass.
 
+### Round 2 — CONSENSUS
+
+- `[sol]` APPROVE (r2, HEAD 9814524) — the `:3` rung teaches the width before Challenge 29; pacing
+  notes match the cells; wording fixes verified by running the affected stand-ins and fences.
+- `[fable]`, `[glm]`, `[self]` APPROVE WITH NITS (r1, nits folded).
+
+**Consensus reached.** Final `scripts/ci-local.sh`: ALL GREEN.
+
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Status: implemented; Phase E audits clean; content gate folded (2026-09-24).**
+
+- **Execution note:** authored by Codex gpt-6-sol through direct `codex exec` in the main checkout
+  (statements and solutions in separate fresh sessions); the branch was rebased onto `main` after plan
+  080 merged, dropping the stacked 080 commits.
+- **Phase B:** lesson rungs and moves as planned (U04 `+=`, digit count → digit sum → best-so-far,
+  two-step `break`, plain-condition sentinel; U05 range step and negative step, `continue`, first divisor
+  before the prime flag, single row before the first nested loop, triangle before table, `"*" * r`,
+  `end=""`, number row, the pattern ladder; U06 loop before travel, `l3_two_squares.py`, "loop variable").
+  `no-exec` real-input cells: U04 6, U05 3 (at least one per lesson). Exercises: U04 11 → 34, U05 11 → 31,
+  U06 9 → 18 in the binding order; every exercise ends with exactly one Real / No-real line.
+- **Phase C:** stand-ins with asserts; 60 real-program fences (U04 29, U05 31) with bare `input()`;
+  U06 solution assets `solutions_ex8`–`ex18` (old Challenge solutions moved to 16/17) with headless
+  companions that replay each asset through `tools/fake_turtle`.
+- **Phase D:** teacher-notes U04–U06 rewritten (pacing incl. 60-minute cuts, partitions with values,
+  common mistakes, D9 genre ideas); metadata deltas applied identically to manifests and
+  `coverage-map.yaml` (U04 practices += input, type-conversion, string-concat; U05 += input,
+  type-conversion; U06 requires += if-statement, elif-else, comparison, print).
+- **Phase E:** contract + fence-parity audit 0 findings for U04–U06 (every fence executed with its
+  Sample input); toolkit AST audit clean; U06 command traces confirmed by Codex and independently by
+  `[fable]`'s recording-turtle replay; blind solves by all reviewers matched. One CI-only defect was
+  found by `ci-local` itself (U06 companions used repo-root asset paths; CI executes from the unit
+  folder) and fixed; the audit script now also executes from the unit folder.
+- **Deviation:** a U05 width rung (`f"{n:3}"`) was added in the content gate because Challenge 29
+  assessed it untaught — the plan's toolkit listed `:3` but no rung taught it.
+- **Deltas:** 67 new exercises; ~40 new lesson cells; 11 new U06 solution assets.
