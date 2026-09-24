@@ -359,6 +359,14 @@ U10+ (plans 083–084); checkpoints (084); tooling.
 - `[WONTFIX]` U08 `if-statement`: already declared in U08 `requires` (shipped); the honesty scan passes,
   so the planned `practices` tag is not duplicated.
 
+### Rounds 2–3 — CONSENSUS
+
+- `[sol]` r2 (HEAD 10fc1b0): fence and wording fixes verified; one remaining note (turtle exercises are
+  seeded scripts, not functions) → fixed → r3 **APPROVE** (HEAD 16d6d25).
+- `[fable]`, `[glm]`, `[self]` APPROVE WITH NITS (r1, nits folded or WONTFIX with reasons).
+
+**Consensus reached.**
+
 ## Post-Execution Report
 
 **Status: implemented; Phase E audits clean; ci-local ALL GREEN (2026-09-24).**
