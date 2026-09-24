@@ -1,9 +1,9 @@
 map_version: 1
-# Book 1b is in buildout (see books.yaml `buildout: true`): this map grows one entry per
-# content plan. Unit 01 lands in plan 070 Phase C; Units 02-13, the checkpoints, and the
-# end-of-book Algorithm Challenge follow in plans 071+. The full 62-concept catalog ships
-# up front in concepts.yaml (content-identical to Book 1); every concept is introduced
-# exactly once across the units as they land. Design: docs/designs/005-book1b-concept-first.md.
+# Book 1b is COMPLETE: Units 01-13, checkpoints 01-05, and the end-of-book Algorithm Challenge
+# (project-01-algorithm-challenge, the last entry) all ship. The full 62-concept catalog is in
+# concepts.yaml (content-identical to Book 1); every concept is introduced exactly once across
+# the units and practiced in a non-capstone entry (the practice-coverage anchor). The book left
+# `buildout` with plan 078. Design: docs/designs/005-book1b-concept-first.md.
 entries:
 - id: unit-01-output-and-variables
   kind: unit
@@ -172,3 +172,18 @@ entries:
               list-literal, string-methods, type-conversion, if-statement, elif-else, comparison, boolean,
               arithmetic, count-by-condition, accumulator, builtin-functions, int-type, float-type, f-string,
               string-literal]
+- id: project-01-algorithm-challenge
+  kind: project
+  title: "Project 1 — Algorithm Challenge"
+  lessons: 2
+  introduces: []
+  requires: [def-function, parameters, return-value, for-loop, while-loop, nested-loops, if-statement,
+             elif-else, comparison, boolean, logical-ops, arithmetic, list-index, list-sort, dict-access,
+             file-read, file-write, with-statement, class-def, init-method, attributes, methods]
+  practices: [def-function, parameters, return-value, variable, for-loop, while-loop, nested-loops,
+              break-statement, range-function, if-statement, elif-else, comparison, boolean, logical-ops,
+              arithmetic, int-type, list-literal, list-index, list-append, list-loop, list-sort,
+              string-index, string-slice, string-methods, string-literal, dict-literal, dict-access,
+              dict-loop, file-read, file-write, with-statement, class-def, init-method, attributes,
+              methods, type-conversion, f-string, accumulator, running-total, count-by-condition,
+              find-extreme, linear-search, transform-each, builtin-functions]
