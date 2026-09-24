@@ -79,12 +79,16 @@ implementation starts only after 082 merges. If 082 were abandoned, U10 rung 4 w
    `print(scores[::-1])` (a new reversed list; the original is unchanged) — placed after the position loop (`u10l011`–`u10l013`) and before rung 4's new section.
 4. **New section at the end of Lesson 1: "Read several numbers on one line"** — rungs:
    `line = "7 3 8"` / `parts = line.split()` / `print(parts)` (a list of strings); `print(int(parts[0])
-   + int(parts[1]))` → 10; then a loop that appends `int(part)` for every piece into `numbers`.
+   + int(parts[1]))` → 10; then a loop that appends `int(part)` for every piece into `numbers`; then
+   `print("-".join(parts))` → `7-3-8` (**`join` over a list of strings** — U09 joined the letters of one
+   string; now the pieces come from a list).
    Then two `no-exec` real-input cells: `parts = input().split()` → numbers → `print(sum(numbers))`;
    and "read `n`, then `n` lines" appending `int(input())`.
 5. **New section before `u10l046` (put it together): "Lists inside lists: a grid"** — rungs:
    `grid = [[1, 1, 0], [0, 1, 1]]` / `print(grid[1])`; `print(grid[1][0])` (row, then column);
-   a nested loop that builds one row string per inner list; a list of strings as a picture
+   a nested loop that builds one row string per inner list and appends it to `rows`, then
+   `print("\n".join(rows))` (a picture returned as one string — the form every ASCII-art exercise uses);
+   a list of strings as a picture
    (`board = ["#..", ".#.", "..#"]`, `print(board[2][2])`); then a `no-exec` cell reading a grid (first
    line the row count, then one row per line). The `u10l046` lead-in stays above `u10l047`.
 6. **Lesson 2 real-input cell (D3: one per lesson):** a `no-exec` cell after the `sorted` section reads
@@ -214,7 +218,8 @@ program.
   (Ex 6, Magic Square Check, Class Average); `count-by-condition` 3 (Mode, Minesweeper Counts, Game of
   Life Step); `loop-counter` ≥3; `f-string` 3 (stand-in code of Bar Chart, Median, Class Average — plus Statistics Report);
   `error-messages` 3 (Fix the Index Error, Fix the Missing Value, Fix the String Sum);
-  `float-type` 3 (Median, Class Average, Statistics Report); `comment` 3 (purpose comments in the Ex 8–10 stand-ins, counted in solutions.ipynb); `int-type`,
+  `float-type` 3 (Median, Class Average, Statistics Report); `loop-counter` 3 (Mode's inner `count`, Minesweeper Counts' and Game of Life
+  Step's neighbour counts); `comment` 3 (purpose comments in the Ex 8–10 stand-ins, counted in solutions.ipynb); `int-type`,
   `naming` ≥3.
 - **U11 introduces:** `dict-literal` ≥12, `dict-access` ≥12, `dict-loop` ≥8 (every tally/report
   exercise).
@@ -244,7 +249,8 @@ Rule: `practices` gains a concept only with ≥3 named reps; a concept used by f
   one).
 - **U11 `practices` +=** `input`, `type-conversion` (every real program; Scores from Records, Luhn
   Check Digit). **U11 `requires` +=** `float-type` (Vote Percentages, Report Card — two reps),
-  `error-messages` (Fix the KeyError — one rep).
+  `error-messages` (Fix the KeyError — one rep), `string-concat` (Letter Tally Chart's `"#" * count`
+  rows — one rep).
 - Phase E's depth audit enforces D7 for **every** added `practices` concept, and its lesson audit
   enforces D3's one real-input `no-exec` cell per lesson.
 
@@ -281,7 +287,10 @@ U12–U13, checkpoints, syllabus refresh (plan 084); tooling.
   Grid Printer and Numbers on One Line copy lesson values; incomplete rewrite list (U10/U11 teacher-notes
   Goals/pacing/Value plan, `u11e002`, `u11l039`); nits: string immutability untaught, f-string/comment
   reps must be in stand-in code, Second Largest two-value note, Median int.
-- `[glm]` pending.
+- `[glm]` **REJECT** (reviewed the pre-fold draft 7ccba24) — delta tags without 3 reps (`string-slice`,
+  `while-loop`, `error-messages`, `logical-ops`, `elif-else`, U11 `float-type`/`error-messages`);
+  `join` over a list never taught; U11 omits `string-concat`; nits: dependency, Luhn without a negative
+  step, rung 3/4 order, `loop-counter` reps unnamed.
 
 ### Round 1 — fold
 
@@ -295,6 +304,9 @@ U12–U13, checkpoints, syllabus refresh (plan 084); tooling.
   lesson values changed (`"7 3 8"`, `[[1, 1, 0], [0, 1, 1]]`) so no exercise copies a rung.
 - `[FIXED]` rewrite list: `u11e002`, `u11l039`, U10/U11 teacher-notes Goals/pacing/Challenge
   counts/Value plans; dictionary insertion order taught by a new U11 rung before Letter Tally Chart.
+- `[FIXED]` ([glm]) `join` over a list taught by two rungs (`"-".join(parts)`, `"\n".join(rows)`);
+  U11 `string-concat` → `requires`; `loop-counter` reps named; slices placed before rung 4; delta tags
+  were already moved to `requires` by the [sol]/[fable] fold; Luhn indexes `s[len(s) - 1 - i]` (no step).
 - `[FIXED]` f-string reps pinned in stand-in code (Bar Chart, Median, Class Average; Letter Tally Chart,
   Report Card, Word Winner); comment reps counted in solutions; Second Largest and Median notes.
 
