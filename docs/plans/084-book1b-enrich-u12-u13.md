@@ -112,7 +112,9 @@ Challenge count and Value plan.
    `Rectangle("D-1", 5, 2)` (the lesson's `(code, width, height)` class) → `"#####\n#####"` (the exercise
    defines its own two-argument class and uses `(4, 2)`).
 4. **After `u13l027` (Counter): "A list as an attribute"** — `class Shelf:` with `self.books = []` and
-   `add(self, title)` appending; then "Objects in a list" — a loop over three `Point`s printing each
+   `add(self, title)` appending; then **"A dictionary as an attribute"** — `class Scoreboard:` with
+   `self.points = {}` and `record(self, name, amount)` storing `self.points[name] = amount` (one idea: the
+   attribute is a dict; used before Stockroom); then "Objects in a list" — a loop over three `Point`s printing each
    `x`; then **"A state machine"** — `class Lamp:` with `self.state = "off"` and `press(self)` switching
    `"off"` → `"on"` → `"off"` with `if`/`else`.
 5. **D3 — one real-input `no-exec` cell per lesson:** L1 reads `x` and `y` and builds a `Point`; L2 reads
@@ -258,8 +260,9 @@ existing exercises already use heavily (U12 `list-append`, `for-loop`) are left 
   `nested-loops` (Game Board), `error-messages` (two repairs), `list-index` (Game Board's `self.cells[row][col]` — one rep),
   `dict-loop` (Save the Stockroom's `for name in self.stock:` — one rep), `string-concat` (Draw a Rectangle's
   `"#" * width`, Rover's position text — two reps), `accumulator` (Total Area — one rep).
-- `float-type` stays a U13 practice: Ex 4 (`** 0.5` → `5.0`), Student Grades (`/` → `85.0`), Closest
-  Point (`** 0.5`); the scanner marks `float-type` on `/` and float results, confirmed in Phase E.
+- `float-type` stays a U13 practice with three semantic reps: Ex 4 (`** 0.5` → `5.0`), Student Grades
+  (`/` → `85.0`), Closest Point (`** 0.5` distances). (The scanner marks `float-type` only on float
+  literals such as `0.5`; the reps are semantic, not scanner-inferred.)
 - Checkpoints: no manifest change — fences are read-only notes, reviewer-enforced and not scanned, and
   `input` (U01) is inside every checkpoint's taught range; the checkpoints' graded code stays input-free.
 
@@ -275,7 +278,9 @@ existing exercises already use heavily (U12 `list-append`, `for-loop`) are left 
   (U12/U13 allow-lists; checkpoints against their covered units); contract + fence-parity audit (every
   fence EXECUTED with its Sample input, in a scratch directory so file fences cannot touch the repo;
   stdout == Expected output == the stand-in's printed lines) for U12, U13 (whose Ex 7, Counter Snapshot
-and Save the Stockroom fences also write files) and all five checkpoints (against the table above);
+and Save the Stockroom fences also write files) and all five checkpoints (against the table above — a checkpoint fence's stdout is compared with the table's Expected output,
+which is the graded answer's asserted value in the printed form the table pins, since the shipped
+CP03–CP05 solution cells assert returned values rather than print them);
 a D3 lesson audit (one real-input `no-exec` cell per lesson: U12 3/3, U13 3/3); a D7 reconciliation that
 lists, for every `practices` concept of U12 and U13, the distinct exercises supplying it; file
   hygiene (solutions leave no stray files outside the unit folder; `ex<N>_` prefixes unique); fixture grep;
@@ -346,6 +351,14 @@ Tooling; Book 1; the project (`project-01-algorithm-challenge`) — its brief al
   `split`/indexing stated as in range; U13 `requires` += `list-index`, `dict-loop`; the ≥3-reps rule's
   scope stated and U12 `list-loop` added to `requires`. `Mina` reuse in U12 rung 4 stays consistent with
   the shipped cell.
+
+### Round 2 — [sol] REJECT (folded)
+
+- `[FIXED]` (already folded from [fable] r2) the draw rung calls `Rectangle("D-1", 5, 2)`.
+- `[FIXED]` checkpoint fences are compared with the table's Expected output (the graded answer's
+  asserted value in its pinned printed form), since CP03–CP05 solution cells assert rather than print.
+- `[FIXED]` a single-idea **dictionary-as-attribute** rung (`Scoreboard`) precedes Stockroom.
+- `[FIXED]` the `float-type` note describes semantic reps, not scanner inference.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
