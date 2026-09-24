@@ -25,8 +25,9 @@ notes with a 60–90 min pacing plan.
 
 ## Roadmap (concept-family units)
 
-This edition is in buildout; the shipped-entries table appears below as units land (Unit 01 first).
-The planned progression, each unit introducing its concept family exactly once in an order that keeps
+This edition is COMPLETE: all 13 units, 5 checkpoints, and the end-of-book Algorithm Challenge ship
+(see the shipped-entries table below).
+The progression, each unit introducing its concept family exactly once in an order that keeps
 `requires` closure strict:
 
 1. **Unit 01 — Output & Variables:** printing, comments, variables, naming, input, string joining, f-strings, reading errors.
@@ -68,6 +69,7 @@ The **Algorithm Challenge** (a non-themed integrative problem set) closes the ye
 | `unit-12-files` | unit | 3 | Save and load data — read, write, and the `with` statement. |
 | `unit-13-objects` | unit | 3 | Bundle data + behaviour — classes, `__init__`, attributes, and methods. |
 | `checkpoint-05-files-and-objects` | checkpoint | 0.5 | Prove files and objects on a mixed problem set (the mandatory final checkpoint). |
+| `project-01-algorithm-challenge` | project | 2 | The year-end Algorithm Challenge — an integrative, non-themed problem set (primes, searching, tallies, files, a class). |
 
 ## Rules this syllabus is bound by
 

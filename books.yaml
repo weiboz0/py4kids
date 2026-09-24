@@ -11,7 +11,6 @@ books:
   depends_on: []
   variant_of: book1
   prereq_policy: fastforward
-  buildout: true
   concept_minimum: 40
   lesson_budget: [30, 60]
 - id: book2

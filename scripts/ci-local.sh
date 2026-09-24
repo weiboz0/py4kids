@@ -58,8 +58,9 @@ uv run py4kids-tools --book book2 exec-lessons
 uv run py4kids-tools --book book2 judge-check
 uv run py4kids-tools --book book2 source-policy
 
-# Book 1b: concept-first variant in buildout (fastforward + buildout relaxations key on its per-book
-# flags). Per-entry checks iterate existing dirs, so they cover authored units and are inert for
+# Book 1b: concept-first variant, now COMPLETE (fastforward relaxation keys on its per-book flag; the
+# buildout flag was removed in plan 078, so introduction-completeness + lesson-lower-bound now apply).
+# Per-entry checks iterate existing dirs, so they cover authored units and are inert for
 # unauthored entries. Existence-guarded so this block is a no-op until book1b/ exists. No Book-1-only
 # pattern checks (technique-spiral/pattern-marker/patterns-doc are hard-gated to book1); no book2-only
 # judge-check/source-policy.
