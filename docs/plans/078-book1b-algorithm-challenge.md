@@ -30,6 +30,10 @@ buildout removal), §6 (coverage + the `practice_findings` anchor).
   **Do NOT use the two-variable `for k, v in d.items()` form** — for-target unpacking would trip the
   tier-C tuple-assignment ban (Plans 076/077 carved `.items()` out, but this plan sidesteps the question
   entirely by prescribing the single-variable idiom). Ordinary `a, b = ...` multiple assignment is banned.
+- **No string `+` concatenation** (`visit_BinOp` detects `str + …` as scanner concept `string-concat`,
+  which is NOT in the contract): write file lines with f-strings, e.g. `f.write(f"{word}\n")`.
+  **No `in` membership tests** (`word in counts`) — tally/lookups use `.get`; membership would detect the
+  `in-operator` concept, also not in the contract.
 - Content-gate/AST-audit bans (NOT scanner-flagged in Book 1b schema-v1, so reviewer + Phase-E audit
   enforced): NO comprehensions, tuple/multiple assignment, step slices, `ord`/`chr`, `import math`,
   inheritance, dunder methods beyond `__init__`, decorators.
@@ -53,7 +57,8 @@ buildout removal), §6 (coverage + the `practice_findings` anchor).
 3. **Syllabus**: add the project as a shipped-table row; update the roadmap prose line.
 4. **Buildout removal**: drop `buildout: true` from the `book1b` entry in `books.yaml`; update
    `tests/test_books.py:23` to assert the finished state; sweep the now-stale "in buildout" comments at
-   `tests/test_books.py:20` and `scripts/ci-local.sh:61`.
+   `tests/test_books.py:20`, `scripts/ci-local.sh:61`, and the `book1b/curriculum/coverage-map.yaml:2-6`
+   header ("Book 1b is in buildout…").
 5. **`.gitignore`**: add the project scratch-`.txt` glob.
 
 ## The problem set (11 problems in 4 milestones; 9 core + 2 Challenge)
@@ -64,9 +69,10 @@ Book 1b content. The 2 Challenge problems (P4, P5) are cell-tagged `stretch` (re
 both `brief.ipynb` and `solutions.ipynb`.
 
 **Milestone 1 — Number algorithms**
-1. **nth_prime(k)** — the k-th prime (1-indexed): a `while` counter that trial-divides each candidate
-    with an inner loop (`break` on a found divisor). `nth_prime(1)`→2, `nth_prime(5)`→11,
-    `nth_prime(10)`→29. (nested-loops, break-statement, `%`, count-by-condition.)
+1. **nth_prime(k)** — the k-th prime (1-indexed): a `while` counter over candidates; test each candidate
+    with an inner `for d in range(2, candidate):` loop that `break`s on a found divisor (2 is prime by the
+    empty-range base case). `nth_prime(1)`→2, `nth_prime(5)`→11, `nth_prime(10)`→29. (nested-loops,
+    break-statement, `%`, count-by-condition.)
 2. **reverse_digits(n)** — reverse the digits of a non-negative int arithmetically
     (`rev = rev * 10 + n % 10`; `n = n // 10`). `reverse_digits(1234)`→4321, `reverse_digits(1200)`→21,
     `reverse_digits(0)`→0. (while, `//`/`%`, accumulator.)
@@ -86,26 +92,32 @@ both `brief.ipynb` and `solutions.ipynb`.
 
 **Milestone 3 — Text, tallies & files**
 6. **count_substring(text, part)** — count OVERLAPPING occurrences of `part` in `text` by walking every
-    start index and comparing the slice `text[i:i+len(part)]` with `part`. `count_substring("banana",
-    "an")`→2, `count_substring("aaaa","aa")`→3, `count_substring("mississippi","ss")`→2. (string-slice,
-    linear-search, count-by-condition; case-sensitive — no `.lower()`.)
+    start index `for i in range(len(text) - len(part) + 1):` and comparing the slice `text[i:i+len(part)]`
+    with `part`. `count_substring("cocoon","co")`→2, `count_substring("aaaa","aa")`→3,
+    `count_substring("mississippi","ss")`→2. (string-slice, linear-search, count-by-condition;
+    case-sensitive — no `.lower()`.)
 7. **word_counts_from_file(path)** — SELF-CONTAINED: write one word per line, then read and tally into a
     dict with `.get`, iterating lines with `for line in f:` + `.strip()`. Fresh fixtures (NOT
     red/blue/red), e.g. `["fern","moss","fern","ivy","moss","fern"]`→`{"fern":3,"moss":2,"ivy":1}` (+ two
     more distinct fixtures). (file-read/write, with, dict-access `.get`, string-methods.)
 8. **most_common_word(path)** — SELF-CONTAINED: build the tally, then return the single word with the
     highest count by iterating `for key in counts:` and tracking the best (find-extreme). Distinct
-    fixtures from #7, single clear winner each. (dict-loop single-var, find-extreme, comparison.)
+    fixtures from #7, single clear winner each. `most_common_word` over a file written from
+    `["kite","yoyo","kite","kite","yoyo"]`→`"kite"` (+ two more distinct single-winner fixtures).
+    (dict-loop single-var, find-extreme, comparison.)
 9. **group_by_parity(nums)** — return `{"even": [...], "odd": [...]}` preserving order (`n % 2`, append
-    into the right list). `group_by_parity([1,2,3,4])`→`{"even":[2,4],"odd":[1,3]}` (+ two fixtures; note
-    `0`→even). (dict-literal with list values, `%`.)
+    into the right list). `group_by_parity([1,2,3,4])`→`{"even":[2,4],"odd":[1,3]}`,
+    `group_by_parity([0,7,10])`→`{"even":[0,10],"odd":[7]}` (`0`→even),
+    `group_by_parity([])`→`{"even":[],"odd":[]}`. (dict-literal with list values, `%`.)
 
 **Milestone 4 — Objects & pipelines**
 10. **class RunningTally** — `__init__(self)` starts an empty list attribute; `add(self, value)` appends
-    and returns **the number of values stored so far**; `total(self)`/`highest(self)` use `sum`/`max`;
-    `describe(self)` returns an f-string. Asserts construct-then-check across ≥3 states, always calling
-    `add` at least once before `highest`/`describe` (`max([])` raises). (class-def/init/attributes/
-    methods, list-append, builtins, f-string.)
+    and returns **the number of values stored so far**; `total(self)` returns `sum`; `highest(self)`
+    returns `max`; `describe(self)` returns the f-string `f"{count} values, total {total}, highest {highest}"`.
+    Worked sample: `t = RunningTally()`; `t.add(5)`→1, `t.add(9)`→2, `t.add(0)`→3; then `t.total()`→14,
+    `t.highest()`→9, `t.describe()`→`"3 values, total 14, highest 9"`. Asserts construct-then-check across
+    ≥3 states, always calling `add` at least once before `highest`/`describe` (`max([])` raises).
+    (class-def/init/attributes/methods, list-append, builtins, f-string.)
 11. **running_totals_to_file(in_path, out_path)** — SELF-CONTAINED: read integers (one per line) from
     `in_path`, write their running totals to `out_path` (one f-string line each), and return the list of
     running totals. `[5,3,2]`→writes `"5\n8\n10\n"`, returns `[5,8,10]` (+ two more fixtures).
@@ -175,8 +187,9 @@ but the strict scan requires the tag set to cover every detected concept.
   `tests/test_books.py:23` → `assert books[1].get("buildout", False) is False`; sweep the stale
   "in buildout" comments (`tests/test_books.py:20`, `scripts/ci-local.sh:61`). Reconcile the project
   `practices` to the actual scan. Run `scripts/ci-local.sh` — the now-active strict
-  `introduction_findings` (all 62 introduced) + `lesson_budget` lower bound (`[30,60]`; total 43.5 + 2 =
-  45.5) + `practice_findings` anchor must all be GREEN, plus the full project structure/hygiene/scan/exec.
+  `introduction_findings` (all 62 introduced) + `lesson_budget` lower bound (`[30,60]`; pre-project total
+  41.5 + project 2 = 43.5) + `practice_findings` anchor must all be GREEN, plus the full project
+  structure/hygiene/scan/exec.
   Static AST/grep audit for the tier-C bans. `pytest tests/` GREEN. Post-execution report.
 
 ## Value plan
@@ -236,7 +249,33 @@ Consensus: **NOT reached** (2 REJECT). All findings converge; folded below.
   `highest`/`describe`; `add` returns "number of values stored so far" (`[fable]`).
 - `[FIXED]` **stale buildout comments** swept in Phase E (`[fable]`/`[glm]`/`[sol]`).
 
-Round 2 dispatched after this fold.
+### Round 2 — verdicts (HEAD 6334ec1)
+
+- `[self]` APPROVE — S1/S2 folded; rewrite addresses every converging r1 finding.
+- `[glm]` APPROVE WITH NITS — all r1 nits folded + re-verified computationally (anchor green,
+  buildout-removal green, all 22 `requires` introduced before the project, manifest consistent). New nits:
+  Phase-E arithmetic typo (`41.5+2=43.5`), coverage-map header also needs the sweep. **Both folded.**
+- `[fable]` APPROVE WITH NITS — re-solved all 11 within pins (outputs verified), fixture-collision grep
+  0 hits for the new fixtures, all r1 blockers confirmed resolved. New nits: `"banana"` is a shipped U09
+  input (→ `"cocoon"`); `string-concat`/`in-operator` are scanner-detected (pin f-string writes + ban
+  `in`); name the parity fixtures; specify `nth_prime` loop bound. **All folded.**
+- `[sol]` **REJECT** — 4 of 5 r1 blockers RESOLVED; the 5th (value-distinctness) still flagged `"banana"`
+  (U09) — **now fixed to `"cocoon"`**. New `[OPEN]`: P8/P10 lacked concrete worked samples — **now added**
+  (`most_common_word(...)`→"kite"; `RunningTally.describe()`→"3 values, total 14, highest 9"). Both NITs
+  (arithmetic, coverage-map header) already folded.
+
+Consensus: **NOT reached** (1 REJECT). All findings folded (this commit); round 3 confirms `[sol]`.
+
+### Round 2 — fold
+
+- `[FIXED]` `"banana"` (U09 collision) → `"cocoon"` in `count_substring` (`[fable]`/`[sol]`).
+- `[FIXED]` P8/P10 concrete worked samples added (`[sol]` `[OPEN]`).
+- `[FIXED]` pins: no string-`+` concat (f-string writes), no `in` membership (scanner-detected concepts
+  kept out of the contract) (`[fable]`).
+- `[FIXED]` `nth_prime` inner-loop bound (`for d in range(2, candidate)`); named `group_by_parity`
+  fixtures (`[fable]`).
+- `[FIXED]` Phase-E arithmetic (`41.5+2=43.5`); coverage-map header added to the stale-comment sweep
+  (`[glm]`/`[sol]`).
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
