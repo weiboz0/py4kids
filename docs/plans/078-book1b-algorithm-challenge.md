@@ -10,67 +10,106 @@ buildout removal), §6 (coverage + the `practice_findings` anchor).
 ## Global constraints (verbatim)
 
 - Book 1b is `prereq_policy: fastforward`, but **the project keeps the STRICT per-entry allowed set**
-  (`concept_scan.py:933-940` — fastforward whole-catalog allowance is `kind == "unit"` only). So every
+  (`concept_scan.py:933-940` — the fastforward whole-catalog union is `kind == "unit"` only). So every
   scanner-DETECTED concept in the project's cells MUST appear in the entry's `requires ∪ practices`,
   exactly like a checkpoint.
+- **`project` structure is CI-enforced** (`structure-check` runs for Book 1b; `structure_findings` is not
+  book-gated): `PROJECT_REQUIRED_FILES` = `manifest.yaml`, `brief.ipynb`, `solutions.ipynb`,
+  `teacher-notes.md`. `brief.ipynb` needs **3–6 sequential `## Milestone N` headings**, a
+  `## Make it yours` heading, and a `## Requirements checklist` heading, and NO `# … Solution` heading
+  (`project_milestone_findings`, notebooks.py:779-816). `teacher-notes.md` needs
+  `PROJECT_NOTES_HEADINGS` = the standard notes set **+ `## Rubric`** (NOT `## Grading` — that is the
+  checkpoint heading), notebooks.py:50.
+- **Manifest schema:** `blueprint_version: 1` with `concepts` = EXACTLY `{introduces, requires,
+  practices}` (strict-equality `manifest_findings`, notebooks.py:39-42/462). **Do NOT add `auxiliary`.**
 - Tool-subset pins (unchanged from 075–077): string methods ⊆ {upper,lower,strip,replace}; list methods
-  ⊆ {append,sort}; dict methods ⊆ {items,keys,values,get}; file methods ⊆ {read,readlines,readline,
-  write,close}; builtins ⊆ {len,min,max,sum,sorted,abs,round} with NO `key=`.
+  ⊆ {append,sort} (**`.copy()` is NOT allowed** — copy a list via `sorted(x)` or a build loop); dict
+  methods ⊆ {items,keys,values,get}; file methods ⊆ {read,readlines,readline,write,close}; builtins ⊆
+  {len,min,max,sum,sorted,abs,round} with NO `key=`.
+- **Dict iteration:** iterate with the single-variable form `for key in d:` + `d[key]`/`.get(...)`.
+  **Do NOT use the two-variable `for k, v in d.items()` form** — for-target unpacking would trip the
+  tier-C tuple-assignment ban (Plans 076/077 carved `.items()` out, but this plan sidesteps the question
+  entirely by prescribing the single-variable idiom). Ordinary `a, b = ...` multiple assignment is banned.
 - Content-gate/AST-audit bans (NOT scanner-flagged in Book 1b schema-v1, so reviewer + Phase-E audit
   enforced): NO comprehensions, tuple/multiple assignment, step slices, `ord`/`chr`, `import math`,
   inheritance, dunder methods beyond `__init__`, decorators.
-- File drills are SELF-CONTAINED (write the scratch file before reading it) and use git-ignored scratch
-  names. The `.gitignore` book1b block already globs `book1b/units/**` scratch `.txt`; add a
-  `book1b/projects/project-01-algorithm-challenge/*.txt` glob.
+- File problems are SELF-CONTAINED (write the scratch file before reading it) and use git-ignored scratch
+  names. Add a `book1b/projects/project-01-algorithm-challenge/*.txt` glob to `.gitignore`.
 - Student-facing `brief.ipynb` is solution-free with NO executed outputs and unique cell ids; no
   `input()`. `solutions.ipynb` runs top-to-bottom clean, function/class form, **≥3 distinct asserted
-  cases per problem**, seeds fixed where randomness is used (no randomness is planned here).
-- Values-distinctness rule: each problem's worked-sample inputs distinct from each other and from any
-  lesson/exercise the student has seen.
+  cases per problem** (`_solution_policy_findings` needs ≥3 assert cells overall; the per-problem rigor is
+  a content-gate rule). No randomness (no seeding needed).
+- **Value-distinctness (STRICT — audit before authoring):** every worked-sample / fixture input must be
+  distinct from each other AND from any lesson/exercise/checkpoint the student has already seen. Known
+  collisions to AVOID: `count_primes(10/20)` and the `2..20` prime count (cp03 / U05); the
+  `["red","blue","red"]` word list (cp04); U09's palindrome exercise; U04's digit-sum drill; U11's
+  `word_counts`. Codex MUST grep existing Book 1b notebooks for each chosen fixture before finalizing.
 
 ## Scope
 
 1. **Coverage-map entry** `project-01-algorithm-challenge` (kind `project`, LAST entry; `introduces: []`).
-2. **Project directory**: `manifest.yaml`, `brief.ipynb` (11 problems, solution-free), `solutions.ipynb`
-   (worked, asserted), `teacher-notes.md`.
+2. **Project directory**: `manifest.yaml`, `brief.ipynb` (11 problems in 4 milestones, solution-free),
+   `solutions.ipynb` (worked, asserted), `teacher-notes.md`.
 3. **Syllabus**: add the project as a shipped-table row; update the roadmap prose line.
 4. **Buildout removal**: drop `buildout: true` from the `book1b` entry in `books.yaml`; update
-   `tests/test_books.py` (line 23) to assert the finished state.
+   `tests/test_books.py:23` to assert the finished state; sweep the now-stale "in buildout" comments at
+   `tests/test_books.py:20` and `scripts/ci-local.sh:61`.
 5. **`.gitignore`**: add the project scratch-`.txt` glob.
 
-## The problem set (11 problems: 9 core + 2 Challenge)
+## The problem set (11 problems in 4 milestones; 9 core + 2 Challenge)
 
 Non-themed, algorithmic, integrative. Each is function/class form with a precise **Specification** +
-worked sample (input→exact output). Distinct inputs per problem.
+worked sample (input→exact output). Inputs are distinct across problems and audited against shipped
+Book 1b content. The 2 Challenge problems (P4, P5) are cell-tagged `stretch` (rendered "Challenge") in
+both `brief.ipynb` and `solutions.ipynb`.
 
-1. **count_primes(n)** — count primes ≤ n (n ≥ 0). Nested loop + `%` primality; count-by-condition.
-   `count_primes(10)`→4, `count_primes(1)`→0, `count_primes(20)`→8.
-2. **digit_sum(n)** — sum the digits of a non-negative int with a `while` loop + `//`/`%`.
-   `digit_sum(1234)`→10, `digit_sum(0)`→0, `digit_sum(9080)`→17.
-3. **top_three(scores)** — the three largest values, descending, as a list (sort a copy ascending, take
-   the last three by index in reverse order; ≥3 values guaranteed).
-   `top_three([4,9,1,7,3])`→[9,7,4], `top_three([5,5,2,8])`→[8,5,5], `top_three([10,20,30])`→[30,20,10].
-4. **is_palindrome(text)** — case-insensitive palindrome test; compare `text[i]` with `text[len-1-i]`
-   over the first half (`.lower()`, `string-index`, no reverse builtin).
-   `is_palindrome("Racecar")`→True, `is_palindrome("hello")`→False, `is_palindrome("Noon")`→True.
-5. **merge_sorted(a, b)** — merge two ascending lists into one ascending list (two-index walk + `append`).
-   `merge_sorted([1,4,6],[2,3,5])`→[1,2,3,4,5,6], `merge_sorted([],[2,9])`→[2,9],
-   `merge_sorted([1,2],[])`→[1,2].
-6. **word_counts(path)** — SELF-CONTAINED: write one word per line, then read and tally into a dict with
-   `.get`. `["red","blue","red"]`→{"red":2,"blue":1} (+ two more distinct fixtures).
-7. **most_common_word(path)** — SELF-CONTAINED: build the tally, then return the word with the highest
-   count (find-extreme over `.items()`). Distinct fixtures from #6; single clear winner each.
-8. **binary_search(nums, target)** — index of `target` in a sorted list, else `-1` (`while` + `//`
-   midpoint). `binary_search([1,3,5,7,9],7)`→3, `binary_search([1,3,5,7,9],4)`→-1,
-   `binary_search([2,4,6,8,10,12],2)`→0.
-9. **class RunningTally** — `__init__(self)` starts an empty list attribute; `add(self, value)` appends
-   and returns the running count; `total(self)`/`highest(self)`/`describe(self)` (f-string) report from
-   the attribute. Assert construct-then-check across ≥3 states.
-10. **[Challenge] running_totals_to_file(in_path, out_path)** — SELF-CONTAINED: read numbers from
+**Milestone 1 — Number algorithms**
+1. **nth_prime(k)** — the k-th prime (1-indexed): a `while` counter that trial-divides each candidate
+    with an inner loop (`break` on a found divisor). `nth_prime(1)`→2, `nth_prime(5)`→11,
+    `nth_prime(10)`→29. (nested-loops, break-statement, `%`, count-by-condition.)
+2. **reverse_digits(n)** — reverse the digits of a non-negative int arithmetically
+    (`rev = rev * 10 + n % 10`; `n = n // 10`). `reverse_digits(1234)`→4321, `reverse_digits(1200)`→21,
+    `reverse_digits(0)`→0. (while, `//`/`%`, accumulator.)
+
+**Milestone 2 — Lists & searching**
+3. **top_three(scores)** — the three largest values, descending, as a list. Sort with `sorted(scores)`
+    (ascending), then read the last three by index in reverse order (`s[n-1], s[n-2], s[n-3]`; NO
+    `.copy()`, NO `[::-1]`). ≥3 values guaranteed. `top_three([4,9,1,7,3])`→[9,7,4],
+    `top_three([5,5,2,8])`→[8,5,5], `top_three([10,20,30])`→[30,20,10]. (list-sort, list-index.)
+4. **[Challenge] merge_sorted(a, b)** — merge two ascending lists into one ascending list with a
+    two-index walk (`while i < len(a) and j < len(b)`, then drain each remainder). `merge_sorted([1,4,6],
+    [2,3,5])`→[1,2,3,4,5,6], `merge_sorted([],[2,9])`→[2,9], `merge_sorted([1,2],[])`→[1,2].
+    (logical-ops, list-index, list-append.)
+5. **[Challenge] binary_search(nums, target)** — the index of `target` in a **sorted list of distinct
+    values**, else `-1` (`while lo <= hi`, `mid = (lo + hi) // 2`). `binary_search([1,3,5,7,9],7)`→3,
+    `binary_search([1,3,5,7,9],4)`→-1, `binary_search([2,4,6,8,10,12],2)`→0. (while, `//`, comparison.)
+
+**Milestone 3 — Text, tallies & files**
+6. **count_substring(text, part)** — count OVERLAPPING occurrences of `part` in `text` by walking every
+    start index and comparing the slice `text[i:i+len(part)]` with `part`. `count_substring("banana",
+    "an")`→2, `count_substring("aaaa","aa")`→3, `count_substring("mississippi","ss")`→2. (string-slice,
+    linear-search, count-by-condition; case-sensitive — no `.lower()`.)
+7. **word_counts_from_file(path)** — SELF-CONTAINED: write one word per line, then read and tally into a
+    dict with `.get`, iterating lines with `for line in f:` + `.strip()`. Fresh fixtures (NOT
+    red/blue/red), e.g. `["fern","moss","fern","ivy","moss","fern"]`→`{"fern":3,"moss":2,"ivy":1}` (+ two
+    more distinct fixtures). (file-read/write, with, dict-access `.get`, string-methods.)
+8. **most_common_word(path)** — SELF-CONTAINED: build the tally, then return the single word with the
+    highest count by iterating `for key in counts:` and tracking the best (find-extreme). Distinct
+    fixtures from #7, single clear winner each. (dict-loop single-var, find-extreme, comparison.)
+9. **group_by_parity(nums)** — return `{"even": [...], "odd": [...]}` preserving order (`n % 2`, append
+    into the right list). `group_by_parity([1,2,3,4])`→`{"even":[2,4],"odd":[1,3]}` (+ two fixtures; note
+    `0`→even). (dict-literal with list values, `%`.)
+
+**Milestone 4 — Objects & pipelines**
+10. **class RunningTally** — `__init__(self)` starts an empty list attribute; `add(self, value)` appends
+    and returns **the number of values stored so far**; `total(self)`/`highest(self)` use `sum`/`max`;
+    `describe(self)` returns an f-string. Asserts construct-then-check across ≥3 states, always calling
+    `add` at least once before `highest`/`describe` (`max([])` raises). (class-def/init/attributes/
+    methods, list-append, builtins, f-string.)
+11. **running_totals_to_file(in_path, out_path)** — SELF-CONTAINED: read integers (one per line) from
     `in_path`, write their running totals to `out_path` (one f-string line each), and return the list of
     running totals. `[5,3,2]`→writes `"5\n8\n10\n"`, returns `[5,8,10]` (+ two more fixtures).
-11. **[Challenge] group_by_parity(nums)** — return `{"even":[...], "odd":[...]}` preserving order (`%`,
-    dict with list values). `group_by_parity([1,2,3,4])`→{"even":[2,4],"odd":[1,3]} (+ two fixtures).
+    (file-read/write, with, running-total/accumulator, transform-each.)
 
 ## Coverage-map entry (contract)
 
@@ -82,56 +121,69 @@ Append AFTER `checkpoint-05-files-and-objects` (must be the last entry):
   title: "Project 1 — Algorithm Challenge"
   lessons: 2
   introduces: []
-  requires: [def-function, parameters, return-value, for-loop, while-loop, if-statement, elif-else,
-             comparison, boolean, arithmetic, list-index, dict-access, file-read, file-write,
-             with-statement, class-def, init-method, attributes, methods]
-  practices: [def-function, parameters, return-value, variable, for-loop, while-loop, range-function,
-              if-statement, elif-else, comparison, boolean, arithmetic, int-type, list-literal,
-              list-index, list-append, list-loop, string-index, string-slice, string-methods,
-              string-literal, dict-literal, dict-access, dict-loop, file-read, file-write,
-              with-statement, class-def, init-method, attributes, methods, type-conversion, f-string,
-              accumulator, running-total, count-by-condition, find-extreme, linear-search,
-              transform-each, builtin-functions]
+  requires: [def-function, parameters, return-value, for-loop, while-loop, nested-loops, if-statement,
+             elif-else, comparison, boolean, logical-ops, arithmetic, list-index, list-sort, dict-access,
+             file-read, file-write, with-statement, class-def, init-method, attributes, methods]
+  practices: [def-function, parameters, return-value, variable, for-loop, while-loop, nested-loops,
+              break-statement, range-function, if-statement, elif-else, comparison, boolean, logical-ops,
+              arithmetic, int-type, list-literal, list-index, list-append, list-loop, list-sort,
+              string-index, string-slice, string-methods, string-literal, dict-literal, dict-access,
+              dict-loop, file-read, file-write, with-statement, class-def, init-method, attributes,
+              methods, type-conversion, f-string, accumulator, running-total, count-by-condition,
+              find-extreme, linear-search, transform-each, builtin-functions]
 ```
 
-`manifest.yaml` mirrors this entry (same `introduces`/`requires`/`practices`; `blueprint_version: 1`,
-`provenance: original`, `lessons: 2`, plus an `auxiliary: []`).
-**Final `practices` set is reconciled to the actual scan in Phase E** (add/drop to exactly match detected
-concepts; the anchor does not need the project's own practices, but the strict scan requires the tag set
-to cover every detected concept and carry no untaught method).
+`manifest.yaml` mirrors this entry's `introduces`/`requires`/`practices` exactly, with
+`blueprint_version: 1`, `provenance: original`, `lessons: 2`, and NO `auxiliary` key.
+**Phase E reconciles the `practices` set to the ACTUAL scan** (add/drop so it exactly covers every
+detected concept and carries no untaught method). The anchor does not need the project's own practices,
+but the strict scan requires the tag set to cover every detected concept.
 
-## Tooling pins (enforcement tiers) — reused from 075–077
+## Tooling pins (enforcement tiers)
 
-- (A) CI-enforced by concept-scan: method subsets + builtins set above; `class-def`/`init-method`/
-  `attributes`/`methods`/`with-statement` detected; slices → `string-slice`.
-- (B) MANUAL_ONLY (declaration + reviewer-verified, never scanner-detected): the technique concepts
-  (`accumulator`/`running-total`/`count-by-condition`/`find-extreme`/`linear-search`/`transform-each`),
-  plus `list-index`/`list-loop`/`dict-access`/`string-index`/`int-type`/`variable`/`type-conversion`.
-- (C) NOT scanner-flagged but BANNED (Phase-E static AST/grep audit): comprehensions, tuple-assignment,
-  step slices, `ord`/`chr`, `import math`, inheritance, dunders beyond `__init__`, decorators.
+- (A) **CI-enforced by concept-scan** (must be tagged if used): method subsets + builtins set above;
+  `class-def`/`init-method`/`attributes`/`methods`/`with-statement`; slices → `string-slice`;
+  `nested-loops`; `break-statement`; `logical-ops` (`and`/`or`); `list-sort` (`sorted`/`.sort`);
+  **`accumulator`** (scanner-detected, `concept_scan.py:248` — NOT manual).
+- (B) MANUAL_ONLY (`never_flag`; declaration + reviewer-verified): the OTHER technique concepts
+  (`running-total`/`count-by-condition`/`find-extreme`/`linear-search`/`transform-each`), plus
+  `list-index`/`list-loop`/`dict-access`/`dict-loop`/`string-index`/`int-type`/`variable`/
+  `type-conversion`.
+- (C) NOT scanner-flagged but BANNED (Phase-E static AST/grep audit): comprehensions, tuple/multiple
+  assignment, step slices, `ord`/`chr`, `import math`, inheritance, dunders beyond `__init__`, decorators.
 - Project scan is STRICT (allowed = introduces∪requires∪practices∪baseline; NO fastforward union).
 
 ## Phases
 
-- **Phase A — Contracts.** Coverage-map entry + `manifest.yaml` + `.gitignore` glob + syllabus row/prose.
-  Gate: `coverage-check`/`prereq-check` GREEN with the project entry present (buildout STILL on, so the
-  anchor stays dormant until the directory is authored; verify the entry parses and requires-closure holds).
-- **Phase B — Brief (Codex, statements).** `brief.ipynb`: 11 problems, solution-free, unique ids, no
-  executed outputs, no `input()`.
+- **Phase A — Contracts.** Coverage-map entry + `manifest.yaml` (this CREATES the project directory) +
+  `.gitignore` glob + syllabus row/prose. Gate: `coverage-check` + `prereq-check` GREEN. **NOTE:** because
+  the directory now exists, `practice_findings` (the coverage anchor) is ACTIVE from this phase (it keys on
+  directory existence, not on `buildout`); it is GREEN because all 62 concepts are already practiced by
+  U01–U13 + cp01–cp05 (`known ⊆ pre_capstone`, pre-verified). Do NOT run full `structure-check` here
+  (brief/solutions/teacher-notes not yet authored).
+- **Phase B — Brief (Codex, statements).** `brief.ipynb`: 4 `## Milestone N` headings, 11 `### Problem N`
+  problems, `## Make it yours`, `## Requirements checklist`; solution-free, unique ids, no executed
+  outputs, no `input()`; P4/P5 cell-tagged `stretch`. Codex greps shipped notebooks to confirm every
+  fixture is fresh.
 - **Phase C — Solutions (SEPARATE fresh Codex).** `solutions.ipynb`: function/class form, ≥3 distinct
-  asserted cases per problem, self-contained file problems, within all tool subsets.
-- **Phase D — Teacher-notes (inline).** `teacher-notes.md` with the full heading set (Goals / Pacing /
-  Common mistakes / Discussion prompts / Differentiation / Grading) + a per-problem value inventory.
+  asserted cases per problem, self-contained file problems, within all tool subsets and the dict
+  single-var idiom; P4/P5 tagged `stretch`.
+- **Phase D — Teacher-notes (inline).** `teacher-notes.md` with `PROJECT_NOTES_HEADINGS` (Goals / Pacing /
+  Common mistakes / Discussion prompts / Differentiation / **Rubric**) + a per-problem value inventory
+  that NAMES the scratch files used by P7/P8/P11.
 - **Phase E — Buildout removal + VERIFICATION.** Drop `buildout: true` from `books.yaml`; update
-  `tests/test_books.py:23` to `assert books[1].get("buildout", False) is False`. Reconcile the project
-  `practices` set to the actual scan. Run `scripts/ci-local.sh` — the **now-active** `practice_findings`
-  anchor (`known ≤ pre_capstone`) plus strict `introduction_findings`/`lesson_budget` lower bound must all
-  be GREEN. Static AST/grep audit for the tier-C bans. `pytest tests/` GREEN. Post-execution report.
+  `tests/test_books.py:23` → `assert books[1].get("buildout", False) is False`; sweep the stale
+  "in buildout" comments (`tests/test_books.py:20`, `scripts/ci-local.sh:61`). Reconcile the project
+  `practices` to the actual scan. Run `scripts/ci-local.sh` — the now-active strict
+  `introduction_findings` (all 62 introduced) + `lesson_budget` lower bound (`[30,60]`; total 43.5 + 2 =
+  45.5) + `practice_findings` anchor must all be GREEN, plus the full project structure/hygiene/scan/exec.
+  Static AST/grep audit for the tier-C bans. `pytest tests/` GREEN. Post-execution report.
 
 ## Value plan
 
-Every worked sample above uses distinct inputs. Solutions assert each problem's listed cases plus, where
-noted, two additional distinct fixtures (file problems #6/#7/#10 write distinct scratch files per case).
+Every worked sample above uses distinct inputs, audited against shipped Book 1b notebooks (avoid the known
+collisions listed under Global constraints). Solutions assert each problem's listed cases plus, where
+noted, two additional distinct fixtures; file problems (#7/#8/#11) write distinct scratch files per case.
 No two problems share an input tuple. No randomness (no seeding needed).
 
 ## Out of scope
@@ -146,7 +198,45 @@ No two problems share an input tuple. No randomness (no seeding needed).
   phase is required and included.
 
 ## Plan Review
-_(4-way plan-review gate — filled before implementation.)_
+
+4-way plan-review gate. Verdicts tagged `[self]`/`[sol]`/`[glm]`/`[fable]`.
+
+### Round 1 — verdicts (HEAD a0d7fee)
+
+- `[self]` APPROVE WITH NITS — dict-iteration idiom (S1) + stretch-tagging (S2).
+- `[glm]` APPROVE WITH NITS — anchor + buildout-removal verified PASS computationally; missing
+  `nested-loops`/`list-sort` practices; Phase-A anchor wording; pin problem 3 to `sorted()`; stale comments.
+- `[sol]` **REJECT** — invalid v1 manifest (`auxiliary`); missing project structure (milestones/Rubric);
+  strict-scan omits `nested-loops`/`list-sort`/`logical-ops` and mis-tiers `accumulator`; value-dup
+  (count_primes vs cp03, red/blue/red vs cp04); dict `.items()` unpacking ambiguity.
+- `[fable]` **REJECT** — solved all 11 within pins (all correct); count_primes verbatim cp03 dup; project
+  structure omissions (CI-fatal); v1 manifest `auxiliary`; strict-scan concept gaps; tiering + naming nits.
+
+Consensus: **NOT reached** (2 REJECT). All findings converge; folded below.
+
+### Round 1 — fold (this rewrite)
+
+- `[FIXED]` **count_primes verbatim cp03 dup** → replaced with `nth_prime(k)` (fresh values) (`[fable]`/`[sol]`).
+- `[FIXED]` **project structure** → 4 `## Milestone N` + 11 `### Problem N` + `## Make it yours` +
+  `## Requirements checklist`; teacher-notes `## Rubric` (not Grading) (`[fable]`/`[sol]`).
+- `[FIXED]` **manifest schema** → `blueprint_version: 1`, NO `auxiliary` (`[fable]`/`[sol]`).
+- `[FIXED]` **strict-scan coverage** → added `nested-loops`/`list-sort`/`logical-ops`/`break-statement` to
+  the contract; corrected tier note: `accumulator` is scanner-DETECTED (tier A) (`[sol]`/`[glm]`/`[fable]`).
+- `[FIXED]` **more value-dups** → `word_counts` fixture `red/blue/red` (cp04) replaced with fern/moss/ivy;
+  `is_palindrome` (U09 dup) → `count_substring`; `digit_sum` (U04 dup) → `reverse_digits`; `word_counts`
+  → `word_counts_from_file` (U11 name collision); Codex greps every fixture before authoring (`[sol]`/`[fable]`).
+- `[FIXED]` **dict `.items()` unpacking** → prescribe single-var `for key in d:` + `d[key]`/`.get`; state
+  the tuple-assignment ban explicitly (`[self]`/`[sol]`/`[fable]`).
+- `[FIXED]` **Phase-A anchor wording** → anchor activates on directory existence in Phase A (not dormant /
+  not buildout-gated); green because coverage already complete (`[glm]`/`[sol]`).
+- `[FIXED]` **problem 3 `.copy()` trap** → pinned to `sorted(scores)` (`.copy()` not in the list pin) (`[glm]`).
+- `[FIXED]` **Challenge tiering** → P4 `merge_sorted` + P5 `binary_search` are the two Challenges; #10/#11
+  core (`[fable]`/`[glm]`); P4/P5 cell-tagged `stretch` (`[self]` S2).
+- `[FIXED]` **binary_search / RunningTally specs** → distinct sorted values; ≥1 `add` before
+  `highest`/`describe`; `add` returns "number of values stored so far" (`[fable]`).
+- `[FIXED]` **stale buildout comments** swept in Phase E (`[fable]`/`[glm]`/`[sol]`).
+
+Round 2 dispatched after this fold.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
