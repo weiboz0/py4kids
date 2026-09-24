@@ -293,4 +293,37 @@ cleared for implementation.
 _(4-way content-review gate — filled before PR.)_
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Status: implemented, ci-local ALL GREEN + pytest 664 passed (2026-09-23). Content-review gate next.**
+
+- **Phase A:** coverage-map entry `project-01-algorithm-challenge` (last, kind `project`) + `manifest.yaml`
+  (v1, no `auxiliary`) + `.gitignore` project scratch glob + syllabus row/prose; coverage-map header
+  swept. Creating the manifest activated the `practice_findings` anchor (directory existence) —
+  `coverage-check` + `prereq-check` GREEN, confirming all 62 concepts practiced pre-capstone.
+- **Phase B (Codex):** `brief.ipynb` — 4 `## Milestone N`, 11 `### Problem N`, `## Make it yours`,
+  `## Requirements checklist`; solution-free, unique ids, no outputs; P4/P5 tagged `stretch`. Codex swapped
+  two fixtures for freshness: `mississippi`→`possession` (U09), `ivy`→`larch` (U11).
+- **Phase C (SEPARATE fresh Codex):** `solutions.ipynb` — 11 problems, function/class form, ≥3 asserted
+  cases each; self-contained file problems; single-var dict iteration; f-string writes.
+- **Reconciliation (inline):** the parallel Phase C authored from the plan specs, so its fixtures
+  mismatched the brief. Aligned solutions to the brief's fresh fixtures and audited ALL extra fixtures
+  against shipped Book 1b content (grep): P6 `mississippi`→`possession`; P7 `ivy`→`larch`, and the extra
+  fixtures `red/blue/gold`→`maple/birch/cedar` and `owl/newt`→`wren/finch` (all shipped collisions);
+  P8 extras `ant/bee`+`sun/moon/star`→`seal/crane`+`heron/ibis/koi` (all shipped). Also simplified P11's
+  over-engineered manual digit-parser to the taught `int(line.strip())` (kept the fixtures, incl. a
+  negative). concept-scan PASS; all 11 solution cells execute with every assert passing.
+- **Phase D (inline):** `teacher-notes.md` with `PROJECT_NOTES_HEADINGS` (Goals/Pacing/Common
+  mistakes/Discussion prompts/Differentiation/**Rubric**) + a per-problem value inventory naming the
+  scratch files.
+- **Phase E:** dropped `buildout: true` from `books.yaml`; `tests/test_books.py:23` →
+  `assert books[1].get("buildout", False) is False` (+ comment); swept stale "buildout" comments in
+  `scripts/ci-local.sh` and the coverage-map header. `TMPDIR=/dev/shm bash scripts/ci-local.sh` →
+  **ALL GREEN** with the now-active strict `introduction_findings` (62/62), `lesson_budget` lower bound
+  (45.5 ∈ [30,60]), and `practice_findings` anchor. `pytest tests/` → **664 passed**. Static tier-C
+  AST/grep audit (comprehensions / tuple-assign / step-slice / ord-chr / import-math / inheritance /
+  dunder>__init__ / decorators / `.copy()` / `.items()`-unpack): **VIOLATIONS NONE**. Working tree clean;
+  every scratch `.txt` gitignored.
+
+No deviations from the approved plan beyond the fixture reconciliation and the P11 simplification (both
+quality fixes within scope). **This closes Book 1b:** all 13 units, 5 checkpoints, and the end-of-book
+Algorithm Challenge ship; the book has left `buildout` with the full practice-coverage anchor GREEN.

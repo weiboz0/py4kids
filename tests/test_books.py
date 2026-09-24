@@ -17,10 +17,10 @@ def test_registry_ids_order_and_dependencies():
     assert books[0]["depends_on"] == []       # book1
     assert books[1]["depends_on"] == []       # book1b — self-contained variant of book1
     assert books[2]["depends_on"] == ["book1"]  # book2
-    # book1b is a fastforward variant in buildout
+    # book1b is a finished fastforward variant (the buildout flag was removed on completion, plan 078)
     assert books[1]["variant_of"] == "book1"
     assert books[1]["prereq_policy"] == "fastforward"
-    assert books[1]["buildout"] is True
+    assert books[1].get("buildout", False) is False
 
 
 def test_book_roots_have_required_layout():
