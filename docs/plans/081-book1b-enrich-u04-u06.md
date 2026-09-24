@@ -286,6 +286,14 @@ U01–U03 (plan 080), U07+ (plans 082–084), checkpoints (084), tooling.
   Decimal to Binary, Guessing Robot, Count the Steps; U05 Pythagorean Triples, Chickens and Rabbits,
   Coin Combinations, Pascal's Triangle.
 
+### Round 3 — CONSENSUS
+
+- `[sol]` APPROVE (round 3) — both round-2 blockers resolved; ran the new broken programs (SyntaxError,
+  IndentationError) and the repairs (`3 2 1`, `6`); binding order reconciles to U04 34 / U05 31 / U06 18.
+- `[fable]` APPROVE WITH NITS (round 2, folded). `[glm]` APPROVE WITH NITS (round 1, folded). `[self]` APPROVE.
+
+**Consensus: REACHED** — cleared for implementation (after plan 080 merges, in the main checkout).
+
 ### Round 2 — [fable] APPROVE WITH NITS (folded)
 
 - `[FIXED]` depth rows aligned with the exercise tables (U04 break 6, sentinel 8, running-total 6);
