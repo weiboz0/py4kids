@@ -182,7 +182,30 @@ L365-389 no-mutation test), `test_judge_policy.py`, `test_book1b_tooling.py`.
 implementation.
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+### Round 1 — verdicts (HEAD efea99d)
+
+- `[self]` APPROVE — ci-local ALL GREEN; pytest 693 passed.
+- `[fable]` APPROVE WITH NITS — conformance + adversarial probes hold on all three books. N1: a
+  tracked `set()` `.remove` in a Book 1 profile became invisible; N2: Book 2 raw `used` gains
+  `list-append` for `remove` (no finding change); N3: `str.index`/`dict.pop` over-attribute (strict).
+- `[glm]` APPROVE WITH NITS — conformance verified line by line; 207 targeted tests pass; nits are
+  benign test deviations (strengthened asserts, bonus case, documented `title` swap).
+- `[sol]` **REJECT** — the list-mutation branch fires in Book 2 (`remove` is taught there via
+  set-ops): `factory().remove(1)`, `set().remove(1)`, `{1}.remove(1)` emit `list-append`; the Book 2
+  preservation test used a synthetic profile without set-ops, so it was vacuous for this collision.
+
+### Round 1 — fold
+
+- `[FIXED]` list-mutation (`pop`/`insert`/`remove`) and `index` branches now also require the
+  widened (own-catalog `string-methods`) profile, so Book 2 never emits them (`[sol]`, `[fable]` N2).
+- `[FIXED]` set receivers recognized as sets for literals and `set()` calls (`is_set_expression` or a
+  `set(...)` call); the set-ops branch is taken only when `set-ops` is registered, so a Book 1 profile
+  falls through to closure-enforced `list-append` (`[fable]` N1) while Book 1 cells borrowing Book 2
+  set-ops keep their cross-book finding.
+- `[FIXED]` new real-Book-2-catalog regression (`factory().remove`, `set().remove`, `{1,2}.remove`,
+  tracked set, list) + Book 1 set-remove fallback test; N3 documented in the code comment.
+- pytest 695 passed; ci-local ALL GREEN.
 
 ## Post-Execution Report
 

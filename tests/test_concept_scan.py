@@ -269,3 +269,45 @@ def test_strict_checkpoint_reports_each_widened_concept(tmp_path, source, missin
     assert concept_scan_findings(tmp_path, "book1") == [
         f"FAIL: checkpoint-01-fixture: used-but-unlisted concept {missing}"
     ]
+
+
+def test_book1_profile_set_remove_falls_back_to_list_append():
+    """A Book 1-style profile has no set-ops, so a tracked set's .remove() must stay
+    visible (closure-enforced as list-append) rather than silently disappearing."""
+    import ast as _ast
+
+    from tools import concept_scan as _cs
+    profile = _cs.scanner_profile([{"id": "string-methods"}, {"id": "list-append"}])
+    used, unknown = _cs.detect(
+        _ast.parse("s = set()\ns.remove(1)\n"),
+        registered_concepts={"string-methods", "list-append"},
+        profile=profile,
+    )
+    assert "list-append" in used
+    assert "set-ops" not in used
+    assert "remove" not in unknown
+
+
+def test_real_book2_profile_remove_never_emits_list_append():
+    """Book 2's own catalog does not register string-methods, so the Book 1/1b list-mutation
+    widening must not fire there — even though set-ops makes `remove` a taught method."""
+    import ast as _ast
+    from pathlib import Path as _Path
+
+    import yaml as _yaml
+
+    from tools import concept_scan as _cs
+    root = _Path(__file__).resolve().parents[1]
+    concepts = _yaml.safe_load((root / "book2/curriculum/concepts.yaml").read_text())["concepts"]
+    profile = _cs.scanner_profile(concepts)
+    registered = {c["id"] for c in concepts}
+    for source, want_set_ops in [
+        ("factory().remove(1)\n", False),
+        ("set().remove(1)\n", True),
+        ("{1, 2}.remove(1)\n", True),
+        ("seen = set()\nseen.remove(1)\n", True),
+        ("xs.remove(1)\n", False),
+    ]:
+        used, _unknown = _cs.detect(_ast.parse(source), registered_concepts=registered, profile=profile)
+        assert "list-append" not in used, source
+        assert ("set-ops" in used) == (want_set_ops and "set-ops" in registered), source

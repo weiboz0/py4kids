@@ -431,20 +431,29 @@ def detect(
                 add_feature("str-split")
             elif node.attr == "split" and "split" in active_profile.taught_methods:
                 used.add("string-methods")
+            receiver_is_set = is_set_expression(node.value) or (
+                isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Name)
+                and node.value.func.id == "set"
+            )
+            widened = "string-methods" in active_profile.features  # Book 1 / Book 1b only
             if (
                 node.attr in {"add", "discard", "remove"}
-                and isinstance(node.value, ast.Name)
-                and node.value.id in set_names
+                and receiver_is_set
+                and "set-ops" in registered
             ):
                 add_feature("set-ops")
-            # An untracked set receiver (for example, a parameter) is
-            # conservatively attributed to Book 1's list-changing concept.
+            # A set receiver in a book without set-ops, or an untracked set receiver
+            # (for example, a parameter), is conservatively attributed to Book 1's
+            # list-changing concept; likewise str.index -> list-index and dict.pop ->
+            # list-append (stricter, never looser).
             elif (
-                node.attr in {"pop", "insert", "remove"}
+                widened
+                and node.attr in {"pop", "insert", "remove"}
                 and node.attr in active_profile.taught_methods
             ):
                 used.add("list-append")
-            if node.attr == "index" and node.attr in active_profile.taught_methods:
+            if widened and node.attr == "index" and node.attr in active_profile.taught_methods:
                 used.add("list-index")
             if node.attr in {"appendleft", "popleft"}:
                 add_feature("deque")
