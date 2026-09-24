@@ -25,7 +25,7 @@ implementation starts only after 082 merges. If 082 were abandoned, U10 rung 4 w
 - **U10 toolkit:** everything through U09, plus list literals, indexing (positive and negative),
   assignment through an index (`scores[1] = 5`), slices on lists (incl. `[::-1]`, the only step),
   `len`/`sum`/`min`/`max`/`sorted`, `.sort()` (no arguments), `append`, `insert`, `pop` (with and
-  without an index), `remove`, `index`, `in`/`not in` on lists, `" ".join(list_of_strings)`,
+  without an index), `remove`, `index`, `in`/`not in` on lists, list equality `==`, `" ".join(list_of_strings)`,
   **lists of lists** (`grid[r][c]`), and `line.split()` with subscripting (`parts[0]`) and
   `int(...)` per piece.
   Never: `enumerate`, `zip`, tuple assignment or unpacking (swaps use a temporary variable),
@@ -149,7 +149,7 @@ the new sections), the Challenge count (71) and the **Value plan** (75–88) lis
    "green": 1}` / `print(vote_counts)`; then `print(vote_counts["blue"])`; then the existing
    function cell. `u11l002`'s explanation stays as the first rung's lead-in; each rung gets its own
    lead-in.
-2. **In "Add or update a pair" (after `u11l012`):** a rung `counts = {"blue": 3}` / `counts["blue"] =
+2. **In "Add or update a pair" (after `u11l013`, the payoff of `u11l012`):** a rung `counts = {"blue": 3}` / `counts["blue"] =
    counts["blue"] + 1` / `print(counts)` — updating a stored number, the step the frequency map
    (`u11l032`) relies on.
 3. **In "Build a frequency map" (after `u11l033`):** a rung that tallies the letters of one word
@@ -183,7 +183,7 @@ Challenges" (line 62) and the **Value plan** (66–79) listing every new fixture
 | Price Lookup Total | MP | `cart_total({"pen": 3, "pad": 5, "ink": 12}, ["pen", "ink", "pen"])` → 18; real reads the item names on one line | aggregation |
 | Luhn Check Digit | MP | `luhn_valid("79927398713")` → True, `("79927398710")` → False (from the right, double every second digit, subtract 9 when over 9, total % 10 == 0) | number theory, validation |
 | Scores from Records | MP | `parse_records(["Rin 12", "Oto 7", "Rin 5"])` → `{'Rin': 17, 'Oto': 7}` (`split`, `int(parts[1])`, add to an existing key); real reads `n` then `n` record lines | parsing, aggregation |
-| Group by Length | MP | `group_by_length(["elk", "lynx", "yak", "hare", "gnu"])` → `{3: ['elk', 'yak', 'gnu'], 4: ['lynx', 'hare']}` (the explicit membership form from `u11l037`) | grouping |
+| Group by Length | MP | `group_by_length(["elk", "ibex", "yak", "hare", "gnu"])` → `{3: ['elk', 'yak', 'gnu'], 4: ['ibex', 'hare']}` (the explicit membership form from `u11l037`) | grouping |
 | Most Frequent Letter | MP | `top_letter("bookkeeper")` → `"e"` (tally, then a strict find-extreme scan) | tallies, find-extreme |
 | Vote Percentages | MP | `percentages({"yes": 6, "no": 2})` → `{'yes': 75.0, 'no': 25.0}` (`count / total * 100`, total by a loop) | statistics, data report |
 | Word Translator | MP | `translate("a red hen", {"red": "rojo", "hen": "gallina"})` → `"a rojo gallina"` (`get(word, word)` keeps unknown words) | encoding, text |
@@ -360,6 +360,16 @@ U12–U13, checkpoints, syllabus refresh (plan 084); tooling.
 
 - `[FIXED]` `type-conversion` reps named as the numeric fences (text-only programs do not count); U11
   comment reps tied to the Ex 8–10 statements' purpose-comment requirement.
+
+### Round 3 — CONSENSUS
+
+- `[glm]` APPROVE WITH NITS (r3) — round-2 blockers fixed. Nits folded: `lynx` → `ibex` (a case-variant
+  of checkpoint-05's `Lynx`; Phase E's fixture grep is case-insensitive); U11 rung 2 lands after
+  `u11l013`; U10 toolkit lists list `==`. (U11 comment reps were pinned in their rows at 126c6ff.)
+- `[sol]` APPROVE WITH NITS (r4, nits folded) · `[fable]` APPROVE WITH NITS (r2, nits folded) ·
+  `[self]` APPROVE WITH NITS.
+
+**Consensus reached — implementation starts after plan 082 merges.**
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
