@@ -50,7 +50,9 @@ time; the scratch files are git-ignored.
 - **File problems:** reading before writing; using string `+` to build a line instead of an f-string;
   forgetting `int(line.strip())` when a saved line must become a number.
 - **`RunningTally`:** calling `highest()`/`describe()` before any `add` (`max([])` raises); forgetting
-  `self`.
+  `self`. Inside `describe`, call the methods with parentheses (`self.total()`/`self.highest()`) or the
+  helpers (`sum(self.values)`/`max(self.values)`) — a bare `{self.total}` in the f-string prints a
+  bound-method, and a bare `{total}` is a `NameError`.
 - **Dict problems:** reaching for `for k, v in d.items()` (multiple assignment) — use `for key in d:` and
   `counts[key]`/`.get`.
 
@@ -94,7 +96,7 @@ Every fixture below is distinct across problems and audited against shipped Book
 - **P1 `nth_prime`:** 1→2, 5→11, 10→29 (+3→5).
 - **P2 `reverse_digits`:** 1234→4321, 1200→21, 0→0 (+507→705).
 - **P3 `top_three`:** [4,9,1,7,3]→[9,7,4], [5,5,2,8]→[8,5,5], [10,20,30]→[30,20,10].
-- **P4 `merge_sorted` (Challenge):** [1,4,6]+[2,3,5]→[1,2,3,4,5,6], []+[2,9]→[2,9], [1,2]+[]→[1,2] (+[1,1]+[1,2]→[1,1,1,2]).
+- **P4 `merge_sorted` (Challenge):** [1,4,6]+[2,3,5]→[1,2,3,4,5,6], []+[2,9]→[2,9], [3,8,9]+[]→[3,8,9] (+[2,6,6]+[6,10]→[2,6,6,6,10], a duplicate-handling case).
 - **P5 `binary_search` (Challenge):** ([1,3,5,7,9],7)→3, (…,4)→-1, ([2,4,6,8,10,12],2)→0 (+…,12→5).
 - **P6 `count_substring`:** ("cocoon","co")→2, ("aaaa","aa")→3, ("possession","ss")→2.
 - **P7 `word_counts_from_file`** (scratch `p7_words.txt`/`p7b_words.txt`/`p7c_words.txt`):

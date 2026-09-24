@@ -290,7 +290,38 @@ Consensus: **NOT reached** (1 REJECT). All findings folded (this commit); round 
 cleared for implementation.
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+4-way content-review gate. Findings `[OPEN]`/`[FIXED]`/`[WONTFIX]`; all `[OPEN]` resolve before merge.
+
+### Round 1 — verdicts (HEAD 4fcf8ec)
+
+- `[self]` APPROVE — structure/concept-scan/ci-local/pytest/AST-audit green; brief↔solutions consistent.
+- `[fable]` APPROVE WITH NITS — executed solutions (all asserts pass), blind-solved all 11, value-distinctness
+  grep 0 hits, full tool-pin/tier-C AST audit clean. Nits: P7/P8/P11 spec read/write wording; P10 f-string
+  method-name note; P3 idiom hint; solutions P4/P5 headings.
+- `[glm]` APPROVE WITH NITS — anchor+buildout green; **manifest honesty verified** (33 detected concepts all
+  in-contract; 11 manual techniques all genuine; no over-claim). Nits: post-exec arithmetic typo
+  (45.5→43.5); same P7/P8/P11 wording.
+- `[sol]` **REJECT** — 2 Must-Fix (all blind solves otherwise correct; concept-scan/structure/coverage/AST
+  PASS): (1) P7/P8/P11 specs describe a write-then-read *function* but the solutions' functions only read
+  (self-containedness is at the CELL level); (2) P4's `[1,2]` fixture collides with U10 `keep_approved` and
+  repeats within P4.
+
+Consensus: **NOT reached** (1 REJECT). All findings folded (this commit); round 2 confirms `[sol]`.
+
+### Round 1 — fold
+
+- `[FIXED]` **P7/P8/P11 self-containedness** (`[sol]` MF1 / `[fable]` / `[glm]`): reworded the specs so the
+  FUNCTION only reads (P11 reads in / writes out) and the CELL does the fixture setup; updated the
+  Requirements checklist to state cell-level self-containedness. Matches the U12 convention + the solutions.
+- `[FIXED]` **P4 `[1,2]` collision** (`[sol]` MF2): brief sample `merge_sorted([1,2],[])`→`[3,8,9],[]`; solution
+  fixtures → `[3,8,9]+[]` and `[2,6,6]+[6,10]` (all grep 0 hits); teacher-notes value plan updated.
+- `[FIXED]` post-exec arithmetic typo 45.5→43.5 (`[glm]`).
+- `[FIXED]` P10 f-string method-call note added to teacher-notes Common mistakes (`[fable]`).
+- `[FIXED]` P3 idiom hint (`ordered[len(ordered)-1]`) added to the brief spec (`[fable]`).
+- `[FIXED]` solutions P4/P5 headings now read "— Challenge" (`[fable]`).
+
+ci-local: ALL GREEN after fold.
 
 ## Post-Execution Report
 
@@ -319,7 +350,7 @@ _(4-way content-review gate — filled before PR.)_
   `assert books[1].get("buildout", False) is False` (+ comment); swept stale "buildout" comments in
   `scripts/ci-local.sh` and the coverage-map header. `TMPDIR=/dev/shm bash scripts/ci-local.sh` →
   **ALL GREEN** with the now-active strict `introduction_findings` (62/62), `lesson_budget` lower bound
-  (45.5 ∈ [30,60]), and `practice_findings` anchor. `pytest tests/` → **664 passed**. Static tier-C
+  (43.5 ∈ [30,60]), and `practice_findings` anchor. `pytest tests/` → **664 passed**. Static tier-C
   AST/grep audit (comprehensions / tuple-assign / step-slice / ord-chr / import-math / inheritance /
   dunder>__init__ / decorators / `.copy()` / `.items()`-unpack): **VIOLATIONS NONE**. Working tree clean;
   every scratch `.txt` gitignored.
