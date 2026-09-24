@@ -96,8 +96,8 @@ round-trip.
 - Ex5 `highest_saved_score([44,81,63],"ex5_high_score.txt")`→`81`; `([205,199,201],…)`→`205`.
 - Ex6 `player_record_summary("Lina",3,480,"ex6_typed_record.txt")`→`"Lina: level 3, 480 points"`; `("Zoe",1,75,…)`→`"Zoe: level 1, 75 points"`.
 - Ex7 `save_and_find_player(["Inez","Kai","Noor"],"Inez","ex7_roster.txt")`→`"Found Inez."`; `…,"Pia",…`→`"Pia was not found."`.
-- Ex25 (stretch) `replace_and_load_scores([10,20],[30,40],"ex8_replace.txt")`→`[30,40]` (overwrite proof).
-- Ex26 (stretch) `saved_total_and_best([12,30,18],"ex9_combined_stats.txt")`→`[60,30]` (`[total, best]`, one pass).
+- Ex25 (stretch) `replace_and_load_scores([10,20],[30,40],"ex25_replace.txt")`→`[30,40]` (overwrite proof).
+- Ex26 (stretch) `saved_total_and_best([12,30,18],"ex26_combined_stats.txt")`→`[60,30]` (`[total, best]`, one pass).
 - New exercises 8–28: fixtures as in the exercise statements (plan 084's tables), grep-distinct from shipped
   Book 1b content.
 

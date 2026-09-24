@@ -87,7 +87,7 @@ reads the constructor and method arguments with bare `input()`, builds the objec
 
 - Strugglers: Core 1–3 (identity, a record class, `area`/`perimeter`); give `__init__` and have them write one
   method.
-- Fast finishers: the state-machine More Practice (Vending Machine, Game Board), then the Challenges (Rover
+- Fast finishers: the state-machine exercises (Traffic Light, Vending Machine), then the Challenges (Rover
   Commands is the capstone); then add a method that compares two
   objects (e.g. which rectangle is larger).
 - Middle tier: rewrite a plain function from Unit 07 as a method on a class and confirm identical results.
@@ -102,7 +102,7 @@ mutating methods).
 - Ex5 `crate.short_code()`→"NE", `crate.describe()`→"NE-48: 7 by 3". Ex6 `blue.increment(3)`→3, then `increment(2)`→5.
 - Ex7 `Point(14,9).save("ex7_point.txt")`→"ex7_point.txt"; the loaded point has `x`=14, `y`=9.
 - Ex21 (stretch) `Rectangle(10,7).size_band()`→"large", `Rectangle(7,5)`→"medium". Ex22 (stretch)
-  `visitors = Counter("north gate",12)`: `increment(4)`→16, `save("ex9_counter.txt")`→"ex9_counter.txt", then
+  `visitors = Counter("north gate",12)`: `increment(4)`→16, `save("ex22_counter.txt")`→"ex22_counter.txt", then
   `load_counter(...)` gives back `label`="north gate", `count`=16.
 - New exercises 8–24: fixtures as in the exercise statements (plan 084's tables), grep-distinct from shipped
   Book 1b content.

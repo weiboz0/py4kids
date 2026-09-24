@@ -132,7 +132,7 @@ attributes and state); U13 teacher-notes Goals, pacing, Challenge count, Value p
 | Draw a Rectangle | C | `Rectangle(4, 2).draw()` → `"####\n####"` (rows appended to a list, then `"\n".join(rows)`) (purpose comment required) | ASCII art, objects |
 | Bank Account | C | `BankAccount("Idris", 50)`; `deposit(30)` → 80; `withdraw(100)` → `"Insufficient funds"` (balance stays 80); `withdraw(25)` → 55 (purpose comment required) | modeling, state |
 | Traffic Light | C | `TrafficLight()` starts `"green"`; `next()` → `"yellow"`, `"red"`, `"green"` (an `if`/`elif`/`else` state machine) (purpose comment required) | state machines |
-| Playlist | MP | `Playlist()`; `add("Tide")`, `add("Ember")` → `count()` 2, `songs` `['Tide', 'Ember']` (a list attribute) | modeling |
+| Playlist | MP | `Playlist()`; `add("Tide")`, `add("Ember")` → `song_count()` 2 (not `count` — that name belongs to the untaught `list.count`), `songs` `['Tide', 'Ember']` (a list attribute) | modeling |
 | Vending Machine | MP | `VendingMachine(3)`; `insert(1)` → `"Insert 2 more"`, `insert(1)` → `"Insert 1 more"`, `insert(2)` → `"Vend! Change: 1"` (credit resets to 0) | state machines |
 | Stockroom | MP | `Stockroom()`; `add("rivet", 10)`, `add("washer", 4)`, `remove("rivet", 3)` → `stock` `{'rivet': 7, 'washer': 4}` (a dict attribute; `add` uses the membership pattern) | modeling, dicts |
 | Student Grades | MP | `Student("Yusra")`; `add_score(80)`, `add_score(90)` → `average()` 85.0 | statistics, objects |

@@ -27,8 +27,8 @@ Budget: half a lesson (~30–45 minutes). Hand out after Unit 08. The seven ques
 
 ## Real-version notes (design 006, plan 084)
 
-Each question now ends with an ungraded **Real version** note (CP01 Q7, a traceback-reading question,
-says **No real version**). Graded answers still use the fixed given values and never call `input()`; the
+Each question now ends with an ungraded **Real version** note (only Checkpoint 01's traceback-reading
+question has none). Graded answers still use the fixed given values and never call `input()`; the
 solutions notebook shows each real program — the same work reading stdin with a bare `input()`, the way a
 contest problem does — with a sample input and its expected output. Use one or two as a warm-up after the
 checkpoint, typing the sample input live.
