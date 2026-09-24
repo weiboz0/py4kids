@@ -27,6 +27,14 @@ The seven questions and the concept each targets:
 7. **Read the Final Traceback Line** — read a broken snippet's traceback and name the error *type* on
    its final line (U01–U02 `error-messages`).
 
+## Real-version notes (design 006, plan 084)
+
+Each question now ends with an ungraded **Real version** note (CP01 Q7, a traceback-reading question,
+says **No real version**). Graded answers still use the fixed given values and never call `input()`; the
+solutions notebook shows each real program — the same work reading stdin with a bare `input()`, the way a
+contest problem does — with a sample input and its expected output. Use one or two as a warm-up after the
+checkpoint, typing the sample input live.
+
 ## Common mistakes
 
 - `/` printing `10.0` where a student expected `10` (Q4) — `/` always gives a float.

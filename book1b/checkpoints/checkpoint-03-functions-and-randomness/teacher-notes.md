@@ -25,6 +25,14 @@ Budget: half a lesson (~30–45 minutes). Hand out after Unit 08. The seven ques
 7. **Seeded High-Roll Count** — `import random` + `random.seed(4)` then count rolls over a threshold (U08).
    *The statement tells the student to seed with 4 first so the answer is reproducible.*
 
+## Real-version notes (design 006, plan 084)
+
+Each question now ends with an ungraded **Real version** note (CP01 Q7, a traceback-reading question,
+says **No real version**). Graded answers still use the fixed given values and never call `input()`; the
+solutions notebook shows each real program — the same work reading stdin with a bare `input()`, the way a
+contest problem does — with a sample input and its expected output. Use one or two as a warm-up after the
+checkpoint, typing the sample input live.
+
 ## Common mistakes
 
 - A function that `print`s instead of `return`ing, so the caller cannot use its value.

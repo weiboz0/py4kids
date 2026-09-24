@@ -27,6 +27,14 @@ Unit 13. The seven questions and their targets:
 7. **Save a Labeled Rectangle** — a class whose method saves itself to a file + a `string-slice`
    (`short_code`) of an attribute — ties U12 + U13 (U12+U13). *Pass-bar (class-with-a-method).*
 
+## Real-version notes (design 006, plan 084)
+
+Each question now ends with an ungraded **Real version** note (CP01 Q7, a traceback-reading question,
+says **No real version**). Graded answers still use the fixed given values and never call `input()`; the
+solutions notebook shows each real program — the same work reading stdin with a bare `input()`, the way a
+contest problem does — with a sample input and its expected output. Use one or two as a warm-up after the
+checkpoint, typing the sample input live.
+
 ## Common mistakes
 
 - Reading a file before it is written — each file question writes its own file first.

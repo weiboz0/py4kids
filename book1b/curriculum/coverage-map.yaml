@@ -153,19 +153,24 @@ entries:
   title: "Files — read, write, and the with statement"
   lessons: 3
   introduces: [file-read, file-write, with-statement]
-  requires: [def-function, parameters, return-value, for-loop, list-append, string-methods, if-statement,
-             comparison, arithmetic, type-conversion, variable, print]
+  requires: [def-function, parameters, return-value, for-loop, list-append, if-statement, comparison,
+             arithmetic, variable, print, elif-else, string-concat, float-type, list-sort,
+             error-messages, list-index, break-statement, nested-loops, range-function,
+             string-literal]
   practices: [transform-each, linear-search, list-literal, builtin-functions, running-total,
-              count-by-condition, find-extreme, accumulator, int-type, f-string, comment, naming]
+              count-by-condition, find-extreme, accumulator, int-type, f-string, comment, naming,
+              input, type-conversion, string-methods, list-loop]
 - id: unit-13-objects
   kind: unit
   title: "Objects — classes, __init__, attributes, and methods"
   lessons: 3
   introduces: [class-def, init-method, attributes, methods]
   requires: [def-function, parameters, return-value, arithmetic, comparison, boolean, if-statement,
-             variable, print]
-  practices: [string-slice, file-read, file-write, with-statement, f-string, int-type, float-type,
-              type-conversion, comment, naming]
+             variable, print, string-slice, dict-literal, dict-access, in-operator, range-function,
+             string-methods, find-extreme, nested-loops, error-messages, list-index, dict-loop,
+             string-concat, accumulator, string-literal, builtin-functions]
+  practices: [file-read, file-write, with-statement, f-string, int-type, float-type, type-conversion,
+              comment, naming, input, list-append, elif-else, list-loop, for-loop, list-literal]
 - id: checkpoint-05-files-and-objects
   kind: checkpoint
   title: "Checkpoint 5 — Files & Objects"
