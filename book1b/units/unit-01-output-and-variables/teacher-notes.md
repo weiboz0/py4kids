@@ -27,9 +27,9 @@ load — so each is taught as a short **worked-example ladder** (minimal → one
   line). Comments; quotes; the new **Special characters** ladder: `\n`, `\t`, `\"`, then a triple-quoted
   three-line picture. No input yet (Lesson 1 is exempt from the real-input rule).
 - **Lesson 2 — Save Values (variable, naming, input).**
-  Assign values; choose clear names; then `input()` — the two `no-exec` cells are real programs students
-  run at home or with you live (`name = input("Name: ")`, then `print("Hello,", name)` — the comma form,
-  because `+` comes in Lesson 3).
+  Assign values; choose clear names; then `input()` — the three `no-exec` cells are real programs
+  students run at home or with you live (e.g. `name = input("Name: ")`, then `print("Hello,", name)` —
+  the comma form, because `+` comes in Lesson 3).
 - **Lesson 3 — Assemble the Card (string-concat, f-string, error-messages).**
   `+`, then f-strings; the `no-exec` "real card" cell reads two values and prints one f-string line.
   Finish with the deliberate broken/fixed traceback cells and the **Final build**.
@@ -41,10 +41,12 @@ are the natural "try it" rungs.
 ## Exercises — core vs. More Practice vs. challenge
 
 20 exercises, partitioned so a single lesson still fits 60–90 minutes:
-- **Core (Exercises 1–14)** — the in-class path: output, comments, string literals, concatenation,
-  f-strings, a traceback repair (Ex 6), writing your own named variables (Ex 7), plus the new
-  **Comma Print** (12, `Club: Origami` / `Room: B12`), **Room Sign** (13, `West Wing, Room 204` with
-  `+`) and **Escape Poem** (14, one string with `\n` and `\t`). Exercises 12–14 require a purpose comment.
+- **Core (Exercises 1–7 and 12–14)** — the in-class path: output, comments, string literals,
+  concatenation, f-strings, a traceback repair (Ex 6), writing your own named variables (Ex 7), plus
+  the new **Comma Print** (12, `Club: Origami` / `Room: B12`), **Room Sign** (13, `West Wing, Room 204`
+  with `+`) and **Escape Poem** (14, one string with `\n` and `\t`). Exercises 12–14 require a purpose
+  comment.
+- **Extra practice (Exercises 8–11)** — the original extra set (8 now carries a Real version).
 - **More Practice (Exercises 15–18)** — homework / fast finishers: **Predict the Output** (15:
   `A B`, `x-y-z`, `Go!Now`), **Swap Two Values** (16: pear/plum with a temporary variable), **Fix the
   NameError** (17: `Favorite` vs `favorite`, prints `mango`), **Triple-Quote Cat** (18: `=^.^=` /

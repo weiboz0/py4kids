@@ -320,7 +320,29 @@ Checkpoint real-version notes (plan 084); U04+ units; tooling changes.
 **Consensus: REACHED** — cleared for implementation.
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+### Round 1 — verdicts (HEAD 38c5a04)
+
+- `[self]` APPROVE — U01–U03 walked end to end; audits clean.
+- `[glm]` APPROVE.
+- `[sol]` APPROVE WITH NITS (blind-solved every new exercise).
+- `[fable]` APPROVE WITH NITS (blind-solved every new exercise).
+
+**Consensus reached.** Nits folded (Codex gpt-6-sol, then verified inline):
+
+- `[FIXED]` new exercise starters held only a comment — worked-sample "given" assignments prepended
+  (U01 12/13/16, U02 new exercises, U03 9–16, 20–21), matching the existing starters.
+- `[FIXED]` U02 lesson: the `ValueError` cells sat inside the `TypeError` broken→repair pair — moved
+  after its Notice (`u02l032`), lead-in split into `u02l032a`.
+- `[FIXED]` U03 lesson: Notice on `elif score >= 80 and score < 90` says the `< 90` half is redundant
+  under top-down order; the "`and` binds tighter than `or`" note moved to the leap-year parentheses cell.
+- `[FIXED]` U02 Ex 21 (1089 Trick) subtraction instruction made exact; U01 Ex 12 fence dropped unused
+  assignments; U02 Ex 16/23 Real version lines state the width-dependent input.
+- `[FIXED]` U01 teacher-notes partition (Core 1–7 and 12–14; Extra practice 8–11) and the Lesson 2
+  comma-form input example.
+
+Post-fold: Phase E audit 0 findings (U01–U03); all solutions execute; structure / hygiene / noexec /
+concept-scan pass.
 
 ## Post-Execution Report
 
