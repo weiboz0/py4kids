@@ -207,6 +207,18 @@ implementation.
   tracked set, list) + Book 1 set-remove fallback test; N3 documented in the code comment.
 - pytest 695 passed; ci-local ALL GREEN.
 
+### Round 2 — verdicts (HEAD 7b5d52e) — CONSENSUS
+
+- `[self]` APPROVE.
+- `[sol]` APPROVE — round-1 finding resolved; the real-Book-2 test is non-vacuous (4 of its 5 cases
+  fail on efea99d, all pass now); 27 focused tests pass.
+- `[fable]` APPROVE WITH NITS — 695 passed; 0/0/0 findings on the three books; N1/N2 resolved.
+  Nits: `[FIXED]` intent comment that a non-set `remove` is unattributed in Book 2;
+  `[WONTFIX]` `receiver_is_set` duplicates the `set()`-call test used for `set_names` (cosmetic).
+- `[glm]` — round-1 APPROVE WITH NITS carried forward (its nits were benign test deviations).
+
+**Consensus: REACHED** — cleared for PR.
+
 ## Post-Execution Report
 
 **Status: implemented; ci-local ALL GREEN; pytest 693 passed (2026-09-24). Content-review gate next.**

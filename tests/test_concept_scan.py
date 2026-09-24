@@ -306,6 +306,8 @@ def test_real_book2_profile_remove_never_emits_list_append():
         ("set().remove(1)\n", True),
         ("{1, 2}.remove(1)\n", True),
         ("seen = set()\nseen.remove(1)\n", True),
+        # A non-set `remove` is intentionally UNATTRIBUTED in Book 2 (list mutation is Book 1
+        # baseline there); do not "fix" this into a Book 2 list-append emission.
         ("xs.remove(1)\n", False),
     ]:
         used, _unknown = _cs.detect(_ast.parse(source), registered_concepts=registered, profile=profile)
