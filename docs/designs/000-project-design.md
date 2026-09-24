@@ -137,7 +137,7 @@ Adopts the usaaio workflow unchanged in shape; `docs/development-workflow.md` an
   Pause only for genuine judgment forks and hard safeguards.
 - Branch before drafting a plan (`feature/plan-NNN-description`); never commit to `main`.
 - **Plan-review gate (4-way):** `[self]` (active session, inline),
-  `[sol]` (codex:codex-rescue, GPT-5.6-sol, fresh read-only),
+  `[sol]` (codex:codex-rescue, GPT-6.0-sol, fresh read-only),
   `[glm]` (opencode:opencode-review, fresh read-only),
   `[fable]` (fresh read-only Fable 5 reviewer — post-2026-08-09 rotation).
   Full blocking consensus: all four APPROVE / APPROVE WITH NITS, no open blockers.
@@ -148,7 +148,7 @@ Adopts the usaaio workflow unchanged in shape; `docs/development-workflow.md` an
   all `[OPEN]` resolve before merge. Reviewers blind-solve exercises and checkpoints,
   and additionally review for age-appropriateness and engagement
   (does the unit open with the hook, or with drill?).
-- **Errata:** post-merge content bugs get 2-way diagnosis (Claude inline + Codex GPT-5.6-sol,
+- **Errata:** post-merge content bugs get 2-way diagnosis (Claude inline + Codex GPT-6.0-sol,
   read-only) → fix plan → gates → merge, plus an `ERRATA.md` entry in the affected directory.
   Typos skip diagnosis.
 
@@ -157,10 +157,10 @@ Adopts the usaaio workflow unchanged in shape; `docs/development-workflow.md` an
 | Work | Dispatch |
 |------|----------|
 | Planning, review orchestration, curriculum architecture | Active session inline |
-| Lesson content + exercise/checkpoint STATEMENTS | `codex:codex-rescue` (GPT-5.6-sol) |
-| SOLUTIONS to exercises + checkpoints | `codex:codex-rescue` (GPT-5.6-sol) — separate fresh session, never reads statement outlines; cross-model verification lives in the gates |
+| Lesson content + exercise/checkpoint STATEMENTS | `codex:codex-rescue` (GPT-6.0-sol) |
+| SOLUTIONS to exercises + checkpoints | `codex:codex-rescue` (GPT-6.0-sol) — separate fresh session, never reads statement outlines; cross-model verification lives in the gates |
 | Blind independent solving (content gate) | Gate roster (all four reviewers solve blind) |
-| Tooling code (`tools/`, `scripts/`) | `codex:codex-rescue` (GPT-5.6-sol) |
+| Tooling code (`tools/`, `scripts/`) | `codex:codex-rescue` (GPT-6.0-sol) |
 | Teacher notes | Active session inline (pedagogy judgment) |
 | Trivially-scoped edits | Inline |
 
