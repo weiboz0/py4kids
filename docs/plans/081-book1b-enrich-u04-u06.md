@@ -1,7 +1,7 @@
 # Plan 081 — Book 1b enrichment: Units 04–06 (Loops & Counting, For & Range, Turtle Geometry)
 
-**Goal:** Apply design 006 (D3–D8) to U04–U06: gentler loop ladders, the full ASCII-art pattern
-ladder (U05), algorithm variants, the real-input (CP-ready) pattern for U04–U05, and the missing
+**Goal:** Apply design 006 (D3–D8) to U04–U06: gentler loop ladders, the ASCII-art pattern ladder (U05: rectangle → right triangle → inverted → right-aligned → hollow
+box → checkerboard → pyramid → diamond → tree → Floyd/Pascal), algorithm variants, the real-input (CP-ready) pattern for U04–U05, and the missing
 loop facets (`+=`, best-so-far, digit count, `range` step/negative step, `continue`, `end=`,
 string-repetition shapes).
 
@@ -84,6 +84,7 @@ uses the longer form" → now introduces `+=` as the shorthand taught in Lesson 
 | 29 | Decimal to Binary | MP | `n = 37` → `100101` by repeated `// 2`, prepending `str(n % 2)` (genre: number bases) | accumulator, string-concat, type-conversion |
 | 30 | Guessing Robot | MP | secret 42 in 1..100, always guess the middle → `Guesses: 50 25 37 43 40 41 42` / `Found 42 in 7 guesses` (genre: games). Real version reads the SECRET and runs the same robot (identical transcript — D3 parity); the human-player version is a lesson `no-exec` cell in L3 instead | sentinel-loop, break, loop-counter |
 | 31 | Challenge: Count the Steps | S | GCD of 270 and 192 both ways → `Subtraction steps: 10` / `Remainder steps: 4` / `GCD: 6` (genre: tracing & efficiency) | loop-counter |
+| 32 | Countdown Bars | MP | `start = 4` → `4 ####` / `3 ###` / `2 ##` / `1 #` (`while` + `"#" * n`; genre: ASCII art) | string-concat, while |
 | 25 | Challenge: Powers of Two | S | → `2^0 = 1` … `2^7 = 128` (8 lines) then `Total: 255` | while, running-total |
 
 Real programs for existing Ex 3 (read amounts until 0 → total) and Ex 9 (read scores until 0 →
@@ -128,10 +129,11 @@ U05 teacher-notes line 36 ("`x = x + 1` only" → either form, `+=` taught in U0
 | 23 | Divisor Count | MP | `n = 36` → `36 has 9 divisors` | count-by-condition |
 | 24 | Challenge: Aligned Times Table | S | 6×6 with `f"{p:3}"` → 6 rows, last `  6 12 18 24 30 36` | nested-loops |
 | 26 | Leap Years in a Range | MP | years 1990..2030; the statement spells out the nested form itself (`% 4` outer → `% 100` inside → `% 400` innermost) — U03 taught only the one-line `and`/`or` form → `Leap years: 10` | conditional-nesting, count-by-condition |
-| 27 | Pythagorean Triples | MP | all a < b < c ≤ 20 with a² + b² = c² → 6 lines `3 4 5`, `6 8 10`, `5 12 13`, `9 12 15`, `8 15 17`, `12 16 20` (loop c outer, b, then a; genre: puzzle search) | nested-loops |
+| 27 | Pythagorean Triples | MP | all a < b < c ≤ 20 with `a * a + b * b == c * c` (no `**` — outside the U04–U06 toolkit) → 6 lines `3 4 5`, `6 8 10`, `5 12 13`, `9 12 15`, `8 15 17`, `12 16 20` (loop c outer, b, then a; genre: puzzle search) | nested-loops |
 | 28 | Chickens and Rabbits | MP | 20 heads, 56 legs → `Chickens: 12, Rabbits: 8` by trying every split (genre: puzzle search) | for-loop, if |
 | 29 | Coin Combinations | MP | ways to make 50¢ from 5¢, 10¢, 25¢ coins → `Ways: 10` (three nested loops; genre: puzzle search) | nested-loops, count-by-condition |
 | 30 | Challenge: Pascal's Triangle | S | 5 rows via `c = c * (row - k) // (k + 1)` → `1` / `1 1` / `1 2 1` / `1 3 3 1` / `1 4 6 4 1` (genre: sequences) | nested-loops, accumulator |
+| 31 | Inverted Triangle | MP | `height = 4` → `****` / `***` / `**` / `*` | string-concat, range (negative step) |
 | 25 | Challenge: Primes up to 50 | S | → `2 3 5 7 11 13 17 19 23 29 31 37 41 43 47` and `Count: 15` | nested-loops, break |
 
 ## U06 — Turtle Geometry (input-exempt)
@@ -167,6 +169,40 @@ asset). Technique concepts: `loop-counter` = a variable increased by 1 inside a 
 increased inside an `if` in a loop; `sentinel-loop` = a loop whose stop is a value test
 (`while x != …`, or `while True` + `break`); best-so-far counts toward `find-extreme` (practice,
 not required). `conditional-nesting` = an `If` inside an `If`. Shortfalls are fixed before the gate.
+
+## Binding final exercise order (Challenges last; `More Practice: ` prefix; tables above are provisional)
+
+- **U04 (32):** 1–9 existing core · 10 Countdown Liftoff · 11 Count the Digits · 12 Reverse a Number ·
+  13–27 MP: Palindrome Number, Doubling Past a Limit, Sum of Even Digits, Count the Odd Digits, Largest
+  Digit, Loop-Built Star Bar, First Square Over 300, Fix the Infinite Loop, Fix the Missing Starting
+  Value, Lucky Sevens, Savings Streak, Triangular Numbers, Decimal to Binary, Guessing Robot, Countdown
+  Bars · 28–32 Challenges: Remainder GCD (was 10), Probe Mission 19 (was 11), Collatz Peak, Powers of
+  Two, Count the Steps.
+- **U05 (31):** 1–9 existing core (Ex 1 rewritten as Triangle Number) · 10 Countdown by Twos · 11 Hollow
+  Box · 12 Right-Aligned Triangle · 13–26 MP: Checkerboard, Pyramid, Diamond, Tree with Trunk, Floyd's
+  Triangle, Skip the Sevens, Multiples of 3 or 5, Perfect Number Check, Divisor Count, Leap Years in a
+  Range, Pythagorean Triples, Chickens and Rabbits, Coin Combinations, Inverted Triangle ·
+  27–31 Challenges: Step-Range Total (was 10), Count the Primes (was 11), Aligned Times Table, Primes up
+  to 50, Pascal's Triangle.
+- **U06 (18):** 1–7 existing core · 8 Row of Squares · 9 Dashed Line · 10–15 MP: Color-Alternating Ring,
+  Growing Squares, Seven-Point Star, Fix the Misspelled Command, Fix the Missing Import, Fix the
+  Indentation · 16–18 Challenges: Five-Point Star (was 8), The Eight-Degree Gap (was 9), Grid of Squares.
+
+## Metadata deltas (manifest.yaml AND coverage-map.yaml, identically)
+
+- U04 `practices` += `input`, `type-conversion`, `string-concat` (string-concat reps: Star Bar, Decimal
+  to Binary, Countdown Bars). `find-extreme` is NOT claimed (best-so-far appears only twice; it is plain
+  `if` + comparison).
+- U05 `practices` += `input`, `type-conversion`.
+- U06 `requires` += `if-statement`, `elif-else`, `comparison`, `print` (used by the Ring, Dashed Line and
+  printed counts; below the practice threshold, so `requires`).
+
+## Real-input idioms
+
+U04 real programs are sentinel loops (U04's concept). The D3 "read `n`, then `n` lines" idiom lands in
+U05: the real programs for Ex 3 (Divisible-by-Four Census) and Ex 7 (Nested Classification Count) read
+`n` and then `n` numbers. Every U05 art exercise reads its dimensions (height/width/size) — none is
+fixed art, so each has a Real version.
 
 ## Genre coverage (design 006 D9)
 
@@ -208,7 +244,7 @@ accumulation, debug/repair. All ≥ 4.
   values, common mistakes: `continue` in `while`, off-by-one in `range` step, trailing spaces in art,
   forgetting to reset the row string); manifests + coverage-map honesty (e.g. U05 practices
   `string-concat` already; add any newly used concept).
-- **Phase E — VERIFICATION** (specialized audits FIRST; `scripts/ci-local.sh` LAST, and re-run after
+- **Phase E — VERIFICATION** (specialized audits FIRST — incl. a per-unit **genre table** (D9 ≥4), a **grep of EVERY new fixture** (not only distinctive ones) within the unit, fence output == the stand-in's asserted values, and a manifest ↔ coverage-map diff; `scripts/ci-local.sh` LAST, and re-run after
   any audit-driven correction):
   1. AST audit of every code cell, fence and U06 asset against the per-unit toolkit.
   2. Fence parity: run each fence with its Sample input; stdout must equal Expected output and the
@@ -243,6 +279,15 @@ U01–U03 (plan 080), U07+ (plans 082–084), checkpoints (084), tooling.
 - **User direction (2026-09-24):** genre coverage (design 006 D9) folded — U04 Triangular Numbers,
   Decimal to Binary, Guessing Robot, Count the Steps; U05 Pythagorean Triples, Chickens and Rabbits,
   Coin Combinations, Pascal's Triangle.
+
+### Round 1 — [glm] APPROVE WITH NITS (folded)
+
+- `[FIXED]` metadata deltas enumerated (U04/U05 practices, U06 requires); third U04 string-concat rep
+  (Countdown Bars, also fills D4's U04 art line); `find-extreme` not claimed.
+- `[FIXED]` Inverted Triangle added (the U05 ladder is now complete); Pythagorean Triples uses `a * a`.
+- `[FIXED]` "read n then n lines" lands in U05 Ex 3/7 real programs; U05 art reads its dimensions.
+- `[FIXED]` binding final order for U04/U05/U06 (Challenges last).
+- `[FIXED]` Phase E: genre table, full-fixture grep, fence == stand-in, manifest ↔ map diff.
 
 ### Round 1 — [sol] fold
 
