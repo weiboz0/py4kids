@@ -7,5 +7,5 @@ concepts:
   introduces: [string-index, string-slice, string-methods, in-operator, transform-each, linear-search]
   requires: [def-function, parameters, return-value, for-loop, range-function, if-statement, comparison,
              boolean, arithmetic, variable, print, string-literal]
-  practices: [f-string, string-concat, accumulator, count-by-condition, loop-counter, builtin-functions,
-              int-type, type-conversion, elif-else, comment, naming]
+  practices: [f-string, string-concat, accumulator, count-by-condition, loop-counter,
+              builtin-functions, int-type, type-conversion, elif-else, comment, naming, input]

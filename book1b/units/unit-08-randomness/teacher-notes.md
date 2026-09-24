@@ -3,7 +3,8 @@
 ## Goals
 
 Students leave able to import and use the `random` module — `random.randint(a, b)` for a whole number in a
-range, `random.choice(range(...))` to pick from a range, and `random.seed(4)` to make a random program
+range, `random.choice(...)` to pick from a `range(...)` or from the characters of a string
+(`random.choice("HT")`), and `random.seed(4)` to make a random program
 reproducible — and to package randomness inside functions that count outcomes and estimate probabilities.
 Success looks like: every student writes a seeded function that simulates many trials and reports a count or
 a percentage, and can explain why a simulated estimate is close to, but not exactly, the true value.
@@ -14,11 +15,16 @@ times.
 
 Budget: three lessons of 60–90 minutes.
 
-- **Lesson 1 — Chance (`random-module`).** `import random`; `random.randint` (inclusive of both ends) and
-  `random.choice(range(...))`; **`random.seed(4)`** so a run can be repeated and tested (why every solution
-  here seeds). A dice-and-coin game that keeps a cumulative score across rolls.
+- **Lesson 1 — Chance (`random-module`).** Three single-idea rungs open the unit: `import random`, then
+  `random.seed(4)`, then `print(random.randint(1, 6))` (inclusive of both ends); then
+  `random.choice(range(...))` and the new rung `random.choice("HT")` (a coin from a string);
+  **`random.seed(4)`** so a run can be repeated and tested (why every solution
+  here seeds). A `no-exec` cell reads the number of rolls. A dice-and-coin game that keeps a cumulative
+  score across rolls.
 - **Lesson 2 — Simulate & Estimate.** Count how often an outcome happens over many trials (a running total
-  inside a function), report it as a percentage (`round`), then a Monte-Carlo estimate of π: throw random
+  inside a function; a `no-exec` cell reads the number of trials), report it as a percentage (`round`),
+  then — after a new rung that tests ONE fixed point `(0.3, 0.4)` against the quarter circle — a
+  Monte-Carlo estimate of π: throw random
   points into a square and count how many land inside the quarter-circle (`x*x + y*y <= 1000*1000`); the
   fraction inside is about π/4, so multiply by 4. **The estimate is close to, not exactly, π** (about 3.1,
   not 3.14159) — more trials bring it closer ON AVERAGE, but not monotonically (a larger run can score
@@ -26,26 +32,39 @@ Budget: three lessons of 60–90 minutes.
   grid.")
 - **Lesson 3 — Random Turtle Walk.** A turtle that steps forward and turns left or right based on
   `random.randint(0, 1)`, seeded so the drawing is reproducible; run as `assets/*.py` from the terminal
-  (an open path — it does not close).
+  (an open path — it does not close). A `no-exec` cell reads the number of coin flips.
 
 **60-minute cut (any lesson):** in Lesson 2, teach the counting simulation and the percentage report live and
 leave the π estimate as a "try it"; it is the least essential and the most math-heavy.
 
-## Exercises — core vs. extra vs. challenge
+## Exercises — core vs. More Practice vs. challenge
 
-Core (1–7): Dice Total, Heads Counter, Bonus-Round Score (cumulative), Target Roll Counter
-(count-by-condition), Even-Roll Percentage (`round`), Quarter-Circle Estimate (Monte-Carlo), **Rescue-Robot
-Random Walk** (the turtle practice site — run it in the terminal).
-Challenges (8–9, `stretch`): Highest Twenty-Sided Roll (`max` over trials); Multiples in a Random Range.
-Every non-turtle exercise is a **seeded function** (`random.seed(4)` before the first random call) asserted
-against its deterministic result; the turtle walk is checked by running it.
+20 exercises. Every non-turtle exercise is a **seeded function** (`random.seed(4)` before the first random
+call) asserted against its deterministic result.
+
+- **Core (1–10):** Dice Total, Heads Counter, Bonus-Round Score, Target Roll Counter, Even-Roll Percentage,
+  Quarter-Circle Estimate, **Rescue-Robot Random Walk** (turtle), plus **Die Face Art** (8: `die_face(5)` →
+  `o.o` / `.o.` / `o.o`, chosen by an `if`/`elif` chain), **Roll Until Six** (9: `Rolls: 4`) and **Longest
+  Heads Streak** (10: 20 flips → `Longest streak: 4`). Exercises 8–10 require a purpose comment.
+- **More Practice (11–17):** Two-Dice Histogram (rows ` 2:##` … `12:`, padded by hand — no format widths),
+  Pig Turn (rolls 2, 3, 1 → `Turn score: 0`), Nim Winner (12 → False, 13 → True — the `% 4` rule),
+  Three Heads in a Row (`Flips: 8`), Average Roll (`Average: 2.5`), Random Polygon (turtle; seed 4 → a
+  square), Random Color Row (turtle; colours red, green, red, blue).
+- **Challenges (18–20, `stretch`):** Highest Twenty-Sided Roll, Multiples in a Random Range, **Random
+  Password** (length 6 → `rvg38j`).
+
+**Real versions.** Every exercise except the three turtle exercises (7, 16, 17) has a real program: it
+defines the function, reads the count/target/length with bare `input()`, seeds, and prints the same line.
 
 ## Common mistakes
 
 - Forgetting to seed (or seeding after the first random call), so results are not reproducible and the tests
   do not match — seed with `random.seed(4)` first.
 - Assuming `random.randint(1, 6)` excludes 6 — both ends are included.
-- Passing a list to `random.choice` — use a `range(...)` (lists come later).
+- Passing a list to `random.choice` — use a `range(...)` or a string (lists come later).
+- Reseeding inside a loop by accident, so every trial repeats the same roll (the histogram reseeds per
+  total on purpose — say so).
+- Pig Turn: checking the goal before the 1 — a 1 always ends the turn with 0.
 - Expecting a simulated estimate to equal the exact value, or to improve on EVERY increase in trials; more
   trials help on average (and never make it perfectly exact), but the improvement is not monotonic.
 - In the random walk: running from the wrong directory, or expecting the drawing to close (it is an open
@@ -62,7 +81,7 @@ against its deterministic result; the turtle walk is checked by running it.
 
 - Strugglers: Core 1–5 (dice/coin counts and a percentage); give the loop and have them add the random call
   and the tally.
-- Fast finishers: the π estimate, then the two Challenges, then extend the random walk with a random step
+- Fast finishers: the π estimate, the games (Pig, Nim), then the Challenges, then extend the random walk with a random step
   length (still seeded).
 - Middle tier: change the number of trials in a simulation and predict how the estimate's stability changes,
   then confirm.
@@ -76,5 +95,13 @@ against its deterministic result; the turtle walk is checked by running it.
 - Exercise 5 — `even_percent(trials)`: `10`, `25`, `100`.
 - Exercise 6 — `estimate_pi(trials)`: `20`, `200`, `2000`.
 - Exercise 7 — random-walk real program (no function call): seed `4`, `step = 31`, `move_count = 20`.
-- Exercise 8 — `highest_roll(trials)`: `3`, `10`, `30`.
-- Exercise 9 — `count_multiples(trials, n)`: `(10, 4)`, `(25, 5)`, `(40, 3)`.
+- Exercise 18 — `highest_roll(trials)`: `3`, `10`, `30`.
+- Exercise 19 — `count_multiples(trials, n)`: `(10, 4)`, `(25, 5)`, `(40, 3)`.
+- New exercises 8–20: fixtures as in the exercise statements (plan 082's tables); every seeded value was
+  computed by running the code with `random.seed(4)`.
+
+## More Practice ideas (design 006 D9 genres)
+
+- **Games:** "Guess the die" — the computer rolls, the player's fixed guesses are scored.
+- **Simulation:** how many rolls until every face 1–6 has appeared (six flags, no lists).
+- **ASCII art:** a coin-flip "strip" that prints `H`/`T` in rows of 10.
