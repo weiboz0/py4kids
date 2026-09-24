@@ -109,7 +109,8 @@ Challenge count and Value plan.
    "more methods" rung with its own lead-in.
 3. **After `u13l016`: "A method that draws"** — `draw(self)` returns `"\n".join(rows)` of
    `"#" * self.width`, one row per unit of height, rows collected with `append` → the lesson uses
-   `Rectangle(5, 2)` → `"#####\n#####"` (the exercise uses `(4, 2)`).
+   `Rectangle("D-1", 5, 2)` (the lesson's `(code, width, height)` class) → `"#####\n#####"` (the exercise
+   defines its own two-argument class and uses `(4, 2)`).
 4. **After `u13l027` (Counter): "A list as an attribute"** — `class Shelf:` with `self.books = []` and
    `add(self, title)` appending; then "Objects in a list" — a loop over three `Point`s printing each
    `x`; then **"A state machine"** — `class Lamp:` with `self.state = "off"` and `press(self)` switching
@@ -138,7 +139,7 @@ attributes and state); U13 teacher-notes Goals, pacing, Challenge count, Value p
 | Closest Point | MP | `closest(Point(0, 0), [Point(3, 4), Point(1, 1), Point(6, 8)])` → the `Point(1, 1)` object (strict find-extreme on `distance`); the stand-in prints `f"{best.x} {best.y}"` → `1 1` | searching |
 | Fix the Missing self | MP | broken: `def area():` inside `class Rect` → `Rect(3, 4).area()` raises `TypeError: Rect.area() takes 0 positional arguments but 1 was given`; repaired `def area(self):` → `12` (No real version) | debug & repair |
 | Fix the Attribute Typo | MP | broken: `self.hieght = height` then `volume` reads `self.height` → `AttributeError: 'Crate' object has no attribute 'height'`; repaired → `Crate(2, 3, 4).volume()` → `24` (No real version) | debug & repair |
-| Predict Two Counters | MP | predict: `a = Counter("x")`, `b = Counter("x")`, `b.increment(5)`, `print(a.count, b.count)` → `0 5` (No real version) | tracing |
+| Predict Two Counters | MP | predict (the cell shows its own `Counter` whose `increment(self, amount)` adds `amount`): `a = Counter("x")`, `b = Counter("x")`, `b.increment(5)`, `print(a.count, b.count)` → `0 5` (No real version) | tracing |
 | Challenge: Rover Commands | S | `Rover()` at `(0, 0)` facing `"N"`; `run("FFRFF")` → `position()` `"(2, 2) facing E"` (turn with `"NESW"[("NESW".find(facing) + 1) % 4]` for `R` and `- 1 … % 4` for `L`, so W→N wraps; `F` moves one step) | state machines, grids |
 | Challenge: Save the Stockroom | S | `Stockroom.save(path)` writes `name,qty` lines; module-level `load_stockroom(path)` rebuilds it → `{'rivet': 7, 'washer': 4}` | files & persistence |
 
@@ -152,8 +153,9 @@ question gets exactly one closing `**Real version:**` / `**No real version:**` l
 points and answers are otherwise unchanged. Each Real version gets a `**The real program**` fence in the
 checkpoint's `solutions.ipynb` with the pinned **Sample input** / **Expected output** below. Fences are
 **strict**: only concepts taught up to and including the last unit the checkpoint assesses (CP01 → U03,
-CP02 → U06, CP03 → U08, CP04 → U11, CP05 → U13), no borrowed tools; `input` is a U01 concept, so every
-checkpoint may use it. Booleans are read as `yes`/`no` and compared with
+CP02 → U05, CP03 → U08, CP04 → U11, CP05 → U13), no borrowed tools; `input` is a U01 concept, so every
+checkpoint may use it. CP04's fences use `split` (U09) and list indexing `parts[1]` (U10), inside its
+range; Phase E's checkpoint audit checks fences against the taught range, not the checkpoint manifest. Booleans are read as `yes`/`no` and compared with
 `==`. Function-form checkpoints (CP03–CP05) define the function in the fence, read the arguments, call
 it and print the result.
 
@@ -234,6 +236,10 @@ the widened toolkit (079). Roadmap text is unchanged.
 
 ## Metadata deltas (manifest + coverage-map; ≥3 named exercise reps → `practices`, fewer → `requires`)
 
+The rule is applied to the concepts this plan's new work touches; shipped `requires` tags that the
+existing exercises already use heavily (U12 `list-append`, `for-loop`) are left as shipped, and U12
+`list-loop` is added to `requires` (every `save_*` loops over its list).
+
 - **U12 `practices` +=** `input`, `type-conversion` (the real programs that read numbers — ≥3; stand-ins: Ex 2's
   `int(line.strip())` etc.), `string-methods` is already required — `split(",")`, `startswith`, `upper`
   (Best Team, Keep the To-Dos, Shout Copy) move it to **`practices`**. **`requires` +=** `elif-else`
@@ -249,7 +255,8 @@ the widened toolkit (079). Roadmap text is unchanged.
   scanner on the stand-ins before the manifests change. **`requires` +=** `dict-literal`, `dict-access`
   (Stockroom, Save the Stockroom — two reps), `in-operator` (Stockroom's membership), `range-function`,
   `string-methods` (Rover's `find`, Save the Stockroom's `split`), `find-extreme` (Closest Point),
-  `nested-loops` (Game Board), `error-messages` (two repairs), `string-concat` (Draw a Rectangle's
+  `nested-loops` (Game Board), `error-messages` (two repairs), `list-index` (Game Board's `self.cells[row][col]` — one rep),
+  `dict-loop` (Save the Stockroom's `for name in self.stock:` — one rep), `string-concat` (Draw a Rectangle's
   `"#" * width`, Rover's position text — two reps), `accumulator` (Total Area — one rep).
 - `float-type` stays a U13 practice: Ex 4 (`** 0.5` → `5.0`), Student Grades (`/` → `85.0`), Closest
   Point (`** 0.5`); the scanner marks `float-type` on `/` and float results, confirmed in Phase E.
@@ -331,6 +338,14 @@ Tooling; Book 1; the project (`project-01-algorithm-challenge`) — its brief al
 - `[FIXED]` nits: `list-loop` reps (Total Area, Closest Point, Game Board `render()`); `type-conversion`
   claim narrowed to number-reading programs; checkpoint `input` exemption stated; rung 2 keeps the shipped
   `(code, width, height)` signature; U12 toolkit names `line.split()`; Rover turns wrap with `% 4`.
+
+### Round 2 — [fable] APPROVE WITH NITS (folded)
+
+- `[FIXED]` rung 3 pins `Rectangle("D-1", 5, 2)`; Predict Two Counters shows its own
+  `increment(self, amount)`; CP02's taught range ends at U05 (syllabus order); CP04 fence
+  `split`/indexing stated as in range; U13 `requires` += `list-index`, `dict-loop`; the ≥3-reps rule's
+  scope stated and U12 `list-loop` added to `requires`. `Mina` reuse in U12 rung 4 stays consistent with
+  the shipped cell.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
