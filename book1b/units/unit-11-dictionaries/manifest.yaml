@@ -6,7 +6,8 @@ provenance: original
 concepts:
   introduces: [dict-literal, dict-access, dict-loop]
   requires: [def-function, parameters, return-value, for-loop, list-loop, in-operator, if-statement,
-             elif-else, comparison, boolean, arithmetic, variable, print]
+             elif-else, comparison, boolean, arithmetic, variable, print, float-type, error-messages,
+             string-concat, string-literal, range-function, nested-loops]
   practices: [list-literal, list-append, list-sort, filter-into-list, string-index, string-methods,
               count-by-condition, accumulator, builtin-functions, find-extreme, int-type, f-string,
-              comment, naming]
+              comment, naming, input, type-conversion]
