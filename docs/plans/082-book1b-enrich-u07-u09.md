@@ -200,9 +200,8 @@ shipped tag that cannot reach 3 (design 005 fastforward), recorded in the post-e
 - **U07 practices:** `import-statement`/`turtle-basics`/`turtle-drawing` 3 (Ex 7, Star Function,
   Polygon Row); `error-messages` 3 (Fix the Scope Bug `NameError`, Fix the Missing Argument
   `TypeError`, Fix the Call Before Define `NameError`); `accumulator`/`running-total`/`loop-counter` ≥3
-  (Digital Root, Primes Below, Roman Numeral, Longest Collatz); `float-type` 3 (Ex 1 `celsius_to_f`,
-  Rounded Fahrenheit's `69.8`, Ex 5/6 shipped float work — Phase E confirms, else a float rep is pinned
-  into Distance Apart's real program); `int-type`/`comment`/`naming` ≥3.
+  (Digital Root, Primes Below, Roman Numeral, Longest Collatz); `float-type` 3 (Rounded Fahrenheit's `69.8`
+  before rounding, Ex 7's `360 / n` turn, Polygon Row's `360 / sides` = `60.0`); `int-type`/`comment`/`naming` ≥3.
 - **U08 introduces:** `random-module` ≥15. **Practices:** `builtin-functions` 3 (shipped Ex 5 and Ex 6
   `max`/`round`, Ex 8 `max`); `float-type` 3 (Ex 5, Ex 6, Average Roll); `turtle-*` 3 (Ex 7, Random
   Polygon, Random Color Row); `comment` 3 (required in Die Face Art, Roll Until Six, Longest Heads
