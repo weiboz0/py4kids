@@ -6,5 +6,6 @@ provenance: original
 concepts:
   introduces: [def-function, parameters, return-value, scope, builtin-functions]
   requires: [for-loop, range-function, while-loop, arithmetic, comparison, boolean, if-statement, variable, print]
-  practices: [import-statement, turtle-basics, turtle-drawing, loop-counter, accumulator, running-total,
-              int-type, float-type, error-messages, comment, naming]
+  practices: [import-statement, turtle-basics, turtle-drawing, loop-counter, accumulator,
+              running-total, int-type, float-type, error-messages, comment, naming, string-concat,
+              elif-else, input, type-conversion]

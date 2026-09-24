@@ -80,8 +80,9 @@ entries:
   lessons: 3
   introduces: [def-function, parameters, return-value, scope, builtin-functions]
   requires: [for-loop, range-function, while-loop, arithmetic, comparison, boolean, if-statement, variable, print]
-  practices: [import-statement, turtle-basics, turtle-drawing, loop-counter, accumulator, running-total,
-              int-type, float-type, error-messages, comment, naming]
+  practices: [import-statement, turtle-basics, turtle-drawing, loop-counter, accumulator,
+              running-total, int-type, float-type, error-messages, comment, naming, string-concat,
+              elif-else, input, type-conversion]
 - id: unit-08-randomness
   kind: unit
   title: "Randomness — the random module, dice, and simulation"
@@ -90,7 +91,8 @@ entries:
   requires: [import-statement, def-function, parameters, return-value, for-loop, range-function, arithmetic,
              comparison, if-statement, boolean, variable, print]
   practices: [turtle-basics, turtle-drawing, builtin-functions, running-total, count-by-condition,
-              accumulator, int-type, float-type, scope, comment, naming]
+              accumulator, int-type, float-type, comment, naming, input, type-conversion, elif-else,
+              string-concat, while-loop]
 - id: checkpoint-03-functions-and-randomness
   kind: checkpoint
   title: "Checkpoint 3 — Functions & Randomness"
@@ -110,8 +112,8 @@ entries:
   introduces: [string-index, string-slice, string-methods, in-operator, transform-each, linear-search]
   requires: [def-function, parameters, return-value, for-loop, range-function, if-statement, comparison,
              boolean, arithmetic, variable, print, string-literal]
-  practices: [f-string, string-concat, accumulator, count-by-condition, loop-counter, builtin-functions,
-              int-type, type-conversion, elif-else, comment, naming]
+  practices: [f-string, string-concat, accumulator, count-by-condition, loop-counter,
+              builtin-functions, int-type, type-conversion, elif-else, comment, naming, input]
 - id: unit-10-lists
   kind: unit
   title: "Lists — build, index, loop, sort, find, and filter"
