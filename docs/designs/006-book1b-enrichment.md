@@ -32,13 +32,18 @@ auditors, 2026-09-24) found four systematic weaknesses the user asked to fix:
   "Missing concepts" are filled as **facets** of existing concepts, never as new catalog ids.
   Catalog *names* may be broadened (identically in both books) to describe the widened facets.
 - **D2 — Widen the shared toolkit (user decision, 2026-09-24: "widen for both books").**
-  The shared scanner pins in `tools/concept_scan.py` grow so both Book 1 and Book 1b may use:
-  string methods `split`, `join`, `isdigit`, `isalpha`, `count`, `find`, `startswith`, `endswith`;
-  list methods `pop`, `insert`, `remove`, `index`; and the `continue` statement.
-  Each maps to an **existing** concept so prereq closure keeps catching premature use:
-  string methods → `string-methods`; `pop`/`insert`/`remove` → `list-append`;
-  `index` → `list-index`; `continue` → `break-statement`.
-  Book 2 behavior is preserved: where `str-split` is registered, `split` still maps to `str-split`.
+  The scanner profile of the two books sharing the 62-concept catalog (Book 1, Book 1b) grows so
+  both may use: string methods `split`, `join`, `isdigit`, `isalpha`, `find`, `startswith`,
+  `endswith`; list methods `pop`, `insert`, `remove`, `index`; and the `continue` statement.
+  Each maps to an **existing, scanner-enforced** concept so code-cell closure keeps catching
+  premature use: string methods → `string-methods`; `pop`/`insert`/`remove` → `list-append`;
+  `index` → `list-index` (removed from `MANUAL_ONLY` so it is enforced); `continue` →
+  `break-statement`.
+  The widening is gated on the scanned book's own catalog registering `string-methods`, so Book 2
+  (whose own catalog registers `str-split` instead) is unchanged — `split` still maps to
+  `str-split` there.
+  `count` is deliberately excluded (`str.count` vs `list.count` is indistinguishable to the scanner);
+  counting stays the `count-by-condition` loop technique.
   Delivered first, as its own tooling plan (079).
 - **D3 — Book 1's real-input pattern, everywhere it fits.**
   - Lessons: at least one `no-exec` code cell per lesson that runs the lesson's idea on real
@@ -49,10 +54,17 @@ auditors, 2026-09-24) found four systematic weaknesses the user asked to fix:
     **competitive-programming shape** — read input, compute (call the function from U07 on), print —
     beside the existing executable fixed-value stand-in with asserts (solution code cells may never
     call `input()`, `notebooks.py:283-287`).
-  - Input idioms ramp with the toolkit: one value per line (U01–U03), read `n` then `n` lines
-    (U04–U05), `input().split()` with `int()` conversion from the unit that teaches `split`
-    (U09) onward, reading a grid of rows (U10), words/records (U11–U12), object construction from
-    input (U13).
+  - Input idioms ramp with the toolkit, one new idea at a time: one value per line (U01–U03),
+    read `n` then `n` lines (U04–U05); U09 teaches `split` only as word iteration
+    (`for word in line.split():`, `len(line.split())`) — no indexing into the pieces;
+    **U10** (lists) is where several numbers on one line are parsed (`parts = input().split()`,
+    `int(parts[0])`, or a loop converting each piece); reading a grid of rows (U10), words/records
+    (U11–U12), object construction from input (U13).
+    Never tuple unpacking (`a, b = input().split()` is excluded, §4).
+    `isdigit` validation cannot accept negatives (`"-3".isdigit()` is False) — say so where taught.
+  - **Enforcement boundary:** Book 1b is a map-v1 book whose legacy scan reads code cells only, so
+    real-program fences are reviewer-enforced; every content plan's static AST/grep audit parses
+    every fenced python block (strictly for checkpoints/project) against the entry's allowed set.
   - Turtle work (U06) is exempt (no stdin in turtle scripts).
 - **D4 — ASCII art as a first-class exercise genre.**
   Taught formally at the first point the tools exist:
@@ -100,11 +112,11 @@ auditors, 2026-09-24) found four systematic weaknesses the user asked to fix:
 
 | plan | scope |
 |---|---|
-| 079 | Tooling: widen the shared scanner pins (D2) + tests + catalog-name broadening in both books. |
+| 079 | Tooling: widen the Book 1 / Book 1b scanner profile (D2) + tests + catalog-name broadening in both books. |
 | 080 | U01–U03 enrichment. |
-| 081 | U04–U06 enrichment. |
-| 082 | U07–U09 enrichment (teaches the widened string methods, incl. `split`). |
-| 083 | U10–U11 enrichment (teaches `pop`/`insert`/`remove`/`index`, nested-list grids). |
+| 081 | U04–U06 enrichment (`continue` taught as a U04/U05 loop-control facet beside `break`). |
+| 082 | U07–U09 enrichment (teaches the widened string methods; `split` as word iteration only). |
+| 083 | U10–U11 enrichment (multi-number `split` parsing, `pop`/`insert`/`remove`/`index`, nested-list grids). |
 | 084 | U12–U13 enrichment + checkpoint "Real version" notes + syllabus/teacher-notes refresh. |
 
 Each content plan names, per unit: the rungs to insert (by cell id, from the audit), the facets to
