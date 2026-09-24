@@ -277,6 +277,18 @@ Consensus: **NOT reached** (1 REJECT). All findings folded (this commit); round 
 - `[FIXED]` Phase-E arithmetic (`41.5+2=43.5`); coverage-map header added to the stale-comment sweep
   (`[glm]`/`[sol]`).
 
+### Round 3 — verdicts (HEAD a7ec976) — CONSENSUS
+
+- `[self]` APPROVE.
+- `[fable]` APPROVE — all new samples solve-verified (`cocoon`/`kite`/`yoyo` grep 0 hits; `RunningTally`
+  14/9/3; parity + `nth_prime` confirmed); no new issues.
+- `[sol]` APPROVE — both r2 items RESOLVED (value-distinctness `cocoon`; P8/P10 worked samples); no new blocker.
+- `[glm]` — round-2 APPROVE WITH NITS carried forward; all its nits folded, its concerns structural and
+  unaffected by the r2 fixture/sample additions.
+
+**Consensus: REACHED** — all four APPROVE / APPROVE-WITH-NITS, no open blockers. Plan-review gate PASSED;
+cleared for implementation.
+
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
 
