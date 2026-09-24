@@ -121,7 +121,7 @@ cases per function.
 - Ex6 `progress_totals`: `[4,6,3]`, `[10,0,5,2]`, `[]`.
 - Ex7 `above_average`: `[9,15,12,20]`, `[4,4,4]`, `[-6,-2,-4]`.
 - Ex31 (stretch) `keep_approved`: `([7,2,7,5],[2,5])`, `([3,3,8],[3,9])`, `([4,6],[1,2])`.
-- Ex32 (stretch) `position_of_longest`: `["owl","panther","fox"]`, `["green","blue","gold"]`, `["sun","map","key"]`.
+- Ex32 (stretch) `position_of_longest`: `["owl","panther","fox"]`, `["kiwi","apricot","fig"]`, `["sun","map","key"]`.
 - New exercises 8–37: fixtures as in the exercise statements (plan 083's tables), grep-distinct from shipped
   Book 1b content.
 
