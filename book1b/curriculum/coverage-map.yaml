@@ -45,7 +45,8 @@ entries:
   introduces: [while-loop, break-statement, loop-counter, accumulator, sentinel-loop,
                running-total, count-by-condition]
   requires: [if-statement, comparison, arithmetic, int-type, boolean, variable, print]
-  practices: [elif-else, f-string, string-literal, naming, comment, error-messages]
+  practices: [elif-else, f-string, string-literal, naming, comment, error-messages, input,
+              type-conversion, string-concat]
 - id: unit-05-for-and-range
   kind: unit
   title: "For & Range — counting loops and nested loops"
@@ -53,7 +54,8 @@ entries:
   introduces: [for-loop, range-function, nested-loops]
   requires: [while-loop, accumulator, loop-counter, arithmetic, comparison, if-statement, variable, print]
   practices: [running-total, count-by-condition, accumulator, boolean, elif-else, conditional-nesting,
-              break-statement, string-concat, int-type, f-string, string-literal, naming]
+              break-statement, string-concat, int-type, f-string, string-literal, naming, input,
+              type-conversion]
 - id: checkpoint-02-loops
   kind: checkpoint
   title: "Checkpoint 2 — Loops (while, for, counting)"
@@ -69,7 +71,7 @@ entries:
   title: "Turtle Geometry — drawing with loops and angles"
   lessons: 3
   introduces: [import-statement, turtle-basics, turtle-drawing]
-  requires: [for-loop, range-function, arithmetic, variable]
+  requires: [for-loop, range-function, arithmetic, variable, if-statement, elif-else, comparison, print]
   practices: [nested-loops, loop-counter, accumulator, int-type, float-type, comment, naming,
               run-program, error-messages]
 - id: unit-07-functions

@@ -1,4 +1,4 @@
-# Student task: replace this starter with the goldenrod 96-step five-point star from Exercise 8.
+# Student task: replace this starter with the goldenrod 96-step five-point star from Exercise 16.
 import turtle
 
 n = 4

@@ -1,15 +1,19 @@
 # Bring in Python's turtle drawing tools.
 import turtle
 
-# Use the honest decimal angle for a closed eleven-sided comparison shape.
-n = 11
-side = 34
-angle = 360 / n
-turtle.pencolor("magenta")
+# turtle-check: open-path
+segments = 24
+step = 10
+dashes = 0
 
-# Eleven equal decimal turns complete the regular hendecagon.
-for corner in range(n):
-    turtle.forward(side)
-    turtle.left(angle)
+for i in range(segments):
+    if i % 2 == 0:
+        turtle.pendown()
+        turtle.forward(step)
+        dashes = dashes + 1
+    else:
+        turtle.penup()
+        turtle.forward(step)
 
+print(f"Dashes: {dashes}")
 turtle.done()

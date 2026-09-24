@@ -5,6 +5,6 @@ lessons: 3
 provenance: original
 concepts:
   introduces: [import-statement, turtle-basics, turtle-drawing]
-  requires: [for-loop, range-function, arithmetic, variable]
+  requires: [for-loop, range-function, arithmetic, variable, if-statement, elif-else, comparison, print]
   practices: [nested-loops, loop-counter, accumulator, int-type, float-type, comment, naming,
               run-program, error-messages]
