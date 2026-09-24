@@ -18,7 +18,8 @@ with f-strings (no `+`); search lines with `==` (no `in`); no `while`/`range`/`s
 Budget: **45–60 minutes** (heavier than earlier checkpoints — file setup + class definitions). Hand out after
 Unit 13. The seven questions and their targets:
 1. **Score File Round Trip** (`save_scores`/`load_scores`) — `file-write`+`file-read`+`with` (U12). *Pass-bar (round-trip).*
-2. **Load a Score Summary** (`score_summary`) — load numbers, report [max, min, count] (U12 stats).
+2. **Load a Score Summary** (`score_summary`) — load numbers, report `[total, highest, strong_count]`
+   (`strong_count` = how many scores are ≥ 15) (U12 stats).
 3. **Find the First Matching Team** (`find_team`) — `linear-search` over lines with `==` (U12).
 4. **Make a Point** (`Point`) — a class with `__init__` + attributes; construct and read (U13).
 5. **Rectangle Report** — an `area()` method + a `describe()` f-string method (U13 methods).
@@ -59,7 +60,10 @@ correctly but mis-parses on load at half (note the `int(line.strip())` fix).
 ## Value plan (sample inputs)
 
 - Q1 `save_scores([14,27,31],"q1_scores.txt")`→"q1_scores.txt"; `load_scores(...)`→[14,27,31].
-- Q2 `score_summary("q2_scores.txt")`→[57,19,3] (max,min,count). Q3 `find_team(...,"Otter")`→"Found Otter";
+- Q2 `score_summary("q2_scores.txt")` over `[12,19,7,19]`→[57,19,2] (`[total, highest, strong_count]`; two
+  scores are ≥ 15). Q3 `find_team(...,"Otter")`→"Found Otter";
   `"Lynx"`→"No team named Lynx".
-- Q4 `Point` construct + read attributes. Q5 `poster.area()`→24, `poster.describe()`→"8 by 3 has area 24".
-- Q6 `Counter(12).award_band()`→"gold", `Counter(7)`→"silver". Q7 `sign.short_code()`→"NW" + save round-trip.
+- Q4 `Point(6,2)` and `Point(-3,8)` — read `.x`/`.y`; `first.x = 10` leaves `second.x` at -3 (identity).
+  Q5 `poster.area()`→24, `poster.describe()`→"8 by 3 has area 24" (`Rectangle(8,3)`).
+- Q6 `Counter(12).award_band()`→"gold", `Counter(7)`→"silver", `Counter(2)`→"bronze"; `Counter(12).reached_goal()`→True, `Counter(7)`→False.
+- Q7 `sign.short_code()`→"NW" (`code` "NW-17"); `sign.save("q7_rectangle.txt")` writes `"NW-17\n9\n4\n"` (save round-trip).

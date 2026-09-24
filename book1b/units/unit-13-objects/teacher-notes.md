@@ -22,7 +22,7 @@ player to carry name + score + wins together — a class bundles them into one o
   attribute, show the other is untouched. Trap: forgetting `self`.
 - **Lesson 2 — Methods Compute with Attributes (`methods`).** Methods that use attributes and RETURN a value:
   `area`/`perimeter`, `distance` via `** 0.5`, `describe()` returning an f-string (not `__str__`); a
-  `string-slice` on an attribute string (`short_code()` → `self.name[0:2]`). Contrast a method with a plain
+  `string-slice` on an attribute string (`short_code()` → `self.code[0:2]`). Contrast a method with a plain
   function that takes the object.
 - **Lesson 3 — Save and Load an Object.** A class with a `save(path)` method (`file-write`) and a
   **module-level `load_point(path)`** that reads (`open(path, "r")`) and RETURNS a new object — the file reuse
@@ -66,8 +66,9 @@ Challenges (8–9, `stretch`): Rectangle Size Band (an `elif` method); Counter S
 
 Each exercise uses distinct instances; solutions assert construct-then-check (and attribute-after-call for
 mutating methods).
-- Ex1 two `Point`s with independent attributes; Ex2 `Rectangle` record.
-- Ex3 `tile.area()`→36, `tile.perimeter()`→26. Ex4 `Point(0,0).distance(Point(3,4))`→5.0; `Point(2,1).distance(Point(2,6))`→5.0.
+- Ex1 `Point(2,6)` and `Point(9,4)`; then `start.x = 5` leaves `finish.x` at 9 (the identity beat).
+- Ex2 `Rectangle("N-12",6,4)` and `Rectangle("S-30",12,7)` — read `.code`/`.width`/`.height`.
+- Ex3 `tile.area()`→36, `tile.perimeter()`→26 (`Rectangle(9,4)`). Ex4 `Point(0,0).distance(Point(3,4))`→5.0; `Point(2,1).distance(Point(2,6))`→5.0.
 - Ex5 `crate.short_code()`→"NE", `crate.describe()`→"NE-48: 7 by 3". Ex6 `blue.increment(3)`→3, then `increment(2)`→5.
-- Ex7 save/load a `Point` round-trip.
+- Ex7 `Point(14,9).save("ex7_point.txt")`→"ex7_point.txt"; the loaded point has `x`=14, `y`=9.
 - Ex8 (stretch) `Rectangle(10,7).size_band()`→"large", `Rectangle(7,5)`→"medium". Ex9 (stretch) `increment(4)`→16 then `save(...)`.

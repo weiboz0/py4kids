@@ -239,7 +239,43 @@ consensus-ready, no re-dispatch needed):
 **Plan-review gate PASSED (4-way consensus).**
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+4-way content-review gate. Findings tagged `[OPEN]`/`[FIXED]`/`[WONTFIX]`; all `[OPEN]` resolve before merge.
+
+### Round 1 — verdicts
+
+- `[self]` APPROVE WITH NITS — statements↔solutions consistent on my read; deferred to the blind solvers for
+  the worked-sample arithmetic (which is exactly where they caught the Q2 bug).
+- `[sol]` **REJECT** — cp05 Q2 worked sample contradicts the solution; incomplete value-plan inventories.
+- `[glm]` **REJECT** — same Q2 contradiction; unused `print` tag in cp05 manifest+coverage-map; U12/U13 lesson
+  hooks (readline-before-taught, `\n` under-explained, U13 promises a scoreboard never built).
+- `[fable]` **REJECT** — same Q2; missing explicit `__init__` signatures; U12 Ex1/Ex6 verbatim lesson copies;
+  wording nits.
+
+Consensus: **NOT reached** (3 REJECT). All three externals converge on the same load-bearing Must-Fix.
+
+### Round 1 — findings
+
+**MUST FIX**
+- `[FIXED]` **cp05 Q2 wrong worked sample** (all three): `score_summary("q2_scores.txt")` over `[12,19,7,19]`
+  showed `[57,19,3]`, but only two scores are ≥ 15 → correct `[57,19,2]` (the solution already asserts this).
+  Fixed the checkpoint statement to `[57,19,2]`; made the return shape explicit as `[total, highest,
+  strong_count]`; fixed teacher-notes Pacing label (`[max,min,count]`→`[total,highest,strong_count]`) and the
+  Q2 value-plan line.
+
+**SHOULD FIX**
+- `[FIXED]` value-plan inventories completed with concrete inputs in all three teacher-notes (`[sol]`).
+- `[FIXED]` dropped unused `print` from cp05 `manifest.yaml` (requires+practices) and `coverage-map.yaml`
+  (verified no `print(` call anywhere in cp05) (`[glm]`).
+- `[FIXED]` U12 L3 gains a sentence teaching `f.readline()` before first use; U12 L1 gains two sentences
+  explaining `\n` (`[fable]`/`[glm]`).
+- `[FIXED]` U13 lesson hook reframed to the Point/Rectangle/Counter domain the unit actually builds; L1 gains a
+  one-sentence problem framing (`[fable]`/`[glm]`).
+- `[FIXED]` explicit `__init__` signatures added to cp05 Q5/Q6 and U13 Ex3/Ex8/Ex9 (`[fable]`).
+
+**NICE**
+- `[FIXED]` `**` power-operator Notice added in U13 L2; U12 Ex1/Ex6 reshaped off the lesson copies; U13
+  teacher-notes `short_code` `self.name[0:2]`→`self.code[0:2]`; wording (`Change`→`Convert`).
 
 ## Post-Execution Report
 

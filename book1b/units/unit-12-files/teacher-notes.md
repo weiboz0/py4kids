@@ -66,8 +66,12 @@ are git-ignored.
 
 Each exercise writes a distinct per-exercise scratch file and uses distinct data; solutions assert the
 round-trip.
-- Ex1 `score_text_round_trip`: `([45,70,55],"ex1_scores.txt")`→`"45\n70\n55\n"`; `([120,95],…)`→`"120\n95\n"`.
-- Ex2 `score_list_round_trip`: `([18,27,36],…)`→`[18,27,36]`; `([5,105],…)`→`[5,105]`.
-- Ex3 total & count saved tickets; Ex4 `saved_score_summary([8,15,11],…)`→`[8,15,34,3]` (min,max,sum,count).
-- Ex5 `highest_saved_score([44,81,63],…)`→`81`. Ex6 typed record load; Ex7 roster search (found / not found).
-- Ex8 (stretch) overwrite proof; Ex9 (stretch) two statistics in one pass.
+- Ex1 `score_text_with_header([45,70,55],"ex1_scores.txt")`→`"ARCADE SCORES\n45\n70\n55\n"`; `([120,95],…)`→`"ARCADE SCORES\n120\n95\n"`.
+- Ex2 `score_list_round_trip([18,27,36],"ex2_score_list.txt")`→`[18,27,36]`; `([5,105],…)`→`[5,105]`.
+- Ex3 `saved_ticket_report([20,35,15],25,"ex3_tickets.txt")`→`[70,1]`; `([9,12,7],20,…)`→`[28,0]` (`[total, count ≥ threshold]`).
+- Ex4 `saved_score_summary([8,15,11],"ex4_summary.txt")`→`[8,15,34,3]` (min,max,sum,count); `([50,20],…)`→`[20,50,70,2]`.
+- Ex5 `highest_saved_score([44,81,63],"ex5_high_score.txt")`→`81`; `([205,199,201],…)`→`205`.
+- Ex6 `player_record_summary("Lina",3,480,"ex6_typed_record.txt")`→`"Lina: level 3, 480 points"`; `("Zoe",1,75,…)`→`"Zoe: level 1, 75 points"`.
+- Ex7 `save_and_find_player(["Inez","Kai","Noor"],"Inez","ex7_roster.txt")`→`"Found Inez."`; `…,"Pia",…`→`"Pia was not found."`.
+- Ex8 (stretch) `replace_and_load_scores([10,20],[30,40],"ex8_replace.txt")`→`[30,40]` (overwrite proof).
+- Ex9 (stretch) `saved_total_and_best([12,30,18],"ex9_combined_stats.txt")`→`[60,30]` (`[total, best]`, one pass).
