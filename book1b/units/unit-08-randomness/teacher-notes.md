@@ -39,7 +39,7 @@ leave the π estimate as a "try it"; it is the least essential and the most math
 
 ## Exercises — core vs. More Practice vs. challenge
 
-20 exercises. Every non-turtle exercise is a **seeded function** (`random.seed(4)` before the first random
+20 exercises. Every exercise that uses randomness is a **seeded function** (`random.seed(4)` before the first random
 call) asserted against its deterministic result.
 
 - **Core (1–10):** Dice Total, Heads Counter, Bonus-Round Score, Target Roll Counter, Even-Roll Percentage,
@@ -63,7 +63,8 @@ defines the function, reads the count/target/length with bare `input()`, seeds, 
 - Assuming `random.randint(1, 6)` excludes 6 — both ends are included.
 - Passing a list to `random.choice` — use a `range(...)` or a string (lists come later).
 - Reseeding inside a loop by accident, so every trial repeats the same roll (the histogram reseeds per
-  total on purpose — say so).
+  total on purpose — reseeding before each total replays the same 36 pairs, so it equals tallying ONE
+  36-pair sample).
 - Pig Turn: checking the goal before the 1 — a 1 always ends the turn with 0.
 - Expecting a simulated estimate to equal the exact value, or to improve on EVERY increase in trials; more
   trials help on average (and never make it perfectly exact), but the improvement is not monotonic.
