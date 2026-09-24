@@ -372,7 +372,50 @@ U12–U13, checkpoints, syllabus refresh (plan 084); tooling.
 **Consensus reached — implementation starts after plan 082 merges.**
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+### Round 1 — verdicts (HEAD 88d1565)
+
+- `[self]` APPROVE WITH NITS — Phase E audit 0 findings; a scanner honesty pass over the solutions named
+  the true undeclared concepts (`string-literal`, U11 `range-function`) and they were declared.
+- `[fable]` APPROVE WITH NITS — blind-solved 32 exercises; ran all 60 fences; findings: stale Ex 32 value
+  in the U10 value plan (Should Fix), a "function" lead-in on plain statements, a template-like predict
+  sentence, an `assert` inside a fence.
+- `[glm]` APPROVE WITH NITS — blind-solved 13; a stray space in a solution call; the fence `assert`.
+- `[sol]` **REJECT** — U10 Ex 6's real program read three cases instead of one line; the three U10 repairs
+  lacked the plan's function form; the stale Ex 32 value.
+
+### Round 1 — fold
+
+- `[FIXED]` U10 Ex 6's fence reads one line and prints one result (the stand-in prints the same case).
+- `[FIXED]` U10 Fix the Index Error / Fix the Missing Value / Fix the String Sum are small named functions
+  (`last_score`, `drop_seven`, `total_of_line`) with the same pinned errors and repaired outputs.
+- `[FIXED]` value plan Ex 32 (`["kiwi", "apricot", "fig"]`); `u11l107` "The next cell…"; `u11e141` predict
+  sentence; `assert` removed from `u11sol-ex28-real`; stray space in `u10sol-ex34-code`.
+
+Post-fold: Phase E audit 0 findings; lessons and solutions execute through the CI executor; structure /
+hygiene / noexec / concept-scan / cell-lint pass.
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Status: implemented; Phase E audits clean (2026-09-24).**
+
+- **Execution:** Codex gpt-6-sol via direct `codex exec` in the main checkout (statements and solutions in
+  separate fresh sessions); branch rebased onto `main` after plan 082 merged.
+- **Phase B:** U10 dense first cell split (literal → index 0 → negative index → `len` → index assignment →
+  function); in-place methods one per rung with the `ValueError` guard Notice; slices, `[::-1]`, list `==`;
+  one-line parsing with `join` over a list; the grid section with `"\n".join(rows)`; U11 literal/read
+  split, stored-number update, insertion order, one-word tally, dict `==`, Read records. `no-exec`
+  real-input cells in every lesson (U10 4, U11 4). Exercises U10 9 → 37, U11 9 → 28 in the binding order.
+- **Phase C:** stand-ins + asserts; 60 real-program fences (U10 34, U11 26), lists read as one line or `n`
+  then `n` lines, grids as a row count then rows.
+- **Phase D:** teacher-notes U10–U11 (pacing incl. 60-minute cuts, partitions, common mistakes, value plans,
+  D9 ideas); metadata from a scanner honesty pass — U10 practices += input, type-conversion,
+  string-methods, string-index, string-concat, nested-loops, error-messages; requires += elif-else,
+  while-loop, logical-ops, string-slice, string-literal. U11 practices += input, type-conversion; requires
+  += float-type, error-messages, string-concat, string-literal, range-function, nested-loops. Manifest ==
+  coverage-map.
+- **Phase E:** contract + fence-parity audit 0 findings (every fence executed); toolkit audit clean (the
+  audit script now honours U11's `items()` two-name loop); honesty scan shows no used-but-undeclared
+  concept; blind solves by all three reviewers matched.
+- **Deltas:** 47 new exercises, ~90 new lesson cells.
+
