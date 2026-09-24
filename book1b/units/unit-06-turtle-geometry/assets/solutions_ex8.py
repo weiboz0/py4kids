@@ -1,16 +1,20 @@
 # Bring in Python's turtle drawing tools.
 import turtle
 
-# Set up a five-point stage logo.
-n = 5
-side = 96
-angle = 720 / n
-turtle.pencolor("goldenrod")
-turtle.pensize(3)
+squares = 4
+side = 40
+travel = 60
 
-# A star crosses its center, so its turns make two full 360-degree turns.
-for point in range(n):
-    turtle.forward(side)
-    turtle.left(angle)
+# Draw each square, then travel to the next starting point without ink.
+for square in range(squares):
+    for corner in range(4):
+        turtle.forward(side)
+        turtle.left(90)
+    turtle.penup()
+    turtle.forward(travel)
+    turtle.pendown()
 
+# Four travels put the turtle 240 steps away; return to the start.
+turtle.penup()
+turtle.backward(240)
 turtle.done()

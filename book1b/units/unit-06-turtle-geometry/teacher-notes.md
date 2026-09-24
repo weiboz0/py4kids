@@ -23,9 +23,10 @@ Budget: three lessons of 60–90 minutes; ladders with a *Notice* per rung.
 
 - **Lesson 1 — Move & Draw (`import-statement`, `turtle-basics`).**
   Open with the gallery teaser, then the reachable question "what turn makes a square? predict, then run."
-  Teach `import turtle`, `turtle.forward`/`turtle.left`/`turtle.right`, and `penup`/`pendown` (a
-  travel-without-drawing rung, `assets/l1_travel.py`); draw a square by hand (`assets/l1_square.py`), then
-  with a `for` loop (`assets/l1_square_loop.py`).
+  Teach `import turtle`, `turtle.forward`/`turtle.left`/`turtle.right`; draw a square by hand
+  (`assets/l1_square.py`), then with a `for` loop (`assets/l1_square_loop.py` — `side_number` is the
+  *loop variable*, not a counter), and only then `penup`/`pendown` (the travel-without-drawing rung,
+  `assets/l1_travel.py`, which now uses the loop it follows).
   **First terminal encounter (~15 min, budget it):** File → New → Terminal, `cd` into the unit directory,
   `python assets/l1_square.py`, then edit-save-rerun; expect to walk the room and repeat this twice.
   Show the two errors students WILL hit, and read them together: calling `forward(100)` without the
@@ -44,7 +45,9 @@ Budget: three lessons of 60–90 minutes; ladders with a *Notice* per rung.
   Close the lesson with the five-point star (`assets/l2_star.py`, `angle = 720 / n`, `144°` — "two full
   turns").
 - **Lesson 3 — Patterns with Nested Loops (`nested-loops`).**
-  A ring of polygons (`assets/l3_ring.py`): an outer loop turns `360 / shape_count` between shapes, an inner
+  First a new bridge rung (`assets/l3_two_squares.py`): a side-60 square, `left(90)`, a second square,
+  then `right(90)` to restore the heading — two shapes by hand before a loop repeats them.
+  Then a ring of polygons (`assets/l3_ring.py`): an outer loop turns `360 / shape_count` between shapes, an inner
   loop draws each polygon; use `shape` and `corner`, and finish the inner loop before the outer turn.
   A growing spiral (`assets/l3_spiral.py`): `side = side + step` is the accumulator, and the path does NOT
   close, so the file carries the exact comment `# turtle-check: open-path`.
@@ -56,23 +59,35 @@ In Lesson 2 the `360 / n` polygon loop is non-negotiable core; defer the colour/
 `//` contrast Notice.
 In Lesson 3 run the ring live and leave the growing spiral as a "try it."
 
-## Exercises — core vs. extra vs. challenge
+## Exercises — core vs. More Practice vs. challenge
 
-Core (1–7): Courtyard Square (`n=4`, side 62, royalblue), Trail-Sign Triangle (`n=3`, side 74, forestgreen,
-120° — the outside angle, not 60°), Festival Pentagon (`n=5`, side 68, orchid, `pensize` 4), Decimal-Turn
-Heptagon (`n=7`, side 57, darkorange — the float-angle rung; the student states `360 / 7` before running and
-reads it back with a `print`, total turn 360°), Move Then Mark (travel 39, then an OCTAGON `n=8` side 44
-crimson, 45° turns, 8 pen-down moves), Nine-Hexagon Wheel (`n=6` side 41 turquoise, `shape_count=9`, 40°
-between shapes, 54 pen-down moves — the nested loop), Growing Radar Spiral (`side=11`, `step=6`, 14 moves,
-maroon, open-path, accumulator ends at 95, does NOT close).
-Challenges (8–9, tagged `stretch`): Five-Point Star (`n=5`, side 96, goldenrod, `angle = 720 / n = 144°`,
-total turn 720°); The Eight-Degree Gap (draw the honest eleven-sided shape with `n=11`, side 34, magenta,
-`360 / n` ≈ 32.73°, total turn 360°, closes; then predict what `turtle.left(360 // 11)` would draw —
-`360 // 11 = 32`, `11 × 32 = 352`, an 8° gap, does NOT close).
-Every core exercise uses a distinct polygon `n` (4, 3, 5, 7, 8, 6) with a distinct `(side, colour)`; the two
-challenges are a star (`720 / n`) and an eleven-sided almost-shape, distinct from the lesson rungs and from
-each other in shape, size, colour, and checkable number.
-No core exercise depends on a challenge; all angles use `/`, never `//`, in the drawn assets.
+18 exercises. Turtle work is input-exempt: every exercise ends with a **No real version** line (turtle
+drawings run as scripts, not stdin programs). Each exercise has a starter asset `assets/exN_*.py`, a
+solution asset `assets/solutions_exN.py`, and a headless check in the solutions notebook.
+
+- **Core (1–9):** Courtyard Square (`n=4`, side 62, royalblue), Trail-Sign Triangle (`n=3`, side 74,
+  forestgreen, 120° — the outside angle, not 60°), Festival Pentagon (`n=5`, side 68, orchid, `pensize` 4),
+  Decimal-Turn Heptagon (`n=7`, side 57, darkorange — the float-angle rung; the student states `360 / 7`
+  before running and reads it back with a `print`, total turn 360°), Move Then Mark (travel 39, then an
+  OCTAGON `n=8` side 44 crimson, 45° turns, 8 pen-down moves), Nine-Hexagon Wheel (`n=6` side 41 turquoise,
+  `shape_count=9`, 40° between shapes, 54 pen-down moves — the nested loop), Growing Radar Spiral
+  (`side=11`, `step=6`, 14 moves, maroon, open-path, accumulator ends at 95, does NOT close), plus the new
+  **Row of Squares** (8: four side-40 squares, a pen-up `forward(60)` after each, then `backward(240)` home)
+  and **Dashed Line** (9: 24 ten-step segments, pen down on even `i` → prints `Dashes: 12`, open path).
+- **More Practice (10–15):** Color-Alternating Ring (8 squares, `pencolor` by `i % 3` via `if`/`elif`/`else`,
+  prints `Turned: 360` and `Squares: 8`), Growing Squares (sides 20 → 100 by `side = side + 20`, prints
+  `Squares: 5`), Seven-Point Star (turn `3 * 360 / 7` — true division; 154 would leave a gap), and three
+  repairs with pinned errors: Fix the Misspelled Command (`turtle.foward` → `AttributeError`; the fix
+  draws a side-50 square), Fix the Missing Import (`NameError`; a side-70 triangle), Fix the Indentation
+  (`IndentationError`; a side-60 pentagon).
+- **Challenges (16–18, tagged `stretch`):** Five-Point Star (`n=5`, side 96, goldenrod, `angle = 720 / n =
+  144°`, total turn 720°); The Eight-Degree Gap (the honest eleven-sided shape, `360 / 11` ≈ 32.73°, closes;
+  then predict what `turtle.left(360 // 11)` would draw — `11 × 32 = 352`, an 8° gap); Grid of Squares (a
+  3×3 grid of side-30 squares, travel 45, a stated pen-up path back to the start, prints `Squares: 9`).
+
+Every exercise uses a distinct shape/size/colour; no core exercise depends on a Challenge; all drawn angles
+use `/`, never `//`. The headless checks replay each solution through the course's fake turtle and assert
+the moves, turns, colours and printed counts.
 
 ## Common mistakes
 
@@ -86,6 +101,10 @@ No core exercise depends on a challenge; all angles use `/`, never `//`, in the 
 - `left` vs `right` mirror the drawing; `penup` without a later `pendown` leaves nothing on the page.
 - The turtle window opens BEHIND JupyterLab; closing the window ends the script (re-run, don't rescue).
 - Nested loops: finish the inner (per-side) loop before the outer per-shape turn; `range(n)` gives 0..n-1.
+- Travelling between shapes with the pen still down — Row of Squares and the Grid need `penup` before
+  each travel and `pendown` after it.
+- Misspelling a command (`turtle.foward`) raises `AttributeError: module 'turtle' has no attribute
+  'foward'` — read the name it quotes.
 
 ## Discussion prompts
 
@@ -100,7 +119,13 @@ No core exercise depends on a challenge; all angles use `/`, never `//`, in the 
 
 - Strugglers: give the outer loop of the ring and have them write only the inner polygon loop; keep them on
   polygons whose `360 / n` is a whole number (square, triangle, hexagon) before the heptagon.
-- Fast finishers: the two Challenges (star, the eight-degree gap), then extend the gallery with another
+- Fast finishers: More Practice (the ring and the seven-point star first), then the Challenges; then extend the gallery with another
   polygon or a second ring at a new colour.
 - Middle tier: change one polygon's `n` and predict the new turn angle and total-turn before running, then
   confirm the drawing closes.
+
+## More Practice ideas (design 006 D9 genres)
+
+- **Patterns:** a row of five triangles that alternate pen colours (`i % 2`).
+- **Accumulation:** a staircase — five steps whose rise grows by 10 each time, printing the total climb.
+- **Debug & repair:** hand out a ring script whose outer turn is `360 // 7` and ask why it does not close.

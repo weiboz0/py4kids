@@ -7,4 +7,5 @@ concepts:
   introduces: [while-loop, break-statement, loop-counter, accumulator, sentinel-loop,
                running-total, count-by-condition]
   requires: [if-statement, comparison, arithmetic, int-type, boolean, variable, print]
-  practices: [elif-else, f-string, string-literal, naming, comment, error-messages]
+  practices: [elif-else, f-string, string-literal, naming, comment, error-messages, input,
+              type-conversion, string-concat]

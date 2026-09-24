@@ -2,57 +2,101 @@
 
 ## Goals
 
-Students leave able to write a counting loop with `for` over `range`, read `range(n)` (from 0) and
-`range(a, b)` (stop value excluded), reuse the accumulator/counting techniques from Unit 04 over a range,
-and stack one loop inside another (nested loops) to build tables and triangles. Success looks like: every
-student replaces a hand-written `while` counter with a `for`/`range` loop and builds a small grid with a
-nested loop. `for i in range(n)` is introduced as a **named shorthand** for the manual `while` counter
-students already built in Unit 04.
+Students leave able to write a counting loop with `for` over `range`, read `range(n)` (from 0),
+`range(a, b)` (stop value excluded) and `range(a, b, step)` (including a negative step), skip one pass with
+`continue` or leave early with `break`, reuse the accumulator/counting techniques from Unit 04 over a
+range, and stack one loop inside another (nested loops) to build tables and **ASCII pictures**.
+Success looks like: every student replaces a hand-written `while` counter with a `for`/`range` loop, draws
+a triangle, a pyramid and a hollow box from a height they type in, and can say which loop is the row and
+which is the column.
+`for i in range(n)` is introduced as a **named shorthand** for the manual `while` counter students already
+built in Unit 04.
 
 ## Pacing
 
-Budget: three lessons of 60–90 minutes; ladders with a *Notice* per rung.
+Budget: three lessons of 60–90 minutes; one new idea per code cell, a *Notice* per rung.
 
 - **Lesson 1 — Visit a Range (`for`, `range`).** Reproduce Unit 04's 5050 sum as
   `for n in range(1, 101): total = total + n` — same result, less typing (the motivation for `range`).
-  Teach `range(n)` and `range(a, b)` with the Notice **"the stop value is not included"**; contrast with a
-  bound-sensitive example.
-- **Lesson 2 — Calculate across a Range.** Running total and count-by-condition over a range → **FizzBuzz**
-  (an `elif` ladder inside a `for`) → **primality LAST** (a boolean flag `is_prime`, `break`, spec `n ≥ 2`,
-  and the Notice that `range(2, 2)` is empty so `n == 2` stays prime). Primality is the natural 60-MINUTE
-  CUT casualty.
-- **Lesson 3 — Put One Loop inside Another (`nested-loops`).** Build a times table / number triangle by
-  accumulating each `row` string in the inner loop and `print(row)` once (Notice on the 8-space inner body
-  and the dedent trap; use `row`/`col`, not `i`/`j`; `break` exits only the inner loop). Then a
-  nested-classify exercise (`if` inside `if` inside the `for`). Final build.
+  Teach `range(n)` and `range(a, b)` with the Notice **"the stop value is not included"**; then the new
+  step rungs `range(0, 20, 5)` and `range(10, 0, -1)` (count down with a negative step). A `no-exec`
+  real-input cell reads `n` and prints 1 to `n`.
+- **Lesson 2 — Calculate across a Range.** Running total and count-by-condition over a range, then the new
+  **`continue`** rung (skip multiples of 3 in 1–10) → **FizzBuzz** (an `elif` ladder inside a `for`) → the
+  early exit **before** the flag: find the first divisor of 91 and `break` (→ 7) → the full prime flag
+  (spec `n ≥ 2`; `range(2, 2)` is empty so `n == 2` stays prime). A `no-exec` cell reads `n` and prints
+  FizzBuzz up to it.
+- **Lesson 3 — Put One Loop inside Another (`nested-loops`) and the ASCII pattern ladder.** First ONE loop
+  builds one row of stars (`row = row + "*"`); then the growing triangle (the first nested loop), then the
+  `"*" * r` one-liner beside it (loop-built vs. repetition — same picture); a single-loop number row
+  `1 2 3 4 5`, then the multiplication table (Notice on the 8-space inner body and the dedent trap; use
+  `row`/`col`; `break` exits only the inner loop; `print(piece, end="")` then `print()` as an alternative to
+  building a row string). Then the **pattern ladder** in design order: inverted triangle
+  (`range(h, 0, -1)`), right-aligned triangle `" " * (h - r) + "*" * r`, centered pyramid
+  `" " * (h - r) + "*" * (2 * r - 1)`. A `no-exec` cell reads a height and draws the pyramid. Final build.
 
-60-MINUTE CUT (any lesson): teach rungs 1–2 live and leave the last as a "try it"; primality can wait.
+60-MINUTE CUT: L1 — the negative-step rung is a good "try it". L2 — primality can wait; keep `continue` and
+FizzBuzz live. L3 — teach the triangle and the table live; hand the pattern ladder over as a worksheet
+(each rung is one formula change).
 
-## Exercises — core vs. extra vs. challenge
+## Exercises — core vs. More Practice vs. challenge
 
-Core (1–7): The 5050 Total, Stop-Bound Inspector (range bounds), Divisible-by-Four Census, FizzBuzz Board
-(elif), Prime-Flag Test (primality), Four-by-Four Times Table (nested), Nested Classification Count
-(`conditional-nesting`). Extra (8–9): Growing Signal Triangle, Factorial over a Range. Challenges (10–11):
-Step-Range Total, Count the Primes. No core exercise depends on a Challenge. Pre-function; `x = x + 1` only;
-same-line/tabular output via string accumulation (no `end=`/`sep=`/format specs, no `"*" * i` in core).
+31 exercises. Pre-function; either `x = x + 1` or `x += 1` (taught in Unit 04); rows are built as strings
+(or with `end=""`), never with lists.
+
+- **Core (1–13)** — the in-class path: **Triangle Number** (1: `n = 250` → `Total: 31375`, rewritten from a
+  copy of the lesson cell), Stop-Bound Inspector, Divisible-by-Four Census, FizzBuzz Board, Prime-Flag Test,
+  Four-by-Four Times Table, Nested Classification Count, Growing Signal Triangle (the right triangle),
+  Factorial over a Range, plus **Countdown by Twos** (10: `20 18 … 2`), **Inverted Triangle** (11),
+  **Right-Aligned Triangle** (12: `   *` / `  **` / ` ***` / `****`) and **Hollow Box** (13: 6×4, the
+  edge-ROW test outside and the edge-COLUMN test inside its `else`).
+- **More Practice (14–26)**, grouped by genre:
+  - *ASCII pattern ladder (continues 8 → 11 → 12 → 13):* Checkerboard (`#.#.` / `.#.#` …), Pyramid (height 4),
+    Diamond (size 3), Tree with Trunk (the pyramid plus `   |`), Floyd's Triangle (`1` / `2 3` / `4 5 6` /
+    `7 8 9 10`).
+  - *Number theory:* Skip the Sevens (`continue` → `Sum: 189`), Multiples of 3 or 5 (below 1000 →
+    `Sum: 233168`), Perfect Number Check (28), Divisor Count (36 → 9 divisors), Leap Years in a Range
+    (1990–2030 → 10, written as nested `if`s — the statement spells out the nesting).
+  - *Brute-force puzzle search:* Pythagorean Triples (c ≤ 20 → 6 triples, `a * a + b * b == c * c`),
+    Chickens and Rabbits (20 heads, 56 legs → 12 and 8), Coin Combinations (50¢ from 5/10/25 → 10 ways).
+- **Challenges (27–31)** — optional: Step-Range Total, Count the Primes, Aligned Times Table (`f"{p:3}"`
+  columns), Primes up to 50 (15 primes), Pascal's Triangle (5 rows via `c = c * (row - k) // (k + 1)`).
+
+**Real versions.** Every exercise has a Real version. Art exercises read their height/width/size; Ex 3 and
+Ex 7 use the "read `n`, then `n` numbers" idiom (design 006 D3) — the first time students see it. Graded
+solution cells never call `input()`; type a real program in and draw a pyramid of height 6 live.
 
 ## Common mistakes
 
-- `range` bounds: `range(1, 5)` gives 1–4, not 1–5 — the stop value is excluded.
+- `range` bounds: `range(1, 5)` gives 1–4, not 1–5 — the stop value is excluded; with a negative step,
+  `range(10, 0, -1)` stops at 1.
 - Nested-loop indentation: the inner body is 8 spaces; `print(row)` belongs at 4 (after the inner loop).
+- Forgetting to reset `row = ""` at the start of each outer pass — the rows grow into one long line.
+- Trailing spaces in art: build only the leading spaces, never pad the right side.
+- `continue` skips the rest of this pass only; it is not `break`.
 - Primality flag: forgetting to `break`, or a wrong upper bound; `range(2, 2)` is empty so `2` stays prime.
 - FizzBuzz `elif` order: test `% 15` (or `% 3 and % 5`) before `% 3`/`% 5`.
-- Rebinding the `for` variable inside its body, or expecting `range` to include the stop value.
+- Pyramid width: row `r` has `2 * r - 1` stars and `h - r` leading spaces — check row 1 and row `h` on paper.
 
 ## Discussion prompts
 
 - How is `for i in range(n)` the same as the Unit 04 `while` counter? How is it shorter?
-- Why does `range(1, 5)` stop at 4?
+- Why does `range(1, 5)` stop at 4? What does `range(20, 0, -2)` produce?
 - In a times table, which loop is the row and which is the column?
-- What does the `is_prime` flag remember, and when do you set it to `False`?
+- The triangle can be built with an inner loop or with `"*" * r` — when is each easier to read?
+- Puzzle search tries every possibility — how many tries does Coin Combinations make?
 
 ## Differentiation
 
-- Strugglers: give the outer loop and have them write only the inner loop / the `row` accumulation.
-- Fast finishers: Extra (8–9), then the Challenges (10–11).
-- Middle tier: rewrite a `while` counter from Unit 04 as a `for`/`range` loop and confirm identical output.
+- Strugglers: give the outer loop and have them write only the inner loop / the `row` accumulation;
+  Countdown by Twos and Inverted Triangle are short.
+- Fast finishers: walk the pattern ladder to the Tree, then the puzzle searches, then the Challenges.
+- Middle tier: rewrite a `while` counter from Unit 04 as a `for`/`range` loop and confirm identical output;
+  redraw the triangle both ways.
+
+## More Practice ideas (design 006 D9 genres)
+
+- **ASCII art:** an hourglass (inverted pyramid then pyramid); a staircase of `#` blocks two wide.
+- **Brute-force search:** find all two-digit numbers equal to the sum of their digits times 7.
+- **Sequences:** print the first 10 square numbers and the gaps between them (odd numbers!).
+- **Calendar & time:** print a 3-row "days of the month" grid for days 1–21 using `f"{d:3}"`.
