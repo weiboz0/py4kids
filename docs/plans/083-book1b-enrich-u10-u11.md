@@ -175,9 +175,9 @@ Challenges" (line 62) and the **Value plan** (66–79) listing every new fixture
 
 | title | kind | fixture → exact result | genre |
 |---|---|---|---|
-| Morse Encoder | C | code table `{"A": ".-", "E": ".", "N": "-.", "O": "---", "S": "...", "T": "-"}` given in the spec; `to_morse("NOTE")` → `"-. --- - ."`, `to_morse("SOS")` → `"... --- ..."` (a list of codes, then `" ".join`) | encoding |
-| Roman Numeral Value | C | values `{"I": 1, "V": 5, "X": 10, "L": 50, "C": 100}`; `roman_to_int("XLII")` → 42, `("LXIX")` → 69 (subtract a value that is smaller than the next one) | sequences & bases |
-| Letter Tally Chart | C | `tally_chart("papaya")` → `"p ##\na ###\ny #"` (rows in first-appearance order — taught by U11 rung 5; each row `f"{ch} " + "#" * count`) | ASCII art, tallies |
+| Morse Encoder | C | code table `{"A": ".-", "E": ".", "N": "-.", "O": "---", "S": "...", "T": "-"}` given in the spec; `to_morse("NOTE")` → `"-. --- - ."`, `to_morse("SOS")` → `"... --- ..."` (a list of codes, then `" ".join`) (purpose comment required) | encoding |
+| Roman Numeral Value | C | values `{"I": 1, "V": 5, "X": 10, "L": 50, "C": 100}`; `roman_to_int("XLII")` → 42, `("LXIX")` → 69 (subtract a value that is smaller than the next one) (purpose comment required) | sequences & bases |
+| Letter Tally Chart | C | `tally_chart("papaya")` → `"p ##\na ###\ny #"` (rows in first-appearance order — taught by U11 rung 5; each row `f"{ch} " + "#" * count`) (purpose comment required) | ASCII art, tallies |
 | Invert a Dictionary | MP | `invert({"cold": "C", "warm": "W", "hot": "H"})` → `{'C': 'cold', 'W': 'warm', 'H': 'hot'}` (values are unique) | encoding |
 | Anagram by Tally | MP | `is_anagram("listen", "silent")` → True, `("cider", "crumb")` → False (two tallies compared with `==`) | text |
 | Price Lookup Total | MP | `cart_total({"pen": 3, "pad": 5, "ink": 12}, ["pen", "ink", "pen"])` → 18; real reads the item names on one line | aggregation |
