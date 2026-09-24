@@ -26,7 +26,7 @@ values tables, depth rule, fence parity, bare-`input()` fences, pinned repairs, 
     **`split` rule (D3):** only word iteration — `for word in line.split():` and `len(line.split())`.
     The ban is on subscripting the list that `split()` returns (`parts[0]`); indexing a *string* that
     the loop hands you (`word[0]`) is ordinary string indexing and is allowed.
-    **`[::-1]`:** plan 075's authoring rule ("do not teach `s[::-1]`") is lifted from U09 on — design
+    **`[::-1]`:** plan 075's authoring rule ("do not teach `s[::-1]`") is lifted from U09 on for the reversing slice ONLY (other steps such as `[::2]` stay out of the toolkit; the Phase E audit flags any step other than `-1`) — design
     006 §1 lists the reversing slice as a missing facet (no scanner rule is involved; any slice scans
     as `string-slice`).
   - Never in U07–U09: list literals, `append`, dicts, files, classes, tuple assignment, comprehensions,
@@ -86,7 +86,7 @@ Exercises 8–9 are optional Challenges" → the new partition); U07 teacher-not
 | Clamp a Score | MP | `clamp(120)` → 100, `clamp(-5)` → 0, `clamp(64)` → 64 (`min(max(score, 0), 100)`) | built-ins |
 | Star Function | MP | turtle asset: `draw_star(size)` draws a closed 5-point star (5 × `forward(size)`, `right(144)`); the script calls `draw_star(80)` (No real version: turtle) | turtle |
 | Polygon Row | MP | turtle asset: `draw_polygon(sides, length)` + `polygon_row()` calling it 3 times for hexagons of side 30, pen-up `forward(70)` after each, then pen-up `backward(210)` back to the start (closed) (No real version: turtle) | turtle, composition |
-| Challenge: Month Calendar | S | `month_calendar(30, 3)` RETURNS (0 = Sunday) `"Su Mo Tu We Th Fr Sa\n          1  2  3  4\n 5  6  7  8  9 10 11\n12 13 14 15 16 17 18\n19 20 21 22 23 24 25\n26 27 28 29 30"` — built with one growing `row` string (no lists): each cell is `f"{d:2}"` (blank cells `"  "`), cells separated by one space (`row = cell` if `row == ""` else `row + " " + cell`), a row closes when `(first_weekday + d - 1) % 7 == 6`; the last row is not padded | calendar, layout |
+| Challenge: Month Calendar | S | `month_calendar(30, 3)` RETURNS (0 = Sunday) `"Su Mo Tu We Th Fr Sa\n          1  2  3  4\n 5  6  7  8  9 10 11\n12 13 14 15 16 17 18\n19 20 21 22 23 24 25\n26 27 28 29 30"` — built with one growing `row` string (no lists): each cell is `str(d)` padded to two characters with a leading space when `d < 10` (blank cells `"  "`; no format-width specs — `:2` is never taught), cells separated by one space (`row = cell` if `row == ""` else `row + " " + cell`), a row closes when `(first_weekday + d - 1) % 7 == 6`; the last row is not padded | calendar, layout |
 | Challenge: Longest Collatz | S | `longest_collatz_below(20)` → 18 (the smallest start below 20 with the most steps, 20; strict `>` keeps the first) via a `collatz_steps(n)` helper | number theory |
 
 ## U08 — Randomness (seeded values computed with `random.seed(4)` in the stated call order)
@@ -109,7 +109,7 @@ intro ("For Exercises 1–6 and 8–9" → the new partition).
 | Die Face Art | C | `die_face(n)` returns 3 rows of 3 characters with `.` filler: 1 `...`/`.o.`/`...`; 2 `o..`/`...`/`..o`; 3 `o..`/`.o.`/`..o`; 4 `o.o`/`...`/`o.o`; 5 `o.o`/`.o.`/`o.o`; 6 `o.o`/`o.o`/`o.o` — `die_face(5)` → `"o.o\n.o.\no.o"` (real version reads the face) | ASCII art |
 | Roll Until Six | C | seed 4, `randint(1, 6)` until the target face → `Rolls: 4` (real version reads the target face 6) | simulation |
 | Longest Heads Streak | C | seed 4, 20 flips of `choice("HT")` (`HTHTTHHHHTTHHTTHHTHH`) → `Longest streak: 4` (real version reads the flip count 20) | simulation, counting |
-| Two-Dice Histogram | MP | for each total 2..12: reseed 4, roll 36 pairs, count that total; rows `f"{total:2}:" + "#" * count` → ` 2:##` / ` 3:##` / ` 4:######` / ` 5:#####` / ` 6:####` / ` 7:###` / ` 8:#####` / ` 9:#######` / `10:#` / `11:#` / `12:` (real version reads the pair count 36) | simulation, statistics |
+| Two-Dice Histogram | MP | for each total 2..12: reseed 4, roll 36 pairs, count that total; rows `label + ":" + "#" * count`, where `label = str(total)` gets a leading space when `total < 10` (no `:2` format width) → ` 2:##` / ` 3:##` / ` 4:######` / ` 5:#####` / ` 6:####` / ` 7:###` / ` 8:#####` / ` 9:#######` / `10:#` / `11:#` / `12:` (real version reads the pair count 36) | simulation, statistics |
 | Pig Turn | MP | seed 4, roll until the turn total reaches the goal or a 1 appears (a 1 scores 0): rolls 2, 3, 1 → `Turn score: 0` (real version reads the goal 20) | games |
 | Nim Winner | MP | take 1–3 stones; `first_player_wins(stones)` → `stones % 4 != 0`: 12 → `First player wins: False`, 13 → `First player wins: True` (real version reads the stone count) | games |
 | Three Heads in a Row | MP | seed 4, flip `choice("HT")` until the streak length is reached (`HTHTTHHH`) → `Flips: 8` (real version reads the streak length 3) | simulation |
@@ -156,6 +156,8 @@ Challenge" (renumbered below).
 | Spam Check | MP | `is_spammy("You WIN a prize")` → True, `"See you at noon"` → False (`"win" in text.lower()` or `"free" in …`) | validation |
 | Common Letters | MP | `common_letters("thunder", "under")` → `"under"` (keep a letter if `in` the second word and not already `in` the result) | text |
 | Word Box | MP | `word_box("CODE")` → `"CODE\nO  D\nD  O\nEDOC"` (first word, then `word[i] + spaces + word[-1 - i]`, then `word[::-1]`; design 006 D4's word frame) | ASCII art |
+| First Vowel | MP | `first_vowel("rhythm and blues")` → 7; `for i in range(len(text))` returning `i` at the first vowel (early exit), `-1` if none (`first_vowel("rhythm")` → -1) | search |
+| Has a Digit | MP | `has_digit("launch42")` → True, `has_digit("orbit")` → False; return `True` at the first `ch.isdigit()` (early exit), `False` after the loop | search, validation |
 | Challenge: Word Wrap | S | `wrap("the quick brown fox jumps", 10)` → `"the quick\nbrown fox\njumps"`: greedy; a word joins the line when `len(line) + 1 + len(word) <= width`; the first word never gets a leading space; a word longer than `width` sits alone | text layout |
 | Challenge: Safe Number | S | `to_number("42")` → 42, `"4x"` → -1 (`isdigit` validation; negatives are not accepted) | validation & parsing |
 
@@ -170,9 +172,10 @@ Challenge" (renumbered below).
   11–17 MP: Two-Dice Histogram, Pig Turn, Nim Winner, Three Heads in a Row, Average Roll, Random Polygon,
   Random Color Row · 18–20 Challenges: Highest Twenty-Sided Roll (was 8), Multiples in a Random Range
   (was 9), Random Password.
-- **U09 (27):** 1–7 existing core · 8 Word Count · 9 Initials · 10 Valid PIN · 11–23 MP: Longest Word,
+- **U09 (29):** 1–7 existing core · 8 Word Count · 9 Initials · 10 Valid PIN · 11–25 MP: Longest Word,
   Sentence Palindrome, Run-Length Encoding, Atbash Cipher, File Type, Word Triangle, Center Text, Letter
-  Spacer, Rotate Left, Ends of a Word, Spam Check, Common Letters, Word Box · 24–27 Challenges:
+  Spacer, Rotate Left, Ends of a Word, Spam Check, Common Letters, Word Box, First Vowel, Has a Digit ·
+  26–29 Challenges:
   Alternating Case (was 8), Caesar Shift (was 9), Word Wrap, Safe Number.
 
 No real version: U07 Ex 2 (repair), Ex 7 and the new turtle exercises (Star Function, Polygon Row),
@@ -195,13 +198,15 @@ U09 none. Every other exercise has a real program.
   Until Six, Longest Heads Streak); `count-by-condition`/`running-total`/`accumulator` ≥3.
 - **U09 introduces:** `string-index` ≥6; `string-slice` 6 (Ex 1, Sentence Palindrome, Word Triangle,
   Rotate Left, Ends of a Word, Word Box); `string-methods` ≥10; `in-operator` 5 (Ex 4, Ex 5, Atbash,
-  Spam Check, Common Letters); `transform-each` ≥5; `linear-search` ≥4.
+  Spam Check, Common Letters); `transform-each` ≥5; `linear-search` 5 (Ex 3 Palindrome Gate's early `False`, Ex 6 First Matching
+  Position, First Vowel, Has a Digit, Caesar Shift's `position` helper).
 
 ## Metadata deltas (manifest + coverage-map, identically; confirmed by Phase E's honesty scan)
 
 Expected: U07 `practices` += `string-concat`, `nested-loops` (Triangle Picture, Month Calendar),
-`elif-else`, `input`, `type-conversion`; U08 `practices` += `input`, `type-conversion`, `elif-else`,
-`string-concat`, `if-statement`; U09 `practices` += `input`, `for-loop`, `range-function`,
+`elif-else` (Days in a Month, Weekday Name), `input`, `type-conversion` (every real program);
+U08 `practices` += `input`, `type-conversion`, `elif-else`, `string-concat`, `if-statement`, `while-loop`
+(Roll Until Six, Pig Turn, Three Heads in a Row); new U07/U08 work uses no f-string (padding is explicit); U09 `practices` += `input`, `for-loop`, `range-function`,
 `find-extreme` (only if ≥3 reps, else leave to fastforward).
 
 ## Phases
@@ -212,7 +217,7 @@ Expected: U07 `practices` += `string-concat`, `nested-loops` (Triangle Picture, 
   in the U06 format.
 - **Phase D (inline):** teacher-notes (incl. D9 genre notes and the rewrites above), metadata deltas.
 - **Phase E (audits first, ci-local last):** toolkit AST audit of every cell, fence and turtle asset;
-  the exercise-contract + fence-parity audit (plan 080's script); turtle command-trace check (Random
+  the exercise-contract + fence-parity audit (plan 080's script — every fence is EXECUTED with its pinned Sample input and its stdout compared to Expected output and the stand-in); turtle command-trace check (Random
   Polygon 4 pen-down; Random Color Row 16 pen-down + 4 travels + `backward(120)`, colors `rgrb`; Polygon
   Row 18 pen-down + `backward(210)`; Star Function 5 pen-down); fixture/value-use audit; manifest ↔
   coverage-map diff + honesty scan; depth + genre tables; `scripts/ci-local.sh`; post-execution report.
@@ -233,7 +238,10 @@ U10+ (plans 083–084); checkpoints (084); tooling.
   blockers: `len` on a string untaught; D7 shortfalls (U07 builtin-functions, scope; U09 string-slice,
   in-operator); no shipped-text rewrite list; five lead-in-splitting anchors; Die Face under-specified;
   fixture collision; byte-exact pins for calendar/wrap/center/Atbash/U08 real inputs.
-- `[glm]` pending.
+- `[glm]` APPROVE WITH NITS (reviewed HEAD 9425125) — metadata deltas incomplete (U07
+  input/type-conversion/f-string, U08 while-loop/f-string); `:2` format width untaught; Initials vs. the
+  split rule + a typo; D7 projections below 5 (incl. `linear-search`); step-slice lift too broad; state
+  fence execution in Phase E.
 
 ### Round 1 — fold (this rewrite)
 
@@ -254,6 +262,17 @@ U10+ (plans 083–084); checkpoints (084); tooling.
   U06 format with named companion asserts and command-trace expectations.
 - `[FIXED]` `split` rule clarified (no subscripting the split list; string indexing of the iterated
   word is fine); step-slice note cites plan 075's authoring rule.
+
+### Round 1 — [glm] fold
+
+- `[FIXED]` metadata deltas: U07 `elif-else`/`input`/`type-conversion` tied to their exercises; U08
+  adds `while-loop`; `f-string` avoided by explicit padding.
+- `[FIXED]` `:2` format width removed from Month Calendar and Two-Dice Histogram (leading-space padding
+  via `str()`).
+- `[FIXED]` `linear-search` (introduced in U09) reaches 5 with First Vowel and Has a Digit (U09 → 29).
+- `[FIXED]` Initials/split rule, the typo, and the other D7 counts were already resolved by the
+  [sol]/[fable] rewrite (split rule clarified; scope 5, builtin-functions 5, in-operator 5).
+- `[FIXED]` step-slice lift is reversing-slice-only; Phase E states fence execution explicitly.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
