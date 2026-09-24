@@ -13,8 +13,9 @@ decorators. `distance` uses `** 0.5`, never `math.sqrt`.
 
 ## Pacing
 
-Budget: three lessons of 60–90 minutes (OOP is the hardest unit — go slowly). Hook: "a scoreboard needs each
-player to carry name + score + wins together — a class bundles them into one object."
+Budget: three lessons of 60–90 minutes (OOP is the hardest unit — go slowly). Hook: "a map editor needs each
+marker to carry its x and y together and keep them after the program ends — a class bundles them into one
+object."
 
 - **Lesson 1 — Build Objects with a Class (`class-def`, `init-method`, `attributes`).** `class Point:` with
   `def __init__(self, x, y): self.x = x; self.y = y`; create instances; read `p.x`. Explain **`self` as "THIS
@@ -67,8 +68,10 @@ Challenges (8–9, `stretch`): Rectangle Size Band (an `elif` method); Counter S
 Each exercise uses distinct instances; solutions assert construct-then-check (and attribute-after-call for
 mutating methods).
 - Ex1 `Point(2,6)` and `Point(9,4)`; then `start.x = 5` leaves `finish.x` at 9 (the identity beat).
-- Ex2 `Rectangle("N-12",6,4)` and `Rectangle("S-30",12,7)` — read `.code`/`.width`/`.height`.
-- Ex3 `tile.area()`→36, `tile.perimeter()`→26 (`Rectangle(9,4)`). Ex4 `Point(0,0).distance(Point(3,4))`→5.0; `Point(2,1).distance(Point(2,6))`→5.0.
+- Ex2 `small = Rectangle("N-12",6,4)`, `large = Rectangle("S-30",12,7)`: `small.code`→"N-12", `small.width`→6, `large.height`→7.
+- Ex3 `tile.area()`→36, `tile.perimeter()`→26 (`Rectangle(9,4)`). Ex4 `Point(1,2).distance(Point(4,6))`→5.0; `Point(2,1).distance(Point(2,6))`→5.0.
 - Ex5 `crate.short_code()`→"NE", `crate.describe()`→"NE-48: 7 by 3". Ex6 `blue.increment(3)`→3, then `increment(2)`→5.
 - Ex7 `Point(14,9).save("ex7_point.txt")`→"ex7_point.txt"; the loaded point has `x`=14, `y`=9.
-- Ex8 (stretch) `Rectangle(10,7).size_band()`→"large", `Rectangle(7,5)`→"medium". Ex9 (stretch) `increment(4)`→16 then `save(...)`.
+- Ex8 (stretch) `Rectangle(10,7).size_band()`→"large", `Rectangle(7,5)`→"medium". Ex9 (stretch)
+  `visitors = Counter("north gate",12)`: `increment(4)`→16, `save("ex9_counter.txt")`→"ex9_counter.txt", then
+  `load_counter(...)` gives back `label`="north gate", `count`=16.

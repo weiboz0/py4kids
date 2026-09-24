@@ -16,8 +16,9 @@ Budget: three lessons of 60–90 minutes. Hook: save a list of arcade scores, th
 
 - **Lesson 1 — Save Scores, Then Load Them Back (`file-write`, `file-read`, `with-statement`).**
   `with open(path, "w") as f: f.write(f"{x}\n")`; read the whole file with `with open(path, "r") as f:
-  f.read()`. **Motivate `with` with a contrast cell:** `f = open(path); f.write(...); f.close()` — "`with`
-  does the `close()` for you, even if you forget or the program crashes."
+  f.read()`. **Motivate `with` with a contrast cell:** `f = open(path, "w"); f.write(...); f.close()` — "`with`
+  does the `close()` for you, even if you forget or the program crashes." (Open in `"w"` mode in the contrast,
+  or the `f.write(...)` fails on a read-only handle.)
 - **Lesson 2 — Turn Saved Lines into Score Statistics.** `for line in f:` + `int(line.strip())` to load
   numbers; total (`running-total`/`accumulator`), count-by-condition, `min`/`max`/`sum`/`len`, the best
   (`find-extreme`). Seeded functions.
@@ -30,10 +31,11 @@ opens Lesson 2 (the stats need it anyway).
 
 ## Exercises — core vs. extra vs. challenge
 
-Core (1–7): Save/Read Arcade Scores (`score_text_round_trip`), Rebuild the Number List
-(`score_list_round_trip`), Total & Count Saved Tickets, Four-Number Summary (`saved_score_summary`), Find the
-Saved High Score by Scanning (`highest_saved_score`, find-extreme), Load a Typed Player Record
-(transform-each), Search a Saved Roster (`linear-search`).
+Core (1–7): Save a Labeled Score Report (`score_text_with_header`), Rebuild the Number List
+(`score_list_round_trip`), Total & Count Saved Tickets (`saved_ticket_report`), Four-Number Summary
+(`saved_score_summary`), Find the Saved High Score by Scanning (`highest_saved_score`, find-extreme), Summarize
+a Saved Player Record (`player_record_summary`, `readline`×3 + f-string, transform-each), Search a Saved Roster
+(`save_and_find_player`, `linear-search`).
 Challenges (8–9, `stretch`): Prove a Fresh Save Replaces the Old One (overwrite semantics); Find Two
 Statistics in One Pass.
 Every file drill writes its own per-exercise scratch file (`ex1_scores.txt`, …) before reading — the files

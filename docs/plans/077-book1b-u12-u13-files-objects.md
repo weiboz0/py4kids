@@ -277,6 +277,42 @@ Consensus: **NOT reached** (3 REJECT). All three externals converge on the same 
 - `[FIXED]` `**` power-operator Notice added in U13 L2; U12 Ex1/Ex6 reshaped off the lesson copies; U13
   teacher-notes `short_code` `self.name[0:2]`→`self.code[0:2]`; wording (`Change`→`Convert`).
 
+### Round 2 — verdicts (HEAD d3e16c4)
+
+- `[self]` APPROVE — cp05 Q2 statement↔solution agree (`[57,19,2]`); value plans complete; ci-local GREEN.
+- `[sol]` **REJECT** — r1 finding 3 partially unresolved: U13 teacher-notes Ex2 value-plan gave inputs but no
+  concrete outputs. Blind-solve: all 11 sampled items MATCH; hard-rules all PASS.
+- `[glm]` APPROVE WITH NITS — all three r1 REJECT drivers verified fixed in learner-facing materials; blind-
+  solved all 23 items (MATCH); full AST+exec audit clean. Two `[OPEN]` should-fixes (stale U13 Pacing hook;
+  U13 Ex4 sample dups the lesson) + two cosmetic nits.
+- `[fable]` APPROVE WITH NITS — all four r1 findings RESOLVED; forbidden-construct audit CLEAN; prereq closure
+  holds. Three LOW nits (stale U12 inventory; optional `__init__` harmonization; stretch-only tag gap).
+
+Consensus: **NOT reached** (1 REJECT). Fold below → round 3.
+
+### Round 2 — findings
+
+- `[FIXED]` **U13 Ex2 value-plan concrete outputs** (`[sol]`, r1-carryover): added `small.code`→"N-12",
+  `small.width`→6, `large.height`→7.
+- `[FIXED]` **U13 teacher-notes Ex9 value-plan** (`[sol]`): now the concrete `Counter("north gate",12)`
+  increment/save/load round-trip.
+- `[FIXED]` **U12 teacher-notes:19 contrast code** (`[sol]`): `f = open(path)` (default read mode)
+  → `f = open(path, "w")` so the illustrative `f.write(...)` is valid.
+- `[FIXED]` **U13 teacher-notes:16 stale Pacing hook** (`[glm]`1): scoreboard framing → map-editor/Point, matching
+  the reframed lesson hook.
+- `[FIXED]` **U13 Ex4 lesson-duplicate sample** (`[glm]`2): first worked sample `Point(0,0).distance(Point(3,4))`
+  (verbatim lesson L2) → `Point(1,2).distance(Point(4,6))` (still 5.0), in `exercises.ipynb`/`solutions.ipynb`
+  (vars renamed `here`/`there`) and the teacher-notes Ex4 line.
+- `[FIXED]` **U12 teacher-notes:33-36 stale exercise inventory** (`[sol]`/`[glm]`/`[fable]`): Ex1
+  `score_text_with_header`, Ex6 `player_record_summary`, plus `saved_ticket_report`/`save_and_find_player` names.
+- `[WONTFIX]` optional `__init__(self, …)` harmonization for U13 Ex4/Ex5/Ex7 + cp05 Q7 (`[fable]`): worked
+  samples already show constructor arity/order unambiguously; not the r1 defect recurring.
+- `[WONTFIX]` U13 `practices` omit `elif-else`/`boolean` (`[fable]`): those appear only in stretch Ex8; core
+  never depends on stretch and concept-scan (which counts non-stretch) is GREEN.
+- `[WONTFIX]` cosmetic `\n`-explainer wording (`[glm]`4): accurate as written.
+
+ci-local: ALL GREEN after fold.
+
 ## Post-Execution Report
 
 **Status: implemented, ci-local ALL GREEN (2026-09-23). Content-review gate next.**
