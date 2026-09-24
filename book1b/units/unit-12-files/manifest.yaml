@@ -1,0 +1,11 @@
+id: unit-12-files
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [file-read, file-write, with-statement]
+  requires: [def-function, parameters, return-value, for-loop, list-append, string-methods, if-statement,
+             comparison, arithmetic, type-conversion, variable, print]
+  practices: [transform-each, linear-search, list-literal, builtin-functions, running-total,
+              count-by-condition, find-extreme, accumulator, int-type, f-string, comment, naming]

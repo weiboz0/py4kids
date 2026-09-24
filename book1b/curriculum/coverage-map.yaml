@@ -141,3 +141,34 @@ entries:
               in-operator, for-loop, list-loop, list-literal, list-index, if-statement, elif-else, comparison,
               boolean, arithmetic, count-by-condition, accumulator, builtin-functions, find-extreme, int-type,
               f-string, string-literal, type-conversion]
+- id: unit-12-files
+  kind: unit
+  title: "Files — read, write, and the with statement"
+  lessons: 3
+  introduces: [file-read, file-write, with-statement]
+  requires: [def-function, parameters, return-value, for-loop, list-append, string-methods, if-statement,
+             comparison, arithmetic, type-conversion, variable, print]
+  practices: [transform-each, linear-search, list-literal, builtin-functions, running-total,
+              count-by-condition, find-extreme, accumulator, int-type, f-string, comment, naming]
+- id: unit-13-objects
+  kind: unit
+  title: "Objects — classes, __init__, attributes, and methods"
+  lessons: 3
+  introduces: [class-def, init-method, attributes, methods]
+  requires: [def-function, parameters, return-value, arithmetic, comparison, boolean, if-statement,
+             variable, print]
+  practices: [string-slice, file-read, file-write, with-statement, f-string, int-type, float-type,
+              type-conversion, comment, naming]
+- id: checkpoint-05-files-and-objects
+  kind: checkpoint
+  title: "Checkpoint 5 — Files & Objects"
+  lessons: 0.5
+  introduces: []
+  requires: [variable, def-function, parameters, return-value, file-read, file-write, with-statement,
+             class-def, init-method, attributes, methods, for-loop, list-append, string-methods, type-conversion,
+             if-statement, elif-else, comparison, boolean, arithmetic, int-type, float-type, f-string, string-literal]
+  practices: [variable, def-function, parameters, return-value, file-read, file-write, with-statement,
+              class-def, init-method, attributes, methods, linear-search, string-slice, for-loop, list-append,
+              list-literal, string-methods, type-conversion, if-statement, elif-else, comparison, boolean,
+              arithmetic, count-by-condition, accumulator, builtin-functions, int-type, float-type, f-string,
+              string-literal]

@@ -1,0 +1,11 @@
+id: unit-13-objects
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [class-def, init-method, attributes, methods]
+  requires: [def-function, parameters, return-value, arithmetic, comparison, boolean, if-statement,
+             variable, print]
+  practices: [string-slice, file-read, file-write, with-statement, f-string, int-type, float-type,
+              type-conversion, comment, naming]

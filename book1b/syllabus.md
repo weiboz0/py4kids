@@ -65,6 +65,9 @@ The **Algorithm Challenge** (a non-themed integrative problem set) closes the ye
 | `unit-10-lists` | unit | 3 | Collect and process data — build, index, loop, sort, find the best, and filter lists. |
 | `unit-11-dictionaries` | unit | 3 | Map keys to values — lookups, `.get`, looping, tallies, and group-by. |
 | `checkpoint-04-dictionaries` | checkpoint | 0.5 | Prove dictionaries and collections on a mixed problem set. |
+| `unit-12-files` | unit | 3 | Save and load data — read, write, and the `with` statement. |
+| `unit-13-objects` | unit | 3 | Bundle data + behaviour — classes, `__init__`, attributes, and methods. |
+| `checkpoint-05-files-and-objects` | checkpoint | 0.5 | Prove files and objects on a mixed problem set (the mandatory final checkpoint). |
 
 ## Rules this syllabus is bound by
 

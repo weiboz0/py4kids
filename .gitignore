@@ -36,3 +36,9 @@ book1/units/unit-09-save-point/dragon_slot.txt
 
 # Local agent session state
 .claude/
+
+# book1b U12/U13/cp05 file-I/O runtime scratch (written by lesson/exercise/solution/checkpoint
+# notebooks at run time via self-contained setup; never commit)
+book1b/units/unit-12-files/*.txt
+book1b/units/unit-13-objects/*.txt
+book1b/checkpoints/checkpoint-05-files-and-objects/*.txt
