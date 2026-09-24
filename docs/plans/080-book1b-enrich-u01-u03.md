@@ -17,9 +17,11 @@ are taught) and D7 (U01–U02 thresholds 3/2) as amended in this plan's own comm
   sentence (e.g. `**Realistic:** …`, `**Minimal:** …`, `One twist: …`). When inserting rungs after
   such a Notice, cut that trailing lead-in out of the Notice and place it in its own markdown cell
   directly above the code cell it introduces (after the inserted rungs); each inserted rung gets its
-  own one-sentence lead-in. Affected anchors: `3fe905d22497`→`79f51979aec5`, `u02l007`→`u02l008`,
+  own one-sentence lead-in. Affected anchors: `u02l007`→`u02l008`,
   `u02l012`→`u02l013`, `u02l039`→`u02l040`, `u03l025`→`u03l026`, and `u03l021` (its
-  "**Minimal:** reverse one boolean" lead-in moves down to sit above `u03l029`).
+  "**Minimal:** reverse one boolean" lead-in moves down to sit above `u03l029`), and `u03l034`
+  (its "**Realistic:** accept either of two exact values." lead-in moves above `u03l034a` after the
+  chained-comparison rung).
 - **Per-unit allowed toolkit (core AND More Practice AND stretch AND fences):**
   - U01: `print` (incl. several arguments, `sep=`, `end=`), comments, string literals incl. escapes
     `\n` `\t` `\"` and triple-quoted strings, variables, `input()`, string `+`, f-strings.
@@ -67,7 +69,10 @@ are taught) and D7 (U01–U02 thresholds 3/2) as amended in this plan's own comm
 2. New `### Special characters` after Notice `77355aa20921`: (a) `\n`; (b) `\t`; (c) `\"` inside a
    double-quoted string; (d) a triple-quoted 3-line picture (no backslashes).
 3. Lesson Two `### Input from a person`: the existing markdown input snippet becomes a `no-exec`
-   code cell (`name = input("Name: ")` then `print("Hello, " + name)`).
+   code cell (`name = input("Name: ")` then `print("Hello,", name)` — the comma form from rung 1;
+   string `+` is not taught until Lesson Three). The second markdown `input()` snippet in
+   `6b9548f7319b` (`favorite_color`) becomes a `no-exec` code cell too, and `67533836dd4a`'s intro
+   sentence ("…shown as text") is rewritten to introduce runnable-at-home `no-exec` cells.
 4. Lesson Three after the f-string section: `no-exec` "real card" cell (two inputs, one f-string).
 
 **New exercises** (C = core, MP = More Practice, S = stretch):
@@ -126,9 +131,11 @@ are taught) and D7 (U01–U02 thresholds 3/2) as amended in this plan's own comm
    gets a Notice naming its three-way `or`.
 4. Before `u03l043`: `print(year % 4 == 0)` → `print(year % 4 == 0 and year % 100 != 0)` →
    the full rule with `or year % 400 == 0` (three cells), then the existing build.
-5. Chained comparison `print(0 <= x <= 10)` rung; the Notice `u03l034` ("we will use the `and`
+5. Chained comparison `print(0 <= x <= 10)` rung, inserted after Notice `u03l034` (lead-in rule);
+   the Notice `u03l034` ("we will use the `and`
    form") is rewritten to present both forms; Ex 3 accepts either.
-6. `print("Yes" == "yes")` rung (case-sensitive equality); a Notice: `and` binds tighter than `or`.
+6. `print("Yes" == "yes")` rung (case-sensitive equality), after the Notice that follows
+   `u03l034a`; a Notice: `and` binds tighter than `or`.
 7. `no-exec` real-input cells: L1 score → if/else; L2 day name → weekend check; L3 year → leap rule
    (the `u03l040` markdown snippet becomes one of these).
 
@@ -141,9 +148,9 @@ are taught) and D7 (U01–U02 thresholds 3/2) as amended in this plan's own comm
 | 14 | Order Three Numbers | MP | `19, 4, 11` → `4 11 19` using only comparisons, `if` and temporary-variable swaps (no loops/lists/`sorted`/`min`/`max`) | if-statement, f-string |
 | 15 | Rock-Paper-Scissors Judge | MP, N | `"rock"`, `"scissors"` → `Player 1 wins` (tie first → `Tie`; else nested on player 1's move → `Player 1 wins` / `Player 2 wins`) | conditional-nesting |
 | 16 | Quadrant Finder | MP, N | `x = -3`, `y = 5` → `(-3, 5) is in Quadrant II`; `(0, 0)` → `(0, 0) is the Origin`; one coordinate 0 → `(x, y) is on an axis` | conditional-nesting, f-string |
-| 17 | Valid Triangle | MP | `3, 4, 8` → `Not a triangle` | logical-ops |
+| 17 | Valid Triangle | MP | `2, 5, 9` → `Not a triangle` (valid sides → `Triangle`) | logical-ops |
 | 18 | Traffic Light Art | MP | `state = "yellow"` → rows `( )` / `(Y)` / `( )`; `"red"` → `(R)` / `( )` / `( )`; `"green"` → `( )` / `( )` / `(G)` (if/elif/else) | if-statement, elif-else, string-literal |
-| 19 | Mood Face | MP | `score = 66` → band 50–79 → rows `o o` / ` -` / `---`; 80+ → `^ ^` / ` -` / `(_)`; under 50 → `- -` / ` -` / `...` (no backslashes, no trailing spaces) | if-statement, elif-else |
+| 19 | Mood Face | MP | `score = 72` → band 50–79 → rows `o o` / ` -` / `---`; 80+ → `^ ^` / ` -` / `(_)`; under 50 → `- -` / ` -` / `...` (no backslashes, no trailing spaces) | if-statement, elif-else |
 | 20 | Challenge: Ticket Price | S, N | `age = 15`, `day = "Thursday"` (weekday) → `Ticket: $8` (under 13 → 6; 13–17 → 8 weekday / 9 weekend; 18+ → 12 / 14) | conditional-nesting, f-string |
 | 21 | Challenge: Valid Clock Time | S, N | `hour = 23`, `minute = 60` → `Invalid minute` (other outcomes `Invalid hour`, `Valid time`; nested; chained comparisons) | conditional-nesting, comparison |
 
@@ -276,6 +283,14 @@ Checkpoint real-version notes (plan 084); U04+ units; tooling changes.
 - `[FIXED]` every branch output specified (FizzBuzz, RPS, Traffic Light, Mood Face bands, Quadrant,
   Clock); Seconds wording; cat rows; catalog ids in the depth column.
 - `[FIXED]` numbering rule (Challenges stay last); projected depth matrix table.
+
+### Round 3 — [fable] APPROVE WITH NITS (folded)
+
+- `[FIXED]` U01 Lesson Two input cell uses the comma form (`+` is taught in Lesson Three); second
+  snippet `6b9548f7319b` converted; intro sentence rewritten.
+- `[FIXED]` dropped `3fe905d22497` from the affected-anchor list; named the `u03l034` →
+  `u03l034a` lead-in anchor and the rung-6 position.
+- `[FIXED]` U03 fixtures varied: Mood Face 72, Valid Triangle 2/5/9 (no shared small ints).
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
