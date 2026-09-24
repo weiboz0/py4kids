@@ -26,7 +26,7 @@ Stacked on plans 082 (U09 string methods incl. `split`/`startswith`) and 083 (U1
   `ex<N>_` so exercises never share a file. `open` always sits in a `with` block after Lesson 1's
   "old way" contrast; modes are explicit (`"w"`, `"r"`, `"a"`).
 - **U12 toolkit:** everything through U11 plus `open` with `"w"`/`"r"`/`"a"`, `with`, `f.write`,
-  `f.read`, `f.readline`, `for line in f:`, `line.strip()`, `line.split(",")` (split with a separator —
+  `f.read`, `f.readline`, `for line in f:`, `line.strip()`, `line.split()` (U09's word walk), `line.split(",")` (split with a separator —
   a `string-methods` facet taught by a new rung). Never: `readlines`, `writelines`, `os`, `csv`, `json`,
   `try`/`except`, `enumerate`, tuple unpacking, comprehensions.
 - **U13 toolkit:** U12 plus `class`, `__init__`, `self.` attributes, methods (returning, or changing
@@ -104,7 +104,8 @@ Challenge count and Value plan.
 1. **Before `u13l003`:** a one-attribute class first — `class Marker:` / `__init__(self, label)` /
    `self.label = label`, `m = Marker("A")`, `print(m.label)`; `u13l002`'s class/`__init__` sentences are
    its lead-in; a new lead-in ("Now give the class two attributes") sits above `u13l003`.
-2. **Before `u13l012`:** a Rectangle with only `area` (one method); `u13l012` (three methods) becomes the
+2. **Before `u13l012`:** a Rectangle with the shipped signature `(code, width, height)` and only `area`
+   (one method); `u13l012` (three methods) becomes the
    "more methods" rung with its own lead-in.
 3. **After `u13l016`: "A method that draws"** — `draw(self)` returns `"\n".join(rows)` of
    `"#" * self.width`, one row per unit of height, rows collected with `append` → the lesson uses
@@ -138,7 +139,7 @@ attributes and state); U13 teacher-notes Goals, pacing, Challenge count, Value p
 | Fix the Missing self | MP | broken: `def area():` inside `class Rect` → `Rect(3, 4).area()` raises `TypeError: Rect.area() takes 0 positional arguments but 1 was given`; repaired `def area(self):` → `12` (No real version) | debug & repair |
 | Fix the Attribute Typo | MP | broken: `self.hieght = height` then `volume` reads `self.height` → `AttributeError: 'Crate' object has no attribute 'height'`; repaired → `Crate(2, 3, 4).volume()` → `24` (No real version) | debug & repair |
 | Predict Two Counters | MP | predict: `a = Counter("x")`, `b = Counter("x")`, `b.increment(5)`, `print(a.count, b.count)` → `0 5` (No real version) | tracing |
-| Challenge: Rover Commands | S | `Rover()` at `(0, 0)` facing `"N"`; `run("FFRFF")` → `position()` `"(2, 2) facing E"` (`"NESW"` with `find` to turn; `F` moves one step) | state machines, grids |
+| Challenge: Rover Commands | S | `Rover()` at `(0, 0)` facing `"N"`; `run("FFRFF")` → `position()` `"(2, 2) facing E"` (turn with `"NESW"[("NESW".find(facing) + 1) % 4]` for `R` and `- 1 … % 4` for `L`, so W→N wraps; `F` moves one step) | state machines, grids |
 | Challenge: Save the Stockroom | S | `Stockroom.save(path)` writes `name,qty` lines; module-level `load_stockroom(path)` rebuilds it → `{'rivet': 7, 'washer': 4}` | files & persistence |
 
 ## Checkpoints — real-version notes (all five)
@@ -233,7 +234,7 @@ the widened toolkit (079). Roadmap text is unchanged.
 
 ## Metadata deltas (manifest + coverage-map; ≥3 named exercise reps → `practices`, fewer → `requires`)
 
-- **U12 `practices` +=** `input`, `type-conversion` (every real program's fence; stand-ins: Ex 2's
+- **U12 `practices` +=** `input`, `type-conversion` (the real programs that read numbers — ≥3; stand-ins: Ex 2's
   `int(line.strip())` etc.), `string-methods` is already required — `split(",")`, `startswith`, `upper`
   (Best Team, Keep the To-Dos, Shout Copy) move it to **`practices`**. **`requires` +=** `elif-else`
   (Grade Report — one rep), `string-concat` (Chart from a File — one rep; Numbered Lines uses an f-string
@@ -242,7 +243,7 @@ the widened toolkit (079). Roadmap text is unchanged.
 - **U13 `practices` −=** `string-slice` (one exercise rep, Ex 5 → **`requires`**).
 - **U13 `practices` +=** `input` (every real program's fence), `list-append` (Playlist, Draw a Rectangle,
   Game Board — each pins `append`), `elif-else` (Traffic Light, Vending Machine, Rover Commands),
-  `list-loop` (Total Area, Closest Point, Student Grades), `for-loop` (Draw a Rectangle, Game Board,
+  `list-loop` (Total Area, Closest Point, Game Board's `render()`), `for-loop` (Draw a Rectangle, Game Board,
   Total Area), `list-literal` (Game Board, Total Area, Closest Point), `builtin-functions` (Student
   Grades `len`/`sum`, Game Board `range`… `len`, Draw a Rectangle `range`) — Phase E confirms each with the
   scanner on the stand-ins before the manifests change. **`requires` +=** `dict-literal`, `dict-access`
@@ -252,7 +253,8 @@ the widened toolkit (079). Roadmap text is unchanged.
   `"#" * width`, Rover's position text — two reps), `accumulator` (Total Area — one rep).
 - `float-type` stays a U13 practice: Ex 4 (`** 0.5` → `5.0`), Student Grades (`/` → `85.0`), Closest
   Point (`** 0.5`); the scanner marks `float-type` on `/` and float results, confirmed in Phase E.
-- Checkpoints: no manifest change (fences are reviewer-enforced; `input` is U01).
+- Checkpoints: no manifest change — fences are read-only notes, reviewer-enforced and not scanned, and
+  `input` (U01) is inside every checkpoint's taught range; the checkpoints' graded code stays input-free.
 
 ## Phases
 
@@ -320,6 +322,15 @@ Tooling; Book 1; the project (`project-01-algorithm-challenge`) — its brief al
 - `[FIXED]` rewrite list adds `u12l012`, `u12l014`, `u13l001`, `u13l002`; U13 rung 3 wording.
 - `[FIXED]` Phase E adds the D3 lesson count, the D7 per-concept reconciliation, and scratch-directory
   execution for U13 and CP05 file fences.
+
+### Round 1 — [glm] APPROVE WITH NITS (folded)
+
+- Its four required fixes were already covered by the [fable]/[sol] fold (`dict-access` → `requires`;
+  Long Words in a File as the third conditional count; `Sam`/`Kai`/`cedar` replaced; `string-concat`
+  → `requires` in both units).
+- `[FIXED]` nits: `list-loop` reps (Total Area, Closest Point, Game Board `render()`); `type-conversion`
+  claim narrowed to number-reading programs; checkpoint `input` exemption stated; rung 2 keeps the shipped
+  `(code, width, height)` signature; U12 toolkit names `line.split()`; Rover turns wrap with `% 4`.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
