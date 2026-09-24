@@ -166,12 +166,6 @@ L365-389 no-mutation test), `test_judge_policy.py`, `test_book1b_tooling.py`.
   unscanned → reviewer + per-plan AST audit); design 006 D2/D3/rollout updated (U09 split = word
   iteration; multi-number parsing in U10; `continue` home explicit).
 
-## Content Review
-_(4-way content-review gate — filled before PR.)_
-
-## Post-Execution Report
-_(filled before merge.)_
-
 ### Round 2 — verdicts (HEAD 7510ae2)
 
 - `[self]` APPROVE.
@@ -181,3 +175,14 @@ _(filled before merge.)_
   real strict checkpoint. Nits: correct the test table (3 rows unchanged because the fixture catalog
   lacks `string-methods`); gate the `split` else-branch; say which assertion each split test keeps.
   **All three nits folded** (table corrected, `elif` gate, per-test assertion choice).
+- `[glm]` APPROVE — all four r1 items resolved (first r2 dispatch hit an opencode 20-min timeout —
+  infra, not a verdict; re-dispatched).
+
+**Consensus: REACHED** — all four APPROVE / APPROVE-WITH-NITS, no open blockers. Cleared for
+implementation.
+
+## Content Review
+_(4-way content-review gate — filled before PR.)_
+
+## Post-Execution Report
+_(filled before merge.)_
