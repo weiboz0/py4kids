@@ -3,8 +3,9 @@
 **Goal:** Apply design 006 (D3–D8) to U01–U03: gentler ladders, ASCII-art and algorithm-variant
 exercises, the real-input (CP-ready) pattern, and the missing facets the audit found.
 
-**Spec:** `docs/designs/006-book1b-enrichment.md` (as amended by plan 079: D3 repair/predict
-"No real version" exemption and fence sample-input parity); U01–U03 audit (2026-09-24).
+**Spec:** `docs/designs/006-book1b-enrichment.md` — D3 (repair/predict/fixed-art "No real
+version", bare-`input()` fences, sample-input parity, per-lesson exemption until `input()`/`int()`
+are taught) and D7 (U01–U02 thresholds 3/2) as amended in this plan's own commit; U01–U03 audit.
 
 ## Global constraints
 
@@ -12,6 +13,13 @@ exercises, the real-input (CP-ready) pattern, and the missing facets the audit f
   print it, assert it. No `def` in U01–U03.
 - **One new idea per code cell** (D6). Every new rung is inserted **after the Notice/explanation
   cell that follows its anchor code cell**, never between an example and its explanation.
+  **Lead-in rule:** in these notebooks a Notice cell often ends with the NEXT rung's lead-in
+  sentence (e.g. `**Realistic:** …`, `**Minimal:** …`, `One twist: …`). When inserting rungs after
+  such a Notice, cut that trailing lead-in out of the Notice and place it in its own markdown cell
+  directly above the code cell it introduces (after the inserted rungs); each inserted rung gets its
+  own one-sentence lead-in. Affected anchors: `3fe905d22497`→`79f51979aec5`, `u02l007`→`u02l008`,
+  `u02l012`→`u02l013`, `u02l039`→`u02l040`, `u03l025`→`u03l026`, and `u03l021` (its
+  "**Minimal:** reverse one boolean" lead-in moves down to sit above `u03l029`).
 - **Per-unit allowed toolkit (core AND More Practice AND stretch AND fences):**
   - U01: `print` (incl. several arguments, `sep=`, `end=`), comments, string literals incl. escapes
     `\n` `\t` `\"` and triple-quoted strings, variables, `input()`, string `+`, f-strings.
@@ -35,11 +43,14 @@ exercises, the real-input (CP-ready) pattern, and the missing facets the audit f
   - Exercises: every exercise ends with `**Real version:** the real program reads <what> with
     input() — see the solution.` Repair and predict-the-output exercises instead end with
     `**No real version:** this exercise fixes (or traces) code rather than reading input.`
+    Fixed-art exercises that read nothing end with
+    `**No real version:** this exercise prints fixed art.`
     The existing "Fixed-Value …" exercises (U01/U02/U03 Ex 8) are reframed as ordinary exercises
     with a Real version line (their stand-in already exists).
   - Solutions: after each exercise's executable stand-in cell, a markdown cell
     `**The real program** (reads <what>):` + a fenced ```python block reading stdin **one value per
-    line** (short prompt labels at most; output lines identical to the stand-in's), followed by
+    line** with **bare `input()` — no prompt text** (so stdout is exactly the stand-in's output
+    lines), followed by
     `Sample input:` and `Expected output:` fenced text blocks whose values equal the stand-in's fixed
     values and asserted outputs. Solution CODE cells never call `input()`.
 - **Values:** the tables below are binding. Distinctive literals (words, tuples, showcase numbers)
@@ -48,7 +59,8 @@ exercises, the real-input (CP-ready) pattern, and the missing facets the audit f
 ## U01 — Output & Variables
 
 **Rungs (lesson):**
-1. New `### Printing several things` after Notice `3fe905d22497`:
+1. New `### Printing several things` after Notice `f101b910dc48` (the end of the Print-output
+   ladder; `3fe905d22497` keeps its example→lead-in→`79f51979aec5` sequence intact):
    (a) `print("Name:", "Maya")` — a comma adds a space;
    (b) `print("red", "teal", "gold", sep=" / ")`;
    (c) ONE cell: `print("Loading", end="")` then `print("...done")` — `end` keeps the line open.
@@ -64,11 +76,11 @@ exercises, the real-input (CP-ready) pattern, and the missing facets the audit f
 |---|---|---|---|---|
 | 14 | Comma Print | C | `club = "Origami"`, `room = "B12"` → `Club: Origami` / `Room: B12` via `print("Club:", club)` | print, variable, comment (purpose comment required) |
 | 15 | Room Sign | C | `building = "West"`, `room_number = "204"` → `West Wing, Room 204` with `+` | string-concat, comment |
-| 16 | Escape Poem | C | one string `"Sun comes up\nBirds sing\n\tThe end"` printed once | string-literal, comment |
+| 16 | Escape Poem | C | one string `"Sun comes up\nBirds sing\n\tThe end"` printed once (No real version: fixed art) | string-literal, comment |
 | 17 | Predict the Output | MP | predictions for `print("A", "B")`, `print("x", "y", "z", sep="-")`, `print("Go", end="!")`+`print("Now")` → `"A B"`, `"x-y-z"`, `"Go!Now"` (No real version) | print |
-| 18 | Swap Two Values | MP | `left = "apple"`, `right = "plum"` → swapped with a temporary variable → `left: plum` / `right: apple` | variable, naming |
-| 19 | Fix the NameError | MP | given `favorite = "kiwi"` then `print(Favorite)` (NameError) → repaired `print(favorite)` → `kiwi` (No real version) | error-messages |
-| 20 | Triple-Quote Cat | MP | art `=^.^=` / `(   )` / ` | | ` as one triple-quoted string | string-literal |
+| 18 | Swap Two Values | MP | `left = "pear"`, `right = "plum"` → swapped with a temporary variable → `left: plum` / `right: pear` | variable, naming |
+| 19 | Fix the NameError | MP | given `favorite = "mango"` then `print(Favorite)` (NameError) → repaired `print(favorite)` → `mango` (No real version) | error-messages |
+| 20 | Triple-Quote Cat | MP | rows `=^.^=` / `(   )` / ` \| \|` (no trailing spaces; the closing `"""` follows the last row directly — no trailing newline) as one triple-quoted string (No real version: fixed art) | string-literal |
 
 ## U02 — Numbers & Arithmetic
 
@@ -89,8 +101,8 @@ exercises, the real-input (CP-ready) pattern, and the missing facets the audit f
 
 | # | title | kind | fixture → exact output | depth |
 |---|---|---|---|---|
-| 11 | Coin Change | C | `cents = 91` → `Quarters: 3` / `Dimes: 1` / `Nickels: 1` / `Pennies: 1` | arithmetic, int-type, comment |
-| 12 | Seconds Breakdown | C | `seconds = 4000` → `Hours: 1` / `Minutes: 6` / `Seconds: 40` (labeled lines, no colons/padding) | arithmetic, comment |
+| 11 | Coin Change | C | `cents = 83` → `Quarters: 3` / `Dimes: 0` / `Nickels: 1` / `Pennies: 3` | arithmetic, int-type, comment |
+| 12 | Seconds Breakdown | C | `seconds = 4000` → `Hours: 1` / `Minutes: 6` / `Seconds: 40` (labeled lines — no `h:mm:ss` clock form, no zero padding) | arithmetic, comment |
 | 13 | Boolean Report | C | `score = 66` → `print(score >= 60)` `True`, `score == 100` `False`, `score != 0` `True` | comparison, boolean |
 | 14 | Three-Digit Sum | MP | `number = 468` → `18` | arithmetic |
 | 15 | Power Pair | MP | `side = 7` → `Square: 49` / `Cube: 343` | arithmetic |
@@ -124,19 +136,25 @@ exercises, the real-input (CP-ready) pattern, and the missing facets the audit f
 
 | # | title | kind | fixture → exact output | depth |
 |---|---|---|---|---|
-| 12 | FizzBuzz for One Number | C | `n = 75` → `FizzBuzz` (check 15 first) | if/elif, arithmetic |
+| 12 | FizzBuzz for One Number | C | `n = 75` → `FizzBuzz` (check 15 first; other branches `Fizz`, `Buzz`, else the number itself, e.g. `7`) | if-statement, elif-else, arithmetic |
 | 13 | Largest of Three | C | `14, 31, 22` → `Largest: 31` (comparisons with `and`; no `max`) | logical-ops, f-string |
 | 14 | Order Three Numbers | MP | `19, 4, 11` → `4 11 19` using only comparisons, `if` and temporary-variable swaps (no loops/lists/`sorted`/`min`/`max`) | if-statement, f-string |
-| 15 | Rock-Paper-Scissors Judge | MP, N | `"rock"`, `"scissors"` → `Player 1 wins` (tie first; nested on player 1's move) | conditional-nesting |
-| 16 | Quadrant Finder | MP, N | `x = -3`, `y = 5` → `(-3, 5) is in Quadrant II`; spec also defines `Origin` and `On an axis` | conditional-nesting, f-string |
+| 15 | Rock-Paper-Scissors Judge | MP, N | `"rock"`, `"scissors"` → `Player 1 wins` (tie first → `Tie`; else nested on player 1's move → `Player 1 wins` / `Player 2 wins`) | conditional-nesting |
+| 16 | Quadrant Finder | MP, N | `x = -3`, `y = 5` → `(-3, 5) is in Quadrant II`; `(0, 0)` → `(0, 0) is the Origin`; one coordinate 0 → `(x, y) is on an axis` | conditional-nesting, f-string |
 | 17 | Valid Triangle | MP | `3, 4, 8` → `Not a triangle` | logical-ops |
-| 18 | Traffic Light Art | MP | `state = "yellow"` → rows `( )` / `(Y)` / `( )` chosen by if/elif | if/elif, string-literal |
-| 19 | Mood Face | MP | `score = 66` (50–79 band) → 3-row neutral face (no backslashes) | if/elif |
-| 20 | Challenge: Ticket Price | S, N | `age = 15`, `day = "Friday"` (weekday) → `Ticket: $8` (under 13 → 6; 13–17 → 8 weekday / 9 weekend; 18+ → 12 / 14) | conditional-nesting, f-string |
-| 21 | Challenge: Valid Clock Time | S, N | `hour = 23`, `minute = 60` → `Invalid minute` (nested; chained comparisons) | conditional-nesting, comparison |
+| 18 | Traffic Light Art | MP | `state = "yellow"` → rows `( )` / `(Y)` / `( )`; `"red"` → `(R)` / `( )` / `( )`; `"green"` → `( )` / `( )` / `(G)` (if/elif/else) | if-statement, elif-else, string-literal |
+| 19 | Mood Face | MP | `score = 66` → band 50–79 → rows `o o` / ` -` / `---`; 80+ → `^ ^` / ` -` / `(_)`; under 50 → `- -` / ` -` / `...` (no backslashes, no trailing spaces) | if-statement, elif-else |
+| 20 | Challenge: Ticket Price | S, N | `age = 15`, `day = "Thursday"` (weekday) → `Ticket: $8` (under 13 → 6; 13–17 → 8 weekday / 9 weekend; 18+ → 12 / 14) | conditional-nesting, f-string |
+| 21 | Challenge: Valid Clock Time | S, N | `hour = 23`, `minute = 60` → `Invalid minute` (other outcomes `Invalid hour`, `Valid time`; nested; chained comparisons) | conditional-nesting, comparison |
 
 `conditional-nesting` reaches 5 (existing Ex 7 + 15, 16, 20, 21).
 If any U03 art uses string `+`/`*`, add `string-concat` to U03 `practices` (manifest + coverage-map).
+
+## Numbering
+
+New core/MP exercises are inserted **before** each unit's existing Challenge exercises, and every
+exercise is renumbered so Challenges stay last; statements, solutions (headings mirror) and
+teacher-notes use the same final numbers. The `#` column in the tables above is provisional.
 
 ## Depth rule (D7, made precise for this plan)
 
@@ -149,6 +167,30 @@ purpose comment; `error-messages`: repair exercises; `input`: a real-program fen
 every practiced concept ≥2. U03: introduced ≥5, practiced ≥3. Forward-reaching design-005 practices
 (`for-loop`, `range-function`, `accumulator` in U02) are exempt. Phase E prints the table; any
 shortfall is fixed before the content gate.
+
+**Projected depth matrix** (existing exercises from a scanner pass over the current solutions +
+manual attribution; "+" = new exercises from the tables):
+
+| unit | concept (introduces) | existing | + new | projected | need |
+|---|---|---|---|---|---|
+| U01 | print, string-literal, variable, naming, run-program | 13 | +7 | 20 | 3 |
+| U01 | f-string | 10 | 0 | 10 | 3 |
+| U01 | input (real-program fences) | 0 | fences on ~14 of 20 | ~14 | 3 |
+| U01 | string-concat | 2 (Ex 4, Ex 9) | +1 (Room Sign) | 3 | 3 |
+| U01 | comment | 0 required | +3 (Comma Print, Room Sign, Escape Poem) | 3 | 3 |
+| U01 | error-messages | 2 (Ex 6, 13) | +1 (Fix the NameError) | 3 | 3 |
+| U02 | arithmetic, int-type | 8 | +9 | 17 | 3 |
+| U02 | float-type | 2 (Ex 3, 8) | +2 (Read the ValueError, Receipt) | 4 | 3 |
+| U02 | type-conversion | 3 (Ex 4, 7, 8) | +1 (+ every numeric fence's `int(input())`) | ≥4 | 3 |
+| U02 | comparison, boolean | 1 (Ex 5) | +2 (Boolean Report, Precedence Predictions) | 3 | 3 |
+| U02 practices | comment | 0 | +2 (Coin Change, Seconds Breakdown) | 2 | 2 |
+| U02 practices | error-messages | 1 (Ex 7) | +1 (Read the ValueError) | 2 | 2 |
+| U02 practices | string-concat | 1 | +3 (Progress Bar, Box Banner, Framed Title) | 4 | 2 |
+| U03 | if-statement, elif-else | 11 / 9 | +10 | 21 / ≥17 | 5 |
+| U03 | logical-ops | 5 | +2 (Largest of Three, Valid Triangle) | 7 | 5 |
+| U03 | conditional-nesting | 1 (Ex 7) | +4 (RPS, Quadrant, Ticket, Clock) | 5 | 5 |
+| U03 practices | f-string | 2 | +4 (Largest, Order, Quadrant, Ticket) | 6 | 3 |
+| U03 practices | type-conversion, input | 1 / 0 | + numeric real-program fences | ≥10 | 3 |
 
 ## Phases
 
@@ -202,7 +244,7 @@ Checkpoint real-version notes (plan 084); U04+ units; tooling changes.
   (`3fe905d22497`, `77355aa20921`, and the U03 `and`/`or` rungs now go **before** `u03l029`).
 - `[FIXED]` Seconds Breakdown uses labeled lines; Clock Arithmetic gives the `(h-1+d) % 12 + 1`
   formula; 1089 Trick states hundreds > ones and three-digit reversal with the 99 Notice
-  (fixture 841, since 732 already appears in U01–U03); art has no backslashes.
+  (fixture 841); art has no backslashes.
 - `[FIXED]` per-lesson input rule enumerated with exemptions; existing markdown input snippets
   converted; repair/predict → No real version; "Fixed-Value" exercises reframed.
 - `[FIXED]` binding values table (grep-audited); precise D7 depth rule + pass thresholds; added
@@ -210,6 +252,30 @@ Checkpoint real-version notes (plan 084); U04+ units; tooling changes.
   RPS/Quadrant/Ticket/Clock.
 - `[FIXED]` U02 manifest removal dropped (keeps design 005's demo; resolves the citation error).
 - `[FIXED]` Order Three Numbers constrained; audit covers every cell and fence; Phase E fence parity.
+
+### Round 2 — verdicts (HEAD 571cd0e)
+
+- `[self]` APPROVE.
+- `[glm]` APPROVE — all seven round-1 nits verified resolved.
+- `[fable]` APPROVE WITH NITS — all 30 new exercises solved exactly under the unit toolkits; must-folds:
+  spec citation (design amendments were on the 079 branch, not this base); lead-in-splitting
+  anchors; prompt labels break fence parity; parameter-less art needs a no-real-version line;
+  nits: `Friday`/`kiwi`/`apple` collide, cat row trailing space, unspecified branch labels, depth
+  ids, numbering.
+- `[sol]` **REJECT** — the same lead-in and prompt-parity issues; `91`/`kiwi`/`apple` collide and the
+  732 note was a false positive (a cell-id match); Mood Face/Seconds rows underspecified; the actual
+  depth matrix is missing; the U01 L1/U02 L1 exemptions are not in design D3.
+
+### Round 2 — fold
+
+- `[FIXED]` design 006 amended in this plan's commit (the branch is now rebased on main, which carries
+  plan 079's D3 amendments): per-lesson exemption until `input()`/`int()` are taught; bare-`input()`
+  fences; fixed-art "No real version" line; D7 U01–U02 thresholds 3/2.
+- `[FIXED]` lead-in rule + the six affected anchors named; U01 rung 1 anchors after `f101b910dc48`.
+- `[FIXED]` fixtures: cents 83 (3/0/1/3), pear/plum, mango, Thursday (all grep-clean); 732 note removed.
+- `[FIXED]` every branch output specified (FizzBuzz, RPS, Traffic Light, Mood Face bands, Quadrant,
+  Clock); Seconds wording; cat rows; catalog ids in the depth column.
+- `[FIXED]` numbering rule (Challenges stay last); projected depth matrix table.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_

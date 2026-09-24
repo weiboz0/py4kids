@@ -47,16 +47,20 @@ auditors, 2026-09-24) found four systematic weaknesses the user asked to fix:
   Delivered first, as its own tooling plan (079).
 - **D3 — Book 1's real-input pattern, everywhere it fits.**
   - Lessons: at least one `no-exec` code cell per lesson that runs the lesson's idea on real
-    `input()` (CI forces interactive cells to `no-exec`, `notebooks.py:855-878`).
+    `input()` (CI forces interactive cells to `no-exec`, `notebooks.py:855-878`), **from the lesson
+    where `input()` (and, for numeric input, `int()`/`float()`) has been taught** — earlier lessons
+    are exempt (U01 L1, U02 L1). Lesson cells may show a prompt string.
   - Exercises: every non-turtle exercise ends with a `**Real version:**` line naming what the real
     program reads — except repair and predict-the-output exercises, which carry Book 1's
-    `**No real version:**` sentence (they fix or trace code rather than read input). This is design
-    006's expansion of Book 1's mechanics (Book 1 used real versions selectively).
+    `**No real version:**` sentence (they fix or trace code rather than read input), and so do
+    fixed-art exercises that take no input (`**No real version:** this exercise prints fixed art.`).
+    This is design 006's expansion of Book 1's mechanics (Book 1 used real versions selectively).
   - Solutions: every non-turtle exercise gets a markdown `**The real program**` fenced block in
     **competitive-programming shape** — read input, compute (call the function from U07 on), print —
     beside the existing executable fixed-value stand-in with asserts (solution code cells may never
     call `input()`, `notebooks.py:283-287`).
-    Each fence is followed by a `Sample input:` / `Expected output:` pair; because fences are never
+    Real-program fences use bare `input()` (no prompt text — CP style), so stdout is exactly the
+    answer. Each fence is followed by a `Sample input:` / `Expected output:` pair; because fences are never
     executed by CI, every content plan's verification phase runs each fence with its pinned sample
     stdin and checks the stdout equals the expected output, which must match the stand-in's asserted
     values.
@@ -102,7 +106,8 @@ auditors, 2026-09-24) found four systematic weaknesses the user asked to fix:
   Per the standing preference (memory: exercise-sets-favor-volume) and design 005's "no exercise
   cap", each unit gains new exercises until every concept it `introduces` appears in ≥5 exercises
   and every concept it `practices` in ≥3, with at least 3 ASCII-art/algorithm-variant exercises per
-  unit (U01–U02 stay comparatively lean — the fragile-intro exception).
+  unit (U01–U02 stay comparatively lean — the fragile-intro exception: there the thresholds are
+  introduced ≥3 and practiced ≥2).
   Extra reps are labelled **More Practice**; at least one rep of each concept stays on the in-class
   path.
   This enrichment request is the user's explicit sign-off for growth beyond the plan-037 Phase-V
