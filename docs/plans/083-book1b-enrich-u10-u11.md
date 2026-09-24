@@ -157,10 +157,10 @@ the new sections), the Challenge count (71) and the **Value plan** (75–88) lis
 4. **New rung after `u11l035`:** `print(tally_with_get(["a", "b"]) == {"b": 1, "a": 1})` → `True` —
    two dictionaries are equal when they hold the same pairs, whatever the order.
 5. **In "Loop through the keys" (after `u11l019`):** a rung that builds `order = {}` by adding
-   `"zinc"`, then `"iron"`, then `"gold"` and loops over it — the keys come back **in the order they
+   `"zinc"`, then `"iron"`, then `"neon"` and loops over it — the keys come back **in the order they
    were added** (the rule Letter Tally Chart relies on).
 6. **D3 — one real-input `no-exec` cell per lesson:** L1 reads a Roman symbol (`I`, `V` or `X`) and looks
-   it up in `u11l015`'s table; L2 reads a minimum and prints the players at or above it; L3's two cells
+   it up in `u11l015`'s table; L2 reads `n`, then `n` lines `name score` into a dictionary (split and `int` from U10, `d[key] = value` from L1) and prints the total with the keys loop of `u11l018`; L3's two cells
    are in rung 7.
 7. **New section before `u11l044`: "Read records"** — `record = "Rin 12"` / `parts = record.split()`
    / `scores[parts[0]] = int(parts[1])`; then two `no-exec` real-input cells: read one line of words
@@ -347,6 +347,12 @@ U12–U13, checkpoints, syllabus refresh (plan 084); tooling.
 - `[FIXED]` list equality taught by a rung (`[1, 2] == [1, 2]` / `[1, 2] == [2, 1]`) before Is It Sorted?.
 - `[FIXED]` U10 `requires` += `elif-else`; ASCII-art constraint cites U10 rungs 4–5 for `join`; the
   contract line names the `n`-then-`n`-lines form; U11 comment reps named.
+
+### Round 3 — [sol] REJECT (folded)
+
+- `[FIXED]` the insertion-order rung's third key is `"neon"` (`"gold"` is shipped in `u11l003`).
+- `[FIXED]` the U11 Lesson 2 real-input cell now uses only Lesson 1–2 patterns (build a dict from
+  records, total it with the keys loop).
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
