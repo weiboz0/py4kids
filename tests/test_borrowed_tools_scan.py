@@ -424,6 +424,7 @@ def test_k1_authorization_is_cell_local(tmp_path):
 
 def test_markdown_general_closure_ignores_input_but_rejects_undeclared_split(tmp_path):
     root = _scanner_root(tmp_path)
+    _add_future_string_methods_home(root)
     _write_notebook(
         root / "book1/units/unit-01-fixture/solutions.ipynb",
         [
@@ -439,6 +440,16 @@ def test_markdown_general_closure_ignores_input_but_rejects_undeclared_split(tmp
             ),
         ],
     )
+    _write_notebook(
+        root / "book1/units/unit-02-future-string-methods/solutions.ipynb",
+        [
+            _cell(
+                "```python\nwords = input().split()\n```",
+                cell_id="split-after-home",
+                cell_type="markdown",
+            )
+        ],
+    )
 
     findings = concept_scan_findings(root, "book1")
 
@@ -446,7 +457,7 @@ def test_markdown_general_closure_ignores_input_but_rejects_undeclared_split(tmp
     assert findings == [
         (
             "FAIL: unit-01-fixture: solutions.ipynb cell split-fence: "
-            "undeclared borrowed tool book2:str-split"
+            "undeclared borrowed tool book1:string-methods"
         )
     ]
 
@@ -460,6 +471,34 @@ def _add_future_list_home(root: Path) -> None:
             "title": "Future lists",
             "lessons": 1,
             "introduces": ["list-literal"],
+            "requires": [],
+            "practices": [],
+            "auxiliary": [],
+        }
+    )
+    _write_yaml(path, data)
+
+
+def _add_future_string_methods_home(root: Path) -> None:
+    concepts_path = root / "book1/curriculum/concepts.yaml"
+    concepts = yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
+    concepts["concepts"].append(
+        {
+            "id": "string-methods",
+            "name": "string-methods",
+            "category": "data",
+        }
+    )
+    _write_yaml(concepts_path, concepts)
+
+    path, data = _map(root)
+    data["entries"].append(
+        {
+            "id": "unit-02-future-string-methods",
+            "kind": "unit",
+            "title": "Future string methods",
+            "lessons": 1,
+            "introduces": ["string-methods"],
             "requires": [],
             "practices": [],
             "auxiliary": [],
@@ -530,13 +569,14 @@ def test_markdown_declaration_removal_fails_for_future_book1_concept(tmp_path):
 )
 def test_attributed_python_fence_scans_undeclared_split(tmp_path, source):
     root = _scanner_root(tmp_path)
+    _add_future_string_methods_home(root)
     _write_notebook(
         root / "book1/units/unit-01-fixture/solutions.ipynb",
         [_cell(source, cell_id="attributed-split", cell_type="markdown")],
     )
 
     assert any(
-        "undeclared borrowed tool book2:str-split" in finding
+        "undeclared borrowed tool book1:string-methods" in finding
         for finding in concept_scan_findings(root, "book1")
     )
 
@@ -684,6 +724,7 @@ def test_unclosed_non_python_markdown_fence_fails_closed(tmp_path):
 @pytest.mark.parametrize("language", ["python3", "py3"])
 def test_python3_markdown_fence_is_scanned_for_borrowed_tools(tmp_path, language):
     root = _scanner_root(tmp_path)
+    _add_future_string_methods_home(root)
     _write_notebook(
         root / "book1/units/unit-01-fixture/lesson.ipynb",
         [
@@ -696,7 +737,7 @@ def test_python3_markdown_fence_is_scanned_for_borrowed_tools(tmp_path, language
     )
 
     assert any(
-        "undeclared borrowed tool book2:str-split" in finding
+        "undeclared borrowed tool book1:string-methods" in finding
         for finding in concept_scan_findings(root, "book1")
     )
 
@@ -1492,8 +1533,8 @@ def test_unauthorized_split_keeps_untaught_method_finding(tmp_path):
     )
 
     findings = concept_scan_findings(root, "book1")
-    assert any("undeclared borrowed tool book2:str-split" in item for item in findings)
     assert any("untaught method split" in item for item in findings)
+    assert not any("book2:str-split" in item for item in findings)
 
 
 def test_split_rejects_wrong_book_owner_declaration(tmp_path):
@@ -1512,7 +1553,7 @@ def test_split_rejects_wrong_book_owner_declaration(tmp_path):
 
     findings = concept_scan_findings(root, "book1")
     assert any("str-split must be declared as book2:str-split" in item for item in findings)
-    assert any("undeclared borrowed tool book2:str-split" in item for item in findings)
+    assert not any("undeclared borrowed tool book2:str-split" in item for item in findings)
 
 
 def test_markdown_solution_enforces_real_form_role_before_scope_exit(tmp_path):

@@ -185,4 +185,19 @@ implementation.
 _(4-way content-review gate — filled before PR.)_
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Status: implemented; ci-local ALL GREEN; pytest 693 passed (2026-09-24). Content-review gate next.**
+
+- **Phase A (Codex, TDD):** 24 new/changed cases red → green (every widened method in a Book 1
+  profile; Book 1 split ignores Book 2's registered `str-split`; strict-checkpoint closure for
+  `.index`/`continue`/`.split`/`.pop`; the 5 re-expressed borrowed-tools tests). `tools/concept_scan.py`:
+  `ScanProfile.features`, `WIDENED_METHODS` gated on the own catalog registering `string-methods`,
+  profile-keyed `split`, set-receiver `remove` elif guard, `index` → `list-index` with `list-index`
+  removed from `MANUAL_ONLY`, `visit_Continue`, `detect()` no-profile fallback. ruff clean.
+- **Phase B (inline):** four catalog names broadened identically in both books (`diff` identical).
+- **Phase C:** full `pytest tests/` → 693 passed (Codex's own run hit sandbox socket denial for
+  Jupyter; re-run here with sockets); `scripts/ci-local.sh` → ALL GREEN for Book 1, Book 1b, Book 2.
+- **Deviation:** the plan listed `title` as a still-untaught probe, but `title` is already a taught
+  turtle method in `TAUGHT_METHODS`; the new test uses `extend`/`count` instead. Design 006 D3 gained
+  the repair/predict "No real version" exemption and the fence sample-input parity requirement
+  (content-plan verification), both from the plan-080 gate.

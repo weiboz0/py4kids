@@ -49,11 +49,17 @@ auditors, 2026-09-24) found four systematic weaknesses the user asked to fix:
   - Lessons: at least one `no-exec` code cell per lesson that runs the lesson's idea on real
     `input()` (CI forces interactive cells to `no-exec`, `notebooks.py:855-878`).
   - Exercises: every non-turtle exercise ends with a `**Real version:**` line naming what the real
-    program reads.
+    program reads — except repair and predict-the-output exercises, which carry Book 1's
+    `**No real version:**` sentence (they fix or trace code rather than read input). This is design
+    006's expansion of Book 1's mechanics (Book 1 used real versions selectively).
   - Solutions: every non-turtle exercise gets a markdown `**The real program**` fenced block in
     **competitive-programming shape** — read input, compute (call the function from U07 on), print —
     beside the existing executable fixed-value stand-in with asserts (solution code cells may never
     call `input()`, `notebooks.py:283-287`).
+    Each fence is followed by a `Sample input:` / `Expected output:` pair; because fences are never
+    executed by CI, every content plan's verification phase runs each fence with its pinned sample
+    stdin and checks the stdout equals the expected output, which must match the stand-in's asserted
+    values.
   - Input idioms ramp with the toolkit, one new idea at a time: one value per line (U01–U03),
     read `n` then `n` lines (U04–U05); U09 teaches `split` only as word iteration
     (`for word in line.split():`, `len(line.split())`) — no indexing into the pieces;
