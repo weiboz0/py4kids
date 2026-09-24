@@ -119,6 +119,29 @@ auditors, 2026-09-24) found four systematic weaknesses the user asked to fix:
   student notebooks solution-free with no outputs, statements and solutions authored in separate
   fresh sessions, 4-way plan and content gates.
 
+- **D9 — Genre coverage (user decision, 2026-09-24: "fold these categories in").**
+  Exercise genres, used to keep every unit's set varied:
+  (1) output & formatting; (2) arithmetic & number tricks; (3) decisions & classification;
+  (4) counting & accumulation; (5) number theory; (6) ASCII art & patterns; (7) turtle geometry;
+  (8) simulation & randomness; (9) text processing; (10) searching & sorting;
+  (11) aggregation & tallies; (12) files & persistence; (13) modeling with objects;
+  (14) debug, repair & predict — plus the added genres
+  (16) grid & board problems; (17) brute-force puzzle search; (18) sequences & number bases;
+  (19) encoding & ciphers; (20) small games & state machines; (21) statistics & data reports;
+  (22) calendar & time; (23) text layout; (24) input validation & parsing;
+  (25) tracing & efficiency. (Genre 15, the CP real program, is the cross-cutting input/output
+  format of every exercise, not a genre.)
+  **Rule:** from U04 on, each unit's exercise set touches at least **four** genres. Each added genre
+  lands where its tools first exist: U04 sequences, number bases, a guessing game, step-count
+  tracing; U05 brute-force puzzle search, Pascal's triangle; U07 calendar printing, Roman-style
+  conversions as functions; U08 dice games (Pig, Nim); U09 ciphers (Caesar via an alphabet
+  `find`, Atbash, run-length encoding), text layout (centering, word-wrap), input validation
+  (`isdigit`); U10 grid & board problems (tic-tac-toe winner, Minesweeper counts, a Game-of-Life
+  step, magic-square check), statistics (mean/median/mode), multi-number parsing; U11 Morse and
+  Roman numerals with dicts, check digits, data reports; U12 file-based reports; U13 state
+  machines (vending machine, bank account, traffic-light cycle). U01–U03 carry genre ideas as
+  teacher-notes "More Practice ideas" (plan 080).
+
 ## 3. Rollout
 
 | plan | scope |
