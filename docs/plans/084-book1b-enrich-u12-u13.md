@@ -371,6 +371,15 @@ Tooling; Book 1; the project (`project-01-algorithm-challenge`) — its brief al
 - `[FIXED]` U12 `list-loop` → `practices` with three named reps (Append a Late Score, Save a Text Map,
   Event Log), included in the D7 reconciliation.
 
+### Round 4 — CONSENSUS
+
+- `[sol]` APPROVE (r4, HEAD 9e5cba6) — all 34 checkpoint real-version outputs recomputed; round 1–3 issues
+  resolved.
+- `[fable]` APPROVE WITH NITS (r2, nits folded) · `[glm]` APPROVE WITH NITS (r1, nits folded) ·
+  `[self]` APPROVE WITH NITS.
+
+**Consensus reached — implementation starts after plan 083 merges.**
+
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
 
