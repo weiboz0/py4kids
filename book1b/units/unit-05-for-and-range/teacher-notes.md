@@ -21,19 +21,21 @@ Budget: three lessons of 60–90 minutes; one new idea per code cell, a *Notice*
   Teach `range(n)` and `range(a, b)` with the Notice **"the stop value is not included"**; then the new
   step rungs `range(0, 20, 5)` and `range(10, 0, -1)` (count down with a negative step). A `no-exec`
   real-input cell reads `n` and prints 1 to `n`.
-- **Lesson 2 — Calculate across a Range.** Running total and count-by-condition over a range, then the new
-  **`continue`** rung (skip multiples of 3 in 1–10) → **FizzBuzz** (an `elif` ladder inside a `for`) → the
-  early exit **before** the flag: find the first divisor of 91 and `break` (→ 7) → the full prime flag
-  (spec `n ≥ 2`; `range(2, 2)` is empty so `n == 2` stays prime). A `no-exec` cell reads `n` and prints
-  FizzBuzz up to it.
+- **Lesson 2 — Calculate across a Range.** Running total and count-by-condition over a range →
+  **FizzBuzz** (an `elif` ladder inside a `for`) → the new **`continue`** rung (skip multiples of 3 in
+  1–10) → a `no-exec` cell that reads `n` and prints FizzBuzz up to it → the early exit **before** the flag:
+  find the first divisor of 91 and `break` (→ 7) → the full prime flag (spec `n ≥ 2`; `range(2, 2)` is
+  empty so `n == 2` stays prime).
 - **Lesson 3 — Put One Loop inside Another (`nested-loops`) and the ASCII pattern ladder.** First ONE loop
-  builds one row of stars (`row = row + "*"`); then the growing triangle (the first nested loop), then the
-  `"*" * r` one-liner beside it (loop-built vs. repetition — same picture); a single-loop number row
-  `1 2 3 4 5`, then the multiplication table (Notice on the 8-space inner body and the dedent trap; use
-  `row`/`col`; `break` exits only the inner loop; `print(piece, end="")` then `print()` as an alternative to
-  building a row string). Then the **pattern ladder** in design order: inverted triangle
-  (`range(h, 0, -1)`), right-aligned triangle `" " * (h - r) + "*" * r`, centered pyramid
-  `" " * (h - r) + "*" * (2 * r - 1)`. A `no-exec` cell reads a height and draws the pyramid. Final build.
+  builds one row of stars (`row_text = row_text + "*"`); then that loop inside an outer loop makes a
+  **rectangle** — the first nested loop (Notice on the 8-space inner body and the dedent trap; `break`
+  exits only the inner loop). Then the growing triangle (the row number controls the inner loop), the
+  `"*" * r` one-liner beside it (loop-built vs. repetition — same picture), `print(piece, end="")` then
+  `print()`, a single number row `1 2 3 4 5`, the multiplication table, and the new **width rung**
+  `f"{number:3}"` (pads on the left so table columns line up — used by Challenge 29). Then the **pattern
+  ladder** in design order: inverted triangle (`range(h, 0, -1)`), right-aligned triangle
+  `" " * (h - r) + "*" * r`, centered pyramid `" " * (h - r) + "*" * (2 * r - 1)`. A `no-exec` cell reads
+  a height and draws the pyramid. Final build.
 
 60-MINUTE CUT: L1 — the negative-step rung is a good "try it". L2 — primality can wait; keep `continue` and
 FizzBuzz live. L3 — teach the triangle and the table live; hand the pattern ladder over as a worksheet

@@ -333,7 +333,30 @@ U01–U03 (plan 080), U07+ (plans 082–084), checkpoints (084), tooling.
   command-trace check; fixture/value-use audit.
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+### Round 1 — verdicts (HEAD 5c925e8)
+
+- `[self]` APPROVE WITH NITS — structure audit of all 83 exercises (contract lines, stretch tags,
+  `no-exec` cells per lesson); found the U04 notes' repair count wrong; found and fixed a CI-only
+  failure (U06 companion cells loaded assets by repo-root path, but CI executes from the unit folder).
+- `[fable]` APPROVE WITH NITS — blind-solved 24 exercises, ran all 60 fences, replayed every new U06
+  asset through a recording turtle; three U05 wording nits.
+- `[glm]` APPROVE WITH NITS — blind-solved 14; flagged the untaught `f"{p:3}"` width in U05 Ex 29,
+  a U04 fence typo, and U04 Ex 19's hidden limit bound.
+- `[sol]` **REJECT** — the same untaught `:3` width (Must Fix) and U05 teacher-notes pacing order.
+
+### Round 1 — fold
+
+- `[FIXED]` `:3` width: a new U05 Lesson 3 rung (`u05l081`–`u05l083`: `f"{col * 4:3}"` →
+  `  4  8 12 16 20`, left padding, no trailing space) before the pattern ladder; the teacher notes name it.
+- `[FIXED]` U05 teacher-notes pacing now follows the cells (FizzBuzz before `continue`; the rectangle is
+  the first nested loop).
+- `[FIXED]` U05 Tree with Trunk says `height - 1` leading spaces; Countdown by Twos gives `start = 20`
+  and `range(start, 0, -2)`; Hollow Box wording; U04 Ex 19 states the `n <= 100` bound's range; U04
+  Ex 30 fence heading typo; U04 notes "five repairs (2 and 20–23)"; U06 `run_path("assets/…")`.
+
+Post-fold: Phase E audit 0 findings (U04–U06); lesson/solution notebooks execute through the CI
+executor; structure / hygiene / concept-scan / cell-lint pass.
 
 ## Post-Execution Report
 _(filled before merge.)_
