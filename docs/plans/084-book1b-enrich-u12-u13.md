@@ -381,7 +381,55 @@ Tooling; Book 1; the project (`project-01-algorithm-challenge`) — its brief al
 **Consensus reached — implementation starts after plan 083 merges.**
 
 ## Content Review
-_(4-way content-review gate — filled before PR.)_
+
+### Round 1 — verdicts (HEAD f9449f1)
+
+- `[self]` APPROVE WITH NITS — Phase E audits 0 findings; 34 checkpoint fences independently executed in
+  temp directories (all match) and AST-checked against each checkpoint's taught range (clean); a scanner
+  honesty pass set the U12/U13 metadata.
+- `[fable]` **REJECT** — the U13 exercises notebook lost its title/intro cells (`u13e001`/`u13e002`);
+  should-fix: a stored bound method in the Playlist solution, stale scratch-file names in two value plans;
+  nits: a Differentiation example, dangling "with input()" in four checkpoint lines, nested `with` blocks
+  unmentioned in Shout Copy.
+- `[glm]` APPROVE WITH NITS — blind-solved 6, executed all seven solution notebooks; nit: the checkpoint
+  teacher-notes sentence cites CP01 Q7 inside CP02–CP05.
+- `[sol]` **REJECT** — Best Team's spec allowed negative points that the `-1` seed cannot handle;
+  should-fix: four U13 Real-version lines under-describe their fences; the stale scratch-file names.
+
+### Round 1 — fold
+
+- `[FIXED]` `u13e001`/`u13e002` restored with the new partition and the real-version sentence.
+- `[FIXED]` Best Team states points are 0 or more.
+- `[FIXED]` every U13 Real-version line checked against its fence (13 cells reworded).
+- `[FIXED]` Playlist's method is `song_count()` (the plan's `count()` collided with the untaught
+  `list.count`, which is why the solution had stored a bound method); called directly everywhere.
+- `[FIXED]` value-plan scratch names (`ex25_replace.txt`, `ex26_combined_stats.txt`, `ex22_counter.txt`);
+  U13 Differentiation example; checkpoint "with input()" wording (`cp01s012`, `cp05s003`, `cp05s006`,
+  `cp05s021`); CP02–CP05 teacher-notes sentence; Shout Copy mentions the nested `with` option.
+
+Post-fold: Phase E audit 0 findings; solutions execute; structure / hygiene / concept-scan / cell-lint pass.
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Status: implemented; Phase E audits clean (2026-09-24).**
+
+- **Execution:** Codex gpt-6-sol via direct `codex exec` in the main checkout (statements and solutions in
+  separate fresh sessions; checkpoints by their own sessions); branch rebased onto `main` after plan 083
+  merged.
+- **Phase B:** U12 dense cells split (one-line write → read → loop write → functions; four statistics
+  rungs), append mode, comma records; U13 one-attribute class, one-method Rectangle, `draw()`, list and dict
+  attributes, objects in a list, a `Lamp` state machine; three `no-exec` real-input cells per unit.
+  Exercises U12 9 → 28, U13 9 → 24. All five checkpoints: an ungraded real-version sentence in the
+  introduction and one Real/No-real line per question (CP01 Q7 the only No real version).
+- **Phase C:** stand-ins + asserts; 46 unit fences (U12 25, U13 21) and 34 checkpoint fences, every one
+  executed in a temporary directory against its Sample input.
+- **Phase D:** teacher-notes U12/U13 (pacing, partitions, common mistakes, value plans, D9 ideas);
+  checkpoint teacher-notes paragraph; syllabus **Enrichment** section with per-unit counts; metadata from a
+  scanner honesty pass (U12 practices += input, type-conversion, string-methods, list-loop; U13 practices
+  += input, list-append, elif-else, list-loop, for-loop, list-literal and −= string-slice; the rest in
+  `requires`); manifest == coverage-map.
+- **Phase E:** contract + fence-parity audit 0 findings (the audit now runs fences in a temporary
+  directory and allows `with`/`class` from U12/U13); checkpoint fences strict per taught range; D3 3/3
+  lessons per unit; honesty scan shows no used-but-undeclared concept.
+- **Deltas:** 34 new unit exercises, ~50 new lesson cells, 34 checkpoint real programs.
+
