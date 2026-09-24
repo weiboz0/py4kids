@@ -323,4 +323,26 @@ Checkpoint real-version notes (plan 084); U04+ units; tooling changes.
 _(4-way content-review gate — filled before PR.)_
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Status: implemented; Phase E audits clean; ci-local run before the content gate (2026-09-24).**
+
+- **Execution note (infrastructure):** Codex authoring moved to gpt-6-sol (user direction, PRs
+  #103/#104) and runs as direct `codex exec` in the main checkout — the plugin companion rejects
+  `gpt-6-sol`, and Codex's sandbox cannot write to git worktrees. Earlier attempts failed on quota and
+  on the read-only worktree without touching files.
+- **Phase B (Codex ×3):** lesson rungs + `no-exec` real-input cells + exercise statements.
+  U01 13 → 20, U02 10 → 23, U03 11 → 21 exercises (binding numbering, Challenges last); every exercise
+  ends with exactly one Real version / No real version line (U01 14/6, U02 20/3, U03 20/1).
+- **Phase C (Codex ×3, separate sessions):** solutions mirror every heading; new stand-ins with
+  asserts; 54 real-program fences (bare `input()`) with Sample input / Expected output.
+- **Phase D (inline):** teacher-notes U01–U03 rewritten (new facets, real-input pattern, core / More
+  Practice / Challenge partitions with values, new common mistakes, D9 "More Practice ideas").
+  Manifests unchanged — the honesty scan shows no used-but-undeclared concept (the one U01 hit,
+  `arithmetic`, is a pre-existing scanner false positive on `first_name + last_name`, a Name + Name
+  concatenation the scanner cannot type).
+- **Phase E:** a new audit script (toolkit AST check over every code cell and fence; exactly one
+  Real/No-real line per exercise; solution headings mirror exercises; every fence run with its Sample
+  input == Expected output == the stand-in's printed lines) → **0 findings** for U01–U03.
+  Depth (D7): U01 comment 4, error-messages 3, string-concat 4, input 14; U02 float-type 4,
+  comparison/boolean 3, comment 3, error-messages 2, string-concat 4; U03 logical-ops 8,
+  conditional-nesting 7, f-string 6, input 20 — all thresholds met.
