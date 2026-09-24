@@ -37,7 +37,7 @@ implementation starts only after 082 merges. If 082 were abandoned, U10 rung 4 w
   new rung). Never: `del`, `pop` on a dict, `setdefault`, `sorted(d)`, dict comprehensions,
   `defaultdict`/`Counter`.
 - **ASCII art:** functions RETURN the picture as one string with `"\n"` between rows (built as a list
-  of row strings joined with `"\n".join(rows)` — join is taught in U09, lists in U10); asserted
+  of row strings joined with `"\n".join(rows)` — taught by U10 rungs 4–5); asserted
   exactly; no trailing spaces; `.` filler where a gap is needed.
 - **Grids** are lists of strings (`["*..", "...", ".*."]`, read with `grid[r][c]`) or lists of lists of
   numbers; a grid function returning a grid returns a new list of row strings.
@@ -45,8 +45,9 @@ implementation starts only after 082 merges. If 082 were abandoned, U10 rung 4 w
   rung gets its own lead-in and a short Notice.
 - **Contract lines:** every exercise ends with exactly one `**Real version:**` or `**No real
   version:**` line. Real programs read lists as **one line of space-separated values** (`parts =
-  input().split()`, then a loop appending `int(part)`) and grids as **one row per line** after a first
-  line holding the row count. No-real cases: repair/predict exercises only.
+  input().split()`, then a loop appending `int(part)`), or as `n` then `n` lines (Class Average, Scores
+  from Records — the form taught by U10 rung 4's second `no-exec` cell), and grids as **one row per line**
+  after a first line holding the row count. No-real cases: repair/predict exercises only.
 - **Repairs** pin the broken code (shown as a `no-exec` cell or text), its exact error line, and the
   repaired output.
 - **Values:** every new fixture below is grepped against shipped Book 1b content (Phase E); the
@@ -79,7 +80,9 @@ implementation starts only after 082 merges. If 082 were abandoned, U10 rung 4 w
    removes the first match; `.index(value)` finds a position — plus a Notice that `remove`/`index`
    raise `ValueError` when the value is missing, so guard with `in`.
 3. **Slices on lists:** two rungs — `print(scores[1:3])` (a slice is a new list), then
-   `print(scores[::-1])` (a new reversed list; the original is unchanged) — placed after the position loop (`u10l011`–`u10l013`) and before rung 4's new section.
+   `print(scores[::-1])` (a new reversed list; the original is unchanged), then
+   `print([1, 2] == [1, 2], [1, 2] == [2, 1])` → `True False` (two lists are equal when they hold the same
+   items in the same order — Is It Sorted? relies on it) — placed after the position loop (`u10l011`–`u10l013`) and before rung 4's new section.
 4. **New section at the end of Lesson 1: "Read several numbers on one line"** — rungs:
    `line = "7 3 8"` / `parts = line.split()` / `print(parts)` (a list of strings); `print(int(parts[0])
    + int(parts[1]))` → 10; then a loop that appends `int(part)` for every piece into `numbers`; then
@@ -236,7 +239,7 @@ program.
   Chart, Most Frequent Letter); `accumulator` ≥3 (Ex 3, Price Lookup Total, Luhn Check Digit, Vote
   Percentages); `f-string` 3 (Word Winner Report, Report Card rows `f"{name} {average}"`, Letter Tally
   Chart's rows); `builtin-functions` ≥3; `comment` 3 (purpose comments
-  required in Ex 8–10); `int-type`/`naming` ≥3.
+  required in Ex 8–10 — Morse Encoder, Roman Numeral Value, Letter Tally Chart — pinned in their rows); `int-type`/`naming` ≥3.
 
 ## Metadata deltas (manifest + coverage-map, identically; confirmed by Phase E's honesty scan)
 
@@ -248,7 +251,8 @@ Rule: `practices` gains a concept only with ≥3 named reps; a concept used by f
   Minesweeper Counts, Game of Life Step), `string-concat` (Bar Chart, Grid Printer, Vertical Bar Chart,
   Minesweeper Counts), `nested-loops` (Mode, Grid Printer, Minesweeper Counts, Game of Life Step,
   Selection Sort), `error-messages` (the three repairs). (`float-type` is already a shipped U10 practice,
-  not a delta — Median, Class Average and Statistics Report keep it honest.) **U10 `requires` +=** `while-loop` (Reverse in Place only), `logical-ops`
+  not a delta — Median, Class Average and Statistics Report keep it honest.) **U10 `requires` +=** `elif-else` (Tic-Tac-Toe Winner / Game of Life Step may use one; fewer than 3
+  pinned reps), `while-loop` (Reverse in Place only), `logical-ops`
   (Minesweeper bounds only if the scanner sees `and`), `string-slice` (lesson slices; no exercise needs
   one).
 - **U11 `practices` +=** `input`, `type-conversion` (every real program; Scores from Records, Luhn
@@ -337,6 +341,12 @@ U12–U13, checkpoints, syllabus refresh (plan 084); tooling.
   fences** (the source of the `input` reps); Phase E prints the combined table.
 - `[FIXED]` Class Average's `n`-then-`n`-lines input is not a `split` rep (Queue at the Counter's fence
   is); `float-type` is noted as a shipped practice, not a delta.
+
+### Round 2 — [glm] REJECT (folded)
+
+- `[FIXED]` list equality taught by a rung (`[1, 2] == [1, 2]` / `[1, 2] == [2, 1]`) before Is It Sorted?.
+- `[FIXED]` U10 `requires` += `elif-else`; ASCII-art constraint cites U10 rungs 4–5 for `join`; the
+  contract line names the `n`-then-`n`-lines form; U11 comment reps named.
 
 ## Content Review
 _(4-way content-review gate — filled before PR.)_
