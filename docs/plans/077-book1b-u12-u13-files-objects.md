@@ -313,6 +313,16 @@ Consensus: **NOT reached** (1 REJECT). Fold below → round 3.
 
 ci-local: ALL GREEN after fold.
 
+### Round 3 — verdicts (HEAD 60008ac) — CONSENSUS
+
+- `[self]` APPROVE — Ex4 statement↔solution↔teacher-notes agree (`Point(1,2)/Point(4,6)`→5.0); ci-local GREEN.
+- `[sol]` APPROVE — its r2 REJECT finding (U13 Ex2 value-plan outputs) RESOLVED; Ex4 regression clean; no new findings.
+- `[glm]` APPROVE — both r2 `[OPEN]` should-fixes (Pacing hook, Ex4 de-dup) RESOLVED; executed asserts pass; no new findings.
+  (First r3 dispatch hit an opencode 20-min invocation timeout — infra, not a verdict; re-dispatched, returned APPROVE.)
+- `[fable]` APPROVE — Ex4 regression clean; U12 inventory nit resolved; three solutions execute clean; forbidden-construct scan clean.
+
+**Consensus: REACHED** — all four APPROVE, no open blockers. Content-review gate PASSED; cleared for PR.
+
 ## Post-Execution Report
 
 **Status: implemented, ci-local ALL GREEN (2026-09-23). Content-review gate next.**
