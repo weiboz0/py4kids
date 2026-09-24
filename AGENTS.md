@@ -95,7 +95,7 @@ while the named plan is unshipped.
 | # | Reviewer | Dispatch | Model |
 |---|----------|----------|-------|
 | 1 | Self-review | active session inline; record in `## Plan Review` | active session model |
-| 2 | Sol reviewer | `codex:codex-rescue` subagent, fresh and read-only (request `--model gpt-5.6-sol`) | GPT-5.6-sol |
+| 2 | Sol reviewer | `codex:codex-rescue` subagent, fresh and read-only (request `--model gpt-6.0-sol`) | GPT-6.0-sol |
 | 3 | GLM reviewer | `opencode:opencode-review` subagent, fresh and read-only (pass `--model volcengine-plan/glm-5.3`) | volcengine-plan/glm-5.3 |
 | 4 | Fable reviewer | fresh, read-only Fable 5 subagent (`Agent`, general-purpose) | Fable 5 |
 
@@ -117,17 +117,17 @@ all `[OPEN]` resolve before merge.
 | Work | Dispatch |
 |------|----------|
 | Planning, review orchestration, curriculum architecture | Active session inline |
-| Lesson content + exercise/checkpoint STATEMENTS | `codex:codex-rescue` (GPT-5.6-sol) |
-| SOLUTIONS to exercises + checkpoints | `codex:codex-rescue` (GPT-5.6-sol) — SEPARATE fresh session, never reads statements' outlines; cross-model verification lives in the gates |
+| Lesson content + exercise/checkpoint STATEMENTS | `codex:codex-rescue` (GPT-6.0-sol) |
+| SOLUTIONS to exercises + checkpoints | `codex:codex-rescue` (GPT-6.0-sol) — SEPARATE fresh session, never reads statements' outlines; cross-model verification lives in the gates |
 | Blind independent solving (content gate) | Gate roster (all four reviewers solve blind) |
-| Tooling code (`tools/`, `scripts/`) | `codex:codex-rescue` (GPT-5.6-sol) |
+| Tooling code (`tools/`, `scripts/`) | `codex:codex-rescue` (GPT-6.0-sol) |
 | Teacher notes | Active session inline (pedagogy judgment) |
 | Trivially-scoped edits | Inline |
 
 ## Errata
 
 Post-merge content bugs (wrong answer, broken exercise): 2-way diagnosis
-(Claude inline + Codex on GPT-5.6-sol, read-only) → fix plan → gates → merge, plus an
+(Claude inline + Codex on GPT-6.0-sol, read-only) → fix plan → gates → merge, plus an
 `ERRATA.md` entry in the affected unit/project/checkpoint directory. Typos skip diagnosis.
 
 ## Session Handoff
