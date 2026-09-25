@@ -37,6 +37,7 @@ def test_lesson_routing():
 
 def test_chapter_references_repeated_turtle_asset_without_second_listing(tmp_path, monkeypatch):
     import nbformat
+
     from tools import publish
 
     entry = tmp_path / 'units' / 'unit-06-fixture'
@@ -207,6 +208,7 @@ def test_grouped_exercise_and_brief_keep_statements(tmp_path):
 
 def test_empty_starter_omitted_but_inventory_retained(tmp_path):
     import nbformat
+
     from tools.publish import render_items
 
     entry = tmp_path / 'units' / 'fixture'
@@ -225,6 +227,7 @@ def test_empty_starter_omitted_but_inventory_retained(tmp_path):
 
 def test_chapter_titles_and_frontmatter_are_unnumbered(tmp_path):
     import nbformat
+
     from tools.publish import render_chapter
 
     entry = tmp_path / 'units' / 'unit-01-fixture'
