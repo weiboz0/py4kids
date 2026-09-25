@@ -29,8 +29,9 @@ lesson + teacher notes to a `scrbook` PDF with executed outputs once `no-exec` c
   with `solutions_`), project data files, `syllabus.md` and `front-matter/`. It never opens
   `teacher-notes.md`, `solutions.ipynb` or `assets/solutions_*.py` (enforced in code by one allowlist
   function and verified by tests, see Phase E).
-- Tags: this plan adds one new cell tag, **`error-demo`**, to the 11 `no-exec` lesson cells that show
-  deliberately broken code (listed in Phase C); it is the only source edit besides stored outputs.
+- Tags: this plan adds two new cell tags to `no-exec` lesson cells — **`error-demo`** (9 cells of
+  deliberately broken code) and **`hang-demo`** (1 infinite loop) — enumerated by id in Phase C; they are
+  the only source edits besides stored outputs.
 
 ## Phase A — Tooling: stored outputs and turtle traces (Codex gpt-6-sol)
 
@@ -78,21 +79,24 @@ running heads come from the unit's H1 without the leading "Unit NN —" and are 
 `###` heading) beginning `**Notice:**` / `### Notice` becomes a `::: {.notice}` panel holding that
 paragraph and any directly following paragraphs of the same cell until the next heading. Other bold
 lead-ins (`**One twist:**`, `**Realistic:**`, `**Check yourself:**`, `**Try real input:**`, …) pass
-through unchanged as prose. The notebook H1 becomes the chapter title; the paragraphs of the first cell
-after the H1 become the `::: {.opener}`.
+through unchanged as prose. The notebook H1 becomes the chapter title; the paragraphs that follow the H1
+**in the same cell** (the hook) become the `::: {.opener}`; the next cell continues as normal content.
 
 **Lessons:** code cells → fenced `python` block, then the stored output (if non-empty) in
-`::: {.output}`. `no-exec` cells: tagged `error-demo` → `::: {.errordemo}` "Read the error" (code only;
-the explanation stays in the following markdown); code that imports `turtle` → the code as a
-"Program" listing followed by the TikZ figure; otherwise (input demos) → `::: {.tryit}` "Try it
-yourself" (code, no output). A lesson paragraph naming `assets/<name>.py` for a file that exists and is
+`::: {.output}`. `no-exec` cells, routed by a fixed precedence: tagged `error-demo` → `::: {.errordemo}` "Read
+the error" (code only; the explanation stays in the following markdown); tagged `hang-demo` →
+`::: {.hangdemo}` "Watch out: this never stops" (code only); code that imports `turtle` → the code as a
+"Program" listing followed by the TikZ figure; code that calls `input(` → `::: {.tryit}` "Try it
+yourself" (code, no output); anything else (e.g. `u07l034a`, an excerpt of a real program) →
+`::: {.program}` "Program excerpt". A lesson paragraph naming `assets/<name>.py` for a file that exists and is
 not a `solutions_` asset gets that asset listed as code (once per chapter, in a `::: {.program}` block
 with its path as caption) and, if it imports `turtle`, its figure.
 
 **Units — exercises:** cells are grouped per exercise: the `## Exercise N` cell starts a group; the next
 `### Title` cell gives the title (rendered "Exercise N — Title", Challenges "Challenge — Title" with a
-Challenge badge when any cell of the group is tagged `stretch`); the remaining markdown and code cells of
-the group follow in order. The `**Real version:**` / `**No real version:**` line becomes a
+Challenge badge when any cell of the group is tagged `stretch`) **and the rest of that cell — the
+statement — follows the title unchanged**; the remaining markdown and code cells of the group follow in
+order. The `**Real version:**` / `**No real version:**` line becomes a
 `::: {.realprog}` note, reworded in the Student Book to "Real program: … — your teacher's edition has the
 full program." Starter code cells always print as a "Starter" code block (instruction comments stay
 visible); in the Student Book each exercise ends with a ruled answer area (six lines; twelve for
@@ -110,8 +114,10 @@ the problem in a `::: {.datafile}` block with its file name.
   the file's H1 is dropped and remaining headings shift down two levels; development jargon is removed by
   a fixed substitution list (`(design 006 D9 genres)`, `design 006 D3`, `(plan 0NN)` references, "for CI"
   asides) and `60-MINUTE CUT` becomes "60-minute cut";
-- after each exercise set / checkpoint / problem set, an **Answer key** section: for each exercise in
-  order, "Exercise N — Title", then the solution code cells with lines consisting only of `assert …`
+- after each exercise set / checkpoint / problem set, an **Answer key** section: for each item in order,
+  its label in the entry's own terms — "Exercise N — Title" (units), "Question N — Title" (checkpoints),
+  "Problem N" (the brief) — matched to the solutions notebook's `## Exercise N` / `## Question N` /
+  `## Problem N` headings, then the solution code cells with lines consisting only of `assert …`
   removed and a note "(checked by the course's test suite)" when any were removed; then the real program
   and its sample input/output from the markdown fence; U06–U08 turtle exercises list the
   `assets/solutions_exN*.py` program and its figure; solution notebooks' "Note for teachers … CI" preface
@@ -139,11 +145,13 @@ project and **not** in any file of the student project nor in the student PDF's 
 
 ## Phase C — Populate stored lesson outputs (run the tool)
 
-Tag the 11 deliberate-error `no-exec` lesson cells `error-demo` (identified by the markdown after them
-naming an error; [fable] listed them: U01 unclosed quote and misspelled name, U02 `int("abc")`, U03
-`if score = 90:`, U04 the infinite `while`, U07 `f(3) + 1`, U13 the lost `self`, and the others the
-search finds); the Phase E audit re-derives the list and requires every cell followed by an error
-explanation to carry the tag. Run `fill-outputs --book book1b`; review the diff (outputs + the tags only;
+Tag these `no-exec` lesson cells (the complete list — every lesson `no-exec` cell that neither reads
+input nor imports `turtle`, except the program excerpt `u07l034a`):
+`error-demo` — U01 `9442d5582e1f` (unclosed quote), `25129fdd9963` (misspelled name),
+`dcec5192b293` (missing `+`); U02 `u02l029` (`"Age: " + 12`), `u02l079` (`int("abc")`); U03 `u03l010`
+(`if score = 90:`); U04 `u04l022` (`total` before assignment); U07 `u07l009` (`f(3) + 1`); U13 `u13l009`
+(lost `self`). `hang-demo` — U04 `u04l012` (the counter never changes). The Phase E audit re-derives this
+list from the notebooks and fails on any difference. Run `fill-outputs --book book1b`; review the diff (outputs + the tags only;
 287 executable lesson cells across 13 units); `lesson-outputs-check` PASS; `hygiene-check` unchanged.
 
 ## Phase D — Front matter and typography polish (inline)
@@ -162,8 +170,10 @@ correct.
 3. **Completeness audit** (a script over the generated projects and the PDFs' extracted text): for each
    edition, the ordered list of chapter identifiers equals the syllabus order (13 units, 5 checkpoints,
    the Algorithm Challenge); per unit the count and order of "Exercise N" titles equals `exercises.ipynb`,
-   per checkpoint the Question count, per brief the Problem count; every lesson's executable-cell count
-   equals the number of rendered code blocks for that chapter; the Teacher's Edition has one Answer key
+   per checkpoint the Question count, per brief the Problem count; for every chapter, the builder writes
+   a typed block inventory (source cell id → rendered kind: code+output, errordemo, hangdemo, tryit,
+   program, figure, starter, asset listing) and the audit checks that every source code cell id appears
+   exactly once, in source order, with the kind its routing rule requires; the Teacher's Edition has one Answer key
    per exercise set / checkpoint / problem set covering every exercise number; the Student Book has none.
 4. **Render log audit:** no `Missing character` lines; overfull hbox warnings ≤ 5 per edition, none wider
    than 10 pt; no `In [` / `Out[` strings in either PDF's text.
@@ -219,6 +229,15 @@ PDF/X export — the v1 books are classroom-publishable, not press-ready.
   solutions; a source allowlist with sentinel tests on project files and PDF text; a fallback font for
   missing glyphs and a `Missing character` log check; completeness audit by ordered counts; CI duration
   recorded; `front-matter/` path; out-of-scope book furniture listed.
+
+### Round 2 — [sol] REJECT (folded)
+
+- `[FIXED]` the opener is the paragraphs after the H1 in the same cell; the exercise statement that
+  shares the `### Title` cell is kept.
+- `[FIXED]` completeness uses a typed block inventory keyed by source cell id; answer-key labels follow
+  each entry type (Exercise / Question / Problem).
+- `[FIXED]` the tagged cells are enumerated by id (9 `error-demo`, 1 `hang-demo` for the infinite loop
+  with a "this never stops" panel); `u07l034a` routes to "Program excerpt"; routing precedence fixed.
 
 ## Content Review
 _(4-way content-review gate — reviewers inspect sampled rendered pages as well as sources.)_
