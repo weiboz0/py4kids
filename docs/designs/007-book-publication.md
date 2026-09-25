@@ -44,13 +44,18 @@ plus the syllabus; they carry notebook framing (`In [ ]:` prompts, raw cell boxe
   sources:
   - code cells render with their **stored outputs** (Quarto `execute: enabled: false`), so the book
     shows exactly what D2 verified;
-  - `no-exec` cells render as code under a "Try it yourself" label, with no output;
+  - `no-exec` cells render with no output: input demos under "Try it yourself", deliberate-error demos
+    (a new `error-demo` tag) under "Read the error", and turtle scripts as a program listing followed by
+    the drawing, replayed through the headless turtle and drawn with TikZ;
   - `**Notice:**` paragraphs become Notice callouts; `stretch` exercises get a Challenge marker; each
     exercise's `**Real version:**` line becomes a small "Real program" note;
   - notebook-only furniture is removed (execution counts, empty starter cells become a short
     "Your turn" answer area in the student edition);
   - turtle assets referenced by lessons render as listings of the `.py` file.
 - **D4 — Two editions from the same sources (user decision: "Two editions").**
+  The Student Book is built from an explicit source allowlist (lessons, exercises, checkpoints, briefs,
+  non-solution assets, data files, syllabus, front matter); teacher notes and solutions are opened only
+  by the Teacher's Edition code path.
   - **Student Book:** front matter (title page, how to use this book, table of contents), then for each
     unit in syllabus order: a unit opener (the hook), its lessons, its exercises (core, More Practice,
     Challenge); checkpoints where the syllabus places them; the Algorithm Challenge; no solutions.
