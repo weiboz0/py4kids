@@ -287,5 +287,43 @@ PDF/X export — the v1 books are classroom-publishable, not press-ready.
 - `[FIXED]` plan text now records the 4/8 answer-line counts (reduced during Phase D to keep the Student
   Book near 460–500 pages).
 
+### Round 2 — CONSENSUS
+
+- `[sol]` APPROVE WITH NITS (r2) — no artefacts, U06 outline complete, plan records 4/8 lines; nit folded
+  (Real-program notes capitalised in both editions).
+- `[fable]` APPROVE WITH NITS (r2) — all six round-1 items verified on rendered pages; nits folded: the
+  U12 `## Challenge` section note now introduces the next exercise instead of joining Exercise 24; the
+  checkpoint no-real note says "for this question". Recorded as follow-ups (not blocking): keep-together
+  page growth (≈36 pages; answer areas could split after the Starter), one answer-key "Expected output"
+  label orphaned at a page foot, and the doubled label on U06's "Contrast Notice" heading.
+- `[glm]` APPROVE WITH NITS (r2) — nits recorded: "Lesson One" vs "Lesson 1" naming (source wording, out
+  of this plan's scope) and the U03 PDF bookmark dropping inline code (`if`).
+- `[self]` APPROVE WITH NITS.
+
+**Consensus reached.**
+
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Status: implemented; audits clean (2026-09-25).**
+
+- **Phase A (Codex gpt-6-sol):** `fill-outputs` / `lesson-outputs-check` (stdout-only, silent cells `[]`,
+  idempotent), `fake_turtle` segment/style recording, `tools/turtle_figure.py` (TikZ, padded, centred,
+  captioned); `lesson-outputs-check` in ci-local (Book 1 and Book 2 SKIP until plan 086).
+- **Phase C:** 287 executable lesson cells in the 13 Book 1b lessons now store their verified outputs; 9
+  `error-demo` + 1 `hang-demo` tags. The notebook diffs contain only outputs and those tags (verified by
+  all three reviewers).
+- **Phase B (Codex):** `tools/publish.py` (notebook → `.qmd`, paragraph-level Notice, routing, grouping
+  for exercises / checkpoint questions / brief problems with data files, teacher panels, answer keys, a
+  single source-allowlist gate), the Quarto theme (`tools/publish_theme/`), `scripts/build-book.sh`,
+  `tools/publish_audit.py` (chapter order, per-item counts, typed block inventory, Notice counts, answer-key
+  coverage, tag re-derivation, render-log and literal-artefact checks, student/teacher boundary sentinels).
+- **Phase D:** front matter written (`book1b/front-matter/`); four rounds of rendered-page review and
+  layout polish (numbering, unit/checkpoint labels, framed code + attached Output, light callouts, turtle
+  figure bounds, running heads, keep-together rules, answer areas 4/8 lines).
+- **Result:** Student Book 496 pages, Teacher's Edition ≈860 pages; `publish-audit` PASS (19 chapters,
+  391 items per edition, 0 overfull boxes, no missing glyphs, no notebook or Markdown artefacts); 29
+  publication tests; `scripts/ci-local.sh` ALL GREEN in 1709 s with both book renders (previous runs,
+  before the book build, took roughly 20 minutes).
+- **Follow-ups (not blocking):** page growth from keep-together rules; an orphaned answer-key label; the
+  U06 "Contrast Notice" double label; U03 bookmark inline code; "Lesson One" vs "Lesson 1" source
+  naming; Book 1 and Book 2 editions (later plans).

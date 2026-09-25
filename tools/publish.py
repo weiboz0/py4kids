@@ -189,15 +189,25 @@ def item_groups(cells, label: str):
     groups = []
     current = None
     preface = []
+    interlude = []
     for cell in cells:
         match = pattern.match(cell.source) if cell.cell_type == 'markdown' else None
         if match:
-            current = {'number': int(match[1]), 'cells': [cell]}
+            current = {'number': int(match[1]), 'cells': [cell], 'interlude': interlude}
+            interlude = []
             groups.append(current)
         elif current is None:
             preface.append(cell)
+        elif (label != 'Problem' and cell.cell_type == 'markdown'
+              and re.match(r'^## (?!#)', cell.source)):
+            # A section note between items (e.g. "## Challenge") introduces the NEXT item.
+            interlude.append(cell)
+        elif interlude:
+            interlude.append(cell)
         else:
             current['cells'].append(cell)
+    if interlude and groups:
+        groups[-1]['cells'].extend(interlude)
     return preface, groups
 
 
@@ -227,6 +237,10 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                     text = re.sub(r'(?m)^## Milestone ', '### Milestone ', text)
                 out.append(markdown_blocks(text))
     for group in groups:
+        for c in group.get('interlude', []):
+            text = c.source.strip()
+            if text:
+                out.append(markdown_blocks(re.sub(r'^## ', '### ', text)))
         number = group['number']
         stretch = any('stretch' in c.metadata.get('tags', []) for c in group['cells'])
         title = group_title(group, label)
@@ -256,7 +270,10 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                         # No stdin program exists, so there is nothing to point to in the Teacher's Edition.
                         reason = paragraph.rstrip(' .')
                         reason = reason[0].lower() + reason[1:] if reason[:1].isupper() and not reason[:2].isupper() else reason
-                        paragraph = f'There is no real program for this exercise: {reason}.'
+                        item = {'checkpoint': 'question', 'project': 'problem'}.get(kind, 'exercise')
+                        stripped = re.sub(r'^this (?:exercise|question|problem)\s+', '', reason)
+                        reason = f'it {stripped}' if stripped != reason else reason
+                        paragraph = f'There is no real program for this {item}: {reason}.'
                     elif edition == 'student':
                         not_graded = bool(re.search(r'\(Not graded\.\)', paragraph, re.IGNORECASE))
                         paragraph = re.sub(r'\s*\(Not graded\.\)', '', paragraph, flags=re.IGNORECASE)
@@ -268,6 +285,8 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                         if not_graded:
                             paragraph += ' (not graded)'
                         paragraph += ". The full program is in the Teacher's Edition."
+                    if paragraph[:1].islower():
+                        paragraph = paragraph[0].upper() + paragraph[1:]
                     parts.append(panel('realprog', paragraph))
                 else:
                     parts.append(markdown_blocks(paragraph))
