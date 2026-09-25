@@ -35,6 +35,41 @@ def test_lesson_routing():
     assert route_code(cell('print(1)'))[0] == 'code'
 
 
+def test_chapter_references_repeated_turtle_asset_without_second_listing(tmp_path, monkeypatch):
+    import nbformat
+    from tools import publish
+
+    entry = tmp_path / 'units' / 'unit-06-fixture'
+    assets = entry / 'assets'
+    assets.mkdir(parents=True)
+    code = 'import turtle\nturtle.forward(50)\nturtle.done()'
+    (assets / 'same.py').write_text('# saved version\n' + code + '\n')
+    (assets / 'different.py').write_text('import turtle\nturtle.forward(60)\nturtle.done()\n')
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Turtle\n\nDraw a shape.'),
+        nbformat.v4.new_code_cell(code, metadata={'tags': ['no-exec']}),
+        nbformat.v4.new_markdown_cell('Run assets/same.py and assets/different.py.'),
+    ]), entry / 'lesson.ipynb')
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Exercises'),
+    ]), entry / 'exercises.ipynb')
+    monkeypatch.setattr(publish, 'turtle_picture', lambda source: r'\draw (0,0) -- (1,0);')
+    body, inventory, _, _ = publish.render_chapter(entry, 'unit', 'student')
+    assert 'This program is saved as assets/same.py.' in body
+    assert '**assets/same.py**' not in body
+    assert '**assets/different.py**' in body
+    assert body.count(r'\draw (0,0) -- (1,0);') == 2
+    assert ('asset:same.py', 'asset reference') in [(x['id'], x['kind']) for x in inventory]
+    assert ('asset:different.py', 'asset listing') in [(x['id'], x['kind']) for x in inventory]
+
+
+def test_panels_reserve_room_before_their_latex_start():
+    lua = Path('tools/publish_theme/panels.lua').read_text()
+    theme = Path('tools/publish_theme/theme.tex').read_text()
+    assert "'\\\\Needspace{9\\\\baselineskip}\\n\\\\begin{pub'" in lua
+    assert 'lines before break=4' in theme
+
+
 def test_output_label_is_tight_to_output():
     theme = Path('tools/publish_theme/theme.tex').read_text()
     lua = Path('tools/publish_theme/panels.lua').read_text()

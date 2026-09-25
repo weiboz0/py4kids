@@ -5,6 +5,7 @@ import io
 import json
 import re
 import shutil
+import tokenize
 from contextlib import redirect_stdout
 from pathlib import Path
 
@@ -90,6 +91,14 @@ def code_block(source: str) -> str:
     return '```python\n' + source.rstrip() + '\n```\n'
 
 
+def code_tokens(source: str) -> tuple[tuple[int, str], ...]:
+    """Compare Python code while ignoring comments, blank lines, and spacing."""
+    ignored = {tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE,
+               tokenize.ENCODING, tokenize.ENDMARKER}
+    return tuple((token.type, token.string) for token in tokenize.generate_tokens(
+        io.StringIO(source).readline) if token.type not in ignored)
+
+
 def route_code(cell) -> tuple[str, str]:
     tags = cell.metadata.get('tags', [])
     source = cell.source
@@ -150,7 +159,8 @@ def entries(book: Path, edition: str) -> list[tuple[str, Path]]:
     return [(id_, book / ('units' if id_.startswith('unit-') else 'checkpoints' if id_.startswith('checkpoint-') else 'projects') / id_) for id_ in ids]
 
 
-def asset_blocks(text: str, entry: Path, edition: str, seen: set[str], unit: str) -> tuple[str, list[dict]]:
+def asset_blocks(text: str, entry: Path, edition: str, seen: set[str], unit: str,
+                 rendered_turtles: set[tuple[tuple[int, str], ...]] | None = None) -> tuple[str, list[dict]]:
     rendered = []
     records = []
     for name in ASSET.findall(text):
@@ -160,6 +170,10 @@ def asset_blocks(text: str, entry: Path, edition: str, seen: set[str], unit: str
         if path.exists():
             seen.add(name)
             source = read_source(path, edition)
+            if rendered_turtles is not None and code_tokens(source) in rendered_turtles:
+                rendered.append(f'This program is saved as assets/{name}.')
+                records.append({'id': f'asset:{name}', 'kind': 'asset reference'})
+                continue
             rendered.append(panel('program', f'**assets/{name}**\n\n{code_block(source)}'))
             records.append({'id': f'asset:{name}', 'kind': 'asset listing'})
             if re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', source):
@@ -320,10 +334,12 @@ def render_chapter(entry: Path, kind: str, edition: str):
         chapter.append(teacher_notes(read_source(entry / 'teacher-notes.md', edition)))
     if kind == 'unit':
         seen: set[str] = set()
+        rendered_turtles: set[tuple[tuple[int, str], ...]] = set()
         for c in n.cells[1:]:
             if c.cell_type == 'markdown':
                 chapter.append(markdown_blocks(c.source))
-                assets, records = asset_blocks(c.source, entry, edition, seen, entry.name)
+                assets, records = asset_blocks(c.source, entry, edition, seen, entry.name,
+                                               rendered_turtles)
                 if assets:
                     chapter.append(assets); inventory.extend(records)
             else:
@@ -331,6 +347,7 @@ def render_chapter(entry: Path, kind: str, edition: str):
                 chapter.append(body)
                 inventory.append({'id': c.id, 'kind': route})
                 if route == 'figure':
+                    rendered_turtles.add(code_tokens(c.source))
                     try:
                         chapter.append('```{=latex}\n' + turtle_picture(c.source) + '\n```')
                     except Exception as error:

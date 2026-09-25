@@ -16,10 +16,10 @@ function Div(el)
   for _, class in ipairs(el.classes) do
     if names[class] then
       if class == 'codeoutput' then
-        local blocks = {pandoc.RawBlock('latex', '\\begin{pubcodeoutput}')}
+        local blocks = {pandoc.RawBlock('latex', '\\Needspace{9\\baselineskip}\n\\begin{pubcodeoutput}')}
         for _, block in ipairs(el.content) do
           if block.t == 'RawBlock' and block.format == 'latex' then
-            if block.text == '\\begin{puboutput}' then
+            if block.text:match('\\begin{puboutput}$') then
               table.insert(blocks, pandoc.RawBlock('latex',
                 '\\tcblower\\textbf{\\scriptsize\\color{SteelBlue}Output}\\par\\vspace{-0.5\\baselineskip}'))
             elseif block.text ~= '\\end{puboutput}' and block.text ~= '\\begin{pubcode}' and
@@ -33,7 +33,7 @@ function Div(el)
         table.insert(blocks, pandoc.RawBlock('latex', '\\end{pubcodeoutput}'))
         return blocks
       end
-      local blocks = {pandoc.RawBlock('latex', '\\begin{pub' .. class .. '}')}
+      local blocks = {pandoc.RawBlock('latex', '\\Needspace{9\\baselineskip}\n\\begin{pub' .. class .. '}')}
       local own_code_frame = class == 'output' or class == 'tryit' or
         class == 'errordemo' or class == 'hangdemo' or class == 'program' or
         class == 'starter' or class == 'datafile'
