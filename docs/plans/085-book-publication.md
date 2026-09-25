@@ -192,7 +192,7 @@ correct.
 
 Book 1 and Book 2 editions (later plans); HTML/e-book output; Markdown migration or jupytext pairing
 (design 007 D1 — the notebooks remain the single source of truth); changing any lesson or exercise wording
-(only stored outputs and the `error-demo` tag are added). Real-book furniture not in v1: index, glossary,
+(only stored outputs and the `error-demo` / `hang-demo` tags are added). Real-book furniture not in v1: index, glossary,
 figure/listing numbering and cross-references, cover art, colophon/copyright page, print trim/bleed and
 PDF/X export — the v1 books are classroom-publishable, not press-ready.
 
@@ -246,8 +246,17 @@ PDF/X export — the v1 books are classroom-publishable, not press-ready.
 ### Round 3 — [sol] REJECT (folded)
 
 - `[FIXED]` the Notice rule covers all three source forms found by a survey of every lesson paragraph
-  (`**Notice:**` 280+, plain `Notice:` 15 in U12, headings containing `Notice`); a U12 fixture test, a
+  (262 bold `**Notice:**`, 15 plain `Notice:` in U12, 4 headings containing `Notice`); a U12 fixture test, a
   per-chapter Notice-count audit and a U12 page in the rendered review were added.
+
+### Round 4 — CONSENSUS
+
+- `[sol]` APPROVE WITH NITS (r4) — Notice forms, fixture and audit verified; nits folded (exact Notice
+  counts 262/15/4; out-of-scope names both new tags).
+- `[fable]` APPROVE WITH NITS (r1, folded) · `[glm]` APPROVE WITH NITS (r1, folded) · `[self]` APPROVE
+  WITH NITS.
+
+**Consensus reached — implementation starts.**
 
 ## Content Review
 _(4-way content-review gate — reviewers inspect sampled rendered pages as well as sources.)_
