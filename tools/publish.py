@@ -300,8 +300,6 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                     if file.exists():
                         out.append(panel('datafile', f'**{name}**\n\n```text\n{read_source(file, edition).rstrip()}\n```'))
                         inventory.append({'id': f'data:{name}', 'kind': 'asset listing'})
-        if edition == 'student' and kind == 'unit':
-            out.append('\\answerlines{' + ('8' if stretch else '4') + '}\n')
     return '\n\n'.join(block.rstrip() for block in out) + '\n', inventory, [{'number': g['number'], 'title': group_title(g, label)} for g in groups]
 
 
