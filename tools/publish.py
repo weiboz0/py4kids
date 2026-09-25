@@ -58,6 +58,7 @@ def panel(kind: str, body: str) -> str:
 
 def markdown_blocks(source: str, first: bool = False) -> str:
     """Split a markdown cell into paragraphs while preserving Notice continuations."""
+    source = re.sub(r'(?m)^## (?!Lesson\b|Exercises\b|Answer key\b)', '### ', source)
     paragraphs = re.split(r'\n\s*\n', source.strip())
     out = []
     if first and paragraphs and paragraphs[0].startswith('# '):
@@ -71,7 +72,7 @@ def markdown_blocks(source: str, first: bool = False) -> str:
     while i < len(paragraphs):
         p = paragraphs[i]
         if NOTICE.match(p):
-            contents = [p]
+            contents = [re.sub(r'^(?:\*\*Notice:\*\*|Notice:)\s*', '', p, count=1, flags=re.IGNORECASE)]
             i += 1
             while i < len(paragraphs) and not paragraphs[i].startswith('#'):
                 contents.append(paragraphs[i]); i += 1
@@ -103,7 +104,7 @@ def route_code(cell) -> tuple[str, str]:
     body = code_block(source)
     if output:
         body += '\n' + panel('output', '```text\n' + output.rstrip() + '\n```')
-        return 'code+output', body
+        return 'code+output', panel('codeoutput', body)
     return 'code', body
 
 
@@ -117,6 +118,7 @@ def teacher_notes(source: str) -> str:
     body = re.sub(r'\bfor CI\b', '', body)
     body = body.replace('60-MINUTE CUT', '60-minute cut')
     body = body.replace('`/`', '` / `')
+    body = re.sub(r'(?m)([^\n])\n(?=\s*(?:[-*+]\s|\d+[.)]\s))', r'\1\n\n', body)
     escaped_lines = []
     fenced = False
     for line in body.splitlines():
@@ -203,30 +205,36 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
             # The notebook H1 is replaced by the chapter H1.
             text = re.sub(r'^# [^\n]*', '', c.source).strip()
             if text:
+                if kind == 'project':
+                    text = re.sub(r'(?m)^## Milestone ', '### Milestone ', text)
                 out.append(markdown_blocks(text))
     for group in groups:
         number = group['number']
         stretch = any('stretch' in c.metadata.get('tags', []) for c in group['cells'])
         title = group_title(group, label)
         display = f'{label} {number}' + (f' — {title}' if title else '')
-        out.append(('### ' if kind in {'unit', 'project'} else '## ') + display + '\n')
+        out.append(('#### ' if kind == 'project' else '### ') + display + '\n')
         if stretch:
             out.append(panel('challenge', '**Challenge**'))
         for c in (group['cells'] if kind == 'project' else group['cells'][1:]):
             if c.cell_type == 'code':
-                out.append(panel('starter', code_block(c.source)))
+                if c.source.strip():
+                    out.append(panel('starter', code_block(c.source)))
                 inventory.append({'id': c.id, 'kind': 'starter'})
                 continue
             text = c.source
             text = re.sub(r'^### [^\n]+\n*', '', text)
+            if kind == 'project':
+                text = re.sub(r'(?m)^## Milestone ', '### Milestone ', text)
             # Real-version lines become a distinct note; keep the rest of the cell.
             parts = []
             for paragraph in re.split(r'\n\s*\n', text.strip()):
                 if re.match(r'^\*\*(?:Real version|No real version):\*\*', paragraph):
+                    paragraph = re.sub(r'^\*\*(?:Real version|No real version):\*\*\s*', '', paragraph)
+                    paragraph = re.sub(r'(?i)^(?:real program:\s*|the real program\s+)', '', paragraph)
                     if edition == 'student':
-                        paragraph = re.sub(r'^\*\*(?:Real version|No real version):\*\*', 'Real program:', paragraph)
                         paragraph = re.sub(r'(?i)see (?:the )?solution[^.]*\.?', '', paragraph)
-                        paragraph += " — your teacher's edition has the full program."
+                        paragraph = paragraph.rstrip(' .—') + " — your teacher's edition has the full program."
                     parts.append(panel('realprog', paragraph))
                 else:
                     parts.append(markdown_blocks(paragraph))
@@ -241,7 +249,7 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                         out.append(panel('datafile', f'**{name}**\n\n```text\n{read_source(file, edition).rstrip()}\n```'))
                         inventory.append({'id': f'data:{name}', 'kind': 'asset listing'})
         if edition == 'student' and kind == 'unit':
-            out.append('\\answerlines{' + ('12' if stretch else '6') + '}\n')
+            out.append('\\answerlines{' + ('8' if stretch else '4') + '}\n')
     return '\n'.join(out), inventory, [{'number': g['number'], 'title': group_title(g, label)} for g in groups]
 
 
@@ -283,11 +291,22 @@ def render_chapter(entry: Path, kind: str, edition: str):
     source = entry / ('lesson.ipynb' if kind == 'unit' else 'checkpoint.ipynb' if kind == 'checkpoint' else 'brief.ipynb')
     n = notebook(source, edition)
     title = n.cells[0].source.splitlines()[0].removeprefix('# ')
-    short_title = re.sub(r'^Unit \d+ — ', '', title)
+    display_title = re.sub(r'^Unit \d+ — ', '', title)
+    display_title = re.sub(r'^Checkpoint \d+:\s*', '', display_title)
+    short_title = display_title
     if len(short_title) > 32:
         short_title = short_title[:33].rsplit(' ', 1)[0]
+    if kind == 'unit':
+        chapter_label = 'Unit ' + str(int(re.search(r'\d+', entry.name)[0]))
+    elif kind == 'checkpoint':
+        chapter_label = 'Checkpoint ' + str(int(re.search(r'\d+', entry.name)[0]))
+    else:
+        chapter_label = ''
+        short_title = 'Algorithm Challenge'
     short_tex = short_title.replace('\\', r'\textbackslash{}').replace('&', r'\&').replace('%', r'\%').replace('_', r'\_')
-    chapter = ['# ' + title + '\n', '```{=latex}\n\\chaptermark{' + short_tex + '}\n```']
+    chapter = ['# ' + display_title + ' {pub-label="' + chapter_label + '"' +
+               (' pub-mainmatter="true"' if kind == 'unit' and entry.name.startswith('unit-01-') else '') + '}\n',
+               '```{=latex}\n\\chaptermark{' + (chapter_label + ' — ' if chapter_label else '') + short_tex + '}\n```']
     inventory = []
     first = n.cells[0].source
     hook = re.sub(r'^# [^\n]*\n*', '', first).strip()
@@ -349,6 +368,7 @@ def build(root: Path, book_id: str, edition: str) -> Path:
     if edition == 'teacher':
         front.append((read_source(book / 'front-matter' / 'for-teachers.md', edition), 'for-teachers.qmd'))
     for body, name in front:
+        body = re.sub(r'(?m)^## ', '### ', body)
         (project / name).write_text(body, encoding='utf-8')
     for id_, entry in entries(book, edition):
         kind = id_.split('-', 1)[0]

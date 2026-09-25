@@ -95,6 +95,8 @@ def audit(root: Path, book_id: str) -> list[str]:
         for chapter in chapters:
             id_ = chapter['id']; kind = chapter['kind']; entry = root / chapter['source']
             qmd = (project / chapter['file']).read_text(encoding='utf-8')
+            if re.search(r'^#{1,6}\s+\d+(?:\.\d+)*\.\s+', qmd, re.MULTILINE):
+                findings.append(f'FAIL: {edition}: {id_}: numbered heading text')
             cells = _source_code(entry, kind)
             lesson_ids = ({c.id for c in notebook(entry / 'lesson.ipynb', 'student').cells}
                           if kind == 'unit' else set())
@@ -108,7 +110,7 @@ def audit(root: Path, book_id: str) -> list[str]:
             numbers = [g['number'] for g in groups]
             if numbers != [x['number'] for x in chapter['items']]:
                 findings.append(f'FAIL: {edition}: {id_}: item order')
-            heading = '###' if kind in {'unit', 'project'} else '##'
+            heading = '####' if kind == 'project' else '###'
             student_part = qmd.split('## Answer key', 1)[0]
             rendered = [int(x) for x in re.findall(r'^' + heading + r' ' + ITEM[kind] + r' (\d+)\b', student_part, re.MULTILINE)]
             if rendered != numbers:
@@ -121,6 +123,13 @@ def audit(root: Path, book_id: str) -> list[str]:
             elif '## Answer key' in qmd:
                 findings.append(f'FAIL: {edition}: {id_}: answer key present')
         pdf = project / '_book' / ('Book1b-Teacher.pdf' if edition == 'teacher' else 'Book1b-Student.pdf')
+        tex = project / ('Book1b-Teacher.tex' if edition == 'teacher' else 'Book1b-Student.tex')
+        if not tex.exists():
+            findings.append(f'FAIL: {edition}: generated TeX missing')
+        else:
+            tex_text = tex.read_text(encoding='utf-8')
+            if r'\setcounter{secnumdepth}{-\maxdimen}' not in tex_text or r'\setcounter{tocdepth}{1}' not in tex_text:
+                findings.append(f'FAIL: {edition}: heading numbering or TOC depth')
         if not pdf.exists():
             findings.append(f'FAIL: {edition}: PDF missing'); continue
         text = subprocess.run(['pdftotext', str(pdf), '-'], check=True, capture_output=True, text=True).stdout

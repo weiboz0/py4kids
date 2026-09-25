@@ -1,15 +1,57 @@
-local names = {opener=true, output=true, notice=true, tryit=true, errordemo=true,
+local names = {opener=true, output=true, codeoutput=true, notice=true, tryit=true, errordemo=true,
   hangdemo=true, program=true, challenge=true, realprog=true, datafile=true,
   teacher=true, starter=true}
+function Header(el)
+  if not FORMAT:match('latex') or el.level ~= 1 then return nil end
+  local label = el.attributes['pub-label']
+  if label == nil then return nil end
+  local prefix = ''
+  if el.attributes['pub-mainmatter'] == 'true' then prefix = '\\mainmatter\n' end
+  prefix = prefix .. '\\pubchapterlabel{' .. label .. '}'
+  el.attributes['pub-label'] = nil
+  el.attributes['pub-mainmatter'] = nil
+  return {pandoc.RawBlock('latex', prefix), el}
+end
 function Div(el)
   for _, class in ipairs(el.classes) do
     if names[class] then
+      if class == 'codeoutput' then
+        local blocks = {pandoc.RawBlock('latex', '\\begin{pubcodeoutput}')}
+        for _, block in ipairs(el.content) do
+          if block.t == 'RawBlock' and block.format == 'latex' then
+            if block.text == '\\begin{puboutput}' then
+              table.insert(blocks, pandoc.RawBlock('latex',
+                '\\tcblower\\textbf{\\scriptsize\\color{SteelBlue}Output}\\par\\smallskip'))
+            elseif block.text ~= '\\end{puboutput}' and block.text ~= '\\begin{pubcode}' and
+                block.text ~= '\\end{pubcode}' then
+              table.insert(blocks, block)
+            end
+          else
+            table.insert(blocks, block)
+          end
+        end
+        table.insert(blocks, pandoc.RawBlock('latex', '\\end{pubcodeoutput}'))
+        return blocks
+      end
       local blocks = {pandoc.RawBlock('latex', '\\begin{pub' .. class .. '}')}
-      for _, block in ipairs(el.content) do table.insert(blocks, block) end
+      local own_code_frame = class == 'output' or class == 'tryit' or
+        class == 'errordemo' or class == 'hangdemo' or class == 'program' or
+        class == 'starter' or class == 'datafile'
+      for _, block in ipairs(el.content) do
+        if not (own_code_frame and block.t == 'RawBlock' and block.format == 'latex' and
+          (block.text == '\\begin{pubcode}' or block.text == '\\end{pubcode}')) then
+          table.insert(blocks, block)
+        end
+      end
       table.insert(blocks, pandoc.RawBlock('latex', '\\end{pub' .. class .. '}'))
       return blocks
     end
   end
+end
+function CodeBlock(el)
+  if not FORMAT:match('latex') then return nil end
+  return {pandoc.RawBlock('latex', '\\begin{pubcode}'), el,
+          pandoc.RawBlock('latex', '\\end{pubcode}')}
 end
 function Str(el)
   if not FORMAT:match('latex') then return nil end

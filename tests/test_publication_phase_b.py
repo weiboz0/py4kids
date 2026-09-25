@@ -16,6 +16,10 @@ def test_notice_forms_and_opener():
     assert '::: {.opener}' in blocks and 'The hook.' in blocks
     for source in ('**Notice:** bold', 'Notice: plain', '### Contrast Notice\n\nMore'):
         assert '::: {.notice}' in markdown_blocks(source)
+    assert '**Notice:**' not in markdown_blocks('**Notice:** bold')
+    assert 'Notice: plain' not in markdown_blocks('Notice: plain')
+    theme = Path('tools/publish_theme/theme.tex').read_text()
+    assert 'borderline west' in theme and 'title=Notice' not in theme
 
 
 def test_lesson_routing():
@@ -24,7 +28,8 @@ def test_lesson_routing():
     assert route_code(cell('oops', ['no-exec', 'error-demo']))[0] == 'errordemo'
     assert route_code(cell('while True: pass', ['no-exec', 'hang-demo']))[0] == 'hangdemo'
     assert route_code(cell('name = input()', ['no-exec']))[0] == 'tryit'
-    assert route_code(cell('print(1)', outputs=[{'output_type': 'stream', 'name': 'stdout', 'text': '1\n'}]))[0] == 'code+output'
+    paired = route_code(cell('print(1)', outputs=[{'output_type': 'stream', 'name': 'stdout', 'text': '1\n'}]))
+    assert paired[0] == 'code+output' and '::: {.codeoutput}' in paired[1]
     assert route_code(cell('print(1)'))[0] == 'code'
 
 
@@ -35,6 +40,7 @@ def test_teacher_cleanup():
     escaped = teacher_notes(r'# Title' + '\n\n' + r'File is "5\n8\n"; code is `"5\n"`.')
     assert r'"5\\n8\\n"' in escaped and r'`"5\n"`' in escaped
     assert '`a` / `b`' in teacher_notes('# Title\n\n`a`/`b`')
+    assert 'Goal.\n\n- first' in teacher_notes('# Title\n\nGoal.\n- first\n- second')
     code, removed = strip_asserts('x=1\nassert x == 1\nprint(x)')
     assert removed and code == 'x=1\nprint(x)'
 
@@ -69,7 +75,8 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
         n = nbformat.v4.new_notebook(cells=cells)
         nbformat.write(n, entry / name)
     save('lesson.ipynb', [nbformat.v4.new_markdown_cell('# Fixture\n\nA hook.'),
-                          nbformat.v4.new_code_cell('print("hello")')])
+                          nbformat.v4.new_code_cell('print("hello")', outputs=[
+                              nbformat.v4.new_output('stream', name='stdout', text='hello\n')])])
     save('exercises.ipynb', [nbformat.v4.new_markdown_cell('# Practice'),
                              nbformat.v4.new_markdown_cell('## Exercise 1'),
                              nbformat.v4.new_markdown_cell('### Test\n\nDo a thing for $5 and $6.'),
@@ -95,6 +102,11 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     assert 'Student Book' in pdf_text and 'Invalid Date' not in pdf_text
     assert all(marker not in pdf_text for marker in ('TEACHER_SENTINEL_7429',
                'ASSET_SENTINEL_7429', 'SOLUTION_SENTINEL_7429'))
+    student_tex = (student / 'Book1b-Student.tex').read_text()
+    assert student_tex.index(r'\chapter{How to use}') < student_tex.index(r'\mainmatter', student_tex.index(r'\chapter{How to use}'))
+    assert student_tex.index(r'\pubchapterlabel{Unit 1}') < student_tex.index(r'\chapter{Fixture}')
+    assert r'\setcounter{secnumdepth}{-\maxdimen}' in student_tex
+    assert r'\begin{pubcodeoutput}' in student_tex and r'\tcblower' in student_tex
     subprocess.run([quarto, 'render', str(teacher), '--to', 'pdf'], check=True,
                    capture_output=True, text=True, env=env)
     teacher_pdf_text = subprocess.run(['pdftotext', str(teacher / '_book' / 'Book1b-Teacher.pdf'), '-'],
@@ -116,7 +128,7 @@ def test_grouped_exercise_and_brief_keep_statements(tmp_path):
     exercise = nbformat.v4.new_notebook(cells=[
         nbformat.v4.new_markdown_cell('# Practice'),
         nbformat.v4.new_markdown_cell('## Exercise 1'),
-        nbformat.v4.new_markdown_cell('### A title\n\nKeep this statement. Use assets/ex1_start.py.\n\n**Real version:** reads input.'),
+        nbformat.v4.new_markdown_cell('### A title\n\nKeep this statement. Use assets/ex1_start.py.\n\n**Real version:** the real program reads input.'),
         nbformat.v4.new_code_cell('# fill this in', metadata={'tags': ['stretch']}),
     ])
     nbformat.write(exercise, entry / 'exercises.ipynb')
@@ -124,12 +136,14 @@ def test_grouped_exercise_and_brief_keep_statements(tmp_path):
     teacher, _, _ = render_items(entry / 'exercises.ipynb', 'unit', 'teacher', entry, 'unit-01-fixture')
     assert '### Exercise 1 — A title' in student
     assert 'Keep this statement.' in student
-    assert '::: {.challenge}' in student and r'\answerlines{12}' in student
+    assert '::: {.challenge}' in student and r'\answerlines{8}' in student
     assert "your teacher's edition has the full program" in student
     assert "your teacher's edition has the full program" not in teacher
     assert '# fill this in' in student
     assert ('asset:ex1_start.py', 'asset listing') in [(x['id'], x['kind']) for x in inventory]
     assert items == [{'number': 1, 'title': 'A title'}]
+    assert 'Real program: Real program:' not in student
+    assert '::: {.realprog}\nreads input' in student
 
     brief = nbformat.v4.new_notebook(cells=[
         nbformat.v4.new_markdown_cell('# Brief\n\nHook.'),
@@ -139,10 +153,48 @@ def test_grouped_exercise_and_brief_keep_statements(tmp_path):
     ])
     nbformat.write(brief, brief_entry / 'brief.ipynb')
     body, _, items = render_items(brief_entry / 'brief.ipynb', 'project', 'student', brief_entry, 'project-01-fixture')
-    assert '## Milestone 1' in body
-    assert '### Problem 7' in body and 'Keep this problem statement.' in body
+    assert '### Milestone 1' in body
+    assert '#### Problem 7' in body and 'Keep this problem statement.' in body
     assert '::: {.datafile}' in body and 'fern' in body
     assert items == [{'number': 7, 'title': ''}]
+
+
+def test_empty_starter_omitted_but_inventory_retained(tmp_path):
+    import nbformat
+    from tools.publish import render_items
+
+    entry = tmp_path / 'units' / 'fixture'
+    entry.mkdir(parents=True)
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Practice'),
+        nbformat.v4.new_markdown_cell('## Exercise 1'),
+        nbformat.v4.new_markdown_cell('### Write it\n\nYour task.'),
+        nbformat.v4.new_code_cell('  \n  '),
+    ]), entry / 'exercises.ipynb')
+    body, inventory, _ = render_items(entry / 'exercises.ipynb', 'unit', 'student', entry, 'fixture')
+    assert '::: {.starter}' not in body
+    assert r'\answerlines{4}' in body
+    assert inventory[0]['kind'] == 'starter'
+
+
+def test_chapter_titles_and_frontmatter_are_unnumbered(tmp_path):
+    import nbformat
+    from tools.publish import render_chapter
+
+    entry = tmp_path / 'units' / 'unit-01-fixture'
+    entry.mkdir(parents=True)
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Unit 01 — Output & Variables\n\nHook.'),
+    ]), entry / 'lesson.ipynb')
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Practice'),
+    ]), entry / 'exercises.ipynb')
+    body, _, _, _ = render_chapter(entry, 'unit', 'student')
+    assert '# Output & Variables' in body
+    assert 'pub-label="Unit 1"' in body and 'pub-mainmatter="true"' in body
+    theme = Path('tools/publish_theme/_quarto.yml').read_text()
+    assert 'number-sections: false' in theme
+    assert 'toc-depth: 2' in theme
 
 
 def test_checkpoint_group_and_answer_key(tmp_path):
@@ -160,7 +212,7 @@ def test_checkpoint_group_and_answer_key(tmp_path):
     ])
     nbformat.write(checkpoint, entry / 'checkpoint.ipynb')
     body, inventory, items = render_items(entry / 'checkpoint.ipynb', 'checkpoint', 'student', entry, 'checkpoint-01-fixture')
-    assert '## Question 1 — First title' in body and 'Keep this question.' in body
+    assert '### Question 1 — First title' in body and 'Keep this question.' in body
     assert '::: {.challenge}' not in body
     assert inventory[0]['kind'] == 'starter'
     solutions = nbformat.v4.new_notebook(cells=[
