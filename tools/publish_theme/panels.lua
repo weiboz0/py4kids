@@ -2,7 +2,15 @@ local names = {opener=true, output=true, codeoutput=true, notice=true, tryit=tru
   hangdemo=true, program=true, challenge=true, realprog=true, datafile=true,
   teacher=true, starter=true}
 function Header(el)
-  if not FORMAT:match('latex') or el.level ~= 1 then return nil end
+  if not FORMAT:match('latex') then return nil end
+  if (el.level == 3 or el.level == 4) and el.content[1] then
+    local title = pandoc.utils.stringify(el.content)
+    if title:match('^Exercise %d+') or title:match('^Question %d+') or
+       title:match('^Problem %d+') or title:match('^Challenge — ') then
+      return {pandoc.RawBlock('latex', '\\Needspace{16\\baselineskip}'), el}
+    end
+  end
+  if el.level ~= 1 then return nil end
   local label = el.attributes['pub-label']
   if label == nil then return nil end
   local prefix = ''
@@ -33,7 +41,9 @@ function Div(el)
         table.insert(blocks, pandoc.RawBlock('latex', '\\end{pubcodeoutput}'))
         return blocks
       end
-      local blocks = {pandoc.RawBlock('latex', '\\Needspace{9\\baselineskip}\n\\begin{pub' .. class .. '}')}
+      local opening = class == 'challenge' and '\\begin{pubchallenge}' or
+        '\\Needspace{9\\baselineskip}\n\\begin{pub' .. class .. '}'
+      local blocks = {pandoc.RawBlock('latex', opening)}
       local own_code_frame = class == 'output' or class == 'tryit' or
         class == 'errordemo' or class == 'hangdemo' or class == 'program' or
         class == 'starter' or class == 'datafile'

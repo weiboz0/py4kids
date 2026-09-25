@@ -60,6 +60,55 @@ def _expected_notices(entry: Path) -> int:
     return count
 
 
+def _outline_heading(title: str) -> str:
+    """Match source headings to PDF bookmarks, allowing inline code spans."""
+    title = re.sub(r'`[^`]*`', '', title)
+    return re.sub(r'\s+', ' ', title).strip().casefold()
+
+
+def _missing_lesson_headings(chapters: list[dict], root: Path, outline: str) -> list[str]:
+    sections: dict[int, list[str]] = {}
+    unit_number = None
+    for line in outline.splitlines():
+        title_match = re.search(r'"([^"]+)"', line)
+        if not title_match:
+            continue
+        if re.match(r'^[+|]\t"', line):
+            unit_match = re.match(r'Unit (\d+)\b', title_match[1])
+            unit_number = int(unit_match[1]) if unit_match else None
+        elif re.match(r'^[+|]\t{2,}"', line) and unit_number is not None:
+            sections.setdefault(unit_number, []).append(_outline_heading(title_match[1]))
+    missing = []
+    for chapter in chapters:
+        if chapter['kind'] != 'unit':
+            continue
+        number = int(re.search(r'unit-(\d+)', chapter['id'])[1])
+        bookmarks = sections.get(number, [])
+        entry = root / chapter['source']
+        for cell in notebook(entry / 'lesson.ipynb', 'student').cells:
+            if cell.cell_type != 'markdown':
+                continue
+            for title in re.findall(r'^## ([^\n]+)', cell.source, re.MULTILINE):
+                expected = _outline_heading(title)
+                if not any(bookmark.startswith(expected) for bookmark in bookmarks):
+                    missing.append(f"{chapter['id']}: {title}")
+        if 'exercises' not in bookmarks:
+            missing.append(f"{chapter['id']}: Exercises")
+        exercise = notebook(entry / 'exercises.ipynb', 'student')
+        _, groups = item_groups(exercise.cells, 'Exercise')
+        titles = {item['number']: item['title'] for item in chapter['items']}
+        for group in groups:
+            number = group['number']
+            stretch = any('stretch' in cell.metadata.get('tags', []) for cell in group['cells'])
+            title = titles[number]
+            display = (f'Challenge — {title}' if stretch else
+                       f'Exercise {number}' + (f' — {title}' if title else ''))
+            expected = _outline_heading(display)
+            if not any(bookmark.startswith(expected) for bookmark in bookmarks):
+                missing.append(f"{chapter['id']}: {display}")
+    return missing
+
+
 def audit(root: Path, book_id: str) -> list[str]:
     book = root / book_id
     findings: list[str] = []
@@ -112,7 +161,9 @@ def audit(root: Path, book_id: str) -> list[str]:
                 findings.append(f'FAIL: {edition}: {id_}: item order')
             heading = '####' if kind == 'project' else '###'
             student_part = qmd.split('## Answer key', 1)[0]
-            rendered = [int(x) for x in re.findall(r'^' + heading + r' ' + ITEM[kind] + r' (\d+)\b', student_part, re.MULTILINE)]
+            rendered = [int(number) for number, challenge in re.findall(
+                r'^' + heading + r' (?:' + ITEM[kind] + r' (\d+)\b|Challenge — [^\n]+\n\n::: \{\.challenge\}\n\*\*' + ITEM[kind] + r' (\d+)\*\*)',
+                student_part, re.MULTILINE) for number in [number or challenge]]
             if rendered != numbers:
                 findings.append(f'FAIL: {edition}: {id_}: rendered item titles')
             if kind == 'unit' and qmd.count('::: {.notice}') != _expected_notices(entry):
@@ -133,6 +184,13 @@ def audit(root: Path, book_id: str) -> list[str]:
         if not pdf.exists():
             findings.append(f'FAIL: {edition}: PDF missing'); continue
         text = subprocess.run(['pdftotext', str(pdf), '-'], check=True, capture_output=True, text=True).stdout
+        artefact = re.search(r'(?m)^[ \t]*(?:#{2,6} +\S|# +(?:Lesson|Unit|Exercise|Exercises|Challenge|Question|Problem)\b|:::(?:[ \t]*\{|[ \t]*$)|```)', text)
+        if artefact:
+            findings.append(f'FAIL: {edition}: literal Markdown/Quarto artefact in PDF: {artefact.group().strip()}')
+        outline = subprocess.run(['mutool', 'show', str(pdf), 'outline'], check=True,
+                                 capture_output=True, text=True).stdout
+        for heading in _missing_lesson_headings(chapters, root, outline):
+            findings.append(f'FAIL: {edition}: {heading}: heading missing from PDF outline')
         if re.search(r'\b(?:In|Out) \[', text):
             findings.append(f'FAIL: {edition}: notebook prompt in PDF')
         if edition == 'student' and 'Answer key' in text:

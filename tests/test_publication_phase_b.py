@@ -57,11 +57,79 @@ def test_chapter_references_repeated_turtle_asset_without_second_listing(tmp_pat
     monkeypatch.setattr(publish, 'turtle_picture', lambda source: r'\draw (0,0) -- (1,0);')
     body, inventory, _, _ = publish.render_chapter(entry, 'unit', 'student')
     assert 'This program is saved as assets/same.py.' in body
+    assert 'This program is saved as assets/same.py.\n\n' in body
     assert '**assets/same.py**' not in body
     assert '**assets/different.py**' in body
     assert body.count(r'\draw (0,0) -- (1,0);') == 2
     assert ('asset:same.py', 'asset reference') in [(x['id'], x['kind']) for x in inventory]
     assert ('asset:different.py', 'asset listing') in [(x['id'], x['kind']) for x in inventory]
+    assert '\n\n## Exercises\n\n' in body
+
+
+def test_u06_asset_reference_does_not_swallow_next_lesson(tmp_path, monkeypatch):
+    import nbformat
+
+    from tools import publish
+
+    entry = tmp_path / 'units' / 'unit-06-fixture'
+    (entry / 'assets').mkdir(parents=True)
+    code = 'import turtle\nturtle.forward(10)'
+    (entry / 'assets' / 'shape.py').write_text(code)
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Unit 06 — Turtle\n\nDraw.'),
+        nbformat.v4.new_code_cell(code, metadata={'tags': ['no-exec']}),
+        nbformat.v4.new_markdown_cell('See assets/shape.py.'),
+        nbformat.v4.new_markdown_cell('## Lesson 2: Draw more\n\nNext lesson.'),
+    ]), entry / 'lesson.ipynb')
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Exercises'),
+    ]), entry / 'exercises.ipynb')
+    monkeypatch.setattr(publish, 'turtle_picture', lambda source: 'figure')
+    body, _, _, _ = publish.render_chapter(entry, 'unit', 'student')
+    assert 'This program is saved as assets/shape.py.\n\n## Lesson 2: Draw more' in body
+
+
+def test_u06_outline_audit_detects_swallowed_heading(tmp_path):
+    import nbformat
+
+    from tools.publish_audit import _missing_lesson_headings
+
+    entry = tmp_path / 'units' / 'unit-06-fixture'
+    entry.mkdir(parents=True)
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Unit 06\n\n## Lesson 1: Start'),
+        nbformat.v4.new_markdown_cell('## Lesson 2: Continue'),
+    ]), entry / 'lesson.ipynb')
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Exercises'),
+        nbformat.v4.new_markdown_cell('## Exercise 1'),
+    ]), entry / 'exercises.ipynb')
+    chapters = [{'id': 'unit-06-fixture', 'kind': 'unit', 'source': 'units/unit-06-fixture',
+                 'items': [{'number': 1, 'title': 'Square'}]}]
+    outline = '+\t"Unit 6 — Turtle"\t#page=1\n|\t\t"Lesson 1: Start"\t#page=1\n'
+    assert _missing_lesson_headings(chapters, tmp_path, outline) == [
+        'unit-06-fixture: Lesson 2: Continue', 'unit-06-fixture: Exercises',
+        'unit-06-fixture: Exercise 1 — Square']
+
+
+def test_turtle_answer_key_uses_asset_not_harness(tmp_path, monkeypatch):
+    import nbformat
+
+    from tools import publish
+
+    entry = tmp_path / 'units' / 'unit-06-fixture'
+    (entry / 'assets').mkdir(parents=True)
+    (entry / 'assets' / 'solutions_ex1_square.py').write_text('import turtle\nturtle.forward(10)\n')
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Solutions'),
+        nbformat.v4.new_markdown_cell('## Exercise 1\n\n### Square'),
+        nbformat.v4.new_code_cell('from runpy import run_path\nfrom tools import fake_turtle\n'
+                                       'run_path("assets/solutions_ex1_square.py")\nassert True'),
+    ]), entry / 'solutions.ipynb')
+    monkeypatch.setattr(publish, 'turtle_picture', lambda source: 'figure')
+    key = publish.answer_key(entry, 'unit', [{'number': 1, 'title': 'Square'}])
+    assert 'run_path' not in key and 'fake_turtle' not in key
+    assert '**solutions_ex1_square.py**' in key and 'figure' in key
 
 
 def test_panels_reserve_room_before_their_latex_start():
@@ -181,16 +249,17 @@ def test_grouped_exercise_and_brief_keep_statements(tmp_path):
     nbformat.write(exercise, entry / 'exercises.ipynb')
     student, inventory, items = render_items(entry / 'exercises.ipynb', 'unit', 'student', entry, 'unit-01-fixture')
     teacher, _, _ = render_items(entry / 'exercises.ipynb', 'unit', 'teacher', entry, 'unit-01-fixture')
-    assert '### Exercise 1 — A title' in student
+    assert '### Challenge — A title' in student
+    assert '::: {.challenge}\n**Exercise 1**' in student
     assert 'Keep this statement.' in student
     assert '::: {.challenge}' in student and r'\answerlines{8}' in student
-    assert "your teacher's edition has the full program" in student
-    assert "your teacher's edition has the full program" not in teacher
+    assert "The full program is in the Teacher's Edition." in student
+    assert "The full program is in the Teacher's Edition." not in teacher
     assert '# fill this in' in student
     assert ('asset:ex1_start.py', 'asset listing') in [(x['id'], x['kind']) for x in inventory]
     assert items == [{'number': 1, 'title': 'A title'}]
     assert 'Real program: Real program:' not in student
-    assert '::: {.realprog}\nreads input' in student
+    assert '::: {.realprog}\nThe real program reads input.' in student
 
     brief = nbformat.v4.new_notebook(cells=[
         nbformat.v4.new_markdown_cell('# Brief\n\nHook.'),

@@ -100,8 +100,9 @@ statement — follows the title unchanged**; the remaining markdown and code cel
 order. The `**Real version:**` / `**No real version:**` line becomes a
 `::: {.realprog}` note, reworded in the Student Book to "Real program: … — your teacher's edition has the
 full program." Starter code cells always print as a "Starter" code block (instruction comments stay
-visible); in the Student Book each exercise ends with a ruled answer area (six lines; twelve for
-Challenges). Statements naming `assets/exN_*.py` list that starter asset as code.
+visible); in the Student Book each exercise ends with a ruled answer area (four lines; eight for
+Challenges — reduced from six/twelve during the Phase D page review to keep the Student Book near 460
+pages). Statements naming `assets/exN_*.py` list that starter asset as code.
 
 **Checkpoints:** the same grouping keyed on `## Question N` + `### Title`; no Challenge badges.
 
@@ -259,7 +260,32 @@ PDF/X export — the v1 books are classroom-publishable, not press-ready.
 **Consensus reached — implementation starts.**
 
 ## Content Review
-_(4-way content-review gate — reviewers inspect sampled rendered pages as well as sources.)_
+
+### Round 1 — verdicts (HEAD b9bf2a5; PDF snapshots of polish round 3)
+
+- `[self]` APPROVE WITH NITS — three rounds of rendered-page review folded (numbering, callouts, framed
+  code + output, turtle figure clipping, TOC kind labels, duplicate asset listings, orphaned labels);
+  `ci-local.sh` ALL GREEN with both book renders (1709 s).
+- `[fable]` **REJECT** — U06 asset-reference line swallowed the following `##` headings (TOC/outline lost
+  Lessons 2–3 and Exercises); stranded Challenge headings; answer rules colliding with the Starter box;
+  turtle answer keys printing the test harness; Real-program wording fragments; mixed heading fonts.
+  Fidelity, leak and stored-output checks clean.
+- `[glm]` **REJECT** — the same U06 corruption (literal `##`/`:::` in both PDFs); answer areas 4/8 vs
+  the plan's 6/12; Challenge title form; suggested a literal-artefact audit.
+- `[sol]` **REJECT** — the same U06 corruption; answer-area count vs the plan.
+
+### Round 1 — fold
+
+- `[FIXED]` every emitted block ends with a blank line and blocks join with a blank line; the audit now
+  rejects literal Markdown/Quarto artefacts in PDF text and checks source `##` headings reach the outline
+  (U06 now lists Lessons 1–3 and Exercises); regression test added.
+- `[FIXED]` exercise/question/problem headings keep with their body; answer rules start clear of the
+  Starter box and never orphan; turtle answer keys drop harness cells and show the solution program +
+  figure; Real-program notes are full sentences ("… (not graded)." for checkpoints) and "no real
+  program" notes say so without pointing to the Teacher's Edition; headings use Atkinson Hyperlegible;
+  Challenges render "Challenge — Title" with an "Exercise N" badge.
+- `[FIXED]` plan text now records the 4/8 answer-line counts (reduced during Phase D to keep the Student
+  Book near 460–500 pages).
 
 ## Post-Execution Report
 _(filled before merge.)_

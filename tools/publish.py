@@ -181,7 +181,7 @@ def asset_blocks(text: str, entry: Path, edition: str, seen: set[str], unit: str
                     rendered.append('```{=latex}\n' + turtle_picture(source) + '\n```')
                 except Exception as error:
                     raise ValueError(f'FAIL: {unit}: turtle figure for asset {name}: {error}') from error
-    return '\n'.join(rendered), records
+    return '\n\n'.join(block.rstrip() for block in rendered) + ('\n' if rendered else ''), records
 
 
 def item_groups(cells, label: str):
@@ -204,7 +204,8 @@ def item_groups(cells, label: str):
 def group_title(group, label: str) -> str:
     for c in group['cells'][1:]:
         if c.cell_type == 'markdown' and c.source.startswith('### '):
-            return c.source.splitlines()[0][4:].replace(' — Challenge', '')
+            title = c.source.splitlines()[0][4:].replace(' — Challenge', '')
+            return re.sub(r'^Challenge(?: \d+)?:\s*', '', title)
     return ''
 
 
@@ -229,10 +230,11 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
         number = group['number']
         stretch = any('stretch' in c.metadata.get('tags', []) for c in group['cells'])
         title = group_title(group, label)
-        display = f'{label} {number}' + (f' — {title}' if title else '')
+        display = (f'Challenge — {title}' if stretch and kind == 'unit' else
+                   f'{label} {number}' + (f' — {title}' if title else ''))
         out.append(('#### ' if kind == 'project' else '### ') + display + '\n')
         if stretch:
-            out.append(panel('challenge', '**Challenge**'))
+            out.append(panel('challenge', f'**{label} {number}**'))
         for c in (group['cells'] if kind == 'project' else group['cells'][1:]):
             if c.cell_type == 'code':
                 if c.source.strip():
@@ -247,11 +249,25 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
             parts = []
             for paragraph in re.split(r'\n\s*\n', text.strip()):
                 if re.match(r'^\*\*(?:Real version|No real version):\*\*', paragraph):
+                    no_real = paragraph.startswith('**No real version:**')
                     paragraph = re.sub(r'^\*\*(?:Real version|No real version):\*\*\s*', '', paragraph)
-                    paragraph = re.sub(r'(?i)^(?:real program:\s*|the real program\s+)', '', paragraph)
-                    if edition == 'student':
-                        paragraph = re.sub(r'(?i)see (?:the )?solution[^.]*\.?', '', paragraph)
-                        paragraph = paragraph.rstrip(' .—') + " — your teacher's edition has the full program."
+                    paragraph = re.sub(r'(?i)^real program:\s*', '', paragraph)
+                    if no_real:
+                        # No stdin program exists, so there is nothing to point to in the Teacher's Edition.
+                        reason = paragraph.rstrip(' .')
+                        reason = reason[0].lower() + reason[1:] if reason[:1].isupper() and not reason[:2].isupper() else reason
+                        paragraph = f'There is no real program for this exercise: {reason}.'
+                    elif edition == 'student':
+                        not_graded = bool(re.search(r'\(Not graded\.\)', paragraph, re.IGNORECASE))
+                        paragraph = re.sub(r'\s*\(Not graded\.\)', '', paragraph, flags=re.IGNORECASE)
+                        paragraph = re.sub(r'\s*—\s*see (?:the )?solution[^.]*\.?', '', paragraph, flags=re.IGNORECASE)
+                        paragraph = paragraph.rstrip(' .—')
+                        if not re.match(r'(?i)^the real program\b|^no real program\b', paragraph):
+                            paragraph = 'The real program ' + paragraph
+                        paragraph = paragraph[0].upper() + paragraph[1:]
+                        if not_graded:
+                            paragraph += ' (not graded)'
+                        paragraph += ". The full program is in the Teacher's Edition."
                     parts.append(panel('realprog', paragraph))
                 else:
                     parts.append(markdown_blocks(paragraph))
@@ -267,7 +283,7 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                         inventory.append({'id': f'data:{name}', 'kind': 'asset listing'})
         if edition == 'student' and kind == 'unit':
             out.append('\\answerlines{' + ('8' if stretch else '4') + '}\n')
-    return '\n'.join(out), inventory, [{'number': g['number'], 'title': group_title(g, label)} for g in groups]
+    return '\n\n'.join(block.rstrip() for block in out) + '\n', inventory, [{'number': g['number'], 'title': group_title(g, label)} for g in groups]
 
 
 def answer_key(entry: Path, kind: str, items: list[dict]) -> str:
@@ -284,6 +300,9 @@ def answer_key(entry: Path, kind: str, items: list[dict]) -> str:
         out.append('### ' + heading + '\n')
         for c in by_number[number]['cells'][1:]:
             if c.cell_type == 'code':
+                if (re.search(r'\brun_path\s*\(\s*["\']assets/solutions_ex', c.source)
+                        and 'fake_turtle' in c.source):
+                    continue
                 code, removed = strip_asserts(c.source)
                 if code:
                     out.append(code_block(code))
@@ -301,7 +320,7 @@ def answer_key(entry: Path, kind: str, items: list[dict]) -> str:
                     out.append('```{=latex}\n' + turtle_picture(source) + '\n```')
                 except Exception as error:
                     raise ValueError(f'FAIL: {entry.name}: turtle figure for asset {file.name}: {error}') from error
-    return '\n'.join(out)
+    return '\n\n'.join(block.rstrip() for block in out) + '\n'
 
 
 def render_chapter(entry: Path, kind: str, edition: str):
@@ -360,7 +379,7 @@ def render_chapter(entry: Path, kind: str, edition: str):
         chapter.append(body); inventory.extend(records)
     if edition == 'teacher':
         chapter.append(answer_key(entry, kind, items))
-    return '\n'.join(chapter), inventory, items, title
+    return '\n\n'.join(block.rstrip() for block in chapter) + '\n', inventory, items, title
 
 
 def build(root: Path, book_id: str, edition: str) -> Path:
