@@ -186,3 +186,18 @@ def test_figure_square_and_unsupported_call():
     assert "color=black" in figure_tikz("import turtle\nturtle.pencolor('not-a-color')\nturtle.forward(1)")
     with pytest.raises(RuntimeError, match="turtle figure replay failed: .*unsupported_method"):
         figure_tikz("import turtle\nturtle.unsupported_method()")
+
+
+def test_figure_bounds_enclose_strokes_and_origin_marker():
+    import re
+
+    source = "import turtle\nturtle.pensize(10)\nturtle.forward(82)\nturtle.left(90)\nturtle.forward(82)"
+    figure = figure_tikz(source)
+    match = re.search(r'\\useasboundingbox \(([-\d.]+),([-\d.]+)\) rectangle '\
+                      r'\(([-\d.]+),([-\d.]+)\);', figure)
+    assert match is not None
+    left, bottom, right, top = map(float, match.groups())
+    assert left < -2.2 and bottom < -2.2
+    assert right > 84 and top > 84
+    assert r'\begin{pubfigure}' in figure
+    assert 'Drawing made by the program above' in figure

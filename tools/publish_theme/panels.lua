@@ -21,7 +21,7 @@ function Div(el)
           if block.t == 'RawBlock' and block.format == 'latex' then
             if block.text == '\\begin{puboutput}' then
               table.insert(blocks, pandoc.RawBlock('latex',
-                '\\tcblower\\textbf{\\scriptsize\\color{SteelBlue}Output}\\par\\smallskip'))
+                '\\tcblower\\textbf{\\scriptsize\\color{SteelBlue}Output}\\par\\vspace{-0.5\\baselineskip}'))
             elseif block.text ~= '\\end{puboutput}' and block.text ~= '\\begin{pubcode}' and
                 block.text ~= '\\end{pubcode}' then
               table.insert(blocks, block)

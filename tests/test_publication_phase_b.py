@@ -18,6 +18,8 @@ def test_notice_forms_and_opener():
         assert '::: {.notice}' in markdown_blocks(source)
     assert '**Notice:**' not in markdown_blocks('**Notice:** bold')
     assert 'Notice: plain' not in markdown_blocks('Notice: plain')
+    assert '::: {.notice}\nPlain' in markdown_blocks('Notice: plain')
+    assert '::: {.notice}\n`code` remains' in markdown_blocks('Notice: `code` remains')
     theme = Path('tools/publish_theme/theme.tex').read_text()
     assert 'borderline west' in theme and 'title=Notice' not in theme
 
@@ -31,6 +33,15 @@ def test_lesson_routing():
     paired = route_code(cell('print(1)', outputs=[{'output_type': 'stream', 'name': 'stdout', 'text': '1\n'}]))
     assert paired[0] == 'code+output' and '::: {.codeoutput}' in paired[1]
     assert route_code(cell('print(1)'))[0] == 'code'
+
+
+def test_output_label_is_tight_to_output():
+    theme = Path('tools/publish_theme/theme.tex').read_text()
+    lua = Path('tools/publish_theme/panels.lua').read_text()
+    assert r'Output}\par\smallskip' not in theme
+    assert r'Output}\\par\\smallskip' not in lua
+    assert r'Output}\par\vspace{-0.5\baselineskip}' in theme
+    assert r'Output}\\par\\vspace{-0.5\\baselineskip}' in lua
 
 
 def test_teacher_cleanup():
@@ -104,7 +115,7 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
                'ASSET_SENTINEL_7429', 'SOLUTION_SENTINEL_7429'))
     student_tex = (student / 'Book1b-Student.tex').read_text()
     assert student_tex.index(r'\chapter{How to use}') < student_tex.index(r'\mainmatter', student_tex.index(r'\chapter{How to use}'))
-    assert student_tex.index(r'\pubchapterlabel{Unit 1}') < student_tex.index(r'\chapter{Fixture}')
+    assert student_tex.index(r'\pubchapterlabel{Unit 1}') < student_tex.index(r'\chapter{Unit 1')
     assert r'\setcounter{secnumdepth}{-\maxdimen}' in student_tex
     assert r'\begin{pubcodeoutput}' in student_tex and r'\tcblower' in student_tex
     subprocess.run([quarto, 'render', str(teacher), '--to', 'pdf'], check=True,
@@ -190,11 +201,13 @@ def test_chapter_titles_and_frontmatter_are_unnumbered(tmp_path):
         nbformat.v4.new_markdown_cell('# Practice'),
     ]), entry / 'exercises.ipynb')
     body, _, _, _ = render_chapter(entry, 'unit', 'student')
-    assert '# Output & Variables' in body
+    assert '# Unit 1 — Output & Variables' in body
     assert 'pub-label="Unit 1"' in body and 'pub-mainmatter="true"' in body
+    assert r'\chaptermark{Unit 1 — Output \& Variables}' in body
     theme = Path('tools/publish_theme/_quarto.yml').read_text()
     assert 'number-sections: false' in theme
     assert 'toc-depth: 2' in theme
+    assert r'\automark[section]{chapter}' in Path('tools/publish_theme/theme.tex').read_text()
 
 
 def test_checkpoint_group_and_answer_key(tmp_path):

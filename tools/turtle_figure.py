@@ -40,12 +40,19 @@ def figure_tikz(source: str) -> str:
     traced = fake_turtle.segments()
     coordinates = [(0.0, 0.0)] + [point for x1, y1, x2, y2, _, _ in traced
                                     for point in ((x1, y1), (x2, y2))]
-    width = max(x for x, _ in coordinates) - min(x for x, _ in coordinates)
-    height = max(y for _, y in coordinates) - min(y for _, y in coordinates)
+    padding = max(2.2, *(float(pen_width) * 0.2 for *_, pen_width in traced)) + 2
+    left = min(x for x, _ in coordinates) - padding
+    right = max(x for x, _ in coordinates) + padding
+    bottom = min(y for _, y in coordinates) - padding
+    top = max(y for _, y in coordinates) + padding
+    width = right - left
+    height = top - bottom
     lines = [
         # Both limits divide the same scale factor, preserving aspect ratio.
-        rf"\pgfmathsetmacro{{\figscale}}{{min(1, 0.8\textwidth/{max(width, 1):.6g}pt, 7cm/{max(height, 1):.6g}pt)}}",
+        r"\begin{pubfigure}",
+        rf"\pgfmathsetmacro{{\figscale}}{{min(2.4, 0.8\textwidth/{max(width, 1):.6g}pt, 7cm/{max(height, 1):.6g}pt)}}",
         r"\begin{tikzpicture}[x=1pt,y=1pt,scale=\figscale]",
+        rf"\useasboundingbox ({left:.6f},{bottom:.6f}) rectangle ({right:.6f},{top:.6f});",
     ]
     for x1, y1, x2, y2, color, pen_width in traced:
         mapped = SVG_NAMES.get(str(color).lower(), "black")
@@ -55,4 +62,6 @@ def figure_tikz(source: str) -> str:
         )
     lines.append(r"\path[draw, line width=0.4pt, color=black] (0,0) circle[radius=2pt];")
     lines.append(r"\end{tikzpicture}")
+    lines.append(r"\par\smallskip{\scriptsize\color{black!60}Drawing made by the program above}")
+    lines.append(r"\end{pubfigure}")
     return "\n".join(lines)

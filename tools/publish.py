@@ -72,7 +72,10 @@ def markdown_blocks(source: str, first: bool = False) -> str:
     while i < len(paragraphs):
         p = paragraphs[i]
         if NOTICE.match(p):
-            contents = [re.sub(r'^(?:\*\*Notice:\*\*|Notice:)\s*', '', p, count=1, flags=re.IGNORECASE)]
+            notice = re.sub(r'^(?:\*\*Notice:\*\*|Notice:)\s*', '', p, count=1, flags=re.IGNORECASE)
+            if notice and notice[0].islower():
+                notice = notice[0].upper() + notice[1:]
+            contents = [notice]
             i += 1
             while i < len(paragraphs) and not paragraphs[i].startswith('#'):
                 contents.append(paragraphs[i]); i += 1
@@ -304,7 +307,8 @@ def render_chapter(entry: Path, kind: str, edition: str):
         chapter_label = ''
         short_title = 'Algorithm Challenge'
     short_tex = short_title.replace('\\', r'\textbackslash{}').replace('&', r'\&').replace('%', r'\%').replace('_', r'\_')
-    chapter = ['# ' + display_title + ' {pub-label="' + chapter_label + '"' +
+    full_title = (chapter_label + ' — ' if chapter_label else '') + display_title
+    chapter = ['# ' + full_title + ' {pub-label="' + chapter_label + '"' +
                (' pub-mainmatter="true"' if kind == 'unit' and entry.name.startswith('unit-01-') else '') + '}\n',
                '```{=latex}\n\\chaptermark{' + (chapter_label + ' — ' if chapter_label else '') + short_tex + '}\n```']
     inventory = []

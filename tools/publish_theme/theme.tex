@@ -30,7 +30,9 @@
   colframe=black!22,segmentation style={draw=black!22,line width=.45pt},
   before={\par\needspace{9\baselineskip}}}
 \newtcolorbox{puboutput}{pubbase,colback=blue!3,colframe=black!22,before skip=0pt,
-  before upper={\textbf{\scriptsize\color{SteelBlue}Output}\par\smallskip}}
+  before upper={\textbf{\scriptsize\color{SteelBlue}Output}\par\vspace{-0.5\baselineskip}}}
+\newtcolorbox{pubfigure}{pubbase,colback=black!1,colframe=black!15,
+  before upper={\centering}}
 \newtcolorbox{pubopener}{pubbase,colback=blue!4,colframe=blue!25}
 \newtcolorbox{pubnotice}{pubbase,colback=yellow!5,colframe=yellow!20,
   borderline west={1.4pt}{0pt}{Goldenrod},before upper={\textbf{\scriptsize\color{Goldenrod}Notice}\enspace}}
@@ -58,7 +60,7 @@
 \clearpairofpagestyles
 \ihead{\headmark}
 \ohead{\pagemark}
-\automark{chapter}
+\automark[section]{chapter}
 \emergencystretch=3em
 \DeclareTOCStyleEntries[pagenumberwidth=4em,rightindent=5em]{tocline}{chapter,section}
 \sloppy
