@@ -22,8 +22,12 @@ class _Tracker:
         self.pen_down_moves = 0
         self.draw_start_x = None
         self.draw_start_y = None
+        self.color = "black"
+        self.width = 1
+        self.drawn_segments = []
 
     def move(self, distance: float):
+        old_x, old_y = self.x, self.y
         if self.pen_down and self.draw_start_x is None:
             self.draw_start_x = self.x
             self.draw_start_y = self.y
@@ -33,6 +37,9 @@ class _Tracker:
         self.moves += 1
         if self.pen_down:
             self.pen_down_moves += 1
+            self.drawn_segments.append(
+                (old_x, old_y, self.x, self.y, self.color, self.width)
+            )
 
     def turn(self, degrees: float):
         self.heading = (self.heading + float(degrees)) % 360.0
@@ -71,16 +78,26 @@ def pendown():
     _tracker.pen_down = True
 
 
-def pensize(*_args, **_kwargs):
-    return None
+def pensize(width=None):
+    if width is not None:
+        _tracker.width = width
+    return _tracker.width
 
 
-def pencolor(*_args, **_kwargs):
-    return None
+def pencolor(value=None):
+    if value is not None:
+        _tracker.color = value
+    return _tracker.color
 
 
-def color(*_args, **_kwargs):
-    return None
+def color(*values):
+    if values:
+        _tracker.color = values[0]
+    return _tracker.color
+
+
+def segments():
+    return list(_tracker.drawn_segments)
 
 
 def speed(*_args, **_kwargs):

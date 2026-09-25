@@ -30,6 +30,9 @@ uv run py4kids-tools --book book1 noexec-check
 uv run py4kids-tools --book book1 cell-lint
 uv run py4kids-tools --book book1 exec-solutions
 uv run py4kids-tools --book book1 exec-lessons
+if [ -d book1b ]; then
+  uv run py4kids-tools --book book1b lesson-outputs-check
+fi
 
 step "4/6 curriculum + assets"
 uv run py4kids-tools --book book1 manifest-check
