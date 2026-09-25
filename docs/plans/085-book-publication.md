@@ -75,8 +75,9 @@ executes code (`execute: enabled: false`); the `.qmd` reader disables `tex_math_
 Units 03, 05, 08, 11, 13; the Algorithm Challenge last), one chapter per entry; chapter short titles for
 running heads come from the unit's H1 without the leading "Unit NN —" and are capped at 32 characters.
 
-**Markdown handling (all entries):** each markdown cell is split into paragraphs; a paragraph (or a
-`###` heading) beginning `**Notice:**` / `### Notice` becomes a `::: {.notice}` panel holding that
+**Markdown handling (all entries):** each markdown cell is split into paragraphs; a paragraph that matches `^(\*\*Notice:\*\*|Notice:)` (bold or plain — U12 uses
+the plain form 15 times) or a heading of level 3+ containing the word `Notice` (e.g. `### Notice: …`,
+`### Contrast Notice …`) becomes a `::: {.notice}` panel holding that
 paragraph and any directly following paragraphs of the same cell until the next heading. Other bold
 lead-ins (`**One twist:**`, `**Realistic:**`, `**Check yourself:**`, `**Try real input:**`, …) pass
 through unchanged as prose. The notebook H1 becomes the chapter title; the paragraphs that follow the H1
@@ -134,7 +135,8 @@ long code lines wrap with a marker.
 **Front matter** (`book1b/front-matter/`, Markdown, authored inline in Phase D): title page, "How to use
 this book", "For teachers" (Teacher's Edition only).
 
-**Tests:** transform unit tests on fixture cells — paragraph-level Notice inside a mixed cell; opener;
+**Tests:** transform unit tests on fixture cells — paragraph-level Notice inside a mixed cell, in all
+three forms (bold, plain `Notice:` from a U12 fixture, `### … Notice …` heading); opener;
 stored output preserved and empty output omitted; `error-demo` / turtle / input `no-exec` routing; asset
 listing; exercise grouping with a stretch group and the Real line (both editions' wording); checkpoint
 and brief grouping incl. a data file; teacher panel heading shift and jargon removal; answer-key
@@ -177,12 +179,14 @@ correct.
    per exercise set / checkpoint / problem set covering every exercise number; the Student Book has none.
 4. **Render log audit:** no `Missing character` lines; overfull hbox warnings ≤ 5 per edition, none wider
    than 10 pt; no `In [` / `Out[` strings in either PDF's text.
-5. Rendered-page review (sampled pages as images: unit opener, lesson spread, turtle figure, error demo,
+5. A Notice audit: the number of Notice panels per chapter equals the number of source paragraphs /
+   headings matching the Notice rule (all 13 lessons; U12's plain form included).
+6. Rendered-page review (sampled pages as images: a U12 page with a plain-form Notice, unit opener, lesson spread, turtle figure, error demo,
    exercise with Challenge, teacher panel, answer key, checkpoint, Algorithm Challenge data file) recorded
    in the plan.
-6. `scripts/ci-local.sh` ALL GREEN (now including `lesson-outputs-check` and both book renders); the full
+7. `scripts/ci-local.sh` ALL GREEN (now including `lesson-outputs-check` and both book renders); the full
    CI duration before and after is recorded in the post-execution report.
-7. Post-execution report.
+8. Post-execution report.
 
 ## Out of scope
 
@@ -238,6 +242,12 @@ PDF/X export — the v1 books are classroom-publishable, not press-ready.
   each entry type (Exercise / Question / Problem).
 - `[FIXED]` the tagged cells are enumerated by id (9 `error-demo`, 1 `hang-demo` for the infinite loop
   with a "this never stops" panel); `u07l034a` routes to "Program excerpt"; routing precedence fixed.
+
+### Round 3 — [sol] REJECT (folded)
+
+- `[FIXED]` the Notice rule covers all three source forms found by a survey of every lesson paragraph
+  (`**Notice:**` 280+, plain `Notice:` 15 in U12, headings containing `Notice`); a U12 fixture test, a
+  per-chapter Notice-count audit and a U12 page in the rendered review were added.
 
 ## Content Review
 _(4-way content-review gate — reviewers inspect sampled rendered pages as well as sources.)_
