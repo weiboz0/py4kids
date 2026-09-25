@@ -1,0 +1,35 @@
+project:
+  type: book
+  output-dir: _book
+book:
+  title: "Python, Concept by Concept"
+  subtitle: "@SUBTITLE@"
+  author: "Weibo Zhou"
+  output-file: "@OUTPUT@"
+  chapters:
+@FRONT@
+@CHAPTERS@
+format:
+  pdf:
+    variant: -tex_math_dollars
+    pdf-engine: lualatex
+    latex-auto-install: false
+    latex-max-runs: 3
+    documentclass: scrbook
+    classoption: [open=right, headings=normal]
+    papersize: custom
+    geometry: [paperwidth=7in, paperheight=10in, inner=0.85in, outer=0.7in, top=0.8in, bottom=0.8in]
+    mainfont: "Atkinson Hyperlegible"
+    monofont: "Fira Mono"
+    fontsize: 10pt
+    colorlinks: true
+    toc: true
+    toc-depth: 2
+    number-sections: false
+    keep-tex: true
+    keep-md: true
+    include-in-header: theme/theme.tex
+    filters: [theme/panels.lua]
+    code-overflow: wrap
+execute:
+  enabled: false

@@ -1,0 +1,70 @@
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usepackage[svgnames]{xcolor}
+\usepackage{fontspec}
+\usepackage{fancyvrb}
+\usepackage{fvextra}
+\usepackage{needspace}
+\usepackage{scrlayer-scrpage}
+\newfontfamily\fallbackfont{DejaVu Sans}
+\setsansfont{Atkinson Hyperlegible}
+\setkomafont{disposition}{\normalfont\sffamily\bfseries}
+\AtBeginDocument{\hypersetup{bookmarksdepth=2}}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,breakanywhere,breaksymbolleft=\tiny\ensuremath{\hookrightarrow},commandchars=\\\{\},fontsize=\small}
+% Quarto's snugshade protrudes beyond the text block. The code box supplies the frame.
+\AtBeginDocument{\RenewDocumentEnvironment{Shaded}{}{}{}}
+\newcommand{\pubchapterlabel}[1]{\gdef\thepubchapterlabel{#1}}
+\pubchapterlabel{}
+% Quarto's automatic mainmatter starts before index.qmd. Keep the front chapters
+% in roman pages, then let the explicit call at the end of front matter start Unit 1.
+\newif\ifpubmainstarted
+\let\puboriginalmainmatter\mainmatter
+\renewcommand{\mainmatter}{\ifpubmainstarted\puboriginalmainmatter\else\global\pubmainstartedtrue\fi}
+\renewcommand*{\chapterlinesformat}[3]{%
+  \ifx\thepubchapterlabel\empty\else
+    {\normalfont\small\bfseries\color{SteelBlue}\thepubchapterlabel\par\vspace{.45em}}%
+  \fi
+  #3}
+\tcbset{pubbase/.style={enhanced,breakable,lines before break=4,width=\linewidth,boxrule=.45pt,arc=1pt,
+  left=7pt,right=7pt,top=6pt,bottom=6pt,before skip=8pt,after skip=8pt,
+  before={\par\needspace{4\baselineskip}}}}
+\newtcolorbox{pubcode}{pubbase,colback=black!2,colframe=black!22}
+\newtcolorbox{pubcodeoutput}{pubbase,colback=black!2,colbacklower=blue!3,
+  colframe=black!22,segmentation style={draw=black!22,line width=.45pt},
+  before={\par\needspace{9\baselineskip}}}
+\newtcolorbox{puboutput}{pubbase,colback=blue!3,colframe=black!22,before skip=0pt,
+  before upper={\textbf{\scriptsize\color{SteelBlue}Output}\par\vspace{-0.5\baselineskip}}}
+\newtcolorbox{pubfigure}{pubbase,colback=black!1,colframe=black!15,
+  before upper={\centering}}
+\newtcolorbox{pubopener}{pubbase,colback=blue!4,colframe=blue!25}
+\newtcolorbox{pubnotice}{pubbase,colback=yellow!5,colframe=yellow!20,
+  borderline west={1.4pt}{0pt}{Goldenrod},before upper={\textbf{\scriptsize\color{Goldenrod}Notice}\enspace}}
+\newtcolorbox{pubtryit}{pubbase,colback=green!3,colframe=green!22,
+  before upper={\textbf{\scriptsize\color{DarkGreen}Try it yourself}\par\smallskip}}
+\newtcolorbox{puberrordemo}{pubbase,colback=red!3,colframe=red!20,
+  before upper={\textbf{\scriptsize\color{FireBrick}Read the error}\par\smallskip}}
+\newtcolorbox{pubhangdemo}{pubbase,colback=orange!5,colframe=orange!25,
+  before upper={\textbf{\scriptsize\color{DarkOrange}Watch out: this never stops}\par\smallskip}}
+\newtcolorbox{pubprogram}{pubbase,colback=blue!2,colframe=blue!20,
+  before upper={\textbf{\scriptsize\color{SteelBlue}Program}\par\smallskip}}
+\newtcolorbox{pubstarter}{pubbase,colback=black!2,colframe=black!22,
+  before upper={\textbf{\scriptsize\color{black!65}Starter}\par\smallskip}}
+\newtcolorbox{pubdatafile}{pubbase,colback=black!2,colframe=black!25,
+  before upper={\textbf{\scriptsize Data file}\par\smallskip}}
+\newtcolorbox{pubteacher}{pubbase,colback=blue!3,colframe=blue!14,
+  borderline west={1.5pt}{0pt}{SteelBlue},
+  before upper={\textbf{\scriptsize\color{SteelBlue}Teacher notes}\par\smallskip}}
+\newtcolorbox{pubrealprog}{pubbase,colback=green!2,colframe=green!13,
+  borderline west={1pt}{0pt}{SeaGreen},
+  before upper={\textbf{\scriptsize\color{SeaGreen}Real program}\enspace}}
+\newtcolorbox{pubchallenge}{pubbase,colback=orange!5,colframe=orange!22,
+  before skip=4pt,after skip=4pt,left=5pt,right=5pt,top=2pt,bottom=2pt}
+\newcommand{\answerlines}[1]{\par\noindent\begin{minipage}{\dimexpr\linewidth-12pt\relax}\vspace{.8em}\setlength{\parskip}{0pt}\foreach \i in {1,...,#1}{\noindent\rule{\linewidth}{0.2pt}\par\vspace{.35em}}\end{minipage}\par}
+\clearpairofpagestyles
+\ihead{\headmark}
+\ohead{\pagemark}
+\automark[section]{chapter}
+\emergencystretch=3em
+\DeclareTOCStyleEntries[pagenumberwidth=4em,rightindent=5em]{tocline}{chapter,section}
+\sloppy
+\AtBeginDocument{\date{@EDITION@}}

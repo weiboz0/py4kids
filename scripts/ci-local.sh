@@ -30,6 +30,9 @@ uv run py4kids-tools --book book1 noexec-check
 uv run py4kids-tools --book book1 cell-lint
 uv run py4kids-tools --book book1 exec-solutions
 uv run py4kids-tools --book book1 exec-lessons
+if [ -d book1b ]; then
+  uv run py4kids-tools --book book1b lesson-outputs-check
+fi
 
 step "4/6 curriculum + assets"
 uv run py4kids-tools --book book1 manifest-check
@@ -82,6 +85,8 @@ fi
 step "5/6 PDF build"
 bash scripts/build-pdf.sh --book book1
 [ -d book1b ] && bash scripts/build-pdf.sh --book book1b
+[ -d book1b ] && bash scripts/build-book.sh --book book1b
+[ -d book1b ] && uv run py4kids-tools --book book1b publish-audit
 
 step "6/6 pre-merge guard"
 bash scripts/pre-merge-guard.sh

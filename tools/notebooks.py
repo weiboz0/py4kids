@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import copy
+import json
 import os
 import py_compile
 import re
@@ -1019,6 +1021,103 @@ def exec_solutions_findings(root: Path, book: str, unit: str | None = None) -> l
 
 def exec_lessons_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
     return execute_notebooks(root, book, "lesson.ipynb", unit)
+
+
+def _executed_lesson(notebook, unit_dir: Path):
+    """Run the same ordered, no-exec-filtered cells as exec-lessons."""
+    running = copy.deepcopy(notebook)
+    running.cells = [cell for cell in running.cells if "no-exec" not in tags(cell)]
+    return NotebookClient(
+        running,
+        timeout=120,
+        kernel_name="python3",
+        allow_errors=True,
+        resources={"metadata": {"path": str(unit_dir)}},
+    ).execute()
+
+
+def _stdout_outputs(cell, scope: str) -> tuple[list[dict], str | None]:
+    for output in cell.outputs:
+        kind = output.get("output_type", "unknown")
+        if kind != "stream" or output.get("name") != "stdout":
+            if kind == "stream":
+                kind = output.get("name", "unknown")
+            return [], _fail(scope, f"lesson code cell {cell.id} produced non-stdout output ({kind})")
+    text = "".join(output.text for output in cell.outputs)
+    return ([{"name": "stdout", "output_type": "stream", "text": text.splitlines(keepends=True)}]
+            if text else []), None
+
+
+def _lesson_output_run(root: Path, book: str, unit: str | None, *, write: bool) -> list[str]:
+    units, findings = unit_dirs(root, book, unit)
+    if findings:
+        return findings
+    if not write and book in {"book1", "book2"} and all(
+        (path / "lesson.ipynb").is_file() and
+        not any(cell.outputs for cell in code_cells(read_nb(path / "lesson.ipynb")))
+        for path in units
+    ):
+        return ["SKIP (plan 086)"]
+    for unit_dir in units:
+        path = unit_dir / "lesson.ipynb"
+        if not path.is_file():
+            findings.append(_fail(unit_dir.name, "lesson.ipynb does not exist"))
+            continue
+        original = read_nb(path)
+        if not write:
+            for cell in code_cells(original):
+                if "no-exec" in tags(cell) and cell.outputs:
+                    findings.append(_fail(unit_dir.name,
+                                          f"lesson code cell {cell.id} no-exec cell has stored output"))
+        try:
+            executed = _executed_lesson(original, unit_dir)
+        except Exception as error:  # noqa: BLE001 - kernel errors have varying classes
+            summary = str(error).splitlines()[-1] if str(error) else type(error).__name__
+            findings.append(_fail(unit_dir.name, f"lesson.ipynb execution failed: {summary}"))
+            continue
+        expected = {}
+        unit_findings = []
+        for cell in code_cells(executed):
+            outputs, error = _stdout_outputs(cell, unit_dir.name)
+            if error:
+                unit_findings.append(error)
+            else:
+                expected[cell.id] = outputs
+        findings.extend(unit_findings)
+        if unit_findings:
+            continue
+        if write:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            changed = False
+            for cell in raw["cells"]:
+                if cell["cell_type"] != "code":
+                    continue
+                outputs = ([] if "no-exec" in cell.get("metadata", {}).get("tags", [])
+                           else expected[cell["id"]])
+                if cell.get("outputs") != outputs or cell.get("execution_count") is not None:
+                    cell["outputs"] = outputs
+                    cell["execution_count"] = None
+                    changed = True
+            if changed:
+                path.write_text(json.dumps(raw, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        else:
+            for cell in code_cells(original):
+                if "no-exec" in tags(cell):
+                    continue
+                actual = [{"name": output.get("name"), "output_type": output.get("output_type"),
+                           "text": str(output.get("text", "")).splitlines(keepends=True)}
+                          for output in cell.outputs]
+                if actual != expected[cell.id]:
+                    findings.append(_fail(unit_dir.name, f"lesson code cell {cell.id} output is stale"))
+    return findings
+
+
+def fill_outputs_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
+    return _lesson_output_run(root, book, unit, write=True)
+
+
+def lesson_outputs_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
+    return _lesson_output_run(root, book, unit, write=False)
 
 
 def _ruff_command() -> list[str]:

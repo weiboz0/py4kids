@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 from tools.checks import CHECKS, UNIT_ONLY_CHECKS
-from tools.notebooks import project_dirs
+from tools.notebooks import fill_outputs_findings, lesson_outputs_findings, project_dirs
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -20,7 +20,8 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--book", required=True)
     parser.add_argument("--unit")
-    parser.add_argument("check", choices=CHECKS)
+    parser.add_argument("check", choices=(*CHECKS, "fill-outputs", "lesson-outputs-check", "publish", "publish-audit"))
+    parser.add_argument("--edition", choices=("student", "teacher"))
     return parser
 
 
@@ -52,7 +53,7 @@ def main(argv=None):
     if (
         arguments.unit
         and arguments.unit.startswith(("checkpoint-", "project-"))
-        and arguments.check in UNIT_ONLY_CHECKS
+        and arguments.check in (UNIT_ONLY_CHECKS | {"fill-outputs", "lesson-outputs-check"})
     ):
         kind = arguments.unit.split("-", 1)[0]
         print(
@@ -60,7 +61,30 @@ def main(argv=None):
             file=sys.stderr,
         )
         return 2
-    findings = CHECKS[arguments.check](arguments.root, arguments.book, arguments.unit)
+    if arguments.check == "publish":
+        from tools.publish import build
+        if not arguments.edition:
+            print("usage: publish requires --edition", file=sys.stderr)
+            return 2
+        print(build(arguments.root, arguments.book, arguments.edition))
+        return 0
+    if arguments.check == "publish-audit":
+        from tools.publish_audit import audit
+        findings = audit(arguments.root, arguments.book)
+        for finding in findings:
+            print(finding)
+        if findings and any(finding.startswith("FAIL:") for finding in findings):
+            return 1
+        return 0
+    if arguments.check == "fill-outputs":
+        findings = fill_outputs_findings(arguments.root, arguments.book, arguments.unit)
+    elif arguments.check == "lesson-outputs-check":
+        findings = lesson_outputs_findings(arguments.root, arguments.book, arguments.unit)
+    else:
+        findings = CHECKS[arguments.check](arguments.root, arguments.book, arguments.unit)
+    if findings == ["SKIP (plan 086)"]:
+        print(f"{arguments.check}: SKIP (plan 086)")
+        return 0
     if findings:
         for finding in findings:
             print(finding)
