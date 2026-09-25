@@ -33,8 +33,8 @@ plus the syllabus; they carry notebook framing (`In [ ]:` prompts, raw cell boxe
   working directory) and saves the outputs into the notebook, with execution counts cleared and no
   run-specific metadata, so diffs stay stable. `no-exec` cells keep no outputs (they read stdin or open a
   turtle window). A new check (`lesson-outputs-check`) re-executes every lesson and fails when a stored
-  output differs from what the code prints, or when an executable cell has no stored output — so the
-  expected results can never drift. Exercises, checkpoints and briefs keep the existing rule: no
+  output list differs from what the code prints (a silent cell stores the empty list) — so the expected
+  results can never drift. Exercises, checkpoints and briefs keep the existing rule: no
   outputs (they are the student's work). Seeded randomness and self-contained file cells make lesson
   outputs deterministic; the check proves it.
 - **D3 — The book is built by Quarto from a generated project.**
@@ -49,8 +49,8 @@ plus the syllabus; they carry notebook framing (`In [ ]:` prompts, raw cell boxe
     the drawing, replayed through the headless turtle and drawn with TikZ;
   - `**Notice:**` paragraphs become Notice callouts; `stretch` exercises get a Challenge marker; each
     exercise's `**Real version:**` line becomes a small "Real program" note;
-  - notebook-only furniture is removed (execution counts, empty starter cells become a short
-    "Your turn" answer area in the student edition);
+  - notebook-only furniture is removed (execution counts); starter cells print as "Starter" code and the
+    student edition adds a ruled answer area after each exercise;
   - turtle assets referenced by lessons render as listings of the `.py` file.
 - **D4 — Two editions from the same sources (user decision: "Two editions").**
   The Student Book is built from an explicit source allowlist (lessons, exercises, checkpoints, briefs,
