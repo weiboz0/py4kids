@@ -1,0 +1,32 @@
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usepackage[svgnames]{xcolor}
+\usepackage{fontspec}
+\usepackage{fancyvrb}
+\usepackage{fvextra}
+\usepackage{scrlayer-scrpage}
+\newfontfamily\fallbackfont{DejaVu Sans}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,breakanywhere,breaksymbolleft=\tiny\ensuremath{\hookrightarrow},commandchars=\\\{\}}
+\newtcolorbox{pubopener}{enhanced,breakable,colback=blue!5,colframe=blue!35,boxrule=.4pt,arc=2pt,left=8pt,right=8pt}
+\newtcolorbox{puboutput}{enhanced,breakable,title=Output,colback=black!4,colframe=black!30,boxrule=.4pt,arc=2pt}
+\newtcolorbox{pubnotice}{enhanced,breakable,title=Notice,colback=yellow!7,colframe=yellow!45!black,boxrule=.4pt,arc=2pt}
+\newtcolorbox{pubtryit}{enhanced,breakable,title=Try it yourself,colback=green!4,colframe=green!35!black,boxrule=.4pt,arc=2pt}
+\newtcolorbox{puberrordemo}{enhanced,breakable,title=Read the error,colback=red!4,colframe=red!35!black,boxrule=.4pt,arc=2pt}
+\newtcolorbox{pubhangdemo}{enhanced,breakable,title=Watch out: this never stops,colback=red!4,colframe=red!35!black,boxrule=.4pt,arc=2pt}
+\newtcolorbox{pubprogram}{enhanced,breakable,title=Program,colback=blue!3,colframe=blue!30,boxrule=.4pt,arc=2pt}
+\newtcolorbox{pubchallenge}{enhanced,breakable,title=Challenge,colback=orange!7,colframe=orange!50!black,boxrule=.4pt,arc=2pt}
+\newtcolorbox{pubrealprog}{enhanced,breakable,title=Real program,colback=green!3,colframe=green!30!black,boxrule=.4pt,arc=2pt}
+\newtcolorbox{pubdatafile}{enhanced,breakable,title=Data file,colback=gray!4,colframe=gray!40,boxrule=.4pt,arc=2pt}
+\newtcolorbox{pubteacher}{enhanced,breakable,title=Teacher,colback=purple!4,colframe=purple!35,boxrule=.4pt,arc=2pt}
+\newtcolorbox{pubstarter}{enhanced,breakable,title=Starter,colback=gray!3,colframe=gray!35,boxrule=.4pt,arc=2pt}
+\newcommand{\answerlines}[1]{\par\begingroup\setlength{\parskip}{0pt}\foreach \i in {1,...,#1}{\noindent\rule{\dimexpr\linewidth-12pt\relax}{0.2pt}\par\vspace{.35em}}\endgroup}
+\clearpairofpagestyles
+\ihead{\headmark}
+\ohead{\pagemark}
+\automark[section]{chapter}
+
+\emergencystretch=3em
+\DeclareTOCStyleEntries[pagenumberwidth=3em,rightindent=4em]{tocline}{chapter,section,subsection}
+\sloppy
+
+\AtBeginDocument{\date{@EDITION@}}

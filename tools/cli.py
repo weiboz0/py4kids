@@ -20,7 +20,8 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--book", required=True)
     parser.add_argument("--unit")
-    parser.add_argument("check", choices=(*CHECKS, "fill-outputs", "lesson-outputs-check"))
+    parser.add_argument("check", choices=(*CHECKS, "fill-outputs", "lesson-outputs-check", "publish", "publish-audit"))
+    parser.add_argument("--edition", choices=("student", "teacher"))
     return parser
 
 
@@ -60,6 +61,21 @@ def main(argv=None):
             file=sys.stderr,
         )
         return 2
+    if arguments.check == "publish":
+        from tools.publish import build
+        if not arguments.edition:
+            print("usage: publish requires --edition", file=sys.stderr)
+            return 2
+        print(build(arguments.root, arguments.book, arguments.edition))
+        return 0
+    if arguments.check == "publish-audit":
+        from tools.publish_audit import audit
+        findings = audit(arguments.root, arguments.book)
+        for finding in findings:
+            print(finding)
+        if findings and any(finding.startswith("FAIL:") for finding in findings):
+            return 1
+        return 0
     if arguments.check == "fill-outputs":
         findings = fill_outputs_findings(arguments.root, arguments.book, arguments.unit)
     elif arguments.check == "lesson-outputs-check":

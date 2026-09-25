@@ -85,6 +85,8 @@ fi
 step "5/6 PDF build"
 bash scripts/build-pdf.sh --book book1
 [ -d book1b ] && bash scripts/build-pdf.sh --book book1b
+[ -d book1b ] && bash scripts/build-book.sh --book book1b
+[ -d book1b ] && uv run py4kids-tools --book book1b publish-audit
 
 step "6/6 pre-merge guard"
 bash scripts/pre-merge-guard.sh
