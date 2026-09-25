@@ -252,7 +252,7 @@ def test_grouped_exercise_and_brief_keep_statements(tmp_path):
     assert '### Challenge — A title' in student
     assert '::: {.challenge}\n**Exercise 1**' in student
     assert 'Keep this statement.' in student
-    assert '::: {.challenge}' in student and r'\answerlines{8}' in student
+    assert '::: {.challenge}' in student and r'\answerlines' not in student
     assert "The full program is in the Teacher's Edition." in student
     assert "The full program is in the Teacher's Edition." not in teacher
     assert '# fill this in' in student
@@ -290,7 +290,7 @@ def test_empty_starter_omitted_but_inventory_retained(tmp_path):
     ]), entry / 'exercises.ipynb')
     body, inventory, _ = render_items(entry / 'exercises.ipynb', 'unit', 'student', entry, 'fixture')
     assert '::: {.starter}' not in body
-    assert r'\answerlines{4}' in body
+    assert r'\answerlines' not in body
     assert inventory[0]['kind'] == 'starter'
 
 

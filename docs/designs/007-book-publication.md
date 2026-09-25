@@ -49,8 +49,8 @@ plus the syllabus; they carry notebook framing (`In [ ]:` prompts, raw cell boxe
     the drawing, replayed through the headless turtle and drawn with TikZ;
   - `**Notice:**` paragraphs become Notice callouts; `stretch` exercises get a Challenge marker; each
     exercise's `**Real version:**` line becomes a small "Real program" note;
-  - notebook-only furniture is removed (execution counts); starter cells print as "Starter" code and the
-    student edition adds a ruled answer area after each exercise;
+  - notebook-only furniture is removed (execution counts); starter cells print as "Starter" code; there are
+    no ruled answer lines (students work in their notebooks — user decision, 2026-09-25);
   - turtle assets referenced by lessons render as listings of the `.py` file.
 - **D4 — Two editions from the same sources (user decision: "Two editions").**
   The Student Book is built from an explicit source allowlist (lessons, exercises, checkpoints, briefs,
