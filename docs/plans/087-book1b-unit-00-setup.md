@@ -28,8 +28,10 @@ publication) governs how chapters are built.
 ## Phase A — Content (inline; learner/teacher prose)
 
 `unit-00-getting-set-up.md`: hook (run your first program three ways); what you will install and why;
-install Python on Windows (python.org, "Add python.exe to PATH", `py --version`) and on macOS (python.org
-`.pkg`, "Install Certificates.command", `python3 --version`); install and start JupyterLab, open the course
+install Python on Windows (python.org's **Python install manager** → **Install**, then
+`py install default`, answering `y` to the optional PATH prompt, then `py --version` — the classic
+installer is deprecated from 3.14) and on macOS (python.org `.pkg`, "Install Certificates.command" in
+`/Applications/Python 3.x/`, `python3 --version`); install and start JupyterLab, open the course
 folder, run a cell with Shift+Enter, restart the kernel, stop the server with Ctrl+C; install Thonny, save
 and run `hello.py`; run a `.py` file from the terminal (the Unit 6 turtle workflow); troubleshooting
 table; a final checklist. `unit-00-teacher-notes.md`: goals, a 60–90 minute setup-day plan, preparation
@@ -38,18 +40,26 @@ and a per-student sign-off checklist.
 
 ## Phase B — Tooling (Codex gpt-6-sol)
 
-- `tools/publish.py`: after the front matter, emit the Unit 0 chapter from the docs file with the kind
-  label "Unit 0" and title "Getting Set Up" (TOC, running heads and the PDF outline read "Unit 0 — Getting
-  Set Up"); main matter (arabic page 1) starts at Unit 0 instead of Unit 1; in the Teacher's Edition the
-  teacher notes follow the chapter opener in the usual Teacher panel. Markdown `text` blocks keep their
-  styling as code panels; the `Notice:` rule applies.
-- `allowed_source`: admit `unit-00-getting-set-up.md`; teacher notes stay teacher-only.
-- `tools/publish_audit.py`: expect 20 chapters (Unit 0 + 13 units + 5 checkpoints + the Algorithm
-  Challenge) in order, with Unit 0 first after the front matter; Unit 0 has no exercise/answer-key
-  expectations.
+- `tools/publish.py`: `entries()` keeps reading the syllabus table (unchanged). The builder emits the
+  Unit 0 chapter **separately, before the syllabus loop**, as a chapter of its own kind `setup` (never
+  `unit`, so no lesson/exercise/answer-key logic applies) with id `unit-00-getting-set-up`, kind label
+  "Unit 0" and title "Getting Set Up" (TOC, running heads and the PDF outline read "Unit 0 — Getting Set
+  Up"). The `pub-mainmatter` marker moves from the `unit-01-` chapter to Unit 0, so arabic page 1 is Unit 0.
+  The chapter body is the docs file through the normal Markdown handling (H1 → chapter title, the hook
+  paragraphs → opener, the `Notice:` rule, `text` blocks as code panels, tables, the `- [ ]` checklist).
+  In the Teacher's Edition, `unit-00-teacher-notes.md` follows the opener in the usual Teacher panel.
+- `allowed_source`: explicitly admit `unit-00-getting-set-up.md` for the student edition and explicitly
+  deny any file whose name contains `teacher-notes` (not only by falling through).
+- `tools/publish_audit.py`: the expected chapter order is `unit-00-getting-set-up` followed by the
+  syllabus entries (20 chapters); the audit skips notebook, exercise, Notice-count, inventory and
+  answer-key checks for the `setup` chapter, but its heading and artefact checks still apply.
+- Glyphs: `▸` and the checklist box must render through the fallback font — the render-log audit fails on
+  any `Missing character`.
 - `book1b/front-matter/how-to-use.md` gains one sentence pointing to Unit 0 (inline edit).
-- Tests: Unit 0 placement and label in both editions; teacher panel only in the teacher edition; the
-  student allowlist refuses `unit-00-teacher-notes.md` (sentinel); main matter starts at Unit 0.
+- Tests: Unit 0 placement, kind and label in both editions; main matter starts at Unit 0; the teacher
+  panel only in the teacher edition; the student allowlist admits the chapter and refuses
+  `unit-00-teacher-notes.md` (sentinel string absent from the student project and PDF text); the audit's
+  20-chapter order.
 
 ## Phase C — VERIFICATION
 
@@ -63,7 +73,9 @@ and a per-student sign-off checklist.
 ## Out of scope
 
 A Unit 0 notebook or manifest (user decision); Chromebook/iPad set-up beyond a teacher note; Book 1 and
-Book 2; screenshots.
+Book 2; screenshots. Unit 6's lesson still tells students to run `python assets/l1_square.py` in
+JupyterLab's terminal; Unit 0 now teaches `py` / `python3` and mentions the JupyterLab terminal — aligning
+Unit 6's wording is a follow-up (errata), not part of this plan.
 
 ## Plan Review
 
@@ -75,6 +87,30 @@ Book 2; screenshots.
 - Watch items: glyphs Atkinson Hyperlegible may lack (`▸`, task-list boxes) must hit the fallback font
   (the render-log audit catches misses); the Windows "Modify ▸ Add Python to environment variables"
   wording; macOS Gatekeeper wording for Thonny.
+
+### Round 1 — verdicts
+
+- `[fable]` APPROVE WITH NITS — accuracy: the Modify path does not restore `py`; OneDrive-redirected
+  Documents breaks `cd`; pip warnings; Disable path length limit; SmartScreen; double Ctrl+C; Thonny's
+  bundled Python below 3.12; Unit 6 uses JupyterLab's terminal; pedagogy: saving, where the course folder
+  comes from; teacher notes: offline wheels, proxies; tooling specifics (separate kind, audit order,
+  main-matter marker, explicit teacher-notes deny).
+- `[sol]` **REJECT** — the Windows flow must follow the current **Python install manager** (the classic
+  "Add python.exe to PATH" installer is deprecated from 3.14); the plan must specify how a chapter
+  outside the syllabus is emitted and audited; Thonny's per-architecture downloads; the Mac certificate
+  script location.
+- `[glm]` first attempt timed out; retried.
+
+### Round 1 — fold
+
+- `[FIXED]` Windows steps rewritten for the install manager (Install → `py install default` → `y` to the
+  PATH prompt → `py --version`), with matching troubleshooting and teacher notes (verified against the
+  current docs.python.org Windows guide).
+- `[FIXED]` all of [fable]'s content points (commit 0c13721) and [sol]'s Thonny download choice and Mac
+  certificate location.
+- `[FIXED]` Phase B now specifies the separate `setup` chapter, main-matter move, explicit deny, audit
+  order and skipped checks, glyph fallback, and tests; the Unit 6 wording mismatch is recorded as a
+  follow-up.
 
 ## Content Review
 _(4-way content-review gate — including rendered pages.)_

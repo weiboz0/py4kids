@@ -21,16 +21,18 @@ a JupyterLab cell with its output, `hello.py` running in Thonny, and `hello.py` 
 - **Course files:** decide where students keep the course folder (the chapter assumes
   `Documents/py4kids`) and copy it to every machine beforehand.
 - **Try it yourself** on one Windows and one Mac machine the day before; installer wording changes over
-  time. (python.org's Windows download may be the newer "Python install manager"; `py --version` works
-  the same way with it.)
+  time. On Windows, python.org now provides the **Python install manager** (the classic installer with
+  the "Add python.exe to PATH" box is deprecated from 3.14 and will not exist for 3.16+); students then
+  run `py install default`. `py list` shows the installed runtimes. Some school machines block app
+  packages (MSIX) — IT can deploy the install manager or its MSI package instead.
 
 ## Setup-day plan (60–90 minutes)
 
 1. **5 min — Why three tools.** Python runs programs; JupyterLab holds the lessons; Thonny runs `.py`
    files. Show the "run it three ways" goal.
-2. **20 min — Install Python.** Walk through the Windows and Mac steps together. On Windows, stop the
-   class at the **Add python.exe to PATH** checkbox and check every screen. Everyone runs the version
-   command before moving on.
+2. **20 min — Install Python.** Walk through the Windows and Mac steps together. On Windows, everyone
+   runs `py install default` and answers `y` to the PATH question; on a Mac, everyone runs Install
+   Certificates. Everyone runs the version command before moving on.
 3. **20 min — JupyterLab.** Install with `-m pip`, start it from the course folder, open Unit 1's
    lesson, run the first cell with Shift+Enter, add a new cell, restart the kernel, and stop the server
    with Ctrl+C.
@@ -44,9 +46,9 @@ the terminal run as homework before Unit 6.
 
 ## Common problems
 
-- **Windows, PATH not ticked:** `python` opens the Microsoft Store and `py` may be missing. Re-run the
-  installer, choose **Modify**, tick **py launcher** on the first screen and **Add Python to environment
-  variables** on the next — or reinstall with the PATH checkbox ticked.
+- **Windows, `py` missing or no runtime:** open a new Command Prompt after installing the install
+  manager; if `py --version` reports no Python, run `py install default`. If `python` opens the Microsoft
+  Store, use `py` (the book always does).
 - **Windows OneDrive:** Documents is often redirected into OneDrive, so `cd Documents/py4kids` fails.
   Use `cd OneDrive/Documents/py4kids`, or open a terminal from File Explorer's address bar (`cmd`).
 - **Thonny's own Python:** Thonny ships its own Python, which may be older than the course's 3.12 floor.

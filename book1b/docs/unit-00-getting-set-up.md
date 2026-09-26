@@ -26,23 +26,32 @@ Commands in this chapter are shown in grey boxes. Type them exactly and press En
 
 ## Install Python on Windows
 
-1. Open a web browser and go to **python.org/downloads**.
-2. Click the big **Download Python 3.x.x** button (any version 3.12 or newer is fine).
-3. Open the downloaded installer.
-4. **Important:** at the bottom of the first screen, tick the box **Add python.exe to PATH**.
-5. Click **Install Now** and wait until you see **Setup was successful**. That screen may also offer
-   **Disable path length limit** — you can click it or just click **Close**.
-6. Check that it worked. Open the Start menu, type `cmd`, and open **Command Prompt**. Type:
+On Windows, python.org gives you the **Python install manager**: a small app that installs Python and
+keeps it up to date.
+
+1. Open a web browser and go to **python.org/downloads**, and click the big download button for Windows.
+   It downloads the Python install manager.
+2. Open the downloaded file and click **Install**. Wait until it finishes.
+3. Open the Start menu, type `cmd`, and open **Command Prompt**. Type this command and press Enter:
+
+```text
+py install default
+```
+
+It downloads and installs the newest Python. If it asks whether to add a folder to your **PATH**, type
+`y` and press Enter (this lets the `python` command work too).
+
+4. Check that it worked. In the same window, type:
 
 ```text
 py --version
 ```
 
-You should see something like `Python 3.13.2`. The exact numbers do not matter, as long as it starts with
+You should see something like `Python 3.14.2`. The exact numbers do not matter, as long as it starts with
 `Python 3` and the second number is 12 or more.
 
 Notice: on Windows, this book always starts Python with the command `py`.
-It is the Python launcher, and it finds the Python you just installed even when other copies exist.
+It finds the Python you installed even when other copies exist on the computer.
 
 ## Install Python on a Mac
 
@@ -50,8 +59,8 @@ It is the Python launcher, and it finds the Python you just installed even when 
 2. Click the big **Download Python 3.x.x** button. It downloads a file ending in `.pkg`.
 3. Open the `.pkg` file and click **Continue** through the screens, then **Install**. Enter the Mac's
    password if asked.
-4. When it finishes, a Finder window opens showing the **Python 3.x** folder. Double-click
-   **Install Certificates.command** once. A Terminal window runs for a moment; you can close it when it
+4. When it finishes, a Finder window opens showing the **Python 3.x** folder (if it does not, open
+   **Applications ▸ Python 3.x** in Finder). Double-click **Install Certificates.command** once. A Terminal window runs for a moment; you can close it when it
    says it is done. (This lets Python download things safely.)
 5. Check that it worked. Open **Terminal** (press Command-Space, type `Terminal`, press Enter). Type:
 
@@ -59,7 +68,7 @@ It is the Python launcher, and it finds the Python you just installed even when 
 python3 --version
 ```
 
-You should see something like `Python 3.13.2`.
+You should see something like `Python 3.14.2`.
 
 Notice: on a Mac, this book always types `python3`, not `python`.
 Many Macs have no `python` command at all, and typing it only gives an error.
@@ -140,7 +149,12 @@ Three more things to know:
 Some programs in this book, such as the turtle drawings in Unit 6, are saved as files that end in `.py`
 and run on their own, outside a notebook. Thonny is a friendly editor for those files.
 
-1. Go to **thonny.org** and click the download link for your computer (**Windows** or **Mac**).
+1. Go to **thonny.org** and click the download link for your computer. There is more than one per
+   system — pick the right one:
+   - **Windows:** most computers need the ordinary 64-bit (Intel/AMD) installer. Choose the **Arm**
+     one only if your laptop has an Arm chip (your teacher will tell you).
+   - **Mac:** open the Apple menu ▸ **About This Mac**. If it says **Chip: Apple M…**, choose the Apple
+     Silicon installer; if it says **Processor: Intel**, choose the Intel installer.
 2. Open the downloaded installer and follow the steps, keeping every choice as it is.
    On Windows, if a blue box says **Windows protected your PC**, click **More info**, then **Run anyway**.
    On a Mac, if a message says the app cannot be opened, open **System Settings ▸ Privacy & Security**,
@@ -188,7 +202,9 @@ Terminal window, and press Enter.
 
 | What you see | What to do |
 |---|---|
-| Windows: `'python' is not recognized…`, or the Microsoft Store opens | Use `py` instead of `python`. If `py` also fails, run the Python installer again, choose **Modify**, tick **py launcher** on the first screen and **Add Python to environment variables** on the next, then click **Install**. |
+| Windows: `'py' is not recognized…` | Close Command Prompt and open a new one. If it still fails, download the Python install manager from python.org again and click **Install**. |
+| Windows: `py --version` says no Python is installed | Run `py install default` again and wait for it to finish. |
+| Windows: `'python' is not recognized…`, or the Microsoft Store opens | Use `py` instead of `python` — this book always does. |
 | Windows: `The system cannot find the path specified` after `cd Documents/py4kids` | Your Documents folder may live inside OneDrive: try `cd OneDrive/Documents/py4kids`. Or open the folder in File Explorer, click the address bar, type `cmd`, and press Enter — a terminal opens in that folder. |
 | Mac: `cd: no such file or directory` | Type `cd ` and drag the course folder from Finder onto the Terminal window, then press Enter. |
 | Mac: `command not found: python` | Type `python3`, not `python`. |
