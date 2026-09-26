@@ -130,6 +130,13 @@ Unit 6's wording is a follow-up (errata), not part of this plan.
   (the `cd` step is given only for a new terminal); the plan states that the setup chapter keeps `##`
   headings as level-2 sections and the audit checks them as bookmarks in both editions.
 
+### Round 4 — [sol] REJECT (folded)
+
+- `[FIXED]` Windows fallback for an older launcher owning `py`: `pymanager install default`, and ask the
+  teacher if `py --version` still picks a version below 3.12 (chapter, troubleshooting table, teacher
+  notes); macOS `.pkg` steps name **Agree**; the JupyterLab browser fallback copies the full
+  `http://localhost:…` URL (port may differ).
+
 ## Content Review
 _(4-way content-review gate — including rendered pages.)_
 

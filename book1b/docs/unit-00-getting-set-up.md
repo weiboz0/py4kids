@@ -51,13 +51,17 @@ You should see something like `Python 3.14.2`. The exact numbers do not matter, 
 `Python 3` and the second number is 12 or more.
 
 Notice: on Windows, this book always starts Python with the command `py`.
-It finds the Python you installed even when other copies exist on the computer.
+
+If `py install default` gives an error, the computer may have an older Python launcher. Type
+`pymanager install default` instead — `pymanager` always means the new install manager. If `py --version`
+then still shows a version older than 3.12, ask your teacher for help.
 
 ## Install Python on a Mac
 
 1. Open a web browser and go to **python.org/downloads**.
 2. Click the big **Download Python 3.x.x** button. It downloads a file ending in `.pkg`.
-3. Open the `.pkg` file and click **Continue** through the screens, then **Install**. Enter the Mac's
+3. Open the `.pkg` file and click **Continue** through the screens, click **Agree** to accept the licence,
+   then click **Install**. Enter the Mac's
    password if asked.
 4. When it finishes, a Finder window opens showing the **Python 3.x** folder (if it does not, open
    **Applications ▸ Python 3.x** in Finder). Double-click **Install Certificates.command** once. A Terminal window runs for a moment; you can close it when it
@@ -115,7 +119,8 @@ python3 -m jupyterlab
 ```
 
 After a few seconds your web browser opens JupyterLab. If it does not, look in the terminal for a line
-starting with `http://localhost:8888/` and copy that whole line into your browser.
+starting with `http://localhost:` (the number after it may differ) and copy that whole line into your
+browser.
 
 Notice: keep the terminal window open while you work — JupyterLab stops when that window closes.
 
@@ -213,7 +218,8 @@ Terminal window, and press Enter.
 | Mac: `command not found: python` | Type `python3`, not `python`. |
 | `No module named jupyterlab` | Run the install command again (`py -m pip install jupyterlab` or `python3 -m pip install jupyterlab`) and read the last lines for an error. |
 | `No such file or directory` when you run `hello.py` | The terminal is in a different folder. Use `cd` to move into the folder where you saved the file, then try again. |
-| JupyterLab starts but no browser opens | Copy the `http://localhost:8888/…` line from the terminal into your browser. |
+| JupyterLab starts but no browser opens | Copy the whole `http://localhost:…` line from the terminal into your browser. |
+| Windows: `py install default` fails, or `py --version` shows an old version | Type `pymanager install default`. If `py --version` still shows a version older than 3.12, ask your teacher. |
 | The install is blocked or asks for a password you do not know | Stop and ask your teacher or a parent — school computers often need an administrator. |
 
 ## Checklist

@@ -46,6 +46,9 @@ the terminal run as homework before Unit 6.
 
 ## Common problems
 
+- **Windows, an older launcher owns `py`:** on machines with an earlier Python, `py` may still be the old
+  launcher; `pymanager install default` always reaches the install manager. Remove old Pythons (or ask IT)
+  if `py --version` keeps picking one below 3.12.
 - **Windows, `py` missing or no runtime:** open a new Command Prompt after installing the install
   manager; if `py --version` reports no Python, run `py install default`. If `python` opens the Microsoft
   Store, use `py` (the book always does).
