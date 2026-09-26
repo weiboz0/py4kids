@@ -8,6 +8,10 @@ By the end of this unit you will have run the same tiny program three different 
 Ask an adult before installing software, and ask your teacher first if you are using a school computer —
 many school computers are already set up for you.
 
+You also need the **course folder**, which holds every lesson and exercise. Your teacher will give it to
+you. If you are learning on your own, download it from the course's GitHub page (**Code ▸ Download ZIP**),
+unzip it, and name the folder `py4kids`. This chapter assumes it is in your **Documents** folder.
+
 ## What you will install
 
 | Tool | What it is for | Where you get it |
@@ -26,7 +30,8 @@ Commands in this chapter are shown in grey boxes. Type them exactly and press En
 2. Click the big **Download Python 3.x.x** button (any version 3.12 or newer is fine).
 3. Open the downloaded installer.
 4. **Important:** at the bottom of the first screen, tick the box **Add python.exe to PATH**.
-5. Click **Install Now** and wait until you see **Setup was successful**. Click **Close**.
+5. Click **Install Now** and wait until you see **Setup was successful**. That screen may also offer
+   **Disable path length limit** — you can click it or just click **Close**.
 6. Check that it worked. Open the Start menu, type `cmd`, and open **Command Prompt**. Type:
 
 ```text
@@ -77,6 +82,8 @@ python3 -m pip install jupyterlab
 ```
 
 Wait until the text stops and you see a line starting with `Successfully installed`.
+Yellow lines such as `WARNING: The script … is not on PATH` or `A new release of pip is available` are
+fine — you can ignore them.
 
 To start JupyterLab, first move the terminal into the folder that holds the course files. If your teacher
 gave you a folder called `py4kids` in your Documents folder, type:
@@ -118,12 +125,15 @@ print("Hello from JupyterLab!")
 
 The output below the cell should read `Hello from JupyterLab!`.
 
-Two more things to know:
+Three more things to know:
 
+- Save your work with **File ▸ Save Notebook** (Ctrl+S, or Cmd+S on a Mac). JupyterLab also saves
+  automatically every couple of minutes.
 - If a notebook seems stuck or confused, choose **Kernel ▸ Restart Kernel** and run the cells again from
   the top.
 - To stop JupyterLab at the end of a session, save your work, then click the terminal window and press
-  **Ctrl+C**. If it asks `Shutdown this Jupyter server (y/[n])?`, type `y` and press Enter.
+  **Ctrl+C** (on Windows you may need to press it twice). If it asks
+  `Shutdown this Jupyter server (y/[n])?`, type `y` and press Enter.
 
 ## Install Thonny and run a program file
 
@@ -132,6 +142,7 @@ and run on their own, outside a notebook. Thonny is a friendly editor for those 
 
 1. Go to **thonny.org** and click the download link for your computer (**Windows** or **Mac**).
 2. Open the downloaded installer and follow the steps, keeping every choice as it is.
+   On Windows, if a blue box says **Windows protected your PC**, click **More info**, then **Run anyway**.
    On a Mac, if a message says the app cannot be opened, open **System Settings ▸ Privacy & Security**,
    scroll down, and click **Open Anyway**.
 3. Start Thonny. The top part is the **editor**, where you write a program. The bottom part is the
@@ -166,11 +177,20 @@ python3 hello.py
 
 The terminal prints `Hello from Thonny!` — the same program, run a third way.
 
+Notice: JupyterLab has a terminal of its own. Choose **File ▸ New ▸ Terminal** and it opens inside the
+browser, already in the course folder. The same `py` (Windows) or `python3` (Mac) commands work there — Unit
+6 uses it for the turtle drawings.
+
+On a Mac there is a shortcut for `cd`: type `cd ` (with a space), drag the folder from Finder onto the
+Terminal window, and press Enter.
+
 ## If something goes wrong
 
 | What you see | What to do |
 |---|---|
-| Windows: `'python' is not recognized…`, or the Microsoft Store opens | Use `py` instead of `python`. If `py` also fails, run the Python installer again, choose **Modify**, and tick **Add Python to environment variables**. |
+| Windows: `'python' is not recognized…`, or the Microsoft Store opens | Use `py` instead of `python`. If `py` also fails, run the Python installer again, choose **Modify**, tick **py launcher** on the first screen and **Add Python to environment variables** on the next, then click **Install**. |
+| Windows: `The system cannot find the path specified` after `cd Documents/py4kids` | Your Documents folder may live inside OneDrive: try `cd OneDrive/Documents/py4kids`. Or open the folder in File Explorer, click the address bar, type `cmd`, and press Enter — a terminal opens in that folder. |
+| Mac: `cd: no such file or directory` | Type `cd ` and drag the course folder from Finder onto the Terminal window, then press Enter. |
 | Mac: `command not found: python` | Type `python3`, not `python`. |
 | `No module named jupyterlab` | Run the install command again (`py -m pip install jupyterlab` or `python3 -m pip install jupyterlab`) and read the last lines for an error. |
 | `No such file or directory` when you run `hello.py` | The terminal is in a different folder. Use `cd` to move into the folder where you saved the file, then try again. |

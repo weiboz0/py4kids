@@ -13,11 +13,16 @@ a JupyterLab cell with its output, `hello.py` running in Thonny, and `hello.py` 
   machines, ask IT to pre-install Python (3.12+), JupyterLab and Thonny, or to grant install rights for
   the session.
 - **Downloads:** a class downloading at once can be slow. Put the Windows and macOS installers for
-  Python and Thonny on a USB stick or shared drive as a backup.
+  Python and Thonny on a USB stick or shared drive as a backup. `pip install jupyterlab` pulls roughly
+  100 MB per machine; on slow school Wi-Fi, pre-download the packages once
+  (`py -m pip download jupyterlab -d wheels`) and install from them
+  (`py -m pip install --no-index --find-links wheels jupyterlab`). Web filters or proxies may block
+  pypi.org — check with IT.
 - **Course files:** decide where students keep the course folder (the chapter assumes
   `Documents/py4kids`) and copy it to every machine beforehand.
 - **Try it yourself** on one Windows and one Mac machine the day before; installer wording changes over
-  time.
+  time. (python.org's Windows download may be the newer "Python install manager"; `py --version` works
+  the same way with it.)
 
 ## Setup-day plan (60–90 minutes)
 
@@ -40,8 +45,13 @@ the terminal run as homework before Unit 6.
 ## Common problems
 
 - **Windows, PATH not ticked:** `python` opens the Microsoft Store and `py` may be missing. Re-run the
-  installer, choose **Modify**, and tick **Add Python to environment variables** — or reinstall with the
-  checkbox ticked.
+  installer, choose **Modify**, tick **py launcher** on the first screen and **Add Python to environment
+  variables** on the next — or reinstall with the PATH checkbox ticked.
+- **Windows OneDrive:** Documents is often redirected into OneDrive, so `cd Documents/py4kids` fails.
+  Use `cd OneDrive/Documents/py4kids`, or open a terminal from File Explorer's address bar (`cmd`).
+- **Thonny's own Python:** Thonny ships its own Python, which may be older than the course's 3.12 floor.
+  If a `.py` program needs a newer feature, point Thonny at the python.org install with **Tools ▸ Options
+  ▸ Interpreter**.
 - **Mac, `python` vs `python3`:** students type `python`, and it fails. The book always uses `python3`.
 - **Two Pythons:** students who already had Python (or Anaconda) install JupyterLab into one Python and
   start it with another. Always use `py -m …` / `python3 -m …` so the same Python does both.
