@@ -38,8 +38,8 @@ keeps it up to date.
 py install default
 ```
 
-It downloads and installs the newest Python. If it asks whether to add a folder to your **PATH**, type
-`y` and press Enter (this lets the `python` command work too).
+It downloads and installs the newest Python. If it asks whether to add a folder to your **PATH**, you
+can answer either way — that only adds extra command names, and this book always uses `py`.
 
 4. Check that it worked. In the same window, type:
 
@@ -90,7 +90,8 @@ On a **Mac** (Terminal):
 python3 -m pip install jupyterlab
 ```
 
-Wait until the text stops and you see a line starting with `Successfully installed`.
+Wait until the text stops and you see a line starting with `Successfully installed` (or
+`Requirement already satisfied`, which means it was already there).
 Yellow lines such as `WARNING: The script … is not on PATH` or `A new release of pip is available` are
 fine — you can ignore them.
 
@@ -129,10 +130,10 @@ Try it with a new cell of your own. Click **+** in the toolbar to add a cell, ty
 and press Shift+Enter:
 
 ```python
-print("Hello from JupyterLab!")
+print("Hello, Python!")
 ```
 
-The output below the cell should read `Hello from JupyterLab!`.
+The output below the cell should read `Hello, Python!`.
 
 Three more things to know:
 
@@ -164,11 +165,11 @@ and run on their own, outside a notebook. Thonny is a friendly editor for those 
 4. Type this program into the editor:
 
 ```python
-print("Hello from Thonny!")
+print("Hello, Python!")
 ```
 
 5. Choose **File ▸ Save**, name the file `hello.py`, and save it in your course folder.
-6. Click the green **Run** button (or press **F5**). The Shell shows `Hello from Thonny!`.
+6. Click the green **Run** button (or press **F5**). The Shell shows `Hello, Python!`.
 
 Notice: Thonny comes with its own copy of Python, so it works even before anything else is set up.
 
@@ -189,7 +190,7 @@ cd Documents/py4kids
 python3 hello.py
 ```
 
-The terminal prints `Hello from Thonny!` — the same program, run a third way.
+The terminal prints `Hello, Python!` — the same program, run a third way.
 
 Notice: JupyterLab has a terminal of its own. Choose **File ▸ New ▸ Terminal** and it opens inside the
 browser, already in the course folder. The same `py` (Windows) or `python3` (Mac) commands work there — Unit
