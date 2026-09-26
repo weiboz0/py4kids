@@ -176,19 +176,21 @@ Notice: Thonny comes with its own copy of Python, so it works even before anythi
 ## Run a program file from the terminal
 
 You can also run `hello.py` straight from the terminal — Unit 6 uses this for turtle drawings.
-Move into the folder where you saved it, then run it — Windows:
+If you are still in the terminal where you started JupyterLab (after stopping it with Ctrl+C), you are
+already in the course folder, so just run the file — Windows:
 
 ```text
-cd Documents/py4kids
 py hello.py
 ```
 
 Mac:
 
 ```text
-cd Documents/py4kids
 python3 hello.py
 ```
+
+In a **new** terminal window, first move into the course folder with `cd Documents/py4kids`, then run the
+same command.
 
 The terminal prints `Hello, Python!` — the same program, run a third way.
 

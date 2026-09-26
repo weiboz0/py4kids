@@ -45,6 +45,9 @@ and a per-student sign-off checklist.
   `unit`, so no lesson/exercise/answer-key logic applies) with id `unit-00-getting-set-up`, kind label
   "Unit 0" and title "Getting Set Up" (TOC, running heads and the PDF outline read "Unit 0 — Getting Set
   Up"). The `pub-mainmatter` marker moves from the `unit-01-` chapter to Unit 0, so arabic page 1 is Unit 0.
+  The setup chapter keeps its `##` headings as level-2 sections (the ordinary `markdown_blocks()`
+  demotion of `##` to `###` does not apply), so each appears in the TOC and the PDF outline in both
+  editions; its `###` headings stay level 3.
   The chapter body is the docs file through the normal Markdown handling (H1 → chapter title, the hook
   paragraphs → opener, the `Notice:` rule, `text` blocks as code panels, tables, the `- [ ]` checklist).
   In the Teacher's Edition, `unit-00-teacher-notes.md` follows the opener in the usual Teacher panel.
@@ -57,7 +60,8 @@ contain "Unit 0 — Getting Set Up" and its `##` section headings) and the artef
 - Glyphs: `▸` and the checklist box must render through the fallback font — the render-log audit fails on
   any `Missing character`.
 - `book1b/front-matter/how-to-use.md` gains one sentence pointing to Unit 0 (inline edit).
-- Tests: Unit 0 placement, kind and label in both editions; the setup outline check; main matter starts at Unit 0; the teacher
+- Tests: Unit 0 placement, kind and label in both editions; the setup outline check (every `##`
+  heading of the docs file is a level-2 bookmark under "Unit 0 — Getting Set Up" in both PDFs); main matter starts at Unit 0; the teacher
   panel only in the teacher edition; the student allowlist admits the chapter and refuses
   `unit-00-teacher-notes.md` (sentinel string absent from the student project and PDF text); the audit's
   20-chapter order.
@@ -119,6 +123,12 @@ Unit 6's wording is a follow-up (errata), not part of this plan.
   as optional (it adds versioned aliases; `py` works either way) in the chapter, teacher notes and plan;
   "Requirement already satisfied" accepted as a successful pip result; the audit's PDF outline check is
   specified and tested for the `setup` chapter.
+
+### Round 3 — [sol] REJECT (folded)
+
+- `[FIXED]` the terminal run no longer repeats `cd` in the terminal that is already in the course folder
+  (the `cd` step is given only for a new terminal); the plan states that the setup chapter keeps `##`
+  headings as level-2 sections and the audit checks them as bookmarks in both editions.
 
 ## Content Review
 _(4-way content-review gate — including rendered pages.)_
