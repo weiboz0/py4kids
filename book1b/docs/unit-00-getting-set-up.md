@@ -9,7 +9,8 @@ Ask an adult before installing software, and ask your teacher first if you are u
 many school computers are already set up for you.
 
 You also need the **course folder**, which holds every lesson and exercise. Your teacher will give it to
-you. If you are learning on your own, download it from the course's GitHub page (**Code ▸ Download ZIP**),
+you. If you are learning on your own, download it from the course's GitHub page, **github.com/weiboz0/py4kids** (**Code ▸ Download
+ZIP**),
 unzip it, and name the folder `py4kids`. This chapter assumes it is in your **Documents** folder.
 
 ## What you will install

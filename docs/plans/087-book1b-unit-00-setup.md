@@ -137,6 +137,11 @@ Unit 6's wording is a follow-up (errata), not part of this plan.
   notes); macOS `.pkg` steps name **Agree**; the JupyterLab browser fallback copies the full
   `http://localhost:…` URL (port may differ).
 
+### Round 5 — [sol] APPROVE WITH NITS (folded)
+
+- `[FIXED]` teacher notes name the official remedy (uninstall the legacy **Python launcher**); the chapter
+  gives the course's GitHub address for independent learners.
+
 ## Content Review
 _(4-way content-review gate — including rendered pages.)_
 
