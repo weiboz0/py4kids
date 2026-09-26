@@ -31,7 +31,7 @@ a JupyterLab cell with its output, `hello.py` running in Thonny, and `hello.py` 
 1. **5 min — Why three tools.** Python runs programs; JupyterLab holds the lessons; Thonny runs `.py`
    files. Show the "run it three ways" goal.
 2. **20 min — Install Python.** Walk through the Windows and Mac steps together. On Windows, everyone
-   runs `py install default` and answers `y` to the PATH question; on a Mac, everyone runs Install
+   runs `py install default` (the optional PATH question can be answered either way); on a Mac, everyone runs Install
    Certificates. Everyone runs the version command before moving on.
 3. **20 min — JupyterLab.** Install with `-m pip`, start it from the course folder, open Unit 1's
    lesson, run the first cell with Shift+Enter, add a new cell, restart the kernel, and stop the server

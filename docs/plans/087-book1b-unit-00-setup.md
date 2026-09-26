@@ -29,7 +29,7 @@ publication) governs how chapters are built.
 
 `unit-00-getting-set-up.md`: hook (run your first program three ways); what you will install and why;
 install Python on Windows (python.org's **Python install manager** → **Install**, then
-`py install default`, answering `y` to the optional PATH prompt, then `py --version` — the classic
+`py install default` (the optional PATH prompt only adds versioned aliases), then `py --version` — the classic
 installer is deprecated from 3.14) and on macOS (python.org `.pkg`, "Install Certificates.command" in
 `/Applications/Python 3.x/`, `python3 --version`); install and start JupyterLab, open the course
 folder, run a cell with Shift+Enter, restart the kernel, stop the server with Ctrl+C; install Thonny, save
@@ -52,11 +52,12 @@ and a per-student sign-off checklist.
   deny any file whose name contains `teacher-notes` (not only by falling through).
 - `tools/publish_audit.py`: the expected chapter order is `unit-00-getting-set-up` followed by the
   syllabus entries (20 chapters); the audit skips notebook, exercise, Notice-count, inventory and
-  answer-key checks for the `setup` chapter, but its heading and artefact checks still apply.
+  answer-key checks for the `setup` chapter; the PDF outline check is extended to it (the outline must
+contain "Unit 0 — Getting Set Up" and its `##` section headings) and the artefact check applies.
 - Glyphs: `▸` and the checklist box must render through the fallback font — the render-log audit fails on
   any `Missing character`.
 - `book1b/front-matter/how-to-use.md` gains one sentence pointing to Unit 0 (inline edit).
-- Tests: Unit 0 placement, kind and label in both editions; main matter starts at Unit 0; the teacher
+- Tests: Unit 0 placement, kind and label in both editions; the setup outline check; main matter starts at Unit 0; the teacher
   panel only in the teacher edition; the student allowlist admits the chapter and refuses
   `unit-00-teacher-notes.md` (sentinel string absent from the student project and PDF text); the audit's
   20-chapter order.
@@ -111,6 +112,13 @@ Unit 6's wording is a follow-up (errata), not part of this plan.
 - `[FIXED]` Phase B now specifies the separate `setup` chapter, main-matter move, explicit deny, audit
   order and skipped checks, glyph fallback, and tests; the Unit 6 wording mismatch is recorded as a
   follow-up.
+
+### Round 2 — [sol] REJECT (folded)
+
+- `[FIXED]` one program in all three runs (`print("Hello, Python!")`); the Windows PATH prompt is described
+  as optional (it adds versioned aliases; `py` works either way) in the chapter, teacher notes and plan;
+  "Requirement already satisfied" accepted as a successful pip result; the audit's PDF outline check is
+  specified and tested for the `setup` chapter.
 
 ## Content Review
 _(4-way content-review gate — including rendered pages.)_
