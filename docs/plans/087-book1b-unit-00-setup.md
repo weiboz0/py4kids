@@ -154,7 +154,46 @@ Unit 6's wording is a follow-up (errata), not part of this plan.
 **Consensus reached — implementation starts.**
 
 ## Content Review
-_(4-way content-review gate — including rendered pages.)_
+
+### Round 1 — verdicts (HEAD c647a38; rendered snapshots)
+
+- `[self]` APPROVE WITH NITS — rendered-page review: the troubleshooting table wrapped badly on a 7-inch
+  page and the checklist showed a bullet plus a box; both rewritten (list of symptom/fix items, plain box
+  lines).
+- `[fable]` APPROVE WITH NITS — accuracy re-verified against docs.python.org and thonny.org; `[OPEN]` two
+  Notice panels absorbed the following paragraph; nits: a stretched troubleshooting headline, the
+  Windows download wording, Thonny 4.x/5.0 Python versions, a running head, table header styling.
+- `[sol]` APPROVE — no open findings; text, sections, commands, checklist, teacher-panel placement,
+  main-matter start, 20-chapter outlines and the Student/Teacher boundary verified.
+- `[glm]` **skipped** — user decision 2026-09-26: "skip glm reviewer for 1 day, then use
+  volcengine-plan/glm-5.3" (both `volcengine-plan/glm-5.3` and `opencode-go/glm-5.3` hung on a one-word
+  probe; the content review timed out after 20 minutes).
+
+### Round 1 — fold
+
+- `[FIXED]` every Notice now ends its section (the Windows `py` Notice follows the `pymanager` paragraph;
+  the Mac `cd` shortcut precedes the JupyterLab-terminal Notice); the OneDrive troubleshooting headline is
+  shortened; Windows step 1 says "choose **Python install manager**".
+- `[WONTFIX]` Thonny version detail (the teacher-note wording is already hedged), the teacher-edition
+  running head on page 3, and table header styling (global style, not a regression).
+
+**Consensus reached** ([self]/[sol]/[fable]; [glm] skipped by user decision).
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Status: implemented; audits clean; `scripts/ci-local.sh` ALL GREEN (2026-09-26, 1777 s).**
+
+- **Phase A (inline):** `book1b/docs/unit-00-getting-set-up.md` (student chapter) and
+  `book1b/docs/unit-00-teacher-notes.md` (Teacher's Edition only). Windows follows python.org's Python
+  install manager (`py install default`, `pymanager` fallback, optional PATH prompt); macOS the `.pkg`
+  (Agree, Install Certificates); JupyterLab via `-m pip` / `-m jupyterlab`; Thonny per chip; one
+  `Hello, Python!` program run three ways; troubleshooting list and checklist. Accuracy checked by
+  `[sol]` and `[fable]` against the current Python, JupyterLab and Thonny documentation.
+- **Phase B (Codex gpt-6-sol):** a separate `setup` chapter emitted before the syllabus chapters (main
+  matter starts at Unit 0), `##` headings kept as level-2 sections, the teacher panel only in the
+  Teacher's Edition, an explicit `teacher-notes` deny in the source allowlist, a 20-chapter audit with the
+  outline check extended to Unit 0, and tests including the sentinel boundary test (33 publication tests).
+- **Result:** Student Book 460 pages (Unit 0 = pages 1–6), Teacher's Edition 872 pages (Unit 0 = pages
+  1–8); `publish-audit` PASS (20 chapters, 0 overfull boxes, no missing glyphs).
+- **Follow-up:** Unit 6's lesson still says `python assets/l1_square.py` in JupyterLab's terminal; Unit 0
+  teaches `py` / `python3` — align in an errata pass.
