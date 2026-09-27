@@ -409,6 +409,8 @@ def render_chapter(entry: Path, kind: str, edition: str):
                 route, body = route_code(c)
                 chapter.append(body)
                 inventory.append({'id': c.id, 'kind': route})
+                if route == 'tryit+figure':
+                    rendered_turtles.add(code_tokens(c.source))
                 if route == 'figure':
                     rendered_turtles.add(code_tokens(c.source))
                     try:

@@ -7,7 +7,7 @@ import subprocess
 from pathlib import Path
 
 from tools.fake_turtle import imports_turtle
-from tools.publish import ITEM, NOTICE, SETUP_ID, entries, item_groups, notebook
+from tools.publish import ITEM, NOTICE, SETUP_ID, code_tokens, entries, item_groups, notebook
 from tools.turtle_real import real_programs
 
 ERROR_IDS = {'9442d5582e1f', '25129fdd9963', 'dcec5192b293', 'u02l029',
@@ -46,6 +46,11 @@ def _turtle_drawing_findings(entry: Path, qmd: str, edition: str) -> list[str]:
         caption = f'Drawing for the sample input: {sample}'
         if sample is None or lesson_qmd.count(caption + '}\n\\end{pubfigure}') != 1:
             findings.append(f'FAIL: {edition}: {entry.name}: try-it figure {cell.id}')
+    tryit_tokens = {code_tokens(cell.source) for cell in tryits}
+    for asset in sorted((entry / 'assets').glob('*.py')) if (entry / 'assets').exists() else []:
+        if (f'**assets/{asset.name}**' in lesson_qmd
+                and code_tokens(asset.read_text(encoding='utf-8')) in tryit_tokens):
+            findings.append(f'FAIL: {edition}: {entry.name}: try-it asset {asset.name} listed again in full')
     if entry.name.startswith('unit-06-') and len(tryits) != 3:
         findings.append(f'FAIL: {edition}: {entry.name}: expected three turtle try-it figures')
     if edition != 'teacher':

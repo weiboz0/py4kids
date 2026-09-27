@@ -93,6 +93,24 @@ def test_referenced_input_asset_figure(tmp_path):
     assert '(10,0)' in rendered
 
 
+def test_tryit_asset_after_cell_is_a_reference_and_audit_catches_listing(tmp_path):
+    entry = tmp_path / 'book1b' / 'units' / 'unit-16-fixture'
+    (entry / 'assets').mkdir(parents=True)
+    source = '# sample-input: 10\nimport turtle\nturtle.forward(int(input("Length: ")))\n'
+    (entry / 'assets' / 'l1_square_input.py').write_text(source)
+    cell = nbformat.v4.new_code_cell(source, metadata={'tags': ['no-exec'], 'sample_input': '10'})
+    rendered_turtles = {publish.code_tokens(source)}
+    _, records = publish.asset_blocks('Run assets/l1_square_input.py', entry,
+                                      'student', set(), entry.name, rendered_turtles)
+    assert records == [{'id': 'asset:l1_square_input.py', 'kind': 'asset reference'}]
+    nbformat.write(nbformat.v4.new_notebook(cells=[cell]), entry / 'lesson.ipynb')
+    _, body = publish.route_code(cell)
+    assert _turtle_drawing_findings(entry, body, 'student') == []
+    listed = body + '\n**assets/l1_square_input.py**\n'
+    assert any('listed again in full' in finding
+               for finding in _turtle_drawing_findings(entry, listed, 'student'))
+
+
 def test_answer_key_real_figure(tmp_path):
     unit = fixture_unit(tmp_path)
     key = publish.answer_key(unit, 'unit', [{'number': 1, 'title': 'Square'}])
