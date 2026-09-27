@@ -23,22 +23,44 @@ Non-turtle repair and trace exercises keep their No-real lines (they fix or trac
 
 ## The real-program rule (binding)
 
-For each exercise, the real program:
-1. reads, with bare `input()` (one value per line, in the order the exercise's Real version line
-   states), exactly the settings that the solution asset hard-codes as literals — e.g. Courtyard Square
-   reads the side length, then the pen colour; Nine-Hexagon Wheel reads the number of sides, the side
-   length, then the number of shapes; U08 programs read their counts (the seed stays `random.seed(4)`);
-2. converts numbers with `int(...)` (or `float(...)` where the solution uses a decimal) and uses text
-   input as-is for colours;
-3. otherwise draws exactly as the solution asset does, ending with `turtle.done()`;
-4. prints exactly what the solution asset prints (e.g. `Dashes: 12`, `Squares: 9`), if anything.
+Each real program reads **exactly the inputs in the table below, in that order**, with bare `input()`
+(one value per line; numbers via `int(...)`, colours as typed text). Everything not listed stays code:
+shape rules (e.g. a square's four sides, the Ring's red/blue/green palette), seeds (`random.seed(4)`),
+and the derived values shown. With the **Sample input** (the exercise's own values) it must reproduce the
+solution asset exactly (see Parity). It ends with `turtle.done()` and prints what the asset prints.
 
-**Parity (checked in CI):** run with its **Sample input** — the exercise's own values — the real program
-must record the **identical segment list** (coordinates, colours, pen widths) and the identical stdout as
-the solution asset `solutions_exN*.py`, under the headless `fake_turtle`.
+| Unit / Ex | Exercise | Inputs, in order (sample) | Derived or fixed in code |
+|---|---|---|---|
+| U06 1 | Courtyard Square | side (62), colour (royalblue) | 4 sides; angle `360 / 4` |
+| U06 2 | Trail-Sign Triangle | side (74), colour (forestgreen) | 3 sides |
+| U06 3 | Festival Pentagon | side (68), colour (orchid), pen width (4) | 5 sides |
+| U06 4 | Decimal-Turn Heptagon | sides (7), side (57), colour (darkorange) | angle `360 / sides`, printed |
+| U06 5 | Move, Then Mark | travel (39), sides (8), side (44), colour (crimson) | pen-up travel first |
+| U06 6 | Nine-Hexagon Wheel | sides (6), side (41), shapes (9), colour (turquoise) | turn between shapes `360 / shapes` |
+| U06 7 | Growing Radar Spiral | start side (11), step (6), moves (14), colour (maroon) | 92° turn; final side printed |
+| U06 8 | Row of Squares | squares (4), side (40), travel (60) | return `backward(squares * travel)` |
+| U06 9 | Dashed Line | segments (24), step (10) | dash on even `i`; `Dashes: N` printed |
+| U06 10 | Color-Alternating Ring | squares (8), side (40) | palette by `i % 3`; turn `360 // squares` (so `Turned:` stays a whole number; teacher notes: choose a count that divides 360) |
+| U06 11 | Growing Squares | squares (5), start side (20), growth (20) | `Squares: N` printed |
+| U06 12 | Seven-Point Star | points (7), side (90) | turn `3 * 360 / points` |
+| U06 16 | Five-Point Star | points (5), side (96), colour (goldenrod), pen width (3) | turn `720 / points` |
+| U06 17 | The Eight-Degree Gap | sides (11), side (34), colour (magenta) | angle `360 / sides` |
+| U06 18 | Grid of Squares | rows (3), columns (3), side (30), travel (45) | return path as the asset; `Squares: N` printed |
+| U07 7 | Turtle Polygon Tool | sides (6), side (48), colour (teal) | calls `draw_polygon(sides, side)` |
+| U07 27 | Star Function | size (80) | calls `draw_star(size)`; 144° turns |
+| U07 28 | Polygon Row | sides (6), length (30), count (3), travel (70) | `polygon_row(count, sides, length, travel)`; return `backward(count * travel)` |
+| U08 7 | Rescue-Robot Random Walk | step (31), moves (20), colour (seagreen) | `random.seed(4)`; pen width 3; left/right from `randint(0, 1)` |
+| U08 16 | Random Polygon | length (70) | `random.seed(4)`; sides from `randint(3, 8)` |
+| U08 17 | Random Color Row | side (30), squares (4) | `random.seed(4)`; colour from `choice("rgb")`; return `backward(squares * side)` |
 
-Only concepts taught by that unit are used (U06: `input`, `int`, `float` are U01–U02 concepts, already
-taught; U07/U08 programs call the student's function / seeded randomness as their assets do).
+**Parity (checked in CI):** under `fake_turtle` with a fresh tracker, the real program run with its Sample
+input and the solution asset must produce (a) the same ordered list of pen-down segments (endpoints,
+colour, pen width), (b) the same final position and heading, (c) the same pen state at the end, and (d)
+identical stdout. Coordinates and headings compare with a tolerance of 1e-6; everything else exactly.
+(Final position/heading catch a missing pen-up return, which draws no segment.)
+
+Only concepts taught by that unit are used (`input`, `int` are U01–U02 concepts; U07 programs define and
+call functions; U08 programs use the unit's seeded randomness).
 
 ## Phase A — Design amendment (inline)
 
@@ -57,9 +79,10 @@ asset is checked headlessly), citing the user decision of 2026-09-27.
     Lesson 3: read the number of shapes and draw a ring — each with a lead-in and a Notice ("change the
     number you type and watch the loop draw more or fewer sides"). Each cell carries its sample input in
     cell metadata (`"sample_input": "…"`) so the book can print the drawing it makes.
-  - run instructions: explain once, in "First terminal encounter", how to run a program file — Windows
-    `py assets/l1_square.py`, Mac `python3 assets/l1_square.py`, from the **course folder**'s Unit 6
-    folder (JupyterLab's File ▸ New ▸ Terminal opens there) — and change every later
+  - run instructions: explain once, in "First terminal encounter", how to run a program file: open a
+    terminal (JupyterLab's File ▸ New ▸ Terminal opens in the **course folder**, as Unit 0 says), move into
+    Unit 6's folder with `cd book1b/units/unit-06-turtle-geometry`, then run Windows
+    `py assets/l1_square.py` / Mac `python3 assets/l1_square.py` — and change every later
     "Run `python assets/X.py`." to "Run `assets/X.py` the same way."; replace "repository root" with
     "course folder"; move "Budget about 15 minutes…" to the Unit 6 teacher notes.
 - **Unit 6 teacher notes** (inline): the timing note, the real-program idea for turtle (vary the typed
@@ -74,29 +97,40 @@ solution assets and checks stay unchanged.
 
 ## Phase D — Tooling (Codex gpt-6-sol)
 
-- `tools/fake_turtle.py` (or a new `tools/turtle_real.py`) + CLI check `turtle-real-check --book B`: for every
-  turtle real-program fence (a fence importing `turtle` under a "The real program" heading), run it
-  headlessly with its Sample input on stdin (fake turtle, fresh tracker) and the matching solution asset
-  headlessly; FAIL on any difference in segments or stdout, on no pen-down segment, or on a fence whose
-  Sample input is missing. Wire it into `scripts/ci-local.sh` beside `turtle-check`.
-- The Phase-E contract audit (plan 080's fence-parity audit and `publish-audit`'s contract count): turtle
-  fences are compared by the new check instead of plain stdout-only execution.
-- `tools/publish.py`: (a) Teacher's Edition answer keys render a turtle real-program fence with its sample
-  input and the **drawing** it makes (replayed with the sample input); (b) a lesson `no-exec` turtle cell
-  that reads `input()` routes to "Try it yourself" and, when it has `sample_input` metadata, is followed by
-  its drawing captioned "Drawing for the sample input …"; (c) the Student Book's Real-program notes for
-  these exercises render like every other Real version note.
-- Tests: parity pass and fail cases (a changed colour or side length is caught), missing sample input,
-  stdout mismatch, figure replay with sample input, the lesson try-it figure.
+- **`turtle-real-check --book B`** (registered in `tools/cli.py`'s check registry like `turtle-check`,
+  implemented beside `tools/fake_turtle.py`): builds the expected inventory from the notebooks — every
+  exercise in a unit whose solutions notebook lists a turtle solution asset (`assets/solutions_ex*.py`
+  importing `turtle`) and whose statement carries a Real version line — and requires **exactly one**
+  turtle real-program fence (under "The real program") per such exercise, associated by its
+  `## Exercise N` heading to that asset; Book 1b must yield exactly the 21 rows of the table. For each,
+  it runs the fence (Sample input on stdin) and the asset under a fresh `fake_turtle` and compares per the
+  Parity rule. FAILs: missing/extra fence, missing Sample input, segment / final-state / pen-state / stdout
+  mismatch, no pen-down segment. `fake_turtle` gains a `final_state()` (x, y, heading, pen down) if it
+  lacks one. Wired into `scripts/ci-local.sh` beside `turtle-check`.
+- **Contract audit:** turtle fences are verified by `turtle-real-check`, not by stdout-only execution
+  (the fence-parity step skips fences that import `turtle`).
+- **`tools/turtle_figure.py`:** `figure_tikz(source, stdin: str | None = None)` feeds `stdin` to `input()`
+  during replay.
+- **`tools/publish.py`:** lesson `no-exec` routing adds a rule before the turtle-figure rule: a turtle cell
+  that calls `input(` routes to `tryit`, followed by `figure_tikz(source, stdin=metadata["sample_input"])`
+  captioned "Drawing for the sample input: …" when the metadata exists (inventory kind `tryit+figure`);
+  Teacher's Edition answer keys render each turtle real-program fence, its Sample input, and the drawing
+  replayed with that input; Student Book Real-program notes render like all others.
+- **`tools/publish_audit.py`:** expected routes and inventory include `tryit+figure`; the audit checks the
+  three U06 try-it figures and the 21 answer-key drawings are present.
+- Tests: parity pass; failures for a changed colour, a changed side length, a missing pen-up return (final
+  position), a missing fence, a missing Sample input; `figure_tikz` with stdin; the lesson try-it route and
+  figure; the answer-key drawing; the 21-row inventory on Book 1b.
 
 ## Phase E — VERIFICATION
 
-1. `turtle-real-check` PASS for all 21 fences; `turtle-check`, `lesson-outputs-check`, structure /
+1. `turtle-real-check` PASS with exactly 21 inventory rows (segments, final state, pen state, stdout); `turtle-check`, `lesson-outputs-check`, structure /
    hygiene / noexec / concept-scan / cell-lint PASS.
 2. Contract audit: no exercise in U06/U07/U08 keeps a turtle "No real version" line; repairs and traces
    keep theirs.
-3. Books rebuilt; `publish-audit` PASS; rendered-page review of a U06 exercise, a U06 lesson try-it with
-   its drawing, and a Teacher answer key with a real-program drawing.
+3. Books rebuilt; `publish-audit` PASS including the new `tryit+figure` route and the 21 answer-key
+   drawings; rendered-page review of a U06 exercise, each U06 lesson try-it with its drawing, and Teacher
+   answer keys with real-program drawings (U06, U07, U08).
 4. `scripts/ci-local.sh` ALL GREEN; post-execution report.
 
 ## Out of scope
@@ -115,6 +149,26 @@ lesson naming, jargon) — a separate publication-polish plan. Book 1 and Book 2
   Growing Squares, Grid, Random Color Row) need an explicit reading order; U08 keeps `random.seed(4)` so
   parity stays deterministic; the lesson "run it the same way" rewrite must keep every existing asset run.
 - `[glm]` skipped for this gate by user decision (2026-09-26: "skip glm reviewer for 1 day").
+
+### Round 1 — verdicts
+
+- `[sol]` **REJECT** — the "read the literals" rule is ambiguous (needs an ordered per-exercise input table
+  with fixed and derived values); parity must catch invisible travel (final position/heading, tolerance);
+  the JupyterLab terminal opens in the course folder, not Unit 6's folder; the publisher route, sample-stdin
+  replay, audit routes and CLI registry must be explicit; the check must require exactly 21 associated
+  fences; the `[glm]` skip must be resolved.
+- `[fable]` pending.
+- `[glm]` skipped — a user-authorised one-day exception (2026-09-26: "skip glm reviewer for 1 day, then
+  use volcengine-plan/glm-5.3"); recorded here as the resolution of the gate-composition point.
+
+### Round 1 — fold
+
+- `[FIXED]` a 21-row input table (order, samples, fixed and derived values incl. the Row/Polygon Row/Random
+  Color Row return distances and the Ring's whole-number turn); parity now compares segments, final
+  position and heading, final pen state and stdout with a 1e-6 tolerance for coordinates; the U06 run
+  instructions include the `cd` from the course folder; Phase D specifies the check's inventory (exactly
+  21 associated fences), CLI registration, contract-audit skip, `figure_tikz(stdin=…)`, the `tryit+figure`
+  route, answer-key drawings and audit changes, with tests.
 
 ## Content Review
 _(filled before PR.)_
