@@ -6,7 +6,9 @@ import re
 import subprocess
 from pathlib import Path
 
-from tools.publish import ITEM, NOTICE, SETUP_ID, entries, item_groups, notebook
+from tools.fake_turtle import imports_turtle
+from tools.publish import ITEM, NOTICE, SETUP_ID, code_tokens, entries, item_groups, notebook
+from tools.turtle_real import real_programs
 
 ERROR_IDS = {'9442d5582e1f', '25129fdd9963', 'dcec5192b293', 'u02l029',
              'u02l079', 'u03l010', 'u04l022', 'u07l009', 'u13l009'}
@@ -21,11 +23,52 @@ def _expected_lesson_kind(cell) -> str:
         return 'errordemo'
     if 'hang-demo' in tags:
         return 'hangdemo'
+    if re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', cell.source) and 'input(' in cell.source:
+        return 'tryit+figure'
     if re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', cell.source):
         return 'figure'
     if 'input(' in cell.source:
         return 'tryit'
     return 'program'
+
+
+def _turtle_drawing_findings(entry: Path, qmd: str, edition: str) -> list[str]:
+    """Match sample-input figure captions to the lesson and answer-key sources."""
+    if not entry.name.startswith('unit-'):
+        return []
+    findings = []
+    lesson = notebook(entry / 'lesson.ipynb', 'student')
+    tryits = [cell for cell in lesson.cells if cell.cell_type == 'code'
+              and _expected_lesson_kind(cell) == 'tryit+figure']
+    lesson_qmd = qmd.rsplit('## Exercises', 1)[0]
+    for cell in tryits:
+        sample = cell.metadata.get('sample_input')
+        caption = f'Drawing for the sample input: {sample}'
+        if sample is None or lesson_qmd.count(caption + '}\n\\end{pubfigure}') != 1:
+            findings.append(f'FAIL: {edition}: {entry.name}: try-it figure {cell.id}')
+    tryit_tokens = {code_tokens(cell.source) for cell in tryits}
+    for asset in sorted((entry / 'assets').glob('*.py')) if (entry / 'assets').exists() else []:
+        if (f'**assets/{asset.name}**' in lesson_qmd
+                and code_tokens(asset.read_text(encoding='utf-8')) in tryit_tokens):
+            findings.append(f'FAIL: {edition}: {entry.name}: try-it asset {asset.name} listed again in full')
+    if entry.name.startswith('unit-06-') and len(tryits) != 3:
+        findings.append(f'FAIL: {edition}: {entry.name}: expected three turtle try-it figures')
+    if edition != 'teacher':
+        return findings
+    _, groups = item_groups(notebook(entry / 'solutions.ipynb', 'teacher').cells, 'Exercise')
+    answer = qmd.split('## Answer key', 1)[-1]
+    for group in groups:
+        number = group['number']
+        turtle_programs = [(source, sample) for source, sample in real_programs(group)
+                           if imports_turtle(source)]
+        if not turtle_programs:
+            continue
+        section = re.search(rf'(?ms)^### Exercise {number}\b.*?(?=^### Exercise \d+\b|\Z)', answer)
+        for _, sample in turtle_programs:
+            caption = 'Drawing for the sample input: ' + ', '.join((sample or '').splitlines())
+            if section is None or section[0].count(caption + '}\n\\end{pubfigure}') != 1:
+                findings.append(f'FAIL: teacher: {entry.name}: Exercise {number} real-program drawing')
+    return findings
 
 
 def _source_code(entry: Path, kind: str):
@@ -139,11 +182,13 @@ def audit(root: Path, book_id: str) -> list[str]:
             for tag, ids in source_tags.items():
                 if tag in tags:
                     ids.add(c.id)
-            if 'no-exec' in tags and 'input(' not in c.source and not re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', c.source) and c.id != 'u07l034a':
+            if ('no-exec' in tags and _expected_lesson_kind(c) not in
+                    {'tryit', 'tryit+figure', 'figure'} and c.id != 'u07l034a'):
                 candidates.add(c.id)
     if source_tags['error-demo'] != ERROR_IDS or source_tags['hang-demo'] != HANG_IDS or candidates != ERROR_IDS | HANG_IDS:
         findings.append('FAIL: error-demo/hang-demo source tags differ from re-derived list')
     for edition in ('student', 'teacher'):
+        answer_key_drawings = 0
         project = book / 'build' / 'publish' / edition
         inv_path = project / 'inventory.json'
         if not inv_path.exists():
@@ -184,11 +229,18 @@ def audit(root: Path, book_id: str) -> list[str]:
                 findings.append(f'FAIL: {edition}: {id_}: rendered item titles')
             if kind == 'unit' and qmd.count('::: {.notice}') != _expected_notices(entry):
                 findings.append(f'FAIL: {edition}: {id_}: Notice count')
+            if kind == 'unit' and book_id == 'book1b':
+                findings.extend(_turtle_drawing_findings(entry, qmd, edition))
+                if edition == 'teacher':
+                    answer_key_drawings += qmd.split('## Answer key', 1)[-1].count(
+                        '\\color{black!60}Drawing for the sample input:')
             if edition == 'teacher':
                 if qmd.count('## Answer key') != 1 or [int(x) for x in re.findall(r'^### ' + ITEM[kind] + r' (\d+)\b', qmd.split('## Answer key', 1)[-1], re.MULTILINE)] != numbers:
                     findings.append(f'FAIL: {edition}: {id_}: answer-key coverage')
             elif '## Answer key' in qmd:
                 findings.append(f'FAIL: {edition}: {id_}: answer key present')
+        if edition == 'teacher' and book_id == 'book1b' and answer_key_drawings != 21:
+            findings.append(f'FAIL: teacher: expected 21 turtle real-program drawings, got {answer_key_drawings}')
         pdf = project / '_book' / ('Book1b-Teacher.pdf' if edition == 'teacher' else 'Book1b-Student.pdf')
         tex = project / ('Book1b-Teacher.tex' if edition == 'teacher' else 'Book1b-Student.tex')
         if not tex.exists():

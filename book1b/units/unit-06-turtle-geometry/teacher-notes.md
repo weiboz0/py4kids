@@ -27,8 +27,10 @@ Budget: three lessons of 60–90 minutes; ladders with a *Notice* per rung.
   (`assets/l1_square.py`), then with a `for` loop (`assets/l1_square_loop.py` — `side_number` is the
   *loop variable*, not a counter), and only then `penup`/`pendown` (the travel-without-drawing rung,
   `assets/l1_travel.py`, which now uses the loop it follows).
-  **First terminal encounter (~15 min, budget it):** File → New → Terminal, `cd` into the unit directory,
-  `python assets/l1_square.py`, then edit-save-rerun; expect to walk the room and repeat this twice.
+  **First terminal encounter (~15 min, budget it):** File → New → Terminal (it opens in the course folder),
+  `cd book1b/units/unit-06-turtle-geometry`, then `py assets/l1_square.py` (Windows) or
+  `python3 assets/l1_square.py` (Mac), then edit-save-rerun; expect to walk the
+  room and repeat the edit-save-rerun cycle twice.
   Show the two errors students WILL hit, and read them together: calling `forward(100)` without the
   `turtle.` prefix raises `NameError: name 'forward' is not defined` (module-level style means every call is
   `turtle.forward`), and running from the wrong folder prints `can't open file '.../l1_square.py'`.
@@ -61,8 +63,19 @@ In Lesson 3 run the ring live and leave the growing spiral as a "try it."
 
 ## Exercises — core vs. More Practice vs. challenge
 
-18 exercises. Turtle work is input-exempt: every exercise ends with a **No real version** line (turtle
-drawings run as scripts, not stdin programs). Each exercise has a starter asset `assets/exN_*.py`, a
+18 exercises. Fifteen are drawing exercises (1–12, 16–18) and end with a **Real version** line: the real
+program in the solutions reads the drawing's settings (side length, colour, number of sides, counts) with
+`input()` and draws the same picture when given the exercise's own values.
+The three repairs (13–15) keep **No real version** — they fix given code.
+Use the real programs for the loop idea this unit is about: have students type a different count or length
+and compare the drawings (a count of 12 instead of 6 in a polygon loop draws twelve sides — the loop's
+count *is* the picture).
+Each lesson also has a "Try it yourself" input program (`assets/l1_square_input.py`,
+`assets/l2_polygon_input.py`, `assets/l3_ring_input.py`) run the same way as the other lesson files.
+For the Colour-Alternating Ring's real program, a count that divides 360 (3, 4, 5, 6, 8, 9, 10, 12 …) turns
+by a whole number; other counts turn by a decimal, and adding decimals can leave the total a hair under 360,
+so the printed whole-number total can read 359 (it does for 13 squares).
+Each exercise has a starter asset `assets/exN_*.py`, a
 solution asset `assets/solutions_exN.py`, and a headless check in the solutions notebook.
 
 - **Core (1–9):** Courtyard Square (`n=4`, side 62, royalblue), Trail-Sign Triangle (`n=3`, side 74,

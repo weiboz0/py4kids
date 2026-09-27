@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import io
 import sys
+from contextlib import redirect_stdout
+from unittest.mock import patch
 
 from tools import fake_turtle
 
@@ -18,17 +21,23 @@ SVG_NAMES = {
 }
 
 
-def figure_tikz(source: str) -> str:
+def figure_tikz(source: str, stdin: str | None = None,
+                caption: str = "Drawing made by the program above") -> str:
     """Execute a turtle script with a fresh tracker and return a TikZ picture.
 
     The caller adds its unit/cell context to any exception when reporting a build failure.
     """
     fake_turtle.reset()
+    if stdin is None:
+        stdin = fake_turtle.sample_input(source)
+    if stdin is None and fake_turtle.calls_input(source):
+        raise RuntimeError("turtle figure replay needs sample input")
     previous = sys.modules.get("turtle")
     sys.modules["turtle"] = fake_turtle
     try:
         try:
-            exec(compile(source, "<turtle figure>", "exec"), {"__name__": "__main__"})  # noqa: S102 - course script replay
+            with patch("sys.stdin", io.StringIO(stdin or "")), redirect_stdout(io.StringIO()):
+                exec(compile(source, "<turtle figure>", "exec"), {"__name__": "__main__"})  # noqa: S102 - course script replay
         except BaseException as error:
             raise RuntimeError(f"turtle figure replay failed: {error}") from error
     finally:
@@ -62,6 +71,6 @@ def figure_tikz(source: str) -> str:
         )
     lines.append(r"\path[draw, line width=0.4pt, color=black] (0,0) circle[radius=2pt];")
     lines.append(r"\end{tikzpicture}")
-    lines.append(r"\par\smallskip{\scriptsize\color{black!60}Drawing made by the program above}")
+    lines.append(r"\par\smallskip{\scriptsize\color{black!60}" + caption + "}")
     lines.append(r"\end{pubfigure}")
     return "\n".join(lines)

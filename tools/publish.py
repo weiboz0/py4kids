@@ -12,7 +12,9 @@ from pathlib import Path
 import nbformat
 import yaml
 
+from tools.fake_turtle import imports_turtle
 from tools.turtle_figure import figure_tikz
+from tools.turtle_real import real_programs
 
 THEME = Path(__file__).with_name('publish_theme')
 NOTICE = re.compile(r'^(?:\*\*Notice:\*\*|Notice:|#{3,6} .*\bNotice\b)', re.IGNORECASE)
@@ -50,9 +52,10 @@ def notebook(path: Path, edition: str):
     return nbformat.read(path, as_version=4)
 
 
-def turtle_picture(source: str) -> str:
+def turtle_picture(source: str, stdin: str | None = None,
+                   caption: str = 'Drawing made by the program above') -> str:
     with redirect_stdout(io.StringIO()):
-        return figure_tikz(source)
+        return figure_tikz(source, stdin=stdin, caption=caption)
 
 
 def panel(kind: str, body: str) -> str:
@@ -110,6 +113,15 @@ def route_code(cell) -> tuple[str, str]:
             return 'errordemo', panel('errordemo', code_block(source))
         if 'hang-demo' in tags:
             return 'hangdemo', panel('hangdemo', code_block(source))
+        if re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', source) and 'input(' in source:
+            body = panel('tryit', code_block(source))
+            if 'sample_input' in cell.metadata:
+                sample = cell.metadata['sample_input']
+                stdin = '\n'.join(sample.split(' | ')) + '\n'
+                body += ('\n```{=latex}\n'
+                         + turtle_picture(source, stdin=stdin, caption=f'Drawing for the sample input: {sample}')
+                         + '\n```\n')
+            return 'tryit+figure', body
         if re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', source):
             return 'figure', panel('program', code_block(source))
         if 'input(' in source:
@@ -318,6 +330,11 @@ def answer_key(entry: Path, kind: str, items: list[dict]) -> str:
             raise ValueError(f'{entry}: missing solution {label} {number}')
         heading = f'{label} {number}' + (f" — {item['title']}" if item['title'] and kind != 'project' else '')
         out.append('### ' + heading + '\n')
+        real_figures = []
+        if kind == 'unit':
+            for program, sample in real_programs(by_number[number]):
+                if imports_turtle(program) and sample is not None:
+                    real_figures.append((program, sample))
         for c in by_number[number]['cells'][1:]:
             if c.cell_type == 'code':
                 if (re.search(r'\brun_path\s*\(\s*["\']assets/solutions_ex', c.source)
@@ -332,6 +349,13 @@ def answer_key(entry: Path, kind: str, items: list[dict]) -> str:
                 text = re.sub(r'^### [^\n]+\n*', '', c.source).strip()
                 if text:
                     out.append(text + '\n')
+        for program, sample in real_figures:
+            try:
+                caption = 'Drawing for the sample input: ' + ', '.join(sample.splitlines())
+                out.append('```{=latex}\n' + turtle_picture(program, stdin=sample + '\n', caption=caption)
+                           + '\n```\n')
+            except Exception as error:
+                raise ValueError(f'FAIL: {entry.name}: real-program figure for {label} {number}: {error}') from error
         for file in sorted((entry / 'assets').glob(f'solutions_ex{number}*.py')) if (entry / 'assets').exists() else []:
             source = read_source(file, 'teacher')
             out.append(panel('program', f'**{file.name}**\n\n{code_block(source)}'))
@@ -385,6 +409,8 @@ def render_chapter(entry: Path, kind: str, edition: str):
                 route, body = route_code(c)
                 chapter.append(body)
                 inventory.append({'id': c.id, 'kind': route})
+                if route == 'tryit+figure':
+                    rendered_turtles.add(code_tokens(c.source))
                 if route == 'figure':
                     rendered_turtles.add(code_tokens(c.source))
                     try:

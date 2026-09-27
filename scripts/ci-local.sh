@@ -44,6 +44,7 @@ uv run py4kids-tools --book book1 pattern-marker
 uv run py4kids-tools --book book1 patterns-doc-check
 uv run py4kids-tools --book book1 stretch-check
 uv run py4kids-tools --book book1 turtle-check
+uv run py4kids-tools --book book1 turtle-real-check
 
 # Book 2: map-level checks + per-entry checks (per-entry iterate existing dirs, so they cover
 # authored units and are inert for unauthored entries).
@@ -78,6 +79,7 @@ if [ -d book1b ]; then
   uv run py4kids-tools --book book1b noexec-check
   uv run py4kids-tools --book book1b stretch-check
   uv run py4kids-tools --book book1b turtle-check
+  uv run py4kids-tools --book book1b turtle-real-check
   uv run py4kids-tools --book book1b exec-solutions
   uv run py4kids-tools --book book1b exec-lessons
 fi

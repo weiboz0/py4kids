@@ -22,6 +22,7 @@ CHECK_NAMES = (
     "exec-lessons",
     "cell-lint",
     "turtle-check",
+    "turtle-real-check",
     "prereq-check",
     "coverage-check",
     "concept-scan",

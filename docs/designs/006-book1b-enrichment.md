@@ -75,7 +75,11 @@ auditors, 2026-09-24) found four systematic weaknesses the user asked to fix:
   - **Enforcement boundary:** Book 1b is a map-v1 book whose legacy scan reads code cells only, so
     real-program fences are reviewer-enforced; every content plan's static AST/grep audit parses
     every fenced python block (strictly for checkpoints/project) against the entry's allowed set.
-  - Turtle work (U06) is exempt (no stdin in turtle scripts).
+  - Turtle drawing exercises (U06–U08) have real programs too (user decision, 2026-09-27, plan 088 —
+    reversing the original exemption): the real program reads the drawing's settings (sides, lengths,
+    colours, counts) with `input()` and draws; with the exercise's own values as sample input it must
+    reproduce the solution asset's segments, final position/heading, pen state and stdout under the
+    headless `fake_turtle` (`turtle-real-check`). Repair and trace exercises keep No real version.
 - **D4 — ASCII art as a first-class exercise genre.**
   Taught formally at the first point the tools exist:
   U01 print-only banners/boxes/art (multi-line `print`, escapes);
