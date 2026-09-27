@@ -17,6 +17,7 @@ from tools.notebooks import (
 from tools.patterns import pattern_marker_findings, technique_spiral_findings
 from tools.patterns_doc import patterns_doc_findings
 from tools.source_policy import source_policy_findings
+from tools.turtle_real import turtle_real_findings
 
 
 def stretch_findings(root, book, unit=None):
@@ -32,6 +33,7 @@ CHECKS = {
     "exec-lessons": exec_lessons_findings,
     "cell-lint": cell_lint_findings,
     "turtle-check": turtle_findings,
+    "turtle-real-check": turtle_real_findings,
     "prereq-check": prereq_findings,
     "coverage-check": coverage_findings,
     "concept-scan": concept_scan_findings,
@@ -43,4 +45,4 @@ CHECKS = {
     "source-policy": source_policy_findings,
 }
 
-UNIT_ONLY_CHECKS = {"noexec-check", "stretch-check", "exec-lessons", "turtle-check"}
+UNIT_ONLY_CHECKS = {"noexec-check", "stretch-check", "exec-lessons", "turtle-check", "turtle-real-check"}

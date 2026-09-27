@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import ast
 import io
 import json
 import math
+import re
 import subprocess
 import sys
 import tokenize
@@ -100,6 +102,31 @@ def segments():
     return list(_tracker.drawn_segments)
 
 
+def final_state():
+    return (_tracker.x, _tracker.y, _tracker.heading, _tracker.pen_down)
+
+
+def sample_input(source: str) -> str | None:
+    """Return one stdin line per value in a leading sample-input header."""
+    first = source.splitlines()[0] if source.splitlines() else ""
+    if not first.startswith("# sample-input: "):
+        return None
+    return "\n".join(first.removeprefix("# sample-input: ").split(" | ")) + "\n"
+
+
+def calls_input(source: str) -> bool:
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return "input(" in source
+    return any(isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+               and node.func.id == "input" for node in ast.walk(tree))
+
+
+def imports_turtle(source: str) -> bool:
+    return re.search(r"(?m)^\s*(?:import turtle\b|from turtle import\b)", source) is not None
+
+
 def speed(*_args, **_kwargs):
     return None
 
@@ -176,7 +203,12 @@ def turtle_findings(root: Path, book: str, unit: str | None = None) -> list[str]
         for script in sorted((unit_dir / "assets").glob("*.py")):
             # Plan 036: book2 stdin solvers also live in assets/*.py; they read stdin and would
             # block under this stub. Only run scripts that actually use turtle.
-            if "import turtle" not in script.read_text(encoding="utf-8"):
+            if not imports_turtle(script.read_text(encoding="utf-8")):
+                continue
+            source = script.read_text(encoding="utf-8")
+            stdin = sample_input(source)
+            if calls_input(source) and stdin is None:
+                findings.append(f"FAIL: {unit_dir.name}: {script.name} calls input() without a # sample-input: header")
                 continue
             try:
                 preamble = (
@@ -190,6 +222,7 @@ def turtle_findings(root: Path, book: str, unit: str | None = None) -> list[str]
                     cwd=Path(__file__).resolve().parents[1],
                     text=True,
                     capture_output=True,
+                    input=stdin or "",
                     timeout=20,
                     check=False,
                 )
@@ -202,18 +235,11 @@ def turtle_findings(root: Path, book: str, unit: str | None = None) -> list[str]
                 )
                 findings.append(f"FAIL: {unit_dir.name}: {script.name} did not complete: {detail}")
                 continue
-            marker = next(
-                (
-                    line
-                    for line in reversed(result.stdout.splitlines())
-                    if line.startswith("STATE:")
-                ),
-                None,
-            )
+            marker = result.stdout.rpartition("STATE:")[2] if "STATE:" in result.stdout else None
             if marker is None:
                 findings.append(f"FAIL: {unit_dir.name}: {script.name} returned no turtle state")
                 continue
-            recorded = json.loads(marker.removeprefix("STATE:"))
+            recorded = json.loads(marker)
             if recorded["pen_down_moves"] < 1:
                 findings.append(f"FAIL: {unit_dir.name}: {script.name} has no pen-down move")
             if recorded["moves"] >= 10000:
@@ -221,7 +247,6 @@ def turtle_findings(root: Path, book: str, unit: str | None = None) -> list[str]
                     f"FAIL: {unit_dir.name}: {script.name} has {recorded['moves']} moves "
                     "(must be <10000)"
                 )
-            source = script.read_text(encoding="utf-8")
             if not _has_open_path_comment(source):
                 start_x = recorded["draw_start_x"] or 0.0
                 start_y = recorded["draw_start_y"] or 0.0
