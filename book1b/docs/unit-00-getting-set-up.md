@@ -30,8 +30,8 @@ Commands in this chapter are shown in grey boxes. Type them exactly and press En
 On Windows, python.org gives you the **Python install manager**: a small app that installs Python and
 keeps it up to date.
 
-1. Open a web browser and go to **python.org/downloads**, and click the big download button for Windows.
-   It downloads the Python install manager.
+1. Open a web browser, go to **python.org/downloads**, and choose **Python install manager** for
+   Windows. It downloads a small installer app.
 2. Open the downloaded file and click **Install**. Wait until it finishes.
 3. Open the Start menu, type `cmd`, and open **Command Prompt**. Type this command and press Enter:
 
@@ -51,11 +51,11 @@ py --version
 You should see something like `Python 3.14.2`. The exact numbers do not matter, as long as it starts with
 `Python 3` and the second number is 12 or more.
 
-Notice: on Windows, this book always starts Python with the command `py`.
-
 If `py install default` gives an error, the computer may have an older Python launcher. Type
 `pymanager install default` instead — `pymanager` always means the new install manager. If `py --version`
 then still shows a version older than 3.12, ask your teacher for help.
+
+Notice: on Windows, this book always starts Python with the command `py`.
 
 ## Install Python on a Mac
 
@@ -200,12 +200,12 @@ same command.
 
 The terminal prints `Hello, Python!` — the same program, run a third way.
 
+On a Mac there is a shortcut for `cd`: type `cd ` (with a space), drag the folder from Finder onto the
+Terminal window, and press Enter.
+
 Notice: JupyterLab has a terminal of its own. Choose **File ▸ New ▸ Terminal** and it opens inside the
 browser, already in the course folder. The same `py` (Windows) or `python3` (Mac) commands work there — Unit
 6 uses it for the turtle drawings.
-
-On a Mac there is a shortcut for `cd`: type `cd ` (with a space), drag the folder from Finder onto the
-Terminal window, and press Enter.
 
 ## If something goes wrong
 
@@ -219,8 +219,8 @@ Find what you see, then do what it says.
   Type `pymanager install default`. If `py --version` still shows a version older than 3.12, ask your teacher.
 - **Windows: `'python' is not recognized…`, or the Microsoft Store opens**  
   Use `py` instead of `python` — this book always does.
-- **Windows: `The system cannot find the path specified` after `cd Documents/py4kids`**  
-  Your Documents folder may live inside OneDrive: try `cd OneDrive/Documents/py4kids`. Or open the folder in File Explorer, click the address bar, type `cmd`, and press Enter — a terminal opens in that folder.
+- **Windows: `The system cannot find the path specified`**  
+  This can happen after `cd Documents/py4kids`: your Documents folder may live inside OneDrive: try `cd OneDrive/Documents/py4kids`. Or open the folder in File Explorer, click the address bar, type `cmd`, and press Enter — a terminal opens in that folder.
 - **Mac: `cd: no such file or directory`**  
   Type `cd ` and drag the course folder from Finder onto the Terminal window, then press Enter.
 - **Mac: `command not found: python`**  
