@@ -224,7 +224,32 @@ lesson naming, jargon) — a separate publication-polish plan. Book 1 and Book 2
 **Consensus reached — implementation starts.**
 
 ## Content Review
-_(filled before PR.)_
+
+### Round 1
+
+- `[self]` APPROVE WITH NITS — rendered pages checked (U06 try-its with drawings; Teacher answer keys U06/U07/U08).
+  - `[FIXED]` S1 each sample-input drawing carried two captions (the frame's "Drawing made by the program
+    above" plus "Drawing for the sample input: …" below); the sample caption now replaces the frame caption
+    (`figure_tikz(caption=…)`), audit and test updated.
+  - `[FIXED]` S2 runs of blank lines where literals were removed in the real-program fences (same as F4).
+- `[fable]` APPROVE WITH NITS — blind solve 6/6 exact parity (U06 3, 7, 11, 12; U07 7; U08 7); 17 mutation
+  cases all caught.
+  - `[FIXED]` F1 each U06 try-it printed twice (the lead-in named the asset before the cell, so the publisher
+    listed the asset in full); the run line moved into the Notice after the cell.
+  - `[FIXED]` F2 lowercase lead-in sentences capitalised.
+  - `[FIXED]` F3 the first try-it lead-in explains the `# sample-input:` comment line.
+  - `[FIXED]` F4 blank-line runs in turtle real-program fences collapsed (comments sit on their code again);
+    non-turtle fences untouched.
+  - `[FIXED]` F5 U08 Ex 16 statement says "edge length", matching the fence.
+  - `[WONTFIX]` F6 the error Notice's `py: can't open file` wording is hedged by "text like" (reviewer: no
+    action needed). Optional audit rule for input-asset listings not added: F1's cause is removed and the
+    rendered pages are re-checked in round 2.
+- `[sol]` REJECT — blind solve 5 programs; 4 matched.
+  - `[FIXED]` O1 U08 Ex 17 did not say which way the square turns (a left-turn program drew a mirror image);
+    the statement now says `turtle.forward(30)` and `turtle.right(90)`.
+  - `[FIXED]` O2 parity used `math.isclose` with its default relative tolerance; now `rel_tol=0,
+    abs_tol=1e-6`, with a test at coordinate 1,000,000.
+- `[glm]` skipped — user-authorised one-day exception (2026-09-26: "skip glm reviewer for 1 day").
 
 ## Post-Execution Report
 _(filled before merge.)_

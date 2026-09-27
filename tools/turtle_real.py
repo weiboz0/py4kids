@@ -54,13 +54,13 @@ def _run(source: str, stdin: str, name: str):
 
 def _same_segments(left, right):
     return len(left) == len(right) and all(
-        all(math.isclose(a, b, abs_tol=1e-6) for a, b in zip(one[:4], two[:4]))
+        all(math.isclose(a, b, rel_tol=0, abs_tol=1e-6) for a, b in zip(one[:4], two[:4]))
         and one[4:] == two[4:] for one, two in zip(left, right)
     )
 
 
 def _same_state(left, right):
-    return all(math.isclose(a, b, abs_tol=1e-6) for a, b in zip(left[:3], right[:3])) and left[3] == right[3]
+    return all(math.isclose(a, b, rel_tol=0, abs_tol=1e-6) for a, b in zip(left[:3], right[:3])) and left[3] == right[3]
 
 
 def turtle_real_findings(root: Path, book: str, unit: str | None = None) -> list[str]:

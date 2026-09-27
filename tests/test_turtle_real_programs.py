@@ -116,3 +116,14 @@ def test_publication_audit_requires_real_drawing(tmp_path):
 def test_book1b_21_rows():
     root = Path(__file__).resolve().parents[1]
     assert turtle_real_findings(root, 'book1b') == []
+
+
+def test_parity_tolerance_is_absolute():
+    from tools.turtle_real import _same_segments, _same_state
+
+    base = [(1_000_000.0, 0.0, 1_000_010.0, 0.0, 'black', 1)]
+    near = [(1_000_000.0000005, 0.0, 1_000_010.0, 0.0, 'black', 1)]
+    far = [(1_000_000.0005, 0.0, 1_000_010.0, 0.0, 'black', 1)]
+    assert _same_segments(base, near)
+    assert not _same_segments(base, far)
+    assert not _same_state((1_000_000.0, 0.0, 0.0, True), (1_000_000.0005, 0.0, 0.0, True))
