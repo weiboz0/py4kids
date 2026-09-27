@@ -6,7 +6,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from tools.publish import ITEM, NOTICE, entries, item_groups, notebook
+from tools.publish import ITEM, NOTICE, SETUP_ID, entries, item_groups, notebook
 
 ERROR_IDS = {'9442d5582e1f', '25129fdd9963', 'dcec5192b293', 'u02l029',
              'u02l079', 'u03l010', 'u04l022', 'u07l009', 'u13l009'}
@@ -68,18 +68,32 @@ def _outline_heading(title: str) -> str:
 
 def _missing_lesson_headings(chapters: list[dict], root: Path, outline: str) -> list[str]:
     sections: dict[int, list[str]] = {}
+    setup_present = False
+    setup_sections: list[str] = []
     unit_number = None
     for line in outline.splitlines():
         title_match = re.search(r'"([^"]+)"', line)
         if not title_match:
             continue
         if re.match(r'^[+|]\t"', line):
+            setup_present = setup_present or title_match[1] == 'Unit 0 — Getting Set Up'
             unit_match = re.match(r'Unit (\d+)\b', title_match[1])
             unit_number = int(unit_match[1]) if unit_match else None
+        elif re.match(r'^[+|]\t{2}"', line) and unit_number == 0:
+            setup_sections.append(_outline_heading(title_match[1]))
         elif re.match(r'^[+|]\t{2,}"', line) and unit_number is not None:
             sections.setdefault(unit_number, []).append(_outline_heading(title_match[1]))
     missing = []
     for chapter in chapters:
+        if chapter['kind'] == 'setup':
+            if not setup_present:
+                missing.append(f'{SETUP_ID}: Unit 0 — Getting Set Up')
+            source = (root / chapter['source']).read_text(encoding='utf-8')
+            for title in re.findall(r'^## ([^\n]+)', source, re.MULTILINE):
+                expected = _outline_heading(title)
+                if not any(bookmark.startswith(expected) for bookmark in setup_sections):
+                    missing.append(f'{SETUP_ID}: {title}')
+            continue
         if chapter['kind'] != 'unit':
             continue
         number = int(re.search(r'unit-(\d+)', chapter['id'])[1])
@@ -112,7 +126,7 @@ def _missing_lesson_headings(chapters: list[dict], root: Path, outline: str) -> 
 def audit(root: Path, book_id: str) -> list[str]:
     book = root / book_id
     findings: list[str] = []
-    order = [id_ for id_, _ in entries(book, 'student')]
+    order = [SETUP_ID] + [id_ for id_, _ in entries(book, 'student')]
     source_tags = {'error-demo': set(), 'hang-demo': set()}
     candidates = set()
     for id_, entry in entries(book, 'student'):
@@ -146,6 +160,8 @@ def audit(root: Path, book_id: str) -> list[str]:
             qmd = (project / chapter['file']).read_text(encoding='utf-8')
             if re.search(r'^#{1,6}\s+\d+(?:\.\d+)*\.\s+', qmd, re.MULTILINE):
                 findings.append(f'FAIL: {edition}: {id_}: numbered heading text')
+            if kind == 'setup':
+                continue
             cells = _source_code(entry, kind)
             lesson_ids = ({c.id for c in notebook(entry / 'lesson.ipynb', 'student').cells}
                           if kind == 'unit' else set())
@@ -195,7 +211,7 @@ def audit(root: Path, book_id: str) -> list[str]:
             findings.append(f'FAIL: {edition}: notebook prompt in PDF')
         if edition == 'student' and 'Answer key' in text:
             findings.append('FAIL: student: answer key in PDF')
-        if edition == 'teacher' and text.count('Answer key') < len(order):
+        if edition == 'teacher' and text.count('Answer key') < len(order) - 1:
             findings.append('FAIL: teacher: answer keys missing in PDF')
         log_paths = (project / 'render.log', project / 'latex-audit.log')
         if any(not path.exists() for path in log_paths):

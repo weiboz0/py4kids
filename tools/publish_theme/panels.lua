@@ -74,7 +74,8 @@ function Str(el)
   }
   for _, cp in utf8.codes(el.text) do
     local char = utf8.char(cp)
-    if (cp >= 0x2190 and cp <= 0x21ff) or (cp >= 0x0370 and cp <= 0x03ff) then
+    if (cp >= 0x2190 and cp <= 0x21ff) or (cp >= 0x0370 and cp <= 0x03ff) or
+       cp == 0x25b8 or cp == 0x2610 then
       changed = true
       table.insert(out, '{\\fallbackfont ' .. char .. '}')
     else
@@ -95,7 +96,8 @@ function Code(el)
   local run = 0
   for _, cp in utf8.codes(el.text) do
     local c = utf8.char(cp)
-    if (cp >= 0x2190 and cp <= 0x21ff) or (cp >= 0x0370 and cp <= 0x03ff) then
+    if (cp >= 0x2190 and cp <= 0x21ff) or (cp >= 0x0370 and cp <= 0x03ff) or
+       cp == 0x25b8 or cp == 0x2610 then
       table.insert(parts, '{\\fallbackfont ' .. c .. '}')
     else
       table.insert(parts, escaped[c] or c)

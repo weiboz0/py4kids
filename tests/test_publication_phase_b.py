@@ -177,6 +177,12 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     (root / 'books.yaml').write_text('books:\n- id: book1b\n  number: 1\n  root: book1b\n')
     book = root / 'book1b'
     book.mkdir()
+    docs = book / 'docs'
+    docs.mkdir()
+    (docs / 'unit-00-getting-set-up.md').write_text(
+        '# Unit 0 — Getting Set Up\n\nGet ready.\n\n## Install Python\n\nStart here.\n')
+    (docs / 'unit-00-teacher-notes.md').write_text(
+        '# Teacher Notes\n\nSETUP_TEACHER_SENTINEL_7429\n')
     (book / 'syllabus.md').write_text('# Book 1b — Year 1 Syllabus\n\n| entry | kind | lessons | the hook |\n|---|---|---|---|\n| `unit-01-fixture` | unit | 1 | Hook. |\n')
     front = book / 'front-matter'
     front.mkdir()
@@ -203,7 +209,8 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     teacher = build(root, 'book1b', 'teacher')
     student_text = '\n'.join(p.read_text() for p in student.glob('*.qmd'))
     teacher_text = '\n'.join(p.read_text() for p in teacher.glob('*.qmd'))
-    for marker in ('TEACHER_SENTINEL_7429', 'ASSET_SENTINEL_7429', 'SOLUTION_SENTINEL_7429'):
+    for marker in ('TEACHER_SENTINEL_7429', 'SETUP_TEACHER_SENTINEL_7429',
+                   'ASSET_SENTINEL_7429', 'SOLUTION_SENTINEL_7429'):
         assert marker not in student_text
         assert marker in teacher_text
     env = os.environ.copy()
@@ -216,10 +223,12 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     assert '$5 and $6' in pdf_text
     assert 'Student Book' in pdf_text and 'Invalid Date' not in pdf_text
     assert all(marker not in pdf_text for marker in ('TEACHER_SENTINEL_7429',
+               'SETUP_TEACHER_SENTINEL_7429',
                'ASSET_SENTINEL_7429', 'SOLUTION_SENTINEL_7429'))
     student_tex = (student / 'Book1b-Student.tex').read_text()
     assert student_tex.index(r'\chapter{How to use}') < student_tex.index(r'\mainmatter', student_tex.index(r'\chapter{How to use}'))
-    assert student_tex.index(r'\pubchapterlabel{Unit 1}') < student_tex.index(r'\chapter{Unit 1')
+    assert student_tex.index(r'\mainmatter') < student_tex.index(r'\chapter{Unit 0')
+    assert student_tex.index(r'\pubchapterlabel{Unit 0}') < student_tex.index(r'\chapter{Unit 0')
     assert r'\setcounter{secnumdepth}{-\maxdimen}' in student_tex
     assert r'\begin{pubcodeoutput}' in student_tex and r'\tcblower' in student_tex
     subprocess.run([quarto, 'render', str(teacher), '--to', 'pdf'], check=True,
@@ -227,6 +236,7 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     teacher_pdf_text = subprocess.run(['pdftotext', str(teacher / '_book' / 'Book1b-Teacher.pdf'), '-'],
                                       check=True, capture_output=True, text=True).stdout
     assert 'TEACHER_SENTINEL_7429' in teacher_pdf_text
+    assert 'SETUP_TEACHER_SENTINEL_7429' in teacher_pdf_text
 
 
 def test_grouped_exercise_and_brief_keep_statements(tmp_path):
@@ -309,7 +319,7 @@ def test_chapter_titles_and_frontmatter_are_unnumbered(tmp_path):
     ]), entry / 'exercises.ipynb')
     body, _, _, _ = render_chapter(entry, 'unit', 'student')
     assert '# Unit 1 — Output & Variables' in body
-    assert 'pub-label="Unit 1"' in body and 'pub-mainmatter="true"' in body
+    assert 'pub-label="Unit 1"' in body and 'pub-mainmatter="true"' not in body
     assert r'\chaptermark{Unit 1 — Output \& Variables}' in body
     theme = Path('tools/publish_theme/_quarto.yml').read_text()
     assert 'number-sections: false' in theme

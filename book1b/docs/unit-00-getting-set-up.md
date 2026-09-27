@@ -209,25 +209,36 @@ Terminal window, and press Enter.
 
 ## If something goes wrong
 
-| What you see | What to do |
-|---|---|
-| Windows: `'py' is not recognized…` | Close Command Prompt and open a new one. If it still fails, download the Python install manager from python.org again and click **Install**. |
-| Windows: `py --version` says no Python is installed | Run `py install default` again and wait for it to finish. |
-| Windows: `'python' is not recognized…`, or the Microsoft Store opens | Use `py` instead of `python` — this book always does. |
-| Windows: `The system cannot find the path specified` after `cd Documents/py4kids` | Your Documents folder may live inside OneDrive: try `cd OneDrive/Documents/py4kids`. Or open the folder in File Explorer, click the address bar, type `cmd`, and press Enter — a terminal opens in that folder. |
-| Mac: `cd: no such file or directory` | Type `cd ` and drag the course folder from Finder onto the Terminal window, then press Enter. |
-| Mac: `command not found: python` | Type `python3`, not `python`. |
-| `No module named jupyterlab` | Run the install command again (`py -m pip install jupyterlab` or `python3 -m pip install jupyterlab`) and read the last lines for an error. |
-| `No such file or directory` when you run `hello.py` | The terminal is in a different folder. Use `cd` to move into the folder where you saved the file, then try again. |
-| JupyterLab starts but no browser opens | Copy the whole `http://localhost:…` line from the terminal into your browser. |
-| Windows: `py install default` fails, or `py --version` shows an old version | Type `pymanager install default`. If `py --version` still shows a version older than 3.12, ask your teacher. |
-| The install is blocked or asks for a password you do not know | Stop and ask your teacher or a parent — school computers often need an administrator. |
+Find what you see, then do what it says.
+
+- **Windows: `'py' is not recognized…`**  
+  Close Command Prompt and open a new one. If it still fails, download the Python install manager from python.org again and click **Install**.
+- **Windows: `py --version` says no Python is installed**  
+  Run `py install default` again and wait for it to finish.
+- **Windows: `py install default` fails, or `py --version` shows an old version**  
+  Type `pymanager install default`. If `py --version` still shows a version older than 3.12, ask your teacher.
+- **Windows: `'python' is not recognized…`, or the Microsoft Store opens**  
+  Use `py` instead of `python` — this book always does.
+- **Windows: `The system cannot find the path specified` after `cd Documents/py4kids`**  
+  Your Documents folder may live inside OneDrive: try `cd OneDrive/Documents/py4kids`. Or open the folder in File Explorer, click the address bar, type `cmd`, and press Enter — a terminal opens in that folder.
+- **Mac: `cd: no such file or directory`**  
+  Type `cd ` and drag the course folder from Finder onto the Terminal window, then press Enter.
+- **Mac: `command not found: python`**  
+  Type `python3`, not `python`.
+- **`No module named jupyterlab`**  
+  Run the install command again (`py -m pip install jupyterlab` or `python3 -m pip install jupyterlab`) and read the last lines for an error.
+- **`No such file or directory` when you run `hello.py`**  
+  The terminal is in a different folder. Use `cd` to move into the folder where you saved the file, then try again.
+- **JupyterLab starts but no browser opens**  
+  Copy the whole `http://localhost:…` line from the terminal into your browser.
+- **The install is blocked or asks for a password you do not know**  
+  Stop and ask your teacher or a parent — school computers often need an administrator.
 
 ## Checklist
 
 You are ready for Unit 1 when you can tick every box:
 
-- [ ] `py --version` (Windows) or `python3 --version` (Mac) shows Python 3.12 or newer.
-- [ ] JupyterLab opens in your browser, and a cell you ran printed its output.
-- [ ] Thonny runs `hello.py` and the Shell shows the output.
-- [ ] You can run `hello.py` from the terminal.
+☐ `py --version` (Windows) or `python3 --version` (Mac) shows Python 3.12 or newer.\
+☐ JupyterLab opens in your browser, and a cell you ran printed its output.\
+☐ Thonny runs `hello.py` and the Shell shows the output.\
+☐ You can run `hello.py` from the terminal.
