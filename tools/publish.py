@@ -19,18 +19,20 @@ NOTICE = re.compile(r'^(?:\*\*Notice:\*\*|Notice:|#{3,6} .*\bNotice\b)', re.IGNO
 ASSET = re.compile(r'assets/([\w-]+\.py)')
 DATA = re.compile(r'\b(p\d+[a-z]?_[\w-]+\.txt)\b')
 ITEM = {'unit': 'Exercise', 'checkpoint': 'Question', 'project': 'Problem'}
+SETUP_ID = 'unit-00-getting-set-up'
 
 
 def allowed_source(path: Path, edition: str) -> bool:
     """Single gate for every source read by the student builder."""
     if edition == 'teacher':
         return True
-    if path.name in {'teacher-notes.md', 'solutions.ipynb'}:
+    if 'teacher-notes' in path.name or path.name == 'solutions.ipynb':
         return False
     if path.parts and path.parts[-1].startswith('solutions_'):
         return False
     if path.name in {'lesson.ipynb', 'exercises.ipynb', 'checkpoint.ipynb',
-                     'brief.ipynb', 'syllabus.md', 'how-to-use.md'}:
+                     'brief.ipynb', 'syllabus.md', 'how-to-use.md',
+                     'unit-00-getting-set-up.md'}:
         return True
     return (path.suffix == '.py' and 'units' in path.parts and 'assets' in path.parts) or (
         path.suffix == '.txt' and 'projects' in path.parts)
@@ -57,9 +59,10 @@ def panel(kind: str, body: str) -> str:
     return f'::: {{.{kind}}}\n{body.strip()}\n:::\n'
 
 
-def markdown_blocks(source: str, first: bool = False) -> str:
+def markdown_blocks(source: str, first: bool = False, demote: bool = True) -> str:
     """Split a markdown cell into paragraphs while preserving Notice continuations."""
-    source = re.sub(r'(?m)^## (?!Lesson\b|Exercises\b|Answer key\b)', '### ', source)
+    if demote:
+        source = re.sub(r'(?m)^## (?!Lesson\b|Exercises\b|Answer key\b)', '### ', source)
     paragraphs = re.split(r'\n\s*\n', source.strip())
     out = []
     if first and paragraphs and paragraphs[0].startswith('# '):
@@ -359,7 +362,7 @@ def render_chapter(entry: Path, kind: str, edition: str):
     short_tex = short_title.replace('\\', r'\textbackslash{}').replace('&', r'\&').replace('%', r'\%').replace('_', r'\_')
     full_title = (chapter_label + ' — ' if chapter_label else '') + display_title
     chapter = ['# ' + full_title + ' {pub-label="' + chapter_label + '"' +
-               (' pub-mainmatter="true"' if kind == 'unit' and entry.name.startswith('unit-01-') else '') + '}\n',
+               '}\n',
                '```{=latex}\n\\chaptermark{' + (chapter_label + ' — ' if chapter_label else '') + short_tex + '}\n```']
     inventory = []
     first = n.cells[0].source
@@ -399,6 +402,26 @@ def render_chapter(entry: Path, kind: str, edition: str):
     return '\n\n'.join(block.rstrip() for block in chapter) + '\n', inventory, items, title
 
 
+def render_setup_chapter(source: Path, edition: str):
+    """Render the Markdown setup guide as the first main-matter chapter."""
+    text = read_source(source, edition)
+    title, _, remainder = text.partition('\n')
+    if title != '# Unit 0 — Getting Set Up':
+        raise ValueError(f'unexpected setup title: {title}')
+    heading = re.search(r'(?m)^## ', remainder)
+    hook = remainder[:heading.start()] if heading else remainder
+    sections = remainder[heading.start():] if heading else ''
+    chapter = [title + ' {pub-label="Unit 0" pub-mainmatter="true"}',
+               '```{=latex}\n\\chaptermark{Unit 0 — Getting Set Up}\n```']
+    if hook.strip():
+        chapter.append(panel('opener', hook))
+    if edition == 'teacher':
+        chapter.append(teacher_notes(read_source(source.with_name('unit-00-teacher-notes.md'), edition)))
+    if sections:
+        chapter.append(markdown_blocks(sections, demote=False))
+    return '\n\n'.join(part.rstrip() for part in chapter) + '\n', [], [], title.removeprefix('# ')
+
+
 def build(root: Path, book_id: str, edition: str) -> Path:
     if edition not in {'student', 'teacher'}:
         raise ValueError('edition must be student or teacher')
@@ -427,6 +450,15 @@ def build(root: Path, book_id: str, edition: str) -> Path:
     for body, name in front:
         body = re.sub(r'(?m)^## ', '### ', body)
         (project / name).write_text(body, encoding='utf-8')
+    setup_source = book / 'docs' / f'{SETUP_ID}.md'
+    body, inventory, items, title = render_setup_chapter(setup_source, edition)
+    setup_file = f'{SETUP_ID}.qmd'
+    (project / setup_file).write_text(body, encoding='utf-8')
+    chapters.append(setup_file)
+    manifest['chapters'].append({'id': SETUP_ID, 'file': setup_file,
+                                 'source': str(setup_source.relative_to(root)),
+                                 'kind': 'setup', 'title': title, 'items': items,
+                                 'inventory': inventory})
     for id_, entry in entries(book, edition):
         kind = id_.split('-', 1)[0]
         body, inventory, items, title = render_chapter(entry, kind, edition)
