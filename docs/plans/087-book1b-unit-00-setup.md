@@ -142,6 +142,17 @@ Unit 6's wording is a follow-up (errata), not part of this plan.
 - `[FIXED]` teacher notes name the official remedy (uninstall the legacy **Python launcher**); the chapter
   gives the course's GitHub address for independent learners.
 
+### CONSENSUS
+
+- `[glm]` APPROVE — run on `opencode-go/glm-5.3` (user decision, 2026-09-26: the `volcengine-plan`
+  provider was unreachable; two earlier attempts timed out and a one-word probe hung). Verified the tooling
+  and verification phases and the install steps; optional nits (Windows button label, ageing sample
+  version) left as is — the text already says exact numbers do not matter.
+- `[sol]` APPROVE WITH NITS (r5, nits folded) · `[fable]` APPROVE WITH NITS (r1, folded) · `[self]`
+  APPROVE WITH NITS.
+
+**Consensus reached — implementation starts.**
+
 ## Content Review
 _(4-way content-review gate — including rendered pages.)_
 
