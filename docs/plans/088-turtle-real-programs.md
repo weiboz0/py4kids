@@ -42,7 +42,7 @@ solution asset exactly (see Parity). It ends with `turtle.done()` and prints wha
 | U06 7 | Growing Radar Spiral | start side (11), step (6), moves (14), colour (maroon) | 92° turn; final side printed |
 | U06 8 | Row of Squares | squares (4), side (40), travel (60) | return `backward(squares * travel)` |
 | U06 9 | Dashed Line | segments (24), step (10) | dash on even `i`; `Dashes: N` printed |
-| U06 10 | Color-Alternating Ring | squares (8), side (40) | palette by `i % 3`; turn `360 // squares` (so `Turned:` stays a whole number; teacher notes: choose a count that divides 360) |
+| U06 10 | Color-Alternating Ring | squares (8), side (40) | palette by `i % 3`; turn `360 / squares` (true division, as Unit 6 teaches); `turned` adds each turn and prints `Turned: {int(turned)}` (8 × 45.0 = 360.0 → `Turned: 360`, matching the asset); teacher notes: counts that divide 360 give an exact total |
 | U06 11 | Growing Squares | squares (5), start side (20), growth (20) | `Squares: N` printed |
 | U06 12 | Seven-Point Star | points (7), side (90) | turn `3 * 360 / points` |
 | U06 16 | Five-Point Star | points (5), side (96), colour (goldenrod), pen width (3) | turn `720 / points` |
@@ -113,7 +113,8 @@ solution assets and checks stay unchanged.
   `# sample-input: …` comment and supplies those lines on stdin when it runs an asset (assets without the
   comment still run with empty stdin, as now); a turtle asset that calls `input()` without that comment
   FAILs with a clear message.
-- **`turtle-real-check --book B`** (registered in `tools/cli.py`'s check registry like `turtle-check`,
+- **`turtle-real-check --book B`** (registered in the `tools/checks.py` check registry next to
+  `turtle-check`, so `tools/cli.py` offers it automatically;
   implemented beside `tools/fake_turtle.py`): builds the expected inventory from the notebooks — every
   exercise in a unit whose solutions notebook lists a turtle solution asset (`assets/solutions_ex*.py`
   importing `turtle`) and whose statement carries a Real version line — and requires **exactly one**
@@ -127,7 +128,11 @@ solution assets and checks stay unchanged.
 - **Contract audit:** turtle fences are verified by `turtle-real-check`, not by stdout-only execution
   (the fence-parity step skips fences that import `turtle`).
 - **`tools/turtle_figure.py`:** `figure_tikz(source, stdin: str | None = None)` feeds `stdin` to `input()`
-  during replay.
+  during replay; when `stdin` is None and the source starts with a `# sample-input: …` header, that header
+  supplies it (so **referenced lesson assets** such as `assets/l1_square_input.py`, listed by the
+  publisher's asset path in `asset_blocks`, replay with their sample input too); a source that calls
+  `input()` with neither fails the build clearly. Tested on both the cell path and the referenced-asset
+  path.
 - **`tools/publish.py`:** lesson `no-exec` routing adds a rule before the turtle-figure rule: a turtle cell
   that calls `input(` routes to `tryit`, followed by `figure_tikz(source, stdin=metadata["sample_input"])`
   captioned "Drawing for the sample input: …" when the metadata exists (inventory kind `tryit+figure`);
@@ -199,6 +204,13 @@ lesson naming, jargon) — a separate publication-polish plan. Book 1 and Book 2
   `turtle-check` feeding them; N3 audit routing in lockstep; N4 the four extra U06 wording spots; lesson
   try-its use prompts; fence `input()` lines carry a comment; unconsumed input fails; Phase E greps the
   U06 lesson and runs `turtle-check` on the new assets; the Random Polygon note.
+
+### Round 2 — [sol] REJECT (folded)
+
+- `[FIXED]` referenced lesson input assets replay with their `# sample-input:` header (`figure_tikz`
+  falls back to it; both publisher paths tested); Ex 10 uses true division for the turn and prints
+  `Turned: {int(turned)}` (identical `Turned: 360` for the sample); the check is registered in
+  `tools/checks.py`.
 
 ## Content Review
 _(filled before PR.)_
