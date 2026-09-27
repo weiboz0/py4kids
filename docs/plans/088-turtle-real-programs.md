@@ -24,7 +24,9 @@ Non-turtle repair and trace exercises keep their No-real lines (they fix or trac
 ## The real-program rule (binding)
 
 Each real program reads **exactly the inputs in the table below, in that order**, with bare `input()`
-(one value per line; numbers via `int(...)`, colours as typed text). Everything not listed stays code:
+(one value per line; numbers via `int(...)`, colours as typed text), each `input()` line carrying a
+short trailing comment naming the value (`side = int(input())  # side length`) so a reader knows what to
+type. Everything not listed stays code:
 shape rules (e.g. a square's four sides, the Ring's red/blue/green palette), seeds (`random.seed(4)`),
 and the derived values shown. With the **Sample input** (the exercise's own values) it must reproduce the
 solution asset exactly (see Parity). It ends with `turtle.done()` and prints what the asset prints.
@@ -50,7 +52,7 @@ solution asset exactly (see Parity). It ends with `turtle.done()` and prints wha
 | U07 27 | Star Function | size (80) | calls `draw_star(size)`; 144° turns |
 | U07 28 | Polygon Row | sides (6), length (30), count (3), travel (70) | `polygon_row(count, sides, length, travel)`; return `backward(count * travel)` |
 | U08 7 | Rescue-Robot Random Walk | step (31), moves (20), colour (seagreen) | `random.seed(4)`; pen width 3; left/right from `randint(0, 1)` |
-| U08 16 | Random Polygon | length (70) | `random.seed(4)`; sides from `randint(3, 8)` |
+| U08 16 | Random Polygon | length (70) | `random.seed(4)`; sides from `randint(3, 8)` (kept for uniformity — the loop count stays random, only the length is chosen) |
 | U08 17 | Random Color Row | side (30), squares (4) | `random.seed(4)`; colour from `choice("rgb")`; return `backward(squares * side)` |
 
 **Parity (checked in CI):** under `fake_turtle` with a fresh tracker, the real program run with its Sample
@@ -77,14 +79,24 @@ asset is checked headlessly), citing the user decision of 2026-09-27.
   - add one `no-exec` "Try it yourself" turtle input program per lesson — Lesson 1: read a side length and
     draw a square; Lesson 2: read the number of sides and the side length and draw that polygon;
     Lesson 3: read the number of shapes and draw a ring — each with a lead-in and a Notice ("change the
-    number you type and watch the loop draw more or fewer sides"). Each cell carries its sample input in
-    cell metadata (`"sample_input": "…"`) so the book can print the drawing it makes.
+    number you type and watch the loop draw more or fewer sides"). These lesson programs **use prompt
+    text** in `input("Side length: ")` (a child at a terminal otherwise sees a blank cursor before the
+    window opens; design 006 D3 already allows prompts in lesson cells). Each cell carries its sample input
+    in cell metadata (`"sample_input": "…"`) so the book can print the drawing it makes, and each is also
+    saved as a runnable asset — `assets/l1_square_input.py`, `assets/l2_polygon_input.py`,
+    `assets/l3_ring_input.py` — whose first line is a `# sample-input: …` comment (values separated by
+    `\n`), so the lesson's "run it the same way" works and `turtle-check` can feed it.
   - run instructions: explain once, in "First terminal encounter", how to run a program file: open a
     terminal (JupyterLab's File ▸ New ▸ Terminal opens in the **course folder**, as Unit 0 says), move into
     Unit 6's folder with `cd book1b/units/unit-06-turtle-geometry`, then run Windows
     `py assets/l1_square.py` / Mac `python3 assets/l1_square.py` — and change every later
     "Run `python assets/X.py`." to "Run `assets/X.py` the same way."; replace "repository root" with
-    "course folder"; move "Budget about 15 minutes…" to the Unit 6 teacher notes.
+    "course folder"; move "Budget about 15 minutes…" to the Unit 6 teacher notes. Also rewrite: the unit
+    opener's "Your teacher will run `python assets/l3_gallery.py`" (→ "Your teacher will run the gallery
+    program `assets/l3_gallery.py`"); "Turtle drawings run as Python files, not inside this notebook" (→
+    "…not inside the lesson notebook"); the "errors are directions" Notice's "from the repository root,
+    then rerun `python assets/l1_square.py`" and its error text `python: can't open file` (→ the `py` /
+    `python3` forms and "course folder").
 - **Unit 6 teacher notes** (inline): the timing note, the real-program idea for turtle (vary the typed
   numbers and compare the drawings), and the Real-version count.
 
@@ -97,6 +109,10 @@ solution assets and checks stay unchanged.
 
 ## Phase D — Tooling (Codex gpt-6-sol)
 
+- **`turtle-check` and input assets:** `tools/fake_turtle.turtle_findings` reads a leading
+  `# sample-input: …` comment and supplies those lines on stdin when it runs an asset (assets without the
+  comment still run with empty stdin, as now); a turtle asset that calls `input()` without that comment
+  FAILs with a clear message.
 - **`turtle-real-check --book B`** (registered in `tools/cli.py`'s check registry like `turtle-check`,
   implemented beside `tools/fake_turtle.py`): builds the expected inventory from the notebooks — every
   exercise in a unit whose solutions notebook lists a turtle solution asset (`assets/solutions_ex*.py`
@@ -105,7 +121,8 @@ solution assets and checks stay unchanged.
   `## Exercise N` heading to that asset; Book 1b must yield exactly the 21 rows of the table. For each,
   it runs the fence (Sample input on stdin) and the asset under a fresh `fake_turtle` and compares per the
   Parity rule. FAILs: missing/extra fence, missing Sample input, segment / final-state / pen-state / stdout
-  mismatch, no pen-down segment. `fake_turtle` gains a `final_state()` (x, y, heading, pen down) if it
+  mismatch, no pen-down segment, and **unconsumed input** (the fence reads fewer lines than its Sample
+  input provides). `fake_turtle` gains a `final_state()` (x, y, heading, pen down) if it
   lacks one. Wired into `scripts/ci-local.sh` beside `turtle-check`.
 - **Contract audit:** turtle fences are verified by `turtle-real-check`, not by stdout-only execution
   (the fence-parity step skips fences that import `turtle`).
@@ -116,7 +133,8 @@ solution assets and checks stay unchanged.
   captioned "Drawing for the sample input: …" when the metadata exists (inventory kind `tryit+figure`);
   Teacher's Edition answer keys render each turtle real-program fence, its Sample input, and the drawing
   replayed with that input; Student Book Real-program notes render like all others.
-- **`tools/publish_audit.py`:** expected routes and inventory include `tryit+figure`; the audit checks the
+- **`tools/publish_audit.py`:** in lockstep with the publisher's routing — `_expected_lesson_kind` and the
+  plan-080 candidate filter learn the turtle+`input(` → `tryit+figure` route — and the audit checks the
   three U06 try-it figures and the 21 answer-key drawings are present.
 - Tests: parity pass; failures for a changed colour, a changed side length, a missing pen-up return (final
   position), a missing fence, a missing Sample input; `figure_tikz` with stdin; the lesson try-it route and
@@ -124,10 +142,11 @@ solution assets and checks stay unchanged.
 
 ## Phase E — VERIFICATION
 
-1. `turtle-real-check` PASS with exactly 21 inventory rows (segments, final state, pen state, stdout); `turtle-check`, `lesson-outputs-check`, structure /
+1. `turtle-real-check` PASS with exactly 21 inventory rows (segments, final state, pen state, stdout, no
+   unconsumed input); `turtle-check` PASS including the three new input assets; `turtle-check`, `lesson-outputs-check`, structure /
    hygiene / noexec / concept-scan / cell-lint PASS.
 2. Contract audit: no exercise in U06/U07/U08 keeps a turtle "No real version" line; repairs and traces
-   keep theirs.
+   keep theirs. A grep finds no `python assets/` and no "repository root" left in the U06 lesson.
 3. Books rebuilt; `publish-audit` PASS including the new `tryit+figure` route and the 21 answer-key
    drawings; rendered-page review of a U06 exercise, each U06 lesson try-it with its drawing, and Teacher
    answer keys with real-program drawings (U06, U07, U08).
@@ -157,7 +176,11 @@ lesson naming, jargon) — a separate publication-polish plan. Book 1 and Book 2
   the JupyterLab terminal opens in the course folder, not Unit 6's folder; the publisher route, sample-stdin
   replay, audit routes and CLI registry must be explicit; the check must require exactly 21 associated
   fences; the `[glm]` skip must be resolved.
-- `[fable]` pending.
+- `[fable]` APPROVE WITH NITS — parity confirmed empirically (scratch real programs for the Ring and the
+  Grid reproduce the assets' segments and stdout; a changed side is caught); required: the input table
+  (N1), runnable assets + `turtle-check` stdin for the lesson try-its (N2), publisher/audit routing in
+  lockstep (N3), four more U06 wording spots (N4); suggestions: prompts in lesson try-its, comments on
+  fence `input()` lines, unconsumed-input failure, a wording grep.
 - `[glm]` skipped — a user-authorised one-day exception (2026-09-26: "skip glm reviewer for 1 day, then
   use volcengine-plan/glm-5.3"); recorded here as the resolution of the gate-composition point.
 
@@ -169,6 +192,13 @@ lesson naming, jargon) — a separate publication-polish plan. Book 1 and Book 2
   instructions include the `cd` from the course folder; Phase D specifies the check's inventory (exactly
   21 associated fences), CLI registration, contract-audit skip, `figure_tikz(stdin=…)`, the `tryit+figure`
   route, answer-key drawings and audit changes, with tests.
+
+### Round 1 — [fable] fold
+
+- `[FIXED]` N1 (the table, above); N2 three runnable input assets with `# sample-input:` headers and
+  `turtle-check` feeding them; N3 audit routing in lockstep; N4 the four extra U06 wording spots; lesson
+  try-its use prompts; fence `input()` lines carry a comment; unconsumed input fails; Phase E greps the
+  U06 lesson and runs `turtle-check` on the new assets; the Random Polygon note.
 
 ## Content Review
 _(filled before PR.)_
