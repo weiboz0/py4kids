@@ -242,8 +242,11 @@ lesson naming, jargon) — a separate publication-polish plan. Book 1 and Book 2
     non-turtle fences untouched.
   - `[FIXED]` F5 U08 Ex 16 statement says "edge length", matching the fence.
   - `[WONTFIX]` F6 the error Notice's `py: can't open file` wording is hedged by "text like" (reviewer: no
-    action needed). Optional audit rule for input-asset listings not added: F1's cause is removed and the
-    rendered pages are re-checked in round 2.
+    action needed).
+  - F1 follow-up (found in the rebuilt pages): with the run line after the cell, the asset was still listed
+    in full because try-it cells were not recorded as rendered; `publish.py` now records `tryit+figure`
+    cells, so the mention becomes "This program is saved as …", and `publish_audit` fails a try-it asset
+    listed again in full (with a test).
 - `[sol]` REJECT — blind solve 5 programs; 4 matched.
   - `[FIXED]` O1 U08 Ex 17 did not say which way the square turns (a left-turn program drew a mirror image);
     the statement now says `turtle.forward(30)` and `turtle.right(90)`.
@@ -251,5 +254,50 @@ lesson naming, jargon) — a separate publication-polish plan. Book 1 and Book 2
     abs_tol=1e-6`, with a test at coordinate 1,000,000.
 - `[glm]` skipped — user-authorised one-day exception (2026-09-26: "skip glm reviewer for 1 day").
 
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE** (r2) — O1 re-replayed (right-turn blind program matches the asset's 16 segments and final
+  state); O2 `rel_tol=0` confirmed; try-its render once in both PDFs; fence edits only remove blank lines;
+  the new audit guard detects a duplicate listing.
+- `[fable]` **APPROVE** (r2) — F1–F5 verified on the rebuilt PDFs and by cell-by-cell diff; the audit guard
+  fails a scratch copy with the old layout; no regressions from [sol]'s folds.
+- `[self]` APPROVE — S1/S2 fixed; pages 183–202 (Student) and answer keys re-checked.
+- `[glm]` skipped — user-authorised one-day exception (2026-09-26/27).
+
+**Consensus reached — no `[OPEN]` findings.**
+
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped.**
+- Design 006 D3 amended: turtle drawing exercises have real programs (user decision, 2026-09-27).
+- 21 drawing exercises (U06 1–12, 16–18; U07 7, 27, 28; U08 7, 16, 17) now carry **Real version** lines, and
+  their solutions show a real program reading the table's inputs with bare `input()`, with Sample input,
+  Expected output and, in the Teacher's Edition, the drawing for that input.
+  U06 13–15 (repairs) keep No real version.
+- Unit 6 lesson: three prompted "Try it yourself" input programs (square, polygon, ring) with sample
+  drawings and runnable assets `assets/l{1,2,3}_*_input.py` (`# sample-input:` header); run instructions
+  follow Unit 0 (course folder, `cd book1b/units/unit-06-turtle-geometry`, `py` / `python3`); no
+  `python assets/` or "repository root" remains; the 15-minute budget moved to the teacher notes.
+- U06 teacher notes: run instructions, the real-program idea for turtle (vary the typed count, compare the
+  drawings), the try-it assets, and the Ring's decimal-turn caveat (13 squares prints `Turned: 359`).
+- Tooling: `turtle-real-check` (tools/turtle_real.py; 21-row Book 1b inventory; segments, final
+  position/heading, pen state, stdout, unconsumed input; absolute 1e-6 tolerance) registered and wired into
+  ci-local; `turtle-check` feeds `# sample-input:` headers and fails `input()` assets without one;
+  `figure_tikz(stdin=, caption=)`; publisher `tryit+figure` route and answer-key drawings; audit lockstep
+  plus a duplicate-listing guard.
+  Book 1's turtle exercises, whose real programs are text-only, stay out of the inventory.
+
+**Verification.**
+- `turtle-real-check` PASS (21 rows); `turtle-check`, `lesson-outputs-check`, structure, hygiene, noexec,
+  concept-scan and cell-lint PASS.
+- pytest 745 passed; `publish-audit` PASS (20 chapters, 391 items, 0 overfull hboxes, 3 try-it drawings,
+  21 answer-key drawings).
+- Rendered-page review of the U06 try-its and the Teacher answer keys for U06, U07 and U08.
+- `scripts/ci-local.sh` ALL GREEN at d9e668e (later commits change only this plan file).
+
+**Deviations.** An extra round-1 fix made each drawing carry a single caption inside its frame. The try-it
+duplicate-listing fix touched `publish.py`'s rendered-program tracking. Both are within Phase D's publisher
+scope.
+
+**Follow-ups (out of scope).** `python assets/…` run lines in U07/U08 statements and the rest of the
+reader-review polish belong to the separate publication-polish plan.
