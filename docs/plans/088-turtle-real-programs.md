@@ -84,8 +84,9 @@ asset is checked headlessly), citing the user decision of 2026-09-27.
     window opens; design 006 D3 already allows prompts in lesson cells). Each cell carries its sample input
     in cell metadata (`"sample_input": "…"`) so the book can print the drawing it makes, and each is also
     saved as a runnable asset — `assets/l1_square_input.py`, `assets/l2_polygon_input.py`,
-    `assets/l3_ring_input.py` — whose first line is a `# sample-input: …` comment (values separated by
-    `\n`), so the lesson's "run it the same way" works and `turtle-check` can feed it.
+    `assets/l3_ring_input.py` — whose first line is a `# sample-input: …` comment — the values separated by
+    ` | ` (space, bar, space), e.g. `# sample-input: 6 | 50`; every reader of the header (`turtle-check`,
+    `figure_tikz`, the publisher) splits on ` | ` and feeds one value per line, so the lesson's "run it the same way" works and `turtle-check` can feed it.
   - run instructions: explain once, in "First terminal encounter", how to run a program file: open a
     terminal (JupyterLab's File ▸ New ▸ Terminal opens in the **course folder**, as Unit 0 says), move into
     Unit 6's folder with `cd book1b/units/unit-06-turtle-geometry`, then run Windows
@@ -150,7 +151,7 @@ solution assets and checks stay unchanged.
 1. `turtle-real-check` PASS with exactly 21 inventory rows (segments, final state, pen state, stdout, no
    unconsumed input); `turtle-check` PASS including the three new input assets; `turtle-check`, `lesson-outputs-check`, structure /
    hygiene / noexec / concept-scan / cell-lint PASS.
-2. Contract audit: no exercise in U06/U07/U08 keeps a turtle "No real version" line; repairs and traces
+2. Contract audit: no **drawing** exercise in U06/U07/U08 keeps a turtle "No real version" line; repairs and traces
    keep theirs. A grep finds no `python assets/` and no "repository root" left in the U06 lesson.
 3. Books rebuilt; `publish-audit` PASS including the new `tryit+figure` route and the 21 answer-key
    drawings; rendered-page review of a U06 exercise, each U06 lesson try-it with its drawing, and Teacher
@@ -211,6 +212,16 @@ lesson naming, jargon) — a separate publication-polish plan. Book 1 and Book 2
   falls back to it; both publisher paths tested); Ex 10 uses true division for the turn and prints
   `Turned: {int(turned)}` (identical `Turned: 360` for the sample); the check is registered in
   `tools/checks.py`.
+
+### Round 3 — CONSENSUS
+
+- `[sol]` APPROVE WITH NITS (r3) — inventory and the input table confirmed against every asset; nits folded
+  (the `# sample-input:` header uses ` | ` separators, read the same way everywhere; Phase E says
+  "drawing exercise").
+- `[fable]` APPROVE WITH NITS (r1, folded) · `[self]` APPROVE WITH NITS · `[glm]` skipped (user-authorised
+  one-day exception, 2026-09-26/27).
+
+**Consensus reached — implementation starts.**
 
 ## Content Review
 _(filled before PR.)_
