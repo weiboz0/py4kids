@@ -74,7 +74,7 @@ Each lesson also has a "Try it yourself" input program (`assets/l1_square_input.
 `assets/l2_polygon_input.py`, `assets/l3_ring_input.py`) run the same way as the other lesson files.
 For the Colour-Alternating Ring's real program, a count that divides 360 (3, 4, 5, 6, 8, 9, 10, 12 …) turns
 by a whole number; other counts turn by a decimal, and adding decimals can leave the total a hair under 360,
-so the printed whole-number total can read 359 (it does for 49 squares).
+so the printed whole-number total can read 359 (it does for 13 squares).
 Each exercise has a starter asset `assets/exN_*.py`, a
 solution asset `assets/solutions_exN.py`, and a headless check in the solutions notebook.
 
