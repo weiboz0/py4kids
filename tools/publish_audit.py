@@ -44,7 +44,7 @@ def _turtle_drawing_findings(entry: Path, qmd: str, edition: str) -> list[str]:
     for cell in tryits:
         sample = cell.metadata.get('sample_input')
         caption = f'Drawing for the sample input: {sample}'
-        if sample is None or lesson_qmd.count('\\end{pubfigure}\n```\n' + caption) != 1:
+        if sample is None or lesson_qmd.count(caption + '}\n\\end{pubfigure}') != 1:
             findings.append(f'FAIL: {edition}: {entry.name}: try-it figure {cell.id}')
     if entry.name.startswith('unit-06-') and len(tryits) != 3:
         findings.append(f'FAIL: {edition}: {entry.name}: expected three turtle try-it figures')
@@ -61,7 +61,7 @@ def _turtle_drawing_findings(entry: Path, qmd: str, edition: str) -> list[str]:
         section = re.search(rf'(?ms)^### Exercise {number}\b.*?(?=^### Exercise \d+\b|\Z)', answer)
         for _, sample in turtle_programs:
             caption = 'Drawing for the sample input: ' + ', '.join((sample or '').splitlines())
-            if section is None or section[0].count('\\end{pubfigure}\n```\n' + caption) != 1:
+            if section is None or section[0].count(caption + '}\n\\end{pubfigure}') != 1:
                 findings.append(f'FAIL: teacher: {entry.name}: Exercise {number} real-program drawing')
     return findings
 
@@ -228,7 +228,7 @@ def audit(root: Path, book_id: str) -> list[str]:
                 findings.extend(_turtle_drawing_findings(entry, qmd, edition))
                 if edition == 'teacher':
                     answer_key_drawings += qmd.split('## Answer key', 1)[-1].count(
-                        '\\end{pubfigure}\n```\nDrawing for the sample input:')
+                        '\\color{black!60}Drawing for the sample input:')
             if edition == 'teacher':
                 if qmd.count('## Answer key') != 1 or [int(x) for x in re.findall(r'^### ' + ITEM[kind] + r' (\d+)\b', qmd.split('## Answer key', 1)[-1], re.MULTILINE)] != numbers:
                     findings.append(f'FAIL: {edition}: {id_}: answer-key coverage')

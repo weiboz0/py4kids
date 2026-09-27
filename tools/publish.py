@@ -52,9 +52,10 @@ def notebook(path: Path, edition: str):
     return nbformat.read(path, as_version=4)
 
 
-def turtle_picture(source: str, stdin: str | None = None) -> str:
+def turtle_picture(source: str, stdin: str | None = None,
+                   caption: str = 'Drawing made by the program above') -> str:
     with redirect_stdout(io.StringIO()):
-        return figure_tikz(source, stdin=stdin)
+        return figure_tikz(source, stdin=stdin, caption=caption)
 
 
 def panel(kind: str, body: str) -> str:
@@ -117,8 +118,9 @@ def route_code(cell) -> tuple[str, str]:
             if 'sample_input' in cell.metadata:
                 sample = cell.metadata['sample_input']
                 stdin = '\n'.join(sample.split(' | ')) + '\n'
-                body += '\n```{=latex}\n' + turtle_picture(source, stdin=stdin) + '\n```\n'
-                body += f'Drawing for the sample input: {sample}\n'
+                body += ('\n```{=latex}\n'
+                         + turtle_picture(source, stdin=stdin, caption=f'Drawing for the sample input: {sample}')
+                         + '\n```\n')
             return 'tryit+figure', body
         if re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', source):
             return 'figure', panel('program', code_block(source))
@@ -349,8 +351,9 @@ def answer_key(entry: Path, kind: str, items: list[dict]) -> str:
                     out.append(text + '\n')
         for program, sample in real_figures:
             try:
-                out.append('```{=latex}\n' + turtle_picture(program, stdin=sample + '\n') + '\n```\n'
-                           + 'Drawing for the sample input: ' + ', '.join(sample.splitlines()) + '\n')
+                caption = 'Drawing for the sample input: ' + ', '.join(sample.splitlines())
+                out.append('```{=latex}\n' + turtle_picture(program, stdin=sample + '\n', caption=caption)
+                           + '\n```\n')
             except Exception as error:
                 raise ValueError(f'FAIL: {entry.name}: real-program figure for {label} {number}: {error}') from error
         for file in sorted((entry / 'assets').glob(f'solutions_ex{number}*.py')) if (entry / 'assets').exists() else []:

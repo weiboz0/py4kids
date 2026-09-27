@@ -77,7 +77,8 @@ def test_tryit_route_and_figure():
     kind, body = publish.route_code(cell)
     assert kind == 'tryit+figure'
     assert 'tryit' in body
-    assert 'Drawing for the sample input: 10' in body
+    assert 'Drawing for the sample input: 10}\n\\end{pubfigure}' in body  # one caption, inside the frame
+    assert 'Drawing made by the program above' not in body
     assert '(10,0)' in body
 
 
