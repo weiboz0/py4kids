@@ -245,5 +245,48 @@ None: the Answer Key reuses the existing solutions and the plan 089 answer rende
   - `[FIXED]` N1: the stale U4 example in plan D4.
 - `[self]` APPROVE: title pages, print How to Use, U4 repairs and Answer Key pages checked.
 
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE** (r2): the O1 probe repeated on the real Unit 1 Answer Key chapter. A changed title, an even answer, and teacher prose in an answer and in the heading block each FAIL; the clean build passes. No layout regressions on print pp. 92–93, the Index start, the Answer Key Unit 1 start, or the full/teacher Unit 1 starts.
+- `[fable]` APPROVE WITH NITS (r1, all folded).
+- `[glm]` APPROVE WITH NITS (r1, opencode-go/glm-5.3, folded).
+- `[self]` APPROVE.
+
+**Consensus reached (4/4), no `[OPEN]` findings.**
+
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped.**
+- Four Book 1b editions from one `EDITIONS` profile, which drives the builder, the theme (`@CLASSOPTION@`, `@OUTPUT@`, `@EDITION@`), `build-book.sh` and the audit.
+- **Student Book — Print Edition** (`Book1b-Student-Print.pdf`, **410 pages**): every exercise. It drops the answers appendix and answer cross-references. Only Starters that print needed code are kept (9 of 376: U1 Ex 20's broken program and eight U8 `import random` starters). Chapters use `open=any`, there are no forced blanks, and a chapter's last short box no longer strands on its own page. How to Use has a print block: a Starter legend line, and "Answer Key and full edition online at the course page".
+- **Student Book — Full Edition** (`Book1b-Student.pdf`, 656 pages): plan 089's book, relabelled.
+- **Answer Key** (`Book1b-Answer-Key.pdf`, 192 pages): "Using This Answer Key", then the 175 odd-numbered unit answers in 13 per-unit chapters, with titled headings and no page references. It reads solutions only through `student_answer_sources`.
+- **Teacher's Edition** (922 pages): structure unchanged. Its How to Use block now describes its own answer keys correctly.
+- **`output/`:** every generated PDF lands in `output/<book>/` (Book 1b: four editions, syllabus, 13 handouts; Book 1: syllabus, patterns, 10 handouts). Each script replaces only its own files (`tools/publish_output.py`). `output/README.md` is committed; the PDFs are git-ignored.
+- **Audit per edition:**
+  - edition-specific phrase bans
+  - print equivalence against the full edition, via the `starter-omitted` ids
+  - Answer Key equivalence against the full appendix (entries, titles, bodies, heading block)
+  - the Answer Key source boundary
+  - a print page-count WARN above 400
+- **Build:** the four editions render in parallel with per-edition TeX caches (`BOOK_BUILD_PARALLEL=0` for sequential). Book build ≈ 15 min, versus ≈ 25 min for the old two-edition sequential build.
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN at 52adfd0.
+- pytest 796 passed.
+- `publish-audit` PASS for all four editions: 0 overfull hboxes; the only WARN is print at 410 pages, the user's soft target.
+- `git ls-files output/` shows only the README.
+- Rendered-page review: title pages, print How to Use, U1 Ex 20, U4 repairs, print p.92–93, Answer Key intro and Unit 6.
+- Content gate consensus 4/4 at round 2.
+
+**Page counts:** print 410 · full 656 · Answer Key 192 · Teacher 922 (before this plan: one Student Book of 658).
+
+**Deviations:**
+- The Starter rule was applied exactly as written. The U4 repair Starters are omitted because their broken code is printed in the statement.
+- The Answer Key reads student-visible notebooks for titles.
+- Both deviations were accepted by the gate.
+
+**Follow-ups:**
+- Where to publish the full edition and Answer Key online (e.g. GitHub Releases or Pages): the print How to Use points at github.com/weiboz0/py4kids.
+- A future decision on the Teacher's Edition structure.
+- Print sits at 410 pages; getting under 400 would need typography tightening or moving an exercise tier online.
