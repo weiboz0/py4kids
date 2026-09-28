@@ -117,10 +117,10 @@ all `[OPEN]` resolve before merge.
 | Work | Dispatch |
 |------|----------|
 | Planning, review orchestration, curriculum architecture | Active session inline |
-| Lesson content + exercise/checkpoint STATEMENTS | `codex:codex-rescue` (GPT-6-sol) |
-| SOLUTIONS to exercises + checkpoints | `codex:codex-rescue` (GPT-6-sol) — SEPARATE fresh session, never reads statements' outlines; cross-model verification lives in the gates |
+| Lesson content + exercise/checkpoint STATEMENTS | Opus subagent (`Agent`, `model: opus`) |
+| SOLUTIONS to exercises + checkpoints | Opus subagent (`Agent`, `model: opus`) — SEPARATE fresh session, never reads statements' outlines; cross-model verification lives in the gates |
 | Blind independent solving (content gate) | Gate roster (all four reviewers solve blind) |
-| Tooling code (`tools/`, `scripts/`) | `codex:codex-rescue` (GPT-6-sol) |
+| Tooling code (`tools/`, `scripts/`) | Opus subagent (`Agent`, `model: opus`) |
 | Teacher notes | Active session inline (pedagogy judgment) |
 | Trivially-scoped edits | Inline |
 
