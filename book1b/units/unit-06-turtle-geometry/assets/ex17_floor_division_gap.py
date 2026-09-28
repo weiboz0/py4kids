@@ -1,4 +1,4 @@
-# Student task: draw the magenta 34-step eleven-sided experiment and explain the shortcut's 8-degree gap.
+# Your task: draw the magenta 34-step eleven-sided experiment and explain the shortcut's 8-degree gap.
 import turtle
 
 n = 4

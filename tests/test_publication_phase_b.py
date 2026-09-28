@@ -2,13 +2,39 @@
 from pathlib import Path
 from types import SimpleNamespace
 
-from tools.publish import allowed_source, markdown_blocks, route_code, strip_asserts, teacher_notes
+from tools.publish import (
+    allowed_source,
+    markdown_blocks,
+    route_code,
+    strip_asserts,
+    student_answer_sources,
+    teacher_notes,
+)
 
 
-def test_student_boundary():
+def test_student_boundary(tmp_path):
     for name in ('teacher-notes.md', 'solutions.ipynb', 'assets/solutions_ex1.py'):
         assert not allowed_source(Path(name), 'student')
     assert allowed_source(Path('lesson.ipynb'), 'student')
+    import nbformat
+
+    unit = tmp_path / 'units' / 'unit-01-fixture'
+    (unit / 'assets').mkdir(parents=True)
+    (unit / 'assets' / 'solutions_ex1.py').write_text('print(1)\n')
+    (unit / 'assets' / 'solutions_ex2.py').write_text('print(2)\n')
+    nbformat.write(nbformat.v4.new_notebook(cells=[
+        nbformat.v4.new_markdown_cell('# Solutions'),
+        nbformat.v4.new_markdown_cell('## Exercise 1'),
+        nbformat.v4.new_code_cell('print(1)'),
+        nbformat.v4.new_markdown_cell('## Exercise 2'),
+        nbformat.v4.new_code_cell('print(2)'),
+    ]), unit / 'solutions.ipynb')
+    groups, assets = student_answer_sources(unit)
+    assert [group['number'] for group in groups] == [1]
+    assert {number: [path.name for path in paths] for number, paths in assets.items()} == {
+        1: ['solutions_ex1.py']}
+    assert student_answer_sources(tmp_path / 'checkpoints' / 'checkpoint-01-fixture') == ([], {})
+    assert student_answer_sources(tmp_path / 'projects' / 'project-01-fixture') == ([], {})
 
 
 def test_notice_forms_and_opener():
@@ -151,7 +177,6 @@ def test_output_label_is_tight_to_output():
 def test_teacher_cleanup():
     assert '### Goal' in teacher_notes('# Title\n\n# Goal\n\n60-MINUTE CUT (design 006 D9 genres) for CI')
     assert '60-minute cut' in teacher_notes('# Title\n\n60-MINUTE CUT')
-    assert 'design 006' not in teacher_notes('# Title\n\n(design 006 D9 genres)')
     escaped = teacher_notes(r'# Title' + '\n\n' + r'File is "5\n8\n"; code is `"5\n"`.')
     assert r'"5\\n8\\n"' in escaped and r'`"5\n"`' in escaped
     assert '`a` / `b`' in teacher_notes('# Title\n\n`a`/`b`')
@@ -186,8 +211,13 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     (book / 'syllabus.md').write_text('# Book 1b — Year 1 Syllabus\n\n| entry | kind | lessons | the hook |\n|---|---|---|---|\n| `unit-01-fixture` | unit | 1 | Hook. |\n')
     front = book / 'front-matter'
     front.mkdir()
+    (front / 'preface.md').write_text('# About This Book\n')
     (front / 'how-to-use.md').write_text('# How to use\n')
     (front / 'for-teachers.md').write_text('# For teachers\n')
+    back = book / 'back-matter'
+    back.mkdir()
+    (back / 'glossary.md').write_text('# Glossary\n')
+    (back / 'quick-reference.md').write_text('# Quick Reference\n')
     entry = book / 'units' / 'unit-01-fixture'
     (entry / 'assets').mkdir(parents=True)
     (entry / 'teacher-notes.md').write_text('# Notes\n\nTEACHER_SENTINEL_7429 [1]→{\"x\":[2]}\n')
@@ -209,28 +239,32 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     teacher = build(root, 'book1b', 'teacher')
     student_text = '\n'.join(p.read_text() for p in student.glob('*.qmd'))
     teacher_text = '\n'.join(p.read_text() for p in teacher.glob('*.qmd'))
-    for marker in ('TEACHER_SENTINEL_7429', 'SETUP_TEACHER_SENTINEL_7429',
-                   'ASSET_SENTINEL_7429', 'SOLUTION_SENTINEL_7429'):
+    for marker in ('TEACHER_SENTINEL_7429', 'SETUP_TEACHER_SENTINEL_7429'):
         assert marker not in student_text
         assert marker in teacher_text
+    assert 'SOLUTION_SENTINEL_7429' in student_text
+    assert 'ASSET_SENTINEL_7429' in student_text
     env = os.environ.copy()
     env['TEXMFCACHE'] = str(tmp_path / 'tex-cache')
     env['XDG_CACHE_HOME'] = str(tmp_path / 'xdg-cache')
-    subprocess.run([quarto, 'render', str(student), '--to', 'pdf'], check=True,
-                   capture_output=True, text=True, env=env)
+    student_render = subprocess.run([quarto, 'render', str(student), '--to', 'pdf'],
+                                    capture_output=True, text=True, env=env, check=False)
+    assert student_render.returncode == 0, student_render.stderr[-4000:]
     pdf_text = subprocess.run(['pdftotext', str(student / '_book' / 'Book1b-Student.pdf'), '-'],
                               check=True, capture_output=True, text=True).stdout
     assert '$5 and $6' in pdf_text
+    assert 'SOLUTION_SENTINEL_7429' in pdf_text
     assert 'Student Book' in pdf_text and 'Invalid Date' not in pdf_text
+    assert "Teacher's Edition" not in pdf_text
     assert all(marker not in pdf_text for marker in ('TEACHER_SENTINEL_7429',
-               'SETUP_TEACHER_SENTINEL_7429',
-               'ASSET_SENTINEL_7429', 'SOLUTION_SENTINEL_7429'))
+               'SETUP_TEACHER_SENTINEL_7429'))
     student_tex = (student / 'Book1b-Student.tex').read_text()
     assert student_tex.index(r'\chapter{How to use}') < student_tex.index(r'\mainmatter', student_tex.index(r'\chapter{How to use}'))
     assert student_tex.index(r'\mainmatter') < student_tex.index(r'\chapter{Unit 0')
     assert student_tex.index(r'\pubchapterlabel{Unit 0}') < student_tex.index(r'\chapter{Unit 0')
     assert r'\setcounter{secnumdepth}{-\maxdimen}' in student_tex
     assert r'\begin{pubcodeoutput}' in student_tex and r'\tcblower' in student_tex
+    assert r'\begin{pubcode}\footnotesize' in student_tex
     subprocess.run([quarto, 'render', str(teacher), '--to', 'pdf'], check=True,
                    capture_output=True, text=True, env=env)
     teacher_pdf_text = subprocess.run(['pdftotext', str(teacher / '_book' / 'Book1b-Teacher.pdf'), '-'],
@@ -263,7 +297,7 @@ def test_grouped_exercise_and_brief_keep_statements(tmp_path):
     assert '::: {.challenge}\n**Exercise 1**' in student
     assert 'Keep this statement.' in student
     assert '::: {.challenge}' in student and r'\answerlines' not in student
-    assert "The full program is in the Teacher's Edition." in student
+    assert "The full program is in the Teacher's Edition." not in student
     assert "The full program is in the Teacher's Edition." not in teacher
     assert '# fill this in' in student
     assert ('asset:ex1_start.py', 'asset listing') in [(x['id'], x['kind']) for x in inventory]
@@ -354,5 +388,6 @@ def test_checkpoint_group_and_answer_key(tmp_path):
     nbformat.write(solutions, entry / 'solutions.ipynb')
     key = answer_key(entry, 'checkpoint', items)
     assert '## Answer key' in key and '### Question 1 — First title' in key
-    assert 'assert answer' not in key and "(checked by the course's test suite)" in key
+    assert 'assert answer' not in key and 'Check: `answer` → `1`' in key
+    assert "(checked by the course's test suite)" not in key
     assert '**The real program**' in key and 'Sample input/output.' in key

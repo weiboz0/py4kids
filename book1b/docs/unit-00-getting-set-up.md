@@ -5,13 +5,13 @@ programs; **JupyterLab**, where you will open this course's lessons and exercise
 simple editor for programs saved as `.py` files.
 By the end of this unit you will have run the same tiny program three different ways.
 
-Ask an adult before installing software, and ask your teacher first if you are using a school computer —
-many school computers are already set up for you.
+Ask a parent or whoever manages the computer before installing software.
+If you use a school computer, check whether it is already set up.
 
-You also need the **course folder**, which holds every lesson and exercise. Your teacher will give it to
-you. If you are learning on your own, download it from the course's GitHub page, **github.com/weiboz0/py4kids** (**Code ▸ Download
-ZIP**),
-unzip it, and name the folder `py4kids`. This chapter assumes it is in your **Documents** folder.
+You also need the **course folder**, which holds every lesson and exercise.
+Download it from the course's GitHub page, **github.com/weiboz0/py4kids** (**Code ▸ Download ZIP**).
+Unzip it and name the folder `py4kids`.
+This chapter assumes it is in your **Documents** folder.
 
 ## What you will install
 
@@ -53,7 +53,7 @@ You should see something like `Python 3.14.2`. The exact numbers do not matter, 
 
 If `py install default` gives an error, the computer may have an older Python launcher. Type
 `pymanager install default` instead — `pymanager` always means the new install manager. If `py --version`
-then still shows a version older than 3.12, ask your teacher for help.
+then still shows a version older than 3.12, ask a parent or whoever manages the computer for help.
 
 Notice: on Windows, this book always starts Python with the command `py`.
 
@@ -100,8 +100,8 @@ Wait until the text stops and you see a line starting with `Successfully install
 Yellow lines such as `WARNING: The script … is not on PATH` or `A new release of pip is available` are
 fine — you can ignore them.
 
-To start JupyterLab, first move the terminal into the folder that holds the course files. If your teacher
-gave you a folder called `py4kids` in your Documents folder, type:
+To start JupyterLab, first move the terminal into the folder that holds the course files.
+If the `py4kids` folder is in your Documents folder, type:
 
 ```text
 cd Documents/py4kids
@@ -159,7 +159,7 @@ and run on their own, outside a notebook. Thonny is a friendly editor for those 
 1. Go to **thonny.org** and click the download link for your computer. There is more than one per
    system — pick the right one:
    - **Windows:** most computers need the ordinary 64-bit (Intel/AMD) installer. Choose the **Arm**
-     one only if your laptop has an Arm chip (your teacher will tell you).
+     one only if **Settings ▸ System ▸ About** says the computer has an Arm-based processor.
    - **Mac:** open the Apple menu ▸ **About This Mac**. If it says **Chip: Apple M…**, choose the Apple
      Silicon installer; if it says **Processor: Intel**, choose the Intel installer.
 2. Open the downloaded installer and follow the steps, keeping every choice as it is.
@@ -216,7 +216,8 @@ Find what you see, then do what it says.
 - **Windows: `py --version` says no Python is installed**  
   Run `py install default` again and wait for it to finish.
 - **Windows: `py install default` fails, or `py --version` shows an old version**  
-  Type `pymanager install default`. If `py --version` still shows a version older than 3.12, ask your teacher.
+  Type `pymanager install default`.
+  If `py --version` still shows a version older than 3.12, ask a parent or whoever manages the computer.
 - **Windows: `'python' is not recognized…`, or the Microsoft Store opens**  
   Use `py` instead of `python` — this book always does.
 - **Windows: `The system cannot find the path specified`**  
@@ -232,7 +233,7 @@ Find what you see, then do what it says.
 - **JupyterLab starts but no browser opens**  
   Copy the whole `http://localhost:…` line from the terminal into your browser.
 - **The install is blocked or asks for a password you do not know**  
-  Stop and ask your teacher or a parent — school computers often need an administrator.
+  Stop and ask a parent or whoever manages the computer — school computers often need an administrator.
 
 ## Checklist
 

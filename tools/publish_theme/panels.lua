@@ -1,6 +1,6 @@
 local names = {opener=true, output=true, codeoutput=true, notice=true, tryit=true, errordemo=true,
   hangdemo=true, program=true, challenge=true, realprog=true, datafile=true,
-  teacher=true, starter=true}
+  teacher=true, starter=true, goals=true, recap=true}
 function Header(el)
   if not FORMAT:match('latex') then return nil end
   if (el.level == 3 or el.level == 4) and el.content[1] then
@@ -48,8 +48,13 @@ function Div(el)
         class == 'errordemo' or class == 'hangdemo' or class == 'program' or
         class == 'starter' or class == 'datafile'
       for _, block in ipairs(el.content) do
-        if not (own_code_frame and block.t == 'RawBlock' and block.format == 'latex' and
-          (block.text == '\\begin{pubcode}' or block.text == '\\end{pubcode}')) then
+        if own_code_frame and block.t == 'RawBlock' and block.format == 'latex' and
+          block.text:match('^\\begin{pubcode}') then
+          if block.text:match('\\footnotesize') then
+            table.insert(blocks, pandoc.RawBlock('latex', '\\footnotesize'))
+          end
+        elseif not (own_code_frame and block.t == 'RawBlock' and block.format == 'latex' and
+          block.text == '\\end{pubcode}') then
           table.insert(blocks, block)
         end
       end
@@ -60,6 +65,12 @@ function Div(el)
 end
 function CodeBlock(el)
   if not FORMAT:match('latex') then return nil end
+  for _, class in ipairs(el.classes) do
+    if class == 'answer-code' then
+      return {pandoc.RawBlock('latex', '\\begin{pubcode}\\footnotesize'), el,
+              pandoc.RawBlock('latex', '\\end{pubcode}')}
+    end
+  end
   return {pandoc.RawBlock('latex', '\\begin{pubcode}'), el,
           pandoc.RawBlock('latex', '\\end{pubcode}')}
 end
@@ -103,7 +114,7 @@ function Code(el)
       table.insert(parts, escaped[c] or c)
     end
     if c:match('[A-Za-z0-9]') then run = run + 1 else run = 0 end
-    if c:match('[_%(%)%,%.%:%/%+%-%=]') or run >= 12 then
+    if c == '\\' or c:match('[_%(%)%,%.%:%/%+%-%=]') or run >= 12 then
       table.insert(parts, '\\allowbreak{}')
       run = 0
     end

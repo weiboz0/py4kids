@@ -1,4 +1,4 @@
-# Student task: replace this closed placeholder with the random color row from Exercise 17.
+# Your task: replace this closed placeholder with the random color row from Exercise 17.
 import turtle
 import random
 

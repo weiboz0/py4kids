@@ -27,12 +27,12 @@ Budget: three lessons of 60–90 minutes.
   `ch in word` membership. Before the palindrome: an index loop `for i in range(len(w))` and ONE mirror
   pair. **Palindrome by index-walk** (`for i in range(len(s)//2): if s[i] != s[len(s)-1-i]: return False`);
   `s[::-1]` gives a one-line alternative students may use in the exercises. Vowel count by condition. A
-  classify-the-character function (`elif` ladder). `no-exec` cells read a PIN and a word.
+  classify-the-character function (`elif` ladder). Try-it cells read a PIN and a word.
 - **Lesson 3 — Transform and Search (`transform-each`, `linear-search`).** Build a new string with `+` in a
   loop (the lesson's `double_letters`; masking and alternating case are the exercises); a `linear-search`
   `position(text, ch)` returning the first index or -1; a char-frequency report as `count_char(text, ch)`
   plus a printed alphabet scan (a letter→count MAP needs a dictionary — Unit 11 — so we print each count
-  instead of storing them). A `no-exec` cell reads a line and counts its words.
+  instead of storing them). A try-it cell reads a line and counts its words.
 
 **60-minute cut:** Lesson 3's Caesar shift is the cut casualty (already a Challenge); keep the core
 `transform-each` and `linear-search`.
@@ -105,10 +105,9 @@ several distinct cases per function.
 - Ex26 (stretch) `alternating_case`: `"python"`, `"moon base"`, `"A1b2!"`.
 - Ex27 (stretch) `position("abcdefghijklmnopqrstuvwxyz","q")`→16; Caesar `shift`: `("Code 9!",2)`→`"eqfg 9!"`,
   `("XYZ",3)`→`"abc"` (wraparound), `("stay",0)`→`"stay"`.
-- New exercises 8–29: fixtures as in the exercise statements (plan 082's tables), grep-distinct from shipped
-  Book 1b content.
+- New exercises 8–29: fixtures as in the exercise statements.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **Encoding:** a "pig latin" function for one lowercase word.
 - **Validation:** `is_valid_username(text)` — 3–10 characters, letters and digits only.

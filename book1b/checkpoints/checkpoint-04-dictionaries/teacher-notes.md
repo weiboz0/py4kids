@@ -24,7 +24,7 @@ Budget: half a lesson (~30–45 minutes). Hand out after Unit 11. The seven ques
 7. **First-Word Report** (`first_word_report`) — tally a list of words AND read `words[0]` by position, then
    report `"word: n of total"` (U10 list-index + U11 tally).
 
-## Real-version notes (design 006, plan 084)
+## Real-version notes
 
 Each question now ends with an ungraded **Real version** note (only Checkpoint 01's traceback-reading
 question has none). Graded answers still use the fixed given values and never call `input()`; the

@@ -21,20 +21,20 @@ object."
   makes an object with ONE attribute (`class Marker:` with `self.label = label`); then `class Point:` with
   `def __init__(self, x, y): self.x = x; self.y = y`; create instances; read `p.x`. Explain **`self` as "THIS
   particular object"** (do NOT call it "scope"). The **identity beat:** make TWO instances, change one's
-  attribute, show the other is untouched. A `no-exec` cell reads `x` and `y` and builds a `Point`. Trap:
+  attribute, show the other is untouched. A try-it cell reads `x` and `y` and builds a `Point`. Trap:
   forgetting `self`.
 - **Lesson 2 — Methods Compute with Attributes (`methods`).** Methods that use attributes and RETURN a value:
   first a Rectangle with only `area` (one method), then `area`/`perimeter`/`describe` together, `distance` via `** 0.5`, `describe()` returning an f-string (not `__str__`); a
   `string-slice` on an attribute string (`short_code()` → `self.code[0:2]`). Contrast a method with a plain
   function that takes the object; then **a method that draws** — `draw()` builds rows of `"#" * self.width`
-  and returns `"\n".join(rows)` (`Rectangle("D-1", 5, 2)`), with a `no-exec` cell that reads a width and
+  and returns `"\n".join(rows)` (`Rectangle("D-1", 5, 2)`), with a try-it cell that reads a width and
   height.
 - **Lesson 3 — Save and Load an Object.** A class with a `save(path)` method (`file-write`) and a
   **module-level `load_point(path)`** that reads (`open(path, "r")`) and RETURNS a new object — the file reuse
   from Unit 12. Mutating methods (`Counter.increment`) are fine; assert the attribute after the call. New
   rungs: **a list as an attribute** (`Shelf` with `self.books = []` and `add`), **a dictionary as an
   attribute** (`Scoreboard` with `self.points = {}` and `record`), **objects in a list** (a loop over three
-  `Point`s), and **a state machine** (`Lamp` switching `"off"` ↔ `"on"` with `press()`). A `no-exec` cell
+  `Point`s), and **a state machine** (`Lamp` switching `"off"` ↔ `"on"` with `press()`). A try-it cell
   reads `n` book titles into a `Shelf`.
 
 **60-minute cut:** teach L1 (class + attributes + identity) and L2's `area`/`describe` live; the persistence
@@ -104,10 +104,9 @@ mutating methods).
 - Ex21 (stretch) `Rectangle(10,7).size_band()`→"large", `Rectangle(7,5)`→"medium". Ex22 (stretch)
   `visitors = Counter("north gate",12)`: `increment(4)`→16, `save("ex22_counter.txt")`→"ex22_counter.txt", then
   `load_counter(...)` gives back `label`="north gate", `count`=16.
-- New exercises 8–24: fixtures as in the exercise statements (plan 084's tables), grep-distinct from shipped
-  Book 1b content.
+- New exercises 8–24: fixtures as in the exercise statements.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **State machines:** a `Door` that is `"locked"`, `"closed"` or `"open"` with `unlock()`/`open()` rules.
 - **Modeling:** a `Library` whose `books` dict maps titles to copies, with `lend(title)`.

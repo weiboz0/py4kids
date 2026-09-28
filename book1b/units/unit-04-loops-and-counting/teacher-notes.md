@@ -21,22 +21,22 @@ rung.
 - **Lesson 1 — Repeat and Keep Count (`while`, `loop-counter`).** Open on a real repetition problem. Teach
   the **reassignment rung first** (`count = 0; count = count + 1; print(count)`, Notice: "the right side is
   computed with the OLD value, then saved"). Then the counter loop. Two deliberate beats: (a) the
-  **infinite-loop** cell (a `no-exec` cell that forgot `i = i + 1`) — Notice on why it never stops and **how
+  **infinite-loop** cell (a try-it cell that forgot `i = i + 1`) — Notice on why it never stops and **how
   to stop it: Kernel → Interrupt (or Ctrl-C)**; (b) an **off-by-one** repair (`while i < 5` prints 0–4 vs
   `while i <= 5` prints 0–5) and a `NameError` traceback beat (using `total` before `total = 0`).
-  A `no-exec` real-input cell reads a starting number and counts down from it.
+  A real-input try-it cell reads a starting number and counts down from it.
 - **Lesson 2 — Accumulate Totals and Counts (`accumulator`, running-total, count-by-condition).** Point back
   to Unit 02's 5050 peek ("you saw this — now you write it"). Build a running total, then the new
   **`+=` rung** (`total += number` is shorthand for `total = total + number` — either form is accepted
   from here on). Count how many values pass a test (elif tiers). The digit tools now climb in three rungs:
   **count the digits** (`4827` → 4), then the digit sum, then **best-so-far** (largest digit of 4827:
-  `if d > best: best = d`). A `no-exec` cell reads numbers until 0 and prints their total — written with a
+  `if d > best: best = d`). A try-it cell reads numbers until 0 and prints their total — written with a
   plain condition (`while number != 0:`, reading again at the end of the body), because `break` comes in
   Lesson 3.
 - **Lesson 3 — Stop at a Computed Goal (`break`, `sentinel-loop`).** `break` now arrives in two steps: first
   inside an ordinary `while n <= 100:` loop (leave early when a goal is met), then the `while True: … break`
   exit-from-the-middle shape. The final build is a plain `while n != 1:` Collatz loop; the `steps` counter
-  counts the passes and supplies the printed summary (`Steps: N`). A `no-exec` cell reads `n` and prints
+  counts the passes and supplies the printed summary (`Steps: N`). A try-it cell reads `n` and prints
   its Collatz steps, and another lets a human play the guessing game against the computer's secret.
 
 60-MINUTE CUT: L1 — keep the reassignment rung, the counter loop, and the infinite-loop/off-by-one beats
@@ -106,7 +106,7 @@ never call `input()`; run one or two real programs live by typing the sample inp
 - Middle tier: convert a counter loop into a running-total loop and predict the output; rewrite one
   `x = x + 1` line as `x += 1` and confirm nothing changes.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **Sequences:** print the Fibonacci numbers below 100 with two running variables.
 - **Number theory:** count how many times 2 divides a number (`while n % 2 == 0`).

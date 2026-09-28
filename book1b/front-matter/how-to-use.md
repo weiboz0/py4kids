@@ -1,37 +1,60 @@
 # How to Use This Book
 
-This book teaches Python one idea at a time.
-You do not need any programming experience — only curiosity and the arithmetic you already know.
+Begin with Unit 0 to set up Python and open the course files.
+Each later unit starts with a project or problem, then teaches the ideas you need to solve it.
+Read, run, change, and rerun the examples before you start the exercises.
 
-## What is in each unit
+## Reading the page
 
-Every unit starts with a **problem worth solving**: a puzzle, a picture, or a small tool.
-The lessons then build the ideas you need, one small step at a time, until you can solve it.
+- **Program / Output:** Program shows Python code; Output shows what it prints when run with the shown values.
+- **Notice:** A short explanation of the idea the example just used.
+- **Try it yourself:** Run the code and supply your own input or make the suggested change.
+- **Read the error:** The code is broken on purpose; use the message to find the mistake.
+- **Watch out: this never stops:** A loop is shown to explain a trap; read it, but do not run it unchanged.
+- **Drawing made by the program above:** A turtle drawing, printed right after the program that makes it.
+- **Starter:** A beginning for your exercise program; finish the missing work yourself.
+- **Data file:** Text the program reads or writes; use the shown lines exactly when checking a sample.
+- **Challenge:** An optional stretch problem; later lessons do not depend on it.
+- **Check lines:** A call and its expected result for checking your code.
+- **Real version:** The same task using values entered while the program runs, instead of fixed sample values.
+- **You will learn / Recap:** A short guide to the unit's goals and a reminder of what you can now do.
 
-- **Code and output.** Each program in a lesson is followed by its **Output** — exactly what Python prints
-  when you run it. Type the program yourself, run it, and check that your output matches.
-- **Notice.** A *Notice* box points out the one thing the example just taught. Read it before moving on.
-- **Try it yourself.** Some programs ask *you* for input. Type them in and give them your own values.
-- **Read the error.** Sometimes we show code that is broken on purpose. Mistakes are normal; learning to
-  read Python's error message is one of the most useful skills in this book.
-- **Pictures from code.** In the turtle units, the drawing a program makes is printed next to it.
+## Work in the course files
 
-## Exercises
+Your course folder contains the `book1b` folder.
+Here is the map for each numbered unit:
 
-After the lessons comes a set of exercises in three tiers:
+```text
+book1b/
+  units/
+    unit-NN-…/
+      lesson.ipynb       read and run the lesson
+      exercises.ipynb    write and save your answers here
+      assets/            program files or data, when used
+```
 
-- **Core** exercises practise the unit's main ideas. Do these first.
-- **More Practice** exercises give you extra repetitions in new settings — games, codes, art, and puzzles.
-- **Challenge** exercises stretch you further. They are optional; nothing later depends on them.
+`NN` is the unit number, such as `06`.
+For example, Unit 6's turtle files are in `book1b/units/unit-06-turtle-geometry/assets/`.
+Open the unit's `exercises.ipynb` in JupyterLab, add your code there, run it, and save your work.
+When an exercise asks for a `.py` file, save it in that unit's folder unless the exercise gives another location.
 
-Each exercise gives a precise **specification** and a **worked sample** — exact input and exact output.
-Your program is correct when it produces exactly that output.
-Many exercises also describe a **real program**: the same work, but reading its values with `input()`,
-the way a programming contest expects.
+To run a program file from a terminal, first move into its unit folder.
+On Windows, type `py assets/l1_square.py`; on a Mac, type `python3 assets/l1_square.py`.
+Replace `assets/l1_square.py` with the file named in your lesson or exercise.
+Unit 0 shows how to open a terminal, move into a folder, and run a file.
 
-## Checkpoints and the Algorithm Challenge
+## Check your work
 
-Five **checkpoints** let you show what you have learned so far.
-The book ends with the **Algorithm Challenge**, a set of problems that brings everything together.
+Do Core exercises first, then More Practice, and try Challenges when you want an extra puzzle.
+Run your program with each worked sample and compare every printed line, space, and number with the page.
+Make the sample version work before trying a Real version.
 
-Take your time. Run everything. Change the numbers and see what happens.
+At the back, **Answers to Selected Exercises** gives worked answers to the odd-numbered unit exercises.
+Try an exercise and test its samples before looking.
+If you get stuck, read just enough of the answer to spot the next step, close it, and finish your own program.
+Then compare your result and ask why any differences matter.
+
+The five checkpoints and the Algorithm Challenge are self-tests, so they have no printed answers.
+Every question has worked samples.
+Run your program against all of them and check that its result matches each sample exactly.
+Change the input and predict what should happen to test your understanding further.

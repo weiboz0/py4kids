@@ -1,4 +1,4 @@
-# Student task: replace this starter with the turquoise ring of nine hexagons from Exercise 6.
+# Your task: replace this starter with the turquoise ring of nine hexagons from Exercise 6.
 import turtle
 
 n = 4

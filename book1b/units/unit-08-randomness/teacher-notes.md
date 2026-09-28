@@ -19,10 +19,10 @@ Budget: three lessons of 60–90 minutes.
   `random.seed(4)`, then `print(random.randint(1, 6))` (inclusive of both ends); then
   `random.choice(range(...))` and the new rung `random.choice("HT")` (a coin from a string);
   **`random.seed(4)`** so a run can be repeated and tested (why every solution
-  here seeds). A `no-exec` cell reads the number of rolls. A dice-and-coin game that keeps a cumulative
+  here seeds). A try-it cell reads the number of rolls. A dice-and-coin game that keeps a cumulative
   score across rolls.
 - **Lesson 2 — Simulate & Estimate.** Count how often an outcome happens over many trials (a running total
-  inside a function; a `no-exec` cell reads the number of trials), report it as a percentage (`round`),
+  inside a function; a try-it cell reads the number of trials), report it as a percentage (`round`),
   then — after a new rung that tests ONE fixed point `(0.3, 0.4)` against the quarter circle — a
   Monte-Carlo estimate of π: throw random
   points into a square and count how many land inside the quarter-circle (`x*x + y*y <= 1000*1000`); the
@@ -32,7 +32,7 @@ Budget: three lessons of 60–90 minutes.
   grid.")
 - **Lesson 3 — Random Turtle Walk.** A turtle that steps forward and turns left or right based on
   `random.randint(0, 1)`, seeded so the drawing is reproducible; run as `assets/*.py` from the terminal
-  (an open path — it does not close). A `no-exec` cell reads the number of coin flips.
+  (an open path — it does not close). A try-it cell reads the number of coin flips.
 
 **60-minute cut (any lesson):** in Lesson 2, teach the counting simulation and the percentage report live and
 leave the π estimate as a "try it"; it is the least essential and the most math-heavy.
@@ -70,7 +70,7 @@ defines the function, reads the count/target/length with bare `input()`, seeds, 
 - Expecting a simulated estimate to equal the exact value, or to improve on EVERY increase in trials; more
   trials help on average (and never make it perfectly exact), but the improvement is not monotonic.
 - In the random walk: running from the wrong directory, or expecting the drawing to close (it is an open
-  path and carries the `# turtle-check: open-path` marker).
+  path).
 
 ## Discussion prompts
 
@@ -99,10 +99,10 @@ defines the function, reads the count/target/length with bare `input()`, seeds, 
 - Exercise 7 — random-walk real program (no function call): seed `4`, `step = 31`, `move_count = 20`.
 - Exercise 18 — `highest_roll(trials)`: `3`, `10`, `30`.
 - Exercise 19 — `count_multiples(trials, n)`: `(10, 4)`, `(25, 5)`, `(40, 3)`.
-- New exercises 8–20: fixtures as in the exercise statements (plan 082's tables); every seeded value was
+- New exercises 8–20: fixtures as in the exercise statements; every seeded value was
   computed by running the code with `random.seed(4)`.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **Games:** "Guess the die" — the computer rolls, the player's fixed guesses are scored.
 - **Simulation:** how many rolls until every face 1–6 has appeared (six flags, no lists).

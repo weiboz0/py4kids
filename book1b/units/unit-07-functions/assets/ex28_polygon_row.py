@@ -1,4 +1,4 @@
-# Student task: replace the working hexagon with the Exercise 28 row.
+# Your task: replace the working hexagon with the Exercise 28 row.
 import turtle
 
 

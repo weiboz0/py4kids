@@ -16,16 +16,16 @@ The opening leap-year cell is marked as a **preview** — students read it; they
 by the end of the unit.
 
 - **Lesson 1 — Choose with `if` (if-statement).** `if`/`else`; the deliberate `SyntaxError` beat
-  (`if score = 90:`); a `no-exec` real-input cell that reads a score and decides.
+  (`if score = 90:`); a real-input try-it cell that reads a score and decides.
 - **Lesson 2 — Choose among Several Paths (elif-else, logical-ops).** New minimal rungs first:
   `print(True and False)`, `print(True or False)`, then `not`. The `elif` ladder top-down; a two-part
   `and` inside `elif` before the triangle example (whose three-way `or` gets its own Notice). The range
   test is now taught both ways — `x >= 0 and x <= 10` and the chained `0 <= x <= 10`; then
-  `"Yes" == "yes"` (False: case matters) and a Notice that `and` binds tighter than `or`. A `no-exec` cell
+  `"Yes" == "yes"` (False: case matters) and a Notice that `and` binds tighter than `or`. A try-it cell
   reads a day name and prints whether it is the weekend.
 - **Lesson 3 — Build Clear Decision Trees (conditional-nesting).** Nested decisions; the leap-year rule
   is now built in three steps (`year % 4 == 0` → `and year % 100 != 0` → `or year % 400 == 0`) before the
-  full rule; a `no-exec` cell reads a year and applies it; the **Final build**.
+  full rule; a try-it cell reads a year and applies it; the **Final build**.
 
 60-MINUTE CUT: teach rungs 1–2 live and leave the last rung as a "try it"; the case-sensitivity rung and
 the chained-comparison rung are good self-serve rungs.
@@ -74,7 +74,7 @@ values with `input()` (numbers through `int(input())`), one per line, and prints
   partner.
 - Middle tier: rewrite a nested `if` as an `elif` ladder and confirm identical verdicts.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **Calendar & time:** "is this a valid date?" for month/day (ignore leap years first, then add them).
 - **Games:** a one-round "higher or lower" judge for two cards.

@@ -27,11 +27,11 @@ load — so each is taught as a short **worked-example ladder** (minimal → one
   line). Comments; quotes; the new **Special characters** ladder: `\n`, `\t`, `\"`, then a triple-quoted
   three-line picture. No input yet (Lesson 1 is exempt from the real-input rule).
 - **Lesson 2 — Save Values (variable, naming, input).**
-  Assign values; choose clear names; then `input()` — the three `no-exec` cells are real programs
+  Assign values; choose clear names; then `input()` — the three try-it cells are real programs
   students run at home or with you live (e.g. `name = input("Name: ")`, then `print("Hello,", name)` —
   the comma form, because `+` comes in Lesson 3).
 - **Lesson 3 — Assemble the Card (string-concat, f-string, error-messages).**
-  `+`, then f-strings; the `no-exec` "real card" cell reads two values and prints one f-string line.
+  `+`, then f-strings; the "real card" try-it cell reads two values and prints one f-string line.
   Finish with the deliberate broken/fixed traceback cells and the **Final build**.
 
 60-MINUTE CUT (any lesson): teach rungs 1–2 of each ladder live and leave the last rung as a "try it";
@@ -58,11 +58,11 @@ are the natural "try it" rungs.
 prints the same lines, with a **Sample input** and **Expected output**. Run one or two of these live: type
 the sample input and watch the expected output appear. Repair/predict exercises (6, 15, 17, 20) and
 fixed-art exercises (14, 18) say **No real version** instead. Graded solution cells never call `input()`
-(the notebook runs automatically in CI); the real programs are for typing in and running by hand.
+(the course checks every notebook by running it automatically); the real programs are for typing in and
+running by hand.
 
 Every exercise uses the **pre-function form** — given fixed values, produce an exact output — because
-functions are not taught until Unit 07. (Book 1b allows *fastforward*; **Unit 02 is where the
-forward-reaching `practices:` tagging convention is first demonstrated** — no forward tags are needed here.)
+functions are not taught until Unit 07.
 
 ## Common mistakes
 
@@ -93,7 +93,7 @@ forward-reaching `practices:` tagging convention is first demonstrated** — no 
 - Middle tier: rewrite one `+`-joined line as an f-string and as a comma `print`, and confirm identical
   output.
 
-## More Practice ideas (design 006 D9 genres — for extra homework)
+## More Practice ideas (for extra homework)
 
 - **Output & formatting:** a three-line business card using `sep="|"`; a receipt whose total line uses
   `end=""` to stay on the same line as a label.

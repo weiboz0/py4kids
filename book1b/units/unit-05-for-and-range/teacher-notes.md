@@ -19,11 +19,11 @@ Budget: three lessons of 60–90 minutes; one new idea per code cell, a *Notice*
 - **Lesson 1 — Visit a Range (`for`, `range`).** Reproduce Unit 04's 5050 sum as
   `for n in range(1, 101): total = total + n` — same result, less typing (the motivation for `range`).
   Teach `range(n)` and `range(a, b)` with the Notice **"the stop value is not included"**; then the new
-  step rungs `range(0, 20, 5)` and `range(10, 0, -1)` (count down with a negative step). A `no-exec`
-  real-input cell reads `n` and prints 1 to `n`.
+  step rungs `range(0, 20, 5)` and `range(10, 0, -1)` (count down with a negative step). A real-input
+  try-it cell reads `n` and prints 1 to `n`.
 - **Lesson 2 — Calculate across a Range.** Running total and count-by-condition over a range →
   **FizzBuzz** (an `elif` ladder inside a `for`) → the new **`continue`** rung (skip multiples of 3 in
-  1–10) → a `no-exec` cell that reads `n` and prints FizzBuzz up to it → the early exit **before** the flag:
+  1–10) → a try-it cell that reads `n` and prints FizzBuzz up to it → the early exit **before** the flag:
   find the first divisor of 91 and `break` (→ 7) → the full prime flag (spec `n ≥ 2`; `range(2, 2)` is
   empty so `n == 2` stays prime).
 - **Lesson 3 — Put One Loop inside Another (`nested-loops`) and the ASCII pattern ladder.** First ONE loop
@@ -34,7 +34,7 @@ Budget: three lessons of 60–90 minutes; one new idea per code cell, a *Notice*
   `print()`, a single number row `1 2 3 4 5`, the multiplication table, and the new **width rung**
   `f"{number:3}"` (pads on the left so table columns line up — used by Challenge 29). Then the **pattern
   ladder** in design order: inverted triangle (`range(h, 0, -1)`), right-aligned triangle
-  `" " * (h - r) + "*" * r`, centered pyramid `" " * (h - r) + "*" * (2 * r - 1)`. A `no-exec` cell reads
+  `" " * (h - r) + "*" * r`, centered pyramid `" " * (h - r) + "*" * (2 * r - 1)`. A try-it cell reads
   a height and draws the pyramid. Final build.
 
 60-MINUTE CUT: L1 — the negative-step rung is a good "try it". L2 — primality can wait; keep `continue` and
@@ -65,7 +65,7 @@ FizzBuzz live. L3 — teach the triangle and the table live; hand the pattern la
   columns), Primes up to 50 (15 primes), Pascal's Triangle (5 rows via `c = c * (row - k) // (k + 1)`).
 
 **Real versions.** Every exercise has a Real version. Art exercises read their height/width/size; Ex 3 and
-Ex 7 use the "read `n`, then `n` numbers" idiom (design 006 D3) — the first time students see it. Graded
+Ex 7 use the "read `n`, then `n` numbers" idiom — the first time students see it. Graded
 solution cells never call `input()`; type a real program in and draw a pyramid of height 6 live.
 
 ## Common mistakes
@@ -96,7 +96,7 @@ solution cells never call `input()`; type a real program in and draw a pyramid o
 - Middle tier: rewrite a `while` counter from Unit 04 as a `for`/`range` loop and confirm identical output;
   redraw the triangle both ways.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **ASCII art:** an hourglass (inverted pyramid then pyramid); a staircase of `#` blocks two wide.
 - **Brute-force search:** find all two-digit numbers equal to the sum of their digits times 7.

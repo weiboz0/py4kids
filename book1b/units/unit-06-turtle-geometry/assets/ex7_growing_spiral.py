@@ -1,4 +1,4 @@
-# Student task: replace this starter with the maroon 14-move growing spiral from Exercise 7.
+# Your task: replace this starter with the maroon 14-move growing spiral from Exercise 7.
 import turtle
 
 n = 4

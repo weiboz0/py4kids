@@ -1,4 +1,4 @@
-# Student task: replace this starter with the forestgreen 74-step triangle from Exercise 2.
+# Your task: replace this starter with the forestgreen 74-step triangle from Exercise 2.
 import turtle
 
 n = 4

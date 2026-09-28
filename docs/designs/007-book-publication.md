@@ -76,6 +76,26 @@ plus the syllabus; they carry notebook framing (`In [ ]:` prompts, raw cell boxe
   contains no solution content). Plans applying this design include a rendered-page review in their
   content gate (reviewers look at sampled page images, not only the source).
 
+- **Amendment (plan 089, user decisions 2026-09-27).**
+  - **The Student Book is independent** ("We should assume independence of the student book without
+    referencing the teacher or teacher book"): it never refers to a teacher or to the Teacher's Edition, and it
+    carries **Answers to Selected Exercises** — every odd-numbered unit exercise, read through one checked
+    source path (`student_answer_sources`, units only, odd numbers only). Checkpoints and the Algorithm
+    Challenge print no answers in the Student Book; How to Use explains how to self-check them against their
+    worked samples. D4's "no solutions" and D6's "no solution content" now mean *no solutions beyond that
+    appendix*, enforced by a leak guard.
+  - **Routing (D3):** the Real-program convention is explained once in How to Use (no per-exercise
+    "full program is in the Teacher's Edition" note); "no real program" panels are dropped; `assert` lines
+    render in place as **Check** lines (top-level asserts; nested ones stay code); `# turtle-check:`
+    directive lines are stripped from printed code.
+  - **Front and back matter:** an edition page (title verso), a preface and How to Use; back matter
+    Glossary, Quick Reference and Index (both editions), after the Student Book's answers. Each unit gains a
+    "You will learn" panel (just before its first lesson, after the hook) and a "Recap" panel (its last
+    lesson cell). Exercise and answer headings carry page cross-references.
+  - **Verification (D6):** `publish-audit` adds the independence phrase bans, the leak guard, goals/recap
+    positions, answer coverage, glossary coverage, the index, LaTeX reference hygiene and cross-reference
+    resolution.
+
 ## 3. Rollout
 
 | plan | scope |

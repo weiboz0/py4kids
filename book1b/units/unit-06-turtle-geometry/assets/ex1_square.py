@@ -1,4 +1,4 @@
-# Student task: replace this starter with the royal-blue 62-step square from Exercise 1.
+# Your task: replace this starter with the royal-blue 62-step square from Exercise 1.
 import turtle
 
 n = 4
