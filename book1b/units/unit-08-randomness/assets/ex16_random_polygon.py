@@ -1,4 +1,4 @@
-# Student task: replace this closed placeholder with the random polygon from Exercise 16.
+# Your task: replace this closed placeholder with the random polygon from Exercise 16.
 import turtle
 import random
 

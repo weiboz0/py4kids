@@ -322,7 +322,39 @@ The Problem 11 fix is a publisher change (D3 below); its solution code is correc
 **Consensus reached — implementation starts.**
 
 ## Content Review
-_(filled before PR.)_
+
+### Implementation deviation (recorded before the gate)
+
+- **Leak guard rule.** The plan's rule ("≥ 20-token fragment not in visible sources") flagged 44 shared idioms as leaks: the multiplication-table loop the Unit 5 lesson teaches, the `with open(path, "w")` file-writing loop, and the `Counter` class from the Unit 13 lesson.
+  - The guard now checks the answers chapter only, the one place solution material is printed.
+  - It fails when a printed block equals a hidden (even-exercise, checkpoint or project) solution cell or asset, or contains one whole (≥ 30 tokens).
+  - Tests cover a whole leak, an embedded leak, and a shared fragment that must pass.
+  - Measured content note: a few checkpoint questions (Checkpoint 2 Q3/Q4) closely mirror odd unit exercises whose answers are now printed. This is a follow-up for checkpoint design, not this plan.
+
+### Round 1
+
+- `[self]` APPROVE WITH NITS: rendered pages checked (edition page, unit opener and goals, answers, glossary, quick reference, index).
+  - `[FIXED]` S1: the index put common words ("and", "not") everywhere, had case duplicates, and had terms pointing only at the glossary. Now one entry per term; keywords and backticked keys match inline code only; the audit guards all three.
+- `[sol]` **REJECT:** blind-solved U3 Ex 5, U9 Ex 7, U12 Ex 3, U10 Ex 9; 13 cross-references resolved; Problem 11 and the U06 key confirmed.
+  - `[FIXED]` O1: U10 Ex 9's real program read two lines while the statement says one. A scan found the same "one run per worked sample" pattern in 39 real programs. 37 were rewritten as one run (U07 ×13, U08 ×8, U10 ×16), each verified on its new Sample input; 6 are legitimate multi-read programs whose Real version line says so. The U13 Ex 3 and Ex 21 headings were aligned.
+    - U07 Ex 15 and Ex 32 now print only their one result; Ex 15 prints the weekday name, as the statement's `weekday_name(day_of_week(...))` suggests.
+  - `[FIXED]` O2: Check lines never say "is true". `assert A is False` → "Check: `A` → `False`"; `assert not X` → "`X` → `False`".
+  - `[FIXED]` O3: the index indexes a term only from its glossary unit onward. Generic prose aliases are removed or made code-only (e.g. `random.choice`); Python names match only real code, case-sensitively.
+  - `[FIXED]` O4: the Unit 8 quick reference uses `random.choice("HT")`, not a list.
+- `[fable]` **APPROVE WITH NITS:** blind-solved U2 Ex 3, U7 Ex 11, U11 Ex 5, U13 Ex 9, U8 Ex 4; 10/10 cross-references; audit mutations fail as intended; leak-guard deviation accepted.
+  - `[FIXED]` F1: index noise (as O3).
+  - `[FIXED]` F2: "are the in-class path" ×6 → "are the main path".
+  - `[FIXED]` F3: U8 exercises preface in book voice.
+  - `[FIXED]` F4: the legend entry now names the printed caption "Drawing made by the program above".
+  - `[FIXED]` F5: U8 "classroom example" → "repeat the same way every time".
+  - `[FIXED]` F6: the unexplained "add `# turtle-check: open-path`" instruction is removed from U6 Ex 7, U6 Ex 9 and U8 Ex 7. The U6 Ex 9 starter keeps the marker because the checker needs it; printed code strips it. The U8 lesson sentence explaining the marker was reworded.
+  - `[FIXED]` F7: the Real-program line keeps its full stop.
+  - `[FIXED]` F8: Break and continue is tagged *(Units 4–5)*.
+  - `[FIXED]` F9: "# Student task:" → "# Your task:" in U6–U8 starters.
+  - `[FIXED]` F10: U9 teacher-notes capital.
+  - `[FIXED]` F11: `solution_leak`'s dead `visible` parameter was removed.
+- `[glm]` pending: both GLM providers timed out on 2026-09-28 (quota reset expected). The user chose opencode-go/glm-5.3; AGENTS.md now makes opencode-go primary with volcengine-plan as fallback.
+- Authoring for this fold ran on Opus subagents (user decision 2026-09-27; AGENTS.md updated on this branch).
 
 ## Post-Execution Report
 _(filled before merge.)_

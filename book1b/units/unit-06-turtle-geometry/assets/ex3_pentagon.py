@@ -1,4 +1,4 @@
-# Student task: replace this starter with the orchid 68-step pentagon from Exercise 3.
+# Your task: replace this starter with the orchid 68-step pentagon from Exercise 3.
 import turtle
 
 n = 4

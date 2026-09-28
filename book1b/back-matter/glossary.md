@@ -7,7 +7,7 @@
 <!-- concept: parameters; index: parameter -->
 
 **Arithmetic operators** — The symbols `+`, `-`, `*`, `/`, `//`, and `%` calculate with numbers. *(Unit 2)*
-<!-- concept: arithmetic; index: operators -->
+<!-- concept: arithmetic; index: arithmetic symbols -->
 
 **Attribute** — A value stored on an object, reached with a name such as `point.x`. *(Unit 13)*
 <!-- concept: attributes; index: object attribute -->
@@ -15,14 +15,14 @@
 **Boolean** — One of the two truth values, `True` or `False`. *(Unit 2)*
 <!-- concept: boolean; index: True; False -->
 
-**Break and continue** — `break` leaves a loop; `continue` skips to its next turn. *(Unit 4)*
+**Break and continue** — `break` leaves a loop; `continue` skips to its next turn. *(Units 4–5)*
 <!-- concept: break-statement; index: break; continue -->
 
 **Built-in function** — A ready-to-use Python function such as `len()`, `min()`, or `max()`. *(Unit 7)*
 <!-- concept: builtin-functions; index: len; min; max -->
 
 **Class** — A set of instructions for making objects with the same kinds of attributes and methods. *(Unit 13)*
-<!-- concept: class-def; index: class -->
+<!-- concept: class-def; index: `class` -->
 
 **Code comment** — Words after `#` that explain code to a reader; Python does not run them. *(Unit 1)*
 <!-- concept: comment; index: comment -->
@@ -37,7 +37,7 @@
 <!-- concept: count-by-condition; index: conditional count -->
 
 **Counter variable** — A number you update to track how many loop turns or matching items you have seen. *(Unit 4)*
-<!-- concept: loop-counter; index: counter -->
+<!-- concept: loop-counter; index: loop counter; counter variable -->
 
 **Dictionary** — A collection that connects each key to a value, written like `{"red": 3}`. *(Unit 11)*
 <!-- concept: dict-literal; index: dictionary -->
@@ -61,7 +61,7 @@
 <!-- concept: filter-into-list; index: filter; filtering -->
 
 **Find the best** — Keep the largest or smallest value seen so far, and sometimes the item that owns it. *(Unit 10)*
-<!-- concept: find-extreme; index: maximum; minimum -->
+<!-- concept: find-extreme; index: best value; extreme loop; find-extreme -->
 
 **Float** — A Python number that can have a decimal part, such as `2.5`. *(Unit 2)*
 <!-- concept: float-type; index: decimal number -->
@@ -88,10 +88,10 @@
 <!-- concept: int-type; index: int -->
 
 **List** — An ordered collection of values written with square brackets, such as `[4, 7]`. *(Unit 10)*
-<!-- concept: list-literal; index: list -->
+<!-- concept: list-literal; index: `list`; list literal -->
 
 **List changes** — `append`, `insert`, `pop`, and `remove` add or take away list items. *(Unit 10)*
-<!-- concept: list-append; index: append; insert; pop; remove -->
+<!-- concept: list-append; index: `.append`; `.insert`; `.pop`; `.remove` -->
 
 **List indexing** — `items[0]` gets the first item; `items.index(value)` finds where a value occurs. *(Unit 10)*
 <!-- concept: list-index; index: list index; list indexes -->
@@ -112,43 +112,43 @@
 <!-- concept: methods; index: object method -->
 
 **Name** — A clear, meaningful word you choose for a variable or function so its job is easy to see. *(Unit 1)*
-<!-- concept: naming; index: naming -->
+<!-- concept: naming; index: -Name; naming; clear variable names; meaningful names -->
 
 **Nested loops** — A loop inside another loop; the inner loop completes its turns for each outer turn. *(Unit 5)*
 <!-- concept: nested-loops; index: loop nesting -->
 
 **Object creation** — `__init__` runs when you make a new object and usually saves its first attributes through `self`. *(Unit 13)*
-<!-- concept: init-method; index: __init__; self -->
+<!-- concept: init-method; index: `__init__`; `self` -->
 
 **Print** — `print()` displays a value in the program's output. *(Unit 1)*
 <!-- concept: print; index: `print` -->
 
 **Random choice** — `random.randint(a, b)` chooses an integer from `a` through `b`; `random.choice(items)` picks one item. *(Unit 8)*
-<!-- concept: random-module; index: randint; choice -->
+<!-- concept: random-module; index: `random.randint`; `random.choice` -->
 
 **Range** — `range(n)` supplies the integers from `0` up to, but not including, `n`. *(Unit 5)*
-<!-- concept: range-function; index: range -->
+<!-- concept: range-function; index: `range` -->
 
 **Return value** — A result a function sends back with `return`. *(Unit 7)*
 <!-- concept: return-value; index: return -->
 
 **Running a program** — Asking Python to follow the instructions in a cell or a `.py` file. *(Unit 1)*
-<!-- concept: run-program; index: program -->
+<!-- concept: run-program; index: run a Python cell; running a notebook cell -->
 
 **Running total** — Add each new number to a total as you visit it. *(Unit 4)*
-<!-- concept: running-total; index: total -->
+<!-- concept: running-total; index: running totals -->
 
 **Scan until found** — Check items one by one and stop as soon as the wanted item appears. *(Unit 9)*
-<!-- concept: linear-search; index: search -->
+<!-- concept: linear-search; index: linear search; search for a match -->
 
 **Sentinel loop** — Keep repeating until a special input says to stop. *(Unit 4)*
 <!-- concept: sentinel-loop; index: sentinel -->
 
 **Sort a list** — `items.sort()` puts the items of that list in order. *(Unit 10)*
-<!-- concept: list-sort; index: sort -->
+<!-- concept: list-sort; index: `sort` -->
 
 **String** — Text between quotes, such as `"hello"` or `'hello'`. *(Unit 1)*
-<!-- concept: string-literal; index: string literal -->
+<!-- concept: string-literal; index: -String; string literal; string literals -->
 
 **String combining** — `+` joins strings and `*` repeats a string. *(Unit 1)*
 <!-- concept: string-concat; index: string concatenation -->
@@ -157,7 +157,7 @@
 <!-- concept: string-index; index: character position -->
 
 **String methods** — Tools called on text, such as `.lower()`, `.strip()`, `.split()`, and `.find()`. *(Unit 9)*
-<!-- concept: string-methods; index: lower; strip; split; find -->
+<!-- concept: string-methods; index: `lower`; `strip`; `split`; `find`; string methods -->
 
 **String slice** — `word[start:stop]` takes characters from `start` up to, but not including, `stop`. *(Unit 9)*
 <!-- concept: string-slice; index: slicing; slices -->
@@ -166,7 +166,7 @@
 <!-- concept: in-operator; index: membership -->
 
 **Transform each item** — Visit every item and make a changed value for each one. *(Unit 9)*
-<!-- concept: transform-each; index: map -->
+<!-- concept: transform-each; index: transform each; transforms each -->
 
 **Turtle drawing** — Pen and color commands change the lines and shapes a turtle makes. *(Unit 6)*
 <!-- concept: turtle-drawing; index: turtle pen -->

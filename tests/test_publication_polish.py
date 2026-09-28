@@ -126,13 +126,15 @@ def test_student_phrase_and_panel_audits():
 
 def test_leak_guard_catches_whole_and_embedded_but_not_shared_idioms():
     tokens = publish.code_tokens('result = calculate(1, 2, 3)\nprint(result)')
-    assert publish_audit.solution_leak(tokens, [tokens], [])
+    assert publish_audit.solution_leak(tokens, [tokens])
     long_tokens = publish.code_tokens(' '.join(f'word{i}' for i in range(40)))
     embedded = publish.code_tokens('before = 1\n' + ' '.join(f'word{i}' for i in range(40)) + '\nafter = 2')
-    assert publish_audit.solution_leak(embedded, [long_tokens], [])
-    assert not publish_audit.solution_leak(embedded, [long_tokens], [long_tokens])
+    assert publish_audit.solution_leak(embedded, [long_tokens])
+    # A short hidden solution embedded in a larger block is not flagged (too common to be a leak).
+    short = publish.code_tokens('x = 1')
+    assert not publish_audit.solution_leak(publish.code_tokens('y = 2\nx = 1\nz = 3'), [short])
     # A shared idiom (a fragment of a hidden solution) is not a leak.
-    assert not publish_audit.solution_leak(long_tokens[2:23], [long_tokens], [])
+    assert not publish_audit.solution_leak(long_tokens[2:23], [long_tokens])
 
 
 def test_glossary_index_parser_and_prose_boundary():
@@ -255,3 +257,96 @@ def test_lesson_panel_source_positions(tmp_path):
     cells.insert(2, nbformat.v4.new_markdown_cell('An extra note.'))
     nbformat.write(nbformat.v4.new_notebook(cells=cells), path)
     assert publish_audit.lesson_panel_source_findings(entry)
+
+
+def test_check_lines_state_the_value_and_never_say_is_true():
+    cases = {
+        'assert f(1) == 2': 'Check: `f(1)` → `2`',
+        'assert is_spammy("hi") is False': 'Check: `is_spammy("hi")` → `False`',
+        'assert find(x) is None': 'Check: `find(x)` → `None`',
+        'assert not is_even(3)': 'Check: `is_even(3)` → `False`',
+        'assert is_even(4)': 'Check: `is_even(4)` → `True`',
+        'assert ready': 'Check: `ready` → `True`',
+        'assert a < b': 'Check: `a < b` → `True`',
+        'assert "x" in word': 'Check: `"x" in word` → `True`',
+        'assert f(1) != 2': 'Check: `f(1) != 2` → `True`',
+    }
+    for source, line in cases.items():
+        rendered = publish.render_solution_code(source)
+        assert rendered.strip() == line, source
+        assert 'is true' not in rendered
+
+
+def test_student_real_version_keeps_its_full_stop():
+    assert publish.strip_solution_pointer(
+        'reads the size with input() — see the solution.') == 'reads the size with input().'
+    assert publish.strip_solution_pointer(
+        'reads it with input(), then draws it — see the solution') == 'reads it with input(), then draws it.'
+    assert publish.strip_solution_pointer('Done! — see the solution.') == 'Done!'
+    assert publish.strip_solution_pointer('no pointer here') == 'no pointer here'
+
+
+def test_glossary_units_take_the_first_unit_of_a_range():
+    source = ('**Break and continue** — `break` leaves. *(Units 4–5)*\n<!-- concept: b -->\n'
+              '**Method** — A function on an object. *(Unit 13)*\n<!-- concept: m -->\n')
+    assert publish.glossary_units(source) == {'Break and continue': 4, 'Method': 13}
+
+
+def test_index_waits_for_the_teaching_unit():
+    terms = [('Method', 'methods', []), ('String methods', 'string-methods', ['`find`'])]
+    units = {'Method': 13, 'String methods': 9}
+    qmd = 'A greatest-common-divisor method. Call `text.find("a")`.\n'
+    early = publish.index_first_prose(qmd, terms, 7, units)
+    assert r'\index{' not in early
+    late = publish.index_first_prose(qmd, terms, 13, units)
+    assert r'\index{method@Method}' in late and r'\index{string methods@String methods}' in late
+    glossary = [(term, concept, aliases) for term, concept, aliases in terms]
+    assert publish_audit.index_source_findings(late, glossary, 7, units) == [
+        'FAIL: index before taught in unit 7: method@Method',
+        'FAIL: index before taught in unit 7: string methods@String methods']
+    assert publish_audit.index_source_findings(late, glossary, 13, units) == []
+
+
+def test_index_code_keys_match_real_code_only_and_case_sensitively():
+    names = publish.index_first_prose('Print `print("Open")` then `# open-path` and `Open`.\n', [])
+    assert r'\texttt{open}' not in names
+    assert names.count(r'\texttt{print}') == 1
+    output = publish.index_first_prose('It prints `Digit sum: 7`, then `sum(xs)`.\n', [])
+    assert '`sum(xs)`' + r'\index{Python names!sum@\texttt{sum}}' in output
+    assert '`Digit sum: 7`' + r'\index' not in output
+    terms = [('List changes', 'list-append', ['`.append`', '`.remove`']),
+             ('Random choice', 'random-module', ['`random.choice`']),
+             ('Logical operators', 'logical-ops', ['and', 'or', 'not'])]
+    prose = publish.index_first_prose(
+        'Remove all four digits and make a choice: `choice`, `NameError: name x is not defined`.\n', terms)
+    assert r'\index{' not in prose
+    code = publish.index_first_prose('Use `nums.remove(3)`, `random.choice(xs)`, `not done`.\n', terms)
+    for entry in ('list changes@List changes', 'random choice@Random choice',
+                  'logical operators@Logical operators'):
+        assert r'\index{' + entry + '}' in code
+
+
+def test_index_headword_can_be_suppressed_and_hyphenated_words_do_not_match():
+    terms = [('String', 'string-literal', ['-String', 'string literal']),
+             ('Name', 'naming', ['-Name', 'meaningful names']),
+             ('Counter variable', 'loop-counter', ['loop counter'])]
+    qmd = 'An f-string, a string, a coin counter, a name. A string literal; meaningful names; a loop counter.\n'
+    indexed = publish.index_first_prose(qmd, terms)
+    assert 'string literal' + r'\index{string@String}' in indexed
+    assert 'meaningful names' + r'\index{name@Name}' in indexed
+    assert 'loop counter' + r'\index{counter variable@Counter variable}' in indexed
+    assert indexed.count(r'\index{') == 3
+
+
+def test_book1b_glossary_keys_are_precise_and_every_term_has_a_unit():
+    source = (Path(__file__).resolve().parents[1] / 'book1b' / 'back-matter' / 'glossary.md').read_text(
+        encoding='utf-8')
+    terms = publish.glossary_entries(source)
+    units = publish.glossary_units(source)
+    assert set(units) == {term for term, _, _ in terms}
+    assert units['Break and continue'] == 4
+    generic = {'find', 'choice', 'remove', 'pop', 'counter', 'total', 'program', 'search', 'map',
+               'list', 'class', 'range', 'method', 'name', 'string', 'insert', 'sort', 'self'}
+    prose_keys = {key.casefold() for _, _, aliases in terms for key in aliases
+                  if not key.startswith(('`', '-'))}
+    assert not prose_keys & generic

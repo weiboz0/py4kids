@@ -1,4 +1,4 @@
-# Student task: replace the small placeholder with the drawing in Exercise 10.
+# Your task: replace the small placeholder with the drawing in Exercise 10.
 import turtle
 
 squares = 8

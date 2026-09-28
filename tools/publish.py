@@ -179,11 +179,25 @@ def strip_asserts(source: str) -> tuple[str, bool]:
     return '\n'.join(kept).strip(), len(kept) != len(lines)
 
 
+def check_text(source: str, expression: ast.expr) -> tuple[str, str]:
+    """Split an assert test into what is evaluated and the value it must give.
+
+    `A == B` and `A is B` check that A gives B; `not X` checks that X gives False; anything else
+    (a call, a name, `a < b`, `x in y`, `A != B`) checks that the whole expression gives True.
+    """
+    def one_line(node: ast.expr) -> str:
+        return re.sub(r'\s+', ' ', ast.get_source_segment(source, node)).strip()
+
+    if (isinstance(expression, ast.Compare) and len(expression.ops) == 1
+            and isinstance(expression.ops[0], (ast.Eq, ast.Is))):
+        return one_line(expression.left), one_line(expression.comparators[0])
+    if isinstance(expression, ast.UnaryOp) and isinstance(expression.op, ast.Not):
+        return one_line(expression.operand), 'False'
+    return one_line(expression), 'True'
+
+
 def render_solution_code(source: str) -> str:
     """Replace only top-level asserts with in-order checks."""
-    def one_line(segment: str) -> str:
-        return re.sub(r'\s+', ' ', segment).strip()
-
     lines = source.splitlines(keepends=True)
     checks = [node for node in ast.parse(source).body if isinstance(node, ast.Assert)]
     rendered = []
@@ -192,13 +206,8 @@ def render_solution_code(source: str) -> str:
         fragment = ''.join(lines[start:node.lineno - 1])
         if fragment.strip():
             rendered.append(code_block(fragment).replace('```python', '```{.python .answer-code}', 1))
-        expression = node.test
-        if isinstance(expression, ast.Compare) and len(expression.ops) == 1 and isinstance(expression.ops[0], ast.Eq):
-            left = one_line(ast.get_source_segment(source, expression.left))
-            right = one_line(ast.get_source_segment(source, expression.comparators[0]))
-            rendered.append(f'Check: `{left}` → `{right}`\n')
-        else:
-            rendered.append(f'Check: `{one_line(ast.get_source_segment(source, expression))}` is true\n')
+        evaluated, value = check_text(source, node.test)
+        rendered.append(f'Check: `{evaluated}` → `{value}`\n')
         start = node.end_lineno
     fragment = ''.join(lines[start:])
     if fragment.strip():
@@ -274,6 +283,14 @@ def group_title(group, label: str) -> str:
     return ''
 
 
+def strip_solution_pointer(paragraph: str) -> str:
+    """Drop a Student Book "— see the solution" tail and keep the sentence's full stop."""
+    paragraph, stripped = re.subn(r'\s*—\s*see (?:the )?solution[^.]*\.?', '', paragraph, flags=re.IGNORECASE)
+    if stripped and paragraph and not re.search(r'[.!?:][*_"\'”’]*$', paragraph):
+        paragraph += '.'
+    return paragraph
+
+
 def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
     n = notebook(path, edition)
     label = ITEM[kind]
@@ -326,7 +343,7 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                     if no_real:
                         continue
                     if edition == 'student':
-                        paragraph = re.sub(r'\s*—\s*see (?:the )?solution[^.]*\.?', '', paragraph, flags=re.IGNORECASE)
+                        paragraph = strip_solution_pointer(paragraph)
                     if paragraph[:1].islower():
                         paragraph = paragraph[0].upper() + paragraph[1:]
                     parts.append(panel('realprog', paragraph))
@@ -516,9 +533,59 @@ def glossary_entries(source: str) -> list[tuple[str, str, list[str]]]:
             for term, concept, keys in pattern.findall(source)]
 
 
+def glossary_units(source: str) -> dict[str, int]:
+    """Map each glossary term to the first unit that teaches it: "(Unit 4)" or "(Units 4–5)" gives 4."""
+    return {term: int(unit) for term, unit in
+            re.findall(r'(?m)^\*\*(.+?)\*\* — .*\*\(Units? (\d+)(?:[–-]\d+)?\)\*', source)}
+
+
 PYTHON_INDEX_NAMES = {'print', 'input', 'range', 'len', 'str', 'int', 'float',
                       'append', 'split', 'open', 'sorted', 'sum'}
-CODE_ONLY_NAMES = {name.casefold() for name in [*keyword.kwlist, *dir(builtins)]}
+CODE_SPELLING = {name.casefold(): name for name in [*dir(builtins), *keyword.kwlist]}
+CODE_ONLY_NAMES = set(CODE_SPELLING)
+
+
+def index_key(raw: str) -> tuple[str, bool]:
+    """A key is (text, code_only): backticked keys and Python names match only in code, as Python spells them."""
+    plain = raw.strip('`')
+    if raw.startswith('`'):
+        return plain, True
+    if plain.casefold() in CODE_ONLY_NAMES:
+        return CODE_SPELLING[plain.casefold()], True
+    return plain, False
+
+
+def code_span_names(span: str) -> set[str]:
+    """The Python names a code span really uses: none for output text, strings, or comments.
+
+    A span counts as code when it is a lone name (`elif`, `.append`, `input()`) or parses as Python,
+    possibly as a block header (`for key in d`); only NAME tokens count, so `'int'` and `# open-path` do not.
+    """
+    text = span.strip()
+    if not re.fullmatch(r'\.?[A-Za-z_]\w*(?:\(\))?', text):
+        for attempt in (text, text.rstrip(':') + ': pass'):
+            try:
+                ast.parse(attempt)
+                break
+            except (SyntaxError, ValueError):
+                continue
+        else:
+            return set()
+    try:
+        return {token.string for token in tokenize.generate_tokens(io.StringIO(text).readline)
+                if token.type == tokenize.NAME}
+    except (tokenize.TokenError, SyntaxError):
+        return set()
+
+
+def code_key_used(key: str, span: str, used: set[str]) -> bool:
+    """A code key matches a real code span: a name as a NAME token, `.append` or `random.choice` as text."""
+    if not used:
+        return False
+    if key.isidentifier():
+        return key in used
+    before = '' if key.startswith('.') else r'(?<![\w.])'
+    return re.search(before + re.escape(key) + r'(?!\w)', span) is not None
 
 
 def index_entry(term: str) -> str:
@@ -528,12 +595,17 @@ def index_entry(term: str) -> str:
     return escaped(plain.casefold()) + '@' + escaped(plain)
 
 
-def index_first_prose(qmd: str, glossary: list[tuple[str, str, list[str]]]) -> str:
-    """Index each glossary concept once per unit, using aliases only as match triggers."""
-    remaining = {term: [(raw.strip('`'), raw.startswith('`') or
-                         raw.strip('`').casefold() in CODE_ONLY_NAMES)
-                        for raw in dict.fromkeys([term, *aliases])]
-                 for term, _, aliases in glossary}
+def index_first_prose(qmd: str, glossary: list[tuple[str, str, list[str]]],
+                      unit: int | None = None, first_units: dict[str, int] | None = None) -> str:
+    """Index each glossary concept once per unit, using aliases only as match triggers.
+
+    With `unit` and `first_units`, a term is indexed only in units at or after the one that teaches it.
+    Code-only keys and Python names match inside inline code spans only, case-sensitively.
+    """
+    remaining = {term: [index_key(raw) for raw in dict.fromkeys([term, *aliases])
+                        if not raw.startswith('-') and '-' + raw not in aliases]
+                 for term, _, aliases in glossary
+                 if unit is None or first_units is None or first_units.get(term, 0) <= unit}
     names = PYTHON_INDEX_NAMES - {term.casefold() for term, _, _ in glossary}
     rendered = []
     fence = False
@@ -549,12 +621,15 @@ def index_first_prose(qmd: str, glossary: list[tuple[str, str, list[str]]]) -> s
         for position, span in enumerate(spans):
             in_code = position % 2 == 1
             prose = span[1:-1] if in_code else span
+            used = code_span_names(prose) if in_code else set()
             insertions = []
             for term, aliases in list(remaining.items()):
-                matches = [(match.start(), match.end())
-                           for alias, code_only in aliases if code_only == in_code
-                           for match in [re.search(r'(?<!\w)' + re.escape(alias) + r'(?!\w)',
-                                                   prose, re.IGNORECASE)] if match]
+                matches = [(0, 0) for alias, code_only in aliases
+                           if in_code and code_only and code_key_used(alias, prose, used)]
+                matches += [(match.start(), match.end())
+                            for alias, code_only in aliases if not in_code and not code_only
+                            for match in [re.search(r'(?<![\w-])' + re.escape(alias) + r'(?![\w-])',
+                                                    prose, re.IGNORECASE)] if match]
                 if matches:
                     start, end = min(matches)
                     offset = end
@@ -563,9 +638,8 @@ def index_first_prose(qmd: str, glossary: list[tuple[str, str, list[str]]]) -> s
                     insertions.append((offset, index_entry(term)))
                     del remaining[term]
             if in_code:
-                for name in list(names):
-                    match = re.search(r'(?<!\w)' + re.escape(name) + r'(?!\w)', prose, re.IGNORECASE)
-                    if match:
+                for name in sorted(names):
+                    if name in used:
                         insertions.append((len(prose), 'Python names!' + name +
                                            r'@\texttt{' + name + '}'))
                         names.remove(name)
@@ -662,6 +736,7 @@ def build(root: Path, book_id: str, edition: str) -> Path:
                                  'kind': 'index', 'title': 'Index', 'items': [], 'inventory': []})
     glossary = (project / 'glossary.qmd').read_text(encoding='utf-8')
     terms = glossary_entries(glossary)
+    first_units = glossary_units(glossary)
     glossary = re.sub(r'(?m)^(\*\*(.+?)\*\* — .+)$',
                       lambda match: match[1] + r'\index{' + index_entry(match[2]) + '}', glossary)
     (project / 'glossary.qmd').write_text(glossary, encoding='utf-8')
@@ -669,7 +744,9 @@ def build(root: Path, book_id: str, edition: str) -> Path:
         if chapter['kind'] != 'unit':
             continue
         path = project / chapter['file']
-        path.write_text(index_first_prose(path.read_text(encoding='utf-8'), terms), encoding='utf-8')
+        unit = int(re.match(r'unit-(\d+)', chapter['id'])[1])
+        path.write_text(index_first_prose(path.read_text(encoding='utf-8'), terms, unit, first_units),
+                        encoding='utf-8')
     config = (project / 'theme' / '_quarto.yml').read_text(encoding='utf-8')
     config = config.replace('@CHAPTERS@', '\n'.join('    - ' + x for x in chapters))
     config = config.replace('@FRONT@', '\n'.join('    - ' + name for _, name in front))

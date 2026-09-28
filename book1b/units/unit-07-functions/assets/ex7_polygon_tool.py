@@ -1,4 +1,4 @@
-# Student task: use this working square example to draw the teal hexagon from Exercise 7.
+# Your task: use this working square example to draw the teal hexagon from Exercise 7.
 import turtle
 
 

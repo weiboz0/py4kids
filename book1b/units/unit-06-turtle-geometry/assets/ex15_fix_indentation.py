@@ -1,4 +1,4 @@
-# Student task: replace the small placeholder with the drawing in Exercise 15.
+# Your task: replace the small placeholder with the drawing in Exercise 15.
 import turtle
 
 side = 60

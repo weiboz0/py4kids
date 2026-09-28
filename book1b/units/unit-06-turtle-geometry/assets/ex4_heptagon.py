@@ -1,4 +1,4 @@
-# Student task: replace this starter with the dark-orange 57-step heptagon from Exercise 4.
+# Your task: replace this starter with the dark-orange 57-step heptagon from Exercise 4.
 import turtle
 
 n = 4

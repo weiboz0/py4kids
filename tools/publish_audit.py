@@ -18,6 +18,7 @@ from tools.publish import (
     code_tokens,
     entries,
     glossary_entries,
+    glossary_units,
     index_entry,
     item_groups,
     notebook,
@@ -79,8 +80,10 @@ def index_findings(index_text: str, glossary: list[tuple],
     return findings
 
 
-def index_source_findings(qmd: str, glossary: list[tuple]) -> list[str]:
-    """Reject restricted alias hits placed in ordinary prose."""
+def index_source_findings(qmd: str, glossary: list[tuple], unit: int | None = None,
+                          first_units: dict[str, int] | None = None) -> list[str]:
+    """Reject restricted alias hits placed in ordinary prose, and terms indexed before their unit."""
+    taught = {index_entry(term): first for term, first in (first_units or {}).items()}
     restricted = {index_entry(term): {key.strip('`').casefold() for key in [term, *aliases]
                                       if key.strip('`').casefold() in CODE_ONLY_NAMES or key.startswith('`')}
                   for term, _, aliases in glossary}
@@ -92,6 +95,8 @@ def index_source_findings(qmd: str, glossary: list[tuple]) -> list[str]:
             if match[1].startswith('Python names!') and not prefix.endswith('`'):
                 findings.append(f'FAIL: index restricted name in prose: {match[1]}')
                 continue
+            if unit is not None and taught.get(match[1], 0) > unit:
+                findings.append(f'FAIL: index before taught in unit {unit}: {match[1]}')
             aliases = restricted.get(match[1], set())
             if not aliases:
                 continue
@@ -180,20 +185,18 @@ def _contains(haystack: tuple, needle: tuple) -> bool:
                for i in range(len(haystack) - len(needle) + 1))
 
 
-def solution_leak(block: tuple, solutions: list[tuple], visible: list[tuple]) -> bool:
+def solution_leak(block: tuple, solutions: list[tuple]) -> bool:
     """A printed block leaks a hidden solution when it equals it or contains all of it.
 
     Shared idioms (a file-writing loop, a class taught in the lesson) are not leaks: only a whole hidden
-    solution cell or asset (at least 30 tokens when embedded in a larger block) counts, unless that same
-    code is already student-visible.
+    solution cell or asset (at least 30 tokens when embedded in a larger block) counts.
     """
     for stream in solutions:
         if not stream:
             continue
         if block == stream:
             return True
-        if (len(stream) >= 30 and _contains(block, stream)
-                and not any(_contains(source, stream) for source in visible)):
+        if len(stream) >= 30 and _contains(block, stream):
             return True
     return False
 
@@ -235,7 +238,7 @@ def leak_findings(root: Path, chapters: list[dict], project: Path) -> list[str]:
                 assets = [path for path in (entry / 'assets').glob('solutions_ex*.py')
                           if re.match(rf'solutions_ex{number}(?!\d)', path.stem)]
                 sources += [_tokenize_if_complete(path.read_text(encoding='utf-8')) for path in assets]
-            if any(solution_leak(block, sources, []) for block in blocks):
+            if any(solution_leak(block, sources) for block in blocks):
                 findings.append(f'FAIL: student: answers: solution leak from {id_} {label} {number}')
     return findings
 
@@ -497,6 +500,7 @@ def audit(root: Path, book_id: str) -> list[str]:
             findings.extend(leak_findings(root, chapters, project))
         glossary_text = (project / 'glossary.qmd').read_text(encoding='utf-8')
         glossary = glossary_entries(glossary_text)
+        first_units = glossary_units(glossary_text)
         introduced = [concept for id_, entry in entries(book, 'student') if id_.startswith('unit-')
                       for concept in yaml.safe_load((entry / 'manifest.yaml').read_text(encoding='utf-8'))[
                           'concepts']['introduces']]
@@ -510,7 +514,8 @@ def audit(root: Path, book_id: str) -> list[str]:
             if chapter['kind'] == 'unit':
                 findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
                                 for finding in index_source_findings(
-                                    (project / chapter['file']).read_text(encoding='utf-8'), glossary))
+                                    (project / chapter['file']).read_text(encoding='utf-8'), glossary,
+                                    int(re.match(r'unit-(\d+)', chapter['id'])[1]), first_units))
         for chapter in chapters:
             id_ = chapter['id']; kind = chapter['kind']; entry = root / chapter['source']
             qmd = (project / chapter['file']).read_text(encoding='utf-8')

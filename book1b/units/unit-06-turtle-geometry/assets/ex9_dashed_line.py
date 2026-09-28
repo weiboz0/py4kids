@@ -1,4 +1,4 @@
-# Student task: replace the small placeholder with the drawing in Exercise 9.
+# Your task: replace the small placeholder with the drawing in Exercise 9.
 import turtle
 
 # turtle-check: open-path

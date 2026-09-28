@@ -1,4 +1,4 @@
-# Student task: change this working square into the Exercise 27 star.
+# Your task: change this working square into the Exercise 27 star.
 import turtle
 
 

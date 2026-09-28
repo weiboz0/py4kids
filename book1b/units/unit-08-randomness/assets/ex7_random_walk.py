@@ -1,4 +1,4 @@
-# Student task: replace this closed placeholder with the random walk from Exercise 7.
+# Your task: replace this closed placeholder with the random walk from Exercise 7.
 import turtle
 import random
 
