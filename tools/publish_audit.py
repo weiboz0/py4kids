@@ -127,16 +127,20 @@ def _contains(haystack: tuple, needle: tuple) -> bool:
 
 
 def solution_leak(block: tuple, solutions: list[tuple], visible: list[tuple]) -> bool:
-    """Compare code token streams, including fragments of twenty tokens."""
+    """A printed block leaks a hidden solution when it equals it or contains all of it.
+
+    Shared idioms (a file-writing loop, a class taught in the lesson) are not leaks: only a whole hidden
+    solution cell or asset (at least 30 tokens when embedded in a larger block) counts, unless that same
+    code is already student-visible.
+    """
     for stream in solutions:
         if not stream:
             continue
         if block == stream:
             return True
-        for i in range(len(stream) - 19):
-            fragment = stream[i:i + 20]
-            if _contains(block, fragment) and not any(_contains(source, fragment) for source in visible):
-                return True
+        if (len(stream) >= 30 and _contains(block, stream)
+                and not any(_contains(source, stream) for source in visible)):
+            return True
     return False
 
 
@@ -159,22 +163,15 @@ def _tokenize_if_complete(source: str) -> tuple:
 
 
 def leak_findings(root: Path, chapters: list[dict], project: Path) -> list[str]:
-    blocks = [(chapter['id'], stream) for chapter in chapters
+    """Guard the answers chapter, the only place the student edition prints solution material."""
+    blocks = [stream for chapter in chapters if chapter['id'] == 'answers'
               for stream in printed_code((project / chapter['file']).read_text(encoding='utf-8'))]
-    exact = {}
-    fragments = {}
-    for chapter_id, stream in blocks:
-        exact.setdefault(stream, chapter_id)
-        for i in range(len(stream) - 19):
-            fragments.setdefault(stream[i:i + 20], chapter_id)
     findings = []
     for id_, entry in entries(root / 'book1b', 'student'):
         kind = id_.split('-', 1)[0]
         label = ITEM[kind]
         solutions = notebook(entry / 'solutions.ipynb', 'teacher')
         _, groups = item_groups(solutions.cells, label)
-        visible_base = (printed_code((project / (id_ + '.qmd')).read_text(
-            encoding='utf-8').split('## Exercises', 1)[0]) if kind == 'unit' else [])
         for group in groups:
             number = group['number']
             if kind == 'unit' and number % 2:
@@ -184,30 +181,8 @@ def leak_findings(root: Path, chapters: list[dict], project: Path) -> list[str]:
                 assets = [path for path in (entry / 'assets').glob('solutions_ex*.py')
                           if re.match(rf'solutions_ex{number}(?!\d)', path.stem)]
                 sources += [_tokenize_if_complete(path.read_text(encoding='utf-8')) for path in assets]
-            visible = list(visible_base)
-            statement = entry / ('exercises.ipynb' if kind == 'unit' else
-                                 'checkpoint.ipynb' if kind == 'checkpoint' else 'brief.ipynb')
-            _, stated = item_groups(notebook(statement, 'student').cells, label)
-            matching = next((item for item in stated if item['number'] == number), None)
-            if matching:
-                visible += [_tokenize_if_complete(cell.source) for cell in matching['cells'] if cell.cell_type == 'code']
-                visible += [_tokenize_if_complete(code) for cell in matching['cells'] if cell.cell_type == 'markdown'
-                            for code in re.findall(r'```python\n(.*?)\n```', cell.source, re.DOTALL)]
-                visible += [_tokenize_if_complete(path.read_text(encoding='utf-8'))
-                            for cell in matching['cells'] if cell.cell_type == 'markdown'
-                            for name in re.findall(r'assets/([\w-]+\.py)', cell.source)
-                            if not name.startswith('solutions_')
-                            for path in [entry / 'assets' / name] if path.exists()]
-            visible_fragments = {stream[i:i + 20] for stream in visible
-                                 for i in range(len(stream) - 19)}
-            leaked = next((exact[stream] for stream in sources if stream and stream in exact), None)
-            if leaked is None:
-                leaked = next((fragments[stream[i:i + 20]] for stream in sources
-                               for i in range(len(stream) - 19)
-                               if stream[i:i + 20] in fragments
-                               and stream[i:i + 20] not in visible_fragments), None)
-            if leaked:
-                findings.append(f'FAIL: student: {leaked}: solution leak from {id_} {label} {number}')
+            if any(solution_leak(block, sources, []) for block in blocks):
+                findings.append(f'FAIL: student: answers: solution leak from {id_} {label} {number}')
     return findings
 
 

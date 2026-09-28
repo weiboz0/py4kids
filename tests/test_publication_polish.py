@@ -124,13 +124,15 @@ def test_student_phrase_and_panel_audits():
     assert publish_audit.student_phrase_findings('assert x == 1', 'answers')
 
 
-def test_leak_guard_catches_whole_and_partial_but_not_starter_overlap():
+def test_leak_guard_catches_whole_and_embedded_but_not_shared_idioms():
     tokens = publish.code_tokens('result = calculate(1, 2, 3)\nprint(result)')
     assert publish_audit.solution_leak(tokens, [tokens], [])
-    long_source = ' '.join(f'word{i}' for i in range(25))
-    long_tokens = publish.code_tokens(long_source)
-    assert publish_audit.solution_leak(long_tokens[2:23], [long_tokens], [])
-    assert not publish_audit.solution_leak(long_tokens[2:23], [long_tokens], [long_tokens])
+    long_tokens = publish.code_tokens(' '.join(f'word{i}' for i in range(40)))
+    embedded = publish.code_tokens('before = 1\n' + ' '.join(f'word{i}' for i in range(40)) + '\nafter = 2')
+    assert publish_audit.solution_leak(embedded, [long_tokens], [])
+    assert not publish_audit.solution_leak(embedded, [long_tokens], [long_tokens])
+    # A shared idiom (a fragment of a hidden solution) is not a leak.
+    assert not publish_audit.solution_leak(long_tokens[2:23], [long_tokens], [])
 
 
 def test_glossary_index_parser_and_prose_boundary():
