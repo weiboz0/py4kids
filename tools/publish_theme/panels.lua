@@ -3,6 +3,9 @@ local names = {opener=true, output=true, codeoutput=true, notice=true, tryit=tru
   teacher=true, starter=true, goals=true, recap=true}
 function Header(el)
   if not FORMAT:match('latex') then return nil end
+  -- Quarto gives the heading-less the-index.qmd an empty chapter: a blank page before
+  -- \printindex, which opens its own chapter.
+  if el.level == 1 and #el.content == 0 then return {} end
   if (el.level == 3 or el.level == 4) and el.content[1] then
     local title = pandoc.utils.stringify(el.content)
     if title:match('^Exercise %d+') or title:match('^Question %d+') or
@@ -121,3 +124,58 @@ function Code(el)
   end
   return pandoc.RawInline('latex', '\\texttt{' .. table.concat(parts) .. '}')
 end
+-- A chapter's last box, when short, is marked with \pubfinalbox{lines} (theme.tex) so that it does not
+-- sit alone on an otherwise empty page. This pass runs before the others, on the original blocks.
+local function box_lines(block)
+  if block.t == 'CodeBlock' then
+    local _, breaks = block.text:gsub('\n', '')
+    return breaks + 1
+  end
+  if block.t ~= 'Div' then return nil end
+  local panel = false
+  for _, class in ipairs(block.classes) do
+    if names[class] and class ~= 'challenge' then panel = true end
+  end
+  if not panel then return nil end
+  local lines = 1
+  for _, inner in ipairs(block.content) do
+    if inner.t == 'CodeBlock' then
+      local _, breaks = inner.text:gsub('\n', '')
+      lines = lines + breaks + 1
+    else
+      lines = lines + math.ceil(#pandoc.utils.stringify(inner) / 80)
+    end
+  end
+  return lines
+end
+local function chapter_end(blocks, index)
+  for next_index = index + 1, #blocks do
+    local block = blocks[next_index]
+    if block.t == 'Header' then return block.level == 1 end
+    -- Quarto separates book files with raw metadata markers, as a RawBlock or a raw-only Para.
+    local marker = block.t == 'RawBlock'
+    if block.t == 'Para' and #block.content > 0 then
+      marker = true
+      for _, inline in ipairs(block.content) do
+        if inline.t ~= 'RawInline' then marker = false end
+      end
+    end
+    if not marker then return false end
+  end
+  return true
+end
+local function mark_final_boxes(doc)
+  if not FORMAT:match('latex') then return nil end
+  local blocks = {}
+  for index, block in ipairs(doc.blocks) do
+    local lines = box_lines(block)
+    if lines and lines <= 3 and chapter_end(doc.blocks, index) then
+      table.insert(blocks, pandoc.RawBlock('latex', '\\pubfinalbox{' .. lines .. '}'))
+    end
+    table.insert(blocks, block)
+  end
+  doc.blocks = blocks
+  return doc
+end
+return {{Pandoc = mark_final_boxes},
+        {Header = Header, Div = Div, CodeBlock = CodeBlock, Str = Str, Code = Code}}

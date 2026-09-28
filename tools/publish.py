@@ -26,19 +26,123 @@ DATA = re.compile(r'\b(p\d+[a-z]?_[\w-]+\.txt)\b')
 ITEM = {'unit': 'Exercise', 'checkpoint': 'Question', 'project': 'Problem'}
 SETUP_ID = 'unit-00-getting-set-up'
 
+# One profile per edition drives the builder, the theme, scripts/build-book.sh and the audit.
+#   student_family    no teacher material; independence rules apply
+#   starters          'all' prints every non-empty Starter; 'required' omits redundant ones (D1 rule)
+#   answers_appendix  "Answers to Selected Exercises" after the units
+#   answer_refs       "Answer on page N" lines and page cross-references between exercise and answer
+#   body              'book' (front matter, units, back matter) or 'answers' (the Answer Key)
+#   front             front-matter Markdown files; the first becomes index.qmd
+#   back_matter       Glossary and Quick Reference
+#   index             an index (makeindex step and the Index chapter)
+EDITIONS = {
+    'student-print': {
+        'student_family': True, 'starters': 'required', 'answers_appendix': False,
+        'answer_refs': False, 'classoption': 'open=any', 'output_name': 'Book1b-Student-Print',
+        'edition_label': 'Student Book — Print Edition', 'index': True, 'body': 'book',
+        'front': ('preface.md', 'how-to-use.md'), 'back_matter': True},
+    'student': {
+        'student_family': True, 'starters': 'all', 'answers_appendix': True,
+        'answer_refs': True, 'classoption': 'open=right', 'output_name': 'Book1b-Student',
+        'edition_label': 'Student Book — Full Edition', 'index': True, 'body': 'book',
+        'front': ('preface.md', 'how-to-use.md'), 'back_matter': True},
+    'answer-key': {
+        'student_family': True, 'starters': 'none', 'answers_appendix': False,
+        'answer_refs': False, 'classoption': 'open=any', 'output_name': 'Book1b-Answer-Key',
+        'edition_label': 'Answer Key', 'index': False, 'body': 'answers',
+        'front': ('answer-key-intro.md',), 'back_matter': False},
+    'teacher': {
+        'student_family': False, 'starters': 'all', 'answers_appendix': False,
+        'answer_refs': False, 'classoption': 'open=right', 'output_name': 'Book1b-Teacher',
+        'edition_label': "Teacher's Edition", 'index': True, 'body': 'book',
+        'front': ('preface.md', 'how-to-use.md', 'for-teachers.md'), 'back_matter': True},
+}
+STUDENT_SOURCES = {'lesson.ipynb', 'exercises.ipynb', 'checkpoint.ipynb', 'brief.ipynb', 'syllabus.md',
+                   'how-to-use.md', 'unit-00-getting-set-up.md', 'preface.md', 'glossary.md',
+                   'quick-reference.md'}
+# The Answer Key reads its front matter, the unit and exercise titles, and (only through
+# student_answer_sources) the odd-numbered unit solutions.
+ANSWER_KEY_SOURCES = {'syllabus.md', 'answer-key-intro.md', 'lesson.ipynb', 'exercises.ipynb'}
+EDITION_MARK = re.compile(r'<!--\s*/?\s*edition\b')
+
+
+def profile(edition: str) -> dict:
+    if edition not in EDITIONS:
+        raise ValueError(f"edition must be one of {', '.join(EDITIONS)}")
+    return EDITIONS[edition]
+
+
+def filter_edition_blocks(text: str, edition: str, source: str = 'front matter') -> str:
+    """Keep shared text and the blocks marked for this edition; drop the marker lines.
+
+    `<!-- edition: NAME -->` (or `NAME|NAME`) opens a block and `<!-- /edition -->` closes it. A marker
+    and every excluded line vanish entirely, so a block inside a list leaves no blank line behind; a
+    dropped paragraph-level block leaves one blank line, not two.
+    An unknown edition name, a malformed, nested, stray or unclosed marker fails the build.
+    """
+    out: list[str] = []
+    active: list[str] | None = None
+    opened = 0
+    dropped = False  # a line was dropped since the last kept non-blank line
+    for number, line in enumerate(text.splitlines(keepends=True), 1):
+        if EDITION_MARK.search(line):
+            dropped = True
+            stripped = line.strip()
+            if stripped == '<!-- /edition -->':
+                if active is None:
+                    raise ValueError(f'FAIL: {source}:{number}: edition block closed but never opened')
+                active = None
+                continue
+            match = re.fullmatch(r'<!-- edition: ([a-z-]+(?: *\| *[a-z-]+)*) -->', stripped)
+            if not match:
+                raise ValueError(f'FAIL: {source}:{number}: malformed edition marker: {stripped}')
+            if active is not None:
+                raise ValueError(f'FAIL: {source}:{number}: edition block opened inside line {opened}')
+            names = [name.strip() for name in match[1].split('|')]
+            unknown = [name for name in names if name not in EDITIONS]
+            if unknown:
+                raise ValueError(f"FAIL: {source}:{number}: unknown edition {', '.join(unknown)}")
+            active, opened = names, number
+            continue
+        if active is None or edition in active:
+            if not line.strip():
+                if dropped and out and not out[-1].strip():
+                    continue
+            else:
+                dropped = False
+            out.append(line)
+        else:
+            dropped = True
+    if active is not None:
+        raise ValueError(f'FAIL: {source}:{opened}: edition block never closed')
+    return ''.join(out)
+
+
+def starter_code_lines(source: str) -> list[str]:
+    """A Starter's non-comment, non-`pass` lines, stripped of indentation."""
+    return [line.strip() for line in source.splitlines()
+            if line.strip() and not line.strip().startswith('#') and line.strip() != 'pass']
+
+
+def redundant_starter(source: str, statement: str) -> bool:
+    """Print-edition rule: a Starter is redundant when it has no code lines, or when every code line
+    appears verbatim in the item's statement (its markdown cells only)."""
+    return all(line in statement for line in starter_code_lines(source))
+
 
 def allowed_source(path: Path, edition: str) -> bool:
-    """Single gate for every source read by the student builder."""
+    """Single gate for every source read by the student-family builders."""
     if edition == 'teacher':
         return True
+    if edition not in EDITIONS:
+        return False
     if 'teacher-notes' in path.name or path.name == 'solutions.ipynb':
         return False
     if path.parts and path.parts[-1].startswith('solutions_'):
         return False
-    if path.name in {'lesson.ipynb', 'exercises.ipynb', 'checkpoint.ipynb',
-                     'brief.ipynb', 'syllabus.md', 'how-to-use.md',
-                     'unit-00-getting-set-up.md', 'preface.md', 'glossary.md',
-                     'quick-reference.md'}:
+    if edition == 'answer-key':
+        return path.name in ANSWER_KEY_SOURCES
+    if path.name in STUDENT_SOURCES:
         return True
     return (path.suffix == '.py' and 'units' in path.parts and 'assets' in path.parts) or (
         path.suffix == '.txt' and 'projects' in path.parts)
@@ -292,6 +396,7 @@ def strip_solution_pointer(paragraph: str) -> str:
 
 
 def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
+    edition_profile = profile(edition)
     n = notebook(path, edition)
     label = ITEM[kind]
     preface, groups = item_groups(n.cells, label)
@@ -323,8 +428,12 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
             out.append(f'```{{=latex}}\n\\label{{ex:{entry.name}:{number}}}\n```')
         if stretch:
             out.append(panel('challenge', f'**{label} {number}**'))
+        statement = '\n'.join(c.source for c in group['cells'] if c.cell_type == 'markdown')
         for c in (group['cells'] if kind == 'project' else group['cells'][1:]):
             if c.cell_type == 'code':
+                if edition_profile['starters'] == 'required' and redundant_starter(c.source, statement):
+                    inventory.append({'id': c.id, 'kind': 'starter-omitted'})
+                    continue
                 if c.source.strip():
                     out.append(panel('starter', code_block(c.source)))
                 inventory.append({'id': c.id, 'kind': 'starter'})
@@ -342,7 +451,7 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                     paragraph = re.sub(r'(?i)^real program:\s*', '', paragraph)
                     if no_real:
                         continue
-                    if edition == 'student':
+                    if edition_profile['student_family']:
                         paragraph = strip_solution_pointer(paragraph)
                     if paragraph[:1].islower():
                         paragraph = paragraph[0].upper() + paragraph[1:]
@@ -359,7 +468,7 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                     if file.exists():
                         out.append(panel('datafile', f'**{name}**\n\n```text\n{read_source(file, edition).rstrip()}\n```'))
                         inventory.append({'id': f'data:{name}', 'kind': 'asset listing'})
-        if kind == 'unit' and edition == 'student' and number % 2:
+        if kind == 'unit' and edition_profile['answer_refs'] and number % 2:
             out.append(f'Answer on page \\pageref{{ans:{entry.name}:{number}}}.')
     return '\n\n'.join(block.rstrip() for block in out) + '\n', inventory, [{'number': g['number'], 'title': group_title(g, label)} for g in groups]
 
@@ -383,10 +492,13 @@ def student_answer_sources(entry: Path):
 
 
 def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teacher') -> str:
+    """Teacher: every item's solution. Student family: odd unit exercises via student_answer_sources."""
     label = ITEM[kind]
-    if edition == 'student' and not any(item['number'] % 2 for item in items):
+    edition_profile = profile(edition)
+    student = edition_profile['student_family']
+    if student and not any(item['number'] % 2 for item in items):
         return ''
-    if edition == 'student':
+    if student:
         if kind != 'unit':
             raise ValueError('student answers are unit exercises only')
         groups, assets = student_answer_sources(entry)
@@ -396,18 +508,21 @@ def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teache
         _, groups = item_groups(n.cells, label)
         assets = {item['number']: solution_assets(entry, item['number']) for item in items}
     by_number = {g['number']: g for g in groups}
-    out = ['## Answer key\n'] if edition == 'teacher' else []
+    out = [] if student else ['## Answer key\n']
     for item in items:
         number = item['number']
         if number not in by_number:
             raise ValueError(f'{entry}: missing solution {label} {number}')
         heading = f'{label} {number}' + (f" — {item['title']}" if item['title'] and kind != 'project' else '')
-        if edition == 'student':
+        if student:
             unit_number = int(re.search(r'unit-(\d+)', entry.name)[1])
             heading = f'Unit {unit_number}, {label} {number}'
-        page = f' (page \\pageref{{ex:{entry.name}:{number}}})' if kind == 'unit' else ''
+            if not edition_profile['answer_refs'] and item['title']:
+                heading += f" — {item['title']}"
+        refs = kind == 'unit' and (edition_profile['answer_refs'] or not student)
+        page = f' (page \\pageref{{ex:{entry.name}:{number}}})' if refs else ''
         out.append('### ' + heading + page + '\n')
-        if kind == 'unit':
+        if refs:
             out.append(f'```{{=latex}}\n\\label{{ans:{entry.name}:{number}}}\n```')
         real_figures = []
         if kind == 'unit':
@@ -434,7 +549,7 @@ def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teache
             except Exception as error:
                 raise ValueError(f'FAIL: {entry.name}: real-program figure for {label} {number}: {error}') from error
         for file in assets[number]:
-            source = (file.read_text(encoding='utf-8') if edition == 'student'
+            source = (file.read_text(encoding='utf-8') if student
                       else read_source(file, 'teacher'))
             out.append(panel('program', f'**{file.name}**\n\n{code_block(source).replace("```python", "```{.python .answer-code}", 1)}'))
             if 'import turtle' in source or 'from turtle import' in source:
@@ -706,9 +821,36 @@ def index_first_prose(qmd: str, glossary: list[tuple[str, str, list[str]]],
     return ''.join(rendered)
 
 
+def tex_escape(text: str) -> str:
+    return text.replace('\\', r'\textbackslash{}').replace('&', r'\&').replace('%', r'\%').replace('_', r'\_')
+
+
+def answer_chapter_heading(unit: int, lesson_title: str, mainmatter: bool) -> str:
+    """The heading block of one Answer Key chapter, from the unit's lesson title (its H1)."""
+    display_title = re.sub(r'^Unit \d+ — ', '', lesson_title)
+    label = f'Unit {unit}'
+    short_title = display_title if len(display_title) <= 32 else display_title[:33].rsplit(' ', 1)[0]
+    attributes = f'pub-label="{label}"' + (' pub-mainmatter="true"' if mainmatter else '')
+    return (f'# {label} — {display_title} {{{attributes}}}\n\n'
+            '```{=latex}\n\\chaptermark{' + label + ' — ' + tex_escape(short_title) + '}\n```\n')
+
+
+def render_answer_chapter(entry: Path, edition: str, mainmatter: bool):
+    """One Answer Key chapter: the odd-numbered answers of one unit, with titled flat headings."""
+    lesson = notebook(entry / 'lesson.ipynb', edition)
+    title = lesson.cells[0].source.splitlines()[0].removeprefix('# ')
+    display_title = re.sub(r'^Unit \d+ — ', '', title)
+    unit = int(re.search(r'\d+', entry.name)[0])
+    label = f'Unit {unit}'
+    _, groups = item_groups(notebook(entry / 'exercises.ipynb', edition).cells, 'Exercise')
+    items = [{'number': group['number'], 'title': group_title(group, 'Exercise')} for group in groups]
+    chapter = [answer_chapter_heading(unit, title, mainmatter), answer_key(entry, 'unit', items, edition)]
+    answered = [item for item in items if item['number'] % 2]
+    return '\n\n'.join(block.rstrip() for block in chapter) + '\n', answered, f'{label} — {display_title}'
+
+
 def build(root: Path, book_id: str, edition: str) -> Path:
-    if edition not in {'student', 'teacher'}:
-        raise ValueError('edition must be student or teacher')
+    edition_profile = profile(edition)
     registry = yaml.safe_load((root / 'books.yaml').read_text(encoding='utf-8'))
     if book_id not in [b['id'] for b in registry['books']]:
         raise ValueError(f'unknown book: {book_id}')
@@ -718,53 +860,63 @@ def build(root: Path, book_id: str, edition: str) -> Path:
         shutil.rmtree(project)
     project.mkdir(parents=True)
     shutil.copytree(THEME, project / 'theme')
-    edition_name = "Teacher's Edition" if edition == 'teacher' else 'Student Book'
     theme_tex = project / 'theme' / 'theme.tex'
-    theme_tex.write_text(theme_tex.read_text(encoding='utf-8').replace('@EDITION@', edition_name), encoding='utf-8')
+    theme_tex.write_text(theme_tex.read_text(encoding='utf-8').replace('@EDITION@', edition_profile['edition_label']),
+                         encoding='utf-8')
     chapters = []
-    manifest = {'edition': edition, 'chapters': []}
+    manifest = {'edition': edition, 'output_name': edition_profile['output_name'], 'chapters': []}
     syllabus_header = read_source(book / 'syllabus.md', edition).splitlines()[0].removeprefix('# ')
     title_match = re.match(r'(Book [^ ]+ — Year \d+)', syllabus_header)
     if not title_match:
         raise ValueError('syllabus title lacks book and year')
     syllabus_title = title_match[1]
-    front = [(read_source(book / 'front-matter' / 'preface.md', edition), 'index.qmd'),
-             (read_source(book / 'front-matter' / 'how-to-use.md', edition), 'how-to-use.qmd')]
-    if edition == 'teacher':
-        front.append((read_source(book / 'front-matter' / 'for-teachers.md', edition), 'for-teachers.qmd'))
-    for body, name in front:
+    front = []
+    for position, source_name in enumerate(edition_profile['front']):
+        source = book / 'front-matter' / source_name
+        body = filter_edition_blocks(read_source(source, edition), edition, str(source.relative_to(root)))
         body = re.sub(r'(?m)^## ', '### ', body)
+        name = 'index.qmd' if position == 0 else source_name.replace('.md', '.qmd')
         (project / name).write_text(body, encoding='utf-8')
-        source_name = 'preface.md' if name == 'index.qmd' else name.replace('.qmd', '.md')
-        manifest['chapters'].append({'id': 'preface' if name == 'index.qmd' else name.removesuffix('.qmd'),
-                                     'file': name,
-                                     'source': str((book / 'front-matter' / source_name).relative_to(root)),
+        front.append(name)
+        manifest['chapters'].append({'id': source_name.removesuffix('.md'), 'file': name,
+                                     'source': str(source.relative_to(root)),
                                      'kind': 'front', 'title': body.splitlines()[0].removeprefix('# '),
                                      'items': [], 'inventory': []})
-    setup_source = book / 'docs' / f'{SETUP_ID}.md'
-    body, inventory, items, title = render_setup_chapter(setup_source, edition)
-    setup_file = f'{SETUP_ID}.qmd'
-    (project / setup_file).write_text(body, encoding='utf-8')
-    chapters.append(setup_file)
-    manifest['chapters'].append({'id': SETUP_ID, 'file': setup_file,
-                                 'source': str(setup_source.relative_to(root)),
-                                 'kind': 'setup', 'title': title, 'items': items,
-                                 'inventory': inventory})
-    for id_, entry in entries(book, edition):
-        kind = id_.split('-', 1)[0]
-        body, inventory, items, title = render_chapter(entry, kind, edition)
-        filename = id_ + '.qmd'
-        (project / filename).write_text(body, encoding='utf-8')
-        chapters.append(filename)
-        manifest['chapters'].append({'id': id_, 'file': filename, 'source': str(entry.relative_to(root)),
-                                     'kind': kind, 'title': title, 'items': items, 'inventory': inventory})
-    if edition == 'student':
+    if edition_profile['body'] == 'answers':
+        units = [(id_, entry) for id_, entry in entries(book, edition) if id_.startswith('unit-')]
+        for position, (id_, entry) in enumerate(units):
+            body, items, title = render_answer_chapter(entry, edition, mainmatter=position == 0)
+            filename = f'answers-{id_}.qmd'
+            (project / filename).write_text(body, encoding='utf-8')
+            chapters.append(filename)
+            manifest['chapters'].append({'id': f'answers-{id_}', 'file': filename,
+                                         'source': str(entry.relative_to(root)), 'kind': 'answers',
+                                         'title': title, 'items': items, 'inventory': []})
+    else:
+        setup_source = book / 'docs' / f'{SETUP_ID}.md'
+        body, inventory, items, title = render_setup_chapter(setup_source, edition)
+        setup_file = f'{SETUP_ID}.qmd'
+        (project / setup_file).write_text(body, encoding='utf-8')
+        chapters.append(setup_file)
+        manifest['chapters'].append({'id': SETUP_ID, 'file': setup_file,
+                                     'source': str(setup_source.relative_to(root)),
+                                     'kind': 'setup', 'title': title, 'items': items,
+                                     'inventory': inventory})
+        for id_, entry in entries(book, edition):
+            kind = id_.split('-', 1)[0]
+            body, inventory, items, title = render_chapter(entry, kind, edition)
+            filename = id_ + '.qmd'
+            (project / filename).write_text(body, encoding='utf-8')
+            chapters.append(filename)
+            manifest['chapters'].append({'id': id_, 'file': filename, 'source': str(entry.relative_to(root)),
+                                         'kind': kind, 'title': title, 'items': items, 'inventory': inventory})
+    if edition_profile['answers_appendix']:
         answer_sections = []
         for chapter in manifest['chapters']:
             if chapter['kind'] != 'unit':
                 continue
             entry = root / chapter['source']
-            answer_sections.append(answer_key(entry, 'unit', chapter['items'], edition='student'))
+            answer_sections.append(answer_key(entry, 'unit', chapter['items'], edition=edition))
         filename = 'answers.qmd'
         (project / filename).write_text('# Answers to Selected Exercises\n\n'
                                         + '\n\n'.join(answer_sections), encoding='utf-8')
@@ -772,41 +924,44 @@ def build(root: Path, book_id: str, edition: str) -> Path:
         manifest['chapters'].append({'id': 'answers', 'file': filename, 'source': '',
                                      'kind': 'answers', 'title': 'Answers to Selected Exercises',
                                      'items': [], 'inventory': []})
-    for name, kind, title in (('glossary', 'glossary', 'Glossary'),
-                              ('quick-reference', 'quickref', 'Quick Reference')):
-        filename = name + '.qmd'
-        source = book / 'back-matter' / (name + '.md')
-        body = read_source(source, edition)
-        (project / filename).write_text(body, encoding='utf-8')
-        chapters.append(filename)
-        manifest['chapters'].append({'id': name, 'file': filename,
-                                     'source': str(source.relative_to(root)), 'kind': kind,
-                                     'title': title, 'items': [], 'inventory': []})
-    index_file = 'the-index.qmd'
-    (project / index_file).write_text('\\printindex\n', encoding='utf-8')
-    chapters.append(index_file)
-    manifest['chapters'].append({'id': 'index', 'file': index_file, 'source': '',
-                                 'kind': 'index', 'title': 'Index', 'items': [], 'inventory': []})
-    glossary = (project / 'glossary.qmd').read_text(encoding='utf-8')
-    terms = glossary_entries(glossary)
-    first_units = glossary_units(glossary)
-    name_units = python_name_units(terms, first_units, lesson_code(book))
-    glossary = re.sub(r'(?m)^(\*\*(.+?)\*\* — .+)$',
-                      lambda match: match[1] + r'\index{' + index_entry(match[2]) + '}', glossary)
-    (project / 'glossary.qmd').write_text(glossary, encoding='utf-8')
-    for chapter in manifest['chapters']:
-        if chapter['kind'] != 'unit':
-            continue
-        path = project / chapter['file']
-        unit = int(re.match(r'unit-(\d+)', chapter['id'])[1])
-        path.write_text(index_first_prose(path.read_text(encoding='utf-8'), terms, unit, first_units,
-                                         name_units),
-                        encoding='utf-8')
+    if edition_profile['back_matter']:
+        for name, kind, title in (('glossary', 'glossary', 'Glossary'),
+                                  ('quick-reference', 'quickref', 'Quick Reference')):
+            filename = name + '.qmd'
+            source = book / 'back-matter' / (name + '.md')
+            body = read_source(source, edition)
+            (project / filename).write_text(body, encoding='utf-8')
+            chapters.append(filename)
+            manifest['chapters'].append({'id': name, 'file': filename,
+                                         'source': str(source.relative_to(root)), 'kind': kind,
+                                         'title': title, 'items': [], 'inventory': []})
+    if edition_profile['index']:
+        index_file = 'the-index.qmd'
+        (project / index_file).write_text('\\printindex\n', encoding='utf-8')
+        chapters.append(index_file)
+        manifest['chapters'].append({'id': 'index', 'file': index_file, 'source': '',
+                                     'kind': 'index', 'title': 'Index', 'items': [], 'inventory': []})
+        glossary = (project / 'glossary.qmd').read_text(encoding='utf-8')
+        terms = glossary_entries(glossary)
+        first_units = glossary_units(glossary)
+        name_units = python_name_units(terms, first_units, lesson_code(book))
+        glossary = re.sub(r'(?m)^(\*\*(.+?)\*\* — .+)$',
+                          lambda match: match[1] + r'\index{' + index_entry(match[2]) + '}', glossary)
+        (project / 'glossary.qmd').write_text(glossary, encoding='utf-8')
+        for chapter in manifest['chapters']:
+            if chapter['kind'] != 'unit':
+                continue
+            path = project / chapter['file']
+            unit = int(re.match(r'unit-(\d+)', chapter['id'])[1])
+            path.write_text(index_first_prose(path.read_text(encoding='utf-8'), terms, unit, first_units,
+                                             name_units),
+                            encoding='utf-8')
     config = (project / 'theme' / '_quarto.yml').read_text(encoding='utf-8')
     config = config.replace('@CHAPTERS@', '\n'.join('    - ' + x for x in chapters))
-    config = config.replace('@FRONT@', '\n'.join('    - ' + name for _, name in front))
+    config = config.replace('@FRONT@', '\n'.join('    - ' + name for name in front))
     config = config.replace('@SUBTITLE@', syllabus_title)
-    config = config.replace('@OUTPUT@', 'Book1b-' + ('Teacher' if edition == 'teacher' else 'Student'))
+    config = config.replace('@OUTPUT@', edition_profile['output_name'])
+    config = config.replace('@CLASSOPTION@', edition_profile['classoption'])
     (project / '_quarto.yml').write_text(config, encoding='utf-8')
     (project / 'inventory.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
     return project

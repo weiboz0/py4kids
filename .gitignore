@@ -21,6 +21,8 @@ __pycache__/
 # Build artifacts
 build/
 *.pdf
+# Every generated PDF is copied to output/<book>/ (plan 090); only output/README.md is committed.
+output/**/*.pdf
 
 # unit-09 file-I/O runtime scratch (created by lesson/solution notebooks at run time; never commit)
 book1/units/unit-09-save-point/savegame.txt

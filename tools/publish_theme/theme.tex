@@ -23,13 +23,37 @@
 % in roman pages, then let the explicit call at the end of front matter start Unit 1.
 \newif\ifpubmainstarted
 \let\puboriginalmainmatter\mainmatter
-\renewcommand{\mainmatter}{\ifpubmainstarted\puboriginalmainmatter\else\global\pubmainstartedtrue\fi}
+% With open=any (print edition, Answer Key) Unit 1 starts on the next page, not the next odd page.
+\makeatletter
+\renewcommand{\mainmatter}{\ifpubmainstarted
+    \if@openright\puboriginalmainmatter\else\clearpage\@mainmattertrue\pagenumbering{arabic}\fi
+  \else\global\pubmainstartedtrue\fi}
+% A chapter's last short box (\pubfinalbox{content lines}, from panels.lua) must not sit alone on
+% an otherwise empty page. When it would not fit, the page grows by less than four lines to take it;
+% the box is then unbreakable and its own \needspace/\Needspace stand aside, because the growth
+% already decided the page. (Estimate: content lines plus three for padding and skips.)
+\newif\ifpubfinalbox
+\newcommand{\pubfinalbox}[1]{\par\begingroup
+  \dimen@=\numexpr#1+3\relax\baselineskip
+  \ifdim\pagegoal<.5\maxdimen
+    \dimen@ii\pagegoal\advance\dimen@ii-\pagetotal\advance\dimen@ii\pageshrink
+    \advance\dimen@-\dimen@ii
+    \ifdim\dimen@<4\baselineskip
+      \global\pubfinalboxtrue
+      \ifdim\dimen@>\z@\enlargethispage{\dimen@}\fi
+    \fi
+  \fi\endgroup}
+\let\puboriginalneedspace\needspace
+\let\puboriginalNeedspace\Needspace
+\renewcommand{\needspace}[1]{\ifpubfinalbox\global\pubfinalboxfalse\else\puboriginalneedspace{#1}\fi}
+\renewcommand{\Needspace}[1]{\ifpubfinalbox\else\puboriginalNeedspace{#1}\fi}
+\makeatother
 \renewcommand*{\chapterlinesformat}[3]{%
   \ifx\thepubchapterlabel\empty\else
     {\normalfont\small\bfseries\color{SteelBlue}\thepubchapterlabel\par\vspace{.45em}}%
   \fi
   #3}
-\tcbset{pubbase/.style={enhanced,breakable,lines before break=4,width=\linewidth,boxrule=.45pt,arc=1pt,
+\tcbset{pubbase/.style={enhanced,breakable,lines before break=4,code={\ifpubfinalbox\tcbset{unbreakable}\fi},width=\linewidth,boxrule=.45pt,arc=1pt,
   left=7pt,right=7pt,top=6pt,bottom=6pt,before skip=8pt,after skip=8pt,
   before={\par\needspace{4\baselineskip}}}}
 \newtcolorbox{pubcode}{pubbase,colback=black!2,colframe=black!22}
