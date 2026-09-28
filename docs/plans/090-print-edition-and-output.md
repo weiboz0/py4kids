@@ -88,7 +88,7 @@ None: the Answer Key reuses the existing solutions and the plan 089 answer rende
   - Edition-marked blocks in front-matter Markdown are filtered per edition.
   - `student-print`:
     - no answers chapter, no "Answer on page" lines, no `ans:` references
-    - Starter panels omitted (the exercise's statement, worked sample, Real version and Check yourself stay)
+    - redundant Starter panels omitted per the Starter rule above (the statement, worked sample, Real version and Check yourself stay)
     - KOMA `open=any`
   - `answer-key`: front matter (title, edition page, `answer-key-intro.md`), then the answers by unit; no glossary, quick reference or index.
 - **D2 Build.**
