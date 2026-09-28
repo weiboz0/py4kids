@@ -42,7 +42,7 @@ Of the exercise pages:
 | Edition | Output file | Content |
 |---|---|---|
 | `student-print` | `Book1b-Student-Print.pdf` | Full student content minus the answers appendix, the "Answer on page N" lines and every **redundant** Starter panel (rule in D1). Chapters start on any page (`open=any`). How to Use says that the starting code is in the exercises notebook, and that answers are in the separate Answer Key PDF and the full edition, both online at the course page. The edition page reads "Student Book — Print Edition". |
-| `student` (full) | `Book1b-Student.pdf` | Unchanged from plan 089 — lessons, all exercises with Starters, answers appendix with page cross-references. |
+| `student` (full) | `Book1b-Student.pdf` | Unchanged from plan 089 apart from the edition-page label and its How to Use block — lessons, all exercises with Starters, answers appendix with page cross-references. |
 | `answer-key` | `Book1b-Answer-Key.pdf` | A short book: title and edition page, a one-page "Using this Answer Key", then the answers to the odd-numbered unit exercises. It is built with the same renderer as the full edition's appendix (Check lines, real programs, drawings). One chapter per unit ("Unit U — Title"); flat headings "Unit U, Exercise N — Exercise Title", with no page numbers (pages differ between editions). No checkpoint or Algorithm Challenge answers; no teacher material. |
 | `teacher` | `Book1b-Teacher.pdf` | Unchanged structure (user: "kept for now until future decision"). |
 
@@ -57,14 +57,14 @@ Amend design 007 D4:
 
 ## Phase B — Content (Opus subagent, statements/front matter)
 
-- `book1b/front-matter/how-to-use.md`: edition-specific paragraphs, marked `<!-- edition: student-print -->` … `<!-- /edition -->` and `<!-- edition: student -->` … `<!-- /edition -->`. Text outside markers is shared.
+- `book1b/front-matter/how-to-use.md`: edition-specific paragraphs, marked `<!-- edition: student-print -->`, `<!-- edition: student -->` and `<!-- edition: teacher -->`, each closed by `<!-- /edition -->`. Text outside markers is shared.
   - **Print block:**
     - The "Reading the page" list drops the **Starter** bullet.
     - Keeps the Check-lines bullet.
     - Says: "Each exercise's starting code is in your exercises notebook; a few repair exercises print the code to fix."
     - Says: "Answers to the odd-numbered exercises are in the separate Answer Key. It and the full edition are online at the course page, github.com/weiboz0/py4kids."
   - **Full block:** keeps the current answers paragraph and the Starter bullet.
-  - **Teacher's Edition:** gets the full (`student`) blocks, and must not claim "Answers to Selected Exercises" are at the back — a pre-existing inaccuracy fixed here.
+  - **Teacher block:** says that answers follow each exercise set (answer keys), not "Answers to Selected Exercises at the back" — a pre-existing inaccuracy fixed here.
   - Assumption recorded: the print edition accompanies the course files. The shared "Work in the course files" section stays; standalone distribution would need a later edit.
 - `book1b/front-matter/answer-key-intro.md` (new): how to use the Answer Key honestly. Try first, compare after, and remember that a different correct program is fine when it reproduces the worked samples exactly. Also covers what the Check lines mean and why only odd-numbered exercises are included.
 - No lesson or exercise notebook changes.
@@ -80,7 +80,7 @@ None: the Answer Key reuses the existing solutions and the plan 089 answer rende
   - `student-print`: `Book1b-Student-Print`, "Student Book — Print Edition", `open=any`, redundant Starters omitted, no appendix or refs, index.
   - `answer-key`: `Book1b-Answer-Key`, "Answer Key", `open=any`, no index, no glossary or quick reference.
   - `teacher`: unchanged.
-  - **Starter rule (print):** omit a Starter (units, checkpoints and the project) only when its non-comment, non-`pass` lines are empty **or every such line appears verbatim in that item's statement**. Otherwise print it. The inventory records omitted ones as `starter-omitted`.
+  - **Starter rule (print):** omit a Starter (units, checkpoints and the project) only when its non-comment, non-`pass` lines are empty **or every such line appears verbatim in that item's statement** (its *markdown* cells only; a separate broken-code cell is not "statement", so both it and the "copy the broken program" Starter stay). Otherwise print it. The inventory records omitted ones as `starter-omitted`.
   - **Edition blocks:** `<!-- edition: NAME -->` … `<!-- /edition -->` are filtered before heading demotion. An unknown or unclosed marker FAILs the build.
   - `tools/cli.py` `--edition` accepts `student`, `student-print`, `answer-key` and `teacher`.
   - `tools/publish.py` builds each edition into `bookN/build/publish/<edition>/`.
@@ -100,19 +100,19 @@ None: the Answer Key reuses the existing solutions and the plan 089 answer rende
   - `scripts/build-book.sh` and `scripts/build-pdf.sh` copy every final PDF into `output/<book>/`:
     - Book 1b: `Book1b-Student-Print.pdf`, `Book1b-Student.pdf`, `Book1b-Answer-Key.pdf`, `Book1b-Teacher.pdf`, `syllabus.pdf`, `handouts/<unit>.pdf`
     - Book 1: `syllabus.pdf`, `patterns.pdf`, `handouts/<unit>.pdf`
-  - `output/<book>/` is cleared before copying, so renamed editions leave no stale PDFs. `bookN/build/` keeps intermediates.
+  - Each script owns and replaces only its files: `build-book.sh` deletes and rewrites `output/<book>/Book*-*.pdf`; `build-pdf.sh` deletes and rewrites `output/<book>/syllabus.pdf`, `patterns.pdf` and `handouts/`. Nothing clears the whole folder, so ci-local's order (`build-pdf.sh`, then `build-book.sh`) keeps every file and renamed editions leave no stale book PDF. `bookN/build/` keeps intermediates.
   - `output/README.md` (committed) lists what each file is and which script makes it.
   - PDFs stay git-ignored: `*.pdf` is already ignored, and PDFs are built artifacts per AGENTS.md. `.gitignore` gains an explicit `output/**/*.pdf` line with a comment.
 - **D4 Audit (`tools/publish_audit.py`), per edition via the profile, with sentinel tests.**
-  - **Phrase bans are edition-specific.** Every student-family edition keeps the teacher-independence bans ("Teacher's Edition", "your teacher", …). The "Answer key" heading ban applies to `student` only (it guards the teacher-panel heading). "Answer Key" is allowed in the print edition's marked How to Use paragraph and throughout `answer-key`.
+  - **Phrase bans are edition-specific.** Every student-family edition keeps the teacher-independence bans ("Teacher's Edition", "your teacher", …). The PDF-text "Answer key" phrase ban applies to `student` only; `student-print` and `answer-key` drop it, because the existing `.qmd` check `'## Answer key' in qmd` already guards the teacher-panel heading in every student-family edition, and the leak guard covers the code.
   - **Answer Key source boundary:** the edition opens only its front matter, `answer-key-intro.md` and `student_answer_sources`. A sentinel fails if any teacher note, teacher panel (`.teacher`), checkpoint/project solution or even-exercise solution enters it.
   - The leak guard scans every chapter of kind `answers`, not only the id `answers`.
-  - **Print equivalence:** for every unit, the print `.qmd` equals the full-edition `.qmd` after removing the omitted Starter panels and the "Answer on page" lines. This is stronger than a heading check.
+  - **Print equivalence:** for every unit, the print `.qmd` equals the full-edition `.qmd` after removing exactly the Starter panels whose ids the print inventory records as `starter-omitted`, plus the "Answer on page" lines. This is stronger than a heading check.
   - `answer-key` skips the index and glossary rules.
   - `student-print`:
     - no solution code at all (the leak guard with *every* solution as hidden)
     - no "Answer on page", no answers chapter, no `\pageref{ans:`
-    - no Starter panels
+    - Starter panels present exactly for the Starters the rule keeps: every `starter-omitted` id has no panel, every `starter` id has one (U1 Ex 20 and the U4 repair exercises among them)
     - independence phrase bans
     - every exercise heading of the full edition present (all tiers kept)
     - goals/recap panels
@@ -125,14 +125,14 @@ None: the Answer Key reuses the existing solutions and the plan 089 answer rende
     - no page cross-references
   - `student` and `teacher`: the plan 089 rules, unchanged.
   - The inventory/chapter-order check learns the two new editions.
-- **D5 Tests:** edition filtering of marked blocks; print omits Starters and answer references; the answer-key contents and boundary; `output/` copy (script dry-run or a function test); CLI choices.
+- **D5 Tests:** edition filtering of marked blocks; print omits redundant Starters, keeps required ones (a Starter with unrepeated code) and omits answer references; the answer-key contents and boundary; `output/` copy (script dry-run or a function test); CLI choices.
 
 ## Phase E — VERIFICATION
 
-1. `scripts/build-book.sh --book book1b` builds all four editions. `publish-audit` PASS for each, with the print page count reported (target ≤ ~400, WARN only).
+1. `scripts/build-book.sh --book book1b` builds all four editions. `publish-audit` PASS for each, with the print page count reported (WARN expected at ~405 numbered / ~415 physical pages).
 2. `output/` holds every expected PDF for Book 1 and Book 1b after `scripts/ci-local.sh`; `git status` shows no PDF to commit.
 3. Print equivalence check PASS. Rendered-page review, including print U1 Ex 20 and a U4 repair exercise with their code kept:
-   - print: How to Use, a unit's exercises without Starters, chapter starts without forced blanks, the index
+   - print: How to Use, a unit's exercises with redundant Starters omitted, chapter starts without forced blanks, the index
    - Answer Key: intro, a Unit 6 answer with its drawing, a Check-line answer
    - full and Teacher: unchanged spot pages
 4. `scripts/ci-local.sh` ALL GREEN. The post-execution report records page counts for all four editions and the build time.
@@ -140,7 +140,7 @@ None: the Answer Key reuses the existing solutions and the plan 089 answer rende
 ## Out of scope
 
 - Changing the Teacher's Edition structure
-- Hosting the full edition or Answer Key online (publishing location is a later decision)
+- Hosting the full edition or Answer Key online, e.g. GitHub Releases or Pages at the course page (publishing is a later user decision; the print How to Use already points at github.com/weiboz0/py4kids)
 - Cutting exercises from print
 - Book 1 and Book 2 editions (plan 086)
 
@@ -189,6 +189,29 @@ None: the Answer Key reuses the existing solutions and the plan 089 answer rende
   - the print equivalence check
   - repair exercises in the rendered review
   - build time +12–15 min
+
+### Round 2 — verdicts and fold
+
+- `[sol]` **REJECT** (r2): round-1 blockers resolved; new conflicts —
+  - clearing `output/<book>/` would delete PDFs from `build-pdf.sh`
+  - the D4 "no Starter panels" rule contradicts the Starter rule
+- `[fable]` **APPROVE WITH NITS** (r2), same Starter contradiction plus:
+  - a separate Teacher's Edition block
+  - an exact "Answer key" mechanism for PDF text
+  - the equivalence check's input
+  - "statement" = markdown cells
+  - the full edition's label change
+  - the course-page URL
+  - the page target line
+- `[FIXED]` all of the above:
+  - per-script ownership of `output/` files
+  - the Starter audit requires kept vs omitted per the inventory
+  - teacher marker
+  - PDF-text "Answer key" ban kept for `student` only; the `.qmd` heading check guards all editions
+  - equivalence uses the `starter-omitted` ids
+  - statement = markdown cells
+  - wording lines
+- `[WONTFIX]` the course-page URL stays in the print How to Use: it is where the user will publish, and publishing (Releases/Pages) is listed under Out of scope as the user's follow-up decision.
 
 ## Content Review
 _(filled before PR.)_
