@@ -112,7 +112,7 @@ None: the Answer Key reuses the existing solutions and the plan 089 answer rende
   - `student-print`:
     - no solution code at all (the leak guard with *every* solution as hidden)
     - no "Answer on page", no answers chapter, no `\pageref{ans:`
-    - Starter panels present exactly for the Starters the rule keeps: every `starter-omitted` id has no panel, every `starter` id has one (U1 Ex 20 and the U4 repair exercises among them)
+    - Starter panels present exactly for the Starters the rule keeps: every `starter-omitted` id has no panel, every `starter` id has one (U1 Ex 20 among them; the U4 repair exercises print their broken program in the statement, so their copy Starters are rightly omitted — see the implementation deviation)
     - independence phrase bans
     - every exercise heading of the full edition present (all tiers kept)
     - goals/recap panels

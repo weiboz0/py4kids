@@ -12,11 +12,11 @@ Read, run, change, and rerun the examples before you start the exercises.
 - **Read the error:** The code is broken on purpose; use the message to find the mistake.
 - **Watch out: this never stops:** A loop is shown to explain a trap; read it, but do not run it unchanged.
 - **Drawing made by the program above:** A turtle drawing, printed right after the program that makes it.
-<!-- edition: student -->
+<!-- edition: student|teacher -->
 - **Starter:** A beginning for your exercise program; finish the missing work yourself.
 <!-- /edition -->
-<!-- edition: teacher -->
-- **Starter:** A beginning for your exercise program; finish the missing work yourself.
+<!-- edition: student-print -->
+- **Starter:** Starting code printed only when it is not already on the page, such as a broken program to repair; all other starting code is in your exercises notebook.
 <!-- /edition -->
 - **Data file:** Text the program reads or writes; use the shown lines exactly when checking a sample.
 - **Challenge:** An optional stretch problem; later lessons do not depend on it.
@@ -24,9 +24,6 @@ Read, run, change, and rerun the examples before you start the exercises.
 - **Real version:** The same task using values entered while the program runs, instead of fixed sample values.
 - **You will learn / Recap:** A short guide to the unit's goals and a reminder of what you can now do.
 
-<!-- edition: student-print -->
-Each exercise's starting code is in your exercises notebook; a few repair exercises print the code to fix.
-<!-- /edition -->
 
 ## Work in the course files
 
