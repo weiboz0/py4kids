@@ -31,7 +31,7 @@
 <!-- concept: comparison; index: comparing values -->
 
 **Conditional inside a conditional** — An `if` block placed inside another decision to ask a second question only on one path. *(Unit 3)*
-<!-- concept: conditional-nesting; index: nested conditional -->
+<!-- concept: conditional-nesting; index: nested conditional; decision can contain another decision -->
 
 **Count by condition** — Add one to a count only when an item passes a test. *(Unit 4)*
 <!-- concept: count-by-condition; index: conditional count -->
@@ -52,13 +52,13 @@
 <!-- concept: error-messages; index: traceback -->
 
 **File reading** — Getting saved text from a file with `read()`, `readline()`, or a loop over its lines. *(Unit 12)*
-<!-- concept: file-read; index: read -->
+<!-- concept: file-read; index: `read`; `readline`; reading a file -->
 
 **File writing** — Saving text with `write()` after opening a file in `"w"` mode. *(Unit 12)*
-<!-- concept: file-write; index: write -->
+<!-- concept: file-write; index: `write`; writing a file -->
 
 **Filter into a list** — Loop over items and append only the ones that pass a test to a new list. *(Unit 10)*
-<!-- concept: filter-into-list; index: filter -->
+<!-- concept: filter-into-list; index: filter; filtering -->
 
 **Find the best** — Keep the largest or smallest value seen so far, and sometimes the item that owns it. *(Unit 10)*
 <!-- concept: find-extreme; index: maximum; minimum -->
@@ -94,7 +94,7 @@
 <!-- concept: list-append; index: append; insert; pop; remove -->
 
 **List indexing** — `items[0]` gets the first item; `items.index(value)` finds where a value occurs. *(Unit 10)*
-<!-- concept: list-index; index: list index -->
+<!-- concept: list-index; index: list index; list indexes -->
 
 **Local scope** — A name made inside a function belongs there; a name made outside is available at the program level. *(Unit 7)*
 <!-- concept: scope; index: scope; local variable -->
@@ -103,10 +103,10 @@
 <!-- concept: logical-ops; index: and; or; not -->
 
 **Loop over a dictionary** — Visit its keys, values, or key/value pairs; `.items()` gives each pair. *(Unit 11)*
-<!-- concept: dict-loop; index: items -->
+<!-- concept: dict-loop; index: `items` -->
 
 **Loop over a list** — `for item in items:` visits each list item in order. *(Unit 10)*
-<!-- concept: list-loop; index: list iteration -->
+<!-- concept: list-loop; index: list iteration; value loop -->
 
 **Method** — A function belonging to an object, called through that object, such as `counter.increment()`. *(Unit 13)*
 <!-- concept: methods; index: object method -->
@@ -121,7 +121,7 @@
 <!-- concept: init-method; index: __init__; self -->
 
 **Print** — `print()` displays a value in the program's output. *(Unit 1)*
-<!-- concept: print; index: output -->
+<!-- concept: print; index: `print` -->
 
 **Random choice** — `random.randint(a, b)` chooses an integer from `a` through `b`; `random.choice(items)` picks one item. *(Unit 8)*
 <!-- concept: random-module; index: randint; choice -->
@@ -160,7 +160,7 @@
 <!-- concept: string-methods; index: lower; strip; split; find -->
 
 **String slice** — `word[start:stop]` takes characters from `start` up to, but not including, `stop`. *(Unit 9)*
-<!-- concept: string-slice; index: slicing -->
+<!-- concept: string-slice; index: slicing; slices -->
 
 **Test with in** — `"a" in word` asks whether text contains a smaller piece of text. *(Unit 9)*
 <!-- concept: in-operator; index: membership -->
@@ -175,7 +175,7 @@
 <!-- concept: turtle-basics; index: turtle -->
 
 **Type conversion** — `int()`, `float()`, and `str()` change a value to a needed type. *(Unit 2)*
-<!-- concept: type-conversion; index: converting types -->
+<!-- concept: type-conversion; index: converting types; convert between text and numbers -->
 
 **Variable** — A named place to keep a value, made with an assignment such as `score = 3`. *(Unit 1)*
 <!-- concept: variable; index: assignment -->

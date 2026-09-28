@@ -139,11 +139,61 @@ def test_glossary_index_parser_and_prose_boundary():
     glossary = '**print** — Show text. *(Unit 1)*\n<!-- concept: print; index: display -->\n'
     assert publish.glossary_entries(glossary) == [('print', 'print', ['display'])]
     qmd = '# print\n\n```python\nprint(1)\n```\n\n`print` and print a value.\n'
-    indexed = publish.index_first_prose(qmd, ['print'])
-    assert indexed.count(r'\index{Python names!print@\texttt{print}}') == 1
-    assert '`print` and print' in indexed
-    bold = publish.index_first_prose('A **float** value.\n', ['float'])
-    assert bold == 'A ' + r'\index{Python names!float@\texttt{float}}' + '**float** value.\n'
+    indexed = publish.index_first_prose(qmd, [('Print', 'print', ['display'])])
+    assert indexed.count(r'\index{print@Print}') == 1
+    assert '`print`' + r'\index{print@Print}' in indexed
+    assert 'and print a value' in indexed
+    bold = publish.index_first_prose('A **decimal number** value.\n',
+                                     [('Float', 'float-type', ['decimal number'])])
+    assert bold == 'A ' + r'\index{float@Float}' + '**decimal number** value.\n'
+
+
+def test_index_aliases_share_one_entry_and_restricted_names_use_code_only():
+    terms = [('Logical operators', 'logical-ops', ['and', 'or', 'not']),
+             ('Class', 'class-def', ['class']),
+             ('Code comment', 'comment', ['comment']),
+             ('File writing', 'file-write', ['`write`'])]
+    qmd = ('# class and comment\n```python\nclass X: pass\n```\n'
+           'The class and comment are here.\n'
+           'Use `and` and `write` to add a comment.\n'
+           'Another class and another comment.\n')
+    indexed = publish.index_first_prose(qmd, terms)
+    assert indexed.count(r'\index{logical operators@Logical operators}') == 1
+    assert indexed.count(r'\index{class@Class}') == 0
+    assert indexed.count(r'\index{code comment@Code comment}') == 1
+    assert indexed.count(r'\index{file writing@File writing}') == 1
+    assert '`and`' + r'\index{logical operators@Logical operators}' in indexed
+    assert '`write`' + r'\index{file writing@File writing}' in indexed
+    assert 'comment' + r'\index{code comment@Code comment}' in indexed
+    assert 'The class and comment' in indexed
+    assert r'\index{and}' not in indexed
+    names = publish.index_first_prose('print and `print`; `len` then len.\n', [])
+    assert names.count(r'\index{Python names!print@\texttt{print}}') == 1
+    assert names.count(r'\index{Python names!len@\texttt{len}}') == 1
+    boolean = publish.index_first_prose('A true fact. Use `True`.\n',
+                                        [('Boolean', 'boolean', ['True'])])
+    assert 'true' + r'\index{boolean@Boolean}' not in boolean
+    assert '`True`' + r'\index{boolean@Boolean}' in boolean
+
+
+def test_index_audit_rejects_glossary_only_case_duplicates_and_prose_keyword():
+    glossary = [('Class', 'class-def', ['class']), ('Code comment', 'comment', ['comment'])]
+    good = (r'\item Class, \hyperpage{21}, \hyperpage{643}' + '\n'
+            r'\item Code comment, \hyperpage{10}, \hyperpage{643}')
+    assert publish_audit.index_findings(good, glossary, {643}) == []
+    assert publish_audit.index_findings(good.replace(r'\hyperpage{10}, ', ''), glossary, {643})
+    assert publish_audit.index_findings(good + '\n' + r'\item class, \hyperpage{22}',
+                                        glossary, {643})
+    assert publish_audit.index_source_findings('The class' + r'\index{class@Class}' + '.\n', glossary)
+    assert publish_audit.index_source_findings('Use `class`' + r'\index{class@Class}' + '.\n',
+                                               glossary) == []
+    assert publish_audit.index_source_findings(
+        'Call print' + r'\index{Python names!print@\texttt{print}}' + '.\n', glossary)
+    assert publish_audit.index_source_findings(
+        'Call `print`' + r'\index{Python names!print@\texttt{print}}' + '.\n', glossary) == []
+    assert publish_audit.index_source_findings(
+        '`len`' + r'\index{built-in function@Built-in function}'
+        + r'\index{Python names!len@\texttt{len}}' + '.\n', glossary) == []
 
 
 def test_cross_references_match_unit_and_exercise():

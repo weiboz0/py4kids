@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import ast
+import builtins
 import io
 import json
+import keyword
 import re
 import shutil
 import tokenize
@@ -514,18 +516,25 @@ def glossary_entries(source: str) -> list[tuple[str, str, list[str]]]:
             for term, concept, keys in pattern.findall(source)]
 
 
-def index_entry(key: str) -> str:
-    plain = re.sub(r'`([^`]+)`', r'\1', key)
-    if plain.casefold() in {'print', 'input', 'range', 'len', 'str', 'int', 'float',
-                            'append', 'split', 'open', 'sorted', 'sum'}:
-        name = plain.casefold()
-        return 'Python names!' + name + r'@\texttt{' + name + '}'
-    return plain.replace('!', r'\!').replace('@', r'\@')
+PYTHON_INDEX_NAMES = {'print', 'input', 'range', 'len', 'str', 'int', 'float',
+                      'append', 'split', 'open', 'sorted', 'sum'}
+CODE_ONLY_NAMES = {name.casefold() for name in [*keyword.kwlist, *dir(builtins)]}
 
 
-def index_first_prose(qmd: str, keys: list[str]) -> str:
-    """Place each index key at its first word-bounded prose occurrence."""
-    remaining = {key.casefold(): key for key in keys}
+def index_entry(term: str) -> str:
+    """Use one case-insensitive makeindex identity with the author's display text."""
+    plain = term.strip('`')
+    escaped = lambda value: value.replace('!', r'\!').replace('@', r'\@')
+    return escaped(plain.casefold()) + '@' + escaped(plain)
+
+
+def index_first_prose(qmd: str, glossary: list[tuple[str, str, list[str]]]) -> str:
+    """Index each glossary concept once per unit, using aliases only as match triggers."""
+    remaining = {term: [(raw.strip('`'), raw.startswith('`') or
+                         raw.strip('`').casefold() in CODE_ONLY_NAMES)
+                        for raw in dict.fromkeys([term, *aliases])]
+                 for term, _, aliases in glossary}
+    names = PYTHON_INDEX_NAMES - {term.casefold() for term, _, _ in glossary}
     rendered = []
     fence = False
     for line in qmd.splitlines(keepends=True):
@@ -537,20 +546,34 @@ def index_first_prose(qmd: str, keys: list[str]) -> str:
             rendered.append(line)
             continue
         spans = re.split(r'(`[^`]*`)', line)
-        for position in range(0, len(spans), 2):
-            prose = spans[position]
+        for position, span in enumerate(spans):
+            in_code = position % 2 == 1
+            prose = span[1:-1] if in_code else span
             insertions = []
-            for key in list(remaining.values()):
-                match = re.search(r'(?<!\w)' + re.escape(key) + r'(?!\w)', prose, re.IGNORECASE)
-                if match:
-                    offset = match.end()
-                    if prose[:offset].count('**') % 2:
-                        offset = prose.rfind('**', 0, match.start())
-                    insertions.append((offset, key))
-                    del remaining[key.casefold()]
-            for offset, key in sorted(insertions, reverse=True):
-                prose = prose[:offset] + r'\index{' + index_entry(key) + '}' + prose[offset:]
-            spans[position] = prose
+            for term, aliases in list(remaining.items()):
+                matches = [(match.start(), match.end())
+                           for alias, code_only in aliases if code_only == in_code
+                           for match in [re.search(r'(?<!\w)' + re.escape(alias) + r'(?!\w)',
+                                                   prose, re.IGNORECASE)] if match]
+                if matches:
+                    start, end = min(matches)
+                    offset = end
+                    if not in_code and prose[:end].count('**') % 2:
+                        offset = prose.rfind('**', 0, start)
+                    insertions.append((offset, index_entry(term)))
+                    del remaining[term]
+            if in_code:
+                for name in list(names):
+                    match = re.search(r'(?<!\w)' + re.escape(name) + r'(?!\w)', prose, re.IGNORECASE)
+                    if match:
+                        insertions.append((len(prose), 'Python names!' + name +
+                                           r'@\texttt{' + name + '}'))
+                        names.remove(name)
+            for offset, entry in sorted(insertions, reverse=True):
+                if in_code:
+                    offset = len(span)
+                span = span[:offset] + r'\index{' + entry + '}' + span[offset:]
+            spans[position] = span
         line = ''.join(spans)
         rendered.append(line)
     return ''.join(rendered)
@@ -642,12 +665,11 @@ def build(root: Path, book_id: str, edition: str) -> Path:
     glossary = re.sub(r'(?m)^(\*\*(.+?)\*\* — .+)$',
                       lambda match: match[1] + r'\index{' + index_entry(match[2]) + '}', glossary)
     (project / 'glossary.qmd').write_text(glossary, encoding='utf-8')
-    keys = list(dict.fromkeys(key for term, _, aliases in terms for key in [term, *aliases]))
     for chapter in manifest['chapters']:
         if chapter['kind'] != 'unit':
             continue
         path = project / chapter['file']
-        path.write_text(index_first_prose(path.read_text(encoding='utf-8'), keys), encoding='utf-8')
+        path.write_text(index_first_prose(path.read_text(encoding='utf-8'), terms), encoding='utf-8')
     config = (project / 'theme' / '_quarto.yml').read_text(encoding='utf-8')
     config = config.replace('@CHAPTERS@', '\n'.join('    - ' + x for x in chapters))
     config = config.replace('@FRONT@', '\n'.join('    - ' + name for _, name in front))

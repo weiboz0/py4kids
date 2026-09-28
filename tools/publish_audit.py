@@ -11,12 +11,14 @@ import yaml
 
 from tools.fake_turtle import imports_turtle
 from tools.publish import (
+    CODE_ONLY_NAMES,
     ITEM,
     NOTICE,
     SETUP_ID,
     code_tokens,
     entries,
     glossary_entries,
+    index_entry,
     item_groups,
     notebook,
 )
@@ -53,14 +55,66 @@ def glossary_findings(introduced: list[str], glossary: list[tuple]) -> list[str]
         'FAIL: glossary concept coverage']
 
 
-def index_findings(index_text: str, glossary: list[tuple]) -> list[str]:
+def index_findings(index_text: str, glossary: list[tuple],
+                   glossary_pages: set[int] | None = None) -> list[str]:
     if not index_text.strip():
         return ['FAIL: index empty']
-    displays = [re.sub(r'\\texttt\{([^}]*)\}', r'\1', value).replace(r'\_', '_').casefold()
-                for value in re.findall(r'(?m)^\s*\\(?:item|subitem) (.+?), \\hyperpage',
-                                        index_text)]
-    return [f'FAIL: index missing {term}' for term, _, _ in glossary
-            if term.casefold() not in displays]
+    items = {}
+    findings = []
+    for match in re.finditer(r'(?m)^\s*\\(?:item|subitem) (.+?), \\hyperpage', index_text):
+        display = re.sub(r'\\texttt\{([^}]*)\}', r'\1', match[1]).replace(r'\_', '_')
+        next_item = re.search(r'(?m)^\s*\\(?:item|subitem) ', index_text[match.end():])
+        end = match.end() + next_item.start() if next_item else len(index_text)
+        pages = {int(page) for page in re.findall(r'\\hyperpage\{(\d+)\}',
+                 index_text[match.start():end])}
+        if display.casefold() in items:
+            findings.append(f'FAIL: index duplicate case entry {display}')
+        items[display.casefold()] = pages
+    for term, _, _ in glossary:
+        pages = items.get(term.casefold())
+        if pages is None:
+            findings.append(f'FAIL: index missing {term}')
+        elif glossary_pages is not None and not (pages - glossary_pages):
+            findings.append(f'FAIL: index glossary-only {term}')
+    return findings
+
+
+def index_source_findings(qmd: str, glossary: list[tuple]) -> list[str]:
+    """Reject restricted alias hits placed in ordinary prose."""
+    restricted = {index_entry(term): {key.strip('`').casefold() for key in [term, *aliases]
+                                      if key.strip('`').casefold() in CODE_ONLY_NAMES or key.startswith('`')}
+                  for term, _, aliases in glossary}
+    findings = []
+    for line in qmd.splitlines():
+        for match in re.finditer(r'\\index\{((?:[^{}]|\{[^{}]*\})+)\}', line):
+            prefix = re.sub(r'(?:\\index\{(?:[^{}]|\{[^{}]*\})+\})+$', '',
+                            line[:match.start()])
+            if match[1].startswith('Python names!') and not prefix.endswith('`'):
+                findings.append(f'FAIL: index restricted name in prose: {match[1]}')
+                continue
+            aliases = restricted.get(match[1], set())
+            if not aliases:
+                continue
+            if prefix.endswith('`'):
+                continue
+            if any(re.search(r'(?i)(?<!\w)' + re.escape(key) + r'$' , prefix)
+                   for key in aliases):
+                findings.append(f'FAIL: index restricted name in prose: {match[1]}')
+    return findings
+
+
+def glossary_page_numbers(pdf_text: str) -> set[int]:
+    pages = pdf_text.split('\f')
+    start = next((i for i, page in enumerate(pages) if page.startswith('Glossary\n')), None)
+    end = next((i for i, page in enumerate(pages) if page.startswith('Quick Reference\n')), None)
+    if start is None or end is None or end <= start:
+        return set()
+    for physical in range(start + 1, end):
+        match = re.search(r'(?m)^(\d+)\s+Glossary\b', pages[physical])
+        if match:
+            offset = physical + 1 - int(match[1])
+            return set(range(start + 1 - offset, end + 1 - offset))
+    return set()
 
 
 def label_log_findings(log: str) -> list[str]:
@@ -453,6 +507,11 @@ def audit(root: Path, book_id: str) -> list[str]:
         findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
                         for finding in index_findings(index_text, glossary))
         for chapter in chapters:
+            if chapter['kind'] == 'unit':
+                findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
+                                for finding in index_source_findings(
+                                    (project / chapter['file']).read_text(encoding='utf-8'), glossary))
+        for chapter in chapters:
             id_ = chapter['id']; kind = chapter['kind']; entry = root / chapter['source']
             qmd = (project / chapter['file']).read_text(encoding='utf-8')
             if re.search(r'^#{1,6}\s+\d+(?:\.\d+)*\.\s+', qmd, re.MULTILINE):
@@ -506,6 +565,13 @@ def audit(root: Path, book_id: str) -> list[str]:
         if not pdf.exists():
             findings.append(f'FAIL: {edition}: PDF missing'); continue
         text = subprocess.run(['pdftotext', str(pdf), '-'], check=True, capture_output=True, text=True).stdout
+        pages = glossary_page_numbers(text)
+        if not pages:
+            findings.append(f'FAIL: {edition}: glossary pages unresolved')
+        else:
+            findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
+                            for finding in index_findings(index_text, glossary, pages)
+                            if 'glossary-only' in finding)
         artefact = re.search(r'(?m)^[ \t]*(?:#{2,6} +\S|# +(?:Lesson|Unit|Exercise|Exercises|Challenge|Question|Problem)\b|:::(?:[ \t]*\{|[ \t]*$)|```)', text)
         if artefact:
             findings.append(f'FAIL: {edition}: literal Markdown/Quarto artefact in PDF: {artefact.group().strip()}')
