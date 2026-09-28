@@ -370,4 +370,31 @@ The Problem 11 fix is a publisher change (D3 below); its solution code is correc
 **Consensus reached (4/4), no `[OPEN]` findings.**
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped.**
+- **Independent Student Book:** no teacher or Teacher's Edition references (audited on the `.qmd` and the PDF text, with curly apostrophes normalised). The Real-program convention is explained once in How to Use. "No real program" panels are gone. Independent-reader wording throughout: Unit 0, course folder, `py`/`python3`, "an empty cell in your exercises notebook", "main path".
+- **Answers to Selected Exercises** (Student Book): the 175 odd-numbered unit exercises, read only through `student_answer_sources`. Explicit `ex:`/`ans:` labels give "Answer on page N" and "Unit U, Exercise N (page M)". The Teacher's Edition answer keys also show "(page M)". Checkpoints and the Algorithm Challenge stay without printed answers; How to Use explains self-checking against their worked samples.
+- **Check lines** replace dropped asserts in both editions, fixing Algorithm Challenge Problem 11. The U06 answer key no longer groups Exercise 10–18 assets under Exercise 1.
+- **Front matter:** edition page (title verso), preface "About This Book", rewritten How to Use.
+- **Back matter:** Glossary (62 concept ids), Quick Reference, and an Index that is unit-gated, code-aware and free of case duplicates.
+- **Units:** 13 "You will learn" / "Recap" panels. Lesson 1/2/3 naming. The Unit 8 title is fixed. U02's Peek ahead moved into a Notice.
+- **Teacher notes:** classroom voice (no design/plan citations, `no-exec`, CI, git-ignored).
+- **Found during the gate:** 37 real programs ran once per worked sample instead of once. They are rewritten as single runs and verified; U07 Ex 15 prints the weekday name.
+- **Governance (user-requested, on this branch):** AGENTS.md authoring → Opus subagents; the GLM seat → opencode-go/glm-5.3 with a volcengine-plan/glm-5.3 fallback.
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN at 78a3a8d.
+- pytest all passing.
+- `publish-audit` PASS: phrase bans, leak guard, goals/recap positions, answer coverage (175), glossary and index coverage with unit gating, LaTeX reference hygiene, cross-reference resolution.
+- Rendered-page review of the edition page, a unit opener with its goals, the answers, the glossary, the quick reference and the index.
+- Content gate consensus 4/4 at round 2.
+
+**Page counts:** Student Book 464 → 658 pages; Teacher's Edition ≈ 870 → 924 pages.
+
+**Deviations:**
+- The leak-guard rule was changed from 20-token fragments to whole or embedded hidden solutions (recorded above, with measurements).
+- Pre-existing content bugs found by the gate (one-run real programs) were fixed in this plan.
+
+**Follow-ups:**
+- Checkpoint 2 Q3/Q4 closely mirror odd unit exercises whose answers are now printed; review checkpoint distinctness.
+- Book 1 and Book 2 editions (plan 086).
