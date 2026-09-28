@@ -37,6 +37,9 @@ fi
 
 handouts="$book_root/build/handouts"
 mkdir -p "$handouts"
+# Every PDF built here is copied to output/<book>/ at the end (this script owns syllabus.pdf,
+# patterns.pdf and handouts/ there; build-book.sh owns the Book*-*.pdf editions).
+built=()
 
 for unit_dir in "$book_root"/units/unit-*; do
     [[ -d "$unit_dir" ]] || continue
@@ -53,6 +56,7 @@ for unit_dir in "$book_root"/units/unit-*; do
         echo "FAIL: $unit_id: missing or empty PDF output" >&2
         exit 1
     fi
+    built+=("$output")
 done
 
 pandoc "$book_root/syllabus.md" --pdf-engine=xelatex \
@@ -61,6 +65,7 @@ if [[ ! -s "$book_root/build/syllabus.pdf" ]]; then
     echo "FAIL: $book: missing or empty syllabus PDF" >&2
     exit 1
 fi
+built+=("$book_root/build/syllabus.pdf")
 
 if [[ "$build_patterns" == 1 ]]; then
     pandoc "$book_root/reference/patterns.md" --pdf-engine=xelatex \
@@ -69,6 +74,9 @@ if [[ "$build_patterns" == 1 ]]; then
         echo "FAIL: book1: missing or empty patterns PDF" >&2
         exit 1
     fi
+    built+=("$book_root/build/patterns.pdf")
 fi
+
+uv run python -m tools.publish_output --book "$book" --owner pdf "${built[@]}"
 
 echo "build-pdf: $book PASS"

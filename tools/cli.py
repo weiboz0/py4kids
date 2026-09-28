@@ -9,6 +9,9 @@ from pathlib import Path
 from tools.checks import CHECKS, UNIT_ONLY_CHECKS
 from tools.notebooks import fill_outputs_findings, lesson_outputs_findings, project_dirs
 
+# Mirrors tools.publish.EDITIONS (kept literal so the parser need not import the publisher).
+EDITION_CHOICES = ("student", "student-print", "answer-key", "teacher")
+
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="py4kids-tools")
@@ -21,7 +24,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--book", required=True)
     parser.add_argument("--unit")
     parser.add_argument("check", choices=(*CHECKS, "fill-outputs", "lesson-outputs-check", "publish", "publish-audit"))
-    parser.add_argument("--edition", choices=("student", "teacher"))
+    parser.add_argument("--edition", choices=EDITION_CHOICES)
     return parser
 
 

@@ -16,7 +16,7 @@ format:
     latex-auto-install: false
     latex-max-runs: 3
     documentclass: scrbook
-    classoption: [open=right, headings=normal]
+    classoption: [@CLASSOPTION@, headings=normal]
     papersize: custom
     geometry: [paperwidth=7in, paperheight=10in, inner=0.85in, outer=0.7in, top=0.8in, bottom=0.8in]
     mainfont: "Atkinson Hyperlegible"
