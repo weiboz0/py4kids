@@ -1,6 +1,7 @@
 """Turn Book 1b notebook sources into a Quarto book project."""
 from __future__ import annotations
 
+import ast
 import io
 import json
 import re
@@ -34,7 +35,8 @@ def allowed_source(path: Path, edition: str) -> bool:
         return False
     if path.name in {'lesson.ipynb', 'exercises.ipynb', 'checkpoint.ipynb',
                      'brief.ipynb', 'syllabus.md', 'how-to-use.md',
-                     'unit-00-getting-set-up.md'}:
+                     'unit-00-getting-set-up.md', 'preface.md', 'glossary.md',
+                     'quick-reference.md'}:
         return True
     return (path.suffix == '.py' and 'units' in path.parts and 'assets' in path.parts) or (
         path.suffix == '.txt' and 'projects' in path.parts)
@@ -62,8 +64,17 @@ def panel(kind: str, body: str) -> str:
     return f'::: {{.{kind}}}\n{body.strip()}\n:::\n'
 
 
+def strip_turtle_directives(source: str) -> str:
+    return ''.join(line for line in source.splitlines(keepends=True)
+                   if not re.match(r'^\s*# turtle-check:', line))
+
+
 def markdown_blocks(source: str, first: bool = False, demote: bool = True) -> str:
     """Split a markdown cell into paragraphs while preserving Notice continuations."""
+    source = strip_turtle_directives(source)
+    for title, kind in (('### You will learn', 'goals'), ('### Recap', 'recap')):
+        if source.startswith(title + '\n') or source.strip() == title:
+            return panel(kind, source[len(title):])
     if demote:
         source = re.sub(r'(?m)^## (?!Lesson\b|Exercises\b|Answer key\b)', '### ', source)
     paragraphs = re.split(r'\n\s*\n', source.strip())
@@ -94,7 +105,8 @@ def markdown_blocks(source: str, first: bool = False, demote: bool = True) -> st
 
 
 def code_block(source: str) -> str:
-    return '```python\n' + source.rstrip() + '\n```\n'
+    source = strip_turtle_directives(source)
+    return '```python\n' + source + ('' if source.endswith('\n') else '\n') + '```\n'
 
 
 def code_tokens(source: str) -> tuple[tuple[int, str], ...]:
@@ -136,12 +148,11 @@ def route_code(cell) -> tuple[str, str]:
 
 
 def teacher_notes(source: str) -> str:
-    lines = source.splitlines()
+    lines = strip_turtle_directives(source).splitlines()
     if lines and lines[0].startswith('# '):
         lines.pop(0)
     body = '\n'.join(lines)
     body = re.sub(r'^(#{1,4}) ', lambda m: '#' * (len(m[1]) + 2) + ' ', body, flags=re.MULTILINE)
-    body = re.sub(r'\(design 006 D9 genres\)|design 006 D3|\(plan 0\d\d\)', '', body)
     body = re.sub(r'\bfor CI\b', '', body)
     body = body.replace('60-MINUTE CUT', '60-minute cut')
     body = body.replace('`/`', '` / `')
@@ -164,6 +175,33 @@ def strip_asserts(source: str) -> tuple[str, bool]:
     lines = source.splitlines()
     kept = [line for line in lines if not re.match(r'^\s*assert\s+', line)]
     return '\n'.join(kept).strip(), len(kept) != len(lines)
+
+
+def render_solution_code(source: str) -> str:
+    """Replace only top-level asserts with in-order checks."""
+    def one_line(segment: str) -> str:
+        return re.sub(r'\s+', ' ', segment).strip()
+
+    lines = source.splitlines(keepends=True)
+    checks = [node for node in ast.parse(source).body if isinstance(node, ast.Assert)]
+    rendered = []
+    start = 0
+    for node in checks:
+        fragment = ''.join(lines[start:node.lineno - 1])
+        if fragment.strip():
+            rendered.append(code_block(fragment).replace('```python', '```{.python .answer-code}', 1))
+        expression = node.test
+        if isinstance(expression, ast.Compare) and len(expression.ops) == 1 and isinstance(expression.ops[0], ast.Eq):
+            left = one_line(ast.get_source_segment(source, expression.left))
+            right = one_line(ast.get_source_segment(source, expression.comparators[0]))
+            rendered.append(f'Check: `{left}` → `{right}`\n')
+        else:
+            rendered.append(f'Check: `{one_line(ast.get_source_segment(source, expression))}` is true\n')
+        start = node.end_lineno
+    fragment = ''.join(lines[start:])
+    if fragment.strip():
+        rendered.append(code_block(fragment).replace('```python', '```{.python .answer-code}', 1))
+    return '\n'.join(rendered)
 
 
 def entries(book: Path, edition: str) -> list[tuple[str, Path]]:
@@ -262,6 +300,8 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
         display = (f'Challenge — {title}' if stretch and kind == 'unit' else
                    f'{label} {number}' + (f' — {title}' if title else ''))
         out.append(('#### ' if kind == 'project' else '### ') + display + '\n')
+        if kind == 'unit':
+            out.append(f'```{{=latex}}\n\\label{{ex:{entry.name}:{number}}}\n```')
         if stretch:
             out.append(panel('challenge', f'**{label} {number}**'))
         for c in (group['cells'] if kind == 'project' else group['cells'][1:]):
@@ -282,24 +322,9 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                     paragraph = re.sub(r'^\*\*(?:Real version|No real version):\*\*\s*', '', paragraph)
                     paragraph = re.sub(r'(?i)^real program:\s*', '', paragraph)
                     if no_real:
-                        # No stdin program exists, so there is nothing to point to in the Teacher's Edition.
-                        reason = paragraph.rstrip(' .')
-                        reason = reason[0].lower() + reason[1:] if reason[:1].isupper() and not reason[:2].isupper() else reason
-                        item = {'checkpoint': 'question', 'project': 'problem'}.get(kind, 'exercise')
-                        stripped = re.sub(r'^this (?:exercise|question|problem)\s+', '', reason)
-                        reason = f'it {stripped}' if stripped != reason else reason
-                        paragraph = f'There is no real program for this {item}: {reason}.'
-                    elif edition == 'student':
-                        not_graded = bool(re.search(r'\(Not graded\.\)', paragraph, re.IGNORECASE))
-                        paragraph = re.sub(r'\s*\(Not graded\.\)', '', paragraph, flags=re.IGNORECASE)
+                        continue
+                    if edition == 'student':
                         paragraph = re.sub(r'\s*—\s*see (?:the )?solution[^.]*\.?', '', paragraph, flags=re.IGNORECASE)
-                        paragraph = paragraph.rstrip(' .—')
-                        if not re.match(r'(?i)^the real program\b|^no real program\b', paragraph):
-                            paragraph = 'The real program ' + paragraph
-                        paragraph = paragraph[0].upper() + paragraph[1:]
-                        if not_graded:
-                            paragraph += ' (not graded)'
-                        paragraph += ". The full program is in the Teacher's Edition."
                     if paragraph[:1].islower():
                         paragraph = paragraph[0].upper() + paragraph[1:]
                     parts.append(panel('realprog', paragraph))
@@ -315,21 +340,56 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str):
                     if file.exists():
                         out.append(panel('datafile', f'**{name}**\n\n```text\n{read_source(file, edition).rstrip()}\n```'))
                         inventory.append({'id': f'data:{name}', 'kind': 'asset listing'})
+        if kind == 'unit' and edition == 'student' and number % 2:
+            out.append(f'Answer on page \\pageref{{ans:{entry.name}:{number}}}.')
     return '\n\n'.join(block.rstrip() for block in out) + '\n', inventory, [{'number': g['number'], 'title': group_title(g, label)} for g in groups]
 
 
-def answer_key(entry: Path, kind: str, items: list[dict]) -> str:
-    n = notebook(entry / 'solutions.ipynb', 'teacher')
+def solution_assets(entry: Path, number: int) -> list[Path]:
+    """Match one exercise number, including named variants, without matching 10 for 1."""
+    return [path for path in sorted((entry / 'assets').glob('solutions_ex*.py'))
+            if re.match(rf'solutions_ex{number}(?!\d)', path.stem)] if (entry / 'assets').exists() else []
+
+
+def student_answer_sources(entry: Path):
+    """The only solution-material read allowed for the Student Book."""
+    if 'units' not in entry.parts or not entry.name.startswith('unit-'):
+        return [], {}
+    solution = entry / 'solutions.ipynb'
+    if not solution.exists():
+        raise ValueError(f'missing solutions: {solution}')
+    _, groups = item_groups(nbformat.read(solution, as_version=4).cells, 'Exercise')
+    odd = [group for group in groups if group['number'] % 2]
+    return odd, {group['number']: solution_assets(entry, group['number']) for group in odd}
+
+
+def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teacher') -> str:
     label = ITEM[kind]
-    _, groups = item_groups(n.cells, label)
+    if edition == 'student' and not any(item['number'] % 2 for item in items):
+        return ''
+    if edition == 'student':
+        if kind != 'unit':
+            raise ValueError('student answers are unit exercises only')
+        groups, assets = student_answer_sources(entry)
+        items = [item for item in items if item['number'] % 2]
+    else:
+        n = notebook(entry / 'solutions.ipynb', 'teacher')
+        _, groups = item_groups(n.cells, label)
+        assets = {item['number']: solution_assets(entry, item['number']) for item in items}
     by_number = {g['number']: g for g in groups}
-    out = ['## Answer key\n']
+    out = ['## Answer key\n'] if edition == 'teacher' else []
     for item in items:
         number = item['number']
         if number not in by_number:
             raise ValueError(f'{entry}: missing solution {label} {number}')
         heading = f'{label} {number}' + (f" — {item['title']}" if item['title'] and kind != 'project' else '')
-        out.append('### ' + heading + '\n')
+        if edition == 'student':
+            unit_number = int(re.search(r'unit-(\d+)', entry.name)[1])
+            heading = f'Unit {unit_number}, {label} {number}'
+        page = f' (page \\pageref{{ex:{entry.name}:{number}}})' if kind == 'unit' else ''
+        out.append('### ' + heading + page + '\n')
+        if kind == 'unit':
+            out.append(f'```{{=latex}}\n\\label{{ans:{entry.name}:{number}}}\n```')
         real_figures = []
         if kind == 'unit':
             for program, sample in real_programs(by_number[number]):
@@ -340,14 +400,12 @@ def answer_key(entry: Path, kind: str, items: list[dict]) -> str:
                 if (re.search(r'\brun_path\s*\(\s*["\']assets/solutions_ex', c.source)
                         and 'fake_turtle' in c.source):
                     continue
-                code, removed = strip_asserts(c.source)
-                if code:
-                    out.append(code_block(code))
-                if removed:
-                    out.append("(checked by the course's test suite)\n")
+                out.append(render_solution_code(c.source))
             elif c.cell_type == 'markdown':
                 text = re.sub(r'^### [^\n]+\n*', '', c.source).strip()
                 if text:
+                    text = strip_turtle_directives(text)
+                    text = text.replace('```python', '```{.python .answer-code}')
                     out.append(text + '\n')
         for program, sample in real_figures:
             try:
@@ -356,9 +414,10 @@ def answer_key(entry: Path, kind: str, items: list[dict]) -> str:
                            + '\n```\n')
             except Exception as error:
                 raise ValueError(f'FAIL: {entry.name}: real-program figure for {label} {number}: {error}') from error
-        for file in sorted((entry / 'assets').glob(f'solutions_ex{number}*.py')) if (entry / 'assets').exists() else []:
-            source = read_source(file, 'teacher')
-            out.append(panel('program', f'**{file.name}**\n\n{code_block(source)}'))
+        for file in assets[number]:
+            source = (file.read_text(encoding='utf-8') if edition == 'student'
+                      else read_source(file, 'teacher'))
+            out.append(panel('program', f'**{file.name}**\n\n{code_block(source).replace("```python", "```{.python .answer-code}", 1)}'))
             if 'import turtle' in source or 'from turtle import' in source:
                 try:
                     out.append('```{=latex}\n' + turtle_picture(source) + '\n```')
@@ -448,6 +507,55 @@ def render_setup_chapter(source: Path, edition: str):
     return '\n\n'.join(part.rstrip() for part in chapter) + '\n', [], [], title.removeprefix('# ')
 
 
+def glossary_entries(source: str) -> list[tuple[str, str, list[str]]]:
+    """Read the author-selected terms and their concept ids from glossary comments."""
+    pattern = re.compile(r'^\*\*(.+?)\*\* — .+?\n<!-- concept: ([\w-]+)(?:; index: ([^>]+?))? -->', re.MULTILINE)
+    return [(term, concept, [key.strip() for key in (keys or '').split(';') if key.strip()])
+            for term, concept, keys in pattern.findall(source)]
+
+
+def index_entry(key: str) -> str:
+    plain = re.sub(r'`([^`]+)`', r'\1', key)
+    if plain.casefold() in {'print', 'input', 'range', 'len', 'str', 'int', 'float',
+                            'append', 'split', 'open', 'sorted', 'sum'}:
+        name = plain.casefold()
+        return 'Python names!' + name + r'@\texttt{' + name + '}'
+    return plain.replace('!', r'\!').replace('@', r'\@')
+
+
+def index_first_prose(qmd: str, keys: list[str]) -> str:
+    """Place each index key at its first word-bounded prose occurrence."""
+    remaining = {key.casefold(): key for key in keys}
+    rendered = []
+    fence = False
+    for line in qmd.splitlines(keepends=True):
+        if line.lstrip().startswith('```'):
+            fence = not fence
+            rendered.append(line)
+            continue
+        if fence or line.startswith(('#', ':::')) or line.lstrip().startswith('\\'):
+            rendered.append(line)
+            continue
+        spans = re.split(r'(`[^`]*`)', line)
+        for position in range(0, len(spans), 2):
+            prose = spans[position]
+            insertions = []
+            for key in list(remaining.values()):
+                match = re.search(r'(?<!\w)' + re.escape(key) + r'(?!\w)', prose, re.IGNORECASE)
+                if match:
+                    offset = match.end()
+                    if prose[:offset].count('**') % 2:
+                        offset = prose.rfind('**', 0, match.start())
+                    insertions.append((offset, key))
+                    del remaining[key.casefold()]
+            for offset, key in sorted(insertions, reverse=True):
+                prose = prose[:offset] + r'\index{' + index_entry(key) + '}' + prose[offset:]
+            spans[position] = prose
+        line = ''.join(spans)
+        rendered.append(line)
+    return ''.join(rendered)
+
+
 def build(root: Path, book_id: str, edition: str) -> Path:
     if edition not in {'student', 'teacher'}:
         raise ValueError('edition must be student or teacher')
@@ -470,12 +578,19 @@ def build(root: Path, book_id: str, edition: str) -> Path:
     if not title_match:
         raise ValueError('syllabus title lacks book and year')
     syllabus_title = title_match[1]
-    front = [(read_source(book / 'front-matter' / 'how-to-use.md', edition), 'index.qmd')]
+    front = [(read_source(book / 'front-matter' / 'preface.md', edition), 'index.qmd'),
+             (read_source(book / 'front-matter' / 'how-to-use.md', edition), 'how-to-use.qmd')]
     if edition == 'teacher':
         front.append((read_source(book / 'front-matter' / 'for-teachers.md', edition), 'for-teachers.qmd'))
     for body, name in front:
         body = re.sub(r'(?m)^## ', '### ', body)
         (project / name).write_text(body, encoding='utf-8')
+        source_name = 'preface.md' if name == 'index.qmd' else name.replace('.qmd', '.md')
+        manifest['chapters'].append({'id': 'preface' if name == 'index.qmd' else name.removesuffix('.qmd'),
+                                     'file': name,
+                                     'source': str((book / 'front-matter' / source_name).relative_to(root)),
+                                     'kind': 'front', 'title': body.splitlines()[0].removeprefix('# '),
+                                     'items': [], 'inventory': []})
     setup_source = book / 'docs' / f'{SETUP_ID}.md'
     body, inventory, items, title = render_setup_chapter(setup_source, edition)
     setup_file = f'{SETUP_ID}.qmd'
@@ -493,6 +608,46 @@ def build(root: Path, book_id: str, edition: str) -> Path:
         chapters.append(filename)
         manifest['chapters'].append({'id': id_, 'file': filename, 'source': str(entry.relative_to(root)),
                                      'kind': kind, 'title': title, 'items': items, 'inventory': inventory})
+    if edition == 'student':
+        answer_sections = []
+        for chapter in manifest['chapters']:
+            if chapter['kind'] != 'unit':
+                continue
+            entry = root / chapter['source']
+            answer_sections.append(answer_key(entry, 'unit', chapter['items'], edition='student'))
+        filename = 'answers.qmd'
+        (project / filename).write_text('# Answers to Selected Exercises\n\n'
+                                        + '\n\n'.join(answer_sections), encoding='utf-8')
+        chapters.append(filename)
+        manifest['chapters'].append({'id': 'answers', 'file': filename, 'source': '',
+                                     'kind': 'answers', 'title': 'Answers to Selected Exercises',
+                                     'items': [], 'inventory': []})
+    for name, kind, title in (('glossary', 'glossary', 'Glossary'),
+                              ('quick-reference', 'quickref', 'Quick Reference')):
+        filename = name + '.qmd'
+        source = book / 'back-matter' / (name + '.md')
+        body = read_source(source, edition)
+        (project / filename).write_text(body, encoding='utf-8')
+        chapters.append(filename)
+        manifest['chapters'].append({'id': name, 'file': filename,
+                                     'source': str(source.relative_to(root)), 'kind': kind,
+                                     'title': title, 'items': [], 'inventory': []})
+    index_file = 'the-index.qmd'
+    (project / index_file).write_text('\\printindex\n', encoding='utf-8')
+    chapters.append(index_file)
+    manifest['chapters'].append({'id': 'index', 'file': index_file, 'source': '',
+                                 'kind': 'index', 'title': 'Index', 'items': [], 'inventory': []})
+    glossary = (project / 'glossary.qmd').read_text(encoding='utf-8')
+    terms = glossary_entries(glossary)
+    glossary = re.sub(r'(?m)^(\*\*(.+?)\*\* — .+)$',
+                      lambda match: match[1] + r'\index{' + index_entry(match[2]) + '}', glossary)
+    (project / 'glossary.qmd').write_text(glossary, encoding='utf-8')
+    keys = list(dict.fromkeys(key for term, _, aliases in terms for key in [term, *aliases]))
+    for chapter in manifest['chapters']:
+        if chapter['kind'] != 'unit':
+            continue
+        path = project / chapter['file']
+        path.write_text(index_first_prose(path.read_text(encoding='utf-8'), keys), encoding='utf-8')
     config = (project / 'theme' / '_quarto.yml').read_text(encoding='utf-8')
     config = config.replace('@CHAPTERS@', '\n'.join('    - ' + x for x in chapters))
     config = config.replace('@FRONT@', '\n'.join('    - ' + name for _, name in front))

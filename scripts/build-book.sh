@@ -21,6 +21,7 @@ for edition in student teacher; do
   name="Book1b-${edition^}"
   (cd "$project" && for pass in 1 2; do
     lualatex -draftmode -interaction=nonstopmode -halt-on-error "$name.tex" > latex-audit.log 2>&1 || exit 1
+    makeindex "$name.idx" >> latex-audit.log 2>&1 || exit 1
   done) || {
     tail -80 "$project/latex-audit.log" >&2
     exit 1

@@ -23,8 +23,12 @@ def book(tmp_path):
     (root / 'docs' / 'unit-00-teacher-notes.md').write_text(
         '# Teacher Notes\n\nSETUP_PRIVATE_SENTINEL_1845\n')
     (root / 'front-matter').mkdir()
+    (root / 'front-matter' / 'preface.md').write_text('# About This Book\n')
     (root / 'front-matter' / 'how-to-use.md').write_text('# How to use\n')
     (root / 'front-matter' / 'for-teachers.md').write_text('# For teachers\n')
+    (root / 'back-matter').mkdir()
+    (root / 'back-matter' / 'glossary.md').write_text('# Glossary\n')
+    (root / 'back-matter' / 'quick-reference.md').write_text('# Quick Reference\n')
     (root / 'syllabus.md').write_text(
         '# Book 1b — Year 1 Syllabus\n\n'
         '| entry | kind | lessons | the hook |\n|---|---|---|---|\n'
@@ -64,11 +68,16 @@ def test_setup_is_first_separate_chapter_in_both_editions(book, monkeypatch):
     for edition in ('student', 'teacher'):
         project = build(book, 'book1b', edition)
         chapters = json.loads((project / 'inventory.json').read_text())['chapters']
-        assert [(c['id'], c['kind']) for c in chapters] == [
+        assert [chapter['kind'] for chapter in chapters] == (
+            ['front', 'front'] + (['front'] if edition == 'teacher' else [])
+            + ['setup', 'unit'] + (['answers'] if edition == 'student' else [])
+            + ['glossary', 'quickref', 'index'])
+        assert [(c['id'], c['kind']) for c in chapters if c['kind'] in {'setup', 'unit'}] == [
             ('unit-00-getting-set-up', 'setup'), ('unit-01-fixture', 'unit')]
-        assert chapters[0]['source'] == 'book1b/docs/unit-00-getting-set-up.md'
+        assert next(c for c in chapters if c['kind'] == 'setup')['source'] == 'book1b/docs/unit-00-getting-set-up.md'
         config = (project / '_quarto.yml').read_text()
         assert config.index('unit-00-getting-set-up.qmd') < config.index('unit-01-fixture.qmd')
+        assert (project / 'the-index.qmd').read_text() == '\\printindex\n'
         assert 'pub-mainmatter="true"' in (project / 'unit-00-getting-set-up.qmd').read_text()
         project_text = '\n'.join(p.read_text() for p in project.glob('*.qmd'))
         if edition == 'student':

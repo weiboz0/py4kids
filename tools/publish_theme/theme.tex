@@ -6,6 +6,10 @@
 \usepackage{fvextra}
 \usepackage{needspace}
 \usepackage{scrlayer-scrpage}
+\usepackage{imakeidx}
+\makeindex[intoc]
+\uppertitleback{Python, Concept by Concept\\Book 1b — Year 1\\First edition, 2026}
+\lowertitleback{Copyright © 2026 Weibo Zhou\\Written for Python 3.12 or newer\\Course files: https://github.com/weiboz0/py4kids (folder book1b/)}
 \newfontfamily\fallbackfont{DejaVu Sans}
 \setsansfont{Atkinson Hyperlegible}
 \setkomafont{disposition}{\normalfont\sffamily\bfseries}
@@ -59,6 +63,10 @@
   before upper={\textbf{\scriptsize\color{SeaGreen}Real program}\enspace}}
 \newtcolorbox{pubchallenge}{pubbase,colback=orange!5,colframe=orange!22,
   before skip=4pt,after skip=4pt,left=5pt,right=5pt,top=2pt,bottom=2pt}
+\newtcolorbox{pubgoals}{pubbase,colback=green!3,colframe=green!22,
+  before upper={\textbf{\color{DarkGreen}You will learn}\par\smallskip}}
+\newtcolorbox{pubrecap}{pubbase,colback=blue!3,colframe=blue!20,
+  before upper={\textbf{\color{SteelBlue}Recap}\par\smallskip}}
 \clearpairofpagestyles
 \ihead{\headmark}
 \ohead{\pagemark}
