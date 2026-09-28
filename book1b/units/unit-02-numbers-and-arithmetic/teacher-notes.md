@@ -21,12 +21,12 @@ code cell and a *Notice* per rung.
   (an expression in braces), then string repetition `"=" * 12` and a divider/title/divider card.
   Keep `//`/`%` on non-negative numbers. Lesson 1 has no real-input cell (`int()` comes in Lesson 2).
 - **Lesson 2 — Work with Number Types (float-type, type-conversion).** `/` gives a float; `:.2f` for
-  money; the deliberate `TypeError` beat; `int("12")`; the new `no-exec` `int("abc")` cell to read a
-  `ValueError`; the `no-exec` real-input cell `age = int(input("Age: "))`.
+  money; the deliberate `TypeError` beat; `int("12")`; the new `int("abc")` error cell to read a
+  `ValueError`; the real-input try-it cell `age = int(input("Age: "))`.
 - **Lesson 3 — Ask Number Questions (boolean, comparison).** `print(8 == 8)` and `print(8 != 9)` as two
-  small rungs, then the realistic comparisons and all six operators; the digit split; a `no-exec` cell
+  small rungs, then the realistic comparisons and all six operators; the digit split; a try-it cell
   that reads a number and splits it; the **Final build**; then the boxed **"Peek ahead — not needed for
-  the exercises"** loop cell (read it aloud, do not teach it — it is design 005's forward-practice demo).
+  the exercises"** loop cell (read it aloud, do not teach it — it previews a later idea).
 
 60-MINUTE CUT: teach rungs 1–2 live and leave the last rung as a "try it"; `**` and the f-string
 expression rung are good self-serve rungs.
@@ -75,7 +75,7 @@ real program in the solutions that reads numbers with `int(input())` / `float(in
   amounts.
 - Middle tier: rewrite a `+`/`str()` line as an f-string; format a price with `:.2f`.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **Calendar & time:** "what day of the week is it 100 days after a Monday?" with `% 7`.
 - **Measurement:** convert centimetres to feet and inches with `//` and `%`.

@@ -52,7 +52,7 @@ Budget: three lessons of 60–90 minutes; ladders with a *Notice* per rung.
   Then a ring of polygons (`assets/l3_ring.py`): an outer loop turns `360 / shape_count` between shapes, an inner
   loop draws each polygon; use `shape` and `corner`, and finish the inner loop before the outer turn.
   A growing spiral (`assets/l3_spiral.py`): `side = side + step` is the accumulator, and the path does NOT
-  close, so the file carries the exact comment `# turtle-check: open-path`.
+  close.
   Then the gallery final build (`assets/l3_gallery.py`).
 
 **60-minute cut (any lesson):** In Lesson 1 keep the square loop AND the edit-save-rerun live — the terminal
@@ -126,7 +126,7 @@ the moves, turns, colours and printed counts.
 - When is `360 // n` exactly equal to `360 / n`, and when does it leave a gap? Give an n for each case.
 - Why does the five-point star use 720 instead of 360? What does "two full turns" mean here?
 - In the nine-hexagon wheel, which loop draws a shape and which loop places the shapes around the center?
-- Why does the growing spiral need the `# turtle-check: open-path` comment when the polygons do not?
+- Why does the growing spiral end away from where it started, when every polygon ends where it began?
 
 ## Differentiation
 
@@ -137,7 +137,7 @@ the moves, turns, colours and printed counts.
 - Middle tier: change one polygon's `n` and predict the new turn angle and total-turn before running, then
   confirm the drawing closes.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **Patterns:** a row of five triangles that alternate pen colours (`i % 2`).
 - **Accumulation:** a staircase — five steps whose rise grows by 10 each time, printing the total climb.

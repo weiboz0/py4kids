@@ -21,11 +21,10 @@ Budget: three lessons of 60–90 minutes.
   Then small one-job tools. Close with the **"printing is not returning"** Notice: a function that only
   `print`s returns `None`, so `total = f(3) + 1` raises `TypeError: unsupported operand type(s) for +:
   'NoneType' and 'int'` — read the error together and fix it with `return`. This is the year's most important
-  idea about functions; give it time. A `no-exec` real-input cell reads a Celsius value and prints
+  idea about functions; give it time. A real-input try-it cell reads a Celsius value and prints
   `celsius_to_f(celsius)`.
 - **Lesson 2 — Functions that Compute.** A new rung first: **leave early with `return`**
-  (`first_multiple(start, k)` returns the moment it finds a match). Then `is_prime(n)` (plus a `no-exec`
-  cell that reads a number and tests it), `gcd(a, b)` (Euclid's `while`), `fib(n)` (carry two
+  (`first_multiple(start, k)` returns the moment it finds a match). Then `is_prime(n)` (plus a try-it cell that reads a number and tests it), `gcd(a, b)` (Euclid's `while`), `fib(n)` (carry two
   values with a **temp variable** — `nxt = a + b; a = b; b = nxt`, never the untaught `a, b = b, a + b`),
   and a hand-written running total contrasted with `sum(range(1, n + 1))`; then **composition** — one of
   your functions calling another (`sum_of_squares(n)` calls `square(x)`); then `max`/`min`/`abs`/`round`,
@@ -34,7 +33,7 @@ Budget: three lessons of 60–90 minutes.
 - **Lesson 3 — Scope.** A parameter and the names created in a function body are local; a function returns a
   result rather than reaching out to a caller's variables. The polygon tool `draw_polygon(n, side)` is the
   application — `n`, `side`, and `angle = 360 / n` are local names inside the function (this is the turtle
-  practice site, run as `assets/*.py` from the terminal). The lesson ends with a `no-exec` cell that reads a
+  practice site, run as `assets/*.py` from the terminal). The lesson ends with a try-it cell that reads a
   Celsius value and prints `safe_temperature(celsius)`.
 
 **60-minute cut (Lesson 2 is the densest):** defer `gcd` (Euclid, the least intuitive — cp03 does not need
@@ -124,10 +123,9 @@ function, reads its arguments with bare `input()` (one per line), calls it and p
 - Exercise 7 — `draw_polygon(n, side)`: `(6, 48)`.
 - Exercise 29 — `gcd(a, b)`: `(54, 24)`, `(35, 15)`, `(81, 27)`.
 - Exercise 30 — `is_prime(n)`: `17`, `21`, `2`.
-- New exercises 10–32: fixtures as in the exercise statements (plan 082's tables), all grep-distinct from
-  shipped Book 1b content.
+- New exercises 10–32: fixtures as in the exercise statements.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **Calendar & time:** `minutes_between(h1, m1, h2, m2)` for two clock times on the same day.
 - **Sequences & bases:** `to_binary(n)` returning a string of 0s and 1s (reuse the Unit 04 loop inside a

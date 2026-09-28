@@ -20,19 +20,19 @@ won and by how many?") before the first `{}` — the motivation for a labelled t
   `d.get(key, default)`); add/update with `d[key] = value`, then the new rung that updates a stored number
   (`counts["blue"] = counts["blue"] + 1`). The first code cell is now split: the literal and a printed
   dictionary first, then one `d[key]` read, then the function. A lookup table (Roman values, levels) and a
-  `no-exec` cell that reads a Roman symbol and looks it up.
+  try-it cell that reads a Roman symbol and looks it up.
 - **Lesson 2 — Loop over a Dictionary (`dict-loop`).** `for key in d`, then the new rung showing that keys
   come back **in the order they were added** (`"zinc"`, `"iron"`, `"neon"`) — the rule Letter Tally Chart
   relies on; `for key, value in d.items()` ("two
   loop names, one per pair"); `keys()`/`values()`; sum the values; find the key with the largest value
-  (`find-extreme` over `items()` — assume a unique maximum, or "ties → the first key wins"). A `no-exec` cell
+  (`find-extreme` over `items()` — assume a unique maximum, or "ties → the first key wins"). A try-it cell
   reads `n` records `name score` into a dictionary and totals them.
 - **Lesson 3 — Build Maps from Data.** A frequency tally with the missing-key idiom
   (`if k in d: d[k] = d[k] + 1` / `else: d[k] = 1`, or `d.get(k, 0) + 1`); group-by-first-letter (`word[0]`,
   each value a LIST built with the explicit `if letter in d: d[letter].append(w)` / `else: d[letter] = [w]`);
   new rungs tally the letters of one word and show that two dictionaries are equal when they hold the same
   pairs (`==`, order-independent); a sorted leaderboard and a keys-passing-a-test filter; then **Read
-  records** (`"Rin 12".split()`, `int(parts[1])`) with `no-exec` cells that tally a typed line of words and
+  records** (`"Rin 12".split()`, `int(parts[1])`) with try-it cells that tally a typed line of words and
   read `n` records.
 
 **60-minute cut:** in Lesson 3 keep the frequency tally live; group-by (dict of lists, Ex6 First-Letter
@@ -105,10 +105,9 @@ several distinct cases (dict equality is order-independent).
 - Ex7 `score_board`: `{"Mia":14,"Leo":9,"Zoe":18}`→`[[9,"Leo"],[14,"Mia"],[18,"Zoe"]]`.
 - Ex25 (stretch) `qualifiers`: `({"Ana":16,"Bo":7,"Cy":12},10)`→`["Ana","Cy"]`.
 - Ex26 (stretch) `word_winner`: `["Red","blue","red"]`→`"red: 2"`; `["owl","fox","FOX","fox"]`→`"fox: 3"`.
-- New exercises 8–28: fixtures as in the exercise statements (plan 083's tables), grep-distinct from
-  shipped Book 1b content.
+- New exercises 8–28: fixtures as in the exercise statements.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **Encoding:** a phone keypad map (`"abc" → 2` …) that turns a word into digits.
 - **Data report:** from `n` records `city temperature`, print each city's highest reading.

@@ -7,7 +7,7 @@ The mandatory final checkpoint, proving Units 01–13, with the load on the two 
 methods). It is the only assessment of U12's and U13's concepts before the end-of-book Algorithm Challenge.
 It introduces nothing new. Students work solo; every question is in the function/class form, checked by
 calling it on fixed inputs. File questions are SELF-CONTAINED (they write their file before reading it) and
-use git-ignored scratch names.
+use their own scratch file names.
 
 The checkpoint stays strict: **no inheritance, no dunder methods beyond `__init__`, no decorators; no
 comprehensions, no `math`/`import`; file methods limited to read/readlines/readline/write/close; text joined
@@ -27,7 +27,7 @@ Unit 13. The seven questions and their targets:
 7. **Save a Labeled Rectangle** — a class whose method saves itself to a file + a `string-slice`
    (`short_code`) of an attribute — ties U12 + U13 (U12+U13). *Pass-bar (class-with-a-method).*
 
-## Real-version notes (design 006, plan 084)
+## Real-version notes
 
 Each question now ends with an ungraded **Real version** note (only Checkpoint 01's traceback-reading
 question has none). Graded answers still use the fixed given values and never call `input()`; the

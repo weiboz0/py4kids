@@ -24,19 +24,18 @@ Budget: three lessons of 60–90 minutes.
   raise `ValueError` when the value is missing, so guard with `in`); the index loop; **slices**
   (`nums[1:3]`, `nums[::-1]`) and **list equality** (`[1, 2] == [2, 1]` is False — order matters). Then
   **read several numbers on one line**: `"7 3 8".split()` is a list of strings, `int(parts[0])`, a loop that
-  converts every piece, and `"-".join(parts)` (join over a list). Two `no-exec` cells read a line of numbers
+  converts every piece, and `"-".join(parts)` (join over a list). Two try-it cells read a line of numbers
   and read `n` then `n` lines.
 - **Lesson 2 — Order and Choose (`list-sort`, `find-extreme`).** `nums.sort()` sorts in place and **returns
   `None`** (teach the `scores = nums.sort()` → `None` trap — the list twin of print-vs-return); `sorted(nums)`
   returns a new list and leaves the original alone. `min`/`max`/`sum` builtins vs a hand-written
   **find-extreme** loop seeded `best = nums[0]` (NOT `0` — it breaks on all-negative data); the loop earns
-  its keep as **argmax** (position of the max, or the longest word — `max(key=…)` is not taught). A `no-exec`
-  cell reads a line of numbers and prints them sorted.
+  its keep as **argmax** (position of the max, or the longest word — `max(key=…)` is not taught). A try-it cell reads a line of numbers and prints them sorted.
 - **Lesson 3 — Filter and Combine (`filter-into-list`).** Build a new list of items passing a test with
   `append` inside an `if` in a loop (NOT a comprehension); **prefix sums** (append a running total each step);
   then the new **grid** section — `grid[1]` (a row), `grid[1][0]` (row, then column), a nested loop that
   builds one row string per inner list and `"\n".join(rows)`, a list of strings as a picture, and a
-  `no-exec` cell that reads a row count and then the rows; put it together (keep the above-average scores,
+  try-it cell that reads a row count and then the rows; put it together (keep the above-average scores,
   using `sum`/`len` for the average).
 
 **60-minute cut:** Lesson 1 is the densest — teach the literal/index/`append` rungs and the one-line
@@ -122,10 +121,9 @@ cases per function.
 - Ex7 `above_average`: `[9,15,12,20]`, `[4,4,4]`, `[-6,-2,-4]`.
 - Ex31 (stretch) `keep_approved`: `([7,2,7,5],[2,5])`, `([3,3,8],[3,9])`, `([4,6],[1,2])`.
 - Ex32 (stretch) `position_of_longest`: `["owl","panther","fox"]`, `["kiwi","apricot","fig"]`, `["sun","map","key"]`.
-- New exercises 8–37: fixtures as in the exercise statements (plan 083's tables), grep-distinct from shipped
-  Book 1b content.
+- New exercises 8–37: fixtures as in the exercise statements.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **Grid & board:** count the `#` cells in each column of a list-of-strings map.
 - **Statistics:** the range (max − min) and how many values lie above the median.

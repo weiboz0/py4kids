@@ -9,7 +9,7 @@ and understand why the `with` statement closes the file for them.
 Success looks like: every student writes a `save`/`load` pair that round-trips a list of numbers, and a
 function that loads numbers from a file and reports a statistic.
 Function form throughout; every file drill is SELF-CONTAINED (it writes the file before reading it), so it
-runs the same way every time. Scratch `.txt` files are runtime-only and git-ignored — never commit them.
+runs the same way every time. Scratch `.txt` files are created by the programs as they run.
 
 ## Pacing
 
@@ -20,16 +20,16 @@ Budget: three lessons of 60–90 minutes. Hook: save a list of arcade scores, th
   `f.read()`, write several scores in a loop, then put the save and load steps in functions. **Motivate `with` with a contrast cell:** `f = open(path, "w"); f.write(...); f.close()` — "`with`
   does the `close()` for you, even if you forget or the program crashes." (Open in `"w"` mode in the contrast,
   or the `f.write(...)` fails on a read-only handle.) Then **add to the end with `"a"`**: `"w"` starts a fresh
-  file, `"a"` keeps what is there (`575` then `905`). A `no-exec` cell reads `n` scores and saves them.
+  file, `"a"` keeps what is there (`575` then `905`). A try-it cell reads `n` scores and saves them.
 - **Lesson 2 — Turn Saved Lines into Score Statistics.** `for line in f:` + `int(line.strip())` to load
   numbers; then the old four-function cell as four rungs, one idea each: a running total (`2345`), a count
   that reaches a target (`2`), the best so far (`735`), and the built-in statistics
-  (`[420, 735, 2345, 4]`). A `no-exec` cell reads a target and counts the saved scores that reach it.
+  (`[420, 735, 2345, 4]`). A try-it cell reads a target and counts the saved scores that reach it.
 - **Lesson 3 — Save Records and Search a Roster.** Save/load records (one field per line); **transform each
   line** into a cleaned/typed value with an `append` loop; a **linear-search** written as `for line in f: if
   line.strip() == target: return …` (first match or a "not found" message). New rungs before the search:
   one record per line with fields split by commas (`"Mina,4,860".split(",")`), `int(parts[2])`, and a walk
-  over a saved file of comma records. A `no-exec` cell reads a name and searches a typed roster.
+  over a saved file of comma records. A try-it cell reads a name and searches a typed roster.
 
 **60-minute cut:** Lesson 1 = write + whole-file `read()`; the `for line in f` + `int(line.strip())` loop
 opens Lesson 2 (the stats need it anyway).
@@ -37,7 +37,7 @@ opens Lesson 2 (the stats need it anyway).
 ## Exercises — core vs. More Practice vs. challenge
 
 28 exercises, all in the function form; every file drill writes its own per-exercise scratch file before
-reading (the files are git-ignored).
+reading.
 
 - **Core (1–10):** Save a Labeled Score Report, Rebuild the Number List, Total & Count Saved Tickets,
   Four-Number Summary, Find the Saved High Score by Scanning, Summarize a Saved Player Record, Search a Saved
@@ -98,10 +98,9 @@ round-trip.
 - Ex7 `save_and_find_player(["Inez","Kai","Noor"],"Inez","ex7_roster.txt")`→`"Found Inez."`; `…,"Pia",…`→`"Pia was not found."`.
 - Ex25 (stretch) `replace_and_load_scores([10,20],[30,40],"ex25_replace.txt")`→`[30,40]` (overwrite proof).
 - Ex26 (stretch) `saved_total_and_best([12,30,18],"ex26_combined_stats.txt")`→`[60,30]` (`[total, best]`, one pass).
-- New exercises 8–28: fixtures as in the exercise statements (plan 084's tables), grep-distinct from shipped
-  Book 1b content.
+- New exercises 8–28: fixtures as in the exercise statements.
 
-## More Practice ideas (design 006 D9 genres)
+## More Practice ideas
 
 - **Files & persistence:** a to-do list that appends new items and prints them numbered.
 - **Data report:** from a saved file of `name,score` lines, print the names above the average.

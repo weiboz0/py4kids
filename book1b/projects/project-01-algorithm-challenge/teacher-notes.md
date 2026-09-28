@@ -32,7 +32,7 @@ iteration are encouraged). Suggested split:
   reuses Unit 13's class shape.
 
 Every file problem writes its own scratch `.txt` before reading it, so a cell runs the same way every
-time; the scratch files are git-ignored.
+time; the scratch files are created by the programs themselves.
 
 ## Common mistakes
 
@@ -91,7 +91,7 @@ method is wrong earns half.
 
 Every fixture below is distinct across problems and audited against shipped Book 1b content
 (`possession`/`cocoon`/`larch`/`maple`/`birch`/`cedar`/`wren`/`finch`/`kite`/`yoyo`/`seal`/`crane`/
-`heron`/`ibis`/`koi` are all fresh). File problems write their own git-ignored scratch files.
+`heron`/`ibis`/`koi` are all fresh). File problems write their own scratch files.
 
 - **P1 `nth_prime`:** 1→2, 5→11, 10→29 (+3→5).
 - **P2 `reverse_digits`:** 1234→4321, 1200→21, 0→0 (+507→705).
