@@ -16,11 +16,13 @@ from tools.publish import (
     ITEM,
     NOTICE,
     SETUP_ID,
+    answer_chapter_heading,
     code_block,
     code_tokens,
     entries,
     glossary_entries,
     glossary_units,
+    group_title,
     index_entry,
     item_groups,
     lesson_code,
@@ -570,6 +572,56 @@ def starter_panel_findings(id_: str, print_qmd: str, starters: list[tuple[str, s
     return findings
 
 
+ANSWER_HEADING = re.compile(r'(?m)^### Unit (\d+), Exercise (\d+)([^\n]*)\n')
+ANSWER_LABEL = re.compile(r'\A\s*```\{=latex\}\n\\label\{ans:[^}\n]+\}\n```\n')
+FULL_ANSWER_REF = re.compile(r' \(page \\pageref\{ex:[^}\n]+\}\)')
+
+
+def answer_entries(qmd: str) -> tuple[str, list[tuple[int, int, str, str]]]:
+    """Split answers text into its preamble and (unit, exercise, heading tail, body) entries."""
+    headings = list(ANSWER_HEADING.finditer(qmd))
+    preamble = qmd[:headings[0].start()] if headings else qmd
+    result = []
+    for index, heading in enumerate(headings):
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(qmd)
+        result.append((int(heading[1]), int(heading[2]), heading[3], qmd[heading.end():end]))
+    return preamble, result
+
+
+def answer_key_equivalence_findings(id_: str, unit: int, key_qmd: str, full_answers: str,
+                                    lesson_title: str, titles: dict[int, str],
+                                    mainmatter: bool) -> list[str]:
+    """An Answer Key chapter must be exactly its heading block plus, for each of the unit's entries in
+    the full edition's appendix, the same answer body under a titled flat heading.
+
+    Only the heading form ("(page N)" becomes "— Exercise Title") and the appendix's `ans:` label differ.
+    `titles` maps each exercise number to its statement-heading title in the exercises notebook.
+    """
+    findings = []
+    preamble, key = answer_entries(key_qmd)
+    if preamble.rstrip() != answer_chapter_heading(unit, lesson_title, mainmatter).rstrip():
+        findings.append(f'FAIL: answer-key: {id_}: chapter heading block differs or has extra text')
+    _, full = answer_entries(full_answers)
+    expected = []
+    for entry_unit, number, tail, body in full:
+        if entry_unit != unit:
+            continue
+        if FULL_ANSWER_REF.fullmatch(tail) is None:
+            findings.append(f'FAIL: answer-key: {id_}: full-edition heading form for Exercise {number}')
+        expected.append((number, ANSWER_LABEL.sub('', body, count=1).strip()))
+    if [(u, number) for u, number, _, _ in key] != [(unit, number) for number, _ in expected]:
+        findings.append(f'FAIL: answer-key: {id_}: entries differ from the full edition '
+                        f'({[number for _, number, _, _ in key]})')
+        return findings
+    for (_, number, tail, body), (_, full_body) in zip(key, expected):
+        title = titles.get(number, '')
+        if tail != (f' — {title}' if title else ''):
+            findings.append(f'FAIL: answer-key: {id_}: Exercise {number} title differs from the exercises notebook')
+        if body.strip() != full_body:
+            findings.append(f'FAIL: answer-key: {id_}: Exercise {number} answer differs from the full edition')
+    return findings
+
+
 def item_headings(qmd: str) -> list[str]:
     return re.findall(r'(?m)^#{3,4} (?:Exercise|Challenge|Question|Problem)\b[^\n]*', qmd)
 
@@ -675,6 +727,22 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
         if book_id == 'book1b' and not PRINT_REQUIRED_STARTERS <= {
                 record['id'] for chapter in chapters for record in chapter['inventory']}:
             findings.append('FAIL: student-print: required Starter ids missing from the inventory')
+    if answer_body:
+        full_answers = book / 'build' / 'publish' / 'student' / 'answers.qmd'
+        if not full_answers.exists():
+            findings.append(f'FAIL: {edition}: full edition answers missing for equivalence')
+        else:
+            full_text = full_answers.read_text(encoding='utf-8')
+            answer_chapters = [chapter for chapter in chapters if chapter['kind'] == 'answers']
+            for position, chapter in enumerate(answer_chapters):
+                entry = root / chapter['source']
+                lesson_title = notebook(entry / 'lesson.ipynb', 'student').cells[0].source.splitlines()[0]
+                _, groups = item_groups(notebook(entry / 'exercises.ipynb', 'student').cells, 'Exercise')
+                titles = {group['number']: group_title(group, 'Exercise') for group in groups}
+                findings.extend(answer_key_equivalence_findings(
+                    chapter['id'], int(re.search(r'unit-(\d+)', chapter['id'])[1]),
+                    qmds.get(chapter['file'], ''), full_text, lesson_title.removeprefix('# '), titles,
+                    mainmatter=position == 0))
     index_text = ''
     glossary: list[tuple] = []
     if edition_profile['back_matter']:

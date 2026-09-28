@@ -56,6 +56,16 @@ def test_edition_blocks_inside_a_list_leave_no_blank_line():
     assert filter_edition_blocks('plain\n', 'answer-key') == 'plain\n'
 
 
+def test_dropped_paragraph_block_leaves_one_blank_line():
+    text = 'Before.\n\n<!-- edition: teacher -->\nTeacher only.\n<!-- /edition -->\n\nAfter.\n'
+    assert filter_edition_blocks(text, 'student') == 'Before.\n\nAfter.\n'
+    assert filter_edition_blocks(text, 'teacher') == 'Before.\n\nTeacher only.\n\nAfter.\n'
+    kept_gap = 'Before.\n\n\nAfter.\n'
+    assert filter_edition_blocks(kept_gap, 'student') == kept_gap
+    for edition in EDITIONS:
+        assert '\n\n\n' not in filter_edition_blocks(LIST_WITH_BLOCKS, edition)
+
+
 @pytest.mark.parametrize('text,message', [
     ('<!-- edition: studnet -->\nx\n<!-- /edition -->\n', 'unknown edition studnet'),
     ('<!-- edition: student -->\nx\n', 'never closed'),
@@ -73,8 +83,9 @@ def test_real_how_to_use_filters_for_every_edition():
     source = (REPO / 'book1b' / 'front-matter' / 'how-to-use.md').read_text(encoding='utf-8')
     texts = {edition: filter_edition_blocks(source, edition) for edition in EDITIONS}
     assert all('<!--' not in text for text in texts.values())
-    assert '**Starter:**' not in texts['student-print']
-    assert '**Starter:**' in texts['student'] and '**Starter:**' in texts['teacher']
+    full_starter = '- **Starter:** A beginning for your exercise program'
+    assert full_starter not in texts['student-print'] and 'exercises notebook' in texts['student-print']
+    assert full_starter in texts['student'] and full_starter in texts['teacher']
     assert 'Answers to Selected Exercises' not in texts['student-print']
     assert "Teacher's Edition" not in texts['student-print'] + texts['student']
 
@@ -261,6 +272,31 @@ def test_answer_key_edition_contents_and_source_boundary(book, monkeypatch):
     assert publish_audit.leak_findings(book, chapters, project, 'answer-key') == []
 
 
+def _key_equivalence(book, key_qmd):
+    full = (book / 'book1b' / 'build' / 'publish' / 'student' / 'answers.qmd').read_text()
+    return publish_audit.answer_key_equivalence_findings(
+        'answers-unit-01-fixture', 1, key_qmd, full, 'Signs', {1: 'Given Values', 2: 'Empty', 3: 'Repair It'},
+        mainmatter=True)
+
+
+def test_answer_key_equals_the_full_edition_appendix(book):
+    build(book, 'book1b', 'student')
+    project = build(book, 'book1b', 'answer-key')
+    key = (project / 'answers-unit-01-fixture.qmd').read_text()
+    assert _key_equivalence(book, key) == []
+    changed_title = key.replace('— Repair It', '— Fix It')
+    assert any('Exercise 3 title differs' in f for f in _key_equivalence(book, changed_title))
+    prose = key.replace('### Unit 1, Exercise 3', 'Ask for help if stuck.\n\n### Unit 1, Exercise 3')
+    assert any('Exercise 1 answer differs' in f for f in _key_equivalence(book, prose))
+    heading_prose = key.replace('```{=latex}', 'A note for the class.\n\n```{=latex}', 1)
+    assert any('heading block' in f for f in _key_equivalence(book, heading_prose))
+    even = key.replace('### Unit 1, Exercise 3',
+                       '### Unit 1, Exercise 2 — Empty\n\n```python\nprint(2)\n```\n\n### Unit 1, Exercise 3')
+    assert any('entries differ' in f for f in _key_equivalence(book, even))
+    hidden_even = key.replace('### Unit 1, Exercise 3', '#### Exercise 2\n\nprint(2)\n\n### Unit 1, Exercise 3')
+    assert _key_equivalence(book, hidden_even)
+
+
 def test_answer_key_boundary_denies_teacher_and_solution_sources():
     for name in ('teacher-notes.md', 'solutions.ipynb', 'for-teachers.md', 'preface.md', 'how-to-use.md',
                  'checkpoint.ipynb', 'brief.ipynb', 'glossary.md'):
@@ -415,3 +451,16 @@ def test_cli_edition_choices_match_the_profile(capsys):
         assert cli._parser().parse_args(['--book', 'book1b', 'publish', '--edition', edition]).edition == edition
     assert cli.main(['--book', 'book1b', 'publish', '--edition', 'ebook']) == 2
     assert 'invalid choice' in capsys.readouterr().err
+
+
+def test_theme_layout_guards():
+    theme = (REPO / 'tools' / 'publish_theme' / 'theme.tex').read_text()
+    lua = (REPO / 'tools' / 'publish_theme' / 'panels.lua').read_text()
+    # open=any editions start Unit 1 on the next page; open=right keeps the odd-page start.
+    assert r'\if@openright\puboriginalmainmatter\else\clearpage' in theme
+    # A chapter's short last box takes under four extra lines instead of a page of its own.
+    assert r'\newcommand{\pubfinalbox}' in theme and r'\ifdim\dimen@<4\baselineskip' in theme
+    assert r'code={\ifpubfinalbox\tcbset{unbreakable}\fi}' in theme
+    assert "'\\\\pubfinalbox{'" in lua and 'lines <= 3 and chapter_end' in lua
+    # The heading-less the-index.qmd no longer yields an empty chapter (a blank page).
+    assert 'el.level == 1 and #el.content == 0 then return {}' in lua

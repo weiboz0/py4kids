@@ -24,7 +24,6 @@ Read, run, change, and rerun the examples before you start the exercises.
 - **Real version:** The same task using values entered while the program runs, instead of fixed sample values.
 - **You will learn / Recap:** A short guide to the unit's goals and a reminder of what you can now do.
 
-
 ## Work in the course files
 
 Your course folder contains the `book1b` folder.

@@ -76,14 +76,17 @@ def filter_edition_blocks(text: str, edition: str, source: str = 'front matter')
     """Keep shared text and the blocks marked for this edition; drop the marker lines.
 
     `<!-- edition: NAME -->` (or `NAME|NAME`) opens a block and `<!-- /edition -->` closes it. A marker
-    and every excluded line vanish entirely, so a block inside a list leaves no blank line behind.
+    and every excluded line vanish entirely, so a block inside a list leaves no blank line behind; a
+    dropped paragraph-level block leaves one blank line, not two.
     An unknown edition name, a malformed, nested, stray or unclosed marker fails the build.
     """
-    out = []
+    out: list[str] = []
     active: list[str] | None = None
     opened = 0
+    dropped = False  # a line was dropped since the last kept non-blank line
     for number, line in enumerate(text.splitlines(keepends=True), 1):
         if EDITION_MARK.search(line):
+            dropped = True
             stripped = line.strip()
             if stripped == '<!-- /edition -->':
                 if active is None:
@@ -102,7 +105,14 @@ def filter_edition_blocks(text: str, edition: str, source: str = 'front matter')
             active, opened = names, number
             continue
         if active is None or edition in active:
+            if not line.strip():
+                if dropped and out and not out[-1].strip():
+                    continue
+            else:
+                dropped = False
             out.append(line)
+        else:
+            dropped = True
     if active is not None:
         raise ValueError(f'FAIL: {source}:{opened}: edition block never closed')
     return ''.join(out)
@@ -815,19 +825,26 @@ def tex_escape(text: str) -> str:
     return text.replace('\\', r'\textbackslash{}').replace('&', r'\&').replace('%', r'\%').replace('_', r'\_')
 
 
+def answer_chapter_heading(unit: int, lesson_title: str, mainmatter: bool) -> str:
+    """The heading block of one Answer Key chapter, from the unit's lesson title (its H1)."""
+    display_title = re.sub(r'^Unit \d+ — ', '', lesson_title)
+    label = f'Unit {unit}'
+    short_title = display_title if len(display_title) <= 32 else display_title[:33].rsplit(' ', 1)[0]
+    attributes = f'pub-label="{label}"' + (' pub-mainmatter="true"' if mainmatter else '')
+    return (f'# {label} — {display_title} {{{attributes}}}\n\n'
+            '```{=latex}\n\\chaptermark{' + label + ' — ' + tex_escape(short_title) + '}\n```\n')
+
+
 def render_answer_chapter(entry: Path, edition: str, mainmatter: bool):
     """One Answer Key chapter: the odd-numbered answers of one unit, with titled flat headings."""
     lesson = notebook(entry / 'lesson.ipynb', edition)
     title = lesson.cells[0].source.splitlines()[0].removeprefix('# ')
     display_title = re.sub(r'^Unit \d+ — ', '', title)
-    label = 'Unit ' + str(int(re.search(r'\d+', entry.name)[0]))
-    short_title = display_title if len(display_title) <= 32 else display_title[:33].rsplit(' ', 1)[0]
+    unit = int(re.search(r'\d+', entry.name)[0])
+    label = f'Unit {unit}'
     _, groups = item_groups(notebook(entry / 'exercises.ipynb', edition).cells, 'Exercise')
     items = [{'number': group['number'], 'title': group_title(group, 'Exercise')} for group in groups]
-    attributes = f'pub-label="{label}"' + (' pub-mainmatter="true"' if mainmatter else '')
-    chapter = [f'# {label} — {display_title} {{{attributes}}}\n',
-               '```{=latex}\n\\chaptermark{' + label + ' — ' + tex_escape(short_title) + '}\n```',
-               answer_key(entry, 'unit', items, edition)]
+    chapter = [answer_chapter_heading(unit, title, mainmatter), answer_key(entry, 'unit', items, edition)]
     answered = [item for item in items if item['number'] % 2]
     return '\n\n'.join(block.rstrip() for block in chapter) + '\n', answered, f'{label} — {display_title}'
 

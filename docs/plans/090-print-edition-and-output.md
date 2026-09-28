@@ -223,7 +223,27 @@ None: the Answer Key reuses the existing solutions and the plan 089 answer rende
 **Consensus reached; implementation starts.**
 
 ## Content Review
-_(filled before PR.)_
+
+### Implementation deviations (judged by the gate)
+
+- **Starter rule applied exactly.** The rule keeps 9 of 376 Starters: U1 Ex 20's broken program plus eight U8 `import random` starters. The U4 repair exercises print their broken program in the statement fence, so their "copy the broken program" Starters are redundant and omitted; no code is lost. [sol], [fable] and [glm] all accepted this.
+- **Answer Key titles.** The answer-key edition also reads each unit's student-visible `lesson.ipynb` and `exercises.ipynb` for chapter and exercise titles only. A test pins the files it opens. Accepted by all.
+
+### Round 1
+
+- `[sol]` **REJECT:** both deviations accepted; print, full and teacher editions verified.
+  - `[FIXED]` O1: the Answer Key audit checked numbers only. A probe with a changed title and inserted even-answer and teacher prose passed.
+    - Now: per unit, the chapter heading block, the entry list, every title (from the exercise statements) and every body must equal the full edition's appendix, with only the heading tail and labels normalised.
+    - Sentinels cover a changed title, inserted prose, prose in the heading block, an inserted even answer, and a hidden even answer.
+- `[fable]` **APPROVE WITH NITS:** all 391 items present; the print equivalence was reproduced; 12 omitted Starters checked on the page; Answer Key bodies equal the appendix; full and teacher diffs are only the planned changes; 4 audit mutations all FAIL.
+  - `[FIXED]` F1: a one-line widow page (print p.93). A chapter's last short box that barely misses the page now stays with it.
+  - `[FIXED]` F2: the print legend had no Starter entry, while 9 Starter boxes remain. The print-only bullet now reads "printed only when it is not already on the page … all other starting code is in your exercises notebook".
+  - `[FIXED]` F3: forced blank pages under open=any (before the Index; Answer Key before Unit 1).
+  - `[FIXED]` F4: one `student|teacher` Starter block.
+  - `[FIXED]` F5: doubled blank lines from the edition filter.
+- `[glm]` **APPROVE WITH NITS** (opencode-go/glm-5.3): all user decisions met; `output/` correct and nothing committed.
+  - `[FIXED]` N1: the stale U4 example in plan D4.
+- `[self]` APPROVE: title pages, print How to Use, U4 repairs and Answer Key pages checked.
 
 ## Post-Execution Report
 _(filled before merge.)_
