@@ -151,8 +151,12 @@ The Problem 11 fix is a publisher change (D3 below); its solution code is correc
     only the solutions-notebook groups and `solutions_ex{N}` assets for **odd** N. `allowed_source()` keeps
     denying everything else; `tests/test_publication_phase_b.py` is amended to assert exactly this boundary.
   - **Leak guard (audit + test):** no solution code from an even-numbered exercise, a checkpoint or the project
-    appears anywhere in the Student Book `.qmd`. Solutions are compared as the `code_tokens` streams of each
-    solution code cell and asset. The literal "Answer key" heading stays banned in the Student Book; the new
+    appears anywhere in the Student Book `.qmd`. Unit of comparison: each printed code block's `code_tokens`
+    stream against each such solution cell/asset stream. A block FAILs if it **equals** a solution stream, or
+    if it contains a contiguous run of **≥ 20 tokens** from one that does not also occur in that item's
+    student-visible sources (its statement, starter and the unit lesson), so starter overlap is not a leak.
+    A genuine coincidence fails loudly and is fixed in content; there is no allowlist. Tests cover a whole-cell
+    leak, a partial (fragment) leak and a starter overlap that must pass. The literal "Answer key" heading stays banned in the Student Book; the new
     chapter is titled "Answers to Selected Exercises".
   - Content per odd exercise: solution cells (with Check lines, D3), the real program with its Sample input
     and drawing, and solution assets with drawings. No teacher panels; code at `\footnotesize`.
@@ -200,20 +204,23 @@ The Problem 11 fix is a publisher change (D3 below); its solution code is correc
     are audited; the delivered PDF is the Quarto render (non-draft).
 - **D8 Printed code:** strip lines that are only a `# turtle-check:` directive (both editions).
 - **D9 `tools/publish_audit.py` rules (each with a sentinel test):**
-  - Student Book text contains none of:
+  - Student Book text contains none of the following (checked on the `.qmd` and on the PDF text, with the PDF's
+    curly apostrophes ’ normalised to '):
     - `Teacher's Edition`, `your teacher`, `Your teacher`, `with your teacher`, `ask your teacher`
     - `not graded`, `no-exec`, `solutions.ipynb`, `python assets/`, `Lesson One`
     - "checked by the course's test suite", "There is no real program", "Answer key"
     - `assert` (in the answers chapter)
   - The D2 leak guard.
-  - Both editions: each of the 13 units has exactly one goals and one recap panel in the contract positions.
+  - Both editions: each of the 13 units has exactly one goals panel, the last block before the first
+    `## Lesson` heading in the unit `.qmd`, and one recap panel, the last block before `## Exercises`.
   - The Student answers chapter covers exactly the odd-numbered exercises of every unit (175 today).
   - Every Book 1b-introduced concept id has one glossary entry (by `concept:` comment).
   - The index is non-empty and contains every glossary term.
   - The LaTeX log has no `multiply defined` labels and no `undefined references`.
-  - Cross-references resolve, checked with pdftotext per page:
-    - every "Answer on page N" in the Student PDF text points to a page carrying the matching "Exercise N (page M)" heading
-    - page M carries that exercise
+  - Cross-references resolve, checked with pdftotext per page and matched by **unit and exercise number**
+    (numbers repeat across units): answer headings read "Unit U, Exercise N (page M)"; every "Answer on page P"
+    on a page whose running head is Unit U, below Exercise N, points to a page P carrying "Unit U, Exercise N";
+    page M carries Unit U's running head and the Exercise N heading.
   - The chapter inventory/order accepts the new kinds: `front` (preface), `answers`, `glossary`, `quickref`, `index`.
 - **D10 Tests:** pytest for D1–D9; `structure-check` / `cell-lint` already ignore lesson markdown cells.
 
@@ -234,8 +241,8 @@ The Problem 11 fix is a publisher change (D3 below); its solution code is correc
    - U06 answer key Exercise 1
    - one answer with several Check lines
    - glossary, quick reference, the Index's first page
-5. The post-execution report records both editions' page counts (Student ≈ 464 → ≈ 650 expected).
-6. `scripts/ci-local.sh` ALL GREEN; post-execution report.
+5. `scripts/ci-local.sh` ALL GREEN; post-execution report, recording both editions' page counts
+   (Student ≈ 464 → ≈ 650 expected).
 
 ## Out of scope
 
@@ -301,6 +308,18 @@ The Problem 11 fix is a publisher change (D3 below); its solution code is correc
   - D9: log and cross-reference checks, chapter kinds.
   - B2's concept rule is enforced by the content gate.
   - Phase E additions.
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE WITH NITS** (r2) — round-1 blockers resolved; nits: partial-leak test, match
+  cross-references by unit as well as number.
+- `[fable]` **APPROVE WITH NITS** (r2) — all Should-Fix resolved; nits: normalise the PDF's curly apostrophes
+  in phrase bans; state the leak guard's unit of comparison and no-allowlist rule; concrete audit positions for
+  goals/recap; merge Phase E items 5–6; surface the no-printed-checkpoint-answers choice to the user
+  (done in the status report of 2026-09-27; the user may still redirect).
+- `[FIXED]` all nits above.
+- `[self]` APPROVE · `[glm]` skipped (user-authorised one-day exception, 2026-09-26/27).
+
+**Consensus reached — implementation starts.**
 
 ## Content Review
 _(filled before PR.)_
