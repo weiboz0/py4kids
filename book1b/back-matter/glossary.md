@@ -6,7 +6,7 @@
 **Argument** — A value you give to a function when you call it; the function receives it through a parameter. *(Unit 7)*
 <!-- concept: parameters; index: parameter -->
 
-**Arithmetic operators** — The symbols `+`, `-`, `*`, `/`, `//`, and `%` calculate with numbers. *(Unit 2)*
+**Arithmetic operators** — The symbols `+`, `-`, `*`, `/`, `//`, `%`, and `**` (power) calculate with numbers. *(Unit 2)*
 <!-- concept: arithmetic; index: arithmetic symbols -->
 
 **Attribute** — A value stored on an object, reached with a name such as `point.x`. *(Unit 13)*

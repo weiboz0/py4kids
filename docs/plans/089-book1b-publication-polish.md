@@ -356,5 +356,18 @@ The Problem 11 fix is a publisher change (D3 below); its solution code is correc
 - `[glm]` pending: both GLM providers timed out on 2026-09-28 (quota reset expected). The user chose opencode-go/glm-5.3; AGENTS.md now makes opencode-go primary with volcengine-plan as fallback.
 - Authoring for this fold ran on Opus subagents (user decision 2026-09-27; AGENTS.md updated on this branch).
 
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE** (r2): O1–O4 verified. All 73 real-program samples in U07, U08 and U10 run exactly, with no unconsumed input. The six multi-read programs are described so by their Real version lines. No Check line says "is true". The index starts every term at its unit.
+- `[fable]` **APPROVE WITH NITS** (r2): F1–F11 verified. 174/174 text real programs in U07–U13 match their Expected output. 175 answers = 175 "Answer on page" references; `reference_findings` is clean.
+  - `[FIXED]` N1: Python-name index entries were not unit-gated (`sorted` pointed at the Unit 3 page that forbids it). Each name is now gated by its glossary unit, or else by the first lesson that uses it in code; the audit covers names.
+  - `[FIXED]` N2: U6 Ex 7's check line now ends "the spiral does not return to its start".
+- `[glm]` **APPROVE WITH NITS** (opencode-go/glm-5.3, after a timed-out first attempt): blind-solved U4 Ex 7 and U9 Ex 3, Check lines true, cross-references both ways, independence sweep clean, panels, glossary and quick reference checked, AGENTS.md diff exactly the user-requested changes.
+  - `[FIXED]` NIT-1: the glossary's Arithmetic operators entry now includes `**` (taught in Unit 2).
+  - `[FIXED]` NIT-2: `sorted` pointed at Unit 3 (same as N1).
+- `[self]` APPROVE: index, answers, Check lines and edition page re-checked on the rebuilt PDFs.
+
+**Consensus reached (4/4), no `[OPEN]` findings.**
+
 ## Post-Execution Report
 _(filled before merge.)_
