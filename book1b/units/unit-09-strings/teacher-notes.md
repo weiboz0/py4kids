@@ -27,7 +27,7 @@ Budget: three lessons of 60–90 minutes.
   `ch in word` membership. Before the palindrome: an index loop `for i in range(len(w))` and ONE mirror
   pair. **Palindrome by index-walk** (`for i in range(len(s)//2): if s[i] != s[len(s)-1-i]: return False`);
   `s[::-1]` gives a one-line alternative students may use in the exercises. Vowel count by condition. A
-  classify-the-character function (`elif` ladder). try-it cells read a PIN and a word.
+  classify-the-character function (`elif` ladder). Try-it cells read a PIN and a word.
 - **Lesson 3 — Transform and Search (`transform-each`, `linear-search`).** Build a new string with `+` in a
   loop (the lesson's `double_letters`; masking and alternating case are the exercises); a `linear-search`
   `position(text, ch)` returning the first index or -1; a char-frequency report as `count_char(text, ch)`

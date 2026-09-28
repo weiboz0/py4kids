@@ -11,7 +11,7 @@ Read, run, change, and rerun the examples before you start the exercises.
 - **Try it yourself:** Run the code and supply your own input or make the suggested change.
 - **Read the error:** The code is broken on purpose; use the message to find the mistake.
 - **Watch out: this never stops:** A loop is shown to explain a trap; read it, but do not run it unchanged.
-- **Pictures from code:** A turtle drawing made by the nearby program.
+- **Drawing made by the program above:** A turtle drawing, printed right after the program that makes it.
 - **Starter:** A beginning for your exercise program; finish the missing work yourself.
 - **Data file:** Text the program reads or writes; use the shown lines exactly when checking a sample.
 - **Challenge:** An optional stretch problem; later lessons do not depend on it.

@@ -94,7 +94,7 @@ Names made inside a function belong to that function.
 import random
 random.seed(4)                  # repeatable sequence
 roll = random.randint(1, 6)    # both ends included
-pick = random.choice(["a", "b"])
+pick = random.choice("HT")      # one character: H or T
 ```
 
 ## Strings · Unit 9
