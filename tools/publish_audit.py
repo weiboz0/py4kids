@@ -21,7 +21,9 @@ from tools.publish import (
     glossary_units,
     index_entry,
     item_groups,
+    lesson_code,
     notebook,
+    python_name_units,
 )
 from tools.turtle_real import real_programs
 
@@ -81,9 +83,14 @@ def index_findings(index_text: str, glossary: list[tuple],
 
 
 def index_source_findings(qmd: str, glossary: list[tuple], unit: int | None = None,
-                          first_units: dict[str, int] | None = None) -> list[str]:
-    """Reject restricted alias hits placed in ordinary prose, and terms indexed before their unit."""
+                          first_units: dict[str, int] | None = None,
+                          name_units: dict[str, int] | None = None) -> list[str]:
+    """Reject restricted alias hits placed in ordinary prose, and terms or Python names indexed before their unit.
+
+    With `name_units`, a "Python names" subentry whose name has no teaching unit counts as untaught.
+    """
     taught = {index_entry(term): first for term, first in (first_units or {}).items()}
+    python_entry = re.compile(r'Python names!(\w+)@\\texttt\{\1\}')
     restricted = {index_entry(term): {key.strip('`').casefold() for key in [term, *aliases]
                                       if key.strip('`').casefold() in CODE_ONLY_NAMES or key.startswith('`')}
                   for term, _, aliases in glossary}
@@ -94,6 +101,11 @@ def index_source_findings(qmd: str, glossary: list[tuple], unit: int | None = No
                             line[:match.start()])
             if match[1].startswith('Python names!') and not prefix.endswith('`'):
                 findings.append(f'FAIL: index restricted name in prose: {match[1]}')
+                continue
+            name = python_entry.fullmatch(match[1])
+            if name and unit is not None and name_units is not None:
+                if name_units.get(name[1], unit + 1) > unit:
+                    findings.append(f'FAIL: index before taught in unit {unit}: {match[1]}')
                 continue
             if unit is not None and taught.get(match[1], 0) > unit:
                 findings.append(f'FAIL: index before taught in unit {unit}: {match[1]}')
@@ -501,6 +513,7 @@ def audit(root: Path, book_id: str) -> list[str]:
         glossary_text = (project / 'glossary.qmd').read_text(encoding='utf-8')
         glossary = glossary_entries(glossary_text)
         first_units = glossary_units(glossary_text)
+        name_units = python_name_units(glossary, first_units, lesson_code(book))
         introduced = [concept for id_, entry in entries(book, 'student') if id_.startswith('unit-')
                       for concept in yaml.safe_load((entry / 'manifest.yaml').read_text(encoding='utf-8'))[
                           'concepts']['introduces']]
@@ -515,7 +528,7 @@ def audit(root: Path, book_id: str) -> list[str]:
                 findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
                                 for finding in index_source_findings(
                                     (project / chapter['file']).read_text(encoding='utf-8'), glossary,
-                                    int(re.match(r'unit-(\d+)', chapter['id'])[1]), first_units))
+                                    int(re.match(r'unit-(\d+)', chapter['id'])[1]), first_units, name_units))
         for chapter in chapters:
             id_ = chapter['id']; kind = chapter['kind']; entry = root / chapter['source']
             qmd = (project / chapter['file']).read_text(encoding='utf-8')

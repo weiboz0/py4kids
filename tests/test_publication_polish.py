@@ -350,3 +350,47 @@ def test_book1b_glossary_keys_are_precise_and_every_term_has_a_unit():
     prose_keys = {key.casefold() for _, _, aliases in terms for key in aliases
                   if not key.startswith(('`', '-'))}
     assert not prose_keys & generic
+
+
+def test_python_name_units_prefer_glossary_keys_then_first_lesson_use():
+    glossary = [('Built-in function', 'builtin-functions', ['len', 'min']),
+                ('List changes', 'list-append', ['`.append`']),
+                ('Float', 'float-type', ['decimal number'])]
+    first_units = {'Built-in function': 7, 'List changes': 10, 'Float': 2}
+    lessons = {3: ['n = 5\nprint(len("abc"))'],
+               7: ['sorted = 1', 'total = sum([1, 2])'],
+               10: ['xs = [3, 1]\nys = sorted(xs)\nxs.append(4)']}
+    units = publish.python_name_units(glossary, first_units, lessons)
+    assert units['len'] == 7  # the glossary key wins over an earlier lesson use
+    assert units['append'] == 10 and units['float'] == 2
+    assert units['sum'] == 7
+    assert units['sorted'] == 10  # assigning to the name is not a use
+    assert 'open' not in units
+
+
+def test_python_name_mentioned_before_it_is_taught_is_not_indexed():
+    qmd = 'Do not use `sorted`, `sum(xs)`, or `open`. Use `len(s)`.\n'
+    name_units = {'sorted': 10, 'sum': 7, 'len': 3}
+    early = publish.index_first_prose(qmd, [], 3, {}, name_units)
+    assert r'\texttt{sorted}' not in early and r'\texttt{sum}' not in early
+    assert r'\texttt{open}' not in early  # no teaching unit: never indexed
+    assert '`len(s)`' + r'\index{Python names!len@\texttt{len}}' in early
+    late = publish.index_first_prose(qmd, [], 10, {}, name_units)
+    assert r'\index{Python names!sorted@\texttt{sorted}}' in late
+    assert r'\index{Python names!sum@\texttt{sum}}' in late
+    ungated = publish.index_first_prose(qmd, [])
+    assert publish_audit.index_source_findings(ungated, [], 3, {}, name_units) == [
+        r'FAIL: index before taught in unit 3: Python names!sorted@\texttt{sorted}',
+        r'FAIL: index before taught in unit 3: Python names!sum@\texttt{sum}',
+        r'FAIL: index before taught in unit 3: Python names!open@\texttt{open}']
+    assert publish_audit.index_source_findings(late, [], 10, {}, name_units) == []
+
+
+def test_book1b_python_names_wait_for_their_teaching_unit():
+    book = Path(__file__).resolve().parents[1] / 'book1b'
+    source = (book / 'back-matter' / 'glossary.md').read_text(encoding='utf-8')
+    glossary = publish.glossary_entries(source)
+    units = publish.python_name_units(glossary, publish.glossary_units(source), publish.lesson_code(book))
+    names = publish.PYTHON_INDEX_NAMES - {term.casefold() for term, _, _ in glossary}
+    assert names <= set(units)
+    assert units['sorted'] > 3

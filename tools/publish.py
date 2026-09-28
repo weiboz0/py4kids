@@ -545,6 +545,54 @@ CODE_SPELLING = {name.casefold(): name for name in [*dir(builtins), *keyword.kwl
 CODE_ONLY_NAMES = set(CODE_SPELLING)
 
 
+def code_names_used(source: str) -> set[str]:
+    """Names a code cell really uses: loaded names and attribute names (`.append`), not assignment targets."""
+    lines = [line for line in source.splitlines() if not line.lstrip().startswith(('%', '!'))]
+    try:
+        tree = ast.parse('\n'.join(lines))
+    except (SyntaxError, ValueError):
+        try:
+            return {token.string for token in tokenize.generate_tokens(io.StringIO(source).readline)
+                    if token.type == tokenize.NAME}
+        except (tokenize.TokenError, SyntaxError):
+            return set()
+    return ({node.id for node in ast.walk(tree) if isinstance(node, ast.Name)
+             and isinstance(node.ctx, ast.Load)}
+            | {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)})
+
+
+def lesson_code(book: Path) -> dict[int, list[str]]:
+    """The code cells of each unit's lesson notebook (never exercises), keyed by unit number."""
+    lessons = {}
+    for path in sorted(book.glob('units/unit-*/lesson.ipynb')):
+        unit = int(re.match(r'unit-(\d+)', path.parent.name)[1])
+        lessons[unit] = [c.source for c in notebook(path, 'student').cells if c.cell_type == 'code']
+    return lessons
+
+
+def python_name_units(glossary: list[tuple[str, str, list[str]]], first_units: dict[str, int],
+                      lessons: dict[int, list[str]]) -> dict[str, int]:
+    """Map each indexed Python name to the first unit that teaches it.
+
+    Rule: a name that is a glossary term's headword or one of its `index:` keys (ignoring backticks
+    and a leading `.`, case-insensitively) is taught in that term's unit (`glossary_units`); any other name is taught
+    in the first unit whose LESSON code cells use it (exercises never count).
+    A name that no lesson uses maps to nothing and is never indexed.
+    """
+    units = {}
+    for name in PYTHON_INDEX_NAMES:
+        owners = [first_units[term] for term, _, aliases in glossary if term in first_units
+                  and any(key.strip('`').lstrip('.').casefold() == name for key in [term, *aliases])]
+        if owners:
+            units[name] = min(owners)
+            continue
+        for unit in sorted(lessons):
+            if any(name in code_names_used(cell) for cell in lessons[unit]):
+                units[name] = unit
+                break
+    return units
+
+
 def index_key(raw: str) -> tuple[str, bool]:
     """A key is (text, code_only): backticked keys and Python names match only in code, as Python spells them."""
     plain = raw.strip('`')
@@ -596,10 +644,13 @@ def index_entry(term: str) -> str:
 
 
 def index_first_prose(qmd: str, glossary: list[tuple[str, str, list[str]]],
-                      unit: int | None = None, first_units: dict[str, int] | None = None) -> str:
+                      unit: int | None = None, first_units: dict[str, int] | None = None,
+                      name_units: dict[str, int] | None = None) -> str:
     """Index each glossary concept once per unit, using aliases only as match triggers.
 
     With `unit` and `first_units`, a term is indexed only in units at or after the one that teaches it.
+    With `unit` and `name_units` (from `python_name_units`), a "Python names" subentry is gated the
+    same way: a name is indexed only in units at or after its teaching unit, never if it has none.
     Code-only keys and Python names match inside inline code spans only, case-sensitively.
     """
     remaining = {term: [index_key(raw) for raw in dict.fromkeys([term, *aliases])
@@ -607,6 +658,8 @@ def index_first_prose(qmd: str, glossary: list[tuple[str, str, list[str]]],
                  for term, _, aliases in glossary
                  if unit is None or first_units is None or first_units.get(term, 0) <= unit}
     names = PYTHON_INDEX_NAMES - {term.casefold() for term, _, _ in glossary}
+    if unit is not None and name_units is not None:
+        names = {name for name in names if name_units.get(name, unit + 1) <= unit}
     rendered = []
     fence = False
     for line in qmd.splitlines(keepends=True):
@@ -737,6 +790,7 @@ def build(root: Path, book_id: str, edition: str) -> Path:
     glossary = (project / 'glossary.qmd').read_text(encoding='utf-8')
     terms = glossary_entries(glossary)
     first_units = glossary_units(glossary)
+    name_units = python_name_units(terms, first_units, lesson_code(book))
     glossary = re.sub(r'(?m)^(\*\*(.+?)\*\* — .+)$',
                       lambda match: match[1] + r'\index{' + index_entry(match[2]) + '}', glossary)
     (project / 'glossary.qmd').write_text(glossary, encoding='utf-8')
@@ -745,7 +799,8 @@ def build(root: Path, book_id: str, edition: str) -> Path:
             continue
         path = project / chapter['file']
         unit = int(re.match(r'unit-(\d+)', chapter['id'])[1])
-        path.write_text(index_first_prose(path.read_text(encoding='utf-8'), terms, unit, first_units),
+        path.write_text(index_first_prose(path.read_text(encoding='utf-8'), terms, unit, first_units,
+                                         name_units),
                         encoding='utf-8')
     config = (project / 'theme' / '_quarto.yml').read_text(encoding='utf-8')
     config = config.replace('@CHAPTERS@', '\n'.join('    - ' + x for x in chapters))
