@@ -213,6 +213,15 @@ None: the Answer Key reuses the existing solutions and the plan 089 answer rende
   - wording lines
 - `[WONTFIX]` the course-page URL stays in the print How to Use: it is where the user will publish, and publishing (Releases/Pages) is listed under Out of scope as the user's follow-up decision.
 
+### Round 3 — CONSENSUS
+
+- `[sol]` **APPROVE** (r3), no findings.
+- `[fable]` APPROVE WITH NITS (r2, folded).
+- `[glm]` APPROVE WITH NITS (r1, opencode-go/glm-5.3, folded).
+- `[self]` APPROVE.
+
+**Consensus reached; implementation starts.**
+
 ## Content Review
 _(filled before PR.)_
 

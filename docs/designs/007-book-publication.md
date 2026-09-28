@@ -96,6 +96,14 @@ plus the syllabus; they carry notebook framing (`In [ ]:` prompts, raw cell boxe
     positions, answer coverage, glossary coverage, the index, LaTeX reference hygiene and cross-reference
     resolution.
 
+- **Amendment (plan 090, user decisions 2026-09-28): four Book 1b editions and `output/`.**
+  - **`student-print`** (`Book1b-Student-Print.pdf`) is aimed at publication. It carries the full student content minus the answers appendix, the answer cross-references and every redundant Starter panel. A Starter is kept when it holds code not repeated in the statement, as in repair exercises. Chapters start on any page. The soft target is ~400 pages; the audit only warns, and all exercises are kept.
+  - **`student`** (`Book1b-Student.pdf`) is the full edition for online use. It is plan 089's book, labelled "Full Edition".
+  - **`answer-key`** (`Book1b-Answer-Key.pdf`) is a separate student PDF with the odd-numbered unit answers. It has one chapter per unit and no page cross-references, and it reads solutions only through `student_answer_sources`.
+  - **`teacher`** is unchanged, until the user decides otherwise.
+  - One edition profile (`EDITIONS`) drives the builder, the theme, `build-book.sh` and the audit. Front-matter Markdown may carry `<!-- edition: NAME -->` blocks.
+  - Every generated PDF is copied to the root **`output/<book>/`** folder; each build script replaces only the files it owns. PDFs stay git-ignored built artifacts, and `output/README.md` is committed.
+
 ## 3. Rollout
 
 | plan | scope |
