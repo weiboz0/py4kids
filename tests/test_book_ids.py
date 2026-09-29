@@ -29,6 +29,7 @@ PATTERNS = (
 HISTORICAL_FILE_NAME = re.compile(r"(?:designs|plans)/\d{3}-[\w.-]+")
 # The one-release pre-merge-guard transition map (plan 091 B3) names the old roots on purpose.
 TRANSITION_MARKER = "plan-091-transition"
+TRANSITION_FILE = "scripts/pre-merge-guard.sh"
 HISTORICAL_PREFIXES = ("docs/plans/", "docs/designs/", "docs/reviews/", "docs/architecture/")
 LIVE_DIRS = ("tools/", "tests/", "scripts/")
 LIVE_FILES = ("books.yaml", ".gitignore", "output/README.md", "README.md", "TODO.md")
@@ -77,8 +78,8 @@ def _project_structure_section() -> str:
 def findings_for(label: str, text: str) -> list[str]:
     found = []
     for number, line in enumerate(text.splitlines(), 1):
-        if TRANSITION_MARKER in line:
-            continue
+        if label == TRANSITION_FILE and TRANSITION_MARKER in line and line.startswith("TRANSITION = {"):
+            continue  # the one-release old→new map must name the old roots
         scanned = HISTORICAL_FILE_NAME.sub("", line)
         for name, pattern in PATTERNS:
             if pattern.search(scanned):
@@ -136,3 +137,12 @@ def test_design_000_section_1_points_to_design_008():
     start = text.index("## 1. Repo structure")
     end = text.index("\n## 2.", start)
     assert "008-book-series-naming.md" in text[start:end]
+
+
+def test_transition_exemption_is_limited_to_the_guard_map():
+    marked = 'book = "book1"  # plan-091-transition'
+    assert findings_for("tools/example.py", marked), "marker must not exempt other files"
+    assert findings_for(TRANSITION_FILE, marked), "marker must not exempt other lines of the guard"
+    guard_line = next(line for line in (REPO / TRANSITION_FILE).read_text(encoding="utf-8").splitlines()
+                      if TRANSITION_MARKER in line)
+    assert findings_for(TRANSITION_FILE, guard_line) == []
