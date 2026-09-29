@@ -41,55 +41,69 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
   2. **Reading contest input:**
      - `input()` for one line and several lines
      - `split()`
-     - `int`/`float` conversion
+     - `int` conversion (ACSL input is integers and strings; `float` is not used, which also keeps within `source-policy`'s allowlist)
      - fixed-count and "until 0" reading (a sentinel from the Python books)
   3. **Tuples and complete search:**
      - pairs and triples as tuples
      - unpacking
      - trying every candidate with nested loops
      - counting and choosing the best
-- **Exercises:** at least 12, with the `stretch` Challenge tier, in two kinds (design 009 D4):
+- **Exercises:** at least 12, with the `stretch` Challenge tier, each exactly one kind (design 009 D4):
   - **Programming:** stdin `.py` solvers under the judge contract. Each has a sample fixture plus at least one edge fixture.
-  - **Short-answer:** a question with one exact answer.
-  - Every exercise carries exactly one division tag (`acsl-junior` / `acsl-intermediate` / `acsl-senior`).
+  - **Short-answer:** "given this input, what exactly does this program print?", a WDTPD warm-up. The heading cell is tagged `short-answer`.
+  - Every exercise's heading cell carries exactly one ladder tag (`acsl-junior` / `acsl-intermediate` / `acsl-senior`).
+  - Lesson 1's "run a `.py` solver with input" demo is `assets/l1.py`, so the judge's per-lesson companion rule is met naturally.
 - **Concepts:**
   - introduces (shared with `usaco-bronze` via `peers`, with identical registry entries): `input-parse`, `str-split`, `tuple`, `complete-search`
   - requires: Python-book concepts only (`python-projects` ids)
   - no USACO-only ids
 - **Content is ACSL-flavoured and original.** No USACO notebook is copied.
-- **Teacher notes** (inline, active session): goals, pacing, how to use the book through a season (the contest windows), the division path, common mistakes.
+- **Teacher notes** (inline, active session): all required headings, including `## Discussion prompts` and `## Differentiation`. Differentiation covers the division paths: Elementary and Classroom skip Foundations. The notes also cover goals, pacing, using the book through a season (the contest windows) and common mistakes.
 
 ## Phase C — Solutions (Opus subagent, separate fresh session)
 
 - **Programming items:** each gets a solver `assets/exN.py` plus fixtures under `assets/exN/`, and passes `judge-check`.
-- **Short-answer items:** in `solutions.ipynb`, a cell computes the answer with Python and `assert`s the exact printed answer.
+- **Short-answer items:** in `solutions.ipynb`, a markdown worked answer plus a `verify`-tagged cell that runs the program on the given input, captures its output and asserts the exact answer (non-vacuous).
 - **Lesson companion assets** as the judge contract requires.
 
 ## Phase D — Tooling and registration (Opus subagent)
 
 - **D1 `peers`:**
   - `books.yaml` gets `peers:` (symmetric, validated).
-  - `global_concept_uniqueness_findings` lets peers each introduce a shared id when the `concepts.yaml` entries (name, category, `kind`, including absence) are identical. It fails on drift, and fails if a book `requires` an id that only its peer introduces.
+  - `global_concept_uniqueness_findings` lets a validated symmetric peer pair each introduce a shared id when the `concepts.yaml` entries are identical, compared as dicts (name, category, `kind`, including absence), so key order and quoting are not drift. It fails on drift.
+  - The variant pair's full catalogue-equality check is unchanged.
+  - "Requiring a peer-only id" already fails today via `referenced_concepts_findings` (the id is unknown); a test confirms it.
   - Tests cover all of this.
 - **D2 Register `acsl`:**
-  - `books.yaml`: id `acsl`, title "Contest Python: ACSL", subtitle "From Elementary to Senior, one contest at a time", `depends_on: [python-projects]`, `peers: [usaco-bronze]`, `judge: true`. `usaco-bronze` gets `peers: [acsl]`.
+  - `books.yaml`: id `acsl`, `number: 2` (the contest tier), title "Contest Python: ACSL", subtitle "From Elementary to Senior, one contest at a time", `depends_on: [python-projects]`, `peers: [usaco-bronze]`, `judge: true`, and a new flag `acsl: true` with a `#   acsl:` comment line. `usaco-bronze` gets `peers: [acsl]`.
+  - Update `tests/test_books.py` (ids, numbers, flag map, `FLAGS`, comment lines) and `scripts/ci-local.sh`'s flag list.
+  - `pre-merge-guard` and `test_book_ids` already read roots from `books.yaml`; no change is needed, and a test confirms `acsl` is covered.
   - Folder skeleton:
-    - `acsl/syllabus.md`: the whole season map. Contest 0–4 parts, one row per planned unit, with its category and divisions; units after Foundations marked *planned (plan 09N)*. It also includes a "Following the season" section with the contest windows.
+    - `acsl/syllabus.md`: the whole season map, with Contest 0–4 parts and one row per unit. The shipped Foundations unit uses the syllabus-check row form (`` | `unit-00-acsl-foundations` | unit | 3 | ``). **Planned units use plain names, not backticked ids**, with *planned (plan 09N)*, so `syllabus_findings` does not flag extra rows. The syllabus also has "Following the season" (the contest windows) and "Division paths" sections (design 009 D3).
     - `acsl/curriculum/concepts.yaml`, `coverage-map.yaml`, `season.yaml` (D2 table, with source URL and retrieval date).
     - `acsl/docs/README.md`
     - `acsl/checkpoints/` and `acsl/projects/` as the tools require (empty until 093).
   - The `test_book_ids` guard and `tests/test_books.py` learn `acsl`.
-- **D3 `acsl-check`**, registered in `tools/checks.py` and wired into `ci-local` for books with an `acsl` season file (a registry flag `acsl: true`):
-  - manifest `acsl:` block valid against `season.yaml`
-  - unit order follows the season
-  - exactly one division tag per exercise, never below the unit's lowest division
-  - a contest part has its practice checkpoint once any of its units ship
+- **D3 `manifest-check` and `acsl-check`:**
+  - `manifest_findings` accepts the optional `acsl` key only for books with the `acsl` flag, and rejects it elsewhere.
+  - `acsl-check` is registered in `tools/checks.py` and wired into `ci-local` for `acsl`-flag books. It returns `[]` for every other book. It checks:
+    - each manifest `acsl:` block is valid against `season.yaml`, with `divisions` holding ladder levels only
+    - unit order follows `season.yaml` `unit_order`
+    - exactly one ladder tag on each exercise or question heading, never below the unit's lowest division, and no `acsl-classroom` tag
+    - a contest part with any shipped unit has its practice checkpoint
   - Tests for each failure.
-- **D4 Short-answer items:**
-  - `structure-check` / `cell-lint` / `judge-check` accept an exercise with no stdin solver when its statement is marked short-answer (a `short-answer` cell tag) and its solution has an asserting answer cell.
-  - `exec-solutions` runs those cells.
-  - Tests.
-- **D5 CI:** `ci-local` runs every per-book check for `acsl` (registry-driven); `pre-merge-guard` learns the new root.
+- **D4 Short-answer items:** generic now, for both exercises and checkpoint questions.
+  - `judge-check` maps each `## Exercise N` / `## Question N` heading. A heading cell tagged `short-answer` is exempt from needing a solver; every other heading still needs one.
+  - A new rule for judge books: every short-answer item's solution has ≥ 1 `verify` cell with a non-vacuous assert (reuse `_is_tautology`), and the worked answer is in markdown.
+  - `exec-solutions` stops skipping stdin-model entries. For judge books it executes the solutions notebook with `no-exec` cells filtered (the existing filter). This is safe for `usaco-bronze`, which has no live solution cells; a test pins that.
+  - `source-policy` skips `verify` cells.
+  - `structure-check` and `cell-lint` accept the tags.
+  - Tests and mutations:
+    - an omitted solver for a programming item fails
+    - a missing, tautological or `no-exec` verify assert fails
+    - a wrong answer fails
+    - a `short-answer` tag on a heading with a solver is reported
+- **D5 CI:** `ci-local` runs every per-book check for `acsl` (registry-driven) plus `acsl-check`.
 
 ## Phase E — VERIFICATION
 
@@ -98,10 +112,16 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
 3. Mutation tests fail as designed:
    - a division tag below the unit's minimum
    - a missing tag
+   - an `acsl-classroom` tag
    - an unknown category
    - out-of-season order
+   - a shipped contest unit with no practice checkpoint
+   - an `acsl:` manifest block on a non-`acsl` book
    - peer registry drift
    - requiring a peer-only id
+   - the short-answer mutations (D4)
+
+   Also, `acsl-check` returns `[]` for `usaco-bronze` and the Python books.
 4. Blind solve in the content gate: reviewers solve Foundations exercises from the statements alone.
 5. Post-execution report.
 
@@ -123,6 +143,39 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
   - The short-answer genre must still be machine-verified (no free-text answers without an assert).
   - The season file records its source and date, because ACSL lists change yearly.
 - `[glm]` skipped: user decision 2026-09-28, "Skip GLM until further notice".
+
+### Round 1 — verdicts
+
+- `[sol]` **REJECT:**
+  - mixed short-answer/programming solutions escape verification (judge-check, structure policy, exec-solutions all treat a judge entry wholesale)
+  - the Classroom division is not representable on a single ladder
+  - the Elementary categories are unassigned
+- `[fable]` **APPROVE WITH NITS.** The season table was verified against acsl.org.
+  - Must Fix: `manifest-check` rejects `acsl:`; `float` vs `source-policy`; the full short-answer spec (tag cell, checkpoint questions, assert rule, exec, source-policy)
+  - Should Fix: a deterministic unit order; Classroom not a tag; WDTPD order across divisions; U10 postfix; 097 checkpoint caps; registry/test couplings; the peers test confirms an existing path, with dict comparison; missing mutations
+  - Nice: teacher-notes headings; `l1.py`; the Foundations short-answer form; division paths; planned syllabus rows
+- `[glm]` skipped (user decision 2026-09-28, until further notice).
+
+### Round 1 — fold
+
+- `[FIXED]` all of the above:
+  - **Design 009:**
+    - D2 `unit_order`
+    - D3: ladder levels, Classroom as a path of short-answer Junior/Intermediate items, Elementary sections opening the matching Junior units, division paths, WDTPD Contest 1 covering all constructs for Intermediate/Senior
+    - D4: per-item classification, `short-answer` heading tag, markdown worked answer plus a `verify` cell (executed, non-vacuous, source-policy exempt)
+    - roadmap 097: the U10 postfix trim and the checkpoint caps
+  - **Plan:**
+    - no `float`
+    - the Foundations short-answer form
+    - `l1.py`
+    - teacher-notes headings
+    - peers: dict comparison, variant check unchanged, an existing-path test
+    - registration couplings: number 2, the `acsl` flag, tests, ci-local
+    - planned syllabus rows not backticked
+    - `manifest-check` `acsl` key
+    - `acsl-check` rules
+    - the full short-answer tooling spec, including checkpoint questions
+    - Phase E mutations
 
 ## Content Review
 _(filled before PR.)_

@@ -24,17 +24,26 @@ Students should be able to follow the book **in step with a competition season**
   | 4 | Graph Theory; Digital Electronics; WDTPD – Strings | Graph Theory; Digital Electronics; Assembly Language | Elementary Graph Theory | Graph Theory; Digital Electronics; Assembly Language |
 
   - Junior, Intermediate and Senior contests each include a programming problem; Elementary and Classroom do not.
+  - `season.yaml` also holds one merged **`unit_order`** per contest: the Junior categories in the official order, then the Intermediate/Senior-only categories (LISP, FSAs, Assembly). The book's unit order follows it; `acsl-check` needs it to be deterministic.
   - When ACSL changes the list, only `season.yaml` and the affected units change.
 - **D3 — Every item is marked by division** ("mark concepts by level").
-  - Each ACSL unit and checkpoint manifest carries `acsl: {contest: 0–4, category: <season.yaml name>, divisions: [...]}`, where contest 0 is Foundations.
-  - Each exercise carries its **lowest** division as a cell tag, `acsl-elementary|acsl-junior|acsl-intermediate|acsl-senior`, which later prints as a level badge. A student following one division does the items at or below it.
+  - **Levels form a ladder:** elementary < junior < intermediate < senior.
+    - Each ACSL unit and checkpoint manifest carries `acsl: {contest: 0–4, category: <season.yaml unit_order name>, divisions: [...]}`, where contest 0 is Foundations and `divisions` lists ladder levels only.
+    - Each exercise carries its **lowest** ladder level as a tag on its heading cell, `acsl-elementary|acsl-junior|acsl-intermediate|acsl-senior`, which later prints as a level badge. A student following one ladder level does the items at or below it.
+  - **Classroom** is a season-map column only: never a tag and never in `divisions`. The Classroom path for a contest is every **short-answer** item tagged junior or intermediate in that contest's categories, matching ACSL's Classroom test, which draws on those divisions' non-programming problems.
+  - **Elementary** is a one-category, non-programming test per contest. Each Elementary category (Computer Number Systems, Prefix/Infix/Postfix, Boolean Algebra, Graph Theory) is taught as the **opening Elementary section** of the matching Junior category unit, with items tagged `acsl-elementary`.
+  - **Division paths:** the Elementary path skips Foundations (no programming) and starts at Contest 1's Number Systems unit. The syllabus "Division paths" section spells out every path.
+  - **WDTPD across divisions:** Intermediate and Senior Contest 1 test *all* constructs, while Junior's WDTPD moves Branching → Looping → Arrays → Strings over Contests 1–4. So the Contest 1 WDTPD unit covers Branching for Junior, plus an Intermediate-tagged section tracing loops, arrays and strings. Contests 2–4 add the Junior-flavoured drills.
   - An `acsl-check` enforces all of this:
     - contest and category exist in `season.yaml`
     - unit order follows the season
     - every exercise has exactly one division tag, and it is not below its unit's lowest division
     - every contest part has its practice checkpoint (once that contest ships)
-- **D4 — ACSL items.** Two kinds of exercise:
-  - **Short-answer**, the ACSL non-programming questions (e.g. "convert 3F₁₆ to base 8"). The statement asks for one exact answer. The solution computes it with a Python solver and asserts it, so every printed answer is machine-checked.
+- **D4 — ACSL items.** Each exercise and checkpoint question is exactly one of two kinds, classified per item:
+  - **Short-answer**, the ACSL non-programming questions (e.g. "convert 3F₁₆ to base 8"). The heading cell carries a `short-answer` tag.
+    - The statement asks for one exact answer.
+    - The solution has a **worked answer** in markdown (student-readable), plus a code cell tagged **`verify`** that computes the answer and asserts it non-vacuously.
+    - `verify` cells are verification-only: executed by `exec-solutions`, exempt from `source-policy` (so simulators for LISP, assembly or FSAs may use any Python), never printed to students.
   - **Programming**, the ACSL programming problem: a stdin `.py` solver under the `judge` contract, as in USACO Bronze.
 - **D5 — Independence and sharing** (design 008): `acsl` depends on the Python books only, and is a `peers` of `usaco-bronze`.
   - It may introduce the same concept ids (e.g. `input-parse`, `str-split`, `tuple`, `complete-search`, `code-tracing`, `base-conversion`, `bitwise-ops`, `boolean-algebra`, `tree-traversal`), with identical registry entries.
@@ -49,7 +58,7 @@ Students should be able to follow the book **in step with a competition season**
 | 094 | Contest 2: Prefix/Infix/Postfix; Bit-String Flicking; WDTPD (Looping); LISP (Intermediate+); practice. |
 | 095 | Contest 3: Boolean Algebra; Data Structures; WDTPD (Arrays); FSAs & Regular Expressions (Intermediate+); practice. |
 | 096 | Contest 4: Graph Theory; Digital Electronics; WDTPD (Strings); Assembly Language (Intermediate+); practice. |
-| 097 | **USACO trim.** Remove the ACSL-only topics from `usaco-bronze`: Unit 02 (Boolean logic and code tracing), and the base-conversion/bitwise parts of Unit 11 (gcd, sieve and modular arithmetic stay, as a Number Theory unit). Unit 12 (binary trees) is removed or kept as Bronze-relevant after review. Units are renumbered. Mock-contest questions on moved topics are **replaced** with USACO-topic questions, and the originals **move** into the matching ACSL contest practice (user: "Replace and move"). |
+| 097 | **USACO trim.** Remove the ACSL-only topics from `usaco-bronze`: Unit 02 (Boolean logic and code tracing); the base-conversion/bitwise parts of Unit 11 (gcd, sieve and modular arithmetic stay, as a Number Theory unit); and the postfix half of Unit 10 (stacks, queues and `deque` stay). Unit 12 (binary trees) is removed or kept as Bronze-relevant after review. Units are renumbered. Mock-contest questions on moved topics are **replaced** with USACO-topic questions (user: "Replace and move"). The originals **move** into ACSL as practice: an ACSL practice checkpoint already holds 6–8 questions with exactly one programming problem (the ACSL format), so a moved programming question either replaces that checkpoint's programming problem or becomes an extra exercise in the matching category unit. |
 
 - Unit 10 (stacks, queues, deques) stays in USACO: BFS in the graphs unit needs `deque`. ACSL teaches its own Data Structures in Contest 3.
 - Until plan 097, the shared topics exist in both books, as the `peers` rule allows.
