@@ -255,4 +255,40 @@ Four authors: three units and the checkpoint.
 **Consensus reached, no `[OPEN]` findings.**
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped: ACSL Contest 1** (study window Oct 19, 2026 – Jan 10, 2027).
+
+| Entry | Items | Divisions (by heading tag) |
+|---|---|---|
+| `unit-01-computer-number-systems` | 21 (18 short-answer, 3 programming) | 9 elementary (contiguous mock test), 7 junior, 4 intermediate, 1 senior |
+| `unit-02-recursive-functions` | 16 (10 short-answer, 6 programming) | 9 junior, 5 intermediate, 2 senior |
+| `unit-03-wdtpd-branching` | 18 (16 short-answer, 2 programming; 9 in pseudocode) | 7 junior, 10 intermediate, 1 senior |
+| `checkpoint-01-contest-1-practice` | 8 (Q1–Q6 junior short-answer, Q7 intermediate, Q8 programming last) | Junior paper = Q1–Q6 + Q8 |
+
+- **Unit 01** opens with a standalone Elementary section (the official Elementary topics: bases, grouping, arithmetic in a base, comparisons, RGB, counting 1s). Junior+ adds repeated division, single-digit multiplication, hex colours, and conversion loops before `int(s, base)`. Intermediate adds fractions in bases 2/8/16.
+- **Unit 02** uses ACSL cases notation and the call-table method, and covers two-variable, multiple (Junior) and indirect (Intermediate) recursion, then recursion in Python.
+- **Unit 03** has the ACSL pseudocode dialect table:
+  - `int` = floor (`math.floor`), `sqrt`, real `/`
+  - `FOR` inclusive
+  - ACSL inclusive substrings, which differ from Python slices
+  - 2D arrays
+
+  Its Intermediate+ section covers all constructs, as ACSL's Intermediate/Senior Contest 1 requires. It introduces `code-tracing`, `grid-2d`, and the ACSL-only `acsl-pseudocode`.
+- **Registry:** the shared `base-conversion`, `recursion`, `code-tracing` and `grid-2d` are identical to USACO's; `acsl-pseudocode` is ACSL-only. The coverage map and syllabus rows are reconciled against the manifests.
+- **Tooling:**
+  - `acsl-check`: a practice checkpoint has exactly one programming question, and it is last.
+  - `concept-scan`: `math.floor`/`math.sqrt` are taught only in books registering `acsl-pseudocode` (a USACO probe test confirms they are not allowed there).
+- **Teacher notes** (inline) for all four entries: division paths, ACSL timing (6 in 30 min; Classroom 10 in 50), Grading.
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN, solo run at 8735b83.
+- pytest 909 passed.
+- Blind solves: the solutions sessions matched every author key (checkpoint 7/7, U01 18/18, U02 10/10, U03 16/16). [sol] and [fable] independently matched their samples, and [sol] ran 109 fixtures plus 30 edge probes.
+- Division paths counted by script (above).
+
+**Deviations:**
+- Design and plan corrected: ACSL substrings are inclusive, not Python slices.
+- `floor`/`sqrt` are keyed to a new ACSL-only concept rather than `code-tracing`.
+- One overlapped ci-local run produced a spurious audit failure; the gate is the solo run.
+
+**Next:** plan 094, Contest 2 (Prefix/Infix/Postfix with its Elementary section, Bit-String Flicking, WDTPD – Looping, LISP for Intermediate+, and the Contest 2 practice).
