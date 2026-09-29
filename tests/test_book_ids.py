@@ -80,9 +80,11 @@ def _project_structure_section() -> str:
 
 def findings_for(label: str, text: str) -> list[str]:
     found = []
+    exempt_used = False
     for number, line in enumerate(text.splitlines(), 1):
-        if label == TRANSITION_FILE and line == TRANSITION_LINE:
-            continue  # the one-release old→new map must name the old roots
+        if label == TRANSITION_FILE and line == TRANSITION_LINE and not exempt_used:
+            exempt_used = True  # the one-release old→new map must name the old roots; exempt it once only
+            continue
         scanned = HISTORICAL_FILE_NAME.sub("", line)
         for name, pattern in PATTERNS:
             if pattern.search(scanned):
@@ -157,3 +159,4 @@ def test_transition_line_is_exact_and_unique():
     assert [line for line in lines if TRANSITION_MARKER in line] == [TRANSITION_LINE]
     extra = TRANSITION_LINE + '\nTRANSITION = {"book2": "bad"}  # plan-091-transition'
     assert findings_for(TRANSITION_FILE, extra), "a second marked map line must be caught"
+    assert findings_for(TRANSITION_FILE, TRANSITION_LINE + "\n" + TRANSITION_LINE), "an exact duplicate must be caught"

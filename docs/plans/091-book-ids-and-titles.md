@@ -230,5 +230,10 @@ None.
   - `[FIXED]` The exemption is now the single exact map line (`TRANSITION_LINE`). A test asserts it appears exactly once, that it is the only marked line in the file, and that a second marked map line is caught.
   - The other folds were confirmed.
 
+### Round 3
+
+- `[sol]` **REJECT** (r3): an exact duplicate of the transition line was also exempt.
+  - `[FIXED]` `findings_for` exempts the exact line once only, and a test probes an exact duplicate.
+
 ## Post-Execution Report
 _(filled before merge.)_
