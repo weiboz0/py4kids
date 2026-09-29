@@ -42,8 +42,11 @@ Students should be able to follow the book **in step with a competition season**
 - **D4 — ACSL items.** Each exercise and checkpoint question is exactly one of two kinds, classified per item:
   - **Short-answer**, the ACSL non-programming questions (e.g. "convert 3F₁₆ to base 8"). The heading cell carries a `short-answer` tag.
     - The statement asks for one exact answer.
-    - The solution has a **worked answer** in markdown (student-readable), plus a code cell tagged **`verify`** that computes the answer and asserts it non-vacuously.
-    - `verify` cells are verification-only: executed by `exec-solutions`, exempt from `source-policy` (so simulators for LISP, assembly or FSAs may use any Python), never printed to students.
+    - The solution has a **worked answer** in markdown (student-readable) that ends with exactly one machine-readable line, `**Answer:** `<answer text>``.
+    - A code cell tagged **`verify`** computes the answer and asserts it, as `assert str(<computed>) == "<answer text>"`, where the literal equals the markdown answer text exactly.
+    - The check compares the two statically and then executes the cell, so neither the printed answer nor the computation can drift alone.
+    - `verify` cells are verification-only: executed by `exec-solutions`, exempt from `source-policy` and `concept-scan` (so simulators for LISP, assembly or FSAs may use any Python), never printed to students.
+    - A `verify` cell that needs a program's output runs it with `subprocess.run([sys.executable, "assets/<file>.py"], input=..., capture_output=True, text=True)` from the entry folder, so all short-answer solutions look alike.
   - **Programming**, the ACSL programming problem: a stdin `.py` solver under the `judge` contract, as in USACO Bronze.
 - **D5 — Independence and sharing** (design 008): `acsl` depends on the Python books only, and is a `peers` of `usaco-bronze`.
   - It may introduce the same concept ids (e.g. `input-parse`, `str-split`, `tuple`, `complete-search`, `code-tracing`, `base-conversion`, `bitwise-ops`, `boolean-algebra`, `tree-traversal`), with identical registry entries.

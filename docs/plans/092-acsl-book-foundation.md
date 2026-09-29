@@ -51,7 +51,7 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
 - **Exercises:** at least 12, with the `stretch` Challenge tier, each exactly one kind (design 009 D4):
   - **Programming:** stdin `.py` solvers under the judge contract. Each has a sample fixture plus at least one edge fixture.
   - **Short-answer:** "given this input, what exactly does this program print?", a WDTPD warm-up. The heading cell is tagged `short-answer`.
-  - Every exercise's heading cell carries exactly one ladder tag (`acsl-junior` / `acsl-intermediate` / `acsl-senior`).
+  - Every exercise's heading cell carries exactly one ladder tag (`acsl-junior` / `acsl-intermediate` / `acsl-senior`). `stretch` goes on the heading cell too, so one convention covers all three tags.
   - Lesson 1's "run a `.py` solver with input" demo is `assets/l1.py`, so the judge's per-lesson companion rule is met naturally.
 - **Concepts:**
   - introduces (shared with `usaco-bronze` via `peers`, with identical registry entries): `input-parse`, `str-split`, `tuple`, `complete-search`
@@ -63,13 +63,13 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
 ## Phase C — Solutions (Opus subagent, separate fresh session)
 
 - **Programming items:** each gets a solver `assets/exN.py` plus fixtures under `assets/exN/`, and passes `judge-check`.
-- **Short-answer items:** in `solutions.ipynb`, a markdown worked answer plus a `verify`-tagged cell that runs the program on the given input, captures its output and asserts the exact answer (non-vacuous).
+- **Short-answer items:** in `solutions.ipynb`, a markdown worked answer ending with one `**Answer:** `<text>`` line. A `verify`-tagged cell runs the program via `subprocess.run([sys.executable, "assets/<file>.py"], input=..., capture_output=True, text=True)` from the entry folder and asserts `str(<output>) == "<text>"`, with the literal equal to the markdown answer.
 - **Lesson companion assets** as the judge contract requires.
 
 ## Phase D — Tooling and registration (Opus subagent)
 
 - **D1 `peers`:**
-  - `books.yaml` gets `peers:` (symmetric, validated).
+  - `books.yaml` gets `peers:` (symmetric). An asymmetric or unknown peer is reported by `global_concept_uniqueness_findings`, under the same gate as drift.
   - `global_concept_uniqueness_findings` lets a validated symmetric peer pair each introduce a shared id when the `concepts.yaml` entries are identical, compared as dicts (name, category, `kind`, including absence), so key order and quoting are not drift. It fails on drift.
   - The variant pair's full catalogue-equality check is unchanged.
   - "Requiring a peer-only id" already fails today via `referenced_concepts_findings` (the id is unknown); a test confirms it.
@@ -80,7 +80,7 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
   - `pre-merge-guard` and `test_book_ids` already read roots from `books.yaml`; no change is needed, and a test confirms `acsl` is covered.
   - Folder skeleton:
     - `acsl/syllabus.md`: the whole season map, with Contest 0–4 parts and one row per unit. The shipped Foundations unit uses the syllabus-check row form (`` | `unit-00-acsl-foundations` | unit | 3 | ``). **Planned units use plain names, not backticked ids**, with *planned (plan 09N)*, so `syllabus_findings` does not flag extra rows. The syllabus also has "Following the season" (the contest windows) and "Division paths" sections (design 009 D3).
-    - `acsl/curriculum/concepts.yaml`, `coverage-map.yaml`, `season.yaml` (D2 table, with source URL and retrieval date).
+    - `acsl/curriculum/concepts.yaml`, `coverage-map.yaml`, `season.yaml` (D2 table, with source URL and retrieval date; it includes `contest 0` with `unit_order: [Foundations]` and no per-division categories, so contest 0 needs no special case in code).
     - `acsl/docs/README.md`
     - `acsl/checkpoints/` and `acsl/projects/` as the tools require (empty until 093).
   - The `test_book_ids` guard and `tests/test_books.py` learn `acsl`.
@@ -94,13 +94,16 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
   - Tests for each failure.
 - **D4 Short-answer items:** generic now, for both exercises and checkpoint questions.
   - `judge-check` maps each `## Exercise N` / `## Question N` heading. A heading cell tagged `short-answer` is exempt from needing a solver; every other heading still needs one.
-  - A new rule for judge books: every short-answer item's solution has ≥ 1 `verify` cell with a non-vacuous assert (reuse `_is_tautology`), and the worked answer is in markdown.
+  - A new rule for judge books: every short-answer item's solution has exactly one `**Answer:** `<text>`` line in markdown, and ≥ 1 `verify` cell whose `assert str(...) == "<text>"` literal (parsed with `ast`) equals that text. The assert must be non-vacuous (reuse `_is_tautology`) and executed.
   - `exec-solutions` stops skipping stdin-model entries. For judge books it executes the solutions notebook with `no-exec` cells filtered (the existing filter). This is safe for `usaco-bronze`, which has no live solution cells; a test pins that.
-  - `source-policy` skips `verify` cells.
+  - `source-policy` and `concept-scan` skip `verify` cells in judge-book solutions notebooks.
+  - Execution is skipped when no code cell remains after the `no-exec` filter (USACO's display-only notebooks), with a test.
+  - `judge-check` treats every `acsl`-flag entry as stdin-model even without `assets/`, so a short-answer-only unit or checkpoint cannot escape the solver rule.
   - `structure-check` and `cell-lint` accept the tags.
   - Tests and mutations:
     - an omitted solver for a programming item fails
     - a missing, tautological or `no-exec` verify assert fails
+    - changing only the markdown `**Answer:**` fails (literal mismatch), and changing only the computation fails (the assert fails at execution)
     - a wrong answer fails
     - a `short-answer` tag on a heading with a solver is reported
 - **D5 CI:** `ci-local` runs every per-book check for `acsl` (registry-driven) plus `acsl-check`.
@@ -176,6 +179,19 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
     - `acsl-check` rules
     - the full short-answer tooling spec, including checkpoint questions
     - Phase E mutations
+
+### Round 2 — verdicts and fold
+
+- `[sol]` **REJECT** (r2): the Classroom and Elementary blockers are resolved. Remaining: the markdown worked answer is not tied to the verified value.
+  - `[FIXED]` The worked answer ends with one `**Answer:** `<text>`` line, and the `verify` assert must be `str(...) == "<text>"` with the same literal. It is checked statically and executed. A mutation changes only the printed answer, and another only the computation.
+- `[fable]` **APPROVE WITH NITS** (r2), every round-1 item verified. Nits:
+  - `[FIXED]` `concept-scan` skips `verify` cells.
+  - `[FIXED]` One `subprocess.run` mechanism for running programs in `verify` cells.
+  - `[FIXED]` `season.yaml` contest 0.
+  - `[FIXED]` Asymmetric `peers` is reported by the global concept check.
+  - `[FIXED]` `judge-check` treats `acsl` entries as stdin-model even without `assets/`.
+  - `[FIXED]` Execution is skipped when no live cells remain.
+  - `[FIXED]` `stretch` goes on the heading cell.
 
 ## Content Review
 _(filled before PR.)_
