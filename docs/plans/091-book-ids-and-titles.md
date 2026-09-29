@@ -53,7 +53,10 @@ Split and new ACSL content come in plans 092+.
     - `python-projects`: "Python by Projects" / "Learn Python by building things"
     - `python-concepts`: "Python, Concept by Concept" / "Learn Python one idea at a time"
     - `usaco-bronze`: "Contest Python: USACO Bronze" / "Algorithms for your first programming contests"
-  - Add **feature flags**, which replace every id-keyed switch: `publication: true` (python-concepts), `judge: true` (usaco-bronze), `patterns: true` (python-projects).
+  - Add **feature flags**, which replace every id-keyed switch, each with a comment in `books.yaml` saying what it controls:
+    - `publication: true` (python-concepts): the book-publication pipeline
+    - `judge: true` (usaco-bronze): the stdin `.py` solvers and the subprocess judge
+    - `patterns: true` (python-projects): the pattern checks **and** the coverage-map v2 / markdown concept scan; do not set it on a new book unless both apply
   - `number:` stays as a series ordinal (1/1/2) and drives nothing new.
   - `tests/test_books.py` checks non-empty `title`/`subtitle`, unique ids equal to `root`, version 2, and flags that are booleans.
 - **B3 Tools, tests, scripts:**
@@ -75,10 +78,10 @@ Split and new ACSL content come in plans 092+.
   - A book *as a book* is named by its title.
   - Syllabus H1: `# <Title> — Syllabus`.
   - USACO teacher-notes H1: `# Teacher Notes — USACO Bronze, Unit NN: <Title>`.
-  - Checkpoint notebooks drop any book prefix: `# Mock Contest N` (markdown only; hygiene stays green).
+  - Checkpoint H1s drop only the `Book 2 ` prefix, giving `# Checkpoint N — Mock Contest N`; checkpoint 04 is already book-free and stays as is (markdown only; hygiene stays green).
   - Folder paths in instructions become the new folder (`cd python-concepts/units/…`); they are not title-ified.
   - Links to historical design file names stay.
-  - **Teacher-notes wording is done inline by the active session**, per AGENTS.md dispatch. The subagent leaves `teacher-notes.md` files to the orchestrator after the move.
+  - **Teacher-notes wording is done inline by the active session**, per AGENTS.md dispatch. The subagent leaves `teacher-notes.md` files alone. Its handoff may report the Phase D guard red **only** on teacher notes; the orchestrator rewords them before E1, and the guard must be green at E1.
 - **B6 Current-state docs:**
   - AGENTS.md "Project Structure" lines 50–54 **only**: the new roots and titles, and the contest split planned in design 008. This is a user-requested governance edit and is named in the PR body.
   - Design 000 §1 gets a one-line pointer to design 008.
@@ -118,6 +121,8 @@ None.
 5. Post-execution report: the id mapping, unchanged page counts, and a note that open branches must rebase (the transition map covers `pre-merge-guard` for one release).
 
 ## Out of scope
+
+- The `peers` concept-sharing exemption (design 008 D3; plan 092 implements and tests it).
 
 - Splitting USACO/ACSL (plan 092) and new ACSL units (093+).
 - Rewriting historical plans, designs, reviews and errata.
@@ -185,6 +190,16 @@ None.
   - `TODO.md`
   - a precise guard with a case-insensitive old-name rule, reused by E3
   - E2 exact contents
+
+### Round 2 — verdicts and fold
+
+- `[sol]` **REJECT** (r2): the naming, publication, parser, theme and guard blockers are resolved. Remaining: design D3's concept duplication conflicts with the global concept-uniqueness check.
+  - `[FIXED]` Design D3 now defines the sharing rule: books declared `peers` may each introduce a shared id, with identical registry entries and no requiring a peer-only id. Plan 092 implements and tests it; it is listed under Out of scope here.
+- `[fable]` **APPROVE WITH NITS** (r2), all round-1 items verified.
+  - `[FIXED]` The guard runs red on teacher notes until the orchestrator's inline pass; it must be green at E1.
+  - `[FIXED]` Checkpoint H1 form: drop the `Book 2 ` prefix only.
+  - `[FIXED]` A `books.yaml` comment says what each flag covers (`patterns` includes coverage-map v2).
+  - Noted: E1 relies on `tests/test_books.py` to pin the registry.
 
 ## Content Review
 _(filled before PR.)_
