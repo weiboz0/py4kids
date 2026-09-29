@@ -1,4 +1,4 @@
-# Teacher Notes — USACO Bronze, Unit 02: Boolean Logic & Algebra
+# Teacher Notes — Unit 02: Boolean Logic & Algebra
 
 ## Goals
 

@@ -1,4 +1,4 @@
-# Teacher Notes — USACO Bronze, Unit 01: Reading the Input
+# Teacher Notes — Unit 01: Reading the Input
 
 ## Goals
 

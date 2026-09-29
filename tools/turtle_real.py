@@ -133,6 +133,7 @@ def turtle_real_findings(root: Path, book: str, unit: str | None = None) -> list
                 findings.append(f'FAIL: {context}: final state or pen state mismatch')
             if actual[2] != expected[2]:
                 findings.append(f'FAIL: {context}: stdout mismatch')
+    # Deliberate content pin (not a feature switch): the 21-row inventory belongs to this one book.
     if book == 'python-concepts' and unit is None and inventory != EXPECTED_PYTHON_CONCEPTS:
         findings.append(f'FAIL: python-concepts turtle real-program inventory: expected 21 rows; '
                         f'missing {sorted(EXPECTED_PYTHON_CONCEPTS - inventory)}, extra {sorted(inventory - EXPECTED_PYTHON_CONCEPTS)}')

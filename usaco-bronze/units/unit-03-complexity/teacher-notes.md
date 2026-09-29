@@ -1,4 +1,4 @@
-# Teacher Notes — USACO Bronze, Unit 03: Fast Enough? (Complexity)
+# Teacher Notes — Unit 03: Fast Enough? (Complexity)
 
 ## Goals
 

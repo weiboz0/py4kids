@@ -212,7 +212,16 @@ None.
 **Consensus reached; implementation starts.**
 
 ## Content Review
-_(filled before PR.)_
+
+### Round 1
+
+- `[sol]` **REJECT:** no live old ids; the rendered title and verso match `books.yaml`.
+  - `[FIXED]` O1: the `plan-091-transition` marker exempted any line in any file. It now applies only to the `TRANSITION = {` line of `scripts/pre-merge-guard.sh`, with a probe test that it exempts nothing else.
+- `[fable]` **APPROVE WITH NITS.** Every mapped coupling was migrated. ci-local's per-book check sets are identical to before, book by book. The rendered title, verso and syllabi are correct; page counts are unchanged; no PDFs are tracked.
+  - `[FIXED]` F1: the USACO teacher-notes H1s were inconsistent (01–03 had the new "USACO Bronze," prefix; 04–14 and both Python books have none). Units 01–03 now use `# Teacher Notes — Unit NN: …` like every other book; this deviates from B5's stated form in favour of consistency.
+  - `[FIXED]` F2: `tools/turtle_real.py` keeps its one `python-concepts` id as a commented, deliberate content pin.
+  - `[WONTFIX]` F3: the python-concepts content pins in `publish_audit` ride on `publication`. That is fine with one publication book; it is recorded as a follow-up for any second one.
+  - F4: pre-existing, out of scope — python-projects syllabus table column widths.
 
 ## Post-Execution Report
 _(filled before merge.)_
