@@ -1,0 +1,14 @@
+id: unit-00-acsl-foundations
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 0, category: Foundations, divisions: [junior, intermediate, senior]}
+concepts:
+  introduces: [input-parse, str-split, tuple, complete-search]
+  requires: [print, input, run-program, variable, int-type, type-conversion, string-literal,
+             comparison, if-statement, for-loop, range-function, while-loop, sentinel-loop,
+             nested-loops, list-literal, list-append, list-index, list-loop]
+  practices: [arithmetic, boolean, string-index, running-total, logical-ops, elif-else, accumulator, loop-counter,
+              count-by-condition, find-extreme, builtin-functions, f-string, string-concat,
+              in-operator]

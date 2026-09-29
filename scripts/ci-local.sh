@@ -21,7 +21,7 @@ if catalog.get("books_version") != 2:
 for book in catalog["books"]:
     if book.get("root") != book["id"] or not Path(book["root"]).is_dir():
         sys.exit(f"FAIL: book {book['id']!r}: root must equal the id and exist")
-    flags = [flag for flag in ("publication", "judge", "patterns") if book.get(flag) is True]
+    flags = [flag for flag in ("publication", "judge", "patterns", "acsl") if book.get(flag) is True]
     print(book["id"], *flags)
 PY
 )"
@@ -63,6 +63,9 @@ while read -r book flags <&3; do
   else
     uv run py4kids-tools --book "$book" turtle-check
     uv run py4kids-tools --book "$book" turtle-real-check
+  fi
+  if has_flag acsl "$flags"; then
+    uv run py4kids-tools --book "$book" acsl-check
   fi
 done 3<<< "$books"
 

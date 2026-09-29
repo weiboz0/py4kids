@@ -1,0 +1,15 @@
+map_version: 1
+# Teaching order follows the ACSL season (curriculum/season.yaml, design 009).
+# Contest 0 is Foundations; Contests 1-4 (plans 093-096) each end with a Practice checkpoint.
+entries:
+- id: unit-00-acsl-foundations
+  kind: unit
+  title: "ACSL Foundations"
+  lessons: 3
+  introduces: [input-parse, str-split, tuple, complete-search]
+  requires: [print, input, run-program, variable, int-type, type-conversion, string-literal,
+             comparison, if-statement, for-loop, range-function, while-loop, sentinel-loop,
+             nested-loops, list-literal, list-append, list-index, list-loop]
+  practices: [arithmetic, boolean, string-index, running-total, logical-ops, elif-else, accumulator, loop-counter,
+              count-by-condition, find-extreme, builtin-functions, f-string, string-concat,
+              in-operator]

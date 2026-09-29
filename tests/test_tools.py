@@ -32,6 +32,7 @@ CHECK_NAMES = (
     "stretch-check",
     "judge-check",
     "source-policy",
+    "acsl-check",
 )
 REAL_BOOK_EXEC_CHECKS = {"exec-solutions", "exec-lessons"}
 
@@ -1600,11 +1601,17 @@ def test_ci_local_reads_books_from_registry():
     008), and every flag-gated check hangs off its flag."""
     text = (REPO / "scripts/ci-local.sh").read_text(encoding="utf-8")
     registry = yaml.safe_load((REPO / "books.yaml").read_text(encoding="utf-8"))
+    # The `acsl` flag (design 009) shares its name with the `acsl` book: drop the flag's own
+    # tokens (flag list entry, flag guard, acsl-check) before looking for pinned book ids.
+    unflagged = (
+        text.replace('"acsl")', ")").replace("has_flag acsl", "").replace("acsl-check", "")
+    )
     for book in registry["books"]:
-        assert book["id"] not in text
+        assert book["id"] not in unflagged
     assert 'yaml.safe_load(open("books.yaml"' in text
-    assert '("publication", "judge", "patterns")' in text
+    assert '("publication", "judge", "patterns", "acsl")' in text
     for flag, gated in (
+        ("acsl", ("acsl-check",)),
         ("patterns", ("technique-spiral", "pattern-marker", "patterns-doc-check")),
         ("judge", ("judge-check", "source-policy")),
         ("publication", ("lesson-outputs-check", "build-book.sh", "publish-audit")),

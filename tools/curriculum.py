@@ -15,6 +15,7 @@ from tools.books import (
     dependency_baseline,
     is_buildout,
     lesson_budget,
+    peers,
     prereq_policy,
     qualified_concept_id_pattern,
     variant_of,
@@ -78,11 +79,56 @@ def _curriculum(root: Path, book: str) -> Path:
     return book_path(root, book) / "curriculum"
 
 
+def peer_registry_findings(root: Path) -> list[str]:
+    """Validate ``peers`` in books.yaml: a list of known, other book ids, declared symmetrically."""
+    registered = book_entries(root)
+    findings = []
+    for registered_book, entry in registered.items():
+        if "peers" not in entry:
+            continue
+        declared = entry["peers"]
+        if not isinstance(declared, list) or not all(isinstance(v, str) for v in declared):
+            findings.append(_fail("books", f"{registered_book!r} peers must be a list of book ids"))
+            continue
+        for peer in declared:
+            if peer == registered_book:
+                findings.append(_fail("books", f"{registered_book!r} lists itself as a peer"))
+            elif peer not in registered:
+                findings.append(_fail("books", f"{registered_book!r} peer {peer!r} is unknown"))
+            elif registered_book not in peers(root, peer):
+                findings.append(
+                    _fail(
+                        "books",
+                        f"{registered_book!r} peer {peer!r} is asymmetric "
+                        f"({peer!r} does not list {registered_book!r})",
+                    )
+                )
+    return findings
+
+
+def _is_peer_pair(root: Path, first: str, second: str) -> bool:
+    """Two distinct registered books that list each other as peers."""
+    registered = book_entries(root)
+    return (
+        first != second
+        and first in registered
+        and second in registered
+        and second in peers(root, first)
+        and first in peers(root, second)
+    )
+
+
 def global_concept_uniqueness_findings(root: Path) -> list[str]:
-    """Report concept ids defined by more than one registered book."""
+    """Report concept ids defined by more than one registered book.
+
+    Two exemptions: a ``variant_of`` pair (whose whole catalogues must be equal), and a validated
+    symmetric ``peers`` pair (design 008 D3), which may each define a shared id only when the two
+    registry entries are identical as dicts (name, category and ``kind``, including its absence).
+    """
     registered = book_entries(root)
     owners: dict[str, set[str]] = {}
     catalogs: dict[str, object] = {}
+    entries: dict[tuple[str, str], dict] = {}
     for registered_book in registered:
         path = _curriculum(root, registered_book) / "concepts.yaml"
         if not path.is_file():
@@ -94,6 +140,8 @@ def global_concept_uniqueness_findings(root: Path) -> list[str]:
         for concept in data["concepts"]:
             if isinstance(concept, dict) and isinstance(concept.get("id"), str):
                 owners.setdefault(concept["id"], set()).add(registered_book)
+                entries.setdefault((registered_book, concept["id"]), concept)
+
     def is_variant_pair(books: set[str]) -> bool:
         return any(
             parent in registered and books <= {candidate, parent}
@@ -101,14 +149,40 @@ def global_concept_uniqueness_findings(root: Path) -> list[str]:
             if (parent := variant_of(root, candidate)) is not None
         )
 
-    findings = [
-        _fail(
-            "books",
-            f"concept id {concept_id!r} is defined in multiple books: {sorted(books)}",
+    peer_findings = peer_registry_findings(root)
+
+    def is_peer_set(books: set[str]) -> bool:
+        if peer_findings:
+            return False  # an invalid peer registry grants no exemption
+        ordered = sorted(books)
+        return all(
+            _is_peer_pair(root, first, second)
+            or is_variant_pair({first, second})
+            for index, first in enumerate(ordered)
+            for second in ordered[index + 1 :]
         )
-        for concept_id, books in sorted(owners.items())
-        if len(books) > 1 and not is_variant_pair(books)
-    ]
+
+    findings = list(peer_findings)
+    for concept_id, books in sorted(owners.items()):
+        if len(books) < 2 or is_variant_pair(books):
+            continue
+        if not is_peer_set(books):
+            findings.append(
+                _fail(
+                    "books",
+                    f"concept id {concept_id!r} is defined in multiple books: {sorted(books)}",
+                )
+            )
+            continue
+        definitions = [entries[(book, concept_id)] for book in sorted(books)]
+        if any(definition != definitions[0] for definition in definitions[1:]):
+            findings.append(
+                _fail(
+                    "books",
+                    f"concept id {concept_id!r} drifts between peers {sorted(books)}: "
+                    "concepts.yaml entries must be identical",
+                )
+            )
     missing = object()
     for registered_book in sorted(registered):
         parent = variant_of(root, registered_book)

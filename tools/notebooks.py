@@ -39,6 +39,8 @@ PROJECT_REQUIRED_FILES = (
     "teacher-notes.md",
 )
 MANIFEST_KEYS = {"id", "kind", "blueprint_version", "lessons", "concepts", "provenance"}
+# Optional manifest keys, each allowed only on books with the named books.yaml flag.
+FLAGGED_MANIFEST_KEYS = {"acsl": "acsl"}
 MANIFEST_CONCEPT_KEYS = {
     1: {"introduces", "requires", "practices"},
     2: {"introduces", "requires", "practices", "auxiliary"},
@@ -76,8 +78,38 @@ def is_stdin_model_entry(entry_dir: Path) -> bool:
     return assets.is_dir() and any(assets.glob("*.py"))
 
 
+def is_judged_entry(root: Path, book: str, entry_dir: Path) -> bool:
+    """Whether an entry is verified on the stdin model (judge-check), not by ``solve()`` + asserts.
+
+    True for a ``judge`` book's entry that ships ``.py`` solvers, and for EVERY entry of an ``acsl``
+    book (design 009 D4): a short-answer-only unit or checkpoint must not escape the solver rule.
+    """
+    if not book_flag(root, book, "judge"):
+        return False
+    return book_flag(root, book, "acsl") or is_stdin_model_entry(entry_dir)
+
+
 def _fail(scope: str, detail: str) -> str:
     return f"FAIL: {scope}: {detail}"
+
+
+def is_tautology(test) -> bool:
+    """Tests true by construction that prove nothing about the solution.
+
+    A bare truthy constant, ``not <constant>``, or a comparison whose two sides are both constants
+    or the syntactically identical name (``1 == 1``, ``score == score``).
+    """
+    if isinstance(test, ast.Constant):
+        return bool(test.value)
+    if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
+        return isinstance(test.operand, ast.Constant)
+    if isinstance(test, ast.Compare) and len(test.comparators) == 1:
+        left, right = test.left, test.comparators[0]
+        if isinstance(left, ast.Constant) and isinstance(right, ast.Constant):
+            return True
+        if isinstance(left, ast.Name) and isinstance(right, ast.Name) and left.id == right.id:
+            return True
+    return False
 
 
 def book_root(root: Path, book: str) -> Path:
@@ -258,26 +290,9 @@ def _solution_policy_findings(scope: str, notebook) -> list[str]:
             except SyntaxError:
                 continue
         parsed.append((cell_index, tree))
-    def _is_tautology(test) -> bool:
-        # Tests that are true by construction and prove nothing about the solution:
-        # a bare truthy constant, `not <constant>`, or a comparison whose two sides are the
-        # syntactically identical constant or name (`1 == 1`, `score == score`).
-        if isinstance(test, ast.Constant):
-            return bool(test.value)
-        if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
-            return isinstance(test.operand, ast.Constant)
-        if isinstance(test, ast.Compare) and len(test.comparators) == 1:
-            left, right = test.left, test.comparators[0]
-            if isinstance(left, ast.Constant) and isinstance(right, ast.Constant):
-                return True
-            if (isinstance(left, ast.Name) and isinstance(right, ast.Name)
-                    and left.id == right.id):
-                return True
-        return False
-
     def _non_vacuous_assert(tree) -> bool:
         for node in ast.walk(tree):
-            if isinstance(node, ast.Assert) and not _is_tautology(node.test):
+            if isinstance(node, ast.Assert) and not is_tautology(node.test):
                 return True
         return False
 
@@ -426,7 +441,21 @@ def manifest_findings(root: Path, book: str, unit: str | None = None) -> list[st
         if not isinstance(manifest, dict):
             findings.append(_fail(content_dir.name, "manifest must be a mapping"))
             continue
-        if set(manifest) != MANIFEST_KEYS:
+        flagged = {key for key in set(manifest) - MANIFEST_KEYS if key in FLAGGED_MANIFEST_KEYS}
+        misplaced = sorted(
+            key for key in flagged if not book_flag(root, book, FLAGGED_MANIFEST_KEYS[key])
+        )
+        if misplaced:
+            findings.extend(
+                _fail(
+                    content_dir.name,
+                    f"manifest key {key!r} is only allowed in books with the "
+                    f"{FLAGGED_MANIFEST_KEYS[key]!r} flag",
+                )
+                for key in misplaced
+            )
+            continue
+        if set(manifest) - flagged != MANIFEST_KEYS:
             findings.append(_fail(content_dir.name, f"manifest keys {set(manifest)}"))
             continue
         if manifest["kind"] != expected_kind:
@@ -595,7 +624,6 @@ def solutions_structure_findings(root: Path, book: str, unit: str | None = None)
     units, findings = unit_dirs(root, book, unit)
     if findings:
         return findings
-    judge_book = book_flag(root, book, "judge")
     for unit_dir in units:
         exercises_path = unit_dir / "exercises.ipynb"
         solutions_path = unit_dir / "solutions.ipynb"
@@ -631,7 +659,7 @@ def solutions_structure_findings(root: Path, book: str, unit: str | None = None)
             if "code" not in following:
                 findings.append(_fail(unit_dir.name, f"solutions: no code under '{heading}'"))
         # Plan 036: stdin-model judge-book entries are verified by judge-check, not solve()+asserts.
-        if not (judge_book and is_stdin_model_entry(unit_dir)):
+        if not is_judged_entry(root, book, unit_dir):
             findings.extend(_solution_policy_findings(unit_dir.name, solutions))
     return findings
 
@@ -693,7 +721,6 @@ def checkpoint_solutions_findings(
     checkpoints, findings = checkpoint_dirs(root, book, ident)
     if findings:
         return findings
-    judge_book = book_flag(root, book, "judge")
     for checkpoint_dir in checkpoints:
         checkpoint_path = checkpoint_dir / "checkpoint.ipynb"
         solutions_path = checkpoint_dir / "solutions.ipynb"
@@ -740,7 +767,7 @@ def checkpoint_solutions_findings(
                     findings.append(
                         _fail(checkpoint_dir.name, f"solutions: no code under '{heading}'")
                     )
-        if not (judge_book and is_stdin_model_entry(checkpoint_dir)):
+        if not is_judged_entry(root, book, checkpoint_dir):
             findings.extend(_solution_policy_findings(checkpoint_dir.name, solutions))
     return findings
 
@@ -828,13 +855,12 @@ def project_solutions_findings(
     projects, findings = project_dirs(root, book, ident)
     if findings:
         return findings
-    judge_book = book_flag(root, book, "judge")
     for project_dir in projects:
         path = project_dir / "solutions.ipynb"
         if not path.is_file():
             findings.append(_fail(project_dir.name, "missing solutions.ipynb"))
             continue
-        if not (judge_book and is_stdin_model_entry(project_dir)):
+        if not is_judged_entry(root, book, project_dir):
             findings.extend(_solution_policy_findings(project_dir.name, read_nb(path)))
     return findings
 
@@ -984,20 +1010,19 @@ def execute_notebooks(
     if findings:
         return findings
     for content_dir in directories:
-        # Plan 036: a stdin-model judge-book entry's solutions are no-exec display cells mirroring the
-        # judged assets/*.py — executing them would hang on stdin. judge-check verifies them instead.
-        if (
-            notebook_name == "solutions.ipynb"
-            and book_flag(root, book, "judge")
-            and is_stdin_model_entry(content_dir)
-        ):
-            continue
+        # A judge-book entry's programming solutions are no-exec display cells mirroring the judged
+        # assets/*.py (executing them would hang on stdin; judge-check verifies them). The no-exec
+        # filter drops them, so what runs is the live cells, e.g. short-answer `verify` cells
+        # (design 009 D4). A notebook with no live code cell left (usaco-bronze's display-only
+        # solutions) has nothing to execute and is skipped.
         path = content_dir / notebook_name
         if not path.is_file():
             findings.append(_fail(content_dir.name, f"{notebook_name} does not exist"))
             continue
         notebook = read_nb(path)
         notebook.cells = [cell for cell in notebook.cells if "no-exec" not in tags(cell)]
+        if not code_cells(notebook):
+            continue
         try:
             NotebookClient(
                 notebook,

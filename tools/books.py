@@ -38,6 +38,18 @@ def variant_of(root: Path, book: str) -> str | None:
     return configured if isinstance(configured, str) else None
 
 
+def peers(root: Path, book: str) -> list[str]:
+    """Return the book's declared ``peers`` (design 008 D3); malformed values read as empty.
+
+    Validation (symmetry, known ids) lives in
+    :func:`tools.curriculum.global_concept_uniqueness_findings`.
+    """
+    configured = book_entry(root, book).get("peers", [])
+    if not isinstance(configured, list):
+        return []
+    return [value for value in configured if isinstance(value, str)]
+
+
 def prereq_policy(root: Path, book: str) -> str | None:
     configured = book_entry(root, book).get("prereq_policy")
     return configured if isinstance(configured, str) else None
@@ -108,7 +120,8 @@ def book_flag(root: Path, book: str, flag: str) -> bool:
 
     Tools key features on these flags, never on book ids (design 008):
     ``publication`` (book-publication pipeline), ``judge`` (stdin solvers + subprocess judge),
-    ``patterns`` (pattern checks and the coverage-map v2 / markdown concept scan).
+    ``patterns`` (pattern checks and the coverage-map v2 / markdown concept scan),
+    ``acsl`` (the ACSL season structure: manifest ``acsl:`` block, season.yaml, acsl-check).
     """
     configured = book_entry(root, book).get(flag, False)
     return configured if isinstance(configured, bool) else False

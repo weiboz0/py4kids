@@ -1,0 +1,10 @@
+concepts_version: 1
+concepts:
+# Shared with the peer book usaco-bronze (books.yaml `peers`, design 008 D3 / 009 D5): each entry
+# must stay identical to usaco-bronze/curriculum/concepts.yaml, or the global concept check fails.
+# --- language features (kind: feature) ---
+- {id: tuple, name: Tuples, category: data-structures, kind: feature}
+- {id: str-split, name: Splitting strings, category: io, kind: feature}
+# --- techniques (kind: technique; reviewer-enforced, never scanner-flagged) ---
+- {id: input-parse, name: Parsing structured input, category: io, kind: technique}
+- {id: complete-search, name: Complete search (brute force), category: search, kind: technique}

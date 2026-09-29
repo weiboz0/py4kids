@@ -7,6 +7,7 @@ and builtins outside a pinned allowlist.  Scans executable reference code — ``
 ``solutions.ipynb`` code cells and every ``assets/*.py`` (solvers + helpers).
 
 BOOK-SCOPED to books with the ``judge: true`` flag (returns ``[]`` otherwise — intentional no-op, same as the judge).
+Short-answer ``verify`` cells in ``solutions.ipynb`` are verification-only and exempt (design 009 D4).
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ import builtins as _builtins
 from pathlib import Path
 
 from tools.books import book_flag
-from tools.notebooks import _fail, code_cells, content_dirs, read_nb
+from tools.notebooks import _fail, code_cells, content_dirs, read_nb, tags
 
 # Precise, reject-by-default allowlist (audited against all current usaco-bronze content — the only
 # builtins in use are abs/int/len/max/min/print/range/set/sorted/str/sum). `deque` is imported,
@@ -134,6 +135,8 @@ def source_policy_findings(root: Path, book: str, unit: str | None = None) -> li
             path = entry_dir / nb_name
             if path.is_file():
                 for idx, cell in enumerate(code_cells(read_nb(path))):
+                    if nb_name == "solutions.ipynb" and "verify" in tags(cell):
+                        continue  # verification-only, never shown to students (design 009 D4)
                     findings.extend(_check_source(cell.source, scope, f"{nb_name}[cell {idx}]"))
         assets = entry_dir / "assets"
         if assets.is_dir():
