@@ -41,7 +41,7 @@ This design gives every book a proper id and title, and splits the contest book 
     - A concept both contest books need is **taught in each**; duplication across the two contest books is allowed. For example, `deque` stays in USACO Bronze for BFS, stacks and queues are also taught in ACSL, and `str-split` input parsing and complete search are re-taught in ACSL where its units need them.
     - **Sharing rule.** Concept ids are one global namespace, and `global_concept_uniqueness_findings` today lets two books define the same id only when one is a `variant_of` the other. Plan 092 adds a second exemption: books declared **`peers`** in `books.yaml` (`usaco-bronze: peers: [acsl]` and the reverse, symmetric and validated) may each *introduce* a shared id.
       - Each book teaches the concept completely in its own units.
-      - The registry entry (name, category) must be identical in both books' `concepts.yaml`; the check fails on drift.
+      - The registry entry (name, category, and `kind`, including whether it is absent) must be identical in both books' `concepts.yaml`; the check fails on drift.
       - Neither book may `require` an id that only its peer introduces.
       - Plan 092 implements and tests this exemption, then passes `prereq-check` and `coverage-check` for each contest book on its own. No contest book imports from the other.
 - **D4 — Order of work.**

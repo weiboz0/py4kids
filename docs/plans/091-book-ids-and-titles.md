@@ -201,6 +201,16 @@ None.
   - `[FIXED]` A `books.yaml` comment says what each flag covers (`patterns` includes coverage-map v2).
   - Noted: E1 relies on `tests/test_books.py` to pin the registry.
 
+### Round 3 — CONSENSUS
+
+- `[sol]` **APPROVE WITH NITS** (r3): the `peers` rule resolves the conflict.
+  - `[FIXED]` Shared entries must also match on `kind`, including when it is absent (design 008 D3).
+- `[fable]` APPROVE WITH NITS (r2, folded).
+- `[glm]` APPROVE WITH NITS (r1, opencode-go/glm-5.3, folded).
+- `[self]` APPROVE.
+
+**Consensus reached; implementation starts.**
+
 ## Content Review
 _(filled before PR.)_
 
