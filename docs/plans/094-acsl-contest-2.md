@@ -285,5 +285,10 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
   - U07 17/17
 - `[glm]` skipped (user decision 2026-09-28).
 
+### Round 2
+
+- `[sol]` **REJECT** (r2): O1 is resolved and the other folds are verified. Remaining: the intro told every path, Classroom included, to spend 60 minutes on Q9.
+  - `[FIXED]` The Q9 timing line is conditional: "On the Junior, Intermediate or Senior path … (the Classroom path skips it)".
+
 ## Post-Execution Report
 _(filled before merge.)_
