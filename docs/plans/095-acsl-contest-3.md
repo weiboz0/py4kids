@@ -58,15 +58,25 @@ Conventions and lessons carried over from plans 093–094:
   - `solutions(expr, value=1) -> str`: the canonical tuple list of the rows where `expr` equals `value` (`"(1,0), (1,1)"`), or `NONE`
   - `count(expr, value=1) -> int`
   - `equivalent(a, b) -> bool`, by full truth table
-  - `minimal_sops(expr) -> list[str]`: **every** minimal sum of products (fewest terms, then fewest literals), in canonical text, found by brute force over prime-implicant covers (at most 4 variables)
+  - `minimal_sops(expr) -> list[str]`: **every** minimal sum of products (fewest terms, then fewest literals), in canonical text, found by brute force over prime-implicant covers (2 to 4 variables); a tautology gives `["1"]` and a contradiction `["0"]`
+  - `column(expr) -> str`: the truth-table result column (canonical form below)
 - `ds_eval.py` (unit 09). Its interface:
-  - `run(script, kind) -> list`: runs a `PUSH(x)`/`POP()` script, one operation per list item, with `kind` `"stack"` or `"queue"`, and returns the popped values (`"NIL"` when empty)
-  - `bst(keys) -> dict` with keys `depths`, `ipl`, `epl`, `external`, `leaves`, `height`, `inorder`, `preorder`, `postorder`
-  - `bst_delete(keys, key) -> dict`: the same report after inserting `keys` and then deleting `key` by ACSL's rule (below)
+  - `run(script, kind) -> dict`: runs a script on a `"stack"` or a `"queue"`, one statement per list item. The statements are:
+    - `PUSH(e)`
+    - `POP()`
+    - `V = POP()`, where `V` is a one-letter capital variable
+
+    `e` is an integer, a variable assigned earlier, or `a op b` with `op` one of `+ - *` over those; any other bare word (such as `A` never assigned, or `CAT`) is pushed as a letter/word value.
+    It returns `{"popped": [...], "vars": {...}}`: every popped value in order (`"NIL"` when empty) and the final variables. The wiki sample gives `vars["Z"] == -2`.
+  - `bst(keys) -> dict`, where `keys` is a list inserted in order (a word is passed as `list("PROGRAM")`). The report has these fields:
+    - `depths: list[int]`, the depth of each inserted node in insertion order, so duplicates stay distinct
+    - `ipl`, `epl`, `external`, `leaves`, `height: int`: the internal and external path lengths, the external-node count, the leaf count, and the greatest depth
+    - `leaf_keys`, `inorder`, `preorder`, `postorder: str`, in canonical row text (leaves left to right)
+  - `bst_delete(keys, key) -> dict`: the same report, minus `depths`, after inserting `keys` and then deleting the **shallowest** node holding `key` by ACSL's rule (below)
   - `heap(keys, kind="min") -> list[str]`: the rows of a heap built by insertion, top row first, in canonical text
   - `heap_pop(keys, kind="min") -> list[str]`: the rows after removing the root by ACSL's rule
 - `fsa_eval.py` (unit 11). Its interface:
-  - `accepts(pattern, s) -> bool`: translates an ACSL regular expression and then uses Python's `re.fullmatch`. The translation is token by token: outside a `[...]` class, `U` is union and becomes `|`, and `λ` becomes an empty group `()`, so a quantifier after it stays valid; inside a class every character is literal. Items never use `U` or `λ` as a literal symbol outside a class.
+  - `accepts(pattern, s) -> bool`: translates an ACSL regular expression and then uses Python's `re.fullmatch`. The translation is token by token: outside a `[...]` class, `U` is union and becomes `|`, and `λ` becomes an empty group `()`, so a quantifier after it stays valid; inside a class, `U` and `λ` are literal characters, while the class operators keep their meaning (`[A-D]` is a range, `[^a-ceiou]` a negated class). Items never use `U` or `λ` as a literal symbol outside a class.
   - `run_dfa(table, start, finals, s) -> bool`, where `table` maps `(state, symbol)` to a state and a missing entry rejects
   - `same_language(p, q, alphabet, max_len) -> bool`, which compares acceptance on every string up to `max_len`
 
@@ -99,8 +109,9 @@ Contest books build no PDF yet (ACSL publication is out of scope), so `⊙`, lik
 These map to `list-*`, `dict-*` and `tuple` ids that are already registered.
 
 **Per-entry concept boundaries:**
-- Units 08, 09 and 11 require only *Python by Projects* and Foundations ids (plus `postfix-eval` and `recursion` for unit 09's stack idiom and traversals).
-  Unit 11's manifest also requires `recursion` (unit 02), which its matcher uses, and it lists `dict-literal`, `dict-access` and `tuple` for its FSA tables.
+- Units 08, 09 and 11 require only *Python by Projects* and Foundations ids, with these additions:
+  - Unit 09 also requires `postfix-eval` (unit 04, the stack idiom) and `recursion` (unit 02, for traversals).
+  - Unit 11 also requires `recursion` (unit 02), which its matcher uses, and it lists `dict-literal`, `dict-access` and `tuple` for its FSA tables.
 - Unit 10 also practises `code-tracing`, `acsl-pseudocode` and `grid-2d` (unit 03), and **introduces nothing** (`introduces: []`).
 - The checkpoint is strict over *Python by Projects* plus units 00–11. Its author writes from these specs; A2 re-checks every id against the units' final manifests.
 
@@ -117,6 +128,7 @@ These map to `list-*`, `dict-*` and `tuple` ids that are already registered.
   - `NIL` for an empty `POP`
   - a heap or tree row, or a traversal, as its letters or numbers in order, with letters run together (`RORN`) and numbers separated by single spaces
   - the position of an item in a heap as its 1-based array index (the root is 1)
+- **Truth tables:** the result column as a string of `0`s and `1`s, rows in ascending binary order of the variables (`00, 01, 10, 11` for `A, B`): `~A + B` is `1101`. `bool_eval.column(expr) -> str` gives it.
   - path lengths, depths and counts as bare integers
 - **Option lists** (accepted strings, tautologies, equivalent expressions): items label their options with capital letters `A`, `B`, `C`, …, and the answer is the chosen labels in that order, separated by `, ` (`A, E`); `NONE` when none qualify.
 - **Regular-expression answers** are judged as option choices (which expression is equivalent / describes the FSA), never as free text. The lesson still has students *write* expressions for FSAs, and the teacher notes say real papers grade free text.
@@ -151,7 +163,7 @@ Unit conventions:
 
 - **Divisions:** junior, intermediate, senior. **Introduces:** the ACSL-only `acsl-data-structures` ("Stacks, queues, BSTs and heaps (ACSL conventions)", technique, data-structures) and the shared `tree-traversal`.
 - **Requires** also `recursion` (unit 02, for traversals) and `postfix-eval` (unit 04's stack idiom); the heap uses `//` (`arithmetic`) and a tuple swap (`tuple`).
-- **Rules from ACSL's page:** stacks and queues with `PUSH`/`POP` (`NIL` when empty); BSTs with duplicates to the left; depth, internal/external path length and external nodes; min-heaps built by insertion.
+- **Rules from ACSL's page:** stacks and queues with `PUSH`/`POP` (`NIL` when empty); BSTs with duplicates to the left; depth, internal/external path length and external nodes; heaps built by insertion (min-heaps, and max-heaps when an item says so), and root removal.
 - **Junior:** stack and queue traces; building a BST from a word or list and reading its depths, leaves and internal path length.
 - **Intermediate and above:** inorder, preorder and postorder traversals; external path length and external-node counts; min-heaps and max-heaps (rows, the bottom row, the position of an item); mixed `PUSH`/`POP` scripts with arithmetic on popped values, as in the wiki sample.
 - **Senior:** BST deletion and heap root removal by ACSL's rules, then a report on the new tree (for example its internal path length).
@@ -209,26 +221,28 @@ Unit conventions:
     - precedence cases for `~`, `*`, `⊕`/`⊙` and `+`, left to right on ties
     - De Morgan, and each XOR/XNOR identity
     - `~~A`; `solutions(expr, 0)` for the rows that are false
+    - `column` for 2 and 3 variables; `minimal_sops` on a 2-variable input, a tautology (`["1"]`) and a contradiction (`["0"]`)
+    - the three traversals of the wiki's tree from `A M E R I C A N`: inorder `AACEIMNR`, preorder `AAMECIRN`, postorder `ACIENRMA`
     - canonical tuple order for 2 and 3 variables, and counts
     - minimal sums of products: `A * B + ~A * C` has exactly one (itself, the consensus term dropped); `A * ~B + ~A * B + B * ~C + ~B * C`, whose minimal forms tie, returns more than one; the wiki sample 1 gives exactly `A`; canonical term order
   - `tests/test_acsl_eval_ds.py`:
-    - the wiki's three samples (`-2`, `RORN`, `12`)
+    - the wiki's three samples: `run(["PUSH(3)", "PUSH(6)", "PUSH(8)", "Y = POP()", "X = POP()", "PUSH(X-Y)", "Z = POP()"], "stack")["vars"]["Z"] == -2`; the `PROGRAMMING` min-heap's last row `RORN`; the `PROGRAM` BST's `ipl` `12`
+    - duplicate keys: `depths` for `list("AMERICAN")` keeps both `A` nodes; `bst_delete` removes the shallower one
     - `NIL` on an empty `POP`, for a stack and for a queue
     - a duplicate going left
     - depth, height, leaves, the external node count (= n + 1) and the external path length on a hand-checked tree
     - heap rows for a numeric list
     - max-heap rows; heap root removal
-    - the three traversals of the wiki's example tree (inorder `AACEIMNR`)
     - BST deletion for a leaf, a one-child node and a two-child node
   - `tests/test_acsl_eval_fsa.py`:
     - the wiki's three "accepted" samples, with every listed option accepted or rejected as the wiki states
-    - token-by-token translation: `aUb` is a union, `[TUV]` keeps `U` literal, `(λUa)b` and `λ*` stay valid and match as ACSL means
+    - token-by-token translation: `aUb` is a union, `[TUV]` keeps `U` literal, `[A-D]` and `[^a-ceiou]` keep their range and negation, `(λUa)b` and `λ*` stay valid and match as ACSL means
     - each wiki identity checked with `same_language` over the alphabet `{a, b, c}` on all strings up to length 5
     - a DFA table run, a missing transition rejecting
 
 ## Phase B — Lessons and statements (Opus subagents in parallel, one per entry, each owning only its folder)
 
-Each unit folder gets `lesson.ipynb`, `exercises.ipynb` (statements, worked short answers with their verify cells, and no programming solutions), `manifest.yaml`, and `assets/` with the programming fixtures (`exN/k.in|out`); the checkpoint gets `checkpoint.ipynb`, `manifest.yaml` and `assets/q9/`. Teacher notes come in Phase D.
+Each unit folder gets `lesson.ipynb`, `exercises.ipynb` (statements, with `**Your answer:** _(write your answer here)_` placeholders for short answers; no answers and no verify cells), `manifest.yaml`, and `assets/` with the programming fixtures (`exN/k.in|out`); the checkpoint gets `checkpoint.ipynb`, `manifest.yaml` and `assets/q9/`. Teacher notes come in Phase D. The worked `**Answer:**` lines, the verify cells and the programming solutions go in `solutions.ipynb` in Phase C.
 
 ## Phase C — Solutions (Opus subagents, separate fresh sessions, one per entry)
 
@@ -291,6 +305,19 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
   7. The evaluator interfaces are named in the plan and pinned in the test docstrings.
   8–14. `~~A`; max-heaps; heap position as a 1-based index; students still write regular expressions; the Phase B file set; unit 09's `arithmetic`/`tuple`/`recursion` requires; a lesson note that ACSL accepts any pair order.
 - The plan otherwise follows plan 094's shape and its lessons: tested helpers with pre-written tests, a code-free Elementary lesson, every path listed on the student page, and boundary fixtures.
+
+### Round 2 — verdicts and fold
+
+- `[fable]` **APPROVE WITH NITS**. It verified every round-1 fold (deletion, heap removal, the traversal strings, the interfaces, `λ → ()`, and the `minimal_sops` claims by brute force).
+  - N1 (must fold) = `[sol]` 1: `exercises.ipynb` holds statements and `**Your answer:**` placeholders only; the answers, verify cells and solutions go in `solutions.ipynb` (Phase C), where the tools exempt verify cells.
+  - N2: truth tables have a canonical result-column form and `bool_eval.column`.
+  - N3: `minimal_sops` returns `["1"]` or `["0"]` for a tautology or a contradiction, and works for 2 variables.
+  - N4: the wording is tidied.
+- `[sol]` **REJECT**, 4 findings, all folded:
+  1. = `[fable]` N1.
+  2. `ds_eval.run` now takes assignments and `PUSH(a op b)`, and returns popped values plus variables; the wiki `Z = -2` sample is written out as a test.
+  3. The BST report has typed fields; `depths` is in insertion order, so duplicates stay distinct; deletion removes the shallowest matching node.
+  4. Inside a class, only `U` and `λ` are literal; ranges and negation keep their meaning, with tests.
 
 ## Content Review
 
