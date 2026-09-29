@@ -25,7 +25,9 @@ This design gives every book a proper id and title, and splits the contest book 
   - **ACSL is one book for every division** (user, 2026-09-28: "for ACSL, we will cover all levels in one book, but mark concepts by level"): Elementary, Junior, Intermediate and Senior topics live together.
     - Each concept, unit and exercise carries the lowest ACSL division that tests it (a `acsl-level:` manifest field and a printed level badge), so a student can follow one division's path through the book.
     - The folder is `acsl`, not `acsl-junior`.
-  - `books.yaml` carries each book's `title` and `subtitle`. Every student-facing mention of a book (syllabi, front matter, PDF title pages and file names) uses the title, never the id.
+  - `books.yaml` carries each book's `title` and `subtitle`.
+  - Every student-facing mention of a book *as a book* (syllabi, front matter, PDF title pages) uses the title, never the id.
+  - Folder paths and PDF **file names** use the id (`output/<id>/<id>-<edition>.pdf`): deterministic, lowercase, and no slugging of titles with punctuation.
   - The old "Book 1b" wording on student pages goes away.
 - **D2 — Folders are renamed, not aliased** (user: "option 2 … with proper naming").
   - `git mv` keeps history. Tools, tests, scripts, CI and `output/<id>/` use the new ids.
@@ -35,7 +37,9 @@ This design gives every book a proper id and title, and splits the contest book 
   - **`acsl`** takes Boolean logic, number systems and bitwise, stacks/queues/postfix, and binary trees, each marked with its ACSL division(s).
     - It then gains units for the ACSL categories `book2` never covered, across all divisions: bit-string flicking, recursive functions, What Does This Program Do, graph theory, data structures, prefix/infix/postfix, digital electronics, LISP, regular expressions and FSAs, assembly, and the rest of the current ACSL category list.
     - Each is marked by division. They come in later plans, one or two units per plan, with the usual gates.
-  - Both contest books depend on the Python fundamentals. `depends_on` names both intro books as satisfying the prerequisites (they teach the same 62 concepts).
+  - **Each contest book is independently complete** on top of the Python fundamentals (`depends_on: [python-projects]`; `python-concepts` is a `variant_of` it and teaches the same 62 concept ids, so either intro book satisfies it).
+    - A concept both contest books need is **taught in each**; duplication across the two contest books is allowed. For example, `deque` stays in USACO Bronze for BFS, stacks and queues are also taught in ACSL, and `str-split` input parsing and complete search are re-taught in ACSL where its units need them.
+    - Plan 092 must pass `prereq-check` and `coverage-check` for each contest book on its own; no contest book imports from the other.
 - **D4 — Order of work.**
   1. Plan 091: rename ids and folders and add titles (no content moves).
   2. Plan 092: split `usaco-bronze` / `acsl` (with the level-marking scheme) (move the four ACSL units; renumber; checkpoint and mock-contest questions follow their topic's book; syllabi for both).
