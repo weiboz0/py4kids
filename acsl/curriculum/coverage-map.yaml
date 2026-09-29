@@ -76,3 +76,38 @@ entries:
   introduces: []
   requires: [print, input, variable, int-type, type-conversion, arithmetic, comparison, if-statement, input-parse, str-split]
   practices: [postfix-eval, bitwise-ops, lisp-eval, code-tracing, acsl-pseudocode, for-loop, range-function, nested-loops, while-loop, accumulator, find-extreme, float-type, list-literal, list-index, list-append, list-loop, elif-else, logical-ops]
+- id: unit-08-boolean-algebra
+  kind: unit
+  title: "Boolean Algebra"
+  lessons: 3
+  introduces: [boolean-algebra]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion, string-literal, string-index, string-concat, boolean, comparison, logical-ops, if-statement, elif-else, while-loop, for-loop, range-function, nested-loops, in-operator, def-function, parameters, return-value, list-append, list-loop, str-split, input-parse]
+  practices: [accumulator, loop-counter, complete-search, builtin-functions]
+- id: unit-09-data-structures
+  kind: unit
+  title: "Data Structures"
+  lessons: 3
+  introduces: [acsl-data-structures, tree-traversal]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion, string-literal, string-concat, boolean, comparison, logical-ops, if-statement, elif-else, while-loop, for-loop, range-function, def-function, parameters, return-value, builtin-functions, list-literal, list-append, list-index, list-loop, str-split, input-parse, tuple, recursion, postfix-eval]
+  practices: [loop-counter, accumulator]
+- id: unit-10-wdtpd-arrays
+  kind: unit
+  title: "WDTPD – Arrays"
+  lessons: 3
+  introduces: []
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion, boolean, comparison, logical-ops, if-statement, elif-else, for-loop, range-function, while-loop, nested-loops, list-literal, list-index, list-append, string-literal, string-concat, str-split, input-parse]
+  practices: [code-tracing, acsl-pseudocode, grid-2d, accumulator, running-total, loop-counter, count-by-condition, find-extreme, list-loop, builtin-functions]
+- id: unit-11-fsas-regular-expressions
+  kind: unit
+  title: "FSAs and Regular Expressions"
+  lessons: 3
+  introduces: [fsa-regex]
+  requires: [print, input, run-program, variable, int-type, type-conversion, arithmetic, string-literal, string-concat, string-index, string-slice, boolean, comparison, logical-ops, if-statement, elif-else, for-loop, while-loop, range-function, def-function, parameters, return-value, list-literal, list-index, list-append, list-loop, dict-literal, dict-access, in-operator, str-split, input-parse, tuple, recursion]
+  practices: [complete-search, builtin-functions]
+- id: checkpoint-03-contest-3-practice
+  kind: checkpoint
+  title: "Contest 3 Practice"
+  lessons: 0.5
+  introduces: []
+  requires: [print, input, variable, int-type, type-conversion, arithmetic, comparison, boolean, if-statement, input-parse, str-split]
+  practices: [boolean-algebra, acsl-data-structures, fsa-regex, code-tracing, acsl-pseudocode, grid-2d, for-loop, range-function, nested-loops, while-loop, accumulator, logical-ops, list-literal, list-index, list-append, list-loop, builtin-functions]

@@ -1,0 +1,15 @@
+id: unit-11-fsas-regular-expressions
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 3, category: FSAs and Regular Expressions, divisions: [intermediate, senior]}
+concepts:
+  introduces: [fsa-regex]
+  requires: [print, input, run-program, variable, int-type, type-conversion, arithmetic,
+             string-literal, string-concat, string-index, string-slice, boolean, comparison,
+             logical-ops, if-statement, elif-else, for-loop, while-loop, range-function,
+             def-function, parameters, return-value, list-literal, list-index, list-append,
+             list-loop, dict-literal, dict-access, in-operator, str-split, input-parse, tuple,
+             recursion]
+  practices: [complete-search, builtin-functions]

@@ -1,0 +1,14 @@
+id: unit-09-data-structures
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 3, category: Data Structures, divisions: [junior, intermediate, senior]}
+concepts:
+  introduces: [acsl-data-structures, tree-traversal]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion,
+             string-literal, string-concat, boolean, comparison, logical-ops, if-statement,
+             elif-else, while-loop, for-loop, range-function, def-function, parameters,
+             return-value, builtin-functions, list-literal, list-append, list-index, list-loop,
+             str-split, input-parse, tuple, recursion, postfix-eval]
+  practices: [loop-counter, accumulator]

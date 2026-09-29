@@ -1,0 +1,5 @@
+parts = input().split()
+a = int(parts[0])
+b = int(parts[1])
+door = (not (not a or b)) or (a and b)
+print(int(door))

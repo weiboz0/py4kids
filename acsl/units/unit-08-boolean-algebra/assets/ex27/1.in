@@ -1,0 +1,2 @@
+A XOR B
+A * ~B + ~A * B
