@@ -40,4 +40,4 @@ entries:
   lessons: 0.5
   introduces: []
   requires: [print, input, variable, int-type, type-conversion, arithmetic, comparison, if-statement, input-parse, str-split]
-  practices: [base-conversion, recursion, code-tracing, grid-2d, elif-else, conditional-nesting, logical-ops, boolean, for-loop, range-function, nested-loops, while-loop, float-type, string-literal, string-index, string-slice, string-concat, builtin-functions, list-literal, list-index, list-append, def-function, parameters, return-value, import-statement]
+  practices: [base-conversion, recursion, code-tracing, acsl-pseudocode, grid-2d, elif-else, conditional-nesting, logical-ops, boolean, for-loop, range-function, nested-loops, while-loop, float-type, string-literal, string-index, string-slice, string-concat, builtin-functions, list-literal, list-index, list-append, def-function, parameters, return-value, import-statement]

@@ -243,5 +243,16 @@ Four authors: three units and the checkpoint.
 - `[self]` APPROVE: all short answers were solved blind by the solutions sessions and matched the authors' keys (checkpoint 7/7, unit 01 18/18, unit 02 10/10, unit 03 16/16).
 - `[glm]` skipped (user decision 2026-09-28).
 
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE WITH NITS** (r2): O1–O3 verified by direct probes.
+  - `[FIXED]` The checkpoint lists `acsl-pseudocode` under practices (manifest and coverage map).
+  - `[FIXED]` The intro calls Q7 an extra challenge beyond the real six-question paper.
+- `[fable]` APPROVE WITH NITS (r1, folded).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28).
+
+**Consensus reached, no `[OPEN]` findings.**
+
 ## Post-Execution Report
 _(filled before merge.)_
