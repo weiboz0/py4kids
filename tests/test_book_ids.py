@@ -30,6 +30,9 @@ HISTORICAL_FILE_NAME = re.compile(r"(?:designs|plans)/\d{3}-[\w.-]+")
 # The one-release pre-merge-guard transition map (plan 091 B3) names the old roots on purpose.
 TRANSITION_MARKER = "plan-091-transition"
 TRANSITION_FILE = "scripts/pre-merge-guard.sh"
+# The only line exempt from the guard: the exact one-release transition map (plan 091).
+TRANSITION_LINE = ('TRANSITION = {"book1b": "python-concepts", "book1": "python-projects", '
+                   '"book2": "usaco-bronze"}  # plan-091-transition')
 HISTORICAL_PREFIXES = ("docs/plans/", "docs/designs/", "docs/reviews/", "docs/architecture/")
 LIVE_DIRS = ("tools/", "tests/", "scripts/")
 LIVE_FILES = ("books.yaml", ".gitignore", "output/README.md", "README.md", "TODO.md")
@@ -78,7 +81,7 @@ def _project_structure_section() -> str:
 def findings_for(label: str, text: str) -> list[str]:
     found = []
     for number, line in enumerate(text.splitlines(), 1):
-        if label == TRANSITION_FILE and TRANSITION_MARKER in line and line.startswith("TRANSITION = {"):
+        if label == TRANSITION_FILE and line == TRANSITION_LINE:
             continue  # the one-release old→new map must name the old roots
         scanned = HISTORICAL_FILE_NAME.sub("", line)
         for name, pattern in PATTERNS:
@@ -146,3 +149,11 @@ def test_transition_exemption_is_limited_to_the_guard_map():
     guard_line = next(line for line in (REPO / TRANSITION_FILE).read_text(encoding="utf-8").splitlines()
                       if TRANSITION_MARKER in line)
     assert findings_for(TRANSITION_FILE, guard_line) == []
+
+
+def test_transition_line_is_exact_and_unique():
+    lines = (REPO / TRANSITION_FILE).read_text(encoding="utf-8").splitlines()
+    assert lines.count(TRANSITION_LINE) == 1
+    assert [line for line in lines if TRANSITION_MARKER in line] == [TRANSITION_LINE]
+    extra = TRANSITION_LINE + '\nTRANSITION = {"book2": "bad"}  # plan-091-transition'
+    assert findings_for(TRANSITION_FILE, extra), "a second marked map line must be caught"

@@ -222,6 +222,13 @@ None.
   - `[FIXED]` F2: `tools/turtle_real.py` keeps its one `python-concepts` id as a commented, deliberate content pin.
   - `[WONTFIX]` F3: the python-concepts content pins in `publish_audit` ride on `publication`. That is fine with one publication book; it is recorded as a follow-up for any second one.
   - F4: pre-existing, out of scope — python-projects syllabus table column widths.
+- `[glm]` **skipped.** Both GLM providers hung on a one-word probe on 2026-09-28. User decision, 2026-09-28: "Skip GLM until further notice". [glm] approved plan 091 at plan review (round 1).
+
+### Round 2
+
+- `[sol]` **REJECT** (r2): the exemption still accepted any marked `TRANSITION = {` line.
+  - `[FIXED]` The exemption is now the single exact map line (`TRANSITION_LINE`). A test asserts it appears exactly once, that it is the only marked line in the file, and that a second marked map line is caught.
+  - The other folds were confirmed.
 
 ## Post-Execution Report
 _(filled before merge.)_
