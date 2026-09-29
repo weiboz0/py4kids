@@ -15,9 +15,11 @@ The evaluator's author implements this interface and does NOT edit this file:
       ``|``, ``*``, ``?``, ``+``, ``.`` (any character), ``( )``; precedence star (and the other
       quantifiers), then concatenation, then union
 
-    Items never use ``U`` or ``λ`` as a literal symbol outside a class. The patterns in these
-    tests contain no spaces (the wiki's identity table spaces its ``U``; a space would be a
-    literal character, as in ``re``).
+    * whitespace OUTSIDE a class is layout and is dropped (``ab U λ`` means ``abUλ``, as the
+      wiki's identity table spaces its ``U``); INSIDE a class every character, a space
+      included, stays literal (``[a ]`` matches a space)
+
+    Items never use ``U`` or ``λ`` as a literal symbol outside a class.
 
 ``fsa_eval.run_dfa(table: dict, start, finals, s: str) -> bool``
     ``table`` maps ``(state, symbol)`` to the next state; ``finals`` is a collection of states.
@@ -274,3 +276,20 @@ def test_dfa_finals_may_be_a_list():
     assert fsa_eval.run_dfa(WIKI_FSA, "A", ["C"], "xy")
     assert not fsa_eval.run_dfa(WIKI_FSA, "A", ["B"], "xy")
     assert fsa_eval.run_dfa(WIKI_FSA, "A", ["B"], "xx")
+
+
+# ---------------------------------------------------------------- whitespace is layout outside a class
+
+
+def test_spaced_union_is_layout():
+    # (ab U λ)*a means (abUλ)*a, which is a(ba)* (wiki identity 5 with a λ).
+    assert fsa_eval.same_language("a(ba)*", "(ab U λ)*a", "ab", 7)
+    assert fsa_eval.accepts("a U b", "b")
+    assert fsa_eval.accepts("a U b", "a")
+    assert not fsa_eval.accepts("a U b", " ")
+
+
+def test_space_inside_a_class_is_literal():
+    assert fsa_eval.accepts("[a ]", " ")
+    assert fsa_eval.accepts("[a ]", "a")
+    assert not fsa_eval.accepts("[a ]", "")

@@ -12,7 +12,7 @@ By the end they can:
 - (Senior) remove a heap's root, and delete a BST node by ACSL's rule, then report on the new tree;
 - write these structures in Python with lists: a stack with a `top` count, a queue with a `head` index, a BST as parallel `key`/`left`/`right` lists, and a heap with slot 0 unused.
 
-The hook is "The Library Robot": three puzzles (a returns pile, a waiting line, and a shelf-sorting tree), one for each lesson.
+The hook is "The Library Robot": three puzzles, one for each lesson — a returns cart and a help-desk line (stacks and queues), a letter tree for the shelves (BSTs), and an urgent pile (heaps).
 
 ## Pacing
 

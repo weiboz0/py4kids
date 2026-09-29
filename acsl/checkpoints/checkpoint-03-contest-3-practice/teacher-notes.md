@@ -7,7 +7,7 @@ It introduces nothing new.
 It holds two full six-question papers that share four questions, plus the programming problem:
 
 - Q1–Q2: Boolean Algebra (a simplification to a sum of products; the triples that make an expression true, with XOR).
-- Q3–Q4: Data Structures (a queue script with arithmetic on popped values; the internal path length of a BST with duplicates).
+- Q3–Q4: Data Structures (a queue script of pushes and pops; the internal path length of a BST with duplicates).
 - Q5–Q6: What Does This Program Do? – Arrays (Junior), one in Python and one in ACSL pseudocode on a 4×4 grid.
 - Q7–Q8: FSAs and Regular Expressions (Intermediate and above): one FSA table item and one regular-expression equivalence item, both as option choices.
 - Q9: the programming problem, "Letter Tree". The program builds the BST of a word (duplicates to the left) and prints its internal path length, leaf count and greatest depth.
@@ -24,7 +24,7 @@ ACSL's Junior, Intermediate and Senior short-answer tests are each 6 questions i
 
 ## Common mistakes
 
-- Q1: stopping before the expression is fully simplified, or writing the terms out of the book's canonical order.
+- Q1: keeping the term `A * ~B`, which the other two terms already cover, or writing the terms out of the book's canonical order.
 - Q2: reading `⊕` with the wrong precedence (it binds after `*` and before `+`), or missing a row of the truth table.
 - Q3: treating the queue as a stack (last in, first out). The same script run as a stack gives a different value.
 - Q4: sending a duplicate letter to the right, or starting the depth count at 1 instead of 0.
@@ -44,7 +44,7 @@ ACSL's Junior, Intermediate and Senior short-answer tests are each 6 questions i
 
 - **Junior:** Q1–Q6 and Q9, a full Junior paper.
 - **Intermediate and Senior:** Q1–Q4, Q7–Q8 and Q9, a full Intermediate/Senior paper; Q5–Q6 optional.
-- **Classroom:** Q1–Q4 and Q7–Q8 as short-answer practice, with Q5–Q6 optional. The real Classroom test is 10 questions in 50 minutes, from Boolean Algebra, FSAs and Regular Expressions, and Data Structures.
+- **Classroom:** Q1–Q4 and Q7–Q8 as short-answer practice, with Q5–Q6 optional. The real Classroom test is 10 questions in 50 minutes (acsl.org Divisions page), from Boolean Algebra, FSAs and Regular Expressions, and Data Structures.
 - **Elementary:** not for Elementary students. Their Contest 3 mock test is unit 08's Exercises 1–6, 6 questions in 30 minutes.
 - **Support:** allow the precedence ladder, a blank truth-table sheet and a blank tree sheet on a first attempt, then retake without them.
 - **Extension:** write two extra Q9 test cases, one of them a case where sending duplicates to the right gives a different answer.

@@ -3,7 +3,9 @@
 ``accepts(pattern, s)`` translates an ACSL regular expression to Python's ``re`` syntax, token by
 token, and uses ``re.fullmatch``. Outside a ``[...]`` class, ``U`` (union) becomes ``|`` and
 ``λ`` (the empty string) becomes an empty group ``()``; inside a class both are literal
-characters and the class operators (ranges, ``^``) keep their meaning. Everything else passes
+characters and the class operators (ranges, ``^``) keep their meaning. Whitespace outside a
+class is layout and is dropped (``ab U λ`` means ``abUλ``, as in the wiki's spaced identity
+table); inside a class every character, a space included, stays literal. Everything else passes
 through: concatenation, ``|``, ``*``, ``?``, ``+``, ``.``, ``( )``, with ``re``'s precedence
 (quantifiers, then concatenation, then union), which is ACSL's.
 
@@ -46,6 +48,8 @@ def _translate(pattern: str) -> str:
             if i + 1 < len(pattern) and pattern[i + 1] == "]":
                 out.append("\\]")
                 i += 1
+        elif ch.isspace():
+            pass  # layout, not a symbol: "ab U λ" means "abUλ"
         elif ch == "U":
             out.append("|")
         elif ch == "λ":

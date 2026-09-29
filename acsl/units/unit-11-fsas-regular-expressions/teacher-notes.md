@@ -12,7 +12,7 @@ By the end they can:
 - read ACSL's extended syntax: `?`, `+`, `.`, `[abc]`, `[^abc]` and `[a-z]`;
 - write a Python FSA simulator (a dict keyed by `(state, symbol)` tuples) and a recursive matcher for simple patterns, without Python's `re` module.
 
-The hook is "The Clubhouse Door": an FSA with buttons `k` and `t`. Students test five codes and describe every opening code in one line. Lesson 2 writes it as `kk*t(kk*t)*`, and Lesson 3 as `(k+t)+`.
+The hook is "The Knock Code": an FSA with buttons `k` and `t`. Students test five codes and describe every opening code in one line. Lesson 2 writes it as `kk*t(kk*t)*`, and Lesson 3 as `(k+t)+`.
 
 ## Pacing
 

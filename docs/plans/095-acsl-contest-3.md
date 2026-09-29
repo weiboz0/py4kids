@@ -336,5 +336,25 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
 
 ## Content Review
 
+### Round 1
+
+- `[sol]` **APPROVE WITH NITS.** Blind solve: every requested item matched (checkpoint Q1–Q8; unit 08 Ex 3, 6, 11, 13, 17, 22, 26; unit 09 Ex 4, 11, 13, 15, 18, 19, 20; unit 10 Ex 3, 11, 13, 19; unit 11 Ex 5, 7, 13, 15, 18). 195 evaluator tests, 155 fixtures across 28 programs and 14 extra probes passed.
+  - `[FIXED]` S1: checkpoint teacher notes no longer claim arithmetic on popped values in Q3.
+- `[fable]` **APPROVE WITH NITS.** Blind solve 32/32 matched, and every other short answer was hand-checked. 195 evaluator tests and 117 fixture files passed, with independent cross-validation. ACSL fidelity re-checked against the wiki and the Elementary doc.
+  - `[FIXED]` F1: `fsa_eval` read spaces as literal characters, so it misjudged the checkpoint's spaced `U` forms. Whitespace outside a class is now layout, and appended tests cover it (the pre-written test file gained cases; none changed).
+  - `[FIXED]` F2: the checkpoint's verify cells now import the tested `bool_eval`, `ds_eval` and `fsa_eval` (checkpoint 02's precedent) instead of re-implementing them.
+  - `[FIXED]` F3: checkpoint Q1 had the same function as unit 08 Ex 12. It is now `A * ~B + ~(~A + C) + ~A * ~B * C` → `A * ~C + ~B * C`, with a unique minimal SOP and a function that differs from every unit 08 item.
+  - `[FIXED]` F4: checkpoint regular expressions follow unit 11's unspaced `U` style.
+  - `[FIXED]` F5: unit 11's hook is renamed "The Knock Code" (unit 08 keeps "The Clubhouse Door").
+  - `[FIXED]` F6: unit 09 teacher notes describe the hook's three puzzles correctly.
+  - `[FIXED]` F7: the Classroom format (10 questions in 50 minutes) is confirmed on acsl.org's Divisions page and cited.
+- `[self]` APPROVE: every short answer was solved blind by the solutions sessions and matched the authors' keys:
+  - checkpoint 8/8
+  - U08 23/23
+  - U09 16/16
+  - U10 16/16
+  - U11 15/15
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Post-Execution Report
 _(filled before merge.)_
