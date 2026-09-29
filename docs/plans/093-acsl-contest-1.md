@@ -85,7 +85,8 @@ Statements write bases ACSL-style with subscripts (3F₁₆).
   - `/` (real division, which can give a decimal; Python `/`, using the `float-type` idea from *Python by Projects*)
   - `^` exponent (small whole-number powers, traced as repeated multiplication)
   - `!`, `&&`, `||` (Python `not`, `and`, `or`)
-  - `abs`, `int` (the greatest integer ≤ x, e.g. `int(7/2)` = 3), and `sqrt` (Python `math.sqrt` after `import math`; items use perfect squares or state the rounding)
+  - `abs`; ACSL `int(x)`, the greatest integer ≤ x, **transliterated as `math.floor(x)`**, never Python `int()`, which truncates toward zero (ACSL `int(-1.5)` = −2, Python `int(-1.5)` = −1). The dialect table calls this out, and at least one Intermediate item uses a negative argument.
+  - `sqrt`: Python `math.sqrt` after `import math`; items use perfect squares or state the rounding
   - `S[a:b]` substrings (Python slicing semantics stated)
   - 1D arrays from index 0 or 1, as the program states, and **2D arrays** `A(r, c)`
 - **At least one third of short-answer items are presented in ACSL pseudocode**, with a Python transliteration in the trace asset.
@@ -205,6 +206,11 @@ Four authors: three units and the checkpoint.
   - `[FIXED]` At least one checkpoint WDTPD question is in pseudocode.
   - `[FIXED]` Division paths are counted by script.
   - `[FIXED]` The `int` wording is clarified.
+
+### Round 3
+
+- `[sol]` **REJECT** (r3): ACSL `int(x)` (floor) differs from Python `int()` (truncation) for negative inputs.
+  - `[FIXED]` ACSL `int(x)` is transliterated as `math.floor(x)`; the dialect table states the difference, and at least one Intermediate item exercises a negative argument.
 
 ## Content Review
 _(filled before PR.)_
