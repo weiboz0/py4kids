@@ -26,6 +26,36 @@ Conventions and lessons carried over from plan 093:
 - **Shared ids** with USACO (identical entries): `postfix-eval` (technique, techniques) and `bitwise-ops` (feature, number-theory). `code-tracing` and `acsl-pseudocode` already exist in `acsl`.
 - **Tooling constraint:** checkpoints allow 6–8 question headings (`tools/notebooks.py`). Contest 2's two paths share only 4 questions, so a practice with both full papers plus the programming problem needs 9.
 
+## Shared rules for this plan
+
+**Verification helpers.** Evaluators that check answers live in `acsl/units/<unit>/assets/verify/`:
+- `lisp_eval.py` (unit 07)
+- `pip_eval.py` (unit 04: a prefix/postfix evaluator and an infix→prefix/postfix converter)
+- `bsf_eval.py` (unit 05: bit-string operators and a brute-force solve-for-x)
+
+They are imported only by `verify` cells. A1 adds a tested carve-out: `source-policy` and `concept-scan` skip `assets/verify/*.py`, just as they skip `verify` cells, and `judge-check` ignores that folder. Each evaluator is unit-tested (`tests/test_acsl_evaluators.py`) against the ACSL wiki's worked examples **before** any answer is trusted. A verify cell's expression string is byte-identical to the statement's.
+
+**Stack and list idioms for student code** (`.pop`, `.index`, `.count`, `.find`, `.join` and slices of lists are not used):
+- a **stack** is a list plus a tracked `top` count: push appends while `top == len(stack)`, else overwrites `stack[top]`; `top` goes up and down; the top item is read as `stack[top - 1]`
+- a LISP `CDR` / `CONS` in Python builds a new list with a loop and `append`
+
+These map to `list-literal`, `list-append`, `list-index` and `list-loop` from *Python by Projects*.
+
+**Per-entry concept boundaries:**
+- Units 04, 05 and 07 require only *Python by Projects* and Foundations ids.
+- Unit 06 also practises `code-tracing` and `acsl-pseudocode` (unit 03) and **introduces nothing** (`introduces: []`, which the tools already accept).
+- The checkpoint is strict over *Python by Projects* plus units 00–07. Its author writes from these specs; A2 re-checks every id against the units' final manifests.
+
+**Canonical answer text** (plan 093's rules, plus the rules below):
+- **Prefix/postfix expressions:** single-space-separated tokens (`+ 3 * 4 2`), `↑` for powers in statements and answers, operands never reordered, equal precedence left to right. Items never stack `↑` without parentheses.
+- **Evaluation results:** an integer when whole, otherwise Python's decimal (`13.5`).
+- **LISP values:**
+  - numbers as above (`(DIV 6 (SUB 2 5))` is `-2`; `(DIV 54 4)` is `13.5`)
+  - lists as `(A B C)` with single spaces, in the case the question uses
+  - the empty list and false as `NIL`, true as `true`
+  - items prefer a number or list as the final value
+- **Bit strings:** the full width stated in the question. **Solve-for-x:** all solutions in ascending binary order, separated by `, `. A "how many" item takes a bare integer. The `*` wildcard form appears only when the item explicitly asks for it *and* the solution set is one pattern.
+
 ## The entries (all under `acsl/`)
 
 Unit conventions:
@@ -35,101 +65,116 @@ Unit conventions:
 - at least 2 `stretch` Challenges
 - ACSL-style statements
 
-Contest code never uses `.pop`; a stack is a list with a tracked top index or a slice.
-
 ### `unit-04-prefix-infix-postfix` — Prefix/Infix/Postfix Notation
 
 - **Divisions:** elementary, junior, intermediate, senior. **Introduces:** `postfix-eval`.
-- **Lesson 1 is the Elementary section**, with no code the student runs:
-  - reading prefix and postfix
-  - evaluating short prefix and postfix expressions with single-digit operands and `+ - * / ↑`
-  - converting simple infix to prefix or postfix
-  - ≥ 6 contiguous `acsl-elementary` short-answer items open the exercises
+- **Non-programming hook.**
+- **Lesson 1 is the Elementary section**, with no code the student runs. It follows the official Elementary doc:
+  - single-digit operands; division only by 1 or 2; powers only 1 or 2
+  - PEMDAS, with left to right for equal precedence
+  - five skills: evaluate postfix, evaluate prefix, infix→prefix, infix→postfix, and **prefix↔postfix**
+  - ≥ 6 contiguous `acsl-elementary` short-answer items open the exercises, before any other tag
 - **Junior and above:**
-  - operator precedence and parentheses, and the fully parenthesised method for conversion
-  - multi-digit operands separated by spaces
-  - evaluating with a stack by hand
-  - expression trees (reading them, and prefix/infix/postfix from a tree)
-  - a Python postfix evaluator using a list stack (no `.pop`)
-- **Intermediate+:** unary operators and longer expressions.
-- ACSL's `↑` (power) uses small whole-number exponents.
+  - multi-digit operands and variables (`A B C`)
+  - nested parentheses; `↑` with precedence
+  - the fully parenthesised conversion method; converting directly between prefix and postfix
+  - evaluating with a stack by hand, then a Python postfix evaluator using the stack idiom
+- **Intermediate and above:** longer expressions, and division producing non-integers.
+- **No unary minus** (not on ACSL's page). Expression trees are a short optional aside, not assessed.
 
 ### `unit-05-bit-string-flicking` — Bit-String Flicking
 
 - **Divisions:** junior, intermediate, senior. **Introduces:** `bitwise-ops`.
-- **Taught ACSL style:**
-  - bit strings as text; `NOT`, `AND`, `OR`, `XOR` bit by bit
-  - `LSHIFT-x`, `RSHIFT-x`, `LCIRC-x`, `RCIRC-x`
-  - ACSL precedence: `NOT`, then shift/circulate, then `AND`, then `XOR`, then `OR`, with parentheses first
-- **Solving for an unknown bit string**, where the answer is all solutions or the count of solutions as the question asks:
-  - Junior: one operation
-  - Intermediate+: two or more operations, and ACSL `*` wildcard answers
-- **Python:** bit-string operations on strings of `0`/`1`, written by hand with loops; the `&`, `|`, `^`, `<<`, `>>` operators on integers shown as the fast equivalent.
+- **Rules from ACSL's page:**
+  - `NOT` / `~`, `AND` / `&`, `OR` / `|`, `XOR` / `⊕`, with the word and symbol forms both used
+  - `LSHIFT-x` and `RSHIFT-x` (bits shifted out are lost, zeros shifted in); `LCIRC-x` and `RCIRC-x` (bits wrap round); a circulate count may exceed the length, taken mod the length
+  - precedence from highest to lowest: `NOT`; shift/circulate; `AND`; `XOR`; `OR`
+  - **equal precedence evaluates left to right; unary operators bind right to left** (`NOT RSHIFT-1 x` = `NOT (RSHIFT-1 x)`)
+  - operands of unequal length are **padded with 0s on the left**
+- **Solve for an unknown x:** Junior has one operation; Intermediate and above chain two or more. Answers use the canonical list or count form above.
+- **Python:**
+  - bit strings as text, processed with hand-written loops (no `bin` or `format`)
+  - integer operators shown as the fast equivalent, including the width mask: `~x` becomes `x ^ mask`, and `<<` is followed by `& mask`
 
 ### `unit-06-wdtpd-looping` — What Does This Program Do? – Looping
 
-- **Divisions:** junior. **Introduces:** no new concept; it practises `code-tracing` and `acsl-pseudocode`. If the tools require an introduction, the ACSL-only `loop-tracing` is added.
-- Junior's Contest 2 category: tracing `FOR`, `WHILE`, nested loops, loops with counters and accumulators, and loops over strings. ACSL pseudocode and Python are side by side, and at least one third of items are in pseudocode.
-- Mostly short-answer, plus a few predict-then-verify programs.
-- *(Intermediate and Senior students met every construct in Contest 1; the teacher notes point them here for extra loop practice.)*
+- **Divisions:** junior. **Introduces:** none; it practises `code-tracing` and `acsl-pseudocode`.
+- **Construct list:**
+  - `FOR … TO … STEP` (inclusive, including **negative STEP**)
+  - `WHILE`, tested at the top
+  - nested loops with dependent bounds
+  - counters, accumulators, and a running maximum
+  - `%`, `int` (floor) and `abs` inside loops
+  - integer-only arithmetic
+- **No string traversal and no arrays:** Junior strings are Contest 4, Junior arrays Contest 3.
+- At least one third of items are in pseudocode; every short-answer item has one-line output.
+- *(Intermediate and Senior met every construct in Contest 1; the teacher notes suggest this unit as loop drill only.)*
 
 ### `unit-07-lisp` — LISP
 
 - **Divisions:** intermediate, senior. **Introduces:** the ACSL-only `lisp-eval` ("Evaluating ACSL LISP expressions", technique, techniques).
-- **ACSL's LISP subset:**
-  - atoms and lists; quote (`'`)
-  - `SETQ`
-  - `CAR`, `CDR` and their compositions (`CADR` …)
-  - `CONS`, `REVERSE`
-  - `ADD`, `SUB`, `MULT`, `DIV`, `SQUARE`, `EXP`
-  - `EQ`, `ATOM`
-  - `DEFUN` with simple bodies
-  - evaluation order from the inside out
-- **Short-answer items:** evaluate an expression and give its value (a list written as `(A B C)`).
-- **Programming items:** Python list versions of `CAR`, `CDR`, `CONS` and `REVERSE` on lists read from input. No `.pop`; loops and slices only.
-- The solutions session verifies LISP answers with a small evaluator in a trace asset. Verify code is exempt from `source-policy`.
+- **ACSL's function set, taught and assessed** (per the wiki):
+  - atoms and lists; `NIL` = `()`; quote `'`
+  - `SET` (first argument quoted), `SETQ`, `EVAL`
+  - `CAR`, `CDR` (`CDR` of a one-element list is `NIL`) and compositions `CADR` …
+  - `CONS` (second argument always a list), `REVERSE`
+  - variadic `ADD` and `MULT`; `SUB`, `DIV`, `SQUARE`, `EXP`; symbol forms `+ - * /`
+  - `EQ`, `POS`, `NEG`, `ATOM`
+  - `DEF` / `DEFUN`
+- **Explicitly out:** `COND`, `IF`, `NULL`, `LIST`, `LENGTH`, `MEMBER`, `APPEND`, `NTH`, `MAPCAR`, lambda.
+- **Short-answer items:** evaluate and give the value. **Programming items:** Python list versions of `CAR`, `CDR`, `CONS` and `REVERSE` on lists read from input, using the list idiom.
 
 ### `checkpoint-02-contest-2-practice` — Practice (contest 2)
 
 - **Divisions:** junior, intermediate, senior. **9 questions:**
-  - Q1–Q2 Prefix/Infix/Postfix, `acsl-junior`
-  - Q3–Q4 Bit-String Flicking, `acsl-junior`
+  - Q1–Q2 Prefix/Infix/Postfix, `acsl-junior` (Q2 the harder)
+  - Q3–Q4 Bit-String Flicking, `acsl-junior` (Q4 the harder, solve-for-x)
   - Q5–Q6 WDTPD – Looping, `acsl-junior`, at least one in pseudocode
-  - Q7–Q8 LISP, `acsl-intermediate`
+  - Q7–Q8 LISP, `acsl-intermediate` (one `DEFUN`/`SETQ` item, one `CAR`/`CDR` composition)
   - Q9 the single `acsl-junior` programming problem, last, with the sample plus ≥ 4 hidden-style fixtures
 - **Paths:**
   - Junior: Q1–Q6 + Q9
   - Intermediate and Senior: Q1–Q4, Q7–Q8 + Q9
-  - Both are full six-question papers.
-- Strict prerequisites.
-- **Teacher notes:** Grading follows ACSL's format (6 short-answer questions in 30 minutes; the programming problem scored on its test data). Classroom takes Q1–Q8 as short-answer practice (the real Classroom test is 10 questions in 50 minutes). Elementary uses unit 04's Elementary items as its mock test.
+  - Classroom (its Contest 2 categories are Prefix/Infix/Postfix, Bit-String Flicking and LISP): Q1–Q4 + Q7–Q8, with Q5–Q6 optional extra
+  - Elementary: unit 04's Elementary items, as 6 questions in 30 minutes
+- **Teacher notes:** Grading uses ACSL's format (6 short answers in 30 minutes; the programming problem scored on its test data).
 
-## Phase A1 — Registry, before authoring (inline)
+## Phase A1 — Registry and tooling, before authoring
 
-`acsl/curriculum/concepts.yaml`:
-- `postfix-eval` and `bitwise-ops`, byte-identical to USACO's
-- the ACSL-only `lisp-eval`
+- **Inline:** `acsl/curriculum/concepts.yaml` gains `postfix-eval` and `bitwise-ops` (byte-identical to USACO's) and the ACSL-only `lisp-eval`.
+- **Opus tooling subagent:**
+  - The checkpoint question-count rule allows **6–10** for `acsl`-flag books and keeps 6–8 elsewhere; the sequential-numbering check runs for every allowed count, Q1–Q10 included.
+  - The `assets/verify/` carve-out in `source-policy`, `concept-scan` and `judge-check`.
+  - Tests: 9 and 10 pass for `acsl`; 9 fails for `usaco-bronze`; numbering gaps fail at 9 and 10; the carve-out covers only `assets/verify/`.
 
 ## Phase B — Lessons and statements (Opus subagents in parallel, one per entry, each owning only its folder)
 
-## Phase C — Solutions (Opus subagents, separate fresh sessions, one per entry, solved from the statements)
+## Phase C — Solutions (Opus subagents, separate fresh sessions, one per entry)
+
+- Solved from the statements only.
+- Unit 04, 05 and 07 solutions sessions write their `assets/verify/*_eval.py` plus the wiki-sample tests in `tests/test_acsl_evaluators.py`.
 
 ## Phase A2 — Coverage and syllabus, after authoring (inline)
 
 Coverage-map entries in season order (units 04, 05, 06, 07, then the checkpoint), reconciled against the manifests. Syllabus rows in the check's form.
 
-## Phase D — Teacher notes (inline) and one tooling rule (Opus subagent)
+## Phase D — Teacher notes (inline)
 
-- Five `teacher-notes.md` files, with the required headings and Grading for the checkpoint.
-- **Tooling:** the checkpoint question-count rule allows **6–10** question headings for `acsl`-flag books (ACSL's Classroom test has 10) and keeps 6–8 elsewhere. Tests for 9 and 10 passing in `acsl` and 9 failing in `usaco-bronze`.
+Five `teacher-notes.md` files, with the required headings and Grading for the checkpoint. They cover division paths (including unit 06 as loop drill for Intermediate/Senior, and the Elementary mock test at 6 in 30), the canonical answer forms, and the ACSL rules students most often get wrong.
 
 ## Phase E — VERIFICATION
 
 1. `scripts/ci-local.sh` ALL GREEN, in a solo run on the final commit.
-2. The global concept check passes with the new shared ids.
-3. Division paths are counted by script, and the counts are reported:
-   - unit 04 has ≥ 6 contiguous `acsl-elementary` items
-   - the checkpoint's Junior and Intermediate paths are each 6 short-answer questions plus 1 programming question
+2. The global concept check passes with the new shared ids. `tests/test_acsl_evaluators.py` passes on the ACSL wiki samples:
+   - **LISP:** `-440`, `((4 (5 6) 7))`, `CA`, `24.5`, `(red white blue)`, `SECOND`
+   - **Bit-String Flicking:** the wiki's operator and solve-for-x examples
+   - **Prefix/Infix/Postfix:** the wiki's conversions and evaluations
+3. A script reports the actual question ids and tags for each checkpoint path:
+   - Junior: Q1–Q6 + Q9
+   - Intermediate/Senior: Q1–Q4, Q7–Q8 + Q9
+   - Classroom: Q1–Q4, Q7–Q8
+
+   It also checks that unit 04 has ≥ 6 contiguous `acsl-elementary` items before any other tag.
 4. Blind solves: reviewers solve all 8 checkpoint short answers and at least 3 items per unit.
 5. Post-execution report.
 
@@ -149,6 +194,30 @@ Coverage-map entries in season order (units 04, 05, 06, 07, then the checkpoint)
   - Bit-string "solve for x" answers need a canonical form (ACSL `*` wildcards).
   - WDTPD – Looping is Junior-only; confirm the tools accept a unit with no new concept.
 - `[glm]` skipped (user decision 2026-09-28).
+
+### Round 1 — verdicts
+
+- `[sol]` **REJECT:**
+  - the LISP evaluator placement conflicts with `source-policy`
+  - the LISP subset and answer formats are imprecise
+  - bit-string semantics and solve-for-x forms are underspecified
+  - Junior string tracing belongs to Contest 4
+  - the no-new-concept unit and the boundaries are not locked
+  - Phase E must verify both paths and Q1–Q10 numbering
+- `[fable]` **APPROVE WITH NITS** (conditional), checked against the ACSL wiki pages and the Elementary PIP doc:
+  - Must fix: the full LISP set (`SET`, `EVAL`, `POS`, `NEG`, `DEF`, symbol forms, variadic `ADD`/`MULT`); canonical LISP text (`DIV` whole results, `true`/`NIL`); evaluator placement with wiki-sample tests; canonical PIP and BSF answer forms; the Classroom path
+  - Should fix: drop unary minus; Elementary per the official doc (limits, prefix↔postfix, a non-programming hook); BSF rules (left to right, right-to-left unary, left padding, mod circulates, symbol forms, Python masks); per-entry boundaries; a concrete stack idiom; an explicit Looping construct list with `introduces: []`; the 6–10 rule moved to A1; verification per unit
+  - Nice: expression trees as an aside; harder Q2/Q4; LISP Q7–Q8 variety; Phase E wording; teacher-notes paths
+- `[glm]` skipped (user decision 2026-09-28).
+
+### Round 1 — fold
+
+- `[FIXED]` all of the above:
+  - A "Shared rules" section: the `assets/verify/` helpers with a tested carve-out and wiki-sample evaluator tests; the stack and list idioms and their ids; per-entry boundaries; canonical answer text for prefix/postfix, evaluation results, LISP and bit strings.
+  - The entries rewritten from the ACSL pages: the Elementary PIP limits and five skills with a non-programming hook; no unary minus; the full BSF rules; the Looping construct list (no strings or arrays; `introduces: []`); the full LISP function set with an explicit out-list.
+  - Checkpoint paths including Classroom.
+  - A1 carries the 6–10 rule (numbering checked for all counts) and the carve-out.
+  - Phase E: evaluator tests on the wiki samples and a scripted path report.
 
 ## Content Review
 _(filled before PR.)_
