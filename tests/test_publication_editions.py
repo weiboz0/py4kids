@@ -1,4 +1,4 @@
-"""Plan 090 Phase D: the four Book 1b editions, edition blocks, the print Starter rule,
+"""Plan 090 Phase D: the four python-concepts editions, edition blocks, the print Starter rule,
 the Answer Key boundary, the audit's per-edition rules, output/ ownership and the CLI."""
 
 import json
@@ -13,6 +13,7 @@ from tools.publish import (
     allowed_source,
     build,
     filter_edition_blocks,
+    output_stem,
     redundant_starter,
     render_items,
 )
@@ -80,7 +81,7 @@ def test_bad_edition_markers_fail(text, message):
 
 
 def test_real_how_to_use_filters_for_every_edition():
-    source = (REPO / 'book1b' / 'front-matter' / 'how-to-use.md').read_text(encoding='utf-8')
+    source = (REPO / 'python-concepts' / 'front-matter' / 'how-to-use.md').read_text(encoding='utf-8')
     texts = {edition: filter_edition_blocks(source, edition) for edition in EDITIONS}
     assert all('<!--' not in text for text in texts.values())
     full_starter = '- **Starter:** A beginning for your exercise program'
@@ -160,7 +161,7 @@ def test_print_audit_sentinels_catch_drift(tmp_path):
 
 
 def test_real_unit1_exercise20_broken_program_stays_in_print():
-    entry = REPO / 'book1b' / 'units' / 'unit-01-output-and-variables'
+    entry = REPO / 'python-concepts' / 'units' / 'unit-01-output-and-variables'
     body, inventory, _ = render_items(entry / 'exercises.ipynb', 'unit', 'student-print', entry, entry.name)
     kinds = {record['id']: record['kind'] for record in inventory}
     assert kinds['057d796ebeff'] == 'starter'
@@ -177,8 +178,8 @@ SENTINELS = ('TEACHER_NOTE_SENTINEL_90', 'EVEN_SOLUTION_SENTINEL_90', 'CHECKPOIN
 
 @pytest.fixture
 def book(tmp_path):
-    (tmp_path / 'books.yaml').write_text('books:\n- id: book1b\n')
-    root = tmp_path / 'book1b'
+    (tmp_path / 'books.yaml').write_text('books_version: 2\nbooks:\n- id: python-concepts\n  root: python-concepts\n  title: Python, Concept by Concept\n  subtitle: Learn Python one idea at a time\n  publication: true\n')
+    root = tmp_path / 'python-concepts'
     (root / 'docs').mkdir(parents=True)
     (root / 'docs' / 'unit-00-getting-set-up.md').write_text(
         '# Unit 0 — Getting Set Up\n\nGet ready.\n\n## Install Python\n\nStart.\n')
@@ -195,7 +196,7 @@ def book(tmp_path):
     (back / 'glossary.md').write_text('# Glossary\n')
     (back / 'quick-reference.md').write_text('# Quick Reference\n')
     (root / 'syllabus.md').write_text(
-        '# Book 1b — Year 1 Syllabus\n\n| entry | kind | lessons | the hook |\n|---|---|---|---|\n'
+        '# Python, Concept by Concept — Syllabus\n\n| entry | kind | lessons | the hook |\n|---|---|---|---|\n'
         '| `unit-01-fixture` | unit | 1 | Hook. |\n'
         '| `checkpoint-01-fixture` | checkpoint | 1 | Test. |\n')
     unit = root / 'units' / 'unit-01-fixture'
@@ -245,7 +246,7 @@ def test_answer_key_edition_contents_and_source_boundary(book, monkeypatch):
 
     monkeypatch.setattr(publish, 'read_source', spy_read)
     monkeypatch.setattr(publish, 'notebook', spy_notebook)
-    project = build(book, 'book1b', 'answer-key')
+    project = build(book, 'python-concepts', 'answer-key')
     assert set(opened) <= {'syllabus.md', 'answer-key-intro.md', 'lesson.ipynb', 'exercises.ipynb'}
     chapters = json.loads((project / 'inventory.json').read_text())['chapters']
     assert [(c['id'], c['kind']) for c in chapters] == [
@@ -265,23 +266,23 @@ def test_answer_key_edition_contents_and_source_boundary(book, monkeypatch):
     assert publish_audit.answer_coverage_findings(answers, [(1, 1), (1, 3)]) == []
     assert not (project / 'glossary.qmd').exists() and not (project / 'the-index.qmd').exists()
     config = (project / '_quarto.yml').read_text()
-    assert 'output-file: "Book1b-Answer-Key"' in config and 'classoption: [open=any, headings=normal]' in config
+    assert 'output-file: "python-concepts-answer-key"' in config and 'classoption: [open=any, headings=normal]' in config
     assert config.split('chapters:')[1].split('format:')[0].split() == [
         '-', 'index.qmd', '-', 'answers-unit-01-fixture.qmd']
     assert '\\date{Answer Key}' in (project / 'theme' / 'theme.tex').read_text()
-    assert publish_audit.leak_findings(book, chapters, project, 'answer-key') == []
+    assert publish_audit.leak_findings(book, 'python-concepts', chapters, project, 'answer-key') == []
 
 
 def _key_equivalence(book, key_qmd):
-    full = (book / 'book1b' / 'build' / 'publish' / 'student' / 'answers.qmd').read_text()
+    full = (book / 'python-concepts' / 'build' / 'publish' / 'student' / 'answers.qmd').read_text()
     return publish_audit.answer_key_equivalence_findings(
         'answers-unit-01-fixture', 1, key_qmd, full, 'Signs', {1: 'Given Values', 2: 'Empty', 3: 'Repair It'},
         mainmatter=True)
 
 
 def test_answer_key_equals_the_full_edition_appendix(book):
-    build(book, 'book1b', 'student')
-    project = build(book, 'book1b', 'answer-key')
+    build(book, 'python-concepts', 'student')
+    project = build(book, 'python-concepts', 'answer-key')
     key = (project / 'answers-unit-01-fixture.qmd').read_text()
     assert _key_equivalence(book, key) == []
     changed_title = key.replace('— Repair It', '— Fix It')
@@ -300,32 +301,32 @@ def test_answer_key_equals_the_full_edition_appendix(book):
 def test_answer_key_boundary_denies_teacher_and_solution_sources():
     for name in ('teacher-notes.md', 'solutions.ipynb', 'for-teachers.md', 'preface.md', 'how-to-use.md',
                  'checkpoint.ipynb', 'brief.ipynb', 'glossary.md'):
-        assert not allowed_source(Path('book1b/x') / name, 'answer-key'), name
-    assert not allowed_source(Path('book1b/units/u/assets/solutions_ex1.py'), 'answer-key')
-    assert not allowed_source(Path('book1b/units/u/assets/l1.py'), 'answer-key')
-    assert allowed_source(Path('book1b/front-matter/answer-key-intro.md'), 'answer-key')
-    assert not allowed_source(Path('book1b/front-matter/answer-key-intro.md'), 'student')
-    assert not allowed_source(Path('book1b/front-matter/answer-key-intro.md'), 'bogus')
+        assert not allowed_source(Path('python-concepts/x') / name, 'answer-key'), name
+    assert not allowed_source(Path('python-concepts/units/u/assets/solutions_ex1.py'), 'answer-key')
+    assert not allowed_source(Path('python-concepts/units/u/assets/l1.py'), 'answer-key')
+    assert allowed_source(Path('python-concepts/front-matter/answer-key-intro.md'), 'answer-key')
+    assert not allowed_source(Path('python-concepts/front-matter/answer-key-intro.md'), 'student')
+    assert not allowed_source(Path('python-concepts/front-matter/answer-key-intro.md'), 'bogus')
     for edition in ('student', 'student-print'):
-        assert not allowed_source(Path('book1b/units/u/solutions.ipynb'), edition)
-        assert not allowed_source(Path('book1b/units/u/teacher-notes.md'), edition)
+        assert not allowed_source(Path('python-concepts/units/u/solutions.ipynb'), edition)
+        assert not allowed_source(Path('python-concepts/units/u/teacher-notes.md'), edition)
 
 
 def test_answer_key_leak_guard_catches_even_and_checkpoint_solutions(book):
-    project = build(book, 'book1b', 'answer-key')
+    project = build(book, 'python-concepts', 'answer-key')
     chapters = json.loads((project / 'inventory.json').read_text())['chapters']
     path = project / 'answers-unit-01-fixture.qmd'
     path.write_text(path.read_text() + '\n```python\nprint("EVEN_SOLUTION_SENTINEL_90")\n```\n'
                     + '\n```python\nprint("CHECKPOINT_SOLUTION_SENTINEL_90")\n```\n')
-    findings = publish_audit.leak_findings(book, chapters, project, 'answer-key')
+    findings = publish_audit.leak_findings(book, 'python-concepts', chapters, project, 'answer-key')
     assert 'FAIL: answer-key: answers: solution leak from unit-01-fixture Exercise 2' in findings
     assert 'FAIL: answer-key: answers: solution leak from checkpoint-01-fixture Question 1' in findings
 
 
 def test_print_and_full_editions_from_the_profile(book):
-    lean = build(book, 'book1b', 'student-print')
-    full = build(book, 'book1b', 'student')
-    teacher = build(book, 'book1b', 'teacher')
+    lean = build(book, 'python-concepts', 'student-print')
+    full = build(book, 'python-concepts', 'student')
+    teacher = build(book, 'python-concepts', 'teacher')
     entry_order = ['unit-01-fixture', 'checkpoint-01-fixture']
     for edition, project in (('student-print', lean), ('student', full), ('teacher', teacher)):
         chapters = json.loads((project / 'inventory.json').read_text())['chapters']
@@ -333,7 +334,14 @@ def test_print_and_full_editions_from_the_profile(book):
         config = (project / '_quarto.yml').read_text()
         files = config.split('chapters:')[1].split('format:')[0].split()[1::2]
         assert files == publish_audit.expected_quarto_files(edition, entry_order)
-        assert f'output-file: "{EDITIONS[edition]["output_name"]}"' in config
+        assert f'output-file: "python-concepts-{edition}"' in config
+        assert output_stem('python-concepts', edition) == f'python-concepts-{edition}'
+        assert 'title: "Python, Concept by Concept"' in config
+        assert 'subtitle: "Learn Python one idea at a time"' in config
+        theme = (project / 'theme' / 'theme.tex').read_text()
+        assert ('\\uppertitleback{Python, Concept by Concept\\\\Learn Python one idea at a time'
+                '\\\\First edition, 2026}') in theme
+        assert '(folder python-concepts/)' in theme and '@TITLE@' not in theme
         assert f'classoption: [{EDITIONS[edition]["classoption"]}, headings=normal]' in config
         assert '\\date{' + EDITIONS[edition]['edition_label'] + '}' in (project / 'theme' / 'theme.tex').read_text()
     assert not (lean / 'answers.qmd').exists() and (full / 'answers.qmd').exists()
@@ -347,7 +355,7 @@ def test_print_and_full_editions_from_the_profile(book):
     assert '- **Starter:** full.' in (full / 'how-to-use.qmd').read_text()
     assert '- **Starter:** teacher.' in (teacher / 'how-to-use.qmd').read_text()
     chapters = json.loads((lean / 'inventory.json').read_text())['chapters']
-    assert publish_audit.leak_findings(book, chapters, lean, 'student-print', hide_odd=True,
+    assert publish_audit.leak_findings(book, 'python-concepts', chapters, lean, 'student-print', hide_odd=True,
                                        kinds=frozenset({'unit', 'checkpoint', 'front', 'setup'})) == []
     unit = next(c for c in chapters if c['id'] == 'unit-01-fixture')
     starters = [(cell_id, source, kind) for cell_id, (kind, source) in
@@ -357,12 +365,12 @@ def test_print_and_full_editions_from_the_profile(book):
 
 
 def test_unknown_edition_marker_fails_the_build(book):
-    path = book / 'book1b' / 'front-matter' / 'how-to-use.md'
+    path = book / 'python-concepts' / 'front-matter' / 'how-to-use.md'
     path.write_text(path.read_text() + '<!-- edition: online -->\nx\n<!-- /edition -->\n')
     with pytest.raises(ValueError, match='unknown edition online'):
-        build(book, 'book1b', 'student')
+        build(book, 'python-concepts', 'student')
     with pytest.raises(ValueError, match='edition must be one of'):
-        build(book, 'book1b', 'ebook')
+        build(book, 'python-concepts', 'ebook')
 
 
 # --- audit rules ----------------------------------------------------------------------------
@@ -382,17 +390,17 @@ def test_leak_guard_scans_every_answers_kind_chapter(tmp_path, monkeypatch):
     project = tmp_path
     (project / 'a.qmd').write_text('```python\nprint("hidden solution")\n```\n')
     chapters = [{'id': 'answers-unit-01-x', 'kind': 'answers', 'file': 'a.qmd'}]
-    entry = tmp_path / 'book1b' / 'units' / 'unit-01-x'
+    entry = tmp_path / 'python-concepts' / 'units' / 'unit-01-x'
     entry.mkdir(parents=True)
     nbformat.write(nbformat.v4.new_notebook(cells=[
         md('# S'), md('## Exercise 1'), code('print("odd")'), md('## Exercise 2'),
         code('print("hidden solution")')]), entry / 'solutions.ipynb')
     monkeypatch.setattr(publish_audit, 'entries', lambda book, edition: [('unit-01-x', entry)])
-    assert publish_audit.leak_findings(tmp_path, chapters, project, 'answer-key') == [
+    assert publish_audit.leak_findings(tmp_path, 'python-concepts', chapters, project, 'answer-key') == [
         'FAIL: answer-key: answers: solution leak from unit-01-x Exercise 2']
     (project / 'a.qmd').write_text('```python\nprint("odd")\n```\n')
-    assert publish_audit.leak_findings(tmp_path, chapters, project, 'answer-key') == []
-    assert publish_audit.leak_findings(tmp_path, chapters, project, 'student-print', hide_odd=True) == [
+    assert publish_audit.leak_findings(tmp_path, 'python-concepts', chapters, project, 'answer-key') == []
+    assert publish_audit.leak_findings(tmp_path, 'python-concepts', chapters, project, 'student-print', hide_odd=True) == [
         'FAIL: student-print: answers: solution leak from unit-01-x Exercise 1']
 
 
@@ -405,35 +413,35 @@ def _pdf(path: Path) -> Path:
 
 
 def test_output_scripts_replace_only_their_own_files(tmp_path):
-    build_dir = tmp_path / 'book1b' / 'build'
+    build_dir = tmp_path / 'python-concepts' / 'build'
     handout = _pdf(build_dir / 'handouts' / 'unit-01-a.pdf')
     syllabus = _pdf(build_dir / 'syllabus.pdf')
-    refresh_output(tmp_path, 'book1b', 'pdf', [handout, syllabus])
-    out = tmp_path / 'output' / 'book1b'
-    _pdf(out / 'Book1b-Student-Old.pdf')  # a renamed edition from an earlier build
-    student = _pdf(build_dir / 'publish' / 'student' / '_book' / 'Book1b-Student.pdf')
-    key = _pdf(build_dir / 'publish' / 'answer-key' / '_book' / 'Book1b-Answer-Key.pdf')
-    refresh_output(tmp_path, 'book1b', 'book', [student, key])
+    refresh_output(tmp_path, 'python-concepts', 'pdf', [handout, syllabus])
+    out = tmp_path / 'output' / 'python-concepts'
+    _pdf(out / 'python-concepts-student-old.pdf')  # a renamed edition from an earlier build
+    student = _pdf(build_dir / 'publish' / 'student' / '_book' / 'python-concepts-student.pdf')
+    key = _pdf(build_dir / 'publish' / 'answer-key' / '_book' / 'python-concepts-answer-key.pdf')
+    refresh_output(tmp_path, 'python-concepts', 'book', [student, key])
     assert sorted(p.relative_to(out).as_posix() for p in out.rglob('*.pdf')) == [
-        'Book1b-Answer-Key.pdf', 'Book1b-Student.pdf', 'handouts/unit-01-a.pdf', 'syllabus.pdf']
+        'handouts/unit-01-a.pdf', 'python-concepts-answer-key.pdf', 'python-concepts-student.pdf', 'syllabus.pdf']
     (out / 'handouts' / 'unit-99-removed.pdf').write_bytes(b'stale')
     new_handout = _pdf(build_dir / 'handouts' / 'unit-02-b.pdf')
-    refresh_output(tmp_path, 'book1b', 'pdf', [new_handout, syllabus])
+    refresh_output(tmp_path, 'python-concepts', 'pdf', [new_handout, syllabus])
     assert sorted(p.relative_to(out).as_posix() for p in out.rglob('*.pdf')) == [
-        'Book1b-Answer-Key.pdf', 'Book1b-Student.pdf', 'handouts/unit-02-b.pdf', 'syllabus.pdf']
+        'handouts/unit-02-b.pdf', 'python-concepts-answer-key.pdf', 'python-concepts-student.pdf', 'syllabus.pdf']
     with pytest.raises(ValueError, match='owns only'):
-        refresh_output(tmp_path, 'book1b', 'book', [syllabus])
+        refresh_output(tmp_path, 'python-concepts', 'book', [syllabus])
     with pytest.raises(ValueError, match='owns only'):
-        refresh_output(tmp_path, 'book1b', 'pdf', [student])
+        refresh_output(tmp_path, 'python-concepts', 'pdf', [student])
     with pytest.raises(ValueError, match='missing or empty'):
-        refresh_output(tmp_path, 'book1b', 'book', [build_dir / 'Book1b-Nothing.pdf'])
-    assert (out / 'Book1b-Student.pdf').exists()  # a failed refresh deletes nothing
+        refresh_output(tmp_path, 'python-concepts', 'book', [build_dir / 'python-concepts-nothing.pdf'])
+    assert (out / 'python-concepts-student.pdf').exists()  # a failed refresh deletes nothing
 
 
 def test_output_readme_and_gitignore_cover_every_file():
     readme = (REPO / 'output' / 'README.md').read_text()
-    for edition in EDITIONS.values():
-        assert f'`{edition["output_name"]}.pdf`' in readme
+    for edition in EDITIONS:
+        assert f'`python-concepts-{edition}.pdf`' in readme
     for name in ('syllabus.pdf', 'patterns.pdf', 'handouts/<unit>.pdf',
                  'scripts/build-book.sh', 'scripts/build-pdf.sh'):
         assert name in readme
@@ -448,8 +456,8 @@ def test_cli_edition_choices_match_the_profile(capsys):
     assert cli.EDITION_CHOICES == tuple(sorted(EDITIONS, key=cli.EDITION_CHOICES.index))
     assert set(cli.EDITION_CHOICES) == set(EDITIONS)
     for edition in EDITIONS:
-        assert cli._parser().parse_args(['--book', 'book1b', 'publish', '--edition', edition]).edition == edition
-    assert cli.main(['--book', 'book1b', 'publish', '--edition', 'ebook']) == 2
+        assert cli._parser().parse_args(['--book', 'python-concepts', 'publish', '--edition', edition]).edition == edition
+    assert cli.main(['--book', 'python-concepts', 'publish', '--edition', 'ebook']) == 2
     assert 'invalid choice' in capsys.readouterr().err
 
 

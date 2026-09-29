@@ -199,8 +199,8 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     if not Path(quarto).exists():
         pytest.skip('Quarto is not installed')
     root = tmp_path
-    (root / 'books.yaml').write_text('books:\n- id: book1b\n  number: 1\n  root: book1b\n')
-    book = root / 'book1b'
+    (root / 'books.yaml').write_text('books_version: 2\nbooks:\n- id: python-concepts\n  root: python-concepts\n  title: Python, Concept by Concept\n  subtitle: Learn Python one idea at a time\n  publication: true\n')
+    book = root / 'python-concepts'
     book.mkdir()
     docs = book / 'docs'
     docs.mkdir()
@@ -208,7 +208,7 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
         '# Unit 0 — Getting Set Up\n\nGet ready.\n\n## Install Python\n\nStart here.\n')
     (docs / 'unit-00-teacher-notes.md').write_text(
         '# Teacher Notes\n\nSETUP_TEACHER_SENTINEL_7429\n')
-    (book / 'syllabus.md').write_text('# Book 1b — Year 1 Syllabus\n\n| entry | kind | lessons | the hook |\n|---|---|---|---|\n| `unit-01-fixture` | unit | 1 | Hook. |\n')
+    (book / 'syllabus.md').write_text('# Python, Concept by Concept — Syllabus\n\n| entry | kind | lessons | the hook |\n|---|---|---|---|\n| `unit-01-fixture` | unit | 1 | Hook. |\n')
     front = book / 'front-matter'
     front.mkdir()
     (front / 'preface.md').write_text('# About This Book\n')
@@ -235,8 +235,8 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     save('solutions.ipynb', [nbformat.v4.new_markdown_cell('# Solutions'),
                              nbformat.v4.new_markdown_cell('## Exercise 1\n\n### Test'),
                              nbformat.v4.new_code_cell('print("SOLUTION_SENTINEL_7429")')])
-    student = build(root, 'book1b', 'student')
-    teacher = build(root, 'book1b', 'teacher')
+    student = build(root, 'python-concepts', 'student')
+    teacher = build(root, 'python-concepts', 'teacher')
     student_text = '\n'.join(p.read_text() for p in student.glob('*.qmd'))
     teacher_text = '\n'.join(p.read_text() for p in teacher.glob('*.qmd'))
     for marker in ('TEACHER_SENTINEL_7429', 'SETUP_TEACHER_SENTINEL_7429'):
@@ -250,7 +250,7 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     student_render = subprocess.run([quarto, 'render', str(student), '--to', 'pdf'],
                                     capture_output=True, text=True, env=env, check=False)
     assert student_render.returncode == 0, student_render.stderr[-4000:]
-    pdf_text = subprocess.run(['pdftotext', str(student / '_book' / 'Book1b-Student.pdf'), '-'],
+    pdf_text = subprocess.run(['pdftotext', str(student / '_book' / 'python-concepts-student.pdf'), '-'],
                               check=True, capture_output=True, text=True).stdout
     assert '$5 and $6' in pdf_text
     assert 'SOLUTION_SENTINEL_7429' in pdf_text
@@ -258,7 +258,7 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     assert "Teacher's Edition" not in pdf_text
     assert all(marker not in pdf_text for marker in ('TEACHER_SENTINEL_7429',
                'SETUP_TEACHER_SENTINEL_7429'))
-    student_tex = (student / 'Book1b-Student.tex').read_text()
+    student_tex = (student / 'python-concepts-student.tex').read_text()
     assert student_tex.index(r'\chapter{How to use}') < student_tex.index(r'\mainmatter', student_tex.index(r'\chapter{How to use}'))
     assert student_tex.index(r'\mainmatter') < student_tex.index(r'\chapter{Unit 0')
     assert student_tex.index(r'\pubchapterlabel{Unit 0}') < student_tex.index(r'\chapter{Unit 0')
@@ -267,7 +267,7 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
     assert r'\begin{pubcode}\footnotesize' in student_tex
     subprocess.run([quarto, 'render', str(teacher), '--to', 'pdf'], check=True,
                    capture_output=True, text=True, env=env)
-    teacher_pdf_text = subprocess.run(['pdftotext', str(teacher / '_book' / 'Book1b-Teacher.pdf'), '-'],
+    teacher_pdf_text = subprocess.run(['pdftotext', str(teacher / '_book' / 'python-concepts-teacher.pdf'), '-'],
                                       check=True, capture_output=True, text=True).stdout
     assert 'TEACHER_SENTINEL_7429' in teacher_pdf_text
     assert 'SETUP_TEACHER_SENTINEL_7429' in teacher_pdf_text

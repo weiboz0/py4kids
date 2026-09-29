@@ -7,88 +7,77 @@ export PY4KIDS_CI=1
 step() { echo; echo "=== $1 ==="; }
 
 step "1/6 registry + lint"
-uv run python - <<'PY'
+# The book list and each book's feature flags come from books.yaml (design 008); nothing here pins
+# a book id. One line per book: "<id> <flag> <flag> ...".
+books="$(uv run python - <<'PY'
 import sys
+from pathlib import Path
 
 import yaml
 
 catalog = yaml.safe_load(open("books.yaml", encoding="utf-8"))
-ids = [book["id"] for book in catalog["books"]]
-if ids != ["book1", "book1b", "book2"]:
-    sys.exit(f"FAIL: unexpected book registry: {ids}")
-print("registry: book1 -> book1b -> book2")
+if catalog.get("books_version") != 2:
+    sys.exit("FAIL: books.yaml books_version must be 2")
+for book in catalog["books"]:
+    if book.get("root") != book["id"] or not Path(book["root"]).is_dir():
+        sys.exit(f"FAIL: book {book['id']!r}: root must equal the id and exist")
+    flags = [flag for flag in ("publication", "judge", "patterns") if book.get(flag) is True]
+    print(book["id"], *flags)
 PY
+)"
+echo "registry: $(cut -d' ' -f1 <<< "$books" | paste -sd' ')"
 uv run ruff check tools/ tests/ scripts/
+
+has_flag() { [[ " $2 " == *" $1 "* ]]; }
 
 step "2/6 unit tests"
 uv run pytest -q
 
 step "3/6 notebook structure + execution"
-uv run py4kids-tools --book book1 hygiene-check
-uv run py4kids-tools --book book1 structure-check
-uv run py4kids-tools --book book1 noexec-check
-uv run py4kids-tools --book book1 cell-lint
-uv run py4kids-tools --book book1 exec-solutions
-uv run py4kids-tools --book book1 exec-lessons
-if [ -d book1b ]; then
-  uv run py4kids-tools --book book1b lesson-outputs-check
-fi
+while read -r book flags <&3; do
+  for check in hygiene-check structure-check noexec-check cell-lint exec-solutions exec-lessons; do
+    uv run py4kids-tools --book "$book" "$check"
+  done
+  if has_flag publication "$flags"; then
+    uv run py4kids-tools --book "$book" lesson-outputs-check
+  fi
+done 3<<< "$books"
 
 step "4/6 curriculum + assets"
-uv run py4kids-tools --book book1 manifest-check
-uv run py4kids-tools --book book1 prereq-check
-uv run py4kids-tools --book book1 coverage-check
-uv run py4kids-tools --book book1 concept-scan
-uv run py4kids-tools --book book1 technique-spiral
-uv run py4kids-tools --book book1 pattern-marker
-uv run py4kids-tools --book book1 patterns-doc-check
-uv run py4kids-tools --book book1 stretch-check
-uv run py4kids-tools --book book1 turtle-check
-uv run py4kids-tools --book book1 turtle-real-check
-
-# Book 2: map-level checks + per-entry checks (per-entry iterate existing dirs, so they cover
-# authored units and are inert for unauthored entries).
-uv run py4kids-tools --book book2 prereq-check
-uv run py4kids-tools --book book2 coverage-check
-uv run py4kids-tools --book book2 concept-scan
-uv run py4kids-tools --book book2 manifest-check
-uv run py4kids-tools --book book2 structure-check
-uv run py4kids-tools --book book2 hygiene-check
-uv run py4kids-tools --book book2 cell-lint
-uv run py4kids-tools --book book2 noexec-check
-uv run py4kids-tools --book book2 stretch-check
-uv run py4kids-tools --book book2 exec-solutions
-uv run py4kids-tools --book book2 exec-lessons
-uv run py4kids-tools --book book2 judge-check
-uv run py4kids-tools --book book2 source-policy
-
-# Book 1b: concept-first variant, now COMPLETE (fastforward relaxation keys on its per-book flag; the
-# buildout flag was removed in plan 078, so introduction-completeness + lesson-lower-bound now apply).
-# Per-entry checks iterate existing dirs, so they cover authored units and are inert for
-# unauthored entries. Existence-guarded so this block is a no-op until book1b/ exists. No Book-1-only
-# pattern checks (technique-spiral/pattern-marker/patterns-doc are hard-gated to book1); no book2-only
-# judge-check/source-policy.
-if [ -d book1b ]; then
-  uv run py4kids-tools --book book1b coverage-check
-  uv run py4kids-tools --book book1b prereq-check
-  uv run py4kids-tools --book book1b concept-scan
-  uv run py4kids-tools --book book1b manifest-check
-  uv run py4kids-tools --book book1b structure-check
-  uv run py4kids-tools --book book1b hygiene-check
-  uv run py4kids-tools --book book1b cell-lint
-  uv run py4kids-tools --book book1b noexec-check
-  uv run py4kids-tools --book book1b stretch-check
-  uv run py4kids-tools --book book1b turtle-check
-  uv run py4kids-tools --book book1b turtle-real-check
-  uv run py4kids-tools --book book1b exec-solutions
-  uv run py4kids-tools --book book1b exec-lessons
-fi
+# Per-entry checks iterate existing dirs, so they cover authored entries and are inert for
+# unauthored ones. Flag-gated checks follow each book's books.yaml flags (see the comments there);
+# books without `judge` run the turtle checks. Fastforward relaxation keys on prereq_policy.
+while read -r book flags <&3; do
+  for check in manifest-check prereq-check coverage-check concept-scan; do
+    uv run py4kids-tools --book "$book" "$check"
+  done
+  if has_flag patterns "$flags"; then
+    for check in technique-spiral pattern-marker patterns-doc-check; do
+      uv run py4kids-tools --book "$book" "$check"
+    done
+  fi
+  uv run py4kids-tools --book "$book" stretch-check
+  if has_flag judge "$flags"; then
+    uv run py4kids-tools --book "$book" judge-check
+    uv run py4kids-tools --book "$book" source-policy
+  else
+    uv run py4kids-tools --book "$book" turtle-check
+    uv run py4kids-tools --book "$book" turtle-real-check
+  fi
+done 3<<< "$books"
 
 step "5/6 PDF build"
-bash scripts/build-pdf.sh --book book1
-[ -d book1b ] && bash scripts/build-pdf.sh --book book1b
-[ -d book1b ] && bash scripts/build-book.sh --book book1b
-[ -d book1b ] && uv run py4kids-tools --book book1b publish-audit
+# Handouts and syllabus PDFs for the Python books (contest books build no PDFs yet); the
+# publication pipeline for `publication: true` books.
+while read -r book flags <&3; do
+  if ! has_flag judge "$flags"; then
+    bash scripts/build-pdf.sh --book "$book"
+  fi
+  if has_flag publication "$flags"; then
+    bash scripts/build-book.sh --book "$book"
+    uv run py4kids-tools --book "$book" publish-audit
+  fi
+done 3<<< "$books"
 
 step "6/6 pre-merge guard"
 bash scripts/pre-merge-guard.sh

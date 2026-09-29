@@ -2,8 +2,8 @@ project:
   type: book
   output-dir: _book
 book:
-  title: "Python, Concept by Concept"
-  subtitle: "@SUBTITLE@"
+  title: @TITLE@
+  subtitle: @SUBTITLE@
   author: "Weibo Zhou"
   output-file: "@OUTPUT@"
   chapters:

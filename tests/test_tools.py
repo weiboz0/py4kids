@@ -51,7 +51,21 @@ def _write_nb(path, notebook):
 @pytest.fixture
 def valid_root(tmp_path):
     """Build an all-green registry root with one prefix unit, checkpoint, and project."""
-    book = tmp_path / "book1"
+    _write_yaml(
+        tmp_path / "books.yaml",
+        {
+            "books_version": 2,
+            "books": [
+                {
+                    "id": "python-projects",
+                    "root": "python-projects",
+                    "depends_on": [],
+                    "patterns": True,
+                }
+            ],
+        },
+    )
+    book = tmp_path / "python-projects"
     (book / "curriculum").mkdir(parents=True)
     (book / "units").mkdir()
     (book / "checkpoints").mkdir()
@@ -279,7 +293,7 @@ def valid_root(tmp_path):
     return tmp_path
 
 
-def _run(root, check, capsys, unit=None, book="book1"):
+def _run(root, check, capsys, unit=None, book="python-projects"):
     args = ["--root", str(root), "--book", book]
     if unit:
         args += ["--unit", unit]
@@ -296,7 +310,7 @@ def test_cli_exit_codes(valid_root, capsys):
     code, output = _run(valid_root, "manifest-check", capsys)
     assert code == 0
     assert output == "manifest-check: PASS\n"
-    assert cli.main(["--book", "book1", "not-a-check"]) == 2
+    assert cli.main(["--book", "python-projects", "not-a-check"]) == 2
 
 
 @pytest.mark.parametrize("check", CHECK_NAMES)
@@ -333,7 +347,7 @@ def test_ci_mode_skips_only_real_book_execution(monkeypatch):
 
 
 def _unit(root):
-    return root / "book1/units/unit-01-story-machine"
+    return root / "python-projects/units/unit-01-story-machine"
 
 
 def _manifest(root):
@@ -342,12 +356,12 @@ def _manifest(root):
 
 
 def _map(root):
-    path = root / "book1/curriculum/coverage-map.yaml"
+    path = root / "python-projects/curriculum/coverage-map.yaml"
     return path, yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
 def _concepts(root):
-    path = root / "book1/curriculum/concepts.yaml"
+    path = root / "python-projects/curriculum/concepts.yaml"
     return path, yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
@@ -495,7 +509,7 @@ def _notes_heading(root, heading):
 
 def _prefix_gap(root):
     source = _unit(root)
-    destination = root / "book1/units/unit-03-turtle-art-studio"
+    destination = root / "python-projects/units/unit-03-turtle-art-studio"
     source.rename(destination)
     path, manifest = (
         destination / "manifest.yaml",
@@ -577,7 +591,7 @@ def test_structure_one_fault(valid_root, capsys, _name, mutate, expected):
     assert code == 1
     lines = [line for line in output.splitlines() if line.startswith("FAIL:")]
     if expected.startswith("unit directories"):
-        expected_lines = [f"FAIL: book1: {expected}"]
+        expected_lines = [f"FAIL: python-projects: {expected}"]
     else:
         expected_lines = [f"FAIL: unit-01-story-machine: {expected}"]
     assert lines == expected_lines
@@ -616,13 +630,13 @@ def _manifest_map_field(root, field):
     _write_yaml(path, data)
 
 
-def _upgrade_book1_fixture_to_schema_v2(root):
+def _upgrade_python_projects_fixture_to_schema_v2(root):
     map_path, coverage = _map(root)
     coverage["map_version"] = 2
     for entry in coverage["entries"]:
         entry["auxiliary"] = []
     _write_yaml(map_path, coverage)
-    for manifest_path in (root / "book1").glob("*/**/manifest.yaml"):
+    for manifest_path in (root / "python-projects").glob("*/**/manifest.yaml"):
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
         manifest["blueprint_version"] = 2
         manifest["concepts"]["auxiliary"] = []
@@ -697,7 +711,7 @@ def test_manifest_unhashable_coverage_map_id_returns_finding(valid_root, capsys,
     _write_yaml(path, data)
     code, output = _run(valid_root, "manifest-check", capsys)
     assert code == 1
-    assert output == "FAIL: book1: coverage-map entry 0 id must be a string\n"
+    assert output == "FAIL: python-projects: coverage-map entry 0 id must be a string\n"
 
 
 def test_manifest_concept_list_members_must_be_ids(valid_root, capsys):
@@ -712,20 +726,20 @@ def test_manifest_concept_list_members_must_be_ids(valid_root, capsys):
 
 
 def test_schema_v2_map_and_manifests_pass(valid_root, capsys):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     code, output = _run(valid_root, "manifest-check", capsys)
     assert code == 0, output
     assert output == "manifest-check: PASS\n"
-    assert map_schema_findings(valid_root, "book1") == []
+    assert map_schema_findings(valid_root, "python-projects") == []
 
 
-def test_schema_v2_is_rejected_for_book2(valid_root, capsys):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
-    (valid_root / "book1").rename(valid_root / "book2")
+def test_schema_v2_is_rejected_for_usaco_bronze(valid_root, capsys):
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
+    (valid_root / "python-projects").rename(valid_root / "usaco-bronze")
 
-    expected = "FAIL: book2: map_version 2 is only supported for book1"
-    assert map_schema_findings(valid_root, "book2") == [expected]
-    code, output = _run(valid_root, "manifest-check", capsys, book="book2")
+    expected = "FAIL: usaco-bronze: map_version 2 is only supported for patterns books"
+    assert map_schema_findings(valid_root, "usaco-bronze") == [expected]
+    code, output = _run(valid_root, "manifest-check", capsys, book="usaco-bronze")
     assert code == 1
     assert output == expected + "\n"
 
@@ -734,57 +748,57 @@ def test_schema_v1_map_forbids_auxiliary(valid_root):
     path, data = _map(valid_root)
     data["entries"][0]["auxiliary"] = []
     _write_yaml(path, data)
-    assert map_schema_findings(valid_root, "book1") == [
-        "FAIL: book1: bad entry keys in unit-01-story-machine"
+    assert map_schema_findings(valid_root, "python-projects") == [
+        "FAIL: python-projects: bad entry keys in unit-01-story-machine"
     ]
 
 
 def test_schema_v2_map_requires_auxiliary_on_every_entry(valid_root):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, data = _map(valid_root)
     del data["entries"][0]["auxiliary"]
     _write_yaml(path, data)
-    assert map_schema_findings(valid_root, "book1") == [
-        "FAIL: book1: bad entry keys in unit-01-story-machine"
+    assert map_schema_findings(valid_root, "python-projects") == [
+        "FAIL: python-projects: bad entry keys in unit-01-story-machine"
     ]
 
 
 @pytest.mark.parametrize("field", ["introduces", "requires", "practices"])
 def test_schema_v2_map_malformed_inherited_field_returns_finding(valid_root, field):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, data = _map(valid_root)
     data["entries"][0][field] = None
     _write_yaml(path, data)
-    assert map_schema_findings(valid_root, "book1") == [
-        f"FAIL: book1: unit-01-story-machine.{field} must be a list of ids"
+    assert map_schema_findings(valid_root, "python-projects") == [
+        f"FAIL: python-projects: unit-01-story-machine.{field} must be a list of ids"
     ]
 
 
 def test_schema_v2_map_unhashable_kind_returns_finding(valid_root):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, data = _map(valid_root)
     data["entries"][0]["kind"] = []
     _write_yaml(path, data)
-    assert map_schema_findings(valid_root, "book1") == [
-        "FAIL: book1: bad entry id: unit-01-story-machine"
+    assert map_schema_findings(valid_root, "python-projects") == [
+        "FAIL: python-projects: bad entry id: unit-01-story-machine"
     ]
 
 
 @pytest.mark.parametrize(
     "value,expected",
     [
-        ("book1:concept-05", None),
+        ("python-projects:concept-05", None),
         ("concept-05", "must contain qualified ids"),
         ("book3:concept-05", "must contain qualified ids"),
-        (["book1:concept-05", "book1:concept-05"], "has duplicates"),
+        (["python-projects:concept-05", "python-projects:concept-05"], "has duplicates"),
     ],
 )
 def test_schema_v2_map_validates_auxiliary_ids(valid_root, value, expected):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, data = _map(valid_root)
     data["entries"][0]["auxiliary"] = value if isinstance(value, list) else [value]
     _write_yaml(path, data)
-    findings = map_schema_findings(valid_root, "book1")
+    findings = map_schema_findings(valid_root, "python-projects")
     if expected is None:
         assert findings == []
     else:
@@ -792,28 +806,28 @@ def test_schema_v2_map_validates_auxiliary_ids(valid_root, value, expected):
         assert expected in findings[0]
 
 
-@pytest.mark.parametrize("value", [None, "book1:concept-05", [1]])
+@pytest.mark.parametrize("value", [None, "python-projects:concept-05", [1]])
 def test_schema_v2_map_auxiliary_must_be_a_list_of_strings(valid_root, value):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, data = _map(valid_root)
     data["entries"][0]["auxiliary"] = value
     _write_yaml(path, data)
-    assert map_schema_findings(valid_root, "book1") == [
+    assert map_schema_findings(valid_root, "python-projects") == [
         (
-            "FAIL: book1: unit-01-story-machine.auxiliary must be a list of "
+            "FAIL: python-projects: unit-01-story-machine.auxiliary must be a list of "
             "qualified ids"
         )
     ]
 
 
 @pytest.mark.parametrize("field", ["introduces", "requires", "practices"])
-def test_schema_v2_map_normalizes_book1_auxiliary_overlap(valid_root, field):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+def test_schema_v2_map_normalizes_python_projects_auxiliary_overlap(valid_root, field):
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, data = _map(valid_root)
     entry = data["entries"][1]
-    entry["auxiliary"] = [f"book1:{entry[field][0]}"]
+    entry["auxiliary"] = [f"python-projects:{entry[field][0]}"]
     _write_yaml(path, data)
-    findings = map_schema_findings(valid_root, "book1")
+    findings = map_schema_findings(valid_root, "python-projects")
     assert len(findings) == 1
     assert "auxiliary overlaps introduces/requires/practices" in findings[0]
 
@@ -822,18 +836,18 @@ def test_schema_v2_map_normalizes_book1_auxiliary_overlap(valid_root, field):
 def test_schema_v2_map_rejects_nonempty_checkpoint_or_project_auxiliary(
     valid_root, kind
 ):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, data = _map(valid_root)
     entry = next(entry for entry in data["entries"] if entry["kind"] == kind)
-    entry["auxiliary"] = ["book1:concept-00"]
+    entry["auxiliary"] = ["python-projects:concept-00"]
     _write_yaml(path, data)
-    findings = map_schema_findings(valid_root, "book1")
+    findings = map_schema_findings(valid_root, "python-projects")
     assert len(findings) == 1
     assert f"{entry['id']}.auxiliary must be empty" in findings[0]
 
 
 def test_manifest_rejects_v1_blueprint_under_v2_map(valid_root, capsys):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     _manifest_mutation(valid_root, "blueprint_version", 1)
     code, output = _run(valid_root, "manifest-check", capsys)
     assert code == 1
@@ -881,7 +895,7 @@ def test_schema_v1_manifest_forbids_auxiliary(valid_root, capsys):
 
 
 def test_schema_v2_manifest_requires_auxiliary(valid_root, capsys):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, manifest = _manifest(valid_root)
     del manifest["concepts"]["auxiliary"]
     _write_yaml(path, manifest)
@@ -894,7 +908,7 @@ def test_schema_v2_manifest_requires_auxiliary(valid_root, capsys):
 def test_schema_v2_manifest_malformed_inherited_field_returns_finding(
     valid_root, capsys, field
 ):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, manifest = _manifest(valid_root)
     manifest["concepts"][field] = None
     _write_yaml(path, manifest)
@@ -909,19 +923,19 @@ def test_schema_v2_manifest_malformed_inherited_field_returns_finding(
 def test_schema_v2_manifest_malformed_map_field_returns_finding(
     valid_root, capsys, field
 ):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, coverage = _map(valid_root)
     coverage["entries"][0][field] = None
     _write_yaml(path, coverage)
     code, output = _run(valid_root, "manifest-check", capsys)
     assert code == 1
     assert output == (
-        f"FAIL: book1: coverage-map unit-01-story-machine.{field} must be a list\n"
+        f"FAIL: python-projects: coverage-map unit-01-story-machine.{field} must be a list\n"
     )
 
 
 def test_schema_v2_manifest_unhashable_map_kind_returns_finding(valid_root, capsys):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, coverage = _map(valid_root)
     coverage["entries"][0]["kind"] = []
     _write_yaml(path, coverage)
@@ -933,9 +947,9 @@ def test_schema_v2_manifest_unhashable_map_kind_returns_finding(valid_root, caps
 
 
 def test_schema_v2_manifest_auxiliary_must_match_map(valid_root, capsys):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     map_path, coverage = _map(valid_root)
-    coverage["entries"][0]["auxiliary"] = ["book1:concept-05"]
+    coverage["entries"][0]["auxiliary"] = ["python-projects:concept-05"]
     _write_yaml(map_path, coverage)
     code, output = _run(valid_root, "manifest-check", capsys)
     assert code == 1
@@ -947,15 +961,15 @@ def test_schema_v2_manifest_auxiliary_must_match_map(valid_root, capsys):
 @pytest.mark.parametrize(
     "value,expected",
     [
-        ("book1:concept-05", None),
+        ("python-projects:concept-05", None),
         ("concept-05", "must contain qualified ids"),
-        (["book1:concept-05", "book1:concept-05"], "has duplicates"),
+        (["python-projects:concept-05", "python-projects:concept-05"], "has duplicates"),
     ],
 )
 def test_schema_v2_manifest_validates_auxiliary_ids(
     valid_root, capsys, value, expected
 ):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     map_path, coverage = _map(valid_root)
     manifest_path, manifest = _manifest(valid_root)
     auxiliary = value if isinstance(value, list) else [value]
@@ -971,11 +985,11 @@ def test_schema_v2_manifest_validates_auxiliary_ids(
         assert expected in output
 
 
-@pytest.mark.parametrize("value", [None, "book1:concept-05", [1]])
+@pytest.mark.parametrize("value", [None, "python-projects:concept-05", [1]])
 def test_schema_v2_manifest_auxiliary_must_be_a_list_of_strings(
     valid_root, capsys, value
 ):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     path, manifest = _manifest(valid_root)
     manifest["concepts"]["auxiliary"] = value
     _write_yaml(path, manifest)
@@ -986,12 +1000,12 @@ def test_schema_v2_manifest_auxiliary_must_be_a_list_of_strings(
     )
 
 
-def test_schema_v2_manifest_normalizes_book1_auxiliary_overlap(valid_root, capsys):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+def test_schema_v2_manifest_normalizes_python_projects_auxiliary_overlap(valid_root, capsys):
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     map_path, coverage = _map(valid_root)
     manifest_path, manifest = _manifest(valid_root)
     concept_id = coverage["entries"][0]["introduces"][0]
-    auxiliary = [f"book1:{concept_id}"]
+    auxiliary = [f"python-projects:{concept_id}"]
     coverage["entries"][0]["auxiliary"] = auxiliary
     manifest["concepts"]["auxiliary"] = auxiliary
     _write_yaml(map_path, coverage)
@@ -1005,16 +1019,16 @@ def test_schema_v2_manifest_normalizes_book1_auxiliary_overlap(valid_root, capsy
 def test_schema_v2_manifest_rejects_nonempty_checkpoint_or_project_auxiliary(
     valid_root, capsys, kind
 ):
-    _upgrade_book1_fixture_to_schema_v2(valid_root)
+    _upgrade_python_projects_fixture_to_schema_v2(valid_root)
     map_path, coverage = _map(valid_root)
     entry = next(entry for entry in coverage["entries"] if entry["kind"] == kind)
-    entry["auxiliary"] = ["book1:concept-00"]
+    entry["auxiliary"] = ["python-projects:concept-00"]
     _write_yaml(map_path, coverage)
     manifest_path = next(
-        (valid_root / "book1" / f"{kind}s").glob("*/manifest.yaml")
+        (valid_root / "python-projects" / f"{kind}s").glob("*/manifest.yaml")
     )
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-    manifest["concepts"]["auxiliary"] = ["book1:concept-00"]
+    manifest["concepts"]["auxiliary"] = ["python-projects:concept-00"]
     _write_yaml(manifest_path, manifest)
     code, output = _run(valid_root, "manifest-check", capsys)
     assert code == 1
@@ -1232,7 +1246,7 @@ def test_turtle_open_path_text_inside_string_does_not_waive_closure(valid_root, 
 
 
 def _coverage_version(root, key):
-    path = root / f"book1/curriculum/{key}.yaml"
+    path = root / f"python-projects/curriculum/{key}.yaml"
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     data["concepts_version" if key == "concepts" else "map_version"] = (
         2 if key == "concepts" else 3
@@ -1281,7 +1295,7 @@ def _remove_precapstone_practice(root):
 
 
 def _break_first_syllabus_row(root):
-    path = root / "book1/syllabus.md"
+    path = root / "python-projects/syllabus.md"
     text = path.read_text(encoding="utf-8")
     path.write_text(text.replace("| unit | 3 |", "| unit | 9 |", 1), encoding="utf-8")
 
@@ -1323,11 +1337,11 @@ MALFORMED_CURRICULUM_CASES = [
 def test_malformed_curriculum_types_return_findings(
     valid_root, capsys, filename, source, expected
 ):
-    path = valid_root / "book1/curriculum" / filename
+    path = valid_root / "python-projects/curriculum" / filename
     path.write_text(source, encoding="utf-8")
     code, output = _run(valid_root, "coverage-check", capsys)
     assert code == 1
-    assert output == f"FAIL: book1: {expected}\n"
+    assert output == f"FAIL: python-projects: {expected}\n"
 
 
 def _invalid_lessons(root, value):
@@ -1446,8 +1460,8 @@ COVERAGE_CASES = [
     ("syllabus-row", _break_first_syllabus_row, "syllabus table missing/incorrect row"),
     (
         "syllabus-extra",
-        lambda r: (r / "book1/syllabus.md").write_text(
-            (r / "book1/syllabus.md").read_text(encoding="utf-8")
+        lambda r: (r / "python-projects/syllabus.md").write_text(
+            (r / "python-projects/syllabus.md").read_text(encoding="utf-8")
             + "\n| 17 | `unit-99-extra` | unit | 1 | Extra |\n",
             encoding="utf-8",
         ),
@@ -1471,7 +1485,7 @@ def test_coverage_one_fault(valid_root, capsys, _name, mutate, expected):
 
 
 def test_syllabus_order_one_fault(valid_root, capsys):
-    path = valid_root / "book1/syllabus.md"
+    path = valid_root / "python-projects/syllabus.md"
     lines = path.read_text(encoding="utf-8").splitlines()
     lines[0], lines[1] = lines[1], lines[0]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -1491,7 +1505,7 @@ def test_checkpoint_introduces_one_fault(valid_root, capsys):
     _write_yaml(path, data)
     code, output = _run(valid_root, "coverage-check", capsys)
     assert code == 1
-    assert output == "FAIL: book1: checkpoint-01-fixture introduces concepts\n"
+    assert output == "FAIL: python-projects: checkpoint-01-fixture introduces concepts\n"
 
 
 def test_checkpoint_assesses_untaught_one_fault(valid_root, capsys):
@@ -1516,7 +1530,7 @@ def test_bool_lessons_preserves_legacy_numeric_contract(valid_root):
     path, data = _map(valid_root)
     data["entries"][0]["lessons"] = True
     _write_yaml(path, data)
-    assert map_schema_findings(valid_root, "book1") == []
+    assert map_schema_findings(valid_root, "python-projects") == []
 
 
 def test_unit_narrowing_accepts_existing_unit(valid_root, capsys):
@@ -1532,7 +1546,7 @@ def test_prereq_closure_one_fault(valid_root, capsys):
     code, output = _run(valid_root, "prereq-check", capsys)
     assert code == 1
     assert output == (
-        "FAIL: book1: unit-01-story-machine uses concepts not yet introduced: ['concept-00']\n"
+        "FAIL: python-projects: unit-01-story-machine uses concepts not yet introduced: ['concept-00']\n"
     )
 
 
@@ -1543,7 +1557,7 @@ def test_practice_closure_one_fault(valid_root, capsys):
     code, output = _run(valid_root, "prereq-check", capsys)
     assert code == 1
     assert output == (
-        "FAIL: book1: unit-01-story-machine uses concepts not yet introduced: ['concept-00']\n"
+        "FAIL: python-projects: unit-01-story-machine uses concepts not yet introduced: ['concept-00']\n"
     )
 
 
@@ -1578,34 +1592,33 @@ def test_ci_local_has_exact_six_real_steps():
     ]
     positions = [text.index(command) for command in commands]
     assert positions == sorted(positions)
-    assert "bash scripts/build-pdf.sh --book book1" in text
+    assert 'bash scripts/build-pdf.sh --book "$book"' in text
 
 
-def test_ci_local_covers_book1b():
-    """Book 1b is registered and its ci-local block runs the Book-1-style checks (minus the
-    Book-1-only pattern checks), existence-guarded, plus its own PDF build."""
+def test_ci_local_reads_books_from_registry():
+    """ci-local pins no book id: the book list and feature flags come from books.yaml (design
+    008), and every flag-gated check hangs off its flag."""
     text = (REPO / "scripts/ci-local.sh").read_text(encoding="utf-8")
-    assert 'ids != ["book1", "book1b", "book2"]' in text
-    assert "[ -d book1b ]" in text
-    for check in (
-        "coverage-check",
-        "prereq-check",
-        "concept-scan",
-        "manifest-check",
-        "structure-check",
-        "hygiene-check",
-        "cell-lint",
-        "noexec-check",
-        "stretch-check",
-        "turtle-check",
-        "exec-solutions",
-        "exec-lessons",
+    registry = yaml.safe_load((REPO / "books.yaml").read_text(encoding="utf-8"))
+    for book in registry["books"]:
+        assert book["id"] not in text
+    assert 'yaml.safe_load(open("books.yaml"' in text
+    assert '("publication", "judge", "patterns")' in text
+    for flag, gated in (
+        ("patterns", ("technique-spiral", "pattern-marker", "patterns-doc-check")),
+        ("judge", ("judge-check", "source-policy")),
+        ("publication", ("lesson-outputs-check", "build-book.sh", "publish-audit")),
     ):
-        assert f"--book book1b {check}" in text
-    # Book-1-only pattern checks must NOT run for book1b
-    for pattern_check in ("technique-spiral", "pattern-marker", "patterns-doc-check"):
-        assert f"--book book1b {pattern_check}" not in text
-    assert "bash scripts/build-pdf.sh --book book1b" in text
+        guard = f'has_flag {flag} "$flags"'
+        assert guard in text
+        for check in gated:
+            assert text.index(guard) < text.index(check)
+    for check in (
+        "coverage-check", "prereq-check", "concept-scan", "manifest-check", "structure-check",
+        "hygiene-check", "cell-lint", "noexec-check", "stretch-check", "turtle-check",
+        "exec-solutions", "exec-lessons",
+    ):
+        assert check in text
 
 
 def test_pdf_builder_contract():
@@ -1617,7 +1630,8 @@ def test_pdf_builder_contract():
     assert '--output "$unit_id"' in text
     assert "--pdf-engine=xelatex" in text
     assert "build/handouts" in text
-    assert '[[ "$book" == "book1" ]]' in text
+    assert 'book_flag(Path("."), sys.argv[1], "patterns")' in text
+    assert '[[ "$is_patterns_book" == 1 ]]' in text
     assert "--pdf-probe" in text
     assert 'case "$pattern_state"' in text
     assert '"empty")' in text
@@ -1642,15 +1656,15 @@ def test_missing_book_root_fails_closed(valid_root, check, capsys):
 
 
 def test_missing_units_dir_fails_closed(valid_root, capsys):
-    shutil.rmtree(valid_root / "book1" / "units")
+    shutil.rmtree(valid_root / "python-projects" / "units")
     code, output = _run(valid_root, "hygiene-check", capsys)
     assert code == 1
     assert "units/ directory does not exist" in output
 
 
 def test_empty_units_dir_still_passes(valid_root, capsys):
-    shutil.rmtree(valid_root / "book1" / "units")
-    (valid_root / "book1" / "units").mkdir()
+    shutil.rmtree(valid_root / "python-projects" / "units")
+    (valid_root / "python-projects" / "units").mkdir()
     code, _ = _run(valid_root, "hygiene-check", capsys)
     assert code == 0
 
@@ -1665,7 +1679,7 @@ def test_empty_units_dir_still_passes(valid_root, capsys):
     ],
 )
 def test_missing_target_notebook_fails_closed(valid_root, check, target, message, capsys):
-    unit = next((valid_root / "book1" / "units").glob("unit-*"))
+    unit = next((valid_root / "python-projects" / "units").glob("unit-*"))
     (unit / target).unlink()
     code, output = _run(valid_root, check, capsys)
     assert code == 1
@@ -1673,7 +1687,7 @@ def test_missing_target_notebook_fails_closed(valid_root, check, target, message
 
 
 def _checkpoint(root):
-    return root / "book1/checkpoints/checkpoint-01-fixture"
+    return root / "python-projects/checkpoints/checkpoint-01-fixture"
 
 
 def _checkpoint_notebook(root, name):
@@ -2092,11 +2106,11 @@ def test_checkpoint_student_stretch_tag_one_fault(valid_root, capsys):
 @pytest.mark.parametrize("fault", ("gap", "orphan"))
 def test_checkpoint_prefix_one_fault(valid_root, capsys, fault):
     if fault == "gap":
-        _checkpoint(valid_root).rename(valid_root / "book1/checkpoints/checkpoint-02-fixture")
+        _checkpoint(valid_root).rename(valid_root / "python-projects/checkpoints/checkpoint-02-fixture")
     else:
         shutil.copytree(
             _checkpoint(valid_root),
-            valid_root / "book1/checkpoints/checkpoint-99-orphan",
+            valid_root / "python-projects/checkpoints/checkpoint-99-orphan",
         )
     code, output = _run(valid_root, "structure-check", capsys)
     assert code == 1
@@ -2105,10 +2119,10 @@ def test_checkpoint_prefix_one_fault(valid_root, capsys, fault):
 
 
 def test_missing_checkpoints_dir_fails_closed(valid_root, capsys):
-    shutil.rmtree(valid_root / "book1/checkpoints")
+    shutil.rmtree(valid_root / "python-projects/checkpoints")
     code, output = _run(valid_root, "hygiene-check", capsys)
     assert code == 1
-    assert output == "FAIL: book1: checkpoints/ directory does not exist\n"
+    assert output == "FAIL: python-projects: checkpoints/ directory does not exist\n"
 
 
 @pytest.mark.parametrize(
@@ -2116,8 +2130,8 @@ def test_missing_checkpoints_dir_fails_closed(valid_root, capsys):
     ("manifest-check", "hygiene-check", "structure-check", "exec-solutions", "cell-lint"),
 )
 def test_empty_checkpoints_dir_still_passes(valid_root, capsys, check):
-    shutil.rmtree(valid_root / "book1/checkpoints")
-    (valid_root / "book1/checkpoints").mkdir()
+    shutil.rmtree(valid_root / "python-projects/checkpoints")
+    (valid_root / "python-projects/checkpoints").mkdir()
     code, output = _run(valid_root, check, capsys)
     assert code == 0, output
     assert output == f"{check}: PASS\n"
@@ -2180,7 +2194,7 @@ def test_checkpoint_target_to_unit_only_check_prints_usage(valid_root, capsys):
             "--root",
             str(valid_root),
             "--book",
-            "book1",
+            "python-projects",
             "--unit",
             "checkpoint-01-fixture",
             "stretch-check",
@@ -2208,7 +2222,7 @@ def test_book_level_check_with_unit_keeps_usage_exit_two(valid_root, capsys, che
             "--root",
             str(valid_root),
             "--book",
-            "book1",
+            "python-projects",
             "--unit",
             "unit-01-story-machine",
             check,
@@ -2227,7 +2241,7 @@ def test_selector_neither_prefix_falls_into_unit_scope(valid_root, capsys):
 
 
 def test_targeted_checkpoint_skips_unscoped_prefix_rule(valid_root, capsys):
-    (valid_root / "book1/checkpoints/checkpoint-99-orphan").mkdir()
+    (valid_root / "python-projects/checkpoints/checkpoint-99-orphan").mkdir()
     code, output = _run(
         valid_root,
         "structure-check",
@@ -2309,7 +2323,7 @@ def test_checkpoint_question_numbers_must_be_sequential(valid_root, capsys):
 
 
 def _project(root):
-    return root / "book1/projects/project-02-grand-adventure"
+    return root / "python-projects/projects/project-02-grand-adventure"
 
 
 def _project_notebook(root, name):
@@ -2323,17 +2337,17 @@ def _project_manifest(root):
 
 
 def test_project_dirs_and_content_dirs_discover_project(valid_root):
-    projects, findings = notebooks.project_dirs(valid_root, "book1")
+    projects, findings = notebooks.project_dirs(valid_root, "python-projects")
     assert findings == []
     assert [path.name for path in projects] == ["project-02-grand-adventure"]
     contents, findings = notebooks.content_dirs(
-        valid_root, "book1", "project-02-grand-adventure"
+        valid_root, "python-projects", "project-02-grand-adventure"
     )
     assert findings == []
     assert [(path.name, kind) for path, kind in contents] == [
         ("project-02-grand-adventure", "project")
     ]
-    contents, findings = notebooks.content_dirs(valid_root, "book1")
+    contents, findings = notebooks.content_dirs(valid_root, "python-projects")
     assert findings == []
     assert ("project-02-grand-adventure", "project") in [
         (path.name, kind) for path, kind in contents
@@ -2540,9 +2554,9 @@ def test_project_teacher_heading_one_fault(valid_root, capsys, heading):
 @pytest.mark.parametrize("fault", ("gap", "orphan"))
 def test_project_prefix_one_fault(valid_root, capsys, fault):
     if fault == "gap":
-        _project(valid_root).rename(valid_root / "book1/projects/project-03-grand-adventure")
+        _project(valid_root).rename(valid_root / "python-projects/projects/project-03-grand-adventure")
     else:
-        shutil.copytree(_project(valid_root), valid_root / "book1/projects/project-99-orphan")
+        shutil.copytree(_project(valid_root), valid_root / "python-projects/projects/project-99-orphan")
     code, output = _run(valid_root, "structure-check", capsys)
     assert code == 1
     assert "project directories are not the coverage-map prefix" in output
@@ -2550,17 +2564,17 @@ def test_project_prefix_one_fault(valid_root, capsys, fault):
 
 
 def test_missing_projects_dir_fails_closed(valid_root, capsys):
-    shutil.rmtree(valid_root / "book1/projects")
+    shutil.rmtree(valid_root / "python-projects/projects")
     code, output = _run(valid_root, "hygiene-check", capsys)
     assert code == 1
-    assert output == "FAIL: book1: projects/ directory does not exist\n"
+    assert output == "FAIL: python-projects: projects/ directory does not exist\n"
 
 
 def test_empty_projects_dir_still_passes_and_ignores_gitkeep(valid_root):
-    shutil.rmtree(valid_root / "book1/projects")
-    (valid_root / "book1/projects").mkdir()
-    (valid_root / "book1/projects/.gitkeep").touch()
-    projects, findings = notebooks.project_dirs(valid_root, "book1")
+    shutil.rmtree(valid_root / "python-projects/projects")
+    (valid_root / "python-projects/projects").mkdir()
+    (valid_root / "python-projects/projects/.gitkeep").touch()
+    projects, findings = notebooks.project_dirs(valid_root, "python-projects")
     assert projects == []
     assert findings == []
 

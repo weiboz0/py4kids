@@ -1,11 +1,12 @@
-"""Subprocess judge for Book-2 stdin-first solutions (Plan 036).
+"""Subprocess judge for stdin-first contest solutions (Plan 036).
 
 A reference solution is a real contest script in an entry's ``assets/`` dir that reads stdin and
 prints stdout. ``judge_findings`` runs each solver against committed ``<pid>/<k>.in`` fixtures and
 token-compares stdout to ``<pid>/<k>.out``.  Modeled on :func:`tools.fake_turtle.turtle_findings`.
 
-BOOK-SCOPED to ``book2``: returns ``[]`` for any other book (the "assets/ + .py" new-model detector
-is indistinguishable from Book-1 turtle assets).  This is an intentional documented no-op, not the
+BOOK-SCOPED to books with the ``judge: true`` flag in ``books.yaml``: returns ``[]`` for any other
+book (the "assets/ + .py" new-model detector is indistinguishable from turtle assets in the Python
+books).  This is an intentional documented no-op, not the
 fail-closed-on-missing-root convention used by the notebook checks.
 """
 
@@ -16,6 +17,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from tools.books import book_flag
 from tools.notebooks import (
     EXERCISE_HEADING,
     PROBLEM_HEADING,
@@ -169,8 +171,8 @@ def _mirror_source(entry_dir: Path, kind: str, stem: str) -> str | None:
 
 
 def judge_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    if book != "book2":
-        return []  # intentional no-op outside book2 (see module docstring)
+    if not book_flag(root, book, "judge"):
+        return []  # intentional no-op outside judge books (see module docstring)
     entries, findings = content_dirs(root, book, unit)
     if findings:
         return findings

@@ -14,8 +14,8 @@ MANUAL_ONLY concepts remain reviewer-enforced.
 A string ``Constant`` inside a ``JoinedStr`` counts as ``string-literal``. Thus
 the literal text in an f-string records both ``f-string`` and ``string-literal``.
 
-Each scan builds a fresh per-book profile. Book 1 retains the original method,
-builtin, and manual-only literals; dependent books extend that profile only for
+Each scan builds a fresh per-book profile. The patterns book (python-projects) retains the
+original method, builtin, and manual-only literals; dependent books extend that profile only for
 features and techniques present in their own registry.
 """
 
@@ -29,7 +29,14 @@ from pathlib import Path
 
 import yaml
 
-from tools.books import book_entries, book_path, dependency_baseline, prereq_policy
+from tools.books import (
+    book_entries,
+    book_flag,
+    book_path,
+    dependency_baseline,
+    prereq_policy,
+    qualified_concept_id_pattern,
+)
 
 # Concepts we do NOT flag as violations: not detectable from code, or too fuzzy
 # to assert confidently. These stay reviewer-manual.
@@ -44,7 +51,7 @@ MANUAL_ONLY = {
     "variable", "print",          # ubiquitous; still detected, low value
 }
 
-# Methods TAUGHT by book 1 (by the concept that teaches them). A method call whose
+# Methods TAUGHT by python-projects (by the concept that teaches them). A method call whose
 # name is not here maps to NO concept id and would slip the closure check silently
 # (this is how `.index` nearly leaked into unit-06). Flag any other method call.
 TAUGHT_METHODS = {
@@ -68,7 +75,6 @@ WIDENED_METHODS = {
 BUILTINS = {"len", "min", "max", "sorted", "sum", "abs", "round"}
 DICT_METHODS = {"items", "keys", "values", "get"}
 AUXILIARY_ROLES = {"demo", "given", "real-form", "composed"}
-QUALIFIED_ID = re.compile(r"^(book1|book2):[a-z][a-z0-9-]*$")
 FENCE_START = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 GIVEN_START = "# GIVEN TOOL — do not edit"
 GIVEN_END = "# your work begins below"
@@ -323,7 +329,7 @@ def detect(
                 and isinstance(parent.iter.func, ast.Attribute)
                 and parent.iter.func.attr == "items"
             )
-            # Book 1 already owns these two tuple-shaped forms through its
+            # python-projects already owns these two tuple-shaped forms through its
             # dict-loop and return-value concepts. Standalone tuple syntax
             # remains a dependent-book feature and is detected globally.
             if not is_dict_items_target and not isinstance(parent, ast.Return):
@@ -436,7 +442,7 @@ def detect(
                 and isinstance(node.value.func, ast.Name)
                 and node.value.func.id == "set"
             )
-            widened = "string-methods" in active_profile.features  # Book 1 / Book 1b only
+            widened = "string-methods" in active_profile.features  # Python books only
             if (
                 node.attr in {"add", "discard", "remove"}
                 and receiver_is_set
@@ -444,7 +450,7 @@ def detect(
             ):
                 add_feature("set-ops")
             # A set receiver in a book without set-ops, or an untracked set receiver
-            # (for example, a parameter), is conservatively attributed to Book 1's
+            # (for example, a parameter), is conservatively attributed to python-projects's
             # list-changing concept; likewise str.index -> list-index and dict.pop ->
             # list-append (stricter, never looser).
             elif (
@@ -689,9 +695,11 @@ def _where(block: _Block) -> str:
     return f"{block.path.name} cell {identity}"
 
 
-def _qualified(raw: str, entry_auxiliary: set[str]) -> str | None:
-    if raw == "str-split":
-        return "book2:str-split"
+def _qualified(
+    raw: str, entry_auxiliary: set[str], owners: dict[str, str] | None = None
+) -> str | None:
+    if raw == "str-split" and owners and "str-split" in owners:
+        return f"{owners['str-split']}:str-split"
     matches = sorted(qid for qid in entry_auxiliary if qid.endswith(f":{raw}"))
     return matches[0] if len(matches) == 1 else None
 
@@ -782,7 +790,7 @@ def _exact_counter_statement(node: ast.AST) -> bool:
 
 
 def _load_k2(root: Path, book: str) -> tuple[list[dict], list[str]]:
-    if book != "book1":
+    if not book_flag(root, book, "patterns"):
         return [], []
     path = book_path(root, book) / "curriculum" / "k2-exceptions.yaml"
     if not path.is_file():
@@ -790,22 +798,22 @@ def _load_k2(root: Path, book: str) -> tuple[list[dict], list[str]]:
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
-        return [], [f"FAIL: book1: k2-exceptions.yaml invalid YAML: {exc}"]
+        return [], [f"FAIL: {book}: k2-exceptions.yaml invalid YAML: {exc}"]
     if not isinstance(data, dict):
-        return [], ["FAIL: book1: k2-exceptions.yaml must be a mapping"]
+        return [], [f"FAIL: {book}: k2-exceptions.yaml must be a mapping"]
     if set(data) != {"k2_exceptions_version", "exceptions"}:
-        return [], ["FAIL: book1: k2-exceptions.yaml keys are invalid"]
+        return [], [f"FAIL: {book}: k2-exceptions.yaml keys are invalid"]
     if data.get("k2_exceptions_version") != 1:
-        return [], ["FAIL: book1: k2_exceptions_version must be 1"]
+        return [], [f"FAIL: {book}: k2_exceptions_version must be 1"]
     rows = data.get("exceptions")
     if not isinstance(rows, list):
-        return [], ["FAIL: book1: k2 exceptions must be a list"]
+        return [], [f"FAIL: {book}: k2 exceptions must be a list"]
     findings: list[str] = []
     valid: list[dict] = []
     expected_keys = {"cell-id", "concept-ids", "exact-ast-form", "role"}
-    expected_concepts = {"book1:loop-counter", "book1:accumulator"}
+    expected_concepts = {f"{book}:loop-counter", f"{book}:accumulator"}
     for index, row in enumerate(rows):
-        prefix = f"FAIL: book1: k2 exception {index}"
+        prefix = f"FAIL: {book}: k2 exception {index}"
         if not isinstance(row, dict) or set(row) != expected_keys:
             findings.append(f"{prefix} must have exactly {sorted(expected_keys)}")
             continue
@@ -896,7 +904,13 @@ def _dependent_feature_owners(
 
 
 def _metadata_findings(
-    eid: str, block: _Block, entry_auxiliary: set[str]
+    eid: str,
+    block: _Block,
+    entry_auxiliary: set[str],
+    *,
+    book: str,
+    qualified_id: re.Pattern[str],
+    owners: dict[str, str],
 ) -> tuple[list[str], set[str]]:
     """Validate one governed cell and return its usable declarations."""
     prefix = f"FAIL: {eid}: {_where(block)}"
@@ -912,12 +926,13 @@ def _metadata_findings(
     declared = block.declared
     if not isinstance(declared, list) or any(not isinstance(qid, str) for qid in declared):
         return [f"{prefix}: py4kids_auxiliary must be a list of qualified ids"], set()
-    if any(not QUALIFIED_ID.fullmatch(qid) for qid in declared):
+    if any(not qualified_id.fullmatch(qid) for qid in declared):
         findings.append(f"{prefix}: py4kids_auxiliary contains an unqualified id")
     if len(declared) != len(set(declared)):
         findings.append(f"{prefix}: py4kids_auxiliary contains duplicate ids")
-    if "book1:str-split" in declared:
-        findings.append(f"{prefix}: str-split must be declared as book2:str-split")
+    split_owner = owners.get("str-split")
+    if split_owner and f"{book}:str-split" in declared:
+        findings.append(f"{prefix}: str-split must be declared as {split_owner}:str-split")
     if has_aux_tag and not declared:
         findings.append(f"{prefix}: auxiliary tag requires at least one id")
     if declared and not has_aux_tag:
@@ -949,7 +964,7 @@ def _legacy_scan_findings(
 ) -> list[str]:
     """Preserve schema-v1 concept-scan behavior and finding text byte-for-byte."""
     book_dir = book_path(root, book)
-    # Fastforward books (e.g. book1b) let a UNIT's content reach forward to any catalog concept
+    # Fastforward books (e.g. python-concepts) let a UNIT's content reach forward to any catalog concept
     # (design 004 §5/§6); checkpoints and projects keep the strict per-entry allowed set.
     fastforward = prereq_policy(root, book) == "fastforward"
     dirs = {
@@ -1042,6 +1057,12 @@ def concept_scan_findings(
             root, book, cmap["entries"], registered, profile, baseline
         )
     dependent_feature_owners = _dependent_feature_owners(root, book, registered)
+    patterns_book = book_flag(root, book, "patterns")
+    metadata_context = {
+        "book": book,
+        "qualified_id": qualified_concept_id_pattern(root, book),
+        "owners": dependent_feature_owners,
+    }
     dirs = {
         "unit": book_dir / "units",
         "checkpoint": book_dir / "checkpoints",
@@ -1093,7 +1114,7 @@ def concept_scan_findings(
                     )
                 continue
             blocks, notebook_issues = _notebook_blocks(
-                path, include_markdown=book == "book1"
+                path, include_markdown=patterns_book
             )
             findings.extend(f"FAIL: {eid}: {issue}" for issue in notebook_issues)
             for block in blocks:
@@ -1126,7 +1147,7 @@ def concept_scan_findings(
     for row in k2_rows:
         if all_cell_ids.count(row["cell-id"]) != 1:
             findings.append(
-                f"FAIL: book1: k2 exception cell-id {row['cell-id']} "
+                f"FAIL: {book}: k2 exception cell-id {row['cell-id']} "
                 "must name exactly one existing cell"
             )
             continue
@@ -1135,7 +1156,7 @@ def concept_scan_findings(
         if len(candidates) == 1:
             row_kind, row_eid, row_auxiliary, block, tree = candidates[0]
             _metadata_errors, validated_declared = _metadata_findings(
-                row_eid, block, row_auxiliary
+                row_eid, block, row_auxiliary, **metadata_context
             )
             accumulator_nodes = [
                 node
@@ -1155,7 +1176,7 @@ def concept_scan_findings(
             active_k2_rows.append(row)
         else:
             findings.append(
-                f"FAIL: book1: k2 exception cell-id {row['cell-id']} does not "
+                f"FAIL: {book}: k2 exception cell-id {row['cell-id']} does not "
                 "match its concepts, role, location, and exact AST form"
             )
 
@@ -1210,9 +1231,9 @@ def concept_scan_findings(
             else:
                 metadata_errors: list[str] = []
                 declared = set()
-                if book == "book1" and block.block_kind != "asset":
+                if patterns_book and block.block_kind != "asset":
                     metadata_errors, declared = _metadata_findings(
-                        eid, block, entry_auxiliary
+                        eid, block, entry_auxiliary, **metadata_context
                     )
                     findings.extend(metadata_errors)
                 metadata_by_cell[cell_key] = declared
@@ -1255,7 +1276,7 @@ def concept_scan_findings(
                 ):
                     findings.append(
                         f"FAIL: {eid}: {_where(block)}: declared auxiliary "
-                        f"{_qualified(raw, declared) or raw} is unused"
+                        f"{_qualified(raw, declared, dependent_feature_owners) or raw} is unused"
                     )
 
                 is_k1 = bool(raw_declared) and block.role != "composed"
@@ -1298,7 +1319,7 @@ def concept_scan_findings(
                     or any(qid.endswith(f":{raw}") for qid in entry_auxiliary)
                 } - block_profile.never_flag
                 for raw in sorted(borrowed_raw - raw_declared):
-                    qid = _qualified(raw, entry_auxiliary)
+                    qid = _qualified(raw, entry_auxiliary, dependent_feature_owners)
                     if qid is None and raw in future_concepts:
                         qid = f"{book}:{raw}"
                     if qid:

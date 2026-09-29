@@ -101,14 +101,14 @@ def test_answer_labels_and_asset_number_boundary(tmp_path):
 
 
 def test_real_problem_11_check_precedes_output_file_read():
-    entry = Path('book1b/projects/project-01-algorithm-challenge')
+    entry = Path('python-concepts/projects/project-01-algorithm-challenge')
     key = publish.answer_key(entry, 'project', [{'number': 11, 'title': ''}])
     assert key.index('Check: `running_totals_to_file("p11_in.txt", "p11_out.txt")`') < key.index(
         'with open("p11_out.txt", "r") as f:')
 
 
 def test_real_u06_exercise_one_asset_does_not_include_exercise_ten():
-    entry = Path('book1b/units/unit-06-turtle-geometry')
+    entry = Path('python-concepts/units/unit-06-turtle-geometry')
     assert [path.name for path in publish.solution_assets(entry, 1)] == ['solutions_ex1.py']
 
 
@@ -338,8 +338,8 @@ def test_index_headword_can_be_suppressed_and_hyphenated_words_do_not_match():
     assert indexed.count(r'\index{') == 3
 
 
-def test_book1b_glossary_keys_are_precise_and_every_term_has_a_unit():
-    source = (Path(__file__).resolve().parents[1] / 'book1b' / 'back-matter' / 'glossary.md').read_text(
+def test_python_concepts_glossary_keys_are_precise_and_every_term_has_a_unit():
+    source = (Path(__file__).resolve().parents[1] / 'python-concepts' / 'back-matter' / 'glossary.md').read_text(
         encoding='utf-8')
     terms = publish.glossary_entries(source)
     units = publish.glossary_units(source)
@@ -386,8 +386,8 @@ def test_python_name_mentioned_before_it_is_taught_is_not_indexed():
     assert publish_audit.index_source_findings(late, [], 10, {}, name_units) == []
 
 
-def test_book1b_python_names_wait_for_their_teaching_unit():
-    book = Path(__file__).resolve().parents[1] / 'book1b'
+def test_python_concepts_python_names_wait_for_their_teaching_unit():
+    book = Path(__file__).resolve().parents[1] / 'python-concepts'
     source = (book / 'back-matter' / 'glossary.md').read_text(encoding='utf-8')
     glossary = publish.glossary_entries(source)
     units = publish.python_name_units(glossary, publish.glossary_units(source), publish.lesson_code(book))

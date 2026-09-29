@@ -54,7 +54,16 @@ def kernel_without_sockets(monkeypatch):
     monkeypatch.setattr(notebooks, "_executed_lesson", execute)
 
 
-def _lesson(tmp_path, *cells, book="book1b"):
+REGISTRY = """books_version: 2
+books:
+- {id: python-projects, root: python-projects, depends_on: [], patterns: true}
+- {id: python-concepts, root: python-concepts, depends_on: [], publication: true}
+- {id: usaco-bronze, root: usaco-bronze, depends_on: [python-projects], judge: true}
+"""
+
+
+def _lesson(tmp_path, *cells, book="python-concepts"):
+    (tmp_path / "books.yaml").write_text(REGISTRY, encoding="utf-8")
     unit = tmp_path / book / "units" / "unit-01-fixture"
     unit.mkdir(parents=True)
     path = unit / "lesson.ipynb"
@@ -69,16 +78,16 @@ def _code(source, *, tags=()):
 def test_fill_check_round_trip_and_idempotence(tmp_path, capsys):
     path = _lesson(tmp_path, _code("print('hello')"), _code("print('world')"))
     before = nbformat.read(path, as_version=4)
-    assert cli.main(["--root", str(tmp_path), "--book", "book1b", "fill-outputs"]) == 0
+    assert cli.main(["--root", str(tmp_path), "--book", "python-concepts", "fill-outputs"]) == 0
     filled = nbformat.read(path, as_version=4)
     assert [cell.outputs[0].text for cell in filled.cells] == ["hello\n", "world\n"]
     assert all(cell.execution_count is None for cell in filled.cells)
     assert filled.metadata == before.metadata
     assert [cell.metadata for cell in filled.cells] == [cell.metadata for cell in before.cells]
     once = path.read_bytes()
-    assert cli.main(["--root", str(tmp_path), "--book", "book1b", "fill-outputs"]) == 0
+    assert cli.main(["--root", str(tmp_path), "--book", "python-concepts", "fill-outputs"]) == 0
     assert path.read_bytes() == once
-    assert cli.main(["--root", str(tmp_path), "--book", "book1b", "lesson-outputs-check"]) == 0
+    assert cli.main(["--root", str(tmp_path), "--book", "python-concepts", "lesson-outputs-check"]) == 0
     assert capsys.readouterr().out.endswith("lesson-outputs-check: PASS\n")
 
 
@@ -88,33 +97,33 @@ def test_fill_preserves_untouched_serialization(tmp_path):
     notebook["cells"][0]["outputs"] = [{"name": "stdout", "output_type": "stream", "text": ["ok\n"]}]
     path.write_text(json.dumps(notebook, ensure_ascii=False, indent=1) + "\n")
     before = path.read_bytes()
-    assert notebooks.fill_outputs_findings(tmp_path, "book1b") == []
+    assert notebooks.fill_outputs_findings(tmp_path, "python-concepts") == []
     assert path.read_bytes() == before
 
 
 def test_stale_and_silent_outputs(tmp_path):
     path = _lesson(tmp_path, _code("print('fresh')"), _code("value = 3"))
-    assert notebooks.fill_outputs_findings(tmp_path, "book1b") == []
+    assert notebooks.fill_outputs_findings(tmp_path, "python-concepts") == []
     nb = nbformat.read(path, as_version=4)
     assert nb.cells[1].outputs == []
     nb.cells[0].outputs[0].text = "stale\n"
     nbformat.write(nb, path)
-    assert notebooks.lesson_outputs_findings(tmp_path, "book1b") == [
+    assert notebooks.lesson_outputs_findings(tmp_path, "python-concepts") == [
         f"FAIL: unit-01-fixture: lesson code cell {nb.cells[0].id} output is stale"
     ]
 
 
 def test_noexec_skipped_and_stored_output_rejected(tmp_path):
     path = _lesson(tmp_path, _code("raise RuntimeError('skip')", tags=["no-exec"]), _code("print('ok')"))
-    assert notebooks.fill_outputs_findings(tmp_path, "book1b") == []
+    assert notebooks.fill_outputs_findings(tmp_path, "python-concepts") == []
     nb = nbformat.read(path, as_version=4)
     assert nb.cells[0].outputs == []
     nb.cells[0].outputs = [nbformat.v4.new_output("stream", name="stdout", text="bad\n")]
     nbformat.write(nb, path)
-    assert notebooks.lesson_outputs_findings(tmp_path, "book1b") == [
+    assert notebooks.lesson_outputs_findings(tmp_path, "python-concepts") == [
         f"FAIL: unit-01-fixture: lesson code cell {nb.cells[0].id} no-exec cell has stored output"
     ]
-    assert notebooks.fill_outputs_findings(tmp_path, "book1b") == []
+    assert notebooks.fill_outputs_findings(tmp_path, "python-concepts") == []
     assert nbformat.read(path, as_version=4).cells[0].outputs == []
 
 
@@ -125,7 +134,7 @@ def test_fill_unit_selector_only_changes_selected_unit(tmp_path):
     second = other / "lesson.ipynb"
     nbformat.write(nbformat.v4.new_notebook(cells=[_code("print('two')")]), second)
     before = second.read_bytes()
-    assert cli.main(["--root", str(tmp_path), "--book", "book1b", "--unit",
+    assert cli.main(["--root", str(tmp_path), "--book", "python-concepts", "--unit",
                      selected.parent.name, "fill-outputs"]) == 0
     assert second.read_bytes() == before
     assert nbformat.read(selected, as_version=4).cells[0].outputs
@@ -141,11 +150,11 @@ def test_non_stdout_rejected(tmp_path, source, kind):
     path = _lesson(tmp_path, _code(source))
     cell_id = nbformat.read(path, as_version=4).cells[0].id
     expected = f"FAIL: unit-01-fixture: lesson code cell {cell_id} produced non-stdout output ({kind})"
-    assert notebooks.fill_outputs_findings(tmp_path, "book1b") == [expected]
-    assert notebooks.lesson_outputs_findings(tmp_path, "book1b") == [expected]
+    assert notebooks.fill_outputs_findings(tmp_path, "python-concepts") == [expected]
+    assert notebooks.lesson_outputs_findings(tmp_path, "python-concepts") == [expected]
 
 
-@pytest.mark.parametrize("book", ["book1", "book2"])
+@pytest.mark.parametrize("book", ["python-projects", "usaco-bronze"])
 def test_unpopulated_other_book_skips(tmp_path, capsys, book):
     _lesson(tmp_path, _code("print('ok')"), book=book)
     assert cli.main(["--root", str(tmp_path), "--book", book, "lesson-outputs-check"]) == 0

@@ -1,7 +1,8 @@
 """Copy built PDFs into the root `output/<book>/` folder (plan 090 D3).
 
 Each build script owns its own files and replaces only those:
-- `book` (scripts/build-book.sh): `Book*-*.pdf`, the typeset editions;
+- `book` (scripts/build-book.sh): `<id>-*.pdf`, the typeset editions (`<id>-<edition>.pdf`,
+  named by `tools.books.output_pdf_name`);
 - `pdf` (scripts/build-pdf.sh): `syllabus.pdf`, `patterns.pdf` and the `handouts/` folder.
 Nothing clears the whole folder, so running both scripts in either order keeps every file,
 and a renamed edition leaves no stale book PDF behind.
@@ -14,16 +15,23 @@ import shutil
 import sys
 from pathlib import Path
 
-BOOK_PATTERN = 'Book*-*.pdf'
+from tools.books import output_pdf_name
+
 PDF_FILES = ('syllabus.pdf', 'patterns.pdf')
 HANDOUTS = 'handouts'
 OWNERS = ('book', 'pdf')
 
 
-def _destination(target: Path, owner: str, source: Path) -> Path:
+def book_pattern(book_id: str) -> str:
+    """The glob of a book's typeset editions: `<id>-*.pdf` (every `output_pdf_name`)."""
+    return output_pdf_name(book_id, '*')
+
+
+def _destination(target: Path, owner: str, source: Path, book_id: str) -> Path:
     if owner == 'book':
-        if not fnmatch.fnmatchcase(source.name, BOOK_PATTERN):
-            raise ValueError(f'build-book owns only {BOOK_PATTERN}, not {source.name}')
+        pattern = book_pattern(book_id)
+        if not fnmatch.fnmatchcase(source.name, pattern):
+            raise ValueError(f'build-book owns only {pattern}, not {source.name}')
         return target / source.name
     if source.name in PDF_FILES:
         return target / source.name
@@ -40,10 +48,10 @@ def refresh_output(root: Path, book_id: str, owner: str, sources: list[Path]) ->
     if missing:
         raise ValueError(f'missing or empty PDF: {", ".join(missing)}')
     target = root / 'output' / book_id
-    destinations = [_destination(target, owner, source) for source in sources]
+    destinations = [_destination(target, owner, source, book_id) for source in sources]
     target.mkdir(parents=True, exist_ok=True)
     if owner == 'book':
-        for old in target.glob(BOOK_PATTERN):
+        for old in target.glob(book_pattern(book_id)):
             old.unlink()
     else:
         for name in PDF_FILES:

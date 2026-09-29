@@ -1,12 +1,12 @@
-"""Source-policy AST checker for Book 2 (Plan 036).
+"""Source-policy AST checker for the contest books (Plan 036).
 
 Mechanically enforces the always-banned, scanner-blind surface that ``concept-scan`` does not catch
-and that has been reviewer-caught all through Book 2: chained comparison, list/str repetition,
+and that has been reviewer-caught all through the contest book: chained comparison, list/str repetition,
 ternary, ``global``/``nonlocal``, ``del``, augmented assign, comprehensions, banned imports/methods,
 and builtins outside a pinned allowlist.  Scans executable reference code — ``lesson.ipynb`` +
 ``solutions.ipynb`` code cells and every ``assets/*.py`` (solvers + helpers).
 
-BOOK-SCOPED to ``book2`` (returns ``[]`` otherwise — intentional no-op, same as the judge).
+BOOK-SCOPED to books with the ``judge: true`` flag (returns ``[]`` otherwise — intentional no-op, same as the judge).
 """
 
 from __future__ import annotations
@@ -15,9 +15,10 @@ import ast
 import builtins as _builtins
 from pathlib import Path
 
+from tools.books import book_flag
 from tools.notebooks import _fail, code_cells, content_dirs, read_nb
 
-# Precise, reject-by-default allowlist (audited against all current book2 content — the only
+# Precise, reject-by-default allowlist (audited against all current usaco-bronze content — the only
 # builtins in use are abs/int/len/max/min/print/range/set/sorted/str/sum). `deque` is imported,
 # not a builtin, so it is never flagged by the builtin check.
 ALLOWED_BUILTINS = {
@@ -122,8 +123,8 @@ def _check_source(source: str, scope: str, where: str) -> list[str]:
 
 
 def source_policy_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    if book != "book2":
-        return []  # intentional no-op outside book2 (see module docstring)
+    if not book_flag(root, book, "judge"):
+        return []  # intentional no-op outside judge books (see module docstring)
     entries, findings = content_dirs(root, book, unit)
     if findings:
         return findings

@@ -1,0 +1,102 @@
+# Python, Concept by Concept — Syllabus
+
+A concept-organized, story-light edition of Year 1 Python for middle-school students with zero
+programming experience.
+It covers the **same 62 concepts as *Python by Projects***, but organized around the language concepts themselves
+rather than themed projects, with rigorous mastery built through **real problem-solving** — mathematics,
+simple (counting-style) algorithms, turtle geometry, and puzzles.
+Exercises are **mini-CP / LeetCode-style** (a precise spec, worked sample input→output, testable
+solutions) with simple, accessible backgrounds, and there is no cap on how many a unit may carry.
+Full design: `../docs/designs/005-book1b-concept-first.md`.
+
+*Python, Concept by Concept* is an independent, self-contained root — a *variant* of *Python by Projects*, not a dependent of it —
+so a teacher can run either book as a complete Year-1 course.
+Every unit still opens with a concrete problem that motivates the concept (a genuine puzzle with a
+visible payoff, never concept drill), ships `stretch` ("Challenge") exercises, and carries teacher
+notes with a 60–90 min pacing plan.
+
+## How *Python, Concept by Concept* differs from *Python by Projects*
+
+- Organized around **concept families**, not themed projects; the verbose narrative is deliberately weakened.
+- **Fastforward is allowed:** examples and practice may use a concept before it is formally taught, to keep
+  problems real. Core teaching (`requires`) and checkpoint assessment stay strict.
+- **Checkpoints are kept**; the themed capstones are dropped in favour of per-unit problem sets and one
+  non-themed end-of-book **Algorithm Challenge** — the visible year-end goal students work toward.
+
+## Roadmap (concept-family units)
+
+This edition is COMPLETE: all 13 units, 5 checkpoints, and the end-of-book Algorithm Challenge ship
+(see the shipped-entries table below).
+The progression, each unit introducing its concept family exactly once in an order that keeps
+`requires` closure strict:
+
+1. **Unit 01 — Output & Variables:** printing, comments, variables, naming, input, string joining, f-strings, reading errors.
+2. **Unit 02 — Numbers & Arithmetic:** integers, floats, arithmetic (`+ - * / // %`), type conversion, booleans, comparison.
+3. **Unit 03 — Decisions:** logical operators, `if`/`elif`/`else`, nested conditionals.
+4. **Unit 04 — Loops & Counting:** `while`, `break`, counters, accumulators, and the counting techniques (sentinel loop, running total, count-by-condition).
+5. **Unit 05 — For & Range:** `for` loops, `range`, nested loops.
+6. **Unit 06 — Turtle Geometry:** importing modules (`import turtle`), turtle movement and drawing — angles as math.
+7. **Unit 07 — Functions:** defining functions, parameters, return values, scope, built-in functions.
+8. **Unit 08 — Randomness:** the `random` module — dice, coins, and simulation.
+9. **Unit 09 — Strings:** indexing, slicing, string methods, membership, transform-each, linear search.
+10. **Unit 10 — Lists:** creating/indexing/appending/looping/sorting lists, find-the-best, filter.
+11. **Unit 11 — Dictionaries:** creating, looking up, and looping over dictionaries.
+12. **Unit 12 — Files:** reading, writing, and the `with` statement.
+13. **Unit 13 — Objects:** classes, `__init__`, attributes, and methods.
+
+Checkpoints follow Units 03, 05, 08, and 11, with a mandatory checkpoint after Unit 13.
+The **Algorithm Challenge** (a non-themed integrative problem set) closes the year.
+
+## Shipped so far
+
+| entry | kind | lessons | the hook |
+|---|---|---|---|
+| `unit-01-output-and-variables` | unit | 3 | Fill a club "fact card" from a few saved values — output, variables, and your first programs. |
+| `unit-02-numbers-and-arithmetic` | unit | 3 | Make the computer do the math — integers, floats, `//`/`%`, conversions, and True/False comparisons. |
+| `unit-03-decisions` | unit | 3 | Teach the computer to choose — `if`/`elif`/`else` and `and`/`or`/`not` on leap years, grades, and more. |
+| `checkpoint-01-foundations` | checkpoint | 0.5 | Prove output, numbers, and decisions on a mixed problem set. |
+| `unit-04-loops-and-counting` | unit | 3 | Teach the computer to repeat and count — `while`, counters, accumulators, and stop-when-done. |
+| `unit-05-for-and-range` | unit | 3 | Count with `for`/`range` and stack loops for tables and triangles. |
+| `checkpoint-02-loops` | checkpoint | 0.5 | Prove `while`, `for`/`range`, and counting on a mixed loop problem set. |
+| `unit-06-turtle-geometry` | unit | 3 | Draw with code — `import turtle`, movement, and polygons as angles (`360 / n`) with loops. |
+| `unit-07-functions` | unit | 3 | Package logic into functions — `def`, parameters, `return`, scope, and Python's built-in tools. |
+| `unit-08-randomness` | unit | 3 | Roll dice and simulate — the `random` module, seeding, and Monte-Carlo estimates. |
+| `checkpoint-03-functions-and-randomness` | checkpoint | 0.5 | Prove functions and randomness on a mixed problem set. |
+| `unit-09-strings` | unit | 3 | Work with text — indexing, slicing, the core string methods, membership, transforming, and searching. |
+| `unit-10-lists` | unit | 3 | Collect and process data — build, index, loop, sort, find the best, and filter lists. |
+| `unit-11-dictionaries` | unit | 3 | Map keys to values — lookups, `.get`, looping, tallies, and group-by. |
+| `checkpoint-04-dictionaries` | checkpoint | 0.5 | Prove dictionaries and collections on a mixed problem set. |
+| `unit-12-files` | unit | 3 | Save and load data — read, write, and the `with` statement. |
+| `unit-13-objects` | unit | 3 | Bundle data + behaviour — classes, `__init__`, attributes, and methods. |
+| `checkpoint-05-files-and-objects` | checkpoint | 0.5 | Prove files and objects on a mixed problem set (the mandatory final checkpoint). |
+| `project-01-algorithm-challenge` | project | 2 | The year-end Algorithm Challenge — an integrative, non-themed problem set (primes, searching, tallies, files, a class). |
+
+## Enrichment (design 006, plans 079–084)
+
+A 2026 enrichment pass (`../docs/designs/006-book1b-enrichment.md`) strengthened every unit without changing
+the 62-concept catalog.
+- **Gentler ladders.** Each lesson code cell adds one new idea; dense multi-idea cells were split into
+  worked-example rungs, each with its own lead-in and a *Notice*.
+- **Real programs.** Every exercise that takes input ends with a **Real version** note, and its solution
+  shows the same program reading stdin with a bare `input()` (contest style), with a sample input and the
+  expected output. Repair, trace, and turtle exercises say **No real version** instead. Checkpoint
+  questions carry ungraded real-version notes as well.
+- **Wider toolkit (plan 079, both books).** `split`/`join`/`find`/`startswith`/`endswith`/`isdigit`/`isalpha`,
+  `insert`/`pop`/`remove`/`index`, and `continue` are now taught facets of existing concepts.
+- **Filled facets.** `print(a, b)`, `sep`/`end`, escapes, string repetition, `**`, precedence, `+=`, `round`,
+  chained comparisons, `range` steps, `continue`, default parameters, composition, negative indexes, open
+  slices and `[::-1]`, list equality, nested-list grids, file append mode, lists and dicts as attributes.
+- **Variety and volume.** ASCII art runs as a thread from Unit 01 to Unit 13 (banners, the full pattern
+  ladder, shape functions, dice faces, word frames, grids, tally charts, text maps, `draw()` methods), and
+  each unit's set touches at least four problem genres (number theory, simulation, ciphers, text layout,
+  grids and boards, statistics, calendar and time, state machines, debug and repair, and more).
+  Exercise counts after enrichment: Unit 01 20, 02 23, 03 21, 04 34, 05 31, 06 18, 07 32, 08 20, 09 29,
+  10 37, 11 28, 12 28, 13 24 — each split into core, **More Practice**, and **Challenge** tiers.
+
+## Rules this syllabus is bound by
+
+- Prereq closure over `requires` (strict): a unit's core teaching never depends on a concept introduced later.
+- Fastforward (relaxed): examples/practice may reach forward to any catalog concept.
+- Checkpoints assess only concepts already introduced; they introduce nothing.
+- Stretch exercises may preview, but core paths never depend on stretch content.
+- Docs use semantic line breaks (one sentence per line).

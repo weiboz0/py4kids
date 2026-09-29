@@ -19,17 +19,19 @@ if [[ ! -d "$book_root" ]]; then
 fi
 
 build_patterns=0
-if [[ "$book" == "book1" ]]; then
+# The `patterns: true` book (books.yaml) also builds patterns.pdf.
+is_patterns_book="$(uv run python -c 'import sys; from pathlib import Path; from tools.books import book_flag; print(int(book_flag(Path("."), sys.argv[1], "patterns")))' "$book")"
+if [[ "$is_patterns_book" == 1 ]]; then
     if ! pattern_state="$(uv run python tools/patterns_doc.py --pdf-probe)"; then
         echo "$pattern_state" >&2
-        echo "FAIL: book1: unable to validate pattern PDF inputs" >&2
+        echo "FAIL: $book: unable to validate pattern PDF inputs" >&2
         exit 1
     fi
     case "$pattern_state" in
         "empty") ;;
         "present") build_patterns=1 ;;
         *)
-            echo "FAIL: book1: unexpected pattern PDF probe result: $pattern_state" >&2
+            echo "FAIL: $book: unexpected pattern PDF probe result: $pattern_state" >&2
             exit 1
             ;;
     esac
@@ -38,7 +40,7 @@ fi
 handouts="$book_root/build/handouts"
 mkdir -p "$handouts"
 # Every PDF built here is copied to output/<book>/ at the end (this script owns syllabus.pdf,
-# patterns.pdf and handouts/ there; build-book.sh owns the Book*-*.pdf editions).
+# patterns.pdf and handouts/ there; build-book.sh owns the <id>-*.pdf editions).
 built=()
 
 for unit_dir in "$book_root"/units/unit-*; do
@@ -71,7 +73,7 @@ if [[ "$build_patterns" == 1 ]]; then
     pandoc "$book_root/reference/patterns.md" --pdf-engine=xelatex \
         -o "$book_root/build/patterns.pdf"
     if [[ ! -s "$book_root/build/patterns.pdf" ]]; then
-        echo "FAIL: book1: missing or empty patterns PDF" >&2
+        echo "FAIL: $book: missing or empty patterns PDF" >&2
         exit 1
     fi
     built+=("$book_root/build/patterns.pdf")
