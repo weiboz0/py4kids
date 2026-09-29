@@ -33,7 +33,16 @@ Conventions and lessons carried over from plan 093:
 - `pip_eval.py` (unit 04: a prefix/postfix evaluator and an infix→prefix/postfix converter)
 - `bsf_eval.py` (unit 05: bit-string operators and a brute-force solve-for-x)
 
-They are imported only by `verify` cells. A1 adds a tested carve-out: `source-policy` and `concept-scan` skip `assets/verify/*.py`, just as they skip `verify` cells, and `judge-check` ignores that folder. Each evaluator is unit-tested (`tests/test_acsl_evaluators.py`) against the ACSL wiki's worked examples **before** any answer is trusted. A verify cell's expression string is byte-identical to the statement's.
+They are imported only by `verify` cells, which use one recipe: `sys.path.insert(0, "assets/verify")`, then `import lisp_eval` (cells run from the entry folder), with `assets/verify/__pycache__/` git-ignored.
+
+`source-policy` and `concept-scan` already scan only `assets/*.py`, which leaves the subfolder alone. A1 makes `judge-check` ignore `assets/verify/`, compiles `assets/verify/*.py` in the asset-reference pass, and tests both.
+
+Each evaluator must pass its **pre-written** test file before any answer is trusted. The A1 tooling session writes these, and the evaluator authors do not edit them:
+- `tests/test_acsl_eval_lisp.py`
+- `tests/test_acsl_eval_pip.py`
+- `tests/test_acsl_eval_bsf.py`
+
+A verify cell's expression string is byte-identical to the statement's.
 
 **Stack and list idioms for student code** (`.pop`, `.index`, `.count`, `.find`, `.join` and slices of lists are not used):
 - a **stack** is a list plus a tracked `top` count: push appends while `top == len(stack)`, else overwrites `stack[top]`; `top` goes up and down; the top item is read as `stack[top - 1]`
@@ -48,7 +57,7 @@ These map to `list-literal`, `list-append`, `list-index` and `list-loop` from *P
 
 **Canonical answer text** (plan 093's rules, plus the rules below):
 - **Prefix/postfix expressions:** single-space-separated tokens (`+ 3 * 4 2`), `↑` for powers in statements and answers, operands never reordered, equal precedence left to right. Items never stack `↑` without parentheses.
-- **Evaluation results:** an integer when whole, otherwise Python's decimal (`13.5`).
+- **Evaluation results:** an integer when whole, otherwise Python's decimal (`13.5`). Items are designed so every division is whole or terminating (halves, quarters, tenths), never a repeating decimal.
 - **LISP values:**
   - numbers as above (`(DIV 6 (SUB 2 5))` is `-2`; `(DIV 54 4)` is `13.5`)
   - lists as `(A B C)` with single spaces, in the case the question uses
@@ -70,7 +79,7 @@ Unit conventions:
 - **Divisions:** elementary, junior, intermediate, senior. **Introduces:** `postfix-eval`.
 - **Non-programming hook.**
 - **Lesson 1 is the Elementary section**, with no code the student runs. It follows the official Elementary doc:
-  - single-digit operands; division only by 1 or 2; powers only 1 or 2
+  - single-digit operands; division only by 1 or 2; powers only 1 or 2. Powers are shown as both `^` (the Elementary paper's glyph) and `↑`; the book answers with `↑`.
   - PEMDAS, with left to right for equal precedence
   - five skills: evaluate postfix, evaluate prefix, infix→prefix, infix→postfix, and **prefix↔postfix**
   - ≥ 6 contiguous `acsl-elementary` short-answer items open the exercises, before any other tag
@@ -145,14 +154,19 @@ Unit conventions:
 - **Opus tooling subagent:**
   - The checkpoint question-count rule allows **6–10** for `acsl`-flag books and keeps 6–8 elsewhere; the sequential-numbering check runs for every allowed count, Q1–Q10 included.
   - The `assets/verify/` carve-out in `source-policy`, `concept-scan` and `judge-check`.
-  - Tests: 9 and 10 pass for `acsl`; 9 fails for `usaco-bronze`; numbering gaps fail at 9 and 10; the carve-out covers only `assets/verify/`.
+  - Tests: 9 and 10 pass for `acsl`; 9 fails for `usaco-bronze`; numbering gaps fail at 9 and 10. `judge-check` ignores `assets/verify/`, while `source-policy` and `concept-scan` still scan `assets/*.py` beside it.
+  - **Pre-written evaluator tests** (expected values from the ACSL wiki, one test file per evaluator):
+    - `tests/test_acsl_eval_lisp.py`: the wiki samples (`-440`, `((4 (5 6) 7))`, `CA`, `24.5`, `(red white blue)`, `SECOND`, and the wiki's `EVAL` and `ATOM` examples) plus **at least one case for every supported operation**: `SET`, `SETQ`, `EVAL`, `CAR`, `CDR`, a composition, `CONS`, `REVERSE`, `ADD`, `SUB`, `MULT`, `DIV`, `SQUARE`, `EXP`, `+ - * /`, `EQ`, `POS`, `NEG`, `ATOM`, `DEF`/`DEFUN`, quote and `NIL`
+    - `tests/test_acsl_eval_pip.py`: the wiki's conversions and evaluations
+    - `tests/test_acsl_eval_bsf.py`: the wiki's operator examples and the solve-for-x example (`00000, 00001, 00100, 00101`)
+    - Each file imports its evaluator from the unit's `assets/verify/` and skips until that module exists.
 
 ## Phase B — Lessons and statements (Opus subagents in parallel, one per entry, each owning only its folder)
 
 ## Phase C — Solutions (Opus subagents, separate fresh sessions, one per entry)
 
 - Solved from the statements only.
-- Unit 04, 05 and 07 solutions sessions write their `assets/verify/*_eval.py` plus the wiki-sample tests in `tests/test_acsl_evaluators.py`.
+- The unit 04, 05 and 07 solutions sessions each write their `assets/verify/*_eval.py`, which must pass the pre-written test file for it. They do not edit that file.
 
 ## Phase A2 — Coverage and syllabus, after authoring (inline)
 
@@ -165,7 +179,7 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
 ## Phase E — VERIFICATION
 
 1. `scripts/ci-local.sh` ALL GREEN, in a solo run on the final commit.
-2. The global concept check passes with the new shared ids. `tests/test_acsl_evaluators.py` passes on the ACSL wiki samples:
+2. The global concept check passes with the new shared ids. The three pre-written evaluator test files pass, with no skips, on the ACSL wiki samples:
    - **LISP:** `-440`, `((4 (5 6) 7))`, `CA`, `24.5`, `(red white blue)`, `SECOND`
    - **Bit-String Flicking:** the wiki's operator and solve-for-x examples
    - **Prefix/Infix/Postfix:** the wiki's conversions and evaluations
@@ -218,6 +232,19 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
   - Checkpoint paths including Classroom.
   - A1 carries the 6–10 rule (numbering checked for all counts) and the carve-out.
   - Phase E: evaluator tests on the wiki samples and a scripted path report.
+
+### Round 2 — verdicts and fold
+
+- `[sol]` **REJECT** (r2): four of the six blockers are resolved. Remaining:
+  - the LISP tests don't cover `EVAL`, `EQ`, `POS`, `NEG` and `ATOM`
+  - three sessions share one test file with no owner
+  - `[FIXED]` The A1 tooling session pre-writes three separate test files, one per evaluator, with the wiki samples plus ≥ 1 case per supported LISP operation. The evaluator authors must pass them and never edit them.
+- `[fable]` **APPROVE WITH NITS** (r2), all round-1 items verified.
+  - `[FIXED]` Carve-out scope: `judge-check` is the one tool that needs the exclusion.
+  - `[FIXED]` The verify-cell import recipe, with `__pycache__` ignored.
+  - `[FIXED]` Only terminating divisions in items.
+  - `[FIXED]` Elementary shows both `^` and `↑`.
+  - `[FIXED]` Tests are seeded by A1 rather than by the evaluator authors.
 
 ## Content Review
 _(filled before PR.)_
