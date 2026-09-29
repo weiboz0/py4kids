@@ -125,7 +125,7 @@ Unit conventions:
 - **ACSL's function set, taught and assessed** (per the wiki):
   - atoms and lists; `NIL` = `()`; quote `'`
   - `SET` (first argument quoted), `SETQ`, `EVAL`
-  - `CAR`, `CDR` (`CDR` of a one-element list is `NIL`) and compositions `CADR` …
+  - `CAR`, `CDR` (`CDR` of a one-element list is `NIL`) and the compositions `CAAR`, `CADR`, `CDAR`, `CDDR`, `CADDR`, `CDDAR` (no others are assessed)
   - `CONS` (second argument always a list), `REVERSE`
   - variadic `ADD` and `MULT`; `SUB`, `DIV`, `SQUARE`, `EXP`; symbol forms `+ - * /`
   - `EQ`, `POS`, `NEG`, `ATOM`
@@ -153,10 +153,11 @@ Unit conventions:
 - **Inline:** `acsl/curriculum/concepts.yaml` gains `postfix-eval` and `bitwise-ops` (byte-identical to USACO's) and the ACSL-only `lisp-eval`.
 - **Opus tooling subagent:**
   - The checkpoint question-count rule allows **6–10** for `acsl`-flag books and keeps 6–8 elsewhere; the sequential-numbering check runs for every allowed count, Q1–Q10 included.
-  - The `assets/verify/` carve-out in `source-policy`, `concept-scan` and `judge-check`.
+  - The `assets/verify/` carve-out in `judge-check` (the one tool that needs it), plus regression checks that `source-policy` and `concept-scan` still scan `assets/*.py` and leave the subfolder alone.
   - Tests: 9 and 10 pass for `acsl`; 9 fails for `usaco-bronze`; numbering gaps fail at 9 and 10. `judge-check` ignores `assets/verify/`, while `source-policy` and `concept-scan` still scan `assets/*.py` beside it.
   - **Pre-written evaluator tests** (expected values from the ACSL wiki, one test file per evaluator):
-    - `tests/test_acsl_eval_lisp.py`: the wiki samples (`-440`, `((4 (5 6) 7))`, `CA`, `24.5`, `(red white blue)`, `SECOND`, and the wiki's `EVAL` and `ATOM` examples) plus **at least one case for every supported operation**: `SET`, `SETQ`, `EVAL`, `CAR`, `CDR`, a composition, `CONS`, `REVERSE`, `ADD`, `SUB`, `MULT`, `DIV`, `SQUARE`, `EXP`, `+ - * /`, `EQ`, `POS`, `NEG`, `ATOM`, `DEF`/`DEFUN`, quote and `NIL`
+    - `tests/test_acsl_eval_lisp.py`: the wiki samples (`-440`, `((4 (5 6) 7))`, `CA`, `24.5`, `(red white blue)`, `SECOND`, and the wiki's `EVAL` and `ATOM` examples) plus **at least one case for every supported operation**: `SET`, `SETQ`, `EVAL`, `CAR`, `CDR`, `CONS`, `REVERSE`, `ADD`, `SUB`, `MULT`, `DIV`, `SQUARE`, `EXP`, `+ - * /`, `EQ`, `POS`, `NEG`, `ATOM`, **`DEF` and `DEFUN` as separate cases**, quote and `NIL`
+      - **one case for each supported composition**: `CAAR`, `CADR`, `CDAR`, `CDDR`, `CADDR` and `CDDAR` (the wiki's example)
     - `tests/test_acsl_eval_pip.py`: the wiki's conversions and evaluations
     - `tests/test_acsl_eval_bsf.py`: the wiki's operator examples and the solve-for-x example (`00000, 00001, 00100, 00101`)
     - Each file imports its evaluator from the unit's `assets/verify/` and skips until that module exists.
@@ -245,6 +246,12 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
   - `[FIXED]` Only terminating divisions in items.
   - `[FIXED]` Elementary shows both `^` and `↑`.
   - `[FIXED]` Tests are seeded by A1 rather than by the evaluator authors.
+
+### Round 3
+
+- `[sol]` **REJECT** (r3): test-file ownership is resolved. Remaining: LISP coverage is ambiguous for `DEF` vs `DEFUN` and for compositions.
+  - `[FIXED]` `DEF` and `DEFUN` are separate test cases. The assessed compositions are bounded to `CAAR`, `CADR`, `CDAR`, `CDDR`, `CADDR` and `CDDAR`, each with a test.
+  - `[FIXED]` Nit: A1 names `judge-check` as the one carve-out, with regression checks for the other two tools.
 
 ## Content Review
 _(filled before PR.)_
