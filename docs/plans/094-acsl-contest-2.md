@@ -298,4 +298,40 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
 - `[glm]` skipped (user decision 2026-09-28).
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped: ACSL Contest 2** (study window Jan 4 – Feb 28, 2027).
+
+| Entry | Items | Divisions (by heading tag) |
+|---|---|---|
+| `unit-04-prefix-infix-postfix` | 23 (19 short-answer, 4 programming) | 9 elementary (contiguous mock test, first), 8 junior, 4 intermediate, 2 senior |
+| `unit-05-bit-string-flicking` | 21 (17 short-answer, 4 programming) | 14 junior, 5 intermediate, 2 senior |
+| `unit-06-wdtpd-looping` | 19 (16 short-answer, 3 programming) | 19 junior |
+| `unit-07-lisp` | 21 (17 short-answer, 4 programming) | 16 intermediate, 5 senior |
+| `checkpoint-02-contest-2-practice` | 9 (Q1–Q6 junior, Q7–Q8 intermediate short-answer; Q9 junior programming, last) | see paths |
+
+- **Checkpoint paths** (from the question tags):
+  - Junior: Q1–Q6 + Q9
+  - Intermediate/Senior: Q1–Q4, Q7–Q8 + Q9
+  - Classroom: Q1–Q4, Q7–Q8 (Q5–Q6 optional; no programming)
+  - Elementary: unit 04 Exercises 1–9, as 6 questions in 30 minutes
+- **Unit 04** opens with a code-free Elementary lesson (the five official skills); its optional self-checker starts Lesson 2. It introduces the shared `postfix-eval`, with the stack-plus-`top` idiom.
+- **Unit 05** follows ACSL's precedence and right-to-left unary rule, pads on the left, clamps long shifts, and covers solve-for-x in the canonical list form. It introduces the shared `bitwise-ops`.
+- **Unit 06** is Junior loop drill in ACSL pseudocode and Python (`introduces: []`).
+- **Unit 07** covers ACSL's LISP function set and the six assessed `CxR` compositions. It introduces the ACSL-only `lisp-eval`.
+- **Verify helpers:** `pip_eval.py`, `bsf_eval.py` and `lisp_eval.py` in each unit's `assets/verify/`, each passing its pre-written test file (ACSL wiki samples plus one case per supported operation).
+- **Tooling:**
+  - ACSL checkpoints allow 6–10 questions (other books keep 6–8), with sequential numbering checked at every count.
+  - `judge-check` ignores `assets/verify/`; `source-policy` and `concept-scan` still scan `assets/*.py`.
+- **Registry:** `postfix-eval` and `bitwise-ops` are identical to USACO's; `lisp-eval` is ACSL-only. The coverage map and syllabus rows are reconciled against the manifests.
+- **Teacher notes** (inline) for all five entries: division paths, ACSL timing, canonical answer forms, and Grading.
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN, solo run at 472b596 (pytest 1071 passed, 2 environment skips).
+- Blind solves: the solutions sessions matched every author key (checkpoint 8/8, U04 19/19, U05 17/17, U06 16/16, U07 17/17). [sol] and [fable] independently matched their samples. [sol] ran 147 evaluator tests, 146 fixture runs and 29 probes; [fable] ran 261 evaluator and tooling tests.
+
+**Deviations:**
+- Content round 1: the runnable self-checker moved out of the Elementary lesson; the checkpoint gained its Classroom path; shift-clamp fixtures were added.
+- Content round 2: Q9's timing applies only to the programming paths.
+- `[WONTFIX]` F2: Elementary items stay shorter than the official 9–13 tokens, noted for a future enrichment pass.
+
+**Next:** plan 095, Contest 3 (Boolean Algebra with its Elementary section, Data Structures, WDTPD – Arrays, FSAs and Regular Expressions for Intermediate+, and the Contest 3 practice).
