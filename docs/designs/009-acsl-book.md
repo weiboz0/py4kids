@@ -28,7 +28,8 @@ Students should be able to follow the book **in step with a competition season**
   - When ACSL changes the list, only `season.yaml` and the affected units change.
 - **D3 — Every item is marked by division** ("mark concepts by level").
   - **Levels form a ladder:** elementary < junior < intermediate < senior.
-    - Each ACSL unit and checkpoint manifest carries `acsl: {contest: 0–4, category: <season.yaml unit_order name>, divisions: [...]}`, where contest 0 is Foundations and `divisions` lists ladder levels only.
+    - Each ACSL **unit** manifest carries `acsl: {contest: 0–4, category: <season.yaml unit_order name>, divisions: [...]}`, where contest 0 is Foundations and `divisions` lists ladder levels only.
+    - Each **practice checkpoint** manifest carries `acsl: {contest: 1–4, category: Practice, divisions: [...]}`. `Practice` is reserved, is not a `unit_order` entry, and is valid only on checkpoints: exactly one per shipped contest, placed after that contest's last unit. Its questions may span any of that contest's categories.
     - Each exercise carries its **lowest** ladder level as a tag on its heading cell, `acsl-elementary|acsl-junior|acsl-intermediate|acsl-senior`, which later prints as a level badge. A student following one ladder level does the items at or below it.
   - **Classroom** is a season-map column only: never a tag and never in `divisions`. The Classroom path for a contest is every **short-answer** item tagged junior or intermediate in that contest's categories, matching ACSL's Classroom test, which draws on those divisions' non-programming problems.
   - **Elementary** is a one-category, non-programming test per contest. Each Elementary category (Computer Number Systems, Prefix/Infix/Postfix, Boolean Algebra, Graph Theory) is taught as the **opening Elementary section** of the matching Junior category unit, with items tagged `acsl-elementary`.

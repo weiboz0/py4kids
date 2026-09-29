@@ -87,7 +87,7 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
 - **D3 `manifest-check` and `acsl-check`:**
   - `manifest_findings` accepts the optional `acsl` key only for books with the `acsl` flag, and rejects it elsewhere.
   - `acsl-check` is registered in `tools/checks.py` and wired into `ci-local` for `acsl`-flag books. It returns `[]` for every other book. It checks:
-    - each manifest `acsl:` block is valid against `season.yaml`, with `divisions` holding ladder levels only
+    - each unit manifest `acsl:` block is valid against `season.yaml` `unit_order`; each checkpoint uses the reserved `category: Practice` (contest 1–4, one per shipped contest, after its last unit); `divisions` holds ladder levels only; `Practice` on a unit or a category name on a checkpoint fails (mutations)
     - unit order follows `season.yaml` `unit_order`
     - exactly one ladder tag on each exercise or question heading, never below the unit's lowest division, and no `acsl-classroom` tag
     - a contest part with any shipped unit has its practice checkpoint
@@ -192,6 +192,11 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
   - `[FIXED]` `judge-check` treats `acsl` entries as stdin-model even without `assets/`.
   - `[FIXED]` Execution is skipped when no live cells remain.
   - `[FIXED]` `stretch` goes on the heading cell.
+
+### Round 3
+
+- `[sol]` **REJECT** (r3): the worked-answer gap is closed. Remaining: practice checkpoints have no valid category.
+  - `[FIXED]` A reserved `category: Practice` for checkpoints only: contest 1–4, one per shipped contest, after its last unit; questions may span that contest's categories. Mutations cover `Practice` on a unit and a category name on a checkpoint.
 
 ## Content Review
 _(filled before PR.)_
