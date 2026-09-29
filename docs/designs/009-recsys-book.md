@@ -196,6 +196,43 @@ capped slice) rather than weakening the gate.
 - Final slice parameters (target row counts for books and synthetic readers) — set in the Part-1 Unit-1 plan.
 - Whether the neural units may opt into `sentence-transformers` (network download) or stay GloVe-only.
 
+## Design Review
+
+Design-review gate on this doc. Roster: `[self]` (inline), `[sol]` (codex `--model gpt-6-sol`, read-only),
+`[fable]` (Fable 5, read-only). `[glm]` is skipped by standing user decision (2026-09-28, "Skip GLM until further
+notice"; recorded in plan 091). Consensus target: all active reviewers APPROVE / APPROVE WITH NITS, no open blockers.
+
+### Review 1 — [self] (2026-09-29)
+- **Verdict:** APPROVE WITH NITS
+The two-part arc, dual-track pedagogy, and multi-path retrieve-then-rank architecture are coherent and genuinely
+production-shaped; the data strategy and audience carve-out are sound. Design-level items to resolve (mostly in the
+per-unit plans, a couple in this doc):
+1. `[OPEN]` Should Fix (§7/§9) — **CPU-deterministic feasibility guardrail is under-specified.** "Small enough to
+   train in minutes on CPU with fixed seeds" is asserted but not bounded. PyTorch determinism needs explicit setup
+   (seed + `torch.use_deterministic_algorithms`); FAISS determinism means the graded path uses an exact index
+   (`IndexFlat`), not approximate HNSW; heavy-training cells may need a cached-artifact + `no-exec` pattern so the
+   exec gate stays in budget. The design should state these guardrails, not just defer them.
+2. `[OPEN]` Should Fix (§8 U12) — **the self-attention / SASRec sequence unit is the least CPU-friendly.** Training
+   even a tiny transformer deterministically in minutes is the shakiest claim; consider scoping U12 explicitly as a
+   small "taste" with a capped model + short sequences, or note it may become a conceptual + tiny-demo unit.
+3. `[OPEN]` Should Fix (§7) — **dependency weight vs. the shared environment.** PyTorch + FAISS are heavy in an
+   otherwise library-light repo; they load into the shared `uv` env and slow every book's CI. The design says
+   libraries are "isolated to this book" pedagogically, but the ENVIRONMENT is shared. Decide whether they go in an
+   optional extras group and how `ci-local` handles a book whose exec needs them.
+4. `[OPEN]` Should Fix (§5/§8 U1) — **the `RetrievalPath` interface must be forward-designed for Part 2.** If U1's
+   interface is shaped only around classical paths, the neural/ANN paths in Part 2 will force a redesign. State that
+   U1 designs the interface with embedding/ANN paths in mind.
+5. `[OPEN]` Should Fix (§6/§12) — **the `books` DB origin/license is a merge blocker, not just an open question.**
+   Committing a slice to a PUBLIC repo requires a known-permissive license; resolve before the first content merge.
+6. `[OPEN]` Nice to Have (§8) — **add an explicit recommender-ethics beat** (filter bubbles, feedback loops,
+   popularity bias) — appropriate and valuable for this audience; currently only diversity-in-ablation is mentioned.
+
+### Review 2 — [sol] (2026-09-29)
+_(pending)_
+
+### Review 3 — [fable] (2026-09-29)
+_(pending)_
+
 ## 13. Revision history
 
 - **v1 (2026-09-29):** created. Two-part book (Foundational / Neural Recommenders), dual concept∥project tracks,
