@@ -72,7 +72,7 @@ Conventions and lessons carried over from plans 093–094:
     - `depths: list[int]`, the depth of each inserted node in insertion order, so duplicates stay distinct
     - `ipl`, `epl`, `external`, `leaves`, `height: int`: the internal and external path lengths, the external-node count, the leaf count, and the greatest depth
     - `leaf_keys`, `inorder`, `preorder`, `postorder: str`, in canonical row text (leaves left to right)
-  - `bst_delete(keys, key) -> dict`: the same report, minus `depths`, after inserting `keys` and then deleting the **shallowest** node holding `key` by ACSL's rule (below)
+  - `bst_delete(keys, key) -> dict`: the same report, minus `depths`, after inserting `keys` and then deleting the **shallowest** node holding `key` by ACSL's rule (below). Items never ask to delete a duplicated key (the wiki gives no rule); the pin only makes the helper total
   - `heap(keys, kind="min") -> list[str]`: the rows of a heap built by insertion, top row first, in canonical text
   - `heap_pop(keys, kind="min") -> list[str]`: the rows after removing the root by ACSL's rule
 - `fsa_eval.py` (unit 11). Its interface:
@@ -128,8 +128,8 @@ These map to `list-*`, `dict-*` and `tuple` ids that are already registered.
   - `NIL` for an empty `POP`
   - a heap or tree row, or a traversal, as its letters or numbers in order, with letters run together (`RORN`) and numbers separated by single spaces
   - the position of an item in a heap as its 1-based array index (the root is 1)
-- **Truth tables:** the result column as a string of `0`s and `1`s, rows in ascending binary order of the variables (`00, 01, 10, 11` for `A, B`): `~A + B` is `1101`. `bool_eval.column(expr) -> str` gives it.
   - path lengths, depths and counts as bare integers
+- **Truth tables:** the result column as a string of `0`s and `1`s, rows in ascending binary order of the variables (`00, 01, 10, 11` for `A, B`): `~A + B` is `1101`. `bool_eval.column(expr) -> str` gives it.
 - **Option lists** (accepted strings, tautologies, equivalent expressions): items label their options with capital letters `A`, `B`, `C`, …, and the answer is the chosen labels in that order, separated by `, ` (`A, E`); `NONE` when none qualify.
 - **Regular-expression answers** are judged as option choices (which expression is equivalent / describes the FSA), never as free text. The lesson still has students *write* expressions for FSAs, and the teacher notes say real papers grade free text.
 
@@ -137,7 +137,7 @@ These map to `list-*`, `dict-*` and `tuple` ids that are already registered.
 
 Unit conventions:
 - a project-first hook and 3 lessons
-- **at least 14 exercises**, mixing programming items (judged line-exact) and short-answer items (`**Answer:**` line and a top-level `verify` assert)
+- **at least 14 exercises**, mixing programming items (judged line-exact) and short-answer items (a `**Your answer:**` placeholder in `exercises.ipynb`; the `**Answer:**` line and a top-level `verify` assert in `solutions.ipynb`)
 - a heading ladder tag plus a visible division line on every exercise
 - at least 2 `stretch` Challenges
 - ACSL-style statements
@@ -222,10 +222,10 @@ Unit conventions:
     - De Morgan, and each XOR/XNOR identity
     - `~~A`; `solutions(expr, 0)` for the rows that are false
     - `column` for 2 and 3 variables; `minimal_sops` on a 2-variable input, a tautology (`["1"]`) and a contradiction (`["0"]`)
-    - the three traversals of the wiki's tree from `A M E R I C A N`: inorder `AACEIMNR`, preorder `AAMECIRN`, postorder `ACIENRMA`
     - canonical tuple order for 2 and 3 variables, and counts
     - minimal sums of products: `A * B + ~A * C` has exactly one (itself, the consensus term dropped); `A * ~B + ~A * B + B * ~C + ~B * C`, whose minimal forms tie, returns more than one; the wiki sample 1 gives exactly `A`; canonical term order
   - `tests/test_acsl_eval_ds.py`:
+    - the three traversals of the wiki's tree from `A M E R I C A N`: inorder `AACEIMNR`, preorder `AAMECIRN`, postorder `ACIENRMA`
     - the wiki's three samples: `run(["PUSH(3)", "PUSH(6)", "PUSH(8)", "Y = POP()", "X = POP()", "PUSH(X-Y)", "Z = POP()"], "stack")["vars"]["Z"] == -2`; the `PROGRAMMING` min-heap's last row `RORN`; the `PROGRAM` BST's `ipl` `12`
     - duplicate keys: `depths` for `list("AMERICAN")` keeps both `A` nodes; `bst_delete` removes the shallower one
     - `NIL` on an empty `POP`, for a stack and for a queue
@@ -318,6 +318,14 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
   2. `ds_eval.run` now takes assignments and `PUSH(a op b)`, and returns popped values plus variables; the wiki `Z = -2` sample is written out as a test.
   3. The BST report has typed fields; `depths` is in insertion order, so duplicates stay distinct; deletion removes the shallowest matching node.
   4. Inside a class, only `U` and `λ` are literal; ranges and negation keep their meaning, with tests.
+
+### Round 3
+
+- `[fable]` **APPROVE WITH NITS**. It confirmed the `run` contract (the wiki sample gives `Z = -2`), the typed BST report, the class rule, `column` and `minimal_sops`. Three placement nits are folded: the traversal test sits under the DS tests, the Truth-tables bullet is out of the DS sub-list, and items never delete a duplicated key.
+
+- `[sol]` **REJECT** (r3), 2 findings, both folded:
+  1. The unit-convention line now matches Phase B/C: a placeholder in `exercises.ipynb`, and the `**Answer:**` line and verify assert in `solutions.ipynb`.
+  2. = `[fable]` r3 nit 1 (the traversal test is under the DS tests).
 
 ## Content Review
 
