@@ -228,10 +228,69 @@ per-unit plans, a couple in this doc):
    popularity bias) — appropriate and valuable for this audience; currently only diversity-in-ablation is mentioned.
 
 ### Review 2 — [sol] (2026-09-29)
-_(pending)_
+- **Verdict:** REJECT (core arc & registry sound; blockers are additive)
+Must Fix: (M1) §7/§9 heavy-dep execution & determinism are deferred not designed — needs dependency-group + per-book
+CI routing, concrete cell/notebook/book runtime ceilings, torch/numpy/faiss determinism (seeds, deterministic algs,
+pinned threads), ANN verified by recall/latency bounds not exact neighbors, tolerance-based assertions, and a
+mandatory named verification phase per plan; does NOT endorse `no-exec`+cached artifacts unless a separate required
+check regenerates/validates them. (M2) §6 shippable data + embedding provenance contract incomplete — catalog
+license is a blocker before ANY public artifact merge; need a stable extraction contract (source/snapshot,
+deterministic ordering, normalization/dedup, schema/data-dictionary, row counts, checksums, query params); GloVe
+must be a committed checksum-pinned slice-vocabulary subset, default CI needing neither DB nor network. (M3) §10 the
+`docs/plans/recsys/` namespace is NOT collision-safe — `pre-merge-guard.sh` only checks Markdown directly under
+`docs/plans/` (path-depth), so a nested `recsys/092-…md` evades the reserved-092/093 guard; either use top-level
+globally-numbered files OR extend+test the guard first. (M4) §2/§10 the baseline override is too broad — must
+normatively state it overrides ONLY audience + assumed math + library permission and RETAINS project-first/coverage/
+taught-before-assessed/hygiene/stretch/teacher-materials; add probability/statistics + numerical-Python to the
+assumed baseline or say where taught; a design doc cannot declare the gate "3-way". (M5) §6/§8 the synthetic
+generator doesn't yet support the curriculum — needs timestamps/ordered sessions, exposure/observation process,
+implicit positives + sampled negatives, cold-start partitions, leakage-safe splits; and latent factors are not
+identifiable (rotations) so students verify recovered scores/rankings/subspaces, not literal factor coordinates.
+Should Fix: eval too late (move a minimal holdout + hit-rate@k to U1/U2); from-scratch is not realistic for
+FAISS/SASRec (define the "reveal" there as brute-force baseline → library w/ recall-vs-speed); library APIs still
+need taught-before-assessed closure (each API introduced before use; marked instructor adapters); `RetrievalPath`
+contract needs forward design (stable ids, fit/load/retrieve lifecycle, artifact versioning, tie-breaking, candidate
+limits, score semantics); ethics/beyond-accuracy is core not nice-to-have; U12 must be a tiny capped SASRec taste,
+U14 must consume bounded/cached models with a total budget. Nice: registry `number:3`; fix "design 008 §3"→§2 D3;
+set a concrete `lesson_budget`.
 
 ### Review 3 — [fable] (2026-09-29)
-_(pending)_
+- **Verdict:** REJECT (revise to v2 — core arc sound; blockers are additive sections)
+Must Fix: (1) §6 synthetic-interaction generator under-specified and Part 2 depends on it — enumerate per-unit
+latent signals (content-derived taste, popularity bias, sequential/session dynamics, held-out cold items/readers)
+with a "which unit needs which signal" table and exposed ground-truth; else the neural units can't beat MF. (2)
+§6/§7/§9 offline reproducibility not closed — CI can't run as written: GloVe via gensim is a ~130MB network
+download; slice format parquet drags pyarrow (prefer gzip'd CSV + size ceiling); `NotebookClient` timeout is 120s
+PER CELL and `exec-lessons` runs `lesson.ipynb` too, so every training loop runs ≥twice per CI pass — state concrete
+budgets + mitigations. (3) §2/§10 governance dependency understated — the middle-school baseline is hard-coded in
+AGENTS.md CRITICAL RULES and `docs/content-review-gate.md` (both governance files autopilot may not edit); the design
+must list the required governance amendments as a user-approved precondition, else every recsys gate reviewer is
+obliged to reject; and §10's "3-way gate" contradicts AGENTS.md — drop it or cite where the user recorded it. (4)
+§2 assumed-baseline has no tooling mechanism — `depends_on: [python-projects]` gives only ~62 Book-1 ids (no
+inheritance/exceptions/comprehensions/`*args`/type-hints/numpy/pandas), yet the `RetrievalPath` registry needs
+polymorphism day one; specify a `kind: assumed`/`baseline.yaml` construct honored (no credit) by prereq/coverage as
+U1 tooling; confirm stretch/turtle/concept-scan checks are inert or flagged. Should Fix: eval arrives too late (U6) —
+move a scoreboard to U1/U2; U8/U9 ordering (two-tower needs U9's loss before U8's training — reorder to U8=MF-as-
+ID-only-two-tower/BPR, U9=feature towers + cold start + hard negatives); U3 overloaded + U7 mean-GloVe will score
+below TF-IDF-on-subjects (make it a deliberate lesson); DROP `surprise` (unmaintained, compiles, numpy-2/py3.12
+breakage) — sklearn + PyTorch MF suffice, `implicit` if ALS wanted; isolate deps via `[dependency-groups] recsys` +
+`uv run --group` routing in ci-local, plus explicit determinism (torch/faiss seeds + single-thread); name the
+license fallback (Open Library public-domain, or goodbooks-10k which adds real ratings) and gate the U1 slice-commit
+on it; project packaging unspecified — a cumulative `RetrievalPath` system can't live in notebook cells (needs an
+importable package + stated CI import mechanism + how the single `projects/` manifest grows + milestone notebooks);
+MISSING checkpoints/teacher-notes/pacing (design 000 requires checkpoints) — classroom vs self-study?; ethics/
+beyond-accuracy thread belongs in core (popularity bias, coverage/diversity/serendipity/novelty, feedback loops,
+filter bubbles, offline-metric limits) with a capstone beyond-accuracy table; cold-start as a cross-unit thread
+(U6→U9→U13). Nice: registry `number:3` + note "Applied Python" as a new title series; define the
+`docs/plans/recsys/` numbering + guard extension; acknowledge synthetic-vs-real trade-off + optional out-of-repo
+goodbooks-10k stretch; `sentence-transformers` must never be on the CI path (GloVe-only default).
+
+### Gate status (round 1): **[self] APPROVE WITH NITS · [sol] REJECT · [fable] REJECT · [glm] skipped**
+Not consensus. The design requires a **v2** revision folding the convergent findings above. The three reviewers
+agree the two-part arc, dual-track pedagogy, multi-path architecture, BM25 placement, and registry choices are
+sound, and that feasibility is achievable **under explicit scale ceilings** (~5–20k books, ~5k synthetic readers,
+~200k interactions, embedding dim ~32, a tiny capped SASRec, per-cell ≤120s, pinned threads). Several findings are
+genuine forks for the author (governance amendments; plan-namespace approach) — surfaced below.
 
 ## 13. Revision history
 
