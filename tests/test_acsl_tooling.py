@@ -178,7 +178,7 @@ def test_real_registry_peers_and_contest_books_close_separately():
     )
     usaco_by_id = {c["id"]: c for c in usaco["concepts"]}
     shared = {c["id"] for c in acsl["concepts"]}
-    assert shared == {"input-parse", "str-split", "tuple", "complete-search"}
+    assert {"input-parse", "str-split", "tuple", "complete-search"} <= shared  # grows as contests ship
     for concept in acsl["concepts"]:
         assert concept == usaco_by_id[concept["id"]]
 
