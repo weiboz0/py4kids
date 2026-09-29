@@ -11,6 +11,8 @@ book (an intentional no-op, like the judge). For an ``acsl`` book it checks:
 - every ``## Exercise N`` / ``## Question N`` heading cell carries exactly one ladder tag
   (``acsl-elementary|acsl-junior|acsl-intermediate|acsl-senior``), never below the entry's lowest
   division, and never ``acsl-classroom``;
+- a practice checkpoint has exactly one programming question (a ``## Question N`` heading cell
+  not tagged ``short-answer``), and it is the last question (plan 093);
 - in coverage-map order, shipped units follow the season's ``units`` order and each practice
   checkpoint comes after its contest's last unit; a contest part with a shipped unit has its
   practice checkpoint.
@@ -23,6 +25,7 @@ from pathlib import Path
 import yaml
 
 from tools.books import book_flag, book_path
+from tools.judge import SHORT_ANSWER_TAG
 from tools.notebooks import (
     EXERCISE_HEADING,
     QUESTION_HEADING,
@@ -225,6 +228,33 @@ def _tag_findings(scope: str, entry_dir: Path, kind: str, block: dict | None,
     return findings
 
 
+def _practice_findings(scope: str, entry_dir: Path) -> list[str]:
+    """A practice checkpoint closes with exactly one programming question (plan 093)."""
+    path = entry_dir / "checkpoint.ipynb"
+    if not path.is_file():
+        return []  # structure-check reports the missing notebook
+    notebook = read_nb(path)
+    questions: list[tuple[str, bool]] = []
+    seen_cells: set[int] = set()
+    for heading, index in _markdown_heading_occurrences(notebook, QUESTION_HEADING):
+        if index in seen_cells:
+            continue  # _tag_findings reports a shared heading cell
+        seen_cells.add(index)
+        is_short = SHORT_ANSWER_TAG in tags(notebook.cells[index])
+        questions.append((heading.removeprefix("## "), not is_short))
+    programming = [item for item, is_programming in questions if is_programming]
+    if not programming:
+        return [_fail(scope, "a practice checkpoint needs exactly one programming question "
+                             "(a Question heading not tagged short-answer); found none")]
+    if len(programming) > 1:
+        return [_fail(scope, "a practice checkpoint needs exactly one programming question; "
+                             f"found {len(programming)}: {programming}")]
+    if questions[-1][0] != programming[0]:
+        return [_fail(scope, f"the programming question ({programming[0]}) must be the last "
+                             f"question (last is {questions[-1][0]})")]
+    return []
+
+
 def _read_block(entry_dir: Path) -> tuple[bool, object]:
     """(manifest usable, its acsl block or None)."""
     path = entry_dir / "manifest.yaml"
@@ -310,6 +340,8 @@ def acsl_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
         block_findings = _block_findings(scope, kind, block, season)
         findings.extend(block_findings)
         findings.extend(_tag_findings(scope, entry_dir, kind, block, season))
+        if kind == "checkpoint" and isinstance(block, dict) and block.get("category") == PRACTICE:
+            findings.extend(_practice_findings(scope, entry_dir))
         if not block_findings:
             valid[scope] = (kind, block)
     if unit is None:

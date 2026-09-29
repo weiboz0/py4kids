@@ -384,6 +384,42 @@ def test_question_tag_bounded_by_the_checkpoint_divisions(tmp_path):
                for f in findings), findings
 
 
+def _practice_with(root, item_tags):
+    shutil.rmtree(root / "acsl/checkpoints/checkpoint-01-contest-1-practice")
+    _acsl_checkpoint(root, "checkpoint-01-contest-1-practice", 1, item_tags=item_tags)
+    return [f for f in acsl_findings(root, "acsl") if "programming question" in f]
+
+
+SA = ("acsl-junior", "short-answer")
+PROG = ("acsl-junior",)
+
+
+def test_practice_checkpoint_closing_with_one_programming_question_passes(tmp_path):
+    root = _acsl_root(tmp_path)
+    _shipped_contest_one(root)
+    _practice_with(root, (SA, SA, SA, PROG))
+    assert acsl_findings(root, "acsl") == []
+
+
+@pytest.mark.parametrize(
+    "item_tags, expected",
+    [
+        ((SA, SA), ("a practice checkpoint needs exactly one programming question "
+                    "(a Question heading not tagged short-answer); found none")),
+        ((SA, PROG, PROG), ("a practice checkpoint needs exactly one programming question; "
+                            "found 2: ['Question 2', 'Question 3']")),
+        ((SA, PROG, SA), ("the programming question (Question 2) must be the last question "
+                          "(last is Question 3)")),
+    ],
+    ids=["zero-programming", "two-programming", "programming-not-last"],
+)
+def test_practice_checkpoint_programming_question_mutations_fail(tmp_path, item_tags, expected):
+    root = _acsl_root(tmp_path)
+    _shipped_contest_one(root)
+    findings = _practice_with(root, item_tags)
+    assert findings == [f"FAIL: checkpoint-01-contest-1-practice: {expected}"], findings
+
+
 def test_out_of_season_order_fails(tmp_path):
     root = _acsl_root(tmp_path)
     _acsl_unit(root, "unit-00-foundations", 0, "Foundations")
@@ -762,3 +798,12 @@ def test_wrong_line_layout_passes_token_judge(tmp_path):
 def test_line_exact_comparison(actual, expected, match):
     assert outputs_match(actual, expected, line_exact=True) is match
     assert outputs_match(actual, expected, line_exact=False) is (actual.split() == expected.split())
+
+
+def test_code_tracing_registry_teaches_math_floor_and_sqrt():
+    from tools.concept_scan import scanner_profile
+
+    with_tracing = scanner_profile([{"id": "code-tracing", "kind": "technique"}])
+    without = scanner_profile([{"id": "tuple", "kind": "feature"}])
+    assert {"floor", "sqrt"} <= with_tracing.taught_methods
+    assert not ({"floor", "sqrt"} & without.taught_methods)

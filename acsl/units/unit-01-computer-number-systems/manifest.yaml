@@ -1,0 +1,14 @@
+id: unit-01-computer-number-systems
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 1, category: Computer Number Systems, divisions: [elementary, junior, intermediate, senior]}
+concepts:
+  introduces: [base-conversion]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion,
+             string-literal, string-index, string-concat, comparison, if-statement, while-loop,
+             for-loop, range-function, def-function, parameters, return-value, str-split,
+             input-parse]
+  practices: [accumulator, loop-counter, builtin-functions, find-extreme, count-by-condition,
+              complete-search]

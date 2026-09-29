@@ -61,10 +61,10 @@ Planned units are listed by name; they arrive in later editions of the book.
 
 | entry | kind | lessons | focus |
 |-------|------|---------|-------|
-| Computer Number Systems | unit | — | *planned (plan 093)*; opens with the Elementary section |
-| Recursive Functions | unit | — | *planned (plan 093)* |
-| What Does This Program Do? – Branching | unit | — | *planned (plan 093)*; Intermediate section on all constructs |
-| Contest 1 practice | checkpoint | — | *planned (plan 093)* |
+| `unit-01-computer-number-systems` | unit | 3 | bases 2/8/10/16, conversions, arithmetic in a base, hex colours, fractions; opens with the Elementary section |
+| `unit-02-recursive-functions` | unit | 3 | evaluating recursive definitions (call tables), multiple and indirect recursion, recursion in Python |
+| `unit-03-wdtpd-branching` | unit | 3 | ACSL pseudocode, tracing branches; Intermediate section on loops, arrays, 2D grids and strings |
+| `checkpoint-01-contest-1-practice` | checkpoint | 0.5 | timed Contest 1 practice: 6 short answers + 1 Intermediate trace + 1 programming problem |
 
 ### Contest 2
 

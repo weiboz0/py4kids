@@ -111,6 +111,9 @@ def scanner_profile(concepts: list[dict]) -> ScanProfile:
         taught_methods.update({"add", "discard", "remove"})
     if "deque" in registered:
         taught_methods.update({"appendleft", "popleft"})
+    if "code-tracing" in registered:
+        # ACSL WDTPD's dialect table teaches `int(x)` as math.floor and `sqrt` as math.sqrt.
+        taught_methods.update({"floor", "sqrt"})
     return ScanProfile(
         taught_methods=frozenset(taught_methods),
         builtins=frozenset(BUILTINS),

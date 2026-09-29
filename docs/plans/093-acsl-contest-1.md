@@ -87,7 +87,7 @@ Statements write bases ACSL-style with subscripts (3F₁₆).
   - `!`, `&&`, `||` (Python `not`, `and`, `or`)
   - `abs`; ACSL `int(x)`, the greatest integer ≤ x, **transliterated as `math.floor(x)`**, never Python `int()`, which truncates toward zero (ACSL `int(-1.5)` = −2, Python `int(-1.5)` = −1). The dialect table calls this out, and at least one Intermediate item uses a negative argument.
   - `sqrt`: Python `math.sqrt` after `import math`; items use perfect squares or state the rounding
-  - `S[a:b]` substrings (Python slicing semantics stated)
+  - ACSL substrings, which are **not** Python slices: `S[:n]` = the first n characters, `S[n:]` = the **last** n characters (Python `S[len(S)-n:]`), `S[a:b]` = positions a **through** b (Python `S[a:b+1]`); the dialect table states both rules
   - 1D arrays from index 0 or 1, as the program states, and **2D arrays** `A(r, c)`
 - **At least one third of short-answer items are presented in ACSL pseudocode**, with a Python transliteration in the trace asset.
 - **Junior:** `if`/`elif`/`else` chains, nested conditions, logical operators, integer arithmetic, exact output.
