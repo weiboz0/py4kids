@@ -89,7 +89,7 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
   - `acsl-check` is registered in `tools/checks.py` and wired into `ci-local` for `acsl`-flag books. It returns `[]` for every other book. It checks:
     - each unit manifest `acsl:` block is valid against `season.yaml` `unit_order`; each checkpoint uses the reserved `category: Practice` (contest 1–4, one per shipped contest, after its last unit); `divisions` holds ladder levels only; `Practice` on a unit or a category name on a checkpoint fails (mutations)
     - unit order follows `season.yaml` `unit_order`
-    - exactly one ladder tag on each exercise or question heading, never below the unit's lowest division, and no `acsl-classroom` tag
+    - exactly one ladder tag on each exercise or question heading, never below the entry's (unit's or checkpoint's) lowest division, and no `acsl-classroom` tag
     - a contest part with any shipped unit has its practice checkpoint
   - Tests for each failure.
 - **D4 Short-answer items:** generic now, for both exercises and checkpoint questions.
@@ -197,6 +197,16 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
 
 - `[sol]` **REJECT** (r3): the worked-answer gap is closed. Remaining: practice checkpoints have no valid category.
   - `[FIXED]` A reserved `category: Practice` for checkpoints only: contest 1–4, one per shipped contest, after its last unit; questions may span that contest's categories. Mutations cover `Practice` on a unit and a category name on a checkpoint.
+
+### Round 4 — CONSENSUS
+
+- `[sol]` **APPROVE WITH NITS** (r4): the `Practice` category closes the gap.
+  - `[FIXED]` Question tags are bounded by the *entry's* lowest division, and design 009's summary names the `Practice` exception.
+- `[fable]` APPROVE WITH NITS (r2, folded).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28, until further notice).
+
+**Consensus reached; implementation starts.**
 
 ## Content Review
 _(filled before PR.)_

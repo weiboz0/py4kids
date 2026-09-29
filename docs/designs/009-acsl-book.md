@@ -36,7 +36,7 @@ Students should be able to follow the book **in step with a competition season**
   - **Division paths:** the Elementary path skips Foundations (no programming) and starts at Contest 1's Number Systems unit. The syllabus "Division paths" section spells out every path.
   - **WDTPD across divisions:** Intermediate and Senior Contest 1 test *all* constructs, while Junior's WDTPD moves Branching → Looping → Arrays → Strings over Contests 1–4. So the Contest 1 WDTPD unit covers Branching for Junior, plus an Intermediate-tagged section tracing loops, arrays and strings. Contests 2–4 add the Junior-flavoured drills.
   - An `acsl-check` enforces all of this:
-    - contest and category exist in `season.yaml`
+    - contest and category exist in `season.yaml` (checkpoints use the reserved `Practice` category)
     - unit order follows the season
     - every exercise has exactly one division tag, and it is not below its unit's lowest division
     - every contest part has its practice checkpoint (once that contest ships)
