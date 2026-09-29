@@ -177,10 +177,11 @@ def test_real_registry_peers_and_contest_books_close_separately():
         (REPO / "usaco-bronze/curriculum/concepts.yaml").read_text(encoding="utf-8")
     )
     usaco_by_id = {c["id"]: c for c in usaco["concepts"]}
-    shared = {c["id"] for c in acsl["concepts"]}
-    assert shared == {"input-parse", "str-split", "tuple", "complete-search"}
+    shared = {c["id"] for c in acsl["concepts"]} & set(usaco_by_id)
+    assert {"input-parse", "str-split", "tuple", "complete-search"} <= shared  # grows as contests ship
     for concept in acsl["concepts"]:
-        assert concept == usaco_by_id[concept["id"]]
+        if concept["id"] in shared:  # ACSL-only ids (e.g. acsl-pseudocode) have no peer entry
+            assert concept == usaco_by_id[concept["id"]]
 
 
 # ---------------------------------------------------------------- acsl book fixture
@@ -382,6 +383,42 @@ def test_question_tag_bounded_by_the_checkpoint_divisions(tmp_path):
     findings = acsl_findings(root, "acsl")
     assert any("Question 1: acsl-junior is below the checkpoint's lowest division" in f
                for f in findings), findings
+
+
+def _practice_with(root, item_tags):
+    shutil.rmtree(root / "acsl/checkpoints/checkpoint-01-contest-1-practice")
+    _acsl_checkpoint(root, "checkpoint-01-contest-1-practice", 1, item_tags=item_tags)
+    return [f for f in acsl_findings(root, "acsl") if "programming question" in f]
+
+
+SA = ("acsl-junior", "short-answer")
+PROG = ("acsl-junior",)
+
+
+def test_practice_checkpoint_closing_with_one_programming_question_passes(tmp_path):
+    root = _acsl_root(tmp_path)
+    _shipped_contest_one(root)
+    _practice_with(root, (SA, SA, SA, PROG))
+    assert acsl_findings(root, "acsl") == []
+
+
+@pytest.mark.parametrize(
+    "item_tags, expected",
+    [
+        ((SA, SA), ("a practice checkpoint needs exactly one programming question "
+                    "(a Question heading not tagged short-answer); found none")),
+        ((SA, PROG, PROG), ("a practice checkpoint needs exactly one programming question; "
+                            "found 2: ['Question 2', 'Question 3']")),
+        ((SA, PROG, SA), ("the programming question (Question 2) must be the last question "
+                          "(last is Question 3)")),
+    ],
+    ids=["zero-programming", "two-programming", "programming-not-last"],
+)
+def test_practice_checkpoint_programming_question_mutations_fail(tmp_path, item_tags, expected):
+    root = _acsl_root(tmp_path)
+    _shipped_contest_one(root)
+    findings = _practice_with(root, item_tags)
+    assert findings == [f"FAIL: checkpoint-01-contest-1-practice: {expected}"], findings
 
 
 def test_out_of_season_order_fails(tmp_path):
@@ -762,3 +799,21 @@ def test_wrong_line_layout_passes_token_judge(tmp_path):
 def test_line_exact_comparison(actual, expected, match):
     assert outputs_match(actual, expected, line_exact=True) is match
     assert outputs_match(actual, expected, line_exact=False) is (actual.split() == expected.split())
+
+
+def test_acsl_pseudocode_registry_teaches_math_floor_and_sqrt():
+    from tools.concept_scan import scanner_profile
+
+    with_tracing = scanner_profile([{"id": "acsl-pseudocode", "kind": "technique"}])
+    without = scanner_profile([{"id": "code-tracing", "kind": "technique"}])  # USACO registers this too
+    assert {"floor", "sqrt"} <= with_tracing.taught_methods
+    assert not ({"floor", "sqrt"} & without.taught_methods)
+
+
+def test_usaco_bronze_registry_does_not_allow_math_floor_or_sqrt():
+    import yaml
+
+    from tools.concept_scan import scanner_profile
+
+    usaco = yaml.safe_load((REPO / "usaco-bronze/curriculum/concepts.yaml").read_text(encoding="utf-8"))["concepts"]
+    assert not ({"floor", "sqrt"} & scanner_profile(usaco).taught_methods)

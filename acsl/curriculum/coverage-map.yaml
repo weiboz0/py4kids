@@ -13,3 +13,31 @@ entries:
   practices: [arithmetic, boolean, string-index, running-total, logical-ops, elif-else, accumulator, loop-counter,
               count-by-condition, find-extreme, builtin-functions, f-string, string-concat,
               in-operator]
+- id: unit-01-computer-number-systems
+  kind: unit
+  title: "Computer Number Systems"
+  lessons: 3
+  introduces: [base-conversion]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion, string-literal, string-index, string-concat, comparison, if-statement, while-loop, for-loop, range-function, def-function, parameters, return-value, str-split, input-parse]
+  practices: [accumulator, loop-counter, builtin-functions, find-extreme, count-by-condition, complete-search]
+- id: unit-02-recursive-functions
+  kind: unit
+  title: "Recursive Functions"
+  lessons: 3
+  introduces: [recursion]
+  requires: [print, input, run-program, variable, int-type, type-conversion, arithmetic, comparison, if-statement, logical-ops, def-function, parameters, return-value, while-loop, for-loop, range-function, list-literal, list-append, list-index, input-parse, str-split, tuple]
+  practices: [elif-else, string-concat, builtin-functions, scope]
+- id: unit-03-wdtpd-branching
+  kind: unit
+  title: "What Does This Program Do? – Branching"
+  lessons: 3
+  introduces: [code-tracing, grid-2d, acsl-pseudocode]
+  requires: [print, input, variable, int-type, float-type, arithmetic, type-conversion, string-literal, boolean, comparison, logical-ops, if-statement, elif-else, conditional-nesting, import-statement, for-loop, range-function, while-loop, nested-loops, list-literal, list-index, list-append, string-index, string-slice, str-split, input-parse]
+  practices: [builtin-functions, accumulator, running-total, loop-counter, string-concat, string-methods, in-operator, find-extreme]
+- id: checkpoint-01-contest-1-practice
+  kind: checkpoint
+  title: "Contest 1 Practice"
+  lessons: 0.5
+  introduces: []
+  requires: [print, input, variable, int-type, type-conversion, arithmetic, comparison, if-statement, input-parse, str-split]
+  practices: [base-conversion, recursion, code-tracing, acsl-pseudocode, grid-2d, elif-else, conditional-nesting, logical-ops, boolean, for-loop, range-function, nested-loops, while-loop, float-type, string-literal, string-index, string-slice, string-concat, builtin-functions, list-literal, list-index, list-append, def-function, parameters, return-value, import-statement]

@@ -1,0 +1,294 @@
+# Plan 093 — ACSL Contest 1: Number Systems, Recursive Functions, What Does This Program Do?
+
+**Goal:** Ship the Contest 1 part of *Contest Python: ACSL*: one unit per Contest 1 category, then the Contest 1 practice checkpoint. This is the part students study before the first contest window (Oct 19, 2026 – Jan 10, 2027).
+
+**Spec:** design 009 (D1–D5 and the roadmap row for 093). User decisions, 2026-09-29:
+- "continue with plan 093 on autopilot and all other contest followed"
+- the earlier decisions quoted in plan 092 (one book for every division, marked by level; organized by the contest season)
+
+## Survey (2026-09-29, main at efb3866)
+
+- **Existing book:** `acsl/` holds `unit-00-acsl-foundations`, which introduces `input-parse`, `str-split`, `tuple` and `complete-search`.
+- **`season.yaml` Contest 1 units:**
+  - Computer Number Systems — elementary, junior, intermediate, senior
+  - Recursive Functions — junior, intermediate, senior
+  - What Does This Program Do? – Branching — junior, intermediate, senior (the merged all-constructs unit, design 009 D3)
+- **Shared concept ids** available via `peers`, with entries identical to `usaco-bronze`:
+  - `base-conversion` (technique, number-theory)
+  - `recursion` (feature, techniques)
+  - `code-tracing` (technique, techniques)
+- **Checkpoint rules:** 6–8 question headings (`tools/notebooks.py`), strict prerequisites (no borrowed tools), and a Grading section in the teacher notes. The ACSL format is short-answer questions plus exactly one programming problem.
+
+## The entries (all under `acsl/`)
+
+Every unit follows the Foundations conventions:
+- a project-first hook cell and 3 lessons
+- **at least 14 exercises**, mixing programming items (judged line-exact, with edge fixtures) and short-answer items (`**Answer:**` line and a top-level `verify` assert)
+- a ladder tag plus a visible "_Division: X and above._" line on each heading
+- at least 2 `stretch` Challenges
+
+**Canonical short-answer text**, so blind solves compare cleanly:
+- hex digits uppercase
+- no base prefix or subscript in the answer (the base is stated in the question)
+- no leading zeros
+- recursion values as plain integers
+- fractions in lowest terms as `a/b`, **or** the digit string with a point when the question asks for the representation in a base (e.g. `0.101`)
+- every WDTPD short-answer program prints **exactly one line**; the answer is that line, since multi-line literals do not survive `judge-check`'s static compare
+- decimal results as Python prints them (e.g. `2.5`)
+
+Statements write bases ACSL-style with subscripts (3F₁₆).
+
+**`source-policy` applies to lesson, solution and asset code** (`verify` cells are exempt):
+- Allowed: `int(s, base)`, but only *after* the hand method.
+- Never used: `bin`, `oct`, `hex`, `format`, `divmod`, `.join`, `.index`, `.find`, `.count`.
+- Hand-written conversion loops are the taught method.
+
+### `unit-01-computer-number-systems` — Computer Number Systems
+
+- **Divisions:** elementary, junior, intermediate, senior. **Introduces:** `base-conversion`. **Requires:** *Python by Projects* ids and Foundations ids only.
+- **Hook: non-programming.** For example: "which is larger, 101101₂ or 55₈?" or "what colour is #7FBF3F?"
+- **Lesson 1 is the Elementary section**, with no code the student runs. It follows the official Elementary study doc:
+  - bases 2/8/10/16 and place value; any base → decimal by expanded notation
+  - the 3-bit/4-bit grouping shortcut between 2, 8 and 16
+  - addition and subtraction in another base
+  - comparing values across bases
+  - hex RGB colours (`#FF0000`)
+  - counting the 1s in a binary number
+- `assets/l1.py` is a small base-10 → base-2 self-checker, mentioned in a `no-exec` cell so the judge's per-lesson rule holds.
+- **Exercises open with ≥ 6 contiguous `acsl-elementary` short-answer items**, the size of an Elementary test.
+- **Lessons 2–3 (Junior+):**
+  - decimal → any base by repeated division
+  - larger conversions
+  - multiplication by a single digit in a base (ACSL excludes division)
+  - hex colours at Junior level
+  - programming conversion loops, then `int(s, base)`
+  - **fractional place value in bases 2, 8 and 16** (e.g. 0.101₂ = 5/8), taught by hand; items short-answer and tagged as stretch or Intermediate
+
+### `unit-02-recursive-functions` — Recursive Functions
+
+- **Divisions:** junior, intermediate, senior. **Introduces:** `recursion`. **Requires:** *Python by Projects* and Foundations ids, including `def-function`, `parameters` and `return-value`.
+- **ACSL notation:** piecewise "cases" definitions in ACSL's bracket layout. **Call-table method:** expand top-down to the base case, then substitute back up. Conditions may use `abs`, floor and `mod`.
+- **Forms taught and assessed:**
+  - single recursion
+  - two-variable functions
+  - **multiple recursion** (`f(x-1) + f(x-2)`; at least one Junior exercise)
+  - **indirect recursion** (f calls g calls f; at least one Intermediate exercise)
+- Nested calls `f(f(x))` are not tested by ACSL and not used.
+- **Python:** a function that calls itself, base cases, tracing calls, the call stack. Programming items implement a given definition.
+- `concept-scan` has no recursion detector, so taught-before-used is enforced by review.
+
+### `unit-03-wdtpd-branching` — What Does This Program Do? – Branching
+
+- **Divisions:** junior, intermediate, senior. **Introduces:** `code-tracing`, `grid-2d`. **Requires:** *Python by Projects* and Foundations ids, plus `recursion` and `base-conversion` if traced.
+- **Lesson 1 opens with an ACSL pseudocode ↔ Python dialect table.** Operators and forms in scope:
+  - `+ - * %`
+  - `/` (real division, which can give a decimal; Python `/`, using the `float-type` idea from *Python by Projects*)
+  - `^` exponent (small whole-number powers, traced as repeated multiplication)
+  - `!`, `&&`, `||` (Python `not`, `and`, `or`)
+  - `abs`; ACSL `int(x)`, the greatest integer ≤ x, **transliterated as `math.floor(x)`**, never Python `int()`, which truncates toward zero (ACSL `int(-1.5)` = −2, Python `int(-1.5)` = −1). The dialect table calls this out, and at least one Intermediate item uses a negative argument.
+  - `sqrt`: Python `math.sqrt` after `import math`; items use perfect squares or state the rounding
+  - ACSL substrings, which are **not** Python slices: `S[:n]` = the first n characters, `S[n:]` = the **last** n characters (Python `S[len(S)-n:]`), `S[a:b]` = positions a **through** b (Python `S[a:b+1]`); the dialect table states both rules
+  - 1D arrays from index 0 or 1, as the program states, and **2D arrays** `A(r, c)`
+- **At least one third of short-answer items are presented in ACSL pseudocode**, with a Python transliteration in the trace asset.
+- **Junior:** `if`/`elif`/`else` chains, nested conditions, logical operators, integer arithmetic, exact output.
+- **Intermediate+ section** (tagged `acsl-intermediate`): Contest 1 covers **all constructs** for these divisions, per ACSL's WDTPD page. It traces `while` and `for` loops (including stepped loops), 1D arrays, **2D arrays** (taught as a grid of rows and columns, in pseudocode and as a Python list of lists), strings (indexing, slicing, methods from *Python by Projects*), real division with decimal results, and `abs`/`int`/`sqrt`.
+- This unit therefore also **introduces `grid-2d`**, shared with `usaco-bronze` via `peers` with an identical registry entry (`2D grids (list of lists)`, data-structures, technique). A1 adds it.
+- Mostly short-answer, plus a few "predict, then verify" programming items.
+
+### `checkpoint-01-contest-1-practice` — Practice (contest 1)
+
+- **Divisions:** junior, intermediate, senior.
+- **8 questions:**
+  - Q1–Q6: `acsl-junior` short-answer, 2 per category (a full Junior paper)
+  - Q7: one `acsl-intermediate` short-answer tracing question across all constructs
+  - at least one WDTPD question (Q5/Q6 or Q7) is presented in ACSL pseudocode
+- **The checkpoint author writes from this plan's entry specs** (and Foundations) as the syllabus. Phase A2 re-checks every checkpoint `practices` id against the units' final lists, and the checkpoint is revised if a unit did not teach something.
+  - Q8: the single `acsl-junior` **programming problem**, last as on the contest, with the sample plus ≥ 4 hidden-style fixtures
+- Strict: `requires`/`practices` only ids from *Python by Projects* and units 00–03; no introductions; no auxiliary concepts.
+- **Teacher notes:**
+  - Grading uses ACSL's published scoring (1 point per short answer; the programming problem scored on its test cases) and time limits, quoted from acsl.org rather than invented.
+  - Division paths: Classroom takes Q1–Q7; the Elementary path uses unit 01's Elementary items as its mock test.
+
+## Phase A1 — Registry, before authoring (inline)
+
+`acsl/curriculum/concepts.yaml`: add `base-conversion` (technique, number-theory), `recursion` (feature, techniques), `code-tracing` (technique, techniques) and `grid-2d` (technique, data-structures), byte-identical to USACO's, so the manifests validate.
+
+## Phase B — Lessons and statements (Opus subagents, one per entry, in parallel; each owns only its folder)
+
+Four authors: three units and the checkpoint.
+- Each unit author writes `manifest.yaml` (with the `acsl:` block), `lesson.ipynb`, `exercises.ipynb`, and the lesson assets `lN.py` with fixtures.
+- The checkpoint author writes `manifest.yaml` and `checkpoint.ipynb`.
+- Each reports its concept lists.
+
+## Phase C — Solutions (Opus subagents, separate fresh sessions, one per entry)
+
+- Programming items: `assets/exN.py` or `qN.py` with fixtures, and no-exec mirrors in the notebook.
+- Short-answer items: a trace asset where a program is involved, a worked answer, and a `verify` cell, using the canonical answer text.
+- Solved from the statements only.
+
+## Phase A2 — Coverage and syllabus, after authoring (inline)
+
+- `acsl/curriculum/coverage-map.yaml`: entries in season order (units 01, 02, 03, then the checkpoint), reconciled exactly against each manifest.
+- `acsl/syllabus.md`: the Contest 1 rows in the syllabus-check form (`` | `id` | kind | lessons | ``), with the checkpoint's lessons value as in USACO's syllabus.
+
+## Phase D — Teacher notes (inline) and one tooling rule (Opus subagent)
+
+- **Four `teacher-notes.md` files:** the required headings, plus Grading for the checkpoint. They cover:
+  - division paths
+  - pacing against the Contest 1 window
+  - common mistakes (place value vs digit value, a missing base case, tracing `elif` after a true branch)
+- **`acsl-check`:** a practice checkpoint has exactly one question heading without the `short-answer` tag, and it is the last question. Mutation tests: zero programming questions, two, and not last.
+
+## Phase E — VERIFICATION
+
+1. `scripts/ci-local.sh` ALL GREEN. For `acsl` this covers structure, hygiene, noexec, cell-lint, exec-solutions, exec-lessons, manifest, prereq, coverage, concept-scan, stretch, judge-check, source-policy and `acsl-check`, including season order, practice placement, division subsets and the new one-programming-question rule.
+2. The global concept check passes with the four new shared ids.
+3. **Division paths are checked** by a small scripted count of heading tags, reported in the post-execution report:
+   - the Junior path through the checkpoint is exactly 6 short-answer questions plus 1 programming question
+   - unit 01 has ≥ 6 contiguous `acsl-elementary` items before any other tag
+4. **Blind solves** in the content gate: every reviewer solves all 7 short-answer checkpoint questions and at least 3 short-answer items per unit, using the canonical answer text, plus a sample of programming items.
+5. Post-execution report.
+
+## Out of scope
+
+- Contests 2–4 (094–096).
+- The USACO trim (097).
+- ACSL publication.
+
+## Plan Review
+
+### Round 1 — `[self]` APPROVE WITH NITS
+
+- The verification phase is named. The scope is 3 units and a checkpoint, as in earlier content plans.
+- Watch items:
+  - the Elementary section must be fully non-programming and usable alone
+  - the Intermediate+ tracing section must not use concepts beyond *Python by Projects*
+  - `int(s, base)` must come after the hand method
+  - the checkpoint must have exactly one programming question
+- `[glm]` skipped: user decision 2026-09-28, until further notice.
+
+### Round 1 — verdicts
+
+- `[sol]` **REJECT:**
+  - the Junior checkpoint path has fewer than 6 short answers
+  - "all constructs" is too narrow and unspecified (2D arrays, stepped loops, slicing, real division, exponent, `abs`/`sqrt`/`int`)
+  - Number Systems omits fractions
+  - registry timing contradicts the author handoff
+- `[fable]` **APPROVE WITH NITS** (conditional), checked against acsl.org category pages and the Elementary study doc:
+  - Must fix: ACSL pseudocode dialect; multiple and indirect recursion; Elementary aligned with the official doc (grouping, add/subtract, compare, RGB, counting 1s, ≥ 6 items); the checkpoint Junior path
+  - Should fix: per-entry `requires` boundaries; A1/A2 ordering; the Elementary hook and `l1.py` mechanics; canonical answer text; the 2D-array exclusion; `source-policy` gotchas
+  - Nice: official scoring and timing, Classroom/Elementary paths, blind-solve sample definition, a one-programming-question check, subscripted bases, hex colours at Junior
+- `[glm]` skipped (user decision 2026-09-28, until further notice).
+
+### Round 1 — fold
+
+- `[FIXED]` all of the above.
+  - **Entries rewritten** with explicit per-entry scope, divisions, `requires` boundaries and canonical answer text:
+    - Elementary is Lesson 1 of unit 01, with a non-programming hook and ≥ 6 contiguous items.
+    - Fractions in bases 2/8/16 are taught by hand.
+    - Recursion covers multiple and indirect recursion, with the call-table method.
+    - WDTPD has a pseudocode dialect table, at least one third of items in pseudocode, and an explicit construct list with its semantics.
+    - 2D arrays, `sqrt` and non-integer division are excluded in 093, with the gap stated (plan 095 covers 2D arrays).
+    - The checkpoint has 8 questions: 6 Junior short answers, 1 Intermediate, and the programming problem last (≥ 4 hidden-style fixtures).
+  - **Phases A1/A2** split (registry before authoring; coverage and syllabus after, reconciled).
+  - **Tooling:** `acsl-check` enforces exactly one programming question, last.
+  - **Phase E:** division-path checks and the blind-solve sample.
+
+### Round 2 — verdicts and fold
+
+- `[sol]` **REJECT** (r2): three blockers resolved. Remaining: excluding 2D arrays, `sqrt` and real division leaves the Intermediate/Senior "all constructs" claim unmet.
+  - `[FIXED]` All three are now taught and assessed in unit 03's Intermediate+ section. 2D arrays are a grid in pseudocode and a Python list of lists; unit 03 also introduces `grid-2d`, shared with USACO. `sqrt` is `math.sqrt` on perfect squares or with stated rounding. Real division gives decimals.
+  - `[FIXED]` Nit: `.count()` is on the banned list.
+- `[fable]` **APPROVE WITH NITS** (r2), every round-1 item verified.
+  - `[FIXED]` WDTPD short answers print exactly one line (multi-line literals cannot pass the static compare).
+  - `[FIXED]` The checkpoint author writes from the plan specs; A2 re-checks.
+  - `[FIXED]` Base-representation answers such as `0.101` are allowed.
+  - `[FIXED]` At least one checkpoint WDTPD question is in pseudocode.
+  - `[FIXED]` Division paths are counted by script.
+  - `[FIXED]` The `int` wording is clarified.
+
+### Round 3
+
+- `[sol]` **REJECT** (r3): ACSL `int(x)` (floor) differs from Python `int()` (truncation) for negative inputs.
+  - `[FIXED]` ACSL `int(x)` is transliterated as `math.floor(x)`; the dialect table states the difference, and at least one Intermediate item exercises a negative argument.
+
+### Round 4 — CONSENSUS
+
+- `[sol]` **APPROVE** (r4), no findings.
+- `[fable]` APPROVE WITH NITS (r2, folded).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28).
+
+**Consensus reached; implementation starts.**
+
+## Content Review
+
+### Round 1
+
+- `[sol]` **REJECT.**
+  - Blind solve: all checkpoint Q1–Q7 and the sampled unit items match. 109 fixtures and 30 independent edge probes pass.
+  - `[FIXED]` O1: Q7 stated Python's slice rule inside ACSL pseudocode. It now states ACSL's inclusive rule, and the program uses `S[p:p + 2]` (positions 3–5 = `PUT`). The worked answer is updated; `trace7.py` keeps the Python equivalent with a comment.
+  - `[FIXED]` O2: the checkpoint's timing and division text misstated the real test.
+    - The intro says 30 minutes for the short answers, calls Q1–Q6 the six-question paper, and calls Q7 extra Intermediate/Senior practice. "Same shape as the real contest" becomes "modelled on".
+    - The teacher notes state ACSL's 6-in-30 for Junior/Intermediate/Senior and Classroom's 10-in-50, and record Q7 separately.
+  - `[FIXED]` O3: the `floor`/`sqrt` scanner allowance leaked to USACO via `code-tracing`. It now keys on a new **ACSL-only** concept, `acsl-pseudocode`, introduced by unit 03 (registry, manifest, coverage map). A test proves USACO's registry does not allow them.
+- `[fable]` **APPROVE WITH NITS.**
+  - Blind solve: every sampled item and checkpoint question matches (Q7 under its stated rule). Two programs pass 5/5 and 10/10, and 3/3 wrong variants are caught.
+  - The dialect was checked against the ACSL wiki; the Elementary section, the division-tag counts and the ⅓ pseudocode share were verified by script.
+  - `[FIXED]` F1: same as O1.
+  - `[FIXED]` F2: same as O2.
+  - `[FIXED]` F3: unit 02's teacher note on floor vs `int` is reworded.
+  - `[FIXED]` F4: superseded by O3 (the allowance is scoped to the ACSL-only concept).
+  - `[WONTFIX]` F5: the `132_b` mystery-base notation is consistent with Lesson 2.
+- `[self]` APPROVE: all short answers were solved blind by the solutions sessions and matched the authors' keys (checkpoint 7/7, unit 01 18/18, unit 02 10/10, unit 03 16/16).
+- `[glm]` skipped (user decision 2026-09-28).
+
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE WITH NITS** (r2): O1–O3 verified by direct probes.
+  - `[FIXED]` The checkpoint lists `acsl-pseudocode` under practices (manifest and coverage map).
+  - `[FIXED]` The intro calls Q7 an extra challenge beyond the real six-question paper.
+- `[fable]` APPROVE WITH NITS (r1, folded).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28).
+
+**Consensus reached, no `[OPEN]` findings.**
+
+## Post-Execution Report
+
+**Shipped: ACSL Contest 1** (study window Oct 19, 2026 – Jan 10, 2027).
+
+| Entry | Items | Divisions (by heading tag) |
+|---|---|---|
+| `unit-01-computer-number-systems` | 21 (18 short-answer, 3 programming) | 9 elementary (contiguous mock test), 7 junior, 4 intermediate, 1 senior |
+| `unit-02-recursive-functions` | 16 (10 short-answer, 6 programming) | 9 junior, 5 intermediate, 2 senior |
+| `unit-03-wdtpd-branching` | 18 (16 short-answer, 2 programming; 9 in pseudocode) | 7 junior, 10 intermediate, 1 senior |
+| `checkpoint-01-contest-1-practice` | 8 (Q1–Q6 junior short-answer, Q7 intermediate, Q8 programming last) | Junior paper = Q1–Q6 + Q8 |
+
+- **Unit 01** opens with a standalone Elementary section (the official Elementary topics: bases, grouping, arithmetic in a base, comparisons, RGB, counting 1s). Junior+ adds repeated division, single-digit multiplication, hex colours, and conversion loops before `int(s, base)`. Intermediate adds fractions in bases 2/8/16.
+- **Unit 02** uses ACSL cases notation and the call-table method, and covers two-variable, multiple (Junior) and indirect (Intermediate) recursion, then recursion in Python.
+- **Unit 03** has the ACSL pseudocode dialect table:
+  - `int` = floor (`math.floor`), `sqrt`, real `/`
+  - `FOR` inclusive
+  - ACSL inclusive substrings, which differ from Python slices
+  - 2D arrays
+
+  Its Intermediate+ section covers all constructs, as ACSL's Intermediate/Senior Contest 1 requires. It introduces `code-tracing`, `grid-2d`, and the ACSL-only `acsl-pseudocode`.
+- **Registry:** the shared `base-conversion`, `recursion`, `code-tracing` and `grid-2d` are identical to USACO's; `acsl-pseudocode` is ACSL-only. The coverage map and syllabus rows are reconciled against the manifests.
+- **Tooling:**
+  - `acsl-check`: a practice checkpoint has exactly one programming question, and it is last.
+  - `concept-scan`: `math.floor`/`math.sqrt` are taught only in books registering `acsl-pseudocode` (a USACO probe test confirms they are not allowed there).
+- **Teacher notes** (inline) for all four entries: division paths, ACSL timing (6 in 30 min; Classroom 10 in 50), Grading.
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN, solo run at 8735b83.
+- pytest 909 passed.
+- Blind solves: the solutions sessions matched every author key (checkpoint 7/7, U01 18/18, U02 10/10, U03 16/16). [sol] and [fable] independently matched their samples, and [sol] ran 109 fixtures plus 30 edge probes.
+- Division paths counted by script (above).
+
+**Deviations:**
+- Design and plan corrected: ACSL substrings are inclusive, not Python slices.
+- `floor`/`sqrt` are keyed to a new ACSL-only concept rather than `code-tracing`.
+- One overlapped ci-local run produced a spurious audit failure; the gate is the solo run.
+
+**Next:** plan 094, Contest 2 (Prefix/Infix/Postfix with its Elementary section, Bit-String Flicking, WDTPD – Looping, LISP for Intermediate+, and the Contest 2 practice).

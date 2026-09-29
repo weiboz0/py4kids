@@ -1,0 +1,13 @@
+id: unit-02-recursive-functions
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 1, category: Recursive Functions, divisions: [junior, intermediate, senior]}
+concepts:
+  introduces: [recursion]
+  requires: [print, input, run-program, variable, int-type, type-conversion, arithmetic,
+             comparison, if-statement, logical-ops, def-function, parameters, return-value,
+             while-loop, for-loop, range-function, list-literal, list-append, list-index,
+             input-parse, str-split, tuple]
+  practices: [elif-else, string-concat, builtin-functions, scope]
