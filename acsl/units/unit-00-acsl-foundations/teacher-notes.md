@@ -36,7 +36,7 @@ Budget: three lessons of 60–90 minutes.
 - **Lesson 3 — Tuples and complete search.**
   - Start with tuples and unpacking, then "try every candidate" (`3x + 5y = 31`), then every pair with `range(i + 1, n)`.
   - Close by solving the opening hook with `assets/l3.py`, including its `NONE` edge case.
-- **Exercises.** Exercises 1–7 are the Junior core. Exercises 8–13 add Intermediate items. Exercises 14–15 are Challenges (Intermediate and Senior). Programming items are good homework; short-answer items work well as five-minute warm-ups in later lessons.
+- **Exercises.** Exercises 1–7 and 10 are the Junior core. Exercises 8, 9 and 11–13 add Intermediate items. Exercises 14–15 are Challenges (Intermediate and Senior). Programming items are good homework; short-answer items work well as five-minute warm-ups in later lessons.
 
 **60-minute cut:** keep Lesson 1's terminal run and Lesson 2's fixed-count and sentinel readers. Move the tuple swap and the edge-test discussion in Lesson 3 to homework reading.
 
