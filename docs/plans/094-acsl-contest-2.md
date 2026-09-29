@@ -253,6 +253,15 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
   - `[FIXED]` `DEF` and `DEFUN` are separate test cases. The assessed compositions are bounded to `CAAR`, `CADR`, `CDAR`, `CDDR`, `CADDR` and `CDDAR`, each with a test.
   - `[FIXED]` Nit: A1 names `judge-check` as the one carve-out, with regression checks for the other two tools.
 
+### Round 4 — CONSENSUS
+
+- `[sol]` **APPROVE** (r4), no findings.
+- `[fable]` APPROVE WITH NITS (r2, folded).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28).
+
+**Consensus reached; implementation starts.**
+
 ## Content Review
 _(filled before PR.)_
 
