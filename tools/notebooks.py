@@ -398,13 +398,16 @@ def _assets_reference_findings(entry_dir: Path, notebook_names) -> list[str]:
     for reference in sorted(referenced):
         if not (entry_dir / reference).is_file():
             findings.append(_fail(entry_dir.name, f"references missing {reference}"))
-    for script in sorted(assets.glob("*.py")):
+    # assets/verify/*.py (plan 094: answer-checking evaluators imported by verify cells) compile too.
+    scripts = sorted(assets.glob("*.py")) + sorted((assets / "verify").glob("*.py"))
+    for script in scripts:
         with tempfile.NamedTemporaryFile(suffix=".pyc", delete=False) as compiled:
             compiled_path = Path(compiled.name)
         try:
             py_compile.compile(str(script), cfile=str(compiled_path), doraise=True)
         except py_compile.PyCompileError:
-            findings.append(_fail(entry_dir.name, f"asset {script.name} does not compile"))
+            name = script.relative_to(assets).as_posix()
+            findings.append(_fail(entry_dir.name, f"asset {name} does not compile"))
         finally:
             compiled_path.unlink(missing_ok=True)
     return findings
@@ -681,12 +684,19 @@ def checkpoint_layout_findings(
     return findings
 
 
+def checkpoint_question_range(root: Path, book: str) -> tuple[int, int]:
+    """Allowed checkpoint question counts (inclusive): 6–10 on ``acsl``-flag books (plan 094: a
+    contest practice holds 6 short answers plus programming/extra items), 6–8 elsewhere."""
+    return (6, 10) if book_flag(root, book, "acsl") else (6, 8)
+
+
 def checkpoint_question_findings(
     root: Path, book: str, ident: str | None = None
 ) -> list[str]:
     checkpoints, findings = checkpoint_dirs(root, book, ident)
     if findings:
         return findings
+    low, high = checkpoint_question_range(root, book)
     for checkpoint_dir in checkpoints:
         path = checkpoint_dir / "checkpoint.ipynb"
         if not path.is_file():
@@ -695,13 +705,13 @@ def checkpoint_question_findings(
         notebook = read_nb(path)
         occurrences = _markdown_heading_occurrences(notebook, QUESTION_HEADING)
         count = len(occurrences)
-        if count < 6:
-            findings.append(_fail(checkpoint_dir.name, f"{count} question headings (<6)"))
-        if count > 8:
-            findings.append(_fail(checkpoint_dir.name, f"{count} question headings (>8)"))
+        if count < low:
+            findings.append(_fail(checkpoint_dir.name, f"{count} question headings (<{low})"))
+        if count > high:
+            findings.append(_fail(checkpoint_dir.name, f"{count} question headings (>{high})"))
         # Only judge numbering when the count is in range — otherwise the count finding
         # above is the story and a numbering finding would just pile on.
-        if 6 <= count <= 8:
+        if low <= count <= high:
             numbers = [int(re.search(r"\d+", text).group(0)) for text, _idx in occurrences]
             if numbers != list(range(1, len(numbers) + 1)):
                 findings.append(

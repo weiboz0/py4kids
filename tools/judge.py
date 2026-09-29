@@ -47,6 +47,8 @@ _LESSON_ASSET = re.compile(r"assets/(l\d+)\.py")
 _NUM = re.compile(r"\d+")
 SHORT_ANSWER_TAG = "short-answer"
 VERIFY_TAG = "verify"
+# assets/<this>/ holds verify-cell evaluator modules (plan 094); judge-check ignores it.
+VERIFY_ASSETS_DIR = "verify"
 # The one machine-readable answer line of a short-answer worked solution.
 ANSWER_LINE = re.compile(r"^\*\*Answer:\*\* `([^`\n]+)`[ \t]*$", re.MULTILINE)
 ANSWER_MARK = re.compile(r"^[ \t]*\*\*Answer", re.MULTILINE)
@@ -396,8 +398,11 @@ def judge_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
             mirror = _mirror_source(entry_dir, kind, stem)
             if mirror is None or _norm_ws(mirror) != _norm_ws(script.read_text(encoding="utf-8")):
                 findings.append(_fail(scope, f"{stem}.py has no mirroring display cell (drift?)"))
-        # orphan fixture dirs with no matching .py
+        # orphan fixture dirs with no matching .py; assets/verify/ holds answer-checking evaluators
+        # imported by verify cells (plan 094), not fixtures, so it is exempt
         for sub in sorted(p for p in assets.iterdir() if p.is_dir()):
+            if sub.name == VERIFY_ASSETS_DIR:
+                continue
             if sub.name not in scripts:
                 findings.append(_fail(scope, f"fixture dir {sub.name}/ has no {sub.name}.py"))
     return findings

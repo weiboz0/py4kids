@@ -70,11 +70,11 @@ Planned units are listed by name; they arrive in later editions of the book.
 
 | entry | kind | lessons | focus |
 |-------|------|---------|-------|
-| Prefix/Infix/Postfix Notation | unit | — | *planned (plan 094)*; opens with the Elementary section |
-| Bit-String Flicking | unit | — | *planned (plan 094)* |
-| What Does This Program Do? – Looping | unit | — | *planned (plan 094)* |
-| LISP | unit | — | *planned (plan 094)*; Intermediate and Senior |
-| Contest 2 practice | checkpoint | — | *planned (plan 094)* |
+| `unit-04-prefix-infix-postfix` | unit | 3 | evaluating and converting prefix/infix/postfix, stack evaluation; opens with the Elementary section |
+| `unit-05-bit-string-flicking` | unit | 3 | NOT/AND/OR/XOR, shifts and circulates, ACSL precedence, solving for x |
+| `unit-06-wdtpd-looping` | unit | 3 | tracing FOR/WHILE and nested loops (Junior) |
+| `unit-07-lisp` | unit | 3 | ACSL LISP: lists, CAR/CDR/CONS, arithmetic, SETQ/EVAL, DEFUN (Intermediate and Senior) |
+| `checkpoint-02-contest-2-practice` | checkpoint | 0.5 | timed Contest 2 practice: Junior and Intermediate/Senior six-question papers + 1 programming problem |
 
 ### Contest 3
 

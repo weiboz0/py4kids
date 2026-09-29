@@ -20,7 +20,12 @@ from tools.curriculum import (
     referenced_concepts_findings,
 )
 from tools.judge import judge_findings, outputs_match, verify_literals
-from tools.notebooks import exec_solutions_findings, manifest_findings, structure_findings
+from tools.notebooks import (
+    checkpoint_question_findings,
+    exec_solutions_findings,
+    manifest_findings,
+    structure_findings,
+)
 from tools.source_policy import source_policy_findings
 
 REPO = Path(__file__).resolve().parents[1]
@@ -817,3 +822,124 @@ def test_usaco_bronze_registry_does_not_allow_math_floor_or_sqrt():
 
     usaco = yaml.safe_load((REPO / "usaco-bronze/curriculum/concepts.yaml").read_text(encoding="utf-8"))["concepts"]
     assert not ({"floor", "sqrt"} & scanner_profile(usaco).taught_methods)
+
+
+# ---------------------------------------------------------------- plan 094 A1 question count
+
+
+def _question_checkpoint(root, book, numbers):
+    entry_dir = root / book / "checkpoints" / "checkpoint-02-contest-2-practice"
+    entry_dir.mkdir(parents=True)
+    _nb(entry_dir / "checkpoint.ipynb",
+        *[_heading(f"## Question {n}\n\nAnswer it.") for n in numbers])
+    return entry_dir
+
+
+@pytest.mark.parametrize("count", [6, 8, 9, 10])
+def test_acsl_checkpoint_allows_six_to_ten_questions(tmp_path, count):
+    root = _acsl_root(tmp_path)
+    _question_checkpoint(root, "acsl", range(1, count + 1))
+    assert checkpoint_question_findings(root, "acsl") == []
+
+
+@pytest.mark.parametrize("count, expected", [(5, "5 question headings (<6)"),
+                                             (11, "11 question headings (>10)")])
+def test_acsl_checkpoint_question_count_bounds(tmp_path, count, expected):
+    root = _acsl_root(tmp_path)
+    _question_checkpoint(root, "acsl", range(1, count + 1))
+    assert checkpoint_question_findings(root, "acsl") == [
+        f"FAIL: checkpoint-02-contest-2-practice: {expected}"
+    ]
+
+
+@pytest.mark.parametrize("count", [9, 10])
+def test_nine_or_ten_questions_fail_outside_acsl(tmp_path, count):
+    root = _acsl_root(tmp_path)
+    _question_checkpoint(root, "usaco-bronze", range(1, count + 1))
+    assert checkpoint_question_findings(root, "usaco-bronze") == [
+        f"FAIL: checkpoint-02-contest-2-practice: {count} question headings (>8)"
+    ]
+
+
+def test_eight_questions_still_pass_outside_acsl(tmp_path):
+    root = _acsl_root(tmp_path)
+    _question_checkpoint(root, "usaco-bronze", range(1, 9))
+    assert checkpoint_question_findings(root, "usaco-bronze") == []
+
+
+@pytest.mark.parametrize(
+    "numbers",
+    [
+        [1, 2, 3, 4, 5, 6, 7, 8, 10],  # 9 headings, Q9 skipped
+        [1, 2, 3, 4, 5, 6, 7, 9, 9],  # 9 headings, duplicate
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 11],  # 10 headings, Q10 skipped
+        [1, 2, 3, 4, 5, 6, 7, 8, 10, 9],  # 10 headings, out of order
+    ],
+)
+def test_acsl_numbering_gaps_fail_at_nine_and_ten(tmp_path, numbers):
+    root = _acsl_root(tmp_path)
+    _question_checkpoint(root, "acsl", numbers)
+    expected = f"question numbers must be sequential 1..N, got {numbers}"
+    assert checkpoint_question_findings(root, "acsl") == [
+        f"FAIL: checkpoint-02-contest-2-practice: {expected}"
+    ]
+
+
+# ---------------------------------------------------------------- plan 094 A1 assets/verify/
+
+EVALUATOR = "def run(program):\n    return [part for part in program.split()]\n"  # a comprehension
+
+
+def test_judge_check_ignores_assets_verify(tmp_path):
+    root = _acsl_root(tmp_path)
+    entry = _sa_unit(root)
+    (entry / "assets" / "verify").mkdir()
+    (entry / "assets" / "verify" / "lisp_eval.py").write_text(EVALUATOR, encoding="utf-8")
+    (entry / "assets" / "verify" / "__pycache__").mkdir()
+    assert judge_findings(root, "acsl") == []
+    # the carve-out is by name: any other solver-less subfolder is still an orphan fixture dir
+    (entry / "assets" / "helpers").mkdir()
+    assert judge_findings(root, "acsl") == [
+        "FAIL: unit-00-foundations: fixture dir helpers/ has no helpers.py"
+    ]
+
+
+def test_asset_reference_pass_compiles_assets_verify(tmp_path):
+    root = _acsl_root(tmp_path)
+    entry = _sa_unit(root)
+    verify_dir = entry / "assets" / "verify"
+    verify_dir.mkdir()
+    (verify_dir / "lisp_eval.py").write_text(EVALUATOR, encoding="utf-8")
+    assert not any("does not compile" in f
+                   for f in structure_findings(root, "acsl", "unit-00-foundations"))
+    (verify_dir / "lisp_eval.py").write_text("def run(:\n", encoding="utf-8")
+    findings = structure_findings(root, "acsl", "unit-00-foundations")
+    assert "FAIL: unit-00-foundations: asset verify/lisp_eval.py does not compile" in findings
+
+
+def test_source_policy_scans_assets_but_not_assets_verify(tmp_path):
+    root = _acsl_root(tmp_path)
+    entry = _sa_unit(root)
+    (entry / "assets" / "verify").mkdir()
+    (entry / "assets" / "verify" / "lisp_eval.py").write_text(EVALUATOR, encoding="utf-8")
+    assert source_policy_findings(root, "acsl") == []
+    (entry / "assets" / "helper.py").write_text(EVALUATOR, encoding="utf-8")
+    findings = source_policy_findings(root, "acsl")
+    assert any("assets/helper.py" in f and "comprehension" in f for f in findings), findings
+    assert not any("lisp_eval" in f for f in findings), findings
+
+
+def test_concept_scan_scans_assets_but_not_assets_verify(tmp_path):
+    root = _acsl_root(tmp_path)
+    entry = _sa_unit(root, solver=False)
+    notebook = nbformat.read(entry / "solutions.ipynb", as_version=4)
+    notebook.cells = notebook.cells[2:]  # keep only the short-answer item
+    nbformat.write(notebook, entry / "solutions.ipynb")
+    uses_tuple = "pair = (3, 15)\nprint(pair[0])\n"
+    (entry / "assets" / "verify").mkdir(parents=True)
+    (entry / "assets" / "verify" / "lisp_eval.py").write_text(uses_tuple, encoding="utf-8")
+    assert concept_scan_findings(root, "acsl") == []
+    (entry / "assets" / "helper.py").write_text(uses_tuple, encoding="utf-8")
+    assert "FAIL: unit-00-foundations: used-but-unlisted concept tuple" in concept_scan_findings(
+        root, "acsl"
+    )

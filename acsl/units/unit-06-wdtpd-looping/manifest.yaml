@@ -1,0 +1,13 @@
+id: unit-06-wdtpd-looping
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 2, category: "WDTPD – Looping", divisions: [junior]}
+concepts:
+  introduces: []
+  requires: [print, input, run-program, variable, int-type, float-type, arithmetic,
+             type-conversion, boolean, comparison, if-statement, elif-else, import-statement,
+             for-loop, range-function, while-loop, nested-loops, str-split, input-parse]
+  practices: [code-tracing, acsl-pseudocode, accumulator, running-total, loop-counter,
+              count-by-condition, find-extreme, builtin-functions]
