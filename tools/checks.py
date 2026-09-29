@@ -1,5 +1,6 @@
 """Named check registry used by the command-line interface."""
 
+from tools.acsl import acsl_findings
 from tools.concept_scan import concept_scan_findings
 from tools.curriculum import coverage_findings, prereq_findings
 from tools.fake_turtle import turtle_findings
@@ -43,6 +44,7 @@ CHECKS = {
     "stretch-check": stretch_findings,
     "judge-check": judge_findings,
     "source-policy": source_policy_findings,
+    "acsl-check": acsl_findings,
 }
 
 UNIT_ONLY_CHECKS = {"noexec-check", "stretch-check", "exec-lessons", "turtle-check", "turtle-real-check"}

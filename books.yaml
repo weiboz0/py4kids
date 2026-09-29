@@ -13,6 +13,12 @@ books_version: 2
 #   patterns:    the pattern checks (patterns.yaml, patterns doc) AND the
 #                coverage-map v2 / markdown concept scan. Do not set it on a
 #                new book unless both apply.
+#   acsl:        the ACSL season structure (design 009): the `acsl:` manifest block,
+#                curriculum/season.yaml and the acsl-check.
+#
+# `peers` (design 008 D3 / 009 D5): books that may each introduce the same concept id, with
+# identical concepts.yaml entries. It must be symmetric; neither peer may require an id
+# only the other introduces.
 books:
 - id: python-projects
   number: 1
@@ -40,4 +46,17 @@ books:
   subtitle: Algorithms for your first programming contests
   depends_on:
   - python-projects
+  peers:
+  - acsl
   judge: true
+- id: acsl
+  number: 2
+  root: acsl
+  title: 'Contest Python: ACSL'
+  subtitle: From Elementary to Senior, one contest at a time
+  depends_on:
+  - python-projects
+  peers:
+  - usaco-bronze
+  judge: true
+  acsl: true

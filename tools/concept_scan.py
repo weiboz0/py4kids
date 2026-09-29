@@ -546,6 +546,16 @@ def code_sources(nb_path: Path):
             )
 
 
+def _is_verify_cell(path: Path, tags: object, judge_book: bool) -> bool:
+    """A judge book's short-answer ``verify`` cell: verification-only, never scanned (design 009 D4)."""
+    return (
+        judge_book
+        and path.name == "solutions.ipynb"
+        and isinstance(tags, list)
+        and "verify" in tags
+    )
+
+
 def entry_notebooks(entry_dir: Path, kind: str):
     if kind == "unit":
         names = ["lesson.ipynb", "exercises.ipynb", "solutions.ipynb"]
@@ -973,6 +983,7 @@ def _legacy_scan_findings(
         "project": book_dir / "projects",
     }
     findings: list[str] = []
+    judge_book = book_flag(root, book, "judge")
     for entry in entries:
         if not isinstance(entry, dict):
             continue
@@ -996,7 +1007,11 @@ def _legacy_scan_findings(
         defined_names: set[str] = set()
         for path in entry_notebooks(edir, kind):
             if path.suffix == ".ipynb":
-                sources = [block[3] for block in code_sources(path)]
+                sources = [
+                    block[3]
+                    for block in code_sources(path)
+                    if not _is_verify_cell(path, block[4], judge_book)
+                ]
             else:
                 sources = [path.read_text(encoding="utf-8")]
             for source in sources:
@@ -1120,6 +1135,10 @@ def concept_scan_findings(
             for block in blocks:
                 if isinstance(block.cell_id, str):
                     all_cell_ids.append(block.cell_id)
+                if block.block_kind == "code" and _is_verify_cell(
+                    path, block.tags, book_flag(root, book, "judge")
+                ):
+                    continue
                 try:
                     tree = ast.parse(block.source)
                     parsed.append((block, tree))

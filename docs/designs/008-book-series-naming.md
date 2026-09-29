@@ -44,7 +44,7 @@ This design gives every book a proper id and title, and splits the contest book 
       - The registry entry (name, category, and `kind`, including whether it is absent) must be identical in both books' `concepts.yaml`; the check fails on drift.
       - Neither book may `require` an id that only its peer introduces.
       - Plan 092 implements and tests this exemption, then passes `prereq-check` and `coverage-check` for each contest book on its own. No contest book imports from the other.
-- **D4 — Order of work.**
+- **D4 — Order of work.** *(Steps 2–3 are refined by design 009: ACSL is written fresh, organized by the contest season; USACO is trimmed last, in plan 097.)*
   1. Plan 091: rename ids and folders and add titles (no content moves).
   2. Plan 092: split `usaco-bronze` / `acsl` (with the level-marking scheme) (move the four ACSL units; renumber; checkpoint and mock-contest questions follow their topic's book; syllabi for both).
   3. Plan 093+: new ACSL units, marked by division.
