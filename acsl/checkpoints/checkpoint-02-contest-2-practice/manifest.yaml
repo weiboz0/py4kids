@@ -1,0 +1,13 @@
+id: checkpoint-02-contest-2-practice
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+acsl: {contest: 2, category: Practice, divisions: [junior, intermediate, senior]}
+concepts:
+  introduces: []
+  requires: [print, input, variable, int-type, type-conversion, arithmetic, comparison,
+             if-statement, input-parse, str-split]
+  practices: [postfix-eval, bitwise-ops, lisp-eval, code-tracing, acsl-pseudocode, for-loop,
+              range-function, nested-loops, while-loop, accumulator, find-extreme, float-type,
+              list-literal, list-index, list-append, list-loop, elif-else, logical-ops]

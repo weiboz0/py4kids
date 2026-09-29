@@ -1,0 +1,13 @@
+id: unit-05-bit-string-flicking
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 2, category: Bit-String Flicking, divisions: [junior, intermediate, senior]}
+concepts:
+  introduces: [bitwise-ops]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion,
+             string-literal, string-index, string-slice, string-concat, boolean, comparison,
+             logical-ops, if-statement, elif-else, while-loop, for-loop, range-function,
+             def-function, parameters, return-value, builtin-functions, str-split, input-parse]
+  practices: [accumulator, loop-counter, complete-search, base-conversion]

@@ -46,3 +46,6 @@ python-concepts/units/unit-12-files/*.txt
 python-concepts/units/unit-13-objects/*.txt
 python-concepts/checkpoints/checkpoint-05-files-and-objects/*.txt
 python-concepts/projects/project-01-algorithm-challenge/*.txt
+
+# ACSL verify-cell evaluators (plan 094): verify cells import assets/verify/*.py, which writes bytecode
+acsl/**/assets/verify/__pycache__/

@@ -1,0 +1,13 @@
+id: unit-04-prefix-infix-postfix
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 2, category: Prefix/Infix/Postfix Notation, divisions: [elementary, junior, intermediate, senior]}
+concepts:
+  introduces: [postfix-eval]
+  requires: [print, input, run-program, variable, int-type, float-type, arithmetic, type-conversion,
+             string-literal, string-concat, comparison, if-statement, for-loop, range-function,
+             def-function, parameters, return-value, list-literal, list-append, list-index,
+             list-loop, in-operator, str-split, input-parse]
+  practices: [builtin-functions, loop-counter]
