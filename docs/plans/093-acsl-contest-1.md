@@ -222,7 +222,26 @@ Four authors: three units and the checkpoint.
 **Consensus reached; implementation starts.**
 
 ## Content Review
-_(filled before PR.)_
+
+### Round 1
+
+- `[sol]` **REJECT.**
+  - Blind solve: all checkpoint Q1–Q7 and the sampled unit items match. 109 fixtures and 30 independent edge probes pass.
+  - `[FIXED]` O1: Q7 stated Python's slice rule inside ACSL pseudocode. It now states ACSL's inclusive rule, and the program uses `S[p:p + 2]` (positions 3–5 = `PUT`). The worked answer is updated; `trace7.py` keeps the Python equivalent with a comment.
+  - `[FIXED]` O2: the checkpoint's timing and division text misstated the real test.
+    - The intro says 30 minutes for the short answers, calls Q1–Q6 the six-question paper, and calls Q7 extra Intermediate/Senior practice. "Same shape as the real contest" becomes "modelled on".
+    - The teacher notes state ACSL's 6-in-30 for Junior/Intermediate/Senior and Classroom's 10-in-50, and record Q7 separately.
+  - `[FIXED]` O3: the `floor`/`sqrt` scanner allowance leaked to USACO via `code-tracing`. It now keys on a new **ACSL-only** concept, `acsl-pseudocode`, introduced by unit 03 (registry, manifest, coverage map). A test proves USACO's registry does not allow them.
+- `[fable]` **APPROVE WITH NITS.**
+  - Blind solve: every sampled item and checkpoint question matches (Q7 under its stated rule). Two programs pass 5/5 and 10/10, and 3/3 wrong variants are caught.
+  - The dialect was checked against the ACSL wiki; the Elementary section, the division-tag counts and the ⅓ pseudocode share were verified by script.
+  - `[FIXED]` F1: same as O1.
+  - `[FIXED]` F2: same as O2.
+  - `[FIXED]` F3: unit 02's teacher note on floor vs `int` is reworded.
+  - `[FIXED]` F4: superseded by O3 (the allowance is scoped to the ACSL-only concept).
+  - `[WONTFIX]` F5: the `132_b` mystery-base notation is consistent with Lesson 2.
+- `[self]` APPROVE: all short answers were solved blind by the solutions sessions and matched the authors' keys (checkpoint 7/7, unit 01 18/18, unit 02 10/10, unit 03 16/16).
+- `[glm]` skipped (user decision 2026-09-28).
 
 ## Post-Execution Report
 _(filled before merge.)_

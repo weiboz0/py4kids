@@ -5,7 +5,7 @@ lessons: 3
 provenance: original
 acsl: {contest: 1, category: "What Does This Program Do? – Branching", divisions: [junior, intermediate, senior]}
 concepts:
-  introduces: [code-tracing, grid-2d]
+  introduces: [code-tracing, grid-2d, acsl-pseudocode]
   requires: [print, input, variable, int-type, float-type, arithmetic, type-conversion,
              string-literal, boolean, comparison, logical-ops, if-statement, elif-else,
              conditional-nesting, import-statement, for-loop, range-function, while-loop,

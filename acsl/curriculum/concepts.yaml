@@ -12,3 +12,5 @@ concepts:
 - {id: base-conversion, name: Number base conversion, category: number-theory, kind: technique}
 - {id: code-tracing, name: Reading and tracing code, category: techniques, kind: technique}
 - {id: grid-2d, name: 2D grids (list of lists), category: data-structures, kind: technique}
+# --- ACSL-only (not shared with usaco-bronze) ---
+- {id: acsl-pseudocode, name: "ACSL pseudocode dialect (int as floor, sqrt, inclusive substrings)", category: techniques, kind: technique}

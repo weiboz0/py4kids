@@ -35,7 +35,7 @@ Budget: three lessons of 60–90 minutes, still inside the Contest 1 run-up.
 - Stopping at the base case and giving its value as the answer, instead of substituting back up.
 - Adding the wrong value on the way up (e.g. adding `x` of the base case instead of the `x` of each level).
 - Missing one of the two calls in multiple recursion, or recomputing the same values by hand instead of using a table.
-- Using Python's `int()` instead of floor for a negative division: ACSL's `int(-7/2)` is −4, and Python's `-7 // 2` is also −4, but `int(-3.5)` is −3.
+- Translating ACSL's floor of a division wrongly: write `floor(x / 2)` as `x // 2` (it floors: `-7 // 2` is −4), never as `int(x / 2)` (it truncates: `int(-3.5)` is −3).
 - Forgetting a base case when writing the Python function, which produces `RecursionError`.
 - In indirect recursion, switching to the wrong function at a step.
 

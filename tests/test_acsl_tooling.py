@@ -177,10 +177,11 @@ def test_real_registry_peers_and_contest_books_close_separately():
         (REPO / "usaco-bronze/curriculum/concepts.yaml").read_text(encoding="utf-8")
     )
     usaco_by_id = {c["id"]: c for c in usaco["concepts"]}
-    shared = {c["id"] for c in acsl["concepts"]}
+    shared = {c["id"] for c in acsl["concepts"]} & set(usaco_by_id)
     assert {"input-parse", "str-split", "tuple", "complete-search"} <= shared  # grows as contests ship
     for concept in acsl["concepts"]:
-        assert concept == usaco_by_id[concept["id"]]
+        if concept["id"] in shared:  # ACSL-only ids (e.g. acsl-pseudocode) have no peer entry
+            assert concept == usaco_by_id[concept["id"]]
 
 
 # ---------------------------------------------------------------- acsl book fixture
@@ -800,10 +801,19 @@ def test_line_exact_comparison(actual, expected, match):
     assert outputs_match(actual, expected, line_exact=False) is (actual.split() == expected.split())
 
 
-def test_code_tracing_registry_teaches_math_floor_and_sqrt():
+def test_acsl_pseudocode_registry_teaches_math_floor_and_sqrt():
     from tools.concept_scan import scanner_profile
 
-    with_tracing = scanner_profile([{"id": "code-tracing", "kind": "technique"}])
-    without = scanner_profile([{"id": "tuple", "kind": "feature"}])
+    with_tracing = scanner_profile([{"id": "acsl-pseudocode", "kind": "technique"}])
+    without = scanner_profile([{"id": "code-tracing", "kind": "technique"}])  # USACO registers this too
     assert {"floor", "sqrt"} <= with_tracing.taught_methods
     assert not ({"floor", "sqrt"} & without.taught_methods)
+
+
+def test_usaco_bronze_registry_does_not_allow_math_floor_or_sqrt():
+    import yaml
+
+    from tools.concept_scan import scanner_profile
+
+    usaco = yaml.safe_load((REPO / "usaco-bronze/curriculum/concepts.yaml").read_text(encoding="utf-8"))["concepts"]
+    assert not ({"floor", "sqrt"} & scanner_profile(usaco).taught_methods)

@@ -15,5 +15,5 @@ y = math.floor(math.sqrt(A[3][3] + 2))
 while abs(x) < 10:
     x = x * y
 p = abs(x) % 4
-w = S[p:p + 3]
+w = S[p:p + 3]  # ACSL S[p:p + 2] = positions p through p + 2
 print(w)
