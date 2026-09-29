@@ -212,6 +212,15 @@ Four authors: three units and the checkpoint.
 - `[sol]` **REJECT** (r3): ACSL `int(x)` (floor) differs from Python `int()` (truncation) for negative inputs.
   - `[FIXED]` ACSL `int(x)` is transliterated as `math.floor(x)`; the dialect table states the difference, and at least one Intermediate item exercises a negative argument.
 
+### Round 4 — CONSENSUS
+
+- `[sol]` **APPROVE** (r4), no findings.
+- `[fable]` APPROVE WITH NITS (r2, folded).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28).
+
+**Consensus reached; implementation starts.**
+
 ## Content Review
 _(filled before PR.)_
 
