@@ -263,7 +263,27 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
 **Consensus reached; implementation starts.**
 
 ## Content Review
-_(filled before PR.)_
+
+### Round 1
+
+- `[sol]` **REJECT.**
+  - Blind solve: all 28 sampled items and the checkpoint match. 147 evaluator tests, 146 fixture runs and 29 independent probes pass.
+  - `[FIXED]` O1: unit 04's Lesson 1 (Elementary) offered a runnable self-checker. Lesson 1 now has no code cell and only mentions the optional program. The `l1.py` mirror cell and its run instructions moved to the start of Lesson 2, and the back-reference was updated.
+  - `[FIXED]` O2: the checkpoint's student page lacked the Classroom path. It now has "Classroom (no programming): Q1–Q4 and Q7–Q8; Q5–Q6 optional".
+- `[fable]` **APPROVE WITH NITS.**
+  - Blind solve: all 29 requested items plus about 35 more match. Q9 and unit 05 Ex 19 were solved independently; wrong variants were caught, except for the shift-clamp gap below. Fidelity to the ACSL wiki and the Elementary doc was verified; 261 evaluator and tooling tests pass.
+  - `[FIXED]` F1: unit 05 Ex 14 and Ex 19 had no fixture for a shift longer than the string. New fixtures (`LSHIFT-9 NOT 0110` → `0000`; `RSHIFT-7 x` = `000` → all 8 strings) were cross-checked with `bsf_eval`, and a clamp-less solver fails them.
+  - `[WONTFIX]` F2: lengthening Elementary items to the official 9–13 tokens. The current items already cover every Elementary skill within the doc's limits; this is noted for a future enrichment pass.
+  - `[FIXED]` F3: Q3 no longer restates the precedence ladder.
+  - `[FIXED]` F4: Q6 notes that ACSL papers also write keywords in lowercase.
+  - `[FIXED]` F5: the post-execution report is written before the PR.
+- `[self]` APPROVE: every short answer was solved blind by the solutions sessions and matched the authors' keys:
+  - checkpoint 8/8
+  - U04 19/19
+  - U05 17/17
+  - U06 16/16
+  - U07 17/17
+- `[glm]` skipped (user decision 2026-09-28).
 
 ## Post-Execution Report
 _(filled before merge.)_
