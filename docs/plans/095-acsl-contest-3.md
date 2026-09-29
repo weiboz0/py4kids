@@ -89,8 +89,10 @@ These map to `list-*`, `dict-*` and `tuple` ids that are already registered.
 
 **Canonical answer text** (plan 093–094 rules, plus the rules below):
 - **Boolean values and counts:** `1`, `0`, or a bare integer count.
-- **Satisfying tuples:** `(A,B)` values with no inner spaces, in ascending binary order, separated by `, `: `(1,0), (1,1)`. Three variables give `(A,B,C)` triples.
-- **Simplified expressions:** a sum of products in the book's notation, with literals in each term in alphabetical order (`~A * B`, not `B * ~A`). Terms go in alphabetical order of their first variable, and on a tie a shorter term first. `0` and `1` stand alone.
+- **Satisfying tuples:** values in alphabetical order of the variables, `(A,B)` with no inner spaces, in ascending binary order, separated by `, `: `(1,0), (1,1)`. Three variables give `(A,B,C)` triples.
+- **Simplified expressions:** a sum of products in the book's notation. Within a term, literals go in alphabetical order of their variable (`~A * B`, not `B * ~A`).
+  Terms are ordered by comparing their literal lists position by position: the earlier variable first, then `X` before `~X` for the same variable, and a term that runs out first goes first (`A + A * ~B + ~A * C`).
+  `0` and `1` stand alone. No XOR or XNOR appears in a simplified answer.
   - Every simplify item's minimal answer must be unique under these rules; the verify cell asserts both the string and truth-table equivalence to the original.
 - **Data structures:**
   - popped values as integers or letters
@@ -165,7 +167,7 @@ Unit conventions:
   - Q3–Q4 Data Structures, `acsl-junior` (one stack/queue item, one BST item)
   - Q5–Q6 WDTPD – Arrays, `acsl-junior`, at least one in pseudocode
   - Q7–Q8 FSAs and Regular Expressions, `acsl-intermediate` (one FSA item, one regular-expression item)
-  - Q9 the single `acsl-junior` programming problem, last, on Contest 3 material, with the sample plus ≥ 4 hidden-style fixtures
+  - Q9 the single `acsl-junior` programming problem, last, on Junior Contest 3 material (Boolean Algebra, a stack or queue, a BST, or arrays), with the sample plus ≥ 4 hidden-style fixtures
 - **Paths:**
   - Junior: Q1–Q6 + Q9
   - Intermediate and Senior: Q1–Q4, Q7–Q8 + Q9
@@ -234,6 +236,13 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
 - ACSL publication.
 
 ## Plan Review
+
+### Round 1 — `[self]` APPROVE WITH NITS
+
+- **N1 (folded):** the term order for simplified answers had no tie-break between `X` and `~X`. It now compares literal lists (earlier variable, then `X` before `~X`, then the shorter term), and simplified answers never use XOR or XNOR.
+- **N2 (folded):** tuple values follow the alphabetical order of the variables.
+- **N3 (folded):** Q9 must use Junior material, because FSAs are Intermediate+.
+- The plan otherwise follows plan 094's shape and its lessons: tested helpers with pre-written tests, a code-free Elementary lesson, every path listed on the student page, and boundary fixtures.
 
 ## Content Review
 
