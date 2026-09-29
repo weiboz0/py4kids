@@ -327,6 +327,13 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
   1. The unit-convention line now matches Phase B/C: a placeholder in `exercises.ipynb`, and the `**Answer:**` line and verify assert in `solutions.ipynb`.
   2. = `[fable]` r3 nit 1 (the traversal test is under the DS tests).
 
+### Round 4 — CONSENSUS
+
+- `[sol]` **APPROVE** (r4): both round-3 findings resolved; no remaining findings.
+- `[fable]` APPROVE WITH NITS (r3; its nits folded).
+- `[self]` APPROVE WITH NITS (r1; its nits folded).
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Content Review
 
 ## Post-Execution Report
