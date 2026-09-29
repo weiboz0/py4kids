@@ -227,5 +227,45 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
 - `[self]` APPROVE WITH NITS: the blind short answers (two sessions) match the author's key; the teacher notes' division paths are consistent with the syllabus.
 - `[glm]` skipped (user decision 2026-09-28, until further notice).
 
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE** (r2): O1–O3 verified by direct probes; the category strings match acsl.org; the division lines and wording fixes are present.
+- `[fable]` APPROVE WITH NITS (r1, all folded).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28, until further notice).
+
+**Consensus reached, no `[OPEN]` findings.**
+
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped.**
+- **Design 009:** *Contest Python: ACSL* is one book for every division, organized by the ACSL season: Foundations, then Contest 1–4 parts with one unit per category and a practice checkpoint per contest.
+  - Every item carries its lowest ladder level; Classroom and Elementary have explicit paths.
+  - It refines design 008 D3–D4 and sets the roadmap: 093–096 add one contest each, and 097 is the USACO trim with replace-and-move.
+- **Registry:** `acsl` is registered (`number: 2`, `judge`, the new `acsl` flag), with `peers` between `acsl` and `usaco-bronze`.
+  - The global concept check lets validated symmetric peers share ids when their entries are identical as dicts. The variant check is unchanged.
+- **`acsl/curriculum/season.yaml`:** the 2026–27 season from acsl.org (official category strings per division; contest windows) and an explicit `units` map per contest with the ladder levels that take each unit.
+  - `acsl/syllabus.md` shows the whole season map (planned units named plainly), "Following the season" and "Division paths".
+- **Tooling:**
+  - `acsl-check` (`tools/acsl.py`): the manifest block, the reserved `Practice` category for checkpoints, division subsets, heading ladder tags, season order, practice placement.
+  - `manifest-check` accepts `acsl:` only on `acsl` books.
+  - The **short-answer genre**: a `short-answer` heading tag, a `**Answer:**` line, and a top-level executed `verify` assert with the same literal. It is exempt from `source-policy` and `concept-scan`.
+  - `exec-solutions` now runs judge-book notebooks with `no-exec` filtered, skipping display-only ones.
+  - `judge-check` treats `acsl` entries as stdin-model and judges `acsl` output **line-exact**; USACO keeps token comparison.
+- **ACSL Foundations unit:** the hook "Pairs That Make the Target"; 3 lessons (how ACSL works, reading contest input, tuples and complete search); 15 exercises, 10 programming (judged, with edge fixtures) and 5 short-answer (verified). Each exercise carries a ladder tag plus a visible division line, and 2 are Challenges. Solutions and teacher notes are included.
+  - It introduces `input-parse`, `str-split`, `tuple`, `complete-search` (shared with USACO via `peers`) and requires only *Python by Projects* concepts.
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN at bb3dea7, all four books included.
+- pytest 903 passed.
+- Blind solves: the solutions session and both reviewers independently matched all short answers. [fable]'s 10 independent programs pass 46/46 fixtures, and 12 plausible wrong solutions are caught.
+- Mutations: 64+ tests in `tests/test_acsl_tooling.py`, plus probes (nested asserts, line layout, Junior LISP) confirmed by [sol].
+
+**Deviations:**
+- The plan's per-contest `unit_order` became an explicit `units` map with divisions (content gate O3).
+- `acsl` output is judged line-exact (O2).
+- Both are recorded in design 009.
+
+**Follow-ups:**
+- Plan 093: Contest 1 (Computer Number Systems with its Elementary section, Recursive Functions, WDTPD – Branching with the Intermediate/Senior all-constructs section, Contest 1 practice).
+- Level badges in print arrive with ACSL publication.
