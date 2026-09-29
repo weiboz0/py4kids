@@ -290,5 +290,12 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
 - `[sol]` **REJECT** (r2): O1 is resolved and the other folds are verified. Remaining: the intro told every path, Classroom included, to spend 60 minutes on Q9.
   - `[FIXED]` The Q9 timing line is conditional: "On the Junior, Intermediate or Senior path … (the Classroom path skips it)".
 
+### Round 3 — CONSENSUS
+
+- `[sol]` **APPROVE** (r3): no `[OPEN]` findings. Q9's timing and programming instructions now apply only to the Junior, Intermediate and Senior paths; the Q3 and Q6 folds hold; the new unit 05 Ex 14 and Ex 19 fixtures match direct `bsf_eval` results.
+- `[fable]` APPROVE WITH NITS (r1; every nit folded or WONTFIX with reason).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Post-Execution Report
 _(filled before merge.)_
