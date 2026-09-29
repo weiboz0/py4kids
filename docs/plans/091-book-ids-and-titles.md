@@ -235,5 +235,43 @@ None.
 - `[sol]` **REJECT** (r3): an exact duplicate of the transition line was also exempt.
   - `[FIXED]` `findings_for` exempts the exact line once only, and a test probes an exact duplicate.
 
+### Round 4 — CONSENSUS
+
+- `[sol]` **APPROVE** (r4): both duplicate probes are caught; the real guard line passes.
+- `[fable]` APPROVE WITH NITS (r1, folded).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28, until further notice).
+
+**Consensus reached, no `[OPEN]` findings.**
+
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped.**
+
+| Old id | New id / folder | Title | Subtitle |
+|---|---|---|---|
+| `book1` | `python-projects` | Python by Projects | Learn Python by building things |
+| `book1b` | `python-concepts` | Python, Concept by Concept | Learn Python one idea at a time |
+| `book2` | `usaco-bronze` | Contest Python: USACO Bronze | Algorithms for your first programming contests |
+
+- `git mv` of the three roots (history follows). `books.yaml` v2 adds titles, subtitles and commented feature flags (`publication`, `judge`, `patterns`); every id-keyed switch in the tools now keys on a flag.
+- Qualified concept ids use a registry-built owner alternation (a future `acsl:` needs no regex edit); fixtures and in-test registries are migrated.
+- `ci-local.sh` and `pre-merge-guard.sh` read the ids from `books.yaml`. The guard carries a one-release transition map, so branches cut before this merge still collision-check.
+- Publication: titles and subtitles come from `books.yaml` (the syllabus-H1 regex is gone), with a new title verso. PDFs are named `output/<id>/<id>-<edition>.pdf` through one helper. The `publish_audit` root bug is fixed.
+- Content: syllabus H1s `# <Title> — Syllabus`; checkpoint H1s drop "Book 2"; folder paths are updated; teacher notes were reworded inline, with USACO H1s made consistent with every other book.
+- AGENTS.md: the Project Structure lines only. Design 000 §1 points to design 008. Historical docs and `docs/architecture/decisions.md` are untouched.
+- Guard: `tests/test_book_ids.py` fails on any live old id, path, `--book` value, qualified id, old output name or old book name. It exempts exactly one line, the transition map, once.
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN at 40653ec. ci-local's per-book check sets are unchanged, book by book ([fable]).
+- `output/python-concepts/` holds exactly four editions, the syllabus and handouts; `output/python-projects/` holds the syllabus, `patterns.pdf` and handouts. No `output/book*` remains, and no PDF is tracked.
+- Title page and verso show the new title and subtitle and "(folder python-concepts/)"; the syllabus H1s are correct. `git log --follow` works through a move.
+- Page counts are unchanged: print 410 · full 656 · answer key 192 · teacher 922.
+
+**Deviations:**
+- USACO teacher-notes H1s use the common `# Teacher Notes — Unit NN: …` form, not the planned "USACO Bronze," prefix, for consistency with every other book.
+
+**Notes and follow-ups:**
+- Open branches cut before this merge must rebase; the transition map covers `pre-merge-guard` for one release.
+- `publish_audit`'s python-concepts content pins ride on the `publication` flag; a second publication book will need per-book data.
+- Plan 092: split usaco-bronze / acsl with the `peers` concept-sharing rule and ACSL division marking (design 008).
