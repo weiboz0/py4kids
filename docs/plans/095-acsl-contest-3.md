@@ -356,5 +356,12 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
   - U11 15/15
 - `[glm]` skipped (user decision 2026-09-28).
 
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE** (r2): no `[OPEN]` findings. It blind-solved the new Q1 (`A * ~C + ~B * C`, unique, and unlike every unit 08 item), confirmed Q8 as `A, C, D` under unspaced `U`, and confirmed every fold; 93 FSA tests and all eight checkpoint verify cells pass.
+- `[fable]` APPROVE WITH NITS (r1; every finding folded).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Post-Execution Report
 _(filled before merge.)_
