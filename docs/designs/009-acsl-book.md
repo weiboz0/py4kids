@@ -18,18 +18,18 @@ Students should be able to follow the book **in step with a competition season**
 
   | Contest | Junior | Intermediate & Senior | Elementary | Classroom |
   |---|---|---|---|---|
-  | 1 | Computer Number Systems; Recursive Functions; What Does This Program Do? – Branching | Computer Number Systems; Recursive Functions; What Does This Program Do? | Elementary Computer Number Systems | Number Systems; Recursive Functions; WDTPD |
-  | 2 | Prefix/Infix/Postfix Notation; Bit-String Flicking; WDTPD – Looping | Prefix/Infix/Postfix Notation; Bit-String Flicking; LISP | Elementary Prefix/Infix/Postfix | Prefix/Infix/Postfix; Bit-String Flicking; LISP |
-  | 3 | Boolean Algebra; Data Structures; WDTPD – Arrays | Boolean Algebra; Data Structures; FSAs and Regular Expressions | Elementary Boolean Algebra | Boolean Algebra; FSAs and Regular Expressions; Data Structures |
-  | 4 | Graph Theory; Digital Electronics; WDTPD – Strings | Graph Theory; Digital Electronics; Assembly Language | Elementary Graph Theory | Graph Theory; Digital Electronics; Assembly Language |
+  | 1 | Computer Number Systems; Recursive Functions; What Does This Program Do? - Branching | Computer Number Systems; Recursive Functions; What Does This Program Do? | Elementary Computer Number Systems | Computer Number Systems; Recursive Functions; What Does This Program Do? |
+  | 2 | Prefix/Infix/Postfix Notation; Bit-String Flicking; What Does This Program Do? - Looping | Prefix/Infix/Postfix Notation; Bit-String Flicking; LISP | Elementary Prefix/Infix/Postfix Notation | Prefix/Infix/Postfix Notation; Bit-String Flicking; LISP |
+  | 3 | Boolean Algebra; Data Structures; What Does This Program Do? - Arrays | Boolean Algebra; Data Structures; FSAs and Regular Expressions | Elementary Boolean Algebra | Boolean Algebra; FSAs and Regular Expressions; Data Structures |
+  | 4 | Graph Theory; Digital Electronics; What Does This Program Do? - Strings | Graph Theory; Digital Electronics; Assembly Language | Elementary Graph Theory | Graph Theory; Digital Electronics; Assembly Language |
 
   - Junior, Intermediate and Senior contests each include a programming problem; Elementary and Classroom do not.
-  - `season.yaml` also holds one merged **`unit_order`** per contest: the Junior categories in the official order, then the Intermediate/Senior-only categories (LISP, FSAs, Assembly). The book's unit order follows it; `acsl-check` needs it to be deterministic.
+  - `season.yaml` also holds an explicit **`units`** map per contest, `[{name: <unit category>, divisions: [<ladder levels that take it>]}, ...]`: the Junior categories in the official order, then the Intermediate/Senior-only categories (LISP, FSAs, Assembly). The book's unit order follows the list, and a unit manifest's `divisions` must be a subset of its entry's `divisions` (so a Junior LISP or Assembly unit fails); `acsl-check` needs it to be deterministic.
   - When ACSL changes the list, only `season.yaml` and the affected units change.
 - **D3 — Every item is marked by division** ("mark concepts by level").
   - **Levels form a ladder:** elementary < junior < intermediate < senior.
-    - Each ACSL **unit** manifest carries `acsl: {contest: 0–4, category: <season.yaml unit_order name>, divisions: [...]}`, where contest 0 is Foundations and `divisions` lists ladder levels only.
-    - Each **practice checkpoint** manifest carries `acsl: {contest: 1–4, category: Practice, divisions: [...]}`. `Practice` is reserved, is not a `unit_order` entry, and is valid only on checkpoints: exactly one per shipped contest, placed after that contest's last unit. Its questions may span any of that contest's categories.
+    - Each ACSL **unit** manifest carries `acsl: {contest: 0–4, category: <season.yaml units name>, divisions: [...]}`, where contest 0 is Foundations and `divisions` lists ladder levels only.
+    - Each **practice checkpoint** manifest carries `acsl: {contest: 1–4, category: Practice, divisions: [...]}`. `Practice` is reserved, is not a `units` entry, and is valid only on checkpoints: exactly one per shipped contest, placed after that contest's last unit. Its questions may span any of that contest's categories.
     - Each exercise carries its **lowest** ladder level as a tag on its heading cell, `acsl-elementary|acsl-junior|acsl-intermediate|acsl-senior`, which later prints as a level badge. A student following one ladder level does the items at or below it.
   - **Classroom** is a season-map column only: never a tag and never in `divisions`. The Classroom path for a contest is every **short-answer** item tagged junior or intermediate in that contest's categories, matching ACSL's Classroom test, which draws on those divisions' non-programming problems.
   - **Elementary** is a one-category, non-programming test per contest. Each Elementary category (Computer Number Systems, Prefix/Infix/Postfix, Boolean Algebra, Graph Theory) is taught as the **opening Elementary section** of the matching Junior category unit, with items tagged `acsl-elementary`.
@@ -47,8 +47,10 @@ Students should be able to follow the book **in step with a competition season**
     - A code cell tagged **`verify`** computes the answer and asserts it, as `assert str(<computed>) == "<answer text>"`, where the literal equals the markdown answer text exactly.
     - The check compares the two statically and then executes the cell, so neither the printed answer nor the computation can drift alone.
     - `verify` cells are verification-only: executed by `exec-solutions`, exempt from `source-policy` and `concept-scan` (so simulators for LISP, assembly or FSAs may use any Python), never printed to students.
+    - The matching assert must be a top-level statement of the `verify` cell (not nested in `if`, `for`, `while`, `try`, `with`, `def` or `class`), so it always runs and nothing swallows it.
     - A `verify` cell that needs a program's output runs it with `subprocess.run([sys.executable, "assets/<file>.py"], input=..., capture_output=True, text=True)` from the entry folder, so all short-answer solutions look alike.
   - **Programming**, the ACSL programming problem: a stdin `.py` solver under the `judge` contract, as in USACO Bronze.
+    - Output is compared **line-exact** in `acsl` (each line's trailing whitespace and trailing empty lines ignored; everything else must match), not token-by-token as in `usaco-bronze`, because ACSL grades the output layout.
 - **D5 — Independence and sharing** (design 008): `acsl` depends on the Python books only, and is a `peers` of `usaco-bronze`.
   - It may introduce the same concept ids (e.g. `input-parse`, `str-split`, `tuple`, `complete-search`, `code-tracing`, `base-conversion`, `bitwise-ops`, `boolean-algebra`, `tree-traversal`), with identical registry entries.
   - It teaches each in its own words and problems. Content is written for ACSL; USACO notebooks are not copied.

@@ -19,7 +19,7 @@ from tools.curriculum import (
     prereq_findings,
     referenced_concepts_findings,
 )
-from tools.judge import judge_findings, verify_literals
+from tools.judge import judge_findings, outputs_match, verify_literals
 from tools.notebooks import exec_solutions_findings, manifest_findings, structure_findings
 from tools.source_policy import source_policy_findings
 
@@ -318,9 +318,9 @@ def _mutate(root, entry, **changes):
     "entry, changes, expected",
     [
         ("units/unit-01-number-systems", {"category": "Graph Theory"},
-         "acsl category 'Graph Theory' is not in contest 1's unit_order"),
+         "acsl category 'Graph Theory' is not a unit of contest 1"),
         ("units/unit-01-number-systems", {"category": "Number Theory"},
-         "acsl category 'Number Theory' is not in contest 1's unit_order"),
+         "acsl category 'Number Theory' is not a unit of contest 1"),
         ("units/unit-01-number-systems", {"contest": 7}, "acsl contest 7 is not in season.yaml"),
         ("units/unit-01-number-systems", {"category": "Practice"},
          "'Practice' is reserved for practice checkpoints"),
@@ -438,11 +438,60 @@ def test_practice_without_units_and_duplicate_practice_fail(tmp_path):
 def test_season_file_is_required_and_practice_reserved(tmp_path):
     root = _acsl_root(tmp_path)
     season = yaml.safe_load(SEASON.read_text(encoding="utf-8"))
-    season["contests"][1]["unit_order"].append("Practice")
+    season["contests"][1]["units"].append({"name": "Practice", "divisions": ["junior"]})
     _write_yaml(root / "acsl/curriculum/season.yaml", season)
-    assert any("uses the reserved 'Practice'" in f for f in acsl_findings(root, "acsl"))
+    assert any("units use the reserved 'Practice'" in f for f in acsl_findings(root, "acsl"))
     (root / "acsl/curriculum/season.yaml").unlink()
     assert acsl_findings(root, "acsl") == ["FAIL: acsl: curriculum/season.yaml does not exist"]
+
+
+@pytest.mark.parametrize(
+    "contest, category, divisions, bad",
+    [
+        (2, "LISP", ("junior",), ["junior"]),
+        (4, "Assembly Language", ("junior", "intermediate"), ["junior"]),
+        (1, "Recursive Functions", ("elementary", "junior"), ["elementary"]),
+        (3, "WDTPD – Arrays", ("junior", "senior"), ["senior"]),
+    ],
+)
+def test_unit_divisions_must_take_the_category(tmp_path, contest, category, divisions, bad):
+    root = _acsl_root(tmp_path)
+    _acsl_unit(root, "unit-00-foundations", 0, "Foundations")
+    _acsl_unit(root, "unit-01-x", contest, category, divisions=divisions)
+    _set_map(root, ["unit-00-foundations", "unit-01-x"])
+    findings = acsl_findings(root, "acsl")
+    assert any(f"unit-01-x: acsl divisions {bad} do not take contest {contest} {category!r}" in f
+               for f in findings), findings
+
+
+def test_unit_divisions_within_the_category_pass(tmp_path):
+    root = _acsl_root(tmp_path)
+    _acsl_unit(root, "unit-00-foundations", 0, "Foundations")
+    _acsl_unit(root, "unit-01-lisp", 2, "LISP", divisions=("intermediate", "senior"),
+               item_tags=(("acsl-intermediate",),))
+    _set_map(root, ["unit-00-foundations", "unit-01-lisp"])
+    findings = acsl_findings(root, "acsl")
+    assert not any("do not take" in f for f in findings), findings
+
+
+@pytest.mark.parametrize(
+    "mutate, expected",
+    [
+        (lambda c: c.__setitem__("units", []), "contest 1 units must be a non-empty list"),
+        (lambda c: c.__setitem__("units", ["Recursive Functions"]),
+         "contest 1 units must be a non-empty list"),
+        (lambda c: c["units"][0].__setitem__("divisions", ["classroom"]),
+         "contest 1 unit 'Computer Number Systems' divisions must be ladder levels"),
+        (lambda c: c["units"].append(dict(c["units"][0])), "contest 1 units repeat a name"),
+    ],
+)
+def test_season_units_schema_mutations_fail(tmp_path, mutate, expected):
+    root = _acsl_root(tmp_path)
+    season = yaml.safe_load(SEASON.read_text(encoding="utf-8"))
+    mutate(season["contests"][1])
+    _write_yaml(root / "acsl/curriculum/season.yaml", season)
+    findings = acsl_findings(root, "acsl")
+    assert any(expected in f for f in findings), findings
 
 
 # ---------------------------------------------------------------- D4 short-answer items
@@ -562,6 +611,30 @@ def test_verify_literals_parses_only_the_contract_form():
     assert verify_literals("not python (") == []
 
 
+@pytest.mark.parametrize(
+    "verify",
+    [
+        'if False:\n    assert str(int("3F", 16)) == "63"\n',
+        'try:\n    assert str(int("3E", 16)) == "63"\nexcept AssertionError:\n    pass\n',
+        'def check():\n    assert str(int("3F", 16)) == "63"\n',
+        'for _ in range(0):\n    assert str(int("3F", 16)) == "63"\n',
+        'with open(__file__) as f:\n    assert str(int("3F", 16)) == "63"\n',
+        'check = lambda: str(int("3F", 16)) == "63"\n',
+    ],
+)
+def test_nested_verify_assert_does_not_count(tmp_path, verify):
+    assert verify_literals(verify) == []
+    root = _acsl_root(tmp_path)
+    _sa_unit(root, verify=verify)
+    findings = judge_findings(root, "acsl")
+    assert any("no non-vacuous verify assert str(...) == '63'" in f for f in findings), findings
+
+
+def test_top_level_verify_assert_after_setup_counts():
+    source = 'def f(x):\n    return int(x, 16)\n\nassert str(f("3F")) == "63"\n'
+    assert verify_literals(source) == ["63"]
+
+
 def test_exec_solutions_runs_verify_cells_and_skips_display_cells(tmp_path):
     root = _acsl_root(tmp_path)
     _sa_unit(root)
@@ -635,3 +708,57 @@ def test_concept_scan_skips_verify_cells(tmp_path):
     assert "FAIL: unit-00-foundations: used-but-unlisted concept tuple" in concept_scan_findings(
         root, "acsl"
     )
+
+
+# ---------------------------------------------------------------- D4 output comparison
+
+
+def _layout_entry(root, book):
+    """A solver printing one number per line where the fixtures require one single line."""
+    entry_dir = root / book / "units" / "unit-01-layout"
+    (entry_dir / "assets" / "ex1").mkdir(parents=True)
+    solver = "for token in input().split():\n    print(token)\n"
+    (entry_dir / "assets" / "ex1.py").write_text(solver, encoding="utf-8")
+    for k, line in enumerate(("15 10 4", "1 2"), 1):
+        (entry_dir / "assets" / "ex1" / f"{k}.in").write_text(line + "\n", encoding="utf-8")
+        (entry_dir / "assets" / "ex1" / f"{k}.out").write_text(line + "\n", encoding="utf-8")
+    _nb(entry_dir / "exercises.ipynb", _heading("## Exercise 1\n\nEcho.", "acsl-junior"))
+    _nb(entry_dir / "solutions.ipynb", _heading("## Exercise 1"), _code(solver, "no-exec"))
+    _manifest(entry_dir, "unit", {"contest": 0, "category": "Foundations",
+                                  "divisions": ["junior"]}, lessons=0)
+    _set_map(root, ["unit-01-layout"], book=book)
+
+
+def test_wrong_line_layout_fails_in_acsl(tmp_path):
+    root = _acsl_root(tmp_path)
+    _layout_entry(root, "acsl")
+    assert judge_findings(root, "acsl") == [
+        "FAIL: unit-01-layout: ex1.py wrong output on 1.in",
+        "FAIL: unit-01-layout: ex1.py wrong output on 2.in",
+    ]
+
+
+def test_wrong_line_layout_passes_token_judge(tmp_path):
+    # usaco-bronze's documented contract compares whitespace-split tokens
+    root = _acsl_root(tmp_path)
+    _layout_entry(root, "usaco-bronze")
+    assert judge_findings(root, "usaco-bronze") == []
+
+
+@pytest.mark.parametrize(
+    "actual, expected, match",
+    [
+        ("15 10 4\n", "15 10 4\n", True),
+        ("15 10 4   \n\n\n", "15 10 4\n", True),
+        ("15 10 4", "15 10 4\n", True),
+        ("a\r\nb\r\n", "a\nb\n", True),
+        ("15\n10\n4\n", "15 10 4\n", False),
+        ("15  10 4\n", "15 10 4\n", False),
+        (" 15 10 4\n", "15 10 4\n", False),
+        ("\n15 10 4\n", "15 10 4\n", False),
+        ("a\n\nb\n", "a\nb\n", False),
+    ],
+)
+def test_line_exact_comparison(actual, expected, match):
+    assert outputs_match(actual, expected, line_exact=True) is match
+    assert outputs_match(actual, expected, line_exact=False) is (actual.split() == expected.split())

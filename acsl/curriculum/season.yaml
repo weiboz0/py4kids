@@ -12,50 +12,71 @@ divisions: [elementary, classroom, junior, intermediate, senior]
 ladder: [elementary, junior, intermediate, senior]
 # Divisions whose contests include a programming problem.
 programming: [junior, intermediate, senior]
-# `unit_order` is the book's unit order within a contest part: the Junior categories in the
-# official order, then the Intermediate/Senior-only categories. Each practice checkpoint uses the
-# reserved category `Practice` (never a unit_order entry) and comes after its contest's last unit.
+# `units` is the book's unit map per contest part, in book order: each entry names one unit
+# category and the ladder levels that take it (a unit manifest's `divisions` must be a subset).
+# The Junior categories come in the official order, then the Intermediate/Senior-only ones.
+# `categories` holds the official acsl.org category names per season-map column.
+# Each practice checkpoint uses the reserved category `Practice` (never a `units` entry) and
+# comes after its contest's last unit.
 contests:
 - contest: 0
   name: Foundations
-  unit_order: [Foundations]
+  units:
+  - {name: Foundations, divisions: [junior, intermediate, senior]}
 - contest: 1
   name: Contest 1
   window: {opens: '2026-10-19', closes: '2027-01-10'}
   categories:
-    junior: [Computer Number Systems, Recursive Functions, "What Does This Program Do? – Branching"]
+    junior: [Computer Number Systems, Recursive Functions, "What Does This Program Do? - Branching"]
     intermediate: [Computer Number Systems, Recursive Functions, "What Does This Program Do?"]
     senior: [Computer Number Systems, Recursive Functions, "What Does This Program Do?"]
     elementary: [Elementary Computer Number Systems]
-    classroom: [Number Systems, Recursive Functions, WDTPD]
-  unit_order: [Computer Number Systems, Recursive Functions, "What Does This Program Do? – Branching"]
+    classroom: [Computer Number Systems, Recursive Functions, "What Does This Program Do?"]
+  units:
+  - {name: Computer Number Systems, divisions: [elementary, junior, intermediate, senior]}
+  - {name: Recursive Functions, divisions: [junior, intermediate, senior]}
+  # The merged all-constructs WDTPD unit (design 009 D3): Branching for Junior, plus an
+  # Intermediate-tagged section on loops, arrays and strings.
+  - {name: "What Does This Program Do? – Branching", divisions: [junior, intermediate, senior]}
 - contest: 2
   name: Contest 2
   window: {opens: '2027-01-04', closes: '2027-02-28'}
   categories:
-    junior: [Prefix/Infix/Postfix Notation, Bit-String Flicking, WDTPD – Looping]
+    junior: [Prefix/Infix/Postfix Notation, Bit-String Flicking, "What Does This Program Do? - Looping"]
     intermediate: [Prefix/Infix/Postfix Notation, Bit-String Flicking, LISP]
     senior: [Prefix/Infix/Postfix Notation, Bit-String Flicking, LISP]
-    elementary: [Elementary Prefix/Infix/Postfix]
-    classroom: [Prefix/Infix/Postfix, Bit-String Flicking, LISP]
-  unit_order: [Prefix/Infix/Postfix Notation, Bit-String Flicking, WDTPD – Looping, LISP]
+    elementary: [Elementary Prefix/Infix/Postfix Notation]
+    classroom: [Prefix/Infix/Postfix Notation, Bit-String Flicking, LISP]
+  units:
+  - {name: Prefix/Infix/Postfix Notation, divisions: [elementary, junior, intermediate, senior]}
+  - {name: Bit-String Flicking, divisions: [junior, intermediate, senior]}
+  - {name: WDTPD – Looping, divisions: [junior]}
+  - {name: LISP, divisions: [intermediate, senior]}
 - contest: 3
   name: Contest 3
   window: {opens: '2027-02-01', closes: '2027-04-11'}
   categories:
-    junior: [Boolean Algebra, Data Structures, WDTPD – Arrays]
+    junior: [Boolean Algebra, Data Structures, "What Does This Program Do? - Arrays"]
     intermediate: [Boolean Algebra, Data Structures, FSAs and Regular Expressions]
     senior: [Boolean Algebra, Data Structures, FSAs and Regular Expressions]
     elementary: [Elementary Boolean Algebra]
     classroom: [Boolean Algebra, FSAs and Regular Expressions, Data Structures]
-  unit_order: [Boolean Algebra, Data Structures, WDTPD – Arrays, FSAs and Regular Expressions]
+  units:
+  - {name: Boolean Algebra, divisions: [elementary, junior, intermediate, senior]}
+  - {name: Data Structures, divisions: [junior, intermediate, senior]}
+  - {name: WDTPD – Arrays, divisions: [junior]}
+  - {name: FSAs and Regular Expressions, divisions: [intermediate, senior]}
 - contest: 4
   name: Contest 4
   window: {opens: '2027-03-01', closes: '2027-05-23'}
   categories:
-    junior: [Graph Theory, Digital Electronics, WDTPD – Strings]
+    junior: [Graph Theory, Digital Electronics, "What Does This Program Do? - Strings"]
     intermediate: [Graph Theory, Digital Electronics, Assembly Language]
     senior: [Graph Theory, Digital Electronics, Assembly Language]
     elementary: [Elementary Graph Theory]
     classroom: [Graph Theory, Digital Electronics, Assembly Language]
-  unit_order: [Graph Theory, Digital Electronics, WDTPD – Strings, Assembly Language]
+  units:
+  - {name: Graph Theory, divisions: [elementary, junior, intermediate, senior]}
+  - {name: Digital Electronics, divisions: [junior, intermediate, senior]}
+  - {name: WDTPD – Strings, divisions: [junior]}
+  - {name: Assembly Language, divisions: [intermediate, senior]}

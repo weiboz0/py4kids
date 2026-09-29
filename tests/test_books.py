@@ -96,13 +96,29 @@ def test_acsl_season_map_records_source_and_contests():
     assert season["retrieved"] == "2026-09-29"
     contests = {c["contest"]: c for c in season["contests"]}
     assert sorted(contests) == [0, 1, 2, 3, 4]
-    assert contests[0]["unit_order"] == ["Foundations"] and "categories" not in contests[0]
+    names = {n: [u["name"] for u in c["units"]] for n, c in contests.items()}
+    assert names[0] == ["Foundations"] and "categories" not in contests[0]
     for number in (1, 2, 3, 4):
         assert set(contests[number]["categories"]) == set(season["divisions"])
-        assert "Practice" not in contests[number]["unit_order"]
-    assert contests[2]["unit_order"][-1] == "LISP"
-    assert contests[3]["unit_order"][-1] == "FSAs and Regular Expressions"
-    assert contests[4]["unit_order"][-1] == "Assembly Language"
+        assert "Practice" not in names[number]
+    assert names[2][-1] == "LISP"
+    assert names[3][-1] == "FSAs and Regular Expressions"
+    assert names[4][-1] == "Assembly Language"
+    # the official acsl.org strings (design 009 D2)
+    assert [contests[n]["categories"]["elementary"] for n in (1, 2, 3, 4)] == [
+        ["Elementary Computer Number Systems"], ["Elementary Prefix/Infix/Postfix Notation"],
+        ["Elementary Boolean Algebra"], ["Elementary Graph Theory"],
+    ]
+    assert contests[1]["categories"]["classroom"] == [
+        "Computer Number Systems", "Recursive Functions", "What Does This Program Do?"
+    ]
+    assert contests[2]["categories"]["classroom"] == [
+        "Prefix/Infix/Postfix Notation", "Bit-String Flicking", "LISP"
+    ]
+    for number, topic in ((2, "Looping"), (3, "Arrays"), (4, "Strings")):
+        assert contests[number]["categories"]["junior"][-1] == (
+            f"What Does This Program Do? - {topic}"
+        )
 
 
 def test_book_roots_have_required_layout():

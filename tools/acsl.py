@@ -4,13 +4,14 @@ BOOK-SCOPED to books with the ``acsl: true`` flag in ``books.yaml``; returns ``[
 book (an intentional no-op, like the judge). For an ``acsl`` book it checks:
 
 - ``curriculum/season.yaml`` is well formed (contest 0 is Foundations; ``Practice`` is reserved);
-- every unit manifest carries ``acsl: {contest, category, divisions}`` with ``category`` in that
-  contest's ``unit_order``; every checkpoint carries the reserved ``category: Practice`` for a
+- every unit manifest carries ``acsl: {contest, category, divisions}`` with ``category`` a
+  ``units`` entry of that contest and ``divisions`` a subset of that entry's divisions (so a
+  Junior LISP unit fails); every checkpoint carries the reserved ``category: Practice`` for a
   contest 1-4; ``divisions`` holds ladder levels only (never ``classroom``);
 - every ``## Exercise N`` / ``## Question N`` heading cell carries exactly one ladder tag
   (``acsl-elementary|acsl-junior|acsl-intermediate|acsl-senior``), never below the entry's lowest
   division, and never ``acsl-classroom``;
-- in coverage-map order, shipped units follow the season's ``unit_order`` and each practice
+- in coverage-map order, shipped units follow the season's ``units`` order and each practice
   checkpoint comes after its contest's last unit; a contest part with a shipped unit has its
   practice checkpoint.
 """
@@ -80,11 +81,35 @@ def load_season(root: Path, book: str) -> tuple[dict | None, list[str]]:
         findings.append(_fail(scope, "contest 0 (Foundations) is missing"))
     for contest in contests:
         label = f"contest {contest['contest']}"
-        order = contest.get("unit_order")
-        if not _string_list(order) or not order or len(set(order)) != len(order):
-            findings.append(_fail(scope, f"{label} unit_order must be a non-empty list of names"))
-        elif PRACTICE in order:
-            findings.append(_fail(scope, f"{label} unit_order uses the reserved {PRACTICE!r}"))
+        units = contest.get("units")
+        if not (
+            isinstance(units, list)
+            and units
+            and all(
+                isinstance(unit, dict)
+                and set(unit) == {"name", "divisions"}
+                and isinstance(unit["name"], str)
+                and _string_list(unit["divisions"])
+                and unit["divisions"]
+                for unit in units
+            )
+        ):
+            findings.append(
+                _fail(scope, f"{label} units must be a non-empty list of {{name, divisions}}")
+            )
+            continue
+        unit_names = [unit["name"] for unit in units]
+        if len(set(unit_names)) != len(unit_names):
+            findings.append(_fail(scope, f"{label} units repeat a name"))
+        if PRACTICE in unit_names:
+            findings.append(_fail(scope, f"{label} units use the reserved {PRACTICE!r}"))
+        for unit in units:
+            if not set(unit["divisions"]) <= set(ladder) or len(set(unit["divisions"])) != len(
+                unit["divisions"]
+            ):
+                findings.append(
+                    _fail(scope, f"{label} unit {unit['name']!r} divisions must be ladder levels")
+                )
         categories = contest.get("categories", {})
         if not isinstance(categories, dict) or not all(
             division in divisions and _string_list(names)
@@ -94,6 +119,11 @@ def load_season(root: Path, book: str) -> tuple[dict | None, list[str]]:
     if findings:
         return None, findings
     return data, []
+
+
+def _unit_map(contest: dict) -> dict[str, list[str]]:
+    """A contest's units in book order: category name -> the ladder levels that take it."""
+    return {unit["name"]: unit["divisions"] for unit in contest.get("units", [])}
 
 
 def _block_findings(scope: str, kind: str, block: object, season: dict) -> list[str]:
@@ -116,19 +146,32 @@ def _block_findings(scope: str, kind: str, block: object, season: dict) -> list[
             findings.append(_fail(scope, f"{PRACTICE} checkpoints belong to contests 1-4"))
     elif category == PRACTICE:
         findings.append(_fail(scope, f"{PRACTICE!r} is reserved for practice checkpoints"))
-    elif category not in contests[number]["unit_order"]:
+    elif not isinstance(category, str) or category not in _unit_map(contests[number]):
         findings.append(
-            _fail(scope, f"acsl category {category!r} is not in contest {number}'s unit_order")
+            _fail(scope, f"acsl category {category!r} is not a unit of contest {number}")
         )
     ladder = season["ladder"]
     if not _string_list(divisions) or not divisions or len(set(divisions)) != len(divisions):
         findings.append(_fail(scope, "acsl divisions must be a non-empty list of distinct levels"))
-    else:
-        for division in divisions:
-            if division == "classroom":
-                findings.append(_fail(scope, "classroom is never a division (a path only)"))
-            elif division not in ladder:
-                findings.append(_fail(scope, f"acsl division {division!r} is not a ladder level"))
+        return findings
+    for division in divisions:
+        if division == "classroom":
+            findings.append(_fail(scope, "classroom is never a division (a path only)"))
+        elif division not in ladder:
+            findings.append(_fail(scope, f"acsl division {division!r} is not a ladder level"))
+    allowed = None
+    if kind == "unit" and _is_int(number) and number in contests and isinstance(category, str):
+        allowed = _unit_map(contests[number]).get(category)
+    if allowed is not None:
+        extra = [d for d in divisions if d in ladder and d not in allowed]
+        if extra:
+            findings.append(
+                _fail(
+                    scope,
+                    f"acsl divisions {extra} do not take contest {number} {category!r} "
+                    f"(season.yaml allows {allowed})",
+                )
+            )
     return findings
 
 
@@ -214,7 +257,7 @@ def _season_order_findings(root: Path, book: str, season: dict,
     for entry_id in ordered:
         kind, block = blocks[entry_id]
         number = block["contest"]
-        order = contests[number]["unit_order"]
+        order = list(_unit_map(contests[number]))
         if kind == "checkpoint":
             key = (number, len(order))
             practice.setdefault(number, []).append(entry_id)
@@ -226,7 +269,7 @@ def _season_order_findings(root: Path, book: str, season: dict,
                 _fail(
                     entry_id,
                     f"out of season order: contest {number} {block['category']!r} comes after "
-                    f"{previous[1]} (season.yaml unit_order; practice closes its part)",
+                    f"{previous[1]} (season.yaml units order; practice closes its part)",
                 )
             )
         previous = (key, entry_id)

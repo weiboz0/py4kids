@@ -209,7 +209,23 @@ Unit `acsl/units/unit-00-acsl-foundations/`. The manifest's `acsl:` block is `{c
 **Consensus reached; implementation starts.**
 
 ## Content Review
-_(filled before PR.)_
+
+### Round 1
+
+- `[sol]` **REJECT.**
+  - Blind solve: short-answer Ex 6, 9 and 12 match. Programming Ex 8, 11 and 14 match the reference solvers; 15 fixtures and 7 extra edge cases pass. The season map and windows were verified against acsl.org.
+  - `[FIXED]` O1: a `verify` assert nested in `if False:` or a caught `try` passed. Only top-level asserts of the verify cell count now, and none may sit inside a `try`. Mutations: `if`, `try`, an uncalled `def`, `for range(0)`, `with`, a lambda.
+  - `[FIXED]` O2: the judge compared tokens, so a wrong line layout passed. `acsl` books now compare line-exact (trailing whitespace and trailing blank lines ignored); other judge books keep token comparison. Design 009 D4 records the rule, and tests cover both.
+  - `[FIXED]` O3: division validation accepted Junior LISP/Assembly. `season.yaml` now has an explicit `units: [{name, divisions}]` map per contest, and a unit's divisions must be a subset. Mutations: Junior LISP, Junior Assembly, Elementary Recursive Functions, Senior WDTPD – Arrays.
+- `[fable]` **APPROVE WITH NITS.**
+  - Blind solve: all 5 short answers match; 10 independent programming solutions pass 46/46 fixtures; 12 plausible wrong solutions are all caught. The ACSL description and season map were verified against acsl.org. Seven tooling mutations fail as designed.
+  - `[FIXED]` F1: the classroom and elementary columns (and Junior's WDTPD C1–C4) now use the official acsl.org strings; design 009 D2's table matches.
+  - `[FIXED]` F2: a visible "_Division: X and above._" line under each exercise heading.
+  - `[FIXED]` F3: "fall to spring".
+  - `[FIXED]` F4: the teacher notes' Junior set is "1–7 and 10".
+  - `[FIXED]` F5: the terminal example uses `< assets/ex4/1.in`.
+- `[self]` APPROVE WITH NITS: the blind short answers (two sessions) match the author's key; the teacher notes' division paths are consistent with the syllabus.
+- `[glm]` skipped (user decision 2026-09-28, until further notice).
 
 ## Post-Execution Report
 _(filled before merge.)_

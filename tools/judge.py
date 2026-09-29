@@ -2,7 +2,8 @@
 
 A reference solution is a real contest script in an entry's ``assets/`` dir that reads stdin and
 prints stdout. ``judge_findings`` runs each solver against committed ``<pid>/<k>.in`` fixtures and
-token-compares stdout to ``<pid>/<k>.out``.  Modeled on :func:`tools.fake_turtle.turtle_findings`.
+compares stdout to ``<pid>/<k>.out``: token-compared (whitespace-split) by default, and
+line-exact in ``acsl`` books (design 009 D4; see :func:`outputs_match`).  Modeled on :func:`tools.fake_turtle.turtle_findings`.
 
 BOOK-SCOPED to books with the ``judge: true`` flag in ``books.yaml``: returns ``[]`` for any other
 book (the "assets/ + .py" new-model detector is indistinguishable from turtle assets in the Python
@@ -12,8 +13,8 @@ fail-closed-on-missing-root convention used by the notebook checks.
 Short-answer items (design 009 D4): an ``## Exercise N`` / ``## Question N`` heading cell tagged
 ``short-answer`` needs no solver. Its solution section instead ends its worked answer with exactly
 one ``**Answer:** `<text>` `` line and has >= 1 live ``verify`` code cell asserting
-``str(<computed>) == "<text>"`` with that same literal (checked here statically; ``exec-solutions``
-executes it). Every entry of an ``acsl`` book is on the stdin model, with or without ``assets/``.
+``str(<computed>) == "<text>"`` with that same literal as a TOP-LEVEL statement of the cell
+(checked here statically; ``exec-solutions`` executes it). Every entry of an ``acsl`` book is on the stdin model, with or without ``assets/``.
 """
 
 from __future__ import annotations
@@ -160,7 +161,27 @@ def _fixture_pairs(fx_dir: Path, scope: str, stem: str, findings: list[str]):
     return pairs
 
 
-def _run_case(script: Path, inp: Path, outp: Path, scope: str, stem: str) -> str | None:
+def _output_lines(text: str) -> list[str]:
+    lines = [line.rstrip() for line in text.splitlines()]
+    while lines and lines[-1] == "":
+        lines.pop()
+    return lines
+
+
+def outputs_match(actual: str, expected: str, *, line_exact: bool) -> bool:
+    """Judge comparison. Token mode (usaco-bronze's contract) compares whitespace-split tokens.
+
+    Line-exact mode (``acsl`` books, design 009 D4) compares line by line after stripping trailing
+    whitespace on each line and ignoring trailing empty lines; everything else must match, so a
+    required single line ``15 10 4`` does not accept ``15\n10\n4``.
+    """
+    if line_exact:
+        return _output_lines(actual) == _output_lines(expected)
+    return actual.split() == expected.split()
+
+
+def _run_case(script: Path, inp: Path, outp: Path, scope: str, stem: str,
+              line_exact: bool = False) -> str | None:
     try:
         result = subprocess.run(
             [sys.executable, str(script)],
@@ -178,7 +199,7 @@ def _run_case(script: Path, inp: Path, outp: Path, scope: str, stem: str) -> str
         return _fail(scope, f"{stem}.py failed on {inp.name}: {detail}")
     if result.stdout.strip() == "":
         return _fail(scope, f"{stem}.py produced no output on {inp.name}")
-    if result.stdout.split() != outp.read_text(encoding="utf-8").split():
+    if not outputs_match(result.stdout, outp.read_text(encoding="utf-8"), line_exact=line_exact):
         return _fail(scope, f"{stem}.py wrong output on {inp.name}")
     return None
 
@@ -235,13 +256,18 @@ def _section_cells(notebook, heading: str, number: int) -> list | None:
 
 
 def verify_literals(source: str) -> list[str]:
-    """Literals of every non-vacuous ``assert str(<computed>) == "<text>"`` in a verify cell."""
+    """Literals of every non-vacuous TOP-LEVEL ``assert str(<computed>) == "<text>"`` in a cell.
+
+    Only statements of the module body count: an assert nested in ``if``/``for``/``while``/
+    ``try``/``with``/``def``/``class`` may never run (``if False:``, an uncalled ``def``) or be
+    swallowed (``try: ... except``), so it proves nothing about the answer.
+    """
     try:
         tree = ast.parse(source)
     except SyntaxError:
         return []
     literals = []
-    for node in ast.walk(tree):
+    for node in tree.body:
         if not isinstance(node, ast.Assert) or is_tautology(node.test):
             continue
         test = node.test
@@ -364,7 +390,7 @@ def judge_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
             if len(pairs) < 2:
                 findings.append(_fail(scope, f"{stem}.py needs >=2 fixture pairs (has {len(pairs)})"))
             for inp, outp in pairs:
-                problem = _run_case(script, inp, outp, scope, stem)
+                problem = _run_case(script, inp, outp, scope, stem, line_exact=acsl_book)
                 if problem:
                     findings.append(problem)
             mirror = _mirror_source(entry_dir, kind, stem)
