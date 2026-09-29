@@ -29,6 +29,8 @@ engagement is enforced by design (no unit may open with concept drill).
 
 ## 1. Repo structure
 
+> **Book names (design 008):** the roots below are now `python-projects/`, `python-concepts/` and `usaco-bronze/`, with titles in `books.yaml`; see [design 008](008-book-series-naming.md).
+
 ```
 py4kids/
 ├── AGENTS.md                  # canonical agent instructions (CLAUDE.md is a pointer)

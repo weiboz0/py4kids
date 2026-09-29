@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import yaml
@@ -100,3 +101,54 @@ def lesson_budget(root: Path, book: str) -> tuple[float, float | None]:
     ):
         return configured[0], configured[1]
     return (1, None) if entry.get("depends_on") else (28, 32)
+
+
+def book_flag(root: Path, book: str, flag: str) -> bool:
+    """Return a boolean feature flag from books.yaml (absent or non-boolean means False).
+
+    Tools key features on these flags, never on book ids (design 008):
+    ``publication`` (book-publication pipeline), ``judge`` (stdin solvers + subprocess judge),
+    ``patterns`` (pattern checks and the coverage-map v2 / markdown concept scan).
+    """
+    configured = book_entry(root, book).get(flag, False)
+    return configured if isinstance(configured, bool) else False
+
+
+def books_with_flag(root: Path, flag: str) -> list[str]:
+    """Return registered book ids (registry order) whose ``flag`` is true."""
+    return [book for book in book_entries(root) if book_flag(root, book, flag)]
+
+
+def book_title(root: Path, book: str) -> str:
+    configured = book_entry(root, book).get("title")
+    return configured if isinstance(configured, str) and configured.strip() else book
+
+
+def book_subtitle(root: Path, book: str) -> str:
+    configured = book_entry(root, book).get("subtitle")
+    return configured if isinstance(configured, str) else ""
+
+
+def output_pdf_name(book: str, edition: str) -> str:
+    """The one PDF file name for a book edition: ``<id>-<edition>.pdf`` (design 008 D1)."""
+    return f"{book}-{edition}.pdf"
+
+
+def qualified_owner_alternation(root: Path, book: str | None = None) -> str:
+    """Regex alternation of every registered book id (plus ``book``), longest first.
+
+    Qualified concept ids are ``<owner>:<concept-id>``; building the owner part from the
+    registry lets hyphenated ids (``usaco-bronze:str-split``) and future books work unedited.
+    """
+    owners = set(book_entries(root))
+    if book:
+        owners.add(book)
+    ordered = sorted(owners, key=lambda owner: (-len(owner), owner))
+    return "|".join(re.escape(owner) for owner in ordered) or "(?!)"
+
+
+def qualified_concept_id_pattern(
+    root: Path, book: str | None = None, concept: str = r"[a-z][a-z0-9-]*"
+) -> re.Pattern[str]:
+    """Compiled ``^(owner|...):<concept>$`` for the registered owners."""
+    return re.compile(rf"^(?:{qualified_owner_alternation(root, book)}):{concept}$")

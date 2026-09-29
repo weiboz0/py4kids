@@ -201,7 +201,7 @@ def turtle_findings(root: Path, book: str, unit: str | None = None) -> list[str]
         return findings
     for unit_dir in units:
         for script in sorted((unit_dir / "assets").glob("*.py")):
-            # Plan 036: book2 stdin solvers also live in assets/*.py; they read stdin and would
+            # Plan 036: contest-book (judge) stdin solvers also live in assets/*.py; they read stdin and would
             # block under this stub. Only run scripts that actually use turtle.
             if not imports_turtle(script.read_text(encoding="utf-8")):
                 continue

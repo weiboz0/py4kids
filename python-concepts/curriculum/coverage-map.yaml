@@ -1,0 +1,201 @@
+map_version: 1
+# Python, Concept by Concept (python-concepts) is COMPLETE: Units 01-13, checkpoints 01-05, and the end-of-book Algorithm Challenge
+# (project-01-algorithm-challenge, the last entry) all ship. The full 62-concept catalog is in
+# concepts.yaml (content-identical to python-projects); every concept is introduced exactly once across
+# the units and practiced in a non-capstone entry (the practice-coverage anchor). The book left
+# `buildout` with plan 078. Design: docs/designs/005-book1b-concept-first.md.
+entries:
+- id: unit-01-output-and-variables
+  kind: unit
+  title: "Output & Variables — your first programs"
+  lessons: 3
+  introduces: [run-program, print, comment, string-literal, variable, naming, input,
+               string-concat, f-string, error-messages]
+  requires: []
+  practices: []
+- id: unit-02-numbers-and-arithmetic
+  kind: unit
+  title: "Numbers & Arithmetic — integers, floats, and comparisons"
+  lessons: 3
+  introduces: [int-type, float-type, arithmetic, type-conversion, boolean, comparison]
+  requires: [print, variable, input, f-string]
+  practices: [string-literal, naming, comment, error-messages, run-program, string-concat,
+              for-loop, range-function, accumulator]
+- id: unit-03-decisions
+  kind: unit
+  title: "Decisions — if, elif, else, and logic"
+  lessons: 3
+  introduces: [logical-ops, if-statement, elif-else, conditional-nesting]
+  requires: [boolean, comparison, arithmetic, variable, print]
+  practices: [int-type, type-conversion, f-string, string-literal, naming, input]
+- id: checkpoint-01-foundations
+  kind: checkpoint
+  title: "Checkpoint 1 — Foundations (output, numbers, decisions)"
+  lessons: 0.5
+  introduces: []
+  requires: [print, variable, if-statement, elif-else, comparison, logical-ops, arithmetic,
+             type-conversion, float-type, f-string, string-concat]
+  practices: [print, variable, comparison, boolean, arithmetic, int-type, float-type, type-conversion,
+              if-statement, elif-else, logical-ops, f-string, string-literal, string-concat, naming,
+              error-messages]
+- id: unit-04-loops-and-counting
+  kind: unit
+  title: "Loops & Counting — while, counters, and accumulators"
+  lessons: 3
+  introduces: [while-loop, break-statement, loop-counter, accumulator, sentinel-loop,
+               running-total, count-by-condition]
+  requires: [if-statement, comparison, arithmetic, int-type, boolean, variable, print]
+  practices: [elif-else, f-string, string-literal, naming, comment, error-messages, input,
+              type-conversion, string-concat]
+- id: unit-05-for-and-range
+  kind: unit
+  title: "For & Range — counting loops and nested loops"
+  lessons: 3
+  introduces: [for-loop, range-function, nested-loops]
+  requires: [while-loop, accumulator, loop-counter, arithmetic, comparison, if-statement, variable, print]
+  practices: [running-total, count-by-condition, accumulator, boolean, elif-else, conditional-nesting,
+              break-statement, string-concat, int-type, f-string, string-literal, naming, input,
+              type-conversion]
+- id: checkpoint-02-loops
+  kind: checkpoint
+  title: "Checkpoint 2 — Loops (while, for, counting)"
+  lessons: 0.5
+  introduces: []
+  requires: [print, variable, while-loop, for-loop, range-function, accumulator, if-statement,
+             comparison, arithmetic, f-string]
+  practices: [print, variable, while-loop, break-statement, loop-counter, accumulator, running-total,
+              count-by-condition, sentinel-loop, for-loop, range-function, nested-loops, if-statement,
+              elif-else, comparison, boolean, arithmetic, int-type, f-string, string-literal, string-concat]
+- id: unit-06-turtle-geometry
+  kind: unit
+  title: "Turtle Geometry — drawing with loops and angles"
+  lessons: 3
+  introduces: [import-statement, turtle-basics, turtle-drawing]
+  requires: [for-loop, range-function, arithmetic, variable, if-statement, elif-else, comparison, print]
+  practices: [nested-loops, loop-counter, accumulator, int-type, float-type, comment, naming,
+              run-program, error-messages]
+- id: unit-07-functions
+  kind: unit
+  title: "Functions — def, parameters, return, and built-ins"
+  lessons: 3
+  introduces: [def-function, parameters, return-value, scope, builtin-functions]
+  requires: [for-loop, range-function, while-loop, arithmetic, comparison, boolean, if-statement, variable, print]
+  practices: [import-statement, turtle-basics, turtle-drawing, loop-counter, accumulator,
+              running-total, int-type, float-type, error-messages, comment, naming, string-concat,
+              elif-else, input, type-conversion]
+- id: unit-08-randomness
+  kind: unit
+  title: "Randomness — the random module, dice, and simulation"
+  lessons: 3
+  introduces: [random-module]
+  requires: [import-statement, def-function, parameters, return-value, for-loop, range-function, arithmetic,
+             comparison, if-statement, boolean, variable, print]
+  practices: [turtle-basics, turtle-drawing, builtin-functions, running-total, count-by-condition,
+              accumulator, int-type, float-type, comment, naming, input, type-conversion, elif-else,
+              string-concat, while-loop]
+- id: checkpoint-03-functions-and-randomness
+  kind: checkpoint
+  title: "Checkpoint 3 — Functions & Randomness"
+  lessons: 0.5
+  introduces: []
+  requires: [print, variable, def-function, parameters, return-value, random-module, import-statement,
+             type-conversion, for-loop, range-function, while-loop, if-statement, elif-else, comparison,
+             boolean, arithmetic, builtin-functions, f-string, string-literal]
+  practices: [print, variable, def-function, parameters, return-value, scope, builtin-functions, random-module,
+              import-statement, type-conversion, for-loop, range-function, while-loop, loop-counter, accumulator,
+              running-total, count-by-condition, if-statement, elif-else, comparison, boolean, arithmetic,
+              int-type, float-type]
+- id: unit-09-strings
+  kind: unit
+  title: "Strings — indexing, slicing, methods, and search"
+  lessons: 3
+  introduces: [string-index, string-slice, string-methods, in-operator, transform-each, linear-search]
+  requires: [def-function, parameters, return-value, for-loop, range-function, if-statement, comparison,
+             boolean, arithmetic, variable, print, string-literal]
+  practices: [f-string, string-concat, accumulator, count-by-condition, loop-counter,
+              builtin-functions, int-type, type-conversion, elif-else, comment, naming, input]
+- id: unit-10-lists
+  kind: unit
+  title: "Lists — build, index, loop, sort, find, and filter"
+  lessons: 3
+  introduces: [list-literal, list-index, list-append, list-loop, list-sort, find-extreme, filter-into-list]
+  requires: [def-function, parameters, return-value, for-loop, range-function, if-statement,
+             comparison, boolean, arithmetic, variable, print, elif-else, while-loop, logical-ops,
+             string-slice, string-literal]
+  practices: [builtin-functions, in-operator, accumulator, running-total, count-by-condition,
+              loop-counter, f-string, int-type, float-type, comment, naming, input, type-conversion,
+              string-methods, string-index, string-concat, nested-loops, error-messages]
+- id: unit-11-dictionaries
+  kind: unit
+  title: "Dictionaries — key/value maps, lookups, and tallies"
+  lessons: 3
+  introduces: [dict-literal, dict-access, dict-loop]
+  requires: [def-function, parameters, return-value, for-loop, list-loop, in-operator, if-statement,
+             elif-else, comparison, boolean, arithmetic, variable, print, float-type, error-messages,
+             string-concat, string-literal, range-function, nested-loops]
+  practices: [list-literal, list-append, list-sort, filter-into-list, string-index, string-methods,
+              count-by-condition, accumulator, builtin-functions, find-extreme, int-type, f-string,
+              comment, naming, input, type-conversion]
+- id: checkpoint-04-dictionaries
+  kind: checkpoint
+  title: "Checkpoint 4 — Dictionaries & Collections"
+  lessons: 0.5
+  introduces: []
+  requires: [print, variable, def-function, parameters, return-value, dict-literal, dict-access, dict-loop,
+             in-operator, for-loop, list-loop, list-literal, if-statement, elif-else, comparison, boolean,
+             arithmetic, builtin-functions, f-string, string-literal, type-conversion]
+  practices: [print, variable, def-function, parameters, return-value, dict-literal, dict-access, dict-loop,
+              in-operator, for-loop, list-loop, list-literal, list-index, if-statement, elif-else, comparison,
+              boolean, arithmetic, count-by-condition, accumulator, builtin-functions, find-extreme, int-type,
+              f-string, string-literal, type-conversion]
+- id: unit-12-files
+  kind: unit
+  title: "Files — read, write, and the with statement"
+  lessons: 3
+  introduces: [file-read, file-write, with-statement]
+  requires: [def-function, parameters, return-value, for-loop, list-append, if-statement, comparison,
+             arithmetic, variable, print, elif-else, string-concat, float-type, list-sort,
+             error-messages, list-index, break-statement, nested-loops, range-function,
+             string-literal]
+  practices: [transform-each, linear-search, list-literal, builtin-functions, running-total,
+              count-by-condition, find-extreme, accumulator, int-type, f-string, comment, naming,
+              input, type-conversion, string-methods, list-loop]
+- id: unit-13-objects
+  kind: unit
+  title: "Objects — classes, __init__, attributes, and methods"
+  lessons: 3
+  introduces: [class-def, init-method, attributes, methods]
+  requires: [def-function, parameters, return-value, arithmetic, comparison, boolean, if-statement,
+             variable, print, string-slice, dict-literal, dict-access, in-operator, range-function,
+             string-methods, find-extreme, nested-loops, error-messages, list-index, dict-loop,
+             string-concat, accumulator, string-literal, builtin-functions]
+  practices: [file-read, file-write, with-statement, f-string, int-type, float-type, type-conversion,
+              comment, naming, input, list-append, elif-else, list-loop, for-loop, list-literal]
+- id: checkpoint-05-files-and-objects
+  kind: checkpoint
+  title: "Checkpoint 5 — Files & Objects"
+  lessons: 0.5
+  introduces: []
+  requires: [variable, def-function, parameters, return-value, file-read, file-write, with-statement,
+             class-def, init-method, attributes, methods, for-loop, list-append, string-methods, type-conversion,
+             if-statement, elif-else, comparison, boolean, arithmetic, int-type, float-type, f-string, string-literal]
+  practices: [variable, def-function, parameters, return-value, file-read, file-write, with-statement,
+              class-def, init-method, attributes, methods, linear-search, string-slice, for-loop, list-append,
+              list-literal, string-methods, type-conversion, if-statement, elif-else, comparison, boolean,
+              arithmetic, count-by-condition, accumulator, builtin-functions, int-type, float-type, f-string,
+              string-literal]
+- id: project-01-algorithm-challenge
+  kind: project
+  title: "Project 1 — Algorithm Challenge"
+  lessons: 2
+  introduces: []
+  requires: [def-function, parameters, return-value, for-loop, while-loop, nested-loops, if-statement,
+             elif-else, comparison, boolean, logical-ops, arithmetic, list-index, list-sort, dict-access,
+             file-read, file-write, with-statement, class-def, init-method, attributes, methods]
+  practices: [def-function, parameters, return-value, variable, for-loop, while-loop, nested-loops,
+              break-statement, range-function, if-statement, elif-else, comparison, boolean, logical-ops,
+              arithmetic, int-type, list-literal, list-index, list-append, list-loop, list-sort,
+              string-index, string-slice, string-methods, string-literal, dict-literal, dict-access,
+              dict-loop, file-read, file-write, with-statement, class-def, init-method, attributes,
+              methods, type-conversion, f-string, accumulator, running-total, count-by-condition,
+              find-extreme, linear-search, transform-each, builtin-functions]

@@ -17,7 +17,7 @@ from tools.notebooks import unit_dirs
 PYTHON_FENCE = re.compile(r'```python\s*\n(.*?)\n```', re.DOTALL)
 SAMPLE_FENCE = re.compile(r'Sample input:\s*\n\s*```text\s*\n(.*?)\n```', re.DOTALL)
 ASSET = re.compile(r'assets/(solutions_ex\d+[\w-]*\.py)')
-EXPECTED_BOOK1B = {(6, n) for n in (*range(1, 13), 16, 17, 18)} | {
+EXPECTED_PYTHON_CONCEPTS = {(6, n) for n in (*range(1, 13), 16, 17, 18)} | {
     (7, 7), (7, 27), (7, 28), (8, 7), (8, 16), (8, 17),
 }
 
@@ -98,8 +98,8 @@ def turtle_real_findings(root: Path, book: str, unit: str | None = None) -> list
                     findings.append(f'FAIL: {context}: extra turtle real-program fence')
                 continue
             if programs and not any(fake_turtle.imports_turtle(source) for source, _ in programs):
-                # A text-only real program for a turtle exercise (Book 1) is not a drawing program;
-                # Book 1b's exact inventory below catches a drawing program that lost its import.
+                # A text-only real program for a turtle exercise (python-projects) is not a drawing program;
+                # python-concepts' exact inventory below catches a drawing program that lost its import.
                 continue
             inventory.add((unit_number, number))
             if len(turtle_assets) != 1:
@@ -133,7 +133,8 @@ def turtle_real_findings(root: Path, book: str, unit: str | None = None) -> list
                 findings.append(f'FAIL: {context}: final state or pen state mismatch')
             if actual[2] != expected[2]:
                 findings.append(f'FAIL: {context}: stdout mismatch')
-    if book == 'book1b' and unit is None and inventory != EXPECTED_BOOK1B:
-        findings.append(f'FAIL: Book 1b turtle real-program inventory: expected 21 rows; '
-                        f'missing {sorted(EXPECTED_BOOK1B - inventory)}, extra {sorted(inventory - EXPECTED_BOOK1B)}')
+    # Deliberate content pin (not a feature switch): the 21-row inventory belongs to this one book.
+    if book == 'python-concepts' and unit is None and inventory != EXPECTED_PYTHON_CONCEPTS:
+        findings.append(f'FAIL: python-concepts turtle real-program inventory: expected 21 rows; '
+                        f'missing {sorted(EXPECTED_PYTHON_CONCEPTS - inventory)}, extra {sorted(inventory - EXPECTED_PYTHON_CONCEPTS)}')
     return findings

@@ -38,12 +38,12 @@ def test_f_string_literal_text_is_string_literal():
 
 
 def test_real_book_has_no_used_but_unlisted_concepts():
-    assert concept_scan_findings(REPO, "book1") == []
+    assert concept_scan_findings(REPO, "python-projects") == []
 
 
 def test_unlisted_concept_produces_one_finding(tmp_path):
-    curriculum = tmp_path / "book1/curriculum"
-    entry_dir = tmp_path / "book1/units/unit-01-fixture"
+    curriculum = tmp_path / "python-projects/curriculum"
+    entry_dir = tmp_path / "python-projects/units/unit-01-fixture"
     curriculum.mkdir(parents=True)
     entry_dir.mkdir(parents=True)
     coverage_map = {
@@ -68,7 +68,7 @@ def test_unlisted_concept_produces_one_finding(tmp_path):
         entry_dir / "lesson.ipynb",
     )
 
-    assert concept_scan_findings(tmp_path, "book1") == [
+    assert concept_scan_findings(tmp_path, "python-projects") == [
         "FAIL: unit-01-fixture: used-but-unlisted concept arithmetic"
     ]
 
@@ -90,7 +90,7 @@ def test_unlisted_concept_produces_one_finding(tmp_path):
         ("for item in values:\n    continue", "break-statement"),
     ],
 )
-def test_book1_profile_detects_every_widened_method(source, concept):
+def test_python_projects_profile_detects_every_widened_method(source, concept):
     concepts = [
         {"id": concept_id}
         for concept_id in (
@@ -112,7 +112,7 @@ def test_book1_profile_detects_every_widened_method(source, concept):
     assert untaught == set()
 
 
-def test_book1_profile_split_ignores_book2_registered_concept():
+def test_python_projects_profile_split_ignores_usaco_bronze_registered_concept():
     profile = scanner_profile([{"id": "string-methods"}])
 
     used, untaught = detect(
@@ -126,7 +126,7 @@ def test_book1_profile_split_ignores_book2_registered_concept():
     assert untaught == set()
 
 
-def test_book1_declared_book2_split_uses_str_split():
+def test_python_projects_declared_usaco_bronze_split_uses_str_split():
     profile = scanner_profile([{"id": "string-methods"}, {"id": "str-split"}])
 
     used, untaught = detect(
@@ -140,7 +140,7 @@ def test_book1_declared_book2_split_uses_str_split():
     assert untaught == set()
 
 
-def test_book2_profile_keeps_split_as_str_split():
+def test_usaco_bronze_profile_keeps_split_as_str_split():
     profile = scanner_profile([{"id": "str-split"}])
 
     used, untaught = detect(
@@ -157,7 +157,7 @@ def test_book2_profile_keeps_split_as_str_split():
     "method",
     ["insert", "isalpha", "startswith", "pop", "index", "join"],
 )
-def test_book2_profile_keeps_widened_methods_untaught(method):
+def test_usaco_bronze_profile_keeps_widened_methods_untaught(method):
     profile = scanner_profile([{"id": "str-split"}])
 
     used, untaught = detect(
@@ -185,7 +185,7 @@ def test_known_set_remove_maps_only_to_set_ops():
 
 
 @pytest.mark.parametrize("method", ["count", "title", "extend"])
-def test_book1_profile_keeps_unwidened_methods_out_of_new_concepts(method):
+def test_python_projects_profile_keeps_unwidened_methods_out_of_new_concepts(method):
     profile = scanner_profile([{"id": "string-methods"}])
 
     used, untaught = detect(
@@ -204,8 +204,8 @@ def test_book1_profile_keeps_unwidened_methods_out_of_new_concepts(method):
 
 
 def _write_strict_checkpoint(root: Path, source: str) -> None:
-    curriculum = root / "book1/curriculum"
-    checkpoint = root / "book1/checkpoints/checkpoint-01-fixture"
+    curriculum = root / "python-projects/curriculum"
+    checkpoint = root / "python-projects/checkpoints/checkpoint-01-fixture"
     curriculum.mkdir(parents=True)
     checkpoint.mkdir(parents=True)
     concept_ids = [
@@ -266,13 +266,13 @@ def _write_strict_checkpoint(root: Path, source: str) -> None:
 def test_strict_checkpoint_reports_each_widened_concept(tmp_path, source, missing):
     _write_strict_checkpoint(tmp_path, source)
 
-    assert concept_scan_findings(tmp_path, "book1") == [
+    assert concept_scan_findings(tmp_path, "python-projects") == [
         f"FAIL: checkpoint-01-fixture: used-but-unlisted concept {missing}"
     ]
 
 
-def test_book1_profile_set_remove_falls_back_to_list_append():
-    """A Book 1-style profile has no set-ops, so a tracked set's .remove() must stay
+def test_python_projects_profile_set_remove_falls_back_to_list_append():
+    """A python-projects-style profile has no set-ops, so a tracked set's .remove() must stay
     visible (closure-enforced as list-append) rather than silently disappearing."""
     import ast as _ast
 
@@ -288,8 +288,8 @@ def test_book1_profile_set_remove_falls_back_to_list_append():
     assert "remove" not in unknown
 
 
-def test_real_book2_profile_remove_never_emits_list_append():
-    """Book 2's own catalog does not register string-methods, so the Book 1/1b list-mutation
+def test_real_usaco_bronze_profile_remove_never_emits_list_append():
+    """usaco-bronze's own catalog does not register string-methods, so the Python-book list-mutation
     widening must not fire there — even though set-ops makes `remove` a taught method."""
     import ast as _ast
     from pathlib import Path as _Path
@@ -298,7 +298,7 @@ def test_real_book2_profile_remove_never_emits_list_append():
 
     from tools import concept_scan as _cs
     root = _Path(__file__).resolve().parents[1]
-    concepts = _yaml.safe_load((root / "book2/curriculum/concepts.yaml").read_text())["concepts"]
+    concepts = _yaml.safe_load((root / "usaco-bronze/curriculum/concepts.yaml").read_text())["concepts"]
     profile = _cs.scanner_profile(concepts)
     registered = {c["id"] for c in concepts}
     for source, want_set_ops in [
@@ -306,8 +306,8 @@ def test_real_book2_profile_remove_never_emits_list_append():
         ("set().remove(1)\n", True),
         ("{1, 2}.remove(1)\n", True),
         ("seen = set()\nseen.remove(1)\n", True),
-        # A non-set `remove` is intentionally UNATTRIBUTED in Book 2 (list mutation is Book 1
-        # baseline there); do not "fix" this into a Book 2 list-append emission.
+        # A non-set `remove` is intentionally UNATTRIBUTED in usaco-bronze (list mutation is python-projects
+        # baseline there); do not "fix" this into a usaco-bronze list-append emission.
         ("xs.remove(1)\n", False),
     ]:
         used, _unknown = _cs.detect(_ast.parse(source), registered_concepts=registered, profile=profile)

@@ -1,4 +1,4 @@
-"""Turn Book 1b notebook sources into a Quarto book project."""
+"""Turn a `publication: true` book's notebook sources into a Quarto book project."""
 from __future__ import annotations
 
 import ast
@@ -15,6 +15,7 @@ from pathlib import Path
 import nbformat
 import yaml
 
+from tools.books import book_entry, book_flag, book_path, book_subtitle, book_title, output_pdf_name
 from tools.fake_turtle import imports_turtle
 from tools.turtle_figure import figure_tikz
 from tools.turtle_real import real_programs
@@ -27,6 +28,7 @@ ITEM = {'unit': 'Exercise', 'checkpoint': 'Question', 'project': 'Problem'}
 SETUP_ID = 'unit-00-getting-set-up'
 
 # One profile per edition drives the builder, the theme, scripts/build-book.sh and the audit.
+# Every edition's PDF is named `<book id>-<edition>.pdf` (tools.books.output_pdf_name).
 #   student_family    no teacher material; independence rules apply
 #   starters          'all' prints every non-empty Starter; 'required' omits redundant ones (D1 rule)
 #   answers_appendix  "Answers to Selected Exercises" after the units
@@ -38,22 +40,22 @@ SETUP_ID = 'unit-00-getting-set-up'
 EDITIONS = {
     'student-print': {
         'student_family': True, 'starters': 'required', 'answers_appendix': False,
-        'answer_refs': False, 'classoption': 'open=any', 'output_name': 'Book1b-Student-Print',
+        'answer_refs': False, 'classoption': 'open=any',
         'edition_label': 'Student Book — Print Edition', 'index': True, 'body': 'book',
         'front': ('preface.md', 'how-to-use.md'), 'back_matter': True},
     'student': {
         'student_family': True, 'starters': 'all', 'answers_appendix': True,
-        'answer_refs': True, 'classoption': 'open=right', 'output_name': 'Book1b-Student',
+        'answer_refs': True, 'classoption': 'open=right',
         'edition_label': 'Student Book — Full Edition', 'index': True, 'body': 'book',
         'front': ('preface.md', 'how-to-use.md'), 'back_matter': True},
     'answer-key': {
         'student_family': True, 'starters': 'none', 'answers_appendix': False,
-        'answer_refs': False, 'classoption': 'open=any', 'output_name': 'Book1b-Answer-Key',
+        'answer_refs': False, 'classoption': 'open=any',
         'edition_label': 'Answer Key', 'index': False, 'body': 'answers',
         'front': ('answer-key-intro.md',), 'back_matter': False},
     'teacher': {
         'student_family': False, 'starters': 'all', 'answers_appendix': False,
-        'answer_refs': False, 'classoption': 'open=right', 'output_name': 'Book1b-Teacher',
+        'answer_refs': False, 'classoption': 'open=right',
         'edition_label': "Teacher's Edition", 'index': True, 'body': 'book',
         'front': ('preface.md', 'how-to-use.md', 'for-teachers.md'), 'back_matter': True},
 }
@@ -64,6 +66,11 @@ STUDENT_SOURCES = {'lesson.ipynb', 'exercises.ipynb', 'checkpoint.ipynb', 'brief
 # student_answer_sources) the odd-numbered unit solutions.
 ANSWER_KEY_SOURCES = {'syllabus.md', 'answer-key-intro.md', 'lesson.ipynb', 'exercises.ipynb'}
 EDITION_MARK = re.compile(r'<!--\s*/?\s*edition\b')
+
+
+def output_stem(book_id: str, edition: str) -> str:
+    """The Quarto output-file stem of an edition: `<book id>-<edition>` (one naming helper)."""
+    return output_pdf_name(book_id, edition).removesuffix('.pdf')
 
 
 def profile(edition: str) -> dict:
@@ -821,6 +828,11 @@ def index_first_prose(qmd: str, glossary: list[tuple[str, str, list[str]]],
     return ''.join(rendered)
 
 
+def yaml_string(text: str) -> str:
+    """A double-quoted YAML scalar (JSON strings are valid YAML) for `_quarto.yml` placeholders."""
+    return json.dumps(text, ensure_ascii=False)
+
+
 def tex_escape(text: str) -> str:
     return text.replace('\\', r'\textbackslash{}').replace('&', r'\&').replace('%', r'\%').replace('_', r'\_')
 
@@ -854,22 +866,25 @@ def build(root: Path, book_id: str, edition: str) -> Path:
     registry = yaml.safe_load((root / 'books.yaml').read_text(encoding='utf-8'))
     if book_id not in [b['id'] for b in registry['books']]:
         raise ValueError(f'unknown book: {book_id}')
-    book = root / book_id
+    if not book_flag(root, book_id, 'publication'):
+        raise ValueError(f'{book_id} is not a publication book (books.yaml publication: true)')
+    book = book_path(root, book_id)
+    output_name = output_stem(book_id, edition)
     project = book / 'build' / 'publish' / edition
     if project.exists():
         shutil.rmtree(project)
     project.mkdir(parents=True)
     shutil.copytree(THEME, project / 'theme')
     theme_tex = project / 'theme' / 'theme.tex'
-    theme_tex.write_text(theme_tex.read_text(encoding='utf-8').replace('@EDITION@', edition_profile['edition_label']),
-                         encoding='utf-8')
+    theme_text = theme_tex.read_text(encoding='utf-8')
+    for placeholder, value in (('@EDITION@', edition_profile['edition_label']),
+                               ('@TITLE@', tex_escape(book_title(root, book_id))),
+                               ('@SUBTITLE@', tex_escape(book_subtitle(root, book_id))),
+                               ('@FOLDER@', tex_escape(book_entry(root, book_id).get('root', book_id)))):
+        theme_text = theme_text.replace(placeholder, value)
+    theme_tex.write_text(theme_text, encoding='utf-8')
     chapters = []
-    manifest = {'edition': edition, 'output_name': edition_profile['output_name'], 'chapters': []}
-    syllabus_header = read_source(book / 'syllabus.md', edition).splitlines()[0].removeprefix('# ')
-    title_match = re.match(r'(Book [^ ]+ — Year \d+)', syllabus_header)
-    if not title_match:
-        raise ValueError('syllabus title lacks book and year')
-    syllabus_title = title_match[1]
+    manifest = {'edition': edition, 'output_name': output_name, 'chapters': []}
     front = []
     for position, source_name in enumerate(edition_profile['front']):
         source = book / 'front-matter' / source_name
@@ -959,8 +974,9 @@ def build(root: Path, book_id: str, edition: str) -> Path:
     config = (project / 'theme' / '_quarto.yml').read_text(encoding='utf-8')
     config = config.replace('@CHAPTERS@', '\n'.join('    - ' + x for x in chapters))
     config = config.replace('@FRONT@', '\n'.join('    - ' + name for name in front))
-    config = config.replace('@SUBTITLE@', syllabus_title)
-    config = config.replace('@OUTPUT@', edition_profile['output_name'])
+    config = config.replace('@TITLE@', yaml_string(book_title(root, book_id)))
+    config = config.replace('@SUBTITLE@', yaml_string(book_subtitle(root, book_id)))
+    config = config.replace('@OUTPUT@', output_name)
     config = config.replace('@CLASSOPTION@', edition_profile['classoption'])
     (project / '_quarto.yml').write_text(config, encoding='utf-8')
     (project / 'inventory.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')

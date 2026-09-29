@@ -9,12 +9,14 @@ import yaml
 
 from tools.books import (
     book_entries,
+    book_flag,
     book_path,
     concept_minimum,
     dependency_baseline,
     is_buildout,
     lesson_budget,
     prereq_policy,
+    qualified_concept_id_pattern,
     variant_of,
 )
 
@@ -63,7 +65,9 @@ MAP_ENTRY_KEYS = {
         "auxiliary",
     },
 }
-QUALIFIED_CONCEPT_ID = re.compile(r"^book[12]:[a-z0-9]+(?:-[a-z0-9]+)*$")
+# Qualified concept ids are `<owner>:<concept-id>`; the owner alternation is built from the
+# registered book ids (tools.books.qualified_concept_id_pattern), never hard-coded.
+QUALIFIED_CONCEPT_TAIL = r"[a-z0-9]+(?:-[a-z0-9]+)*"
 
 
 def _fail(book: str, detail: str) -> str:
@@ -134,14 +138,15 @@ def _has_duplicates(values: list[object]) -> bool:
     return any(value in values[:index] for index, value in enumerate(values))
 
 
-def auxiliary_schema_details(entry: dict) -> list[str]:
+def auxiliary_schema_details(entry: dict, root: Path, book: str) -> list[str]:
     """Return schema-v2 auxiliary errors without attaching a book/entry scope."""
     values = entry.get("auxiliary")
     if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
         return ["auxiliary must be a list of qualified ids"]
 
     details = []
-    if not all(QUALIFIED_CONCEPT_ID.fullmatch(value) for value in values):
+    qualified = qualified_concept_id_pattern(root, book, QUALIFIED_CONCEPT_TAIL)
+    if not all(qualified.fullmatch(value) for value in values):
         details.append("auxiliary must contain qualified ids")
     if _has_duplicates(values):
         details.append("auxiliary has duplicates")
@@ -156,7 +161,7 @@ def auxiliary_schema_details(entry: dict) -> list[str]:
         if isinstance(field_values, list):
             raw.update(value for value in field_values if isinstance(value, str))
     normalized = {
-        value.removeprefix("book1:") if value.startswith("book1:") else value
+        value.removeprefix(f"{book}:") if value.startswith(f"{book}:") else value
         for value in values
     }
     overlap = normalized & raw
@@ -222,8 +227,8 @@ def map_schema_findings(root: Path, book: str) -> list[str]:
     map_version = data.get("map_version")
     if map_version not in MAP_ENTRY_KEYS:
         return [_fail(book, "map_version must be 1 or 2")]
-    if map_version == 2 and book != "book1":
-        return [_fail(book, "map_version 2 is only supported for book1")]
+    if map_version == 2 and not book_flag(root, book, "patterns"):
+        return [_fail(book, "map_version 2 is only supported for patterns books")]
     ids = [entry.get("id") for entry in entries]
     if _has_duplicates(ids):
         findings.append(_fail(book, "duplicate entry ids"))
@@ -246,7 +251,7 @@ def map_schema_findings(root: Path, book: str) -> list[str]:
         if map_version == 2:
             findings.extend(
                 _fail(book, f"{entry['id']}.{detail}")
-                for detail in auxiliary_schema_details(entry)
+                for detail in auxiliary_schema_details(entry, root, book)
             )
     return findings
 
@@ -361,14 +366,14 @@ def _auxiliary_prereq_findings(
         for concept_id in entry.get("introduces", []):
             home_positions.setdefault(concept_id, index)
 
-    book2_concepts = _registered_concepts(root, "book2")
-    book2_is_dependent = _is_transitive_dependent(root, "book2", book)
+    owner_concepts: dict[str, set[str]] = {}
+    owner_is_dependent: dict[str, bool] = {}
     findings = []
     for index, entry in enumerate(entries):
         entry_id = entry.get("id", "?")
         for qualified_id in entry.get("auxiliary", []):
             owner, concept_id = qualified_id.split(":", 1)
-            if owner == "book1":
+            if owner == book:
                 home_index = home_positions.get(concept_id)
                 if home_index is None:
                     findings.append(
@@ -385,18 +390,22 @@ def _auxiliary_prereq_findings(
                             "introduction",
                         )
                     )
-            elif concept_id not in book2_concepts:
+            elif concept_id not in owner_concepts.setdefault(
+                owner, _registered_concepts(root, owner)
+            ):
                 findings.append(
                     _fail(
                         book,
                         f"{entry_id}.auxiliary {qualified_id} has no registered owner",
                     )
                 )
-            elif not book2_is_dependent:
+            elif not owner_is_dependent.setdefault(
+                owner, _is_transitive_dependent(root, owner, book)
+            ):
                 findings.append(
                     _fail(
                         book,
-                        f"{entry_id}.auxiliary {qualified_id} owner book2 is not a "
+                        f"{entry_id}.auxiliary {qualified_id} owner {owner} is not a "
                         f"transitive dependent of {book}",
                     )
                 )

@@ -1,4 +1,4 @@
-"""Generate and verify the Book 1 algorithm-pattern reference."""
+"""Generate and verify the algorithm-pattern reference of the `patterns: true` book."""
 
 from __future__ import annotations
 
@@ -7,53 +7,60 @@ from pathlib import Path
 
 import yaml
 
-from tools.patterns import PatternBookData, load_pattern_book
+from tools.books import book_flag, book_title
+from tools.patterns import PatternBookData, load_pattern_book, pattern_book_id
 
-HEADER = """# Book 1 Algorithm Patterns
+HEADER = """# {title}: Algorithm Patterns
 
 This reference is generated from the curriculum pattern catalog and coverage map.
 Do not edit it by hand.
 """
 
 
-def _fail(detail: str) -> str:
-    return f"FAIL: book1: {detail}"
+def _fail(book: str, detail: str) -> str:
+    return f"FAIL: {book}: {detail}"
+
+
+def _header(root: Path, book: str) -> str:
+    return HEADER.format(title=book_title(root, book))
 
 
 def _catalog_input(root: Path) -> tuple[PatternBookData, dict, list[str]]:
     data = load_pattern_book(root)
+    book = data.book
     findings = list(data.findings)
     path = data.directory / "curriculum/patterns-catalog.yaml"
     if not path.is_file():
-        findings.append(_fail("patterns-catalog.yaml does not exist"))
+        findings.append(_fail(book, "patterns-catalog.yaml does not exist"))
         return data, {}, findings
     try:
         catalog = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as error:
-        findings.append(_fail(f"patterns-catalog.yaml is not valid YAML: {error}"))
+        findings.append(_fail(book, f"patterns-catalog.yaml is not valid YAML: {error}"))
         return data, {}, findings
     if not isinstance(catalog, dict):
-        findings.append(_fail("patterns-catalog.yaml must be a mapping"))
+        findings.append(_fail(book, "patterns-catalog.yaml must be a mapping"))
         return data, {}, findings
     return data, catalog, findings
 
 
 def _catalog_findings(root: Path) -> list[str]:
     data, catalog, findings = _catalog_input(root)
+    book = data.book
     if findings:
         return findings
     technique_ids = set(data.techniques)
     non_string_keys = [key for key in catalog if not isinstance(key, str)]
     if non_string_keys:
         rendered = sorted(repr(key) for key in non_string_keys)
-        findings.append(_fail(f"catalog keys must be string technique ids: {rendered}"))
+        findings.append(_fail(book, f"catalog keys must be string technique ids: {rendered}"))
     catalog_ids = {key for key in catalog if isinstance(key, str)}
     missing = sorted(technique_ids - catalog_ids)
     extra = sorted(catalog_ids - technique_ids)
     if missing:
-        findings.append(_fail(f"catalog is missing technique ids: {missing}"))
+        findings.append(_fail(book, f"catalog is missing technique ids: {missing}"))
     if extra:
-        findings.append(_fail(f"catalog has unregistered technique ids: {extra}"))
+        findings.append(_fail(book, f"catalog has unregistered technique ids: {extra}"))
 
     concept_ids = {
         concept["id"]
@@ -71,22 +78,24 @@ def _catalog_findings(root: Path) -> list[str]:
     for technique in data.techniques.values():
         pattern_id = technique["id"]
         if not isinstance(technique.get("name"), str) or not technique["name"].strip():
-            findings.append(_fail(f"technique {pattern_id!r} needs a name"))
+            findings.append(_fail(book, f"technique {pattern_id!r} needs a name"))
         row = catalog.get(pattern_id)
         if not isinstance(row, dict):
             if pattern_id in catalog:
-                findings.append(_fail(f"catalog row {pattern_id!r} must be a mapping"))
+                findings.append(_fail(book, f"catalog row {pattern_id!r} must be a mapping"))
             continue
         if set(row) != {"hook", "enabling_concepts"}:
             findings.append(
-                _fail(f"catalog row {pattern_id!r} must contain hook and enabling_concepts")
+                _fail(book, f"catalog row {pattern_id!r} must contain hook and enabling_concepts")
             )
             continue
         if not isinstance(row["hook"], str) or not row["hook"].strip():
-            findings.append(_fail(f"catalog row {pattern_id!r} needs a non-empty hook"))
+            findings.append(_fail(book, f"catalog row {pattern_id!r} needs a non-empty hook"))
         enabling = row["enabling_concepts"]
         if not isinstance(enabling, list) or not all(isinstance(item, str) for item in enabling):
-            findings.append(_fail(f"catalog row {pattern_id!r} enabling_concepts must be ids"))
+            findings.append(
+                _fail(book, f"catalog row {pattern_id!r} enabling_concepts must be ids")
+            )
             continue
         homes = [
             index
@@ -94,17 +103,21 @@ def _catalog_findings(root: Path) -> list[str]:
             if isinstance(entry, dict) and pattern_id in (entry.get("introduces", []) or [])
         ]
         if len(homes) != 1:
-            findings.append(_fail(f"technique {pattern_id!r} must have exactly one home"))
+            findings.append(_fail(book, f"technique {pattern_id!r} must have exactly one home"))
             continue
         home_index = homes[0]
         for enabling_id in enabling:
             if enabling_id not in concept_ids:
                 findings.append(
-                    _fail(f"{pattern_id!r} enabling concept {enabling_id!r} is not registered")
+                    _fail(
+                        book,
+                        f"{pattern_id!r} enabling concept {enabling_id!r} is not registered",
+                    )
                 )
             elif enabling_id not in introduced_at or introduced_at[enabling_id] > home_index:
                 findings.append(
                     _fail(
+                        book,
                         f"{pattern_id!r} enabling concept {enabling_id!r} "
                         "is not introduced by its home"
                     )
@@ -117,9 +130,9 @@ def generated_patterns_text(root: Path) -> str:
     if input_findings or _catalog_findings(root):
         raise ValueError("cannot generate patterns.md from invalid pattern catalog")
     if not data.techniques:
-        return HEADER + "\nNo algorithm patterns are registered yet.\n"
+        return _header(root, data.book) + "\nNo algorithm patterns are registered yet.\n"
 
-    sections = [HEADER.rstrip()]
+    sections = [_header(root, data.book).rstrip()]
     for technique in data.techniques.values():
         pattern_id = technique["id"]
         row = catalog[pattern_id]
@@ -159,13 +172,14 @@ def generated_patterns_text(root: Path) -> str:
     return "\n\n".join(sections) + "\n"
 
 
-def generate_patterns_document(root: Path, book: str = "book1") -> Path:
-    if book != "book1":
-        raise ValueError("patterns.md generation is Book 1 only")
+def generate_patterns_document(root: Path, book: str | None = None) -> Path:
+    book = book or pattern_book_id(root)
+    if not book_flag(root, book, "patterns"):
+        raise ValueError("patterns.md generation needs a `patterns: true` book")
     findings = _catalog_findings(root)
     if findings:
         raise ValueError("\n".join(findings))
-    data = load_pattern_book(root)
+    data = load_pattern_book(root, book)
     output = data.directory / "reference/patterns.md"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(generated_patterns_text(root), encoding="utf-8")
@@ -174,16 +188,18 @@ def generate_patterns_document(root: Path, book: str = "book1") -> Path:
 
 def patterns_doc_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
     del unit
-    if book != "book1":
+    if not book_flag(root, book, "patterns"):
         return []
     findings = _catalog_findings(root)
     if findings:
         return findings
-    path = load_pattern_book(root).directory / "reference/patterns.md"
+    path = load_pattern_book(root, book).directory / "reference/patterns.md"
     if not path.is_file():
-        return [_fail("reference/patterns.md does not exist")]
+        return [_fail(book, "reference/patterns.md does not exist")]
     if path.read_bytes() != generated_patterns_text(root).encode("utf-8"):
-        return [_fail("reference/patterns.md is out of date; run tools/patterns_doc.py generate")]
+        return [
+            _fail(book, "reference/patterns.md is out of date; run tools/patterns_doc.py generate")
+        ]
     return []
 
 
@@ -207,7 +223,7 @@ def main(argv=None) -> int:
         print("present" if data.techniques else "empty")
         return 0
     if arguments.check:
-        findings = patterns_doc_findings(arguments.root, "book1")
+        findings = patterns_doc_findings(arguments.root, pattern_book_id(arguments.root))
         if findings:
             print("\n".join(findings))
             return 1

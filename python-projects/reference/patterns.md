@@ -1,0 +1,116 @@
+# Python by Projects: Algorithm Patterns
+
+This reference is generated from the curriculum pattern catalog and coverage map.
+Do not edit it by hand.
+
+## Repeat until done (sentinel loop)
+
+You know when you're done; the program must ask "done yet?" every pass.
+
+- Pattern id: `sentinel-loop`
+- Enabling concepts: `while-loop`, `comparison`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-02-number-detective` |
+| Reappearance | `project-01-arcade-night` |
+| Reappearance | `unit-07-high-score-hall` |
+| Reappearance | `unit-10-pet-simulator` |
+
+## Running total (accumulate)
+
+Keep a named box for the total-so-far, and update it each step.
+
+- Pattern id: `running-total`
+- Enabling concepts: `accumulator`, `arithmetic`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-04-quiz-show` |
+| Reappearance | `unit-05-function-factory` |
+| Reappearance | `unit-07-high-score-hall` |
+| Reappearance | `unit-09-save-point` |
+
+## Counting by condition (count)
+
+Keep a counter; check each item once, bump it when it matches. The tally-by-key variation keeps one counter per group.
+
+- Pattern id: `count-by-condition`
+- Enabling concepts: `if-statement`, `comparison`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-04-quiz-show` |
+| Reappearance | `unit-06-secret-codes` |
+| Reappearance | `unit-07-high-score-hall` |
+| Reappearance | `unit-08-word-wizard` |
+
+## Do the same to each (map)
+
+Give every item the same change, and collect the results in a new sequence.
+
+- Pattern id: `transform-each`
+- Enabling concepts: `for-loop`, `string-methods`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-06-secret-codes` |
+| Reappearance | `unit-07-high-score-hall` |
+| Reappearance | `unit-08-word-wizard` |
+| Reappearance | `unit-09-save-point` |
+
+## Scan until found + stop early
+
+Check items one by one; break when found so the program stops working early.
+
+- Pattern id: `linear-search`
+- Enabling concepts: `for-loop`, `break-statement`, `in-operator`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-06-secret-codes` |
+| Reappearance | `unit-07-high-score-hall` |
+| Reappearance | `unit-08-word-wizard` |
+| Reappearance | `unit-09-save-point` |
+
+## Find the best (max / argmax)
+
+Keep the best so far while scanning, and remember who, not just the number.
+
+- Pattern id: `find-extreme`
+- Enabling concepts: `list-loop`, `comparison`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-07-high-score-hall` |
+| Reappearance | `unit-08-word-wizard` |
+| Reappearance | `unit-09-save-point` |
+| Reappearance | `unit-10-pet-simulator` |
+
+## Keep the ones that pass (filter)
+
+Build a new list that keeps only the items that pass your test.
+
+- Pattern id: `filter-into-list`
+- Enabling concepts: `list-append`, `comparison`
+
+### Where you'll meet it
+
+| Role | Entry |
+| --- | --- |
+| Home | `unit-07-high-score-hall` |
+| Reappearance | `unit-08-word-wizard` |
+| Reappearance | `unit-09-save-point` |
+| Reappearance | `unit-10-pet-simulator` |

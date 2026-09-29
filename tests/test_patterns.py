@@ -37,7 +37,7 @@ def _entry(entry_id, *, kind="unit", introduces=None, practices=None):
 
 def _entry_dir(root: Path, entry: dict) -> Path:
     plural = {"unit": "units", "checkpoint": "checkpoints", "project": "projects"}
-    return root / "book1" / plural[entry["kind"]] / entry["id"]
+    return root / "python-projects" / plural[entry["kind"]] / entry["id"]
 
 
 def _write_manifest(root: Path, entry: dict) -> None:
@@ -68,7 +68,7 @@ def _exercise_cells(pattern=PATTERN, *, heading_tags=None, code_tags=None):
 
 
 def _map(root: Path):
-    path = root / "book1/curriculum/coverage-map.yaml"
+    path = root / "python-projects/curriculum/coverage-map.yaml"
     return path, yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
@@ -97,20 +97,27 @@ def pattern_root(tmp_path):
     _write_yaml(
         tmp_path / "books.yaml",
         {
-            "books_version": 1,
+            "books_version": 2,
             "books": [
-                {"id": "book1", "number": 1, "root": "book1", "depends_on": []},
                 {
-                    "id": "book2",
+                    "id": "python-projects",
+                    "number": 1,
+                    "root": "python-projects",
+                    "depends_on": [],
+                    "patterns": True,
+                },
+                {
+                    "id": "usaco-bronze",
                     "number": 2,
-                    "root": "book2",
-                    "depends_on": ["book1"],
+                    "root": "usaco-bronze",
+                    "judge": True,
+                    "depends_on": ["python-projects"],
                 },
             ],
         },
     )
     _write_yaml(
-        tmp_path / "book1/curriculum/concepts.yaml",
+        tmp_path / "python-projects/curriculum/concepts.yaml",
         {
             "concepts_version": 1,
             "concepts": [
@@ -133,7 +140,7 @@ def pattern_root(tmp_path):
         _entry("project-02-capstone", kind="project"),
     ]
     _write_yaml(
-        tmp_path / "book1/curriculum/coverage-map.yaml",
+        tmp_path / "python-projects/curriculum/coverage-map.yaml",
         {"map_version": 1, "entries": entries},
     )
     for entry in entries:
@@ -163,7 +170,7 @@ def pattern_root(tmp_path):
                 [nbformat.v4.new_markdown_cell("# Capstone")],
             )
     _write_yaml(
-        tmp_path / "book1/curriculum/patterns-catalog.yaml",
+        tmp_path / "python-projects/curriculum/patterns-catalog.yaml",
         {PATTERN: {"hook": "Check each item once.", "enabling_concepts": [BASE]}},
     )
     generate_patterns_document(tmp_path)
@@ -171,14 +178,14 @@ def pattern_root(tmp_path):
 
 
 def test_complete_pattern_fixture_passes_all_checks(pattern_root):
-    assert pattern_marker_findings(pattern_root, "book1") == []
-    assert technique_spiral_findings(pattern_root, "book1") == []
-    assert patterns_doc_findings(pattern_root, "book1") == []
+    assert pattern_marker_findings(pattern_root, "python-projects") == []
+    assert technique_spiral_findings(pattern_root, "python-projects") == []
+    assert patterns_doc_findings(pattern_root, "python-projects") == []
 
 
 def test_technique_spiral_ignores_auxiliary_occurrences(pattern_root):
     borrowed = "borrowed-pattern"
-    concepts_path = pattern_root / "book1/curriculum/concepts.yaml"
+    concepts_path = pattern_root / "python-projects/curriculum/concepts.yaml"
     concepts = yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
     concepts["concepts"].append(
         {
@@ -197,23 +204,23 @@ def test_technique_spiral_ignores_auxiliary_occurrences(pattern_root):
     brief_path, brief = _notebook(pattern_root, capstone["id"], "brief.ipynb")
     brief.cells[0].source += f"\n<!-- pattern: {borrowed} -->"
     nbformat.write(brief, brief_path)
-    baseline = technique_spiral_findings(pattern_root, "book1")
+    baseline = technique_spiral_findings(pattern_root, "python-projects")
 
     path, data = _map(pattern_root)
     data["map_version"] = 2
     for entry in data["entries"]:
         entry["auxiliary"] = []
     for entry in data["entries"][:3]:
-        entry["auxiliary"] = [f"book1:{borrowed}"]
+        entry["auxiliary"] = [f"python-projects:{borrowed}"]
     _write_yaml(path, data)
 
     assert sum(bool(entry["auxiliary"]) for entry in data["entries"]) == 3
     assert any(f"{borrowed}: 0 core pre-capstone" in finding for finding in baseline)
-    assert technique_spiral_findings(pattern_root, "book1") == baseline
+    assert technique_spiral_findings(pattern_root, "python-projects") == baseline
 
 
 def test_generated_patterns_doc_has_map_derived_where_table(pattern_root):
-    text = (pattern_root / "book1/reference/patterns.md").read_text(encoding="utf-8")
+    text = (pattern_root / "python-projects/reference/patterns.md").read_text(encoding="utf-8")
 
     assert (
         """### Where you'll meet it
@@ -239,7 +246,7 @@ def test_technique_spiral_rejects_duplicate_home(pattern_root):
     lesson.cells.append(nbformat.v4.new_markdown_cell(f"Spotlight.\n<!-- pattern: {PATTERN} -->"))
     nbformat.write(lesson, lesson_path)
 
-    findings = technique_spiral_findings(pattern_root, "book1")
+    findings = technique_spiral_findings(pattern_root, "python-projects")
 
     assert any("introduced 2 times" in finding for finding in findings)
 
@@ -249,7 +256,7 @@ def test_technique_spiral_rejects_practice_before_home(pattern_root):
     data["entries"][0], data["entries"][1] = data["entries"][1], data["entries"][0]
     _write_yaml(path, data)
 
-    findings = technique_spiral_findings(pattern_root, "book1")
+    findings = technique_spiral_findings(pattern_root, "python-projects")
 
     assert any("practice before home" in finding for finding in findings)
 
@@ -261,7 +268,7 @@ def test_technique_spiral_rejects_only_two_practices(pattern_root):
     _write_yaml(path, data)
     _sync_manifest(pattern_root, entry)
 
-    findings = technique_spiral_findings(pattern_root, "book1")
+    findings = technique_spiral_findings(pattern_root, "python-projects")
 
     assert any("2 core pre-capstone non-checkpoint practices (<3)" in f for f in findings)
 
@@ -275,7 +282,7 @@ def test_checkpoint_only_third_does_not_satisfy_spiral(pattern_root):
     _sync_manifest(pattern_root, data["entries"][3])
     _sync_manifest(pattern_root, checkpoint)
 
-    findings = technique_spiral_findings(pattern_root, "book1")
+    findings = technique_spiral_findings(pattern_root, "python-projects")
 
     assert any("2 core pre-capstone non-checkpoint practices (<3)" in f for f in findings)
 
@@ -287,7 +294,7 @@ def test_stretch_only_embodiment_does_not_satisfy_spiral(pattern_root, tagged_ce
     notebook.cells[index].metadata["tags"] = ["stretch"]
     nbformat.write(notebook, path)
 
-    findings = technique_spiral_findings(pattern_root, "book1")
+    findings = technique_spiral_findings(pattern_root, "python-projects")
 
     assert any("stretch embodiment" in finding for finding in findings)
     assert any("2 core pre-capstone non-checkpoint practices (<3)" in f for f in findings)
@@ -300,7 +307,7 @@ def test_pattern_marker_rejects_unknown_id(pattern_root):
 
     assert any(
         "unknown or non-technique marker 'unknown-pattern'" in finding
-        for finding in pattern_marker_findings(pattern_root, "book1")
+        for finding in pattern_marker_findings(pattern_root, "python-projects")
     )
 
 
@@ -311,7 +318,7 @@ def test_pattern_marker_rejects_marker_like_invalid_id(pattern_root):
 
     assert any(
         "invalid pattern marker" in finding
-        for finding in pattern_marker_findings(pattern_root, "book1")
+        for finding in pattern_marker_findings(pattern_root, "python-projects")
     )
 
 
@@ -322,30 +329,30 @@ def test_pattern_marker_rejects_manifest_map_mismatch(pattern_root):
 
     assert any(
         "technique tags differ from coverage map" in finding
-        for finding in pattern_marker_findings(pattern_root, "book1")
+        for finding in pattern_marker_findings(pattern_root, "python-projects")
     )
 
 
 def test_patterns_doc_rejects_stale_catalog_output(pattern_root):
-    path = pattern_root / "book1/curriculum/patterns-catalog.yaml"
+    path = pattern_root / "python-projects/curriculum/patterns-catalog.yaml"
     catalog = yaml.safe_load(path.read_text(encoding="utf-8"))
     catalog[PATTERN]["hook"] = "A revised hook."
     _write_yaml(path, catalog)
 
     assert any(
-        "patterns.md is out of date" in f for f in patterns_doc_findings(pattern_root, "book1")
+        "patterns.md is out of date" in f for f in patterns_doc_findings(pattern_root, "python-projects")
     )
 
 
 def test_patterns_doc_rejects_unregistered_catalog_row(pattern_root):
-    path = pattern_root / "book1/curriculum/patterns-catalog.yaml"
+    path = pattern_root / "python-projects/curriculum/patterns-catalog.yaml"
     catalog = yaml.safe_load(path.read_text(encoding="utf-8"))
     catalog["stale-pattern"] = {"hook": "Stale.", "enabling_concepts": [BASE]}
     _write_yaml(path, catalog)
 
     assert any(
         "catalog has unregistered technique ids" in f
-        for f in patterns_doc_findings(pattern_root, "book1")
+        for f in patterns_doc_findings(pattern_root, "python-projects")
     )
 
 
@@ -354,7 +361,7 @@ def test_pattern_marker_rejects_missing_home_marker_in_each_required_notebook(pa
     lesson.cells[1].source = "## Pattern spotlight\nNotice the scan."
     nbformat.write(lesson, path)
 
-    findings = pattern_marker_findings(pattern_root, "book1")
+    findings = pattern_marker_findings(pattern_root, "python-projects")
 
     assert any("lesson.ipynb needs exactly one marker" in finding for finding in findings)
     assert not any("exercises.ipynb needs exactly one marker" in finding for finding in findings)
@@ -367,7 +374,7 @@ def test_pattern_marker_rejects_duplicate_marker_in_one_notebook(pattern_root):
 
     assert any(
         "exercises.ipynb needs exactly one marker" in finding
-        for finding in pattern_marker_findings(pattern_root, "book1")
+        for finding in pattern_marker_findings(pattern_root, "python-projects")
     )
 
 
@@ -378,7 +385,7 @@ def test_pattern_marker_rejects_wrong_exercise_adjacency(pattern_root):
 
     assert any(
         "marker must immediately precede an Exercise heading" in finding
-        for finding in pattern_marker_findings(pattern_root, "book1")
+        for finding in pattern_marker_findings(pattern_root, "python-projects")
     )
 
 
@@ -391,7 +398,7 @@ def test_pattern_marker_rejects_checkpoint_technique_tag(pattern_root):
 
     assert any(
         "checkpoint may not carry technique tags" in finding
-        for finding in pattern_marker_findings(pattern_root, "book1")
+        for finding in pattern_marker_findings(pattern_root, "python-projects")
     )
 
 
@@ -402,7 +409,7 @@ def test_pattern_marker_rejects_checkpoint_marker_without_tag(pattern_root):
 
     assert any(
         "checkpoint may not carry pattern markers" in finding
-        for finding in pattern_marker_findings(pattern_root, "book1")
+        for finding in pattern_marker_findings(pattern_root, "python-projects")
     )
 
 
@@ -413,35 +420,35 @@ def test_pattern_marker_rejects_checkpoint_marker_like_invalid_id(pattern_root):
 
     assert any(
         "checkpoint may not carry pattern markers" in finding
-        for finding in pattern_marker_findings(pattern_root, "book1")
+        for finding in pattern_marker_findings(pattern_root, "python-projects")
     )
 
 
 @pytest.mark.parametrize("check", [pattern_marker_findings, technique_spiral_findings])
 def test_pattern_checks_fail_closed_when_concepts_file_is_missing(pattern_root, check):
-    (pattern_root / "book1/curriculum/concepts.yaml").unlink()
+    (pattern_root / "python-projects/curriculum/concepts.yaml").unlink()
 
     assert any(
-        "concepts.yaml does not exist" in finding for finding in check(pattern_root, "book1")
+        "concepts.yaml does not exist" in finding for finding in check(pattern_root, "python-projects")
     )
 
 
 @pytest.mark.parametrize("check", [pattern_marker_findings, technique_spiral_findings])
 def test_pattern_checks_fail_closed_when_concepts_list_has_wrong_shape(pattern_root, check):
-    path = pattern_root / "book1/curriculum/concepts.yaml"
+    path = pattern_root / "python-projects/curriculum/concepts.yaml"
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     data["concepts"] = {}
     _write_yaml(path, data)
 
-    assert any("concepts must be a list" in finding for finding in check(pattern_root, "book1"))
+    assert any("concepts must be a list" in finding for finding in check(pattern_root, "python-projects"))
 
 
 @pytest.mark.parametrize("check", [pattern_marker_findings, technique_spiral_findings])
 def test_pattern_checks_fail_closed_when_coverage_map_is_missing(pattern_root, check):
-    (pattern_root / "book1/curriculum/coverage-map.yaml").unlink()
+    (pattern_root / "python-projects/curriculum/coverage-map.yaml").unlink()
 
     assert any(
-        "coverage-map.yaml does not exist" in finding for finding in check(pattern_root, "book1")
+        "coverage-map.yaml does not exist" in finding for finding in check(pattern_root, "python-projects")
     )
 
 
@@ -452,16 +459,16 @@ def test_pattern_checks_fail_closed_when_entries_list_has_wrong_shape(pattern_ro
     _write_yaml(path, data)
 
     assert any(
-        "coverage-map entries must be a list" in finding for finding in check(pattern_root, "book1")
+        "coverage-map entries must be a list" in finding for finding in check(pattern_root, "python-projects")
     )
 
 
 @pytest.mark.parametrize(
     ("relative_path", "expected"),
     [
-        ("book1/curriculum/concepts.yaml", "concepts.yaml does not exist"),
-        ("book1/curriculum/coverage-map.yaml", "coverage-map.yaml does not exist"),
-        ("book1/curriculum/patterns-catalog.yaml", "patterns-catalog.yaml does not exist"),
+        ("python-projects/curriculum/concepts.yaml", "concepts.yaml does not exist"),
+        ("python-projects/curriculum/coverage-map.yaml", "coverage-map.yaml does not exist"),
+        ("python-projects/curriculum/patterns-catalog.yaml", "patterns-catalog.yaml does not exist"),
     ],
 )
 def test_patterns_doc_fails_closed_when_authoritative_input_is_missing(
@@ -469,15 +476,15 @@ def test_patterns_doc_fails_closed_when_authoritative_input_is_missing(
 ):
     (pattern_root / relative_path).unlink()
 
-    assert any(expected in finding for finding in patterns_doc_findings(pattern_root, "book1"))
+    assert any(expected in finding for finding in patterns_doc_findings(pattern_root, "python-projects"))
 
 
 @pytest.mark.parametrize(
     ("relative_path", "field", "expected"),
     [
-        ("book1/curriculum/concepts.yaml", "concepts", "concepts must be a list"),
+        ("python-projects/curriculum/concepts.yaml", "concepts", "concepts must be a list"),
         (
-            "book1/curriculum/coverage-map.yaml",
+            "python-projects/curriculum/coverage-map.yaml",
             "entries",
             "coverage-map entries must be a list",
         ),
@@ -491,28 +498,28 @@ def test_patterns_doc_fails_closed_when_authoritative_list_has_wrong_shape(
     data[field] = {}
     _write_yaml(path, data)
 
-    assert any(expected in finding for finding in patterns_doc_findings(pattern_root, "book1"))
+    assert any(expected in finding for finding in patterns_doc_findings(pattern_root, "python-projects"))
 
 
 def test_patterns_doc_fails_closed_when_catalog_has_wrong_shape(pattern_root):
-    path = pattern_root / "book1/curriculum/patterns-catalog.yaml"
+    path = pattern_root / "python-projects/curriculum/patterns-catalog.yaml"
     _write_yaml(path, [])
 
     assert any(
         "patterns-catalog.yaml must be a mapping" in finding
-        for finding in patterns_doc_findings(pattern_root, "book1")
+        for finding in patterns_doc_findings(pattern_root, "python-projects")
     )
 
 
 def test_patterns_doc_and_pdf_probe_reject_non_string_catalog_key(pattern_root, capsys):
-    path = pattern_root / "book1/curriculum/patterns-catalog.yaml"
+    path = pattern_root / "python-projects/curriculum/patterns-catalog.yaml"
     catalog = yaml.safe_load(path.read_text(encoding="utf-8"))
     catalog[7] = {"hook": "Not a valid id.", "enabling_concepts": [BASE]}
     _write_yaml(path, catalog)
 
     assert any(
         "catalog keys must be string technique ids" in finding
-        for finding in patterns_doc_findings(pattern_root, "book1")
+        for finding in patterns_doc_findings(pattern_root, "python-projects")
     )
     assert patterns_doc_main(["--root", str(pattern_root), "--pdf-probe"]) == 1
     assert "catalog keys must be string technique ids" in capsys.readouterr().out
@@ -525,7 +532,7 @@ def test_post_project_02_practice_does_not_satisfy_spiral(pattern_root):
     data["entries"].append(_entry("project-03-later", kind="project"))
     _write_yaml(path, data)
 
-    findings = technique_spiral_findings(pattern_root, "book1")
+    findings = technique_spiral_findings(pattern_root, "python-projects")
 
     assert any("2 core pre-capstone non-checkpoint practices (<3)" in f for f in findings)
 
@@ -539,7 +546,7 @@ def test_technique_spiral_fails_when_project_02_boundary_is_missing(pattern_root
 
     assert any(
         "project-02 capstone boundary" in finding
-        for finding in technique_spiral_findings(pattern_root, "book1")
+        for finding in technique_spiral_findings(pattern_root, "python-projects")
     )
 
 
@@ -556,18 +563,26 @@ def test_patterns_pdf_probe_reports_empty_for_valid_empty_book(tmp_path, capsys)
     _write_yaml(
         tmp_path / "books.yaml",
         {
-            "books_version": 1,
-            "books": [{"id": "book1", "number": 1, "root": "book1", "depends_on": []}],
+            "books_version": 2,
+            "books": [
+                {
+                    "id": "python-projects",
+                    "number": 1,
+                    "root": "python-projects",
+                    "depends_on": [],
+                    "patterns": True,
+                }
+            ],
         },
     )
     _write_yaml(
-        tmp_path / "book1/curriculum/concepts.yaml",
+        tmp_path / "python-projects/curriculum/concepts.yaml",
         {"concepts_version": 1, "concepts": [{"id": BASE, "name": "Base", "category": "loops"}]},
     )
-    _write_yaml(tmp_path / "book1/curriculum/coverage-map.yaml", {"map_version": 1, "entries": []})
-    _write_yaml(tmp_path / "book1/curriculum/patterns-catalog.yaml", {})
-    (tmp_path / "book1/reference").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "book1/reference/patterns.md").write_text(
+    _write_yaml(tmp_path / "python-projects/curriculum/coverage-map.yaml", {"map_version": 1, "entries": []})
+    _write_yaml(tmp_path / "python-projects/curriculum/patterns-catalog.yaml", {})
+    (tmp_path / "python-projects/reference").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "python-projects/reference/patterns.md").write_text(
         generated_patterns_text(tmp_path), encoding="utf-8"
     )
 
@@ -576,7 +591,7 @@ def test_patterns_pdf_probe_reports_empty_for_valid_empty_book(tmp_path, capsys)
 
 
 def test_patterns_pdf_probe_fails_on_malformed_concepts(pattern_root, capsys):
-    path = pattern_root / "book1/curriculum/concepts.yaml"
+    path = pattern_root / "python-projects/curriculum/concepts.yaml"
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     data["concepts"] = {}
     _write_yaml(path, data)
@@ -585,15 +600,15 @@ def test_patterns_pdf_probe_fails_on_malformed_concepts(pattern_root, capsys):
     assert "concepts must be a list" in capsys.readouterr().out
 
 
-def test_book2_only_technique_does_not_affect_book1_spiral(pattern_root):
+def test_usaco_bronze_only_technique_does_not_affect_python_projects_spiral(pattern_root):
     _write_yaml(
-        pattern_root / "book2/curriculum/concepts.yaml",
+        pattern_root / "usaco-bronze/curriculum/concepts.yaml",
         {
             "concepts_version": 1,
             "concepts": [
                 {
-                    "id": "book2-only-technique",
-                    "name": "Book 2 only",
+                    "id": "usaco-bronze-only-technique",
+                    "name": "USACO Bronze only",
                     "category": "techniques",
                     "kind": "technique",
                 }
@@ -601,17 +616,17 @@ def test_book2_only_technique_does_not_affect_book1_spiral(pattern_root):
         },
     )
     _write_yaml(
-        pattern_root / "book2/curriculum/coverage-map.yaml",
+        pattern_root / "usaco-bronze/curriculum/coverage-map.yaml",
         {
             "map_version": 1,
             "entries": [
-                _entry("unit-01-book2", introduces=["book2-only-technique"]),
+                _entry("unit-01-usaco-bronze", introduces=["usaco-bronze-only-technique"]),
             ],
         },
     )
 
-    assert technique_spiral_findings(pattern_root, "book1") == []
-    assert technique_spiral_findings(pattern_root, "book2") == []
+    assert technique_spiral_findings(pattern_root, "python-projects") == []
+    assert technique_spiral_findings(pattern_root, "usaco-bronze") == []
 
 
 def test_pattern_marker_rejects_colonless_comment_on_checkpoint(pattern_root):
@@ -629,7 +644,7 @@ def test_pattern_marker_rejects_colonless_comment_on_checkpoint(pattern_root):
         ],
     )
 
-    findings = pattern_marker_findings(pattern_root, "book1")
+    findings = pattern_marker_findings(pattern_root, "python-projects")
 
     assert any("checkpoint may not carry pattern markers" in finding for finding in findings)
 
@@ -648,7 +663,7 @@ def test_technique_spiral_excludes_home_self_practice(pattern_root):
     dropped_dir = _entry_dir(pattern_root, data["entries"][3])
     _write_notebook(dropped_dir / "exercises.ipynb", [])
 
-    findings = technique_spiral_findings(pattern_root, "book1")
+    findings = technique_spiral_findings(pattern_root, "python-projects")
 
     assert any("core pre-capstone non-checkpoint practices (<3)" in finding for finding in findings)
 
@@ -656,7 +671,7 @@ def test_technique_spiral_excludes_home_self_practice(pattern_root):
 def test_patterns_doc_rejects_enabling_concept_introduced_after_home(pattern_root):
     # A catalog enabling_concept introduced in a LATER entry than the pattern's home
     # must fail patterns-doc-check (tools/patterns_doc.py intro<=home rule).
-    cpath = pattern_root / "book1/curriculum/concepts.yaml"
+    cpath = pattern_root / "python-projects/curriculum/concepts.yaml"
     cdata = yaml.safe_load(cpath.read_text(encoding="utf-8"))
     cdata["concepts"].append({"id": "late-concept", "name": "Late", "category": "loops"})
     _write_yaml(cpath, cdata)
@@ -665,17 +680,17 @@ def test_patterns_doc_rejects_enabling_concept_introduced_after_home(pattern_roo
     mdata["entries"][3]["introduces"] = ["late-concept"]  # unit-04-practice, after home (index 0)
     _write_yaml(mpath, mdata)
 
-    catp = pattern_root / "book1/curriculum/patterns-catalog.yaml"
+    catp = pattern_root / "python-projects/curriculum/patterns-catalog.yaml"
     cat = yaml.safe_load(catp.read_text(encoding="utf-8"))
     cat[PATTERN]["enabling_concepts"].append("late-concept")
     _write_yaml(catp, cat)
 
-    findings = patterns_doc_findings(pattern_root, "book1")
+    findings = patterns_doc_findings(pattern_root, "python-projects")
 
     assert any("not introduced by its home" in finding for finding in findings)
 
 
 def test_real_book_pattern_checks_pass_on_real_book():
-    assert pattern_marker_findings(REPO, "book1") == []
-    assert technique_spiral_findings(REPO, "book1") == []
-    assert patterns_doc_findings(REPO, "book1") == []
+    assert pattern_marker_findings(REPO, "python-projects") == []
+    assert technique_spiral_findings(REPO, "python-projects") == []
+    assert patterns_doc_findings(REPO, "python-projects") == []

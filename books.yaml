@@ -1,20 +1,43 @@
-books_version: 1
+books_version: 2
+# Book registry (design 008). Each id is also the book's folder (root) and the
+# stem of its PDF file names (output/<id>/<id>-<edition>.pdf).
+# Student-facing pages name a book by its title, never by its id.
+# `number` is a series ordinal only; it drives no tooling.
+#
+# Feature flags (booleans; absent means false). Tools key on these flags,
+# never on book ids:
+#   publication: the book-publication pipeline (publish, publish-audit, the
+#                edition PDFs and the per-book cover/front matter).
+#   judge:       stdin `.py` solvers and the subprocess judge (the contest
+#                source policy and the solution-notebook judge harness).
+#   patterns:    the pattern checks (patterns.yaml, patterns doc) AND the
+#                coverage-map v2 / markdown concept scan. Do not set it on a
+#                new book unless both apply.
 books:
-- id: book1
+- id: python-projects
   number: 1
-  root: book1
+  root: python-projects
+  title: Python by Projects
+  subtitle: Learn Python by building things
   depends_on: []
   lesson_budget: [28, 44]
-- id: book1b
+  patterns: true
+- id: python-concepts
   number: 1
-  root: book1b
+  root: python-concepts
+  title: Python, Concept by Concept
+  subtitle: Learn Python one idea at a time
   depends_on: []
-  variant_of: book1
+  variant_of: python-projects
   prereq_policy: fastforward
   concept_minimum: 40
   lesson_budget: [30, 60]
-- id: book2
+  publication: true
+- id: usaco-bronze
   number: 2
-  root: book2
+  root: usaco-bronze
+  title: 'Contest Python: USACO Bronze'
+  subtitle: Algorithms for your first programming contests
   depends_on:
-  - book1
+  - python-projects
+  judge: true

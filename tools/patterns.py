@@ -1,4 +1,4 @@
-"""Book 1 algorithm-pattern marker and spiral checks."""
+"""Algorithm-pattern marker and spiral checks for the `patterns: true` book (python-projects)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 import nbformat
 import yaml
 
-from tools.books import book_path
+from tools.books import book_flag, book_path, books_with_flag
 from tools.concept_scan import entry_notebooks
 from tools.notebooks import tags
 
@@ -29,54 +29,66 @@ class PatternBookData:
     entries: list[dict]
     techniques: dict[str, dict]
     findings: tuple[str, ...]
+    book: str = ""
 
 
-def _read_yaml(path: Path, label: str) -> tuple[object | None, list[str]]:
+def _read_yaml(path: Path, label: str, scope: str) -> tuple[object | None, list[str]]:
     if not path.is_file():
-        return None, [_fail("book1", f"{label} does not exist")]
+        return None, [_fail(scope, f"{label} does not exist")]
     try:
         return yaml.safe_load(path.read_text(encoding="utf-8")), []
     except yaml.YAMLError as error:
-        return None, [_fail("book1", f"{label} is not valid YAML: {error}")]
+        return None, [_fail(scope, f"{label} is not valid YAML: {error}")]
 
 
-def load_pattern_book(root: Path) -> PatternBookData:
-    """Load Book 1 pattern inputs without converting invalid data into an empty set."""
-    directory = book_path(root, "book1")
-    concepts_data, findings = _read_yaml(directory / "curriculum/concepts.yaml", "concepts.yaml")
+def pattern_book_id(root: Path) -> str:
+    """Return the one registered book with ``patterns: true`` (books.yaml)."""
+    books = books_with_flag(root, "patterns")
+    if len(books) != 1:
+        raise ValueError(f"expected exactly one patterns book in books.yaml; found {books}")
+    return books[0]
+
+
+def load_pattern_book(root: Path, book: str | None = None) -> PatternBookData:
+    """Load pattern inputs without converting invalid data into an empty set."""
+    book = book or pattern_book_id(root)
+    directory = book_path(root, book)
+    concepts_data, findings = _read_yaml(
+        directory / "curriculum/concepts.yaml", "concepts.yaml", book
+    )
     map_data, map_findings = _read_yaml(
-        directory / "curriculum/coverage-map.yaml", "coverage-map.yaml"
+        directory / "curriculum/coverage-map.yaml", "coverage-map.yaml", book
     )
     findings.extend(map_findings)
     concepts: list[dict] = []
     entries: list[dict] = []
     if concepts_data is not None:
         if not isinstance(concepts_data, dict):
-            findings.append(_fail("book1", "concepts.yaml must be a mapping"))
+            findings.append(_fail(book, "concepts.yaml must be a mapping"))
         elif not isinstance(concepts_data.get("concepts"), list):
-            findings.append(_fail("book1", "concepts must be a list"))
+            findings.append(_fail(book, "concepts must be a list"))
         else:
             raw_concepts = concepts_data["concepts"]
             malformed = [
                 index for index, concept in enumerate(raw_concepts) if not isinstance(concept, dict)
             ]
             findings.extend(
-                _fail("book1", f"concept entry {index} must be a mapping") for index in malformed
+                _fail(book, f"concept entry {index} must be a mapping") for index in malformed
             )
             if not malformed:
                 concepts = raw_concepts
     if map_data is not None:
         if not isinstance(map_data, dict):
-            findings.append(_fail("book1", "coverage-map.yaml must be a mapping"))
+            findings.append(_fail(book, "coverage-map.yaml must be a mapping"))
         elif not isinstance(map_data.get("entries"), list):
-            findings.append(_fail("book1", "coverage-map entries must be a list"))
+            findings.append(_fail(book, "coverage-map entries must be a list"))
         else:
             raw_entries = map_data["entries"]
             malformed = [
                 index for index, entry in enumerate(raw_entries) if not isinstance(entry, dict)
             ]
             findings.extend(
-                _fail("book1", f"coverage-map entry {index} must be a mapping")
+                _fail(book, f"coverage-map entry {index} must be a mapping")
                 for index in malformed
             )
             if not malformed:
@@ -88,7 +100,7 @@ def load_pattern_book(root: Path) -> PatternBookData:
         and concept.get("kind") == "technique"
         and isinstance(concept.get("id"), str)
     }
-    return PatternBookData(directory, concepts, entries, techniques, tuple(findings))
+    return PatternBookData(directory, concepts, entries, techniques, tuple(findings), book)
 
 
 def _entry_dir(book_dir: Path, entry: dict) -> Path:
@@ -183,7 +195,7 @@ def _expected_markers(entry: dict, techniques: set[str]) -> dict[str, set[str]]:
 
 
 def _manifest_technique_tags(entry_dir: Path, techniques: set[str]):
-    manifest, _findings = _read_yaml(entry_dir / "manifest.yaml", "manifest.yaml")
+    manifest, _findings = _read_yaml(entry_dir / "manifest.yaml", "manifest.yaml", entry_dir.name)
     if not isinstance(manifest, dict) or not isinstance(manifest.get("concepts"), dict):
         return None
     concepts = manifest["concepts"]
@@ -196,11 +208,11 @@ def _manifest_technique_tags(entry_dir: Path, techniques: set[str]):
 
 
 def pattern_marker_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    """Validate Book 1 technique tags, marker cardinality, and exercise adjacency."""
+    """Validate technique tags, marker cardinality, and exercise adjacency."""
     del unit
-    if book != "book1":
+    if not book_flag(root, book, "patterns"):
         return []
-    data = load_pattern_book(root)
+    data = load_pattern_book(root, book)
     if data.findings:
         return list(data.findings)
     book_dir = data.directory
@@ -334,11 +346,11 @@ def _locus_is_core(book_dir: Path, entry: dict, pattern_id: str) -> tuple[bool, 
 
 
 def technique_spiral_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    """Enforce the Book 1 technique home and three-core-practice spiral."""
+    """Enforce the technique home and three-core-practice spiral."""
     del unit
-    if book != "book1":
+    if not book_flag(root, book, "patterns"):
         return []
-    data = load_pattern_book(root)
+    data = load_pattern_book(root, book)
     if data.findings:
         return list(data.findings)
     book_dir = data.directory
@@ -355,7 +367,7 @@ def technique_spiral_findings(root: Path, book: str, unit: str | None = None) ->
     if len(capstones) != 1:
         return [
             _fail(
-                "book1",
+                book,
                 f"project-02 capstone boundary must appear exactly once; found {len(capstones)}",
             )
         ]

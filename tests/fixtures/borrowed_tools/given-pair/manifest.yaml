@@ -10,5 +10,5 @@ concepts:
   requires: []
   practices: []
   auxiliary:
-    - book1:list-literal
+    - python-projects:list-literal
 provenance: original

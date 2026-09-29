@@ -28,6 +28,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+import yaml
+
 mode = sys.argv[1]
 refs = ["WORKTREE"] + (["origin/main"] if mode == "--pr" else [])
 failures: list[str] = []
@@ -44,14 +46,29 @@ def git_lines(*args: str) -> list[str]:
     return proc.stdout.splitlines()
 
 
+# One-release transition map (plan 091, design 008): branches cut before the book rename still
+# carry the old root folders; normalise them so their unit/project/checkpoint ids collide-check
+# against the new roots. Remove after one release.
+TRANSITION = {"book1b": "python-concepts", "book1": "python-projects", "book2": "usaco-bronze"}  # plan-091-transition
+
+
+def normalise(path: str) -> str:
+    for old, new in TRANSITION.items():
+        if path.startswith(old + "/"):
+            return new + path[len(old):]
+    return path
+
+
 def paths(ref: str) -> set[str]:
     if ref == "WORKTREE":
-        return {
+        found = {
             path.as_posix()
             for path in Path(".").rglob("*")
             if path.is_file() and ".git" not in path.parts and ".venv" not in path.parts
         }
-    return set(git_lines("ls-tree", "-r", "--name-only", ref))
+    else:
+        found = set(git_lines("ls-tree", "-r", "--name-only", ref))
+    return {normalise(path) for path in found}
 
 
 def duplicate_numbers(label: str, names: set[str], pattern: str) -> None:
@@ -74,7 +91,10 @@ for directory in ("docs/proposals", "docs/designs", "docs/plans", "docs/reviews"
     }
     duplicate_numbers(directory, names, r"^[0-9]{3}(?=-)")
 
-for book_id in ("book1", "book1b", "book2"):
+registry = yaml.safe_load(Path("books.yaml").read_text(encoding="utf-8"))
+book_roots = [book.get("root", book["id"]) for book in registry["books"]]
+
+for book_id in book_roots:
     for kind, pattern in (
         ("units", r"^unit-[0-9]{2}(?=-)"),
         ("projects", r"^project-[0-9]{2}(?=-)"),

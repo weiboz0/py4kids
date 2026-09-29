@@ -83,7 +83,7 @@ def test_tryit_route_and_figure():
 
 
 def test_referenced_input_asset_figure(tmp_path):
-    entry = tmp_path / 'book1b' / 'units' / 'unit-06-fixture'
+    entry = tmp_path / 'python-concepts' / 'units' / 'unit-06-fixture'
     (entry / 'assets').mkdir(parents=True)
     (entry / 'assets' / 'l1_square_input.py').write_text(
         '# sample-input: 10\nimport turtle\nturtle.forward(int(input("Length: ")))' + '\n')
@@ -94,7 +94,7 @@ def test_referenced_input_asset_figure(tmp_path):
 
 
 def test_tryit_asset_after_cell_is_a_reference_and_audit_catches_listing(tmp_path):
-    entry = tmp_path / 'book1b' / 'units' / 'unit-16-fixture'
+    entry = tmp_path / 'python-concepts' / 'units' / 'unit-16-fixture'
     (entry / 'assets').mkdir(parents=True)
     source = '# sample-input: 10\nimport turtle\nturtle.forward(int(input("Length: ")))\n'
     (entry / 'assets' / 'l1_square_input.py').write_text(source)
@@ -131,9 +131,9 @@ def test_publication_audit_requires_real_drawing(tmp_path):
                _turtle_drawing_findings(unit, key.replace('Drawing for the sample input: 10', ''), 'teacher'))
 
 
-def test_book1b_21_rows():
+def test_python_concepts_21_rows():
     root = Path(__file__).resolve().parents[1]
-    assert turtle_real_findings(root, 'book1b') == []
+    assert turtle_real_findings(root, 'python-concepts') == []
 
 
 def test_parity_tolerance_is_absolute():

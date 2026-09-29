@@ -11,5 +11,5 @@ concepts:
     - input
   practices: []
   auxiliary:
-    - book2:str-split
+    - usaco-bronze:str-split
 provenance: original

@@ -1,24 +1,30 @@
 #!/usr/bin/env bash
-# Build every Book 1b edition named in tools/publish.py EDITIONS, then copy the PDFs to output/book1b/.
+# Build every edition named in tools/publish.py EDITIONS for a `publication: true` book (books.yaml),
+# then copy the PDFs (<id>-<edition>.pdf) to output/<id>/.
 # The editions render in parallel, each with its own TeX and Quarto caches;
 # set BOOK_BUILD_PARALLEL=0 to render them one after another.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-if [ "${1:-}" != --book ] || [ "${2:-}" != book1b ] || [ "$#" != 2 ]; then
-  echo 'usage: build-book.sh --book book1b' >&2
+if [ "${1:-}" != --book ] || [ -z "${2:-}" ] || [ "$#" != 2 ]; then
+  echo 'usage: build-book.sh --book <publication book id>' >&2
   exit 2
 fi
-book=book1b
+book="$2"
+if ! .venv/bin/python -c 'import sys; from pathlib import Path; from tools.books import book_flag; sys.exit(not book_flag(Path("."), sys.argv[1], "publication"))' "$book"; then
+  echo "FAIL: $book: not a publication book (books.yaml publication: true)" >&2
+  exit 2
+fi
 export PATH="$HOME/.local/bin:$PATH"
 cache_root="${TMPDIR:-/tmp}/py4kids-book-cache"
 build_start=$SECONDS
 
 # One line per edition: "<edition> <output name> <1 if it has an index, else 0>".
 profiles="$(.venv/bin/python -c '
-from tools.publish import EDITIONS
+import sys
+from tools.publish import EDITIONS, output_stem
 for name, profile in EDITIONS.items():
-    print(name, profile["output_name"], int(profile["index"]))
-')"
+    print(name, output_stem(sys.argv[1], name), int(profile["index"]))
+' "$book")"
 
 # Generate every Quarto project first (Python; fast, sequential).
 while read -r edition _ _; do

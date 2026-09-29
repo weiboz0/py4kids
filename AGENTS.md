@@ -47,11 +47,13 @@ gates, autopilot through merge) tailored for course-content development.
 ## Project Structure
 
 See `docs/designs/000-project-design.md §1` for the full tree. Top level:
-`books.yaml` registers two independently complete roots: `book1/` (Year 1 fundamentals)
-and `book2/` (Year 2: OOP, algorithms, data, larger builds).
+`books.yaml` registers each book by id (= its folder) with a title, subtitle and feature flags
+(design 008): `python-projects/` (*Python by Projects*), `python-concepts/`
+(*Python, Concept by Concept*, a variant of it) and `usaco-bronze/` (*Contest Python: USACO Bronze*;
+design 008 plans its split into `usaco-bronze/` and `acsl/`, *Contest Python: ACSL*).
 Each book owns its `syllabus.md`, `curriculum/`, `units/`, `projects/`, `checkpoints/`,
 `reference/`, and learner-facing `docs/`;
-Book 2 imports Book 1 prerequisites only through qualified registry contracts.
+a contest book imports Python-book prerequisites only through qualified registry contracts.
 `tools/` (Python verification package), `scripts/` (ci-local, pre-merge-guard),
 and top-level `docs/` (shared lifecycle, design, plan, and review records).
 

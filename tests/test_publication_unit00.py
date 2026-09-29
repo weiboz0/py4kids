@@ -12,8 +12,8 @@ from tools.publish_audit import _missing_lesson_headings
 
 @pytest.fixture
 def book(tmp_path):
-    (tmp_path / 'books.yaml').write_text('books:\n- id: book1b\n')
-    root = tmp_path / 'book1b'
+    (tmp_path / 'books.yaml').write_text('books_version: 2\nbooks:\n- id: python-concepts\n  root: python-concepts\n  title: Python, Concept by Concept\n  subtitle: Learn Python one idea at a time\n  publication: true\n')
+    root = tmp_path / 'python-concepts'
     (root / 'docs').mkdir(parents=True)
     (root / 'docs' / 'unit-00-getting-set-up.md').write_text(
         '# Unit 0 — Getting Set Up\n\nFirst program.\n\n'
@@ -30,14 +30,14 @@ def book(tmp_path):
     (root / 'back-matter' / 'glossary.md').write_text('# Glossary\n')
     (root / 'back-matter' / 'quick-reference.md').write_text('# Quick Reference\n')
     (root / 'syllabus.md').write_text(
-        '# Book 1b — Year 1 Syllabus\n\n'
+        '# Python, Concept by Concept — Syllabus\n\n'
         '| entry | kind | lessons | the hook |\n|---|---|---|---|\n'
         '| `unit-01-fixture` | unit | 1 | Hook. |\n')
     return tmp_path
 
 
 def test_setup_chapter_keeps_section_levels_and_teacher_panel(book):
-    source = book / 'book1b' / 'docs' / 'unit-00-getting-set-up.md'
+    source = book / 'python-concepts' / 'docs' / 'unit-00-getting-set-up.md'
     student, inventory, items, title = publish.render_setup_chapter(source, 'student')
     teacher, _, _, _ = publish.render_setup_chapter(source, 'teacher')
     assert student.startswith('# Unit 0 — Getting Set Up {pub-label="Unit 0" pub-mainmatter="true"}')
@@ -55,9 +55,9 @@ def test_setup_chapter_keeps_section_levels_and_teacher_panel(book):
 
 
 def test_setup_source_is_allowed_but_all_teacher_notes_are_denied():
-    assert allowed_source(Path('book1b/docs/unit-00-getting-set-up.md'), 'student')
+    assert allowed_source(Path('python-concepts/docs/unit-00-getting-set-up.md'), 'student')
     for name in ('unit-00-teacher-notes.md', 'teacher-notes.md', 'other-teacher-notes-extra.md'):
-        assert not allowed_source(Path('book1b/docs') / name, 'student')
+        assert not allowed_source(Path('python-concepts/docs') / name, 'student')
 
 
 def test_setup_is_first_separate_chapter_in_both_editions(book, monkeypatch):
@@ -66,7 +66,7 @@ def test_setup_is_first_separate_chapter_in_both_editions(book, monkeypatch):
     monkeypatch.setattr(publish, 'render_chapter',
                         lambda entry, kind, edition: ('# Unit 1 — Fixture\n', [], [], 'Fixture'))
     for edition in ('student', 'teacher'):
-        project = build(book, 'book1b', edition)
+        project = build(book, 'python-concepts', edition)
         chapters = json.loads((project / 'inventory.json').read_text())['chapters']
         assert [chapter['kind'] for chapter in chapters] == (
             ['front', 'front'] + (['front'] if edition == 'teacher' else [])
@@ -74,7 +74,7 @@ def test_setup_is_first_separate_chapter_in_both_editions(book, monkeypatch):
             + ['glossary', 'quickref', 'index'])
         assert [(c['id'], c['kind']) for c in chapters if c['kind'] in {'setup', 'unit'}] == [
             ('unit-00-getting-set-up', 'setup'), ('unit-01-fixture', 'unit')]
-        assert next(c for c in chapters if c['kind'] == 'setup')['source'] == 'book1b/docs/unit-00-getting-set-up.md'
+        assert next(c for c in chapters if c['kind'] == 'setup')['source'] == 'python-concepts/docs/unit-00-getting-set-up.md'
         config = (project / '_quarto.yml').read_text()
         assert config.index('unit-00-getting-set-up.qmd') < config.index('unit-01-fixture.qmd')
         assert (project / 'the-index.qmd').read_text() == '\\printindex\n'
@@ -88,7 +88,7 @@ def test_setup_is_first_separate_chapter_in_both_editions(book, monkeypatch):
 
 def test_setup_outline_requires_chapter_and_every_level_two_section(book):
     chapter = [{'id': 'unit-00-getting-set-up', 'kind': 'setup',
-                'source': 'book1b/docs/unit-00-getting-set-up.md'}]
+                'source': 'python-concepts/docs/unit-00-getting-set-up.md'}]
     complete = ('+\t"Unit 0 — Getting Set Up"\t#page=1\n'
                 '|\t\t"Install Python"\t#page=1\n'
                 '|\t\t"Checklist"\t#page=2\n')

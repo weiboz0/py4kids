@@ -16,6 +16,7 @@ import nbformat
 import yaml
 from nbclient import NotebookClient
 
+from tools.books import book_flag
 from tools.curriculum import auxiliary_schema_details
 
 REQUIRED_FILES = (
@@ -410,8 +411,8 @@ def manifest_findings(root: Path, book: str, unit: str | None = None) -> list[st
     map_version = data.get("map_version")
     if map_version not in MANIFEST_CONCEPT_KEYS:
         return [_fail(book, "coverage-map map_version must be 1 or 2")]
-    if map_version == 2 and book != "book1":
-        return [_fail(book, "map_version 2 is only supported for book1")]
+    if map_version == 2 and not book_flag(root, book, "patterns"):
+        return [_fail(book, "map_version 2 is only supported for patterns books")]
     for index, entry in enumerate(map_entries):
         if not isinstance(entry.get("id"), str):
             return [_fail(book, f"coverage-map entry {index} id must be a string")]
@@ -501,9 +502,9 @@ def manifest_findings(root: Path, book: str, unit: str | None = None) -> list[st
             }
             findings.extend(
                 _fail(content_dir.name, detail)
-                for detail in auxiliary_schema_details(manifest_auxiliary_entry)
+                for detail in auxiliary_schema_details(manifest_auxiliary_entry, root, book)
             )
-            map_auxiliary_details = auxiliary_schema_details(entry)
+            map_auxiliary_details = auxiliary_schema_details(entry, root, book)
             findings.extend(
                 _fail(book, f"coverage-map {entry.get('id')}.{detail}")
                 for detail in map_auxiliary_details
@@ -594,6 +595,7 @@ def solutions_structure_findings(root: Path, book: str, unit: str | None = None)
     units, findings = unit_dirs(root, book, unit)
     if findings:
         return findings
+    judge_book = book_flag(root, book, "judge")
     for unit_dir in units:
         exercises_path = unit_dir / "exercises.ipynb"
         solutions_path = unit_dir / "solutions.ipynb"
@@ -628,8 +630,8 @@ def solutions_structure_findings(root: Path, book: str, unit: str | None = None)
                 following.append(cell_type)
             if "code" not in following:
                 findings.append(_fail(unit_dir.name, f"solutions: no code under '{heading}'"))
-        # Plan 036: stdin-model book2 entries are verified by judge-check, not solve()+asserts.
-        if not (book == "book2" and is_stdin_model_entry(unit_dir)):
+        # Plan 036: stdin-model judge-book entries are verified by judge-check, not solve()+asserts.
+        if not (judge_book and is_stdin_model_entry(unit_dir)):
             findings.extend(_solution_policy_findings(unit_dir.name, solutions))
     return findings
 
@@ -691,6 +693,7 @@ def checkpoint_solutions_findings(
     checkpoints, findings = checkpoint_dirs(root, book, ident)
     if findings:
         return findings
+    judge_book = book_flag(root, book, "judge")
     for checkpoint_dir in checkpoints:
         checkpoint_path = checkpoint_dir / "checkpoint.ipynb"
         solutions_path = checkpoint_dir / "solutions.ipynb"
@@ -737,7 +740,7 @@ def checkpoint_solutions_findings(
                     findings.append(
                         _fail(checkpoint_dir.name, f"solutions: no code under '{heading}'")
                     )
-        if not (book == "book2" and is_stdin_model_entry(checkpoint_dir)):
+        if not (judge_book and is_stdin_model_entry(checkpoint_dir)):
             findings.extend(_solution_policy_findings(checkpoint_dir.name, solutions))
     return findings
 
@@ -825,12 +828,13 @@ def project_solutions_findings(
     projects, findings = project_dirs(root, book, ident)
     if findings:
         return findings
+    judge_book = book_flag(root, book, "judge")
     for project_dir in projects:
         path = project_dir / "solutions.ipynb"
         if not path.is_file():
             findings.append(_fail(project_dir.name, "missing solutions.ipynb"))
             continue
-        if not (book == "book2" and is_stdin_model_entry(project_dir)):
+        if not (judge_book and is_stdin_model_entry(project_dir)):
             findings.extend(_solution_policy_findings(project_dir.name, read_nb(path)))
     return findings
 
@@ -980,11 +984,11 @@ def execute_notebooks(
     if findings:
         return findings
     for content_dir in directories:
-        # Plan 036: a stdin-model book2 entry's solutions are no-exec display cells mirroring the
+        # Plan 036: a stdin-model judge-book entry's solutions are no-exec display cells mirroring the
         # judged assets/*.py — executing them would hang on stdin. judge-check verifies them instead.
         if (
             notebook_name == "solutions.ipynb"
-            and book == "book2"
+            and book_flag(root, book, "judge")
             and is_stdin_model_entry(content_dir)
         ):
             continue
@@ -1052,7 +1056,7 @@ def _lesson_output_run(root: Path, book: str, unit: str | None, *, write: bool) 
     units, findings = unit_dirs(root, book, unit)
     if findings:
         return findings
-    if not write and book in {"book1", "book2"} and all(
+    if not write and not book_flag(root, book, "publication") and all(
         (path / "lesson.ipynb").is_file() and
         not any(cell.outputs for cell in code_cells(read_nb(path / "lesson.ipynb")))
         for path in units

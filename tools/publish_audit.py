@@ -9,6 +9,7 @@ from pathlib import Path
 
 import yaml
 
+from tools.books import book_flag, book_path
 from tools.fake_turtle import imports_turtle
 from tools.publish import (
     CODE_ONLY_NAMES,
@@ -27,6 +28,7 @@ from tools.publish import (
     item_groups,
     lesson_code,
     notebook,
+    output_stem,
     panel,
     python_name_units,
     redundant_starter,
@@ -44,7 +46,7 @@ INDEPENDENCE_BANS = ("Teacher's Edition", 'your teacher', 'with your teacher',
 # "Answer Key" on purpose; the `'## Answer key' in qmd` check guards the teacher heading in every
 # student-family edition and the leak guard guards the code.
 STUDENT_BANS = INDEPENDENCE_BANS + ('Answer key',)
-# Book 1b Starters the print rule must keep (code that exists only in the Starter).
+# Publication-book (python-concepts) Starters the print rule must keep (code that exists only in the Starter).
 PRINT_REQUIRED_STARTERS = {'057d796ebeff'}  # Unit 1, Exercise 20: the broken program to repair
 PRINT_PAGE_TARGET = 400
 
@@ -251,7 +253,7 @@ def _tokenize_if_complete(source: str) -> tuple:
         return ()
 
 
-def leak_findings(root: Path, chapters: list[dict], project: Path, edition: str = 'student',
+def leak_findings(root: Path, book_id: str, chapters: list[dict], project: Path, edition: str = 'student',
                   hide_odd: bool = False, kinds: frozenset[str] = frozenset({'answers'})) -> list[str]:
     """Guard the chapters of the given kinds (by default every `answers` chapter, the only place a
     student-family edition prints solution material) against hidden solutions: even unit exercises,
@@ -259,7 +261,7 @@ def leak_findings(root: Path, chapters: list[dict], project: Path, edition: str 
     blocks = [stream for chapter in chapters if chapter['kind'] in kinds
               for stream in printed_code((project / chapter['file']).read_text(encoding='utf-8'))]
     findings = []
-    for id_, entry in entries(root / 'book1b', 'student'):
+    for id_, entry in entries(book_path(root, book_id), 'student'):
         kind = id_.split('-', 1)[0]
         label = ITEM[kind]
         solutions = notebook(entry / 'solutions.ipynb', 'teacher')
@@ -627,7 +629,7 @@ def item_headings(qmd: str) -> list[str]:
 
 
 def audit(root: Path, book_id: str) -> list[str]:
-    book = root / book_id
+    book = book_path(root, book_id)
     findings: list[str] = []
     entry_order = [id_ for id_, _ in entries(book, 'student')]
     source_tags = {'error-demo': set(), 'hang-demo': set()}
@@ -660,6 +662,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
     student_family = edition_profile['student_family']
     answer_body = edition_profile['body'] == 'answers'
     answer_key_drawings = 0
+    publication = book_flag(root, book_id, 'publication')
     project = book / 'build' / 'publish' / edition
     inv_path = project / 'inventory.json'
     if not inv_path.exists():
@@ -672,7 +675,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
     configured = re.findall(r'^    - ([^\n]+\.qmd)$', config, re.MULTILINE)
     if configured != expected_quarto_files(edition, entry_order):
         findings.append(f'FAIL: {edition}: Quarto chapter order')
-    if f'output-file: "{edition_profile["output_name"]}"' not in config or (
+    if f'output-file: "{output_stem(book_id, edition)}"' not in config or (
             f'classoption: [{edition_profile["classoption"]},' not in config):
         findings.append(f'FAIL: {edition}: Quarto output name or class options differ from the profile')
     qmds = {file.name: file.read_text(encoding='utf-8') for file in sorted(project.glob('*.qmd'))}
@@ -684,7 +687,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
                 findings.append(f'FAIL: {edition}: {name}: answer key present')
             if '::: {.teacher}' in text:
                 findings.append(f'FAIL: {edition}: {name}: teacher panel present')
-        findings.extend(leak_findings(root, chapters, project, edition))
+        findings.extend(leak_findings(root, book_id, chapters, project, edition))
     if edition_profile['answers_appendix'] or answer_body:
         answers = '\n'.join(qmds.get(c['file'], '') for c in chapters if c['kind'] == 'answers')
         expected_answers = []
@@ -700,7 +703,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
             if 'Answer on page' in text or '\\pageref' in text:
                 findings.append(f'FAIL: {edition}: {name}: page cross-reference present')
     if edition == 'student-print':
-        findings.extend(leak_findings(root, chapters, project, edition, hide_odd=True,
+        findings.extend(leak_findings(root, book_id, chapters, project, edition, hide_odd=True,
                                       kinds=frozenset({'unit', 'checkpoint', 'project', 'setup', 'front'})))
         full = book / 'build' / 'publish' / 'student'
         for chapter in chapters:
@@ -710,7 +713,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
             source_kinds = starter_kinds(root / chapter['source'], chapter['kind'], edition)
             starters = [(cell_id, source, by_id.get(cell_id, 'missing'))
                         for cell_id, (_, source) in source_kinds.items()]
-            if book_id == 'book1b':
+            if publication:
                 for cell_id in PRINT_REQUIRED_STARTERS & set(by_id):
                     if by_id[cell_id] != 'starter':
                         findings.append(f'FAIL: student-print: {chapter["id"]}: required Starter {cell_id} omitted')
@@ -724,7 +727,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
             if item_headings(full_qmd) != item_headings(print_qmd):
                 findings.append(f'FAIL: student-print: {chapter["id"]}: exercise headings differ from the full edition')
             findings.extend(print_equivalence_findings(chapter['id'], full_qmd, print_qmd, starters))
-        if book_id == 'book1b' and not PRINT_REQUIRED_STARTERS <= {
+        if publication and not PRINT_REQUIRED_STARTERS <= {
                 record['id'] for chapter in chapters for record in chapter['inventory']}:
             findings.append('FAIL: student-print: required Starter ids missing from the inventory')
     if answer_body:
@@ -756,7 +759,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
         findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
                         for finding in glossary_findings(introduced, glossary))
     if edition_profile['index']:
-        index = project / (edition_profile['output_name'] + '.ind')
+        index = project / (output_stem(book_id, edition) + '.ind')
         index_text = index.read_text(encoding='utf-8') if index.exists() else ''
         findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
                         for finding in index_findings(index_text, glossary))
@@ -799,16 +802,16 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
                             for finding in panel_findings(id_, qmd))
             findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
                             for finding in lesson_panel_source_findings(entry))
-        if kind == 'unit' and book_id == 'book1b':
+        if kind == 'unit' and publication:
             findings.extend(_turtle_drawing_findings(entry, qmd, edition))
             if edition == 'teacher':
                 answer_key_drawings += qmd.split('## Answer key', 1)[-1].count(
                     '\\color{black!60}Drawing for the sample input:')
         if edition == 'teacher' and (qmd.count('## Answer key') != 1 or [int(x) for x in re.findall(r'^### ' + ITEM[kind] + r' (\d+)\b', qmd.split('## Answer key', 1)[-1], re.MULTILINE)] != numbers):
             findings.append(f'FAIL: {edition}: {id_}: answer-key coverage')
-    if edition == 'teacher' and book_id == 'book1b' and answer_key_drawings != 21:
+    if edition == 'teacher' and publication and answer_key_drawings != 21:
         findings.append(f'FAIL: teacher: expected 21 turtle real-program drawings, got {answer_key_drawings}')
-    name = edition_profile['output_name']
+    name = output_stem(book_id, edition)
     pdf = project / '_book' / f'{name}.pdf'
     tex = project / f'{name}.tex'
     if not tex.exists():

@@ -68,14 +68,21 @@ def _scanner_root(tmp_path: Path, *, auxiliary: list[str] | None = None) -> Path
     _write_yaml(
         tmp_path / "books.yaml",
         {
-            "books_version": 1,
+            "books_version": 2,
             "books": [
-                {"id": "book1", "number": 1, "root": "book1", "depends_on": []},
                 {
-                    "id": "book2",
+                    "id": "python-projects",
+                    "number": 1,
+                    "root": "python-projects",
+                    "depends_on": [],
+                    "patterns": True,
+                },
+                {
+                    "id": "usaco-bronze",
                     "number": 2,
-                    "root": "book2",
-                    "depends_on": ["book1"],
+                    "root": "usaco-bronze",
+                    "judge": True,
+                    "depends_on": ["python-projects"],
                 },
             ],
         },
@@ -91,7 +98,7 @@ def _scanner_root(tmp_path: Path, *, auxiliary: list[str] | None = None) -> Path
         "list-literal",
     ]
     _write_yaml(
-        tmp_path / "book1/curriculum/concepts.yaml",
+        tmp_path / "python-projects/curriculum/concepts.yaml",
         {
             "concepts_version": 1,
             "concepts": [
@@ -100,7 +107,7 @@ def _scanner_root(tmp_path: Path, *, auxiliary: list[str] | None = None) -> Path
         },
     )
     _write_yaml(
-        tmp_path / "book2/curriculum/concepts.yaml",
+        tmp_path / "usaco-bronze/curriculum/concepts.yaml",
         {
             "concepts_version": 1,
             "concepts": [
@@ -114,7 +121,7 @@ def _scanner_root(tmp_path: Path, *, auxiliary: list[str] | None = None) -> Path
         },
     )
     _write_yaml(
-        tmp_path / "book1/curriculum/coverage-map.yaml",
+        tmp_path / "python-projects/curriculum/coverage-map.yaml",
         {
             "map_version": 2,
             "entries": [
@@ -132,7 +139,7 @@ def _scanner_root(tmp_path: Path, *, auxiliary: list[str] | None = None) -> Path
         },
     )
     _write_yaml(
-        tmp_path / "book2/curriculum/coverage-map.yaml",
+        tmp_path / "usaco-bronze/curriculum/coverage-map.yaml",
         {
             "map_version": 1,
             "entries": [
@@ -173,26 +180,26 @@ def _install_fixture_shape(root: Path, shape: str) -> Path:
                 "auxiliary": [],
             },
         )
-    book1_auxiliary = [
-        qualified_id.removeprefix("book1:")
+    python_projects_auxiliary = [
+        qualified_id.removeprefix("python-projects:")
         for qualified_id in concepts["auxiliary"]
-        if qualified_id.startswith("book1:")
+        if qualified_id.startswith("python-projects:")
     ]
-    if book1_auxiliary:
+    if python_projects_auxiliary:
         coverage["entries"].append(
             {
                 "id": "unit-99-auxiliary-home",
                 "kind": "unit",
                 "title": "Synthetic later auxiliary home",
                 "lessons": 1,
-                "introduces": book1_auxiliary,
+                "introduces": python_projects_auxiliary,
                 "requires": [],
                 "practices": [],
                 "auxiliary": [],
             }
         )
     _write_yaml(path, coverage)
-    target = root / "book1/units/unit-01-fixture"
+    target = root / "python-projects/units/unit-01-fixture"
     target.mkdir(parents=True, exist_ok=True)
     for fixture_path in source.iterdir():
         if fixture_path.is_file():
@@ -209,7 +216,7 @@ def _save_notebook(path: Path, notebook) -> None:
 
 
 def _map(root: Path) -> tuple[Path, dict]:
-    path = root / "book1/curriculum/coverage-map.yaml"
+    path = root / "python-projects/curriculum/coverage-map.yaml"
     return path, yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
@@ -229,13 +236,13 @@ def _set_entry(
 
 def _write_k2(root: Path, rows: list[dict]) -> None:
     _write_yaml(
-        root / "book1/curriculum/k2-exceptions.yaml",
+        root / "python-projects/curriculum/k2-exceptions.yaml",
         {"k2_exceptions_version": 1, "exceptions": rows},
     )
 
 
-def _register_book2_feature(root: Path, concept_id: str) -> None:
-    path = root / "book2/curriculum/concepts.yaml"
+def _register_usaco_bronze_feature(root: Path, concept_id: str) -> None:
+    path = root / "usaco-bronze/curriculum/concepts.yaml"
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     data["concepts"].append(
         {
@@ -248,14 +255,14 @@ def _register_book2_feature(root: Path, concept_id: str) -> None:
     _write_yaml(path, data)
 
 
-def _register_book2_set_ops(root: Path) -> None:
-    _register_book2_feature(root, "set-ops")
+def _register_usaco_bronze_set_ops(root: Path) -> None:
+    _register_usaco_bronze_feature(root, "set-ops")
 
 
 def _k2_row(cell_id: str = "counter") -> dict:
     return {
         "cell-id": cell_id,
-        "concept-ids": ["book1:loop-counter", "book1:accumulator"],
+        "concept-ids": ["python-projects:loop-counter", "python-projects:accumulator"],
         "exact-ast-form": "name = name + 1",
         "role": "composed",
     }
@@ -300,8 +307,8 @@ def test_checked_in_borrowed_tool_shape_passes_cleanly(tmp_path, shape):
     root = _scanner_root(tmp_path)
     _install_fixture_shape(root, shape)
 
-    assert prereq_findings(root, "book1") == []
-    assert concept_scan_findings(root, "book1") == []
+    assert prereq_findings(root, "python-projects") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 def test_fixture_remove_auxiliary_tag_fails_specifically(tmp_path):
@@ -312,7 +319,7 @@ def test_fixture_remove_auxiliary_tag_fails_specifically(tmp_path):
     notebook.cells[0].metadata.tags.remove("auxiliary")
     _save_notebook(path, notebook)
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any("py4kids_auxiliary requires the auxiliary tag" in item for item in findings)
 
 
@@ -324,7 +331,7 @@ def test_fixture_remove_cell_declaration_fails_specifically(tmp_path):
     del notebook.cells[0].metadata["py4kids_auxiliary"]
     _save_notebook(path, notebook)
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any("auxiliary tag requires at least one id" in item for item in findings)
     assert any("used-but-unlisted concept list-literal" in item for item in findings)
 
@@ -334,7 +341,7 @@ def test_fixture_remove_entry_declaration_fails_specifically(tmp_path):
     _install_fixture_shape(root, "given-pair")
     _set_entry(root, auxiliary=[])
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any("cell auxiliary ids not declared by entry" in item for item in findings)
 
 
@@ -350,7 +357,7 @@ def test_fixture_move_construct_outside_given_region_fails_specifically(tmp_path
     )
     _save_notebook(path, notebook)
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any("auxiliary list-literal is outside the GIVEN region" in item for item in findings)
 
 
@@ -364,7 +371,7 @@ def test_fixture_duplicate_pairing_id_fails_specifically(tmp_path):
     notebook.cells.append(duplicate)
     _save_notebook(path, notebook)
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any(
         "auxiliary task id borrowed-list-task must pair exactly one exercise cell "
         "with one solution cell" in item
@@ -381,7 +388,7 @@ def test_code_sources_exposes_real_cell_metadata(tmp_path):
                 "scores = [1, 2]",
                 cell_id="borrowed-data",
                 tags=["auxiliary", "demo"],
-                auxiliary=["book1:list-literal"],
+                auxiliary=["python-projects:list-literal"],
             )
         ],
     )
@@ -393,28 +400,28 @@ def test_code_sources_exposes_real_cell_metadata(tmp_path):
             0,
             "scores = [1, 2]",
             ["auxiliary", "demo"],
-            ["book1:list-literal"],
+            ["python-projects:list-literal"],
             "demo",
         )
     ]
 
 
 def test_k1_authorization_is_cell_local(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "scores = [1, 2]",
                 cell_id="authorized",
                 tags=["auxiliary", "demo"],
-                auxiliary=["book1:list-literal"],
+                auxiliary=["python-projects:list-literal"],
             ),
             _cell("other = [3, 4]", cell_id="not-authorized"),
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
             "FAIL: unit-01-fixture: lesson.ipynb cell not-authorized: "
             "used-but-unlisted concept list-literal"
@@ -426,7 +433,7 @@ def test_markdown_general_closure_ignores_input_but_rejects_undeclared_split(tmp
     root = _scanner_root(tmp_path)
     _add_future_string_methods_home(root)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 "```python\nname = input('Name: ')\n```",
@@ -441,7 +448,7 @@ def test_markdown_general_closure_ignores_input_but_rejects_undeclared_split(tmp
         ],
     )
     _write_notebook(
-        root / "book1/units/unit-02-future-string-methods/solutions.ipynb",
+        root / "python-projects/units/unit-02-future-string-methods/solutions.ipynb",
         [
             _cell(
                 "```python\nwords = input().split()\n```",
@@ -451,13 +458,13 @@ def test_markdown_general_closure_ignores_input_but_rejects_undeclared_split(tmp
         ],
     )
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
 
     assert not any("input" in finding for finding in findings)
     assert findings == [
         (
             "FAIL: unit-01-fixture: solutions.ipynb cell split-fence: "
-            "undeclared borrowed tool book1:string-methods"
+            "undeclared borrowed tool python-projects:string-methods"
         )
     ]
 
@@ -480,7 +487,7 @@ def _add_future_list_home(root: Path) -> None:
 
 
 def _add_future_string_methods_home(root: Path) -> None:
-    concepts_path = root / "book1/curriculum/concepts.yaml"
+    concepts_path = root / "python-projects/curriculum/concepts.yaml"
     concepts = yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
     concepts["concepts"].append(
         {
@@ -507,11 +514,11 @@ def _add_future_string_methods_home(root: Path) -> None:
     _write_yaml(path, data)
 
 
-def test_markdown_future_book1_concept_requires_cell_declaration(tmp_path):
+def test_markdown_future_python_projects_concept_requires_cell_declaration(tmp_path):
     root = _scanner_root(tmp_path)
     _add_future_list_home(root)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "```python\nname = input('Name: ')\n```",
@@ -526,19 +533,19 @@ def test_markdown_future_book1_concept_requires_cell_declaration(tmp_path):
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
             "FAIL: unit-01-fixture: lesson.ipynb cell future-list: "
-            "undeclared borrowed tool book1:list-literal"
+            "undeclared borrowed tool python-projects:list-literal"
         )
     ]
 
 
-def test_markdown_declaration_removal_fails_for_future_book1_concept(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
+def test_markdown_declaration_removal_fails_for_future_python_projects_concept(tmp_path):
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal"])
     _add_future_list_home(root)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 "```python\nscores = [1, 2]\n```",
@@ -548,14 +555,14 @@ def test_markdown_declaration_removal_fails_for_future_book1_concept(tmp_path):
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
-            "FAIL: unit-01-fixture: entry auxiliary book1:list-literal "
+            "FAIL: unit-01-fixture: entry auxiliary python-projects:list-literal "
             "is not declared by any cell"
         ),
         (
             "FAIL: unit-01-fixture: solutions.ipynb cell removed-cell-declaration: "
-            "undeclared borrowed tool book1:list-literal"
+            "undeclared borrowed tool python-projects:list-literal"
         )
     ]
 
@@ -571,13 +578,13 @@ def test_attributed_python_fence_scans_undeclared_split(tmp_path, source):
     root = _scanner_root(tmp_path)
     _add_future_string_methods_home(root)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [_cell(source, cell_id="attributed-split", cell_type="markdown")],
     )
 
     assert any(
-        "undeclared borrowed tool book1:string-methods" in finding
-        for finding in concept_scan_findings(root, "book1")
+        "undeclared borrowed tool python-projects:string-methods" in finding
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
@@ -591,46 +598,46 @@ def test_attributed_python_fence_scans_undeclared_split(tmp_path, source):
 def test_attributed_python_fence_syntax_error_fails(tmp_path, source):
     root = _scanner_root(tmp_path)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell(source, cell_id="attributed-broken", cell_type="markdown")],
     )
 
     assert any(
         "python fence has SyntaxError" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
-def test_authorized_book2_split_in_markdown_passes_without_duplicate_registry_id(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book2:str-split"])
+def test_authorized_usaco_bronze_split_in_markdown_passes_without_duplicate_registry_id(tmp_path):
+    root = _scanner_root(tmp_path, auxiliary=["usaco-bronze:str-split"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 "```python\nwords = input().split()\n```",
                 cell_id="split-fence",
                 cell_type="markdown",
                 tags=["auxiliary", "real-form"],
-                auxiliary=["book2:str-split"],
+                auxiliary=["usaco-bronze:str-split"],
             )
         ],
     )
 
-    book1_registry = yaml.safe_load(
-        (root / "book1/curriculum/concepts.yaml").read_text(encoding="utf-8")
+    python_projects_registry = yaml.safe_load(
+        (root / "python-projects/curriculum/concepts.yaml").read_text(encoding="utf-8")
     )
-    book2_registry = yaml.safe_load(
-        (root / "book2/curriculum/concepts.yaml").read_text(encoding="utf-8")
+    usaco_bronze_registry = yaml.safe_load(
+        (root / "usaco-bronze/curriculum/concepts.yaml").read_text(encoding="utf-8")
     )
-    assert "str-split" not in {row["id"] for row in book1_registry["concepts"]}
-    assert [row["id"] for row in book2_registry["concepts"]].count("str-split") == 1
-    assert concept_scan_findings(root, "book1") == []
+    assert "str-split" not in {row["id"] for row in python_projects_registry["concepts"]}
+    assert [row["id"] for row in usaco_bronze_registry["concepts"]].count("str-split") == 1
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 def test_python_markdown_syntax_error_fails(tmp_path):
     root = _scanner_root(tmp_path)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "```python\nif True print('broken')\n```",
@@ -640,7 +647,7 @@ def test_python_markdown_syntax_error_fails(tmp_path):
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         ("FAIL: unit-01-fixture: lesson.ipynb cell broken-fence: python fence has SyntaxError")
     ]
 
@@ -649,7 +656,7 @@ def test_python_markdown_syntax_error_fails(tmp_path):
 def test_v2_malformed_code_source_fails_closed(tmp_path, source):
     root = _scanner_root(tmp_path)
     _write_raw_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             {
                 "cell_type": "code",
@@ -662,7 +669,7 @@ def test_v2_malformed_code_source_fails_closed(tmp_path, source):
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
             "FAIL: unit-01-fixture: lesson.ipynb cell malformed-source: "
             "code source must be a string or list of strings"
@@ -673,11 +680,11 @@ def test_v2_malformed_code_source_fails_closed(tmp_path, source):
 def test_v2_code_cell_syntax_error_fails_closed(tmp_path):
     root = _scanner_root(tmp_path)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("if True print('broken')", cell_id="broken-code")],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         ("FAIL: unit-01-fixture: lesson.ipynb cell broken-code: code cell has SyntaxError")
     ]
 
@@ -685,7 +692,7 @@ def test_v2_code_cell_syntax_error_fails_closed(tmp_path):
 def test_unclosed_python_markdown_fence_fails_closed(tmp_path):
     root = _scanner_root(tmp_path)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "```python\nprint('never closed')\n",
@@ -695,7 +702,7 @@ def test_unclosed_python_markdown_fence_fails_closed(tmp_path):
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         ("FAIL: unit-01-fixture: lesson.ipynb cell unclosed-fence: unclosed python fence")
     ]
 
@@ -703,7 +710,7 @@ def test_unclosed_python_markdown_fence_fails_closed(tmp_path):
 def test_unclosed_non_python_markdown_fence_fails_closed(tmp_path):
     root = _scanner_root(tmp_path)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "```text\nnot closed\n```python\nwords = text.split()",
@@ -713,7 +720,7 @@ def test_unclosed_non_python_markdown_fence_fails_closed(tmp_path):
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
             "FAIL: unit-01-fixture: lesson.ipynb cell unclosed-text-fence: "
             "unclosed non-python fence"
@@ -726,7 +733,7 @@ def test_python3_markdown_fence_is_scanned_for_borrowed_tools(tmp_path, language
     root = _scanner_root(tmp_path)
     _add_future_string_methods_home(root)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 f"```{language}\nwords = text.split()\n```",
@@ -737,15 +744,15 @@ def test_python3_markdown_fence_is_scanned_for_borrowed_tools(tmp_path, language
     )
 
     assert any(
-        "undeclared borrowed tool book1:string-methods" in finding
-        for finding in concept_scan_findings(root, "book1")
+        "undeclared borrowed tool python-projects:string-methods" in finding
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_malformed_unhashable_tags_return_finding(tmp_path):
     root = _scanner_root(tmp_path)
     _write_raw_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             {
                 "cell_type": "code",
@@ -758,7 +765,7 @@ def test_malformed_unhashable_tags_return_finding(tmp_path):
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
             "FAIL: unit-01-fixture: lesson.ipynb cell bad-tags: "
             "metadata tags must be a list of strings"
@@ -766,18 +773,18 @@ def test_malformed_unhashable_tags_return_finding(tmp_path):
     ]
 
 
-def test_v1_book1_split_preserves_exact_legacy_finding(tmp_path):
+def test_v1_python_projects_split_preserves_exact_legacy_finding(tmp_path):
     root = _scanner_root(tmp_path)
     path, data = _map(root)
     data["map_version"] = 1
     del data["entries"][0]["auxiliary"]
     _write_yaml(path, data)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("words = text.split()", cell_id="legacy-split")],
     )
 
-    assert concept_scan_findings(root, "book1") == ["FAIL: unit-01-fixture: untaught method split"]
+    assert concept_scan_findings(root, "python-projects") == ["FAIL: unit-01-fixture: untaught method split"]
 
 
 def test_asset_enumeration_is_sorted(tmp_path):
@@ -794,11 +801,11 @@ def test_asset_enumeration_is_sorted(tmp_path):
 
 def test_v2_asset_syntax_error_fails_closed(tmp_path):
     root = _scanner_root(tmp_path)
-    asset = root / "book1/units/unit-01-fixture/assets/broken.py"
+    asset = root / "python-projects/units/unit-01-fixture/assets/broken.py"
     asset.parent.mkdir(parents=True)
     asset.write_text("if True print('broken')\n", encoding="utf-8")
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         "FAIL: unit-01-fixture: assets/broken.py has SyntaxError"
     ]
 
@@ -816,37 +823,37 @@ def test_code_sources_does_not_rewrite_notebook(tmp_path):
 @pytest.mark.parametrize(
     ("auxiliary", "tags", "expected"),
     [
-        ("book1:list-literal", ["auxiliary", "demo"], "must be a list"),
+        ("python-projects:list-literal", ["auxiliary", "demo"], "must be a list"),
         (
-            ["book1:list-literal", 7],
+            ["python-projects:list-literal", 7],
             ["auxiliary", "demo"],
             "must be a list of qualified ids",
         ),
         (["list-literal"], ["auxiliary", "demo"], "unqualified"),
         (
-            ["book1:list-literal", "book1:list-literal"],
+            ["python-projects:list-literal", "python-projects:list-literal"],
             ["auxiliary", "demo"],
             "duplicate",
         ),
         ([], ["auxiliary", "demo"], "requires at least one id"),
-        (["book1:list-literal"], ["demo"], "requires the auxiliary tag"),
-        (["book1:list-literal"], ["auxiliary"], "exactly one auxiliary role"),
+        (["python-projects:list-literal"], ["demo"], "requires the auxiliary tag"),
+        (["python-projects:list-literal"], ["auxiliary"], "exactly one auxiliary role"),
         (
-            ["book1:list-literal"],
+            ["python-projects:list-literal"],
             ["auxiliary", "demo", "given"],
             "exactly one auxiliary role",
         ),
         (
-            ["book1:list-literal"],
+            ["python-projects:list-literal"],
             ["auxiliary", "preview"],
             "exactly one auxiliary role",
         ),
     ],
 )
 def test_malformed_cell_auxiliary_metadata_fails(tmp_path, auxiliary, tags, expected):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "scores = [1, 2]",
@@ -857,76 +864,76 @@ def test_malformed_cell_auxiliary_metadata_fails(tmp_path, auxiliary, tags, expe
         ],
     )
 
-    assert any(expected in finding for finding in concept_scan_findings(root, "book1"))
+    assert any(expected in finding for finding in concept_scan_findings(root, "python-projects"))
 
 
 def test_cell_id_must_be_declared_by_entry(tmp_path):
     root = _scanner_root(tmp_path)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "scores = [1, 2]",
                 cell_id="not-in-entry",
                 tags=["auxiliary", "demo"],
-                auxiliary=["book1:list-literal"],
+                auxiliary=["python-projects:list-literal"],
             )
         ],
     )
 
     assert any(
-        "not declared by entry" in finding for finding in concept_scan_findings(root, "book1")
+        "not declared by entry" in finding for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_role_tag_without_auxiliary_marker_or_declaration_fails(tmp_path):
     root = _scanner_root(tmp_path)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("print('ready')", cell_id="role-only", tags=["demo"])],
     )
 
     assert any(
         "auxiliary role requires the auxiliary tag" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_detectable_declared_but_unused_fails_and_manual_only_is_exempt(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal", "book1:loop-counter"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal", "python-projects:loop-counter"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "print('ready')",
                 cell_id="unused",
                 tags=["auxiliary", "demo"],
-                auxiliary=["book1:list-literal", "book1:loop-counter"],
+                auxiliary=["python-projects:list-literal", "python-projects:loop-counter"],
             )
         ],
     )
 
-    findings = concept_scan_findings(root, "book1")
-    assert any("book1:list-literal is unused" in finding for finding in findings)
+    findings = concept_scan_findings(root, "python-projects")
+    assert any("python-projects:list-literal is unused" in finding for finding in findings)
     assert not any("loop-counter is unused" in finding for finding in findings)
 
 
 def test_entry_auxiliary_must_be_declared_by_a_cell(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
-    (root / "book1/units/unit-01-fixture").mkdir(parents=True)
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal"])
+    (root / "python-projects/units/unit-01-fixture").mkdir(parents=True)
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
-            "FAIL: unit-01-fixture: entry auxiliary book1:list-literal "
+            "FAIL: unit-01-fixture: entry auxiliary python-projects:list-literal "
             "is not declared by any cell"
         )
     ]
 
 
 def test_markdown_unused_check_aggregates_all_fences_in_cell(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book2:str-split"])
+    root = _scanner_root(tmp_path, auxiliary=["usaco-bronze:str-split"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 "```python\nprint('fixed form')\n```\n\n"
@@ -934,40 +941,40 @@ def test_markdown_unused_check_aggregates_all_fences_in_cell(tmp_path):
                 cell_id="two-real-form-fences",
                 cell_type="markdown",
                 tags=["auxiliary", "real-form"],
-                auxiliary=["book2:str-split"],
+                auxiliary=["usaco-bronze:str-split"],
             )
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 def test_fenceless_declared_markdown_cell_reports_unused_auxiliary(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book2:str-split"])
+    root = _scanner_root(tmp_path, auxiliary=["usaco-bronze:str-split"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 "This real form is missing its Python fence.",
                 cell_id="fenceless-real-form",
                 cell_type="markdown",
                 tags=["auxiliary", "real-form"],
-                auxiliary=["book2:str-split"],
+                auxiliary=["usaco-bronze:str-split"],
             )
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
             "FAIL: unit-01-fixture: solutions.ipynb cell fenceless-real-form: "
-            "declared auxiliary book2:str-split is unused"
+            "declared auxiliary usaco-bronze:str-split is unused"
         )
     ]
 
 
 def test_markdown_manual_only_future_concept_is_not_flagged(tmp_path):
     root = _scanner_root(tmp_path)
-    concepts_path = root / "book1/curriculum/concepts.yaml"
+    concepts_path = root / "python-projects/curriculum/concepts.yaml"
     concepts = yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
     concepts["concepts"].append(
         {"id": "type-conversion", "name": "type-conversion", "category": "data"}
@@ -988,7 +995,7 @@ def test_markdown_manual_only_future_concept_is_not_flagged(tmp_path):
     )
     _write_yaml(map_path, coverage)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "```python\nvalue = int('1')\n```",
@@ -998,30 +1005,30 @@ def test_markdown_manual_only_future_concept_is_not_flagged(tmp_path):
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 def test_two_detectable_tools_exceed_cell_budget(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal", "book2:str-split"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal", "usaco-bronze:str-split"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "scores = [1, 2]\nwords = text.split()",
                 cell_id="over-budget",
                 tags=["auxiliary", "demo"],
-                auxiliary=["book1:list-literal", "book2:str-split"],
+                auxiliary=["python-projects:list-literal", "usaco-bronze:str-split"],
             )
         ],
     )
 
     assert any(
-        "more than one detectable" in finding for finding in concept_scan_findings(root, "book1")
+        "more than one detectable" in finding for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_exercise_and_solution_given_regions_pair_by_task_id_not_position(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal"])
     first_given = "# GIVEN TOOL — do not edit\nfirst = [1, 2]\n# your work begins below\n"
     second_given = "# GIVEN TOOL — do not edit\nsecond = [3, 4]\n# your work begins below\n"
     exercise_cells = [
@@ -1029,14 +1036,14 @@ def test_exercise_and_solution_given_regions_pair_by_task_id_not_position(tmp_pa
             first_given + "print('exercise one')",
             cell_id="exercise-one",
             tags=["auxiliary", "given"],
-            auxiliary=["book1:list-literal"],
+            auxiliary=["python-projects:list-literal"],
             task_id="task-one",
         ),
         _cell(
             second_given + "print('exercise two')",
             cell_id="exercise-two",
             tags=["auxiliary", "given"],
-            auxiliary=["book1:list-literal"],
+            auxiliary=["python-projects:list-literal"],
             task_id="task-two",
         ),
     ]
@@ -1045,23 +1052,23 @@ def test_exercise_and_solution_given_regions_pair_by_task_id_not_position(tmp_pa
             second_given + "print('solution two')",
             cell_id="solution-two",
             tags=["auxiliary", "real-form"],
-            auxiliary=["book1:list-literal"],
+            auxiliary=["python-projects:list-literal"],
             task_id="task-two",
         ),
         _cell(
             first_given + "print('solution one')",
             cell_id="solution-one",
             tags=["auxiliary", "real-form"],
-            auxiliary=["book1:list-literal"],
+            auxiliary=["python-projects:list-literal"],
             task_id="task-one",
         ),
     ]
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         exercise_cells,
     )
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         solution_cells,
     )
 
@@ -1074,34 +1081,34 @@ def test_exercise_and_solution_given_regions_pair_by_task_id_not_position(tmp_pa
         "task-one",
     ]
     assert _given_bytes(exercise_cells[0].source) != _given_bytes(solution_cells[0].source)
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 def test_exercise_auxiliary_outside_given_region_fails(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal"])
     source = (
         "# GIVEN TOOL — do not edit\nprint('ready')\n# your work begins below\nscores = [1, 2]\n"
     )
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         [
             _cell(
                 source,
                 cell_id="exercise-side",
                 tags=["auxiliary", "given"],
-                auxiliary=["book1:list-literal"],
+                auxiliary=["python-projects:list-literal"],
                 task_id="task-one",
             )
         ],
     )
 
     assert any(
-        "outside the GIVEN region" in finding for finding in concept_scan_findings(root, "book1")
+        "outside the GIVEN region" in finding for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_generic_k1_locality_rejects_function_after_given_region(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:def-function"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:def-function"])
     source = (
         "# GIVEN TOOL — do not edit\n"
         "print('ready')\n"
@@ -1110,13 +1117,13 @@ def test_generic_k1_locality_rejects_function_after_given_region(tmp_path):
         "    print('outside')\n"
     )
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         [
             _cell(
                 source,
                 cell_id="generic-locality",
                 tags=["auxiliary", "given"],
-                auxiliary=["book1:def-function"],
+                auxiliary=["python-projects:def-function"],
                 task_id="task-one",
             )
         ],
@@ -1124,33 +1131,33 @@ def test_generic_k1_locality_rejects_function_after_given_region(tmp_path):
 
     assert any(
         "auxiliary def-function is outside the GIVEN region" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_generic_k1_locality_retains_set_receiver_context(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book2:set-ops"])
+    root = _scanner_root(tmp_path, auxiliary=["usaco-bronze:set-ops"])
     source = "# GIVEN TOOL — do not edit\nvalues = set()\n# your work begins below\nvalues.add(1)\n"
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         [
             _cell(
                 source,
                 cell_id="set-context",
                 tags=["auxiliary", "given"],
-                auxiliary=["book2:set-ops"],
+                auxiliary=["usaco-bronze:set-ops"],
                 task_id="task-one",
             )
         ],
     )
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any("auxiliary set-ops is outside the GIVEN region" in finding for finding in findings)
-    assert not any("book2:set-ops is unused" in finding for finding in findings)
+    assert not any("usaco-bronze:set-ops is unused" in finding for finding in findings)
 
 
 def test_given_region_bytes_must_match(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal"])
     exercise_source = (
         "# GIVEN TOOL — do not edit\nscores = [1, 2]\n# your work begins below\nprint('done')\n"
     )
@@ -1163,71 +1170,71 @@ def test_given_region_bytes_must_match(tmp_path):
     assert ast.dump(ast.parse(exercise_given)) == ast.dump(ast.parse(solution_given))
 
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         [
             _cell(
                 exercise_source,
                 cell_id="exercise-side",
                 tags=["auxiliary", "given"],
-                auxiliary=["book1:list-literal"],
+                auxiliary=["python-projects:list-literal"],
                 task_id="stable-task",
             )
         ],
     )
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 solution_source,
                 cell_id="solution-side",
                 tags=["auxiliary", "real-form"],
-                auxiliary=["book1:list-literal"],
+                auxiliary=["python-projects:list-literal"],
                 task_id="stable-task",
             )
         ],
     )
 
     assert any(
-        "GIVEN regions differ" in finding for finding in concept_scan_findings(root, "book1")
+        "GIVEN regions differ" in finding for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_solution_auxiliary_cell_requires_pairing_id(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal"])
     source = "# GIVEN TOOL — do not edit\nscores = [1]\n# your work begins below\n"
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 source,
                 cell_id="solution-side",
                 tags=["auxiliary", "real-form"],
-                auxiliary=["book1:list-literal"],
+                auxiliary=["python-projects:list-literal"],
             )
         ],
     )
 
     assert any(
         "auxiliary solution cell requires py4kids_task_id" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_solution_real_form_without_given_region_needs_no_pairing_id(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book2:str-split"])
+    root = _scanner_root(tmp_path, auxiliary=["usaco-bronze:str-split"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 "words = text.split()",
                 cell_id="standalone-real-form",
                 tags=["auxiliary", "real-form"],
-                auxiliary=["book2:str-split"],
+                auxiliary=["usaco-bronze:str-split"],
             )
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 def test_exercise_auxiliary_cell_requires_pairing_id(tmp_path):
@@ -1240,7 +1247,7 @@ def test_exercise_auxiliary_cell_requires_pairing_id(tmp_path):
 
     assert any(
         "auxiliary exercise cell requires py4kids_task_id" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
@@ -1252,34 +1259,34 @@ def test_exercise_auxiliary_cell_requires_pairing_id(tmp_path):
     ],
 )
 def test_k1_role_must_match_notebook_kind(tmp_path, notebook, role, expected):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal"])
     _write_notebook(
-        root / f"book1/units/unit-01-fixture/{notebook}",
+        root / f"python-projects/units/unit-01-fixture/{notebook}",
         [
             _cell(
                 "scores = [1]",
                 cell_id="wrong-context",
                 tags=["auxiliary", role],
-                auxiliary=["book1:list-literal"],
+                auxiliary=["python-projects:list-literal"],
                 task_id="task-one" if notebook == "solutions.ipynb" else None,
             )
         ],
     )
 
-    assert any(expected in finding for finding in concept_scan_findings(root, "book1"))
+    assert any(expected in finding for finding in concept_scan_findings(root, "python-projects"))
 
 
 def test_exercise_requires_given_role(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:list-literal"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:list-literal"])
     source = "# GIVEN TOOL — do not edit\nscores = [1]\n# your work begins below\n"
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         [
             _cell(
                 source,
                 cell_id="wrong-role",
                 tags=["auxiliary", "demo"],
-                auxiliary=["book1:list-literal"],
+                auxiliary=["python-projects:list-literal"],
                 task_id="task-one",
             )
         ],
@@ -1287,26 +1294,26 @@ def test_exercise_requires_given_role(tmp_path):
 
     assert any(
         "exercise auxiliary cell must use role given" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def _install_k2_case(root: Path, source: str, *, cell_id="counter", role="composed"):
     _set_entry(
         root,
-        auxiliary=["book1:loop-counter", "book1:accumulator"],
+        auxiliary=["python-projects:loop-counter", "python-projects:accumulator"],
         introduces=["print", "string-literal", "arithmetic"],
     )
     _write_k2(root, [_k2_row()])
     tags = ["auxiliary", role] if role else ["auxiliary"]
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 source,
                 cell_id=cell_id,
                 tags=tags,
-                auxiliary=["book1:loop-counter", "book1:accumulator"],
+                auxiliary=["python-projects:loop-counter", "python-projects:accumulator"],
             )
         ],
     )
@@ -1316,30 +1323,30 @@ def test_k2_exact_counter_statement_passes(tmp_path):
     root = _scanner_root(tmp_path)
     _install_k2_case(root, "n = n + 1")
 
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 def test_k2_composed_exercise_is_exempt_from_given_region_and_pairing(tmp_path):
     root = _scanner_root(tmp_path)
     _set_entry(
         root,
-        auxiliary=["book1:loop-counter", "book1:accumulator"],
+        auxiliary=["python-projects:loop-counter", "python-projects:accumulator"],
         introduces=["print", "string-literal", "arithmetic"],
     )
     _write_k2(root, [_k2_row()])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         [
             _cell(
                 "n = n + 1",
                 cell_id="counter",
                 tags=["auxiliary", "composed"],
-                auxiliary=["book1:loop-counter", "book1:accumulator"],
+                auxiliary=["python-projects:loop-counter", "python-projects:accumulator"],
             )
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 @pytest.mark.parametrize(
@@ -1358,7 +1365,7 @@ def test_k2_rejects_non_exact_counter_forms(tmp_path, source):
 
     assert any(
         "used-but-unlisted concept accumulator" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
@@ -1368,7 +1375,7 @@ def test_k2_authorization_is_per_statement(tmp_path):
 
     assert any(
         "used-but-unlisted concept accumulator" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
@@ -1383,18 +1390,18 @@ def test_k2_rejects_non_exact_accumulator_node_types(tmp_path, second_statement)
 
     assert any(
         "used-but-unlisted concept accumulator" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_annotation_only_statement_is_not_an_accumulator(tmp_path):
     root = _scanner_root(tmp_path)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("m: int", cell_id="annotation-only")],
     )
 
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 def test_k2_row_with_missing_cell_id_fails_closed(tmp_path):
@@ -1402,7 +1409,7 @@ def test_k2_row_with_missing_cell_id_fails_closed(tmp_path):
     _install_k2_case(root, "n = n + 1")
     _write_k2(root, [_k2_row("missing-cell")])
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any("must name exactly one existing cell" in finding for finding in findings)
     assert any("used-but-unlisted concept accumulator" in finding for finding in findings)
 
@@ -1411,24 +1418,24 @@ def test_k2_row_for_different_existing_cell_does_not_authorize_counter(tmp_path)
     root = _scanner_root(tmp_path)
     _set_entry(
         root,
-        auxiliary=["book1:loop-counter", "book1:accumulator"],
+        auxiliary=["python-projects:loop-counter", "python-projects:accumulator"],
         introduces=["print", "string-literal", "arithmetic"],
     )
     _write_k2(root, [_k2_row("ordinary")])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell("print('ordinary')", cell_id="ordinary"),
             _cell(
                 "n = n + 1",
                 cell_id="counter",
                 tags=["auxiliary", "composed"],
-                auxiliary=["book1:loop-counter", "book1:accumulator"],
+                auxiliary=["python-projects:loop-counter", "python-projects:accumulator"],
             ),
         ],
     )
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any(
         "k2 exception cell-id ordinary does not match its concepts, role, location, "
         "and exact AST form" in finding
@@ -1444,10 +1451,10 @@ def test_k2_row_with_different_concepts_is_rejected_closed(tmp_path):
     root = _scanner_root(tmp_path)
     _install_k2_case(root, "n = n + 1")
     row = _k2_row()
-    row["concept-ids"] = ["book1:accumulator"]
+    row["concept-ids"] = ["python-projects:accumulator"]
     _write_k2(root, [row])
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any("k2 exception 0 is not an allowed closed-table row" in item for item in findings)
     assert any("used-but-unlisted concept accumulator" in item for item in findings)
 
@@ -1456,7 +1463,7 @@ def test_k2_cell_missing_composed_role_is_rejected_closed(tmp_path):
     root = _scanner_root(tmp_path)
     _install_k2_case(root, "n = n + 1", role="")
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any("borrowed cell must have exactly one auxiliary role" in item for item in findings)
     assert any(
         "k2 exception cell-id counter does not match its concepts, role, location, "
@@ -1473,24 +1480,24 @@ def test_k2_never_authorizes_checkpoint(tmp_path):
     entry["id"] = "checkpoint-01-fixture"
     entry["kind"] = "checkpoint"
     entry["introduces"] = ["print", "string-literal", "arithmetic"]
-    entry["auxiliary"] = ["book1:loop-counter", "book1:accumulator"]
+    entry["auxiliary"] = ["python-projects:loop-counter", "python-projects:accumulator"]
     _write_yaml(path, data)
     _write_k2(root, [_k2_row()])
     _write_notebook(
-        root / "book1/checkpoints/checkpoint-01-fixture/checkpoint.ipynb",
+        root / "python-projects/checkpoints/checkpoint-01-fixture/checkpoint.ipynb",
         [
             _cell(
                 "n = n + 1",
                 cell_id="counter",
                 tags=["auxiliary", "composed"],
-                auxiliary=["book1:loop-counter", "book1:accumulator"],
+                auxiliary=["python-projects:loop-counter", "python-projects:accumulator"],
             )
         ],
     )
 
     assert any(
         "used-but-unlisted concept accumulator" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
@@ -1501,22 +1508,22 @@ def test_k2_never_authorizes_project(tmp_path):
     entry["id"] = "project-01-fixture"
     entry["kind"] = "project"
     entry["introduces"] = ["print", "string-literal", "arithmetic"]
-    entry["auxiliary"] = ["book1:loop-counter", "book1:accumulator"]
+    entry["auxiliary"] = ["python-projects:loop-counter", "python-projects:accumulator"]
     _write_yaml(path, data)
     _write_k2(root, [_k2_row()])
     _write_notebook(
-        root / "book1/projects/project-01-fixture/brief.ipynb",
+        root / "python-projects/projects/project-01-fixture/brief.ipynb",
         [
             _cell(
                 "n = n + 1",
                 cell_id="counter",
                 tags=["auxiliary", "composed"],
-                auxiliary=["book1:loop-counter", "book1:accumulator"],
+                auxiliary=["python-projects:loop-counter", "python-projects:accumulator"],
             )
         ],
     )
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any(
         "k2 exception cell-id counter does not match its concepts, role, location, "
         "and exact AST form" in item
@@ -1528,52 +1535,52 @@ def test_k2_never_authorizes_project(tmp_path):
 def test_unauthorized_split_keeps_untaught_method_finding(tmp_path):
     root = _scanner_root(tmp_path)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("words = text.split()", cell_id="raw-split")],
     )
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any("untaught method split" in item for item in findings)
-    assert not any("book2:str-split" in item for item in findings)
+    assert not any("usaco-bronze:str-split" in item for item in findings)
 
 
 def test_split_rejects_wrong_book_owner_declaration(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book1:str-split"])
+    root = _scanner_root(tmp_path, auxiliary=["python-projects:str-split"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "words = text.split()",
                 cell_id="wrong-split-owner",
                 tags=["auxiliary", "demo"],
-                auxiliary=["book1:str-split"],
+                auxiliary=["python-projects:str-split"],
             )
         ],
     )
 
-    findings = concept_scan_findings(root, "book1")
-    assert any("str-split must be declared as book2:str-split" in item for item in findings)
-    assert not any("undeclared borrowed tool book2:str-split" in item for item in findings)
+    findings = concept_scan_findings(root, "python-projects")
+    assert any("str-split must be declared as usaco-bronze:str-split" in item for item in findings)
+    assert not any("undeclared borrowed tool usaco-bronze:str-split" in item for item in findings)
 
 
 def test_markdown_solution_enforces_real_form_role_before_scope_exit(tmp_path):
-    root = _scanner_root(tmp_path, auxiliary=["book2:str-split"])
+    root = _scanner_root(tmp_path, auxiliary=["usaco-bronze:str-split"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 "```python\nwords = text.split()\n```",
                 cell_id="markdown-wrong-role",
                 cell_type="markdown",
                 tags=["auxiliary", "demo"],
-                auxiliary=["book2:str-split"],
+                auxiliary=["usaco-bronze:str-split"],
             )
         ],
     )
 
     assert any(
         "solution auxiliary cell must use role real-form" in item
-        for item in concept_scan_findings(root, "book1")
+        for item in concept_scan_findings(root, "python-projects")
     )
 
 
@@ -1583,7 +1590,7 @@ def test_k2_rejects_float_one_literal(tmp_path):
 
     assert any(
         "used-but-unlisted concept accumulator" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
@@ -1591,18 +1598,18 @@ def test_k2_row_pointing_at_ordinary_cell_fails_closed(tmp_path):
     root = _scanner_root(tmp_path)
     _set_entry(
         root,
-        auxiliary=["book1:loop-counter", "book1:accumulator"],
+        auxiliary=["python-projects:loop-counter", "python-projects:accumulator"],
         introduces=["print", "string-literal", "arithmetic"],
     )
     _write_k2(root, [_k2_row("ordinary")])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("print('ordinary')", cell_id="ordinary")],
     )
 
     assert any(
         "does not match its concepts, role, location, and exact AST form" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
@@ -1610,23 +1617,23 @@ def test_k2_prevalidation_rejects_unhashable_cell_declarations_without_crash(tmp
     root = _scanner_root(tmp_path)
     _set_entry(
         root,
-        auxiliary=["book1:loop-counter", "book1:accumulator"],
+        auxiliary=["python-projects:loop-counter", "python-projects:accumulator"],
         introduces=["print", "string-literal", "arithmetic"],
     )
     _write_k2(root, [_k2_row()])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "n = n + 1",
                 cell_id="counter",
                 tags=["auxiliary", "composed"],
-                auxiliary=[["book1:accumulator"]],
+                auxiliary=[["python-projects:accumulator"]],
             )
         ],
     )
 
-    findings = concept_scan_findings(root, "book1")
+    findings = concept_scan_findings(root, "python-projects")
     assert any("py4kids_auxiliary must be a list of qualified ids" in item for item in findings)
     assert any(
         "does not match its concepts, role, location, and exact AST form" in item
@@ -1635,29 +1642,29 @@ def test_k2_prevalidation_rejects_unhashable_cell_declarations_without_crash(tmp
 
 
 def _install_paired_set_ops(root: Path) -> None:
-    _register_book2_set_ops(root)
-    _set_entry(root, auxiliary=["book2:set-ops"])
+    _register_usaco_bronze_set_ops(root)
+    _set_entry(root, auxiliary=["usaco-bronze:set-ops"])
     given = "# GIVEN TOOL — do not edit\nvalues = set()\nvalues.add(1)\n# your work begins below\n"
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         [
             _cell(
                 given,
                 cell_id="set-exercise",
                 tags=["auxiliary", "given"],
-                auxiliary=["book2:set-ops"],
+                auxiliary=["usaco-bronze:set-ops"],
                 task_id="set-task",
             )
         ],
     )
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 given,
                 cell_id="set-solution",
                 tags=["auxiliary", "real-form"],
-                auxiliary=["book2:set-ops"],
+                auxiliary=["usaco-bronze:set-ops"],
                 task_id="set-task",
             )
         ],
@@ -1668,30 +1675,30 @@ def test_authorized_cross_book_set_ops_extends_scanner_profile(tmp_path):
     root = _scanner_root(tmp_path)
     _install_paired_set_ops(root)
 
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 def test_cross_book_set_ops_still_fails_in_undeclared_sibling_block(tmp_path):
     root = _scanner_root(tmp_path)
     _install_paired_set_ops(root)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("other = set()\nother.add(2)", cell_id="undeclared-set")],
     )
 
     assert any(
-        "lesson.ipynb cell undeclared-set: undeclared borrowed tool book2:set-ops"
+        "lesson.ipynb cell undeclared-set: undeclared borrowed tool usaco-bronze:set-ops"
         in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_method_profile_authorization_is_cell_local(tmp_path):
     root = _scanner_root(tmp_path)
-    _register_book2_set_ops(root)
-    _set_entry(root, auxiliary=["book2:set-ops"])
+    _register_usaco_bronze_set_ops(root)
+    _set_entry(root, auxiliary=["usaco-bronze:set-ops"])
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [
             _cell(
                 "# GIVEN TOOL — do not edit\n"
@@ -1700,7 +1707,7 @@ def test_method_profile_authorization_is_cell_local(tmp_path):
                 "# your work begins below\n",
                 cell_id="declared-set-method",
                 tags=["auxiliary", "demo"],
-                auxiliary=["book2:set-ops"],
+                auxiliary=["usaco-bronze:set-ops"],
             ),
             _cell("other.remove(2)", cell_id="undeclared-set-method"),
         ],
@@ -1708,7 +1715,7 @@ def test_method_profile_authorization_is_cell_local(tmp_path):
 
     assert any(
         "lesson.ipynb cell undeclared-set-method: untaught method remove" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
@@ -1722,13 +1729,13 @@ def test_exercise_method_authorization_is_limited_to_given_region(tmp_path):
         "# your work begins below\n"
     )
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         [
             _cell(
                 given + "other.remove(2)\n",
                 cell_id="set-exercise",
                 tags=["auxiliary", "given"],
-                auxiliary=["book2:set-ops"],
+                auxiliary=["usaco-bronze:set-ops"],
                 task_id="set-task",
             )
         ],
@@ -1736,14 +1743,14 @@ def test_exercise_method_authorization_is_limited_to_given_region(tmp_path):
 
     assert any(
         "exercises.ipynb cell set-exercise: untaught method remove" in finding
-        for finding in concept_scan_findings(root, "book1")
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_entry_defined_name_does_not_authorize_borrowed_method_outside_given(tmp_path):
     root = _scanner_root(tmp_path)
-    _register_book2_set_ops(root)
-    _set_entry(root, auxiliary=["book2:set-ops"])
+    _register_usaco_bronze_set_ops(root)
+    _set_entry(root, auxiliary=["usaco-bronze:set-ops"])
     source = (
         "# GIVEN TOOL — do not edit\n"
         "values = set()\n"
@@ -1756,60 +1763,60 @@ def test_entry_defined_name_does_not_authorize_borrowed_method_outside_given(tmp
         "alias.add(2)\n"
     )
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         [
             _cell(
                 source,
                 cell_id="entry-defined-add",
                 tags=["auxiliary", "given"],
-                auxiliary=["book2:set-ops"],
+                auxiliary=["usaco-bronze:set-ops"],
                 task_id="set-task",
             )
         ],
     )
 
-    assert any("untaught method add" in finding for finding in concept_scan_findings(root, "book1"))
+    assert any("untaught method add" in finding for finding in concept_scan_findings(root, "python-projects"))
 
 
 def test_bare_deque_identifier_is_not_a_borrowed_tool(tmp_path):
     root = _scanner_root(tmp_path)
-    _register_book2_feature(root, "deque")
+    _register_usaco_bronze_feature(root, "deque")
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("deque = 1\nprint(deque)", cell_id="deque-variable")],
     )
 
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
 def test_undeclared_deque_attribute_is_a_borrowed_tool(tmp_path):
     root = _scanner_root(tmp_path)
-    _register_book2_feature(root, "deque")
+    _register_usaco_bronze_feature(root, "deque")
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("queue_type = collections.deque", cell_id="deque-attribute")],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
             "FAIL: unit-01-fixture: lesson.ipynb cell deque-attribute: "
-            "undeclared borrowed tool book2:deque"
+            "undeclared borrowed tool usaco-bronze:deque"
         )
     ]
 
 
 def test_undeclared_deque_constructor_is_a_borrowed_tool(tmp_path):
     root = _scanner_root(tmp_path)
-    _register_book2_feature(root, "deque")
+    _register_usaco_bronze_feature(root, "deque")
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("queue = deque()", cell_id="deque-constructor")],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
             "FAIL: unit-01-fixture: lesson.ipynb cell deque-constructor: "
-            "undeclared borrowed tool book2:deque"
+            "undeclared borrowed tool usaco-bronze:deque"
         )
     ]
 
@@ -1826,19 +1833,19 @@ def test_attributed_deque_constructor_is_detected():
 
 def test_scanned_book_concept_wins_dependent_registry_collision(tmp_path):
     root = _scanner_root(tmp_path)
-    _register_book2_feature(root, "deque")
-    concepts_path = root / "book1/curriculum/concepts.yaml"
+    _register_usaco_bronze_feature(root, "deque")
+    concepts_path = root / "python-projects/curriculum/concepts.yaml"
     concepts = yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
     concepts["concepts"].append(
         {"id": "deque", "name": "deque", "category": "data", "kind": "feature"}
     )
     _write_yaml(concepts_path, concepts)
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("queue = deque()", cell_id="local-deque")],
     )
 
-    assert concept_scan_findings(root, "book1") == [
+    assert concept_scan_findings(root, "python-projects") == [
         (
             "FAIL: unit-01-fixture: lesson.ipynb cell local-deque: "
             "used-but-unlisted concept deque"
@@ -1848,25 +1855,25 @@ def test_scanned_book_concept_wins_dependent_registry_collision(tmp_path):
 
 def test_dependent_book_feature_requires_cell_declaration(tmp_path):
     root = _scanner_root(tmp_path)
-    _register_book2_feature(root, "comprehension")
+    _register_usaco_bronze_feature(root, "comprehension")
     _write_notebook(
-        root / "book1/units/unit-01-fixture/lesson.ipynb",
+        root / "python-projects/units/unit-01-fixture/lesson.ipynb",
         [_cell("copies = [n for n in values]", cell_id="undeclared-comprehension")],
     )
 
     assert any(
         "lesson.ipynb cell undeclared-comprehension: undeclared borrowed tool "
-        "book2:comprehension" in finding
-        for finding in concept_scan_findings(root, "book1")
+        "usaco-bronze:comprehension" in finding
+        for finding in concept_scan_findings(root, "python-projects")
     )
 
 
 def test_dependent_book_feature_is_authorized_in_paired_given_region(tmp_path):
     root = _scanner_root(tmp_path)
-    _register_book2_feature(root, "comprehension")
+    _register_usaco_bronze_feature(root, "comprehension")
     _set_entry(
         root,
-        auxiliary=["book2:comprehension"],
+        auxiliary=["usaco-bronze:comprehension"],
         introduces=["print", "string-literal"],
     )
     source = (
@@ -1876,50 +1883,50 @@ def test_dependent_book_feature_is_authorized_in_paired_given_region(tmp_path):
         "print(copies)\n"
     )
     _write_notebook(
-        root / "book1/units/unit-01-fixture/exercises.ipynb",
+        root / "python-projects/units/unit-01-fixture/exercises.ipynb",
         [
             _cell(
                 source,
                 cell_id="given-comprehension",
                 tags=["auxiliary", "given"],
-                auxiliary=["book2:comprehension"],
+                auxiliary=["usaco-bronze:comprehension"],
                 task_id="comprehension-task",
             )
         ],
     )
     _write_notebook(
-        root / "book1/units/unit-01-fixture/solutions.ipynb",
+        root / "python-projects/units/unit-01-fixture/solutions.ipynb",
         [
             _cell(
                 source,
                 cell_id="solution-comprehension",
                 tags=["auxiliary", "real-form"],
-                auxiliary=["book2:comprehension"],
+                auxiliary=["usaco-bronze:comprehension"],
                 task_id="comprehension-task",
             )
         ],
     )
 
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
 
-def test_book1_auxiliary_profile_cannot_leak_into_later_book2_v1_scan(tmp_path):
+def test_python_projects_auxiliary_profile_cannot_leak_into_later_usaco_bronze_v1_scan(tmp_path):
     root = _scanner_root(tmp_path)
     _install_paired_set_ops(root)
 
-    # Non-vacuous first half: this Book-1 scan activates the set-ops profile
+    # Non-vacuous first half: this python-projects scan activates the set-ops profile
     # extension and needs it to authorize both set() and .add().
-    assert concept_scan_findings(root, "book1") == []
+    assert concept_scan_findings(root, "python-projects") == []
 
-    concepts_path = root / "book2/curriculum/concepts.yaml"
+    concepts_path = root / "usaco-bronze/curriculum/concepts.yaml"
     concepts = yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
     concepts["concepts"] = [
         concept for concept in concepts["concepts"] if concept["id"] != "set-ops"
     ]
     _write_yaml(concepts_path, concepts)
     _write_notebook(
-        root / "book2/units/unit-01-split/lesson.ipynb",
-        [_cell("values = set()\nvalues.add(1)", cell_id="book2-v1-set")],
+        root / "usaco-bronze/units/unit-01-split/lesson.ipynb",
+        [_cell("values = set()\nvalues.add(1)", cell_id="usaco-bronze-v1-set")],
     )
 
-    assert concept_scan_findings(root, "book2") == ["FAIL: unit-01-split: untaught method add"]
+    assert concept_scan_findings(root, "usaco-bronze") == ["FAIL: unit-01-split: untaught method add"]
