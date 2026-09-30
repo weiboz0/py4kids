@@ -232,5 +232,29 @@ The tests cover:
 
 ## Content Review
 
+### Round 1
+
+- `[sol]` **REJECT**, 2 findings, both folded:
+  - `[FIXED]` Solution heading-cell bodies (worked explanations) were dropped from answers. They now print through `heading_answer`, which skips restated statements and asset listings that already print as panels.
+  - `[FIXED]` Structural subheads take an optional number and an optional `— label` (`Sample Input — first case`), while `Input from a person` stays a title.
+- `[fable]` **APPROVE WITH NITS**. It verified Phase B on real contest and *Python by Projects* notebooks in a scratch copy with all four books flagged, found no tooling leak path, and confirmed the regression test. Findings, all folded:
+  - `[FIXED]` F1: the regression digest depended on gitignored data files. `datafile` panels and `data:*` records are now normalised away, and the test passes with and without the files.
+  - `[FIXED]` F2: the Notice count now covers the body before the answer key.
+  - `[FIXED]` F3: = [sol] 1.
+  - `[FIXED]` F4: body-leak findings name their chapter.
+  - `[FIXED]` F5: `.division` is styled (`\pubdivision`).
+  - `[FIXED]` F6: `pyproject.toml` and `uv.lock` trigger all books.
+  - `[FIXED]` F7: an exemption phrase must be on the ban list.
+  - `[FIXED]` F8: the answer key uses the book's `lesson_heading`.
+  - F9 was a reminder: its scratch audit counts are the content plans' to-do list.
+- **python-concepts output:** the heading-cell fix prints 4 explanations the old answer key silently dropped (unit-06 Ex 17; unit-07 Ex 7, 27, 28). The 5 affected files are listed in `tests/data/python-concepts-publish-allowed-diffs.yaml` with their D3 reason; nothing else changed.
+
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE WITH NITS** (r2): every fold is supported by code and tests. `[FIXED]` its nit: the allowed-diffs comment's counts were corrected (25 heading bodies, 20 of them asset-only).
+- `[fable]` APPROVE WITH NITS (r1; all folded).
+- `[self]` APPROVE: two solo CI runs were ALL GREEN (9143777, then 9f33194), and python-concepts' four editions rendered and audited clean (410 / 656 / 192 / 922 pages, 0 overfull hboxes).
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Post-Execution Report
 _(filled before merge.)_

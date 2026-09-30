@@ -13,7 +13,7 @@
 # stdin lesson programs, and its answer markdown is unchanged by markdown_blocks (answers keep their
 # code fences whole).
 # The D3 heading-cell rule (content review r1: a solution heading cell's body is part of the worked
-# answer) changes four answers. 23 python-concepts solution heading cells have a body: 19 only label
+# answer) changes four answers. 25 python-concepts solution heading cells have a body: 20 only label
 # and list (or point to) a solution asset that the answer prints as a program panel anyway, and one
 # (checkpoint-02 Question 7) restates its statement verbatim; both kinds stay unprinted. The other
 # four hold explanations the old answer key dropped, and now print: unit-06 Exercise 17 and unit-07
