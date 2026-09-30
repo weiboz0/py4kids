@@ -223,6 +223,13 @@ The tests cover:
 
   No further blocker was found in the rest of the plan.
 
+### Round 6 — CONSENSUS
+
+- `[sol]` **APPROVE** (r6): no findings and no remaining internal contradiction.
+- `[fable]` APPROVE WITH NITS (r2; nits folded). Rounds 3–6 only narrowed rules [sol] raised (exemption scope, checkpoint mirror cells, `patterns.pdf`, glob provenance), and each fold was checked against the code.
+- `[self]` APPROVE WITH NITS (r1; folded).
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Content Review
 
 ## Post-Execution Report
