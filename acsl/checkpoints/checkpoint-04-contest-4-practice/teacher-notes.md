@@ -10,7 +10,7 @@ It holds two full six-question papers that share four questions, plus the progra
 - Q3–Q4: Digital Electronics (the TRUE triples of a circuit; a circuit simplified to its sum of products).
 - Q5–Q6: What Does This Program Do? – Strings (Junior), one in ACSL pseudocode with ACSL's substrings and one in Python.
 - Q7–Q8: Assembly Language (Intermediate and above): a `DIV` that rounds toward zero, and a `READ` loop with a branch on the boundary.
-- Q9: the programming problem, "Friend of a Friend". For each vertex of an undirected graph, the program lists the vertices it is not joined to that share at least one neighbour with it, with the count of shared neighbours (an entry of `M^2`).
+- Q9: the programming problem, "What Kind of Route?". The program stores a directed graph as an adjacency matrix and names each given route as `NOT A PATH`, `CYCLE`, `SIMPLE PATH` or `PATH`, using the definitions of Unit 12.
 
 ## Pacing
 
@@ -32,13 +32,14 @@ ACSL's Junior, Intermediate and Senior short-answer tests are each 6 questions i
 - Q6: an off-by-one in the letter shift.
 - Q7: rounding `DIV` down instead of toward zero (`-23` ÷ `4` is `-5`).
 - Q8: treating `BG` as "greater than or equal"; the 10 is not greater than 10.
-- Q9: suggesting a vertex already joined to X, or X itself; printing nothing instead of `NONE`.
+- Q9: using an edge against its direction (`AC` when only `CA` is given); calling `ABCABCA` a cycle because it ends where it started; forgetting that in a directed graph `ABA` can be a cycle.
 
 ## Discussion prompts
 
 - Which category cost you the most points, and what will you practise before Contest 4?
 - In Q2, how can you check a matrix answer by listing the walks?
 - In Q7, where else does "toward zero" versus "down" change an answer?
+- In Q9, a route can fail in two ways: a missing edge, or a vertex visited twice. Which one should the program look for first, and why?
 - Looking back over the season, which ACSL rule surprised you most?
 
 ## Differentiation
@@ -48,7 +49,7 @@ ACSL's Junior, Intermediate and Senior short-answer tests are each 6 questions i
 - **Classroom:** Q1–Q4 and Q7–Q8 as short-answer practice, with Q5–Q6 optional. The real Classroom test is 10 questions in 50 minutes (acsl.org Divisions page), from Graph Theory, Digital Electronics and Assembly Language.
 - **Elementary:** not for Elementary students. Their Contest 4 mock test is unit 12's Exercises 1–6, 6 questions in 30 minutes.
 - **Support:** allow a blank matrix grid, a gate truth-table card and a trace table on a first attempt, then retake without them.
-- **Extension:** write two extra Q9 test cases, one of them a graph where some vertex should print `NONE` although it has neighbours.
+- **Extension:** write two extra Q9 test cases, one of them a route that ends where it started but is not a cycle.
 
 ## Grading
 

@@ -10,7 +10,7 @@ It holds two full six-question papers that share four questions, plus the progra
 - Q3–Q4: Bit-String Flicking (a precedence evaluation; a solve-for-x).
 - Q5–Q6: What Does This Program Do? – Looping (Junior), one in ACSL pseudocode.
 - Q7–Q8: LISP (Intermediate and above): one `DEFUN`/`SETQ` item and one `CAR`/`CDR` composition item.
-- Q9: the programming problem, "Deepest Stack". The program evaluates a postfix expression and reports its value and the deepest stack reached.
+- Q9: the programming problem, "Brackets Away". The program reads a fully bracketed infix expression and prints it in postfix and in prefix: each operator is written out when its closing bracket is reached, and a stack of pieces builds the prefix.
 
 ## Pacing
 
@@ -31,13 +31,13 @@ ACSL's Junior, Intermediate and Senior short-answer tests are each 6 questions i
 - Q5–Q6: stopping a `FOR` loop early (ACSL includes the end value); using Python `int()` for ACSL `int`.
 - Q7: forgetting that `DIV` can give a decimal (write `14.5`, not `14`).
 - Q8: reading `CADDR` left to right, or nesting wrongly in `CONS`.
-- Q9: printing the value only, not the maximum depth; miscounting depth at the moment of a push.
+- Q9: writing an operator when its bracket opens instead of when it closes; building the prefix by reversing the postfix, which reverses the operands too (`(9-4)` would give `- 4 9`); forgetting that a single operand has no brackets.
 
 ## Discussion prompts
 
 - Which category cost you the most points, and what will you practise before Contest 2?
 - In Q4, how did you decide which bits were free?
-- In Q9, when exactly does the stack reach its deepest point: before or after an operator is applied?
+- In Q9, at which character is each operator written into the postfix, and why does that give the right order?
 - If you had five more minutes, which question would you check first, and why?
 
 ## Differentiation
@@ -47,7 +47,7 @@ ACSL's Junior, Intermediate and Senior short-answer tests are each 6 questions i
 - **Classroom:** Q1–Q4 and Q7–Q8 as short-answer practice, with Q5–Q6 optional. The real Classroom test is 10 questions in 50 minutes, from Prefix/Infix/Postfix, Bit-String Flicking and LISP.
 - **Elementary:** not for Elementary students. Their Contest 2 mock test is unit 04's Elementary items (Exercises 1–9), 6 questions in 30 minutes.
 - **Support:** allow the precedence ladders (PIP and bit strings) and a LISP function card on a first attempt, then retake without them.
-- **Extension:** write two extra Q9 test cases, one of them a case where a wrong depth count would fail.
+- **Extension:** write two extra Q9 test cases, one of them a case where writing each operator at its opening bracket would fail.
 
 ## Grading
 

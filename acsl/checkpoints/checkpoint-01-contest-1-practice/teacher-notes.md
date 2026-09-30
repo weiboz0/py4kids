@@ -10,7 +10,7 @@ It introduces nothing new.
 - Q3–Q4: evaluating recursive definitions, including a multiple-recursion definition.
 - Q5–Q6: tracing a Python program and an ACSL-pseudocode program to one exact output line.
 - Q7 (Intermediate and above): an all-constructs trace, covering a 2D array, a stepped loop, ACSL `int` of a negative number (floor), `sqrt`, `abs`, a `while` loop, `%`, and a substring.
-- Q8: the programming problem, Base Palindromes. The program reads `N B`, prints `N` in base `B` and says whether the digits read the same both ways.
+- Q8: the programming problem, One Digit, Repeated. The program reads `N` and searches the bases from 2 upward for the first one in which every digit of `N` is the same, then prints that base, the digit and the number of digits.
 
 ## Pacing
 
@@ -25,16 +25,16 @@ Run this practice the same way:
 
 - Q1: regrouping hex → binary → octal from the left instead of from the right, or dropping a leading zero inside a group.
 - Q2: carrying 10 instead of 16 when multiplying in hex, or writing the answer in decimal.
-- Q3–Q4: stopping at the first base case reached instead of finishing the substitution back up the call table; in Q4, forgetting one of the two recursive calls.
+- Q3–Q4: stopping at the first base case reached instead of finishing the substitution back up the call table; in Q4, forgetting one of the two recursive calls or the `+ 1`, or using the base case for `n = 4` (it is `n < 4`).
 - Q5–Q6: taking an `elif` after an earlier branch was already true; misreading `!`, `&&`, `||` in the pseudocode.
 - Q7: using Python-style truncation for ACSL `int(-2.5)` (it is −3, not −2); starting the 2D array at the wrong index; reading the ACSL substring `S[3:5]` as a Python slice (ACSL includes position 5).
-- Q8: printing lowercase hex digits or extra spaces; comparing only the first and last digits; mishandling `N` that is a single digit.
+- Q8: comparing only the first and last digits (21 is 10101 in base 2, whose ends match, but the answer is 111 in base 4); stopping the search at base 16, although 300 first repeats a digit in base 19; mishandling `N = 1` and `N = 2`, which are single digits.
 
 ## Discussion prompts
 
 - Which question took the longest? Was it the method or the arithmetic that slowed you down?
 - For Q7, which single construct did you find hardest to trace, and how could you check it quickly during a contest?
-- In Q8, what test inputs did you try before handing in? Which one would have caught a program that only compares the end digits?
+- In Q8, what test inputs did you try before handing in? Which one would have caught a program that only compares the end digits, or one that stops at base 16?
 - How would you split your 30 minutes across six questions next time?
 
 ## Differentiation

@@ -25,7 +25,7 @@ Budget: three lessons of 60–90 minutes, still inside the Contest 1 run-up.
   - Indirect recursion is marked Intermediate and above.
 - **Lesson 3.**
   - The hook as a Python `def`. Add start/return prints so students see the "down, then up" order match the call table.
-  - The call stack, a deliberately broken definition (no-exec) that raises `RecursionError`, and Python's `//` flooring for negatives.
+  - The call stack, a deliberately broken definition, shown but not run, that would raise `RecursionError`, and Python's `//` flooring for negatives.
 - **Exercises:** 1–9 Junior (short answers and three programs), 10–14 Intermediate, 15–16 Senior Challenges.
 
 **60-minute cut:** keep the call-table method and multiple recursion; move the call-stack discussion and the tuple-returning Challenge to homework.

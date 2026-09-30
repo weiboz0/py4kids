@@ -15,18 +15,29 @@ for e in edges:
     while names[b] != e[1]:
         b = b + 1
     m[a][b] = 1
-    m[b][a] = 1
-for x in range(n):
-    line = names[x]
-    found = False
-    for y in range(n):
-        if y != x and m[x][y] == 0:
-            common = 0
-            for k in range(n):
-                common = common + m[x][k] * m[k][y]
-            if common > 0:
-                line = line + " " + names[y] + str(common)
-                found = True
-    if not found:
-        line = line + " NONE"
-    print(line)
+routes = int(input())
+for r in range(routes):
+    route = input().split()[0]
+    places = []
+    for letter in route:
+        a = 0
+        while names[a] != letter:
+            a = a + 1
+        places.append(a)
+    joined = True
+    for i in range(len(places) - 1):
+        if m[places[i]][places[i + 1]] == 0:
+            joined = False
+    repeats = 0
+    for i in range(len(places)):
+        for j in range(i + 1, len(places)):
+            if places[i] == places[j]:
+                repeats = repeats + 1
+    if not joined:
+        print("NOT A PATH")
+    elif repeats == 0:
+        print("SIMPLE PATH")
+    elif repeats == 1 and places[0] == places[len(places) - 1]:
+        print("CYCLE")
+    else:
+        print("PATH")

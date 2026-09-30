@@ -49,7 +49,7 @@ Follow your division's path, and do every item marked at your division **or belo
 
 ## Season map
 
-Planned units are listed by name; they arrive in later editions of the book.
+The whole season is in this book: the Foundations unit, then each contest's units followed by its practice checkpoint.
 
 ### Contest 0 — Foundations
 
