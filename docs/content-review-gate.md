@@ -24,9 +24,10 @@ by the same roster in the same round.
 3. **Clarity.** Flag ambiguous wording, underspecified inputs, unstated assumptions.
 4. **Engagement (project-first law).** The unit must open with its project/problem hook;
    opening with concept drill is a blocking finding.
-   Judge whether a middle schooler would care about the project.
-5. **Age-appropriateness.** Reading level, cultural references, and content suit
-   middle school students.
+   Judge whether the book's declared audience would care about the project.
+5. **Audience-appropriateness.** Reading level, cultural references, and content suit
+   the book's declared audience — design 000's middle-school default, or a book's own
+   declared baseline per its design doc (e.g. design 009 for an advanced book).
 6. **Difficulty + pacing.** Judge against the 60–90 min lesson budget and the declared
    position in the concept progression; stretch exercises stretch without gatekeeping core.
 7. **Accessibility.** Read as the target student

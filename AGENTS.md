@@ -30,8 +30,14 @@ gates, autopilot through merge) tailored for course-content development.
   the plan file and all review verdicts live on that branch. Never commit directly to `main`.
 - **Run the 4-way plan-review gate before any implementation** (see `## Plan-review gate`).
 - **Run the 4-way content-review gate before opening a PR** (see `docs/content-review-gate.md`).
-- **Self-containedness is law.** The student baseline is ZERO programming experience plus
-  typical middle-school math.
+- **Self-containedness is law.** The **default** student baseline is ZERO programming experience plus
+  typical middle-school math. **A book MAY declare its own baseline in its design doc** — its audience,
+  its assumed mathematics, and permission to use named external libraries (e.g. design 009 for `recsys`);
+  a declared baseline overrides ONLY those three things. **Every other law is retained for every book,
+  whatever its baseline:** prereq closure, practice coverage, taught-before-assessed, project-first
+  delivery, student-notebook hygiene, a stretch exercise per unit, teacher-notes, and checkpoints.
+  An assumed-baseline concept is declared (earning no teaching or practice credit) and is legal to use;
+  a library API a student must write is taught-before-assessed like any concept.
   Nothing may be used before it is taught (prereq closure), nothing taught without practice
   (coverage), nothing **assessed** that was not taught.
   **Narrow exception (design 004):** a future concept may appear as a marked, *given*
