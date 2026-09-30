@@ -54,26 +54,30 @@ Rules and lessons carried over from plans 097–099:
   - **CP2 Q9** "Deepest Stack" extends u04 Ex16.
   - **CP3 Q9** "Letter Tree" extends u09 Ex8.
   - **CP2 Q1** shares its title "Infix to Postfix" with u04 Ex3.
-  - Everything else is the same category with new data, which is allowed.
+  - **CP4 Q9** "Friend of a Friend" stitches u12 Ex17 (odd, printed) and Ex18 (found in plan review).
+  - The short-answer near-matches (CP4 Q2, Q1, Q8; CP1 Q3; CP2 Q5) are the same category with new data, which is allowed.
 
 ## Phases
 
-### Phase A — Tooling (Opus tooling subagent; each fix with a fixture test; the python-concepts and python-projects `.qmd` baselines unchanged, or each difference listed with its reason; *USACO Bronze* output checked by a digest captured before any change)
+### Phase A — Tooling (Opus tooling subagent; each fix with a fixture test)
 
-1. **Lesson programs printed once.** A `no-exec` Try-it identical (by code tokens) to an `assets/lN.py` that the **preceding or following** markdown cell names ("It is saved as `assets/lN.py`" / a run line) prints once:
-   - the Try-it is kept, followed by one line naming the file
-   - the asset listing is not repeated
-   - the audit's inventory and "listed again in full" checks agree
+0. **A continuing guard for all three published books.** Before any change, capture a committed `tests/data/usaco-bronze-publish-baseline.json` for all four editions, plus an allowed-diffs file, and add `usaco-bronze` to `BOOKS` in `tests/test_publication_regression.py`. python-concepts, python-projects and *USACO Bronze* are then all checked in Phase E and by later tooling changes; any difference is listed with its reason.
 
-   Turtle Try-its with figures keep their current output. The python-concepts baseline proves this.
-2. **Running-head reset.** A book whose main matter ends with a checkpoint must not carry that chapter's label into the back matter. Every back-matter chapter (answers appendix, Glossary, Quick Reference, Index) sets its own mark. `glossary_page_numbers` resolves a glossary of any length, including one page.
-3. **Page-number reading.** `reference_findings` takes the page number from the folio position, not the first numeric line of the page text. The u13 Ex19 case is a regression test.
+1. **Lesson programs printed once.** All 51 ACSL lesson Try-its use `input()`, so none reads stdin, and plan 099's `stdin_run_asset` never reaches them.
+   - **The fix:** the dedup extends to the plain `tryit` route, and explicitly **not** to `tryit+figure`/`figure`. python-concepts' only asset-identical `input()` Try-its are unit 06's three turtle cells with `sample_input`, which keep their output, so its baseline stays byte-identical.
+   - All 48 ACSL matches name the asset in **both** the preceding cell ("saved as `assets/lN.py`") and the following run-line cell. `asset_blocks` for the preceding cell must look ahead to the next code cell and suppress the listing.
+   - No extra "file name" line is printed; the run line already names the file.
+   - The audit mirror (`_expected_lesson_kind`, and `stdin_tryits` / "listed again in full") gains the same `tryit` case.
+2. **Chapter kicker reset.** The running heads are fine. What bleeds is the chapter kicker `\pubchapterlabel` (set through `pub-label`), which the answers appendix, Glossary, Quick Reference and Index never reset; python-concepts and *USACO Bronze* escape only because a project with an empty label comes last.
+   - **The fix:** those four chapters emit `{pub-label=""}`.
+   - `glossary_page_numbers` then finds "Glossary" at the top of the page, and it must also resolve a one-page glossary.
+3. **Page-number reading.** In `reference_findings`, a top-of-page integer counts as the folio only when it equals `physical − offset`, with the offset fixed from the first unit page; otherwise the page number is `physical − offset`. The u13 Ex19 case (physical 373, folio 363, whose text begins "Exercises" / "2") is a regression test.
 4. **Quiet the SyntaxWarnings** in `code_span_names`.
 
 ### Phase B — Content fixes and checkpoint replacements (Opus content subagents; the replaced problems' solutions are written by a separate blind session)
 
-- **Replace CP1 Q4, CP1 Q8, CP2 Q9 and CP3 Q9** with new problems of the same category and level that copy no unit task:
-  - statement, `assets/qN.py`, and fixtures (sample, edge cases, and one modest scale case, from a seeded generator; the whole fold's fixtures stay under about 1 MB)
+- **Replace CP1 Q4, CP1 Q8, CP2 Q9, CP3 Q9 and CP4 Q9** with new problems (CP4 Q9 "Friend of a Friend" stitches u12 Ex17's matrix parsing, odd and printed, to u12 Ex18's M² count). Each replacement of a checkpoint's programming problem keeps the rule that exactly one programming question comes last (`acsl-check`). Each gets of the same category and level that copy no unit task:
+  - a statement, `assets/qN.py`, and fixtures (sample, edge cases, and one modest scale case, from a seeded generator; the whole fold's fixtures stay under about 1 MB)
   - `verify`/answer entries, and updated teacher notes
   - for short answers: a new instance with a unique canonical answer, checked with the unit's `assets/verify/*_eval.py` helper
 - **Retitle CP2 Q1** to a title no unit exercise uses.
@@ -81,11 +85,17 @@ Rules and lessons carried over from plans 097–099:
 - **Error demo:** tag u02 `7be73630` as `error-demo`.
 - **u02 `07600bc9`:** print the value (for example `print(f(17))`).
 - **Independence:** remove "with your teacher or club advisor" (u00 `56500fd0`).
-- **Checkpoint openers:** check your work "against each question's samples" instead of against answers, and write your answer "on paper or in your notebook".
+- **Checkpoint openers:** write your answer "on paper or in your notebook". Self-checking:
+  - **Short answers** have no samples. Mark the questions you were unsure of, then re-derive them with the unit's method (redo the trace or the truth table, or check the conversion both ways) and compare with a partner or a second attempt.
+  - **The programming question** is checked against its sample, and against inputs of your own made from its constraints.
 - **Print wording:** make the notebook-only lines print-neutral:
   - "run the cell" (u00 `ae5e434c`, u01 `l-023`, u03 `7dc53e50`, `d1aa0ec4`, u04 `l-018`)
   - "In the notebook…" (u00 `9878c129`, u03 `2d11cfac`)
   - "this cell is marked not to run in the notebook" (u00 `b7510c30`)
+  - "This cell is marked not to run" (u02, around lesson.ipynb line 633)
+  - "This cell runs a script" (u09, around line 151)
+  - "This cell runs" and "the cell above" (u13, around line 561)
+  - and any other such line a final grep of the student PDFs finds ("this cell", "the cell above", "run the cell", "in the notebook")
 - **Markup:**
   - Add the missing blank line before each of the 12 lists.
   - Rewrite the three table cells whose code holds `\|`, so no pipe needs escaping inside a table.
@@ -97,7 +107,7 @@ Rules and lessons carried over from plans 097–099:
 ### Phase C — Lesson outputs and panels
 
 - `fill-outputs` for the 148 executable lesson cells; `lesson-outputs-check` passes twice.
-- **Goals and recap (Opus):** in all 16 lessons, a `### You will learn` cell immediately before the first `## Lesson` cell and a `### Recap` last cell. They are in student voice, drawn from the teacher-notes goals, and division-aware ("Elementary and above: …" where a unit has an Elementary section).
+- **Goals and recap (Opus):** in all 16 lessons, a `### You will learn` cell immediately before the first `## Lesson` cell and a `### Recap` **last** cell. The Recap goes after closing asides such as u04's "Optional aside: expression trees" and u11/u15's "Back to the door/robot", but summarises the core lessons. Both are in student voice, drawn from the teacher-notes goals, and division-aware ("Elementary and above: …" where a unit has an Elementary section).
 
 ### Phase D — Front and back matter, setup chapter, config
 
@@ -107,15 +117,15 @@ Rules and lessons carried over from plans 097–099:
   - `unit_headers` for u03, u06, u10 and u14: "WDTPD – Branching", "WDTPD – Looping", "WDTPD – Arrays", "WDTPD – Strings"
   - `lesson_heading: '^## Lesson\b'`
   - `index_names` for the names this book teaches
-  - `audit`: `error_demo_ids: [7be73630]`; the other lists measured from the sources; `python assets/` exemptions for `[unit]`/`units/*` and `[setup]`/`docs/getting-set-up.md`
+  - `audit`: `error_demo_ids: [7be73630]`; `print_page_target: 400` (the Student Print will warn at about 440 pages, which is expected, not chased); the other lists measured from the sources; `python assets/` exemptions for `[unit]`/`units/*` and `[setup]`/`docs/getting-set-up.md`
 - **Front matter** (inline; Student Book independent):
   - `preface.md`
   - `how-to-use.md`:
     - the division ladder, and doing items at your division or below
     - the paths (Elementary, Junior, Intermediate and Senior, Classroom)
-    - the contest windows and following the season
+    - following the contest season: it names the season the book was written for, and points to acsl.org's schedule for current dates
     - short-answer practice (pencil, exact canonical answers, 30 minutes per six-question paper)
-    - programming problems (`input()`, running with a sample file, exact output)
+    - programming problems (`input()`, running with a sample file using the neutral form `python my_solution.py < sample.txt`, exact output)
     - the Challenges, and the practice checkpoints as self-tests
     - Answers to Selected Exercises
   - `for-teachers.md`
@@ -129,7 +139,7 @@ Rules and lessons carried over from plans 097–099:
     - base notation, PIP precedence, and bit-string operators and precedence
     - LISP functions, Boolean notation `~ * + ⊕ ⊙`, and data-structure conventions
     - regex syntax, graph conventions, gates, and assembly opcodes
-- **Setup chapter** (unnumbered "Getting Set Up") and its teacher notes:
+- **Setup chapter** (unnumbered "Getting Set Up") and its teacher notes, which also cover running a program and typing its input yourself (the self-checkers in u00, u01, u04 and u08 do this):
   - installing Python is in *Python by Projects* Unit 0
   - opening a terminal in a unit folder, and running `python assets/lN.py < assets/lN/1.in` or a solution with an input file (Windows Command Prompt, not PowerShell, for `<`)
   - comparing output exactly, and how fixtures check a program
@@ -142,18 +152,24 @@ Rules and lessons carried over from plans 097–099:
    - Because `tools/` changes, all four publication books render in all four editions (about 60 minutes). Never overlap runs.
    - `lesson-outputs-check`, `judge-check`, `acsl-check` and `publish-audit` pass for every edition.
 2. The python-concepts, python-projects and USACO Bronze outputs are unchanged, or any change is listed with its reason.
-3. **Blind solves:** reviewers solve the replaced CP1 Q4, CP1 Q8, CP2 Q9 and CP3 Q9, and the revised u04 Ex21, from the statement, and run the solutions against the fixtures. They re-audit all 35 questions by task.
+3. **Blind solves:** reviewers solve the replaced CP1 Q4, CP1 Q8, CP2 Q9, CP3 Q9 and CP4 Q9, and the revised u04 Ex21, from the statement, and run the solutions against the fixtures. They re-audit all 35 questions by task.
 4. **Rendered-page review, covering all four editions:**
    - a unit opener with You will learn
-   - an Elementary lesson and its exercises
+   - an Elementary lesson and its exercises (u01, u04, u08 **and u12**)
    - a lesson with a Try-it printed once
    - a short-answer page with division tags, and its answer
    - a programming item
    - pseudocode, netlist, assembly and LISP pages; unit 08's overbars and the fixed table
-   - a checkpoint opener and a question, and the Teacher's checkpoint key
+   - a checkpoint opener and a question, CP4 Q9's replacement page, and the Teacher's checkpoint key
    - the back-matter running heads, the glossary and the index
    - a WDTPD running head, and the setup chapter
 5. The post-execution report records page counts and the audit summary.
+
+6. **Release doc.** Add a "Publishing a release" section to `output/README.md` with the essentials:
+   - run `scripts/ci-local.sh --all-books`
+   - tag `pdfs-<date>`, and run `gh release create <tag> --target <full SHA>` with `GH_TOKEN=$(cat .gh-token)`
+   - asset names prefixed with the book id, since handouts share names across books
+   - the Teacher's Edition is included, by the user's choice of 2026-09-30
 
 **After plan 100 merges:**
 - run `scripts/ci-local.sh --all-books`
@@ -170,6 +186,26 @@ Rules and lessons carried over from plans 097–099:
 
 - The plan is built from a probe that inspected rendered pages and audited every checkpoint question by task. It applies plan 099's lessons from the start: the strict no-copy rule, modest fixtures, and digests for every already-published book.
 - **N1 (noted):** CP2 Q9 and CP3 Q9 are each the checkpoint's single programming problem. Their replacements must keep ACSL's exactly-one-programming-question-last rule (`acsl-check`).
+
+### Round 1 — verdicts and fold
+
+- `[sol]` **REJECT**, 3 findings, all folded:
+  1. The checkpoint self-check guidance is split: short answers (re-derive by the unit's method) and the programming question (samples and own inputs).
+  2. The print-wording list adds u02, u09 and u13, plus a final grep.
+  3. A committed *USACO Bronze* baseline and regression test make it a continuing guard.
+- `[fable]` **REJECT**, 2 blockers and 9 nits, all folded:
+  - **B1:** the Try-it dedup covers the plain `tryit` route (not turtle figures), looks ahead from the preceding cell, prints no extra name line, and has an audit mirror.
+  - **B2:** CP4 Q9 is a stitched extension of u12 Ex17/18 and is added to the replacements.
+  - **Nits:**
+    - The kicker reset (`pub-label`) is the real mechanism.
+    - The folio rule is defined.
+    - How to Use uses the neutral run form.
+    - The setup chapter covers typing input.
+    - The contest-season wording won't date.
+    - A release doc goes in `output/README.md`.
+    - The 440-page print warning is expected.
+    - The Recap goes after closing asides.
+    - The review list gains the u12 Elementary lesson and CP4 Q9.
 
 ## Content Review
 
