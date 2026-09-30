@@ -1,0 +1,9 @@
+6
+INPUTS A B C D
+p = NOR(A, D)
+q = XOR(B, C)
+r = NAND(p, q)
+s = XNOR(r, A)
+t = AND(s, C)
+out = OR(t, B)
+0 0 1 1

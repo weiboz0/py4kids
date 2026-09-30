@@ -1,0 +1,14 @@
+id: unit-14-wdtpd-strings
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 4, category: "WDTPD – Strings", divisions: [junior]}
+concepts:
+  introduces: []
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion,
+             string-literal, string-index, string-slice, string-concat, boolean, comparison,
+             logical-ops, if-statement, elif-else, for-loop, range-function, while-loop,
+             nested-loops]
+  practices: [code-tracing, acsl-pseudocode, accumulator, loop-counter, count-by-condition,
+              find-extreme, builtin-functions]

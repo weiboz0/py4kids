@@ -1,0 +1,12 @@
+9
+X     DC    50
+      READ  X
+      LOAD  X
+      SUB   =-3
+      MULT  =-2
+      STORE Y
+      PRINT X
+      PRINT Y
+DONE  END
+1
+-8

@@ -1,0 +1,6 @@
+1
+INPUTS A B
+out = OR(A, B)
+1
+INPUTS A B
+out = XOR(A, B)

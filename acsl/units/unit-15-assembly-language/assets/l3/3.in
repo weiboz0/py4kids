@@ -1,0 +1,9 @@
+8
+A     DC    12
+B     DC    5
+LOOP  LOAD  A
+      SUB   B
+      STORE A
+      PRINT A
+      BG    LOOP
+      END

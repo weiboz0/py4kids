@@ -1,0 +1,9 @@
+4
+INPUTS A B
+p = NOR(A, B)
+q = NOR(A, p)
+r = NOR(B, p)
+out = NOR(q, r)
+1
+INPUTS A B
+out = XNOR(A, B)

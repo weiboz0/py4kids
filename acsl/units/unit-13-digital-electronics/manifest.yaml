@@ -1,0 +1,15 @@
+id: unit-13-digital-electronics
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 4, category: Digital Electronics, divisions: [junior, intermediate, senior]}
+concepts:
+  introduces: [logic-gates]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion,
+             string-literal, string-concat, boolean, comparison, logical-ops, if-statement,
+             elif-else, while-loop, for-loop, range-function, nested-loops, in-operator,
+             def-function, parameters, return-value, builtin-functions, list-literal,
+             list-append, list-index, list-loop, dict-literal, dict-access, str-split,
+             input-parse, boolean-algebra]
+  practices: [loop-counter, accumulator, complete-search]

@@ -1,0 +1,18 @@
+14
+      READ  B
+      READ  E
+      LOAD  =1
+      STORE R
+LOOP  LOAD  E
+      BE    DONE
+      SUB   =1
+      STORE E
+      LOAD  R
+      MULT  B
+      STORE R
+      BU    LOOP
+DONE  PRINT R
+      END
+2
+3
+5

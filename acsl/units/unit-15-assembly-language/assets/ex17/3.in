@@ -1,0 +1,25 @@
+19
+K     DC    4
+AGAIN READ  V
+      LOAD  V
+      BG    PLUS
+      BL    MINUS
+      STORE S
+      BU    SHOW
+PLUS  LOAD  =1
+      STORE S
+      BU    SHOW
+MINUS LOAD  =-1
+      STORE S
+SHOW  PRINT S
+      LOAD  K
+      SUB   =1
+      STORE K
+      BE    STOP
+      BU    AGAIN
+STOP  END
+4
+5
+-12
+0
+3

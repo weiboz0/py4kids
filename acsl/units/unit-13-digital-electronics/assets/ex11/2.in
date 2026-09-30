@@ -1,0 +1,5 @@
+2
+INPUTS A B C
+p = NAND(A, B)
+out = OR(p, C)
+1 1 0

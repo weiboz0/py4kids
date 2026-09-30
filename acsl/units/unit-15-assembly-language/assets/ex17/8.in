@@ -1,0 +1,17 @@
+14
+      READ  N
+      LOAD  N
+      DIV   =-4
+      STORE Q
+      PRINT Q
+      LOAD  =100
+      DIV   N
+      STORE P
+      PRINT P
+      LOAD  N
+      DIV   Q
+      STORE R
+      PRINT R
+      END
+1
+-23

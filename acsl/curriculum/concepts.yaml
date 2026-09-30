@@ -21,3 +21,6 @@ concepts:
 - {id: lisp-eval, name: Evaluating ACSL LISP expressions, category: techniques, kind: technique}
 - {id: acsl-data-structures, name: "Stacks, queues, BSTs and heaps (ACSL conventions)", category: data-structures, kind: technique}
 - {id: fsa-regex, name: Finite state automata and regular expressions, category: techniques, kind: technique}
+- {id: acsl-graph-theory, name: "Graphs: paths, cycles, degrees and adjacency matrices (ACSL)", category: graphs, kind: technique}
+- {id: logic-gates, name: Logic gates and circuits, category: techniques, kind: technique}
+- {id: acsl-assembly, name: ACSL assembly language, category: techniques, kind: technique}

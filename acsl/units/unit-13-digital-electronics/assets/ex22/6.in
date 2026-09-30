@@ -1,0 +1,7 @@
+1
+INPUTS A
+out = NOT(A)
+2
+INPUTS A
+p = NOR(A, A)
+out = BUFFER(p)

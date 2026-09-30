@@ -1,0 +1,14 @@
+11
+      READ  X
+      LOAD  X
+TOP   SUB   =1
+      BE    DONE
+      STORE A
+      MULT  X
+      STORE X
+      LOAD  A
+      BU    TOP
+DONE  PRINT X
+      END
+1
+5

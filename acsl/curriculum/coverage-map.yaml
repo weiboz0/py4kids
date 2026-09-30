@@ -111,3 +111,38 @@ entries:
   introduces: []
   requires: [print, input, variable, int-type, type-conversion, arithmetic, comparison, boolean, if-statement, input-parse, str-split]
   practices: [boolean-algebra, acsl-data-structures, fsa-regex, code-tracing, acsl-pseudocode, grid-2d, for-loop, range-function, nested-loops, while-loop, accumulator, logical-ops, list-literal, list-index, list-append, list-loop, builtin-functions]
+- id: unit-12-graph-theory
+  kind: unit
+  title: "Graph Theory"
+  lessons: 3
+  introduces: [acsl-graph-theory]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion, string-literal, string-index, string-slice, string-concat, boolean, comparison, logical-ops, if-statement, elif-else, for-loop, range-function, nested-loops, in-operator, def-function, parameters, return-value, builtin-functions, list-literal, list-append, list-index, list-loop, str-split, input-parse, grid-2d, recursion]
+  practices: [accumulator, loop-counter, complete-search]
+- id: unit-13-digital-electronics
+  kind: unit
+  title: "Digital Electronics"
+  lessons: 3
+  introduces: [logic-gates]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion, string-literal, string-concat, boolean, comparison, logical-ops, if-statement, elif-else, while-loop, for-loop, range-function, nested-loops, in-operator, def-function, parameters, return-value, builtin-functions, list-literal, list-append, list-index, list-loop, dict-literal, dict-access, str-split, input-parse, boolean-algebra]
+  practices: [loop-counter, accumulator, complete-search]
+- id: unit-14-wdtpd-strings
+  kind: unit
+  title: "WDTPD – Strings"
+  lessons: 3
+  introduces: []
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion, string-literal, string-index, string-slice, string-concat, boolean, comparison, logical-ops, if-statement, elif-else, for-loop, range-function, while-loop, nested-loops]
+  practices: [code-tracing, acsl-pseudocode, accumulator, loop-counter, count-by-condition, find-extreme, builtin-functions]
+- id: unit-15-assembly-language
+  kind: unit
+  title: "Assembly Language"
+  lessons: 3
+  introduces: [acsl-assembly]
+  requires: [print, input, run-program, variable, int-type, type-conversion, arithmetic, string-literal, string-index, string-slice, boolean, comparison, if-statement, elif-else, for-loop, while-loop, range-function, def-function, parameters, return-value, list-literal, list-index, list-append, dict-literal, dict-access, in-operator, str-split, input-parse]
+  practices: [code-tracing, builtin-functions]
+- id: checkpoint-04-contest-4-practice
+  kind: checkpoint
+  title: "Contest 4 Practice"
+  lessons: 0.5
+  introduces: []
+  requires: [print, input, variable, int-type, type-conversion, arithmetic, comparison, boolean, if-statement, input-parse, str-split]
+  practices: [acsl-graph-theory, logic-gates, boolean-algebra, acsl-assembly, code-tracing, acsl-pseudocode, grid-2d, string-literal, string-index, string-slice, string-concat, for-loop, range-function, nested-loops, while-loop, accumulator, logical-ops, list-literal, list-index, list-append, builtin-functions]

@@ -1,0 +1,14 @@
+id: unit-15-assembly-language
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 4, category: Assembly Language, divisions: [intermediate, senior]}
+concepts:
+  introduces: [acsl-assembly]
+  requires: [print, input, run-program, variable, int-type, type-conversion, arithmetic,
+             string-literal, string-index, string-slice, boolean, comparison, if-statement,
+             elif-else, for-loop, while-loop, range-function, def-function, parameters,
+             return-value, list-literal, list-index, list-append, dict-literal, dict-access,
+             in-operator, str-split, input-parse]
+  practices: [code-tracing, builtin-functions]

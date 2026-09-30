@@ -1,0 +1,12 @@
+11
+N     DC    100
+SUM   DC    0
+LOOP  LOAD  SUM
+      ADD   N
+      STORE SUM
+      LOAD  N
+      SUB   =1
+      STORE N
+      BG    LOOP
+      PRINT SUM
+      END

@@ -1,0 +1,6 @@
+3
+INPUTS A B C D
+p = XOR(A, B)
+q = NOR(p, C)
+out = AND(q, D)
+1 1 0 1

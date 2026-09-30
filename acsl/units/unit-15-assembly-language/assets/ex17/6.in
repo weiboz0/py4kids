@@ -1,0 +1,13 @@
+11
+      LOAD  =0
+      STORE K
+LOOP  LOAD  K
+      ADD   STEP
+      STORE K
+      PRINT K
+      SUB   LIMIT
+      BL    LOOP
+      END
+STEP  DC    7
+LIMIT DC    30
+0

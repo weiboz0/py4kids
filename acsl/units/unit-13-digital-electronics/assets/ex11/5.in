@@ -1,0 +1,4 @@
+1
+INPUTS A B
+out = NOT(B)
+1 1
