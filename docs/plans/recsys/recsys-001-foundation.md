@@ -50,7 +50,8 @@ Keep `dependency_baseline()` semantics ("introduced by dependencies") intact.
   **unit** `practices` one (no practice credit). Dependency-book concepts stay assessable as today; confirm
   `tests/test_usaco_bronze_tooling.py::test_checkpoint_seen_set_starts_with_dependency_baseline` still passes.
 - **Tests:** assumed id usable in requires/scan with no prereq/coverage/scan finding and no coverage obligation;
-  non-baseline id still flagged; checkpoint-practices-baseline flagged; malformed/dup/absent; id-in-own-concepts
+  non-baseline id still flagged; checkpoint-practices-baseline AND unit-practices-baseline each flagged;
+  malformed/dup/absent; id-in-own-concepts
   contradiction.
 **Verify:** targeted `pytest` over prereq, coverage, concept-scan, checkpoint assessment.
 
@@ -94,7 +95,10 @@ torch resident and prove nothing); the routed recsys test step passes.
   numerical-Python ids); `reference/`, learner-facing `docs/`; and `units/` `projects/` `checkpoints/` each with a
   **`.gitkeep`** (dirs must exist — `notebooks.py:126/143/160` fail closed on a missing dir; no stub unit needed).
 - Update `tests/test_books.py` (id list +`recsys`; title/subtitle assertions; per-flag book lists — recsys has no
-  feature flags; assert the new `dependency_group: recsys` key) and add the `## output/recsys/` section to
+  feature flags — update the `number` list `[1,1,2,2]`→`[1,1,2,2,3]`; assert the new `dependency_group: recsys`
+  **string** key — do NOT add it to `FLAGS` (else `test_registry_feature_flags_are_booleans` fails) and read it in
+  step 1 as a SEPARATE line, leaving the `("publication","judge","patterns","acsl")` tuple in
+  `test_ci_local_reads_every_flag` intact) and add the `## output/recsys/` section to
   `output/README.md`. **Naming:** `recsys/` is a live root for `tests/test_book_ids.py` (which scans for "Book 1"/
   "Book 2" strings), so the syllabus/docs name books by title ("Python by Projects"), never "Book 1/2".
 **Verify:** `ci-local.sh` registry/structure/curriculum steps pass for `recsys` in buildout; `build-pdf.sh` builds
@@ -103,7 +107,9 @@ torch resident and prove nothing); the routed recsys test step passes.
 ### Phase E — seeded generators + license-gated real-slice script
 - Location: **`recsys/data/`** with seeded `gen_catalog.py` + `gen_interactions.py` ("seeded generation scripts,
   never opaque blobs"). **Decision: regenerated-only — NO generated artifacts are committed.** Their output paths
-  (e.g. `recsys/data/generated/`) are **gitignored**; a required CI step runs the generators (seeded) and then the
+  (e.g. `recsys/data/generated/`) are **gitignored**; a required CI step (the same routed `uv run --group recsys`
+  step from Phase C, its runtime counting toward design §9's ≤15 CI-min whole-book target) runs the generators
+  (seeded) and then the
   Phase-E invariant tests against fresh output, so the substrate is verified every run without tracked data. (This
   supersedes the round-1 "decide later"; committed fixtures + checksum-regeneration is explicitly NOT chosen.)
   Default sizes within §7 ceilings (5–20k books / 5k readers / ~200k interactions) with a generation-time budget.
@@ -139,24 +145,24 @@ proves no real catalog artifact is in the branch.
 `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN with `recsys` registered (buildout, `.gitkeep` dirs, routed
 recsys tests under `--group recsys`, group-free `tests/` unaffected); `tools/guard.py` + baseline + generator-
 invariant + `bookrec` tests pass; determinism (seeds/threads/lock) confirmed; `bash scripts/pre-merge-guard.sh
---pr` OK; tracked-file assertion: no real catalog artifact on the branch. **Precondition:** resolve the untracked
-`book1/` leftover first (see Blockers) — the guard's WORKTREE scan normalizes `book1/`→`python-projects/` and would
-report duplicate unit numbers.
+--pr` OK; tracked-file assertion: no real catalog artifact on the branch.
 
 ## Blockers / preconditions
-- **Untracked `book1/` stray** (present since session start; a stale pre-rename leftover, not in `books.yaml`).
-  The guard's WORKTREE scan + `test_book_ids.py` filesystem scan may choke on it (duplicate unit numbers). Per
-  AGENTS.md ("ask before discarding leftovers") this is surfaced to the user before Phase G.
-- **Data license** (design §6): no real slice commits until the author confirms the `books` DB origin/license or
-  the Open Library fallback is used; CI/committed data stays synthetic.
+- **Data license** (design §6) — the only real gate: no real slice commits until the author confirms the `books` DB
+  origin/license or the Open Library fallback is used; CI/committed data stays synthetic. Enforced by the
+  fail-closed `slice_books.py` + the Phase-G tracked-file assertion (not a manual pause).
+- **Housekeeping only (NOT a precondition):** an untracked `book1/` stray sits in the worktree (stale pre-rename
+  leftover, not in `books.yaml`). Verified NON-blocking — `pre-merge-guard` dedups its normalized names (no
+  duplicate numbers) and `test_book_ids.py` scans only registered roots, so both pass with it present. Cleanup is
+  an optional AGENTS.md "ask before discarding leftovers" courtesy, not a gate.
 
 ## Out of scope (verification-phase exemption)
 No student units/projects/checkpoints ship (→ `recsys-002+`, each with its own verification phase), so the
 unit-shipping verification rule is satisfied by shipping none; Phase G is this plan's verification. No real-catalog
 slice commit (license-gated); no GPU; no served API; no neural model (Part 2); no GloVe subset (lands with U7).
 **No stub unit** is added — `buildout: true` is the mechanism for the not-yet-populated state.
-Design 009's closing line still lists "Unit 1" under `recsys-001`; this plan records the **no-unit override**, and a
-one-line design-009 reconciliation is a separate follow-up.
+(Design 011 §6/§13 already record `recsys-001` as a no-unit foundation plan — the earlier stale "Unit 1" wording
+was reconciled in the 009→011 renumber PR.)
 
 ## Plan Review
 
@@ -202,6 +208,23 @@ one-line design-009 reconciliation is a separate follow-up.
   checkpoint/unit practices-baseline finding (N6).
 
 ### Round 3 (on v3)
+- **[self]:** APPROVE.
+- **[sol]:** REJECT — round-2 items all resolved, no regression; 1 new Must: the `book1/` Phase-G precondition is
+  **false** (guard dedups normalized names; `test_book_ids.py` scans only registered roots — both pass with
+  `book1/` present) and would needlessly pause autopilot; + 2 nits (add a unit-practices-baseline regression; the
+  Out-of-scope paragraph still says "Design 009"/Unit-1).
+- **[fable]:** APPROVE WITH NITS — all resolved; traced the zero-unit CI path to confirm genuinely CI-green; nits:
+  same stale-009 paragraph, two `tests/test_books.py` pins (`number` list `→[1,1,2,2,3]`; `dependency_group` must be
+  a string key NOT in `FLAGS`, read as a separate step-1 line), and tie the Phase-E CI gen step to the routed group;
+  independently confirmed `book1/` is non-blocking.
+- **[glm]:** skipped.
+- **Round-3 outcome:** NOT consensus (1 REJECT, purely doc fixes). **v4 folds all:** removed the false `book1/`
+  precondition (now housekeeping-only, verified non-blocking); reconciled the stale Design-009/Unit-1 text (design
+  011 already records the no-unit foundation); added the unit-practices-baseline regression; pinned the
+  `test_books.py` `number` list + `dependency_group` string-key handling; tied the Phase-E gen step to the routed
+  `--group recsys` step + the §9 CI-min budget.
+
+### Round 4 (on v4)
 - **[self]:** _(pending)_ · **[sol]:** _(pending)_ · **[fable]:** _(pending)_ · **[glm]:** skipped.
 
 ## Content Review
