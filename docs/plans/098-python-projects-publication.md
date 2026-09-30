@@ -219,5 +219,74 @@ python-concepts' output is checked against its baseline. Any change there is lis
 
 ## Content Review
 
+### Round 1
+
+- `[sol]` **REJECT**, 3 findings, all folded:
+  - `[FIXED]` Arcade Night's answer key printed Check values that depend on an unprinted seed. The `import random; random.seed(4)` cell moved into the first answer section, so it prints with the answer.
+  - `[FIXED]` How to Use overpromised ("each milestone starts from a Starter"; "every question has worked samples").
+  - `[FIXED]` `sorted` was listed in `index_names` but is never taught.
+- `[fable]` **APPROVE WITH NITS**. Its rendered-page review of all four editions found them clean, and it confirmed the odd-answer rule, the leak guard and Student Book independence. Findings:
+  - `[FIXED]` `print_required_starters` now lists the book's 6 broken-program Starters.
+  - `[FIXED]` = [sol] 3.
+  - `[FIXED]` How to Use no longer claims "More Practice closes most sets" or describes "Watch out"/"Data file" panels the book never prints.
+  - `[WONTFIX]` (a follow-up, pre-existing on main) Unit 5 uses `float()` without teaching it, which breaks taught-before-assessed. It is a separate curriculum errata item and outside this plan's phases; [sol] agrees.
+  - `[FIXED]` The audit's `starter_kinds` order matches the publisher (lead-in code after the exercise groups).
+  - `[FIXED]` Empty or duplicate challenge answer sections are findings.
+  - `[FIXED]` The unnumbered challenge marker reads plain "Challenge".
+  - `[WONTFIX]` Classroom and homework language in student editions: tone only; independence (no teacher mention) holds.
+  - `[FIXED]` For Teachers notes that turtle drawings appear only in the book.
+  - `[FIXED]` Preface wording; glossary "Argument" → "Parameter" (the book's word); quick-reference precedence comment; the Unit 10 recap covers the simulation.
+  - `[FIXED]` New tests for challenge stripping, lead-in code, empty or duplicate answers, and the challenge leak guard.
+- `[self]` APPROVE: `scripts/ci-local.sh` ALL GREEN solo at 47c9eb5 and again at cedc550.
+
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE WITH NITS** (r2): no open findings. It re-ran Arcade Night's printed sections with the printed seed and got the printed Check values (5, 4, 9).
+- `[fable]` APPROVE WITH NITS (r1; folded or WONTFIX with reasons).
+- `[self]` APPROVE.
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped: *Python by Projects* in four editions** (design 010 D6; `publication: true`).
+
+| Edition | Pages | Chapters | Items | Challenges |
+|---|---|---|---|---|
+| Student Book — Print | 227 | 22 | 211 | 16 |
+| Student Book — Full | 320 | 23 | 211 | 16 |
+| Answer Key | 81 | 11 | 92 (odd unit exercises) | — |
+| Teacher's Edition | 470 | 23 | 211 | 16 |
+
+All four editions audit clean: 0 overfull hboxes and no missing glyphs.
+
+- **Tooling (Phase A):**
+  - Project milestone scaffolds print as Starter panels (they were silently dropped).
+  - `## Exercise N: Title` items carry their titles (72 items).
+  - End-of-unit challenges render as titled "Challenge N" items, with Teacher's Edition answers.
+  - Project answer keys print their solution sections (Teacher's only).
+  - The artefact check ignores printed (and wrapped) code comments, and cross-reference attribution is anchored to a heading line.
+  - python-concepts' output is unchanged (regression test, no new allowed-diffs).
+- **Notebooks (Phase B):**
+  - independence rewrites; 16 lesson headings renamed to `## Lesson N: Title`
+  - checkpoint-01's H1, and its Q6 answer as a markdown cell (plus a code cell structure-check requires)
+  - the `py`/`python3`/Thonny run form, with no `python assets/` phrase
+  - "no-exec"/assert removals (u03's nested asserts became top-level checks)
+  - 6 error-demo tags, unique cell ids, 🚀 → `*`, and `### Challenge 1` answer headings in u01–u03
+- **Lessons (Phase C):** `random.seed(1)` in unit 02, with an explanation; 181 stored outputs (the lesson-output check is deterministic); a goals and a recap panel in all 10 lessons.
+- **Matter and config (Phase D):**
+  - front matter; a glossary of 62 entries keyed to this book's units and trimmed to what it teaches
+  - a re-keyed quick reference; the setup chapter adapted (folder, Unit 3 turtle, Unit 1 checklist)
+  - `publication.yaml`; `books.yaml` and `tests/test_books.py` updated
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN in solo runs at 47c9eb5 and at cedc550 (the final code commit): pytest 1527 passed.
+- Both Python books rendered all four editions and audited clean. python-concepts: 410 / 656 / 192 / 922 pages, with the Student Print soft-target warning as before.
+
+**Deviations:**
+- Checkpoint-01 Q6 gained a naming code cell (structure-check needs one under every question).
+- Project answer keys print every solution section, not only `## Milestone N` ones: project-01's solutions are organised by game.
+- The preface opener reads "From Unit 1 on, every unit…".
+
+**Follow-ups:**
+- An errata fix for unit 05's untaught `float()` (taught-before-assessed).
+- Next: plan 099, *Contest Python: USACO Bronze* publication.
