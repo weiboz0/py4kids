@@ -35,9 +35,8 @@ sweep are usually the quickest to bank), ~35 minutes to work through them (each 
 - **Q3 (prefix sums + binary search):** an off-by-one between day numbers and prefix indices (day `d` is
   `pre[d]`); searching for "greater than" instead of "at least" the goal; forgetting `-1` when the final
   total is still short. Scanning the days for every goal is O(n·q) and times out.
-- **Q6 (prefix sums):** the ±1 index convention (`pre[r+1] - pre[l]`, not `pre[r] - pre[l]`); in 2D,
-  a wrong sign or a dropped term in the four-term inclusion-exclusion formula.
-- **Q6 (square placements):** a placement loop that stops one short (`top + K < R` instead of
+- **Q6 (2D prefix sums, square placements):** a wrong sign or a dropped term in the four-term
+  inclusion-exclusion formula; a placement loop that stops one short (`top + K < R` instead of
   `top + K <= R`) misses the bottom row or right column of placements, which the sample's bottom-right answer
   catches; starting the best total at `0` prints `0` when every placement total is negative (a hidden case
   is all shadow).
