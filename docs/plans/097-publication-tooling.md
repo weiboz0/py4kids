@@ -50,9 +50,10 @@ The read-only gap survey (2026-09-30) is summarised in design 010 §1.
      - `error_demo_routing_exceptions` (python-concepts: `u07l034a`, now hard-coded at `publish_audit.py:648`)
      - `print_page_target` (python-concepts: 400, a soft warning)
      - `turtle_tryits: {unit_id: count}` and `teacher_turtle_drawings`
-     - `phrase_exemptions: [{phrase, sources, reason}]`, where `sources` is a list of source-path globs relative to the book (for example `units/*/lesson.ipynb`). An exempt phrase is allowed only in chapters generated from matching sources, and is still banned everywhere else: front matter, answers, other notebooks.
-     - **Both audit layers keep the chapter boundary.** The `.qmd` scan checks each generated chapter against its `source` in `inventory.json`. The PDF-text scan (`publish_audit.py:853`, today one string) is split per chapter with the PDF outline (the chapter start pages already used by the outline checks), and each page range is checked against its chapter's source.
-     - Tests: an exempt phrase passes in a matching lesson chapter, and fails in front matter and in an answers chapter, at both layers.
+     - `phrase_exemptions: [{phrase, chapters, reason}]`, where `chapters` is a list of globs over the **chapter source** that `inventory.json` records. A unit, checkpoint or project chapter's source is its directory (for example `units/*` or `checkpoints/*`); chapters from front matter, answers, back matter and the setup chapter have their own sources.
+       An exempt phrase is allowed only in matching chapters, and stays banned everywhere else. The scope is the whole chapter, because a unit chapter combines its lesson and exercises; a finer scope would need per-range provenance, which this plan does not add.
+     - **Both audit layers keep the chapter boundary.** The `.qmd` scan checks each generated chapter against its source. The PDF-text scan (`publish_audit.py:853`, today one string) is split per chapter with the PDF outline (the chapter start pages already used by the outline checks), and each page range is checked against its chapter's source.
+     - Tests: an exempt phrase passes in a matching unit chapter, and fails in front matter, in an answers chapter and in a non-matching chapter, at both layers.
      - `goals_recap: required`, required for every book by user decision
    - `index_names:` — the Python names the index recognises
    - `lesson_heading:` — the regex for lesson headings
@@ -101,7 +102,7 @@ The read-only gap survey (2026-09-30) is summarised in design 010 §1.
 - **Handouts and syllabi (F3):** the builds become two steps with a kept log. `nbconvert --to latex` and `pandoc -s -o *.tex` write the source, then `lualatex` runs in a kept `build/` directory, using templates with the book fonts and the same fallback.
   - The handout template is a small nbconvert template that inherits `latex/index.tex.j2` and replaces its font block (main and mono fonts with `RawFeature={fallback=…}`), so it does not fight the stock template's fontspec defaults.
   - nbconvert only writes `.tex`; `--PDFExporter` is no longer used. Today nbconvert and pandoc discard the engine log, so there is nothing to check.
-- **The missing-glyph check:** a small tool, `tools/pdf_glyphs.py`, scans the kept LaTeX log for `Missing character` and fails. It runs for every handout and syllabus build. The book audit already has this check, now with the wider fallback.
+- **The missing-glyph check:** a small tool, `tools/pdf_glyphs.py`, scans the kept LaTeX log for `Missing character` and fails. It covers **every** PDF build: book editions (through the audit), handouts, syllabi, and `patterns.pdf`. `patterns.pdf`'s `xelatex` step (`build-pdf.sh:72`) moves to `lualatex` with the same fallback and a kept, checked log. It runs for every handout and syllabus build. The book audit already has this check, now with the wider fallback.
 - `ci-local.sh` step 5 builds handouts and the syllabus for **every** book (the `judge` gate goes).
 - **Change-scoped book builds (D7):** `ci-local.sh` renders a publication book's editions only when `git diff origin/main...HEAD` (plus uncommitted changes) touches that book's root (including its `publication.yaml`).
   - A change to **anything under `tools/` or `scripts/`, or to `books.yaml`**, renders every publication book. The publisher imports `tools/books.py`, the turtle modules and other tools, so no shared input can skip a book.
@@ -197,6 +198,12 @@ The tests cover:
   3. Scoped phrase exemptions keep the chapter boundary in both the `.qmd` scan and the PDF-text scan (split by outline page ranges), with tests.
   4. = N2.
 - **User decision, 2026-09-30:** CI renders only changed books; `--all-books` runs before each release.
+
+### Round 3
+
+- `[sol]` **REJECT**, 2 blockers, both folded:
+  1. Phrase exemptions are scoped to whole chapters by chapter-source globs, since a unit chapter mixes its lesson and exercises; tested at both layers.
+  2. The missing-glyph check and the font fallback also cover `patterns.pdf`.
 
 ## Content Review
 

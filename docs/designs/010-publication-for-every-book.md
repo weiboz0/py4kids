@@ -33,7 +33,7 @@ A read-only survey (2026-09-30) found that the pipeline, the audit and the theme
     - error-demo and hang-demo cell ids
     - print-required Starters
     - turtle try-it counts per unit and the Teacher's Edition drawing count
-    - the per-book exemptions to the phrase bans, each scoped to the source files where the book teaches the phrase (for example `python assets/` in contest lessons, which is how students run their programs). The phrase stays banned everywhere else.
+    - the per-book exemptions to the phrase bans, each scoped to the chapters where the book teaches the phrase (for example `python assets/` in contest lessons, which is how students run their programs). The phrase stays banned everywhere else.
   - **index:** the set of Python names the index recognises
 
   The *Python, Concept by Concept* values move there **unchanged**. A regression guard proves that its four generated Quarto projects and its audit results are byte-identical before and after the move.
