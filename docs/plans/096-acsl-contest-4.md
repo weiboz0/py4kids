@@ -35,7 +35,7 @@ Conventions and lessons carried over from plans 093–095:
     - **undirected** graphs only, written as a vertex set `{A, B, C, D}` and an edge set `{AB, AC, BC, AD, DB}`; small graphs of about 4–8 vertices; complete graphs
     - simple paths (no repeated vertex), and paths of a given length (for example "all simple paths of length 3 starting from C": `CADB, CABD, CBAD, CBDA`)
     - cycles (the doc lists 6 cycles of one graph, each in both directions from A: `ABDA, ADBA, ABCA, ACBA, ACBDA, ADBCA`)
-    - traversability: every edge used once without lifting the pencil, possible only when 0 or 2 vertices have odd degree
+    - traversability: every edge used once without lifting the pencil, possible only when 0 or 2 vertices have odd degree (and, as the book states it, only when every vertex with an edge is connected)
     - the number of edges of a complete graph
   - *Graph Theory* (ACSL wiki):
     - vertices, edges written as pairs (`AB`), and undirected, directed and weighted graphs
@@ -65,19 +65,24 @@ Conventions and lessons carried over from plans 093–095:
 ## Shared rules for this plan
 
 **Verification helpers** in `acsl/units/<unit>/assets/verify/`, with the plan 094–095 recipe:
-- `graph_eval.py` (unit 12). Its interface:
-  - `parse(edges, directed=False)` reads an edge string like `"AB AC BC AD DB"` (space-separated pairs; a weighted edge is `AB3`).
-    It returns `(vertices, adjacency)`, with vertices in alphabetical order.
-  - `matrix(edges, directed=False) -> list[list[int]]`, rows and columns in alphabetical vertex order
+- `graph_eval.py` (unit 12). Every function takes `edges` and the keyword arguments `vertices=None, directed=False`.
+  - `edges` is the statement's edge text pasted verbatim: braces, commas and whitespace are layout, so `"{AB, AC, BC}"` and `"AB AC BC"` are the same. A weighted edge carries its weight after the pair (`AB3`). For a directed graph `AB` goes from A to B. A self-loop `AA` is allowed and puts 1 on the diagonal; items never use self-loops in cycle or traversability questions.
+  - `vertices` is an optional string of vertex letters (`"ABCDE"`) naming every vertex, isolated ones included; without it the vertices are those that appear in `edges`. Vertices are always taken in alphabetical order.
+  - `matrix(edges, ...) -> list[list[int]]`: the adjacency matrix in alphabetical vertex order, **1 for an edge and 0 otherwise, whatever the weight**. An undirected edge sets both entries. Items never use repeated edges or loops.
   - `matrix_power(M, p) -> list[list[int]]`
-  - `count_paths(edges, start, end, length, directed=False) -> int`: walks with repeats allowed, as `M^p` counts them
-  - `simple_paths(edges, start, length, directed=False) -> list[str]`: every simple path of `length` edges from `start`, as vertex strings in alphabetical order
-  - `cycles(edges, directed=False, start=None) -> list[str]`: with `start`, every cycle through `start` written from it, in each direction, in alphabetical order (the Elementary doc's form).
-    Without `start`, each cycle once, written from its alphabetically smallest vertex, going the direction whose second vertex is smaller for an undirected graph.
-  - `degrees(edges) -> dict`, `traversable(edges) -> bool`, `components(edges) -> int`
-- `circuit_eval.py` (unit 13). A circuit is a **netlist**: one gate per line, `NAME = GATE(input, input)`, with `GATE` one of `BUFFER NOT AND NAND OR NOR XOR XNOR`; inputs are the circuit's variables `A`–`D` or earlier gate names; the last line's gate is the output.
-  - `evaluate(netlist, values) -> int`
-  - `solutions(netlist, value=1) -> str`: the canonical tuple list, as `bool_eval.solutions`
+  - `count_paths(edges, start, end, length, ...) -> int`: walks of exactly `length` edges, with repeats allowed, as the entry of `M^length` counts them
+  - `simple_paths(edges, start, length, ...) -> list[str]`: every simple path of `length` edges from `start`, as vertex strings, sorted alphabetically
+  - `cycles(edges, start=None, both_directions=False, ...) -> list[str]`, sorted alphabetically:
+    - **with `start`:** every cycle through `start`, written from `start` and back to it. For an undirected graph each cycle appears in both directions, as in the Elementary doc (`ABCA` and `ACBA`); for a directed graph only in the direction its edges allow.
+    - **without `start`:** each cycle once, written from its alphabetically smallest vertex. For an undirected graph it goes the direction whose second vertex is smaller.
+    - **`both_directions=True`** (undirected only, without `start`): each cycle written from its smallest vertex in **both** directions, which is how the Elementary doc counts (its sample graph has 6).
+    - A cycle has at least 3 distinct vertices in an undirected graph, and at least 2 in a directed one (`ABA` when both `AB` and `BA` exist).
+  - `degrees(edges, ...) -> dict` (in-degree plus out-degree for a directed graph), `components(edges, ...) -> int` (isolated vertices count as components)
+  - `traversable(edges, ...) -> bool` (undirected only): True exactly when every vertex **that has an edge** lies in one connected component, and 0 or 2 vertices have odd degree
+  - `cheapest(edges, start, end, ...) -> int`: the least total weight over all simple paths, by listing (weighted graphs only)
+- `circuit_eval.py` (unit 13). A circuit is a **netlist**. Its first line is `INPUTS A B C` (the circuit's input variables, in alphabetical order, each one a column of every tuple even if no gate uses it). Then comes one gate per line, `NAME = GATE(input, input)` (one input for `BUFFER` and `NOT`), with `GATE` one of `BUFFER NOT AND NAND OR NOR XOR XNOR`; a gate's inputs are declared inputs or earlier gate names. Gate names are lowercase (`p`, `q`, `out`), so they never collide with the capital inputs `A`–`D`. The last line's gate is the output.
+  - `evaluate(netlist, values) -> int`, where `values` is a dict from each declared input to 0 or 1
+  - `solutions(netlist, value=1) -> str`: the canonical tuple list over the declared inputs in `INPUTS` order, rows in ascending binary order (`(1,1,0)`), or `NONE`
   - `count(netlist, value=1) -> int`
   - `to_expression(netlist) -> str`: the circuit as an expression in the book's Boolean notation, where `NAND(x, y)` is `~(x * y)`, and so on
   - Simplifying reuses unit 08's `bool_eval.minimal_sops`; verify cells import it from `../unit-08-boolean-algebra/assets/verify`.
@@ -85,11 +90,13 @@ Conventions and lessons carried over from plans 093–095:
   - `run(program, inputs=()) -> dict` runs an ACSL assembly program, given as text with one instruction per line.
     It returns `{"memory": {label: value}, "printed": [values], "acc": [ACC after each ACC-changing instruction]}`.
   - The semantics are exactly the wiki's:
-    - `ADD`, `SUB` and `MULT` results are reduced modulo 1,000,000 as the wiki states. The A1 test author reads the wiki's exact wording (and any worked example) and pins the rule for negative results in the test docstring; items avoid results beyond ±999,999 unless an item is about the rule itself.
-    - `DIV` keeps the signed integer part, rounding toward zero. `DIV` is the one place ACSL rounds toward zero, not floor.
-    - `READ` takes the next input.
+    - `ADD`, `SUB`, `MULT` and `READ` keep a value modulo 1,000,000, as the wiki states. The book reads this as keeping the sign and the last six digits: a true result `v` becomes `sign(v) × (|v| mod 1,000,000)`, so `999,999 + 1` is `0` and `−999,999 − 2` is `−1`.
+      The wiki gives no negative-overflow example, so this is a **book convention**: the lesson labels it so, and **no item assesses it**. Every value an item's program produces stays within ±999,999.
+    - `DIV` divides ACC by LOC ("divided into the contents of the ACC") and keeps the signed integer part, rounding toward zero: `-7` `DIV` `2` is `-3`. This is the one place ACSL rounds toward zero, not floor. Items never divide by zero, and the helper raises if one does.
+    - `READ` takes the next input, reduced by the same rule.
     - Branches jump to a label; `END` stops.
-    - A `STORE` to a label with no `DC` creates it.
+    - A `STORE` or `READ` to a label with no `DC` creates it (the wiki's `N!` sample does both).
+    - **Line parsing:** tokens are split on whitespace. The first token is a label exactly when it is not an opcode (the wiki forbids opcodes as labels), so `DONE END` is a labelled `END` and `LOAD B` is an unlabelled `LOAD`. Statements show programs as fixed-width code blocks, pasted byte-identical into verify cells.
   - A step limit of 100,000 raises an error rather than looping forever.
 
 Each evaluator must pass its **pre-written** test file (`tests/test_acsl_eval_graph.py`, `tests/test_acsl_eval_circuit.py`, `tests/test_acsl_eval_asm.py`) before any answer is trusted.
@@ -109,13 +116,16 @@ A small ASCII sketch may accompany it.
 
 **Per-entry concept boundaries:**
 - **Unit 12** introduces the ACSL-only `acsl-graph-theory` ("Graphs: paths, cycles, degrees and adjacency matrices (ACSL)", technique, graphs). It requires *Python by Projects*, Foundations, `grid-2d` (unit 03) and `recursion` (unit 02).
-- **Unit 13** introduces the ACSL-only `logic-gates` ("Logic gates and circuits", technique, techniques). It requires `boolean-algebra` (unit 08).
-- **Unit 14** introduces nothing (`introduces: []`); it practises `code-tracing` and `acsl-pseudocode`.
+- **Unit 13** introduces the ACSL-only `logic-gates` ("Logic gates and circuits", technique, techniques). It requires `boolean-algebra` (unit 08) and, for its simulator, `dict-literal`, `dict-access`, `str-split` and `input-parse`.
+- **Unit 14** introduces nothing (`introduces: []`); it practises `code-tracing` and `acsl-pseudocode`, and requires `string-index`, `string-slice` and `string-concat`.
 - **Unit 15** introduces the ACSL-only `acsl-assembly` ("ACSL assembly language", technique, techniques). It requires `dict-*`, `str-split` and `input-parse`.
 - **The checkpoint** is strict over *Python by Projects* plus units 00–15.
 
 **Canonical answer text** (plans 093–095, plus these):
-- **Paths and cycles:** vertex strings with no separators (`CADB`), listed in alphabetical order and separated by `, `; counts as bare integers. Each counting item states in words what counts (a walk that may repeat vertices, a simple path, a cycle counted once, or a cycle in each direction from a named vertex).
+- **Paths and cycles:** vertex strings with no separators (`CADB`), listed in alphabetical order and separated by `, `; counts as bare integers. Each counting item states in words what counts (a walk that may repeat vertices, a simple path, a cycle counted once, or a cycle in each direction).
+  - **Elementary** items follow the Elementary doc: an undirected cycle counts in **each direction**, and paths of a given length are **simple** paths in order (its "paths of length 2" count is 12, not the 22 walks of `M^2`).
+  - **Junior and above** follow the wiki: a cycle counts **once** ("HEGH and EHGE are different ways to identify the same cycle"), and a directed cycle only in its own direction.
+  - `acsl-elementary` items never ask for cycles "counted once".
 - **Matrices:** an item asks for one entry or a row sum as an integer, never a whole matrix.
 - **Yes/no** (for example traversable): `YES` or `NO`.
 - **Circuits:** tuples and counts as in unit 08; simplified expressions as unit 08's unique minimal sum of products, with `0` and `1` standing alone.
@@ -125,7 +135,7 @@ A small ASCII sketch may accompany it.
 ## The entries (all under `acsl/`)
 
 Unit conventions:
-- a project-first hook with a title no other unit uses, and 3 lessons
+- a project-first hook with a title no other unit uses, and 3 lessons. The 12 titles already taken are: Pairs That Make the Target; Three Friends, One Number?; The Shrinking Function; What is output?; The Calculator With No Brackets; The Stage Light Board; How far does the ball travel?; The Shuffled Shopping List; The Clubhouse Door; The Library Robot; Who ends up in locker 2?; The Knock Code
 - **at least 14 exercises**, mixing programming items (judged line-exact) and short-answer items
 - a heading ladder tag plus a visible division line on every exercise
 - at least 2 `stretch` Challenges
@@ -148,7 +158,7 @@ Unit conventions:
 
 - **Divisions:** junior, intermediate, senior. **Introduces:** `logic-gates`; practises `boolean-algebra`.
 - **Scope:** the eight gates and their truth tables; reading a circuit (netlist and ASCII sketch) as a Boolean expression; circuit outputs for given inputs; the tuples that make a circuit TRUE or FALSE; counts; simplifying a circuit's expression to its unique minimal sum of products; NAND and NOR as universal gates.
-- **Junior:** two and three inputs, up to about 4 gates. **Intermediate and above:** four inputs, deeper circuits, XNOR chains. **Senior:** building a given function from NAND gates only (answered as a count or an option choice).
+- **Junior:** two and three inputs, up to about 4 gates. **Intermediate and above:** four inputs, deeper circuits, XNOR chains. **Senior:** building a given function from NAND gates only, answered as an **option choice** (which circuit is equivalent), checked by truth table.
 - **Python:** a circuit simulator that reads a netlist from input and prints its truth table, or the count of TRUE rows.
 
 ### `unit-14-wdtpd-strings` — What Does This Program Do? – Strings
@@ -191,19 +201,28 @@ Unit conventions:
 - **Opus tooling subagent: pre-written evaluator tests**, pinning the interfaces above in their docstrings, from the wiki and Elementary doc samples:
   - `tests/test_acsl_eval_graph.py`:
     - the Elementary doc's simple paths from C (`CABD, CADB, CBAD, CBDA`)
-    - its six cycles from A (`ABCA, ABDA, ACBA, ACBDA, ADBA, ADBCA`), and the same graph's cycles counted once each
-    - the wiki's matrix-power sample (1 path of length 2 from A to C; 3 of length 4)
-    - traversability with 0, 2 and 4 odd vertices; components; a directed cycle count; weighted parsing
+    - its six cycles from A (`ABCA, ABDA, ACBA, ACBDA, ADBA, ADBCA`), its whole-graph count of 6 with `both_directions=True`, and 3 without it (a helper canonicalisation case, not an Elementary answer)
+    - the doc's second graph, whose two cycles are `abcda` and `adcba` in both-direction counting
+    - the wiki's matrix-power sample (1 path of length 2 from A to C; 3 of length 4), with its self-loop. The graph exists only in the wiki's image `graph sample3.svg`, so the A1 author fetches it and records the transcription in a comment
+    - the wiki's directed cycle-count sample (`ABA`, `BCDB`, `CDC`: 3)
+    - edge text with braces and commas parsing the same as bare pairs
+    - traversability with 0, 2 and 4 odd vertices, and two disjoint triangles (0 odd vertices, not traversable); an isolated vertex given through `vertices` (degree 0, its own component, no effect on traversability)
+    - directed cycles with and without `start`, including a 2-cycle `ABA`; `matrix` ignoring weights; `cheapest` on a small weighted graph
   - `tests/test_acsl_eval_circuit.py`:
+    - the `INPUTS` line setting tuple columns and order, including an input no gate uses
     - the wiki's three samples (`(1,1,0)` the only FALSE triple; 10 TRUE rows; simplifies to `0`), transcribed from the wiki's diagrams into netlists
     - every gate's truth table
     - `to_expression` agreeing with `evaluate` on every row
   - `tests/test_acsl_eval_asm.py`:
     - the wiki's two samples (`TEMP` = −9 with the `ACC` trace −2, −6, 2, −1, −9; `N!` for several `N`)
-    - each opcode, including immediate data, `DIV` toward zero for negatives, the modulo rule on overflow, each branch, `READ`/`PRINT`, and the step limit
+    - each opcode, including immediate data, `DIV` toward zero for negatives, each branch, `READ`/`PRINT`, and the step limit
+    - `READ` and `STORE` creating labels (the `N!` sample); line parsing of `DONE END` versus `LOAD B`; `DIV` operand order and `-7 DIV 2` → `-3`; `DIV` by zero raising
+    - the book's modulo rule at the boundaries: `999999 + 1` → `0`, `-999999 - 2` → `-1`, a `MULT` overflow, and a `READ` of `1000005` → `5`
 - Each file imports its evaluator from the unit's `assets/verify/` and skips until it exists.
 
-## Phase B — Lessons and statements (Opus subagents in parallel, one per entry, each owning only its folder)
+## Phase B — Lessons and statements (Opus subagents, one per entry, each owning only its folder)
+
+The four unit authors work in parallel. **The checkpoint author starts after them**, reads units 12–15, and chooses items that repeat no unit item's edge set, netlist function or program.
 
 Each unit folder gets `lesson.ipynb`, `exercises.ipynb` (statements with placeholders only), `manifest.yaml`, and `assets/` (lesson mirrors, reference solvers, and fixtures `exN/k.in|out`). The checkpoint gets `checkpoint.ipynb`, `manifest.yaml` and `assets/q9/`. Each author reports its intended answers for a blind cross-check without writing them into any file.
 
@@ -219,15 +238,19 @@ Coverage-map entries in season order (units 12–15, then the checkpoint), recon
 
 ## Phase D — Teacher notes (inline)
 
-Five `teacher-notes.md` files with the required headings, and Grading for the checkpoint. They cover division paths (unit 14 as string drill for Intermediate/Senior; the Elementary mock test), the canonical forms, and the traps: substrings versus slices, `DIV` toward zero, walks versus simple paths, and cycles counted once versus in each direction.
+Five `teacher-notes.md` files with the required headings, and Grading for the checkpoint. They cover division paths (unit 14 as string drill for Intermediate/Senior; the Elementary mock test), the canonical forms, and the traps: substrings versus slices, `DIV` toward zero, walks (`M^p`) versus the Elementary doc's simple paths, and cycles in each direction (Elementary) versus once (the wiki). Unit 12's notes state the Elementary/wiki counting conflict plainly. Unit 15's notes state that the modulo reading for negatives is a book convention.
 
 ## Phase E — VERIFICATION
 
 1. `scripts/ci-local.sh` ALL GREEN, in a solo run on the final commit.
 2. The three pre-written evaluator test files pass with no skips.
 3. A script reports the checkpoint paths by question tags (Junior Q1–Q6 + Q9; Intermediate/Senior Q1–Q4, Q7–Q8 + Q9; Classroom Q1–Q4, Q7–Q8). It also checks that unit 12's Exercises 1–6 are `acsl-elementary` short-answer items, contiguous before any other tag.
-4. Blind solves: reviewers solve all 8 checkpoint short answers and at least 3 items per unit.
-5. Post-execution report.
+4. De-duplication scripts:
+   - hook titles are unique across `acsl/units`
+   - no checkpoint item has a unit 12–15 item's edge set, netlist truth column or program text
+   - the checkpoint's verify cells import `graph_eval`, `circuit_eval` and `asm_eval` and define no evaluator of their own
+5. Blind solves: reviewers solve all 8 checkpoint short answers and at least 3 items per unit.
+6. Post-execution report.
 
 ## Out of scope
 
@@ -240,6 +263,25 @@ Five `teacher-notes.md` files with the required headings, and Grading for the ch
 
 - **N1 (folded):** the assembly modulo rule for negative results was stated from memory. A1 now pins it from the wiki's wording, and items stay inside ±999,999 unless the rule is the point.
 - The plan carries every plan 095 lesson forward: helpers pinned by pre-written tests, checkpoints importing them, a placeholder-only `exercises.ipynb`, unique hook titles, no checkpoint repeats, and stated counting rules for paths and cycles.
+
+### Round 1 — verdicts and fold
+
+- `[sol]` **REJECT**, 4 findings, all folded:
+  1. Traversability also requires every vertex with an edge to be connected; tested with two disjoint triangles.
+  2. `graph_eval` takes an optional `vertices` string (isolated vertices), `matrix` is 0/1 whatever the weights, and directed cycles run only in their edge direction; tested.
+  3. Netlists begin with `INPUTS …`, which fixes tuple columns and order (unused inputs included); `values` is a dict; tested.
+  4. The modulo rule (with `READ`) is pinned as a book convention, with boundary tests, and no item assesses it.
+- `[fable]` **REJECT**, 3 blockers and 7 nits, all folded:
+  1. Cycle counting follows each source: Elementary counts each undirected cycle in both directions (`both_directions=True`; the doc's 6), and Junior+ counts once (the wiki). Elementary items never say "counted once", and the teacher notes state the conflict.
+  2. = `[sol]` 4. No item assesses overflow, and items never divide by zero.
+  3. `READ` creates labels, line parsing is pinned (a first token is a label only when it is not an opcode), and `DIV` is ACC ÷ LOC, rounding toward zero; tested.
+  4. NAND-only construction is option choice only.
+  5. The 12 taken hook titles are listed; the checkpoint author starts after the units; Phase E adds de-duplication and helper-import scripts.
+  6. Edge text is pasted verbatim (braces and commas are layout).
+  7. Self-loops are allowed in matrices but kept out of cycle items; the wiki's image-only matrix sample is to be transcribed by the A1 author.
+  8. Gate names are lowercase.
+  9. Units 13 and 14 list their Python `requires`.
+  10. The Elementary "paths of length 2" count (simple paths, 12) versus `M^2` walks is named in the canonical rules and in Phase D.
 
 ## Content Review
 
