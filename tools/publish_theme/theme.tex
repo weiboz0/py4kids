@@ -10,8 +10,27 @@
 \makeindex[intoc]
 \uppertitleback{@TITLE@\\@SUBTITLE@\\First edition, 2026}
 \lowertitleback{Copyright © 2026 Weibo Zhou\\Written for Python 3.12 or newer\\Course files: https://github.com/weiboz0/py4kids (folder @FOLDER@/)}
+% Font fallback (design 010 D4): a glyph the primary fonts lack (⊕ ⊙ ⌊ ⌋, sub/superscripts, box
+% drawing, ✓ ✗ ...) comes from DejaVu Sans / DejaVu Sans Mono, everywhere the fonts are used (prose,
+% code, headings, running heads, TOC, index). Glyphs the primary fonts have are unchanged.
+% Quarto sets the main and mono fonts before this header; they are set again here, with the same
+% default features, so that the fallback is attached. The last fallback= in a shape's features wins.
+\directlua{
+  luaotfload.add_fallback("pubfallback", {"DejaVu Sans:mode=node;", "DejaVu Sans Mono:mode=node;"})
+  luaotfload.add_fallback("pubfallbackbold", {"DejaVu Sans/B:mode=node;", "DejaVu Sans Mono/B:mode=node;"})
+  luaotfload.add_fallback("pubfallbackmono", {"DejaVu Sans Mono:mode=node;", "DejaVu Sans:mode=node;"})
+  luaotfload.add_fallback("pubfallbackmonobold", {"DejaVu Sans Mono/B:mode=node;", "DejaVu Sans/B:mode=node;"})
+}
+\setmainfont{Atkinson Hyperlegible}[RawFeature={fallback=pubfallback},
+  BoldFeatures={RawFeature={fallback=pubfallbackbold}},BoldItalicFeatures={RawFeature={fallback=pubfallbackbold}}]
+\setmonofont{Fira Mono}[RawFeature={fallback=pubfallbackmono},
+  BoldFeatures={RawFeature={fallback=pubfallbackmonobold}},BoldItalicFeatures={RawFeature={fallback=pubfallbackmonobold}}]
+% Arrows, Greek, U+25B8 and U+2610 stay wrapped in \fallbackfont by panels.lua: this family is scaled
+% to the main font's x-height (Scale=MatchLowercase), a plain fallback glyph is not, so dropping the
+% wrapping would change Python, Concept by Concept's pages.
 \newfontfamily\fallbackfont{DejaVu Sans}
-\setsansfont{Atkinson Hyperlegible}
+\setsansfont{Atkinson Hyperlegible}[RawFeature={fallback=pubfallback},
+  BoldFeatures={RawFeature={fallback=pubfallbackbold}},BoldItalicFeatures={RawFeature={fallback=pubfallbackbold}}]
 \setkomafont{disposition}{\normalfont\sffamily\bfseries}
 \AtBeginDocument{\hypersetup{bookmarksdepth=2}}
 \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,breakanywhere,breaksymbolleft=\tiny\ensuremath{\hookrightarrow},commandchars=\\\{\},fontsize=\small}

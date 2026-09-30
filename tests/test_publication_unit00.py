@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+from publication_helpers import fixture_config, write_publication_config
 
 from tools import publish
 from tools.publish import allowed_source, build
@@ -33,13 +34,14 @@ def book(tmp_path):
         '# Python, Concept by Concept — Syllabus\n\n'
         '| entry | kind | lessons | the hook |\n|---|---|---|---|\n'
         '| `unit-01-fixture` | unit | 1 | Hook. |\n')
+    write_publication_config(root)
     return tmp_path
 
 
 def test_setup_chapter_keeps_section_levels_and_teacher_panel(book):
-    source = book / 'python-concepts' / 'docs' / 'unit-00-getting-set-up.md'
-    student, inventory, items, title = publish.render_setup_chapter(source, 'student')
-    teacher, _, _, _ = publish.render_setup_chapter(source, 'teacher')
+    root = book / 'python-concepts'
+    student, inventory, items, title = publish.render_setup_chapter(root, 'student', fixture_config())
+    teacher, _, _, _ = publish.render_setup_chapter(root, 'teacher', fixture_config())
     assert student.startswith('# Unit 0 — Getting Set Up {pub-label="Unit 0" pub-mainmatter="true"}')
     assert r'\chaptermark{Unit 0 — Getting Set Up}' in student
     assert '::: {.opener}\nFirst program.' in student
@@ -55,16 +57,20 @@ def test_setup_chapter_keeps_section_levels_and_teacher_panel(book):
 
 
 def test_setup_source_is_allowed_but_all_teacher_notes_are_denied():
-    assert allowed_source(Path('python-concepts/docs/unit-00-getting-set-up.md'), 'student')
+    setup = fixture_config().setup_source
+    assert allowed_source(Path('python-concepts/docs/unit-00-getting-set-up.md'), 'student', setup)
+    # The setup source is allowed only by the book's config, never by a hard-coded name.
+    assert not allowed_source(Path('python-concepts/docs/unit-00-getting-set-up.md'), 'student')
     for name in ('unit-00-teacher-notes.md', 'teacher-notes.md', 'other-teacher-notes-extra.md'):
-        assert not allowed_source(Path('python-concepts/docs') / name, 'student')
+        assert not allowed_source(Path('python-concepts/docs') / name, 'student', setup)
+        assert not allowed_source(Path('python-concepts/docs') / name, 'student', 'docs/' + name)
 
 
 def test_setup_is_first_separate_chapter_in_both_editions(book, monkeypatch):
     from tools import publish
 
     monkeypatch.setattr(publish, 'render_chapter',
-                        lambda entry, kind, edition: ('# Unit 1 — Fixture\n', [], [], 'Fixture'))
+                        lambda entry, kind, edition, config: ('# Unit 1 — Fixture\n', [], [], 'Fixture'))
     for edition in ('student', 'teacher'):
         project = build(book, 'python-concepts', edition)
         chapters = json.loads((project / 'inventory.json').read_text())['chapters']
@@ -87,7 +93,7 @@ def test_setup_is_first_separate_chapter_in_both_editions(book, monkeypatch):
 
 
 def test_setup_outline_requires_chapter_and_every_level_two_section(book):
-    chapter = [{'id': 'unit-00-getting-set-up', 'kind': 'setup',
+    chapter = [{'id': 'unit-00-getting-set-up', 'kind': 'setup', 'title': 'Unit 0 — Getting Set Up',
                 'source': 'python-concepts/docs/unit-00-getting-set-up.md'}]
     complete = ('+\t"Unit 0 — Getting Set Up"\t#page=1\n'
                 '|\t\t"Install Python"\t#page=1\n'

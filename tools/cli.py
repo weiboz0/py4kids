@@ -6,6 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from tools.books import PublicationConfigError
 from tools.checks import CHECKS, UNIT_ONLY_CHECKS
 from tools.notebooks import fill_outputs_findings, lesson_outputs_findings, project_dirs
 
@@ -69,11 +70,19 @@ def main(argv=None):
         if not arguments.edition:
             print("usage: publish requires --edition", file=sys.stderr)
             return 2
-        print(build(arguments.root, arguments.book, arguments.edition))
+        try:
+            print(build(arguments.root, arguments.book, arguments.edition))
+        except PublicationConfigError as error:
+            print(error, file=sys.stderr)
+            return 1
         return 0
     if arguments.check == "publish-audit":
         from tools.publish_audit import audit
-        findings = audit(arguments.root, arguments.book)
+        try:
+            findings = audit(arguments.root, arguments.book)
+        except PublicationConfigError as error:
+            print(error, file=sys.stderr)
+            return 1
         for finding in findings:
             print(finding)
         if findings and any(finding.startswith("FAIL:") for finding in findings):

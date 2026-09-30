@@ -14,6 +14,18 @@ if ! .venv/bin/python -c 'import sys; from pathlib import Path; from tools.books
   echo "FAIL: $book: not a publication book (books.yaml publication: true)" >&2
   exit 2
 fi
+# A publication book needs a valid <book>/publication.yaml (design 010 D1).
+if ! .venv/bin/python -c '
+import sys
+from pathlib import Path
+from tools.books import publication_config_errors
+errors = publication_config_errors(Path("."), sys.argv[1])
+for error in errors:
+    print("FAIL: " + error, file=sys.stderr)
+sys.exit(1 if errors else 0)
+' "$book"; then
+  exit 2
+fi
 export PATH="$HOME/.local/bin:$PATH"
 cache_root="${TMPDIR:-/tmp}/py4kids-book-cache"
 build_start=$SECONDS

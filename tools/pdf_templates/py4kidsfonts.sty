@@ -1,0 +1,23 @@
+% py4kids fonts for handouts, syllabi and patterns.pdf (design 010 D4; built with lualatex by
+% scripts/build-pdf.sh, which puts this folder on TEXINPUTS). The same body and mono fonts, and the
+% same luaotfload fallback chains, as the book theme (tools/publish_theme/theme.tex): a glyph the
+% primary fonts lack comes from DejaVu Sans / DejaVu Sans Mono. A glyph no font has is still a
+% "Missing character" in the log, which tools/pdf_glyphs.py fails.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{py4kidsfonts}[2026/09/30 py4kids fonts with DejaVu fallback]
+\RequirePackage{fontspec}
+\directlua{
+  luaotfload.add_fallback("pubfallback", {"DejaVu Sans:mode=node;", "DejaVu Sans Mono:mode=node;"})
+  luaotfload.add_fallback("pubfallbackbold", {"DejaVu Sans/B:mode=node;", "DejaVu Sans Mono/B:mode=node;"})
+  luaotfload.add_fallback("pubfallbackmono", {"DejaVu Sans Mono:mode=node;", "DejaVu Sans:mode=node;"})
+  luaotfload.add_fallback("pubfallbackmonobold", {"DejaVu Sans Mono/B:mode=node;", "DejaVu Sans/B:mode=node;"})
+}
+\defaultfontfeatures{Scale=MatchLowercase}
+\defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\setmainfont{Atkinson Hyperlegible}[RawFeature={fallback=pubfallback},
+  BoldFeatures={RawFeature={fallback=pubfallbackbold}},BoldItalicFeatures={RawFeature={fallback=pubfallbackbold}}]
+\setsansfont{Atkinson Hyperlegible}[RawFeature={fallback=pubfallback},
+  BoldFeatures={RawFeature={fallback=pubfallbackbold}},BoldItalicFeatures={RawFeature={fallback=pubfallbackbold}}]
+\setmonofont{Fira Mono}[RawFeature={fallback=pubfallbackmono},
+  BoldFeatures={RawFeature={fallback=pubfallbackmonobold}},BoldItalicFeatures={RawFeature={fallback=pubfallbackmonobold}}]
+\endinput

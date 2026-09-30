@@ -4,6 +4,16 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 export PY4KIDS_CI=1
 
+# --all-books renders every publication book's editions (required before a release); without it,
+# step 5 renders only the books the change touches (design 010 D7).
+scope_args=()
+for arg in "$@"; do
+  case "$arg" in
+    --all-books) scope_args=(--all-books) ;;
+    *) echo "usage: scripts/ci-local.sh [--all-books]" >&2; exit 2 ;;
+  esac
+done
+
 step() { echo; echo "=== $1 ==="; }
 
 step "1/6 registry + lint"
@@ -70,17 +80,28 @@ while read -r book flags <&3; do
 done 3<<< "$books"
 
 step "5/6 PDF build"
-# Handouts and syllabus PDFs for the Python books (contest books build no PDFs yet); the
-# publication pipeline for `publication: true` books.
+# Handouts and the syllabus for every book, judge books included (design 010 D5); build-pdf.sh
+# fails on a missing glyph. A publication book's editions render only when the change touches the
+# book, or anything under tools/ or scripts/, or books.yaml (design 010 D7, tools/ci_scope.py), or
+# with --all-books. publish-audit needs the render, so it is skipped with it; never silently.
+rendered=()
+skipped=()
 while read -r book flags <&3; do
-  if ! has_flag judge "$flags"; then
-    bash scripts/build-pdf.sh --book "$book"
-  fi
+  bash scripts/build-pdf.sh --book "$book"
   if has_flag publication "$flags"; then
-    bash scripts/build-book.sh --book "$book"
-    uv run py4kids-tools --book "$book" publish-audit
+    decision="$(uv run python -m tools.ci_scope --book "$book" "${scope_args[@]}")"
+    echo "book editions: $book: $decision"
+    if [[ "$decision" == render:* ]]; then
+      bash scripts/build-book.sh --book "$book"
+      uv run py4kids-tools --book "$book" publish-audit
+      rendered+=("$book")
+    else
+      echo "SKIP: $book: book editions and publish-audit (${decision#skip: })"
+      skipped+=("$book")
+    fi
   fi
 done 3<<< "$books"
+echo "book editions rendered: ${rendered[*]:-none}; skipped: ${skipped[*]:-none}"
 
 step "6/6 pre-merge guard"
 bash scripts/pre-merge-guard.sh

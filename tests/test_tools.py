@@ -1635,7 +1635,7 @@ def test_pdf_builder_contract():
     assert config < convert
     assert "mktemp -d" in text
     assert '--output "$unit_id"' in text
-    assert "--pdf-engine=xelatex" in text
+    assert "lualatex -interaction=nonstopmode" in text and "xelatex" not in text  # plan 097 D4
     assert "build/handouts" in text
     assert 'book_flag(Path("."), sys.argv[1], "patterns")' in text
     assert '[[ "$is_patterns_book" == 1 ]]' in text
@@ -1644,7 +1644,7 @@ def test_pdf_builder_contract():
     assert '"empty")' in text
     assert '"present")' in text
     assert '"$book_root/reference/patterns.md"' in text
-    assert '"$book_root/build/patterns.pdf"' in text
+    assert 'pandoc_pdf "$book_root/reference/patterns.md" patterns' in text
 
 
 # Fail-closed guards (content-gate glm #1): a typo'd book root or a missing target

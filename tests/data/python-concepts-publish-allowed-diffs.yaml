@@ -1,0 +1,12 @@
+# Plan 097 regression contract (design 010 D1; plan 097 Phase A step 3).
+# tests/data/python-concepts-publish-baseline.json is the immutable pre-change digest of every generated
+# .qmd and inventory.json of python-concepts' four editions. The regression test
+# (tests/test_publication_regression.py) allows a generated file to differ from it only when it is
+# listed here as {edition, file, reason}, with a reason naming the design 010 D2/D3 rule that requires
+# the change. A listed file that no longer differs fails the test, so the list stays minimal.
+#
+# Empty: plan 097's D2/D3 rules change no python-concepts output. Its items keep heading-only
+# `## Exercise N` cells, it has no structural subsections, division lines, placeholders, verify
+# cells or stdin lesson programs, and its answer markdown is unchanged by markdown_blocks (answers
+# keep their code fences whole).
+allowed_diffs: []
