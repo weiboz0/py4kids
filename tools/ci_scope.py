@@ -4,7 +4,8 @@ A publication book's four editions take minutes each to render, so ci-local rend
 when the change touches it:
 - the book renders when `git diff origin/main...HEAD` plus the uncommitted changes (staged,
   unstaged and untracked) touch its root, which includes its `publication.yaml`;
-- any change under `tools/` or `scripts/`, or to `books.yaml`, renders every publication book
+- any change under `tools/` or `scripts/`, or to `books.yaml`, `pyproject.toml` or `uv.lock` (the
+  toolchain's dependencies), renders every publication book
   (the publisher imports `tools/books.py`, the turtle modules and other tools);
 - `--all-books` renders every publication book (required before a release);
 - when the change set cannot be computed (no `origin/main`, not a git checkout), every book renders.
@@ -23,7 +24,7 @@ import yaml
 
 BASE = 'origin/main'
 SHARED_DIRS = ('tools/', 'scripts/')
-SHARED_FILES = ('books.yaml',)
+SHARED_FILES = ('books.yaml', 'pyproject.toml', 'uv.lock')
 
 
 class ScopeError(RuntimeError):
@@ -65,7 +66,8 @@ def decide(book_root: str, changed: list[str], all_books: bool = False) -> tuple
     own = [path for path in changed if path.startswith(prefix)]
     if own:
         return True, f'book changed: {_examples(own)}'
-    return False, (f'no change under {prefix}, tools/, scripts/ or books.yaml '
+    return False, (f'no change under {prefix}, tools/, scripts/, books.yaml, '
+                   f'pyproject.toml or uv.lock '
                    f'since {BASE} (run ci-local.sh --all-books to render it)')
 
 

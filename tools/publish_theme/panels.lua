@@ -124,6 +124,15 @@ function Code(el)
   end
   return pandoc.RawInline('latex', '\\texttt{' .. table.concat(parts) .. '}')
 end
+-- A judge item's division tag, [Division: X]{.division}, is set by \pubdivision (theme.tex).
+function Span(el)
+  if not FORMAT:match('latex') then return nil end
+  if not el.classes:includes('division') then return nil end
+  local out = {pandoc.RawInline('latex', '\\pubdivision{')}
+  for _, inline in ipairs(el.content) do table.insert(out, inline) end
+  table.insert(out, pandoc.RawInline('latex', '}'))
+  return out
+end
 -- A chapter's last box, when short, is marked with \pubfinalbox{lines} (theme.tex) so that it does not
 -- sit alone on an otherwise empty page. This pass runs before the others, on the original blocks.
 local function box_lines(block)
@@ -178,4 +187,4 @@ local function mark_final_boxes(doc)
   return doc
 end
 return {{Pandoc = mark_final_boxes},
-        {Header = Header, Div = Div, CodeBlock = CodeBlock, Str = Str, Code = Code}}
+        {Header = Header, Div = Div, CodeBlock = CodeBlock, Str = Str, Code = Code, Span = Span}}

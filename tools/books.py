@@ -177,6 +177,18 @@ CHAPTER_KINDS = frozenset({"front", "setup", "unit", "checkpoint", "project", "a
                            "glossary", "quickref", "index"})
 
 
+# The publication audit's banned phrases (tools.publish_audit reads them from here). Every
+# student-family edition bans INDEPENDENCE_BANS; the full Student Book also bans "Answer key"; answer
+# chapters also ban "assert". A phrase exemption must name one of them (case-insensitively).
+INDEPENDENCE_BANS = ("Teacher's Edition", 'your teacher', 'with your teacher',
+                     'ask your teacher', 'not graded', 'no-exec', 'solutions.ipynb',
+                     'python assets/', 'Lesson One', "checked by the course's test suite",
+                     'There is no real program')
+STUDENT_BANS = INDEPENDENCE_BANS + ('Answer key',)
+ANSWER_BANS = ('assert',)
+BANNED_PHRASES = STUDENT_BANS + ANSWER_BANS
+
+
 class PublicationConfigError(ValueError):
     """A publication book's `publication.yaml` is missing or invalid."""
 
@@ -373,6 +385,9 @@ def _parse_publication_config(root: Path, book: str) -> tuple[PublicationConfig 
         phrase, reason = raw["phrase"], raw["reason"]
         if not isinstance(phrase, str) or not phrase:
             errors.append(f"{label}: phrase must be a non-empty string")
+        elif phrase.casefold() not in {banned.casefold() for banned in BANNED_PHRASES}:
+            errors.append(f"{label}: unknown phrase {phrase!r} (not on the audit's ban list: "
+                          f"{', '.join(BANNED_PHRASES)})")
         if not isinstance(reason, str) or not reason.strip():
             errors.append(f"{label}: reason must say why the book teaches the phrase")
         kinds = _string_list(raw["kinds"], f"{label}: kinds", errors)

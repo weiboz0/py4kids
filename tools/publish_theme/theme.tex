@@ -38,6 +38,10 @@
 \AtBeginDocument{\RenewDocumentEnvironment{Shaded}{}{}{}}
 \newcommand{\pubchapterlabel}[1]{\gdef\thepubchapterlabel{#1}}
 \pubchapterlabel{}
+% A judge item's division tag (`[Division: X]{.division}`, wrapped by panels.lua): a small grey
+% small-caps line under the item title. The main font has no small caps, so it sets letter-spaced
+% small capitals.
+\newcommand{\pubdivision}[1]{{\footnotesize\color{black!60}\addfontfeature{LetterSpace=6}\MakeUppercase{#1}}}
 % Quarto's automatic mainmatter starts before index.qmd. Keep the front chapters
 % in roman pages, then let the explicit call at the end of front matter start Unit 1.
 \newif\ifpubmainstarted

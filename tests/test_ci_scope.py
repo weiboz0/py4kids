@@ -18,6 +18,9 @@ REPO = Path(__file__).resolve().parents[1]
     (['tools/pdf_templates/pandoc.latex'], True, 'shared input changed'),
     (['scripts/build-book.sh'], True, 'shared input changed'),
     (['books.yaml'], True, 'shared input changed'),
+    (['pyproject.toml'], True, 'shared input changed'),
+    (['uv.lock'], True, 'shared input changed'),
+    (['acsl/pyproject.toml', 'docs/uv.lock'], False, 'no change'),  # only the repo-root files
     (['acsl/units/unit-05-x/lesson.ipynb', 'docs/plans/097.md', 'tests/test_x.py'], False, 'no change'),
     (['python-concepts-notes.md', 'python-conceptsx/a.md'], False, 'no change'),
     ([], False, 'no change'),

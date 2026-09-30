@@ -8,6 +8,7 @@ import re
 import shutil
 from pathlib import Path
 
+import pytest
 import yaml
 
 from tools.publish import EDITIONS, build
@@ -17,10 +18,31 @@ DATA = REPO / 'tests' / 'data'
 BASELINE = DATA / 'python-concepts-publish-baseline.json'
 ALLOWED = DATA / 'python-concepts-publish-allowed-diffs.yaml'
 
+# Environment-independent digests. A project's data files (`p7_words.txt`, `p11_in.txt`, ...) are not
+# in the repository: its solutions write them when they execute, so a fresh clone or an exported tree
+# has none. The publisher prints a `::: {.datafile}` panel (and records a `data:<name>` inventory
+# entry) only for a data file that exists, so both are normalised away, in the baseline and in the
+# current output alike, before hashing. Everything else is hashed byte for byte.
+DATAFILE_PANEL = re.compile(r'\n\n::: \{\.datafile\}\n\*\*[\w.-]+\*\*\n\n```text\n.*?\n```\n:::(?=\n|$)',
+                            re.DOTALL)
+
+
+def normalised(path: Path) -> bytes:
+    """A generated file's bytes without anything that depends on the project's data files."""
+    text = path.read_text(encoding='utf-8')
+    if path.suffix == '.qmd':
+        return DATAFILE_PANEL.sub('', text).encode('utf-8')
+    manifest = json.loads(text)
+    for chapter in manifest['chapters']:
+        chapter['inventory'] = [record for record in chapter['inventory']
+                                if not record['id'].startswith('data:')]
+    return (json.dumps(manifest, indent=2) + '\n').encode('utf-8')
+
 
 def digest(project: Path) -> dict[str, str]:
-    """SHA-256 of every generated .qmd and inventory.json of one edition's Quarto project."""
-    return {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(project.iterdir())
+    """SHA-256 of every generated .qmd and inventory.json of one edition's Quarto project, after
+    `normalised` (the baseline records these normalised digests)."""
+    return {path.name: hashlib.sha256(normalised(path)).hexdigest() for path in sorted(project.iterdir())
             if path.suffix == '.qmd' or path.name == 'inventory.json'}
 
 
@@ -42,11 +64,30 @@ def test_baseline_covers_every_edition():
         assert 'inventory.json' in files and any(name.endswith('.qmd') for name in files), edition
 
 
-def test_python_concepts_output_matches_the_baseline(tmp_path):
+def test_normalisation_removes_only_data_file_panels_and_records(tmp_path):
+    qmd = tmp_path / 'p.qmd'
+    qmd.write_text('Use it.\n\n::: {.datafile}\n**p7_words.txt**\n\n```text\nfern\n\nmoss\n```\n:::\n\n'
+                   '::: {.program}\nx\n:::\n', encoding='utf-8')
+    assert normalised(qmd) == b'Use it.\n\n::: {.program}\nx\n:::\n'
+    inventory = tmp_path / 'inventory.json'
+    records = [{'id': 'c1', 'kind': 'starter'}, {'id': 'data:p7_words.txt', 'kind': 'asset listing'}]
+    inventory.write_text(json.dumps({'chapters': [{'id': 'p', 'inventory': records}]}), encoding='utf-8')
+    assert json.loads(normalised(inventory)) == {'chapters': [{'id': 'p', 'inventory': records[:1]}]}
+
+
+@pytest.mark.parametrize('data_files', ['absent', 'present'])
+def test_python_concepts_output_matches_the_baseline(tmp_path, data_files):
     # Build from a copy so the test never touches python-concepts/build (the rendered editions).
     shutil.copy(REPO / 'books.yaml', tmp_path / 'books.yaml')
     shutil.copytree(REPO / 'python-concepts', tmp_path / 'python-concepts',
                     ignore=shutil.ignore_patterns('build'))
+    # The result must not depend on whether the project's generated data files exist here.
+    for project in (tmp_path / 'python-concepts' / 'projects').glob('project-*'):
+        for data in project.glob('p*_*.txt'):
+            data.unlink()
+        if data_files == 'present':
+            (project / 'p7_words.txt').write_text('fern\nmoss\n', encoding='utf-8')
+            (project / 'p11_in.txt').write_text('3\n1 2 3\n', encoding='utf-8')
     baseline = json.loads(BASELINE.read_text(encoding='utf-8'))['editions']
     differing = set()
     for edition in EDITIONS:

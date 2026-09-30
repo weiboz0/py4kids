@@ -38,8 +38,11 @@ ITEM = {'unit': 'Exercise', 'checkpoint': 'Question', 'project': 'Problem'}
 # `exN_name.py` starters are not solution sources. assets/verify/** is solution material too.
 SOLUTION_SOURCE = re.compile(r'^(ex|q|p)\d+\.py$')
 SOLUTION_PREFIX = {'unit': 'ex', 'checkpoint': 'q', 'project': 'p'}
-# Structural subsections of an item statement (matched by prefix: "Sample Input 1" is structural).
-STRUCTURAL = re.compile(r'^(?:Input|Output|Constraints|Sample Input|Sample Output|Example)(?:\s+\d+)?\s*$')
+# Structural subsections of an item statement: a fixed name, an optional number, then optionally a
+# separator (` — `, ` - ` or `:`) and a label. "Sample Input 1" and "Sample Input — first case" are
+# structural; "Input from a person" is not (no separator), so it stays a title.
+STRUCTURAL = re.compile(r'^(?:Input|Output|Constraints|Sample Input|Sample Output|Example)(?:\s+\d+)?'
+                        r'(?:\s+[—-]\s+\S.*|\s*:(?:\s*\S.*)?)?\s*$')
 DIVISION = re.compile(r'^_Division:\s*(.+?)\.?_[ \t]*$', re.MULTILINE)
 PLACEHOLDER = re.compile(r'^\*\*Your answer:\*\*')
 VERIFY_TAG = 'verify'
@@ -477,7 +480,8 @@ def _clean_title(title: str) -> str:
 
 
 def structural(heading: str) -> bool:
-    """`Input`, `Output`, `Constraints`, `Sample Input`, `Sample Output`, `Example`, optionally numbered."""
+    """`Input`, `Output`, `Constraints`, `Sample Input`, `Sample Output`, `Example`, optionally numbered,
+    optionally followed by a separator (` — `, ` - `, `:`) and a label (see STRUCTURAL)."""
     return STRUCTURAL.match(heading.strip()) is not None
 
 
@@ -537,7 +541,7 @@ def structural_subheads(text: str) -> str:
             out.append(paragraph)
             index += 1
             continue
-        name = match[1].strip()
+        name = match[1].strip().removesuffix(':').rstrip()
         rest = paragraph[match.end():]
         if rest.strip():
             follow, index = rest, index + 1
@@ -700,8 +704,60 @@ def student_answer_sources(entry: Path):
     return odd, {group['number']: solution_assets(entry, group['number']) for group in odd}
 
 
-def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teacher') -> str:
-    """Teacher: every item's solution. Student family: odd unit exercises via student_answer_sources."""
+STATEMENT_SOURCE = {'unit': 'exercises.ipynb', 'checkpoint': 'checkpoint.ipynb', 'project': 'brief.ipynb'}
+SOLUTION_ASSET_LABEL = re.compile(r'^\*\*Solution asset\b')
+
+
+def statement_paragraphs(entry: Path, kind: str, edition: str) -> dict[int, set[str]]:
+    """Each item's statement paragraphs, as `statement_text` renders them (keyed by item number)."""
+    path = entry / STATEMENT_SOURCE[kind]
+    if not path.exists():
+        return {}
+    _, groups = item_groups(notebook(path, edition).cells, ITEM[kind])
+    paragraphs: dict[int, set[str]] = {}
+    for group in groups:
+        found = title_heading(group)
+        title_line = found[1] if found else None
+        paragraphs[group['number']] = {
+            paragraph.strip() for position, c in enumerate(group['cells']) if c.cell_type == 'markdown'
+            for paragraph in fenced_paragraphs(statement_text(c.source, position == 0, title_line))
+            if paragraph.strip()}
+    return paragraphs
+
+
+def heading_answer(source: str, title_line: str | None, statement: set[str], printed_assets: set[str]) -> str:
+    """The worked-answer text of a solution's heading cell (*Python by Projects* keeps explanations there).
+
+    Its title lines go by the statement rule (`statement_text`). Two kinds of paragraph would print
+    twice and are dropped: a paragraph that restates the item's statement verbatim, and a
+    `**Solution asset ...**` label naming an asset the answer prints as a program panel anyway (with
+    the code listing that follows the label).
+    """
+    kept = []
+    listing = False
+    for paragraph in fenced_paragraphs(statement_text(source, True, title_line).strip()):
+        if listing and paragraph.lstrip().startswith('```'):
+            listing = False
+            continue
+        listing = False
+        if SOLUTION_ASSET_LABEL.match(paragraph) and any(
+                f'assets/{name}' in paragraph for name in printed_assets):
+            listing = True
+            continue
+        if paragraph.strip() in statement:
+            continue
+        kept.append(paragraph)
+    return '\n\n'.join(kept).strip()
+
+
+def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teacher',
+               lesson_heading: str | None = None) -> str:
+    """Teacher: every item's solution. Student family: odd unit exercises via student_answer_sources.
+
+    A solution's heading cell prints its body (`heading_answer`) as part of the worked answer.
+    `lesson_heading` is the book's lesson-heading regex (publication.yaml), passed to `markdown_blocks`
+    as everywhere else.
+    """
     label = ITEM[kind]
     edition_profile = profile(edition)
     student = edition_profile['student_family']
@@ -717,6 +773,7 @@ def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teache
         _, groups = item_groups(n.cells, label)
         assets = {item['number']: solution_assets(entry, item['number']) for item in items}
     by_number = {g['number']: g for g in groups}
+    statements = statement_paragraphs(entry, kind, edition)
     out = [] if student else ['## Answer key\n']
     for item in items:
         number = item['number']
@@ -738,7 +795,18 @@ def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teache
             for program, sample in real_programs(by_number[number]):
                 if imports_turtle(program) and sample is not None:
                     real_figures.append((program, sample))
-        for c in by_number[number]['cells'][1:]:
+        group = by_number[number]
+        found = title_heading(group)
+        title_line = found[1] if found else None
+        for position, c in enumerate(group['cells']):
+            if position == 0:
+                # The heading cell: its title lines go, its body (a worked explanation) prints.
+                text = heading_answer(c.source, title_line, statements.get(number, set()),
+                                      {path.name for path in assets[number]})
+                if text:
+                    text = markdown_blocks(text, keep_fences=True, lesson_heading=lesson_heading).rstrip()
+                    out.append(text.replace('```python', '```{.python .answer-code}') + '\n')
+                continue
             if c.cell_type == 'code':
                 if VERIFY_TAG in c.metadata.get('tags', []):
                     continue  # verify cells are checks, never printed (design 010 D3)
@@ -751,7 +819,7 @@ def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teache
                 text = re.sub(r'^### [^\n]+\n*', '', c.source).strip()
                 if text:
                     # Worked answers and their `**Answer:**` line, through the same Markdown rules.
-                    text = markdown_blocks(text, keep_fences=True).rstrip()
+                    text = markdown_blocks(text, keep_fences=True, lesson_heading=lesson_heading).rstrip()
                     text = text.replace('```python', '```{.python .answer-code}')
                     out.append(text + '\n')
         for program, sample in real_figures:
@@ -834,7 +902,7 @@ def render_chapter(entry: Path, kind: str, edition: str, config: PublicationConf
         body, records, items = render_items(source, kind, edition, entry, entry.name, config)
         chapter.append(body); inventory.extend(records)
     if edition == 'teacher':
-        chapter.append(answer_key(entry, kind, items))
+        chapter.append(answer_key(entry, kind, items, lesson_heading=lesson_heading))
     return '\n\n'.join(block.rstrip() for block in chapter) + '\n', inventory, items, title
 
 
@@ -1062,7 +1130,7 @@ def answer_chapter_heading(unit: int, lesson_title: str, mainmatter: bool) -> st
             '```{=latex}\n\\chaptermark{' + label + ' — ' + tex_escape(short_title) + '}\n```\n')
 
 
-def render_answer_chapter(entry: Path, edition: str, mainmatter: bool):
+def render_answer_chapter(entry: Path, edition: str, mainmatter: bool, lesson_heading: str | None = None):
     """One Answer Key chapter: the odd-numbered answers of one unit, with titled flat headings."""
     lesson = notebook(entry / 'lesson.ipynb', edition)
     title = lesson.cells[0].source.splitlines()[0].removeprefix('# ')
@@ -1071,7 +1139,7 @@ def render_answer_chapter(entry: Path, edition: str, mainmatter: bool):
     label = f'Unit {unit}'
     _, groups = item_groups(notebook(entry / 'exercises.ipynb', edition).cells, 'Exercise')
     items = [{'number': group['number'], 'title': group_title(group, 'Exercise')} for group in groups]
-    chapter = [answer_chapter_heading(unit, title, mainmatter), answer_key(entry, 'unit', items, edition)]
+    chapter = [answer_chapter_heading(unit, title, mainmatter), answer_key(entry, 'unit', items, edition, lesson_heading)]
     answered = [item for item in items if item['number'] % 2]
     return '\n\n'.join(block.rstrip() for block in chapter) + '\n', answered, f'{label} — {display_title}'
 
@@ -1116,7 +1184,8 @@ def build(root: Path, book_id: str, edition: str) -> Path:
     if edition_profile['body'] == 'answers':
         units = [(id_, entry) for id_, entry in entries(book, edition) if id_.startswith('unit-')]
         for position, (id_, entry) in enumerate(units):
-            body, items, title = render_answer_chapter(entry, edition, mainmatter=position == 0)
+            body, items, title = render_answer_chapter(entry, edition, mainmatter=position == 0,
+                                                       lesson_heading=config.lesson_heading)
             filename = f'answers-{id_}.qmd'
             (project / filename).write_text(body, encoding='utf-8')
             chapters.append(filename)
@@ -1147,7 +1216,8 @@ def build(root: Path, book_id: str, edition: str) -> Path:
             if chapter['kind'] != 'unit':
                 continue
             entry = root / chapter['source']
-            answer_sections.append(answer_key(entry, 'unit', chapter['items'], edition=edition))
+            answer_sections.append(answer_key(entry, 'unit', chapter['items'], edition=edition,
+                                                   lesson_heading=config.lesson_heading))
         filename = 'answers.qmd'
         (project / filename).write_text('# Answers to Selected Exercises\n\n'
                                         + '\n\n'.join(answer_sections), encoding='utf-8')

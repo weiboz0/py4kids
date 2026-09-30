@@ -10,7 +10,15 @@ from pathlib import Path
 
 import yaml
 
-from tools.books import PublicationConfig, book_flag, book_path, publication_config
+from tools.books import (
+    ANSWER_BANS,
+    INDEPENDENCE_BANS,
+    STUDENT_BANS,
+    PublicationConfig,
+    book_flag,
+    book_path,
+    publication_config,
+)
 from tools.fake_turtle import imports_turtle
 from tools.publish import (
     CODE_ONLY_NAMES,
@@ -40,14 +48,11 @@ from tools.publish import (
 )
 from tools.turtle_real import real_programs
 
-INDEPENDENCE_BANS = ("Teacher's Edition", 'your teacher', 'with your teacher',
-                     'ask your teacher', 'not graded', 'no-exec', 'solutions.ipynb',
-                     'python assets/', 'Lesson One', "checked by the course's test suite",
-                     'There is no real program')
+# The ban lists live in tools.books (INDEPENDENCE_BANS, STUDENT_BANS, ANSWER_BANS), where
+# publication.yaml's phrase exemptions are validated against them.
 # The full edition also bans "Answer key" in its text. The print edition and the Answer Key say
 # "Answer Key" on purpose; the `'## Answer key' in qmd` check guards the teacher heading in every
 # student-family edition and the leak guard guards the code.
-STUDENT_BANS = INDEPENDENCE_BANS + ('Answer key',)
 # Every book-specific expectation (error/hang demo ids, required print Starters, the print page target,
 # turtle counts, phrase exemptions, project headers, the lesson heading) lives in the book's
 # publication.yaml (tools.books.publication_config; design 010 D1).
@@ -65,7 +70,7 @@ def student_phrase_findings(text: str, location: str, edition: str = 'student',
     if answers is None:
         answers = location == 'answers'
     exempt = {phrase.casefold() for phrase in allowed}
-    banned = phrase_bans(edition) + (('assert',) if answers else ())
+    banned = phrase_bans(edition) + (ANSWER_BANS if answers else ())
     return [f'FAIL: {edition}: {location}: banned phrase {phrase}' for phrase in banned
             if phrase.casefold() in normalized and phrase.casefold() not in exempt]
 
@@ -328,9 +333,17 @@ def leak_findings(root: Path, book_id: str, chapters: list[dict], project: Path,
                   hide_odd: bool = False, kinds: frozenset[str] = frozenset({'answers'})) -> list[str]:
     """Guard the chapters of the given kinds (by default every `answers` chapter, the only place a
     student-family edition prints solution material) against hidden solutions: even unit exercises,
-    checkpoints and the project, plus the odd unit exercises when `hide_odd`."""
-    blocks = [stream for chapter in chapters if chapter['kind'] in kinds
-              for stream in printed_code((project / chapter['file']).read_text(encoding='utf-8'))]
+    checkpoints and the project, plus the odd unit exercises when `hide_odd`.
+
+    A finding names where the leak printed: `answers` for an answer chapter, otherwise the chapter's
+    kind and id (e.g. `unit unit-01-x`), so a body-scan leak points at the chapter that holds it.
+    """
+    located = []  # (where, printed code blocks) per scanned chapter, in chapter order
+    for chapter in chapters:
+        if chapter['kind'] not in kinds:
+            continue
+        where = 'answers' if chapter['kind'] == 'answers' else f"{chapter['kind']} {chapter['id']}"
+        located.append((where, printed_code((project / chapter['file']).read_text(encoding='utf-8'))))
     findings = []
     for id_, entry in entries(book_path(root, book_id), 'student'):
         kind = id_.split('-', 1)[0]
@@ -346,8 +359,9 @@ def leak_findings(root: Path, book_id: str, chapters: list[dict], project: Path,
             if kind == 'unit':
                 files += solution_assets(entry, number)
             sources += [_tokenize_if_complete(path.read_text(encoding='utf-8')) for path in files]
-            if any(solution_leak(block, sources) for block in blocks):
-                findings.append(f'FAIL: {edition}: answers: solution leak from {id_} {label} {number}')
+            for where in dict.fromkeys(where for where, blocks in located
+                                       if any(solution_leak(block, sources) for block in blocks)):
+                findings.append(f'FAIL: {edition}: {where}: solution leak from {id_} {label} {number}')
     return findings
 
 
@@ -508,6 +522,18 @@ def _expected_notices(entry: Path) -> int:
                 source = source.partition('\n')[2].strip()
             count += sum(bool(NOTICE.match(p)) for p in re.split(r'\n\s*\n', source) if p)
     return count
+
+
+def notice_count_findings(id_: str, qmd: str, entry: Path, edition: str) -> list[str]:
+    """The Notice panels of a unit chapter's body match its lesson and exercise sources.
+
+    Only the body before the Teacher's Edition `## Answer key` counts: a worked solution may hold its
+    own Notice, which `_expected_notices` (lesson and exercise sources) does not expect.
+    """
+    body = qmd.split('## Answer key', 1)[0]
+    if body.count('::: {.notice}') != _expected_notices(entry):
+        return [f'FAIL: {edition}: {id_}: Notice count']
+    return []
 
 
 def _outline_heading(title: str) -> str:
@@ -908,8 +934,8 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
         rendered = rendered_item_numbers(student_part, kind)
         if rendered != numbers:
             findings.append(f'FAIL: {edition}: {id_}: rendered item titles')
-        if kind == 'unit' and qmd.count('::: {.notice}') != _expected_notices(entry):
-            findings.append(f'FAIL: {edition}: {id_}: Notice count')
+        if kind == 'unit':
+            findings.extend(notice_count_findings(id_, qmd, entry, edition))
         if kind == 'unit':
             findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
                             for finding in panel_findings(id_, qmd, config.lesson_heading))

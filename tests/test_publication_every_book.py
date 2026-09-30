@@ -212,8 +212,16 @@ def test_structural_rule_is_a_prefix_with_an_optional_number():
     for heading in ('Input', 'Output', 'Constraints', 'Sample Input', 'Sample Output 2', 'Example',
                     'Sample Input 1'):
         assert publish.structural(heading), heading
-    for heading in ('Input from a person', 'Outputs and more', 'Sum Pair', 'Examples of loops'):
+    # A separator (` — `, ` - `, `:`) and a label may follow; without a separator it is a title.
+    for heading in ('Sample Input — first case', 'Sample Output 2 — big case', 'Input - two lines',
+                    'Example: a tie', 'Constraints:', 'Output:the count'):
+        assert publish.structural(heading), heading
+    for heading in ('Input from a person', 'Outputs and more', 'Sum Pair', 'Examples of loops',
+                    'Sample Input first case', 'Input —', 'Example-driven design'):
         assert not publish.structural(heading), heading
+    text = publish.structural_subheads('### Sample Input — first case\n\n```text\n2\n```\n\n'
+                                       '### Input:\n\nOne line.')
+    assert text == '**Sample Input — first case**\n\n```text\n2\n```\n\n**Input.** One line.'
     group = {'cells': [md('## Exercise 1\n\n### Sample Input 1\n\n```text\n1\n```'), md('### Real Title\n\nx')]}
     assert publish.group_title(group, 'Exercise') == 'Real Title'
 
@@ -305,6 +313,103 @@ def test_teacher_answers_short_answer_markdown_no_verify_and_mirror_once(contest
     assert brief.count('P1_MIRROR_SENTINEL') == 1 and '**p1.py**' not in brief
 
 
+def _set_heading(path: Path, heading: str, source: str) -> None:
+    """Replace the solution notebook's `heading` cell (e.g. `## Exercise 1`) with `source`."""
+    nb = nbformat.read(path, as_version=4)
+    (cell,) = [cell for cell in nb.cells if cell.source.split('\n', 1)[0] == heading]
+    cell.source = source
+    nbformat.write(nb, path)
+
+
+def test_solution_heading_cell_body_prints_as_the_worked_answer(contest):
+    """*Python by Projects* keeps worked explanations in the solution's heading cell (checkpoint-01,
+    unit-04 Ex 5-7): the body prints, the title lines do not; a title-only heading prints nothing."""
+    unit = contest / 'contest' / 'units' / 'unit-01-fixture'
+    _set_heading(unit / 'solutions.ipynb', '## Exercise 1',
+                 '## Exercise 1\n\n### Concept Style\n\nHEADING_ANSWER_SENTINEL: it prints once.\n\n'
+                 '**Notice:** the loop runs one time.')
+    _set_heading(contest / 'contest' / 'checkpoints' / 'checkpoint-01-fixture' / 'solutions.ipynb',
+                 '## Question 2', '## Question 2\n\nCP_HEADING_ANSWER_SENTINEL: the value is `15`.')
+    project = build(contest, 'contest', 'teacher')
+    key = _unit(project).split('## Answer key', 1)[1]
+    assert key.index('### Exercise 1 — Concept Style') < key.index('HEADING_ANSWER_SENTINEL') < key.index(
+        'odd one')
+    assert '### Concept Style' not in key.splitlines() and '## Exercise 1' not in key.splitlines()
+    assert '::: {.notice}\nThe loop runs one time.\n:::' in key  # through the same Markdown rules
+    cp_key = (project / 'checkpoint-01-fixture.qmd').read_text().split('## Answer key', 1)[1]
+    assert 'CP_HEADING_ANSWER_SENTINEL: the value is `15`.' in cp_key
+    # The student answers (odd unit exercises) print it too; heading-only cells add nothing.
+    build(contest, 'contest', 'student')
+    answers = (contest / 'contest' / 'build' / 'publish' / 'student' / 'answers.qmd').read_text()
+    assert answers.count('HEADING_ANSWER_SENTINEL') == 1
+    section = answers.split('### Unit 1, Exercise 3', 1)[1]
+    # Exercise 3's heading cell holds only its heading line: its answer opens with the next cell.
+    assert section.split('```\n\n', 1)[1].startswith('::: {.notice}\nAdd as you read.')
+
+
+def test_heading_answer_drops_restated_statements_and_printed_asset_listings():
+    statement = {'Print a square.', '**Expected output:**', '```text\n####\n```'}
+    # A restated statement (python-concepts checkpoint-02 Question 7) prints nothing.
+    assert publish.heading_answer('## Question 7\n\n### Square\n\nPrint a square.\n\n**Expected output:**\n\n'
+                                  '```text\n####\n```', '### Square', statement, set()) == ''
+    # A label and listing of a printed solution asset go; the explanation after them stays.
+    listed = ('## Exercise 7\n\n### Tool\n\n**Solution asset (`assets/solutions_ex7_tool.py`)**\n\n'
+              '```python\nimport turtle\n\nturtle.forward(9)\n```\n\nThe asset draws a hexagon.')
+    assert publish.heading_answer(listed, '### Tool', set(), {'solutions_ex7_tool.py'}) == \
+        'The asset draws a hexagon.'
+    assert publish.heading_answer('## Exercise 8\n\n### T\n\n**Solution asset:** `assets/solutions_ex8.py`\n',
+                                  '### T', set(), {'solutions_ex8.py'}) == ''
+    # An asset the answer does not print keeps its label and listing.
+    assert publish.heading_answer(listed, '### Tool', set(), set()).startswith('**Solution asset')
+    # A worked explanation (Python by Projects) prints; title-only headings print nothing.
+    assert publish.heading_answer('## Question 1\n\nConvert with `str(...)`.', None, set(), set()) == \
+        'Convert with `str(...)`.'
+    assert publish.heading_answer('## Exercise 1\n\n### Welcome Sign', '### Welcome Sign', set(), set()) == ''
+
+
+def test_notice_count_ignores_notices_in_the_teachers_answer_key(contest):
+    project = build(contest, 'contest', 'teacher')
+    qmd = _unit(project)
+    entry = contest / 'contest' / 'units' / 'unit-01-fixture'
+    # One Notice in the exercises, one in the Exercise 3 worked solution.
+    assert qmd.count('::: {.notice}') == 2 and publish_audit._expected_notices(entry) == 1
+    assert publish_audit.notice_count_findings('unit-01-fixture', qmd, entry, 'teacher') == []
+    body, key = qmd.split('## Answer key', 1)
+    extra = body + '\n::: {.notice}\nStray.\n:::\n\n## Answer key' + key
+    assert publish_audit.notice_count_findings('unit-01-fixture', extra, entry, 'teacher') == [
+        'FAIL: teacher: unit-01-fixture: Notice count']
+
+
+def test_answer_key_uses_the_books_lesson_heading(contest):
+    unit = contest / 'contest' / 'units' / 'unit-01-fixture'
+    _set_heading(unit / 'solutions.ipynb', '## Exercise 1',
+                 '## Exercise 1\n\nRecall the lesson.\n\n## L1: Read the whole input\n\nUse sys.stdin.')
+    items = [{'number': 1, 'title': 'Concept Style'}]
+    assert '\n## L1: Read the whole input' in publish.answer_key(unit, 'unit', items, lesson_heading=r'^## L\d+:')
+    assert '\n### L1: Read the whole input' in publish.answer_key(unit, 'unit', items)
+    # The built Teacher's Edition passes publication.yaml's lesson_heading through.
+    key = _unit(build(contest, 'contest', 'teacher')).split('## Answer key', 1)[1]
+    assert '\n## L1: Read the whole input' in key
+
+
+def test_division_tag_is_styled_by_the_theme():
+    import shutil
+    import subprocess
+
+    theme = (publish.THEME / 'theme.tex').read_text()
+    assert '\\newcommand{\\pubdivision}' in theme and 'black!60' in theme
+    lua = publish.THEME / 'panels.lua'
+    assert 'Span = Span' in lua.read_text()
+    pandoc = shutil.which('pandoc')
+    if pandoc is None:
+        pytest.skip('pandoc is not installed')
+    latex = subprocess.run([pandoc, '-f', 'markdown', '-t', 'latex', '--lua-filter', str(lua)],
+                           input='[Division: Junior & above]{.division}\n\nPlain [span]{.other}.\n',
+                           capture_output=True, text=True, check=True).stdout
+    assert '\\pubdivision{Division: Junior \\& above}' in latex
+    assert latex.count('\\pubdivision') == 1
+
+
 def test_student_editions_print_only_odd_unit_answers(contest):
     full = _qmd(build(contest, 'contest', 'student'))
     printed = _qmd(build(contest, 'contest', 'student-print'))
@@ -355,15 +460,21 @@ def test_audit_leak_guard_covers_ex_q_and_p_files_in_student_editions(contest):
                     + '```\n\n```python\n' + P1_MIRROR + '```\n')
     findings = publish_audit.leak_findings(contest, 'contest', chapters, project, 'student', hide_odd=True,
                                            kinds=body)
-    assert findings == ['FAIL: student: answers: solution leak from unit-01-fixture Exercise 2',
-                        'FAIL: student: answers: solution leak from checkpoint-01-fixture Question 1',
-                        'FAIL: student: answers: solution leak from project-01-fixture Problem 1']
+    # A body-scan leak names the chapter that prints it (kind and id), not "answers".
+    assert findings == ['FAIL: student: unit unit-01-fixture: solution leak from unit-01-fixture Exercise 2',
+                        'FAIL: student: unit unit-01-fixture: solution leak from checkpoint-01-fixture Question 1',
+                        'FAIL: student: unit unit-01-fixture: solution leak from project-01-fixture Problem 1']
+    brief = project / 'project-01-fixture.qmd'
+    brief.write_text(brief.read_text() + '\n```python\n' + P1_MIRROR + '```\n')
+    assert ('FAIL: student: project project-01-fixture: solution leak from project-01-fixture Problem 1'
+            in publish_audit.leak_findings(contest, 'contest', chapters, project, 'student', hide_odd=True,
+                                           kinds=body))
     # A file-only solution (no notebook cell) is still guarded: the exN.py body itself counts.
     solutions = contest / 'contest' / 'units' / 'unit-01-fixture' / 'solutions.ipynb'
     nb = nbformat.read(solutions, as_version=4)
     nb.cells = [cell for cell in nb.cells if 'EVEN_EX2' not in cell.source]
     nbformat.write(nb, solutions)
-    assert 'FAIL: student: answers: solution leak from unit-01-fixture Exercise 2' in publish_audit.leak_findings(
+    assert 'FAIL: student: unit unit-01-fixture: solution leak from unit-01-fixture Exercise 2' in publish_audit.leak_findings(
         contest, 'contest', chapters, project, 'student', hide_odd=True, kinds=body)
     # The odd answer in the appendix stays allowed.
     assert publish_audit.leak_findings(contest, 'contest', chapters, project, 'student') == []
@@ -574,6 +685,8 @@ def test_python_concepts_config_holds_the_moved_constants():
         {'phrase': 'python assets/', 'kinds': ['unit'], 'chapters': ['units/*']}]}}, 'missing reason'),
     ({'audit': {'goals_recap': 'required', 'phrase_exemptions': [
         {'phrase': 'x', 'kinds': ['lesson'], 'chapters': ['units/*'], 'reason': 'r'}]}}, 'unknown chapter kind'),
+    ({'audit': {'goals_recap': 'required', 'phrase_exemptions': [
+        {'phrase': 'teacher', 'kinds': ['unit'], 'chapters': ['units/*'], 'reason': 'r'}]}}, 'unknown phrase'),
     ({'extra': 1}, 'unknown key extra'),
 ])
 def test_config_validation_errors(tmp_path, change, message):
@@ -587,6 +700,19 @@ def test_config_validation_errors(tmp_path, change, message):
     assert any(message in error for error in errors), errors
     with pytest.raises(PublicationConfigError, match='FAIL'):
         publication_config(tmp_path, 'book')
+
+
+def test_phrase_exemptions_name_a_banned_phrase_case_insensitively(tmp_path):
+    from tools.books import BANNED_PHRASES
+    root = tmp_path / 'book'
+    (root / 'docs').mkdir(parents=True)
+    (root / 'docs' / 'unit-00-getting-set-up.md').write_text('# Unit 0 — Getting Set Up\n')
+    (root / 'docs' / 'unit-00-teacher-notes.md').write_text('# Notes\n')
+    exemptions = [{'phrase': phrase, 'kinds': ['unit'], 'chapters': ['units/*'], 'reason': 'r'}
+                  for phrase in (*BANNED_PHRASES, 'ANSWER KEY', 'Python Assets/')]
+    write_publication_config(root, audit={'goals_recap': 'required', 'phrase_exemptions': exemptions})
+    assert publication_config_errors(tmp_path, 'book') == []
+    assert set(BANNED_PHRASES) == set(publish_audit.STUDENT_BANS) | {'assert'}
 
 
 def test_publish_and_audit_fail_loudly_without_a_config(contest, capsys):
