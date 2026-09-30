@@ -79,7 +79,7 @@ Plan 098's lessons apply:
    - It applies at both truncation sites: the unit chapter (`tools/publish.py`, around lines 1123–1125) and the Answer Key chapter (around line 1401).
    - A head over 32 characters with no override is a publisher error, never a silent truncation.
    - The test case is `unit-11-number-systems-bitwise`, whose short head is "Number Systems & Bitwise".
-   - *Python, Concept by Concept*'s `unit-08-randomness` ("Randomness: Dice, Simulations, and a Wandering Turtle", 53 characters, today silently cut to "Randomness: Dice, Simulations,") gets `unit_headers: {unit-08-randomness: Randomness}`. Its affected chapter `.qmd` files are listed in `tests/data/python-concepts-publish-allowed-diffs.yaml` with the A.4 reason. python-projects has no title over 32 characters.
+   - *Python, Concept by Concept*'s `unit-08-randomness` ("Randomness: Dice, Simulations, and a Wandering Turtle", 53 characters, today silently cut to "Randomness: Dice, Simulations,") gets `unit_headers: {unit-08-randomness: "Randomness: Dice, Simulations,"}`, its exact current head. python-concepts' output stays byte-identical, as the regression contract (design 010 D2/D3 reasons only) requires. A better short head for that unit is left as a follow-up. python-projects has no title over 32 characters.
 5. **Index audit.** Index entries that makeindex wraps across `.ind` lines are matched.
 
 ### Phase B — Notebook fixes and content (Opus content subagents; blind solves for every changed problem)
@@ -208,6 +208,10 @@ Plan 098's lessons apply:
 - `[sol]` **REJECT** (r2), 1 blocker and 1 nit, both folded:
   1. The "retitles" repeated the colliding titles. New titles: CP3 Q1 "Gap-Respecting Orders", CP4 Q1 "Lakes on the Map".
   2. The blind-solve count is 8 in total.
+
+### Round 3
+
+- `[sol]` **REJECT** (r3), 1 blocker, folded: a new short head would change python-concepts' output for a reason outside D2/D3, which the regression contract forbids. The config pins unit 08's exact current head, so its output is unchanged; a better head is a follow-up.
 
 ## Content Review
 
