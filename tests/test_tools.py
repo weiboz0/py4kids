@@ -1602,9 +1602,12 @@ def test_ci_local_reads_books_from_registry():
     text = (REPO / "scripts/ci-local.sh").read_text(encoding="utf-8")
     registry = yaml.safe_load((REPO / "books.yaml").read_text(encoding="utf-8"))
     # The `acsl` flag (design 009) shares its name with the `acsl` book: drop the flag's own
-    # tokens (flag list entry, flag guard, acsl-check) before looking for pinned book ids.
+    # tokens (flag list entry, flag guard, acsl-check) before looking for pinned book ids. The
+    # `recsys` book directories are in the static `ruff check` scope (design 011 §7 / plan
+    # recsys-001 Phase F) — a path argument, not id-branching — so drop those static paths too.
     unflagged = (
         text.replace('"acsl")', ")").replace("has_flag acsl", "").replace("acsl-check", "")
+        .replace("recsys/projects/bookrec", "").replace("recsys/data", "")
     )
     for book in registry["books"]:
         assert book["id"] not in unflagged

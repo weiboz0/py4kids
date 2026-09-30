@@ -64,6 +64,16 @@ Folders and PDF file names use the book id from `books.yaml`; the PDFs themselve
 
 `build-book.sh` replaces `acsl-*.pdf` (every edition is `<id>-<edition>.pdf`); `build-pdf.sh` replaces `syllabus.pdf` and `handouts/`.
 
+## `output/recsys/` — Applied Python: Recommendation Systems
+
+| File | What it is | Made by |
+|---|---|---|
+| `syllabus.pdf` | The Applied Python: Recommendation Systems syllabus | `scripts/build-pdf.sh --book recsys` |
+| `handouts/<unit>.pdf` | One exercise handout per unit, printed from its `exercises.ipynb` | `scripts/build-pdf.sh --book recsys` |
+
+`recsys` ships in **buildout** state (design 011): units, projects, and checkpoints — and therefore the handouts — land in `recsys-002+`.
+It is not a `publication` book, so it renders no student/teacher editions; `build-pdf.sh` replaces `syllabus.pdf` and `handouts/`.
+
 ## Publishing a release
 
 The PDFs are published as GitHub Releases on `weiboz0/py4kids`, never committed.

@@ -8,12 +8,13 @@ from pathlib import Path
 import yaml
 
 from tools.books import (
+    assumed_baseline,
     book_entries,
     book_flag,
     book_path,
     concept_minimum,
-    dependency_baseline,
     is_buildout,
+    known_baseline,
     lesson_budget,
     peers,
     prereq_policy,
@@ -353,7 +354,7 @@ def lesson_budget_findings(root: Path, book: str) -> list[str]:
 def referenced_concepts_findings(root: Path, book: str) -> list[str]:
     concepts = _concept_data(root, book).get("concepts", [])
     own = {concept["id"] for concept in concepts if "id" in concept}
-    known = own | dependency_baseline(root, book)
+    known = own | known_baseline(root, book)
     findings = []
     for entry in _map_data(root, book).get("entries", []):
         for field in ("introduces", "requires", "practices"):
@@ -496,7 +497,7 @@ def prereq_findings(root: Path, book: str, unit: str | None = None) -> list[str]
     entries = map_data.get("entries", [])
     if map_data.get("map_version") == 2:
         findings.extend(_auxiliary_prereq_findings(root, book, entries))
-    seen = dependency_baseline(root, book)
+    seen = known_baseline(root, book)
     # Which fields must close over already-introduced concepts. Fastforward books check
     # `requires` only (a unit's core teaching); `practices` may reach forward. Not an ordering.
     checked_fields = (
@@ -524,6 +525,7 @@ def prereq_findings(root: Path, book: str, unit: str | None = None) -> list[str]
 def practice_findings(root: Path, book: str) -> list[str]:
     entries = _map_data(root, book).get("entries", [])
     findings = []
+    assumed = assumed_baseline(root, book)
     for entry in entries:
         overlap = set(entry.get("practices", [])) & set(entry.get("introduces", []))
         if overlap:
@@ -531,6 +533,15 @@ def practice_findings(root: Path, book: str) -> list[str]:
                 _fail(
                     book,
                     f"{entry.get('id', '?')} practices its own introductions: {sorted(overlap)}",
+                )
+            )
+        practiced_assumed = set(entry.get("practices", [])) & assumed
+        if entry.get("kind") == "unit" and practiced_assumed:
+            findings.append(
+                _fail(
+                    book,
+                    f"{entry.get('id', '?')} practices assumed baseline concepts: "
+                    f"{sorted(practiced_assumed)}",
                 )
             )
         for field in ("introduces", "requires", "practices"):
@@ -559,7 +570,8 @@ def practice_findings(root: Path, book: str) -> list[str]:
 
 def checkpoint_findings(root: Path, book: str) -> list[str]:
     findings = []
-    seen = dependency_baseline(root, book)
+    assumed = assumed_baseline(root, book)
+    seen = known_baseline(root, book)
     for entry in _map_data(root, book).get("entries", []):
         if entry.get("kind") == "checkpoint":
             if entry.get("introduces"):
@@ -570,6 +582,15 @@ def checkpoint_findings(root: Path, book: str) -> list[str]:
                     _fail(
                         book,
                         f"{entry.get('id', '?')} assesses untaught concepts: {sorted(untaught)}",
+                    )
+                )
+            practiced_assumed = set(entry.get("practices", [])) & assumed
+            if practiced_assumed:
+                findings.append(
+                    _fail(
+                        book,
+                        f"{entry.get('id', '?')} practices assumed baseline concepts: "
+                        f"{sorted(practiced_assumed)}",
                     )
                 )
         seen |= set(entry.get("introduces", []))

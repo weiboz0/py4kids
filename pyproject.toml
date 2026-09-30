@@ -19,6 +19,32 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.6",
 ]
+# The `recsys` book's heavy numerical/ML stack (design 011 §7). Selected/installed only
+# when `ci-local.sh` routes that book through `uv run --group recsys`; the other books'
+# commands never require or import these. torch is pinned to the CPU wheel (below) to avoid
+# the multi-GB `nvidia-*` CUDA tree. `bookrec` is the editable local project package (Phase F).
+# `psycopg`/`gensim` are deliberately NOT here: they are slice/derivation-only, imported lazily
+# (fail-closed) by `recsys/data/slice_books.py` and never on the CI exec path. Linux-CPU-only.
+recsys = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scikit-learn",
+    "torch",
+    "faiss-cpu",
+    "bookrec",
+]
+
+# CPU-only torch: the explicit index is used ONLY for packages routed to it via
+# [tool.uv.sources] (explicit=true), so it never shadows the default index for anything else.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+bookrec = { path = "recsys/projects/bookrec", editable = true }
 
 [build-system]
 requires = ["hatchling"]

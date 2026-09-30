@@ -1,0 +1,15 @@
+[project]
+name = "bookrec"
+version = "0.1.0"
+description = "The cumulative book-recommender package for Applied Python: Recommendation Systems"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["bookrec"]

@@ -36,20 +36,64 @@ for book in catalog["books"]:
 PY
 )"
 echo "registry: $(cut -d' ' -f1 <<< "$books" | paste -sd' ')"
-uv run ruff check tools/ tests/ scripts/
+uv run ruff check tools/ tests/ scripts/ recsys/projects/bookrec recsys/data
+
+# `dependency_group` is a routing VALUE (design 011 §7), read as a SEPARATE line from the boolean
+# feature flags above: "<id> <group-or-empty>". A book with a group runs its heavy notebook/exec
+# and test commands under `uv run --group <group>`; a group-free book runs plain `uv run`.
+groups="$(uv run python - <<'PY'
+import yaml
+
+catalog = yaml.safe_load(open("books.yaml", encoding="utf-8"))
+for book in catalog["books"]:
+    print(book["id"], book.get("dependency_group") or "")
+PY
+)"
+declare -A GROUP
+while read -r gid ggrp; do GROUP["$gid"]="$ggrp"; done <<< "$groups"
 
 has_flag() { [[ " $2 " == *" $1 "* ]]; }
 
+# Run a py4kids-tools check for a book, routed through its dependency group when it declares one.
+book_run() {
+  local book="$1"; shift
+  local grp="${GROUP[$book]:-}"
+  if [[ -n "$grp" ]]; then
+    uv run --group "$grp" py4kids-tools --book "$book" "$@"
+  else
+    uv run py4kids-tools --book "$book" "$@"
+  fi
+}
+
 step "2/6 unit tests"
+# The global suite stays GROUP-FREE: it must not require any book's dependency group (design 011
+# §7). A routed book's own tests live OUTSIDE tests/ (under its <root>/**/tests/) precisely so this
+# run does not import that book's heavy stack.
 uv run pytest -q
+
+# Routed per-book suites: a book with a dependency_group runs its own tests under that group. For a
+# book that ships a data/ generator substrate (design 011 §6/§9), CI first REGENERATES the seeded
+# catalog + interactions (nothing is committed — output is gitignored), then runs the invariant +
+# package tests against fresh output, so the substrate is verified every run without tracked data.
+# PYTHONHASHSEED pins hash-dependent iteration for the routed (heavy/ML) commands (design 011 §7
+# determinism contract); the seeded generators already thread one numpy rng and normalise gzip mtime.
+while read -r book grp <&3; do
+  [[ -n "$grp" ]] || continue
+  echo "routed suite: $book (uv run --group $grp)"
+  if [[ -f "$book/data/gen_catalog.py" && -f "$book/data/gen_interactions.py" ]]; then
+    PYTHONHASHSEED=0 uv run --group "$grp" python "$book/data/gen_catalog.py"
+    PYTHONHASHSEED=0 uv run --group "$grp" python "$book/data/gen_interactions.py"
+  fi
+  PYTHONHASHSEED=0 uv run --group "$grp" pytest -q "$book"
+done 3<<< "$groups"
 
 step "3/6 notebook structure + execution"
 while read -r book flags <&3; do
   for check in hygiene-check structure-check noexec-check cell-lint exec-solutions exec-lessons; do
-    uv run py4kids-tools --book "$book" "$check"
+    book_run "$book" "$check"
   done
   if has_flag publication "$flags"; then
-    uv run py4kids-tools --book "$book" lesson-outputs-check
+    book_run "$book" lesson-outputs-check
   fi
 done 3<<< "$books"
 
@@ -59,23 +103,23 @@ step "4/6 curriculum + assets"
 # books without `judge` run the turtle checks. Fastforward relaxation keys on prereq_policy.
 while read -r book flags <&3; do
   for check in manifest-check prereq-check coverage-check concept-scan; do
-    uv run py4kids-tools --book "$book" "$check"
+    book_run "$book" "$check"
   done
   if has_flag patterns "$flags"; then
     for check in technique-spiral pattern-marker patterns-doc-check; do
-      uv run py4kids-tools --book "$book" "$check"
+      book_run "$book" "$check"
     done
   fi
-  uv run py4kids-tools --book "$book" stretch-check
+  book_run "$book" stretch-check
   if has_flag judge "$flags"; then
-    uv run py4kids-tools --book "$book" judge-check
-    uv run py4kids-tools --book "$book" source-policy
+    book_run "$book" judge-check
+    book_run "$book" source-policy
   else
-    uv run py4kids-tools --book "$book" turtle-check
-    uv run py4kids-tools --book "$book" turtle-real-check
+    book_run "$book" turtle-check
+    book_run "$book" turtle-real-check
   fi
   if has_flag acsl "$flags"; then
-    uv run py4kids-tools --book "$book" acsl-check
+    book_run "$book" acsl-check
   fi
 done 3<<< "$books"
 
