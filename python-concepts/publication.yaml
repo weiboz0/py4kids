@@ -1,0 +1,43 @@
+# Publication config for *Python, Concept by Concept* (design 010 D1, plan 097).
+# Read and validated by tools/books.py (publication_config); `publish`, `publish-audit` and
+# scripts/build-book.sh refuse a `publication: true` book without a valid one.
+# Paths and chapter globs are book-relative.
+
+# The setup chapter (Markdown). `numbered: true` titles it "Unit 0 — Getting Set Up";
+# `false` gives an unnumbered "Getting Set Up". Its teacher notes go only into the Teacher's Edition.
+setup:
+  source: docs/unit-00-getting-set-up.md
+  teacher_notes: docs/unit-00-teacher-notes.md
+  numbered: true
+
+# Each project's running header. The audit's page-header reset rule is derived from these values
+# plus the fixed back-matter names.
+project_headers:
+  project-01-algorithm-challenge: Algorithm Challenge
+
+# Lesson headings: kept at level 2 by the publisher and checked by the audit's goals/recap rules.
+lesson_heading: '^## Lesson\b'
+
+# The Python names the index recognises (a "Python names" subentry each).
+index_names: [print, input, range, len, str, int, float, append, split, open, sorted, sum]
+
+audit:
+  # Lesson cells tagged error-demo / hang-demo; the audit re-derives both lists from the sources.
+  error_demo_ids: ['9442d5582e1f', '25129fdd9963', 'dcec5192b293', u02l029, u02l079, u03l010,
+                   u04l022, u07l009, u13l009]
+  hang_demo_ids: [u04l012]
+  # A no-exec fragment printed as a program, not as an error demo (it is not run on its own).
+  error_demo_routing_exceptions: [u07l034a]
+  # Starters the print edition must keep (code that exists only in the Starter).
+  print_required_starters: ['057d796ebeff']  # Unit 1, Exercise 20: the broken program to repair
+  # The print edition's soft page target (a warning only).
+  print_page_target: 400
+  # Turtle try-it figures per unit, and the Teacher's Edition real-program drawings.
+  turtle_tryits:
+    unit-06-turtle-geometry: 3
+  teacher_turtle_drawings: 21
+  # [{phrase, kinds, chapters, reason}]: a banned phrase allowed only in chapters of these kinds
+  # whose source matches a book-relative glob. This book needs none.
+  phrase_exemptions: []
+  # Every unit has a "You will learn" and a "Recap" panel (every book; design 010).
+  goals_recap: required

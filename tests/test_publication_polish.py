@@ -3,8 +3,12 @@
 from pathlib import Path
 
 import nbformat
+from publication_helpers import python_concepts_config
 
 from tools import publish, publish_audit
+
+# The python-concepts index names (its publication.yaml `index_names`).
+NAMES = python_concepts_config().index_names
 
 
 def test_check_lines_preserve_order_blank_lines_and_nested_asserts():
@@ -116,10 +120,11 @@ def test_student_phrase_and_panel_audits():
     qmd = ('# Unit 1\n\n::: {.opener}\nHook.\n:::\n\n'
            '::: {.goals}\n- Print values.\n:::\n\n## Lesson 1\n\n'
            '::: {.recap}\n- Print values.\n:::\n\n## Exercises\n')
-    assert publish_audit.panel_findings('unit-01-fixture', qmd) == []
-    assert publish_audit.panel_findings('unit-01-fixture', qmd.replace('::: {.recap}', '### Recap'))
+    lesson = r'^## Lesson\b'
+    assert publish_audit.panel_findings('unit-01-fixture', qmd, lesson) == []
+    assert publish_audit.panel_findings('unit-01-fixture', qmd.replace('::: {.recap}', '### Recap'), lesson)
     assert publish_audit.panel_findings('unit-01-fixture', qmd.replace(
-        '## Lesson 1', 'Extra prose.\n\n## Lesson 1'))
+        '## Lesson 1', 'Extra prose.\n\n## Lesson 1'), lesson)
     assert publish_audit.student_phrase_findings('Teacher’s Edition', 'pdf')
     assert publish_audit.student_phrase_findings('assert x == 1', 'answers')
 
@@ -169,7 +174,7 @@ def test_index_aliases_share_one_entry_and_restricted_names_use_code_only():
     assert 'comment' + r'\index{code comment@Code comment}' in indexed
     assert 'The class and comment' in indexed
     assert r'\index{and}' not in indexed
-    names = publish.index_first_prose('print and `print`; `len` then len.\n', [])
+    names = publish.index_first_prose('print and `print`; `len` then len.\n', [], index_names=NAMES)
     assert names.count(r'\index{Python names!print@\texttt{print}}') == 1
     assert names.count(r'\index{Python names!len@\texttt{len}}') == 1
     boolean = publish.index_first_prose('A true fact. Use `True`.\n',
@@ -253,10 +258,10 @@ def test_lesson_panel_source_positions(tmp_path):
              nbformat.v4.new_markdown_cell('## Lesson 1\n\nPrint.'),
              nbformat.v4.new_markdown_cell('### Recap\n\n- Print.')]
     nbformat.write(nbformat.v4.new_notebook(cells=cells), path)
-    assert publish_audit.lesson_panel_source_findings(entry) == []
+    assert publish_audit.lesson_panel_source_findings(entry, r'^## Lesson\b') == []
     cells.insert(2, nbformat.v4.new_markdown_cell('An extra note.'))
     nbformat.write(nbformat.v4.new_notebook(cells=cells), path)
-    assert publish_audit.lesson_panel_source_findings(entry)
+    assert publish_audit.lesson_panel_source_findings(entry, r'^## Lesson\b')
 
 
 def test_check_lines_state_the_value_and_never_say_is_true():
@@ -308,10 +313,11 @@ def test_index_waits_for_the_teaching_unit():
 
 
 def test_index_code_keys_match_real_code_only_and_case_sensitively():
-    names = publish.index_first_prose('Print `print("Open")` then `# open-path` and `Open`.\n', [])
+    names = publish.index_first_prose('Print `print("Open")` then `# open-path` and `Open`.\n', [],
+                                      index_names=NAMES)
     assert r'\texttt{open}' not in names
     assert names.count(r'\texttt{print}') == 1
-    output = publish.index_first_prose('It prints `Digit sum: 7`, then `sum(xs)`.\n', [])
+    output = publish.index_first_prose('It prints `Digit sum: 7`, then `sum(xs)`.\n', [], index_names=NAMES)
     assert '`sum(xs)`' + r'\index{Python names!sum@\texttt{sum}}' in output
     assert '`Digit sum: 7`' + r'\index' not in output
     terms = [('List changes', 'list-append', ['`.append`', '`.remove`']),
@@ -360,7 +366,7 @@ def test_python_name_units_prefer_glossary_keys_then_first_lesson_use():
     lessons = {3: ['n = 5\nprint(len("abc"))'],
                7: ['sorted = 1', 'total = sum([1, 2])'],
                10: ['xs = [3, 1]\nys = sorted(xs)\nxs.append(4)']}
-    units = publish.python_name_units(glossary, first_units, lessons)
+    units = publish.python_name_units(glossary, first_units, lessons, NAMES)
     assert units['len'] == 7  # the glossary key wins over an earlier lesson use
     assert units['append'] == 10 and units['float'] == 2
     assert units['sum'] == 7
@@ -371,14 +377,14 @@ def test_python_name_units_prefer_glossary_keys_then_first_lesson_use():
 def test_python_name_mentioned_before_it_is_taught_is_not_indexed():
     qmd = 'Do not use `sorted`, `sum(xs)`, or `open`. Use `len(s)`.\n'
     name_units = {'sorted': 10, 'sum': 7, 'len': 3}
-    early = publish.index_first_prose(qmd, [], 3, {}, name_units)
+    early = publish.index_first_prose(qmd, [], 3, {}, name_units, NAMES)
     assert r'\texttt{sorted}' not in early and r'\texttt{sum}' not in early
     assert r'\texttt{open}' not in early  # no teaching unit: never indexed
     assert '`len(s)`' + r'\index{Python names!len@\texttt{len}}' in early
-    late = publish.index_first_prose(qmd, [], 10, {}, name_units)
+    late = publish.index_first_prose(qmd, [], 10, {}, name_units, NAMES)
     assert r'\index{Python names!sorted@\texttt{sorted}}' in late
     assert r'\index{Python names!sum@\texttt{sum}}' in late
-    ungated = publish.index_first_prose(qmd, [])
+    ungated = publish.index_first_prose(qmd, [], index_names=NAMES)
     assert publish_audit.index_source_findings(ungated, [], 3, {}, name_units) == [
         r'FAIL: index before taught in unit 3: Python names!sorted@\texttt{sorted}',
         r'FAIL: index before taught in unit 3: Python names!sum@\texttt{sum}',
@@ -390,7 +396,7 @@ def test_python_concepts_python_names_wait_for_their_teaching_unit():
     book = Path(__file__).resolve().parents[1] / 'python-concepts'
     source = (book / 'back-matter' / 'glossary.md').read_text(encoding='utf-8')
     glossary = publish.glossary_entries(source)
-    units = publish.python_name_units(glossary, publish.glossary_units(source), publish.lesson_code(book))
-    names = publish.PYTHON_INDEX_NAMES - {term.casefold() for term, _, _ in glossary}
+    units = publish.python_name_units(glossary, publish.glossary_units(source), publish.lesson_code(book), NAMES)
+    names = NAMES - {term.casefold() for term, _, _ in glossary}
     assert names <= set(units)
     assert units['sorted'] > 3

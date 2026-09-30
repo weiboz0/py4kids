@@ -6,6 +6,7 @@ from pathlib import Path
 
 import nbformat
 import pytest
+from publication_helpers import python_concepts_config, write_publication_config
 
 from tools import cli, publish, publish_audit
 from tools.publish import (
@@ -165,7 +166,7 @@ def test_real_unit1_exercise20_broken_program_stays_in_print():
     body, inventory, _ = render_items(entry / 'exercises.ipynb', 'unit', 'student-print', entry, entry.name)
     kinds = {record['id']: record['kind'] for record in inventory}
     assert kinds['057d796ebeff'] == 'starter'
-    assert publish_audit.PRINT_REQUIRED_STARTERS <= set(kinds)
+    assert python_concepts_config().print_required_starters <= set(kinds)
     assert 'print("Room: + room_name)' in body
     assert list(kinds.values()).count('starter-omitted') > 20
 
@@ -184,6 +185,7 @@ def book(tmp_path):
     (root / 'docs' / 'unit-00-getting-set-up.md').write_text(
         '# Unit 0 — Getting Set Up\n\nGet ready.\n\n## Install Python\n\nStart.\n')
     (root / 'docs' / 'unit-00-teacher-notes.md').write_text('# Notes\n\nSETUP_TEACHER_SENTINEL_90\n')
+    write_publication_config(root)
     front = root / 'front-matter'
     front.mkdir()
     (front / 'preface.md').write_text('# About This Book\n')
@@ -251,7 +253,8 @@ def test_answer_key_edition_contents_and_source_boundary(book, monkeypatch):
     chapters = json.loads((project / 'inventory.json').read_text())['chapters']
     assert [(c['id'], c['kind']) for c in chapters] == [
         ('answer-key-intro', 'front'), ('answers-unit-01-fixture', 'answers')]
-    assert publish_audit.expected_chapter_ids('answer-key', ['unit-01-fixture', 'checkpoint-01-fixture']) == [
+    assert publish_audit.expected_chapter_ids('answer-key', ['unit-01-fixture', 'checkpoint-01-fixture'],
+                                              'unit-00-getting-set-up') == [
         c['id'] for c in chapters]
     text = _project_text(project)
     for sentinel in SENTINELS:
@@ -330,10 +333,11 @@ def test_print_and_full_editions_from_the_profile(book):
     entry_order = ['unit-01-fixture', 'checkpoint-01-fixture']
     for edition, project in (('student-print', lean), ('student', full), ('teacher', teacher)):
         chapters = json.loads((project / 'inventory.json').read_text())['chapters']
-        assert [c['id'] for c in chapters] == publish_audit.expected_chapter_ids(edition, entry_order)
+        assert [c['id'] for c in chapters] == publish_audit.expected_chapter_ids(
+            edition, entry_order, 'unit-00-getting-set-up')
         config = (project / '_quarto.yml').read_text()
         files = config.split('chapters:')[1].split('format:')[0].split()[1::2]
-        assert files == publish_audit.expected_quarto_files(edition, entry_order)
+        assert files == publish_audit.expected_quarto_files(edition, entry_order, 'unit-00-getting-set-up')
         assert f'output-file: "python-concepts-{edition}"' in config
         assert output_stem('python-concepts', edition) == f'python-concepts-{edition}'
         assert 'title: "Python, Concept by Concept"' in config

@@ -1,0 +1,10 @@
+((=- Handout template (design 010 D4): the stock nbconvert LaTeX article (latex/index.tex.j2),
+with the font block replaced by the py4kids fonts and their DejaVu fallback (py4kidsfonts.sty).
+scripts/build-pdf.sh runs `nbconvert --to latex` with this file, then lualatex with a kept log. -=))
+((*- extends 'index.tex.j2' -*))
+
+((* block packages *))
+((( super() )))
+    % py4kids fonts: Atkinson Hyperlegible and Fira Mono with DejaVu fallback (not Latin Modern).
+    \usepackage{py4kidsfonts}
+((* endblock packages *))

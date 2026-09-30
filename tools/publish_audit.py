@@ -5,18 +5,26 @@ import json
 import re
 import subprocess
 import tokenize
+from itertools import pairwise
 from pathlib import Path
 
 import yaml
 
-from tools.books import book_flag, book_path
+from tools.books import (
+    ANSWER_BANS,
+    INDEPENDENCE_BANS,
+    STUDENT_BANS,
+    PublicationConfig,
+    book_flag,
+    book_path,
+    publication_config,
+)
 from tools.fake_turtle import imports_turtle
 from tools.publish import (
     CODE_ONLY_NAMES,
     EDITIONS,
     ITEM,
     NOTICE,
-    SETUP_ID,
     answer_chapter_heading,
     code_block,
     code_tokens,
@@ -31,24 +39,23 @@ from tools.publish import (
     output_stem,
     panel,
     python_name_units,
+    reads_stdin,
     redundant_starter,
+    solution_assets,
+    solution_source_files,
+    statement_text,
+    title_heading,
 )
 from tools.turtle_real import real_programs
 
-ERROR_IDS = {'9442d5582e1f', '25129fdd9963', 'dcec5192b293', 'u02l029',
-             'u02l079', 'u03l010', 'u04l022', 'u07l009', 'u13l009'}
-HANG_IDS = {'u04l012'}
-INDEPENDENCE_BANS = ("Teacher's Edition", 'your teacher', 'with your teacher',
-                     'ask your teacher', 'not graded', 'no-exec', 'solutions.ipynb',
-                     'python assets/', 'Lesson One', "checked by the course's test suite",
-                     'There is no real program')
+# The ban lists live in tools.books (INDEPENDENCE_BANS, STUDENT_BANS, ANSWER_BANS), where
+# publication.yaml's phrase exemptions are validated against them.
 # The full edition also bans "Answer key" in its text. The print edition and the Answer Key say
 # "Answer Key" on purpose; the `'## Answer key' in qmd` check guards the teacher heading in every
 # student-family edition and the leak guard guards the code.
-STUDENT_BANS = INDEPENDENCE_BANS + ('Answer key',)
-# Publication-book (python-concepts) Starters the print rule must keep (code that exists only in the Starter).
-PRINT_REQUIRED_STARTERS = {'057d796ebeff'}  # Unit 1, Exercise 20: the broken program to repair
-PRINT_PAGE_TARGET = 400
+# Every book-specific expectation (error/hang demo ids, required print Starters, the print page target,
+# turtle counts, phrase exemptions, project headers, the lesson heading) lives in the book's
+# publication.yaml (tools.books.publication_config; design 010 D1).
 
 
 def phrase_bans(edition: str) -> tuple[str, ...]:
@@ -56,17 +63,86 @@ def phrase_bans(edition: str) -> tuple[str, ...]:
 
 
 def student_phrase_findings(text: str, location: str, edition: str = 'student',
-                            answers: bool | None = None) -> list[str]:
+                            answers: bool | None = None, allowed: frozenset[str] = frozenset()) -> list[str]:
+    """Banned phrases in a student-family text. `allowed` holds the phrases the book's
+    publication.yaml exempts for this chapter (see `chapter_exemptions`)."""
     normalized = text.replace('’', "'").casefold()
     if answers is None:
         answers = location == 'answers'
-    banned = phrase_bans(edition) + (('assert',) if answers else ())
+    exempt = {phrase.casefold() for phrase in allowed}
+    banned = phrase_bans(edition) + (ANSWER_BANS if answers else ())
     return [f'FAIL: {edition}: {location}: banned phrase {phrase}' for phrase in banned
-            if phrase.casefold() in normalized]
+            if phrase.casefold() in normalized and phrase.casefold() not in exempt]
 
 
-def answers_pdf_findings(text: str) -> list[str]:
-    start = re.search(r'Unit\s+1,\s*Exercise\s+1\s*\(page\s+\d+\)', text)
+def book_prefix(root: Path, book_id: str) -> str:
+    """The repo-relative book folder that prefixes every inventory `source` (`<book id>`)."""
+    return book_path(root, book_id).relative_to(Path(root).resolve()).as_posix()
+
+
+def chapter_exemptions(config: PublicationConfig, chapter: dict | None, prefix: str) -> frozenset[str]:
+    """Phrases exempt in one chapter: its inventory `kind` must be listed and its book-relative
+    `source` must match a glob. Anything outside a recorded chapter (no chapter) gets none."""
+    if chapter is None:
+        return frozenset()
+    return config.exempt_phrases(chapter.get('kind'), chapter.get('source'), prefix)
+
+
+def qmd_phrase_findings(qmds: dict[str, str], chapters: list[dict], edition: str,
+                        config: PublicationConfig, prefix: str) -> list[str]:
+    """The `.qmd` layer: each generated chapter is checked against its own source's exemptions."""
+    by_file = {chapter['file']: chapter for chapter in chapters}
+    findings = []
+    for name, text in qmds.items():
+        chapter = by_file.get(name)
+        findings.extend(student_phrase_findings(
+            text, name, edition, answers=chapter is not None and chapter['kind'] == 'answers',
+            allowed=chapter_exemptions(config, chapter, prefix)))
+    return findings
+
+
+def outline_chapter_starts(outline: str) -> list[tuple[str, int]]:
+    """Top-level PDF bookmarks (one per chapter, in order) and their physical start pages."""
+    return [(match[1], int(match[2])) for match in
+            re.finditer(r'(?m)^[+|]\t"([^"]+)"\t#page=(\d+)', outline)]
+
+
+def chapter_page_texts(text: str, outline: str, chapters: list[dict]) -> list[tuple[dict | None, str]] | None:
+    """Split pdftotext output into chapter page ranges using the PDF outline's chapter start pages.
+
+    The pages before the first chapter (title and contents pages) come first, with no chapter.
+    Returns None when the outline's chapters do not match the inventory one-to-one.
+    """
+    starts = outline_chapter_starts(outline)
+    pages = text.split('\f')
+    if len(starts) != len(chapters) or not starts or any(
+            later <= earlier for (_, earlier), (_, later) in pairwise(starts)):
+        return None
+    regions: list[tuple[dict | None, str]] = [(None, '\f'.join(pages[:starts[0][1] - 1]))]
+    for index, (chapter, (_, start)) in enumerate(zip(chapters, starts)):
+        end = starts[index + 1][1] - 1 if index + 1 < len(starts) else len(pages)
+        regions.append((chapter, '\f'.join(pages[start - 1:end])))
+    return regions
+
+
+def pdf_phrase_findings(text: str, outline: str, chapters: list[dict], edition: str,
+                        config: PublicationConfig, prefix: str, answers: bool) -> list[str]:
+    """The PDF-text layer: each chapter's page range is checked against its own source's exemptions."""
+    regions = chapter_page_texts(text, outline, chapters)
+    if regions is None:
+        return ([f'FAIL: {edition}: PDF outline chapters differ from the inventory (phrase scan unscoped)']
+                + student_phrase_findings(text, 'pdf', edition, answers=answers))
+    findings = []
+    for chapter, region in regions:
+        location = 'pdf ' + (chapter['id'] if chapter else 'title pages')
+        findings.extend(student_phrase_findings(region, location, edition, answers=answers,
+                                                allowed=chapter_exemptions(config, chapter, prefix)))
+    return findings
+
+
+def answers_pdf_findings(text: str, first_unit: int = 1) -> list[str]:
+    """The answers appendix starts at the book's first unit's Exercise 1 and ends at the Glossary."""
+    start = re.search(rf'Unit\s+{first_unit},\s*Exercise\s+1\s*\(page\s+\d+\)', text)
     if not start:
         return ['FAIL: student: answers chapter missing in PDF']
     ending = re.search(r'(?m)(?:^|\f)Glossary\s*$', text[start.end():])
@@ -184,13 +260,13 @@ def rendered_item_numbers(qmd: str, kind: str) -> list[int]:
     return numbers
 
 
-def panel_findings(id_: str, qmd: str) -> list[str]:
-    """Goals end at the first lesson; recap ends at Exercises."""
+def panel_findings(id_: str, qmd: str, lesson_heading: str) -> list[str]:
+    """Goals end at the first lesson (the book's `lesson_heading`); recap ends at Exercises."""
     findings = []
     if qmd.count('::: {.goals}') != 1 or qmd.count('::: {.recap}') != 1:
         findings.append(f'FAIL: {id_}: goals/recap count')
         return findings
-    lesson = re.search(r'(?m)^## Lesson\b', qmd)
+    lesson = re.search('(?m)' + lesson_heading, qmd)
     exercise = re.search(r'(?m)^## Exercises\b', qmd)
     if not lesson or not re.search(r'(?ms)^::: \{\.goals\}\n(?:(?!^:::).)*^:::\s*\Z',
                                    qmd[:lesson.start()]):
@@ -201,10 +277,10 @@ def panel_findings(id_: str, qmd: str) -> list[str]:
     return findings
 
 
-def lesson_panel_source_findings(entry: Path) -> list[str]:
+def lesson_panel_source_findings(entry: Path, lesson_heading: str) -> list[str]:
     cells = notebook(entry / 'lesson.ipynb', 'student').cells
     lessons = [index for index, cell in enumerate(cells)
-               if cell.cell_type == 'markdown' and cell.source.startswith('## Lesson')]
+               if cell.cell_type == 'markdown' and re.match(lesson_heading, cell.source)]
     if not lessons or lessons[0] == 0 or not (
             cells[lessons[0] - 1].cell_type == 'markdown'
             and cells[lessons[0] - 1].source.startswith('### You will learn')):
@@ -257,9 +333,17 @@ def leak_findings(root: Path, book_id: str, chapters: list[dict], project: Path,
                   hide_odd: bool = False, kinds: frozenset[str] = frozenset({'answers'})) -> list[str]:
     """Guard the chapters of the given kinds (by default every `answers` chapter, the only place a
     student-family edition prints solution material) against hidden solutions: even unit exercises,
-    checkpoints and the project, plus the odd unit exercises when `hide_odd`."""
-    blocks = [stream for chapter in chapters if chapter['kind'] in kinds
-              for stream in printed_code((project / chapter['file']).read_text(encoding='utf-8'))]
+    checkpoints and the project, plus the odd unit exercises when `hide_odd`.
+
+    A finding names where the leak printed: `answers` for an answer chapter, otherwise the chapter's
+    kind and id (e.g. `unit unit-01-x`), so a body-scan leak points at the chapter that holds it.
+    """
+    located = []  # (where, printed code blocks) per scanned chapter, in chapter order
+    for chapter in chapters:
+        if chapter['kind'] not in kinds:
+            continue
+        where = 'answers' if chapter['kind'] == 'answers' else f"{chapter['kind']} {chapter['id']}"
+        located.append((where, printed_code((project / chapter['file']).read_text(encoding='utf-8'))))
     findings = []
     for id_, entry in entries(book_path(root, book_id), 'student'):
         kind = id_.split('-', 1)[0]
@@ -271,17 +355,29 @@ def leak_findings(root: Path, book_id: str, chapters: list[dict], project: Path,
             if kind == 'unit' and number % 2 and not hide_odd:
                 continue
             sources = [_tokenize_if_complete(cell.source) for cell in group['cells'] if cell.cell_type == 'code']
+            files = solution_source_files(entry, kind, number)  # exN.py / qN.py / pN.py
             if kind == 'unit':
-                assets = [path for path in (entry / 'assets').glob('solutions_ex*.py')
-                          if re.match(rf'solutions_ex{number}(?!\d)', path.stem)]
-                sources += [_tokenize_if_complete(path.read_text(encoding='utf-8')) for path in assets]
-            if any(solution_leak(block, sources) for block in blocks):
-                findings.append(f'FAIL: {edition}: answers: solution leak from {id_} {label} {number}')
+                files += solution_assets(entry, number)
+            sources += [_tokenize_if_complete(path.read_text(encoding='utf-8')) for path in files]
+            for where in dict.fromkeys(where for where, blocks in located
+                                       if any(solution_leak(block, sources) for block in blocks)):
+                findings.append(f'FAIL: {edition}: {where}: solution leak from {id_} {label} {number}')
     return findings
 
 
-def reference_findings(pdf_text: str) -> list[str]:
+BACK_MATTER_HEADERS = ('Answers to Selected Exercises', 'Glossary', 'Quick Reference', 'Index')
+
+
+def header_reset_pattern(project_headers: tuple[str, ...] = ()) -> re.Pattern[str]:
+    """Page headers that end a unit: checkpoints, the book's project running headers
+    (publication.yaml `project_headers`) and the fixed back-matter names."""
+    names = [re.escape(name) for name in dict.fromkeys((*project_headers, *BACK_MATTER_HEADERS))]
+    return re.compile(r'(?m)^(?:Checkpoint\s+\d+|' + '|'.join(names) + r')\b')
+
+
+def reference_findings(pdf_text: str, project_headers: tuple[str, ...] = ()) -> list[str]:
     """Check printed page references against unit-qualified exercise headings."""
+    resets = header_reset_pattern(project_headers)
     raw_pages = []
     for physical, page in enumerate(pdf_text.split('\f'), 1):
         if page.strip():
@@ -304,7 +400,7 @@ def reference_findings(pdf_text: str) -> list[str]:
         unit = re.search(r'(?m)^Unit\s+(\d+)(?:\s+[—–-].*)?\s*$', header)
         if unit:
             current_unit = int(unit[1])
-        elif re.search(r'(?m)^(?:Checkpoint\s+\d+|Algorithm Challenge|Answers to Selected Exercises|Glossary|Quick Reference|Index)\b', header):
+        elif resets.search(header):
             current_unit = None
         pages.append((printed, page, current_unit))
     by_number = {number: (page, unit) for number, page, unit in pages}
@@ -333,6 +429,7 @@ def reference_findings(pdf_text: str) -> list[str]:
 
 
 def _expected_lesson_kind(cell) -> str:
+    """Mirror of `tools.publish.route_code`, with the same precedence and the same stdin predicate."""
     tags = cell.metadata.get('tags', [])
     if 'no-exec' not in tags:
         return 'code+output' if any(o.get('text') for o in cell.outputs) else 'code'
@@ -340,6 +437,8 @@ def _expected_lesson_kind(cell) -> str:
         return 'errordemo'
     if 'hang-demo' in tags:
         return 'hangdemo'
+    if reads_stdin(cell.source):
+        return 'tryit-stdin'
     if re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', cell.source) and 'input(' in cell.source:
         return 'tryit+figure'
     if re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', cell.source):
@@ -349,7 +448,8 @@ def _expected_lesson_kind(cell) -> str:
     return 'program'
 
 
-def _turtle_drawing_findings(entry: Path, qmd: str, edition: str) -> list[str]:
+def _turtle_drawing_findings(entry: Path, qmd: str, edition: str,
+                             turtle_tryits: dict[str, int] | None = None) -> list[str]:
     """Match sample-input figure captions to the lesson and answer-key sources."""
     if not entry.name.startswith('unit-'):
         return []
@@ -368,8 +468,9 @@ def _turtle_drawing_findings(entry: Path, qmd: str, edition: str) -> list[str]:
         if (f'**assets/{asset.name}**' in lesson_qmd
                 and code_tokens(asset.read_text(encoding='utf-8')) in tryit_tokens):
             findings.append(f'FAIL: {edition}: {entry.name}: try-it asset {asset.name} listed again in full')
-    if entry.name.startswith('unit-06-') and len(tryits) != 3:
-        findings.append(f'FAIL: {edition}: {entry.name}: expected three turtle try-it figures')
+    expected = (turtle_tryits or {}).get(entry.name)
+    if expected is not None and len(tryits) != expected:
+        findings.append(f'FAIL: {edition}: {entry.name}: expected {expected} turtle try-it figures, got {len(tryits)}')
     if edition != 'teacher':
         return findings
     _, groups = item_groups(notebook(entry / 'solutions.ipynb', 'teacher').cells, 'Exercise')
@@ -409,6 +510,9 @@ def _expected_notices(entry: Path) -> int:
     preface, groups = item_groups(exercise.cells, 'Exercise')
     count += _notice_count(preface)
     for group in groups:
+        found = title_heading(group)
+        heading = statement_text(group['cells'][0].source, True, found[1] if found else None)
+        count += sum(bool(NOTICE.match(p)) for p in re.split(r'\n\s*\n', heading) if p)
         cells = group['cells'][1:]
         for index, cell in enumerate(cells):
             if cell.cell_type != 'markdown':
@@ -420,6 +524,18 @@ def _expected_notices(entry: Path) -> int:
     return count
 
 
+def notice_count_findings(id_: str, qmd: str, entry: Path, edition: str) -> list[str]:
+    """The Notice panels of a unit chapter's body match its lesson and exercise sources.
+
+    Only the body before the Teacher's Edition `## Answer key` counts: a worked solution may hold its
+    own Notice, which `_expected_notices` (lesson and exercise sources) does not expect.
+    """
+    body = qmd.split('## Answer key', 1)[0]
+    if body.count('::: {.notice}') != _expected_notices(entry):
+        return [f'FAIL: {edition}: {id_}: Notice count']
+    return []
+
+
 def _outline_heading(title: str) -> str:
     """Match source headings to PDF bookmarks, allowing inline code spans."""
     title = re.sub(r'`[^`]*`', '', title)
@@ -427,32 +543,41 @@ def _outline_heading(title: str) -> str:
 
 
 def _missing_lesson_headings(chapters: list[dict], root: Path, outline: str) -> list[str]:
+    """Every lesson, exercise and setup section heading must be a PDF bookmark.
+
+    The setup chapter is found by its inventory record (kind `setup`, its id and title), never by the
+    number 0, so a book whose Unit 0 is a real unit keeps it as Unit 0.
+    """
+    setup_titles = {chapter['title'] for chapter in chapters if chapter['kind'] == 'setup'}
     sections: dict[int, list[str]] = {}
-    setup_present = False
+    present: set[str] = set()
     setup_sections: list[str] = []
+    in_setup = False
     unit_number = None
     for line in outline.splitlines():
         title_match = re.search(r'"([^"]+)"', line)
         if not title_match:
             continue
         if re.match(r'^[+|]\t"', line):
-            setup_present = setup_present or title_match[1] == 'Unit 0 — Getting Set Up'
-            unit_match = re.match(r'Unit (\d+)\b', title_match[1])
+            in_setup = title_match[1] in setup_titles
+            if in_setup:
+                present.add(title_match[1])
+            unit_match = None if in_setup else re.match(r'Unit (\d+)\b', title_match[1])
             unit_number = int(unit_match[1]) if unit_match else None
-        elif re.match(r'^[+|]\t{2}"', line) and unit_number == 0:
+        elif re.match(r'^[+|]\t{2}"', line) and in_setup:
             setup_sections.append(_outline_heading(title_match[1]))
         elif re.match(r'^[+|]\t{2,}"', line) and unit_number is not None:
             sections.setdefault(unit_number, []).append(_outline_heading(title_match[1]))
     missing = []
     for chapter in chapters:
         if chapter['kind'] == 'setup':
-            if not setup_present:
-                missing.append(f'{SETUP_ID}: Unit 0 — Getting Set Up')
+            if chapter['title'] not in present:
+                missing.append(f"{chapter['id']}: {chapter['title']}")
             source = (root / chapter['source']).read_text(encoding='utf-8')
             for title in re.findall(r'^## ([^\n]+)', source, re.MULTILINE):
                 expected = _outline_heading(title)
                 if not any(bookmark.startswith(expected) for bookmark in setup_sections):
-                    missing.append(f'{SETUP_ID}: {title}')
+                    missing.append(f"{chapter['id']}: {title}")
             continue
         if chapter['kind'] != 'unit':
             continue
@@ -483,21 +608,21 @@ def _missing_lesson_headings(chapters: list[dict], root: Path, outline: str) -> 
     return missing
 
 
-def expected_chapter_ids(edition: str, entry_order: list[str]) -> list[str]:
-    """The chapter order an edition's profile implies."""
+def expected_chapter_ids(edition: str, entry_order: list[str], setup_id: str) -> list[str]:
+    """The chapter order an edition's profile implies (`setup_id`: publication.yaml's setup chapter)."""
     edition_profile = EDITIONS[edition]
     front = [name.removesuffix('.md') for name in edition_profile['front']]
     if edition_profile['body'] == 'answers':
         return front + [f'answers-{id_}' for id_ in entry_order if id_.startswith('unit-')]
-    return (front + [SETUP_ID] + entry_order
+    return (front + [setup_id] + entry_order
             + (['answers'] if edition_profile['answers_appendix'] else [])
             + (['glossary', 'quick-reference'] if edition_profile['back_matter'] else [])
             + (['index'] if edition_profile['index'] else []))
 
 
-def expected_quarto_files(edition: str, entry_order: list[str]) -> list[str]:
+def expected_quarto_files(edition: str, entry_order: list[str], setup_id: str) -> list[str]:
     return ['index.qmd' if position == 0 else 'the-index.qmd' if id_ == 'index' else f'{id_}.qmd'
-            for position, id_ in enumerate(expected_chapter_ids(edition, entry_order))]
+            for position, id_ in enumerate(expected_chapter_ids(edition, entry_order, setup_id))]
 
 
 def starter_kinds(entry: Path, kind: str, edition: str) -> dict[str, tuple[str, str]]:
@@ -509,10 +634,14 @@ def starter_kinds(entry: Path, kind: str, edition: str) -> dict[str, tuple[str, 
     kinds = {}
     for group in groups:
         statement = '\n'.join(c.source for c in group['cells'] if c.cell_type == 'markdown')
-        for cell in (group['cells'] if kind == 'project' else group['cells'][1:]):
-            if cell.cell_type == 'code':
-                omitted = required and redundant_starter(cell.source, statement)
-                kinds[cell.id] = ('starter-omitted' if omitted else 'starter', cell.source)
+        for cell in group['cells']:
+            if cell.cell_type != 'code':
+                continue
+            if 'verify' in cell.metadata.get('tags', []):
+                kinds[cell.id] = ('verify-omitted', cell.source)
+                continue
+            omitted = required and redundant_starter(cell.source, statement)
+            kinds[cell.id] = ('starter-omitted' if omitted else 'starter', cell.source)
     return kinds
 
 
@@ -533,7 +662,7 @@ def print_equivalence_findings(id_: str, full_qmd: str, print_qmd: str,
     expected = ANSWER_REF_LINE.sub('', full_qmd)
     cursor = 0
     for cell_id, source, kind in starters:
-        if not source.strip():
+        if not source.strip() or kind == 'verify-omitted':
             continue
         text = _starter_panel(source)
         at = expected.find(text, cursor)
@@ -629,6 +758,7 @@ def item_headings(qmd: str) -> list[str]:
 
 
 def audit(root: Path, book_id: str) -> list[str]:
+    config = publication_config(root, book_id)  # fails loudly without a valid publication.yaml
     book = book_path(root, book_id)
     findings: list[str] = []
     entry_order = [id_ for id_, _ in entries(book, 'student')]
@@ -645,20 +775,26 @@ def audit(root: Path, book_id: str) -> list[str]:
                 if tag in tags:
                     ids.add(c.id)
             if ('no-exec' in tags and _expected_lesson_kind(c) not in
-                    {'tryit', 'tryit+figure', 'figure'} and c.id != 'u07l034a'):
+                    {'tryit', 'tryit-stdin', 'tryit+figure', 'figure'}
+                    and c.id not in config.error_demo_routing_exceptions):
                 candidates.add(c.id)
-    if source_tags['error-demo'] != ERROR_IDS or source_tags['hang-demo'] != HANG_IDS or candidates != ERROR_IDS | HANG_IDS:
+    error_ids, hang_ids = config.error_demo_ids, config.hang_demo_ids
+    if (source_tags['error-demo'] != error_ids or source_tags['hang-demo'] != hang_ids
+            or candidates != error_ids | hang_ids):
         findings.append('FAIL: error-demo/hang-demo source tags differ from re-derived list')
     for edition, edition_profile in EDITIONS.items():
-        findings.extend(_audit_edition(root, book_id, book, edition, edition_profile, entry_order))
+        findings.extend(_audit_edition(root, book_id, book, edition, edition_profile, entry_order,
+                                       config))
     if not any(x.startswith('FAIL:') for x in findings):
         findings.append('publish-audit: PASS')
     return findings
 
 
 def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_profile: dict,
-                   entry_order: list[str]) -> list[str]:
+                   entry_order: list[str], config: PublicationConfig) -> list[str]:
     findings: list[str] = []
+    prefix = book_prefix(root, book_id)
+    unit_numbers = [int(re.match(r'unit-(\d+)', id_)[1]) for id_ in entry_order if id_.startswith('unit-')]
     student_family = edition_profile['student_family']
     answer_body = edition_profile['body'] == 'answers'
     answer_key_drawings = 0
@@ -669,25 +805,28 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
         return [f'FAIL: {edition}: no inventory']
     manifest = json.loads(inv_path.read_text(encoding='utf-8'))
     chapters = manifest['chapters']
-    if [c['id'] for c in chapters] != expected_chapter_ids(edition, entry_order):
+    if [c['id'] for c in chapters] != expected_chapter_ids(edition, entry_order, config.setup_id):
         findings.append(f'FAIL: {edition}: chapter order')
-    config = (project / '_quarto.yml').read_text(encoding='utf-8')
-    configured = re.findall(r'^    - ([^\n]+\.qmd)$', config, re.MULTILINE)
-    if configured != expected_quarto_files(edition, entry_order):
+    quarto_config = (project / '_quarto.yml').read_text(encoding='utf-8')
+    configured = re.findall(r'^    - ([^\n]+\.qmd)$', quarto_config, re.MULTILINE)
+    if configured != expected_quarto_files(edition, entry_order, config.setup_id):
         findings.append(f'FAIL: {edition}: Quarto chapter order')
-    if f'output-file: "{output_stem(book_id, edition)}"' not in config or (
-            f'classoption: [{edition_profile["classoption"]},' not in config):
+    if f'output-file: "{output_stem(book_id, edition)}"' not in quarto_config or (
+            f'classoption: [{edition_profile["classoption"]},' not in quarto_config):
         findings.append(f'FAIL: {edition}: Quarto output name or class options differ from the profile')
     qmds = {file.name: file.read_text(encoding='utf-8') for file in sorted(project.glob('*.qmd'))}
-    kinds = {chapter['file']: chapter['kind'] for chapter in chapters}
     if student_family:
+        findings.extend(qmd_phrase_findings(qmds, chapters, edition, config, prefix))
         for name, text in qmds.items():
-            findings.extend(student_phrase_findings(text, name, edition, answers=kinds.get(name) == 'answers'))
             if '## Answer key' in text:
                 findings.append(f'FAIL: {edition}: {name}: answer key present')
             if '::: {.teacher}' in text:
                 findings.append(f'FAIL: {edition}: {name}: teacher panel present')
         findings.extend(leak_findings(root, book_id, chapters, project, edition))
+    if edition == 'student':
+        # Outside the odd answers, no solution (notebook cell, exN.py, qN.py, pN.py) may be printed.
+        findings.extend(leak_findings(root, book_id, chapters, project, edition, hide_odd=True,
+                                      kinds=frozenset({'unit', 'checkpoint', 'project', 'setup', 'front'})))
     if edition_profile['answers_appendix'] or answer_body:
         answers = '\n'.join(qmds.get(c['file'], '') for c in chapters if c['kind'] == 'answers')
         expected_answers = []
@@ -714,7 +853,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
             starters = [(cell_id, source, by_id.get(cell_id, 'missing'))
                         for cell_id, (_, source) in source_kinds.items()]
             if publication:
-                for cell_id in PRINT_REQUIRED_STARTERS & set(by_id):
+                for cell_id in config.print_required_starters & set(by_id):
                     if by_id[cell_id] != 'starter':
                         findings.append(f'FAIL: student-print: {chapter["id"]}: required Starter {cell_id} omitted')
             print_qmd = qmds[chapter['file']]
@@ -727,7 +866,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
             if item_headings(full_qmd) != item_headings(print_qmd):
                 findings.append(f'FAIL: student-print: {chapter["id"]}: exercise headings differ from the full edition')
             findings.extend(print_equivalence_findings(chapter['id'], full_qmd, print_qmd, starters))
-        if publication and not PRINT_REQUIRED_STARTERS <= {
+        if publication and not config.print_required_starters <= {
                 record['id'] for chapter in chapters for record in chapter['inventory']}:
             findings.append('FAIL: student-print: required Starter ids missing from the inventory')
     if answer_body:
@@ -752,7 +891,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
         glossary_text = qmds.get('glossary.qmd', '')
         glossary = glossary_entries(glossary_text)
         first_units = glossary_units(glossary_text)
-        name_units = python_name_units(glossary, first_units, lesson_code(book))
+        name_units = python_name_units(glossary, first_units, lesson_code(book), config.index_names)
         introduced = [concept for id_, entry in entries(book, 'student') if id_.startswith('unit-')
                       for concept in yaml.safe_load((entry / 'manifest.yaml').read_text(encoding='utf-8'))[
                           'concepts']['introduces']]
@@ -795,22 +934,23 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
         rendered = rendered_item_numbers(student_part, kind)
         if rendered != numbers:
             findings.append(f'FAIL: {edition}: {id_}: rendered item titles')
-        if kind == 'unit' and qmd.count('::: {.notice}') != _expected_notices(entry):
-            findings.append(f'FAIL: {edition}: {id_}: Notice count')
+        if kind == 'unit':
+            findings.extend(notice_count_findings(id_, qmd, entry, edition))
         if kind == 'unit':
             findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
-                            for finding in panel_findings(id_, qmd))
+                            for finding in panel_findings(id_, qmd, config.lesson_heading))
             findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
-                            for finding in lesson_panel_source_findings(entry))
+                            for finding in lesson_panel_source_findings(entry, config.lesson_heading))
         if kind == 'unit' and publication:
-            findings.extend(_turtle_drawing_findings(entry, qmd, edition))
+            findings.extend(_turtle_drawing_findings(entry, qmd, edition, config.turtle_tryits))
             if edition == 'teacher':
                 answer_key_drawings += qmd.split('## Answer key', 1)[-1].count(
                     '\\color{black!60}Drawing for the sample input:')
         if edition == 'teacher' and (qmd.count('## Answer key') != 1 or [int(x) for x in re.findall(r'^### ' + ITEM[kind] + r' (\d+)\b', qmd.split('## Answer key', 1)[-1], re.MULTILINE)] != numbers):
             findings.append(f'FAIL: {edition}: {id_}: answer-key coverage')
-    if edition == 'teacher' and publication and answer_key_drawings != 21:
-        findings.append(f'FAIL: teacher: expected 21 turtle real-program drawings, got {answer_key_drawings}')
+    if edition == 'teacher' and publication and answer_key_drawings != config.teacher_turtle_drawings:
+        findings.append(f'FAIL: teacher: expected {config.teacher_turtle_drawings} turtle real-program '
+                        f'drawings, got {answer_key_drawings}')
     name = output_stem(book_id, edition)
     pdf = project / '_book' / f'{name}.pdf'
     tex = project / f'{name}.tex'
@@ -851,10 +991,11 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
     if edition == 'student' and 'Answer key' in text:
         findings.append('FAIL: student: answer key in PDF')
     if student_family:
-        findings.extend(student_phrase_findings(text, 'pdf', edition, answers=answer_body))
+        findings.extend(pdf_phrase_findings(text, outline, chapters, edition, config, prefix,
+                                            answers=answer_body))
     if edition == 'student':
-        findings.extend(answers_pdf_findings(text))
-        findings.extend(reference_findings(text))
+        findings.extend(answers_pdf_findings(text, min(unit_numbers, default=1)))
+        findings.extend(reference_findings(text, tuple(config.project_headers.values())))
     if (student_family and not edition_profile['answer_refs']
             and re.search(r'Answer on page|\(page\s+\d+\)', text)):
         findings.append(f'FAIL: {edition}: page cross-reference in PDF')
@@ -871,8 +1012,9 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
     boxes = [float(x) for x in re.findall(r'Overfull \\hbox \((\d+(?:\.\d+)?)pt too wide\)', log)]
     if len(boxes) > 5 or any(x > 10 for x in boxes):
         findings.append(f'FAIL: {edition}: overfull hboxes: {len(boxes)}, max {max(boxes, default=0):g}pt')
-    if edition == 'student-print' and page_count > PRINT_PAGE_TARGET:
-        findings.append(f'WARN: student-print: {page_count} pages, above the soft target of {PRINT_PAGE_TARGET}')
+    target = config.print_page_target
+    if edition == 'student-print' and target is not None and page_count > target:
+        findings.append(f'WARN: student-print: {page_count} pages, above the soft target of {target}')
     findings.append(f'{edition}: {len(chapters)} chapters, {sum(len(c["items"]) for c in chapters)} items, '
                     f'{len(boxes)} overfull hboxes, {page_count} pages')
     return findings

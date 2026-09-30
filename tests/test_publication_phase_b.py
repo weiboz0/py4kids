@@ -2,6 +2,8 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+from publication_helpers import fixture_config, write_publication_config
+
 from tools.publish import (
     allowed_source,
     markdown_blocks,
@@ -111,7 +113,7 @@ def test_u06_asset_reference_does_not_swallow_next_lesson(tmp_path, monkeypatch)
         nbformat.v4.new_markdown_cell('# Exercises'),
     ]), entry / 'exercises.ipynb')
     monkeypatch.setattr(publish, 'turtle_picture', lambda source: 'figure')
-    body, _, _, _ = publish.render_chapter(entry, 'unit', 'student')
+    body, _, _, _ = publish.render_chapter(entry, 'unit', 'student', fixture_config())
     assert 'This program is saved as assets/shape.py.\n\n## Lesson 2: Draw more' in body
 
 
@@ -208,6 +210,7 @@ def test_student_sentinel_stays_out_of_project_and_pdf(tmp_path):
         '# Unit 0 — Getting Set Up\n\nGet ready.\n\n## Install Python\n\nStart here.\n')
     (docs / 'unit-00-teacher-notes.md').write_text(
         '# Teacher Notes\n\nSETUP_TEACHER_SENTINEL_7429\n')
+    write_publication_config(book)
     (book / 'syllabus.md').write_text('# Python, Concept by Concept — Syllabus\n\n| entry | kind | lessons | the hook |\n|---|---|---|---|\n| `unit-01-fixture` | unit | 1 | Hook. |\n')
     front = book / 'front-matter'
     front.mkdir()
