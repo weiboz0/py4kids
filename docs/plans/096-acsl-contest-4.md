@@ -206,6 +206,7 @@ Unit conventions:
     - the wiki's matrix-power sample (1 path of length 2 from A to C; 3 of length 4), with its self-loop. The graph exists only in the wiki's image `graph sample3.svg`, so the A1 author fetches it and records the transcription in a comment
     - the wiki's directed cycle-count sample (`ABA`, `BCDB`, `CDC`: 3)
     - edge text with braces and commas parsing the same as bare pairs
+    - `components(..., directed=True)` raising; `simple_paths` with `end` (and with `length=None`) filtering its results
     - traversability with 0, 2 and 4 odd vertices, and two disjoint triangles (0 odd vertices, not traversable); an isolated vertex given through `vertices` (degree 0, its own component, no effect on traversability)
     - directed cycles with and without `start`, including a 2-cycle `ABA`; `matrix` ignoring weights; `cheapest` on a small weighted graph
   - `tests/test_acsl_eval_circuit.py`:
@@ -289,6 +290,13 @@ Five `teacher-notes.md` files with the required headings, and Grading for the ch
 - `[sol]` **REJECT**, 1 blocker and 1 nit, both folded:
   1. `components` is undirected only (it raises for directed graphs), and component items use undirected graphs.
   2. = `[fable]` nit 2.
+
+### Round 3 — CONSENSUS
+
+- `[sol]` **APPROVE WITH NITS** (r3). Its nit is folded: tests pin that `components` raises for directed graphs, and that `simple_paths` filters by `end`.
+- `[fable]` APPROVE WITH NITS (r2; nits folded).
+- `[self]` APPROVE WITH NITS (r1; folded, and N1 superseded).
+- `[glm]` skipped (user decision 2026-09-28).
 
 ## Content Review
 
