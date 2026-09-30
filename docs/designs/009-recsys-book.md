@@ -49,8 +49,10 @@ but is legal to use; a library API is taught-before-assessed like any concept (�
   dependency/global-namespace contract is design 008 §2 D3).
 - **flags:** none of `patterns` / `judge` / `publication` (schema v1: `map_version: 1`, `blueprint_version: 1`;
   no borrowed-tools machinery, no contest judge, no publication pipeline).
-- **lesson_budget:** `[30, 60]` per unit (classroom sessions may span 2–3 sittings; see §8 pacing) — set concretely
-  in the registry entry, not left to the dependent-book default.
+- **lesson_budget:** `[30, 60]` as a **whole-book total** (the registry sums each entry's `lessons` and compares the
+  sum to the range; a total below the minimum FAILS unless buildout — `tools/curriculum.py` `lesson_budget_findings`).
+  With 14 units at ~2–3 sittings each (~30–48 total) this fits; the first plan sizes each entry's `lessons` so the
+  sum lands in range. This is NOT a per-unit budget.
 
 ## 4. Baseline & library-API tooling mechanism
 
@@ -136,6 +138,8 @@ a new capability — designed from the start to admit those, so no rewrite is fo
   Because latent factors are **not identifiable** (rotations give equivalent predictions), students verify
   **recovered scores / rankings / latent subspaces**, not literal factor coordinates.
   No PII: readers are synthetic.
+  **First-plan deliverables:** the slice script AND the synthetic generator ship in `recsys-001` (U1's scoreboard
+  needs interactions); the committed GloVe subset lands with U7.
 
 ## 7. Tooling, dependency isolation & reproducibility
 
@@ -146,10 +150,15 @@ a new capability — designed from the start to admit those, so no rewrite is fo
   baseline → library**, compared on **recall-vs-speed**, not a from-scratch reimplementation.
 - **Libraries (isolated via a dependency group):** `numpy`, `pandas`, `matplotlib`, `scikit-learn`
   (`NearestNeighbors`, `TruncatedSVD`), **PyTorch** (MF, two-tower, reranker, SASRec taste), **FAISS-cpu**
-  (or `hnswlib`), `gensim`/GloVe; `psycopg` used ONLY in the slice script; **`implicit`** optional for an ALS
-  reveal. **`surprise` is dropped** (unmaintained; compiles; numpy-2 / py3.12 breakage).
+  (or `hnswlib`). `psycopg` and **`gensim`** are used ONLY in the slice / GloVe-subset derivation scripts (off the
+  CI exec path — avoids gensim's wheel/numpy-2 fragility on py≥3.12); notebooks load the committed GloVe `.npy`
+  subset (§6), never `gensim`. **`implicit`** is optional for an ALS reveal and never on the CI path.
+  **`surprise` is dropped** (unmaintained; compiles; numpy-2 / py3.12 breakage).
   These go in `[dependency-groups] recsys` in `pyproject.toml`; `ci-local.sh` routes this book's checks through
-  `uv run --group recsys` so the fundamentals books' CI is not burdened.
+  `uv run --group recsys`, so the install/exec cost of the heavy deps is routed away from the other books' checks.
+  Caveat: `uv` keeps a single lockfile/venv, so `--group recsys` still adds torch/faiss to the shared `.venv` and
+  shares resolution constraints — the *cost* is isolated, the *lock* is not; if version conflicts with the other
+  books appear, promote `recsys` to a `uv` workspace member.
 - **Determinism (mandatory):** `PYTHONHASHSEED`, `numpy` seed, `torch.manual_seed` +
   `torch.use_deterministic_algorithms(True)` + single-thread; `faiss.omp_set_num_threads(1)` (HNSW build is
   thread-order dependent).
@@ -205,6 +214,9 @@ Concrete execution budget (the exec gate is the authority, not a bypass):
   escape: a **required check regenerates the cached artifacts from their seeded scripts and validates them**, so the
   expensive behavior stays under the authoritative gate.
 - Every unit-shipping plan MUST name its verification phase (the standard gate rule).
+- **Whole-book exec target:** ≤ ~15 CI-minutes (a first-plan-validated target the per-unit plans divide against).
+  Note `exec-solutions` also executes the `projects/` milestone/solutions notebooks, so a heavy path can run a
+  *third* time (lesson + solution + project/capstone regeneration) — model/epoch sizing accounts for all three.
 
 ## 10. Project packaging
 
@@ -232,6 +244,8 @@ BEFORE recsys content merges:
 
 This design doc does **not** itself declare any gate/roster change (e.g. it does not establish a "3-way" gate;
 the current [glm] skip is a separate standing user decision recorded in plan 091).
+The amendment ships as its **own governance PR** (it edits root governance files, not recsys content) — not as a
+`recsys-NNN` plan — and merges before any recsys content.
 
 ## 12. Namespace & collision safety
 
@@ -239,7 +253,9 @@ Plans live under **`docs/plans/recsys/`** (author's choice), numbered **`recsys-
 `scripts/pre-merge-guard.sh` today guards only Markdown directly under `docs/plans/` (a path-depth condition), so
 nested files evade the collision check that protects the reserved plans 092/093.
 The first plan therefore **extends pre-merge-guard with a tested namespace-aware uniqueness rule** (guarding nested
-plan files too) before any nested plan is relied on.
+plan files too, and matching the `recsys-NNN` stem — the current `^[0-9]{3}(?=-)` regex would not).
+Chicken-and-egg: that first guard-extending plan file is itself unguarded under the current depth rule, which is
+acceptable because only that single file is exposed before the rule lands.
 Book id `recsys` is unused; `acsl` / `usaco-silver` are avoided.
 
 ## 13. Out of scope (for now)
@@ -285,10 +301,27 @@ thread + cold-start cross-unit thread (§8), concrete exec budgets (§9), import
 namespace-aware guard extension (§12), and the Nice items (number:3, "Applied Python" series, §-ref fix,
 lesson_budget). Ready for round-2 review.
 
-### Round 2 (on v2)
-- **[self]:** _(pending)_
-- **[sol]:** _(pending)_
-- **[fable]:** _(pending)_
+### Round 2 (on v2, commit 04f5dba)
+- **[self]:** APPROVE — verified every round-1 Must/Should item maps to a v2 section; no new issues.
+- **[sol]:** APPROVE — all 5 Must-Fixes RESOLVED (with §s), all Should-Fixes handled, no new findings.
+- **[fable]:** APPROVE WITH NITS — all 4 Must + 8 Should + Nice RESOLVED; scope right-sized, no new blocker; 6 NIT
+  findings, all folded into v2:
+  1. §3 `lesson_budget` is a whole-book TOTAL (not per-unit) — reworded + the min/buildout caveat noted. **[FIXED]**
+  2. §7 `gensim` (and `implicit`) moved to slice/derivation-only / never-on-CI; notebooks load the committed GloVe
+     `.npy`. **[FIXED]**
+  3. §6 pinned the slice script + synthetic generator as `recsys-001` deliverables; GloVe subset with U7. **[FIXED]**
+  4. §11/§12 governance PR ships as its own governance PR (not a `recsys-NNN` plan); §12 notes the guard must match
+     the `recsys-NNN` stem and the one-file chicken-and-egg. **[FIXED]**
+  5. §7 softened the CI-isolation claim (uv single lock/venv; cost isolated, lock shared; workspace-member escape
+     hatch). **[FIXED]**
+  6. §9 pinned a whole-book exec target (~≤15 CI-min) + noted the third heavy execution via `projects/`. **[FIXED]**
+- **[glm]:** skipped (standing user decision, plan 091).
+
+### Design-review outcome: **FULL CONSENSUS on v2** — [self] APPROVE · [sol] APPROVE · [fable] APPROVE WITH NITS (all folded) · [glm] skipped
+No open blockers. Gate CLOSED. The design is approved. Implementation preconditions (each named above): the
+user-authorized **governance-amendment PR** (§11) ships first; then `recsys-001` (§12) extends pre-merge-guard,
+scaffolds the book + `baseline.yaml` + slice script + synthetic generator + the `bookrec` package, and Unit 1 —
+through the plan-review gate, per design 008's one-design-then-1–2-units cadence.
 
 ## 14. Revision history
 
