@@ -7,7 +7,10 @@ Run from the repository root:
 For every problem listed below it writes the input cases (`N.in`), then pipes each case through the
 problem's reference solver (`assets/<stem>.py`) to write the expected output (`N.out`).
 Replaced problems get their whole fixture set rewritten; earlier problems only gain the listed extra
-case (a scale case near the stated limits).
+case (a scale case).
+Scale cases use thousands to tens of thousands of items (each input at most about 130 KB): large
+enough to expose a quadratic or per-query approach and to reach deep recursion, small enough for
+a public repository.
 The random data is seeded, so every run produces byte-identical files.
 """
 
@@ -51,9 +54,9 @@ def names(count: int, rng: random.Random) -> list[str]:
 # ---------------------------------------------------------------- Checkpoint 1
 def cp1_q4():
     rng = random.Random(10104)
-    pool = names(2000, rng)
+    pool = names(400, rng)
     rows = []
-    for _ in range(100000):
+    for _ in range(7000):
         a = rng.choice(pool)
         if rng.random() < 0.3 and rows:
             b, a = rows[rng.randrange(len(rows))]  # reverse an earlier pick
@@ -74,13 +77,13 @@ def cp1_q4():
 
 def cp1_q5():
     rng = random.Random(10105)
-    stations = rng.sample(range(0, 1000001), 100000)
-    houses = [rng.randint(0, 1000000) for _ in range(100000)]
+    stations = rng.sample(range(0, 1000001), 6000)
+    houses = [rng.randint(0, 1000000) for _ in range(6000)]
     return [
         lines("4 5", "12 3 20 8", "1 9 16 20 30"),
         lines("1 3", "10", "0 10 25"),
         lines("3 4", "500 100 900", "700 0 1000000 300"),
-        lines("100000 100000", nums(stations), nums(houses)),
+        lines("6000 6000", nums(stations), nums(houses)),
     ]
 
 
@@ -99,47 +102,47 @@ def cp1_q6():
 # ---------------------------------------------------------------- Checkpoint 2
 def cp2_q1():
     rng = random.Random(10201)
-    needs = [rng.randint(1, 1000000) for _ in range(100000)]
-    snacks = [rng.randint(1, 1000000) for _ in range(100000)]
+    needs = [rng.randint(1, 1000000) for _ in range(6000)]
+    snacks = [rng.randint(1, 1000000) for _ in range(6000)]
     return [
         lines("4 5", "3 1 7 5", "2 4 1 6 8"),
         lines("2 2", "5 6", "1 4"),
         lines("3 5", "2 2 2", "2 2 1 1 3"),
         lines("1 1", "7", "7"),
-        lines("100000 100000", nums(needs), nums(snacks)),
+        lines("6000 6000", nums(needs), nums(snacks)),
     ]
 
 
 def cp2_q2():
     rng = random.Random(10202)
     kinds = ["FILL A", "FILL B", "EMPTY A", "EMPTY B", "POUR A B", "POUR B A", "POUR A B", "POUR B A"]
-    commands = [rng.choice(kinds) for _ in range(100000)]
+    commands = [rng.choice(kinds) for _ in range(10000)]
     return [
         lines("5 3", 6, "FILL A", "POUR A B", "EMPTY B", "POUR A B", "FILL A", "POUR A B"),
         lines("4 4", 4, "POUR A B", "FILL B", "POUR A B", "POUR B A"),
         lines("1000000000 999999999", 3, "FILL A", "POUR A B", "EMPTY B"),
         lines("7 3", 5, "FILL B", "POUR B A", "FILL B", "POUR B A", "FILL B"),
-        lines("999999937 123456791", 100000, *commands),
+        lines("999999937 123456791", 10000, *commands),
     ]
 
 
 def cp2_q3():
     rng = random.Random(10203)
-    earn = [rng.randint(1, 1000) for _ in range(100000)]
+    earn = [rng.randint(1, 1000) for _ in range(6000)]
     total = sum(earn)
-    goals = [rng.randint(1, total + 10000) for _ in range(100000)]
+    goals = [rng.randint(1, total + 10000) for _ in range(6000)]
     return [
         lines("5 5", "3 1 4 1 5", "4 1 9 14 15"),
         lines("1 3", "5", "1 5 6"),
         lines("4 4", "2 2 2 2", "2 3 8 9"),
         lines("3 2", "1000 1000 1000", "1000000000000 3000"),
-        lines("100000 100000", nums(earn), nums(goals)),
+        lines("6000 6000", nums(earn), nums(goals)),
     ]
 
 
 def cp2_q4():
     rng = random.Random(10204)
-    spots = sorted(rng.sample(range(1, 1000000000), 100000))
+    spots = sorted(rng.sample(range(1, 1000000000), 7000))
     tank = 0
     last = 0
     for s in spots:
@@ -152,30 +155,30 @@ def cp2_q4():
         lines("10 10 0"),
         lines("30 10 3", "5 10 21"),
         lines("20 5 3", "15 5 10"),
-        lines("1000000000 " + str(tank) + " 100000", nums(spots)),
+        lines("1000000000 " + str(tank) + " 7000", nums(spots)),
     ]
 
 
 def cp2_q5():
     rng = random.Random(10205)
     events = []
-    for _ in range(100000):
+    for _ in range(12000):
         events.append(rng.choice("AB") + " " + str(rng.randint(1, 1000)))
     return [
         lines(7, "A 2", "B 2", "B 1", "A 3", "B 2", "A 1", "B 3"),
         lines(2, "A 1", "B 1"),
         lines(4, "A 1", "B 2", "A 2", "B 2"),
         lines(1, "B 5"),
-        lines(100000, *events),
+        lines(12000, *events),
     ]
 
 
 def cp2_q6_scale():
     rng = random.Random(10206)
     rows = []
-    for _ in range(700):
-        rows.append(nums(rng.randint(-9, 9) for _ in range(700)))
-    return lines("700 700 300", *rows)
+    for _ in range(200):
+        rows.append(nums(rng.randint(-9, 9) for _ in range(200)))
+    return lines("200 200 100", *rows)
 
 
 # ---------------------------------------------------------------- Checkpoint 3
@@ -194,7 +197,7 @@ def cp3_q2_scale():
     rng = random.Random(10302)
     tokens = []
     depth = 0
-    for _ in range(80000):
+    for _ in range(18000):
         tokens.append(rng.choice("01"))
         depth += 1
         if rng.random() < 0.2:
@@ -242,7 +245,7 @@ def cp3_q4():
 def cp3_q5():
     rng = random.Random(10305)
     points = []
-    while len(points) < 50000:
+    while len(points) < 4000:
         p = (rng.randint(-10**9, 10**9), rng.randint(-10**9, 10**9))
         if rng.random() < 0.3:
             step = rng.randint(1, 1000)
@@ -288,7 +291,7 @@ def random_tree(n: int, height: int, rng: random.Random):
 
 def cp3_q7_scale():
     rng = random.Random(10307)
-    n = 100000
+    n = 6000
     left, right = random_tree(n, 900, rng)
     order = list(range(n))
     rng.shuffle(order)
@@ -304,18 +307,18 @@ def cp3_q7_scale():
 def cp4_q1():
     rng = random.Random(10401)
     grid = ["".join("#" if rng.random() < 0.3 else "." for _ in range(20)) for _ in range(20)]
-    queries = [str(rng.randrange(20)) + " " + str(rng.randrange(20)) for _ in range(200000)]
+    queries = [str(rng.randrange(20)) + " " + str(rng.randrange(20)) for _ in range(12000)]
     return [
         lines("4 5 4", "..#..", ".##.#", "#...#", "##.#.", "0 0", "0 3", "1 1", "3 4"),
         lines("1 1 2", ".", "0 0", "0 0"),
         lines("2 3 3", "###", "#.#", "0 0", "1 1", "1 2"),
         lines("3 3 2", ".#.", "#.#", ".#.", "0 0", "1 1"),
-        lines("20 20 200000", *grid, *queries),
+        lines("20 20 12000", *grid, *queries),
     ]
 
 
 def cp4_q2():
-    rows, cols = 400, 500
+    rows, cols = 200, 400
     grid = []
     for r in range(rows):
         if r % 2 == 0:
@@ -341,7 +344,7 @@ def cp4_q3():
     edges = set()
     for i in range(1, n):
         edges.add((i, i + 1))
-    while len(edges) < 20000:
+    while len(edges) < 9000:
         u = rng.randint(1, n)
         v = rng.randint(1, n)
         if u % 2 != v % 2:
@@ -360,20 +363,20 @@ def cp4_q3():
 
 def cp4_q4_scale():
     rng = random.Random(10404)
-    heights = [rng.randint(0, 1000000) for _ in range(200000)]
-    return lines(200000, nums(heights))
+    heights = [rng.randint(0, 1000000) for _ in range(12000)]
+    return lines(12000, nums(heights))
 
 
 def cp4_q5():
     rng = random.Random(10405)
-    flavors = [rng.randint(1, 500) for _ in range(200000)]
+    flavors = [rng.randint(1, 300) for _ in range(20000)]
     return [
         lines(8, "2 2 1 1 3 3 1 2"),
         lines(1, "42"),
         lines(4, "7 7 7 7"),
         lines(5, "5 4 3 2 1"),
         lines(6, "1 2 1 2 1 3"),
-        lines(200000, nums(flavors)),
+        lines(20000, nums(flavors)),
     ]
 
 
@@ -392,18 +395,18 @@ def cp4_q6():
 # ---------------------------------------------------------------- Grand Mock Contest
 def p1():
     rng = random.Random(10501)
-    values = [rng.randint(-10**9, 10**9) for _ in range(100000)]
+    values = [rng.randint(-10**9, 10**9) for _ in range(7000)]
     return [
         lines(6, "4 -1 7 3 -2 5"),
         lines(2, "5 5"),
         lines(3, "-3 -3 6"),
         lines(4, "1000000000 -1000000000 1000000000 -1000000000"),
-        lines(100000, nums(values)),
+        lines(7000, nums(values)),
     ]
 
 
 def p2():
-    rows = cols = 500
+    rows = cols = 300
     grid = [["."] * cols for _ in range(rows)]
     for r in range(rows):
         if r % 2 == 0:
@@ -419,36 +422,36 @@ def p2():
         lines("1 1 0", "/"),
         lines("2 5 1", ".....", "....."),
         lines("3 4 0", "..\\.", "/./.", "\\..."),
-        lines("500 500 0", *("".join(row) for row in grid)),
+        lines("300 300 0", *("".join(row) for row in grid)),
     ]
 
 
 def p3():
     rng = random.Random(10503)
-    spots = rng.sample(range(0, 1000000001), 100000)
+    spots = rng.sample(range(0, 1000000001), 7000)
     return [
         lines("6 3", "1 12 3 7 10 15"),
         lines("2 2", "5 100"),
         lines("4 4", "0 3 9 10"),
         lines("5 2", "8 1 4 9 2"),
-        lines("100000 1000", nums(spots)),
+        lines("7000 200", nums(spots)),
     ]
 
 
 def p4():
     rng = random.Random(10504)
-    values = rng.sample(range(0, 300000), 100000)
+    values = rng.sample(range(0, 40000), 12000)
     return [
         lines("6 3", "1 7 4 10 5 13"),
         lines("3 2", "1 4 8"),
         lines("2 1000000000", "1000000000 0"),
         lines("5 1", "5 4 3 2 1"),
-        lines("100000 7", nums(values)),
+        lines("12000 7", nums(values)),
     ]
 
 
 def p5():
-    width, height = 250, 200
+    width, height = 70, 60
     edges = []
 
     def node(r, c):
@@ -493,7 +496,7 @@ def p6():
 
 def p8():
     rng = random.Random(10508)
-    n = 100000
+    n = 6000
     left, right = random_tree(n, 500, rng)
     rows = []
     for i in range(n):

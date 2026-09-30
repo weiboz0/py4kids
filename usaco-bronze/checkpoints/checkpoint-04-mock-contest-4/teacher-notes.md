@@ -81,7 +81,7 @@ clock stops.
 Grade from the answer key (each reference is a display-only mirror of a stdin/stdout program in
 `assets/`, judged by piping each committed input case to it and comparing the printed output). Each
 question is judged as a stdin-to-stdout program against the sample plus hidden cases, including one large
-case near the stated limits; award full credit for a correct, in-budget solver, partial credit for a correct
+case (thousands of items, large enough to expose a quadratic or per-query approach); award full credit for a correct, in-budget solver, partial credit for a correct
 approach with a boundary slip (e.g. Q2 missing the `-1` case, Q3 missing a separate rival group).
 Per-question intended complexity:
 
@@ -95,7 +95,7 @@ Per-question intended complexity:
 | 6 | Repeated squaring on (power, total) | O(log E) |
 | 7 | BFS trace | O(N + M) |
 
-Signature checks the hidden cases enforce: Q1's large case (a `20 × 20` map with `200000` questions) times
+Signature checks the hidden cases enforce: Q1's large case (a `20 × 20` map with `12000` questions) times
 out a per-question flood fill, and a fence question answers `0`; Q2 needs every mold cell as a source, answers
 `0` with no clean cell and `-1` for a walled-off one, and its snake-shaped large case defeats minute-by-minute
 rescans; Q3 reports `NO` for an odd ring hidden in a second group; Q4 moves the shorter wall's pointer; Q5
