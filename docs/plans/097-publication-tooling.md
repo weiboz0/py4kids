@@ -50,10 +50,14 @@ The read-only gap survey (2026-09-30) is summarised in design 010 §1.
      - `error_demo_routing_exceptions` (python-concepts: `u07l034a`, now hard-coded at `publish_audit.py:648`)
      - `print_page_target` (python-concepts: 400, a soft warning)
      - `turtle_tryits: {unit_id: count}` and `teacher_turtle_drawings`
-     - `phrase_exemptions: [{phrase, chapters, reason}]`, where `chapters` is a list of globs over the **chapter source** that `inventory.json` records. A unit, checkpoint or project chapter's source is its directory (for example `units/*` or `checkpoints/*`); chapters from front matter, answers, back matter and the setup chapter have their own sources.
+     - `phrase_exemptions: [{phrase, kinds, chapters, reason}]`. An exemption matches a chapter only when **both** hold:
+       - its `kind` in `inventory.json` is in `kinds` (for example `[unit]`)
+       - its source matches a glob in `chapters` (for example `units/*`)
+
+       Answer chapters (`kind: answers`) record the same `units/...` source as their unit chapter, so the kind test is what keeps an exemption for `units/*` lessons out of the Answer Key and the answers appendix.
        An exempt phrase is allowed only in matching chapters, and stays banned everywhere else. The scope is the whole chapter, because a unit chapter combines its lesson and exercises; a finer scope would need per-range provenance, which this plan does not add.
      - **Both audit layers keep the chapter boundary.** The `.qmd` scan checks each generated chapter against its source. The PDF-text scan (`publish_audit.py:853`, today one string) is split per chapter with the PDF outline (the chapter start pages already used by the outline checks), and each page range is checked against its chapter's source.
-     - Tests: an exempt phrase passes in a matching unit chapter, and fails in front matter, in an answers chapter and in a non-matching chapter, at both layers.
+     - Tests: an exempt phrase passes in a matching unit chapter, and fails in front matter, in a non-matching chapter, and in an **Answer Key chapter and the answers appendix** that share the unit's source, at both layers.
      - `goals_recap: required`, required for every book by user decision
    - `index_names:` — the Python names the index recognises
    - `lesson_heading:` — the regex for lesson headings
@@ -82,11 +86,11 @@ The read-only gap survey (2026-09-30) is summarised in design 010 §1.
 - **Setup chapter:** it follows `publication.yaml` (numbered or not). A book whose own Unit 0 is a real unit (ACSL Foundations) keeps that as Unit 0. The audit's outline parser identifies the setup chapter by id, never by the number 0.
 - **Answers:**
   - Short-answer items print their worked markdown (through `markdown_blocks`) and their `**Answer:**` line.
-  - **Checkpoints:** as design 007 amended it, the student editions print no checkpoint answers. The Teacher's Edition prints each checkpoint's answers the same way: short answers from their `**Answer:**` lines; a judge programming question as a listing of its `assets/qN.py`.
+  - **Checkpoints:** as design 007 amended it, the student editions print no checkpoint answers. The Teacher's Edition prints each checkpoint's answers the same way: short answers from their `**Answer:**` lines; a judge programming question as its solution notebook's mirror cell (the same rule as units: `qN.py` is a boundary object and is never printed itself).
   - `verify`-tagged cells are never printed.
   - Judge programming items print **the solution notebook's mirror cell**, which `judge-check` already enforces to be identical to `assets/exN.py` / `qN.py` / `pN.py`, apart from trailing whitespace and trailing blank lines (`tools/judge.py:65–69, 215–220`). The file is never printed a second time; it is only a boundary object (F2).
   - The answers-start check accepts the book's first unit number.
-- **Source boundary:** files matching exactly `^(ex|q|p)\d+\.py$` under `assets/` (unit `exN.py`, checkpoint `qN.py`, project `pN.py`), and `assets/verify/**`, are solution sources. `exN_name.py` starters stay allowed; a test covers both sides (F9). They are outside every student allowlist except through `student_answer_sources`, which reads odd unit `exN.py` only. `allowed_source`, `solution_assets` and the leak guard (`publish_audit.py:264`) are extended to all three kinds. Tests cover the Teacher's Edition rendering checkpoint `qN.py`, and a student edition failing the audit if any `exN.py` / `qN.py` body appears outside the allowed odd answers.
+- **Source boundary:** files matching exactly `^(ex|q|p)\d+\.py$` under `assets/` (unit `exN.py`, checkpoint `qN.py`, project `pN.py`), and `assets/verify/**`, are solution sources. `exN_name.py` starters stay allowed; a test covers both sides (F9). They are outside every student allowlist except through `student_answer_sources`, which reads odd unit `exN.py` only. `allowed_source`, `solution_assets` and the leak guard (`publish_audit.py:264`) are extended to all three kinds. Tests cover the Teacher's Edition printing a checkpoint's mirror cell once (and never the `qN.py` file), and a student edition failing the audit if any `exN.py` / `qN.py` body appears outside the allowed odd answers.
 - **Project running headers** come from `publication.yaml`.
 
 - **stdin programs (F1):** a `no-exec` lesson cell that reads `sys.stdin` or `open(0)` is a stdin program. It renders as a "Try it yourself" panel with a line on running it with a sample file.
@@ -204,6 +208,12 @@ The tests cover:
 - `[sol]` **REJECT**, 2 blockers, both folded:
   1. Phrase exemptions are scoped to whole chapters by chapter-source globs, since a unit chapter mixes its lesson and exercises; tested at both layers.
   2. The missing-glyph check and the font fallback also cover `patterns.pdf`.
+
+### Round 4
+
+- `[sol]` **REJECT**, 2 blockers, both folded:
+  1. Exemptions match on chapter **kind** as well as source, so an answers chapter sharing a unit's source stays banned; tested at both layers.
+  2. Checkpoint answers print the mirror cell, as units do; `qN.py` is never printed.
 
 ## Content Review
 
