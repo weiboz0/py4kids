@@ -69,7 +69,7 @@ Rules and lessons carried over from plans 097–099:
    - No extra "file name" line is printed; the run line already names the file.
    - The audit mirror (`_expected_lesson_kind`, and `stdin_tryits` / "listed again in full") gains the same `tryit` case.
 2. **Chapter kicker reset.** The running heads are fine. What bleeds is the chapter kicker `\pubchapterlabel` (set through `pub-label`), which the answers appendix, Glossary, Quick Reference and Index never reset; python-concepts and *USACO Bronze* escape only because a project with an empty label comes last.
-   - **The fix:** the answers appendix, Glossary and Quick Reference emit `{pub-label=""}` on their level-one heading. The Index is generated as a bare `\printindex`, which `pub-label` cannot reach, so the publisher emits an explicit reset (`\renewcommand{\pubchapterlabel}{}`, or the theme's equivalent) before `\printindex`. A rendered check confirms the Index opening page carries no "Checkpoint 4".
+   - **The fix:** the answers appendix, Glossary and Quick Reference emit `{pub-label=""}` on their level-one heading. The Index is generated as a bare `\printindex`, which `pub-label` cannot reach, so the publisher emits an explicit reset (`\pubchapterlabel{}`, the theme's own setter, which clears the stored label) before `\printindex`. A rendered check confirms the Index opening page carries no "Checkpoint 4".
    - `glossary_page_numbers` then finds "Glossary" at the top of the page, and it must also resolve a one-page glossary.
 3. **Page-number reading.** In `reference_findings`, a top-of-page integer counts as the folio only when it equals `physical − offset`, with the offset fixed from the first unit page; otherwise the page number is `physical − offset`. The u13 Ex19 case (physical 373, folio 363, whose text begins "Exercises" / "2") is a regression test.
 4. **Quiet the SyntaxWarnings** in `code_span_names`.
@@ -213,6 +213,13 @@ Rules and lessons carried over from plans 097–099:
 - `[sol]` **REJECT** (r2), 2 findings, both folded:
   1. *USACO Bronze* is added to the regression test's output-comparison parameters, not only to `BOOKS`.
   2. The Index gets an explicit kicker reset before `\printindex`, since `pub-label` cannot reach it, with a rendered check.
+
+### Round 3 — CONSENSUS
+
+- `[sol]` **APPROVE WITH NITS** (r3). Its nit is folded: the Index reset uses the theme's `\pubchapterlabel{}` setter.
+- `[fable]` APPROVE WITH NITS (r2; nits folded).
+- `[self]` APPROVE WITH NITS (r1).
+- `[glm]` skipped (user decision 2026-09-28).
 
 ## Content Review
 
