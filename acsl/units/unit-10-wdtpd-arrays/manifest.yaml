@@ -1,0 +1,14 @@
+id: unit-10-wdtpd-arrays
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 3, category: "WDTPD – Arrays", divisions: [junior]}
+concepts:
+  introduces: []
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion,
+             boolean, comparison, logical-ops, if-statement, elif-else, for-loop,
+             range-function, while-loop, nested-loops, list-literal, list-index, list-append,
+             string-literal, string-concat, str-split, input-parse]
+  practices: [code-tracing, acsl-pseudocode, grid-2d, accumulator, running-total, loop-counter,
+              count-by-condition, find-extreme, list-loop, builtin-functions]

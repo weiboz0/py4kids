@@ -1,0 +1,9 @@
+PUSH R : R
+PUSH U : R U
+PUSH N : R U N
+POP -> R : U N
+PUSH S : U N S
+POP -> U : N S
+POP -> N : S
+POP -> S :
+POP -> NIL :

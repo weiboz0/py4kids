@@ -80,11 +80,11 @@ Planned units are listed by name; they arrive in later editions of the book.
 
 | entry | kind | lessons | focus |
 |-------|------|---------|-------|
-| Boolean Algebra | unit | — | *planned (plan 095)*; opens with the Elementary section |
-| Data Structures | unit | — | *planned (plan 095)* |
-| What Does This Program Do? – Arrays | unit | — | *planned (plan 095)* |
-| FSAs and Regular Expressions | unit | — | *planned (plan 095)*; Intermediate and Senior |
-| Contest 3 practice | checkpoint | — | *planned (plan 095)* |
+| `unit-08-boolean-algebra` | unit | 3 | NOT/AND/OR/XOR/XNOR, the laws, simplifying to a sum of products, truth tables and satisfying tuples; opens with the Elementary section |
+| `unit-09-data-structures` | unit | 3 | stacks and queues, binary search trees (depths, path lengths, traversals, deletion), min- and max-heaps |
+| `unit-10-wdtpd-arrays` | unit | 3 | tracing 1D arrays and 2D grids in ACSL pseudocode and Python (Junior) |
+| `unit-11-fsas-regular-expressions` | unit | 3 | finite state automata, regular expressions and their identities, extended syntax (Intermediate and Senior) |
+| `checkpoint-03-contest-3-practice` | checkpoint | 0.5 | timed Contest 3 practice: Junior and Intermediate/Senior six-question papers + 1 programming problem |
 
 ### Contest 4
 

@@ -1,0 +1,14 @@
+id: unit-08-boolean-algebra
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 3, category: Boolean Algebra, divisions: [elementary, junior, intermediate, senior]}
+concepts:
+  introduces: [boolean-algebra]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion,
+             string-literal, string-index, string-concat, boolean, comparison, logical-ops,
+             if-statement, elif-else, while-loop, for-loop, range-function, nested-loops,
+             in-operator, def-function, parameters, return-value, list-append, list-loop,
+             str-split, input-parse]
+  practices: [accumulator, loop-counter, complete-search, builtin-functions]

@@ -14,6 +14,10 @@ concepts:
 - {id: code-tracing, name: Reading and tracing code, category: techniques, kind: technique}
 - {id: grid-2d, name: 2D grids (list of lists), category: data-structures, kind: technique}
 - {id: postfix-eval, name: Postfix expression evaluation, category: techniques, kind: technique}
+- {id: boolean-algebra, name: Boolean algebra, category: techniques, kind: technique}
+- {id: tree-traversal, name: Binary tree traversal (pre/in/post-order), category: data-structures, kind: technique}
 # --- ACSL-only (not shared with usaco-bronze) ---
 - {id: acsl-pseudocode, name: "ACSL pseudocode dialect (int as floor, sqrt, inclusive substrings)", category: techniques, kind: technique}
 - {id: lisp-eval, name: Evaluating ACSL LISP expressions, category: techniques, kind: technique}
+- {id: acsl-data-structures, name: "Stacks, queues, BSTs and heaps (ACSL conventions)", category: data-structures, kind: technique}
+- {id: fsa-regex, name: Finite state automata and regular expressions, category: techniques, kind: technique}

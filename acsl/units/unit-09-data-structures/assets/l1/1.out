@@ -1,0 +1,9 @@
+PUSH 2 : 2
+PUSH 9 : 2 9
+PUSH 5 : 2 9 5
+POP -> 5 : 2 9
+PUSH 3 : 2 9 3
+POP -> 3 : 2 9
+POP -> 9 : 2
+POP -> 2 :
+POP -> NIL :
