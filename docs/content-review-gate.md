@@ -27,7 +27,7 @@ by the same roster in the same round.
    Judge whether the book's declared audience would care about the project.
 5. **Audience-appropriateness.** Reading level, cultural references, and content suit
    the book's declared audience — design 000's middle-school default, or a book's own
-   declared baseline per its design doc (e.g. design 009 for an advanced book).
+   declared baseline per its design doc (e.g. design 011 for an advanced book).
 6. **Difficulty + pacing.** Judge against the 60–90 min lesson budget and the declared
    position in the concept progression; stretch exercises stretch without gatekeeping core.
 7. **Accessibility.** Read as the target student
