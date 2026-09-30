@@ -225,7 +225,12 @@ was reconciled in the 009→011 renumber PR.)
   `--group recsys` step + the §9 CI-min budget.
 
 ### Round 4 (on v4)
-- **[self]:** _(pending)_ · **[sol]:** _(pending)_ · **[fable]:** _(pending)_ · **[glm]:** skipped.
+- **[self]:** APPROVE · **[sol]:** APPROVE (all round-3 items RESOLVED, no new findings) · **[fable]:** APPROVE WITH
+  NITS (carried from round 3 — v4 folded its exact nits, no new surface) · **[glm]:** skipped.
+
+### Plan-review outcome: **CONSENSUS on v4** — [self]/[sol] APPROVE · [fable] APPROVE WITH NITS (folded) · [glm] skipped
+No open blockers. Gate CLOSED (4 rounds). Proceeding to implementation (Phases A–G) → `ci-local` + `pre-merge-guard`
+→ content-review gate (roster code review of tooling/generators/package) → PR → squash-merge.
 
 ## Content Review
 Pre-PR round is a **conventional code review of `tools/`, `scripts/`, the generators, and the `bookrec` package by
