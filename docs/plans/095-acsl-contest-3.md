@@ -364,4 +364,41 @@ Five `teacher-notes.md` files, with the required headings and Grading for the ch
 - `[glm]` skipped (user decision 2026-09-28).
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped: ACSL Contest 3** (study window Feb 1 – Apr 11, 2027).
+
+| Entry | Items | Divisions (by heading tag) |
+|---|---|---|
+| `unit-08-boolean-algebra` | 27 (23 short-answer, 4 programming) | 9 elementary (Ex 1–6 the mock test, first and contiguous), 10 junior, 6 intermediate, 2 senior |
+| `unit-09-data-structures` | 21 (16 short-answer, 5 programming) | 8 junior, 9 intermediate, 4 senior |
+| `unit-10-wdtpd-arrays` | 19 (16 short-answer, 3 programming; 14 in pseudocode) | 19 junior |
+| `unit-11-fsas-regular-expressions` | 18 (15 short-answer, 3 programming) | 12 intermediate, 6 senior |
+| `checkpoint-03-contest-3-practice` | 9 (Q1–Q6 junior, Q7–Q8 intermediate short-answer; Q9 junior programming, last) | see paths |
+
+- **Checkpoint paths** (from the question tags; all listed on the student page, with Q9's timing only on the programming paths):
+  - Junior: Q1–Q6 + Q9
+  - Intermediate/Senior: Q1–Q4, Q7–Q8 + Q9
+  - Classroom: Q1–Q4, Q7–Q8 (Q5–Q6 optional; no programming)
+  - Elementary: unit 08 Exercises 1–6, as 6 questions in 30 minutes
+- **Unit 08** opens with a code-free Elementary lesson (2 variables, `~ * +`, the Elementary doc's skills). Junior+ adds 3 variables, XOR/XNOR, the wiki's overbar notation translated to the book's, and Python truth-table loops. Every simplify item has a unique minimal sum of products. It introduces the shared `boolean-algebra`.
+- **Unit 09** covers stacks and queues (`NIL`), BSTs (duplicates left, depth from 0, internal/external path length, traversals), min- and max-heaps, and (Senior) ACSL's heap root removal and BST deletion, using list idioms only. It introduces the ACSL-only `acsl-data-structures` and the shared `tree-traversal`.
+- **Unit 10** is Junior array and grid drill in ACSL pseudocode and Python (`introduces: []`, no string traversal).
+- **Unit 11** covers FSAs as transition tables, regular expressions (precedence, `λ`, the 8 identities, the extended syntax), a DFA simulator and a recursive matcher without `re`. It introduces the ACSL-only `fsa-regex`.
+- **Verify helpers:** `bool_eval.py`, `ds_eval.py` and `fsa_eval.py`, each passing its pre-written test file (wiki and Elementary-doc samples, every pinned interface). The checkpoint's verify cells import them.
+- **Registry:** `boolean-algebra` and `tree-traversal` are identical to USACO's; `acsl-data-structures` and `fsa-regex` are ACSL-only. The coverage map and syllabus rows are reconciled against the manifests.
+- **Teacher notes** (inline) for all five entries: division paths, ACSL timing, canonical answer forms versus ACSL's "fewest operators" and free-text regular expressions, and Grading.
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN, solo run at ec95d15 (pytest 1268 passed, 2 environment skips).
+- Blind solves: the solutions sessions matched every author key (checkpoint 8/8, U08 23/23, U09 16/16, U10 16/16, U11 15/15). [sol] matched every sampled item, and in round 2 blind-solved the new Q1; [fable] matched 32/32 and hand-checked the rest.
+- Evaluator tests: 195 at first, plus 2 whitespace tests added in the content fold (0 skips).
+
+**Deviations:**
+- A1 pinned rules the wiki leaves open: heap root removal breaks ties between equal children to the left; equal keys never swap on insertion; an expression's variables are its distinct capital letters in alphabetical order; `PUSH(A)` takes bare words.
+- Content fold: `fsa_eval` treats whitespace outside a class as layout. The pre-written FSA test file gained two appended cases (none changed). The spaced form appears in unit 11's identity table.
+- Unit 08 Ex 10 and 17 print the wiki's LaTeX overbar notation, so their verify cells use the worked translation rather than a byte-identical copy.
+- Unit 11 Ex 2's answer is a state name (`q1`), a form not listed in the plan's canonical rules; its teacher notes state it.
+- Unit 08's programming inputs spell `⊕`/`⊙` as the words `XOR`/`XNOR`, as unit 04 types its power sign as `^`.
+- Checkpoint Q1 was replaced in the content fold (it duplicated unit 08 Ex 12's function).
+
+**Next:** plan 096, Contest 4 (Graph Theory with its Elementary section, Digital Electronics, WDTPD – Strings, Assembly Language for Intermediate+, and the Contest 4 practice).
