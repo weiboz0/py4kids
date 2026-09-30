@@ -18,6 +18,12 @@
 # (checkpoint-02 Question 7) restates its statement verbatim; both kinds stay unprinted. The other
 # four hold explanations the old answer key dropped, and now print: unit-06 Exercise 17 and unit-07
 # Exercises 7, 27 and 28. Odd exercises also print in the Student Book answers and the Answer Key.
+#
+# Plan 100 Phase A2 (chapter kicker reset, a D2 rendering fix) changes each back-matter chapter's
+# generated source, and nothing else: the answers appendix, Glossary and Quick Reference headings gain
+# an empty `{pub-label=""}`, and the-index.qmd gains `\pubchapterlabel{}` before `\printindex`, so no
+# back-matter chapter opens under the last main-matter chapter's kicker (ACSL's "Checkpoint 4").
+# Verified: reverting exactly those lines reproduces every baseline digest.
 allowed_diffs:
 - edition: teacher
   file: unit-06-turtle-geometry.qmd
@@ -27,10 +33,37 @@ allowed_diffs:
   reason: D3 heading-cell answer text — Exercises 7, 27 and 28 print their note on what the asset draws.
 - edition: student
   file: answers.qmd
-  reason: D3 heading-cell answer text — odd answers unit-06 Exercise 17 and unit-07 Exercises 7 and 27.
+  reason: D3 heading-cell answer text — odd answers unit-06 Exercise 17 and unit-07 Exercises 7 and 27; and the D2 back-matter kicker reset (plan 100 A2), an empty pub-label on its heading.
 - edition: answer-key
   file: answers-unit-06-turtle-geometry.qmd
   reason: D3 heading-cell answer text — Exercise 17 (The Eight-Degree Gap) prints its explanation.
 - edition: answer-key
   file: answers-unit-07-functions.qmd
   reason: D3 heading-cell answer text — Exercises 7 and 27 print their note on what the asset draws.
+- edition: student-print
+  file: glossary.qmd
+  reason: D2 back-matter kicker reset (plan 100 A2) — the "Glossary" heading gains an empty pub-label; nothing else changes.
+- edition: student-print
+  file: quick-reference.qmd
+  reason: D2 back-matter kicker reset (plan 100 A2) — the "Quick Reference" heading gains an empty pub-label; nothing else changes.
+- edition: student-print
+  file: the-index.qmd
+  reason: D2 back-matter kicker reset (plan 100 A2) — \pubchapterlabel{} is emitted before \printindex; nothing else changes.
+- edition: student
+  file: glossary.qmd
+  reason: D2 back-matter kicker reset (plan 100 A2) — the "Glossary" heading gains an empty pub-label; nothing else changes.
+- edition: student
+  file: quick-reference.qmd
+  reason: D2 back-matter kicker reset (plan 100 A2) — the "Quick Reference" heading gains an empty pub-label; nothing else changes.
+- edition: student
+  file: the-index.qmd
+  reason: D2 back-matter kicker reset (plan 100 A2) — \pubchapterlabel{} is emitted before \printindex; nothing else changes.
+- edition: teacher
+  file: glossary.qmd
+  reason: D2 back-matter kicker reset (plan 100 A2) — the "Glossary" heading gains an empty pub-label; nothing else changes.
+- edition: teacher
+  file: quick-reference.qmd
+  reason: D2 back-matter kicker reset (plan 100 A2) — the "Quick Reference" heading gains an empty pub-label; nothing else changes.
+- edition: teacher
+  file: the-index.qmd
+  reason: D2 back-matter kicker reset (plan 100 A2) — \pubchapterlabel{} is emitted before \printindex; nothing else changes.

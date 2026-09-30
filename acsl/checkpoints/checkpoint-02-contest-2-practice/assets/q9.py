@@ -1,25 +1,32 @@
-tokens = input().split()
-stack = []
+text = input().split()[0]
+operators = []
 top = 0
-deepest = 0
-for token in tokens:
-    if token == "+" or token == "-" or token == "*":
-        right = stack[top - 1]
-        left = stack[top - 2]
-        top = top - 2
-        if token == "+":
-            value = left + right
-        elif token == "-":
-            value = left - right
+pieces = []
+count = 0
+postfix = ""
+for ch in text:
+    if ch == "+" or ch == "-" or ch == "*" or ch == "/" or ch == "^":
+        if top == len(operators):
+            operators.append(ch)
         else:
-            value = left * right
-    else:
-        value = int(token)
-    if top == len(stack):
-        stack.append(value)
-    else:
-        stack[top] = value
-    top = top + 1
-    if top > deepest:
-        deepest = top
-print(str(stack[0]) + " " + str(deepest))
+            operators[top] = ch
+        top = top + 1
+    elif ch == ")":
+        top = top - 1
+        op = operators[top]
+        postfix = postfix + " " + op
+        right = pieces[count - 1]
+        left = pieces[count - 2]
+        count = count - 2
+        piece = op + " " + left + " " + right
+        pieces[count] = piece
+        count = count + 1
+    elif ch != "(":
+        postfix = postfix + " " + ch
+        if count == len(pieces):
+            pieces.append(ch)
+        else:
+            pieces[count] = ch
+        count = count + 1
+print(postfix[1:])
+print(pieces[0])

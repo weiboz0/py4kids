@@ -1,0 +1,37 @@
+# Publication config for *Contest Python: ACSL* (design 010 D1, plan 100).
+# Read and validated by tools/books.py (publication_config). Paths and chapter globs are book-relative.
+setup:
+  source: docs/getting-set-up.md
+  teacher_notes: docs/getting-set-up-teacher-notes.md
+  numbered: false
+
+project_headers: {}
+
+unit_headers:
+  unit-03-wdtpd-branching: WDTPD – Branching
+  unit-06-wdtpd-looping: WDTPD – Looping
+  unit-10-wdtpd-arrays: WDTPD – Arrays
+  unit-14-wdtpd-strings: WDTPD – Strings
+
+lesson_heading: '^## Lesson\b'
+
+index_names: [print, input, range, len, split, tuple]
+
+audit:
+  error_demo_ids: ['7be73630']  # u02: broken(x) raises RecursionError on purpose
+  hang_demo_ids: []
+  error_demo_routing_exceptions: []
+  print_required_starters: []
+  print_page_target: 400  # Student Print lands near 440 pages; the warning is expected
+  turtle_tryits: {}
+  teacher_turtle_drawings: 0
+  phrase_exemptions:
+    - phrase: python assets/
+      kinds: [unit]
+      chapters: ['units/*']
+      reason: lessons teach running each unit's program as `python assets/lN.py < assets/lN/1.in`
+    - phrase: python assets/
+      kinds: [setup]
+      chapters: [docs/getting-set-up.md]
+      reason: the setup chapter teaches how to run a program from a unit's assets folder
+  goals_recap: required

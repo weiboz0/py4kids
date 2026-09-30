@@ -62,3 +62,4 @@ books:
   - usaco-bronze
   judge: true
   acsl: true
+  publication: true

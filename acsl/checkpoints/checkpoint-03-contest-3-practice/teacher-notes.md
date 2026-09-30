@@ -10,7 +10,7 @@ It holds two full six-question papers that share four questions, plus the progra
 - Q3–Q4: Data Structures (a queue script of pushes and pops; the internal path length of a BST with duplicates).
 - Q5–Q6: What Does This Program Do? – Arrays (Junior), one in Python and one in ACSL pseudocode on a 4×4 grid.
 - Q7–Q8: FSAs and Regular Expressions (Intermediate and above): one FSA table item and one regular-expression equivalence item, both as option choices.
-- Q9: the programming problem, "Letter Tree". The program builds the BST of a word (duplicates to the left) and prints its internal path length, leaf count and greatest depth.
+- Q9: the programming problem, "The Counting Line". The program keeps the players in a queue (a list and a `head` index, as in Unit 9), moves `K − 1` players from the front to the back each round, and prints the order in which the players leave.
 
 ## Pacing
 
@@ -31,14 +31,14 @@ ACSL's Junior, Intermediate and Senior short-answer tests are each 6 questions i
 - Q5–Q6: tracing a pass with the array as it was at the start; mixing up the main diagonal and the anti-diagonal.
 - Q7: forgetting that a string must end in a final state, not just pass through one.
 - Q8: accepting an expression that matches the examples tried but not every string (test short strings, including `λ`).
-- Q9: counting the root as depth 1, or counting a one-node tree as having no leaves.
+- Q9: moving `K` players to the back instead of `K − 1`; starting each round again from player 1 instead of from the front of the queue; a program that breaks when `K` is larger than the number of players left.
 
 ## Discussion prompts
 
 - Which category cost you the most points, and what will you practise before Contest 3?
 - In Q3, how did you keep track of the front of the queue?
 - In Q8, what is the quickest string that proves two expressions are different?
-- In Q9, which test case would catch a program that sends duplicates to the right?
+- In Q9, what happens when `K` is larger than the number of players left, and which test case checks it?
 
 ## Differentiation
 
@@ -47,7 +47,7 @@ ACSL's Junior, Intermediate and Senior short-answer tests are each 6 questions i
 - **Classroom:** Q1–Q4 and Q7–Q8 as short-answer practice, with Q5–Q6 optional. The real Classroom test is 10 questions in 50 minutes (acsl.org Divisions page), from Boolean Algebra, FSAs and Regular Expressions, and Data Structures.
 - **Elementary:** not for Elementary students. Their Contest 3 mock test is unit 08's Exercises 1–6, 6 questions in 30 minutes.
 - **Support:** allow the precedence ladder, a blank truth-table sheet and a blank tree sheet on a first attempt, then retake without them.
-- **Extension:** write two extra Q9 test cases, one of them a case where sending duplicates to the right gives a different answer.
+- **Extension:** write two extra Q9 test cases, one of them a case where moving `K` players to the back instead of `K − 1` gives a different answer.
 
 ## Grading
 

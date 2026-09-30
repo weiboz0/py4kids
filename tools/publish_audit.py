@@ -48,8 +48,8 @@ from tools.publish import (
     solution_assets,
     solution_source_files,
     statement_text,
-    stdin_run_asset,
     title_heading,
+    tryit_run_asset,
     unit_challenges,
 )
 from tools.turtle_real import real_programs
@@ -226,7 +226,17 @@ def index_source_findings(qmd: str, glossary: list[tuple], unit: int | None = No
     return findings
 
 
+# A back-matter verso page opens with its folio, then its running head (pdftotext: "508\n\nGlossary").
+BACK_MATTER_VERSO = re.compile(r'(\d+)\s+(?:Answers to Selected Exercises|Glossary|Quick Reference|Index)\b')
+
+
 def glossary_page_numbers(pdf_text: str) -> set[int]:
+    """The printed page numbers of the Glossary, from its opening page up to Quick Reference's.
+
+    Chapter opening pages print no folio, so the folio offset comes from a verso Glossary page
+    ("508 Glossary"), or, for a one-page glossary (plan 100 A2), from the nearest other back-matter
+    verso page: after the Glossary first (Quick Reference, Index), then before it (the answers appendix).
+    """
     pages = pdf_text.split('\f')
     start = next((i for i, page in enumerate(pages) if page.startswith('Glossary\n')), None)
     end = next((i for i, page in enumerate(pages) if page.startswith('Quick Reference\n')), None)
@@ -234,6 +244,11 @@ def glossary_page_numbers(pdf_text: str) -> set[int]:
         return set()
     for physical in range(start + 1, end):
         match = re.search(r'(?m)^(\d+)\s+Glossary\b', pages[physical])
+        if match:
+            offset = physical + 1 - int(match[1])
+            return set(range(start + 1 - offset, end + 1 - offset))
+    for physical in [*range(end, len(pages)), *range(start - 1, -1, -1)]:
+        match = BACK_MATTER_VERSO.match(pages[physical])
         if match:
             offset = physical + 1 - int(match[1])
             return set(range(start + 1 - offset, end + 1 - offset))
@@ -423,7 +438,10 @@ def reference_findings(pdf_text: str, project_headers: tuple[str, ...] = ()) -> 
     pages = []
     current_unit = None
     for physical, page, top_number in raw_pages:
-        printed = top_number if top_number is not None else physical - offset
+        # The printed page number is physical − offset. Top-of-page numbers only fix the offset (from
+        # the first unit page, above); elsewhere a top integer may be page text, such as a sample input
+        # "2" at the top of a recto page, so it is never read as the folio (plan 100 A3).
+        printed = physical - offset
         header = page[:200]
         unit = re.search(r'(?m)^Unit\s+(\d+)(?:\s+[—–-].*)?\s*$', header)
         if unit:
@@ -495,15 +513,18 @@ def _turtle_drawing_findings(entry: Path, qmd: str, edition: str,
             findings.append(f'FAIL: {edition}: {entry.name}: try-it figure {cell.id}')
     # A stdin Try-it prints once too (plan 099 A1): the asset its next cell runs is never listed again,
     # and the generic "save it as a .py file" note prints only for a stdin Try-it with no run line.
+    # A plain `input()` Try-it prints once as well (plan 100 A1), whichever neighbouring cell names its
+    # asset; it never carries the note.
     cells = lesson.cells[1:]
-    stdin_tryits = [(cell, stdin_run_asset(cell, cells[index + 1] if index + 1 < len(cells) else None, entry))
-                    for index, cell in enumerate(cells)
-                    if cell.cell_type == 'code' and _expected_lesson_kind(cell) == 'tryit-stdin']
-    expected_notes = sum(run_asset is None for _, run_asset in stdin_tryits)
+    run_tryits = [(cell, _expected_lesson_kind(cell),
+                   tryit_run_asset(cell, cells[index + 1] if index + 1 < len(cells) else None, entry))
+                  for index, cell in enumerate(cells)
+                  if cell.cell_type == 'code' and _expected_lesson_kind(cell) in ('tryit-stdin', 'tryit')]
+    expected_notes = sum(kind == 'tryit-stdin' and run_asset is None for _, kind, run_asset in run_tryits)
     if lesson_qmd.count(STDIN_NOTE) != expected_notes:
         findings.append(f'FAIL: {edition}: {entry.name}: expected {expected_notes} stdin try-it notes, '
                         f'got {lesson_qmd.count(STDIN_NOTE)}')
-    tryit_tokens = {code_tokens(cell.source) for cell in [*tryits, *(cell for cell, _ in stdin_tryits)]}
+    tryit_tokens = {code_tokens(cell.source) for cell in [*tryits, *(cell for cell, _, _ in run_tryits)]}
     for asset in sorted((entry / 'assets').glob('*.py')) if (entry / 'assets').exists() else []:
         if (f'**assets/{asset.name}**' in lesson_qmd
                 and code_tokens(asset.read_text(encoding='utf-8')) in tryit_tokens):

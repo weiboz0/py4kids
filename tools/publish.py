@@ -9,6 +9,7 @@ import keyword
 import re
 import shutil
 import tokenize
+import warnings
 from contextlib import redirect_stdout
 from pathlib import Path
 
@@ -351,6 +352,32 @@ def route_code(cell, stdin_note: bool = True) -> tuple[str, str]:
     return 'code', body
 
 
+def _named_identical_asset(cell, markdown_cell, entry: Path) -> str | None:
+    """The first lesson asset `markdown_cell` names whose code (by `code_tokens`) is `cell`'s own."""
+    if markdown_cell is None or markdown_cell.cell_type != 'markdown':
+        return None
+    tokens = code_tokens(cell.source)
+    for name in dict.fromkeys(ASSET.findall(markdown_cell.source)):
+        path = entry / 'assets' / name
+        if (name.startswith('solutions_') or SOLUTION_SOURCE.match(name) or not path.is_file()):
+            continue
+        try:
+            if code_tokens(path.read_text(encoding='utf-8')) == tokens:
+                return name
+        except (tokenize.TokenError, SyntaxError):
+            continue
+    return None
+
+
+def plain_tryit(cell) -> bool:
+    """A `no-exec` `input()` Try-it: `route_code`'s plain `tryit` route (not a stdin, turtle or demo cell)."""
+    tags = cell.metadata.get('tags', [])
+    return (cell.cell_type == 'code' and 'no-exec' in tags and 'error-demo' not in tags
+            and 'hang-demo' not in tags and not reads_stdin(cell.source)
+            and not re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', cell.source)
+            and 'input(' in cell.source)
+
+
 def stdin_run_asset(cell, next_cell, entry: Path) -> str | None:
     """The lesson asset a stdin Try-it cell is saved as, when the next cell tells students to run it.
 
@@ -361,19 +388,32 @@ def stdin_run_asset(cell, next_cell, entry: Path) -> str | None:
     """
     tags = cell.metadata.get('tags', [])
     if (cell.cell_type != 'code' or 'no-exec' not in tags or 'error-demo' in tags or 'hang-demo' in tags
-            or not reads_stdin(cell.source) or next_cell is None or next_cell.cell_type != 'markdown'):
+            or not reads_stdin(cell.source)):
         return None
-    tokens = code_tokens(cell.source)
-    for name in dict.fromkeys(ASSET.findall(next_cell.source)):
-        path = entry / 'assets' / name
-        if (name.startswith('solutions_') or SOLUTION_SOURCE.match(name) or not path.is_file()):
-            continue
-        try:
-            if code_tokens(path.read_text(encoding='utf-8')) == tokens:
-                return name
-        except (tokenize.TokenError, SyntaxError):
-            continue
-    return None
+    return _named_identical_asset(cell, next_cell, entry)
+
+
+def tryit_run_asset(cell, next_cell, entry: Path) -> str | None:
+    """The lesson asset a Try-it cell prints once for, named by the markdown cell after it.
+
+    A stdin Try-it (`stdin_run_asset`, plan 099 A1) or a plain `input()` Try-it (`plain_tryit`, plan 100
+    A1) followed by a markdown cell naming an identical asset: that cell is the run line, so the asset is
+    not listed again. Turtle Try-its (`tryit+figure`, `figure`) are never matched. Otherwise None.
+    """
+    if plain_tryit(cell):
+        return _named_identical_asset(cell, next_cell, entry)
+    return stdin_run_asset(cell, next_cell, entry)
+
+
+def tryit_ahead_assets(markdown_cell, later_cells, entry: Path) -> set[str]:
+    """The lesson assets a markdown cell names that a later plain `input()` Try-it prints.
+
+    ACSL lessons say "It is saved as `assets/l1.py`" just *before* the Try-it, and some mention the
+    program earlier still ("This unit's folder also holds … `assets/l1.py`", plan 100 A1). The cell's
+    asset listing is suppressed, since a Try-it further on in the lesson prints the identical program.
+    """
+    return {name for cell in later_cells if plain_tryit(cell)
+            for name in [_named_identical_asset(cell, markdown_cell, entry)] if name}
 
 
 def teacher_notes(source: str) -> str:
@@ -453,12 +493,14 @@ def entries(book: Path, edition: str) -> list[tuple[str, Path]]:
 
 def asset_blocks(text: str, entry: Path, edition: str, seen: set[str], unit: str,
                  rendered_turtles: set[tuple[tuple[int, str], ...]] | None = None,
-                 rendered_stdin: set[str] | None = None) -> tuple[str, list[dict]]:
+                 rendered_tryits: set[str] | None = None) -> tuple[str, list[dict]]:
     """Program listings of the lesson assets a markdown cell names, each once per chapter.
 
-    An asset whose code a turtle Try-it already printed gets a "saved as" line instead; a stdin Try-it's
-    asset (`rendered_stdin`, from `stdin_run_asset`) prints nothing more, since the cell naming it is
-    its run line (plan 099 A1). Both are inventoried as `asset reference`.
+    An asset whose code a turtle Try-it already printed gets a "saved as" line instead; a Try-it's
+    asset (`rendered_tryits`: from `tryit_run_asset` for the cell after a Try-it, plan 099 A1, or from
+    `tryit_ahead_assets` for a cell before a plain `input()` Try-it, plan 100 A1) prints nothing more,
+    since the Try-it prints the program and the cell naming it is its run line. Both are inventoried
+    as `asset reference`.
     """
     rendered = []
     records = []
@@ -468,7 +510,7 @@ def asset_blocks(text: str, entry: Path, edition: str, seen: set[str], unit: str
         path = entry / 'assets' / name
         if path.exists():
             seen.add(name)
-            if rendered_stdin is not None and name in rendered_stdin:
+            if rendered_tryits is not None and name in rendered_tryits:
                 records.append({'id': f'asset:{name}', 'kind': 'asset reference'})
                 continue
             source = read_source(path, edition)
@@ -1202,21 +1244,22 @@ def render_chapter(entry: Path, kind: str, edition: str, config: PublicationConf
     if kind == 'unit':
         seen: set[str] = set()
         rendered_turtles: set[tuple[tuple[int, str], ...]] = set()
-        rendered_stdin: set[str] = set()
+        rendered_tryits: set[str] = set()
         cells = n.cells[1:]
         for position, c in enumerate(cells):
             if c.cell_type == 'markdown':
                 chapter.append(markdown_blocks(c.source, lesson_heading=lesson_heading))
+                rendered_tryits |= tryit_ahead_assets(c, cells[position + 1:], entry)
                 assets, records = asset_blocks(c.source, entry, edition, seen, entry.name,
-                                               rendered_turtles, rendered_stdin)
+                                               rendered_turtles, rendered_tryits)
                 if assets:
                     chapter.append(assets)
                 inventory.extend(records)
             else:
-                run_asset = stdin_run_asset(c, cells[position + 1] if position + 1 < len(cells) else None,
+                run_asset = tryit_run_asset(c, cells[position + 1] if position + 1 < len(cells) else None,
                                             entry)
                 if run_asset:
-                    rendered_stdin.add(run_asset)
+                    rendered_tryits.add(run_asset)
                 route, body = route_code(c, stdin_note=run_asset is None)
                 chapter.append(body)
                 inventory.append({'id': c.id, 'kind': route})
@@ -1352,7 +1395,11 @@ def code_span_names(span: str) -> set[str]:
     if not re.fullmatch(r'\.?[A-Za-z_]\w*(?:\(\))?', text):
         for attempt in (text, text.rstrip(':') + ': pass'):
             try:
-                ast.parse(attempt)
+                # Spans such as `2d` make the compiler warn ("invalid decimal literal") before
+                # failing; the warning is noise here (plan 100 A4).
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', SyntaxWarning)
+                    ast.parse(attempt)
                 break
             except (SyntaxError, ValueError):
                 continue
@@ -1450,6 +1497,22 @@ def index_first_prose(qmd: str, glossary: list[tuple[str, str, list[str]]],
 def yaml_string(text: str) -> str:
     """A double-quoted YAML scalar (JSON strings are valid YAML) for `_quarto.yml` placeholders."""
     return json.dumps(text, ensure_ascii=False)
+
+
+# The chapter kicker (`\\pubchapterlabel`, set by a level-one heading's `pub-label`) is global, so a
+# chapter that sets none inherits the last one: after a book whose main matter ends with a checkpoint,
+# "Checkpoint 4" opened every back-matter chapter (plan 100 A2). The answers appendix, Glossary and
+# Quick Reference clear it on their heading; the Index, a bare `\\printindex` that no heading
+# attribute reaches, clears it with the theme's own setter first.
+KICKER_RESET = ' {pub-label=""}'
+INDEX_BODY = '\\pubchapterlabel{}\n\n\\printindex\n'
+
+
+def reset_kicker(text: str) -> str:
+    """Give a back-matter chapter's level-one heading, its first line, an empty `pub-label` (see
+    KICKER_RESET). A file that does not open with a plain `# ` heading is returned unchanged."""
+    return re.sub(r'\A(\s*# [^\n{]*?)[ \t]*$', lambda match: match[1] + KICKER_RESET, text, count=1,
+                  flags=re.MULTILINE)
 
 
 def tex_escape(text: str) -> str:
@@ -1558,7 +1621,7 @@ def build(root: Path, book_id: str, edition: str) -> Path:
             answer_sections.append(answer_key(entry, 'unit', chapter['items'], edition=edition,
                                                    lesson_heading=config.lesson_heading))
         filename = 'answers.qmd'
-        (project / filename).write_text('# Answers to Selected Exercises\n\n'
+        (project / filename).write_text('# Answers to Selected Exercises' + KICKER_RESET + '\n\n'
                                         + '\n\n'.join(answer_sections), encoding='utf-8')
         chapters.append(filename)
         manifest['chapters'].append({'id': 'answers', 'file': filename, 'source': '',
@@ -1569,7 +1632,7 @@ def build(root: Path, book_id: str, edition: str) -> Path:
                                   ('quick-reference', 'quickref', 'Quick Reference')):
             filename = name + '.qmd'
             source = book / 'back-matter' / (name + '.md')
-            body = read_source(source, edition)
+            body = reset_kicker(read_source(source, edition))
             (project / filename).write_text(body, encoding='utf-8')
             chapters.append(filename)
             manifest['chapters'].append({'id': name, 'file': filename,
@@ -1577,7 +1640,7 @@ def build(root: Path, book_id: str, edition: str) -> Path:
                                          'title': title, 'items': [], 'inventory': []})
     if edition_profile['index']:
         index_file = 'the-index.qmd'
-        (project / index_file).write_text('\\printindex\n', encoding='utf-8')
+        (project / index_file).write_text(INDEX_BODY, encoding='utf-8')
         chapters.append(index_file)
         manifest['chapters'].append({'id': 'index', 'file': index_file, 'source': '',
                                      'kind': 'index', 'title': 'Index', 'items': [], 'inventory': []})

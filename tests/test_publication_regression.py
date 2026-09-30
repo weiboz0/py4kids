@@ -1,6 +1,6 @@
-"""Plan 097/099 regression contract: python-concepts' and python-projects' generated Quarto projects
-equal their immutable pre-change baselines, except for files listed (with a D2/D3 reason) in each
-book's allowed-diffs list."""
+"""Plan 097/099/100 regression contract: python-concepts', python-projects' and usaco-bronze's
+generated Quarto projects equal their immutable pre-change baselines, except for files listed (with a
+D2/D3 reason) in each book's allowed-diffs list."""
 from __future__ import annotations
 
 import hashlib
@@ -16,9 +16,10 @@ from tools.publish import EDITIONS, build
 
 REPO = Path(__file__).resolve().parents[1]
 DATA = REPO / 'tests' / 'data'
-# Each regression-guarded book: python-concepts (plan 097) and python-projects (plan 099, captured
-# before plan 099's first tooling change).
-BOOKS = ('python-concepts', 'python-projects')
+# Each regression-guarded book: python-concepts (plan 097), python-projects (plan 099, captured
+# before plan 099's first tooling change) and usaco-bronze (plan 100, captured before plan 100's first
+# tooling change).
+BOOKS = ('python-concepts', 'python-projects', 'usaco-bronze')
 
 
 def baseline_path(book: str) -> Path:
@@ -86,8 +87,8 @@ def test_normalisation_removes_only_data_file_panels_and_records(tmp_path):
     assert json.loads(normalised(inventory)) == {'chapters': [{'id': 'p', 'inventory': records[:1]}]}
 
 
-@pytest.mark.parametrize(('book', 'data_files'), [('python-concepts', 'absent'), ('python-concepts', 'present'),
-                                                  ('python-projects', 'absent'), ('python-projects', 'present')])
+@pytest.mark.parametrize(('book', 'data_files'), [(book, data_files) for book in BOOKS
+                                                  for data_files in ('absent', 'present')])
 def test_output_matches_the_baseline(tmp_path, book, data_files):
     # Build from a copy so the test never touches <book>/build (the rendered editions).
     shutil.copy(REPO / 'books.yaml', tmp_path / 'books.yaml')

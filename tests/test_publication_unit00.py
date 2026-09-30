@@ -83,7 +83,7 @@ def test_setup_is_first_separate_chapter_in_both_editions(book, monkeypatch):
         assert next(c for c in chapters if c['kind'] == 'setup')['source'] == 'python-concepts/docs/unit-00-getting-set-up.md'
         config = (project / '_quarto.yml').read_text()
         assert config.index('unit-00-getting-set-up.qmd') < config.index('unit-01-fixture.qmd')
-        assert (project / 'the-index.qmd').read_text() == '\\printindex\n'
+        assert (project / 'the-index.qmd').read_text() == '\\pubchapterlabel{}\n\n\\printindex\n'
         assert 'pub-mainmatter="true"' in (project / 'unit-00-getting-set-up.qmd').read_text()
         project_text = '\n'.join(p.read_text() for p in project.glob('*.qmd'))
         if edition == 'student':

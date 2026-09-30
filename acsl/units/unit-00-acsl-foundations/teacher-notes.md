@@ -60,7 +60,8 @@ Budget: three lessons of 60–90 minutes.
 
 ## Differentiation
 
-**Division paths through the book (design 009):**
+**Division paths through the book:**
+
 - **Junior** students do every `acsl-junior` item here, then follow the Contest 1–4 parts in season order.
 - **Intermediate** and **Senior** students also do the items tagged at their level. Before Contest 1, they should also work the Contest 1 "What Does This Program Do?" section that traces loops, arrays and strings, because their Contest 1 covers all constructs.
 - **Elementary** students skip this unit (the Elementary contest has no programming) and start at Contest 1's Computer Number Systems unit.
