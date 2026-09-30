@@ -1,0 +1,6 @@
+5
+AND 1 1
+NAND 1 1
+NOT 0
+XOR 1 0
+NOR 0 0

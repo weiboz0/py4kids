@@ -1,0 +1,4 @@
+2
+INPUTS A B C
+p = XOR(A, C)
+out = NOR(p, B)

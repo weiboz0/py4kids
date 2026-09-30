@@ -1,0 +1,8 @@
+1
+INPUTS A B C
+out = NAND(A, B)
+3
+INPUTS A B C
+p = NOT(A)
+q = NOT(B)
+out = OR(p, q)

@@ -1,0 +1,5 @@
+3
+INPUTS A B
+p = AND(A, B)
+q = NOT(p)
+out = AND(p, q)

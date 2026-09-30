@@ -90,11 +90,11 @@ Planned units are listed by name; they arrive in later editions of the book.
 
 | entry | kind | lessons | focus |
 |-------|------|---------|-------|
-| Graph Theory | unit | — | *planned (plan 096)*; opens with the Elementary section |
-| Digital Electronics | unit | — | *planned (plan 096)* |
-| What Does This Program Do? – Strings | unit | — | *planned (plan 096)* |
-| Assembly Language | unit | — | *planned (plan 096)*; Intermediate and Senior |
-| Contest 4 practice | checkpoint | — | *planned (plan 096)* |
+| `unit-12-graph-theory` | unit | 3 | vertices and edges, paths and cycles, traversability, adjacency matrices and M^p, components and trees; opens with the Elementary section |
+| `unit-13-digital-electronics` | unit | 3 | the eight gates, circuits as netlists and expressions, tuples and counts, simplifying, NAND/NOR |
+| `unit-14-wdtpd-strings` | unit | 3 | tracing string programs with ACSL's substring rules (Junior) |
+| `unit-15-assembly-language` | unit | 3 | ACSL assembly: the accumulator, memory, branches and loops, READ/PRINT (Intermediate and Senior) |
+| `checkpoint-04-contest-4-practice` | checkpoint | 0.5 | timed Contest 4 practice: Junior and Intermediate/Senior six-question papers + 1 programming problem |
 
 The category lists come from the acsl.org Study Materials page (retrieved 2026-09-29).
 ACSL revises them from year to year; the book follows the current list.

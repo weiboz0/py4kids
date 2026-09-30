@@ -1,0 +1,5 @@
+3
+INPUTS A B C D
+p = XNOR(A, B)
+q = XNOR(p, C)
+out = XNOR(q, D)

@@ -1,0 +1,4 @@
+1
+INPUTS A B C
+out = OR(A, B)
+0

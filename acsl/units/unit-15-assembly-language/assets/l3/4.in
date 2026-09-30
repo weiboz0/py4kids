@@ -1,0 +1,11 @@
+10
+X     DC    1
+LIM   DC    40
+LOOP  LOAD  X
+      ADD   X
+      STORE X
+      PRINT X
+      LOAD  LIM
+      SUB   X
+      BG    LOOP
+      END

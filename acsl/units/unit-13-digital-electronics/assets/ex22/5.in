@@ -1,0 +1,9 @@
+2
+INPUTS A B C D
+p = AND(A, B)
+out = AND(p, D)
+3
+INPUTS A B C D
+p = AND(A, B)
+q = AND(p, C)
+out = AND(q, D)

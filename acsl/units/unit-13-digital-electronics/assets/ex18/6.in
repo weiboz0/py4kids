@@ -1,0 +1,4 @@
+1
+INPUTS A
+out = BUFFER(A)
+1

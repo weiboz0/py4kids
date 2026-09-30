@@ -1,0 +1,6 @@
+3
+INPUTS A B C
+one = BUFFER(C)
+two = AND(one, one)
+three = XOR(two, A)
+1 0 1

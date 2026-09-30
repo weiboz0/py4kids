@@ -1,0 +1,15 @@
+id: unit-12-graph-theory
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+acsl: {contest: 4, category: Graph Theory, divisions: [elementary, junior, intermediate, senior]}
+concepts:
+  introduces: [acsl-graph-theory]
+  requires: [print, input, run-program, variable, int-type, arithmetic, type-conversion,
+             string-literal, string-index, string-slice, string-concat, boolean, comparison,
+             logical-ops, if-statement, elif-else, for-loop, range-function, nested-loops,
+             in-operator, def-function, parameters, return-value, builtin-functions,
+             list-literal, list-append, list-index, list-loop, str-split, input-parse,
+             grid-2d, recursion]
+  practices: [accumulator, loop-counter, complete-search]

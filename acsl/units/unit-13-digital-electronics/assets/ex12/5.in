@@ -1,0 +1,6 @@
+4
+INPUTS A B C D
+p = OR(A, B)
+q = NAND(C, D)
+r = XOR(p, q)
+out = XNOR(r, D)

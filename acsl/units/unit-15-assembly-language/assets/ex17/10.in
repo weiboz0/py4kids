@@ -1,0 +1,20 @@
+18
+I     DC    1
+ROW   LOAD  =1
+      STORE J
+COL   LOAD  I
+      MULT  J
+      STORE T
+      PRINT T
+      LOAD  J
+      ADD   =1
+      STORE J
+      SUB   =3
+      BL    COL
+      LOAD  I
+      ADD   =1
+      STORE I
+      SUB   =4
+      BL    ROW
+      END
+0

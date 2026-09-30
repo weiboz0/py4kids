@@ -1,0 +1,7 @@
+4
+INPUTS A B C
+p = NOR(A, B)
+q = NOT(C)
+r = NAND(p, q)
+alarm = BUFFER(r)
+0 1 0

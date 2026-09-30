@@ -1,0 +1,14 @@
+id: checkpoint-04-contest-4-practice
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+acsl: {contest: 4, category: Practice, divisions: [junior, intermediate, senior]}
+concepts:
+  introduces: []
+  requires: [print, input, variable, int-type, type-conversion, arithmetic, comparison,
+             boolean, if-statement, input-parse, str-split]
+  practices: [acsl-graph-theory, logic-gates, boolean-algebra, acsl-assembly, code-tracing,
+              acsl-pseudocode, grid-2d, string-literal, string-index, string-slice,
+              string-concat, for-loop, range-function, nested-loops, while-loop, accumulator,
+              logical-ops, list-literal, list-index, list-append, builtin-functions]
