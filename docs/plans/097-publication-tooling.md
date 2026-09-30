@@ -52,12 +52,12 @@ The read-only gap survey (2026-09-30) is summarised in design 010 §1.
      - `turtle_tryits: {unit_id: count}` and `teacher_turtle_drawings`
      - `phrase_exemptions: [{phrase, kinds, chapters, reason}]`. An exemption matches a chapter only when **both** hold:
        - its `kind` in `inventory.json` is in `kinds` (for example `[unit]`)
-       - its source matches a glob in `chapters` (for example `units/*`)
+       - its source matches a glob in `chapters` (for example `units/*`). Globs are **book-relative**: both audit layers strip the recorded repo-relative prefix (`<book id>/`) from `inventory.json`'s `source` before matching, so `units/*` matches `python-concepts/units/unit-01-output-and-variables`. A test pins this.
 
-       Answer chapters (`kind: answers`) record the same `units/...` source as their unit chapter, so the kind test is what keeps an exemption for `units/*` lessons out of the Answer Key and the answers appendix.
+       Answer Key chapters (`kind: answers`) record the same `units/...` source as their unit chapter, and the combined answers appendix records an empty source. The kind test keeps an exemption for `units/*` out of both.
        An exempt phrase is allowed only in matching chapters, and stays banned everywhere else. The scope is the whole chapter, because a unit chapter combines its lesson and exercises; a finer scope would need per-range provenance, which this plan does not add.
      - **Both audit layers keep the chapter boundary.** The `.qmd` scan checks each generated chapter against its source. The PDF-text scan (`publish_audit.py:853`, today one string) is split per chapter with the PDF outline (the chapter start pages already used by the outline checks), and each page range is checked against its chapter's source.
-     - Tests: an exempt phrase passes in a matching unit chapter, and fails in front matter, in a non-matching chapter, and in an **Answer Key chapter and the answers appendix** that share the unit's source, at both layers.
+     - Tests: an exempt phrase passes in a matching unit chapter, and fails in front matter, in a non-matching chapter, in an **Answer Key chapter** (same unit source, `kind: answers`) and in the **answers appendix** (empty source), at both layers.
      - `goals_recap: required`, required for every book by user decision
    - `index_names:` — the Python names the index recognises
    - `lesson_heading:` — the regex for lesson headings
@@ -214,6 +214,14 @@ The tests cover:
 - `[sol]` **REJECT**, 2 blockers, both folded:
   1. Exemptions match on chapter **kind** as well as source, so an answers chapter sharing a unit's source stays banned; tested at both layers.
   2. Checkpoint answers print the mirror cell, as units do; `qN.py` is never printed.
+
+### Round 5
+
+- `[sol]` **REJECT**, 1 blocker and 1 nit, both folded:
+  1. Exemption globs are book-relative; both layers strip the `<book id>/` prefix from `inventory.json` sources; tested.
+  2. The answers appendix's empty source is stated, and the tests are split accordingly.
+
+  No further blocker was found in the rest of the plan.
 
 ## Content Review
 
