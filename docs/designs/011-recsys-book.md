@@ -1,4 +1,7 @@
-# Design 009 — "Applied Python: Recommendation Systems" (a new advanced book)
+# Design 011 — "Applied Python: Recommendation Systems" (a new advanced book)
+
+> Renumbered 009 → 011 on 2026-09-30: design 009 was already owned by the ACSL book (`009-acsl-book.md`, reserved
+> via design 008); `010` is the publication design. This doc is design **011**.
 
 **Status:** DRAFT — v2 (2026-09-29). Proposes a new, self-contained book `recsys` for an advanced audience.
 v2 folds the round-1 design-review findings ([sol] + [fable] REJECT; [self] APPROVE WITH NITS) — see the Design
@@ -320,8 +323,9 @@ lesson_budget). Ready for round-2 review.
 ### Design-review outcome: **FULL CONSENSUS on v2** — [self] APPROVE · [sol] APPROVE · [fable] APPROVE WITH NITS (all folded) · [glm] skipped
 No open blockers. Gate CLOSED. The design is approved. Implementation preconditions (each named above): the
 user-authorized **governance-amendment PR** (§11) ships first; then `recsys-001` (§12) extends pre-merge-guard,
-scaffolds the book + `baseline.yaml` + slice script + synthetic generator + the `bookrec` package, and Unit 1 —
-through the plan-review gate, per design 008's one-design-then-1–2-units cadence.
+scaffolds the book + `baseline.yaml` + slice script + synthetic generator + the `bookrec` package (a
+**foundation** plan — NO student units; `buildout: true`) through the plan-review gate. Units land in
+`recsys-002+`, per design 008's one-design-then-1–2-units cadence.
 
 ## 14. Revision history
 
