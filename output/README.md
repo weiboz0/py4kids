@@ -4,7 +4,7 @@ This folder collects every PDF the repository builds.
 The PDFs are built artifacts: git ignores them (`output/**/*.pdf` in `.gitignore`), and only this README is committed.
 Rebuild them with the scripts below; `scripts/ci-local.sh` runs both.
 `build-pdf.sh` runs for every book on every CI run.
-A book's editions (`build-book.sh`, then `publish-audit`) render only when the change touches that book, `tools/`, `scripts/` or `books.yaml`; otherwise CI prints `SKIP` for them.
+A book's editions (`build-book.sh`, then `publish-audit`) render only when the change touches that book, `tools/`, `scripts/`, `books.yaml`, `pyproject.toml` or `uv.lock`; otherwise CI prints `SKIP` for them.
 `scripts/ci-local.sh --all-books` renders every book's editions.
 
 Each script owns its own files and replaces only those, so running one never deletes the other's PDFs.
@@ -42,8 +42,8 @@ Folders and PDF file names use the book id from `books.yaml`; the PDFs themselve
 
 | File | What it is | Made by |
 |---|---|---|
-| `usaco-bronze-student-print.pdf` | Student Book — Print Edition: the lean book for publication, with no answers and only the Starters that print needed code | `scripts/build-book.sh --book usaco-bronze` |
-| `usaco-bronze-student.pdf` | Student Book — Full Edition: the online book, with every Starter and Answers to Selected Exercises | `scripts/build-book.sh --book usaco-bronze` |
+| `usaco-bronze-student-print.pdf` | Student Book — Print Edition: the lean book for publication, with no answers | `scripts/build-book.sh --book usaco-bronze` |
+| `usaco-bronze-student.pdf` | Student Book — Full Edition: the online book, with Answers to Selected Exercises | `scripts/build-book.sh --book usaco-bronze` |
 | `usaco-bronze-answer-key.pdf` | Answer Key: answers to the odd-numbered unit exercises, one chapter per unit | `scripts/build-book.sh --book usaco-bronze` |
 | `usaco-bronze-teacher.pdf` | Teacher's Edition: the book with teacher notes and every answer key | `scripts/build-book.sh --book usaco-bronze` |
 | `syllabus.pdf` | The Contest Python: USACO Bronze syllabus | `scripts/build-pdf.sh --book usaco-bronze` |
@@ -55,8 +55,8 @@ Folders and PDF file names use the book id from `books.yaml`; the PDFs themselve
 
 | File | What it is | Made by |
 |---|---|---|
-| `acsl-student-print.pdf` | Student Book — Print Edition: the lean book for publication, with no answers and only the Starters that print needed code | `scripts/build-book.sh --book acsl` |
-| `acsl-student.pdf` | Student Book — Full Edition: the online book, with every Starter and Answers to Selected Exercises | `scripts/build-book.sh --book acsl` |
+| `acsl-student-print.pdf` | Student Book — Print Edition: the lean book for publication, with no answers | `scripts/build-book.sh --book acsl` |
+| `acsl-student.pdf` | Student Book — Full Edition: the online book, with Answers to Selected Exercises | `scripts/build-book.sh --book acsl` |
 | `acsl-answer-key.pdf` | Answer Key: answers to the odd-numbered unit exercises, one chapter per unit | `scripts/build-book.sh --book acsl` |
 | `acsl-teacher.pdf` | Teacher's Edition: the book with teacher notes and every answer key | `scripts/build-book.sh --book acsl` |
 | `syllabus.pdf` | The Contest Python: ACSL syllabus | `scripts/build-pdf.sh --book acsl` |

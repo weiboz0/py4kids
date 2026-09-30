@@ -223,5 +223,66 @@ Rules and lessons carried over from plans 097–099:
 
 ## Content Review
 
+### Round 1
+
+- `[sol]` **REJECT**. Blind solves: CP1 Q4 = 27, and 47/47 fixtures for CP1 Q8, CP2–4 Q9 and u04 Ex21. There are no task copies among the 35 questions, including CP2 Q9 against unit 04. Findings:
+  - `[FIXED]` The "Publishing a release" section in `output/README.md` was missing. It is added (all-books CI, tag, full-SHA `gh release create`, prefixed assets, Teacher's Edition choice), with per-book tables for all four books.
+- `[fable]` **REJECT**. Blind solves matched every fixture, plus about 1,100 fuzzed inputs against the committed solvers (0 mismatches). No task copies; clean rendered pages across all four editions, with no "Checkpoint 4" kicker on any back-matter page. Findings:
+  - `[FIXED]` The quick-reference table cells printed `\|` backslashes; the rows moved to prose or plain words.
+  - `[FIXED]` The folio line in the audit was a tautology; it is simplified.
+  - `[FIXED]` CP2 Q1's instance was close to u04 Ex12; it is now `A - (B + C) * D ↑ E / F` → `A B C + D E ↑ * F / -`.
+  - `[FIXED]` The glossary heap wording now covers min-heaps and max-heaps.
+- `[self]` APPROVE: `scripts/ci-local.sh` ALL GREEN solo at 2bb5cce, with all four books rendered and audited.
+
+### Round 2 — CONSENSUS
+
+- `[sol]` **APPROVE WITH NITS** (r2): it re-solved CP2 Q1 blind and matched, and verified every fold. `[FIXED]` The README CI note now lists `pyproject.toml`/`uv.lock`.
+- `[fable]` **APPROVE WITH NITS** (r2): it blind-solved CP2 Q1 and verified every fold. `[FIXED]` The contest editions' README rows no longer mention Starters.
+- `[self]` APPROVE: `scripts/ci-local.sh` ALL GREEN solo at 5a13f22 (pytest 1562 passed; all four books rendered, each edition 0 overfull hboxes). The later commit changes only `output/README.md` and this plan.
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped: *Contest Python: ACSL* in four editions. This completes design 010: every book has PDFs.**
+
+| Edition | Pages | Chapters | Items |
+|---|---|---|---|
+| Student Book — Print | 432 (the soft-target warning is expected) | 26 | 359 |
+| Student Book — Full | 534 | 27 | 359 |
+| Answer Key | 89 | 17 | 167 (odd unit exercises) |
+| Teacher's Edition | 664 | 27 | 359 |
+
+All four editions audit clean, with 0 overfull hboxes and no missing glyphs.
+
+- **Tooling:**
+  - Plain `input()` Try-its print once when an identical `assets/lN.py` is named before or after them (48 cases).
+  - The back-matter chapters reset the chapter kicker (`{pub-label=""}`, and `\pubchapterlabel{}` before `\printindex`), so no "Checkpoint 4" bleeds into the back matter. A one-page glossary resolves.
+  - The folio rule no longer reads sample input as a page number, and the SyntaxWarnings are silenced.
+  - The *USACO Bronze* regression baseline is committed, and all three published books are compared. Their only changes are the back-matter kicker lines, listed as D2 fixes.
+- **Content:**
+  - 5 checkpoint questions replaced under the strict no-copy rule (CP1 Q4, CP1 Q8, CP2 Q9, CP3 Q9, CP4 Q9), from a seeded generator, all blind-solved; CP2 Q1 retitled and given a fresh instance.
+  - u04 Ex21 revised; u02's error demo tagged and its bare expression printed.
+  - Independence and print-neutral wording; checkpoint self-check guidance for short answers and programs.
+  - Markup fixes: 12 lists, table pipes, `_Challenge._` lines, base-b notation, the u08 table.
+  - Goals and recap panels in 16 lessons, and 148 stored lesson outputs.
+- **Matter:**
+  - front matter: division paths, the season, and the short-answer and programming formats
+  - a glossary of 19 entries (10 reused from *USACO Bronze*; boolean-algebra and bitwise-ops rewritten in ACSL notation; 7 new)
+  - a 16-section notation quick reference, and the unnumbered Getting Set Up chapter
+  - `publication.yaml`
+- **Release doc:** `output/README.md` lists all four books' PDFs and how to publish a release.
+
+**Verification.** `scripts/ci-local.sh` ALL GREEN in solo runs at 2bb5cce and at 5a13f22, with all four publication books rendered and audited.
+
+| Book | Student Print | Student Full | Answer Key | Teacher's |
+|---|---|---|---|---|
+| *Python by Projects* | 227 | 320 | 83 | 470 |
+| *Python, Concept by Concept* | 410 | 662 | 197 | 922 |
+| *USACO Bronze* | 218 | 286 | 62 | 406 |
+| *ACSL* | 432 | 534 | 89 | 664 |
+
+**Deviations:**
+- The Try-it look-ahead covers any later plain Try-it in the lesson, not only the next code cell (u04 and u08 name `l1.py` earlier).
+- CP4 Q9 was added to the replacements in plan review.
+
+**Next:** publish a GitHub Release with every book's PDFs (from this run's `output/`), as `output/README.md` describes.
