@@ -134,18 +134,44 @@ def test_project_problem_answers_take_the_brief_titles(tmp_path):
 
 @pytest.mark.skipif(shutil.which('pandoc') is None, reason='pandoc is not installed')
 def test_inline_code_never_breaks_between_or_before_punctuation():
-    source = '`1..n` `a[l..r]` `N - 1` `foo.bar_baz(x, y)` `__init__` `abcdefghijklmnopq`\n'
-    latex = subprocess.run(['pandoc', '-f', 'markdown', '-t', 'latex', '--lua-filter', str(THEME / 'panels.lua')],
-                           input=source, capture_output=True, text=True, check=True).stdout
-    spans = re.findall(r'\\texttt\{((?:[^{}]|\{\})*)\}', latex)
+    source = ('`assets/l1.py` `assets/ex1/1.out` `1.in` `1..n` `a[l..r]` `N - 1` `foo.bar_baz(x, y)` '
+              '`__init__` `abcdefghijklmnopq` `{"c":["cat","crow","camel"],"d":["dog"]}` '
+              '`["cat","crow","dog","camel"]`\n')
+    latex = _pandoc_latex(source)
+    spans = re.findall(r'\\texttt\{((?:\\[{}]|\{\}|[^{}])*)\}', latex)
     assert spans == [
-        '1..\\allowbreak{}n',               # never "1. / .n"
-        'a[l..\\allowbreak{}r]',
+        'assets/\\allowbreak{}l1.py',       # never "assets/l1. / py"
+        'assets/\\allowbreak{}ex1/\\allowbreak{}1.out',
+        '1.in',
+        '1..n',                             # never after a dot
+        'a[l..r]',
         'N - 1',                            # never "N - / 1" (the spaces break anyway)
-        'foo.\\allowbreak{}bar\\_\\allowbreak{}baz(\\allowbreak{}x, y)',
+        'foo.bar\\_\\allowbreak{}baz(\\allowbreak{}x, y)',
         '\\_\\_\\allowbreak{}init\\_\\_',   # after `_` only before an identifier character
         'abcdefghijkl\\allowbreak{}mnopq',  # a long run of letters still breaks
+        # after `,` and `:` even before punctuation (a 151pt overfull line otherwise)
+        ('\\{"c":\\allowbreak{}["cat",\\allowbreak{}"crow",\\allowbreak{}"camel"],\\allowbreak{}'
+         '"d":\\allowbreak{}["dog"]\\}'),
+        '["cat",\\allowbreak{}"crow",\\allowbreak{}"dog",\\allowbreak{}"camel"]',
     ]
+
+
+def _pandoc_latex(source: str) -> str:
+    return subprocess.run(['pandoc', '-f', 'markdown', '-t', 'latex', '--wrap=none', '--lua-filter',
+                           str(THEME / 'panels.lua')], input=source, capture_output=True, text=True, check=True).stdout
+
+
+@pytest.mark.skipif(shutil.which('pandoc') is None, reason='pandoc is not installed')
+def test_answer_key_headings_keep_with_what_follows():
+    """`## Answer key` and every answer heading under it get \\Needspace, so none sits alone at a page
+    foot; headings outside an answer key are untouched, and the mark never reaches the output."""
+    source = ('# Project 1\n\n### Lucky Guess\n\nBrief.\n\n## Answer key\n\n### Exercise 1 — A\n\nx\n\n'
+              '### Milestone 1 — Open the arcade\n\ny\n\n# Answers\n\n### Unit 3, Exercise 1\n\nz\n')
+    latex = _pandoc_latex(source)
+    needs = re.findall(r'\\Needspace\{(\d+)\\baselineskip\}\s*\\hypertarget\{[^}]*\}\{%\s*\\\w+\{([^}]*)\}', latex)
+    assert needs == [('20', 'Answer key'), ('16', 'Exercise 1 --- A'),
+                     ('16', 'Milestone 1 --- Open the arcade'), ('16', 'Unit 3, Exercise 1')]
+    assert 'pub-keep' not in latex
 
 
 # --- A4: running headers ----------------------------------------------------------------------------
@@ -206,12 +232,14 @@ def _book(tmp_path: Path) -> Path:
     (root / 'docs' / 'unit-00-getting-set-up.md').write_text('# Unit 0 — Getting Set Up\n')
     (root / 'docs' / 'unit-00-teacher-notes.md').write_text('# Notes\n')
     (root / 'units' / 'unit-11-bits').mkdir(parents=True)
+    (root / 'checkpoints' / 'checkpoint-01-mock').mkdir(parents=True)
     return root
 
 
 @pytest.mark.parametrize('headers,message', [
-    ({'checkpoint-01-x': 'Mock'}, 'key checkpoint-01-x must be a unit id'),
+    ({'project-01-x': 'Mock'}, 'key project-01-x must be a unit or checkpoint id'),
     ({'unit-12-missing': 'Missing'}, 'unit unit-12-missing does not exist'),
+    ({'checkpoint-02-missing': 'Missing'}, 'checkpoint checkpoint-02-missing does not exist'),
     ({'unit-11-bits': ''}, 'needs a header text'),
     ({'unit-11-bits': 'x' * 33}, 'header is 33 characters (at most 32)'),
     (['unit-11-bits'], 'unit_headers: must be a mapping'),
@@ -244,3 +272,21 @@ def test_index_audit_matches_entries_wrapped_across_ind_lines():
     assert index_findings(ind, glossary, glossary_pages={12}) == []
     assert index_findings(ind, glossary, glossary_pages={12, 14}) == [
         'FAIL: index glossary-only Complete search over every candidate answer in a bounded range']
+
+
+def test_unit_headers_valid_checkpoint_key(tmp_path):
+    headers = {'unit-11-bits': 'Bits', 'checkpoint-01-mock': 'Mock Contest'}
+    write_publication_config(_book(tmp_path), unit_headers=headers)
+    assert publication_config(tmp_path, 'book').unit_headers == headers
+
+
+def test_unit_headers_give_a_checkpoint_chapter_its_short_head(tmp_path):
+    entry = tmp_path / 'checkpoints' / 'checkpoint-02-mock-contest'
+    _write(entry / 'checkpoint.ipynb', [
+        md('# Checkpoint 2: A Full Mock Contest of Four Bronze Problems\n\nOpening task.', id='c0'),
+        md('## Question 1', id='c1'), md('### First\n\nDo it.', id='c2')])
+    with pytest.raises(ValueError, match='unit_headers'):
+        render_chapter(entry, 'checkpoint', 'student', fixture_config())
+    config = fixture_config(unit_headers={entry.name: 'Full Mock Contest'})
+    body, _, _, _ = render_chapter(entry, 'checkpoint', 'student', config)
+    assert '\\chaptermark{Checkpoint 2 — Full Mock Contest}' in body
