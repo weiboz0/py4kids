@@ -14,3 +14,5 @@ code and the results on the page always agree.
 
 The notebooks that this book is made from are the classroom materials: students can run each lesson in
 Jupyter, where the same expected outputs are shown under each cell.
+Turtle drawings are the exception: they appear only in the book, because a turtle program draws in its
+own window when a student runs it.

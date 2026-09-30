@@ -10,7 +10,6 @@ Read, run, change, and rerun the examples before you start the exercises.
 - **Notice:** A short explanation of the idea the example just used.
 - **Try it yourself:** Run the code and supply your own input or make the suggested change.
 - **Read the error:** The code is broken on purpose; use the message to find the mistake.
-- **Watch out: this never stops:** A loop is shown to explain a trap; read it, but do not run it unchanged.
 - **Drawing made by the program above:** A turtle drawing, printed right after the program that makes it.
 <!-- edition: student|teacher -->
 - **Starter:** A beginning for your exercise program; finish the missing work yourself.
@@ -18,7 +17,6 @@ Read, run, change, and rerun the examples before you start the exercises.
 <!-- edition: student-print -->
 - **Starter:** Starting code printed only when it is not already on the page, such as a broken program to repair; all other starting code is in your exercises notebook.
 <!-- /edition -->
-- **Data file:** Text the program reads or writes; use the shown lines exactly when checking a sample.
 - **Check lines:** A call and its expected result for checking your code.
 - **Real version:** The same task using values entered while the program runs, instead of fixed sample values.
 - **You will learn / Recap:** A short guide to the unit's goals and a reminder of what you can now do.
@@ -36,7 +34,7 @@ You will meet them in two places.
 ## Projects
 
 The two projects, Arcade Night and Grand Adventure, are bigger builds.
-Each is split into milestones, and each milestone starts from a Starter program that you grow step by step.
+Each is split into milestones, and most milestones start from a Starter program that you grow step by step.
 Finish one milestone before you start the next, and run your game after every change.
 
 ## Work in the course files
@@ -66,7 +64,7 @@ Unit 0 shows how to open a terminal, move into a folder, and run a file.
 
 ## Check your work
 
-Do the exercises in order; the More Practice ones that close most sets give extra drill, and Challenges are there when you want an extra puzzle.
+Do the exercises in order; the More Practice exercises in most sets give extra drill, and Challenges are there when you want an extra puzzle.
 Run your program with each worked sample and compare every printed line, space, and number with the page.
 Make the sample version work before trying a Real version.
 
@@ -96,6 +94,6 @@ The four checkpoints and the two projects are self-tests, so the Answer Key does
 For students, the four checkpoints and the two projects are self-tests, so their books print no answers for them.
 <!-- /edition -->
 
-Every question has worked samples.
-Run your program against all of them and check that its result matches each sample exactly.
+When a question gives worked samples, run your program against all of them and check that its result matches each sample exactly.
+When it gives none, make up a few inputs of your own and predict each result before you run it.
 Change the input and predict what should happen to test your understanding further.

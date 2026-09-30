@@ -15,14 +15,21 @@ project_headers:
 lesson_heading: '^## Lesson\b'
 
 # The Python names the index recognises (a "Python names" subentry each), all taught in this book.
-index_names: [print, input, range, len, str, int, float, append, open, sorted, randint]
+index_names: [print, input, range, len, str, int, float, append, open, randint]
 
 audit:
   # Lesson cells tagged error-demo / hang-demo (re-derived by the audit from the sources).
   error_demo_ids: ['8a9940ed', cff23dfd, b9137a93, '09e1db93', c172f647, d1c787cd]
   hang_demo_ids: []
   error_demo_routing_exceptions: []
-  print_required_starters: []
+  # The broken programs to repair: the print edition must keep each Starter.
+  print_required_starters:
+    - exercise-two-broken      # Unit 1, Exercise 2
+    - exercise-three-broken    # Unit 1, Exercise 3
+    - exercise-5-broken        # Unit 2, Exercise 4
+    - exercise-7-buggy-encode  # Unit 6, Exercise 7 (first traceback)
+    - exercise-7-buggy-index   # Unit 6, Exercise 7 (second traceback)
+    - '8d643930'               # Unit 10, Exercise 8
   print_page_target: 400
   turtle_tryits:
     unit-03-turtle-art-studio: 0

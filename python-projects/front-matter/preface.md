@@ -1,7 +1,7 @@
 # About This Book
 
 You can learn Python by building things.
-Every unit in this book starts with something to make: a story machine, a number-guessing game, turtle art, a quiz show, secret codes, a word game, a virtual pet.
+From Unit 1 on, every unit in this book starts with something to make: a story machine, a number-guessing game, turtle art, a quiz show, secret codes, a word translator and word counter, a virtual pet.
 You learn each new idea at the moment your project needs it.
 You need no programming experience.
 If you can follow a recipe and use ordinary middle school math, you are ready.

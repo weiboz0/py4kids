@@ -186,8 +186,10 @@ def test_unnumbered_challenges_render_with_teacher_answers(tmp_path, forms, layo
         for heading in printed:
             assert body.count(heading) == 1, (edition, heading)
         assert body.index(printed[0]) < body.index(printed[1]) < body.index(printed[2])
-        assert body.count('::: {.challenge}\n**Challenge 1**\n:::') == 1
-        assert body.count('::: {.challenge}\n**Challenge 3**\n:::') == 1
+        # The marker reads plain "Challenge": the heading above it already names the number.
+        assert body.count('::: {.challenge}\n**Challenge**\n:::') == 3
+        assert '**Challenge 1**' not in body and '**Challenge 3**' not in body
+        assert '### Challenge 1\n\n::: {.challenge}\n**Challenge**\n:::' in body
         assert 'Write a story.' in body and 'Draw a flower.' in body
         assert r'\label{ex:unit-01-fixture:' not in body.split('### Challenge 1', 1)[1]
         assert 'Answer on page' not in body.split('### Challenge 1', 1)[1]
@@ -229,6 +231,102 @@ def test_unnumbered_challenges_render_with_teacher_answers(tmp_path, forms, layo
     kinds = starter_kinds(entry, 'unit', 'student-print')
     assert list(kinds) == ['e1-work', 'e2-work', 'c1-work', 'c2-work']
     assert [kind for kind, _ in kinds.values()][2:] == ['starter', 'starter-omitted']
+
+
+def _unit_with_lead_in(entry: Path) -> None:
+    """A challenge section whose lead-in holds a code cell, and a challenge whose statement starts
+    `**Challenge:**`."""
+    _write(entry / 'exercises.ipynb', [
+        md('# Practice', id='title'),
+        md('## Exercise 1\n\n### Warm up\n\nPrint hello.', id='e1'),
+        code('greeting = "hi"  # finish me', id='e1-work'),
+        md('## Challenge', id='note', metadata={'tags': ['stretch']}),
+        code('shared = [1, 2, 3]  # used by every challenge', id='lead-code'),
+        md('### Challenge 1: Twice\n\n**Challenge:** double every number.', id='c1',
+           metadata={'tags': ['stretch']}),
+        code('doubled = []  # your loop', id='c1-work', metadata={'tags': ['stretch']}),
+    ])
+    _write(entry / 'solutions.ipynb', [
+        md('# Solutions', id='s-title'),
+        md('## Exercise 1', id='s1'),
+        code('print("hello")', id='s1-code'),
+        md('## Challenge', id='s-note'),
+        md('### Challenge 1', id='s-c1'),
+        code('doubled = [n * 2 for n in shared]\nprint(doubled)', id='s-c1-code'),
+    ])
+
+
+@pytest.mark.parametrize('edition', ['student', 'student-print', 'teacher'])
+def test_unnumbered_challenge_strips_its_challenge_lead(tmp_path, edition):
+    entry = tmp_path / 'units' / 'unit-01-fixture'
+    _unit_with_lead_in(entry)
+    body, _, _ = render_items(entry / 'exercises.ipynb', 'unit', edition, entry, entry.name)
+    assert '### Challenge 1 — Twice\n\n::: {.challenge}\n**Challenge**\n:::\n\nDouble every number.' in body
+    assert '**Challenge:**' not in body
+
+
+@pytest.mark.parametrize('edition', ['student', 'student-print', 'teacher'])
+def test_challenge_lead_in_code_cells_are_starters_after_the_exercises(tmp_path, edition):
+    entry = tmp_path / 'units' / 'unit-01-fixture'
+    _unit_with_lead_in(entry)
+    body, inventory, _ = render_items(entry / 'exercises.ipynb', 'unit', edition, entry, entry.name)
+    lead_panel = '::: {.starter}\n```python\nshared = [1, 2, 3]  # used by every challenge\n```\n:::'
+    assert body.count(lead_panel) == 1
+    assert body.index('greeting = "hi"') < body.index(lead_panel) < body.index('### Challenge 1')
+    assert [record['id'] for record in inventory] == ['e1-work', 'lead-code', 'c1-work']
+    assert {record['kind'] for record in inventory} == {'starter'}
+    # The audit's expectations follow the publisher's print order: exercises, lead-in, challenges.
+    kinds = starter_kinds(entry, 'unit', edition)
+    assert list(kinds) == ['e1-work', 'lead-code', 'c1-work']
+    by_id = {record['id']: record['kind'] for record in inventory}
+    starters = [(cell_id, source, by_id[cell_id]) for cell_id, (_, source) in kinds.items()]
+    assert starter_panel_findings('unit-01-fixture', body, starters) == []
+
+
+def test_challenge_answer_findings_empty_and_duplicate_sections(tmp_path):
+    entry = tmp_path / 'units' / 'unit-01-fixture'
+    _unit_with_lead_in(entry)
+    body, _, items = render_items(entry / 'exercises.ipynb', 'unit', 'teacher', entry, entry.name)
+    qmd = body + '\n\n' + answer_key(entry, 'unit', items)
+    assert challenge_findings('unit-01-fixture', qmd, entry, 'teacher') == []
+
+    # A challenge heading with no answer under it is a finding.
+    cells = nbformat.read(entry / 'solutions.ipynb', as_version=4).cells
+    _write(entry / 'solutions.ipynb', cells[:-1])
+    empty = body + '\n\n' + answer_key(entry, 'unit', items)
+    assert '### Challenge 1 — Twice' in empty
+    assert challenge_findings('unit-01-fixture', empty, entry, 'teacher') == [
+        'FAIL: teacher: unit-01-fixture: empty answer for Challenge 1']
+
+    # A repeated challenge heading in the solutions (or the exercises) is a finding.
+    _write(entry / 'solutions.ipynb', [*cells, md('### Challenge 1\n\nAgain.', id='s-c1-again')])
+    assert 'FAIL: teacher: unit-01-fixture: duplicate challenge headings in solutions: 1' in challenge_findings(
+        'unit-01-fixture', qmd, entry, 'teacher')
+    _write(entry / 'solutions.ipynb', cells)
+    exercises = nbformat.read(entry / 'exercises.ipynb', as_version=4).cells
+    _write(entry / 'exercises.ipynb', [*exercises, md('### Challenge 1\n\nOnce more.', id='c1-again')])
+    assert 'FAIL: student: unit-01-fixture: duplicate challenge headings in exercises: 1' in challenge_findings(
+        'unit-01-fixture', qmd, entry, 'student')
+
+
+def test_leak_guard_hides_unnumbered_challenge_solutions(tmp_path, monkeypatch):
+    from tools import publish_audit
+
+    entry = tmp_path / 'units' / 'unit-01-fixture'
+    _unit_with_lead_in(entry)
+    monkeypatch.setattr(publish_audit, 'book_path', lambda root, book_id: tmp_path)
+    monkeypatch.setattr(publish_audit, 'entries', lambda book, edition: [('unit-01-fixture', entry)])
+    build = tmp_path / 'build'
+    build.mkdir()
+    chapters = [{'id': 'unit-01-fixture', 'kind': 'unit', 'file': 'u.qmd'}]
+    kinds = frozenset({'unit'})
+    body, _, _ = render_items(entry / 'exercises.ipynb', 'unit', 'student', entry, entry.name)
+    (build / 'u.qmd').write_text(body, encoding='utf-8')
+    assert publish_audit.leak_findings(tmp_path, 'fixture', chapters, build, kinds=kinds) == []
+    leaked = body + '\n```python\ndoubled = [n * 2 for n in shared]\nprint(doubled)\n```\n'
+    (build / 'u.qmd').write_text(leaked, encoding='utf-8')
+    assert publish_audit.leak_findings(tmp_path, 'fixture', chapters, build, kinds=kinds) == [
+        'FAIL: student: unit unit-01-fixture: solution leak from unit-01-fixture Challenge 1']
 
 
 def test_challenge_title_under_an_exercise_is_not_a_challenge():

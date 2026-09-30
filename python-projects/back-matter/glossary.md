@@ -6,9 +6,6 @@
 **Append** — `items.append(value)` adds a new item to the end of a list. *(Unit 7)*
 <!-- concept: list-append; index: `.append` -->
 
-**Argument** — A value you give to a function when you call it; the function receives it through a parameter. *(Unit 5)*
-<!-- concept: parameters; index: parameter -->
-
 **Arithmetic operators** — The symbols `+`, `-`, `*`, `/`, `//`, and `%` calculate with numbers. *(Units 2–3)*
 <!-- concept: arithmetic; index: arithmetic symbols; arithmetic -->
 
@@ -119,6 +116,9 @@
 
 **Object creation** — `__init__` runs when you make a new object and usually saves its first attributes through `self`. *(Unit 10)*
 <!-- concept: init-method; index: `__init__`; `self` -->
+
+**Parameter** — A blank in a function's definition, such as `name` in `def greeting_card(name):`; each call fills it with a value, in order. *(Unit 5)*
+<!-- concept: parameters; index: parameter -->
 
 **Print** — `print()` displays a value in the program's output. *(Unit 1)*
 <!-- concept: print; index: `print` -->

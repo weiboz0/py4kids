@@ -21,7 +21,7 @@ Use names that tell you what each value means.
 ```python
 guess = int(input("Guess? "))  # text to integer
 label = str(guess)             # integer to text
-answer = 7 + 3 * 2
+answer = 7 + 3 * 2             # 13: * before +, as in math
 groups = 17 // 5               # whole groups: 3
 left_over = 17 % 5             # leftover: 2
 ```

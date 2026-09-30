@@ -675,10 +675,8 @@ def starter_kinds(entry: Path, kind: str, edition: str) -> dict[str, tuple[str, 
             if cell.cell_type == 'code':
                 kinds[cell.id] = _always_starter_kind(cell)
     lead_in, challenges = unit_challenges(cells) if kind == 'unit' else ([], [])
-    for cell in lead_in:
-        if cell.cell_type == 'code':
-            kinds[cell.id] = _always_starter_kind(cell)
-    for group in [*groups, *challenges]:
+
+    def item_kinds(group) -> None:
         statement = '\n'.join(c.source for c in group['cells'] if c.cell_type == 'markdown')
         for cell in group['cells']:
             if cell.cell_type != 'code':
@@ -688,6 +686,15 @@ def starter_kinds(entry: Path, kind: str, edition: str) -> dict[str, tuple[str, 
                 continue
             omitted = required and redundant_starter(cell.source, statement)
             kinds[cell.id] = ('starter-omitted' if omitted else 'starter', cell.source)
+
+    # The publisher's print order: the exercise groups, then the challenge lead-in, then the challenges.
+    for group in groups:
+        item_kinds(group)
+    for cell in lead_in:
+        if cell.cell_type == 'code':
+            kinds[cell.id] = _always_starter_kind(cell)
+    for group in challenges:
+        item_kinds(group)
     return kinds
 
 
@@ -821,13 +828,34 @@ def challenge_findings(id_: str, qmd: str, entry: Path, edition: str) -> list[st
     numbers = [challenge['number'] for challenge in challenges]
     body, _, answers = qmd.partition('## Answer key')
     findings = []
+    for where, found in (('exercises', numbers), ('solutions', _solution_challenge_numbers(entry))):
+        duplicates = sorted({number for number in found if found.count(number) > 1})
+        if duplicates:
+            findings.append(f'FAIL: {edition}: {id_}: duplicate challenge headings in {where}: '
+                            + ', '.join(map(str, duplicates)))
     rendered = [int(match[1]) for match in re.finditer(
-        r'(?m)^### Challenge (\d+)\b[^\n]*\n\n::: \{\.challenge\}\n\*\*Challenge \1\*\*\n:::', body)]
+        r'(?m)^### Challenge (\d+)\b[^\n]*\n\n::: \{\.challenge\}\n\*\*Challenge\*\*\n:::', body)]
     if rendered != numbers or len(re.findall(r'(?m)^### Challenge \d+\b', body)) != len(numbers):
         findings.append(f'FAIL: {edition}: {id_}: rendered challenge items')
-    if edition == 'teacher' and [int(x) for x in re.findall(r'(?m)^### Challenge (\d+)\b', answers)] != numbers:
-        findings.append(f'FAIL: {edition}: {id_}: challenge answer coverage')
+    if edition == 'teacher':
+        headings = list(re.finditer(r'(?m)^### Challenge (\d+)\b[^\n]*$', answers))
+        if [int(match[1]) for match in headings] != numbers:
+            findings.append(f'FAIL: {edition}: {id_}: challenge answer coverage')
+        for match in headings:
+            # An answer section runs to the next heading of level 1-3; a heading alone is no answer.
+            following = re.search(r'(?m)^#{1,3} ', answers[match.end():])
+            end = match.end() + following.start() if following else len(answers)
+            if not answers[match.end():end].strip():
+                findings.append(f'FAIL: {edition}: {id_}: empty answer for Challenge {match[1]}')
     return findings
+
+
+def _solution_challenge_numbers(entry: Path) -> list[int]:
+    """The challenge numbers of a unit's solutions notebook, in order (duplicates kept)."""
+    solutions = entry / 'solutions.ipynb'
+    if not solutions.exists():
+        return []
+    return [challenge['number'] for challenge in unit_challenges(notebook(solutions, 'teacher').cells)[1]]
 
 
 FENCE_LINE = re.compile(r'^[ \t]*```')

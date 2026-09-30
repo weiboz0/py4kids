@@ -823,7 +823,8 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str,
                 out.append(markdown_blocks(re.sub(r'^## ', '### ', text), lesson_heading=lesson_heading))
         for challenge in challenges:
             out.append('### ' + challenge_display(challenge) + '\n')
-            out.append(panel('challenge', f"**Challenge {challenge['number']}**"))
+            # The heading already reads "Challenge N"; the marker is plain "Challenge" (no repeat).
+            out.append(panel('challenge', '**Challenge**'))
             out.extend(_item_body(challenge, kind, edition, entry, unit, lesson_heading, seen_assets,
                                   inventory, None, challenge_lead=True))
     return '\n\n'.join(block.rstrip() for block in out) + '\n', inventory, [{'number': g['number'], 'title': group_title(g, label)} for g in groups]
