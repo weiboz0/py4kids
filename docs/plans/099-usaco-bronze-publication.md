@@ -60,7 +60,7 @@ Plan 098's lessons apply:
   - Headings are `## Lesson N — Title`.
   - **Unit 03 has no `## Lesson` heading.**
   - Unit 01 opens with `## The Real Program Reads stdin` before Lesson 1.
-- **Reuse:** no other book's glossary covers these ids. The 11 shared definitions are written book-neutrally, so plan 100 (*ACSL*) can reuse them.
+- **Reuse:** no other book's glossary covers these ids. The 12 shared definitions are written book-neutrally, so plan 100 (*ACSL*) can reuse them.
 
 ## Phases
 
@@ -79,6 +79,7 @@ Plan 098's lessons apply:
    - It applies at both truncation sites: the unit chapter (`tools/publish.py`, around lines 1123–1125) and the Answer Key chapter (around line 1401).
    - A head over 32 characters with no override is a publisher error, never a silent truncation.
    - The test case is `unit-11-number-systems-bitwise`, whose short head is "Number Systems & Bitwise".
+   - *Python, Concept by Concept*'s `unit-08-randomness` ("Randomness: Dice, Simulations, and a Wandering Turtle", 53 characters, today silently cut to "Randomness: Dice, Simulations,") gets `unit_headers: {unit-08-randomness: Randomness}`. Its affected chapter `.qmd` files are listed in `tests/data/python-concepts-publish-allowed-diffs.yaml` with the A.4 reason. python-projects has no title over 32 characters.
 5. **Index audit.** Index entries that makeindex wraps across `.ind` lines are matched.
 
 ### Phase B — Notebook fixes and content (Opus content subagents; blind solves for every changed problem)
@@ -92,7 +93,7 @@ Plan 098's lessons apply:
     - **CP4 Q6** = u11 Ex8 (same title, task, constraints and sample)
 
     Each gets a statement, `qN.py` with at least 2 fixture pairs, a `solutions.ipynb` mirror, and updated teacher notes. Solutions are written in a separate session, blind to the statement's intended answer.
-  - **Rule:** no checkpoint question shares a title with a unit exercise. Retitle CP3 Q1 "Spaced Permutation Count" (u09 Ex2 is a different rule) and CP4 Q1 "Count the Islands" (u13 Ex3).
+  - **Rule:** no checkpoint question shares a title with a unit exercise. Both CP3 Q1 and u09 Ex2 are titled "Spaced Permutation Count" (different rules), and both CP4 Q1 and u13 Ex3 are "Count the Islands". Retitle the checkpoint questions: CP3 Q1 becomes **"Gap-Respecting Orders"** and CP4 Q1 becomes **"Lakes on the Map"**, or another title the content author checks against every unit exercise title in the book.
   - Revise **u13 Ex6** so its solution no longer equals Ex7's.
   - Revise **u02 Ex1** so it no longer equals the lesson's gate program `l1.py`.
 - **Independence and print wording:**
@@ -196,8 +197,17 @@ Plan 098's lessons apply:
     - The glossary format is stated, with per-book aliases.
     - The config values are stated.
     - No `answers` exemption is needed.
-    - The blind-solve list grows to 8 problems and 2 revisions.
+    - The blind-solve list grows to 8 (6 checkpoint replacements and 2 unit revisions).
     - The review list gains a CP4 page and the setup chapter.
+
+### Round 2 — verdicts and fold
+
+- `[fable]` **APPROVE WITH NITS** (r2): every round-1 fold verified. Its nits are folded:
+  1. The over-long-head rule would fail python-concepts' unit 08, which gets `unit_headers: Randomness`, with its chapter diffs listed as allowed with the A.4 reason.
+  2. The shared-definition count is 12.
+- `[sol]` **REJECT** (r2), 1 blocker and 1 nit, both folded:
+  1. The "retitles" repeated the colliding titles. New titles: CP3 Q1 "Gap-Respecting Orders", CP4 Q1 "Lakes on the Map".
+  2. The blind-solve count is 8 in total.
 
 ## Content Review
 
