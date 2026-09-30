@@ -49,18 +49,29 @@ Plan 097's Phase E.3 trial render is this plan's to-do list.
 1. **Project scaffolds (a publisher gap, diagnosed in review).**
    - Both briefs are `## Milestone N` sections with untagged code cells. `item_groups` recognises only `Problem N`, so every cell lands in the preface, and the preface loop emits markdown only. The scaffold code is therefore dropped, and the projects' inventories are empty.
    - Fix: a project's preface code cells render as **Starter** panels and are inventoried as `starter`, which is what the audit's expected-codes rule already expects.
+   - They render as `starter` in **every** edition. They are never `starter-omitted`: the print edition's redundant-Starter rule applies to items only.
+   - `starter_kinds` and the Student Print Starter-panel count (`publish_audit.py`, around lines 628 and 683) include project preface cells, so the four Arcade Night scaffolds count. The fixture test covers the print edition.
    - python-concepts' project uses Problems, so its output does not change.
 2. **Colon-form item titles.**
    - `## Exercise N: Title` supplies the item's own title (units 08–10: 72 items render as bare `### Exercise N` today, and the answer key inherits the loss).
    - A leading `**Challenge:**` in a stretch item's statement is removed once the title comes from the heading.
    - python-concepts has no colon-form headings.
 3. **Unnumbered challenge sections.**
-   - Units 01–07 end their exercises with a `## Challenge` note followed by `### Challenge N: Title` problems that are not numbered exercises. Unit 08 has `## Challenge N: Title` at level 2.
-   - **Rendering contract:** each `Challenge N` becomes a titled item ("Challenge N — Title") with the Challenge marker, its Starter if any, and its **Teacher's Edition answer** from the matching `### Challenge N` solution cells.
+   - Units 01–07 end their exercises with a `## Challenge` note followed by challenge problems that are not numbered exercises. Unit 08 has `## Challenge N: Title` at level 2.
+   - **Heading forms** (exercises and solutions alike):
+     - `Challenge N` (untitled: u01, u02, u03, u05)
+     - `Challenge N: Title` (u06, u07)
+     - `Challenge N — Title` (u04)
+     - each at level 2 or 3 (u08 uses level 2)
+   - **Rendering contract:** each challenge becomes an item headed "Challenge N — Title", or "Challenge N" when untitled. It carries the Challenge marker, its Starter if any, and its **Teacher's Edition answer** from the solution cells under the matching challenge heading.
+   - The optional `## Challenge` note cell prints once, as the section's lead-in.
+   - A fixture test covers every heading form.
    - Challenges print no answers in the student editions (odd-numbered *exercises* only), as checkpoints do not.
    - Exercise numbering and counts are unchanged, so no notebook is renumbered.
-   - The audit counts challenge items and checks their answer coverage in the Teacher's Edition.
-4. **The Markdown-artefact check** runs over each generated `.qmd` **outside code fences**, not over the PDF text. Two answer-code comments `# Exercise N — …` falsely matched it; comments in code are not artefacts.
+   - The audit counts challenge items separately from exercises (exercise counts are unchanged), and checks that the Teacher's Edition has an answer for every challenge.
+4. **The Markdown-artefact check** stays on the PDF text, where it finds Markdown that Quarto failed to render. A match on a heading-like line (`# Lesson`, `# Exercise`, …) is ignored when the same line, whitespace-normalised, is a line inside a fenced code block of that edition's generated `.qmd`: it is a printed code comment, not an artefact.
+   - Fixture test: a fence line `# Exercise 1 — Hello` plus the same PDF-text line gives no finding; the same line with no matching fence line gives a finding.
+   - python-concepts' audit findings are unchanged.
 5. **Cross-reference attribution.** The audit's exercise-heading match (`publish_audit.py`, around line 425) is anchored to a whole heading line (`^Exercise (\d+)(?: — .*)?$`). Prose that wraps to begin a line with "Exercise 16's …" no longer steals the next "Answer on page" (the 2 trial findings).
 
 python-concepts' output is checked against its baseline. Any change there is listed in the allowed-diffs file with its reason.
@@ -84,12 +95,15 @@ python-concepts' output is checked against its baseline. Any change there is lis
   - a fragment printed as a program goes in `error_demo_routing_exceptions`
   - a **runnable demonstration** loses `no-exec` and gains stored output
 - **Cell ids:** make the unit-02 solution cell ids unique.
+- **Challenge answer headings:** in u01, u02 and u03 `solutions.ipynb`, Challenge 1's answer sits unlabelled under the `## Challenge` cell. Add a `### Challenge 1` heading cell before it, so every challenge answer has a heading to match.
+- **Teacher notes:** normalise "L1/L2/L3" shorthand to "Lesson 1/2/3" in u05 and u10's `teacher-notes.md`.
+- **Timing:** a runnable demonstration that loses `no-exec` gains its stored output in Phase C, from `fill-outputs`; nothing is hand-written.
 - **Glyphs:** replace 🚀 in the unit-01 solution with text.
 
 ### Phase C — Lesson outputs and panels
 
 - **Seeding:** unit 02 ("The Computer Picks and Judges") calls `random.randint` in 4 executable lesson cells with no seed. Add one visible `random.seed(…)` cell before the first use, with a sentence on why, as python-concepts does. Stored outputs are then deterministic.
-- `py4kids-tools --book python-projects fill-outputs` stores the outputs of the 180 executable lesson cells (the 53 `no-exec` cells are skipped). `lesson-outputs-check` must pass.
+- `py4kids-tools --book python-projects fill-outputs` stores the output of every executable lesson cell: the surveyed 180, plus the seed cell and any demo made runnable in Phase B. `no-exec` cells are skipped. `lesson-outputs-check` must pass.
 - **Goals and recap (Opus content subagent):** each of the 10 lessons gains the exact audit form:
   - the cell immediately before the first lesson-heading cell starts `### You will learn`
   - the notebook's last cell starts `### Recap`
@@ -111,7 +125,8 @@ python-concepts' output is checked against its baseline. Any change there is lis
     - phrase exemptions, only as Phase B justifies them
 - **Front matter** (written inline; Student Book independent; edition blocks as python-concepts uses them):
   - `preface.md`
-  - `how-to-use.md`: the project-first book, units opening with a thing to make, projects with milestones, challenges, checkpoints, Starters, Real version, Check lines, and self-checking with Answers to Selected Exercises
+  - `how-to-use.md`: the project-first book, units opening with a thing to make, projects with milestones, challenges, checkpoints, Starters, Real version, Check lines, and self-checking with Answers to Selected Exercises.
+    It explains the two "Challenge" displays: a Challenge-marked numbered exercise, which is in the odd-numbered answers when odd, and an end-of-unit "Challenge N", which prints no answer in the student editions.
   - `for-teachers.md`
   - `answer-key-intro.md`
 - **Back matter:**
@@ -178,6 +193,22 @@ python-concepts' output is checked against its baseline. Any change there is lis
   13. Glossary ranges are re-derived and quick-reference keys re-keyed.
   14. A runnable demo loses `no-exec`.
   15. CI expectations are stated, and the review samples include the checkpoint-01 opener and a challenge page.
+
+### Round 2 — verdicts and fold
+
+- `[fable]` **APPROVE WITH NITS**. It verified all 15 folds. Its nits are folded:
+  1. The artefact check stays on the PDF text and ignores lines that match `.qmd` code-fence lines.
+  2. Challenge heading forms (untitled, colon, em dash; level 2 or 3), plus `### Challenge 1` answer headings added in u01–u03.
+  3. How to Use explains the two Challenge displays.
+  4. Project Starters are never `starter-omitted`.
+  5. Confirmed, no change.
+  6. L1/L2 teacher-note shorthand is normalised.
+  7. Runnable demos get their output from Phase C.
+- `[sol]` **REJECT**, 3 blockers and 1 nit, all folded:
+  1. = [fable] 1.
+  2. = [fable] 2, with challenge answer coverage counted separately.
+  3. Project preface cells are in `starter_kinds` and the Student Print panel count.
+  4. The output count covers the added cells.
 
 ## Content Review
 
