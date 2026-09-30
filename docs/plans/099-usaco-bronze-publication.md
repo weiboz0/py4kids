@@ -20,7 +20,7 @@ Plan 098's lessons apply:
   - 14 units: 127 exercises, 2 stretch items per unit.
   - 4 checkpoints, "Mock Contest 1–4", after units 5, 8, 12 and 14.
   - 1 project: `project-03-mock-contest`, "Grand Mock Contest", with 8 problems in 5 milestones.
-  - 31 `introduces` ids, 11 of them shared with the peer *Contest Python: ACSL*: input-parse, str-split, grid-2d, boolean-algebra, code-tracing, tuple, complete-search, recursion, postfix-eval, base-conversion, tree-traversal.
+  - 31 `introduces` ids, 12 of them shared with the peer *Contest Python: ACSL*: input-parse, str-split, grid-2d, boolean-algebra, code-tracing, tuple, complete-search, recursion, postfix-eval, base-conversion, bitwise-ops, tree-traversal.
   - Every problem reads stdin (`sys.stdin.read()`). Lessons run full solvers as `python assets/lN.py < assets/lN/1.in` from the unit folder (33 times, always "Run the full solver from this unit folder:").
 - **Probe results:** student 270 pages, teacher 388; 26 chapters, 161 items; 0 overfull boxes and 0 missing glyphs.
 - **Audit findings:**
@@ -66,30 +66,43 @@ Plan 098's lessons apply:
 
 ### Phase A — Tooling gaps (Opus tooling subagent; each fix with a fixture test; python-concepts and python-projects outputs checked against their baselines)
 
-1. **Stdin solver printed once.** When a lesson's stdin Try-it cell is identical (by code tokens) to the `assets/lN.py` the next cell tells students to run, it prints once:
-   - the Try-it panel ends with the book's run line for that file (`python assets/lN.py < assets/lN/1.in`), instead of the generic "save it as a `.py` file…" note
-   - the following `Program assets/lN.py` listing is not repeated
-   - the audit's inventory and "listed again in full" checks agree
+1. **Stdin solver printed once.** When a lesson's stdin Try-it cell is identical (by code tokens) to the `assets/lN.py` the next cell tells students to run, it prints once.
+   - The generic "save it as a `.py` file…" note is dropped. The next markdown cell already carries the run line (a `text` block such as `python assets/l1.py < assets/l1/1.in`), so the run line is not repeated.
+   - The following `Program assets/lN.py` listing is not repeated.
+   - The audit agrees: its `tryits` set gains `tryit-stdin` (today only `tryit+figure`), and its inventory and "listed again in full" checks match the new output.
 2. **Project answer titles.** A project answer section headed `## Problem N` takes its title from the brief's `### Problem N — Title` heading, as checkpoint answers do.
-3. **Inline code with `..`.** Find why inline code containing `..` renders as "1. / .n" (the `Code` filter's break points, or a TeX ligature), and fix it so the code prints exactly.
-4. **Running-header length.** Long unit titles get a short running head, taken from a new optional manifest key `short_title`, or from a rule applied by the publisher. The unit-11 header is the test case.
+3. **Inline code breaks.** `panels.lua` (around lines 121–124) inserts `\allowbreak{}` after every `. , : / + - = ( ) _`, which splits `1..n` as "1. / .n" and `N - 1` as "N - / 1".
+   - New rule: never break between two punctuation characters or before one, and break after `.` or `_` only when an identifier character follows.
+   - Fixture test: `1..n`, `a[l..r]`, `N - 1`.
+   - This is Lua-only, so python-concepts' `.qmd` baseline is untouched. E.1 confirms its overfull-hbox count stays 0.
+4. **Running-header length.** `publication.yaml` gains `unit_headers: {unit id: short head}`, mirroring `project_headers`, with validation and fixture configs. A manifest key would fail `manifest-check`, which requires an exact key set.
+   - It applies at both truncation sites: the unit chapter (`tools/publish.py`, around lines 1123–1125) and the Answer Key chapter (around line 1401).
+   - A head over 32 characters with no override is a publisher error, never a silent truncation.
+   - The test case is `unit-11-number-systems-bitwise`, whose short head is "Number Systems & Bitwise".
 5. **Index audit.** Index entries that makeindex wraps across `.ind` lines are matched.
 
 ### Phase B — Notebook fixes and content (Opus content subagents; blind solves for every changed problem)
 
 - **Duplicates and leaks:**
-  - Replace **CP2 Q6** and **CP3 Q7** (identical to odd unit exercises) and **CP3 Q2** (0.97 similar to u10 Ex2) with new problems of the same topic and level. Each gets a statement, `qN.py` with fixtures, a `solutions.ipynb` mirror and teacher notes. Solutions are written in a separate session, blind to the statement's intended answer.
+  - Replace six checkpoint questions that copy unit exercises with new problems of the same topic and level:
+    - **CP2 Q6** and **CP3 Q7**: identical solutions to odd unit exercises
+    - **CP3 Q2**: 0.97 similar to u10 Ex2
+    - **CP4 Q4** = u14 Ex1 (same title and task; Ex1 is odd, so its solution prints)
+    - **CP4 Q5** = u14 Ex5 (same title and task; odd)
+    - **CP4 Q6** = u11 Ex8 (same title, task, constraints and sample)
+
+    Each gets a statement, `qN.py` with at least 2 fixture pairs, a `solutions.ipynb` mirror, and updated teacher notes. Solutions are written in a separate session, blind to the statement's intended answer.
+  - **Rule:** no checkpoint question shares a title with a unit exercise. Retitle CP3 Q1 "Spaced Permutation Count" (u09 Ex2 is a different rule) and CP4 Q1 "Count the Islands" (u13 Ex3).
   - Revise **u13 Ex6** so its solution no longer equals Ex7's.
   - Revise **u02 Ex1** so it no longer equals the lesson's gate program `l1.py`.
-  - The reviewers judge CP4 Q4/Q5/Q6 and CP3 Q1 (0.64–0.78, same technique with a different task) in the gate; any judged a copy is replaced the same way.
 - **Independence and print wording:**
   - Remove "the teacher grading guide" from the checkpoint openers.
   - Reword "in the empty code cell below" to "in your notebook" (checkpoints and the project).
   - Remove "no-exec" from u08 `0f35cbe0`.
-  - Fix "Book-2" / "Year-2" to the book's name.
+  - Fix "Book-2" / "Year-2" to the book's name, and remove course-schedule wording from student text (CP4's title "Mock Contest 4 (Term 4 Finale)" and "covering Term 4").
 - **Markup:**
   - Remove the `_Challenge (stretch)._` lines (the stretch marker already prints).
-  - Checkpoint inline `**Constraints.**` becomes `### Constraints`.
+  - Checkpoint bold paragraphs `**Constraints.**` / `**Constraints:**` / `**Sample Input**` / `**Sample Output**` become `###` subsections (21 in CP4, and the rest in CP1–3).
   - The project's `Constraints:` / "Sample Input" / "Sample Output" become `###` subsections.
   - Write `O(R*C)` in u01's teacher notes as code.
 - **Cell ids:** give u02's and u04's `exercises.ipynb` cells stable ids.
@@ -108,7 +121,13 @@ Plan 098's lessons apply:
   - `lesson_heading: '^## Lesson\b'`
   - `index_names`: this book's taught names
   - `audit`: empty demo lists, and `print_required_starters` measured from the sources
-  - `phrase_exemptions`: `python assets/`, kinds `[unit]`, chapters `[units/*]`, because the lessons teach running solvers this way
+  - `phrase_exemptions`:
+    - `python assets/`, kinds `[unit]`, chapters `[units/*]`, because the lessons teach running solvers this way
+    - `python assets/`, kinds `[setup]`, chapters `[docs/getting-set-up.md]`, because the setup chapter teaches it
+
+    How to Use (front matter, where no exemption is possible) uses the neutral form `python my_solution.py < case.txt`. The solutions notebooks' H1 cells also contain `python assets/…`, but they precede the first exercise and never print, so no `answers` exemption is needed.
+  - `print_required_starters` measures to `[]` (exercise code cells are empty); `turtle_tryits` is `{}` and `teacher_turtle_drawings` is 0.
+  - `unit_headers` for unit 11 (Phase A.4).
 - **Front matter** (inline; Student Book independent; contest-specific), measured from the sources:
   - `preface.md`
   - `how-to-use.md`, which covers:
@@ -119,7 +138,9 @@ Plan 098's lessons apply:
   - `for-teachers.md`
   - `answer-key-intro.md`
 - **Back matter:**
-  - `glossary.md`: 31 entries with **short** terms (for example "Set operations"), covering exactly the book's `introduces` ids. The 11 ids shared with *ACSL* get book-neutral definitions.
+  - `glossary.md`: 31 entries in the `**Term** — def *(Unit N)*` + `<!-- concept: id; index: … -->` format, with **short** terms (for example "Set operations") and index aliases short enough for one `.ind` line.
+    - It covers exactly the book's `introduces` ids.
+    - The 12 ids shared with *ACSL* get book-neutral definition text; ACSL reuses the text only, since unit tags and index aliases are per book.
   - `quick-reference.md`: contest idioms by unit (reading input, splitting, sorting with a key, sets, prefix sums, deque, bit operations, grid and graph traversal, two pointers).
 - **Setup chapter** (unnumbered "Getting Set Up") and its teacher notes: installing Python is covered in *Python by Projects* Unit 0. It covers:
   - opening a terminal in a unit folder
@@ -134,13 +155,13 @@ Plan 098's lessons apply:
    - Because `tools/` changes, all three publication books render in all four editions, about 45 minutes of rendering. Never overlap runs.
    - `lesson-outputs-check`, `judge-check` (including the new and revised problems) and `publish-audit` pass for every edition.
 2. python-concepts and python-projects outputs are unchanged, or any change is listed with its reason. python-concepts is checked against its baseline and allowed-diffs; python-projects against a digest captured before Phase A.
-3. **Blind solves:** reviewers solve every new or revised problem (CP2 Q6, CP3 Q2, CP3 Q7, u13 Ex6, u02 Ex1, and any replaced in the gate) from the statement, and run the solutions against the fixtures.
-4. **Rendered-page review in the content gate:**
+3. **Blind solves:** reviewers solve every new or revised problem (CP2 Q6, CP3 Q2, CP3 Q7, CP4 Q4, CP4 Q5, CP4 Q6, u13 Ex6, u02 Ex1) from the statement, and run the solutions against the fixtures.
+4. **Rendered-page review in the content gate**, covering all four editions (Student Print, Student Full, Answer Key, Teacher's):
    - a unit opener with You will learn
    - a lesson with a stdin Try-it (printed once, with its run line)
    - a judge exercise with its sections
    - a stretch Challenge
-   - a checkpoint opener and a question
+   - a checkpoint opener, a CP4 question page (the bold-subhead fix), and the setup chapter
    - the Grand Mock Contest problem and its Teacher's answer
    - Answers to Selected Exercises, the Answer Key, and the glossary and index
    - the unit-11 running head and a `..` code span
@@ -157,6 +178,26 @@ Plan 098's lessons apply:
 
 - The plan is built from a fresh probe that looked at rendered pages. It separates tooling from content, and it treats duplicate checkpoint questions as content errors (replaced and blind-solved), not audit noise.
 - **N1 (noted):** the python-projects regression digest is new here. Plan 098 had no baseline for that book, so Phase A captures one before its first change.
+
+### Round 1 — verdicts and fold
+
+- `[sol]` **APPROVE WITH NITS**: the rendered-page review now names all four editions.
+- `[fable]` **REJECT**, 3 blockers and 11 nits, all folded:
+  - **B1:** a second `python assets/` exemption covers the setup chapter; How to Use uses the neutral form.
+  - **B2:** CP4 Q4, Q5 and Q6 are copies and are replaced now, not in the gate. No checkpoint question may share a unit exercise's title (CP3 Q1 and CP4 Q1 are retitled).
+  - **B3:** `unit_headers` lives in `publication.yaml` (a manifest key would fail `manifest-check`), applies at both truncation sites, and makes an over-long head an error.
+  - **Nits:**
+    - 12 ids are shared with ACSL.
+    - CP4's bold Sample subheads become sections.
+    - The stdin note is dropped, and the audit's `tryits` includes `tryit-stdin`.
+    - The inline-code break rule is specified, with its cause and fixtures.
+    - Lesson-structure positions are confirmed.
+    - "Term 4" wording is removed.
+    - The glossary format is stated, with per-book aliases.
+    - The config values are stated.
+    - No `answers` exemption is needed.
+    - The blind-solve list grows to 8 problems and 2 revisions.
+    - The review list gains a CP4 page and the setup chapter.
 
 ## Content Review
 
