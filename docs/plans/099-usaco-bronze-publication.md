@@ -213,6 +213,13 @@ Plan 098's lessons apply:
 
 - `[sol]` **REJECT** (r3), 1 blocker, folded: a new short head would change python-concepts' output for a reason outside D2/D3, which the regression contract forbids. The config pins unit 08's exact current head, so its output is unchanged; a better head is a follow-up.
 
+### Round 4 — CONSENSUS
+
+- `[sol]` **APPROVE** (r4): no findings.
+- `[fable]` APPROVE WITH NITS (r2; nits folded).
+- `[self]` APPROVE WITH NITS (r1).
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Content Review
 
 ## Post-Execution Report
