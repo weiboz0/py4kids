@@ -46,7 +46,7 @@ A read-only survey (2026-09-30) found that the pipeline, the audit and the theme
     - The `**Your answer:**` placeholder prints nothing. As design 007 decided, the book has no answer lines; students work in their notebooks or on paper.
 - **D3 — Answers for every book.**
   - A short-answer item's answer is its worked markdown plus its `**Answer:**` line. `verify`-tagged cells are **never** printed in any edition.
-  - A judge programming item's answer is its solution notebook's mirror cell, which the judge enforces to be byte-identical to `assets/exN.py` (units), `qN.py` (checkpoints, Teacher's Edition only) or `pN.py` (projects). It prints once.
+  - A judge programming item's answer is its solution notebook's mirror cell, which `judge-check` enforces to be identical (apart from trailing whitespace) to `assets/exN.py` (units), `qN.py` (checkpoints, Teacher's Edition only) or `pN.py` (projects). It prints once.
   - Files matching `^(ex|q|p)\d+\.py$` under `assets/`, and `assets/verify/`, are **solution sources**. They are outside every student edition's source allowlist, except through `student_answer_sources` (odd-numbered unit exercises only).
   - The leak guard still applies.
   - The odd-number rule holds for every book. Where an odd answer's code repeats an even item's full solution, the item is changed (content plans), never the rule.
@@ -70,14 +70,14 @@ A read-only survey (2026-09-30) found that the pipeline, the audit and the theme
   - ACSL's quick reference is a notation card: the pseudocode dialect, `⊕ ⊙ ↑ λ`, bit-string, LISP and assembly.
 - **D7 — Build cost.**
   A book's four editions render in parallel in about 14 minutes (python-concepts recorded 187, 422, 639 and 847 seconds). Four publication books would add roughly 30–45 minutes to every `ci-local.sh` run.
-  So `ci-local.sh` builds a book's editions only when the change touches that book, the publication tooling or the theme (a diff against `origin/main`). `ci-local.sh --all-books` builds every book, and it is required before each GitHub Release.
+  So `ci-local.sh` builds a book's editions only when the change touches that book; any change under `tools/`, `scripts/` or `books.yaml` builds every book. The user chose this on 2026-09-30 ("Only changed books"). `ci-local.sh --all-books` builds every book, and it is required before each GitHub Release.
   Handouts and syllabi are cheap and always build for every book. The `ci-local serial` rule (never two runs at once) stands.
 
 ## 3. Rollout
 
 | plan | scope |
 |---|---|
-| 097 | **Tooling.** D1–D5. `publication.yaml` for python-concepts, with its byte-identical regression guard. D2/D3 rendering and the solution-source boundary, tested on fixture books. The D4 glyph fallback and missing-glyph check. D5 handouts and syllabi for every book. No new book is flagged `publication: true` yet. A trial render of each other book in a scratch copy is reported, not gated. |
+| 097 | **Tooling.** D1–D5. `publication.yaml` for python-concepts, with its regression guard (an immutable baseline and a reasoned allowed-diffs list). D2/D3 rendering and the solution-source boundary, tested on fixture books. The D4 glyph fallback and missing-glyph check. D5 handouts and syllabi for every book. No new book is flagged `publication: true` yet. A trial render of each other book in a scratch copy is reported, not gated. |
 | 098 | ***Python by Projects*** content (D6), then `publication: true`. |
 | 099 | ***Contest Python: USACO Bronze*** content (D6, with its contest setup chapter and leak fixes), then `publication: true`. |
 | 100 | ***Contest Python: ACSL*** content (D6, with its setup chapter, notation quick reference and leak fix), then `publication: true`. |

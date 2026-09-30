@@ -41,7 +41,7 @@ The read-only gap survey (2026-09-30) is summarised in design 010 §1.
 ### Phase A — Baseline and per-book config (D1)
 
 1. Before any code change, capture python-concepts' generated Quarto projects for all four editions (every `.qmd` and `inventory.json`) and its `publish-audit` findings into a baseline under `build/` (git-ignored).
-   The regression test compares against a checked-in digest (`tests/data/python-concepts-publish-digest.json`, SHA-256 per generated file per edition).
+   From it, write the checked-in baseline `tests/data/python-concepts-publish-baseline.json` (SHA-256 per generated file per edition). This is the plan's only baseline file.
 2. Add `<book>/publication.yaml` with a schema, loaded and validated by `tools/books.py`. It holds:
    - `setup:` — `source`, `teacher_notes`, and `numbered` (bool): the title is "Unit 0 — Getting Set Up" when numbered, and "Getting Set Up" otherwise
    - `project_headers:` — a map from project id to header text. The audit's page-header reset rule (`publish_audit.py:307`) is **derived** from these values plus the fixed back-matter names, not from a hard-coded "Algorithm Challenge"
@@ -51,6 +51,8 @@ The read-only gap survey (2026-09-30) is summarised in design 010 §1.
      - `print_page_target` (python-concepts: 400, a soft warning)
      - `turtle_tryits: {unit_id: count}` and `teacher_turtle_drawings`
      - `phrase_exemptions: [{phrase, sources, reason}]`, where `sources` is a list of source-path globs relative to the book (for example `units/*/lesson.ipynb`). An exempt phrase is allowed only in chapters generated from matching sources, and is still banned everywhere else: front matter, answers, other notebooks.
+     - **Both audit layers keep the chapter boundary.** The `.qmd` scan checks each generated chapter against its `source` in `inventory.json`. The PDF-text scan (`publish_audit.py:853`, today one string) is split per chapter with the PDF outline (the chapter start pages already used by the outline checks), and each page range is checked against its chapter's source.
+     - Tests: an exempt phrase passes in a matching lesson chapter, and fails in front matter and in an answers chapter, at both layers.
      - `goals_recap: required`, required for every book by user decision
    - `index_names:` — the Python names the index recognises
    - `lesson_heading:` — the regex for lesson headings
@@ -81,23 +83,31 @@ The read-only gap survey (2026-09-30) is summarised in design 010 §1.
   - Short-answer items print their worked markdown (through `markdown_blocks`) and their `**Answer:**` line.
   - **Checkpoints:** as design 007 amended it, the student editions print no checkpoint answers. The Teacher's Edition prints each checkpoint's answers the same way: short answers from their `**Answer:**` lines; a judge programming question as a listing of its `assets/qN.py`.
   - `verify`-tagged cells are never printed.
-  - Judge programming items print **the solution notebook's mirror cell**, which the judge already enforces to be byte-identical to `assets/exN.py` / `qN.py` / `pN.py` (`tools/judge.py:220`). The file is never printed a second time; it is only a boundary object (F2).
+  - Judge programming items print **the solution notebook's mirror cell**, which `judge-check` already enforces to be identical to `assets/exN.py` / `qN.py` / `pN.py`, apart from trailing whitespace and trailing blank lines (`tools/judge.py:65–69, 215–220`). The file is never printed a second time; it is only a boundary object (F2).
   - The answers-start check accepts the book's first unit number.
 - **Source boundary:** files matching exactly `^(ex|q|p)\d+\.py$` under `assets/` (unit `exN.py`, checkpoint `qN.py`, project `pN.py`), and `assets/verify/**`, are solution sources. `exN_name.py` starters stay allowed; a test covers both sides (F9). They are outside every student allowlist except through `student_answer_sources`, which reads odd unit `exN.py` only. `allowed_source`, `solution_assets` and the leak guard (`publish_audit.py:264`) are extended to all three kinds. Tests cover the Teacher's Edition rendering checkpoint `qN.py`, and a student edition failing the audit if any `exN.py` / `qN.py` body appears outside the allowed odd answers.
 - **Project running headers** come from `publication.yaml`.
 
-- **stdin programs (F1):** a `no-exec` lesson cell that reads `sys.stdin` or `open(0)` is a stdin program. It renders as a "Try it yourself" panel with a line on running it with a sample file, and `_expected_lesson_kind` in the audit mirrors this. This covers USACO's 33 such cells; ACSL's `input()` cells already route to Try it.
+- **stdin programs (F1):** a `no-exec` lesson cell that reads `sys.stdin` or `open(0)` is a stdin program. It renders as a "Try it yourself" panel with a line on running it with a sample file.
+  - In `route_code` the stdin test comes after the `error-demo` / `hang-demo` tag checks and before the `input(` check, so every cell gets one deterministic route.
+  - `_expected_lesson_kind` in the audit calls the **same** predicate function. This covers USACO's 33 such cells; ACSL's `input()` cells already route to Try it.
 - **Lesson headings (F5):** `publication.yaml` gains `lesson_heading` (a regex; python-concepts `^## Lesson\b`). `markdown_blocks`' demotion rule and the audit's lesson checks use it. Plan 098 decides whether to rename *Python by Projects*' `## L1:` headings or configure them.
 - **Checkpoint titles (F7):** `render_chapter` strips `# Checkpoint N:` and `# Checkpoint N — ` alike.
-- **Titles (F8):** structural subsections match by prefix (`Sample Input 1` is structural). A `### Problem N — Title *(topic)*` heading supplies its own title, with the italic tag dropped from the running head.
+- **Titles (F8):** structural subsections match by prefix (`Sample Input 1` is structural). A `### Problem N — Title *(topic)*` heading supplies its own title, with its `*(topic)*` tag dropped from the item heading, and so from the outline and answer-key headings. The topic may stay in the statement body.
 
 ### Phase C — Glyphs and the handout/syllabus build (D4, D5)
 
 - **Font fallback (F4):** the theme uses **luaotfload font fallback**, not per-codepoint wrapping. `luaotfload.add_fallback` chains DejaVu Sans and DejaVu Sans Mono, with `RawFeature={fallback=…}` on the main, sans and mono fonts. That covers prose, inline code, code blocks, headings, raw `\chaptermark`, index entries, the TOC and running heads. It applies only to glyphs the primary font lacks, so python-concepts' pages look the same. The old `panels.lua` wrapping is kept only if it is still needed.
-- **Handouts and syllabi (F3):** the builds become two steps with a kept log. `nbconvert --to latex` and `pandoc -s -o *.tex` write the source, then `lualatex` runs in a kept `build/` directory, using templates with the book fonts and the same fallback. Today nbconvert and pandoc discard the engine log, so there is nothing to check.
+- **Handouts and syllabi (F3):** the builds become two steps with a kept log. `nbconvert --to latex` and `pandoc -s -o *.tex` write the source, then `lualatex` runs in a kept `build/` directory, using templates with the book fonts and the same fallback.
+  - The handout template is a small nbconvert template that inherits `latex/index.tex.j2` and replaces its font block (main and mono fonts with `RawFeature={fallback=…}`), so it does not fight the stock template's fontspec defaults.
+  - nbconvert only writes `.tex`; `--PDFExporter` is no longer used. Today nbconvert and pandoc discard the engine log, so there is nothing to check.
 - **The missing-glyph check:** a small tool, `tools/pdf_glyphs.py`, scans the kept LaTeX log for `Missing character` and fails. It runs for every handout and syllabus build. The book audit already has this check, now with the wider fallback.
 - `ci-local.sh` step 5 builds handouts and the syllabus for **every** book (the `judge` gate goes).
-- **Change-scoped book builds (D7):** `ci-local.sh` renders a publication book's editions only when `git diff origin/main...HEAD` (plus uncommitted changes) touches that book's root, `tools/publish*.py`, `tools/publish_theme/`, `scripts/build-book.sh` or `books.yaml`. `ci-local.sh --all-books` renders every publication book, and it is required before a release. The step prints which books it rendered or skipped, and why. A skip is never silent.
+- **Change-scoped book builds (D7):** `ci-local.sh` renders a publication book's editions only when `git diff origin/main...HEAD` (plus uncommitted changes) touches that book's root (including its `publication.yaml`).
+  - A change to **anything under `tools/` or `scripts/`, or to `books.yaml`**, renders every publication book. The publisher imports `tools/books.py`, the turtle modules and other tools, so no shared input can skip a book.
+  - When a render is skipped, `publish-audit` is skipped with it (it needs the build directory). The pytest regression test and every non-render check always run.
+  - Plans 098–100 run `--all-books` (or their own book's render) before flipping `publication: true`.
+  - User decision, 2026-09-30: "Only changed books". `ci-local.sh --all-books` renders every publication book, and it is required before a release. The step prints which books it rendered or skipped, and why. A skip is never silent.
 
 ### Phase D — Unit tests
 
@@ -121,18 +131,18 @@ The tests cover:
 - **a real render fixture:** a minimal Quarto project through the theme (prose, inline code and a code block containing one character from each D4 range) renders with no `Missing character`; likewise a one-cell nbconvert handout and a pandoc syllabus through the new templates. These run in `ci-local.sh` as a slow-marked test.
 - the audit with a non-python-concepts project header (a "Mock Contest" header resets as configured)
 - a scoped phrase exemption: allowed in a matching lesson, and failing in front matter and in an answer
-- the regression digest
+- the regression test against the baseline and the allowed-diffs list
 
 ## Phase E — VERIFICATION
 
 1. `scripts/ci-local.sh` ALL GREEN in a solo run on the final commit. That run builds handouts and syllabi for all four books, with no missing glyphs, and python-concepts' four editions as before.
-2. The python-concepts regression digest is identical for all four editions, and its audit findings are unchanged.
+2. The python-concepts generated output equals `tests/data/python-concepts-publish-baseline.json` for all four editions, except for the files listed in `tests/data/python-concepts-publish-allowed-diffs.yaml`, each with its D2/D3 reason. Its audit findings are unchanged.
 3. **Trial report (not a gate).** In a scratch copy, flag *Python by Projects*, *USACO Bronze* and *ACSL* `publication: true` with stub front and back matter, and build one edition each. Report for each book:
    - the page count
    - that sampled statements are present (Exercise 1 of a contest unit)
    - that there are 0 missing glyphs
    - the remaining audit findings, which are the content plans' to-do list
-4. Post-execution report. It records how the regression baseline is retired: once plan 097 merges, the immutable-baseline test is regenerated only by an explicit command, so later errata to *Python, Concept by Concept* are not blocked (F11).
+4. Post-execution report. It records the baseline's retirement after merge: the test switches to comparing against a regenerable digest, updated only by an explicit command (`py4kids-tools publish-digest --update`). Later errata to *Python, Concept by Concept* are then not blocked, and the pre-097 baseline file is deleted (F11).
 
 ## Out of scope
 
@@ -171,6 +181,22 @@ The tests cover:
   - F11: baseline retirement.
   - F12: the real build cost, recorded in design 010 D7 with change-scoped book builds.
   - F13: config required, with fixture configs.
+
+### Round 2 — verdicts and fold
+
+- `[fable]` **APPROVE WITH NITS**. It verified all 18 round-1 folds. Its nits are folded:
+  - N1: the CI trigger is any change under `tools/`, `scripts/` or `books.yaml`; audit skips go with render skips; recorded as a user decision.
+  - N2: the mirror guarantee is "apart from trailing whitespace".
+  - N3: one baseline file, E.2 checks the allowed-diffs list, and the baseline lifecycle is stated.
+  - N4: the Problem tag is dropped from the item heading.
+  - N5: the stdin route's precedence, with a shared predicate.
+  - N6: the handout template inherits `index.tex.j2`, and nbconvert writes `.tex` only.
+- `[sol]` **REJECT**, 3 blockers and 1 nit, all folded:
+  1. = N3.
+  2. = N1 (`tools/books.py` and every shared input now trigger all books).
+  3. Scoped phrase exemptions keep the chapter boundary in both the `.qmd` scan and the PDF-text scan (split by outline page ranges), with tests.
+  4. = N2.
+- **User decision, 2026-09-30:** CI renders only changed books; `--all-books` runs before each release.
 
 ## Content Review
 
