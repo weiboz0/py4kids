@@ -33,7 +33,7 @@ A read-only survey (2026-09-30) found that the pipeline, the audit and the theme
     - error-demo and hang-demo cell ids
     - print-required Starters
     - turtle try-it counts per unit and the Teacher's Edition drawing count
-    - the per-book exemptions to the phrase bans: a phrase is exempt only where the book teaches it (for example `python assets/` in contest lessons, which is how students run their programs)
+    - the per-book exemptions to the phrase bans, each scoped to the source files where the book teaches the phrase (for example `python assets/` in contest lessons, which is how students run their programs). The phrase stays banned everywhere else.
   - **index:** the set of Python names the index recognises
 
   The *Python, Concept by Concept* values move there **unchanged**. A regression guard proves that its four generated Quarto projects and its audit results are byte-identical before and after the move.
@@ -46,12 +46,12 @@ A read-only survey (2026-09-30) found that the pipeline, the audit and the theme
     - The `**Your answer:**` placeholder prints nothing. As design 007 decided, the book has no answer lines; students work in their notebooks or on paper.
 - **D3 — Answers for every book.**
   - A short-answer item's answer is its worked markdown plus its `**Answer:**` line. `verify`-tagged cells are **never** printed in any edition.
-  - A judge programming item's answer is its solution program `assets/exN.py`, shown as a listing.
-  - `assets/exN.py`, `assets/q*.py` and `assets/verify/` are **solution sources**. They are outside every student edition's source allowlist, except through `student_answer_sources` (odd-numbered unit exercises only).
+  - A judge programming item's answer is its solution notebook's mirror cell, which the judge enforces to be byte-identical to `assets/exN.py` (units), `qN.py` (checkpoints, Teacher's Edition only) or `pN.py` (projects). It prints once.
+  - Files matching `^(ex|q|p)\d+\.py$` under `assets/`, and `assets/verify/`, are **solution sources**. They are outside every student edition's source allowlist, except through `student_answer_sources` (odd-numbered unit exercises only).
   - The leak guard still applies.
   - The odd-number rule holds for every book. Where an odd answer's code repeats an even item's full solution, the item is changed (content plans), never the rule.
 - **D4 — Glyphs.**
-  - The theme's fallback font (DejaVu) covers these ranges, in prose **and** in code blocks: arrows, mathematical operators U+2200–22FF (`⊕ ⊙ ≤ ≥ ≠ −`), miscellaneous technical U+2300–23FF (`⌊ ⌋`), sub- and superscripts U+2070–209F, box drawing U+2500–257F, and dingbats U+2700–27BF (`✓ ✗`).
+  - The theme uses luaotfload font fallback to DejaVu Sans and DejaVu Sans Mono, for any glyph the primary fonts lack, everywhere (prose, code blocks, headings, running heads). The ranges it must cover include: arrows, mathematical operators U+2200–22FF (`⊕ ⊙ ≤ ≥ ≠ −`), miscellaneous technical U+2300–23FF (`⌊ ⌋`), sub- and superscripts U+2070–209F, box drawing U+2500–257F, and dingbats U+2700–27BF (`✓ ✗`).
   - Handouts (nbconvert) and syllabi (pandoc) build with a template that uses the same body, mono and fallback fonts.
   - A **missing-glyph check** fails any PDF build whose LaTeX log reports a missing character. The book audit already fails; handouts and syllabi now fail too.
 - **D5 — Handouts and syllabi for every book.**
@@ -69,7 +69,9 @@ A read-only survey (2026-09-30) found that the pipeline, the audit and the theme
   - ACSL's How to Use also explains divisions, the contest windows and paths.
   - ACSL's quick reference is a notation card: the pseudocode dialect, `⊕ ⊙ ↑ λ`, bit-string, LISP and assembly.
 - **D7 — Build cost.**
-  All four books build all four editions in `ci-local.sh`, with editions in parallel as today. Each book adds about 3–4 minutes. The `ci-local serial` rule (never two runs at once) stands.
+  A book's four editions render in parallel in about 14 minutes (python-concepts recorded 187, 422, 639 and 847 seconds). Four publication books would add roughly 30–45 minutes to every `ci-local.sh` run.
+  So `ci-local.sh` builds a book's editions only when the change touches that book, the publication tooling or the theme (a diff against `origin/main`). `ci-local.sh --all-books` builds every book, and it is required before each GitHub Release.
+  Handouts and syllabi are cheap and always build for every book. The `ci-local serial` rule (never two runs at once) stands.
 
 ## 3. Rollout
 
@@ -83,6 +85,6 @@ A read-only survey (2026-09-30) found that the pipeline, the audit and the theme
 
 ## 4. Non-goals
 
-- No change to design 007's decisions for *Python, Concept by Concept*: its output stays byte-identical through plan 097.
+- No change to design 007's decisions for *Python, Concept by Concept*. Plan 097's per-book config changes none of its output; D2/D3 fixes may change its output only in files listed with a reason against an immutable pre-change baseline.
 - No per-contest split of the ACSL book (one book, as design 009 decided).
 - No e-book or HTML edition.
