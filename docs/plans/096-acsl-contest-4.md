@@ -300,5 +300,68 @@ Five `teacher-notes.md` files with the required headings, and Grading for the ch
 
 ## Content Review
 
+### Round 1 — CONSENSUS
+
+- `[sol]` **APPROVE**, no findings. Blind solve: every requested item matched (checkpoint Q1–Q8 and Q9's sample; unit 12 Ex 2, 7, 8, 11, 13, 19, 21, 24; unit 13 Ex 3, 6, 7, 14, 16, 20; unit 14 Ex 3, 4, 10, 16, 19; unit 15 Ex 2, 5, 9, 12, 14). 152 evaluator tests, 177 program fixtures and 76 verify cells passed, and Q9 matched an independent oracle on 143 more graphs.
+- `[fable]` **APPROVE WITH NITS.** Blind solve: every assigned item matched (35 items plus the checkpoint), and every other short answer was hand-checked. All fixtures passed, and Q9 matched a brute force on 300 random graphs. It confirmed ACSL fidelity, unique hook titles, the code-free Elementary lesson, the paths, no checkpoint repeats, and helper imports.
+  - `[WONTFIX]` F1: the Elementary traversability items answer `YES`/`NO` rather than the doc's start/end-vertex form. The plan pins `YES`/`NO` as canonical, and unit 12's teacher notes state the difference. A start/end form is noted for a future enrichment pass.
+  - `[WONTFIX]` F2: `asm_eval` reports a lowercase opcode as an unknown opcode on its operand. The message is cosmetic, and no item can reach it.
+  - `[WONTFIX]` F3: `graph_eval.traversable` returns True for an edgeless graph. That is vacuously correct, and no item uses it.
+- `[self]` APPROVE: every short answer was solved blind by the solutions sessions and matched the authors' keys:
+  - checkpoint 8/8
+  - U12 22/22
+  - U13 17/17
+  - U14 16/16
+  - U15 13/13
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped: ACSL Contest 4** (study window Mar 1 – May 23, 2027). This completes the season: Foundations plus Contests 1–4.
+
+| Entry | Items | Divisions (by heading tag) |
+|---|---|---|
+| `unit-12-graph-theory` | 26 (22 short-answer, 4 programming) | 9 elementary (Ex 1–6 the mock test, first and contiguous), 9 junior, 5 intermediate, 3 senior |
+| `unit-13-digital-electronics` | 22 (17 short-answer, 5 programming) | 12 junior, 6 intermediate, 4 senior |
+| `unit-14-wdtpd-strings` | 19 (16 short-answer, 3 programming; 14 in pseudocode) | 19 junior |
+| `unit-15-assembly-language` | 18 (13 short-answer, 5 programming) | 11 intermediate, 7 senior |
+| `checkpoint-04-contest-4-practice` | 9 (Q1–Q6 junior, Q7–Q8 intermediate short-answer; Q9 junior programming, last) | see paths |
+
+- **Checkpoint paths** (from the question tags; all listed on the student page, with Q9's timing only on the programming paths):
+  - Junior: Q1–Q6 + Q9
+  - Intermediate/Senior: Q1–Q4, Q7–Q8 + Q9
+  - Classroom: Q1–Q4, Q7–Q8 (Q5–Q6 optional; no programming)
+  - Elementary: unit 12 Exercises 1–6
+- **Unit 12:**
+  - Opens with a code-free Elementary lesson following the Elementary doc: cycles in both directions, simple paths, traversability (connected, with 0 or 2 odd vertices), complete graphs.
+  - Junior and above: directed graphs, cycles counted once, adjacency matrices and `M^p` walks, components, trees and forests.
+  - Intermediate and above: cheapest paths, spanning trees, DAGs.
+  - Introduces the ACSL-only `acsl-graph-theory`.
+- **Unit 13:** the eight gates; circuits as `INPUTS` netlists and ASCII sketches; tuples, counts and unique minimal simplifications; NAND/NOR universality (Senior, option choice); a Python simulator. Introduces the ACSL-only `logic-gates`.
+- **Unit 14:** Junior string drill with ACSL's inclusive substrings (`introduces: []`). The hook shows ACSL's rules and Python's slices giving different answers.
+- **Unit 15:** ACSL assembly exactly as the wiki defines it (`DIV` toward zero; labels parsed by opcode), branches and loops, `READ`/`PRINT`, what a program computes, and a Senior interpreter. Introduces the ACSL-only `acsl-assembly`.
+- **Verify helpers:** `graph_eval.py`, `circuit_eval.py` and `asm_eval.py`, each passing its pre-written test file (152 tests: the wiki and Elementary-doc samples, and every pinned interface). The checkpoint's verify cells import them.
+- **Plan-095 lessons applied:**
+  - the checkpoint was authored after the units
+  - de-duplication checked (edge sets, truth columns, programs)
+  - hook titles are unique across all 16 units (checked by script)
+  - the checkpoint uses no evaluator of its own
+- **Registry:** three ACSL-only ids; coverage map and syllabus reconciled.
+- **Teacher notes** (inline) for all five entries. Unit 12's notes state the Elementary/wiki cycle-counting conflict, and unit 15's notes state the book's modulo convention.
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN, solo run at 99f9788 (pytest 1420 passed, 2 environment skips). The later commits change only the plan file.
+- Blind solves: the solutions sessions matched every author key (checkpoint 8/8, U12 22/22, U13 17/17, U14 16/16, U15 13/13). [sol] and [fable] matched every sampled item, and [fable] hand-checked the rest.
+- Phase E scripts: the checkpoint paths match the tags; unit 12 Ex 1–6 are contiguous `acsl-elementary` items; the 16 hook titles are unique; the checkpoint's 8 verify cells define no evaluator.
+
+**Deviations:**
+- A1 recorded source errata and pinned rules the sources leave open:
+  - the wiki's Digital Electronics sample-2 `q` column (row `0110`) is wrong, and the test uses the corrected column
+  - the wiki's Graph Theory overview omits H from its vertex set
+  - the image-only matrix sample is transcribed as `AA AC CA BB BC`
+  - lowercase vertices are allowed
+  - `to_expression`'s bracket rule, `acc` tracing, and exception types
+- Unit 13 Ex 6 was reworded during authoring ("the same gates, wired the same way") to remove an ambiguity the solutions session found.
+- Content nits F1–F3 are WONTFIX with reasons (see Content Review).
+
+**Next:** stop and check in with the user before plan 097 (the USACO trim with replace-and-move), as agreed.
