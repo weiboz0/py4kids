@@ -226,7 +226,8 @@ class PublicationConfig:
     project_headers: dict[str, str]
     lesson_heading: str
     index_names: frozenset[str]
-    # A unit's running header when its title is over RUNNING_HEAD_MAX characters (plan 099 A4).
+    # A unit's or checkpoint's running header when its title is over RUNNING_HEAD_MAX characters
+    # (plan 099 A4); keyed by unit or checkpoint id.
     unit_headers: dict[str, str] = field(default_factory=dict)
     error_demo_ids: frozenset[str] = frozenset()
     hang_demo_ids: frozenset[str] = frozenset()
@@ -261,7 +262,7 @@ class PublicationConfig:
 
 
 _TOP_KEYS = {"setup", "project_headers", "unit_headers", "lesson_heading", "index_names", "audit"}
-# The longest running header (chapter mark) the theme sets; a longer unit title needs a
+# The longest running header (chapter mark) the theme sets; a longer unit or checkpoint title needs a
 # `unit_headers` entry, and the publisher never truncates silently (plan 099 A4).
 RUNNING_HEAD_MAX = 32
 _SETUP_KEYS = {"source", "teacher_notes", "numbered"}
@@ -342,10 +343,12 @@ def _parse_publication_config(root: Path, book: str) -> tuple[PublicationConfig 
 
     unit_headers = _mapping(data.get("unit_headers", {}) or {}, f"{where}: unit_headers", errors)
     for unit, header in unit_headers.items():
-        if not isinstance(unit, str) or not unit.startswith("unit-"):
-            errors.append(f"{where}: unit_headers: key {unit} must be a unit id")
-        elif not (base / "units" / unit).is_dir():
-            errors.append(f"{where}: unit_headers: unit {unit} does not exist")
+        # Units and checkpoints share `running_head`, so a checkpoint id is a valid key too.
+        kind = unit.split("-", 1)[0] if isinstance(unit, str) else None
+        if kind not in ("unit", "checkpoint"):
+            errors.append(f"{where}: unit_headers: key {unit} must be a unit or checkpoint id")
+        elif not (base / f"{kind}s" / unit).is_dir():
+            errors.append(f"{where}: unit_headers: {kind} {unit} does not exist")
         if not isinstance(header, str) or not header.strip():
             errors.append(f"{where}: unit_headers: {unit} needs a header text")
         elif len(header) > RUNNING_HEAD_MAX:
