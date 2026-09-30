@@ -1,5 +1,6 @@
-2 3
-0 0
-A#C
-DEF
-RDLR
+4 4
+4
+POUR A B
+FILL B
+POUR A B
+POUR B A

@@ -1,10 +1,9 @@
 import sys
 
 data = sys.stdin.read()
-lines = data.split("\n")
-header = lines[0].split()
-n = int(header[0])
-m = int(header[1])
+tokens = data.split()
+n = int(tokens[0])
+m = int(tokens[1])
 adj = {}
 node = 1
 while node <= n:
@@ -12,22 +11,33 @@ while node <= n:
     node = node + 1
 i = 0
 while i < m:
-    parts = lines[1 + i].split()
-    u = int(parts[0])
-    v = int(parts[1])
+    u = int(tokens[2 + 2 * i])
+    v = int(tokens[3 + 2 * i])
     adj[u].append(v)
     adj[v].append(u)
     i = i + 1
-visited = set()
 
-def walk(u, seen):
-    seen.add(u)
-    for nb in adj[u]:
-        if nb not in seen:
-            walk(nb, seen)
+team = {}
 
-walk(1, visited)
-if len(visited) == n:
+
+def place(student, side):
+    team[student] = side
+    for rival in adj[student]:
+        if rival not in team:
+            if not place(rival, 3 - side):
+                return False
+        elif team[rival] == side:
+            return False
+    return True
+
+
+possible = True
+node = 1
+while node <= n and possible:
+    if node not in team:
+        possible = place(node, 1)
+    node = node + 1
+if possible:
     print("YES")
 else:
     print("NO")

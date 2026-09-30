@@ -1,36 +1,45 @@
 import sys
 
 data = sys.stdin.read()
-lines = data.split("\n")
-header = lines[0].split()
-rows = int(header[0]); cols = int(header[1])
+tokens = data.split()
+rows = int(tokens[0])
+cols = int(tokens[1])
 grid = []
 r = 0
 while r < rows:
-    grid.append(lines[1 + r])
+    grid.append(tokens[2 + r])
     r = r + 1
 visited = set()
 
-def fill(cr, cc):
+
+def fill(cr, cc, found):
     visited.add((cr, cc))
-    size = 1
+    found.append((cr, cc))
     neighbours = [(cr - 1, cc), (cr + 1, cc), (cr, cc - 1), (cr, cc + 1)]
     for spot in neighbours:
-        nr = spot[0]; nc = spot[1]
+        nr = spot[0]
+        nc = spot[1]
         if 0 <= nr and nr < rows and 0 <= nc and nc < cols:
-            if grid[nr][nc] == "#" and (nr, nc) not in visited:
-                size = size + fill(nr, nc)
-    return size
+            if grid[nr][nc] == "." and (nr, nc) not in visited:
+                fill(nr, nc, found)
 
-best = 0
+
+ponds = 0
+area = 0
 r = 0
 while r < rows:
     c = 0
     while c < cols:
-        if grid[r][c] == "#" and (r, c) not in visited:
-            region = fill(r, c)
-            if region > best:
-                best = region
+        if grid[r][c] == "." and (r, c) not in visited:
+            found = []
+            fill(r, c, found)
+            enclosed = True
+            for cell in found:
+                if cell[0] == 0 or cell[0] == rows - 1 or cell[1] == 0 or cell[1] == cols - 1:
+                    enclosed = False
+            if enclosed:
+                ponds = ponds + 1
+                area = area + len(found)
         c = c + 1
     r = r + 1
-print(str(best))
+print(str(ponds) + " " + str(area))

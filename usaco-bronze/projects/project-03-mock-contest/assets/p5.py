@@ -2,9 +2,11 @@ from collections import deque
 import sys
 
 data = sys.stdin.read()
-lines = data.split("\n")
-header = lines[0].split()
-n = int(header[0]); m = int(header[1]); source = int(header[2]); target = int(header[3])
+tokens = data.split()
+n = int(tokens[0])
+m = int(tokens[1])
+source = int(tokens[2])
+target = int(tokens[3])
 adj = {}
 node = 1
 while node <= n:
@@ -12,24 +14,27 @@ while node <= n:
     node = node + 1
 i = 0
 while i < m:
-    parts = lines[1 + i].split()
-    u = int(parts[0]); v = int(parts[1])
+    u = int(tokens[4 + 2 * i])
+    v = int(tokens[5 + 2 * i])
     adj[u].append(v)
     adj[v].append(u)
     i = i + 1
-visited = {source}
+
+modulus = 1000000007
+dist = {source: 0}
+ways = {source: 1}
 queue = deque()
-queue.append((source, 0))
-answer = "-1"
-while len(queue) > 0 and answer == "-1":
-    item = queue.popleft()
-    node = item[0]
-    dist = item[1]
-    if node == target:
-        answer = str(dist)
-    else:
-        for nb in adj[node]:
-            if nb not in visited:
-                visited.add(nb)
-                queue.append((nb, dist + 1))
-print(answer)
+queue.append(source)
+while len(queue) > 0:
+    u = queue.popleft()
+    for v in adj[u]:
+        if v not in dist:
+            dist[v] = dist[u] + 1
+            ways[v] = ways[u]
+            queue.append(v)
+        elif dist[v] == dist[u] + 1:
+            ways[v] = (ways[v] + ways[u]) % modulus
+if target in dist:
+    print(str(dist[target]) + " " + str(ways[target]))
+else:
+    print("-1 0")

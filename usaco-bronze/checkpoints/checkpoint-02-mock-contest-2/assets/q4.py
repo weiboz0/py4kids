@@ -1,25 +1,32 @@
 import sys
 
 data = sys.stdin.read()
-parts = data.split()
-item_count = int(parts[0])
-budget = int(parts[1])
-costs = []
+tokens = data.split()
+destination = int(tokens[0])
+tank = int(tokens[1])
+n = int(tokens[2])
+stations = []
 i = 0
-while i < item_count:
-    costs.append(int(parts[i + 2]))
+while i < n:
+    stations.append(int(tokens[3 + i]))
     i = i + 1
+stations.sort()
 
-ordered_costs = sorted(costs)
-spent = 0
-bought = 0
-can_buy = 1
-i = 0
-while i < item_count and can_buy == 1:
-    if spent + ordered_costs[i] <= budget:
-        spent = spent + ordered_costs[i]
-        bought = bought + 1
+stops = 0
+current = 0
+next_station = 0
+stuck = False
+while current + tank < destination and not stuck:
+    farthest = current
+    while next_station < n and stations[next_station] <= current + tank:
+        farthest = stations[next_station]
+        next_station = next_station + 1
+    if farthest == current:
+        stuck = True
     else:
-        can_buy = 0
-    i = i + 1
-print(str(bought))
+        current = farthest
+        stops = stops + 1
+if stuck:
+    print("-1")
+else:
+    print(str(stops))

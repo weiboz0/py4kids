@@ -1,35 +1,39 @@
 import sys
 
 data = sys.stdin.read()
-lines = data.split("\n")
-n = int(lines[0].split()[0])
-label = []
-left = []
-right = []
-build = 0
-while build <= n:
-    label.append(0)
-    left.append(-1)
-    right.append(-1)
-    build = build + 1
-i = 1
-while i <= n:
-    parts = lines[i].split()
-    label[i] = int(parts[0])
-    left[i] = int(parts[1])
-    right[i] = int(parts[2])
+tokens = data.split()
+n = int(tokens[0])
+labels = [0]
+left = [-1]
+right = [-1]
+i = 0
+while i < n:
+    labels.append(int(tokens[1 + 3 * i]))
+    left.append(int(tokens[2 + 3 * i]))
+    right.append(int(tokens[3 + 3 * i]))
     i = i + 1
 
-def walk(node):
-    if node == -1:
-        return ""
-    text = str(label[node])
-    left_text = walk(left[node])
-    if len(left_text) > 0:
-        text = text + " " + left_text
-    right_text = walk(right[node])
-    if len(right_text) > 0:
-        text = text + " " + right_text
-    return text
+counts = []
+sums = []
 
-print(walk(1))
+
+def visit(node, depth):
+    if node == -1:
+        return
+    if depth > len(counts):
+        counts.append(0)
+        sums.append(0)
+    counts[depth - 1] = counts[depth - 1] + 1
+    sums[depth - 1] = sums[depth - 1] + labels[node]
+    visit(left[node], depth + 1)
+    visit(right[node], depth + 1)
+
+
+visit(1, 1)
+best = 0
+level = 1
+while level < len(counts):
+    if counts[level] > counts[best]:
+        best = level
+    level = level + 1
+print(str(best + 1) + " " + str(sums[best]))

@@ -1,23 +1,38 @@
 import sys
 
 data = sys.stdin.read()
-parts = data.split()
-item_count = int(parts[0])
-target = int(parts[1])
-weights = []
-i = 0
-while i < item_count:
-    weights.append(int(parts[i + 2]))
-    i = i + 1
+tokens = data.split()
+lamps = int(tokens[0])
+switch_count = int(tokens[1])
+switches = []
+position = 2
+s = 0
+while s < switch_count:
+    k = int(tokens[position])
+    mask = 0
+    j = 0
+    while j < k:
+        lamp = int(tokens[position + 1 + j])
+        mask = mask | (1 << lamp)
+        j = j + 1
+    switches.append(mask)
+    position = position + 1 + k
+    s = s + 1
 
-matching = 0
-for mask in range(1 << item_count):
-    total = 0
-    i = 0
-    while i < item_count:
-        if mask & (1 << i):
-            total = total + weights[i]
-        i = i + 1
-    if total == target:
-        matching = matching + 1
-print(str(matching))
+all_on = (1 << lamps) - 1
+best = -1
+choice = 0
+while choice < (1 << switch_count):
+    state = 0
+    pressed = 0
+    s = 0
+    while s < switch_count:
+        if choice & (1 << s):
+            state = state ^ switches[s]
+            pressed = pressed + 1
+        s = s + 1
+    if state == all_on:
+        if best == -1 or pressed < best:
+            best = pressed
+    choice = choice + 1
+print(str(best))
