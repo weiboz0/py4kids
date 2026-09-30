@@ -9,7 +9,8 @@ function Header(el)
   if (el.level == 3 or el.level == 4) and el.content[1] then
     local title = pandoc.utils.stringify(el.content)
     if title:match('^Exercise %d+') or title:match('^Question %d+') or
-       title:match('^Problem %d+') or title:match('^Challenge — ') then
+       title:match('^Problem %d+') or title:match('^Challenge — ') or
+       title:match('^Challenge %d+') then
       return {pandoc.RawBlock('latex', '\\Needspace{16\\baselineskip}'), el}
     end
   end

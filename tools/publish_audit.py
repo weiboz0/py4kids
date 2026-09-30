@@ -26,6 +26,7 @@ from tools.publish import (
     ITEM,
     NOTICE,
     answer_chapter_heading,
+    challenge_solution_assets,
     code_block,
     code_tokens,
     entries,
@@ -38,6 +39,8 @@ from tools.publish import (
     notebook,
     output_stem,
     panel,
+    project_answer_headings,
+    project_sections,
     python_name_units,
     reads_stdin,
     redundant_starter,
@@ -45,6 +48,7 @@ from tools.publish import (
     solution_source_files,
     statement_text,
     title_heading,
+    unit_challenges,
 )
 from tools.turtle_real import real_programs
 
@@ -362,6 +366,26 @@ def leak_findings(root: Path, book_id: str, chapters: list[dict], project: Path,
             for where in dict.fromkeys(where for where, blocks in located
                                        if any(solution_leak(block, sources) for block in blocks)):
                 findings.append(f'FAIL: {edition}: {where}: solution leak from {id_} {label} {number}')
+        if kind == 'project' and not groups:
+            # A Problem-less project's milestone and reference sections are Teacher's Edition only.
+            for section in project_sections(solutions.cells):
+                sources = [_tokenize_if_complete(cell.source) for cell in section['cells']
+                           if cell.cell_type == 'code']
+                for where in dict.fromkeys(where for where, blocks in located
+                                           if any(solution_leak(block, sources) for block in blocks)):
+                    findings.append(f"FAIL: {edition}: {where}: solution leak from {id_} {section['heading']}")
+        if kind != 'unit':
+            continue
+        # Unnumbered challenges print no answer in any student-family edition (plan 098 A3).
+        for challenge in unit_challenges(solutions.cells)[1]:
+            number = challenge['number']
+            sources = [_tokenize_if_complete(cell.source) for cell in challenge['cells']
+                       if cell.cell_type == 'code']
+            sources += [_tokenize_if_complete(path.read_text(encoding='utf-8'))
+                        for path in challenge_solution_assets(entry, number)]
+            for where in dict.fromkeys(where for where, blocks in located
+                                       if any(solution_leak(block, sources) for block in blocks)):
+                findings.append(f'FAIL: {edition}: {where}: solution leak from {id_} Challenge {number}')
     return findings
 
 
@@ -416,7 +440,9 @@ def reference_findings(pdf_text: str, project_headers: tuple[str, ...] = ()) -> 
         if unit_on_page != active_unit:
             active_unit = unit_on_page
             active_exercise = None
-        for event in re.finditer(r'(?m)^Exercise\s+(\d+)\b|Answer on page\s+(\d+)', page):
+        # An exercise heading is a whole line (`Exercise 16` or `Exercise 16 — Title`), so prose that
+        # wraps to begin a line with "Exercise 16's ..." never claims the next "Answer on page" (plan 098 A5).
+        for event in re.finditer(r'(?m)^Exercise (\d+)(?: — .*)?[ \t]*$|Answer on page\s+(\d+)', page):
             if event[1]:
                 active_exercise = int(event[1])
                 continue
@@ -508,9 +534,10 @@ def _expected_notices(entry: Path) -> int:
     exercise = notebook(entry / 'exercises.ipynb', 'student')
     count = _notice_count(lesson.cells)
     preface, groups = item_groups(exercise.cells, 'Exercise')
-    count += _notice_count(preface)
-    for group in groups:
-        found = title_heading(group)
+    lead_in, challenges = unit_challenges(exercise.cells)
+    count += _notice_count(preface) + _notice_count(lead_in)
+    for group, numbered in [*((group, True) for group in groups), *((group, False) for group in challenges)]:
+        found = title_heading(group) if numbered else None
         heading = statement_text(group['cells'][0].source, True, found[1] if found else None)
         count += sum(bool(NOTICE.match(p)) for p in re.split(r'\n\s*\n', heading) if p)
         cells = group['cells'][1:]
@@ -625,14 +652,31 @@ def expected_quarto_files(edition: str, entry_order: list[str], setup_id: str) -
             for position, id_ in enumerate(expected_chapter_ids(edition, entry_order, setup_id))]
 
 
+def _always_starter_kind(cell) -> tuple[str, str]:
+    return ('verify-omitted' if 'verify' in cell.metadata.get('tags', []) else 'starter', cell.source)
+
+
 def starter_kinds(entry: Path, kind: str, edition: str) -> dict[str, tuple[str, str]]:
-    """Each item code cell's id -> (expected inventory kind, source) under the edition's Starter rule."""
+    """Each item code cell's id -> (expected inventory kind, source) under the edition's Starter rule,
+    in document order.
+
+    A project's preface code cells (milestone scaffolds) and a challenge lead-in's code cells are
+    Starters in every edition, never `starter-omitted`; unnumbered challenges follow the item rule
+    (plan 098 A1, A3).
+    """
     source = entry / ('exercises.ipynb' if kind == 'unit' else 'checkpoint.ipynb' if kind == 'checkpoint'
                       else 'brief.ipynb')
-    _, groups = item_groups(notebook(source, 'student').cells, ITEM[kind])
+    cells = notebook(source, 'student').cells
+    preface, groups = item_groups(cells, ITEM[kind])
     required = EDITIONS[edition]['starters'] == 'required'
     kinds = {}
-    for group in groups:
+    if kind == 'project':
+        for cell in preface:
+            if cell.cell_type == 'code':
+                kinds[cell.id] = _always_starter_kind(cell)
+    lead_in, challenges = unit_challenges(cells) if kind == 'unit' else ([], [])
+
+    def item_kinds(group) -> None:
         statement = '\n'.join(c.source for c in group['cells'] if c.cell_type == 'markdown')
         for cell in group['cells']:
             if cell.cell_type != 'code':
@@ -642,6 +686,15 @@ def starter_kinds(entry: Path, kind: str, edition: str) -> dict[str, tuple[str, 
                 continue
             omitted = required and redundant_starter(cell.source, statement)
             kinds[cell.id] = ('starter-omitted' if omitted else 'starter', cell.source)
+
+    # The publisher's print order: the exercise groups, then the challenge lead-in, then the challenges.
+    for group in groups:
+        item_kinds(group)
+    for cell in lead_in:
+        if cell.cell_type == 'code':
+            kinds[cell.id] = _always_starter_kind(cell)
+    for group in challenges:
+        item_kinds(group)
     return kinds
 
 
@@ -753,6 +806,104 @@ def answer_key_equivalence_findings(id_: str, unit: int, key_qmd: str, full_answ
     return findings
 
 
+def answer_key_coverage_findings(id_: str, kind: str, qmd: str, numbers: list[int], entry: Path) -> list[str]:
+    """Teacher's Edition: one `## Answer key` with an answer for every item. A Problem-less project
+    answers each solution section (`project_answer_headings`) instead, and a chapter with nothing to
+    answer has no Answer key heading at all."""
+    headings = project_answer_headings(entry) if kind == 'project' and not numbers else []
+    expected_keys = 1 if numbers or headings or kind != 'project' else 0
+    answers = qmd.split('## Answer key', 1)[-1] if expected_keys else ''
+    item_numbers = [int(x) for x in re.findall(r'^### ' + ITEM[kind] + r' (\d+)\b', answers, re.MULTILINE)]
+    project_headings = re.findall(r'(?m)^### (.+)$', answers) if headings else []
+    if qmd.count('## Answer key') != expected_keys or item_numbers != numbers or project_headings != headings:
+        return [f'FAIL: teacher: {id_}: answer-key coverage']
+    return []
+
+
+def challenge_findings(id_: str, qmd: str, entry: Path, edition: str) -> list[str]:
+    """Unnumbered challenges (plan 098 A3), counted apart from exercises: each source challenge prints
+    once as `### Challenge N[ — Title]` with its marker in the chapter body, and the Teacher's Edition
+    answer key has an answer for every challenge (the student editions have none)."""
+    _, challenges = unit_challenges(notebook(entry / 'exercises.ipynb', 'student').cells)
+    numbers = [challenge['number'] for challenge in challenges]
+    body, _, answers = qmd.partition('## Answer key')
+    findings = []
+    for where, found in (('exercises', numbers), ('solutions', _solution_challenge_numbers(entry))):
+        duplicates = sorted({number for number in found if found.count(number) > 1})
+        if duplicates:
+            findings.append(f'FAIL: {edition}: {id_}: duplicate challenge headings in {where}: '
+                            + ', '.join(map(str, duplicates)))
+    rendered = [int(match[1]) for match in re.finditer(
+        r'(?m)^### Challenge (\d+)\b[^\n]*\n\n::: \{\.challenge\}\n\*\*Challenge\*\*\n:::', body)]
+    if rendered != numbers or len(re.findall(r'(?m)^### Challenge \d+\b', body)) != len(numbers):
+        findings.append(f'FAIL: {edition}: {id_}: rendered challenge items')
+    if edition == 'teacher':
+        headings = list(re.finditer(r'(?m)^### Challenge (\d+)\b[^\n]*$', answers))
+        if [int(match[1]) for match in headings] != numbers:
+            findings.append(f'FAIL: {edition}: {id_}: challenge answer coverage')
+        for match in headings:
+            # An answer section runs to the next heading of level 1-3; a heading alone is no answer.
+            following = re.search(r'(?m)^#{1,3} ', answers[match.end():])
+            end = match.end() + following.start() if following else len(answers)
+            if not answers[match.end():end].strip():
+                findings.append(f'FAIL: {edition}: {id_}: empty answer for Challenge {match[1]}')
+    return findings
+
+
+def _solution_challenge_numbers(entry: Path) -> list[int]:
+    """The challenge numbers of a unit's solutions notebook, in order (duplicates kept)."""
+    solutions = entry / 'solutions.ipynb'
+    if not solutions.exists():
+        return []
+    return [challenge['number'] for challenge in unit_challenges(notebook(solutions, 'teacher').cells)[1]]
+
+
+FENCE_LINE = re.compile(r'^[ \t]*```')
+ARTEFACT = re.compile(r'(?m)^[ \t]*(?:#{2,6} +\S|# +(?:Lesson|Unit|Exercise|Exercises|Challenge|Question|Problem)\b'
+                      r'|:::(?:[ \t]*\{|[ \t]*$)|```)')
+
+
+def _normalised_line(line: str) -> str:
+    return ' '.join(line.split())
+
+
+def fenced_code_lines(qmds) -> set[str]:
+    """Every line inside a fenced code block of an edition's generated `.qmd` files, whitespace-normalised."""
+    lines = set()
+    for text in qmds:
+        fenced = False
+        for line in text.splitlines():
+            if FENCE_LINE.match(line):
+                fenced = not fenced
+                continue
+            if fenced:
+                lines.add(_normalised_line(line))
+    return lines
+
+
+def _fence_line_match(line: str, fence_lines: set[str]) -> bool:
+    """True when `line` is a code-fence line, or the start of one that the PDF wrapped."""
+    return line in fence_lines or any(fence.startswith(line) for fence in fence_lines)
+
+
+def markdown_artefact_findings(text: str, fence_lines: set[str], edition: str) -> list[str]:
+    """Literal Markdown or Quarto syntax left in the PDF text (the first one found).
+
+    A heading-like match (`## ...`, `# Exercise ...`) is ignored when its whole line, whitespace-
+    normalised, is a line inside a fenced code block of the edition's `.qmd`: a printed code comment,
+    not an unrendered heading (plan 098 A4). `:::` and backtick fences are always artefacts.
+    """
+    for match in ARTEFACT.finditer(text):
+        start = text.rfind('\n', 0, match.start()) + 1
+        end = text.find('\n', match.start())
+        line = text[start:end if end >= 0 else len(text)].replace('\f', '')
+        heading_like = not match.group().lstrip().startswith((':::', '```'))
+        if heading_like and _fence_line_match(_normalised_line(line), fence_lines):
+            continue
+        return [f'FAIL: {edition}: literal Markdown/Quarto artefact in PDF: {match.group().strip()}']
+    return []
+
+
 def item_headings(qmd: str) -> list[str]:
     return re.findall(r'(?m)^#{3,4} (?:Exercise|Challenge|Question|Problem)\b[^\n]*', qmd)
 
@@ -798,6 +949,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
     student_family = edition_profile['student_family']
     answer_body = edition_profile['body'] == 'answers'
     answer_key_drawings = 0
+    challenge_count = 0
     publication = book_flag(root, book_id, 'publication')
     project = book / 'build' / 'publish' / edition
     inv_path = project / 'inventory.json'
@@ -946,8 +1098,11 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
             if edition == 'teacher':
                 answer_key_drawings += qmd.split('## Answer key', 1)[-1].count(
                     '\\color{black!60}Drawing for the sample input:')
-        if edition == 'teacher' and (qmd.count('## Answer key') != 1 or [int(x) for x in re.findall(r'^### ' + ITEM[kind] + r' (\d+)\b', qmd.split('## Answer key', 1)[-1], re.MULTILINE)] != numbers):
-            findings.append(f'FAIL: {edition}: {id_}: answer-key coverage')
+        if edition == 'teacher':
+            findings.extend(answer_key_coverage_findings(id_, kind, qmd, numbers, entry))
+        if kind == 'unit':
+            findings.extend(challenge_findings(id_, qmd, entry, edition))
+            challenge_count += len(unit_challenges(notebook(source, 'student').cells)[1])
     if edition == 'teacher' and publication and answer_key_drawings != config.teacher_turtle_drawings:
         findings.append(f'FAIL: teacher: expected {config.teacher_turtle_drawings} turtle real-program '
                         f'drawings, got {answer_key_drawings}')
@@ -975,9 +1130,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
             findings.extend(f'FAIL: {edition}: {finding.removeprefix("FAIL: ")}'
                             for finding in index_findings(index_text, glossary, pages)
                             if 'glossary-only' in finding)
-    artefact = re.search(r'(?m)^[ \t]*(?:#{2,6} +\S|# +(?:Lesson|Unit|Exercise|Exercises|Challenge|Question|Problem)\b|:::(?:[ \t]*\{|[ \t]*$)|```)', text)
-    if artefact:
-        findings.append(f'FAIL: {edition}: literal Markdown/Quarto artefact in PDF: {artefact.group().strip()}')
+    findings.extend(markdown_artefact_findings(text, fenced_code_lines(qmds.values()), edition))
     outline = subprocess.run(['mutool', 'show', str(pdf), 'outline'], check=True,
                              capture_output=True, text=True).stdout
     for heading in _missing_lesson_headings(chapters, root, outline):
@@ -999,7 +1152,8 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
     if (student_family and not edition_profile['answer_refs']
             and re.search(r'Answer on page|\(page\s+\d+\)', text)):
         findings.append(f'FAIL: {edition}: page cross-reference in PDF')
-    if edition == 'teacher' and text.count('Answer key') < len(entry_order):
+    if edition == 'teacher' and text.count('Answer key') < sum(
+            '## Answer key' in qmds.get(chapter['file'], '') for chapter in chapters):
         findings.append('FAIL: teacher: answer keys missing in PDF')
     log_paths = (project / 'render.log', project / 'latex-audit.log')
     if any(not path.exists() for path in log_paths):
@@ -1015,6 +1169,7 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
     target = config.print_page_target
     if edition == 'student-print' and target is not None and page_count > target:
         findings.append(f'WARN: student-print: {page_count} pages, above the soft target of {target}')
-    findings.append(f'{edition}: {len(chapters)} chapters, {sum(len(c["items"]) for c in chapters)} items, '
-                    f'{len(boxes)} overfull hboxes, {page_count} pages')
+    challenges = f', {challenge_count} challenges' if challenge_count else ''
+    findings.append(f'{edition}: {len(chapters)} chapters, {sum(len(c["items"]) for c in chapters)} items'
+                    f'{challenges}, {len(boxes)} overfull hboxes, {page_count} pages')
     return findings

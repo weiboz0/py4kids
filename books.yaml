@@ -28,6 +28,7 @@ books:
   depends_on: []
   lesson_budget: [28, 44]
   patterns: true
+  publication: true
 - id: python-concepts
   number: 1
   root: python-concepts
