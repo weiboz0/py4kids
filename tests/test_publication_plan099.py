@@ -135,9 +135,10 @@ def test_project_problem_answers_take_the_brief_titles(tmp_path):
 @pytest.mark.skipif(shutil.which('pandoc') is None, reason='pandoc is not installed')
 def test_inline_code_never_breaks_between_or_before_punctuation():
     source = ('`assets/l1.py` `assets/ex1/1.out` `1.in` `1..n` `a[l..r]` `N - 1` `foo.bar_baz(x, y)` '
-              '`__init__` `abcdefghijklmnopq`\n')
+              '`__init__` `abcdefghijklmnopq` `{"c":["cat","crow","camel"],"d":["dog"]}` '
+              '`["cat","crow","dog","camel"]`\n')
     latex = _pandoc_latex(source)
-    spans = re.findall(r'\\texttt\{((?:[^{}]|\{\})*)\}', latex)
+    spans = re.findall(r'\\texttt\{((?:\\[{}]|\{\}|[^{}])*)\}', latex)
     assert spans == [
         'assets/\\allowbreak{}l1.py',       # never "assets/l1. / py"
         'assets/\\allowbreak{}ex1/\\allowbreak{}1.out',
@@ -148,6 +149,10 @@ def test_inline_code_never_breaks_between_or_before_punctuation():
         'foo.bar\\_\\allowbreak{}baz(\\allowbreak{}x, y)',
         '\\_\\_\\allowbreak{}init\\_\\_',   # after `_` only before an identifier character
         'abcdefghijkl\\allowbreak{}mnopq',  # a long run of letters still breaks
+        # after `,` and `:` even before punctuation (a 151pt overfull line otherwise)
+        ('\\{"c":\\allowbreak{}["cat",\\allowbreak{}"crow",\\allowbreak{}"camel"],\\allowbreak{}'
+         '"d":\\allowbreak{}["dog"]\\}'),
+        '["cat",\\allowbreak{}"crow",\\allowbreak{}"dog",\\allowbreak{}"camel"]',
     ]
 
 

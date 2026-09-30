@@ -119,8 +119,9 @@ function Code(el)
   local chars = {}
   for _, cp in utf8.codes(el.text) do table.insert(chars, cp) end
   -- Break points (plan 099 A3): after `\\ _ ( ) , : / + - =`, or inside a run of 12 letters and
-  -- digits, but never between two punctuation characters or before one (nor before a space, which
-  -- breaks anyway), and after `_` only when an identifier character follows. Never after `.`:
+  -- digits, but never before a space (which breaks anyway), nor between two punctuation characters
+  -- or before one except after `,` or `:` (`{"c":["cat","crow"]}` breaks after each `,` and `:`),
+  -- and after `_` only when an identifier character follows. Never after `.`:
   -- `assets/l1.py`, `1.in`, `1..n`, `a[l..r]` and `N - 1` never split at their punctuation.
   for i, cp in ipairs(chars) do
     local c = utf8.char(cp)
@@ -133,6 +134,8 @@ function Code(el)
     end
     if c:match('[A-Za-z0-9]') then run = run + 1 else run = 0 end
     local open = following ~= nil and not following:match('^[%p%s]$')
+    -- After `,` or `:` a break is allowed before punctuation too (`"c":["cat","crow"]`), not before a space.
+    if c == ',' or c == ':' then open = following ~= nil and not following:match('^%s$') end
     if open and c == '_' then open = following:match('^[A-Za-z0-9]$') ~= nil end
     if open and (c == '\\' or c:match('[_%(%)%,%:%/%+%-%=]') or run >= 12) then
       table.insert(parts, '\\allowbreak{}')
