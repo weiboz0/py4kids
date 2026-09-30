@@ -4,7 +4,7 @@ data = sys.stdin.read()
 parts = data.split()
 rows = int(parts[0])
 columns = int(parts[1])
-query_count = int(parts[2])
+size = int(parts[2])
 
 prefix = []
 row = 0
@@ -21,8 +21,7 @@ row = 0
 while row < rows:
     column = 0
     while column < columns:
-        value_index = 3 + row * columns + column
-        value = int(parts[value_index])
+        value = int(parts[3 + row * columns + column])
         prefix[row + 1][column + 1] = (
             value
             + prefix[row][column + 1]
@@ -32,23 +31,21 @@ while row < rows:
         column = column + 1
     row = row + 1
 
-result = ""
-query_start = 3 + rows * columns
-i = 0
-while i < query_count:
-    corner = query_start + i * 4
-    row_one = int(parts[corner])
-    column_one = int(parts[corner + 1])
-    row_two = int(parts[corner + 2])
-    column_two = int(parts[corner + 3])
-    total = (
-        prefix[row_two + 1][column_two + 1]
-        - prefix[row_one][column_two + 1]
-        - prefix[row_two + 1][column_one]
-        + prefix[row_one][column_one]
-    )
-    if i > 0:
-        result = result + "\n"
-    result = result + str(total)
-    i = i + 1
-print(result)
+best = 0
+top = 0
+while top + size <= rows:
+    left = 0
+    while left + size <= columns:
+        bottom = top + size
+        right = left + size
+        total = (
+            prefix[bottom][right]
+            - prefix[top][right]
+            - prefix[bottom][left]
+            + prefix[top][left]
+        )
+        if (top == 0 and left == 0) or total > best:
+            best = total
+        left = left + 1
+    top = top + 1
+print(str(best))

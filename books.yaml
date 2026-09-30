@@ -49,6 +49,7 @@ books:
   - python-projects
   peers:
   - acsl
+  publication: true
   judge: true
 - id: acsl
   number: 2

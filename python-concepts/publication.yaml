@@ -15,6 +15,12 @@ setup:
 project_headers:
   project-01-algorithm-challenge: Algorithm Challenge
 
+# A unit's running header when its title is over 32 characters (plan 099 A4); a longer title with no
+# entry here is a publisher error. Unit 8's entry pins the head it has always printed (the old silent
+# truncation), so the book's output is unchanged; a better short head is a follow-up.
+unit_headers:
+  unit-08-randomness: 'Randomness: Dice, Simulations,'
+
 # Lesson headings: kept at level 2 by the publisher and checked by the audit's goals/recap rules.
 lesson_heading: '^## Lesson\b'
 

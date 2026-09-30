@@ -25,6 +25,7 @@ from tools.publish import (
     EDITIONS,
     ITEM,
     NOTICE,
+    STDIN_NOTE,
     answer_chapter_heading,
     challenge_solution_assets,
     code_block,
@@ -47,6 +48,7 @@ from tools.publish import (
     solution_assets,
     solution_source_files,
     statement_text,
+    stdin_run_asset,
     title_heading,
     unit_challenges,
 )
@@ -166,7 +168,9 @@ def index_findings(index_text: str, glossary: list[tuple],
         return ['FAIL: index empty']
     items = {}
     findings = []
-    for match in re.finditer(r'(?m)^\s*\\(?:item|subitem) (.+?), \\hyperpage', index_text):
+    # makeindex wraps a long entry's page list onto a continuation line (`, ` then a newline and tabs
+    # before `\hyperpage`), so the separator is a comma and any whitespace (plan 099 A5).
+    for match in re.finditer(r'(?m)^\s*\\(?:item|subitem) (.+?),\s+\\hyperpage', index_text):
         display = re.sub(r'\\texttt\{([^}]*)\}', r'\1', match[1]).replace(r'\_', '_')
         next_item = re.search(r'(?m)^\s*\\(?:item|subitem) ', index_text[match.end():])
         end = match.end() + next_item.start() if next_item else len(index_text)
@@ -489,7 +493,17 @@ def _turtle_drawing_findings(entry: Path, qmd: str, edition: str,
         caption = f'Drawing for the sample input: {sample}'
         if sample is None or lesson_qmd.count(caption + '}\n\\end{pubfigure}') != 1:
             findings.append(f'FAIL: {edition}: {entry.name}: try-it figure {cell.id}')
-    tryit_tokens = {code_tokens(cell.source) for cell in tryits}
+    # A stdin Try-it prints once too (plan 099 A1): the asset its next cell runs is never listed again,
+    # and the generic "save it as a .py file" note prints only for a stdin Try-it with no run line.
+    cells = lesson.cells[1:]
+    stdin_tryits = [(cell, stdin_run_asset(cell, cells[index + 1] if index + 1 < len(cells) else None, entry))
+                    for index, cell in enumerate(cells)
+                    if cell.cell_type == 'code' and _expected_lesson_kind(cell) == 'tryit-stdin']
+    expected_notes = sum(run_asset is None for _, run_asset in stdin_tryits)
+    if lesson_qmd.count(STDIN_NOTE) != expected_notes:
+        findings.append(f'FAIL: {edition}: {entry.name}: expected {expected_notes} stdin try-it notes, '
+                        f'got {lesson_qmd.count(STDIN_NOTE)}')
+    tryit_tokens = {code_tokens(cell.source) for cell in [*tryits, *(cell for cell, _ in stdin_tryits)]}
     for asset in sorted((entry / 'assets').glob('*.py')) if (entry / 'assets').exists() else []:
         if (f'**assets/{asset.name}**' in lesson_qmd
                 and code_tokens(asset.read_text(encoding='utf-8')) in tryit_tokens):
@@ -774,7 +788,8 @@ def answer_entries(qmd: str) -> tuple[str, list[tuple[int, int, str, str]]]:
 
 def answer_key_equivalence_findings(id_: str, unit: int, key_qmd: str, full_answers: str,
                                     lesson_title: str, titles: dict[int, str],
-                                    mainmatter: bool) -> list[str]:
+                                    mainmatter: bool, unit_id: str = '',
+                                    config: PublicationConfig | None = None) -> list[str]:
     """An Answer Key chapter must be exactly its heading block plus, for each of the unit's entries in
     the full edition's appendix, the same answer body under a titled flat heading.
 
@@ -783,7 +798,8 @@ def answer_key_equivalence_findings(id_: str, unit: int, key_qmd: str, full_answ
     """
     findings = []
     preamble, key = answer_entries(key_qmd)
-    if preamble.rstrip() != answer_chapter_heading(unit, lesson_title, mainmatter).rstrip():
+    if preamble.rstrip() != answer_chapter_heading(unit, lesson_title, mainmatter, unit_id,
+                                                        config).rstrip():
         findings.append(f'FAIL: answer-key: {id_}: chapter heading block differs or has extra text')
     _, full = answer_entries(full_answers)
     expected = []
@@ -1036,7 +1052,8 @@ def _audit_edition(root: Path, book_id: str, book: Path, edition: str, edition_p
                 findings.extend(answer_key_equivalence_findings(
                     chapter['id'], int(re.search(r'unit-(\d+)', chapter['id'])[1]),
                     qmds.get(chapter['file'], ''), full_text, lesson_title.removeprefix('# '), titles,
-                    mainmatter=position == 0))
+                    mainmatter=position == 0, unit_id=chapter['id'].removeprefix('answers-'),
+                    config=config))
     index_text = ''
     glossary: list[tuple] = []
     if edition_profile['back_matter']:

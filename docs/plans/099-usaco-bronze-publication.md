@@ -93,6 +93,7 @@ Plan 098's lessons apply:
     - **CP4 Q6** = u11 Ex8 (same title, task, constraints and sample)
 
     Each gets a statement, `qN.py` with at least 2 fixture pairs, a `solutions.ipynb` mirror, and updated teacher notes. Solutions are written in a separate session, blind to the statement's intended answer.
+  - **Added during execution (same rule, found by the checkpoint author):** CP3 Q6 "Primes Up To N" (the same task and identical sample as u11 Ex7) and CP3 Q3 "Decimal to Binary" (the same task as u11 Ex1) are replaced the same way. CP3 Q5 stays, because it combines a whole list, a different task from u11 Ex6's per-pair reports. The blind-solve list in E.3 grows to 10.
   - **Rule:** no checkpoint question shares a title with a unit exercise. Both CP3 Q1 and u09 Ex2 are titled "Spaced Permutation Count" (different rules), and both CP4 Q1 and u13 Ex3 are "Count the Islands". Retitle the checkpoint questions: CP3 Q1 becomes **"Gap-Respecting Orders"** and CP4 Q1 becomes **"Lakes on the Map"**, or another title the content author checks against every unit exercise title in the book.
   - Revise **u13 Ex6** so its solution no longer equals Ex7's.
   - Revise **u02 Ex1** so it no longer equals the lesson's gate program `l1.py`.
@@ -156,7 +157,7 @@ Plan 098's lessons apply:
    - Because `tools/` changes, all three publication books render in all four editions, about 45 minutes of rendering. Never overlap runs.
    - `lesson-outputs-check`, `judge-check` (including the new and revised problems) and `publish-audit` pass for every edition.
 2. python-concepts and python-projects outputs are unchanged, or any change is listed with its reason. python-concepts is checked against its baseline and allowed-diffs; python-projects against a digest captured before Phase A.
-3. **Blind solves:** reviewers solve every new or revised problem (CP2 Q6, CP3 Q2, CP3 Q7, CP4 Q4, CP4 Q5, CP4 Q6, u13 Ex6, u02 Ex1) from the statement, and run the solutions against the fixtures.
+3. **Blind solves:** reviewers solve every new or revised problem (CP2 Q6, CP3 Q2, CP3 Q3, CP3 Q6, CP3 Q7, CP4 Q4, CP4 Q5, CP4 Q6, u13 Ex6, u02 Ex1) from the statement, and run the solutions against the fixtures.
 4. **Rendered-page review in the content gate**, covering all four editions (Student Print, Student Full, Answer Key, Teacher's):
    - a unit opener with You will learn
    - a lesson with a stdin Try-it (printed once, with its run line)

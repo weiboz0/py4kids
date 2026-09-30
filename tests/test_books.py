@@ -59,7 +59,7 @@ def test_registry_feature_flags_are_booleans():
             assert isinstance(book.get(flag, False), bool), f"{book['id']} {flag}"
     enabled = {flag: [i for i, b in books.items() if b.get(flag)] for flag in FLAGS}
     assert enabled == {
-        "publication": ["python-projects", "python-concepts"],
+        "publication": ["python-projects", "python-concepts", "usaco-bronze"],
         "judge": ["usaco-bronze", "acsl"],
         "patterns": ["python-projects"],
         "acsl": ["acsl"],

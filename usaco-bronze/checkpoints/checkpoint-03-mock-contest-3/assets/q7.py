@@ -14,16 +14,13 @@ while i < node_count:
     right.append(int(parts[i * 3 + 4]))
     i = i + 1
 
-def walk(node):
-    if node == -1:
-        return ""
-    result = str(values[node])
-    left_text = walk(left[node])
-    right_text = walk(right[node])
-    if left_text != "":
-        result = result + " " + left_text
-    if right_text != "":
-        result = result + " " + right_text
-    return result
+def heaviest(node):
+    if left[node] == -1 and right[node] == -1:
+        return values[node]
+    if left[node] == -1:
+        return values[node] + heaviest(right[node])
+    if right[node] == -1:
+        return values[node] + heaviest(left[node])
+    return values[node] + max(heaviest(left[node]), heaviest(right[node]))
 
-print(walk(root))
+print(str(heaviest(root)))

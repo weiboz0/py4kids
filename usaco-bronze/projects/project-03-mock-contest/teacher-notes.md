@@ -1,7 +1,7 @@
 # Teacher Notes — Capstone: Grand Mock Contest
 
-The Year-2 finale: a full timed mock contest of eight problems across five rounds, integrating the whole
-year's technique roster (prefix sums, simulation, binary search, greedy, two pointers, graphs/BFS,
+The finale of *Contest Python: USACO Bronze*: a full timed mock contest of eight problems across five rounds, integrating the whole
+book's technique roster (prefix sums, simulation, binary search, greedy, two pointers, graphs/BFS,
 flood-fill, recursion/backtracking, tree traversal). It introduces nothing new — it is where students prove
 they can pick and apply the right technique under a clock.
 
@@ -56,12 +56,12 @@ are the accessible core; 5–8 stretch across the harder techniques.
   skeletons; let students focus on the problem-specific logic. Pre-parse the input for P5/P8.
 - **More challenge:** require a stated Big-O and a worst-case argument for every solved problem; assign all of
   the "Make it yours" extensions.
-- **Extension:** ask fast finishers to write an additional original problem in the year's style with a
+- **Extension:** ask fast finishers to write an additional original problem in the book's style with a
   reference solver and crafted tests (the first "Make it yours" option).
 
 ## Rubric
 
-Grade from `solutions.ipynb` (each reference is a display-only mirror of a stdin/stdout program in
+Grade from the answer key (each reference is a display-only mirror of a stdin/stdout program in
 `assets/`, judged by piping each committed input case to it and comparing the printed output). Each problem
 is judged as a stdin-to-stdout program against the sample plus hidden cases: full credit for a correct,
 in-budget solver; partial credit for a correct approach with a boundary slip. Per-problem intended

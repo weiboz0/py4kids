@@ -20,7 +20,7 @@ one — the payoff of "think before you loop."
 
 Two 60–90 minute lessons. Each concept is a short **worked-example ladder**: the core idea on a tiny array
 you can trace by hand → one step up → the full program that reads the real input from **stdin**. The early
-rungs run live in the notebook (literal data); the full solver is shown `no-exec` and **run from a terminal**
+rungs run live in the notebook (literal data); the full solver is shown as a program (not run in the notebook) and **run from a terminal**
 (`python assets/l1.py < assets/l1/1.in`) — that is the real contest shape, now that this book reads stdin and
 prints stdout (no `solve()` wrapper). Reference solvers live as runnable `.py` in `assets/`, judged against
 committed `.in`/`.out` fixtures.

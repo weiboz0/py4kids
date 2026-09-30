@@ -2,7 +2,7 @@
 
 ## Goals
 
-Students learn the Book-2 input pipeline: a real contest program **reads the whole input from
+Students learn the *Contest Python: USACO Bronze* input pipeline: a real contest program **reads the whole input from
 standard input** (`import sys; data = sys.stdin.read()`), parses it, and **prints** the exact
 output text. In the lesson they practice the parsing on a literal `data = "..."` string (there is
 no contest input waiting in the notebook); the full solvers read real stdin and are run from a
@@ -17,11 +17,11 @@ The intended complexity for every exercise is linear in the amount of input it p
 - Exercise 3, per-line sums: **O(N)** time, where `N` is the total number of values across all
   `K` lists.
 - Exercise 4, target presence and first position: **O(N)** time with a manual loop scan.
-- Exercise 5, grid row sums: **O(R*C)** time.
-- Exercise 6, grid column sums: **O(R*C)** time.
+- Exercise 5, grid row sums: **`O(R*C)`** time.
+- Exercise 6, grid column sums: **`O(R*C)`** time.
 - Exercise 7, doubled values: **O(N)** time.
 - Exercise 8, chosen name: **O(N)** time to read the `K` names.
-- Exercise 9, grid border sum: **O(R*C)** time using the same full-grid reading pattern as the
+- Exercise 9, grid border sum: **`O(R*C)`** time using the same full-grid reading pattern as the
   other grid exercises.
 
 ## Pacing
@@ -32,7 +32,7 @@ Budget: two 60–90 minute lessons (parsing first, grids and exact output second
   - **Hook and the stdin boundary (10 min).** Put the running sample on the board as raw text. Ask
     what the judge pipes to our program on standard input and what exact text it expects back.
     Introduce `data = sys.stdin.read()` as the program boundary used throughout this book; the full
-    solvers are shown `no-exec` and run from a terminal (`python assets/l1.py < assets/l1/1.in`).
+    solvers are shown as programs (not run in the notebook) and run from a terminal (`python assets/l1.py < assets/l1/1.in`).
   - **Tokens and integers (15 min).** Run the `.split()` and `int()` demonstrations. Have students
     predict the token list, then emphasize that number-looking tokens are still strings until
     converted.

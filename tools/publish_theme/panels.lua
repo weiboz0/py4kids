@@ -109,8 +109,15 @@ function Code(el)
   }
   local parts = {}
   local run = 0
-  for _, cp in utf8.codes(el.text) do
+  local chars = {}
+  for _, cp in utf8.codes(el.text) do table.insert(chars, cp) end
+  -- Break points (plan 099 A3): after `\\ _ ( ) , . : / + - =`, or inside a run of 12 letters and
+  -- digits, but never between two punctuation characters or before one (nor before a space, which
+  -- breaks anyway), and after `.` or `_` only when an identifier character follows. So `1..n`,
+  -- `a[l..r]` and `N - 1` never split at their punctuation.
+  for i, cp in ipairs(chars) do
     local c = utf8.char(cp)
+    local following = chars[i + 1] and utf8.char(chars[i + 1]) or nil
     if (cp >= 0x2190 and cp <= 0x21ff) or (cp >= 0x0370 and cp <= 0x03ff) or
        cp == 0x25b8 or cp == 0x2610 then
       table.insert(parts, '{\\fallbackfont ' .. c .. '}')
@@ -118,7 +125,9 @@ function Code(el)
       table.insert(parts, escaped[c] or c)
     end
     if c:match('[A-Za-z0-9]') then run = run + 1 else run = 0 end
-    if c == '\\' or c:match('[_%(%)%,%.%:%/%+%-%=]') or run >= 12 then
+    local open = following ~= nil and not following:match('^[%p%s]$')
+    if open and (c == '.' or c == '_') then open = following:match('^[A-Za-z0-9]$') ~= nil end
+    if open and (c == '\\' or c:match('[_%(%)%,%.%:%/%+%-%=]') or run >= 12) then
       table.insert(parts, '\\allowbreak{}')
       run = 0
     end

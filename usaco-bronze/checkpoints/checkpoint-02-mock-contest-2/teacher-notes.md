@@ -7,7 +7,7 @@ problem wants and implement it cleanly as a stdin-to-stdout program:
 
 - Make a correct greedy choice by sorting on the right key, then sweeping (Unit 6).
 - Simulate a process step by step — a grid walk and a bounded counter — watching the edges (Unit 7).
-- Precompute prefix sums to answer many range queries fast, in 1D and on a 2D grid (Unit 8).
+- Precompute prefix sums to total many ranges fast: 1D range queries, and every fixed-size square of a 2D grid (Unit 8).
 
 Each technique appears twice, so the skill under test is *transfer*: reading a fresh problem and reaching
 for the tool that fits.
@@ -26,6 +26,10 @@ are usually the quickest to bank), ~35 minutes to work through them (each answer
   that move; confusing row/column order.
 - **Q3/Q6 (prefix sums):** the ±1 index convention (`pre[r+1] - pre[l]`, not `pre[r] - pre[l]`); in 2D,
   a wrong sign or a dropped term in the four-term inclusion-exclusion formula.
+- **Q6 (square placements):** a placement loop that stops one short (`top + K < R` instead of
+  `top + K <= R`) misses the bottom row or right column of placements, which the sample's bottom-right answer
+  catches; starting the best total at `0` prints `0` when every placement total is negative (a hidden case
+  is all shadow).
 - **Q5 (bounded counter):** clamping to the cap/floor in the wrong order, or forgetting to clamp every tick
   (only at the end); off-by-one on the final tick.
 
@@ -33,7 +37,8 @@ are usually the quickest to bank), ~35 minutes to work through them (each answer
 
 - For each question, name the technique and the one-sentence clue in the statement that pointed to it.
 - Q3 and Q6 are the same idea in 1D and 2D. What is the "array" in each, and why does the 2D version need
-  four terms where the 1D version needs two?
+  four terms where the 1D version needs two? In Q6, how many placements are there, and what would re-adding
+  every `K`-by-`K` square cost?
 - Q1 and Q4 are both greedy but sort on different keys. What would go wrong if you swapped their sort keys?
 - Where did an off-by-one nearly bite you (a prefix boundary, a robot at a wall, the last tick), and what
   small input would have caught it?
@@ -41,9 +46,10 @@ are usually the quickest to bank), ~35 minutes to work through them (each answer
 ## Differentiation
 
 - **More support:** give the sort key for Q1/Q4 and the prefix-array construction for Q3, so the focus is
-  the sweep / the query formula; award partial credit for a correct-but-slow per-query scan on Q3/Q6.
+  the sweep / the query formula; award partial credit for a correct-but-slow per-query scan on Q3 or a
+  cell-by-cell re-add of every placement on Q6.
 - **More challenge:** ask early finishers to state each solution's Big-O and, for Q3/Q6, the number of
-  queries at which precomputing the prefix array pays off over per-query recomputation.
+  queries (Q3) or square size `K` (Q6) at which precomputing the prefix array pays off over recomputation.
 - **Retry path:** a student who misses Q6 revisits Unit 8's 2D lesson; the review block re-solves Q1 and Q6
   as a class.
 
@@ -57,7 +63,7 @@ the hidden cases (not just the sample). Suggested split:
 - Q3 Scoreboard Range Reports — 20 pts — Unit 8 prefix-sum 1D — O(n + Q).
 - Q4 Supply Cart Budget — 15 pts — Unit 6 greedy (max items under budget) — O(n log n).
 - Q5 Safety Counter — 15 pts — Unit 7 simulation (bounded counter) — O(T) over the T ticks.
-- Q6 Survey Rectangle Sums — 20 pts — Unit 8 prefix-sum 2D — O(R·C + Q).
+- Q6 Solar Panel Placement — 20 pts — Unit 8 prefix-sum 2D (best `K`×`K` square) — O(R·C).
 
 Partial credit: half a question's points for a solution that is correct but of the wrong complexity class
 (passes small cases, times out on the largest) — diagnosing the efficient shape is the skill being trained.

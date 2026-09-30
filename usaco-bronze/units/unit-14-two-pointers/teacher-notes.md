@@ -13,7 +13,7 @@ By the end of this unit students can:
 - Recognize that the sliding-window grow/shrink logic requires **non-negative values** (with negatives the
   monotonicity breaks and the window answer is wrong).
 
-This is the last Book-2 technique: it turns an O(n²) nested-loop scan into a single O(n) (or O(n log n)) pass.
+This is the last technique in *Contest Python: USACO Bronze*: it turns an O(n²) nested-loop scan into a single O(n) (or O(n log n)) pass.
 
 ## Pacing
 
