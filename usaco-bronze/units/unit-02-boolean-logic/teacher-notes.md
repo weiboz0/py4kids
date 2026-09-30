@@ -9,7 +9,7 @@ Every solver reads the whole input from stdin (`import sys; data = sys.stdin.rea
 
 For the complexity notes below, `N` means the total amount of input read, including a fixed small input when an exercise has only a few flags.
 
-- Exercise 1, access gate: **O(N)** time and **O(N)** parsing space.
+- Exercise 1, ride height check: **O(1)** time (three fixed values). Its rule `height >= 120 and (age >= 10 or adult)` needs the parentheses; without them `and` groups first and a short 12-year-old could board.
 - Exercise 2, De Morgan demonstration: **O(N)** time and **O(N)** parsing space.
 - Exercise 3, at least one signal: **O(N)** time and **O(N)** parsing space.
 - Exercise 4, every check passed: **O(N)** time and **O(N)** parsing space.

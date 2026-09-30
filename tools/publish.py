@@ -16,6 +16,7 @@ import nbformat
 import yaml
 
 from tools.books import (
+    RUNNING_HEAD_MAX,
     PublicationConfig,
     book_entry,
     book_flag,
@@ -312,9 +313,13 @@ def reads_stdin(source: str) -> bool:
     return re.search(r'\bsys\.stdin\b|(?<![\w.])open\(\s*0\s*[,)]', source) is not None
 
 
-def route_code(cell) -> tuple[str, str]:
+def route_code(cell, stdin_note: bool = True) -> tuple[str, str]:
     """One deterministic route per lesson code cell: the error-demo and hang-demo tags first, then a
-    stdin program, then turtle programs and `input(` Try-its."""
+    stdin program, then turtle programs and `input(` Try-its.
+
+    A stdin Try-it carries the generic "save it as a `.py` file" note unless `stdin_note` is false:
+    the lesson's next cell already gives its run line (`stdin_run_asset`, plan 099 A1).
+    """
     tags = cell.metadata.get('tags', [])
     source = cell.source
     if 'no-exec' in tags:
@@ -323,7 +328,7 @@ def route_code(cell) -> tuple[str, str]:
         if 'hang-demo' in tags:
             return 'hangdemo', panel('hangdemo', code_block(source))
         if reads_stdin(source):
-            return 'tryit-stdin', panel('tryit', code_block(source) + '\n' + STDIN_NOTE)
+            return 'tryit-stdin', panel('tryit', code_block(source) + ('\n' + STDIN_NOTE if stdin_note else ''))
         if re.search(r'(^|\n)\s*(?:import turtle|from turtle import)', source) and 'input(' in source:
             body = panel('tryit', code_block(source))
             if 'sample_input' in cell.metadata:
@@ -344,6 +349,31 @@ def route_code(cell) -> tuple[str, str]:
         body += '\n' + panel('output', '```text\n' + output.rstrip() + '\n```')
         return 'code+output', panel('codeoutput', body)
     return 'code', body
+
+
+def stdin_run_asset(cell, next_cell, entry: Path) -> str | None:
+    """The lesson asset a stdin Try-it cell is saved as, when the next cell tells students to run it.
+
+    A `no-exec` stdin program (route `tryit-stdin`) followed by a markdown cell that names
+    `assets/<name>.py` whose code (by `code_tokens`) is the cell's own: the program prints once, as
+    the Try-it, without the generic note (the next cell gives the run line), and the asset is not
+    listed again (plan 099 A1). Otherwise None.
+    """
+    tags = cell.metadata.get('tags', [])
+    if (cell.cell_type != 'code' or 'no-exec' not in tags or 'error-demo' in tags or 'hang-demo' in tags
+            or not reads_stdin(cell.source) or next_cell is None or next_cell.cell_type != 'markdown'):
+        return None
+    tokens = code_tokens(cell.source)
+    for name in dict.fromkeys(ASSET.findall(next_cell.source)):
+        path = entry / 'assets' / name
+        if (name.startswith('solutions_') or SOLUTION_SOURCE.match(name) or not path.is_file()):
+            continue
+        try:
+            if code_tokens(path.read_text(encoding='utf-8')) == tokens:
+                return name
+        except (tokenize.TokenError, SyntaxError):
+            continue
+    return None
 
 
 def teacher_notes(source: str) -> str:
@@ -422,7 +452,14 @@ def entries(book: Path, edition: str) -> list[tuple[str, Path]]:
 
 
 def asset_blocks(text: str, entry: Path, edition: str, seen: set[str], unit: str,
-                 rendered_turtles: set[tuple[tuple[int, str], ...]] | None = None) -> tuple[str, list[dict]]:
+                 rendered_turtles: set[tuple[tuple[int, str], ...]] | None = None,
+                 rendered_stdin: set[str] | None = None) -> tuple[str, list[dict]]:
+    """Program listings of the lesson assets a markdown cell names, each once per chapter.
+
+    An asset whose code a turtle Try-it already printed gets a "saved as" line instead; a stdin Try-it's
+    asset (`rendered_stdin`, from `stdin_run_asset`) prints nothing more, since the cell naming it is
+    its run line (plan 099 A1). Both are inventoried as `asset reference`.
+    """
     rendered = []
     records = []
     for name in ASSET.findall(text):
@@ -431,6 +468,9 @@ def asset_blocks(text: str, entry: Path, edition: str, seen: set[str], unit: str
         path = entry / 'assets' / name
         if path.exists():
             seen.add(name)
+            if rendered_stdin is not None and name in rendered_stdin:
+                records.append({'id': f'asset:{name}', 'kind': 'asset reference'})
+                continue
             source = read_source(path, edition)
             if rendered_turtles is not None and code_tokens(source) in rendered_turtles:
                 rendered.append(f'This program is saved as assets/{name}.')
@@ -1089,7 +1129,9 @@ def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teache
         number = item['number']
         if number not in by_number:
             raise ValueError(f'{entry}: missing solution {label} {number}')
-        heading = f'{label} {number}' + (f" — {item['title']}" if item['title'] and kind != 'project' else '')
+        # A project's `## Problem N` answer takes its title from the brief's `### Problem N — Title`
+        # (the rendered item's title), as unit and checkpoint answers do (plan 099 A2).
+        heading = f'{label} {number}' + (f" — {item['title']}" if item['title'] else '')
         if student:
             unit_number = int(re.search(r'unit-(\d+)', entry.name)[1])
             heading = f'Unit {unit_number}, {label} {number}'
@@ -1113,6 +1155,21 @@ def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teache
     return '\n\n'.join(block.rstrip() for block in out) + '\n'
 
 
+def running_head(entry_id: str, display_title: str, config: PublicationConfig | None) -> str:
+    """A unit or checkpoint chapter's running header: its `unit_headers` entry (publication.yaml) or,
+    when it has none, its display title, which must then fit in RUNNING_HEAD_MAX characters.
+
+    A longer title with no entry is a publisher error, never a silent truncation (plan 099 A4).
+    """
+    if config is not None and entry_id in config.unit_headers:
+        return config.unit_headers[entry_id]
+    if len(display_title) > RUNNING_HEAD_MAX:
+        raise ValueError(f'FAIL: {entry_id}: title "{display_title}" is {len(display_title)} characters, '
+                         f'over the {RUNNING_HEAD_MAX}-character running header; add a short head to '
+                         'publication.yaml unit_headers')
+    return display_title
+
+
 def render_chapter(entry: Path, kind: str, edition: str, config: PublicationConfig | None = None):
     lesson_heading = config.lesson_heading if config else None
     source = entry / ('lesson.ipynb' if kind == 'unit' else 'checkpoint.ipynb' if kind == 'checkpoint' else 'brief.ipynb')
@@ -1120,9 +1177,7 @@ def render_chapter(entry: Path, kind: str, edition: str, config: PublicationConf
     title = n.cells[0].source.splitlines()[0].removeprefix('# ')
     display_title = re.sub(r'^Unit \d+ — ', '', title)
     display_title = re.sub(r'^Checkpoint \d+(?::\s*|\s+—\s+)', '', display_title)
-    short_title = display_title
-    if len(short_title) > 32:
-        short_title = short_title[:33].rsplit(' ', 1)[0]
+    short_title = running_head(entry.name, display_title, config) if kind != 'project' else display_title
     if kind == 'unit':
         chapter_label = 'Unit ' + str(int(re.search(r'\d+', entry.name)[0]))
     elif kind == 'checkpoint':
@@ -1147,15 +1202,22 @@ def render_chapter(entry: Path, kind: str, edition: str, config: PublicationConf
     if kind == 'unit':
         seen: set[str] = set()
         rendered_turtles: set[tuple[tuple[int, str], ...]] = set()
-        for c in n.cells[1:]:
+        rendered_stdin: set[str] = set()
+        cells = n.cells[1:]
+        for position, c in enumerate(cells):
             if c.cell_type == 'markdown':
                 chapter.append(markdown_blocks(c.source, lesson_heading=lesson_heading))
                 assets, records = asset_blocks(c.source, entry, edition, seen, entry.name,
-                                               rendered_turtles)
+                                               rendered_turtles, rendered_stdin)
                 if assets:
-                    chapter.append(assets); inventory.extend(records)
+                    chapter.append(assets)
+                inventory.extend(records)
             else:
-                route, body = route_code(c)
+                run_asset = stdin_run_asset(c, cells[position + 1] if position + 1 < len(cells) else None,
+                                            entry)
+                if run_asset:
+                    rendered_stdin.add(run_asset)
+                route, body = route_code(c, stdin_note=run_asset is None)
                 chapter.append(body)
                 inventory.append({'id': c.id, 'kind': route})
                 if route == 'tryit+figure':
@@ -1394,17 +1456,20 @@ def tex_escape(text: str) -> str:
     return text.replace('\\', r'\textbackslash{}').replace('&', r'\&').replace('%', r'\%').replace('_', r'\_')
 
 
-def answer_chapter_heading(unit: int, lesson_title: str, mainmatter: bool) -> str:
-    """The heading block of one Answer Key chapter, from the unit's lesson title (its H1)."""
+def answer_chapter_heading(unit: int, lesson_title: str, mainmatter: bool, unit_id: str = '',
+                          config: PublicationConfig | None = None) -> str:
+    """The heading block of one Answer Key chapter, from the unit's lesson title (its H1); its running
+    header follows `running_head` (the book's `unit_headers`)."""
     display_title = re.sub(r'^Unit \d+ — ', '', lesson_title)
     label = f'Unit {unit}'
-    short_title = display_title if len(display_title) <= 32 else display_title[:33].rsplit(' ', 1)[0]
+    short_title = running_head(unit_id or f'Unit {unit}', display_title, config)
     attributes = f'pub-label="{label}"' + (' pub-mainmatter="true"' if mainmatter else '')
     return (f'# {label} — {display_title} {{{attributes}}}\n\n'
             '```{=latex}\n\\chaptermark{' + label + ' — ' + tex_escape(short_title) + '}\n```\n')
 
 
-def render_answer_chapter(entry: Path, edition: str, mainmatter: bool, lesson_heading: str | None = None):
+def render_answer_chapter(entry: Path, edition: str, mainmatter: bool, lesson_heading: str | None = None,
+                          config: PublicationConfig | None = None):
     """One Answer Key chapter: the odd-numbered answers of one unit, with titled flat headings."""
     lesson = notebook(entry / 'lesson.ipynb', edition)
     title = lesson.cells[0].source.splitlines()[0].removeprefix('# ')
@@ -1413,7 +1478,7 @@ def render_answer_chapter(entry: Path, edition: str, mainmatter: bool, lesson_he
     label = f'Unit {unit}'
     _, groups = item_groups(notebook(entry / 'exercises.ipynb', edition).cells, 'Exercise')
     items = [{'number': group['number'], 'title': group_title(group, 'Exercise')} for group in groups]
-    chapter = [answer_chapter_heading(unit, title, mainmatter), answer_key(entry, 'unit', items, edition, lesson_heading)]
+    chapter = [answer_chapter_heading(unit, title, mainmatter, entry.name, config), answer_key(entry, 'unit', items, edition, lesson_heading)]
     answered = [item for item in items if item['number'] % 2]
     return '\n\n'.join(block.rstrip() for block in chapter) + '\n', answered, f'{label} — {display_title}'
 
@@ -1459,7 +1524,7 @@ def build(root: Path, book_id: str, edition: str) -> Path:
         units = [(id_, entry) for id_, entry in entries(book, edition) if id_.startswith('unit-')]
         for position, (id_, entry) in enumerate(units):
             body, items, title = render_answer_chapter(entry, edition, mainmatter=position == 0,
-                                                       lesson_heading=config.lesson_heading)
+                                                       lesson_heading=config.lesson_heading, config=config)
             filename = f'answers-{id_}.qmd'
             (project / filename).write_text(body, encoding='utf-8')
             chapters.append(filename)

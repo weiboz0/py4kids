@@ -9,8 +9,10 @@ each problem and implement it cleanly as a stdin-to-stdout program:
 - Combine Boolean flags into a correct decision (Unit 2).
 - Choose an efficient shape when the constraints demand it — a single pass or a sort, not an O(n²)
   scan (Unit 3).
-- Use a set for dedup/membership and sort records by a compound tuple key (Unit 4).
-- Answer many queries with binary search, and enumerate all triples with a fixed-depth loop (Unit 5).
+- Store records as tuples in a set, test membership of a reversed tuple, and sort the results with a
+  named key function (Unit 4).
+- Answer many nearest-neighbour queries with binary search, and enumerate every position triple with
+  fixed-depth loops (Unit 5).
 
 The point is transfer: each question is deliberately a different tool, so students practise *diagnosing*
 which technique a problem wants.
@@ -29,12 +31,16 @@ banking the questions they are surest of first (Q2 and Q3 are the quickest wins)
   columns.
 - **Q3 (efficiency):** an O(n²) "compare every pair" gain calculation that times out — the intended answer
   tracks the running minimum in a single pass.
-- **Q4 (sets/tuples):** forgetting the tie-break in the sort, or de-duplicating *after* sorting instead of
-  before; missing that the decisive record is the last one after sorting.
-- **Q5 (binary search):** the classic off-by-one — `lo <= hi` vs `lo < hi`, and `mid + 1` / `mid - 1`
-  updates; forgetting to sort first.
-- **Q6 (complete search):** reusing an index (a triple must use three *distinct* positions), or looping to
-  the wrong depth.
+- **Q4 (sets/tuples):** counting a repeated pick twice (store picks in a set first), reporting each mutual
+  pair twice (once as `Ava Ben` and once as `Ben Ava` — keep only the pair whose first name is
+  alphabetically earlier), or printing the pairs in input order instead of sorted order. Scanning the whole
+  pick list for each reversed pick is O(n²) and times out on the largest case.
+- **Q5 (binary search):** checking only the station at or after the house (the one before may be closer),
+  or indexing past either end when the house lies before the first or beyond the last station; the classic
+  `lo < hi` / `mid + 1` off-by-one; forgetting to sort first. A house exactly at a station answers `0`.
+- **Q6 (complete search):** comparing the values in sorted order instead of position order (`2 5 8` in the
+  sample is not a valid pick), counting only increasing steps (a decreasing pick such as `9 6 3` counts),
+  or reusing a position.
 
 ## Discussion prompts
 
@@ -63,9 +69,9 @@ hidden cases (not just the sample). Suggested split by difficulty:
 - Q1 Strongest Column — 15 pts — assesses Unit 1 (grid parsing) — O(R·C).
 - Q2 Practice Room Gate — 10 pts — assesses Unit 2 (boolean logic) — O(1).
 - Q3 Best Trading Gain — 15 pts — assesses Unit 3 (efficiency: single pass) — O(n).
-- Q4 Distinct Leaderboard Records — 20 pts — assesses Unit 4 (sets + tuple-key sort) — O(n log n).
-- Q5 Counts at Most the Limit — 20 pts — assesses Unit 5 (binary search over queries) — O((n + q) log n).
-- Q6 Target Triple Count — 20 pts — assesses Unit 5 (fixed-depth complete search) — O(n³).
+- Q4 Mutual Partner Picks — 20 pts — assesses Unit 4 (set of tuples + named-key sort) — O(n log n).
+- Q5 Nearest Charging Station — 20 pts — assesses Unit 5 (binary search over queries) — O((n + q) log n).
+- Q6 Evenly Spaced Picks — 20 pts — assesses Unit 5 (fixed-depth complete search) — O(n³).
 
 Partial credit: award half a question's points for a solution that is correct but of the wrong complexity
 class (it would pass small cases but time out on the largest), since diagnosing the efficient shape is the

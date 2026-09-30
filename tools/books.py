@@ -226,6 +226,9 @@ class PublicationConfig:
     project_headers: dict[str, str]
     lesson_heading: str
     index_names: frozenset[str]
+    # A unit's or checkpoint's running header when its title is over RUNNING_HEAD_MAX characters
+    # (plan 099 A4); keyed by unit or checkpoint id.
+    unit_headers: dict[str, str] = field(default_factory=dict)
     error_demo_ids: frozenset[str] = frozenset()
     hang_demo_ids: frozenset[str] = frozenset()
     print_required_starters: frozenset[str] = frozenset()
@@ -258,7 +261,10 @@ class PublicationConfig:
                          if exemption.applies(kind, source, book_prefix))
 
 
-_TOP_KEYS = {"setup", "project_headers", "lesson_heading", "index_names", "audit"}
+_TOP_KEYS = {"setup", "project_headers", "unit_headers", "lesson_heading", "index_names", "audit"}
+# The longest running header (chapter mark) the theme sets; a longer unit or checkpoint title needs a
+# `unit_headers` entry, and the publisher never truncates silently (plan 099 A4).
+RUNNING_HEAD_MAX = 32
 _SETUP_KEYS = {"source", "teacher_notes", "numbered"}
 _AUDIT_KEYS = {"error_demo_ids", "hang_demo_ids", "print_required_starters",
                "error_demo_routing_exceptions", "print_page_target", "turtle_tryits",
@@ -335,6 +341,20 @@ def _parse_publication_config(root: Path, book: str) -> tuple[PublicationConfig 
         if not isinstance(header, str) or not header.strip():
             errors.append(f"{where}: project_headers: {project} needs a header text")
 
+    unit_headers = _mapping(data.get("unit_headers", {}) or {}, f"{where}: unit_headers", errors)
+    for unit, header in unit_headers.items():
+        # Units and checkpoints share `running_head`, so a checkpoint id is a valid key too.
+        kind = unit.split("-", 1)[0] if isinstance(unit, str) else None
+        if kind not in ("unit", "checkpoint"):
+            errors.append(f"{where}: unit_headers: key {unit} must be a unit or checkpoint id")
+        elif not (base / f"{kind}s" / unit).is_dir():
+            errors.append(f"{where}: unit_headers: {kind} {unit} does not exist")
+        if not isinstance(header, str) or not header.strip():
+            errors.append(f"{where}: unit_headers: {unit} needs a header text")
+        elif len(header) > RUNNING_HEAD_MAX:
+            errors.append(f"{where}: unit_headers: {unit} header is {len(header)} characters "
+                          f"(at most {RUNNING_HEAD_MAX})")
+
     lesson_heading = data.get("lesson_heading")
     if "lesson_heading" in data:
         if not isinstance(lesson_heading, str) or not lesson_heading.startswith("^## "):
@@ -410,6 +430,7 @@ def _parse_publication_config(root: Path, book: str) -> tuple[PublicationConfig 
         setup_teacher_notes=notes,
         setup_numbered=numbered,
         project_headers=dict(headers),
+        unit_headers=dict(unit_headers),
         lesson_heading=lesson_heading,
         index_names=frozenset(index_names),
         error_demo_ids=frozenset(ids["error_demo_ids"]),

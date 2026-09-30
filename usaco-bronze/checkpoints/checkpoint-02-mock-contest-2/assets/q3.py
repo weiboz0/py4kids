@@ -1,24 +1,28 @@
 import sys
 
 data = sys.stdin.read()
-parts = data.split()
-score_count = int(parts[0])
-query_count = int(parts[1])
+tokens = data.split()
+n = int(tokens[0])
+q = int(tokens[1])
 prefix = [0]
 i = 0
-while i < score_count:
-    prefix.append(prefix[i] + int(parts[i + 2]))
+while i < n:
+    prefix.append(prefix[i] + int(tokens[2 + i]))
     i = i + 1
 
-result = ""
-query_start = score_count + 2
 i = 0
-while i < query_count:
-    left = int(parts[query_start + i * 2])
-    right = int(parts[query_start + i * 2 + 1])
-    total = prefix[right + 1] - prefix[left]
-    if i > 0:
-        result = result + "\n"
-    result = result + str(total)
+while i < q:
+    goal = int(tokens[2 + n + i])
+    lo = 1
+    hi = n + 1
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if prefix[mid] >= goal:
+            hi = mid
+        else:
+            lo = mid + 1
+    if lo == n + 1:
+        print("-1")
+    else:
+        print(str(lo))
     i = i + 1
-print(result)

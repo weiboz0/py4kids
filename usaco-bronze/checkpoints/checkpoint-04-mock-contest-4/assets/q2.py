@@ -2,46 +2,49 @@ from collections import deque
 import sys
 
 data = sys.stdin.read()
-lines = data.split("\n")
-header = lines[0].split()
-rows = int(header[0])
-cols = int(header[1])
+tokens = data.split()
+rows = int(tokens[0])
+cols = int(tokens[1])
 grid = []
 r = 0
 while r < rows:
-    grid.append(lines[1 + r])
+    grid.append(tokens[2 + r])
     r = r + 1
-start = (0, 0)
-target = (0, 0)
+
+queue = deque()
+visited = set()
+clean = 0
 r = 0
 while r < rows:
     c = 0
     while c < cols:
-        if grid[r][c] == "S":
-            start = (r, c)
-        if grid[r][c] == "T":
-            target = (r, c)
+        if grid[r][c] == "M":
+            queue.append((r, c, 0))
+            visited.add((r, c))
+        elif grid[r][c] == ".":
+            clean = clean + 1
         c = c + 1
     r = r + 1
-queue = deque()
-queue.append((start[0], start[1], 0))
-visited = set()
-visited.add(start)
-answer = "-1"
-while len(queue) > 0 and answer == "-1":
+
+reached = 0
+minutes = 0
+while len(queue) > 0:
     item = queue.popleft()
     cr = item[0]
     cc = item[1]
-    dist = item[2]
-    if (cr, cc) == target:
-        answer = str(dist)
-    else:
-        neighbours = [(cr - 1, cc), (cr + 1, cc), (cr, cc - 1), (cr, cc + 1)]
-        for spot in neighbours:
-            nr = spot[0]
-            nc = spot[1]
-            if 0 <= nr and nr < rows and 0 <= nc and nc < cols:
-                if grid[nr][nc] != "#" and (nr, nc) not in visited:
-                    visited.add((nr, nc))
-                    queue.append((nr, nc, dist + 1))
-print(answer)
+    time = item[2]
+    if time > minutes:
+        minutes = time
+    neighbours = [(cr - 1, cc), (cr + 1, cc), (cr, cc - 1), (cr, cc + 1)]
+    for spot in neighbours:
+        nr = spot[0]
+        nc = spot[1]
+        if 0 <= nr and nr < rows and 0 <= nc and nc < cols:
+            if grid[nr][nc] == "." and (nr, nc) not in visited:
+                visited.add((nr, nc))
+                reached = reached + 1
+                queue.append((nr, nc, time + 1))
+if reached < clean:
+    print("-1")
+else:
+    print(str(minutes))

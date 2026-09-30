@@ -1,20 +1,36 @@
 import sys
 
+
+def pair_key(pair):
+    return (pair[0], pair[1])
+
+
 data = sys.stdin.read()
-parts = data.split()
-n = int(parts[0])
-k = int(parts[1])
-records = set()
+tokens = data.split()
+n = int(tokens[0])
+picks = set()
+order = []
 i = 0
 while i < n:
-    record = (parts[i * 2 + 2], int(parts[i * 2 + 3]))
-    if record not in records:
-        records.add(record)
+    picker = tokens[1 + 2 * i]
+    picked = tokens[2 + 2 * i]
+    if (picker, picked) not in picks:
+        picks.add((picker, picked))
+        order.append((picker, picked))
     i = i + 1
 
-def rank_key(record):
-    return (-record[1], record[0])
+pairs = []
+i = 0
+while i < len(order):
+    picker = order[i][0]
+    picked = order[i][1]
+    if picker < picked and (picked, picker) in picks:
+        pairs.append((picker, picked))
+    i = i + 1
 
-ranked = sorted(records, key=rank_key)
-answer = ranked[k - 1]
-print(answer[0] + " " + str(answer[1]))
+ranked = sorted(pairs, key=pair_key)
+print(str(len(ranked)))
+i = 0
+while i < len(ranked):
+    print(ranked[i][0] + " " + ranked[i][1])
+    i = i + 1

@@ -1,5 +1,6 @@
-"""Plan 097 regression contract: python-concepts' generated Quarto projects equal the immutable
-pre-change baseline, except for files listed (with a D2/D3 reason) in the allowed-diffs list."""
+"""Plan 097/099 regression contract: python-concepts' and python-projects' generated Quarto projects
+equal their immutable pre-change baselines, except for files listed (with a D2/D3 reason) in each
+book's allowed-diffs list."""
 from __future__ import annotations
 
 import hashlib
@@ -15,8 +16,17 @@ from tools.publish import EDITIONS, build
 
 REPO = Path(__file__).resolve().parents[1]
 DATA = REPO / 'tests' / 'data'
-BASELINE = DATA / 'python-concepts-publish-baseline.json'
-ALLOWED = DATA / 'python-concepts-publish-allowed-diffs.yaml'
+# Each regression-guarded book: python-concepts (plan 097) and python-projects (plan 099, captured
+# before plan 099's first tooling change).
+BOOKS = ('python-concepts', 'python-projects')
+
+
+def baseline_path(book: str) -> Path:
+    return DATA / f'{book}-publish-baseline.json'
+
+
+def allowed_path(book: str) -> Path:
+    return DATA / f'{book}-publish-allowed-diffs.yaml'
 
 # Environment-independent digests. A project's data files (`p7_words.txt`, `p11_in.txt`, ...) are not
 # in the repository: its solutions write them when they execute, so a fresh clone or an exported tree
@@ -46,8 +56,8 @@ def digest(project: Path) -> dict[str, str]:
             if path.suffix == '.qmd' or path.name == 'inventory.json'}
 
 
-def allowed_diffs() -> dict[tuple[str, str], str]:
-    entries = yaml.safe_load(ALLOWED.read_text(encoding='utf-8'))['allowed_diffs'] or []
+def allowed_diffs(book: str) -> dict[tuple[str, str], str]:
+    entries = yaml.safe_load(allowed_path(book).read_text(encoding='utf-8'))['allowed_diffs'] or []
     allowed = {}
     for entry in entries:
         assert set(entry) == {'edition', 'file', 'reason'}, entry
@@ -57,8 +67,9 @@ def allowed_diffs() -> dict[tuple[str, str], str]:
     return allowed
 
 
-def test_baseline_covers_every_edition():
-    baseline = json.loads(BASELINE.read_text(encoding='utf-8'))
+@pytest.mark.parametrize('book', BOOKS)
+def test_baseline_covers_every_edition(book):
+    baseline = json.loads(baseline_path(book).read_text(encoding='utf-8'))
     assert set(baseline['editions']) == set(EDITIONS)
     for edition, files in baseline['editions'].items():
         assert 'inventory.json' in files and any(name.endswith('.qmd') for name in files), edition
@@ -75,26 +86,26 @@ def test_normalisation_removes_only_data_file_panels_and_records(tmp_path):
     assert json.loads(normalised(inventory)) == {'chapters': [{'id': 'p', 'inventory': records[:1]}]}
 
 
-@pytest.mark.parametrize('data_files', ['absent', 'present'])
-def test_python_concepts_output_matches_the_baseline(tmp_path, data_files):
-    # Build from a copy so the test never touches python-concepts/build (the rendered editions).
+@pytest.mark.parametrize(('book', 'data_files'), [('python-concepts', 'absent'), ('python-concepts', 'present'),
+                                                  ('python-projects', 'absent'), ('python-projects', 'present')])
+def test_output_matches_the_baseline(tmp_path, book, data_files):
+    # Build from a copy so the test never touches <book>/build (the rendered editions).
     shutil.copy(REPO / 'books.yaml', tmp_path / 'books.yaml')
-    shutil.copytree(REPO / 'python-concepts', tmp_path / 'python-concepts',
-                    ignore=shutil.ignore_patterns('build'))
+    shutil.copytree(REPO / book, tmp_path / book, ignore=shutil.ignore_patterns('build'))
     # The result must not depend on whether the project's generated data files exist here.
-    for project in (tmp_path / 'python-concepts' / 'projects').glob('project-*'):
+    for project in (tmp_path / book / 'projects').glob('project-*'):
         for data in project.glob('p*_*.txt'):
             data.unlink()
         if data_files == 'present':
             (project / 'p7_words.txt').write_text('fern\nmoss\n', encoding='utf-8')
             (project / 'p11_in.txt').write_text('3\n1 2 3\n', encoding='utf-8')
-    baseline = json.loads(BASELINE.read_text(encoding='utf-8'))['editions']
+    baseline = json.loads(baseline_path(book).read_text(encoding='utf-8'))['editions']
     differing = set()
     for edition in EDITIONS:
-        current = digest(build(tmp_path, 'python-concepts', edition))
+        current = digest(build(tmp_path, book, edition))
         expected = baseline[edition]
         differing |= {(edition, name) for name in set(current) | set(expected)
                       if current.get(name) != expected.get(name)}
-    allowed = allowed_diffs()
+    allowed = allowed_diffs(book)
     assert differing <= set(allowed), f'unlisted differences from the baseline: {sorted(differing - set(allowed))}'
     assert set(allowed) <= differing, f'stale allowed-diffs entries: {sorted(set(allowed) - differing)}'

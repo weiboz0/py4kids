@@ -6,7 +6,7 @@ provenance: original
 concepts:
   introduces: []
   requires: [input-parse, str-split]
-  practices: [greedy, simulation, prefix-sum, grid-2d, sorted-key, tuple, accumulator, arithmetic,
-              builtin-functions, comparison, def-function, elif-else, if-statement, list-append,
-              list-literal, list-sort, logical-ops, nested-loops, parameters, return-value, string-concat,
-              string-literal, type-conversion, while-loop]
+  practices: [greedy, simulation, prefix-sum, binary-search, grid-2d, sorted-key, tuple, accumulator,
+              arithmetic, builtin-functions, comparison, def-function, elif-else, if-statement,
+              list-append, list-literal, list-sort, logical-ops, nested-loops, parameters, return-value,
+              string-concat, string-literal, type-conversion, while-loop]

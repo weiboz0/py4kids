@@ -32,7 +32,7 @@ Maze Steps; Emergency Exit — a BFS reachability check).
 
 **Lesson 3 — DFS reachability.** Recursive DFS with visited passed as an argument;
 answering "is `target` reachable from `start`?" by walking the graph from the source. Class works
-**Exercises 6, 7** (Can the Message Travel?; Separate Networks). Assign the stretch problems (8 Largest
+**Exercises 6, 7** (How Far Does the News Spread?; Separate Networks). Assign the stretch problems (8 Largest
 Meadow, 9 Farthest Delivery) as extension.
 
 ## Common mistakes
@@ -69,12 +69,12 @@ Meadow, 9 Farthest Delivery) as extension.
 
 ### Concept → core-exercise coverage
 
-- **graph-repr** → Ex 1 (Friendship Degrees), Ex 6 (Can the Message Travel?), Ex 7 (Separate Networks)
+- **graph-repr** → Ex 1 (Friendship Degrees), Ex 6 (How Far Does the News Spread?), Ex 7 (Separate Networks)
 - **flood-fill** → Ex 2 (Paint One Room), Ex 3 (Count the Islands)
 - **bfs** → Ex 4 (Fewest Maze Steps), Ex 5 (Emergency Exit — reachability via BFS)
-- **dfs** → Ex 6 (Can the Message Travel?), Ex 7 (Separate Networks — reachability)
+- **dfs** → Ex 6 (How Far Does the News Spread? — count reachable nodes), Ex 7 (Separate Networks — reachability)
 
-Note: Ex 5/6/7 are reachability questions (YES/NO), so their answer does not depend on
+Note: Ex 5/7 are reachability questions (YES/NO) and Ex 6 counts the reachable nodes, so their answers do not depend on
 the visit ORDER — the FIFO-vs-LIFO distinction is exercised instead by the shortest-distance problems: the
 Lesson-2 BFS solver's sample (`l2`, where a LIFO stack reports 8 steps instead of the correct 2) and the
 graded Ex 4 and Ex 9 (whose `.in`/`.out` fixtures include a grid/graph where a LIFO traversal gives a longer,
@@ -89,7 +89,7 @@ wrong distance).
 3. Count the Islands — O(R·C) (each cell visited once across all fills).
 4. Fewest Maze Steps — O(R·C) BFS (each cell enqueued once).
 5. Emergency Exit — O(R·C) BFS reachability (can the exit be reached?).
-6. Can the Message Travel? — O(V + E) DFS reachability on the graph.
+6. How Far Does the News Spread? — O(V + E) DFS from `start`; the answer is the size of `visited`.
 7. Separate Networks — O(V + E) DFS reachability (is `target` reachable from `start`?).
 8. Largest Meadow *(stretch)* — O(R·C) (flood-fill every region, track the max).
 9. Farthest Delivery *(stretch)* — O(V + E) BFS from the source, take the max distance.

@@ -196,7 +196,8 @@ def test_problem_title_drops_topic_and_project_header_comes_from_config(contest)
     inventory = json.loads((project / 'inventory.json').read_text())['chapters']
     assert next(c for c in inventory if c['id'] == 'project-01-fixture')['items'] == [
         {'number': 1, 'title': 'Ledger'}]
-    assert '### Problem 1\n' in brief  # the answer-key heading has no topic tag either
+    # The answer-key heading takes the brief's title (plan 099 A2), without the topic tag.
+    assert '### Problem 1 — Ledger\n' in brief.split('## Answer key', 1)[1]
 
 
 def test_checkpoint_titles_strip_colon_and_dash_forms(tmp_path):

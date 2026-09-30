@@ -19,10 +19,10 @@ while prime * prime <= limit:
             multiple = multiple + prime
     prime = prime + 1
 
-count = 0
-i = 2
-while i <= limit:
-    if is_prime[i]:
-        count = count + 1
-    i = i + 1
-print(str(count))
+pairs = 0
+low = 2
+while low + 2 <= limit:
+    if is_prime[low] and is_prime[low + 2]:
+        pairs = pairs + 1
+    low = low + 1
+print(str(pairs))

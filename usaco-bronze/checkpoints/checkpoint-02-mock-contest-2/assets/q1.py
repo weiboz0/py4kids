@@ -1,28 +1,28 @@
 import sys
 
 data = sys.stdin.read()
-parts = data.split()
-event_count = int(parts[0])
-events = []
+tokens = data.split()
+kid_count = int(tokens[0])
+snack_count = int(tokens[1])
+needs = []
 i = 0
-while i < event_count:
-    start = int(parts[1 + i * 2])
-    end = int(parts[2 + i * 2])
-    events.append((start, end))
+while i < kid_count:
+    needs.append(int(tokens[2 + i]))
     i = i + 1
-
-def end_time(event):
-    return event[1]
-
-ordered_events = sorted(events, key=end_time)
-attended = 0
-latest_end = -1
+snacks = []
 i = 0
-while i < event_count:
-    start = ordered_events[i][0]
-    end = ordered_events[i][1]
-    if start >= latest_end:
-        attended = attended + 1
-        latest_end = end
+while i < snack_count:
+    snacks.append(int(tokens[2 + kid_count + i]))
     i = i + 1
-print(str(attended))
+needs.sort()
+snacks.sort()
+
+happy = 0
+kid = 0
+snack = 0
+while kid < kid_count and snack < snack_count:
+    if snacks[snack] >= needs[kid]:
+        happy = happy + 1
+        kid = kid + 1
+    snack = snack + 1
+print(str(happy))

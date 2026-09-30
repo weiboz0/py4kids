@@ -1,33 +1,33 @@
 import sys
 
+
+def beacons_placed(spots, gap):
+    placed = 1
+    last = spots[0]
+    for spot in spots:
+        if spot - last >= gap:
+            placed = placed + 1
+            last = spot
+    return placed
+
+
 data = sys.stdin.read()
 tokens = data.split()
-n = int(tokens[0]); k = int(tokens[1])
-w = []
+n = int(tokens[0])
+k = int(tokens[1])
+spots = []
 i = 0
 while i < n:
-    w.append(int(tokens[2 + i]))
+    spots.append(int(tokens[2 + i]))
     i = i + 1
+spots.sort()
 
-def groups_needed(cap):
-    groups = 1
-    current = 0
-    j = 0
-    while j < n:
-        if current + w[j] > cap:
-            groups = groups + 1
-            current = w[j]
-        else:
-            current = current + w[j]
-        j = j + 1
-    return groups
-
-lo = max(w)
-hi = sum(w)
+lo = 1
+hi = spots[n - 1] - spots[0]
 while lo < hi:
-    mid = (lo + hi) // 2
-    if groups_needed(mid) <= k:
-        hi = mid
+    mid = (lo + hi + 1) // 2
+    if beacons_placed(spots, mid) >= k:
+        lo = mid
     else:
-        lo = mid + 1
+        hi = mid - 1
 print(str(lo))

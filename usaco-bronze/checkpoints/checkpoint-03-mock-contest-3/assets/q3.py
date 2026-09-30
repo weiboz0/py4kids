@@ -1,13 +1,22 @@
 import sys
 
 data = sys.stdin.read()
-number = int(data.strip())
+parts = data.split()
+number = int(parts[0])
+base = int(parts[1])
+forward = ""
+backward = ""
 if number == 0:
-    print("0")
+    forward = "0"
+    backward = "0"
+while number > 0:
+    digit = str(number % base)
+    forward = digit + forward
+    backward = backward + digit
+    number = number // base
+if forward == backward:
+    answer = "YES"
 else:
-    digits = ""
-    while number > 0:
-        digit = str(number % 2)
-        digits = digit + digits
-        number = number // 2
-    print(digits)
+    answer = "NO"
+print(forward)
+print(answer)

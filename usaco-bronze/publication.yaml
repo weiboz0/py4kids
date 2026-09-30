@@ -1,0 +1,39 @@
+# Publication config for *Contest Python: USACO Bronze* (design 010 D1, plan 099).
+# Read and validated by tools/books.py (publication_config). Paths and chapter globs are book-relative.
+
+# The unnumbered "Getting Set Up" chapter; its teacher notes print only in the Teacher's Edition.
+setup:
+  source: docs/getting-set-up.md
+  teacher_notes: docs/getting-set-up-teacher-notes.md
+  numbered: false
+
+project_headers:
+  project-03-mock-contest: Mock Contest
+
+# Short running heads for unit titles over 32 characters.
+unit_headers:
+  unit-11-number-systems-bitwise: Number Systems & Bitwise
+
+lesson_heading: '^## Lesson\b'
+
+# The Python names the index recognises, all taught in this book.
+index_names: [print, input, range, len, split, sorted, set, tuple, deque, append, popleft, appendleft]
+
+audit:
+  error_demo_ids: []
+  hang_demo_ids: []
+  error_demo_routing_exceptions: []
+  print_required_starters: []
+  print_page_target: 400
+  turtle_tryits: {}
+  teacher_turtle_drawings: 0
+  phrase_exemptions:
+    - phrase: python assets/
+      kinds: [unit]
+      chapters: ['units/*']
+      reason: every lesson teaches running its full solver as `python assets/lN.py < assets/lN/1.in`
+    - phrase: python assets/
+      kinds: [setup]
+      chapters: [docs/getting-set-up.md]
+      reason: the setup chapter teaches how to run a program from a unit's assets folder
+  goals_recap: required

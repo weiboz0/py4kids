@@ -2,10 +2,10 @@ import sys
 
 data = sys.stdin.read()
 values = data.split()
-member = int(values[0]) == 1
-guest = int(values[1]) == 1
-banned = int(values[2]) == 1
-if (member or guest) and not banned:
-    print("GRANTED")
+height = int(values[0])
+age = int(values[1])
+adult = int(values[2]) == 1
+if height >= 120 and (age >= 10 or adult):
+    print("BOARD")
 else:
-    print("DENIED")
+    print("WAIT")

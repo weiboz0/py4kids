@@ -1,0 +1,12 @@
+# Plan 099 regression contract for *Python by Projects* (design 010; plan 099 Phase A and E.2).
+# tests/data/python-projects-publish-baseline.json is the immutable digest of every generated .qmd and
+# inventory.json of python-projects' four editions, captured before any plan-099 code change (commit
+# 1a3b335). The regression test (tests/test_publication_regression.py) allows a generated file to
+# differ from it only when it is listed here as {edition, file, reason}, with a reason naming the
+# design 010 D2/D3 rule that requires the change. A listed file that no longer differs fails the test.
+# Digests are taken after the test's `normalised` step, as for python-concepts.
+#
+# Plan 099's Phase A changes no python-projects output: it has no stdin lesson programs, no
+# `## Problem N` project answers, no unit title over 32 characters, and the panels.lua inline-code
+# break rule changes only the PDFs.
+allowed_diffs: []

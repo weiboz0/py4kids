@@ -6,11 +6,18 @@ function Header(el)
   -- Quarto gives the heading-less the-index.qmd an empty chapter: a blank page before
   -- \printindex, which opens its own chapter.
   if el.level == 1 and #el.content == 0 then return {} end
+  -- An answer-key heading (marked by mark_answer_keys) keeps with what follows: `## Answer key` with
+  -- its first answer, each answer heading with its first lines; never alone at a page foot (plan 099).
+  local keep = el.attributes['pub-keep']
+  if keep then
+    el.attributes['pub-keep'] = nil
+    return {pandoc.RawBlock('latex', '\\Needspace{' .. keep .. '\\baselineskip}'), el}
+  end
   if (el.level == 3 or el.level == 4) and el.content[1] then
     local title = pandoc.utils.stringify(el.content)
     if title:match('^Exercise %d+') or title:match('^Question %d+') or
        title:match('^Problem %d+') or title:match('^Challenge — ') or
-       title:match('^Challenge %d+') then
+       title:match('^Challenge %d+') or title:match('^Unit %d+, ') then
       return {pandoc.RawBlock('latex', '\\Needspace{16\\baselineskip}'), el}
     end
   end
@@ -109,8 +116,16 @@ function Code(el)
   }
   local parts = {}
   local run = 0
-  for _, cp in utf8.codes(el.text) do
+  local chars = {}
+  for _, cp in utf8.codes(el.text) do table.insert(chars, cp) end
+  -- Break points (plan 099 A3): after `\\ _ ( ) , : / + - =`, or inside a run of 12 letters and
+  -- digits, but never before a space (which breaks anyway), nor between two punctuation characters
+  -- or before one except after `,` or `:` (`{"c":["cat","crow"]}` breaks after each `,` and `:`),
+  -- and after `_` only when an identifier character follows. Never after `.`:
+  -- `assets/l1.py`, `1.in`, `1..n`, `a[l..r]` and `N - 1` never split at their punctuation.
+  for i, cp in ipairs(chars) do
     local c = utf8.char(cp)
+    local following = chars[i + 1] and utf8.char(chars[i + 1]) or nil
     if (cp >= 0x2190 and cp <= 0x21ff) or (cp >= 0x0370 and cp <= 0x03ff) or
        cp == 0x25b8 or cp == 0x2610 then
       table.insert(parts, '{\\fallbackfont ' .. c .. '}')
@@ -118,7 +133,11 @@ function Code(el)
       table.insert(parts, escaped[c] or c)
     end
     if c:match('[A-Za-z0-9]') then run = run + 1 else run = 0 end
-    if c == '\\' or c:match('[_%(%)%,%.%:%/%+%-%=]') or run >= 12 then
+    local open = following ~= nil and not following:match('^[%p%s]$')
+    -- After `,` or `:` a break is allowed before punctuation too (`"c":["cat","crow"]`), not before a space.
+    if c == ',' or c == ':' then open = following ~= nil and not following:match('^%s$') end
+    if open and c == '_' then open = following:match('^[A-Za-z0-9]$') ~= nil end
+    if open and (c == '\\' or c:match('[_%(%)%,%:%/%+%-%=]') or run >= 12) then
       table.insert(parts, '\\allowbreak{}')
       run = 0
     end
@@ -174,8 +193,25 @@ local function chapter_end(blocks, index)
   end
   return true
 end
+-- Answer-key headings: `## Answer key` needs room for itself and its first answer, and every answer
+-- heading under it (`### Milestone 1 — ...`, `### Lucky Guess`, not only `### Exercise N`) room for
+-- its first lines. Header turns the mark into \Needspace; the .qmd is unchanged (PDF only).
+local function mark_answer_keys(blocks)
+  local in_key = false
+  for _, block in ipairs(blocks) do
+    if block.t == 'Header' then
+      if block.level <= 2 then
+        in_key = block.level == 2 and pandoc.utils.stringify(block.content) == 'Answer key'
+        if in_key then block.attributes['pub-keep'] = '20' end
+      elseif in_key and block.level == 3 then
+        block.attributes['pub-keep'] = '16'
+      end
+    end
+  end
+end
 local function mark_final_boxes(doc)
   if not FORMAT:match('latex') then return nil end
+  mark_answer_keys(doc.blocks)
   local blocks = {}
   for index, block in ipairs(doc.blocks) do
     local lines = box_lines(block)
