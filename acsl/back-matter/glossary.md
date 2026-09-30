@@ -21,7 +21,7 @@
 **Complete search** — Trying every allowed choice, such as every pair or every triple, and keeping the ones that work; it is always correct, but fast enough only when N is small. *(Unit 0)*
 <!-- concept: complete-search; index: brute force -->
 
-**Data structures** — The structures of ACSL's Contest 3: a stack (`POP` takes the newest item), a queue (`POP` takes the oldest), a binary search tree (an equal key goes left), and a heap (every node is at most its children). *(Unit 9)*
+**Data structures** — The structures of ACSL's Contest 3: a stack (`POP` takes the newest item), a queue (`POP` takes the oldest), a binary search tree (an equal key goes left), and a heap (a min-heap: every node is at most its children; a max-heap the reverse). *(Unit 9)*
 <!-- concept: acsl-data-structures; index: stack; queue; binary search tree; heap -->
 
 **Finite state automaton** — A machine of states and transitions that reads a string one symbol at a time and accepts it when it ends in a final state; a regular expression describes the same kind of set of strings. *(Unit 11)*

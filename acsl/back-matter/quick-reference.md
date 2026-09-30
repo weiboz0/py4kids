@@ -60,11 +60,11 @@ f(x) = { f(x - 3) + x      if x > 10
 | `int(x)` | `math.floor(x)` | rounds **down**: `int(-3.7)` is `-4` |
 | `int(a / b)` | `a // b` | for whole numbers `a` and `b` |
 | `^` or `↑` | `**` | `2 ^ 5` is 32 |
-| `!`, `&&`, `\|\|` | `not`, `and`, `or` | write `not (…)` with brackets |
 | `sqrt(x)` | `math.sqrt(x)` | gives a float |
 | `ELSE IF` | `elif` | only the first true branch runs |
 | `A(3)`, `A(r, c)` | `A[3]`, `A[r][c]` | round brackets for arrays |
 
+ACSL's `!`, `&&` and `||` are Python's `not`, `and` and `or`; write `not (…)` with brackets.
 ACSL's order: `!`, then `^`, then `*`, `/` and `%`, then `+` and `-`, then the comparisons, then `&&`, and `||` last.
 Python puts `not` after the comparisons, so add brackets when you translate.
 
@@ -105,7 +105,7 @@ When a question shows Python, use Python's rules; when it shows ACSL pseudocode,
 |---|---|
 | `NOT` (`~`) | flips every bit |
 | `AND` (`&`) | 1 where both bits are 1 |
-| `OR` (`\|`) | 1 where at least one bit is 1 |
+| `OR` | 1 where at least one bit is 1 |
 | `XOR` (`⊕`) | 1 where the bits differ |
 | `LSHIFT-x`, `RSHIFT-x` | move x places; the bits that fall off are lost, and zeros come in |
 | `LCIRC-x`, `RCIRC-x` | move x places; the bits that fall off come back in at the other end |

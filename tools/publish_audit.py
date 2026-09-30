@@ -438,10 +438,10 @@ def reference_findings(pdf_text: str, project_headers: tuple[str, ...] = ()) -> 
     pages = []
     current_unit = None
     for physical, page, top_number in raw_pages:
-        # A top-of-page integer is the folio only when it equals physical − offset (the offset fixed
-        # from the first unit page); otherwise it is page text, such as a sample input "2" at the top of
-        # a recto page, and the page number is physical − offset (plan 100 A3).
-        printed = top_number if top_number == physical - offset else physical - offset
+        # The printed page number is physical − offset. Top-of-page numbers only fix the offset (from
+        # the first unit page, above); elsewhere a top integer may be page text, such as a sample input
+        # "2" at the top of a recto page, so it is never read as the folio (plan 100 A3).
+        printed = physical - offset
         header = page[:200]
         unit = re.search(r'(?m)^Unit\s+(\d+)(?:\s+[—–-].*)?\s*$', header)
         if unit:

@@ -24,7 +24,7 @@ ACSL's Junior, Intermediate and Senior short-answer tests are each 6 questions i
 
 ## Common mistakes
 
-- Q1: reordering operands or grouping `D / (E - F)` wrongly in the postfix.
+- Q1: reordering operands, doing `*` before `↑`, or dividing only `D ↑ E` by `F` instead of the whole product `(B + C) * D ↑ E`.
 - Q2: taking the two operands of a prefix operator in the wrong order.
 - Q3: ignoring precedence (`NOT`, then shifts, then `AND`, then `OR`) or padding on the wrong side.
 - Q4: listing the solutions out of ascending order, or missing a free bit.
