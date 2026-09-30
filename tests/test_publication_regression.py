@@ -1,7 +1,6 @@
 """Plan 097/099/100 regression contract: python-concepts', python-projects' and usaco-bronze's
 generated Quarto projects equal their immutable pre-change baselines, except for files listed (with a
-D2/D3 reason) in each
-book's allowed-diffs list."""
+D2/D3 reason) in each book's allowed-diffs list."""
 from __future__ import annotations
 
 import hashlib
