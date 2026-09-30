@@ -210,6 +210,13 @@ python-concepts' output is checked against its baseline. Any change there is lis
   3. Project preface cells are in `starter_kinds` and the Student Print panel count.
   4. The output count covers the added cells.
 
+### Round 3 — CONSENSUS
+
+- `[sol]` **APPROVE** (r3): no findings.
+- `[fable]` APPROVE WITH NITS (r2; nits folded).
+- `[self]` APPROVE WITH NITS (r1; N1 superseded).
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Content Review
 
 ## Post-Execution Report
