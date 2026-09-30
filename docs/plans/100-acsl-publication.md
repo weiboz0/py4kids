@@ -61,7 +61,7 @@ Rules and lessons carried over from plans 097–099:
 
 ### Phase A — Tooling (Opus tooling subagent; each fix with a fixture test)
 
-0. **A continuing guard for all three published books.** Before any change, capture a committed `tests/data/usaco-bronze-publish-baseline.json` for all four editions, plus an allowed-diffs file, and add `usaco-bronze` to `BOOKS` in `tests/test_publication_regression.py`. python-concepts, python-projects and *USACO Bronze* are then all checked in Phase E and by later tooling changes; any difference is listed with its reason.
+0. **A continuing guard for all three published books.** Before any change, capture a committed `tests/data/usaco-bronze-publish-baseline.json` for all four editions, plus an allowed-diffs file, and add `usaco-bronze` to `BOOKS` **and to the output-comparison test's own parameter list** in `tests/test_publication_regression.py` (it keeps an explicit two-book list, around line 89), so its output is actually compared. python-concepts, python-projects and *USACO Bronze* are then all checked in Phase E and by later tooling changes; any difference is listed with its reason.
 
 1. **Lesson programs printed once.** All 51 ACSL lesson Try-its use `input()`, so none reads stdin, and plan 099's `stdin_run_asset` never reaches them.
    - **The fix:** the dedup extends to the plain `tryit` route, and explicitly **not** to `tryit+figure`/`figure`. python-concepts' only asset-identical `input()` Try-its are unit 06's three turtle cells with `sample_input`, which keep their output, so its baseline stays byte-identical.
@@ -69,14 +69,14 @@ Rules and lessons carried over from plans 097–099:
    - No extra "file name" line is printed; the run line already names the file.
    - The audit mirror (`_expected_lesson_kind`, and `stdin_tryits` / "listed again in full") gains the same `tryit` case.
 2. **Chapter kicker reset.** The running heads are fine. What bleeds is the chapter kicker `\pubchapterlabel` (set through `pub-label`), which the answers appendix, Glossary, Quick Reference and Index never reset; python-concepts and *USACO Bronze* escape only because a project with an empty label comes last.
-   - **The fix:** those four chapters emit `{pub-label=""}`.
+   - **The fix:** the answers appendix, Glossary and Quick Reference emit `{pub-label=""}` on their level-one heading. The Index is generated as a bare `\printindex`, which `pub-label` cannot reach, so the publisher emits an explicit reset (`\renewcommand{\pubchapterlabel}{}`, or the theme's equivalent) before `\printindex`. A rendered check confirms the Index opening page carries no "Checkpoint 4".
    - `glossary_page_numbers` then finds "Glossary" at the top of the page, and it must also resolve a one-page glossary.
 3. **Page-number reading.** In `reference_findings`, a top-of-page integer counts as the folio only when it equals `physical − offset`, with the offset fixed from the first unit page; otherwise the page number is `physical − offset`. The u13 Ex19 case (physical 373, folio 363, whose text begins "Exercises" / "2") is a regression test.
 4. **Quiet the SyntaxWarnings** in `code_span_names`.
 
 ### Phase B — Content fixes and checkpoint replacements (Opus content subagents; the replaced problems' solutions are written by a separate blind session)
 
-- **Replace CP1 Q4, CP1 Q8, CP2 Q9, CP3 Q9 and CP4 Q9** with new problems (CP4 Q9 "Friend of a Friend" stitches u12 Ex17's matrix parsing, odd and printed, to u12 Ex18's M² count). Each replacement of a checkpoint's programming problem keeps the rule that exactly one programming question comes last (`acsl-check`). Each gets of the same category and level that copy no unit task:
+- **Replace CP1 Q4, CP1 Q8, CP2 Q9, CP3 Q9 and CP4 Q9** with new problems of the same category and level that copy no unit task (CP4 Q9 "Friend of a Friend" stitches u12 Ex17's matrix parsing, odd and printed, to u12 Ex18's M² count). Each replacement of a checkpoint's programming problem keeps the rule that exactly one programming question comes last (`acsl-check`). Each gets:
   - a statement, `assets/qN.py`, and fixtures (sample, edge cases, and one modest scale case, from a seeded generator; the whole fold's fixtures stay under about 1 MB)
   - `verify`/answer entries, and updated teacher notes
   - for short answers: a new instance with a unique canonical answer, checked with the unit's `assets/verify/*_eval.py` helper
@@ -94,7 +94,7 @@ Rules and lessons carried over from plans 097–099:
   - "this cell is marked not to run in the notebook" (u00 `b7510c30`)
   - "This cell is marked not to run" (u02, around lesson.ipynb line 633)
   - "This cell runs a script" (u09, around line 151)
-  - "This cell runs" and "the cell above" (u13, around line 561)
+  - "This cell runs" (u13, around line 561) and "the cell above" (u13, around line 712)
   - and any other such line a final grep of the student PDFs finds ("this cell", "the cell above", "run the cell", "in the notebook")
 - **Markup:**
   - Add the missing blank line before each of the 12 lists.
@@ -169,7 +169,7 @@ Rules and lessons carried over from plans 097–099:
    - run `scripts/ci-local.sh --all-books`
    - tag `pdfs-<date>`, and run `gh release create <tag> --target <full SHA>` with `GH_TOKEN=$(cat .gh-token)`
    - asset names prefixed with the book id, since handouts share names across books
-   - the Teacher's Edition is included, by the user's choice of 2026-09-30
+   - the Teacher's Edition is included, by the user's choice of 2026-09-29
 
 **After plan 100 merges:**
 - run `scripts/ci-local.sh --all-books`
@@ -206,6 +206,13 @@ Rules and lessons carried over from plans 097–099:
     - The 440-page print warning is expected.
     - The Recap goes after closing asides.
     - The review list gains the u12 Elementary lesson and CP4 Q9.
+
+### Round 2 — verdicts and fold
+
+- `[fable]` **APPROVE WITH NITS** (r2): every fold verified. Its 3 wording nits are folded: the Phase B sentence, u13's "the cell above" at line 712, and the release-decision date 2026-09-29.
+- `[sol]` **REJECT** (r2), 2 findings, both folded:
+  1. *USACO Bronze* is added to the regression test's output-comparison parameters, not only to `BOOKS`.
+  2. The Index gets an explicit kicker reset before `\printindex`, since `pub-label` cannot reach it, with a rendered check.
 
 ## Content Review
 
