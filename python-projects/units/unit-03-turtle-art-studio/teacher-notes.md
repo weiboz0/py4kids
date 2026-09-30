@@ -11,7 +11,7 @@ Budget: three lessons of 60–90 minutes. Each concept is a short **worked-examp
 
 - **Lesson 1 — turtle-basics + turtle-drawing (60–90 min). FIRST TERMINAL ENCOUNTER.**
   Open on the project thread: the teacher runs `assets/l3_spirograph.py` as a teaser — "by Friday you'll write this."
-  15 min: FIRST-RUN TERMINAL WALKTHROUGH (most students' first terminal): open a terminal in JupyterLab (File → New → Terminal), `cd` to the unit directory, `python assets/l1_corner.py`.
+  15 min: FIRST-RUN TERMINAL WALKTHROUGH (most students' first terminal): open a terminal in JupyterLab (File → New → Terminal), `cd` to the unit directory, `py assets/l1_corner.py` on Windows or `python3 assets/l1_corner.py` on a Mac (or open the file in Thonny and click Run).
     Expect to repeat it slowly twice; put the commands on the board. Also show how to OPEN and EDIT a script: double-click the `.py` in the file browser, change a number, save (Ctrl+S), re-run — the exercises assume this.
   25 min: the five-rung pen ladder — `forward`+`right` (open corner) → a full written-out square → `penup`/`pendown` travel → `color` → `pensize`. One pen action per rung; run each asset (`l1_corner`, `l1_plain_square`, `l1_travel`, `l1_color`, `l1_square`).
   25 min: the pain of drawing the square with eight copy-pasted lines — leave it unresolved (loops rescue us next lesson).

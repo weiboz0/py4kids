@@ -28,7 +28,7 @@ The Challenge exercises 25–26 are optional stretch work and do not carry core 
   its hunger is separate from Buddy's — each object carries its OWN attributes. (Do NOT call this
   "scope"; it is object identity — each `Pet(...)` is its own thing.)
   Use Exercises 1–2 in class.
-  60-MINUTE CUT: one pet is enough for L1; the two-pets independence beat can open L2.
+  60-MINUTE CUT: one pet is enough for Lesson 1; the two-pets independence beat can open Lesson 2.
 - **Lesson 2 — methods change a pet (methods) (60–90 min).**
   Open on the thread: our pet just sits there — let's give it actions. Grow the class one method at a
   time, each taking `self`, re-making `buddy` after each change: first the method idea itself with two

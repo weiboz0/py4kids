@@ -446,7 +446,100 @@ def asset_blocks(text: str, entry: Path, edition: str, seen: set[str], unit: str
     return '\n\n'.join(block.rstrip() for block in rendered) + ('\n' if rendered else ''), records
 
 
+# Unnumbered challenge items (plan 098 A3): `Challenge N`, `Challenge N: Title` or `Challenge N — Title`,
+# at level 2, or at level 3 inside a challenge section (after a `## Challenge` note). A level-3
+# `### Challenge 1: Title` under a `## Exercise N` heading is that exercise's title, not a challenge.
+CHALLENGE_HEADING = re.compile(r'^(#{2,3}) Challenge (\d+)(?:(?::|\s+—)\s*(\S.*?))?\s*$')
+CHALLENGE_NOTE = re.compile(r'^## Challenges?\s*$')
+HEADING_LINE = re.compile(r'^#{2,3} ')
+
+
+def _first_line(cell) -> str:
+    return cell.source.split('\n', 1)[0] if cell.cell_type == 'markdown' else ''
+
+
+def _embedded_challenge(cell) -> int | None:
+    """The line index of a level-3 challenge heading inside a `## Challenge` note cell, if any."""
+    lines = cell.source.split('\n')
+    return next((index for index, line in enumerate(lines[1:], 1)
+                 if line.startswith('### ') and CHALLENGE_HEADING.match(line)), None)
+
+
+def _challenge_follows(cells, start: int) -> bool:
+    """A `## Challenge` note opens a challenge section when the next heading after it is a challenge."""
+    for cell in cells[start:]:
+        first = _first_line(cell)
+        if CHALLENGE_HEADING.match(first):
+            return True
+        if HEADING_LINE.match(first):
+            return False
+    return False
+
+
+def split_challenges(cells):
+    """Split an exercises or solutions notebook's cells into (other cells, lead-in cells, challenges).
+
+    A challenge is {'number', 'title', 'cells'}; its first cell is its heading cell. The lead-in is the
+    `## Challenge` note (and any cells before the first challenge heading), printed once. A note cell
+    that itself holds the first `### Challenge N` heading is split there, so the heading starts its own
+    challenge. A challenge section must end the notebook's items: an `## Exercise N` heading after it
+    fails the build.
+    """
+    rest, lead_in, challenges = [], [], []
+    in_section = False
+    current = None
+    for index, cell in enumerate(cells):
+        first = _first_line(cell)
+        heading = CHALLENGE_HEADING.match(first)
+        if heading and (len(heading[1]) == 2 or in_section):
+            current = {'number': int(heading[2]), 'title': heading[3] or '', 'cells': [cell]}
+            challenges.append(current)
+            in_section = True
+            continue
+        if CHALLENGE_NOTE.match(first) and (_embedded_challenge(cell) is not None
+                                            or _challenge_follows(cells, index + 1)):
+            in_section, current = True, None
+            split = _embedded_challenge(cell)
+            if split is None:
+                lead_in.append(cell)
+                continue
+            lines = cell.source.split('\n')
+            note = nbformat.from_dict({**cell, 'source': '\n'.join(lines[:split]).rstrip()})
+            if note.source.strip():
+                lead_in.append(note)
+            body = nbformat.from_dict({**cell, 'source': '\n'.join(lines[split:])})
+            heading = CHALLENGE_HEADING.match(lines[split])
+            current = {'number': int(heading[2]), 'title': heading[3] or '', 'cells': [body]}
+            challenges.append(current)
+            continue
+        if first.startswith('## '):
+            if (in_section or challenges) and re.match(r'^## Exercise \d+\b', first):
+                raise ValueError(f'FAIL: challenge section must end the exercises: {first}')
+            in_section, current = False, None
+            rest.append(cell)
+        elif current is not None:
+            current['cells'].append(cell)
+        elif in_section:
+            lead_in.append(cell)
+        else:
+            rest.append(cell)
+    return rest, lead_in, challenges
+
+
+def unit_challenges(cells):
+    """(lead-in cells, challenges) of a unit's exercises or solutions notebook (see split_challenges)."""
+    _, lead_in, challenges = split_challenges(cells)
+    return lead_in, challenges
+
+
+def challenge_display(challenge: dict) -> str:
+    title = _clean_title(challenge['title']) if challenge['title'] else ''
+    return f"Challenge {challenge['number']}" + (f' — {title}' if title else '')
+
+
 def item_groups(cells, label: str):
+    if label == 'Exercise':
+        cells = split_challenges(cells)[0]
     pattern = re.compile(r'^## ' + label + r' (\d+)\b') if label != 'Problem' else re.compile(r'^#{2,3} Problem (\d+)\b')
     groups = []
     current = None
@@ -485,10 +578,14 @@ def structural(heading: str) -> bool:
     return STRUCTURAL.match(heading.strip()) is not None
 
 
+# An item heading that supplies its own title: `### Problem N — Title` or `## Exercise N: Title` (plan 098 A2).
+OWN_TITLE = re.compile(r'^(?:#{2,3} Problem \d+ — |## Exercise \d+:\s*)(\S.*)$')
+
+
 def title_heading(group) -> tuple[int, str] | None:
     """The (cell index, `### ` line) that supplies an item's title, or None.
 
-    A `### Problem N — Title` item heading supplies its own title. Otherwise the title is the first
+    A `### Problem N — Title` or `## Exercise N: Title` item heading supplies its own title. Otherwise the title is the first
     `###` heading after the item heading line that is not a structural subsection.
     """
     for index, c in enumerate(group['cells']):
@@ -497,7 +594,7 @@ def title_heading(group) -> tuple[int, str] | None:
         source = c.source
         if index == 0:
             first, _, source = source.partition('\n')
-            own = re.match(r'^#{2,3} Problem \d+ — (.+)$', first.replace(' — Challenge', ''))
+            own = OWN_TITLE.match(first.replace(' — Challenge', ''))
             if own:
                 return 0, first
         for line in source.split('\n'):
@@ -511,7 +608,7 @@ def group_title(group, label: str) -> str:
     if found is None:
         return ''
     line = found[1]
-    own = re.match(r'^#{2,3} Problem \d+ — (.+)$', line.replace(' — Challenge', ''))
+    own = OWN_TITLE.match(line.replace(' — Challenge', ''))
     return _clean_title(own[1] if own else line[4:])
 
 
@@ -586,6 +683,88 @@ def strip_solution_pointer(paragraph: str) -> str:
     return paragraph
 
 
+CHALLENGE_LEAD = re.compile(r'^\*\*Challenge:\*\*\s*')
+
+
+def strip_challenge_lead(text: str) -> str:
+    """Drop a leading `**Challenge:**` from a statement whose heading already names it a challenge."""
+    stripped = CHALLENGE_LEAD.sub('', text, count=1)
+    if stripped != text and stripped[:1].islower():
+        stripped = stripped[0].upper() + stripped[1:]
+    return stripped
+
+
+def _item_body(group, kind: str, edition: str, entry: Path, unit: str, lesson_heading: str | None,
+               seen_assets: set[str], inventory: list[dict], title_line: str | None,
+               challenge_lead: bool) -> list[str]:
+    """An item's statement blocks and Starter panels (unit exercises, challenges, questions, problems).
+
+    With `challenge_lead`, the statement's leading `**Challenge:**` goes (its heading says so already).
+    """
+    edition_profile = profile(edition)
+    out = []
+    statement = '\n'.join(c.source for c in group['cells'] if c.cell_type == 'markdown')
+    lead_pending = challenge_lead
+    for position, c in enumerate(group['cells']):
+        if c.cell_type == 'code':
+            if VERIFY_TAG in c.metadata.get('tags', []):
+                inventory.append({'id': c.id, 'kind': 'verify-omitted'})
+                continue
+            if edition_profile['starters'] == 'required' and redundant_starter(c.source, statement):
+                inventory.append({'id': c.id, 'kind': 'starter-omitted'})
+                continue
+            if c.source.strip():
+                out.append(panel('starter', code_block(c.source)))
+            inventory.append({'id': c.id, 'kind': 'starter'})
+            continue
+        text = statement_text(c.source, position == 0, title_line)
+        if lead_pending and text.strip():
+            text, lead_pending = strip_challenge_lead(text.lstrip()), False
+        if position == 0 and not text.strip():
+            continue
+        if kind == 'project':
+            text = re.sub(r'(?m)^## Milestone ', '### Milestone ', text)
+        # Real-version lines become a distinct note; keep the rest of the cell.
+        parts = []
+        for paragraph in re.split(r'\n\s*\n', text.strip()):
+            if PLACEHOLDER.match(paragraph):
+                continue  # judge books: no answer lines (design 007); students work elsewhere
+            if re.match(r'^\*\*(?:Real version|No real version):\*\*', paragraph):
+                no_real = paragraph.startswith('**No real version:**')
+                paragraph = re.sub(r'^\*\*(?:Real version|No real version):\*\*\s*', '', paragraph)
+                paragraph = re.sub(r'(?i)^real program:\s*', '', paragraph)
+                if no_real:
+                    continue
+                if edition_profile['student_family']:
+                    paragraph = strip_solution_pointer(paragraph)
+                if paragraph[:1].islower():
+                    paragraph = paragraph[0].upper() + paragraph[1:]
+                parts.append(panel('realprog', paragraph))
+            else:
+                parts.append(markdown_blocks(paragraph, lesson_heading=lesson_heading))
+        out.extend(parts)
+        assets, records = asset_blocks(text, entry, edition, seen_assets, unit)
+        if assets:
+            out.append(assets); inventory.extend(records)
+        if kind == 'project':
+            for name in dict.fromkeys(DATA.findall(text)):
+                file = entry / name
+                if file.exists():
+                    out.append(panel('datafile', f'**{name}**\n\n```text\n{read_source(file, edition).rstrip()}\n```'))
+                    inventory.append({'id': f'data:{name}', 'kind': 'asset listing'})
+    return out
+
+
+def _always_starter(c, inventory: list[dict]) -> list[str]:
+    """A code cell outside any item (a project's milestone scaffold, a challenge lead-in cell): a
+    Starter panel in every edition, never `starter-omitted` (plan 098 A1)."""
+    if VERIFY_TAG in c.metadata.get('tags', []):
+        inventory.append({'id': c.id, 'kind': 'verify-omitted'})
+        return []
+    inventory.append({'id': c.id, 'kind': 'starter'})
+    return [panel('starter', code_block(c.source))] if c.source.strip() else []
+
+
 def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str,
                  config: PublicationConfig | None = None):
     edition_profile = profile(edition)
@@ -606,6 +785,8 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str,
                 if kind == 'project':
                     text = re.sub(r'(?m)^## Milestone ', '### Milestone ', text)
                 out.append(markdown_blocks(text, lesson_heading=lesson_heading))
+        elif kind == 'project':
+            out.extend(_always_starter(c, inventory))
     for group in groups:
         for c in group.get('interlude', []):
             text = c.source.strip()
@@ -623,56 +804,28 @@ def render_items(path: Path, kind: str, edition: str, entry: Path, unit: str,
             out.append(f'[Division: {division}]{{.division}}')
         if stretch:
             out.append(panel('challenge', f'**{label} {number}**'))
-        statement = '\n'.join(c.source for c in group['cells'] if c.cell_type == 'markdown')
         found = title_heading(group)
         title_line = found[1] if found else None
-        for position, c in enumerate(group['cells']):
-            if c.cell_type == 'code':
-                if VERIFY_TAG in c.metadata.get('tags', []):
-                    inventory.append({'id': c.id, 'kind': 'verify-omitted'})
-                    continue
-                if edition_profile['starters'] == 'required' and redundant_starter(c.source, statement):
-                    inventory.append({'id': c.id, 'kind': 'starter-omitted'})
-                    continue
-                if c.source.strip():
-                    out.append(panel('starter', code_block(c.source)))
-                inventory.append({'id': c.id, 'kind': 'starter'})
-                continue
-            text = statement_text(c.source, position == 0, title_line)
-            if position == 0 and not text.strip():
-                continue
-            if kind == 'project':
-                text = re.sub(r'(?m)^## Milestone ', '### Milestone ', text)
-            # Real-version lines become a distinct note; keep the rest of the cell.
-            parts = []
-            for paragraph in re.split(r'\n\s*\n', text.strip()):
-                if PLACEHOLDER.match(paragraph):
-                    continue  # judge books: no answer lines (design 007); students work elsewhere
-                if re.match(r'^\*\*(?:Real version|No real version):\*\*', paragraph):
-                    no_real = paragraph.startswith('**No real version:**')
-                    paragraph = re.sub(r'^\*\*(?:Real version|No real version):\*\*\s*', '', paragraph)
-                    paragraph = re.sub(r'(?i)^real program:\s*', '', paragraph)
-                    if no_real:
-                        continue
-                    if edition_profile['student_family']:
-                        paragraph = strip_solution_pointer(paragraph)
-                    if paragraph[:1].islower():
-                        paragraph = paragraph[0].upper() + paragraph[1:]
-                    parts.append(panel('realprog', paragraph))
-                else:
-                    parts.append(markdown_blocks(paragraph, lesson_heading=lesson_heading))
-            out.extend(parts)
-            assets, records = asset_blocks(text, entry, edition, seen_assets, unit)
-            if assets:
-                out.append(assets); inventory.extend(records)
-            if kind == 'project':
-                for name in dict.fromkeys(DATA.findall(text)):
-                    file = entry / name
-                    if file.exists():
-                        out.append(panel('datafile', f'**{name}**\n\n```text\n{read_source(file, edition).rstrip()}\n```'))
-                        inventory.append({'id': f'data:{name}', 'kind': 'asset listing'})
+        out.extend(_item_body(group, kind, edition, entry, unit, lesson_heading, seen_assets, inventory,
+                              title_line, challenge_lead=stretch and found is not None and found[0] == 0
+                              and OWN_TITLE.match(title_line.replace(' — Challenge', '')) is not None))
         if kind == 'unit' and edition_profile['answer_refs'] and number % 2:
             out.append(f'Answer on page \\pageref{{ans:{entry.name}:{number}}}.')
+    if kind == 'unit':
+        # Unnumbered challenges (plan 098 A3): the lead-in once, then each challenge with its marker.
+        lead_in, challenges = unit_challenges(n.cells)
+        for c in lead_in:
+            if c.cell_type == 'code':
+                out.extend(_always_starter(c, inventory))
+                continue
+            text = c.source.strip()
+            if text:
+                out.append(markdown_blocks(re.sub(r'^## ', '### ', text), lesson_heading=lesson_heading))
+        for challenge in challenges:
+            out.append('### ' + challenge_display(challenge) + '\n')
+            out.append(panel('challenge', f"**Challenge {challenge['number']}**"))
+            out.extend(_item_body(challenge, kind, edition, entry, unit, lesson_heading, seen_assets,
+                                  inventory, None, challenge_lead=True))
     return '\n\n'.join(block.rstrip() for block in out) + '\n', inventory, [{'number': g['number'], 'title': group_title(g, label)} for g in groups]
 
 
@@ -750,6 +903,162 @@ def heading_answer(source: str, title_line: str | None, statement: set[str], pri
     return '\n\n'.join(kept).strip()
 
 
+def _answer_blocks(group, kind: str, entry: Path, name: str, title_line: str | None, statement: set[str],
+                   assets: list[Path], student: bool, lesson_heading: str | None) -> list[str]:
+    """One item's worked answer: the heading cell's body, the solution cells, real-program drawings and
+    the printed solution assets. `name` ("Exercise 3", "Challenge 2") names the item in errors."""
+    out = []
+    real_figures = []
+    if kind == 'unit':
+        for program, sample in real_programs(group):
+            if imports_turtle(program) and sample is not None:
+                real_figures.append((program, sample))
+    for position, c in enumerate(group['cells']):
+        if position == 0:
+            # The heading cell: its title lines go, its body (a worked explanation) prints.
+            text = heading_answer(c.source, title_line, statement, {path.name for path in assets})
+            if text:
+                text = markdown_blocks(text, keep_fences=True, lesson_heading=lesson_heading).rstrip()
+                out.append(text.replace('```python', '```{.python .answer-code}') + '\n')
+            continue
+        if c.cell_type == 'code':
+            if VERIFY_TAG in c.metadata.get('tags', []):
+                continue  # verify cells are checks, never printed (design 010 D3)
+            if (re.search(r'\brun_path\s*\(\s*["\']assets/solutions_(?:ex|challenge)', c.source)
+                    and 'fake_turtle' in c.source):
+                continue
+            # A judge item's mirror cell (identical to assets/exN.py, qN.py or pN.py) prints here, once.
+            out.append(render_solution_code(c.source))
+        elif c.cell_type == 'markdown':
+            text = re.sub(r'^### [^\n]+\n*', '', c.source).strip()
+            if text:
+                # Worked answers and their `**Answer:**` line, through the same Markdown rules.
+                text = markdown_blocks(text, keep_fences=True, lesson_heading=lesson_heading).rstrip()
+                text = text.replace('```python', '```{.python .answer-code}')
+                out.append(text + '\n')
+    for program, sample in real_figures:
+        try:
+            caption = 'Drawing for the sample input: ' + ', '.join(sample.splitlines())
+            out.append('```{=latex}\n' + turtle_picture(program, stdin=sample + '\n', caption=caption)
+                       + '\n```\n')
+        except Exception as error:
+            raise ValueError(f'FAIL: {entry.name}: real-program figure for {name}: {error}') from error
+    for file in assets:
+        source = (file.read_text(encoding='utf-8') if student
+                  else read_source(file, 'teacher'))
+        out.append(panel('program', f'**{file.name}**\n\n{code_block(source).replace("```python", "```{.python .answer-code}", 1)}'))
+        if 'import turtle' in source or 'from turtle import' in source:
+            try:
+                out.append('```{=latex}\n' + turtle_picture(source) + '\n```')
+            except Exception as error:
+                raise ValueError(f'FAIL: {entry.name}: turtle figure for asset {file.name}: {error}') from error
+    return out
+
+
+def challenge_solution_assets(entry: Path, number: int) -> list[Path]:
+    """A challenge's printed solution assets (`solutions_challengeN*.py`, not matching 10 for 1)."""
+    return [path for path in sorted((entry / 'assets').glob('solutions_challenge*.py'))
+            if re.match(rf'solutions_challenge{number}(?!\d)', path.stem)
+            ] if (entry / 'assets').exists() else []
+
+
+def _statement_set(group, title_line: str | None) -> set[str]:
+    return {paragraph.strip() for position, c in enumerate(group['cells']) if c.cell_type == 'markdown'
+            for paragraph in fenced_paragraphs(statement_text(c.source, position == 0, title_line))
+            if paragraph.strip()}
+
+
+def challenge_answers(entry: Path, edition: str, lesson_heading: str | None = None) -> list[str]:
+    """Teacher's Edition only: each unnumbered challenge's answer, from the solution cells under the
+    matching challenge heading (plan 098 A3). The student editions print no challenge answers."""
+    if profile(edition)['student_family']:
+        raise ValueError('challenge answers are Teacher\'s Edition only')
+    exercises = entry / 'exercises.ipynb'
+    if not exercises.exists():
+        return []
+    _, statements = unit_challenges(notebook(exercises, edition).cells)
+    if not statements:
+        return []
+    _, solutions = unit_challenges(notebook(entry / 'solutions.ipynb', edition).cells)
+    by_number = {challenge['number']: challenge for challenge in solutions}
+    out = []
+    for challenge in statements:
+        number = challenge['number']
+        if number not in by_number:
+            raise ValueError(f'{entry}: missing solution Challenge {number}')
+        out.append('### ' + challenge_display(challenge) + '\n')
+        out.extend(_answer_blocks(by_number[number], 'unit', entry, f'Challenge {number}', None,
+                                  _statement_set(challenge, None), challenge_solution_assets(entry, number),
+                                  False, lesson_heading))
+    return out
+
+
+MILESTONE = re.compile(r'^## Milestone (\d+)\b')
+
+
+def project_sections(cells) -> list[dict]:
+    """A Problem-less project's solution sections: each `## ` heading (`## Milestone N` or a named
+    reference section such as `## Lucky Guess`) with the cells under it. Cells before the first `## `
+    heading (a seed cell, a CI note, the H1) are not part of any answer."""
+    sections = []
+    current = None
+    for cell in cells:
+        first = _first_line(cell)
+        if first.startswith('## '):
+            milestone = MILESTONE.match(first)
+            current = {'heading': first[3:].strip(), 'milestone': int(milestone[1]) if milestone else None,
+                       'cells': [cell]}
+            sections.append(current)
+        elif current is not None:
+            current['cells'].append(cell)
+    return sections
+
+
+def brief_milestone_titles(cells) -> dict[int, str]:
+    """`## Milestone N` in a project brief -> the first `### ` title in that cell ('' when none)."""
+    titles = {}
+    for cell in cells:
+        milestone = MILESTONE.match(_first_line(cell))
+        if milestone:
+            title = next((line[4:].strip() for line in cell.source.split('\n')[1:] if line.startswith('### ')), '')
+            titles[int(milestone[1])] = _clean_title(title) if title else ''
+    return titles
+
+
+def project_answer_headings(entry: Path, edition: str = 'teacher') -> list[str]:
+    """The Teacher's Edition answer headings of a Problem-less project, in solution order:
+    "Milestone N — Brief title" (or "Milestone N"), or a reference section's own heading."""
+    solutions = entry / 'solutions.ipynb'
+    if not solutions.exists():
+        return []
+    brief = entry / 'brief.ipynb'
+    titles = brief_milestone_titles(notebook(brief, edition).cells) if brief.exists() else {}
+    headings = []
+    for section in project_sections(notebook(solutions, edition).cells):
+        if section['milestone'] is None:
+            headings.append(section['heading'])
+        else:
+            title = titles.get(section['milestone'], '')
+            headings.append(f"Milestone {section['milestone']}" + (f' — {title}' if title else ''))
+    return headings
+
+
+def project_answers(entry: Path, edition: str, lesson_heading: str | None = None) -> list[str]:
+    """Teacher's Edition only: a Problem-less project's answers, one per solution section (milestones
+    and named reference sections), printed like Problem answers (asserts become Check lines)."""
+    if profile(edition)['student_family']:
+        raise ValueError('project answers are Teacher\'s Edition only')
+    solutions = entry / 'solutions.ipynb'
+    if not solutions.exists():
+        return []
+    sections = project_sections(notebook(solutions, edition).cells)
+    out = []
+    for section, heading in zip(sections, project_answer_headings(entry, edition)):
+        out.append('### ' + heading + '\n')
+        out.extend(_answer_blocks(section, 'project', entry, heading, None, set(), [], False, lesson_heading))
+    return out
+
+
 def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teacher',
                lesson_heading: str | None = None) -> str:
     """Teacher: every item's solution. Student family: odd unit exercises via student_answer_sources.
@@ -790,54 +1099,16 @@ def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teache
         out.append('### ' + heading + page + '\n')
         if refs:
             out.append(f'```{{=latex}}\n\\label{{ans:{entry.name}:{number}}}\n```')
-        real_figures = []
-        if kind == 'unit':
-            for program, sample in real_programs(by_number[number]):
-                if imports_turtle(program) and sample is not None:
-                    real_figures.append((program, sample))
         group = by_number[number]
         found = title_heading(group)
-        title_line = found[1] if found else None
-        for position, c in enumerate(group['cells']):
-            if position == 0:
-                # The heading cell: its title lines go, its body (a worked explanation) prints.
-                text = heading_answer(c.source, title_line, statements.get(number, set()),
-                                      {path.name for path in assets[number]})
-                if text:
-                    text = markdown_blocks(text, keep_fences=True, lesson_heading=lesson_heading).rstrip()
-                    out.append(text.replace('```python', '```{.python .answer-code}') + '\n')
-                continue
-            if c.cell_type == 'code':
-                if VERIFY_TAG in c.metadata.get('tags', []):
-                    continue  # verify cells are checks, never printed (design 010 D3)
-                if (re.search(r'\brun_path\s*\(\s*["\']assets/solutions_ex', c.source)
-                        and 'fake_turtle' in c.source):
-                    continue
-                # A judge item's mirror cell (identical to assets/exN.py, qN.py or pN.py) prints here, once.
-                out.append(render_solution_code(c.source))
-            elif c.cell_type == 'markdown':
-                text = re.sub(r'^### [^\n]+\n*', '', c.source).strip()
-                if text:
-                    # Worked answers and their `**Answer:**` line, through the same Markdown rules.
-                    text = markdown_blocks(text, keep_fences=True, lesson_heading=lesson_heading).rstrip()
-                    text = text.replace('```python', '```{.python .answer-code}')
-                    out.append(text + '\n')
-        for program, sample in real_figures:
-            try:
-                caption = 'Drawing for the sample input: ' + ', '.join(sample.splitlines())
-                out.append('```{=latex}\n' + turtle_picture(program, stdin=sample + '\n', caption=caption)
-                           + '\n```\n')
-            except Exception as error:
-                raise ValueError(f'FAIL: {entry.name}: real-program figure for {label} {number}: {error}') from error
-        for file in assets[number]:
-            source = (file.read_text(encoding='utf-8') if student
-                      else read_source(file, 'teacher'))
-            out.append(panel('program', f'**{file.name}**\n\n{code_block(source).replace("```python", "```{.python .answer-code}", 1)}'))
-            if 'import turtle' in source or 'from turtle import' in source:
-                try:
-                    out.append('```{=latex}\n' + turtle_picture(source) + '\n```')
-                except Exception as error:
-                    raise ValueError(f'FAIL: {entry.name}: turtle figure for asset {file.name}: {error}') from error
+        out.extend(_answer_blocks(group, kind, entry, f'{label} {number}', found[1] if found else None,
+                                  statements.get(number, set()), assets[number], student, lesson_heading))
+    if not student and kind == 'unit':
+        out.extend(challenge_answers(entry, edition, lesson_heading))
+    if not student and kind == 'project' and not items:
+        out.extend(project_answers(entry, edition, lesson_heading))
+    if not student and len(out) == 1:
+        return ''  # nothing to answer: no empty "Answer key" heading
     return '\n\n'.join(block.rstrip() for block in out) + '\n'
 
 
@@ -902,7 +1173,9 @@ def render_chapter(entry: Path, kind: str, edition: str, config: PublicationConf
         body, records, items = render_items(source, kind, edition, entry, entry.name, config)
         chapter.append(body); inventory.extend(records)
     if edition == 'teacher':
-        chapter.append(answer_key(entry, kind, items, lesson_heading=lesson_heading))
+        key = answer_key(entry, kind, items, lesson_heading=lesson_heading)
+        if key.strip():
+            chapter.append(key)
     return '\n\n'.join(block.rstrip() for block in chapter) + '\n', inventory, items, title
 
 

@@ -48,8 +48,8 @@ as the "put it together" application, and the `NameError` scope bug is `no-exec`
   self-contained.
   Rest: scope-trace exercises; the stamp gallery.
 
-Practices reappearance: range-function + loop-counter drive the L1 stamp loop; arithmetic
-+ float-type live in L2's `360/n`; nested-loops + turtle-drawing are L3's stamp-grid pattern;
+Practices reappearance: range-function + loop-counter drive the Lesson 1 stamp loop; arithmetic
++ float-type live in Lesson 2's `360/n`; nested-loops + turtle-drawing are Lesson 3's stamp-grid pattern;
 a short **accumulator** beat (a running `total` of card-border lengths, returned) is the running-total pattern's **reuse rep** here (its home is Unit 04), now gathered in the closing Algorithm Extension (Exercise 11).
 All reappear in project 01.
 
@@ -92,10 +92,10 @@ exposure to the same loop shapes, now wrapped in functions.
 ## Common mistakes
 
 - `print` inside a function when `return` was needed — the value is shown but can't be used
-  again (the L2 core distinction; expect it and re-teach on the spot).
+  again (the Lesson 2 core distinction; expect it and re-teach on the spot).
 - Forgetting the parameter, or calling `greeting_card()` with no argument (TypeError — a
   planned traceback moment).
-- Expecting a name defined inside a function to exist outside it (NameError — the L3 bug).
+- Expecting a name defined inside a function to exist outside it (NameError — the Lesson 3 bug).
 - Calling a function before it's defined (define at top, call below).
 - Turtle scripts using `turtle.write`/`goto` — the classroom fake-turtle check only knows
   pen-movement commands; keep cards drawn with strokes.
@@ -108,7 +108,7 @@ exposure to the same loop shapes, now wrapped in functions.
 
 ## Differentiation
 
-- Strugglers: give the L1 card function as a fill-in-the-parameter skeleton; the plain-text
+- Strugglers: give the Lesson 1 card function as a fill-in-the-parameter skeleton; the plain-text
   version is a complete lesson on its own — the turtle stamp is a bonus, not a requirement.
 - Fast finishers: the Challenge exercises — a two-parameter name-badge function and a flower
   stamp that calls a petal function inside a loop.
