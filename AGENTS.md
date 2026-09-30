@@ -103,7 +103,7 @@ while the named plan is unshipped.
 | # | Reviewer | Dispatch | Model |
 |---|----------|----------|-------|
 | 1 | Self-review | active session inline; record in `## Plan Review` | active session model |
-| 2 | Sol reviewer | `codex:codex-rescue` subagent, fresh and read-only (request `--model gpt-6-sol`) | GPT-6-sol |
+| 2 | Sol reviewer | `codex:codex-rescue` subagent, fresh and read-only (request `--model gpt-5.6-sol`) | GPT-5.6-sol |
 | 3 | GLM reviewer | `opencode:opencode-review` subagent, fresh and read-only (pass `--model opencode-go/glm-5.3`; if it does not respond, fall back to `--model volcengine-plan/glm-5.3`) | GLM-5.3 (opencode-go, fallback volcengine-plan) |
 | 4 | Fable reviewer | fresh, read-only Fable 5 subagent (`Agent`, general-purpose) | Fable 5 |
 
@@ -135,7 +135,7 @@ all `[OPEN]` resolve before merge.
 ## Errata
 
 Post-merge content bugs (wrong answer, broken exercise): 2-way diagnosis
-(Claude inline + Codex on GPT-6-sol, read-only) → fix plan → gates → merge, plus an
+(Claude inline + Codex on GPT-5.6-sol, read-only) → fix plan → gates → merge, plus an
 `ERRATA.md` entry in the affected unit/project/checkpoint directory. Typos skip diagnosis.
 
 ## Session Handoff
