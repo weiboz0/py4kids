@@ -257,4 +257,93 @@ The tests cover:
 - `[glm]` skipped (user decision 2026-09-28).
 
 ## Post-Execution Report
-_(filled before merge.)_
+
+**Shipped: publication tooling for every book** (design 010 D1–D5). No new book is flagged `publication: true` yet.
+
+- **Per-book config (D1):**
+  - `<book>/publication.yaml`, validated by `tools/books.py`, holds:
+    - the setup chapter (numbered or not)
+    - project headers, from which the audit's header-reset rule is derived
+    - audit expectations: error and hang demos, the `u07l034a` routing exception, print-required Starters, turtle counts, the print page target
+    - kind- and source-scoped phrase exemptions (the phrase must be on the ban list)
+    - the index names and `lesson_heading`
+  - Every python-concepts constant moved there unchanged.
+  - `publish`, `publish-audit` and `build-book.sh` fail loudly without a valid config.
+- **Items (D2):** every book's items now print correctly:
+  - statements are read from heading cells too
+  - structural run-in subheads (`Input`, `Constraints`, `Sample Input 1`, `Sample Input — label`)
+  - `### Problem N — Title` titles, and the `# Checkpoint N — ` title form
+  - a styled `.division` tag; the `**Your answer:**` placeholder is dropped
+  - stdin lesson programs are routed to Try-it through a predicate shared with the audit
+  - `lesson_heading`, and the syllabus `#` column
+- **Answers (D3):**
+  - Short answers print their worked markdown plus the `**Answer:**` line; solution heading-cell bodies print too.
+  - `verify` cells never print, and judge answers print the judge-enforced mirror cell once.
+  - Checkpoint answers are Teacher's-Edition-only.
+  - Files matching `^(ex|q|p)\d+\.py$`, and `assets/verify/**`, are solution sources outside every student allowlist. The leak guard covers them, and body leaks name their chapter.
+- **Glyphs and builds (D4, D5):**
+  - luaotfload fallback to DejaVu Sans / DejaVu Sans Mono in the book theme and in the new handout and syllabus templates.
+  - Handouts, syllabi and `patterns.pdf` build in two steps with a kept `lualatex` log, and `tools/pdf_glyphs.py` fails on any missing character.
+  - Handouts and syllabi build for **every** book.
+  - The audit's Notice count ignores answer keys.
+- **Change-scoped CI (D7; user decision "Only changed books"):** `tools/ci_scope.py` decides the renders. A book renders when its root changes. Any change to `tools/`, `scripts/`, `books.yaml`, `pyproject.toml` or `uv.lock` renders every book, and so does `--all-books`, which is required before a release. The step prints why each book rendered or was skipped.
+- **Regression contract:**
+  - `tests/data/python-concepts-publish-baseline.json` is the pre-change baseline. It is normalised for the gitignored data files and passes with or without them.
+  - `…-allowed-diffs.yaml` lists 5 files. Four real explanations the old answer key silently dropped now print (unit-06 Ex 17; unit-07 Ex 7, 27, 28). Nothing else changed.
+  - Baseline retirement (F11): once this plan merges, the next plan that changes python-concepts output regenerates the baseline deliberately (a documented one-line regeneration in the test module). The allowed-diffs list is then reset to empty.
+
+**Verification.**
+- `scripts/ci-local.sh` ALL GREEN, in solo runs at 9143777 and at 9f33194 (the final code commit). The later commits touch only a data-file comment and the plan.
+  - pytest: 1498 passed.
+  - python-concepts editions: Student Print 410 pages (the soft-target warning, as before), Student 656, Answer Key 192, Teacher's 922; 0 overfull hboxes and a clean audit.
+  - Handouts and syllabi for all four books, with 0 missing glyphs.
+- python-concepts' generated projects match the baseline except for the 5 listed files.
+- A page-by-page render comparison of the answer key at 150 dpi, old theme against new, was pixel-identical before the heading-answer fix.
+
+**Phase E.3 trial report** (scratch copy; stub front and back matter; `student` edition only):
+
+| | python-projects | usaco-bronze | acsl |
+|---|---|---|---|
+| Pages | 288 | 270 | 516 |
+| Missing characters | 3 (🚀 in a unit-01 solution) | 0 | 0 |
+| Overfull hboxes | 0 | 0 | 3 × 19.8pt (a unit 08 step table) |
+
+Statements, samples, checkpoint questions, answer cross-references and ACSL division tags were all present in the PDFs. The remaining audit findings are the content plans' to-do list:
+
+- **every book:**
+  - goals/recap panels in every unit
+  - the glossary (stubbed in the trial)
+- **error-demo config:**
+  - python-projects: 6 cells
+  - acsl: 1 cell
+- **banned phrases:**
+  - python-projects: "your teacher", "Lesson One", `python assets/`, "no-exec", `assert` in an answer
+  - usaco: "no-exec" in u08
+  - acsl: "your teacher" in u00
+- **solution leaks:**
+  - python-projects: checkpoint-01 Q6
+  - usaco: unit-02 Ex 1, unit-13 Ex 6, checkpoint-02 Q6, checkpoint-03 Q7
+  - acsl: unit-04 Ex 21
+- **usaco-specific:**
+  - u02 and u04 exercise cells lack ids
+- **python-projects-specific:**
+  - project scaffold code missing from the PDF: a publisher gap or tagging, to diagnose first in plan 098
+  - `## Challenge N:` stretch titles
+  - duplicate cell ids in u02 solutions
+  - 2 cross-references, and a possible false-positive `# Exercise` artefact
+  - the 🚀 glyph
+- **acsl-specific:**
+  - 1 cross-reference
+  - the unit 08 table overflow
+
+**Deviations:**
+- **Structural subheads:** matched by name, an optional number and an optional `— label`, not a bare prefix, so a lesson heading like `Input from a person` stays a title.
+- **Formatting choices:**
+  - run-in bold subheads rather than LaTeX headings
+  - answer markdown keeps its code fences
+- **Font fallback:**
+  - `panels.lua`'s `\fallbackfont` wrapping is kept for x-height scaling of arrows and Greek, alongside the luaotfload fallback.
+  - The handout template extends nbconvert's `packages` block, and the pandoc template is a minimal standalone one.
+- **Handout fonts:** handouts and syllabi now use the book fonts (Atkinson Hyperlegible, Fira Mono) instead of Latin Modern.
+
+**Next:** plan 098, *Python by Projects* content. It starts by diagnosing the project scaffold gap.
