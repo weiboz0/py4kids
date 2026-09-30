@@ -1,0 +1,8 @@
+# Plan 100 regression contract for *Contest Python: USACO Bronze* (design 010; plan 100 Phase A step 0).
+# tests/data/usaco-bronze-publish-baseline.json is the immutable digest of every generated .qmd and
+# inventory.json of usaco-bronze's four editions, captured before any plan-100 code change (commit
+# 9e474a4). The regression test (tests/test_publication_regression.py) allows a generated file to
+# differ from it only when it is listed here as {edition, file, reason}, with a reason naming the
+# design 010 D2/D3 rule that requires the change. A listed file that no longer differs fails the test.
+# Digests are taken after the test's `normalised` step, as for python-concepts.
+allowed_diffs: []
