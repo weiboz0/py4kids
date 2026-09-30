@@ -65,19 +65,19 @@ Conventions and lessons carried over from plans 093–095:
 ## Shared rules for this plan
 
 **Verification helpers** in `acsl/units/<unit>/assets/verify/`, with the plan 094–095 recipe:
-- `graph_eval.py` (unit 12). Every function takes `edges` and the keyword arguments `vertices=None, directed=False`.
+- `graph_eval.py` (unit 12). Every function that reads edge text takes `edges` and the keyword arguments `vertices=None, directed=False`; `matrix_power` takes a matrix instead.
   - `edges` is the statement's edge text pasted verbatim: braces, commas and whitespace are layout, so `"{AB, AC, BC}"` and `"AB AC BC"` are the same. A weighted edge carries its weight after the pair (`AB3`). For a directed graph `AB` goes from A to B. A self-loop `AA` is allowed and puts 1 on the diagonal; items never use self-loops in cycle or traversability questions.
   - `vertices` is an optional string of vertex letters (`"ABCDE"`) naming every vertex, isolated ones included; without it the vertices are those that appear in `edges`. Vertices are always taken in alphabetical order.
-  - `matrix(edges, ...) -> list[list[int]]`: the adjacency matrix in alphabetical vertex order, **1 for an edge and 0 otherwise, whatever the weight**. An undirected edge sets both entries. Items never use repeated edges or loops.
+  - `matrix(edges, ...) -> list[list[int]]`: the adjacency matrix in alphabetical vertex order, **1 for an edge and 0 otherwise, whatever the weight**. An undirected edge sets both entries. Items never use repeated edges.
   - `matrix_power(M, p) -> list[list[int]]`
   - `count_paths(edges, start, end, length, ...) -> int`: walks of exactly `length` edges, with repeats allowed, as the entry of `M^length` counts them
-  - `simple_paths(edges, start, length, ...) -> list[str]`: every simple path of `length` edges from `start`, as vertex strings, sorted alphabetically
+  - `simple_paths(edges, start, length=None, end=None, ...) -> list[str]`: every simple path from `start` (of exactly `length` edges when given; ending at `end` when given), as vertex strings, sorted alphabetically
   - `cycles(edges, start=None, both_directions=False, ...) -> list[str]`, sorted alphabetically:
     - **with `start`:** every cycle through `start`, written from `start` and back to it. For an undirected graph each cycle appears in both directions, as in the Elementary doc (`ABCA` and `ACBA`); for a directed graph only in the direction its edges allow.
     - **without `start`:** each cycle once, written from its alphabetically smallest vertex. For an undirected graph it goes the direction whose second vertex is smaller.
     - **`both_directions=True`** (undirected only, without `start`): each cycle written from its smallest vertex in **both** directions, which is how the Elementary doc counts (its sample graph has 6).
     - A cycle has at least 3 distinct vertices in an undirected graph, and at least 2 in a directed one (`ABA` when both `AB` and `BA` exist).
-  - `degrees(edges, ...) -> dict` (in-degree plus out-degree for a directed graph), `components(edges, ...) -> int` (isolated vertices count as components)
+  - `degrees(edges, ...) -> dict` (in-degree plus out-degree for a directed graph), `components(edges, ...) -> int` (**undirected only**, as in the wiki's example; it raises for `directed=True`; isolated vertices count as components). Component items use undirected graphs only
   - `traversable(edges, ...) -> bool` (undirected only): True exactly when every vertex **that has an edge** lies in one connected component, and 0 or 2 vertices have odd degree
   - `cheapest(edges, start, end, ...) -> int`: the least total weight over all simple paths, by listing (weighted graphs only)
 - `circuit_eval.py` (unit 13). A circuit is a **netlist**. Its first line is `INPUTS A B C` (the circuit's input variables, in alphabetical order, each one a column of every tuple even if no gate uses it). Then comes one gate per line, `NAME = GATE(input, input)` (one input for `BUFFER` and `NOT`), with `GATE` one of `BUFFER NOT AND NAND OR NOR XOR XNOR`; a gate's inputs are declared inputs or earlier gate names. Gate names are lowercase (`p`, `q`, `out`), so they never collide with the capital inputs `A`–`D`. The last line's gate is the output.
@@ -217,7 +217,7 @@ Unit conventions:
     - the wiki's two samples (`TEMP` = −9 with the `ACC` trace −2, −6, 2, −1, −9; `N!` for several `N`)
     - each opcode, including immediate data, `DIV` toward zero for negatives, each branch, `READ`/`PRINT`, and the step limit
     - `READ` and `STORE` creating labels (the `N!` sample); line parsing of `DONE END` versus `LOAD B`; `DIV` operand order and `-7 DIV 2` → `-3`; `DIV` by zero raising
-    - the book's modulo rule at the boundaries: `999999 + 1` → `0`, `-999999 - 2` → `-1`, a `MULT` overflow, and a `READ` of `1000005` → `5`
+    - the book's modulo rule at the boundaries: `999999 + 1` → `0`, `-999999 - 2` → `-1`, `1000 MULT =1000` → `0`, `-1234 MULT =1000` → `-234000`, and a `READ` of `1000005` → `5`
 - Each file imports its evaluator from the unit's `assets/verify/` and skips until it exists.
 
 ## Phase B — Lessons and statements (Opus subagents, one per entry, each owning only its folder)
@@ -261,7 +261,7 @@ Five `teacher-notes.md` files with the required headings, and Grading for the ch
 
 ### Round 1 — `[self]` APPROVE WITH NITS
 
-- **N1 (folded):** the assembly modulo rule for negative results was stated from memory. A1 now pins it from the wiki's wording, and items stay inside ±999,999 unless the rule is the point.
+- **N1 (folded; superseded by the round-1 fold):** the assembly modulo rule for negative results was stated from memory. It is now a pinned book convention that no item assesses.
 - The plan carries every plan 095 lesson forward: helpers pinned by pre-written tests, checkpoints importing them, a placeholder-only `exercises.ipynb`, unique hook titles, no checkpoint repeats, and stated counting rules for paths and cycles.
 
 ### Round 1 — verdicts and fold
@@ -282,6 +282,13 @@ Five `teacher-notes.md` files with the required headings, and Grading for the ch
   8. Gate names are lowercase.
   9. Units 13 and 14 list their Python `requires`.
   10. The Elementary "paths of length 2" count (simple paths, 12) versus `M^2` walks is named in the canonical rules and in Phase D.
+
+### Round 2 — verdicts and fold
+
+- `[fable]` **APPROVE WITH NITS**. It verified every fold against the sources. Its nits are folded: self-loops are allowed in matrices; `matrix_power` is exempt from the edge-text arguments; the `[self]` N1 note is marked superseded; `components` is undirected only; the `MULT` overflow tests have expected values; `simple_paths` takes an optional `length` and `end`.
+- `[sol]` **REJECT**, 1 blocker and 1 nit, both folded:
+  1. `components` is undirected only (it raises for directed graphs), and component items use undirected graphs.
+  2. = `[fable]` nit 2.
 
 ## Content Review
 
