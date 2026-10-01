@@ -171,6 +171,54 @@ def test_concept_scan_allows_assumed_concept_in_v1_and_v2(
     assert concept_scan_findings(root, "advanced") == []
 
 
+def test_concept_scan_allows_declared_library_methods_in_v1_and_v2(
+    baseline_root: tuple[Path, int],
+) -> None:
+    root, _ = baseline_root
+    baseline_path = root / "advanced/curriculum/baseline.yaml"
+    baseline = yaml.safe_load(baseline_path.read_text(encoding="utf-8"))
+    baseline["library_methods"] = ["read_csv", "groupby"]
+    _write_yaml(baseline_path, baseline)
+    unit = root / "advanced/units/unit-01-advanced"
+    nbformat.write(
+        nbformat.v4.new_notebook(
+            cells=[
+                nbformat.v4.new_code_cell(
+                    "frame = pd.read_csv(path)\ngroups = frame.groupby(column)",
+                    id="baseline-library-methods",
+                )
+            ]
+        ),
+        unit / "lesson.ipynb",
+    )
+
+    assert books.assumed_library_methods(root, "advanced") == {"read_csv", "groupby"}
+    assert concept_scan_findings(root, "advanced") == []
+
+
+def test_concept_scan_still_flags_undeclared_library_method(
+    baseline_root: tuple[Path, int],
+) -> None:
+    root, _ = baseline_root
+    unit = root / "advanced/units/unit-01-advanced"
+    nbformat.write(
+        nbformat.v4.new_notebook(
+            cells=[
+                nbformat.v4.new_code_cell(
+                    "result = library.undeclared_method()",
+                    id="undeclared-library-method",
+                )
+            ]
+        ),
+        unit / "lesson.ipynb",
+    )
+
+    assert any(
+        "untaught method undeclared_method" in finding
+        for finding in concept_scan_findings(root, "advanced")
+    )
+
+
 def test_non_baseline_concept_is_still_flagged(
     baseline_root: tuple[Path, int],
 ) -> None:
@@ -334,7 +382,10 @@ def test_baseline_id_may_not_be_introduced_by_a_dependency(
         ),
         (
             "baseline_version: 1\nentries: []\nextra: nope\n",
-            "baseline.yaml keys must be exactly ['baseline_version', 'entries']",
+            (
+                "baseline.yaml keys must be exactly ['baseline_version', 'entries'] "
+                "with optional 'library_methods'"
+            ),
         ),
     ],
 )
@@ -346,6 +397,32 @@ def test_malformed_baseline_fails_closed(
 
     with pytest.raises(ValueError, match=re.escape(message)):
         books.assumed_baseline(root, "advanced")
+
+
+@pytest.mark.parametrize(
+    ("library_methods", "message"),
+    [
+        ({"read_csv": True}, "library_methods must be a list"),
+        (["read_csv", 7], "library method 1 must be a string"),
+        (["not-valid"], "library method 0 must be an identifier: 'not-valid'"),
+        (["read_csv", "read_csv"], "duplicate library methods: ['read_csv']"),
+    ],
+)
+def test_malformed_library_methods_fail_closed(
+    baseline_root: tuple[Path, int], library_methods: object, message: str
+) -> None:
+    root, _ = baseline_root
+    _write_yaml(
+        root / "advanced/curriculum/baseline.yaml",
+        {
+            "baseline_version": 1,
+            "entries": [{"id": "arithmetic", "name": "Arithmetic"}],
+            "library_methods": library_methods,
+        },
+    )
+
+    with pytest.raises(books.BaselineConfigError, match=re.escape(message)):
+        books.assumed_library_methods(root, "advanced")
 
 
 def test_baseline_id_may_not_also_be_owned_by_the_book(

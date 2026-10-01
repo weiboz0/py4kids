@@ -6,6 +6,43 @@ baseline_version: 1
 # coverage, taught-before-assessed for what the book DOES teach, hygiene, stretch, teacher-notes,
 # checkpoints) is retained. None of these ids may also appear in this book's concepts.yaml.
 # Prereq-closure, coverage, and the concept scan treat these as known-but-uncredited.
+library_methods:
+# --- bookrec package calls used by Unit 1 notebooks ---
+- Candidate
+- RandomRetrievalPath
+- generated_dir
+- hit_rate_at_k
+- load_catalog
+- rank
+- recall_at_k
+- retrieve
+- run_validation_scoreboard
+- search_catalog
+# --- pandas calls used by Unit 1 notebooks ---
+- DataFrame
+- agg
+- all
+- apply
+- dropna
+- groupby
+- head
+- read_csv
+- reset_index
+- sort_values
+- unstack
+# --- NumPy calls used by Unit 1 notebooks ---
+- any
+- array
+- isin
+- mean
+- sum
+# --- Python standard-library and built-in object methods used by Unit 1 notebooks ---
+- append
+- comb
+- loads
+- read_text
+- split
+- values
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}

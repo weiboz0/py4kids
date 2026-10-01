@@ -1,0 +1,9 @@
+id: unit-01-problem-and-scoreboard
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]
+  requires: []
+  practices: []

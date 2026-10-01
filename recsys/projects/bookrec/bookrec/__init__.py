@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from bookrec.blend import blend
 from bookrec.catalog import Book, load_catalog
+from bookrec.data import generated_dir
 from bookrec.evaluate import hit_rate_at_k, recall_at_k
 from bookrec.protocol import (
     Candidate,
@@ -30,18 +31,25 @@ from bookrec.protocol import (
 )
 from bookrec.rank import rank
 from bookrec.registry import DuplicatePathError, PathRegistry
+from bookrec.scoreboard import RandomRetrievalPath, ScoreboardResult, run_validation_scoreboard
+from bookrec.search import search_catalog
 
 __all__ = [
     "Book",
     "Candidate",
     "DuplicatePathError",
     "PathRegistry",
+    "RandomRetrievalPath",
     "RetrievalPath",
+    "ScoreboardResult",
     "blend",
     "calibrate_scores",
+    "generated_dir",
     "hit_rate_at_k",
     "load_catalog",
     "order_candidates",
     "rank",
     "recall_at_k",
+    "run_validation_scoreboard",
+    "search_catalog",
 ]
