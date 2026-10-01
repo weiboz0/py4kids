@@ -73,8 +73,9 @@ def run_validation_scoreboard(
 ) -> ScoreboardResult:
     """Evaluate a retrieval path on positive ``val`` rows, never on sealed ``test`` rows.
 
-    Readers with no positive validation item and declared cold readers are excluded. Positive
-    training items form the seen set and are removed with :func:`bookrec.rank.rank` before scoring.
+    Readers with no unseen positive validation item and declared cold readers are excluded.
+    Positive training items form the seen set and are removed from both recommendations and
+    relevance before scoring: a re-read is not a recommendation.
     """
     if not isinstance(k, int) or isinstance(k, bool) or k <= 0:
         raise ValueError(f"k must be a positive int, got {k!r}")
@@ -97,10 +98,10 @@ def run_validation_scoreboard(
     hits: list[float] = []
     recalls: list[float] = []
     for reader_id in sorted(val_by_reader):
-        relevant = val_by_reader[reader_id]
+        seen = seen_by_reader[reader_id]
+        relevant = val_by_reader[reader_id] - seen
         if reader_id in cold or not relevant:
             continue
-        seen = seen_by_reader[reader_id]
         candidates = path.retrieve(reader_id, {"seen": seen}, k)
         recommendations = rank(candidates, n=k, exclude=seen)
         hits.append(hit_rate_at_k(recommendations, relevant, k))

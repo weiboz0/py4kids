@@ -59,6 +59,18 @@ class _FixedPath:
         ]
 
 
+class _ReturnedItemsPath:
+    name = "returned-items"
+    version = "1"
+
+    def __init__(self, *item_ids: int) -> None:
+        self.item_ids = item_ids
+
+    def retrieve(self, query: object, context: object, k: int) -> list[Candidate]:
+        del query, context
+        return [Candidate(item_id, 1.0, self.name) for item_id in self.item_ids[:k]]
+
+
 def test_scoreboard_uses_val_only_and_excludes_ineligible_readers(tmp_path: Path) -> None:
     interactions = tmp_path / "interactions.csv.gz"
     _write_interactions(
@@ -80,6 +92,47 @@ def test_scoreboard_uses_val_only_and_excludes_ineligible_readers(tmp_path: Path
     assert result.readers == 1
     assert result.hit_rate_at_k == 0.0  # test item 4 is deliberately not relevant
     assert result.recall_at_k == 0.0
+
+
+def test_scoreboard_removes_train_val_overlap_from_relevant_denominator(
+    tmp_path: Path,
+) -> None:
+    interactions = tmp_path / "interactions.csv.gz"
+    _write_interactions(
+        interactions,
+        [
+            (10, 0, 0, 1, "train", 1),
+            (10, 0, 1, 2, "val", 1),  # re-read: seen, not recommendable
+            (10, 1, 1, 2, "val", 1),  # genuinely unseen and relevant
+        ],
+    )
+
+    result = run_validation_scoreboard(
+        _ReturnedItemsPath(1), interactions, catalog_ids=range(3), k=1
+    )
+
+    assert result.readers == 1
+    assert result.hit_rate_at_k == 1.0
+    assert result.recall_at_k == 1.0
+
+
+def test_scoreboard_reports_nonzero_metrics_for_genuine_hit(tmp_path: Path) -> None:
+    interactions = tmp_path / "interactions.csv.gz"
+    _write_interactions(
+        interactions,
+        [
+            (10, 0, 0, 1, "train", 1),
+            (10, 2, 1, 2, "val", 1),
+        ],
+    )
+
+    result = run_validation_scoreboard(
+        _ReturnedItemsPath(2), interactions, catalog_ids=range(3), k=1
+    )
+
+    assert result.readers == 1
+    assert result.hit_rate_at_k == 1.0
+    assert result.recall_at_k == 1.0
 
 
 def test_random_path_samples_only_unseen_items_and_is_deterministic() -> None:

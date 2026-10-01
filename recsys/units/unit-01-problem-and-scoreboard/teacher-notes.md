@@ -28,7 +28,8 @@ Plan for **two to three sittings** (this is an advanced, applied unit; see the b
    (lesson §§1–2; Exercises 1–3). Have everyone regenerate the synthetic data first
    (`python -m recsys.data.gen_catalog` / `gen_interactions`, or let the project helper point at it).
 2. **Sitting 2 — retrieve-then-rank and the honest scoreboard.** The architecture and `RetrievalPath`, then the
-   temporal `val` split and the two metrics derived from scratch before revealing `bookrec.evaluate`
+   temporal `val` split and the two metrics derived from scratch before revealing the
+   `bookrec.hit_rate_at_k` and `bookrec.recall_at_k` re-exports
    (lesson §§3–4; Exercises 4–6). This is the conceptual heart — do not rush the leakage discussion.
 3. **Sitting 3 — the random floor (+ Challenges).** The seeded random baseline and its analytic expectation
    (lesson §5; Exercises 7–8, both `stretch`). Strong groups can start Unit 2's popularity path informally.
@@ -44,10 +45,14 @@ Plan for **two to three sittings** (this is an advanced, applied unit; see the b
   averaged); precision@k and NDCG come in Unit 6. Watch for students dividing by `k` and calling it hit rate.
 - **Biasing the random floor.** Readers with zero `val` positives (and cold readers, whose events are all `test`)
   must be excluded from the scoreboard mean, or the floor reads artificially low.
+- **Counting re-reads as relevant.** Remove positive validation items already seen in positive training rows:
+  a re-read is not a recommendation and cannot belong in the relevant denominator.
 - **Random path shrinking below k.** The random baseline must sample from the *unseen* set so that
   `rank(exclude=seen)` doesn't drop it below `k` and break the empirical≈analytic comparison.
 - **Confusing the `Book` attributes with its fields.** Only `item_id`/`title` are typed attributes; `author_id`,
   `genres`, `year` live as strings in `Book.fields` and need coercion.
+- **Searching placeholder titles.** Generated titles are identifiers such as `Book 00000`; until later units add
+  real text, useful `text=` queries target genres or author/year digits in the search haystack.
 
 ## Discussion prompts
 

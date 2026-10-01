@@ -21,10 +21,15 @@ library_methods:
 # --- pandas calls used by Unit 1 notebooks ---
 - DataFrame
 - agg
+- all
 - apply
+- dropna
 - groupby
 - head
 - read_csv
+- reset_index
+- sort_values
+- unstack
 # --- NumPy calls used by Unit 1 notebooks ---
 - any
 - array
@@ -33,6 +38,7 @@ library_methods:
 - sum
 # --- Python standard-library and built-in object methods used by Unit 1 notebooks ---
 - append
+- comb
 - loads
 - read_text
 - split
