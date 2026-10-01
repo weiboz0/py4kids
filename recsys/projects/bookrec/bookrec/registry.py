@@ -28,7 +28,15 @@ class PathRegistry:
             raise ValueError("a retrieval path must expose a non-empty string name")
         if name in self._paths:
             raise DuplicatePathError(f"path name already registered: {name!r}")
-        artifact = getattr(path, "artifact_name", lambda: name)()
+        # Artifact ownership is part of the RetrievalPath contract, so enforce it for EVERY path
+        # (protocol-only paths included), not only BaseRetrievalPath subclasses: a path must name
+        # the single artifact it owns, and no two registered paths may own the same artifact.
+        artifact_name = getattr(path, "artifact_name", None)
+        if not callable(artifact_name):
+            raise TypeError(
+                f"retrieval path {name!r} must expose an artifact_name() method (contract §5)"
+            )
+        artifact = artifact_name()
         if artifact in self._artifacts:
             raise DuplicatePathError(
                 f"artifact {artifact!r} already owned by path {self._artifacts[artifact]!r}"

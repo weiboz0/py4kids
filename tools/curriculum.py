@@ -536,7 +536,10 @@ def practice_findings(root: Path, book: str) -> list[str]:
                 )
             )
         practiced_assumed = set(entry.get("practices", [])) & assumed
-        if entry.get("kind") == "unit" and practiced_assumed:
+        # Flag assumed-baseline practice for units AND projects: a baseline id is assessable with
+        # no coverage obligation, so practising it earns silent, undeserved credit. Checkpoints are
+        # covered by `checkpoint_findings`, so they are excluded here to avoid a double-finding.
+        if entry.get("kind") in ("unit", "project") and practiced_assumed:
             findings.append(
                 _fail(
                     book,

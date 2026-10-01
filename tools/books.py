@@ -157,6 +157,14 @@ def assumed_baseline(root: Path, book: str) -> set[str]:
     overlap = sorted(set(ids) & own_ids)
     if overlap:
         raise invalid(f"assumed baseline ids also appear in concepts.yaml: {overlap}")
+    # A concept a dependency book *introduces* is already a known baseline supplied to this book;
+    # also declaring it "assumed" is a contradiction — assumed ids are assessable-with-no-credit,
+    # while dependency-introduced ids are taught upstream — so fail closed on the collision.
+    dependency_overlap = sorted(set(ids) & dependency_baseline(root, book))
+    if dependency_overlap:
+        raise invalid(
+            f"assumed baseline ids are introduced by a dependency: {dependency_overlap}"
+        )
     return set(ids)
 
 

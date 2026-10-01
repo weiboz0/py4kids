@@ -124,7 +124,10 @@ def generate_interactions(
 
     all_items = catalog.item_ids
     warm_items = np.array([i for i in all_items if i not in cold_item_set], dtype=np.int64)
-    pop = catalog.popularity
+    # Popularity-biased exposure, tunable by ``popularity_exposure_weight``: exposure ∝
+    # popularity ** weight. weight=1 (default) is raw-popularity exposure; weight=0 flattens to
+    # uniform exposure; weight>1 sharpens the head. The knob is live, matching the §6 signal table.
+    pop = catalog.popularity ** config.popularity_exposure_weight
     warm_prob = pop[warm_items] / pop[warm_items].sum()
     all_prob = pop / pop.sum()
 

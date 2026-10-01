@@ -224,6 +224,31 @@ def test_unit_practicing_assumed_baseline_is_flagged(
     ]
 
 
+def test_project_practicing_assumed_baseline_is_flagged(
+    baseline_root: tuple[Path, int],
+) -> None:
+    root, map_version = baseline_root
+    entries = [
+        _entry(
+            "unit-01-advanced",
+            introduces=["own-concept"],
+            requires=["arithmetic"],
+            map_version=map_version,
+        ),
+        _entry(
+            "project-01-advanced",
+            kind="project",
+            practices=["arithmetic"],
+            map_version=map_version,
+        ),
+    ]
+    _write_map(root, map_version, entries)
+
+    assert practice_findings(root, "advanced") == [
+        "FAIL: advanced: project-01-advanced practices assumed baseline concepts: ['arithmetic']"
+    ]
+
+
 def test_checkpoint_practicing_assumed_baseline_is_flagged(
     baseline_root: tuple[Path, int],
 ) -> None:
@@ -250,6 +275,24 @@ def test_checkpoint_practicing_assumed_baseline_is_flagged(
             "['arithmetic']"
         )
     ]
+
+
+def test_baseline_id_may_not_be_introduced_by_a_dependency(
+    baseline_root: tuple[Path, int],
+) -> None:
+    root, _ = baseline_root
+    # ``base`` (a dependency of ``advanced``) introduces ``base-feature``; declaring it "assumed"
+    # in advanced is a contradiction — it is taught upstream, not an assessable-no-credit baseline.
+    _write_yaml(
+        root / "advanced/curriculum/baseline.yaml",
+        {"baseline_version": 1, "entries": [{"id": "base-feature", "name": "Base feature"}]},
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"assumed baseline ids are introduced by a dependency: \['base-feature'\]",
+    ):
+        books.assumed_baseline(root, "advanced")
 
 
 @pytest.mark.parametrize(

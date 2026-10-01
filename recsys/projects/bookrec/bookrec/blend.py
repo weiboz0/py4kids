@@ -10,24 +10,43 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from bookrec.protocol import Candidate, calibrate_scores, order_candidates
+from bookrec.protocol import Candidate, RetrievalPath, calibrate_scores, order_candidates
 
 
 def blend(
     per_path: Mapping[str, list[Candidate]],
     weights: Mapping[str, float] | None = None,
+    paths: Mapping[str, RetrievalPath] | None = None,
 ) -> list[Candidate]:
     """Blend ``{path_name: [Candidate, ...]}`` into one ordered, de-duplicated candidate list.
 
-    ``weights`` defaults to ``1.0`` per path. Each path is calibrated independently before the
-    weighted sum, so a path with larger raw scores does not dominate. Provenance on a blended
-    candidate is the ``+``-joined, name-sorted set of contributing paths.
+    ``weights`` defaults to ``1.0`` per path; when supplied it must name *exactly* the blended
+    paths — a missing or unknown weight key is an error (a typo'd path name silently contributing
+    nothing was a foot-gun), raised as :class:`ValueError`.
+
+    ``paths`` optionally maps each path name to its :class:`~bookrec.protocol.RetrievalPath`
+    object (or a :class:`~bookrec.registry.PathRegistry`): when given, each path's own
+    ``calibrate`` is honoured (design §5 per-path calibrated score semantics) instead of the
+    module-level :func:`~bookrec.protocol.calibrate_scores` default. Each path is calibrated
+    independently before the weighted sum, so a path with larger raw scores does not dominate.
+    Provenance on a blended candidate is the ``+``-joined, name-sorted set of contributing paths.
     """
+    if weights is not None:
+        missing = set(per_path) - set(weights)
+        unknown = set(weights) - set(per_path)
+        if missing or unknown:
+            raise ValueError(
+                "weights must name exactly the blended paths; "
+                f"missing={sorted(missing)} unknown={sorted(unknown)}"
+            )
     scores: dict[int, float] = {}
     provenance: dict[int, set[str]] = {}
     for name, candidates in per_path.items():
-        weight = 1.0 if weights is None else float(weights.get(name, 0.0))
-        for cand in calibrate_scores(candidates):
+        weight = 1.0 if weights is None else float(weights[name])
+        calibrate = calibrate_scores
+        if paths is not None and name in paths:
+            calibrate = paths.get(name).calibrate
+        for cand in calibrate(candidates):
             scores[cand.item_id] = scores.get(cand.item_id, 0.0) + weight * cand.score
             provenance.setdefault(cand.item_id, set()).add(cand.provenance)
     blended = [

@@ -21,6 +21,7 @@ from bookrec import (
     recall_at_k,
 )
 from bookrec.evaluate import mean_hit_rate_at_k
+from bookrec.protocol import BaseRetrievalPath
 
 # --- the contract itself ---------------------------------------------------------------------
 
@@ -112,6 +113,47 @@ def test_registry_rejects_duplicate_artifact_ownership() -> None:
         registry.register(clash)
 
 
+class _ProtocolOnlyPath:
+    """A path that satisfies the RetrievalPath Protocol WITHOUT subclassing BaseRetrievalPath."""
+
+    def __init__(self, name: str, artifact: str) -> None:
+        self.name = name
+        self.version = "1"
+        self._artifact = artifact
+
+    def fit(self, interactions: object, catalog: object | None = None) -> _ProtocolOnlyPath:
+        return self
+
+    def load(self, artifact: object) -> _ProtocolOnlyPath:
+        return self
+
+    def retrieve(self, query: object, context: object, k: int) -> list[Candidate]:
+        return []
+
+    def calibrate(self, candidates: list[Candidate]) -> list[Candidate]:
+        return calibrate_scores(candidates)
+
+    def artifact_name(self) -> str:
+        return self._artifact
+
+
+def test_protocol_only_path_artifact_ownership_is_enforced() -> None:
+    # Artifact ownership is enforced for a protocol-only path (not just BaseRetrievalPath):
+    registry = PathRegistry()
+    registry.register(_ProtocolOnlyPath(name="alpha", artifact="shared-v1"))
+    with pytest.raises(DuplicatePathError, match="shared-v1"):
+        registry.register(_ProtocolOnlyPath(name="beta", artifact="shared-v1"))
+
+
+def test_registry_requires_an_artifact_name_method() -> None:
+    class NoArtifact:
+        name = "no-artifact"
+        version = "1"
+
+    with pytest.raises(TypeError, match="artifact_name"):
+        PathRegistry().register(NoArtifact())  # type: ignore[arg-type]
+
+
 # --- catalog ---------------------------------------------------------------------------------
 
 
@@ -180,6 +222,51 @@ def test_blend_applies_per_path_weights() -> None:
     assert blended[1] == pytest.approx(2.0)
     assert blended[2] == pytest.approx(0.0)
     assert blended[3] == pytest.approx(0.0)
+
+
+def test_blend_rejects_missing_or_unknown_weight_keys() -> None:
+    per_path = {
+        "a": [Candidate(1, 1.0, "a")],
+        "b": [Candidate(2, 1.0, "b")],
+    }
+    # a typo'd path name used to silently contribute weight 0.0 — now it is an error.
+    with pytest.raises(ValueError, match="missing"):
+        blend(per_path, weights={"a": 1.0})  # 'b' missing
+    with pytest.raises(ValueError, match="unknown"):
+        blend(per_path, weights={"a": 1.0, "b": 1.0, "typo": 1.0})
+
+
+def test_blend_honours_a_per_path_custom_calibrator() -> None:
+    # A path whose own calibrate() is identity (no min-max) must be used by blend when the path
+    # objects are supplied, so raw per-path scores survive instead of the module-level min-max.
+    class IdentityPath(BaseRetrievalPath):
+        def calibrate(self, candidates: list[Candidate]) -> list[Candidate]:
+            return list(candidates)
+
+    identity = IdentityPath(name="identity", version="1")
+    per_path = {"identity": [Candidate(1, 0.3, "identity"), Candidate(2, 0.9, "identity")]}
+
+    # Without the path objects: module-level min-max -> scores become 0.0 and 1.0.
+    default_scores = {c.item_id: c.score for c in blend(per_path)}
+    assert default_scores[1] == pytest.approx(0.0)
+    assert default_scores[2] == pytest.approx(1.0)
+
+    # With the path objects: the path's identity calibrate() is honoured -> raw scores survive.
+    custom_scores = {c.item_id: c.score for c in blend(per_path, paths={"identity": identity})}
+    assert custom_scores[1] == pytest.approx(0.3)
+    assert custom_scores[2] == pytest.approx(0.9)
+
+
+def test_blend_honours_per_path_calibrator_via_registry() -> None:
+    class IdentityPath(BaseRetrievalPath):
+        def calibrate(self, candidates: list[Candidate]) -> list[Candidate]:
+            return list(candidates)
+
+    registry = PathRegistry()
+    registry.register(IdentityPath(name="identity", version="1"))
+    per_path = {"identity": [Candidate(1, 0.3, "identity"), Candidate(2, 0.9, "identity")]}
+    scores = {c.item_id: c.score for c in blend(per_path, paths=registry)}
+    assert scores == {1: pytest.approx(0.3), 2: pytest.approx(0.9)}
 
 
 def test_rank_excludes_seen_and_bounds_n() -> None:

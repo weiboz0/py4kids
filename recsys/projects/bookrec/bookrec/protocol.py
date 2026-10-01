@@ -72,7 +72,10 @@ def top_k(candidates: list[Candidate], k: int) -> list[Candidate]:
 class RetrievalPath(Protocol):
     """Structural contract for a retrieval path (a candidate generator).
 
-    Implementations set :attr:`name` and :attr:`version` and provide ``fit``/``load``/``retrieve``.
+    Implementations set :attr:`name` and :attr:`version` and provide
+    ``fit``/``load``/``retrieve``, plus the ``calibrate`` and ``artifact_name`` contract members
+    (so a per-path calibrator is honoured by :func:`~bookrec.blend.blend` and artifact ownership
+    is enforced by the registry for every path — not only :class:`BaseRetrievalPath` subclasses).
     """
 
     name: str
@@ -83,6 +86,10 @@ class RetrievalPath(Protocol):
     def load(self, artifact: Any) -> RetrievalPath: ...
 
     def retrieve(self, query: Any, context: Any, k: int) -> list[Candidate]: ...
+
+    def calibrate(self, candidates: list[Candidate]) -> list[Candidate]: ...
+
+    def artifact_name(self) -> str: ...
 
 
 @dataclass

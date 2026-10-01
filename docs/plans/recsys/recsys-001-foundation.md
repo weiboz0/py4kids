@@ -235,6 +235,54 @@ No open blockers. Gate CLOSED (4 rounds). Proceeding to implementation (Phases A
 ## Content Review
 Pre-PR round is a **conventional code review of `tools/`, `scripts/`, the generators, and the `bookrec` package by
 the gate roster** (`docs/content-review-gate.md` — tooling changes get code review in the same round). NOT N/A.
+**Reduced roster this session:** [sol]/codex is out of ChatGPT-Codex credits until 2026-10-03 and [glm] is skipped
+(standing plan-091 decision), so the available reviewers are **[self] + [fable]**. Merging on a 2-reviewer content
+review is below the normal bar → a user decision (surfaced at the gate).
+
+### Review 1 — [self] (2026-09-30, commit 444b363)
+- **Verdict:** APPROVE. Read the baseline mechanism (`tools/books.py`): `assumed_baseline` is fail-closed (raises
+  `BaselineConfigError` on every malformation incl. the id-not-in-own-concepts overlap); `known_baseline` is
+  no-credit. Matches the plan; `ci-local` ALL GREEN (Opus build run + orchestrator gate-of-record).
+
+### Review 2 — [fable] (2026-09-30, commit 444b363)
+- **Verdict:** APPROVE WITH NITS — no Must-level defects; baseline/guard/ci-local-routing/registration verified
+  correct and fail-closed; generator invariant tests meaningful; bookrec contract sound. 18 findings (Should/Nice).
+  Seven **Should** folded pre-PR (the rest are Nice, tracked):
+  1. `[FIXED]` `curriculum.py:539` unit-only gate lets a **project** practicing a baseline id get silent
+     practice credit — drop the kind gate (checkpoints covered separately).
+  2. `[FIXED]` `books.py` rejects assumed ids in own `concepts.yaml` but not in `dependency_baseline()` — add
+     the `assumed ∩ dependency` overlap → raise (today ∅ for recsys, but unenforced).
+  3. `[FIXED]` Phase-E CI generates the default dataset but **no test reads `recsys/data/generated/`** — add a
+     test that loads the generated CSVs via `bookrec.load_catalog` and re-asserts leakage/cold invariants.
+  4. `[FIXED]` `slice_books.py` attestation accepts `license: unknown` — tighten to a permissive allowlist (or an
+     explicit `permissive: true`). Important: the local `books` DB is **ISBNdb-sourced** (non-redistributable), so
+     the real slice must never be publishable.
+  5. `[FIXED]` `_common.py` `popularity_exposure_weight` is a documented knob but unused — apply or remove.
+  6. `[FIXED]` `protocol.py` `RetrievalPath` Protocol omits `calibrate`/`artifact_name`, and `blend` always uses
+     the module-level calibrator, so the design §5 per-path calibration + artifact-ownership contract is unreachable
+     via `blend` — add them to the Protocol and honor per-path calibration in blend.
+  7. `[FIXED]` `blend.py` silently assigns weight 0.0 to a path missing from `weights` (typo = silent no-op) —
+     raise or default to 1.0.
+  **All 7 Should nits FIXED** (commit below) and re-verified: ruff clean; 1617 group-free tests; 43 routed
+  recsys tests; `ci-local` ALL GREEN. 
+  Nice items (8–18: guard misplaced-plan edge, ruff-scope hardcoded ids, NaN-score guard, manifest/ground-truth
+  persistence, Open-Library parser stub, etc.) tracked as follow-ups; none blocks merge.
+- **[sol]:** UNAVAILABLE (codex credits out). **[glm]:** skipped.
+
+## Post-Execution Report
+
+### 2026-09-30 — Foundation implemented (commit 444b363)
+Phases A–F built on branch `feature/recsys-001-foundation` (Phase A + partial B by codex before it hit the user's
+ChatGPT-Codex usage limit; B-finish through F + verification by an Opus subagent in the real environment, since
+codex was unavailable). `TMPDIR=/dev/shm bash scripts/ci-local.sh` → **ALL GREEN** (1612 group-free tests + 32
+routed recsys tests; torch CPU-only with 0 `nvidia-*` in `uv.lock`; ruff clean; `pre-merge-guard` OK; all 4 book
+editions + recsys syllabus PDF built). No student units (buildout). No real-catalog data committed —
+`recsys/data/generated/` gitignored; `slice_books.py` fail-closed.
+**Data-provenance note:** the local `books` PostgreSQL catalog is populated from **ISBNdb** (a commercial, licensed
+API — confirmed by the running `getapbooks … data.isbndb` cron), so an ISBNdb-derived slice is **not
+redistributable** in this PUBLIC repo. The real slice stays a local-only convenience behind the fail-closed gate;
+committed/CI data is synthetic; Open Library (public domain) is the only publish-safe real fallback.
+Pre-PR: folding [fable]'s 7 Should nits, then the reduced-roster (2-reviewer) merge decision goes to the user.
 
 ## Post-Execution Report
 _(pending)_
