@@ -129,7 +129,40 @@ year` schema as-is).
 - **[glm]:** skipped.
 - **Outcome:** NOT consensus (2 REJECT). **v2 folds every Must + Should above.** Round 2 pending.
 ### Round 2 (on v2)
-- **[self]:** _(pending)_ · **[sol]:** _(pending)_ · **[fable]:** _(pending)_ · **[glm]:** skipped.
+- **[self]:** APPROVE (v2 folds every round-1 Must + Should).
+- **[sol]:** APPROVE — all 6 round-1 findings RESOLVED (practices/syllabus; bookrec-code milestone avoiding the
+  capstone rule; lesson Opus-dispatch + ≥6 exercises/≥2 stretch/≥3 asserts; real catalog schema; top-k-ranking-metrics
+  split; pre-merge-guard --pr + buildout holds); no new findings.
+- **[fable]:** APPROVE WITH NITS — every round-1 Must resolved; v2 internally consistent, right-sized, and a 1-unit
+  `lessons:3` buildout map with this entry is CI-green. Nits folded into "Implementation notes" below (data-access
+  idiom; dispatch wording; exact random-baseline analytics; bookrec pandas dep; ASCII applies to the exercises
+  handout).
+- **[glm]:** skipped.
+
+### Plan-review outcome: **CONSENSUS on v2** — [self]/[sol] APPROVE · [fable] APPROVE WITH NITS (folded) · [glm] skipped
+No open blockers. Gate CLOSED (2 rounds). Implementation proceeds per the dispatch + notes below.
+
+## Implementation notes (folded [fable] round-2 nits — binding on the authors)
+- **Dispatch (settled):** content authoring goes to **`codex:codex-rescue` (GPT-5.6-sol)** per the AGENTS.md table
+  (codex credits restored): lesson + exercise STATEMENTS in one fresh session; SOLUTIONS in a SEPARATE fresh
+  session; the `bookrec` `search.py`/`scoreboard.py` + tests as tooling (codex); teacher-notes inline. (If codex is
+  unavailable, substitute an Opus subagent in the real env — as recsys-001 did.) This supersedes the earlier
+  "Opus subagent" wording in Phases B/C.
+- **Data-access idiom:** notebooks execute with cwd = the unit dir, and the data is the gitignored
+  `recsys/data/generated/{catalog,interactions}.csv.gz` (ci-local regenerates it in step 2, before step-3 exec).
+  Add a single `bookrec` path helper (e.g. `bookrec.data.generated_dir()` resolving the repo `recsys/data/generated/`
+  and regenerating deterministically if absent) so all three notebook authors use ONE idiom; the lesson tells
+  students to run the generators first.
+- **Random-baseline analytics (exact):** expected hit-rate@k over N unseen items with r val-positives is
+  `1 − C(N−r,k)/C(N,k)` (≈ k/N only when r = 1 — state the condition). Exclude readers with zero val-positives and
+  all cold readers (all-`test`) from the scoreboard mean (else the floor is biased low). The random path must sample
+  k from the UNSEEN set inside `retrieve` (so `rank(exclude=seen)` doesn't drop it below k and break the
+  empirical≈analytic check). Use `numpy.random.default_rng(seed)` (not stdlib `random`).
+- **`bookrec` deps:** `recsys/projects/bookrec/pyproject.toml` currently declares only numpy and `catalog.py` is
+  stdlib `csv`+`gzip`. If `search.py`/`scoreboard.py` use pandas, add `pandas` to bookrec's deps; otherwise stay
+  stdlib.
+- **Handout glyphs:** `build-pdf.sh` renders `exercises.ipynb` as the handout, so the ASCII-only (no box-drawing)
+  rule applies most to the EXERCISES notebook.
 
 ## Content Review
 _(4-way, pre-PR — pending; reviewers blind-solve the exercises + review the lesson for project-first/engagement/
