@@ -169,7 +169,41 @@ verdict record corrected. **v3 adds Phase 0 (tooling)** to encode assumed librar
 book, folds the remaining nits, and goes back for a **round-3** re-review before any build. No implementation until
 round-3 consensus.
 ### Round 3 (on v3 — adds Phase 0 tooling + folded nits)
-- **[self]:** _(pending)_ · **[sol]:** _(pending)_ · **[fable]:** _(pending)_ · **[glm]:** skipped.
+- **[self]:** APPROVE (Phase 0 closes the blocker; nits folded).
+- **[sol]:** APPROVE WITH NITS — Phase 0 is the right minimal fix (subtract the validated allowlist in BOTH the
+  legacy and v2 untaught-attribute-call sets; `known_baseline` unchanged); no new blocker; v3 implementable to green
+  ci-local. Two refinements folded: (a) `library_methods` is an allowlist of **attribute-call terminal names** (incl.
+  module functions / qualified constructors — `read_csv`, `default_rng`, `comb`, `groupby`, `load_catalog`);
+  malformed/non-identifier/duplicate entries → `BaselineConfigError`; test BOTH map-v1 AND map-v2 paths. (b) The
+  random-baseline expectation is **`= k/N` exactly** for one relevant item (not ≈); empirical only approximates it.
+- **[fable] (independent):** APPROVE WITH NITS — no new blocker; verified Phase 0 closes the blocker empirically
+  under BOTH map versions (only the declared library methods are flagged, zero spurious concept findings); all
+  round-2 nits folded; v3 implementable to green ci-local with buildout kept. Nits folded below.
+- **[glm]:** skipped.
+
+### Plan-review outcome: **CONSENSUS on v3** — [self] APPROVE · [sol] APPROVE WITH NITS · [fable] APPROVE WITH NITS · [glm] skipped
+No open blockers. Gate CLOSED (3 rounds). Implementation proceeds: **Phase 0 first** (it makes the notebooks
+CI-passable), then Phases A/D/B/C, then solutions (separate session), teacher-notes inline, verify, content gate.
+
+### Phase 0 implementation specifics (folded [sol]+[fable] round-3 nits — binding)
+- New accessor **`assumed_library_methods(root, book) -> set[str]`** in `tools/books.py`: the `library_methods`
+  value is a list of unique **identifier strings**, validated **fail-closed** (non-list / non-string / non-identifier
+  / duplicate → `BaselineConfigError`). `assumed_baseline()` stays **ids-only** (so `curriculum.py` consumers are
+  untouched).
+- The baseline.yaml exact-key check `set(data) != {"baseline_version","entries"}` (`tools/books.py:119`) must be
+  widened to ADMIT the optional `library_methods` (keep it exact-set, just add the allowed optional key — do NOT
+  loosen to "superset"), and the existing test expectation
+  `tests/test_assumed_baseline.py` ("keys must be exactly ['baseline_version','entries']") must be UPDATED to match.
+- Subtract `assumed_library_methods` from the untaught-methods set in BOTH scan paths — right after the legacy
+  `methods -= defined_names` (`concept_scan.py:~1035`) and the v2 equivalents (`~1269`, `~1445`). It covers **every
+  `x.name(...)` attribute-style call** (object methods AND module functions / constructors — `pd.DataFrame`,
+  `bookrec.Candidate`, `np.mean`, `math.comb`, `read_csv`, `groupby`, `default_rng`, `hit_rate_at_k`, and `split`);
+  bare from-import calls (`load_catalog(...)`, `rank(...)`) and non-call attribute access (`df.shape`, `.str`) are
+  never flagged. Tests exercise BOTH map-v1 AND map-v2 (declared → pass; undeclared library method → still FAIL).
+- `recsys/curriculum/baseline.yaml` groups `library_methods` by library with comments (for gate review).
+- `bookrec.data.generated_dir()`: prefer **fail with a clear message** if the generated slice is absent (ci-local
+  regenerates it in step 2 before exec) over fragile in-package regeneration (the `recsys/data/gen_*.py` are not a
+  package); a subprocess regen is an acceptable alternative. Random-baseline expectation is **`= k/N`** (exact, r=1).
 
 ## Implementation notes (folded [fable] round-2 nits — binding on the authors)
 - **Dispatch (settled):** content authoring goes to **`codex:codex-rescue` (GPT-5.6-sol)** per the AGENTS.md table
