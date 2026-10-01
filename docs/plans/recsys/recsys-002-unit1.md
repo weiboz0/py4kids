@@ -250,8 +250,18 @@ code-reviewed the Phase-0 tooling + `bookrec` (both: fail-closed, correct).
 - **Outcome:** NOT consensus ([sol] REJECT). Folding the union via codex (relevance−=seen + overlap/non-zero tests;
   non-zero demo floor + analytic expectation; teach the interaction schema/label/cold rule before Ex5; author_id
   clarity; placeholder-titles note; ASCII headings; polish) → re-verify ci-local → round-2 re-review.
-### Round 2
-- **[self]:** _(pending)_ · **[sol]:** _(pending)_ · **[fable]:** _(pending)_ · **[glm]:** skipped.
+### Round 2 (on the fix commit 41745ba)
+- **[self]:** APPROVE (fix re-verified; ci-local ALL GREEN; scoreboard floor now non-zero).
+- **[sol]:** APPROVE — all 4 findings + the scoreboard-floor fix RESOLVED; no new findings (direct exec hit@50
+  0.0598 vs analytic 0.0410; concept-scan PASS with the new library_methods).
+- **[fable] (independent):** APPROVE WITH NITS — independently verified (61 tests; all 3 notebooks execute clean;
+  all book checks PASS). All prior findings RESOLVED. One non-blocking nit N1 (state the general
+  `1−C(N−r,k)/C(N,k)` formula + why k=50 + sampling-noise framing in the lesson) — **folded** as an explanatory
+  markdown cell before the scoreboard demo.
+- **[glm]:** skipped.
+
+### Content-review outcome: **CONSENSUS** — [self]/[sol] APPROVE · [fable] APPROVE WITH NITS (N1 folded) · [glm] skipped
+No open blockers. Gate CLOSED. Ready for `pre-merge-guard --pr` → squash-merge.
 
 ## Post-Execution Report
 _(pending)_
