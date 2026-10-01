@@ -269,22 +269,26 @@ review is below the normal bar → a user decision (surfaced at the gate).
   persistence, Open-Library parser stub, etc.) tracked as follow-ups; none blocks merge.
 ### Review 3 — [sol] (2026-10-03, commit 2af558e; codex credits restored)
 - **Verdict:** REJECT — confirmed baseline/guard/routing/registry/generator-invariants sound; 1 Must + 3 Should:
-  1. `[OPEN→fold]` **Must** `slice_books.py:77` — `permissive: true` OVERRIDES the license allowlist, so
+  1. `[FIXED]` **Must** `slice_books.py:77` — `permissive: true` OVERRIDES the license allowlist, so
      `license: unknown`/`ISBNdb` + `permissive: true` still reaches Postgres (the ISBNdb DB is "one boolean away
      from export"). Remove the override — only an allowlisted license passes.
-  2. `[OPEN→fold]` Should — CI generates into `recsys/data/generated/` but the new test regenerates into `tmp_path`,
+  2. `[FIXED]` Should — CI generates into `recsys/data/generated/` but the new test regenerates into `tmp_path`,
      so the real CLI artifacts are never validated. Validate `GENERATED_DIR` directly (schema/splits/checksums/
      cold-partition metadata).
-  3. `[OPEN→fold]` Should — `blend.py` per-path calibration still fails open for a partial/misspelled `paths`
+  3. `[FIXED]` Should — `blend.py` per-path calibration still fails open for a partial/misspelled `paths`
      mapping; require `paths` keys to match `per_path` exactly (as `weights` does).
-  4. `[OPEN→fold]` Should — `Candidate` accepts non-finite (NaN/inf) scores → calibration/ordering breaks; reject
+  4. `[FIXED]` Should — `Candidate` accepts non-finite (NaN/inf) scores → calibration/ordering breaks; reject
      non-finite scores at construction/calibration.
   [sol] agrees with [fable]'s remaining Nice items at their severity (tracked follow-ups).
 - **[glm]:** skipped.
 
-**Content-review status:** NOT consensus ([sol] REJECT). Folding the 4 via codex → re-verify → [sol]+[fable]
-re-review → merge. (The 2-reviewer merge question is moot now that [sol] is back; the gate runs its normal
-fix→re-review-to-consensus loop.)
+### Review 3b — [sol] re-review (2026-10-03, commit 817bd0b)
+- **Verdict:** APPROVE — all 4 findings RESOLVED (license allowlist can't be overridden by `permissive:true`;
+  GENERATED_DIR artifacts validated incl. persisted cold-partition + checksum manifests; `blend` requires exact
+  `paths` keys incl. PathRegistry; `Candidate` rejects non-finite scores). No new findings.
+
+### Content-review outcome: **FULL 3-reviewer CONSENSUS** — [self] APPROVE · [sol] APPROVE · [fable] APPROVE WITH NITS (all folded) · [glm] skipped
+No open blockers. Gate CLOSED. `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN on the final tree (817bd0b). Proceeding to `pre-merge-guard --pr` → squash-merge PR #130. Remaining [fable] Nice items (8–18) are tracked follow-ups (none blocking); `recsys-002` removes `buildout` and lands the first Part-1 units.
 
 ## Post-Execution Report
 
