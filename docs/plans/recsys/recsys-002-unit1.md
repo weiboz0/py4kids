@@ -234,8 +234,24 @@ CI-passable), then Phases A/D/B/C, then solutions (separate session), teacher-no
   `concept-scan` fails — authors keep that list in sync with the cells they write.
 
 ## Content Review
-_(4-way, pre-PR — pending; reviewers blind-solve the exercises + review the lesson for project-first/engagement/
-audience-appropriateness per the book's declared baseline; the `bookrec` code gets conventional code review.)_
+Pre-PR gate on commit `35613b0` ([glm] skipped). Both externals blind-solved all 8 exercises (matched) and
+code-reviewed the Phase-0 tooling + `bookrec` (both: fail-closed, correct).
+### Round 1
+- **[self]:** APPROVE WITH NITS — ci-local/guard green; content matches the consensus plan; deferred to the external
+  blind-solves for independent correctness.
+- **[sol]:** REJECT — M1 scoreboard relevance includes train-seen val-positives (unrecommendable → biases metrics;
+  15/369 overlap, 1 reader zero recommendable) + the test misses it; M2 Exercise 5 assesses an undeclared data
+  contract (positive=`label==1`, interaction columns, non-cold reader) never taught in the lesson; S3 Ex1
+  `author_id` type ambiguity; S4 handout headings use em-dashes vs the ASCII rule.
+- **[fable] (independent):** APPROVE WITH NITS — no wrong answers/leakage; strong Should: the real validation
+  scoreboard renders **0.0/0.0** (seed 2026 unlucky; hit@10≈0.0085), making the lesson's climax + Exercise 8
+  vacuous (CI green only because the solution asserts `readers>0`); = [sol] M1 (relevance⊄unseen); + title-placeholder
+  clarity + polish (split-table order, temporal-invariant assert, Ex7 derivation, a non-zero-hit regression test).
+- **Outcome:** NOT consensus ([sol] REJECT). Folding the union via codex (relevance−=seen + overlap/non-zero tests;
+  non-zero demo floor + analytic expectation; teach the interaction schema/label/cold rule before Ex5; author_id
+  clarity; placeholder-titles note; ASCII headings; polish) → re-verify ci-local → round-2 re-review.
+### Round 2
+- **[self]:** _(pending)_ · **[sol]:** _(pending)_ · **[fable]:** _(pending)_ · **[glm]:** skipped.
 
 ## Post-Execution Report
 _(pending)_
