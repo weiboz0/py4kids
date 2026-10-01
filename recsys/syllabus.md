@@ -23,6 +23,12 @@ From the first unit there is an evaluation scoreboard —
 a frozen holdout and a hit-rate@k metric —
 so every addition can answer the only question that matters: *did it help?*
 
+## Arc at a glance
+
+| # | Entry | Kind | Lessons | The hook |
+|---|-------|------|---------|----------|
+| 1 | `unit-01-problem-and-scoreboard` | unit | 3 | Turn “what should I read next?” into a recommender you can measure. |
+
 ## How the book is organised
 
 **Part 1 — Foundational Recommenders.**

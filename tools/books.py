@@ -101,11 +101,11 @@ class BaselineConfigError(ValueError):
     """A book's optional ``curriculum/baseline.yaml`` is invalid."""
 
 
-def assumed_baseline(root: Path, book: str) -> set[str]:
-    """Return the book-local assumed concepts, failing closed on invalid config."""
+def _baseline_config(root: Path, book: str) -> dict | None:
+    """Load and validate the shared shape of an optional baseline config."""
     path = book_path(root, book) / "curriculum" / "baseline.yaml"
     if not path.is_file():
-        return set()
+        return None
 
     def invalid(detail: str) -> BaselineConfigError:
         return BaselineConfigError(f"FAIL: {book}: {detail}")
@@ -116,14 +116,55 @@ def assumed_baseline(root: Path, book: str) -> set[str]:
         raise invalid("baseline.yaml is not valid YAML") from error
     if not isinstance(data, dict):
         raise invalid("baseline.yaml must be a mapping")
-    if set(data) != {"baseline_version", "entries"}:
-        raise invalid("baseline.yaml keys must be exactly ['baseline_version', 'entries']")
+    keys = set(data)
+    if keys not in (
+        {"baseline_version", "entries"},
+        {"baseline_version", "entries", "library_methods"},
+    ):
+        raise invalid(
+            "baseline.yaml keys must be exactly ['baseline_version', 'entries'] "
+            "with optional 'library_methods'"
+        )
     version = data["baseline_version"]
     if not isinstance(version, int) or isinstance(version, bool) or version != 1:
         raise invalid("baseline_version must be 1")
     entries = data["entries"]
     if not isinstance(entries, list):
         raise invalid("baseline entries must be a list")
+    library_methods = data.get("library_methods", [])
+    if not isinstance(library_methods, list):
+        raise invalid("library_methods must be a list")
+    for index, method in enumerate(library_methods):
+        if not isinstance(method, str):
+            raise invalid(f"library method {index} must be a string")
+        if not method.isidentifier():
+            raise invalid(f"library method {index} must be an identifier: {method!r}")
+    duplicates = sorted(
+        {method for method in library_methods if library_methods.count(method) > 1}
+    )
+    if duplicates:
+        raise invalid(f"duplicate library methods: {duplicates}")
+    return data
+
+
+def assumed_library_methods(root: Path, book: str) -> set[str]:
+    """Return allowed attribute-call names from the book's assumed library API."""
+    data = _baseline_config(root, book)
+    if data is None:
+        return set()
+    return set(data.get("library_methods", []))
+
+
+def assumed_baseline(root: Path, book: str) -> set[str]:
+    """Return the book-local assumed concepts, failing closed on invalid config."""
+    data = _baseline_config(root, book)
+    if data is None:
+        return set()
+
+    def invalid(detail: str) -> BaselineConfigError:
+        return BaselineConfigError(f"FAIL: {book}: {detail}")
+
+    entries = data["entries"]
 
     ids: list[str] = []
     for index, entry in enumerate(entries):

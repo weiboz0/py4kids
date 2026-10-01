@@ -30,6 +30,7 @@ from pathlib import Path
 import yaml
 
 from tools.books import (
+    assumed_library_methods,
     book_entries,
     book_flag,
     book_path,
@@ -986,6 +987,7 @@ def _legacy_scan_findings(
         "project": book_dir / "projects",
     }
     findings: list[str] = []
+    library_methods = assumed_library_methods(root, book)
     judge_book = book_flag(root, book, "judge")
     for entry in entries:
         if not isinstance(entry, dict):
@@ -1033,6 +1035,7 @@ def _legacy_scan_findings(
                     if isinstance(node, ast.FunctionDef)
                 }
         methods -= defined_names
+        methods -= library_methods
         findings.extend(
             f"FAIL: {eid}: used-but-unlisted concept {concept}"
             for concept in sorted((used - allowed) - profile.never_flag)
@@ -1070,6 +1073,7 @@ def concept_scan_findings(
     }
     profile = scanner_profile(concepts)
     baseline = known_baseline(root, book)
+    library_methods = assumed_library_methods(root, book)
     if cmap.get("map_version") == 1:
         return _legacy_scan_findings(
             root, book, cmap["entries"], registered, profile, baseline
@@ -1267,6 +1271,7 @@ def concept_scan_findings(
                 tree, registered_concepts=entry_registered, profile=block_profile
             )
             methods -= defined_names
+            methods -= library_methods
             scanned.append((block, tree, declared, block_profile, used, methods))
             if block.block_kind == "markdown":
                 markdown_used_by_cell.setdefault(cell_key, set()).update(used)
@@ -1444,7 +1449,7 @@ def concept_scan_findings(
             )
             findings.extend(
                 f"FAIL: {eid}: {_where(block)}: untaught method {method}"
-                for method in sorted(methods)
+                for method in sorted(methods - library_methods)
             )
 
         task_ids = set(exercise_cells) | set(solution_cells)

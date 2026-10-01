@@ -6,3 +6,6 @@ concepts_version: 1
 # (global_concept_uniqueness_findings forbids reusing a python-projects/usaco-bronze/acsl id).
 concepts:
 - {id: retrieve-then-rank, name: "Retrieve-then-rank recommendation pipeline", category: techniques, kind: technique}
+- {id: catalog-search, name: "Catalog search and filtering", category: search, kind: technique}
+- {id: offline-evaluation, name: "Offline evaluation with temporal holdouts", category: techniques, kind: technique}
+- {id: top-k-ranking-metrics, name: "Top-k hit rate and recall", category: techniques, kind: technique}
