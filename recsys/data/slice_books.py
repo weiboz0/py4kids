@@ -39,9 +39,9 @@ except ImportError:  # pragma: no cover
 
 SLICE_COLUMNS = ["item_id", "title", "author", "subjects", "isbn"]
 REQUIRED_ATTESTATION_KEYS = {"source", "license", "confirmed_by", "date"}
-# A permissive license is required to take the DB path. The local ``books`` DB is ISBNdb-sourced
-# (NON-permissive), so an unknown/unlabelled license must fail closed. An attestation may instead
-# set ``permissive: true`` to assert the source is permissive under a license not in this list.
+# An allowlisted permissive license is required to take the DB path. The local ``books`` DB is
+# ISBNdb-sourced (NON-permissive), so an unknown/unlabelled license must fail closed. A boolean
+# attestation field cannot override this allowlist.
 PERMISSIVE_LICENSES = {
     "cc0",
     "cc-by",
@@ -75,11 +75,10 @@ def _load_attestation(path: Path) -> dict:
             f"attestation must record {sorted(REQUIRED_ATTESTATION_KEYS)}; got {path}"
         )
     license_value = str(data["license"]).strip().lower()
-    permissive_flag = data.get("permissive") is True
-    if not permissive_flag and license_value not in PERMISSIVE_LICENSES:
+    if license_value not in PERMISSIVE_LICENSES:
         raise SliceRefused(
             f"refusing the DB path: license {data['license']!r} is not in the permissive "
-            f"allowlist {sorted(PERMISSIVE_LICENSES)} and 'permissive: true' is not set"
+            f"allowlist {sorted(PERMISSIVE_LICENSES)}"
         )
     return data
 

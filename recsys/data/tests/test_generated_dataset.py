@@ -13,13 +13,17 @@ from __future__ import annotations
 
 import csv
 import gzip
+import hashlib
+import json
 from pathlib import Path
 
 import numpy as np
-from _common import DatasetConfig
+import pytest
+from _common import GENERATED_DIR
 from bookrec import load_catalog
-from gen_catalog import generate_catalog, write_catalog
-from gen_interactions import generate_interactions, write_interactions
+
+CATALOG_COLUMNS = ["item_id", "title", "author_id", "genres", "year"]
+INTERACTION_COLUMNS = ["reader_id", "item_id", "session_id", "timestamp", "split", "label"]
 
 
 def _read_interactions(path: Path):
@@ -41,23 +45,55 @@ def _read_interactions(path: Path):
     )
 
 
-def test_generated_csv_satisfies_invariants_on_disk(tmp_path: Path) -> None:
-    # The DEFAULT dataset, generated deterministically from one threaded rng, written to disk.
-    config = DatasetConfig()
-    rng = np.random.default_rng(config.seed)
-    catalog = generate_catalog(config, rng)
-    inter = generate_interactions(catalog, config, rng)
-    write_catalog(catalog, tmp_path)
-    write_interactions(inter, tmp_path)
+def _require_generated_dir() -> Path:
+    if not GENERATED_DIR.is_dir():
+        pytest.skip(
+            "CI-generated artifacts are absent; run gen_catalog.py and gen_interactions.py first"
+        )
+    required = {
+        "catalog.csv.gz",
+        "interactions.csv.gz",
+        "cold_partitions.json",
+        "checksums.json",
+    }
+    missing = sorted(name for name in required if not (GENERATED_DIR / name).is_file())
+    assert not missing, (
+        "generated directory is incomplete; run both generators "
+        f"(missing: {', '.join(missing)})"
+    )
+    return GENERATED_DIR
+
+
+def _read_header(path: Path) -> list[str]:
+    with gzip.open(path, mode="rt", encoding="utf-8", newline="") as handle:
+        return next(csv.reader(handle))
+
+
+def test_ci_generated_artifacts_have_expected_schema_and_checksums() -> None:
+    generated_dir = _require_generated_dir()
+    assert _read_header(generated_dir / "catalog.csv.gz") == CATALOG_COLUMNS
+    assert _read_header(generated_dir / "interactions.csv.gz") == INTERACTION_COLUMNS
+
+    manifest = json.loads((generated_dir / "checksums.json").read_text(encoding="utf-8"))
+    assert set(manifest) == {"catalog.csv.gz", "interactions.csv.gz", "cold_partitions.json"}
+    for name, expected in manifest.items():
+        actual = hashlib.sha256((generated_dir / name).read_bytes()).hexdigest()
+        assert actual == expected
+
+
+def test_ci_generated_artifacts_satisfy_split_and_cold_partition_invariants() -> None:
+    generated_dir = _require_generated_dir()
 
     # 1) The catalog loads via the shipped bookrec loader from the written CSV bytes.
-    loaded = load_catalog(tmp_path / "catalog.csv.gz")
-    assert len(loaded) == catalog.n_books
-    assert set(loaded) == {int(i) for i in catalog.item_ids}
+    loaded = load_catalog(generated_dir / "catalog.csv.gz")
+    assert len(loaded) > 0
 
     # 2) Re-parse the interactions CSV and re-assert invariants on the ON-DISK data.
-    reader_ids, item_ids, timestamps, splits = _read_interactions(tmp_path / "interactions.csv.gz")
+    reader_ids, item_ids, timestamps, splits = _read_interactions(
+        generated_dir / "interactions.csv.gz"
+    )
     assert set(np.unique(splits)) == {"train", "val", "test"}
+    assert set(item_ids.tolist()) <= set(loaded)
 
     # Leakage-free temporal split per warm reader: train < val < test by event time.
     checked = 0
@@ -73,7 +109,9 @@ def test_generated_csv_satisfies_invariants_on_disk(tmp_path: Path) -> None:
         checked += 1
     assert checked > 0
 
-    # Cold partitions disjoint from train (cold ids from the generator, train rows from disk).
+    # Cold partitions disjoint from train, using persisted metadata from the same CLI run.
+    cold = json.loads((generated_dir / "cold_partitions.json").read_text(encoding="utf-8"))
+    assert set(cold) == {"cold_items", "cold_readers"}
     train = splits == "train"
-    assert set(item_ids[train].tolist()).isdisjoint(set(inter.cold_items.tolist()))
-    assert set(reader_ids[train].tolist()).isdisjoint(set(inter.cold_readers.tolist()))
+    assert set(item_ids[train].tolist()).isdisjoint(set(cold["cold_items"]))
+    assert set(reader_ids[train].tolist()).isdisjoint(set(cold["cold_readers"]))

@@ -21,19 +21,21 @@ Nothing is committed — output lands in the gitignored ``recsys/data/generated/
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 
 try:  # script vs. package-relative import
-    from _common import GENERATED_DIR, DatasetConfig, Manifest, write_gzip_csv
+    from _common import GENERATED_DIR, DatasetConfig, Manifest, checksum, write_gzip_csv
     from gen_catalog import Catalog, generate_catalog, write_catalog
 except ImportError:  # pragma: no cover - exercised only as a module
     from recsys.data._common import (  # type: ignore[no-redef]
         GENERATED_DIR,
         DatasetConfig,
         Manifest,
+        checksum,
         write_gzip_csv,
     )
     from recsys.data.gen_catalog import (  # type: ignore[no-redef]
@@ -217,6 +219,35 @@ def write_interactions(inter: Interactions, out_dir: Path = GENERATED_DIR) -> Ma
     )
 
 
+def write_generated_dataset(inter: Interactions, out_dir: Path = GENERATED_DIR) -> None:
+    """Persist the complete generated dataset plus cold partitions and exact-byte checksums."""
+    catalog_manifest = write_catalog(inter.catalog, out_dir)
+    interaction_manifest = write_interactions(inter, out_dir)
+
+    cold_path = out_dir / "cold_partitions.json"
+    cold_path.write_text(
+        json.dumps(
+            {
+                "cold_items": inter.cold_items.tolist(),
+                "cold_readers": inter.cold_readers.tolist(),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    checksums = {
+        **catalog_manifest.checksums,
+        **interaction_manifest.checksums,
+        cold_path.name: checksum(cold_path),
+    }
+    (out_dir / "checksums.json").write_text(
+        json.dumps(checksums, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def build_dataset(config: DatasetConfig | None = None) -> Interactions:
     """Generate the whole dataset from one threaded rng (catalog then interactions)."""
     config = config or DatasetConfig()
@@ -230,13 +261,12 @@ def main() -> None:
     rng = np.random.default_rng(config.seed)
     catalog = generate_catalog(config, rng)
     inter = generate_interactions(catalog, config, rng)
-    write_catalog(catalog)
-    manifest = write_interactions(inter)
+    write_generated_dataset(inter)
     print(
         f"interactions: {inter.n_events} events "
         f"({int(inter.labels.sum())} positives) -> {GENERATED_DIR / 'interactions.csv.gz'}"
     )
-    print(f"sha256: {manifest.checksums['interactions.csv.gz']}")
+    print(f"sha256: {checksum(GENERATED_DIR / 'interactions.csv.gz')}")
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import gzip
+import math
 from pathlib import Path
 
 import pytest
@@ -36,6 +37,12 @@ def test_candidate_item_ids_are_stable_ints() -> None:
     with pytest.raises(TypeError):
         Candidate(item_id=True, score=1.0, provenance="x")  # bools are not stable ids
     assert Candidate(10, 1.0, "x").item_id == 10
+
+
+@pytest.mark.parametrize("score", [math.nan, math.inf, -math.inf])
+def test_candidate_rejects_non_finite_scores(score: float) -> None:
+    with pytest.raises(ValueError, match="finite"):
+        Candidate(item_id=10, score=score, provenance="x")
 
 
 def test_retrieve_honours_k_exactly(popularity: PopularityPath) -> None:
@@ -267,6 +274,25 @@ def test_blend_honours_per_path_calibrator_via_registry() -> None:
     per_path = {"identity": [Candidate(1, 0.3, "identity"), Candidate(2, 0.9, "identity")]}
     scores = {c.item_id: c.score for c in blend(per_path, paths=registry)}
     assert scores == {1: pytest.approx(0.3), 2: pytest.approx(0.9)}
+
+
+def test_blend_rejects_missing_path_calibrator_key() -> None:
+    per_path = {
+        "a": [Candidate(1, 1.0, "a")],
+        "b": [Candidate(2, 1.0, "b")],
+    }
+    with pytest.raises(ValueError, match="missing=.*b"):
+        blend(per_path, paths={"a": BaseRetrievalPath(name="a")})
+
+
+def test_blend_rejects_unknown_path_calibrator_key() -> None:
+    per_path = {"a": [Candidate(1, 1.0, "a")]}
+    paths = {
+        "a": BaseRetrievalPath(name="a"),
+        "typo": BaseRetrievalPath(name="typo"),
+    }
+    with pytest.raises(ValueError, match="unknown=.*typo"):
+        blend(per_path, paths=paths)
 
 
 def test_rank_excludes_seen_and_bounds_n() -> None:

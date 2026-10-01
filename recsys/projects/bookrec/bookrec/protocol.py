@@ -21,6 +21,7 @@ Forward-designed (design 011 §5) so the neural paths of Part 2 need no rewrite 
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
@@ -36,6 +37,8 @@ class Candidate:
     def __post_init__(self) -> None:
         if not isinstance(self.item_id, int) or isinstance(self.item_id, bool):
             raise TypeError(f"item_id must be a stable int, got {self.item_id!r}")
+        if not math.isfinite(self.score):
+            raise ValueError(f"score must be finite, got {self.score!r}")
         if not isinstance(self.provenance, str) or not self.provenance:
             raise ValueError("provenance must be a non-empty string")
 

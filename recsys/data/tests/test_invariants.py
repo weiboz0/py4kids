@@ -12,6 +12,7 @@ from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
+import pytest
 import slice_books
 from _common import GENERATED_DIR
 from _dataset_fixture import small_config
@@ -176,15 +177,23 @@ def test_slice_permissive_license_takes_the_db_path(tmp_path: Path, monkeypatch)
     assert manifest["rowcounts"]["books_slice"] == 1
 
 
-def test_slice_permissive_flag_overrides_license_allowlist(tmp_path: Path, monkeypatch) -> None:
+@pytest.mark.parametrize("license_value", ["unknown", "ISBNdb"])
+def test_slice_permissive_flag_cannot_override_license_allowlist(
+    tmp_path: Path, monkeypatch, license_value: str
+) -> None:
     att = _attestation(
         tmp_path / "att.yaml",
-        license_line="license: bespoke-grant",
+        license_line=f"license: {license_value}",
         extra="permissive: true\n",
     )
-    monkeypatch.setattr(slice_books, "_rows_from_postgres", lambda dsn, limit: [])
+
+    def unexpected_db_call(dsn, limit):
+        pytest.fail("non-allowlisted attestation reached the PostgreSQL layer")
+
+    monkeypatch.setattr(slice_books, "_rows_from_postgres", unexpected_db_call)
     out = tmp_path / "out"
-    assert slice_main(["--attestation", str(att), "--dsn", "db://x", "--output", str(out)]) == 0
+    assert slice_main(["--attestation", str(att), "--dsn", "db://x", "--output", str(out)]) == 1
+    assert not out.exists()
 
 
 def test_popularity_exposure_weight_changes_exposure_skew() -> None:
