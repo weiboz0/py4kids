@@ -39,12 +39,30 @@ torch/faiss) but routed under `--group recsys` (notebooks import numpy/pandas/bo
   precision@k/NDCG (this split avoids `introduction_findings` double-introduce — design §8 row 6 reconciled: U1
   owns hit@k+recall@k, U6 owns precision@k+NDCG).
 
-All four are globally unique vs every registered book (confirmed by both reviewers). `requires`/`practices` for the
+All four are **`kind: technique`** (so `concept_scan` never treats them as flaggable syntax features) with a valid
+`category` (`catalog-search` → `search`). All four are globally unique vs every registered book (confirmed). `requires`/`practices` for the
 Unit-1 entry are **both `[]`** (it is the first entry — nothing earlier to require/practice; assumed-baseline ids
 are used as given and earn no credit, never listed in `practices`). `requires` may list earlier-introduced ids only
 once later units exist.
 
 ## Phases
+
+### Phase 0 — tooling: assumed library methods for a `baseline.yaml` book (NEW — the round-2 blocker)
+`concept_scan`'s legacy (map-v1) path (`_legacy_scan_findings`) emits `FAIL: untaught method <m>` for any
+`x.<m>(...)` whose name is not in `TAUGHT_METHODS` and not a `def` in the entry; `known_baseline` widens only the
+*concept* set, not methods. So a numpy/pandas/math/`bookrec` notebook cannot pass `concept-scan` (verified:
+`read_csv`, `groupby`, `default_rng`, `comb` all flag). Encode design 011 §4's "assumed library API" as tooling:
+- extend `recsys/curriculum/baseline.yaml` + its loader (`tools/books.py`) with an OPTIONAL assumed **library-method
+  allowlist** — a `library_methods: [...]` list (plain method names, e.g. `read_csv, groupby, default_rng, comb,
+  to_frame, ...`), validated **fail-closed** (absent = today's behavior);
+- subtract it from the untaught-methods set in BOTH `tools/concept_scan.py` `_legacy_scan_findings` AND the v2 path
+  (so it also serves future v2 books); keep `dependency_baseline`/`known_baseline` semantics intact.
+- group-free tests in `tests/` (extend `tests/test_assumed_baseline.py` with a library-method scan fixture:
+  declared methods pass, an UNdeclared library method still FAILs).
+Dispatched as tooling (codex per the AGENTS.md table). Then `recsys/curriculum/baseline.yaml` declares exactly the
+library methods Unit-1's notebooks use.
+**Verify:** a representative Unit-1 cell passes `concept-scan` only with its methods declared; undeclared library
+methods still FAIL; group-free `tests/` green.
 
 ### Phase A — curriculum registry + syllabus (the CI-fidelity phase)
 - `recsys/curriculum/concepts.yaml`: add `catalog-search`, `offline-evaluation`, `top-k-ranking-metrics` (kebab,
@@ -133,14 +151,25 @@ year` schema as-is).
 - **[sol]:** APPROVE — all 6 round-1 findings RESOLVED (practices/syllabus; bookrec-code milestone avoiding the
   capstone rule; lesson Opus-dispatch + ≥6 exercises/≥2 stretch/≥3 asserts; real catalog schema; top-k-ranking-metrics
   split; pre-merge-guard --pr + buildout holds); no new findings.
-- **[fable]:** APPROVE WITH NITS — every round-1 Must resolved; v2 internally consistent, right-sized, and a 1-unit
-  `lessons:3` buildout map with this entry is CI-green. Nits folded into "Implementation notes" below (data-access
-  idiom; dispatch wording; exact random-baseline analytics; bookrec pandas dep; ASCII applies to the exercises
-  handout).
+- **[fable] (run 1, a9a640):** APPROVE WITH NITS — v2 resolves every round-1 Must; nits folded below. **Missed the
+  concept-scan blocker.**
+- **[fable] (run 2, independent, ace3d65):** **REJECT** — one new BLOCKER, empirically verified: for a **map-v1**
+  book, `concept_scan._legacy_scan_findings` emits `FAIL: untaught method <m>` for every `x.m(...)` not in
+  `TAUGHT_METHODS` and not a `def` in the entry, and `known_baseline` widens only the *concept* set, not methods.
+  Confirmed by orchestrator probe: `pd.read_csv`, `df.groupby`, `np.random.default_rng`, `math.comb` all flag →
+  Unit-1's numpy/pandas/bookrec notebooks cannot pass `ci-local` step 4. No tooling allows library methods for a
+  baseline-declaring book. (recsys-001 was vacuously green — no notebooks.) This is design 011 §4's "assumed
+  library API" with no tooling encoding yet.
 - **[glm]:** skipped.
 
-### Plan-review outcome: **CONSENSUS on v2** — [self]/[sol] APPROVE · [fable] APPROVE WITH NITS (folded) · [glm] skipped
-No open blockers. Gate CLOSED (2 rounds). Implementation proceeds per the dispatch + notes below.
+### Plan-review outcome (round 2): **NOT consensus — [fable] REJECT (concept-scan library-method blocker).**
+Process correction: the orchestrator prematurely recorded a "[fable] APPROVE WITH NITS / CONSENSUS" line and
+launched a Session-1 build before both [fable] runs returned; that was wrong — the build was **cancelled** and the
+verdict record corrected. **v3 adds Phase 0 (tooling)** to encode assumed library methods for a `baseline.yaml`
+book, folds the remaining nits, and goes back for a **round-3** re-review before any build. No implementation until
+round-3 consensus.
+### Round 3 (on v3 — adds Phase 0 tooling + folded nits)
+- **[self]:** _(pending)_ · **[sol]:** _(pending)_ · **[fable]:** _(pending)_ · **[glm]:** skipped.
 
 ## Implementation notes (folded [fable] round-2 nits — binding on the authors)
 - **Dispatch (settled):** content authoring goes to **`codex:codex-rescue` (GPT-5.6-sol)** per the AGENTS.md table
@@ -161,8 +190,14 @@ No open blockers. Gate CLOSED (2 rounds). Implementation proceeds per the dispat
 - **`bookrec` deps:** `recsys/projects/bookrec/pyproject.toml` currently declares only numpy and `catalog.py` is
   stdlib `csv`+`gzip`. If `search.py`/`scoreboard.py` use pandas, add `pandas` to bookrec's deps; otherwise stay
   stdlib.
-- **Handout glyphs:** `build-pdf.sh` renders `exercises.ipynb` as the handout, so the ASCII-only (no box-drawing)
-  rule applies most to the EXERCISES notebook.
+- **Handout glyphs:** `build-pdf.sh` renders `exercises.ipynb` (and `syllabus.md`) as the handout, so the ASCII-only
+  (no box-drawing) rule applies most to the EXERCISES notebook/syllabus (keep ASCII everywhere anyway).
+- **`Book` schema coercion:** `Book` exposes only `item_id`/`title` as attributes; `author_id`/`genres`/`year` live
+  as STRINGS in `Book.fields` (`genres` is `;`-joined, `year` is e.g. `"1987"`). The lesson's dict→DataFrame view
+  must coerce types (split genres, int the year) — state it for the authors.
+- **Library-method declaration:** every library/`bookrec` METHOD the notebooks call (`.read_csv`, `.groupby`,
+  `.default_rng`, `.comb`, `.to_frame`, etc.) must be in Phase 0's `baseline.yaml library_methods` allowlist, or
+  `concept-scan` fails — authors keep that list in sync with the cells they write.
 
 ## Content Review
 _(4-way, pre-PR — pending; reviewers blind-solve the exercises + review the lesson for project-first/engagement/
