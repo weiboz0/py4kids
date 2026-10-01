@@ -97,6 +97,82 @@ def dependency_baseline(root: Path, book: str) -> set[str]:
     return resolve(book, frozenset())
 
 
+class BaselineConfigError(ValueError):
+    """A book's optional ``curriculum/baseline.yaml`` is invalid."""
+
+
+def assumed_baseline(root: Path, book: str) -> set[str]:
+    """Return the book-local assumed concepts, failing closed on invalid config."""
+    path = book_path(root, book) / "curriculum" / "baseline.yaml"
+    if not path.is_file():
+        return set()
+
+    def invalid(detail: str) -> BaselineConfigError:
+        return BaselineConfigError(f"FAIL: {book}: {detail}")
+
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, yaml.YAMLError) as error:
+        raise invalid("baseline.yaml is not valid YAML") from error
+    if not isinstance(data, dict):
+        raise invalid("baseline.yaml must be a mapping")
+    if set(data) != {"baseline_version", "entries"}:
+        raise invalid("baseline.yaml keys must be exactly ['baseline_version', 'entries']")
+    version = data["baseline_version"]
+    if not isinstance(version, int) or isinstance(version, bool) or version != 1:
+        raise invalid("baseline_version must be 1")
+    entries = data["entries"]
+    if not isinstance(entries, list):
+        raise invalid("baseline entries must be a list")
+
+    ids: list[str] = []
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            raise invalid(f"baseline entry {index} must be a mapping")
+        if set(entry) != {"id", "name"}:
+            raise invalid(f"bad baseline keys in entry {index}")
+        if not isinstance(entry["id"], str) or not isinstance(entry["name"], str):
+            raise invalid(f"baseline entry {index} id and name must be strings")
+        if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", entry["id"]):
+            raise invalid(f"non-kebab baseline id: {entry['id']!r}")
+        ids.append(entry["id"])
+
+    duplicates = sorted({concept_id for concept_id in ids if ids.count(concept_id) > 1})
+    if duplicates:
+        raise invalid(f"duplicate baseline ids: {duplicates}")
+
+    concepts_path = book_path(root, book) / "curriculum" / "concepts.yaml"
+    own_ids: set[str] = set()
+    if concepts_path.is_file():
+        try:
+            concepts_data = yaml.safe_load(concepts_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, yaml.YAMLError):
+            concepts_data = None
+        if isinstance(concepts_data, dict) and isinstance(concepts_data.get("concepts"), list):
+            own_ids = {
+                concept["id"]
+                for concept in concepts_data["concepts"]
+                if isinstance(concept, dict) and isinstance(concept.get("id"), str)
+            }
+    overlap = sorted(set(ids) & own_ids)
+    if overlap:
+        raise invalid(f"assumed baseline ids also appear in concepts.yaml: {overlap}")
+    # A concept a dependency book *introduces* is already a known baseline supplied to this book;
+    # also declaring it "assumed" is a contradiction — assumed ids are assessable-with-no-credit,
+    # while dependency-introduced ids are taught upstream — so fail closed on the collision.
+    dependency_overlap = sorted(set(ids) & dependency_baseline(root, book))
+    if dependency_overlap:
+        raise invalid(
+            f"assumed baseline ids are introduced by a dependency: {dependency_overlap}"
+        )
+    return set(ids)
+
+
+def known_baseline(root: Path, book: str) -> set[str]:
+    """Return concepts supplied by dependencies or explicitly assumed by this book."""
+    return dependency_baseline(root, book) | assumed_baseline(root, book)
+
+
 def concept_minimum(root: Path, book: str) -> int:
     entry = book_entry(root, book)
     configured = entry.get("concept_minimum")

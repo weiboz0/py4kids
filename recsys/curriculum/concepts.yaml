@@ -1,0 +1,8 @@
+concepts_version: 1
+# Applied Python: Recommendation Systems (design 011). Concepts land unit-by-unit in
+# recsys-002+. This foundation plan ships exactly one seed concept so the registry's
+# `concept_minimum` (1, for a depends_on book) is met while units are still absent
+# (`buildout: true`). The id is globally unique across every registered book
+# (global_concept_uniqueness_findings forbids reusing a python-projects/usaco-bronze/acsl id).
+concepts:
+- {id: retrieve-then-rank, name: "Retrieve-then-rank recommendation pipeline", category: techniques, kind: technique}

@@ -16,6 +16,12 @@ books_version: 2
 #   acsl:        the ACSL season structure (design 009): the `acsl:` manifest block,
 #                curriculum/season.yaml and the acsl-check.
 #
+# `dependency_group` (string, not a boolean flag): the name of the `pyproject.toml`
+# [dependency-groups] entry a book's heavy commands must run under (design 011 §7). When set,
+# ci-local.sh runs that book's routed test/exec commands via `uv run --group <name>`; when
+# absent, the book runs group-free. It is read in ci-local step 1 as a SEPARATE line from the
+# boolean feature flags above (it is a value, not a flag), so tools still key on flags, never ids.
+#
 # `peers` (design 008 D3 / 009 D5): books that may each introduce the same concept id, with
 # identical concepts.yaml entries. It must be symmetric; neither peer may require an id
 # only the other introduces.
@@ -63,3 +69,13 @@ books:
   judge: true
   acsl: true
   publication: true
+- id: recsys
+  number: 3
+  root: recsys
+  title: 'Applied Python: Recommendation Systems'
+  subtitle: Build a book recommender — from counting to neural retrieval
+  depends_on:
+  - python-projects
+  lesson_budget: [30, 60]
+  buildout: true
+  dependency_group: recsys

@@ -1,0 +1,309 @@
+# Plan recsys-001 — Foundation: registry, baseline tooling, guard extension, data generators, `bookrec` package
+
+**Design:** `docs/designs/011-recsys-book.md` (gate CLOSED; renumbered from 009). **Autopilot** per AGENTS.md.
+**v3** folds plan-review rounds 1–2 ([sol] REJECT×2 folded; [fable] APPROVE WITH NITS×2).
+Foundation for the advanced `recsys` book: **tooling + registration + scaffolding + seeded data generators + the
+`bookrec` package skeleton**. Ships **no student units/projects/checkpoints** (→ `recsys-002+`) and commits **no
+real-catalog data** (license-gated). Plans are `docs/plans/recsys/recsys-NNN`; this plan adds the guard support
+(the one-file chicken-and-egg of design 011 §12 is accepted).
+
+## Goal
+A registered, CI-green `recsys` book in **buildout** state with: a namespace-aware guard, the assumed-baseline
+tooling, an isolated CPU dependency group, seeded catalog+interaction generators (exposed ground-truth), the
+license-gated real-slice script (no real data committed), and the importable `bookrec` protocol/registry — so
+`recsys-002+` can author units against a working substrate.
+
+## Global constraints
+Determinism: one `numpy.random.default_rng(seed)` threaded through; `PYTHONHASHSEED`; fixed float precision +
+normalized gzip `mtime`; reproducibility is "identical under `uv.lock`" (NEP-19: numpy streams are not frozen
+across releases). CPU-only. No real catalog data in the repo. `[glm]` is skipped per the standing plan-091 user
+decision (roster is otherwise 4-way).
+
+## Phases
+
+### Phase A — namespace-aware pre-merge-guard
+The collision check scans only depth-1 `docs/plans/*.md` matching `^[0-9]{3}(?=-)` and, in `--pr` mode, unions the
+live **WORKTREE** with a freshly-fetched **origin/main** (`pre-merge-guard.sh:15,33`), deduping identical pathnames.
+- Extract the collision logic into an importable **`tools/guard.py`** (injectable path sets) with a thin bash
+  wrapper, so it is unit-testable (today `tests/test_books.py`/`test_book_ids.py` only read the script text).
+- Generalize: for each `docs/plans/<ns>/` subdir, enforce uniqueness of `^<ns>-[0-9]{3}(?=-)` (so `recsys-NNN` is
+  guarded and the next namespaced book needs no further edit); keep the top-level `^[0-9]{3}` guard (protects
+  reserved 092/093); preserve the WORKTREE ∪ fetched-origin/main ref model and pathname dedup. Scan only the
+  **immediate** `docs/plans/<ns>/` subdirectories (not deeper), and build the per-namespace regex with
+  `re.escape(ns)` so the generalization is safe for any future namespace.
+- **Tests:** duplicate `recsys-001` within one ref fails; across WORKTREE/origin-main fails; the same pathname in
+  both refs dedups (no false collision); distinct numbers pass; top-level `[0-9]{3}` still enforced.
+**Verify:** `bash scripts/pre-merge-guard.sh --pr` OK; new `tools/guard.py` tests pass.
+
+### Phase B — assumed-baseline mechanism (`baseline.yaml`)
+Add `assumed_baseline(root, book)` to `tools/books.py` plus `known_baseline()` = `dependency_baseline()` ∪
+`assumed_baseline()`, and **swap all four consumers** to `known_baseline()`: `tools/curriculum.py:356` (referenced),
+`:499` (prereq ordering), `:562` (checkpoint), and `tools/concept_scan.py:1072` (scan allowed set — v1 AND v2).
+Keep `dependency_baseline()` semantics ("introduced by dependencies") intact.
+- **`<book>/curriculum/baseline.yaml` schema:** `baseline_version: 1`; `entries: [{id, name}]`; kebab id (same regex
+  as `curriculum.py:283`); an assumed id MUST NOT also be in the book's own `concepts.yaml` (else "known but
+  uncredited" contradicts "must be introduced"). Fail closed on malformed top level, malformed/duplicate/invalid
+  entries; absent file = today's behavior (opt-in).
+- **Checkpoint/practice policy:** assumed = *legal to use, not assessable / no practice credit* (design §2).
+  Because `known_baseline()` seeds the checkpoint `seen` set, the existing "assesses untaught" path will NOT fire
+  for baseline ids — so add an explicit finding when a **checkpoint** `practices` a baseline id, and likewise when a
+  **unit** `practices` one (no practice credit). Dependency-book concepts stay assessable as today; confirm
+  `tests/test_usaco_bronze_tooling.py::test_checkpoint_seen_set_starts_with_dependency_baseline` still passes.
+- **Tests:** assumed id usable in requires/scan with no prereq/coverage/scan finding and no coverage obligation;
+  non-baseline id still flagged; checkpoint-practices-baseline AND unit-practices-baseline each flagged;
+  malformed/dup/absent; id-in-own-concepts
+  contradiction.
+**Verify:** targeted `pytest` over prereq, coverage, concept-scan, checkpoint assessment.
+
+### Phase C — CPU dependency group + ci-local routing
+- `pyproject.toml` `[dependency-groups] recsys`: `numpy`, `pandas`, `matplotlib`, `scikit-learn`, `torch`,
+  `faiss-cpu`. **torch pinned to the CPU wheel:** `[[tool.uv.index]] name="pytorch-cpu"
+  url="https://download.pytorch.org/whl/cpu" explicit=true` + `[tool.uv.sources] torch = { index = "pytorch-cpu" }`
+  (platform markers if macOS matters) — avoids the multi-GB `nvidia-*` CUDA tree. Prefer **faiss-cpu** (py3.12
+  wheels) over hnswlib (sdist/compiler). `psycopg` + `gensim` slice/derivation-only; `implicit` optional — none on
+  the CI exec path.
+- **Routing (the key fix):** `ci-local.sh:44` runs the whole `tests/` suite with plain `uv run pytest` BEFORE any
+  `--group recsys` step, and `uv run` is an inexact sync — so recsys tests that import numpy/torch/`bookrec` would
+  ImportError. Therefore **recsys tests live OUTSIDE `tests/`** (under `recsys/projects/bookrec/tests/` and
+  `recsys/data/tests/`) and run in a **routed per-book step** `uv run --group recsys pytest <those paths>`; the
+  global `tests/` run stays group-free. Notebook/exec commands for `recsys` also run under `uv run --group recsys`,
+  selected by a **registry flag, not a book-id branch** (books.yaml's rule is "tools key on flags, never on ids"):
+  add a `dependency_group: recsys` key to the `recsys` registry entry, read in `ci-local.sh` step 1 alongside the
+  feature flags, documented in the books.yaml comment block, and asserted in `tests/test_books.py`.
+- Isolation is honest: one lock + one `.venv`, so the group is *selected/installed* but torch/faiss are not
+  *required by* or *imported in* the other books' commands (design §7 single-lock caveat).
+Target **Linux CPU** (the CI host); declare Linux-only support rather than claim macOS resolution (add platform
+markers only if/when macOS is in scope).
+**Verify:** `uv sync --group recsys` resolves to CPU torch (no `nvidia-*`); an **exact** `uv sync` (no group) then
+`uv run pytest -q` over `tests/` proves the global suite does NOT require the group (an inexact `uv run` would leave
+torch resident and prove nothing); the routed recsys test step passes.
+
+### Phase D — book registration + skeleton (buildout state)
+- `books.yaml`: `id: recsys`, `number: 3`, `root: recsys`, title "Applied Python: Recommendation Systems",
+  subtitle "Build a book recommender — from counting to neural retrieval", `depends_on: [python-projects]`,
+  `lesson_budget: [30, 60]`, **`buildout: true`** (no `patterns`/`judge`/`publication`). `buildout` is required: it
+  **waives** the "never introduced" check (`curriculum.py:384`) and the lesson-budget lower bound
+  (`curriculum.py:345`) while units are absent. `concept_minimum = 1` (`books.py:105`, for a `depends_on` book) is
+  **NOT** waived — it is satisfied by shipping the one seed concept below (`curriculum.py:263`). (python-concepts
+  used buildout, removed in plan 078.) The plan that **removes** `recsys`'s `buildout` is **`recsys-002`** (the
+  first Part-1 units).
+- Create `recsys/`: `syllabus.md` (two-part arc prose — do NOT backtick future `unit-NN` ids, or
+  `syllabus_findings` treats them as stale rows, `curriculum.py:598`); `curriculum/concepts.yaml` with **≥1
+  concept** (the globally-unique seed id `retrieve-then-rank` — `global_concept_uniqueness_findings` forbids reusing
+  a python-projects/usaco-bronze/acsl id) so `concept_minimum` is met; `curriculum/coverage-map.yaml`
+  (`map_version: 1`, entries added as units land); `curriculum/baseline.yaml` (assumed advanced-Python / math /
+  numerical-Python ids); `reference/`, learner-facing `docs/`; and `units/` `projects/` `checkpoints/` each with a
+  **`.gitkeep`** (dirs must exist — `notebooks.py:126/143/160` fail closed on a missing dir; no stub unit needed).
+- Update `tests/test_books.py` (id list +`recsys`; title/subtitle assertions; per-flag book lists — recsys has no
+  feature flags — update the `number` list `[1,1,2,2]`→`[1,1,2,2,3]`; assert the new `dependency_group: recsys`
+  **string** key — do NOT add it to `FLAGS` (else `test_registry_feature_flags_are_booleans` fails) and read it in
+  step 1 as a SEPARATE line, leaving the `("publication","judge","patterns","acsl")` tuple in
+  `test_ci_local_reads_every_flag` intact) and add the `## output/recsys/` section to
+  `output/README.md`. **Naming:** `recsys/` is a live root for `tests/test_book_ids.py` (which scans for "Book 1"/
+  "Book 2" strings), so the syllabus/docs name books by title ("Python by Projects"), never "Book 1/2".
+**Verify:** `ci-local.sh` registry/structure/curriculum steps pass for `recsys` in buildout; `build-pdf.sh` builds
+`output/recsys/syllabus.pdf` over zero units.
+
+### Phase E — seeded generators + license-gated real-slice script
+- Location: **`recsys/data/`** with seeded `gen_catalog.py` + `gen_interactions.py` ("seeded generation scripts,
+  never opaque blobs"). **Decision: regenerated-only — NO generated artifacts are committed.** Their output paths
+  (e.g. `recsys/data/generated/`) are **gitignored**; a required CI step (the same routed `uv run --group recsys`
+  step from Phase C, its runtime counting toward design §9's ≤15 CI-min whole-book target) runs the generators
+  (seeded) and then the
+  Phase-E invariant tests against fresh output, so the substrate is verified every run without tracked data. (This
+  supersedes the round-1 "decide later"; committed fixtures + checksum-regeneration is explicitly NOT chosen.)
+  Default sizes within §7 ceilings (5–20k books / 5k readers / ~200k interactions) with a generation-time budget.
+- Interaction generator implements the design §6 signal table (feature-derived taste, popularity bias,
+  timestamps/ordered sessions/drift, exposure process + implicit positives + sampled negatives, cold-item/
+  cold-reader partitions, leakage-safe temporal splits) and **exposes ground-truth**.
+- **Real-slice script `recsys/data/slice_books.py`** (`psycopg`/`gensim`, derivation-only): **fails closed** unless
+  given an explicit recorded permissive source/license attestation, or fed a local Open Library fallback input;
+  records source/version, query params, deterministic ordering, normalization/dedup, row counts, schema/data-
+  dictionary, checksums (§6). Default output is **gitignored / non-promotable**; commits no real catalog.
+- **Tests (invariants, model-free):** observed positives enriched vs. the exposed true-score matrix
+  (AUC / rank-correlation above threshold); measurable popularity skew; per-reader leakage-free splits
+  (max train ts < min val ts < min test ts); cold partitions disjoint from train; sessions ordered; determinism
+  under `uv.lock`.
+**Verify:** seeded generation reproduces identically under the lock; invariant tests green; a tracked-file check
+proves no real catalog artifact is in the branch.
+
+### Phase F — the `bookrec` package
+- `recsys/projects/bookrec/` with `pyproject.toml` (hatchling), a `bookrec` entry in the `recsys` group, and
+  `[tool.uv.sources] bookrec = { path = "recsys/projects/bookrec", editable = true }` so notebooks `import bookrec`
+  even with the unit dir as cwd. (`project_dirs` globs only `project-*` (`notebooks.py:167`), so `bookrec/` is
+  ignored by the content checks — state it.)
+- `RetrievalPath` protocol: stable int item ids, `fit`/`load`, `retrieve(q, ctx, k) -> [(item_id, score,
+  provenance)]`, deterministic tie-break (id order), candidate limit `k`, **calibrated/normalized score semantics
+  before blending**, and **per-path artifact ownership/versioning**; a path **registry**; `blend`; `rank`;
+  `evaluate`; catalog loading. The popularity path is a **test fixture only** (a real popularity impl is Unit 2).
+- Add `recsys/projects/bookrec` + `recsys/data` to the `ruff check` scope.
+- **Tests:** stable ids, `k`, tie-break, provenance, score normalization/calibration, registry duplicate handling,
+  catalog load, blend, rank, hit-rate@k evaluate.
+**Verify:** routed `uv run --group recsys pytest recsys/...` green; deterministic.
+
+### Phase G — verification (named)
+`TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN with `recsys` registered (buildout, `.gitkeep` dirs, routed
+recsys tests under `--group recsys`, group-free `tests/` unaffected); `tools/guard.py` + baseline + generator-
+invariant + `bookrec` tests pass; determinism (seeds/threads/lock) confirmed; `bash scripts/pre-merge-guard.sh
+--pr` OK; tracked-file assertion: no real catalog artifact on the branch.
+
+## Blockers / preconditions
+- **Data license** (design §6) — the only real gate: no real slice commits until the author confirms the `books` DB
+  origin/license or the Open Library fallback is used; CI/committed data stays synthetic. Enforced by the
+  fail-closed `slice_books.py` + the Phase-G tracked-file assertion (not a manual pause).
+- **Housekeeping only (NOT a precondition):** an untracked `book1/` stray sits in the worktree (stale pre-rename
+  leftover, not in `books.yaml`). Verified NON-blocking — `pre-merge-guard` dedups its normalized names (no
+  duplicate numbers) and `test_book_ids.py` scans only registered roots, so both pass with it present. Cleanup is
+  an optional AGENTS.md "ask before discarding leftovers" courtesy, not a gate.
+
+## Out of scope (verification-phase exemption)
+No student units/projects/checkpoints ship (→ `recsys-002+`, each with its own verification phase), so the
+unit-shipping verification rule is satisfied by shipping none; Phase G is this plan's verification. No real-catalog
+slice commit (license-gated); no GPU; no served API; no neural model (Part 2); no GloVe subset (lands with U7).
+**No stub unit** is added — `buildout: true` is the mechanism for the not-yet-populated state.
+(Design 011 §6/§13 already record `recsys-001` as a no-unit foundation plan — the earlier stale "Unit 1" wording
+was reconciled in the 009→011 renumber PR.)
+
+## Plan Review
+
+4-way gate ([glm] skipped, standing plan-091 user decision).
+
+### Round 1 (on v1)
+- **[sol]:** REJECT — 8 Must: (A) guard ref model is WORKTREE∪fetched-origin/main + needs a test harness; (B)
+  baseline must union into concept-scan + checkpoint too (4th site `concept_scan.py:1072`), define schema; (C) the
+  global `uv run pytest` runs before the group so recsys tests ImportError — route them; verification uses `uv sync
+  --group recsys`; (C/F) real packaging contract for `bookrec`; (D) use `buildout: true` (+ update
+  `tests/test_books.py`), no stub, no general relaxation; (E) license gate must be fail-closed in the script +
+  Phase-G tracked-file assertion; (F) add per-path artifact ownership/versioning + calibrated scores, popularity as
+  fixture; (review) `Content Review: N/A` is wrong — tooling gets a roster code review. + Nice: reconcile the stale
+  design-009 Unit-1 line.
+- **[fable]:** APPROVE WITH NITS — 5 Must (ci-local pytest ordering; `buildout:true` + `.gitkeep` + `concept_minimum`
+  ≥1 concept; `tests/test_books.py`/`output/README.md` updates; **torch CPU index source** or CUDA multi-GB;
+  faiss-cpu over hnswlib) + Should (single `known_baseline()` swapping all 4 sites; baseline schema + checkpoint
+  policy; guard test harness via importable `tools/guard.py`; concrete generator-invariant tests + NEP-19/mtime
+  determinism; `bookrec` packaging + tests + ruff scope; Content-Review not N/A) + Nice (isolation wording;
+  syllabus backtick caveat; sequencing; the `book1/` stray).
+- **[self]:** APPROVE WITH NITS — flagged the empty-book ci-local viability (now resolved via `buildout`) and the
+  dependency-isolation reality; both folded.
+- **[glm]:** skipped.
+- **Round-1 outcome:** NOT consensus (1 REJECT). v2 folds all Must + Should items (this revision).
+
+### Round 2 (on v2)
+- **[self]:** APPROVE.
+- **[sol]:** REJECT — all 8 v1 Must-Fixes confirmed RESOLVED; 1 new Must (Phase E "committed-vs-regenerated" left
+  undecided) + 3 nits (D "all waived by buildout" inaccurate; C macOS-marker portability; A `re.escape`/immediate
+  namespace dirs).
+- **[fable]:** APPROVE WITH NITS — all round-1 RESOLVED; new **N1 Must**: design-number collision `009`
+  (`009-acsl` vs `009-recsys`) made `pre-merge-guard` fail repo-wide; + N2 (route via a `dependency_group` registry
+  key, not a book-id branch), N5 (recsys/ is a live `test_book_ids` root → name books by title, seed concept id
+  globally unique), N6 (explicit checkpoint/unit-practices-baseline finding; keep dependency ids assessable), N7
+  (name the buildout-removal plan), + nits (isolation wording, exact-sync verify).
+- **[glm]:** skipped.
+- **Round-2 outcome:** NOT consensus (1 REJECT). **v3 folds all of it.** N1 was fixed out-of-band by the renumber
+  **PR #129** (design 009 → **011**, merged to main; this branch merged main so the collision cannot resurrect).
+  v3 also: decided Phase E **regenerated-only** ([sol] new Must); corrected the buildout-waiver wording + named
+  `recsys-002` as the buildout-removal plan (nits/N7); declared Linux-CPU-only + exact-sync verify (nits); added
+  `re.escape`/immediate-dir to the guard generalization (nit); added the `dependency_group` registry-key routing
+  (N2); the global-unique `retrieve-then-rank` seed id + "Python by Projects" naming (N5); and the explicit
+  checkpoint/unit practices-baseline finding (N6).
+
+### Round 3 (on v3)
+- **[self]:** APPROVE.
+- **[sol]:** REJECT — round-2 items all resolved, no regression; 1 new Must: the `book1/` Phase-G precondition is
+  **false** (guard dedups normalized names; `test_book_ids.py` scans only registered roots — both pass with
+  `book1/` present) and would needlessly pause autopilot; + 2 nits (add a unit-practices-baseline regression; the
+  Out-of-scope paragraph still says "Design 009"/Unit-1).
+- **[fable]:** APPROVE WITH NITS — all resolved; traced the zero-unit CI path to confirm genuinely CI-green; nits:
+  same stale-009 paragraph, two `tests/test_books.py` pins (`number` list `→[1,1,2,2,3]`; `dependency_group` must be
+  a string key NOT in `FLAGS`, read as a separate step-1 line), and tie the Phase-E CI gen step to the routed group;
+  independently confirmed `book1/` is non-blocking.
+- **[glm]:** skipped.
+- **Round-3 outcome:** NOT consensus (1 REJECT, purely doc fixes). **v4 folds all:** removed the false `book1/`
+  precondition (now housekeeping-only, verified non-blocking); reconciled the stale Design-009/Unit-1 text (design
+  011 already records the no-unit foundation); added the unit-practices-baseline regression; pinned the
+  `test_books.py` `number` list + `dependency_group` string-key handling; tied the Phase-E gen step to the routed
+  `--group recsys` step + the §9 CI-min budget.
+
+### Round 4 (on v4)
+- **[self]:** APPROVE · **[sol]:** APPROVE (all round-3 items RESOLVED, no new findings) · **[fable]:** APPROVE WITH
+  NITS (carried from round 3 — v4 folded its exact nits, no new surface) · **[glm]:** skipped.
+
+### Plan-review outcome: **CONSENSUS on v4** — [self]/[sol] APPROVE · [fable] APPROVE WITH NITS (folded) · [glm] skipped
+No open blockers. Gate CLOSED (4 rounds). Proceeding to implementation (Phases A–G) → `ci-local` + `pre-merge-guard`
+→ content-review gate (roster code review of tooling/generators/package) → PR → squash-merge.
+
+## Content Review
+Pre-PR round is a **conventional code review of `tools/`, `scripts/`, the generators, and the `bookrec` package by
+the gate roster** (`docs/content-review-gate.md` — tooling changes get code review in the same round). NOT N/A.
+**Reduced roster this session:** [sol]/codex is out of ChatGPT-Codex credits until 2026-10-03 and [glm] is skipped
+(standing plan-091 decision), so the available reviewers are **[self] + [fable]**. Merging on a 2-reviewer content
+review is below the normal bar → a user decision (surfaced at the gate).
+
+### Review 1 — [self] (2026-09-30, commit 444b363)
+- **Verdict:** APPROVE. Read the baseline mechanism (`tools/books.py`): `assumed_baseline` is fail-closed (raises
+  `BaselineConfigError` on every malformation incl. the id-not-in-own-concepts overlap); `known_baseline` is
+  no-credit. Matches the plan; `ci-local` ALL GREEN (Opus build run + orchestrator gate-of-record).
+
+### Review 2 — [fable] (2026-09-30, commit 444b363)
+- **Verdict:** APPROVE WITH NITS — no Must-level defects; baseline/guard/ci-local-routing/registration verified
+  correct and fail-closed; generator invariant tests meaningful; bookrec contract sound. 18 findings (Should/Nice).
+  Seven **Should** folded pre-PR (the rest are Nice, tracked):
+  1. `[FIXED]` `curriculum.py:539` unit-only gate lets a **project** practicing a baseline id get silent
+     practice credit — drop the kind gate (checkpoints covered separately).
+  2. `[FIXED]` `books.py` rejects assumed ids in own `concepts.yaml` but not in `dependency_baseline()` — add
+     the `assumed ∩ dependency` overlap → raise (today ∅ for recsys, but unenforced).
+  3. `[FIXED]` Phase-E CI generates the default dataset but **no test reads `recsys/data/generated/`** — add a
+     test that loads the generated CSVs via `bookrec.load_catalog` and re-asserts leakage/cold invariants.
+  4. `[FIXED]` `slice_books.py` attestation accepts `license: unknown` — tighten to a permissive allowlist (or an
+     explicit `permissive: true`). Important: the local `books` DB is **ISBNdb-sourced** (non-redistributable), so
+     the real slice must never be publishable.
+  5. `[FIXED]` `_common.py` `popularity_exposure_weight` is a documented knob but unused — apply or remove.
+  6. `[FIXED]` `protocol.py` `RetrievalPath` Protocol omits `calibrate`/`artifact_name`, and `blend` always uses
+     the module-level calibrator, so the design §5 per-path calibration + artifact-ownership contract is unreachable
+     via `blend` — add them to the Protocol and honor per-path calibration in blend.
+  7. `[FIXED]` `blend.py` silently assigns weight 0.0 to a path missing from `weights` (typo = silent no-op) —
+     raise or default to 1.0.
+  **All 7 Should nits FIXED** (commit below) and re-verified: ruff clean; 1617 group-free tests; 43 routed
+  recsys tests; `ci-local` ALL GREEN. 
+  Nice items (8–18: guard misplaced-plan edge, ruff-scope hardcoded ids, NaN-score guard, manifest/ground-truth
+  persistence, Open-Library parser stub, etc.) tracked as follow-ups; none blocks merge.
+### Review 3 — [sol] (2026-10-03, commit 2af558e; codex credits restored)
+- **Verdict:** REJECT — confirmed baseline/guard/routing/registry/generator-invariants sound; 1 Must + 3 Should:
+  1. `[FIXED]` **Must** `slice_books.py:77` — `permissive: true` OVERRIDES the license allowlist, so
+     `license: unknown`/`ISBNdb` + `permissive: true` still reaches Postgres (the ISBNdb DB is "one boolean away
+     from export"). Remove the override — only an allowlisted license passes.
+  2. `[FIXED]` Should — CI generates into `recsys/data/generated/` but the new test regenerates into `tmp_path`,
+     so the real CLI artifacts are never validated. Validate `GENERATED_DIR` directly (schema/splits/checksums/
+     cold-partition metadata).
+  3. `[FIXED]` Should — `blend.py` per-path calibration still fails open for a partial/misspelled `paths`
+     mapping; require `paths` keys to match `per_path` exactly (as `weights` does).
+  4. `[FIXED]` Should — `Candidate` accepts non-finite (NaN/inf) scores → calibration/ordering breaks; reject
+     non-finite scores at construction/calibration.
+  [sol] agrees with [fable]'s remaining Nice items at their severity (tracked follow-ups).
+- **[glm]:** skipped.
+
+### Review 3b — [sol] re-review (2026-10-03, commit 817bd0b)
+- **Verdict:** APPROVE — all 4 findings RESOLVED (license allowlist can't be overridden by `permissive:true`;
+  GENERATED_DIR artifacts validated incl. persisted cold-partition + checksum manifests; `blend` requires exact
+  `paths` keys incl. PathRegistry; `Candidate` rejects non-finite scores). No new findings.
+
+### Content-review outcome: **FULL 3-reviewer CONSENSUS** — [self] APPROVE · [sol] APPROVE · [fable] APPROVE WITH NITS (all folded) · [glm] skipped
+No open blockers. Gate CLOSED. `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN on the final tree (817bd0b). Proceeding to `pre-merge-guard --pr` → squash-merge PR #130. Remaining [fable] Nice items (8–18) are tracked follow-ups (none blocking); `recsys-002` removes `buildout` and lands the first Part-1 units.
+
+## Post-Execution Report
+
+### 2026-09-30 — Foundation implemented (commit 444b363)
+Phases A–F built on branch `feature/recsys-001-foundation` (Phase A + partial B by codex before it hit the user's
+ChatGPT-Codex usage limit; B-finish through F + verification by an Opus subagent in the real environment, since
+codex was unavailable). `TMPDIR=/dev/shm bash scripts/ci-local.sh` → **ALL GREEN** (1612 group-free tests + 32
+routed recsys tests; torch CPU-only with 0 `nvidia-*` in `uv.lock`; ruff clean; `pre-merge-guard` OK; all 4 book
+editions + recsys syllabus PDF built). No student units (buildout). No real-catalog data committed —
+`recsys/data/generated/` gitignored; `slice_books.py` fail-closed.
+**Data-provenance note:** the local `books` PostgreSQL catalog is populated from **ISBNdb** (a commercial, licensed
+API — confirmed by the running `getapbooks … data.isbndb` cron), so an ISBNdb-derived slice is **not
+redistributable** in this PUBLIC repo. The real slice stays a local-only convenience behind the fail-closed gate;
+committed/CI data is synthetic; Open Library (public domain) is the only publish-safe real fallback.
+Pre-PR: folding [fable]'s 7 Should nits, then the reduced-roster (2-reviewer) merge decision goes to the user.
+
+## Post-Execution Report
+_(pending)_

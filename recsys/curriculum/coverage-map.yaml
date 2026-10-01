@@ -1,0 +1,6 @@
+map_version: 1
+# No entries yet: this is a `buildout: true` foundation (design 011 §6/§13, plan recsys-001).
+# Units, projects, and Checkpoint A/B land in recsys-002+, each adding its entry here (with the
+# unit's `lessons` sized so the whole-book total lands inside the [30, 60] budget). The plan that
+# removes `buildout` (recsys-002) is the first to ship entries.
+entries: []

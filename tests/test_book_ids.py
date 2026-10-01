@@ -27,9 +27,9 @@ PATTERNS = (
 )
 # A link to a historical design or plan keeps its file name (`docs/designs/005-book1b-…md`).
 HISTORICAL_FILE_NAME = re.compile(r"(?:designs|plans)/\d{3}-[\w.-]+")
-# The one-release pre-merge-guard transition map (plan 091 B3) names the old roots on purpose.
+# The one-release pre-merge-guard implementation's transition map names the old roots on purpose.
 TRANSITION_MARKER = "plan-091-transition"
-TRANSITION_FILE = "scripts/pre-merge-guard.sh"
+TRANSITION_FILE = "tools/guard.py"
 # The only line exempt from the guard: the exact one-release transition map (plan 091).
 TRANSITION_LINE = ('TRANSITION = {"book1b": "python-concepts", "book1": "python-projects", '
                    '"book2": "usaco-bronze"}  # plan-091-transition')

@@ -1,0 +1,42 @@
+baseline_version: 1
+# Assumed-baseline concepts for this advanced book (design 011 §2/§4): concepts a student is
+# assumed to already know, so they are legal to USE without being introduced, earn no teaching or
+# practice credit, and are never assessed. This is the precise, user-authorised carve-out from
+# design 000's middle-school baseline — NOT a wholesale waiver: every other law (project-first,
+# coverage, taught-before-assessed for what the book DOES teach, hygiene, stretch, teacher-notes,
+# checkpoints) is retained. None of these ids may also appear in this book's concepts.yaml.
+# Prereq-closure, coverage, and the concept scan treat these as known-but-uncredited.
+entries:
+# --- advanced Python (beyond the python-projects dependency baseline) ---
+- {id: class-definition, name: "Defining classes"}
+- {id: class-inheritance, name: "Class inheritance"}
+- {id: protocols, name: "Protocols / structural typing"}
+- {id: dataclasses, name: "Dataclasses"}
+- {id: type-hints, name: "Type hints / annotations"}
+- {id: comprehensions, name: "List / dict / set comprehensions"}
+- {id: generators, name: "Generators and yield"}
+- {id: exceptions, name: "Raising and handling exceptions"}
+- {id: decorators, name: "Decorators"}
+- {id: context-managers, name: "Context managers (with-statement)"}
+- {id: args-kwargs, name: "Variadic arguments (*args / **kwargs)"}
+- {id: enumerate-zip, name: "enumerate and zip"}
+# --- mathematics (calculus, linear algebra, probability & statistics) ---
+- {id: vectors, name: "Vectors"}
+- {id: matrices, name: "Matrices"}
+- {id: dot-product, name: "Dot product"}
+- {id: vector-norm, name: "Vector norms"}
+- {id: gradients, name: "Gradients and partial derivatives"}
+- {id: linear-algebra, name: "Linear algebra basics"}
+- {id: calculus, name: "Single-variable calculus"}
+- {id: probability, name: "Probability and distributions"}
+- {id: statistics, name: "Descriptive statistics"}
+- {id: expectation, name: "Expectation and sampling"}
+- {id: logarithms, name: "Logarithms"}
+- {id: softmax, name: "Softmax and log-sum-exp"}
+# --- numerical Python (numpy / pandas competence) ---
+- {id: numpy-array, name: "NumPy arrays"}
+- {id: numpy-broadcasting, name: "NumPy broadcasting"}
+- {id: numpy-indexing, name: "NumPy indexing and slicing"}
+- {id: numpy-random, name: "NumPy random generators"}
+- {id: pandas-dataframe, name: "pandas DataFrames"}
+- {id: pandas-groupby, name: "pandas groupby / aggregation"}

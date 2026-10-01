@@ -33,7 +33,7 @@ from tools.books import (
     book_entries,
     book_flag,
     book_path,
-    dependency_baseline,
+    known_baseline,
     prereq_policy,
     qualified_concept_id_pattern,
 )
@@ -1069,7 +1069,7 @@ def concept_scan_findings(
         if isinstance(concept, dict) and isinstance(concept.get("id"), str)
     }
     profile = scanner_profile(concepts)
-    baseline = dependency_baseline(root, book)
+    baseline = known_baseline(root, book)
     if cmap.get("map_version") == 1:
         return _legacy_scan_findings(
             root, book, cmap["entries"], registered, profile, baseline

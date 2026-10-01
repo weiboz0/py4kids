@@ -6,12 +6,12 @@ import pytest
 import yaml
 
 from tools import cli
+from tools.books import dependency_baseline
 from tools.concept_scan import concept_scan_findings, detect
 from tools.curriculum import (
     checkpoint_findings,
     concepts_schema_findings,
     coverage_findings,
-    dependency_baseline,
     global_concept_uniqueness_findings,
     lesson_budget_findings,
     practice_findings,
