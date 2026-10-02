@@ -430,6 +430,62 @@ Re-verified: `exec-lessons`/`exec-solutions`/`hygiene`/`structure`/`noexec`/`con
   then skip `[glm]` until Monday), the content gate proceeds 3-of-4 for the weekend; `[glm]` not re-attempted in
   round 2.
 
+### Content-review round 2 (on fixes; commits ae3717b/87cbbba; ci-local ALL GREEN)
+- **[fable] — APPROVE.** Re-executed both notebooks + the new tests, probed the detector and `weighted_rating`
+  directly. All round-1 findings resolved: quality-below-floor prose accurate (no "barely above" remains anywhere),
+  Ex7 head-share 0→1.0 holds and the stretch is solvable from the statement, numpy seed detector correct with no
+  over-reach, `weighted_rating` validation correct (valid incl. m=0/v==0 unchanged; invalid raises), 38 tests pass,
+  both notebooks execute clean. WONTFIX items acceptable. No new issues.
+- **[self] — APPROVE.** Fixes match the findings; `ci-local` ALL GREEN after both fix passes.
+- **[sol] — REJECT** (round 2). Findings 1,2,4,5,6 confirmed genuinely resolved (fresh execution: quality 0.0054 <
+  floor 0.0136; Ex7 head-share 0→1.0; Ex4 orders; Ex8 cases; `weighted_rating` validation rejects every invalid
+  domain). **Finding 3 NOT fully resolved** — the numpy seed gate still fails OPEN on nondeterministic `None` seeds
+  (`np.random.default_rng(None)`, `default_rng(seed=None)`, `np.random.seed(None)` then use) and on numpy.random
+  import aliases (`import numpy.random as npr; npr.random()`, `from numpy import random as rng`). Real fail-open hole
+  in a safeguard that governs all future units — hardening (no shipped Unit-2 notebook uses these bypasses).
+  → **round-3 fix** dispatched.
+
+### Content-review round 3 (on the detector hardening; commit e3addee)
+- **[sol] — APPROVE.** Finding 3 closed: direct AST probes confirm every former bypass (`default_rng(None)`,
+  `default_rng(seed=None)`, `np.random.seed(None)` then use, and the `import numpy.random as npr` /
+  `from numpy import random as rng` aliases) now FAILs, seeded forms still pass, and non-random numpy + seeded
+  `RandomRetrievalPath` are not flagged. No residual concern.
+- **[self] — APPROVE.** 21 detector tests pass; milestone-check/structure-check/concept-scan still green on the
+  shipped notebooks; `ci-local` re-run green.
+
+### Content-review outcome: **CONSENSUS (3-of-4; [glm] skipped per user weekend policy)** — [self] APPROVE · [sol] APPROVE (round 3) · [fable] APPROVE (round 2) · [glm] SKIPPED (volcengine-plan timeout). All `[OPEN]` findings resolved or WONTFIX. Cleared to ship.
+
 ## Post-Execution Report
 
-<!-- appended before ship -->
+**Shipped (recsys-003 — Unit 2: Popularity and weighted baselines).** The second Part-1 unit, on the
+recsys-001/Unit-1 substrate, plus the milestone-notebook mechanism it inaugurates.
+
+- **Phase 0** — Design 011 §10 amended: the growing project is the `bookrec` package + per-unit **milestone
+  notebooks**; the single `projects/` registry entry is reserved for the U14 capstone (resolves the capstone-rule
+  collision). Revision-history v3.
+- **Phase 1** — tooling: milestone notebooks are gated (`milestone-check` + `exec-solutions` + `concept-scan`) via a
+  `projects/*/milestones/*.ipynb` glob, without being `project-*` map entries; the seed policy now also detects
+  unseeded NumPy RNG (incl. `None` seeds and numpy.random import aliases). Group-free regression tests.
+- **Phase A** — registry: concepts `popularity-ranking`/`bayesian-shrinkage`/`popularity-bias`; coverage-map +
+  manifest + syllabus row; `baseline.yaml` library-method declarations. Buildout retained (lessons total **6** < 30).
+- **Phase B** — `bookrec`: `PopularityRetrievalPath` (positive-train-count score, leakage-safe, numpy-only
+  duck-typed rows), `weighted_rating` (Bayesian shrinkage, domain-validated), `catalog_coverage`/`head_share`/
+  `head_ids_from_counts`. 66 package tests.
+- **Phases C/D/E/F** — lesson (project-first; count path beats the random floor; the weighted-rating *quality* lens
+  scores **below** the floor on the popularity-biased val holdout = popularity-bias-in-the-metric; coverage/
+  head-share), 8 exercises (6 core + 2 stretch) + mirrored solutions (6 asserts), the Unit-2 milestone notebook, and
+  teacher-notes (60–90 min).
+
+**Verification.** `scripts/ci-local.sh` ALL GREEN (lint, ~1600 group-free tests + routed recsys suite, both units'
+lesson/solution exec + the milestone notebook, concept-scan, recsys handout + syllabus PDFs, `pre-merge-guard` OK).
+
+**Gates.** Plan-review: consensus on v2.1 (3-of-4; [glm] timed out). Content-review: [sol] REJECT round 1 (prose
+error, Ex7 coverage, numpy-seed hole, `weighted_rating` validation, Ex4/Ex8) → fixed over rounds 2–3 → CONSENSUS
+(3-of-4; [glm] skipped for the weekend per user ruling).
+
+**Numbers (seed 0, k=10, 368 readers).** random hit@10 0.0136 · popularity(count) 0.1196 (~9×) · weighted-rating
+quality 0.0054 (below the floor) · coverage 0.007 vs 0.84 · head-share 1.0 vs 0.10 · default `m=10` reverses the
+3/3 vs 9000/10000 pair when `C<R₂`.
+
+**Follow-ups.** None blocking. `[glm]` to be re-included Monday 2026-10-05. Buildout removal still pending the plan
+that first brings the lesson total ≥30.
