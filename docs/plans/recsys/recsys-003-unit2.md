@@ -344,7 +344,91 @@ weekend gates proceed 3-of-4. Recorded as the standing campaign policy.
 
 ## Content Review
 
-<!-- appended pre-PR -->
+ci-local ALL GREEN (lint + ~1600 tests + both units' lesson/solution exec + the milestone notebook + concept-scan +
+recsys handout/syllabus PDFs + pre-merge-guard OK). 4-way gate; [glm] on volcengine-plan (weekend policy).
+
+### Review 1 — self (2026-10-02)
+- **Verdict**: APPROVE WITH NITS.
+Blind-read the 8 exercises against the lesson: all taught-before-assessed (count/scoreboard, weighted_rating +
+limits, the QualityRetrievalPath twin, head_ids_from_counts/coverage/head_share all taught in Phase C §§1–3);
+project-first hook present; stretch #7 (convex-combination) and #8 (closed-form tie `m`) are genuine derivations.
+Verified Ex8's math independently: with v1=3,R1=1.0,v2=10000,R2=0.9,C=0.5, `m*≈0.75` ties both at ≈0.9 — correct.
+The m→large claim is stated correctly (contraction toward `C` / approaches a `v·(R−C)` order; ties only in the
+infinite limit).
+1. `[OPEN]` **Nice to Have** — Exercises 4 and 7 use an illustrative `C=0.5` on synthetic arrays (clearly flagged
+   "given"), distinct from the generator's real `C≈0.23`; harmless and self-contained, but a one-line note that this
+   `C` is illustrative (not the book's global rate) would pre-empt confusion. Author discretion.
+
+### Review 2 — fable (2026-10-02)
+- **Verdict**: APPROVE WITH NITS. Blind-solved all 8 exercises and empirically re-ran every number on the committed
+  seed (all reproduce: popularity 0.1196 vs random 0.0136; quality 0.0054; coverage 0.007/1.0 vs 0.839/0.100; Ex8
+  `m*≈0.75028` verified; m→large approaches the `v·(R−C)` order). Full package+tooling code review — no regressions.
+1. `[OPEN]` **Should Fix** — lesson cell 22 + solutions cell 10 say the quality ranking scores "barely **above** the
+   random floor"; it is **below** it (0.0054 < 0.0136). Fix the prose to "below even the random floor" (a sharper
+   metric-bias point: the quality ranker is anti-correlated with the popularity-driven holdout exposure).
+2. `[OPEN]` **Should Fix** — Ex7 (stretch) asks whether large-`m` coverage rises/falls; coverage is ≈k/N for ANY
+   reader-independent ranker (measured 0.0055→0.0070, a slight rise), so the robust quantity is **head-share**
+   (0.0→0.90→1.0). Reword the statement + solution prose to ask about head-share.
+3. `[OPEN]` **Nice to Have** — Ex4 "name the thin-but-perfect item demoted" is ambiguous (items 0 and 3); the
+   solution assert only accepts index 0. Say "the 3-of-3 item (index 0)".
+4. `[OPEN]` **Nice to Have** — `weighted_rating` docstring implies the default `m=10` alone exhibits the reversal; it
+   needs `C < R₂` (the test passes `global_rate=0.2`; with default `global_rate=None` on that pair C≈0.90 and there is
+   no reversal). Make the docstring explicit.
+5. `[OPEN]` **Nice to Have** — `practices: [catalog-search]` is nominal (no `search_catalog` call). Drop it from
+   practices (prereq closure still holds via `requires`), or WONTFIX as catalog load/filter practice.
+6. `[OPEN]` **Nice to Have** — lesson provenance: a one-line "you may know this as IMDb's Top-250 weighted rating"
+   helps the advanced audience place `weighted_rating`.
+7. `[WONTFIX]` **Nice to Have** — solutions cell 7 asserts exact `readers_scored==368`; harmless while seed
+   checksums are pinned (the data is regenerated deterministically in CI).
+8. `[WONTFIX]` **Nice to Have** — lesson cell 24 double-ranks (`rank` after `retrieve`); harmless (same result).
+9. `[WONTFIX]` **Nice to Have** — `milestone_hygiene_findings` doesn't enforce a project-hook first cell; optional
+   tooling polish, deferred.
+
+### Fix pass (commits `ae3717b` code/tooling, `87cbbba` notebooks) — dispositions
+- **sol#1 / fable#1** `[FIXED]` — lesson + solutions now say the quality ranking lands **below** even the random
+  floor (≈0.005 vs ≈0.014), with the sharper anti-correlation framing; metric-bias point kept.
+- **sol#2 / fable#2** `[FIXED]` — Ex7 reworded to ask about **head-share** (0→0.90→1.0); solution computes/asserts it.
+- **sol#3** `[FIXED]` — seed policy now detects unseeded NumPy RNG (`np.random.default_rng()` and legacy
+  `np.random.*` without `np.random.seed`), shared by milestone + solution checks; 6 regression tests.
+- **sol#4 / fable#3** `[FIXED]` — Ex4 now names "the 3-of-3 item (index 0)"; solution variable + prose + assert aligned.
+- **sol#5** `[FIXED]` — Ex8 solution enumerates the three cases incl. the degenerate both-zero (equal for all `m`).
+- **sol#6** `[FIXED]` — `weighted_rating` validates domain (finite `m≥0`, `0≤positives≤exposures`, nonneg exposures,
+  `C∈[0,1]`); 11 new tests.
+- **fable#4** `[FIXED]` — `weighted_rating` docstring now states the reversal needs `C<R₂`.
+- **fable#5** `[WONTFIX]` — `practices:[catalog-search]` retained: the unit loads and filters the catalog
+  (train-split + head-set selection), nominal but genuine catalog practice; prereq closure holds either way.
+- **fable#6** `[FIXED]` — lesson notes the IMDb Top-250 "weighted rating" provenance.
+- **fable#7/#8/#9, self#1** `[WONTFIX]` — exact-reader assert (seed pinned), harmless double-rank, milestone
+  project-hook tooling polish, illustrative-`C` note — all cosmetic; deferred.
+Re-verified: `exec-lessons`/`exec-solutions`/`hygiene`/`structure`/`noexec`/`concept-scan`/`milestone-check` PASS;
+14 milestone + 66 package tests green. Full `ci-local` re-run in progress.
+
+### Review 3 — sol (2026-10-02)
+- **Verdict**: REJECT (all one-revision-fixable; blind-solve matched the reference on E1–3,5–6 and the E7–8 algebra).
+1. `[OPEN]` **Must Fix** — (confirms fable#1) lesson + solutions say the quality ranking is "barely above the random
+   floor"; it is below it (0.0054 < 0.0136). Correct the comparison; keep the "near-zero/far below popularity" point.
+2. `[OPEN]` **Must Fix** — (confirms fable#2) Ex7's coverage conclusion ("fall or stay") is false on the data
+   (coverage rises 0.0055→0.0070); reader-independent coverage is ≈k/N and seen-exclusion drives it. Ask about
+   head-share, or measure + explain the interaction.
+3. `[OPEN]` **Must Fix** — the milestone seed gate (`_random_usage` / `milestone_hygiene_findings`) only detects the
+   stdlib `random` module; an UNSEEDED NumPy RNG (`np.random.default_rng()` / `np.random.random()`) passes, violating
+   the fixed-seed contract in a numpy-heavy book. Extend detection to NumPy RNG + regression tests (`tools/notebooks.py`,
+   `tests/test_milestone_notebooks.py`). (Also improves the solutions seed policy, which shares `_random_usage`.)
+4. `[OPEN]` **Should Fix** — (overlaps fable#3) Ex4 "thin-but-perfect item demoted" is ambiguous (items 0 and 3);
+   the solution says item 3 is "demoted hardest" but stores `demoted_thin_item=0`. Make the prompt ask about the 3/3
+   item (index 0) and align the solution variable + prose.
+5. `[OPEN]` **Should Fix** — Ex8 existence condition omits the degenerate case: numerator and denominator both zero ⇒
+   the curves agree for all `m`. Distinguish: positive quotient → one crossover; zero denom & nonzero num → none;
+   both zero → equal for all `m`.
+6. `[OPEN]` **Should Fix** — `weighted_rating` validates no domain (accepts negative `m`, negative exposures,
+   positives>exposures, non-finite, `global_rate∉[0,1]`; e.g. C=2 → 1.75). Validate finite `m≥0`,
+   `0≤positives≤exposures`, nonneg exposures, `C∈[0,1]`; add tests.
+
+### Review 4 — glm (2026-10-02)
+- **Verdict**: SKIPPED (timeout). `opencode:opencode-review --model volcengine-plan/glm-5.3` timed out at the 20-min
+  cap (SIGTERM), same reliable failure as the plan-review gate. Per the user's 2026-10-02 ruling (try volcengine-plan,
+  then skip `[glm]` until Monday), the content gate proceeds 3-of-4 for the weekend; `[glm]` not re-attempted in
+  round 2.
 
 ## Post-Execution Report
 
