@@ -9,3 +9,7 @@ concepts:
 - {id: catalog-search, name: "Catalog search and filtering", category: search, kind: technique}
 - {id: offline-evaluation, name: "Offline evaluation with temporal holdouts", category: techniques, kind: technique}
 - {id: top-k-ranking-metrics, name: "Top-k hit rate and recall", category: techniques, kind: technique}
+# --- Unit 2 (recsys-003): popularity & weighted baselines ---
+- {id: popularity-ranking, name: "Popularity ranking from interaction counts", category: techniques, kind: technique}
+- {id: bayesian-shrinkage, name: "Bayesian shrinkage (weighted average)", category: techniques, kind: technique}
+- {id: popularity-bias, name: "Popularity bias (coverage and head-share)", category: techniques, kind: technique}
