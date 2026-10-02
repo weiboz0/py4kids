@@ -190,6 +190,32 @@ def content_dirs(
     return paths, list(dict.fromkeys(findings))
 
 
+def milestone_notebooks(root: Path, book: str) -> list[Path]:
+    """Project milestone notebooks: ``<book>/projects/*/milestones/*.ipynb``, sorted.
+
+    Milestone notebooks are a first-class gated artifact (executed, hygiene/seed-checked,
+    concept-scanned) but are NOT ``project-*`` curriculum-map entries, so they never reach
+    ``project_dirs``/coverage/prereq/capstone. Fail-closed: a missing ``projects/`` or
+    ``milestones/`` directory yields an empty list, not an error. Dotfiles are skipped so a stray
+    ``.ipynb_checkpoints`` or other hidden notebook is never swept. The ``projects/*/milestones/``
+    glob also excludes ``projects/.gitkeep``, ``projects/bookrec/tests/``, ``__pycache__`` and
+    ``pyproject.toml`` by construction.
+    """
+    projects = book_root(root, book) / "projects"
+    if not projects.is_dir():
+        return []
+    return sorted(
+        path
+        for path in projects.glob("*/milestones/*.ipynb")
+        if path.is_file() and not path.name.startswith(".")
+    )
+
+
+def _milestone_scope(path: Path) -> str:
+    """Identify a milestone notebook by ``<project>/<notebook>`` (e.g. ``bookrec/m1.ipynb``)."""
+    return f"{path.parents[1].name}/{path.name}"
+
+
 def read_nb(path: Path):
     return nbformat.read(path, as_version=4)
 
@@ -277,8 +303,8 @@ def _is_seed_four_call(node, random_names: set[str]) -> bool:
     )
 
 
-def _solution_policy_findings(scope: str, notebook) -> list[str]:
-    findings = []
+def _parse_code_cells(notebook) -> tuple[list, list[tuple[int, ast.AST]]]:
+    """Return (code cells, [(index, AST)]), tolerating magics/syntax errors as the policy does."""
     codes = code_cells(notebook)
     parsed = []
     for cell_index, cell in enumerate(codes):
@@ -290,22 +316,16 @@ def _solution_policy_findings(scope: str, notebook) -> list[str]:
             except SyntaxError:
                 continue
         parsed.append((cell_index, tree))
-    def _non_vacuous_assert(tree) -> bool:
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assert) and not is_tautology(node.test):
-                return True
-        return False
+    return codes, parsed
 
-    assert_count = sum(_non_vacuous_assert(tree) for _cell_index, tree in parsed)
-    if assert_count < 3:
-        findings.append(_fail(scope, "solutions need >=3 non-vacuous assert cells"))
-    for cell in codes:
-        if INTERACTIVE.search(cell.source):
-            findings.append(_fail(scope, "solutions call input()"))
-        if GUI_IMPORT.search(cell.source):
-            findings.append(_fail(scope, "solutions import a GUI"))
-        if RANDOM_FROM_IMPORT.search(cell.source):
-            findings.append(_fail(scope, "solutions use 'from random import'"))
+
+def _random_usage(parsed: list[tuple[int, ast.AST]]) -> tuple[list, list]:
+    """Return (seed_positions, use_positions) for stdlib ``random`` across parsed cells.
+
+    A position is ``(cell_index, lineno, col_offset)``. ``seed_positions`` are the ``random.seed(4)``
+    calls; ``use_positions`` are every other ``random.<attr>`` access. Shared by the solution seed
+    policy and the milestone seed policy so both enforce the identical fixed-seed-before-use rule.
+    """
     random_names = {"random"}
     seed_attributes = set()
     seed_positions = []
@@ -338,6 +358,30 @@ def _solution_policy_findings(scope: str, notebook) -> list[str]:
                     seed_positions.append(position)
                 else:
                     use_positions.append(position)
+    return seed_positions, use_positions
+
+
+def _solution_policy_findings(scope: str, notebook) -> list[str]:
+    findings = []
+    codes, parsed = _parse_code_cells(notebook)
+
+    def _non_vacuous_assert(tree) -> bool:
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assert) and not is_tautology(node.test):
+                return True
+        return False
+
+    assert_count = sum(_non_vacuous_assert(tree) for _cell_index, tree in parsed)
+    if assert_count < 3:
+        findings.append(_fail(scope, "solutions need >=3 non-vacuous assert cells"))
+    for cell in codes:
+        if INTERACTIVE.search(cell.source):
+            findings.append(_fail(scope, "solutions call input()"))
+        if GUI_IMPORT.search(cell.source):
+            findings.append(_fail(scope, "solutions import a GUI"))
+        if RANDOM_FROM_IMPORT.search(cell.source):
+            findings.append(_fail(scope, "solutions use 'from random import'"))
+    seed_positions, use_positions = _random_usage(parsed)
     if seed_positions or use_positions:
         first_use = min(use_positions, default=None)
         if not seed_positions:
@@ -1048,14 +1092,84 @@ def execute_notebooks(
     return findings
 
 
+def _execute_notebook_path(path: Path) -> str | None:
+    """Execute one notebook top-to-bottom (no-exec cells dropped). Return a finding or None."""
+    notebook = read_nb(path)
+    notebook.cells = [cell for cell in notebook.cells if "no-exec" not in tags(cell)]
+    if not code_cells(notebook):
+        return None
+    try:
+        NotebookClient(
+            notebook,
+            timeout=120,
+            kernel_name="python3",
+            resources={"metadata": {"path": str(path.parent)}},
+        ).execute()
+    except Exception as error:  # noqa: BLE001 - nbclient startup/execution failures vary
+        summary = str(error).splitlines()[-1] if str(error) else type(error).__name__
+        return _fail(_milestone_scope(path), f"execution failed: {summary}")
+    return None
+
+
+def exec_milestones_findings(root: Path, book: str) -> list[str]:
+    """Execute every milestone notebook top-to-bottom (fixed-seed demonstrations)."""
+    findings = []
+    for path in milestone_notebooks(root, book):
+        finding = _execute_notebook_path(path)
+        if finding:
+            findings.append(finding)
+    return findings
+
+
 def exec_solutions_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
-    return execute_notebooks(
+    findings = execute_notebooks(
         root,
         book,
         "solutions.ipynb",
         unit,
         include_checkpoints=True,
     )
+    # Milestone notebooks are book-level demonstrations (not per-unit), so they join exec-solutions
+    # only on a whole-book run, routed under the book's dependency group exactly as units are.
+    if unit is None:
+        findings.extend(exec_milestones_findings(root, book))
+    return findings
+
+
+def milestone_hygiene_findings(root: Path, book: str, unit: str | None = None) -> list[str]:
+    """Hygiene + seed policy for milestone notebooks (no existing solutions-hygiene hook to reuse).
+
+    A milestone notebook is committed cleared (no stored ``outputs``, ``execution_count is None``)
+    and runs clean with fixed seeds: no ``input()``/GUI, no bare ``from random import``, and any
+    ``random`` use is preceded by ``random.seed(4)`` — the same seed policy the solution notebooks
+    obey, via the shared ``_random_usage`` machinery.
+    """
+    del unit  # milestone notebooks are a book-level artifact, not keyed to a unit
+    findings: list[str] = []
+    for path in milestone_notebooks(root, book):
+        scope = _milestone_scope(path)
+        notebook = read_nb(path)
+        for index, cell in enumerate(code_cells(notebook)):
+            if cell.outputs:
+                findings.append(_fail(scope, f"milestone code cell {index} has outputs"))
+            if cell.execution_count is not None:
+                findings.append(_fail(scope, f"milestone code cell {index} is executed"))
+        codes, parsed = _parse_code_cells(notebook)
+        for cell in codes:
+            if INTERACTIVE.search(cell.source):
+                findings.append(_fail(scope, "milestone calls input()"))
+            if GUI_IMPORT.search(cell.source):
+                findings.append(_fail(scope, "milestone imports a GUI"))
+            if RANDOM_FROM_IMPORT.search(cell.source):
+                findings.append(_fail(scope, "milestone uses 'from random import'"))
+        seed_positions, use_positions = _random_usage(parsed)
+        if seed_positions or use_positions:
+            first_use = min(use_positions, default=None)
+            if not seed_positions:
+                findings.append(_fail(scope, "milestone uses random without random.seed(4)"))
+            elif first_use is not None and min(seed_positions) >= first_use:
+                findings.append(_fail(scope, "milestone: random.seed(4) must precede first use"))
+    return findings
 
 
 def exec_lessons_findings(root: Path, book: str, unit: str | None = None) -> list[str]:

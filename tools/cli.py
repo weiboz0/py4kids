@@ -36,6 +36,7 @@ BOOK_LEVEL_CHECKS = {
     "technique-spiral",
     "pattern-marker",
     "patterns-doc-check",
+    "milestone-check",
 }
 
 

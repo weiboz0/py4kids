@@ -89,7 +89,7 @@ done 3<<< "$groups"
 
 step "3/6 notebook structure + execution"
 while read -r book flags <&3; do
-  for check in hygiene-check structure-check noexec-check cell-lint exec-solutions exec-lessons; do
+  for check in hygiene-check structure-check noexec-check cell-lint milestone-check exec-solutions exec-lessons; do
     book_run "$book" "$check"
   done
   if has_flag publication "$flags"; then

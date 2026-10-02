@@ -12,6 +12,7 @@ from tools.notebooks import (
     exercise_structure_findings,
     hygiene_findings,
     manifest_findings,
+    milestone_hygiene_findings,
     noexec_findings,
     structure_findings,
 )
@@ -32,6 +33,7 @@ CHECKS = {
     "noexec-check": noexec_findings,
     "exec-solutions": exec_solutions_findings,
     "exec-lessons": exec_lessons_findings,
+    "milestone-check": milestone_hygiene_findings,
     "cell-lint": cell_lint_findings,
     "turtle-check": turtle_findings,
     "turtle-real-check": turtle_real_findings,

@@ -20,6 +20,7 @@ CHECK_NAMES = (
     "noexec-check",
     "exec-solutions",
     "exec-lessons",
+    "milestone-check",
     "cell-lint",
     "turtle-check",
     "turtle-real-check",

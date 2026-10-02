@@ -38,6 +38,7 @@ from tools.books import (
     prereq_policy,
     qualified_concept_id_pattern,
 )
+from tools.notebooks import milestone_notebooks
 
 # Concepts we do NOT flag as violations: not detectable from code, or too fuzzy
 # to assert confidently. These stay reviewer-manual.
@@ -1047,6 +1048,56 @@ def _legacy_scan_findings(
     return findings
 
 
+def _milestone_scan_findings(
+    root: Path,
+    book: str,
+    registered: set[str],
+    profile: ScanProfile,
+    baseline: set[str],
+    library_methods: set[str],
+) -> list[str]:
+    """Scan project milestone notebooks for untaught methods and used-but-unlisted concepts.
+
+    Milestone notebooks are not curriculum-map entries, so there is no per-entry
+    introduces/requires/practices set. They are demonstrations of the fully built system, so the
+    allowed set is the book baseline plus everything the book teaches (``registered``); the real
+    purpose here (matching ``solutions.ipynb``) is to force every ``bookrec``/library ``x.name(...)``
+    call to be declared in ``baseline.yaml`` ``library_methods`` — an undeclared one surfaces as an
+    untaught method.
+    """
+    allowed = set(baseline) | set(registered)
+    findings: list[str] = []
+    for path in milestone_notebooks(root, book):
+        eid = f"{path.parents[1].name}/{path.name}"
+        used: set[str] = set()
+        methods: set[str] = set()
+        defined_names: set[str] = set()
+        for block in code_sources(path):
+            source = block[3]
+            try:
+                tree = ast.parse(source)
+            except SyntaxError:
+                continue
+            block_used, block_methods = detect(
+                tree, registered_concepts=registered, profile=profile
+            )
+            used |= block_used
+            methods |= block_methods
+            defined_names |= {
+                node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+            }
+        methods -= defined_names
+        methods -= library_methods
+        findings.extend(
+            f"FAIL: {eid}: used-but-unlisted concept {concept}"
+            for concept in sorted((used - allowed) - profile.never_flag)
+        )
+        findings.extend(
+            f"FAIL: {eid}: untaught method {method}" for method in sorted(methods)
+        )
+    return findings
+
+
 def concept_scan_findings(
     root: Path, book: str, unit: str | None = None
 ) -> list[str]:
@@ -1074,10 +1125,13 @@ def concept_scan_findings(
     profile = scanner_profile(concepts)
     baseline = known_baseline(root, book)
     library_methods = assumed_library_methods(root, book)
+    milestone_findings = _milestone_scan_findings(
+        root, book, registered, profile, baseline, library_methods
+    )
     if cmap.get("map_version") == 1:
         return _legacy_scan_findings(
             root, book, cmap["entries"], registered, profile, baseline
-        )
+        ) + milestone_findings
     dependent_feature_owners = _dependent_feature_owners(root, book, registered)
     patterns_book = book_flag(root, book, "patterns")
     metadata_context = {
@@ -1470,4 +1524,4 @@ def concept_scan_findings(
                 findings.append(
                     f"FAIL: {eid}: auxiliary task id {task_id} GIVEN regions differ"
                 )
-    return findings
+    return findings + milestone_findings
