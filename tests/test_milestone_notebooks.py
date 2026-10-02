@@ -175,7 +175,84 @@ def test_non_random_numpy_is_not_flagged(tmp_path):
         milestones / "m1.ipynb",
         [
             nbformat.v4.new_markdown_cell("# Milestone demo"),
-            nbformat.v4.new_code_cell("import numpy as np\norder = np.argsort(np.array([3, 1, 2]))"),
+            nbformat.v4.new_code_cell(
+                "import numpy as np\norder = np.argsort(np.array([3, 1, 2]))\n"
+                "ok = np.allclose(np.array([1.0]), np.array([1.0]))"
+            ),
         ],
     )
     assert milestone_hygiene_findings(tmp_path, BOOK) == []
+
+
+def test_numpy_default_rng_none_positional_fails(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [nbformat.v4.new_code_cell("import numpy as np\nrng = np.random.default_rng(None)\nx = rng.random()")],
+    )
+    findings = milestone_hygiene_findings(tmp_path, BOOK)
+    assert any("numpy default_rng() without a seed" in finding for finding in findings)
+
+
+def test_numpy_default_rng_seed_keyword_none_fails(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [nbformat.v4.new_code_cell("import numpy as np\nrng = np.random.default_rng(seed=None)\nx = rng.random()")],
+    )
+    findings = milestone_hygiene_findings(tmp_path, BOOK)
+    assert any("numpy default_rng() without a seed" in finding for finding in findings)
+
+
+def test_numpy_global_seed_none_then_use_fails(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [nbformat.v4.new_code_cell("import numpy as np\nnp.random.seed(None)\nx = np.random.random()")],
+    )
+    findings = milestone_hygiene_findings(tmp_path, BOOK)
+    assert any("numpy random without np.random.seed" in finding for finding in findings)
+
+
+def test_numpy_random_module_alias_unseeded_fails(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [nbformat.v4.new_code_cell("import numpy.random as npr\nx = npr.random()")],
+    )
+    findings = milestone_hygiene_findings(tmp_path, BOOK)
+    assert any("numpy random without np.random.seed" in finding for finding in findings)
+
+
+def test_numpy_random_module_alias_seeded_default_rng_passes(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [
+            nbformat.v4.new_markdown_cell("# Milestone demo"),
+            nbformat.v4.new_code_cell("import numpy.random as npr\nrng = npr.default_rng(0)\nx = rng.random()"),
+        ],
+    )
+    assert milestone_hygiene_findings(tmp_path, BOOK) == []
+
+
+def test_numpy_random_module_alias_seed_then_use_passes(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [
+            nbformat.v4.new_markdown_cell("# Milestone demo"),
+            nbformat.v4.new_code_cell("import numpy.random as npr\nnpr.seed(0)\nx = npr.random()"),
+        ],
+    )
+    assert milestone_hygiene_findings(tmp_path, BOOK) == []
+
+
+def test_from_numpy_import_random_alias_unseeded_fails(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [nbformat.v4.new_code_cell("from numpy import random as rng\ngen = rng.default_rng()\nx = gen.random()")],
+    )
+    findings = milestone_hygiene_findings(tmp_path, BOOK)
+    assert any("numpy default_rng() without a seed" in finding for finding in findings)

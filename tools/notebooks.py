@@ -361,11 +361,20 @@ def _random_usage(parsed: list[tuple[int, ast.AST]]) -> tuple[list, list]:
     return seed_positions, use_positions
 
 
-def _numpy_random_attr(node, numpy_names: set[str]) -> str | None:
-    """If ``node`` is a ``<numpy>.random.<attr>`` attribute, return ``<attr>``; else ``None``.
+def _numpy_random_attr(
+    node, numpy_names: set[str], numpy_random_names: set[str]
+) -> str | None:
+    """Return the numpy-random function ``<attr>`` that ``node`` accesses, or ``None``.
 
-    Matches only the two-level attribute (``np.random.randint``), never the bare ``np.random``
-    module access nor non-random numpy such as ``np.array`` / ``np.argsort``.
+    Two access shapes count, and nothing else:
+
+    * ``<numpy>.random.<attr>`` — the two-level attribute off a numpy package name
+      (``import numpy`` / ``import numpy as np``);
+    * ``<numpy_random>.<attr>`` — a one-level attribute off a name bound directly to the
+      ``numpy.random`` module (``import numpy.random as npr``, ``from numpy import random as rng``).
+
+    The bare ``np.random`` module access and non-random numpy (``np.array``, ``np.argsort``,
+    ``np.allclose``, ...) never match.
     """
     if (
         isinstance(node, ast.Attribute)
@@ -375,7 +384,37 @@ def _numpy_random_attr(node, numpy_names: set[str]) -> str | None:
         and node.value.value.id in numpy_names
     ):
         return node.attr
+    if (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id in numpy_random_names
+    ):
+        return node.attr
     return None
+
+
+def _is_none_literal(node) -> bool:
+    return isinstance(node, ast.Constant) and node.value is None
+
+
+def _call_is_seeded(call: ast.Call) -> bool:
+    """Does ``call`` pass a deterministic seed (not ``None``, not absent)?
+
+    The seed is the first positional argument or a ``seed=`` keyword. A seed of the literal ``None``
+    (``default_rng(None)``, ``default_rng(seed=None)``, ``np.random.seed(None)``) is nondeterministic
+    and is treated as **unseeded**; a missing seed is unseeded too. Any non-``None`` value — a
+    literal or a variable/expression — counts as seeded (a bare variable is given the benefit of the
+    doubt to avoid false positives).
+    """
+    seed_value = None
+    if call.args:
+        seed_value = call.args[0]
+    else:
+        for keyword in call.keywords:
+            if keyword.arg == "seed":
+                seed_value = keyword.value
+                break
+    return seed_value is not None and not _is_none_literal(seed_value)
 
 
 def _numpy_random_usage(
@@ -385,21 +424,24 @@ def _numpy_random_usage(
 
     The numpy counterpart to :func:`_random_usage`; it fails closed in three ways:
 
-    * an **unseeded** ``default_rng()`` (called with no seed argument) — whether written
-      ``np.random.default_rng()`` or via a ``from numpy.random import default_rng`` name — is an
-      unseeded ``Generator`` and is recorded in ``unseeded_generator_positions``. A seeded
-      ``default_rng(0)`` (any literal/seed argument) is fine, as is a name later bound to it
-      (``rng = np.random.default_rng(0); rng.random()`` — ``rng`` is not a numpy module name, so it
-      is never a legacy use).
+    * an **unseeded** ``default_rng()`` — no seed, or a ``None`` seed (``default_rng()``,
+      ``default_rng(None)``, ``default_rng(seed=None)``) — is an unseeded ``Generator`` and is
+      recorded in ``unseeded_generator_positions``. A deterministic ``default_rng(0)`` is fine, as
+      is a name later bound to it (``rng = np.random.default_rng(0); rng.random()`` — ``rng`` is not
+      a numpy module name, so it is never a legacy use).
     * a **legacy global** call ``np.random.<func>(...)`` (``random``/``rand``/``randint``/
       ``choice``/``shuffle``/``normal``/...) is a *use* recorded in ``use_positions``; it must be
-      preceded by ``np.random.seed(<seed>)`` (``seed_positions``), the same seed-before-use rule the
-      stdlib detector enforces. ``seed`` and ``default_rng`` are not themselves uses.
+      preceded by a deterministic ``np.random.seed(<seed>)`` (``seed_positions``), the same
+      seed-before-use rule the stdlib detector enforces. ``seed`` and ``default_rng`` are not uses,
+      and ``np.random.seed(None)`` does not count as a seed.
 
-    Non-random numpy (``np.array``, ``np.argsort``, ...) and generator-method calls on a bound name
-    are never flagged, keeping false positives low.
+    The ``numpy.random`` module is tracked under every binding shape: ``import numpy[/.random]``,
+    ``import numpy as np``, ``import numpy.random as npr``, ``from numpy.random import default_rng``,
+    and ``from numpy import random[ as rng]``. Non-random numpy (``np.array``, ``np.argsort``,
+    ``np.allclose``, ...) and generator-method calls on a bound name are never flagged.
     """
     numpy_names = {"numpy"}
+    numpy_random_names: set[str] = set()
     default_rng_names: set[str] = set()
     seed_positions = []
     use_positions = []
@@ -423,11 +465,11 @@ def _numpy_random_usage(
         )
         for node in events:
             if isinstance(node, ast.Import):
-                numpy_names.update(
-                    alias.asname or alias.name
-                    for alias in node.names
-                    if alias.name == "numpy"
-                )
+                for alias in node.names:
+                    if alias.name == "numpy":
+                        numpy_names.add(alias.asname or alias.name)
+                    elif alias.name == "numpy.random" and alias.asname:
+                        numpy_random_names.add(alias.asname)
             elif isinstance(node, ast.ImportFrom):
                 if node.module == "numpy.random":
                     default_rng_names.update(
@@ -435,20 +477,27 @@ def _numpy_random_usage(
                         for alias in node.names
                         if alias.name == "default_rng"
                     )
+                elif node.module == "numpy":
+                    numpy_random_names.update(
+                        alias.asname or alias.name
+                        for alias in node.names
+                        if alias.name == "random"
+                    )
             elif isinstance(node, ast.Call):
                 position = (cell_index, node.lineno, node.col_offset)
                 func = node.func
-                is_default_rng = _numpy_random_attr(func, numpy_names) == "default_rng" or (
+                func_attr = _numpy_random_attr(func, numpy_names, numpy_random_names)
+                is_default_rng = func_attr == "default_rng" or (
                     isinstance(func, ast.Name) and func.id in default_rng_names
                 )
                 if is_default_rng:
-                    if not node.args and not node.keywords:
+                    if not _call_is_seeded(node):
                         unseeded_generator_positions.append(position)
                     continue
-                if _numpy_random_attr(func, numpy_names) == "seed" and node.args:
+                if func_attr == "seed" and _call_is_seeded(node):
                     seed_positions.append(position)
             elif isinstance(node, ast.Attribute):
-                attr = _numpy_random_attr(node, numpy_names)
+                attr = _numpy_random_attr(node, numpy_names, numpy_random_names)
                 if attr is not None and attr not in {"seed", "default_rng"}:
                     use_positions.append((cell_index, node.lineno, node.col_offset))
     return seed_positions, use_positions, unseeded_generator_positions
