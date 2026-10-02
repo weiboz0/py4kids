@@ -334,7 +334,12 @@ resolved). Folded before authoring:
 No new assessed-but-untaught / project-first / buildout risk; the Design §10 amendment (Phase 0) correctly replaces
 the "single `projects/` entry's manifest grows per unit" sentence at `011-recsys-book.md:231-232`.
 
-<!-- [glm] appended here -->
+**[glm] — SKIPPED (timeout).** `opencode:opencode-review` timed out at the full 20-min cap on BOTH
+`opencode-go/glm-5.3` and the `volcengine-plan/glm-5.3` fallback (40 min total), producing no review. Per the user's
+decision (2026-10-02): try volcengine-plan (done — timed out), then **skip `[glm]` until Monday 2026-10-05**;
+weekend gates proceed 3-of-4. Recorded as the standing campaign policy.
+
+### Plan-review outcome (round 2): **CONSENSUS (3-of-4; [glm] skipped per user)** — [self] APPROVE · [sol] APPROVE WITH NITS (folded) · [fable] APPROVE WITH NITS (folded, empirically verified). No open blockers. Cleared to implement (Phase 0 → G).
 
 
 ## Content Review
