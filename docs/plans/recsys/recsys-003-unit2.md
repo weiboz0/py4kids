@@ -55,8 +55,9 @@ teacher notes; dual **concept∥project tracks**; **from-scratch→reveal-the-li
 - `bayesian-shrinkage` — the weighted / Bayesian-average quality estimate `score = (v·R + m·C)/(v + m)`: an item's
   own positive **rate** `R = positives/observed-train-rows`, its exposure `v`, the global positive rate `C`, and a
   prior strength `m` (pseudo-counts). Taught from first principles (why a 3-of-3 book must not be called better than a
-  9000-of-10000 book; `m→0` recovers the raw rate `R`; `m→∞` sends every score to `C`, so the ranking **degenerates
-  to an all-ties, id-ascending order** — NOT a "global order"). A *quality* ranking, distinct from popularity.
+  9000-of-10000 book; `m→0` recovers the raw rate `R`; as `m` grows every score **contracts toward `C`** (equal only
+  in the limit), so the ranking flattens and the downstream ranker's id tie-break takes over — NOT a "global order").
+  A *quality* ranking, distinct from popularity.
   `kind: technique`, `category: techniques`.
 - `popularity-bias` — a popularity recommender concentrates exposure on head items and starves the tail; **measured**
   here via **catalog coverage** and **head-share** (defined precisely below); and the realisation that the `val`
@@ -143,10 +144,12 @@ foundation's `_popularity_fixture.py` into real shipped code:
   top items by count, **reader-independent**, honouring `context["seen"]` exclusion and the
   `Candidate`/finite-score/stable-int/tie-break contract via `_finish`; `load` restores from a fitted artifact.
   Raise on an empty fit. (Fixes [fable]#2 — input type named; leakage enforced in code.)
-- `bookrec/popularity.py` also exposes `weighted_rating(positives, exposures, *, m, global_rate=None)` computing the
-  `(v·R + m·C)/(v+m)` **quality** estimate (vectorised), with a **documented default `m`** (chosen so the 3/3 vs
-  9000/10000 reversal is exhibited on the fixture — e.g. `m` on the order of the median exposure; authors fix and
-  document the value), the `m→0 ⇒ R` and `m→∞ ⇒ C` limits, and ties broken by ascending `item_id`.
+- `bookrec/popularity.py` also exposes `weighted_rating(positives, exposures, *, m: float = <default>,
+  global_rate=None)` computing the `(v·R + m·C)/(v+m)` **quality** estimate (vectorised over the item arrays), with a
+  **concrete default `m`** in the signature (chosen so the 3/3 vs 9000/10000 reversal is exhibited on the fixture —
+  e.g. `m` on the order of the median exposure; authors fix and document the exact value). This helper is
+  **item-id-free**: it returns per-item scores and does NOT tie-break; ordering/tie-breaking is the ranker's job. Its
+  limits are `m→0 ⇒ R` and **scores contract toward `C` as `m` grows** (equal only in the limit).
 - a **popularity-bias measurement** helper (`bookrec/diversity.py`): `catalog_coverage(recommendations, catalog_ids)`
   and `head_share(recommendations, head_ids)` per the Metric definitions above; small, seed-free.
 - Export the new public names from `bookrec/__init__.py` (`__all__`). **Retire `_popularity_fixture.py`** and
@@ -156,7 +159,8 @@ foundation's `_popularity_fixture.py` into real shipped code:
 - Tests under `recsys/projects/bookrec/tests/` (routed recsys suite): count path **beats the random floor** on the
   seeded `val` scoreboard (direction, not exact value), with `cold_readers` passed; a **leakage test** (val/test or
   `label==0` rows do not change fitted counts); `weighted_rating` reverses 3/3 vs 9000/10000 at the default `m`,
-  `m→0 ⇒ R`, and **`m→∞ ⇒ all-C ties → id-ascending order**; coverage/head-share in `[0,1]` and the popularity path's
+  `m→0 ⇒ R`, and **scores contract monotonically toward `C` as `m` grows** (assert the contraction, not exact ties);
+  coverage/head-share in `[0,1]` and the popularity path's
   coverage is **lower** than the random path's; the path registers in a `PathRegistry` with no name/artifact
   collision.
 **Verify:** `uv run --group recsys pytest recsys/projects/bookrec/tests/` green; deterministic (seeded); no real data.
@@ -279,7 +283,14 @@ user's authorised choice, encoded as a reviewable Design §10 amendment (Phase 0
 cold-reader exclusion, `fit()` input + leakage test, default-`m`/limits, Opus dispatch, and teacher-notes pacing all
 specified. No open [self] blockers.
 
-<!-- [sol] / [glm] / [fable] appended here -->
+**[sol] — APPROVE WITH NITS.** All round-1 Must-Fix items confirmed genuinely resolved; no new blocker.
+1. `[FIXED v2]` **Should Fix** — `weighted_rating(..., *, m, ...)` made `m` mandatory despite requiring a default;
+   specify the concrete default in the signature. And the limit is **convergence toward `C`** (a contraction) — a
+   finite large `m` does not create exact ties, and id tie-breaking belongs to the ranker, not this id-free helper.
+   → folded: Phase B signature now `m: float = <default>` and marks the helper id-free/non-tie-breaking; the concept
+   text + Phase B test now assert monotone contraction toward `C`, not exact ties.
+
+<!-- [glm] / [fable] appended here -->
 
 
 ## Content Review
