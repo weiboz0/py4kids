@@ -205,6 +205,63 @@ def test_weighted_rating_handles_zero_exposure_safely() -> None:
     assert scores[0] == pytest.approx(0.3)  # v==0 -> the global rate C
 
 
+def test_weighted_rating_default_global_rate_shows_no_reversal() -> None:
+    # With the default global_rate=None the shrink target is the pair's OWN C = 9003/10003 ~ 0.90,
+    # which is NOT below R2=0.9, so the thin 3/3 item scores slightly ABOVE the deep 9000/10000 one.
+    # That is why the reversal test must pass an explicit low global_rate (0.2 < R2).
+    positives = np.array([3, 9000])
+    exposures = np.array([3, 10000])
+    scores = weighted_rating(positives, exposures)  # global_rate=None -> C ~ 0.90
+    assert scores[0] > scores[1]  # NO reversal at the pair's own high C
+
+
+def test_weighted_rating_zero_m_is_valid() -> None:
+    scores = weighted_rating(np.array([3.0, 0.0]), np.array([3.0, 5.0]), m=0.0, global_rate=0.2)
+    np.testing.assert_allclose(scores, np.array([1.0, 0.0]))  # m==0 -> raw rate
+
+
+def test_weighted_rating_rejects_negative_m() -> None:
+    with pytest.raises(ValueError, match="m must be >= 0"):
+        weighted_rating(np.array([1, 2]), np.array([2, 4]), m=-1.0, global_rate=0.2)
+
+
+def test_weighted_rating_rejects_non_finite_m() -> None:
+    with pytest.raises(TypeError, match="m must be finite"):
+        weighted_rating(np.array([1, 2]), np.array([2, 4]), m=float("inf"), global_rate=0.2)
+
+
+def test_weighted_rating_rejects_negative_exposures() -> None:
+    with pytest.raises(ValueError, match="exposures must be >= 0"):
+        weighted_rating(np.array([1, 2]), np.array([2, -4]), global_rate=0.2)
+
+
+def test_weighted_rating_rejects_negative_positives() -> None:
+    with pytest.raises(ValueError, match="positives must be >= 0"):
+        weighted_rating(np.array([-1, 2]), np.array([2, 4]), global_rate=0.2)
+
+
+def test_weighted_rating_rejects_positives_exceeding_exposures() -> None:
+    with pytest.raises(ValueError, match="positives must be <= exposures"):
+        weighted_rating(np.array([5, 2]), np.array([3, 4]), global_rate=0.2)
+
+
+def test_weighted_rating_rejects_non_finite_counts() -> None:
+    with pytest.raises(TypeError, match="must be finite"):
+        weighted_rating(np.array([float("nan"), 2.0]), np.array([3.0, 4.0]), global_rate=0.2)
+
+
+def test_weighted_rating_rejects_out_of_range_global_rate() -> None:
+    with pytest.raises(ValueError, match=r"global_rate must be in \[0, 1\]"):
+        weighted_rating(np.array([3, 9000]), np.array([3, 10000]), global_rate=2.0)
+    with pytest.raises(ValueError, match=r"global_rate must be in \[0, 1\]"):
+        weighted_rating(np.array([3, 9000]), np.array([3, 10000]), global_rate=-0.1)
+
+
+def test_weighted_rating_rejects_non_finite_global_rate() -> None:
+    with pytest.raises(TypeError, match="global_rate must be finite"):
+        weighted_rating(np.array([3, 9000]), np.array([3, 10000]), global_rate=float("nan"))
+
+
 # --- popularity-bias metrics: coverage and head-share ----------------------------------------
 
 

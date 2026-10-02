@@ -113,3 +113,69 @@ def test_seed_after_use_fails(tmp_path):
     )
     findings = milestone_hygiene_findings(tmp_path, BOOK)
     assert any("must precede first use" in finding for finding in findings)
+
+
+def test_unseeded_numpy_default_rng_fails(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [nbformat.v4.new_code_cell("import numpy as np\nrng = np.random.default_rng()\nx = rng.random()")],
+    )
+    findings = milestone_hygiene_findings(tmp_path, BOOK)
+    assert any("numpy default_rng() without a seed" in finding for finding in findings)
+
+
+def test_seeded_numpy_default_rng_passes(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [
+            nbformat.v4.new_markdown_cell("# Milestone demo"),
+            nbformat.v4.new_code_cell("import numpy as np\nrng = np.random.default_rng(0)\nx = rng.random()"),
+        ],
+    )
+    assert milestone_hygiene_findings(tmp_path, BOOK) == []
+
+
+def test_unseeded_numpy_legacy_global_fails(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [nbformat.v4.new_code_cell("import numpy as np\nx = np.random.random()")],
+    )
+    findings = milestone_hygiene_findings(tmp_path, BOOK)
+    assert any("numpy random without np.random.seed" in finding for finding in findings)
+
+
+def test_seeded_numpy_legacy_global_passes(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [
+            nbformat.v4.new_markdown_cell("# Milestone demo"),
+            nbformat.v4.new_code_cell("import numpy as np\nnp.random.seed(0)\nx = np.random.random()"),
+        ],
+    )
+    assert milestone_hygiene_findings(tmp_path, BOOK) == []
+
+
+def test_numpy_seed_after_use_fails(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [nbformat.v4.new_code_cell("import numpy as np\nx = np.random.random()\nnp.random.seed(0)")],
+    )
+    findings = milestone_hygiene_findings(tmp_path, BOOK)
+    assert any("np.random.seed(...) must precede first use" in finding for finding in findings)
+
+
+def test_non_random_numpy_is_not_flagged(tmp_path):
+    milestones = _milestones_dir(tmp_path)
+    _write(
+        milestones / "m1.ipynb",
+        [
+            nbformat.v4.new_markdown_cell("# Milestone demo"),
+            nbformat.v4.new_code_cell("import numpy as np\norder = np.argsort(np.array([3, 1, 2]))"),
+        ],
+    )
+    assert milestone_hygiene_findings(tmp_path, BOOK) == []

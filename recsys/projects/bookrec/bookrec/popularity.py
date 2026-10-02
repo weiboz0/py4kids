@@ -21,6 +21,7 @@ satisfy — rather than importing pandas.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Mapping
 from typing import Any
 
@@ -127,9 +128,20 @@ def weighted_rating(
       ``m`` (it approaches an exposure-weighted ``v·(R − C)`` order); exact all-equal ties arise
       only in the infinite-``m`` limit.
 
-    The default ``m = 10.0`` exhibits the reversal the unit teaches: with a realistic (low) global
-    rate, a 3-of-3 item scores **below** a 9000-of-10000 item — thin evidence is not quality.
+    The default ``m = 10.0`` exhibits the reversal the unit teaches **only when ``C < R2``** — the
+    realistic low-global-rate regime. For the canonical 3-of-3 (``R1 = 1.0``, thin) vs
+    9000-of-10000 (``R2 = 0.9``, deep) pair, passing a low ``global_rate`` such as ``0.2`` pulls the
+    thin item **below** the deep one (thin evidence is not quality) — which is why the unit test
+    passes ``global_rate=0.2``. With the **default** ``global_rate=None`` the shrinkage target is the
+    pair's *own* global rate ``C = (3 + 9000)/(3 + 10000) ≈ 0.90``, which is **not** below
+    ``R2 = 0.9``, so there is **no reversal**: the thin item scores slightly above the deep one.
     ``v == 0`` is handled safely (its score is ``C``).
+
+    Inputs are domain-checked and fail loudly rather than silently returning nonsense: ``m`` must be
+    finite and ``>= 0``; ``exposures`` must be ``>= 0`` elementwise; ``positives`` must satisfy
+    ``0 <= positives <= exposures`` elementwise; ``positives`` and ``exposures`` must be finite; and
+    a given ``global_rate`` must lie in ``[0, 1]``. Non-finite numbers raise :class:`TypeError`;
+    every other out-of-domain value raises :class:`ValueError`.
     """
     v = np.asarray(exposures, dtype=float)
     pos = np.asarray(positives, dtype=float)
@@ -137,11 +149,28 @@ def weighted_rating(
         raise ValueError(
             f"positives and exposures must have the same shape, got {pos.shape} and {v.shape}"
         )
+    m = float(m)
+    if not math.isfinite(m):
+        raise TypeError(f"m must be finite, got {m!r}")
+    if m < 0:
+        raise ValueError(f"m must be >= 0, got {m!r}")
+    if not np.isfinite(v).all() or not np.isfinite(pos).all():
+        raise TypeError("positives and exposures must be finite")
+    if (v < 0).any():
+        raise ValueError("exposures must be >= 0 elementwise")
+    if (pos < 0).any():
+        raise ValueError("positives must be >= 0 elementwise")
+    if (pos > v).any():
+        raise ValueError("positives must be <= exposures elementwise")
     if global_rate is None:
         total_v = float(v.sum())
         c = float(pos.sum()) / total_v if total_v > 0 else 0.0
     else:
         c = float(global_rate)
+        if not math.isfinite(c):
+            raise TypeError(f"global_rate must be finite, got {global_rate!r}")
+        if not 0.0 <= c <= 1.0:
+            raise ValueError(f"global_rate must be in [0, 1], got {global_rate!r}")
     fill = np.full(v.shape, c, dtype=float)
     rate = np.divide(pos, v, out=fill.copy(), where=v > 0)
     denom = v + m

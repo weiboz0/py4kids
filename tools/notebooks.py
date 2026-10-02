@@ -361,6 +361,99 @@ def _random_usage(parsed: list[tuple[int, ast.AST]]) -> tuple[list, list]:
     return seed_positions, use_positions
 
 
+def _numpy_random_attr(node, numpy_names: set[str]) -> str | None:
+    """If ``node`` is a ``<numpy>.random.<attr>`` attribute, return ``<attr>``; else ``None``.
+
+    Matches only the two-level attribute (``np.random.randint``), never the bare ``np.random``
+    module access nor non-random numpy such as ``np.array`` / ``np.argsort``.
+    """
+    if (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Attribute)
+        and node.value.attr == "random"
+        and isinstance(node.value.value, ast.Name)
+        and node.value.value.id in numpy_names
+    ):
+        return node.attr
+    return None
+
+
+def _numpy_random_usage(
+    parsed: list[tuple[int, ast.AST]],
+) -> tuple[list, list, list]:
+    """Return ``(seed_positions, use_positions, unseeded_generator_positions)`` for numpy RNG.
+
+    The numpy counterpart to :func:`_random_usage`; it fails closed in three ways:
+
+    * an **unseeded** ``default_rng()`` (called with no seed argument) — whether written
+      ``np.random.default_rng()`` or via a ``from numpy.random import default_rng`` name — is an
+      unseeded ``Generator`` and is recorded in ``unseeded_generator_positions``. A seeded
+      ``default_rng(0)`` (any literal/seed argument) is fine, as is a name later bound to it
+      (``rng = np.random.default_rng(0); rng.random()`` — ``rng`` is not a numpy module name, so it
+      is never a legacy use).
+    * a **legacy global** call ``np.random.<func>(...)`` (``random``/``rand``/``randint``/
+      ``choice``/``shuffle``/``normal``/...) is a *use* recorded in ``use_positions``; it must be
+      preceded by ``np.random.seed(<seed>)`` (``seed_positions``), the same seed-before-use rule the
+      stdlib detector enforces. ``seed`` and ``default_rng`` are not themselves uses.
+
+    Non-random numpy (``np.array``, ``np.argsort``, ...) and generator-method calls on a bound name
+    are never flagged, keeping false positives low.
+    """
+    numpy_names = {"numpy"}
+    default_rng_names: set[str] = set()
+    seed_positions = []
+    use_positions = []
+    unseeded_generator_positions = []
+    for cell_index, tree in parsed:
+        events = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.Import, ast.ImportFrom, ast.Call, ast.Attribute))
+        ]
+        events.sort(
+            key=lambda node: (
+                node.lineno,
+                node.col_offset,
+                0
+                if isinstance(node, (ast.Import, ast.ImportFrom))
+                else 1
+                if isinstance(node, ast.Call)
+                else 2,
+            )
+        )
+        for node in events:
+            if isinstance(node, ast.Import):
+                numpy_names.update(
+                    alias.asname or alias.name
+                    for alias in node.names
+                    if alias.name == "numpy"
+                )
+            elif isinstance(node, ast.ImportFrom):
+                if node.module == "numpy.random":
+                    default_rng_names.update(
+                        alias.asname or alias.name
+                        for alias in node.names
+                        if alias.name == "default_rng"
+                    )
+            elif isinstance(node, ast.Call):
+                position = (cell_index, node.lineno, node.col_offset)
+                func = node.func
+                is_default_rng = _numpy_random_attr(func, numpy_names) == "default_rng" or (
+                    isinstance(func, ast.Name) and func.id in default_rng_names
+                )
+                if is_default_rng:
+                    if not node.args and not node.keywords:
+                        unseeded_generator_positions.append(position)
+                    continue
+                if _numpy_random_attr(func, numpy_names) == "seed" and node.args:
+                    seed_positions.append(position)
+            elif isinstance(node, ast.Attribute):
+                attr = _numpy_random_attr(node, numpy_names)
+                if attr is not None and attr not in {"seed", "default_rng"}:
+                    use_positions.append((cell_index, node.lineno, node.col_offset))
+    return seed_positions, use_positions, unseeded_generator_positions
+
+
 def _solution_policy_findings(scope: str, notebook) -> list[str]:
     findings = []
     codes, parsed = _parse_code_cells(notebook)
@@ -388,6 +481,15 @@ def _solution_policy_findings(scope: str, notebook) -> list[str]:
             findings.append(_fail(scope, "solutions use random without random.seed(4)"))
         elif first_use is not None and min(seed_positions) >= first_use:
             findings.append(_fail(scope, "solutions: random.seed(4) must precede first use"))
+    numpy_seed, numpy_use, numpy_unseeded = _numpy_random_usage(parsed)
+    if numpy_unseeded:
+        findings.append(_fail(scope, "solutions use numpy default_rng() without a seed"))
+    if numpy_use:
+        first_numpy_use = min(numpy_use)
+        if not numpy_seed:
+            findings.append(_fail(scope, "solutions use numpy random without np.random.seed(...)"))
+        elif min(numpy_seed) >= first_numpy_use:
+            findings.append(_fail(scope, "solutions: np.random.seed(...) must precede first use"))
     return findings
 
 
@@ -1169,6 +1271,19 @@ def milestone_hygiene_findings(root: Path, book: str, unit: str | None = None) -
                 findings.append(_fail(scope, "milestone uses random without random.seed(4)"))
             elif first_use is not None and min(seed_positions) >= first_use:
                 findings.append(_fail(scope, "milestone: random.seed(4) must precede first use"))
+        numpy_seed, numpy_use, numpy_unseeded = _numpy_random_usage(parsed)
+        if numpy_unseeded:
+            findings.append(_fail(scope, "milestone uses numpy default_rng() without a seed"))
+        if numpy_use:
+            first_numpy_use = min(numpy_use)
+            if not numpy_seed:
+                findings.append(
+                    _fail(scope, "milestone uses numpy random without np.random.seed(...)")
+                )
+            elif min(numpy_seed) >= first_numpy_use:
+                findings.append(
+                    _fail(scope, "milestone: np.random.seed(...) must precede first use")
+                )
     return findings
 
 
