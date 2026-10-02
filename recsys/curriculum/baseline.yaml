@@ -56,6 +56,12 @@ library_methods:
 - size
 - to_dict
 - weighted_rating
+# Unit-2 stretch-exercise numpy/stdlib idioms (solutions.ipynb)
+- allclose
+- argsort
+- astype
+- isclose
+- round
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}
