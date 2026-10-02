@@ -43,6 +43,19 @@ library_methods:
 - read_text
 - split
 - values
+# --- Unit 2 (recsys-003) new calls: bookrec popularity/bias API + pandas/stdlib ---
+- PathRegistry
+- PopularityRetrievalPath
+- add
+- artifact_name
+- catalog_coverage
+- fit
+- head_ids_from_counts
+- head_share
+- register
+- size
+- to_dict
+- weighted_rating
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}
