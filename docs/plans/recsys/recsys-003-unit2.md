@@ -55,9 +55,10 @@ teacher notes; dual **concept∥project tracks**; **from-scratch→reveal-the-li
 - `bayesian-shrinkage` — the weighted / Bayesian-average quality estimate `score = (v·R + m·C)/(v + m)`: an item's
   own positive **rate** `R = positives/observed-train-rows`, its exposure `v`, the global positive rate `C`, and a
   prior strength `m` (pseudo-counts). Taught from first principles (why a 3-of-3 book must not be called better than a
-  9000-of-10000 book; `m→0` recovers the raw rate `R`; as `m` grows every score **contracts toward `C`** (equal only
-  in the limit), so the ranking flattens and the downstream ranker's id tie-break takes over — NOT a "global order").
-  A *quality* ranking, distinct from popularity.
+  9000-of-10000 book; `m→0` recovers the raw rate `R`; since `score = C + v·(R−C)/(v+m)`, as `m` grows every score
+  **contracts toward `C`** and the ranking approaches an **exposure-weighted `v·(R−C)` order** — exact all-equal ties
+  arise only in the infinite-`m` limit, so it is NOT a flat "global order" at any finite `m`). A *quality* ranking,
+  distinct from popularity.
   `kind: technique`, `category: techniques`.
 - `popularity-bias` — a popularity recommender concentrates exposure on head items and starves the tail; **measured**
   here via **catalog coverage** and **head-share** (defined precisely below); and the realisation that the `val`
@@ -84,16 +85,24 @@ checks `requires`+`practices` against baseline ∪ earlier-introduces; all four 
   in the head set.
 - **Catalog coverage** = fraction of **unique** catalog items that appear in at least one scored reader's top-k.
 - All computed over the **train**-exposure head and the SAME scored-reader set as the scoreboard (cold readers
-  excluded). Reference numbers to reproduce on the seed (k=10, 368 readers, cold excluded): random coverage 0.95 /
-  head-share 0.047; popularity-count coverage 0.007 / head-share 1.0 → the "popularity coverage < random" direction
-  is robust and is the tested assertion.
+  excluded). Reference numbers reproduced on the seed under THESE definitions (head = top 10% = 200 of 2000 items;
+  k=10; 368 scored readers; slots = 3680) — [fable] round 2 measured: **random coverage ≈ 0.84** (theory
+  `1−e^(−3680/2000) ≈ 0.841`) / **head-share ≈ 0.10**; **popularity-count coverage ≈ 0.007 / head-share = 1.0**. The
+  tested assertion is the **direction** (`popularity coverage ≪ random coverage`, ≈0.007 vs ≈0.84), which is robust;
+  lesson prose uses the ≈0.84/≈0.10 vs 0.007/1.0 figures, NOT the earlier wrong 0.95/0.047 (which came from a ~5%
+  head). Authors re-run and use whatever the seed prints.
 
 ### Empirical scoreboard expectations (bind for tests + lesson prose — fixes [sol]#5 / [fable]#1)
 Measured via `run_validation_scoreboard` on `recsys/data/generated/interactions.csv.gz`, k=10, cold excluded, 368
 readers: **random hit@10 ≈ 0.0136; popularity-count hit@10 ≈ 0.1196 (~9× floor); weighted-rating (shrunk rate)
-hit@10 ≈ 0 (m small) rising only toward ~0.03 at large m.** Root cause (`gen_interactions.py:150-160`): positive
-probability has no popularity term while exposure ∝ popularity, so corr(exposure, rate) ≈ 0.006 but corr(exposure,
-count) ≈ 0.906. The shipped path ranks by **count** (beats the floor); the weighted rating is taught as the quality
+hit@10 ≈ 0.003 at m→0, ≈ 0 for small m, then rising to a ≈0.0625 plateau for very large m** ([fable] round 2
+measured m=0→0.0027, m=1/5→0, m=20→0.008, m=100→0.033, m≥1000→0.0625). **Why the plateau is NOT ties:** for finite
+`m`, `score = C + v·(R−C)/(v+m)`, so as `m` grows the ranking does not collapse to ties — it approaches ordering by
+`v·(R−C)` (exposure-weighted "above-average-ness"), which re-introduces exposure and so climbs back to ≈0.0625
+(still far below the count path's 0.1196). Exact all-equal ties arise only in the infinite-`m` limit. Root cause
+(`gen_interactions.py:150-160`): positive probability has no popularity term while exposure ∝ popularity, so
+corr(exposure, rate) ≈ 0.13 but corr(exposure, count) ≈ 0.91. The shipped path ranks by **count** (beats the floor);
+the weighted rating is taught as the quality
 lens whose near-zero scoreboard is the popularity-bias-in-the-metric lesson. Authors RE-RUN these on the committed
 seed and assert the **direction** (count ≫ random; weighted-rating ≪ count), not brittle exact values.
 
@@ -109,14 +118,22 @@ Dispatch: an **Opus subagent** (`Agent`, `model: opus`) extends `tools/notebooks
 discovered and gated WITHOUT being a `project-*` map entry:
 - a `milestone_dirs`/`milestone_notebooks(root, book)` helper globbing `<book_dir>/projects/*/milestones/*.ipynb`
   (so `recsys/projects/bookrec/milestones/*.ipynb` is found); fail-closed (absent dir → no notebooks, no error);
+  **filter out dotfiles** (`name.startswith(".")`) so a stray `.ipynb_checkpoints`/hidden notebook is never swept
+  ([fable]#4 — the glob is otherwise clean: `.gitkeep`, `tests/`, `__pycache__`, `pyproject.toml` are not matched).
 - include milestone notebooks in **`exec-solutions`** (run top-to-bottom clean with fixed seeds — they are
-  demonstrations of the working system) and in **hygiene-check** (committed with cleared outputs +
-  `execution_count: null`, like solutions); they are NOT student-facing exercises (no `exercise-structure`/`noexec`
-  obligation) and NOT map entries (so `coverage`/`prereq`/capstone untouched);
+  demonstrations of the working system). **NOTE ([fable]#3):** there is no existing "solutions hygiene" hook to reuse
+  — `hygiene_findings` today only checks the per-kind STUDENT notebook (`exercises/checkpoint/brief`), and
+  `solutions.ipynb` is exec'd (+ concept-scanned) but not output-checked. So add a **NEW** check path that iterates
+  `milestone_notebooks()` and asserts **no stored `outputs` and `execution_count is None`** (committed cleared), plus
+  the solution **seed policy** (`_solution_policy_findings`-style: fixed seeds, no bare `from random import` /
+  unseeded RNG — they run clean with fixed seeds). Also add milestone notebooks to **`concept-scan`** ([fable]#6 —
+  they call `bookrec` APIs that must be declared in `baseline.yaml library_methods`, same as `solutions.ipynb`).
+  They are NOT student-facing exercises (no `exercise-structure`/`noexec` obligation) and NOT map entries (so
+  `coverage`/`prereq`/capstone and `project_dirs` are untouched — [fable] confirmed no interaction).
 - routed under the book's dependency group exactly as unit notebooks are.
 - group-free tests in `tests/` (e.g. `tests/test_milestone_notebooks.py`): a milestone notebook under the glob is
-  discovered + exec'd; a milestone notebook with stored outputs / non-null `execution_count` FAILs hygiene; absence
-  of a `milestones/` dir is clean.
+  discovered + exec'd; one with stored outputs / non-null `execution_count` FAILs the new check; one with an unseeded
+  RNG FAILs the seed policy; a dotfile notebook is ignored; absence of a `milestones/` dir is clean.
 **Verify:** new `tests/` green (group-free); `exec-solutions`/`hygiene-check` pick up a milestone notebook; no
 regression to existing unit/checkpoint/project discovery; `coverage-map`/capstone behaviour unchanged.
 
@@ -138,12 +155,15 @@ regression to existing unit/checkpoint/project discovery; `coverage-map`/capston
 Dispatch: an **Opus subagent** (`Agent`, `model: opus`) — SEPARATE from lesson/exercise authoring. Promote the
 foundation's `_popularity_fixture.py` into real shipped code:
 - `bookrec/popularity.py`: `PopularityRetrievalPath(BaseRetrievalPath)` (name `"popularity"`, version `"1"`).
-  `fit(interactions, catalog=None)` takes a **pandas DataFrame (or iterable of rows) with columns
-  `reader_id,item_id,split,label`** (per `gen_interactions.py:46 INTERACTION_COLUMNS`) and counts **only
-  `split=="train"` AND `label==1`** rows per catalog item → the popularity **count** score; `retrieve` returns the
-  top items by count, **reader-independent**, honouring `context["seen"]` exclusion and the
+  `fit(interactions, catalog=None)` takes an **iterable of row mappings with keys
+  `reader_id,item_id,split,label`** (per `gen_interactions.py:46 INTERACTION_COLUMNS`) — the shape a pandas
+  `DataFrame.to_dict("records")` and the generator's own rows both satisfy — and counts **only `split=="train"` AND
+  `label==1`** rows per catalog item → the popularity **count** score. **Keep the package numpy-only** ([fable]#5):
+  `bookrec` declares no pandas dependency (`bookrec/catalog.py` deliberately avoids it), so `fit` **duck-types** the
+  rows (no `import pandas` in the package); a notebook holding a DataFrame passes `df.to_dict("records")`. `retrieve`
+  returns the top items by count, **reader-independent**, honouring `context["seen"]` exclusion and the
   `Candidate`/finite-score/stable-int/tie-break contract via `_finish`; `load` restores from a fitted artifact.
-  Raise on an empty fit. (Fixes [fable]#2 — input type named; leakage enforced in code.)
+  Raise on an empty fit. (Fixes [fable]#2 — input shape named, no pandas dep; leakage enforced in code.)
 - `bookrec/popularity.py` also exposes `weighted_rating(positives, exposures, *, m: float = <default>,
   global_rate=None)` computing the `(v·R + m·C)/(v+m)` **quality** estimate (vectorised over the item arrays), with a
   **concrete default `m`** in the signature (chosen so the 3/3 vs 9000/10000 reversal is exhibited on the fixture —
@@ -172,13 +192,17 @@ revealing `bookrec`:
 1. **Count popularity** on **train** only (never val/test); show the heavy-tailed distribution (§6 signal); rank by
    count; score on Unit 1's `val` scoreboard **passing `cold_readers=cold["cold_readers"]` from
    `cold_partitions.json`** (fixes [fable]#4) — it beats the random floor (state and show ≈0.12 vs ≈0.014).
+   **Author note ([fable]#7):** on this seed cold readers have no `val` rows, so passing `cold_readers` is correct
+   hygiene but currently a no-op (369 non-cold `val` readers → 368 scored after the relevant-filter); the prose must
+   NOT claim it "removes N readers".
 2. **Is the most-read the best?** Derive the **weighted (Bayesian-shrinkage)** rating by hand (`(vR+mC)/(v+m)`;
    `m` pseudo-counts; the `m→0`/`m→∞` limits), reveal `weighted_rating`, re-rank → different books surface; then
    **honestly score the quality ranking on `val` → ≈0** and explain WHY: exposure in the holdout ∝ popularity, so the
    offline metric rewards recommending the already-popular — **popularity bias living in the metric.** (Taught here,
    so exercises may assess it.)
-3. **Measure popularity bias** — coverage/head-share for the count path vs the random floor (0.007/1.0 vs 0.95/0.047);
-   name the bias; bridge to personalisation (U4) and beyond-accuracy metrics (U13).
+3. **Measure popularity bias** — coverage/head-share for the count path vs the random floor (≈0.007/1.0 vs
+   ≈0.84/≈0.10 — use the seed's printed values, per Metric definitions); name the bias; bridge to personalisation
+   (U4) and beyond-accuracy metrics (U13).
 ASCII diagrams only (no box-drawing — handout PDF `pdf_glyphs`). Use `rank(exclude=seen)`. Reuse `bookrec`.
 **Verify:** `exec-lessons` clean under the group; non-empty markdown first cell; every `x.name(...)` method declared
 in `baseline.yaml library_methods` or a notebook `def` (`concept-scan`).
@@ -290,7 +314,27 @@ specified. No open [self] blockers.
    → folded: Phase B signature now `m: float = <default>` and marks the helper id-free/non-tie-breaking; the concept
    text + Phase B test now assert monotone contraction toward `C`, not exact ties.
 
-<!-- [glm] / [fable] appended here -->
+**[fable] — APPROVE WITH NITS** (empirically re-verified on the committed seed: count 0.1196 ≫ random 0.0136;
+quality ranking ≈0; `count coverage ≈0.007 ≪ random ≈0.84`; all round-1 [fable] Must/Should items confirmed
+resolved). Folded before authoring:
+1. `[FIXED v2.2]` **Should Fix** — the random coverage/head-share reference numbers (0.95/0.047) don't reproduce
+   under the plan's own top-10% head; measured ≈0.84/≈0.10. → Metric-definitions + Phase C corrected to ≈0.84/≈0.10.
+2. `[FIXED v2.2]` **Should Fix** — the `m→∞` "all-ties/id-ascending" mechanism is false; `score = C + v·(R−C)/(v+m)`
+   so large-`m` ranking approaches a `v·(R−C)` order (hit@10 plateau ≈0.0625, not ~0.03), ties only in the infinite
+   limit. → concept text + Empirical-expectations + Phase B test corrected (assert contraction toward `C`, report the
+   ≈0.0625 plateau).
+3. `[FIXED v2.2]` **Should Fix** — no "solutions hygiene" hook exists to reuse; milestone hygiene is a NEW code path
+   (no outputs + `execution_count is None` + seed policy); add milestone notebooks to `concept-scan` too. → Phase 1.
+4. `[FIXED v2.2]` **Nice** — dotfile `.ipynb` filter in the glob. → Phase 1.
+5. `[FIXED v2.2]` **Nice** — package is numpy-only; `fit()` must not require pandas. → Phase B duck-types row
+   mappings (`df.to_dict("records")`), no pandas import.
+6. `[FIXED v2.2]` **Nice** — milestone notebook added to `concept-scan`. → Phase 1.
+7. `[FIXED v2.2]` **Nice** — on this seed cold readers have no `val` rows, so `cold_readers` is a no-op; prose must
+   not claim it removes readers. → Phase C author note.
+No new assessed-but-untaught / project-first / buildout risk; the Design §10 amendment (Phase 0) correctly replaces
+the "single `projects/` entry's manifest grows per unit" sentence at `011-recsys-book.md:231-232`.
+
+<!-- [glm] appended here -->
 
 
 ## Content Review
