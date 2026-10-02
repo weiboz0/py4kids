@@ -13,8 +13,11 @@ The foundation (plan recsys-001) ships the stable substrate every later unit bui
 - :func:`~bookrec.evaluate.hit_rate_at_k` and friends — the evaluation scoreboard;
 - :func:`~bookrec.catalog.load_catalog` — load the gzip'd-CSV catalog slice.
 
-Real retrieval paths (popularity, BM25, item-item, matrix factorisation, two-tower, …) land in
-recsys-002+. A popularity path lives only as a test fixture here (a real one is Unit 2).
+Unit 2 (plan recsys-003) ships the first real learned/scored retrieval path:
+:class:`~bookrec.popularity.PopularityRetrievalPath` (count ranking), the
+:func:`~bookrec.popularity.weighted_rating` quality lens, and the popularity-bias metrics
+:func:`~bookrec.diversity.catalog_coverage` / :func:`~bookrec.diversity.head_share`. Further real
+retrieval paths (BM25, item-item, matrix factorisation, two-tower, …) land in later units.
 """
 
 from __future__ import annotations
@@ -22,7 +25,9 @@ from __future__ import annotations
 from bookrec.blend import blend
 from bookrec.catalog import Book, load_catalog
 from bookrec.data import generated_dir
+from bookrec.diversity import catalog_coverage, head_ids_from_counts, head_share
 from bookrec.evaluate import hit_rate_at_k, recall_at_k
+from bookrec.popularity import PopularityRetrievalPath, weighted_rating
 from bookrec.protocol import (
     Candidate,
     RetrievalPath,
@@ -39,12 +44,16 @@ __all__ = [
     "Candidate",
     "DuplicatePathError",
     "PathRegistry",
+    "PopularityRetrievalPath",
     "RandomRetrievalPath",
     "RetrievalPath",
     "ScoreboardResult",
     "blend",
     "calibrate_scores",
+    "catalog_coverage",
     "generated_dir",
+    "head_ids_from_counts",
+    "head_share",
     "hit_rate_at_k",
     "load_catalog",
     "order_candidates",
@@ -52,4 +61,5 @@ __all__ = [
     "recall_at_k",
     "run_validation_scoreboard",
     "search_catalog",
+    "weighted_rating",
 ]

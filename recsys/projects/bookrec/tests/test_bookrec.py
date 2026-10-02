@@ -7,11 +7,11 @@ import math
 from pathlib import Path
 
 import pytest
-from _popularity_fixture import PopularityPath
 from bookrec import (
     Candidate,
     DuplicatePathError,
     PathRegistry,
+    PopularityRetrievalPath,
     RetrievalPath,
     blend,
     calibrate_scores,
@@ -27,7 +27,9 @@ from bookrec.protocol import BaseRetrievalPath
 # --- the contract itself ---------------------------------------------------------------------
 
 
-def test_popularity_path_satisfies_the_retrieval_protocol(popularity: PopularityPath) -> None:
+def test_popularity_path_satisfies_the_retrieval_protocol(
+    popularity: PopularityRetrievalPath,
+) -> None:
     assert isinstance(popularity, RetrievalPath)
 
 
@@ -45,7 +47,7 @@ def test_candidate_rejects_non_finite_scores(score: float) -> None:
         Candidate(item_id=10, score=score, provenance="x")
 
 
-def test_retrieve_honours_k_exactly(popularity: PopularityPath) -> None:
+def test_retrieve_honours_k_exactly(popularity: PopularityRetrievalPath) -> None:
     assert len(popularity.retrieve(None, None, k=3)) == 3
     assert len(popularity.retrieve(None, None, k=99)) == 5  # only five distinct items
     for bad in (0, -1, 2.0, True):
@@ -53,23 +55,25 @@ def test_retrieve_honours_k_exactly(popularity: PopularityPath) -> None:
             popularity.retrieve(None, None, k=bad)  # type: ignore[arg-type]
 
 
-def test_retrieve_is_ordered_with_deterministic_id_tie_break(popularity: PopularityPath) -> None:
+def test_retrieve_is_ordered_with_deterministic_id_tie_break(
+    popularity: PopularityRetrievalPath,
+) -> None:
     ids = [c.item_id for c in popularity.retrieve(None, None, k=5)]
     # 10 (4) > 20 (3) > [30, 40 tie at 2 -> id order] > 50 (1)
     assert ids == [10, 20, 30, 40, 50]
 
 
-def test_retrieve_carries_path_provenance(popularity: PopularityPath) -> None:
+def test_retrieve_carries_path_provenance(popularity: PopularityRetrievalPath) -> None:
     assert {c.provenance for c in popularity.retrieve(None, None, k=5)} == {"popularity"}
 
 
 def test_retrieve_before_fit_fails() -> None:
     with pytest.raises(RuntimeError):
-        PopularityPath().retrieve(None, None, k=1)
+        PopularityRetrievalPath().retrieve(None, None, k=1)
 
 
 def test_path_owns_one_versioned_artifact() -> None:
-    assert PopularityPath(version="2").artifact_name() == "popularity-v2"
+    assert PopularityRetrievalPath(version="2").artifact_name() == "popularity-v2"
 
 
 # --- score calibration -----------------------------------------------------------------------
@@ -95,7 +99,7 @@ def test_order_candidates_is_pure_and_deterministic() -> None:
 # --- registry --------------------------------------------------------------------------------
 
 
-def test_registry_registers_and_retrieves(popularity: PopularityPath) -> None:
+def test_registry_registers_and_retrieves(popularity: PopularityRetrievalPath) -> None:
     registry = PathRegistry()
     registry.register(popularity)
     assert "popularity" in registry
@@ -104,17 +108,17 @@ def test_registry_registers_and_retrieves(popularity: PopularityPath) -> None:
     assert len(registry) == 1
 
 
-def test_registry_rejects_duplicate_name(popularity: PopularityPath) -> None:
+def test_registry_rejects_duplicate_name(popularity: PopularityRetrievalPath) -> None:
     registry = PathRegistry()
     registry.register(popularity)
     with pytest.raises(DuplicatePathError):
-        registry.register(PopularityPath())
+        registry.register(PopularityRetrievalPath())
 
 
 def test_registry_rejects_duplicate_artifact_ownership() -> None:
     registry = PathRegistry()
-    registry.register(PopularityPath(name="pop-a", version="1"))
-    clash = PopularityPath(name="pop-b", version="1")
+    registry.register(PopularityRetrievalPath(name="pop-a", version="1"))
+    clash = PopularityRetrievalPath(name="pop-b", version="1")
     clash.artifact_name = lambda: "pop-a-v1"  # type: ignore[method-assign]
     with pytest.raises(DuplicatePathError):
         registry.register(clash)
@@ -304,7 +308,7 @@ def test_rank_excludes_seen_and_bounds_n() -> None:
         rank(pool, n=-1)
 
 
-def test_hit_rate_and_recall_at_k(popularity: PopularityPath) -> None:
+def test_hit_rate_and_recall_at_k(popularity: PopularityRetrievalPath) -> None:
     recs = popularity.retrieve(None, None, k=5)  # ids [10, 20, 30, 40, 50]
     assert hit_rate_at_k(recs, relevant={40}, k=5) == 1.0
     assert hit_rate_at_k(recs, relevant={40}, k=2) == 0.0
@@ -321,7 +325,7 @@ def test_mean_hit_rate_over_queries() -> None:
     assert mean_hit_rate_at_k([], k=2) == 0.0
 
 
-def test_end_to_end_popularity_blend_rank_evaluate(popularity: PopularityPath) -> None:
+def test_end_to_end_popularity_blend_rank_evaluate(popularity: PopularityRetrievalPath) -> None:
     registry = PathRegistry()
     registry.register(popularity)
     per_path = {path.name: path.retrieve(None, None, k=5) for path in registry}

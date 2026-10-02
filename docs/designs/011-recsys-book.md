@@ -228,8 +228,17 @@ It is an **importable package** at `recsys/projects/bookrec/bookrec/` (the `book
 the `RetrievalPath` registry, blend, rank, evaluation), installed via the `recsys` dependency group as an editable
 local package so unit notebooks `import bookrec` under CI (the exec checks run from the unit dir; the package is on
 the path via the group install).
-Each unit's project milestone adds or extends a module and ships a **milestone notebook**; the single `projects/` entry's
-`manifest.yaml` grows its concept mapping per unit.
+Each unit's project milestone **adds or extends a `bookrec` module and ships a milestone notebook** at
+`recsys/projects/bookrec/milestones/unit-NN-<slug>.ipynb` — a runnable, fixed-seed demonstration that integrates the
+unit's deliverable into the growing system. Milestone notebooks are under the authoritative gate (discovered + run by
+`exec-solutions`, hygiene/seed/concept-scan checked by dedicated tooling) **without being `projects/project-*` map
+entries**: the single `projects/` *registry* entry is treated by the tooling as the **capstone**
+(`practice_findings` requires every concept practised by a non-capstone entry), so it is CI-feasible only once the
+book is concept-complete and is therefore **authored only at the Unit-14 capstone**. (The growing project is thus the
+`bookrec` package + its per-unit milestone notebooks; the one `projects/` map entry is the capstone. Resolved
+2026-10-02 per recsys-003 — supersedes the earlier "single `projects/` entry's manifest grows per unit" wording,
+which collided with the capstone rule. Unit 1 is grandfathered: its milestone shipped as package code before this
+convention.)
 
 ## 11. Governance amendments (user-authorized precondition — 2026-09-29)
 
@@ -328,6 +337,11 @@ scaffolds the book + `baseline.yaml` + slice script + synthetic generator + the 
 `recsys-002+`, per design 008's one-design-then-1–2-units cadence.
 
 ## 14. Revision history
+
+- **v3 (2026-10-02, via recsys-003):** §10 project-packaging amended — the growing project is the `bookrec` package
+  + per-unit milestone notebooks (gated via dedicated tooling, not as `projects/project-*` map entries); the single
+  `projects/` registry entry is the Unit-14 capstone. Supersedes the "single `projects/` entry's manifest grows per
+  unit" wording, which collided with the tooling capstone rule. Reviewed under recsys-003's 4-way plan-review gate.
 
 - **v1 (2026-09-29):** created. Two-part book, dual concept∥project tracks, multi-path retrieve-then-rank project
   over the real `books` catalog slice + synthetic interactions, numpy→library tooling with PyTorch/FAISS.

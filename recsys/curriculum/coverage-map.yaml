@@ -1,6 +1,6 @@
 map_version: 1
-# This remains `buildout: true` while its three lessons are below the whole-book budget.
-# A later Part-1 plan removes buildout when the accumulated entries first reach that budget.
+# This remains `buildout: true` while the accumulated lessons (now six: Unit 1's 3 + Unit 2's 3) are below the
+# whole-book lesson budget (30). A later plan removes buildout when the accumulated entries first reach that budget.
 entries:
 - id: unit-01-problem-and-scoreboard
   kind: unit
@@ -9,3 +9,10 @@ entries:
   introduces: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]
   requires: []
   practices: []
+- id: unit-02-popularity-and-bias
+  kind: unit
+  title: "Popularity and weighted baselines"
+  lessons: 3
+  introduces: [popularity-ranking, bayesian-shrinkage, popularity-bias]
+  requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]
+  practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]

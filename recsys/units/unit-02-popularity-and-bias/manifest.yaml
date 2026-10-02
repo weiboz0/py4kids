@@ -1,0 +1,9 @@
+id: unit-02-popularity-and-bias
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [popularity-ranking, bayesian-shrinkage, popularity-bias]
+  requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]
+  practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]
