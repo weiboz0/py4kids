@@ -11,8 +11,8 @@ By the end of this unit students can:
   `m` as a prior pseudo-count, and read the algebra `score = C + v·(R−C)/(v+m)` to predict the limits
   (`m→0 ⇒ R`; as `m` grows the scores contract toward the global rate `C`).
 - Distinguish **popularity** (what is consumed most) from **quality** (the per-item positive rate), and explain why,
-  on a holdout whose exposure is popularity-weighted (taste-aware, but still dominated by popularity), a
-  quality-first ranking scores far below popularity (barely clearing the floor) — **the offline
+  on a holdout whose exposure is popularity-weighted (taste-aware, but with a popularity factor riding along), a
+  quality-first ranking that ignores both popularity and the reader scores far below popularity — **the offline
   metric encodes popularity bias.**
 - **Measure** popularity bias directly with **catalog coverage** and **head-share**, and articulate why a recommender
   that wins hit-rate by serving only the head is still a poor system — the motivation for personalisation (Unit 4)
@@ -32,8 +32,8 @@ sittings** (advanced, applied; the assumed baseline is in `curriculum/baseline.y
    split, see the heavy tail, build/fit/register `PopularityRetrievalPath`, and score it on `val` against the random
    floor (≈0.11 vs ≈0.012). Exercises 1–3.
 2. **Sitting 2 (~30–40 min) — popular vs good.** §2: derive the weighted/Bayesian-shrinkage rating by hand, reveal
-   `bookrec.weighted_rating`, re-rank by quality, and **honestly score the quality ranking on `val`** — the near-zero
-   result and the "popularity bias lives in the metric" discussion. This is the conceptual heart; do not rush it.
+   `bookrec.weighted_rating`, re-rank by quality, and **honestly score the quality ranking on `val`** — the
+   far-below-popularity result and the "popularity bias lives in the metric" discussion. This is the conceptual heart; do not rush it.
    Exercises 4–5.
 3. **Sitting 3 (~20 min, + Challenges) — measuring the bias.** §3: catalog coverage and head-share for popularity vs
    random; name the bias and bridge to Units 4 and 13. Exercise 6 and the two stretch Challenges.

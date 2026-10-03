@@ -26,8 +26,9 @@ plan recsys-004 implementation note 3, the quality-vs-floor relationship is **se
 point instead:
 
 - Ranking by positive **rate** ignores BOTH popularity AND the reader, so it lands **far below
-  popularity** — on this seed ~0.016 (hit@10), only ~1.3x the random floor and roughly 7x below
-  the count path's ~0.11.
+  popularity** — on this seed ~0.016 (hit@10), roughly 7x below the count path's ~0.11. Its
+  position relative to the random floor is seed-dependent and is deliberately **not** pinned in
+  the prose.
 - The assert `quality_hit < random_board.hit_rate_at_k` was **dropped** (not seed-robust) and
   replaced with `quality_hit < 0.5 * pop_board.hit_rate_at_k` (quality loses badly to popularity).
 - The popularity-bias-in-the-metric lesson is preserved, but the holdout is now described as
