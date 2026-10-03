@@ -312,7 +312,57 @@ weekend-skip).
   keywords as a latent-correlated observable; implicit-feedback learned MF; seed-dependent quality-floor) are sound,
   documented, and left for [sol]/[fable] scrutiny. No [self] blockers.
 
-<!-- [sol] / [fable] appended -->
+### Review 2 — sol (2026-10-03)
+- **Verdict**: REJECT (harness hierarchy confirmed sound by direct measurement — floor 0.0108, pop 0.108, genre
+  0.170, BM25 0.158, CF 0.252, MF 0.264, affinity 0.408, propensity 0.522; β→0 and α=3 genuinely break gates;
+  keyword is a latent observable not an oracle; catalog/cold unchanged — but real bugs in the re-validation + harness).
+1. `[OPEN]` **Must Fix** — U1 reader-0 relevance is WRONG: val positives `{205,518,1249}` are ALL in `seen`, so
+   scoreboard relevance (`val−seen`) is EMPTY and reader 0 is not an eligible scored reader. `solutions.ipynb:175` +
+   `ERRATA.md:11` mislabel the raw val set as relevant. Pick an ELIGIBLE reader (nonempty `val−seen`) and compute
+   `relevant = val_positive − seen`.
+2. `[OPEN]` **Must Fix** — U2 rewrite still (a) pins quality "barely clearing the floor" (violates flag 3 — floor
+   relationship is seed-dependent, must NOT be pinned) and (b) claims exposure is "still dominated by popularity",
+   but exposure-logit component std is popularity 0.908 vs taste 2.5 (~7.6× variance) — exposure is TASTE-dominated
+   by variance; the correct claim is **popularity-WEIGHTED**. Remove the above-floor prediction and the
+   popularity-dominance claim; keep "quality far below popularity" + "popularity-weighted holdout".
+   `exercises.ipynb:77`, `lesson.ipynb:157`, `solutions.ipynb:182`, `teacher-notes.md:14`, milestone `:108`.
+3. `[OPEN]` **Should Fix** — `_reference_recommenders.py:95` MF negative sampling draws from the whole catalog
+   (287/53030 "negatives" are known positives); legitimate+conservative but not correct implicit-feedback sampling
+   as documented. Sample from each reader's unobserved complement and re-validate the hierarchy.
+4. `[OPEN]` **Should Fix** — `gen_catalog.py:193` keyword manifest records `{"seed": item_ids.shape[0]}` = 2000, not
+   the real seed (20260930) — false provenance. Fix.
+5. `[OPEN]` **Nice to Have** — `test_unit02.py:82,309` comments retain old figures (~0.12/~0.014, ~0.007/~0.84);
+   refresh (asserts already fine).
+
+### Review 3 — fable (2026-10-03)
+- **Verdict**: APPROVE WITH NITS (full empirical re-measurement; no Must-Fix of its own, but corroborates [sol]).
+  Confirmed: hierarchy holds (pop 10× floor, genre 15.7×, BM25 14.6×, CF 23.3×, MF 24.4×, affinity 37.7×, propensity
+  48×; quality 0.15× pop); teeth real (β=0 → 5 gates red, α=3 → 2 red); `test_signal_recoverability.py` 17 passed +
+  wired into ci-local; `catalog.csv.gz`/`cold_partitions.json` byte-identical to main; learned-MF legitimately learns
+  co-occurrence (shuffled-pairing control drops it to ≈popularity), NOT the oracle; keyword latent tokens recover a
+  genuine latent-correlated observable. **Corroborates [sol]#1**: its own measured reader-0 `seen` contains
+  205/518/1249, so `val−seen` is empty — the U1 relevance pin is wrong.
+1. `[OPEN]` **Should Fix** — stale "near zero" prose survived the rewrite: milestone cell-6 heading "scores near zero
+   on val" (`:108`), teacher-notes.md:35 "the near-zero result" (+ `why_near_zero` var name, cosmetic). → "far below
+   popularity".
+2. `[OPEN]` **Should Fix** — floor relationship IS still pinned (flag 3 violation): lesson md22 + solutions Ex5
+   "~1.3× the random floor", exercises Ex5 "barely clears the random floor", teacher-notes.md:15. → "lands near the
+   floor"/drop the figure. (merges with [sol]#2.)
+3. `[OPEN]` **Should Fix** — Design §6 says affinity content term is "(genres + keywords)"; implementation is latent
+   + feature_weight·genre with keywords a latent-correlated OBSERVABLE. Amend §6 to match (keywords not an affinity
+   input). → fixed inline in Phase 0 design edit.
+4. `[OPEN]` **Should Fix (record for recsys-005)** — keyword BM25 (0.158) does NOT beat genre cosine (0.170) and its
+   latent-pole tokens are redundant with genre on hit@10 (`keyword_genre_scale=3.0` dominates). Not a gate breach
+   (≥2× floor + <CF hold). Either lower `keyword_genre_scale` + re-validate so keywords carry independent lexical
+   signal, or Unit 3 must frame lexical as COMPLEMENTARY to genre (not "beats genre"). Record measurement.
+5. `[OPEN]` **Should Fix** — no test exercises `bookrec.load_keywords`; add a round-trip (2000 rows, tokens ⊆
+   vocabulary) + missing-column/duplicate-id raise cases.
+6. `[OPEN]` **Nice** — harness `random` scorer uses one shared vector (reported 0.022 ≈ 2× analytic floor, a
+   single-draw artifact); draw per reader or drop the key so logs don't mislead. Gates already use the analytic floor.
+7. `[OPEN]` **Nice** — lesson md22 "anti-correlated with the holdout" overstates (quality ≥ floor this seed) →
+   "barely correlated". MF ≥ content is the thinnest gate (note MF hyperparameters are part of the contract).
+
+### Content-review outcome (round 1): **NOT consensus — [sol] REJECT + [fable] APPROVE WITH NITS.** Harness/data confirmed sound; real bugs in the re-validation (U1 relevance, U2 prose) + harness (MF neg-sampling, manifest seed, random key, missing load_keywords test). One fix pass → re-review.
 
 ## Post-Execution Report
 

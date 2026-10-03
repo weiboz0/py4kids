@@ -140,8 +140,10 @@ a new capability — designed from the start to admit those, so no rewrite is fo
 
   **Taste-aware exposure (amended 2026-10-03, recsys-004).** The observation process is NOT popularity-only: a reader
   is exposed to item `i` with probability ∝ `popularity(i)^α · exp(β · z_u(affinity(reader, i)))`, where `affinity`
-  combines the latent taste dot-product and a content term (genres + keywords), and `z_u` is per-reader
-  standardisation of affinity (so `β` is scale-free). Positives arise among exposed items; author-following recurs
+  combines the latent taste dot-product and a **genre** content term, and `z_u` is per-reader standardisation of
+  affinity (so `β` is scale-free). The per-book **keywords** are a *latent-correlated observable* (generated from the
+  book's latent factors + genres), consumed by the lexical/content retrieval paths (U3/U7) — they are NOT an input to
+  the exposure affinity (keeping content retrieval strictly below collaborative/latent on the scoreboard). Positives arise among exposed items; author-following recurs
   across sessions. **Design invariant:** popularity remains a strong baseline, but content (U3), collaborative (U4),
   and latent (U5) signals are each **recoverable** and beat popularity on the `val` scoreboard — enforced by a
   committed **recoverability harness** (per-technique ratio+margin gates against the analytic random floor). A pure
