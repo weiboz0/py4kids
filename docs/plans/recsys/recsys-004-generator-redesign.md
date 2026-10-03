@@ -364,6 +364,24 @@ weekend-skip).
 
 ### Content-review outcome (round 1): **NOT consensus — [sol] REJECT + [fable] APPROVE WITH NITS.** Harness/data confirmed sound; real bugs in the re-validation (U1 relevance, U2 prose) + harness (MF neg-sampling, manifest seed, random key, missing load_keywords test). One fix pass → re-review.
 
+### Fix pass (commits `20920da` code/harness, `f22aaaa` U1/U2 content) — dispositions
+- **sol#1** `[FIXED]` — U1 Ex5 now uses eligible reader 1 (`relevant = val_positives − seen = {195,460,830}`; 823 is a
+  re-read removed); reader-0 ineligibility explained; ERRATA corrected.
+- **sol#2 / fable#1/#2/#7** `[FIXED]` — U2 exposure reframed "popularity-WEIGHTED" (not dominated: taste var 7.6× pop);
+  floor-pinning removed (quality "far below popularity", position vs floor not stated); "near zero"→"far below
+  popularity"; "anti-correlated"→"barely correlated". Robust assert `quality<0.5×pop` kept. Grep-clean across
+  lesson/exercises/solutions/teacher-notes/milestone/ERRATA.
+- **sol#3** `[FIXED]` — learned-MF negatives now from each reader's unobserved complement; MF=0.274, hierarchy holds.
+- **sol#4 / fable#6** `[FIXED]` — keyword manifest records the real `config.seed`; zero data-byte change.
+- **sol#5** `[FIXED]` — `test_unit02.py` stale comments refreshed.
+- **fable#3** `[FIXED]` — Design §6 amended: keywords are a latent-correlated observable, not an affinity input.
+- **fable#5** `[FIXED]` — `test_keywords.py` added (round-trip + missing-column + duplicate-id).
+- **fable#6 (random key)** `[FIXED]` — harness `random` scorer now draws per-reader (gates use the analytic floor).
+- **fable#4** `[WONTFIX→recsys-005]` — keyword BM25 ≈ genre on hit@k (redundant; not a gate breach); Unit 3 frames
+  lexical as complementary or re-tunes `keyword_genre_scale`. Recorded.
+- **fable#9** `[NOTE]` — MF≥content is the thinnest gate; MF hyperparameters are part of the recoverability contract.
+108 harness/generator + 35 U1/U2 tests green; recsys checks PASS. Full `ci-local` re-run in progress.
+
 ## Post-Execution Report
 
 <!-- appended before ship -->
