@@ -19,11 +19,11 @@ Updated figures (verified on the committed seed, k=10, cold readers excluded):
 
 ### Quality-vs-floor correction (the substantive content fix)
 
-The old narrative claimed the positive-rate "quality" ranking scores **below** the random
-floor (~0.005 vs ~0.014). Under the taste-aware generator that is no longer true and, per
-plan recsys-004 implementation note 3, the quality-vs-floor relationship is **seed-dependent**
-(sometimes just above, sometimes just below the floor). The corrected lesson makes the robust
-point instead:
+The old narrative pinned the positive-rate "quality" ranking's hit@10 against the random
+floor (~0.005 vs ~0.014). Under the taste-aware generator that pin is no longer seed-robust —
+per plan recsys-004 implementation note 3 the quality-vs-floor relationship **varies seed to
+seed** — so the corrected lesson states no floor-relative position and makes the robust point
+instead:
 
 - Ranking by positive **rate** ignores BOTH popularity AND the reader, so it lands **far below
   popularity** — on this seed ~0.016 (hit@10), roughly 7x below the count path's ~0.11. Its
