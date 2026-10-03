@@ -279,6 +279,21 @@ floor + margins + min-reader counts; CF-recoverability tuning latitude) and the 
 
 ### Plan-review outcome: **CONSENSUS (3-of-4; [glm] weekend-skip)** — [self]/[sol]/[fable] APPROVE. Mechanism empirically confirmed (α=0.75,β=2.5). Cleared to implement (Phase 0 → F).
 
+## Implementation notes (Phases A–D done, commit `34f22dd`; binding on Phase E + content gate)
+Final regime: α=0.75, β=2.5 (z-scored affinity), `latent_noise`=0.4, `author_exposure_recur`=0.3, default sessions.
+All harness gates pass on 3 seeds (popularity 6.7–10× floor; content 12–16×; CF 2.2–2.9× pop; learned MF 2.4–3.1×,
+≥content; affinity oracle 3.8–4.7×; propensity ceiling ≫ all; quality weak; coverage/head-share; kw-latent>genre-ctl).
+`catalog.csv.gz` + `cold_partitions.json` BYTE-IDENTICAL to main (sha-verified) → U1 search ids + cold sets survive.
+105 tests green. Reviewer flags carried to the content gate / Phase E:
+1. **Affinity = latent·latent + feature_weight·genre** (keywords are a latent-correlated *observable* generated from
+   z-scored latent poles + genre, NOT a third affinity axis) — keeps the `content<CF` ordering; keyword BM25 still
+   recovers taste at 14–16× floor. Content-gate reviewers should eye that this matches design §6's intent.
+2. **Learned MF = implicit training** (train positives + uniformly-sampled negatives), NOT logistic on the full log
+   (which learned "popular=negative" and scored below floor). Documented, still "trained on observed interactions."
+3. **Quality-vs-floor is SEED-DEPENDENT** (seed …32: 0.5× floor = below; others ~1–2× floor). The harness asserts
+   only `quality < 0.5× popularity` (robust). **Phase E's U2 rewrite must therefore say quality lands "far below
+   popularity" and NOT pin whether it is above/below the random floor** (that detail is not seed-robust).
+
 ## Content Review
 
 <!-- appended pre-PR (code/data review: no student content ships; reviewers verify recoverability + U1/U2 re-validation) -->
