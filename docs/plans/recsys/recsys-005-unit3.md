@@ -58,15 +58,18 @@ keyword artifact).
   `log`/`log1p`/`argpartition`/`nonzero`, `np.linalg.norm`→`norm`, bookrec lexical API; `Counter`/`defaultdict` are
   Name calls, not required).
 - `unit-03-lexical-retrieval/manifest.yaml`; `syllabus.md` arc row `| 3 | ... | unit | 3 | <hook> |`; rebuild PDF.
-**Verify:** curriculum checks green; buildout holds (12<30).
+**Verify:** curriculum checks green; buildout holds (9<30).
 
 ### Phase B — `bookrec` lexical code (Opus subagent; numpy-only, no pandas in the package)
 `bookrec/lexical.py`: a document builder from `load_keywords` (tokenize the keyword bag per book); `BM25Index`
 (precompute `df`/`idf`/doc-lengths/`avgdl`; BM25 score vs a query-token multiset; `k1`~1.2, `b`~0.75) + a
 `tfidf_matrix`/`cosine_similarity` helper for the from-scratch step; `LexicalRetrievalPath(BaseRetrievalPath)`
-(name `"lexical"`, version `"1"`): **`fit(interactions, catalog=None, *, keywords=None)`** — keyword-only kwarg so
-the signature stays substitutable for the `RetrievalPath.fit(interactions, catalog=None)` protocol ([sol]#1/[fable]#3);
-raise on `keywords` None/empty; builds the BM25 index from the keyword text. `retrieve(reader_id, context, k)` forms
+(name `"lexical"`, version `"1"`): the path **owns its keyword corpus** — provided at CONSTRUCTION
+(`LexicalRetrievalPath(keywords: Mapping[int, str])`, mirroring how `RandomRetrievalPath` takes `item_ids`), so
+**`fit(interactions, catalog=None)` conforms EXACTLY to the `RetrievalPath` protocol and is fully substitutable** (a
+generic caller can `path.fit(interactions, catalog)` with no extra args — [sol] round-2 #1). `fit` builds the BM25
+index from the constructor-provided keyword corpus (it may ignore `interactions`; a content path indexes the catalog
+text). Raise at construction if `keywords` is empty. `retrieve(reader_id, context, k)` forms
 the query from the keyword tokens of `context["seen"]` books, scores by BM25, excludes `seen`, top-k via `_finish`;
 empty `seen` → `[]`. **`load(artifact)`** restores the fitted **index object** (the concrete artifact: item ids,
 vocabulary, per-doc tf arrays, `df`/`idf`, doc-lengths/`avgdl`). Export from `__init__`. Tests (routed): hand-checked
@@ -113,7 +116,7 @@ when would it matter?** — because books repeat terms only lightly; it would ma
 
 ### Phase G — verification (named)
 `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN with Units 1–3 + the Unit-3 milestone AND
-`bash scripts/pre-merge-guard.sh --pr` OK. buildout holds (12).
+`bash scripts/pre-merge-guard.sh --pr` OK. buildout holds (9).
 
 ## Out of scope
 No CF (U4); no MF/neural/embeddings (U5/U7); no generator/`keyword_genre_scale` change (recorded, deferred); no
@@ -127,7 +130,7 @@ Phase G is this plan's named verification phase.
 ### Round 1 (on v1)
 
 **[self] — APPROVE.** Concepts globally unique; coverage entry closes (Unit-1 ids; `practices∩introduces=∅`; no
-project map entry → capstone rule inert); buildout holds (12<30); named verification Phase G; project-first;
+project map entry → capstone rule inert); buildout holds (9<30); named verification Phase G; project-first;
 from-scratch→library; ≥6/≥2-stretch/≥3-asserts; teacher-notes; milestone. Feasibility is now real (recsys-004
 keyword text: BM25 ~0.158 ≈ 14× floor, with genuine tf repetition + length variation so `k1`/`b` are meaningful);
 framing is honest per the recsys-004 follow-up (lexical beats the floor + is a content candidate source, NOT "beats
@@ -174,7 +177,14 @@ beats TF-IDF cosine" ([fable]#1); floor-beating test pinned as ≥5× floor / >p
 ([fable]#2); stretch `k1→0` binary mirror + teacher-notes k1-light discussion ([fable]#4); baseline methods incl.
 `argpartition`/`norm`/`log1p`/`load_keywords` ([fable]#5). No [self] blockers.
 
-<!-- [sol] round 2 appended -->
+**[sol] — REJECT** (round 2): findings 2 (artifact/round-trip) + 4 ([fable] BM25 honesty) resolved; two left →
+**v2.1**:
+1. `[FIXED v2.1]` **Must** — keyword-only kwarg raising on None still strengthened the precondition (a generic
+   `fit(interactions, catalog=None)` caller couldn't fit it). → keywords now provided at CONSTRUCTION
+   (`LexicalRetrievalPath(keywords=...)`); `fit(interactions, catalog=None)` conforms exactly / fully substitutable.
+3. `[FIXED v2.1]` **Should** — stray "12" lesson-count in Phase A-verify + Phase G → "9".
+
+<!-- [sol] round 3 appended -->
 
 ## Content Review
 
