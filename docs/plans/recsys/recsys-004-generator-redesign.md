@@ -296,7 +296,23 @@ All harness gates pass on 3 seeds (popularity 6.7–10× floor; content 12–16�
 
 ## Content Review
 
-<!-- appended pre-PR (code/data review: no student content ships; reviewers verify recoverability + U1/U2 re-validation) -->
+ci-local ALL GREEN (recoverability harness + updated generator invariants + U1/U2 regenerated exec + routed recsys
+suite + recsys PDFs; other books' editions correctly SKIP as unchanged; pre-merge-guard OK). 3-way gate ([glm]
+weekend-skip).
+
+### Review 1 — self (2026-10-03)
+- **Verdict**: APPROVE. The implementation matches the consensus plan: all Phase-C recoverability gates pass on 3
+  seeds (popularity 6.7–10× floor; content 12–16×; CF 2.2–2.9× pop; learned MF 2.4–3.1×, ≥content; affinity oracle
+  3.8–4.7×; propensity ceiling ≫ all; quality weak; coverage/head-share; kw-latent>genre-ctl), guard-has-teeth
+  asserted (β→0 and α↑ both fail). `catalog.csv.gz`/`cold_partitions.json` byte-identical to main (sha-verified) so
+  U1 search-id/(5,5)/cold pins survive. U1/U2 re-validated (500 readers, floor 0.012, popularity 0.108≈9×, quality
+  0.016≈7× below pop); U2 quality narrative correctly reframed to "far below popularity" without pinning the
+  seed-dependent floor relationship, exposure prose qualified to "popularity-weighted". 105 harness/generator +
+  35 U1/U2 tests green; no test contract weakened. The 3 implementation flags (affinity = latent+genre with
+  keywords as a latent-correlated observable; implicit-feedback learned MF; seed-dependent quality-floor) are sound,
+  documented, and left for [sol]/[fable] scrutiny. No [self] blockers.
+
+<!-- [sol] / [fable] appended -->
 
 ## Post-Execution Report
 
