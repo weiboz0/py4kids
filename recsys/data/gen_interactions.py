@@ -29,7 +29,13 @@ import numpy as np
 
 try:  # script vs. package-relative import
     from _common import GENERATED_DIR, DatasetConfig, Manifest, checksum, write_gzip_csv
-    from gen_catalog import Catalog, generate_catalog, write_catalog
+    from gen_catalog import (
+        Catalog,
+        generate_catalog,
+        generate_keywords,
+        write_catalog,
+        write_keywords,
+    )
 except ImportError:  # pragma: no cover - exercised only as a module
     from recsys.data._common import (  # type: ignore[no-redef]
         GENERATED_DIR,
@@ -41,7 +47,9 @@ except ImportError:  # pragma: no cover - exercised only as a module
     from recsys.data.gen_catalog import (  # type: ignore[no-redef]
         Catalog,
         generate_catalog,
+        generate_keywords,
         write_catalog,
+        write_keywords,
     )
 
 INTERACTION_COLUMNS = ["reader_id", "item_id", "session_id", "timestamp", "split", "label"]
@@ -68,6 +76,7 @@ class Interactions:
     cold_readers: np.ndarray
     catalog: Catalog
     config: DatasetConfig
+    affinity_matrix: np.ndarray  # (n_readers, n_books) exposed true affinity (ground truth)
 
     @property
     def n_events(self) -> int:
@@ -78,6 +87,18 @@ class Interactions:
         latent_term = self.catalog.latent[item_ids] @ self.reader_latent[reader_id]
         feature_term = self.catalog.genre_matrix[item_ids] @ self.reader_prefs[reader_id]
         return latent_term + self.config.feature_weight * feature_term
+
+    def observation_propensity(self) -> np.ndarray:
+        """The generator's exposure log-propensity ``α·log pop + β·z_u(affinity)`` (n_readers, n_books).
+
+        This is the ground-truth exposure process — the recoverability harness's sanity *ceiling*
+        (ranking by it recovers what the generator actually exposed, not just true taste).
+        """
+        a = self.affinity_matrix
+        z = (a - a.mean(axis=1, keepdims=True)) / np.maximum(a.std(axis=1, keepdims=True), 1e-9)
+        alpha = self.config.popularity_exposure_weight
+        beta = self.config.exposure_affinity_weight
+        return alpha * np.log(self.catalog.popularity)[None, :] + beta * z
 
     def mask(self, split: str | None = None, label: int | None = None) -> np.ndarray:
         keep = np.ones(self.n_events, dtype=bool)
@@ -121,17 +142,27 @@ def generate_interactions(
 
     cold_items = np.sort(rng.choice(catalog.n_books, size=config.n_cold_items, replace=False))
     cold_readers = np.sort(rng.choice(n_readers, size=config.n_cold_readers, replace=False))
-    cold_item_set = set(cold_items.tolist())
     cold_reader_set = set(cold_readers.tolist())
 
-    all_items = catalog.item_ids
-    warm_items = np.array([i for i in all_items if i not in cold_item_set], dtype=np.int64)
-    # Popularity-biased exposure, tunable by ``popularity_exposure_weight``: exposure ∝
-    # popularity ** weight. weight=1 (default) is raw-popularity exposure; weight=0 flattens to
-    # uniform exposure; weight>1 sharpens the head. The knob is live, matching the §6 signal table.
-    pop = catalog.popularity ** config.popularity_exposure_weight
-    warm_prob = pop[warm_items] / pop[warm_items].sum()
-    all_prob = pop / pop.sum()
+    n_books = catalog.n_books
+    warm_mask = np.ones(n_books, dtype=bool)
+    warm_mask[cold_items] = False
+
+    # --- Taste-aware exposure (plan recsys-004) --------------------------------------------------
+    # exposure(u, i) ∝ popularity(i)**α · exp(β · z_u(affinity(u, i))), with z_u the per-reader
+    # standardisation of affinity. affinity = reader·item latent + feature_weight·(genre pref). The
+    # popularity term keeps popularity a strong baseline; the z-scored affinity term makes content/
+    # collaborative/latent taste recoverable above it. α=popularity_exposure_weight, β=exposure_
+    # affinity_weight. author_exposure_recur makes a read raise the same author's exposure later.
+    alpha = config.popularity_exposure_weight
+    beta = config.exposure_affinity_weight
+    affinity = reader_latent @ catalog.latent.T + config.feature_weight * (
+        reader_prefs @ catalog.genre_matrix.T
+    )  # (n_readers, n_books), the exposed ground-truth affinity
+    z_affinity = (affinity - affinity.mean(axis=1, keepdims=True)) / np.maximum(
+        affinity.std(axis=1, keepdims=True), 1e-9
+    )
+    log_pop = alpha * np.log(catalog.popularity)  # (n_books,)
 
     reader_ids: list[int] = []
     item_ids: list[int] = []
@@ -145,14 +176,21 @@ def generate_interactions(
         n_sessions = max(4, int(rng.poisson(config.mean_sessions_per_reader)))
         clock = int(rng.integers(0, 100))
         liked_authors: set[int] = set()
+        base_logit = log_pop + beta * z_affinity[u]  # (n_books,) time-invariant exposure logit
+        author_bonus = np.zeros(n_books)  # recurs across sessions as the reader reads authors
         for s in range(n_sessions):
             clock += int(rng.integers(1, 30))
             split = "test" if is_cold_reader else _split_for_session(s, n_sessions, config)
-            pool = all_items if split == "test" else warm_items
-            probs = all_prob if split == "test" else warm_prob
+            logit = base_logit + author_bonus
+            if split != "test":  # warm splits may not expose held-out cold items
+                logit = np.where(warm_mask, logit, -np.inf)
+            finite = np.isfinite(logit)
+            probs_all = np.zeros(n_books)
+            probs_all[finite] = np.exp(logit[finite] - logit[finite].max())
+            probs_all /= probs_all.sum()
             drifted = reader_latent[u] + config.drift_scale * s * drift_dir[u]
             n_slots = int(rng.integers(1, config.max_items_per_session + 1))
-            exposed = rng.choice(pool, size=n_slots, replace=False, p=probs)
+            exposed = rng.choice(n_books, size=n_slots, replace=False, p=probs_all)
             for item in exposed:
                 item = int(item)
                 clock += 1
@@ -172,8 +210,12 @@ def generate_interactions(
                 labels.append(1 if is_positive else 0)
                 if is_positive:
                     liked_authors.add(int(catalog.author_ids[item]))
+                    # Author-follow recurs: raise this author's exposure in later sessions.
+                    author_bonus[catalog.author_ids == catalog.author_ids[item]] += (
+                        config.author_exposure_recur
+                    )
                     for _ in range(config.negatives_per_positive):
-                        neg = int(rng.choice(pool, p=probs))
+                        neg = int(rng.choice(n_books, p=probs_all))
                         if neg == item:
                             continue
                         reader_ids.append(u)
@@ -196,6 +238,7 @@ def generate_interactions(
         cold_readers=cold_readers,
         catalog=catalog,
         config=config,
+        affinity_matrix=affinity,
     )
 
 
@@ -222,6 +265,7 @@ def write_interactions(inter: Interactions, out_dir: Path = GENERATED_DIR) -> Ma
 def write_generated_dataset(inter: Interactions, out_dir: Path = GENERATED_DIR) -> None:
     """Persist the complete generated dataset plus cold partitions and exact-byte checksums."""
     catalog_manifest = write_catalog(inter.catalog, out_dir)
+    keyword_manifest = write_keywords(generate_keywords(inter.catalog, inter.config), out_dir)
     interaction_manifest = write_interactions(inter, out_dir)
 
     cold_path = out_dir / "cold_partitions.json"
@@ -239,6 +283,7 @@ def write_generated_dataset(inter: Interactions, out_dir: Path = GENERATED_DIR) 
     )
     checksums = {
         **catalog_manifest.checksums,
+        **keyword_manifest.checksums,
         **interaction_manifest.checksums,
         cold_path.name: checksum(cold_path),
     }

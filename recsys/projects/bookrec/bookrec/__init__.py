@@ -27,6 +27,7 @@ from bookrec.catalog import Book, load_catalog
 from bookrec.data import generated_dir
 from bookrec.diversity import catalog_coverage, head_ids_from_counts, head_share
 from bookrec.evaluate import hit_rate_at_k, recall_at_k
+from bookrec.keywords import load_keywords
 from bookrec.popularity import PopularityRetrievalPath, weighted_rating
 from bookrec.protocol import (
     Candidate,
@@ -56,6 +57,7 @@ __all__ = [
     "head_share",
     "hit_rate_at_k",
     "load_catalog",
+    "load_keywords",
     "order_candidates",
     "rank",
     "recall_at_k",

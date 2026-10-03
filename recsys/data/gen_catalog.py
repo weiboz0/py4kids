@@ -23,6 +23,7 @@ import numpy as np
 
 try:  # script vs. package-relative import
     from _common import GENERATED_DIR, DatasetConfig, Manifest, write_gzip_csv
+    from vocabulary import build_topics
 except ImportError:  # pragma: no cover - exercised only as a module
     from recsys.data._common import (  # type: ignore[no-redef]
         GENERATED_DIR,
@@ -30,8 +31,10 @@ except ImportError:  # pragma: no cover - exercised only as a module
         Manifest,
         write_gzip_csv,
     )
+    from recsys.data.vocabulary import build_topics  # type: ignore[no-redef]
 
 CATALOG_COLUMNS = ["item_id", "title", "author_id", "genres", "year"]
+KEYWORD_COLUMNS = ["item_id", "keywords"]
 GENRE_NAMES = [
     "fantasy", "sci-fi", "mystery", "romance", "history", "biography",
     "science", "poetry", "horror", "adventure", "philosophy", "children",
@@ -108,6 +111,92 @@ def generate_catalog(config: DatasetConfig, rng: np.random.Generator) -> Catalog
     )
 
 
+@dataclass
+class Keywords:
+    """Per-book keyword token bags — the slice text for lexical (U3) / GloVe (U7) content.
+
+    ``token_strings[i]`` is a space-joined bag for ``item_ids[i]`` (tokens may repeat → TF varies;
+    lengths vary → BM25 ``b`` matters). ``vocab`` is the committed topic vocabulary this draws from.
+    """
+
+    item_ids: np.ndarray  # (n_books,) int
+    token_strings: list[str]
+    vocab: list[str]
+
+    def rows(self):
+        for item_id, bag in zip(self.item_ids, self.token_strings):
+            yield [int(item_id), bag]
+
+    def tf_matrix(self) -> np.ndarray:
+        """Dense term-frequency matrix ``(n_books, |vocab|)`` for the recoverability harness."""
+        index = {word: j for j, word in enumerate(self.vocab)}
+        tf = np.zeros((self.item_ids.shape[0], len(self.vocab)), dtype=np.float64)
+        for i, bag in enumerate(self.token_strings):
+            if not bag:
+                continue
+            cols = [index[w] for w in bag.split(" ")]
+            np.add.at(tf[i], cols, 1.0)
+        return tf
+
+
+def generate_keywords(catalog: Catalog, config: DatasetConfig) -> Keywords:
+    """Sample a latent+genre-conditioned keyword bag per book (design 011 §6, plan recsys-004).
+
+    Topic weights per book come from the book's latent factors (z-scored per dimension, split into
+    positive/negative poles) and its genre membership, so books sharing latent structure or genre
+    share tokens — latent neighbours more finely than genre alone. Tokens are drawn **from a
+    ``SeedSequence.spawn`` sub-stream**, independent of the threaded catalog/interaction RNG, so the
+    5-column ``catalog.csv.gz`` (and U1's pinned search ids) are byte-identical regardless of this
+    text. Token count ``T`` varies and tokens repeat, so TF and document length both vary (BM25).
+    """
+    n, g, dim = catalog.n_books, config.n_genres, config.latent_dim
+    topics = build_topics(g, dim)  # order: latent_pos(dim), latent_neg(dim), genre(g)
+    vocab: list[str] = [word for topic in topics for word in topic]
+    topic_words = [list(topic) for topic in topics]
+
+    latent = catalog.latent
+    std = latent.std(axis=0, keepdims=True)
+    lz = (latent - latent.mean(axis=0, keepdims=True)) / np.where(std == 0.0, 1.0, std)
+    feats = np.concatenate(
+        [
+            np.maximum(lz, 0.0),
+            np.maximum(-lz, 0.0),
+            catalog.genre_matrix * config.keyword_genre_scale,
+        ],
+        axis=1,
+    )  # (n, 2*dim + g), columns aligned to ``topics``
+    weights = np.exp(config.keyword_topic_sharpness * feats)
+    weights /= weights.sum(axis=1, keepdims=True)
+
+    # Independent sub-stream: does not advance the catalog/interaction RNG (byte-stable catalog).
+    kw_rng = np.random.default_rng(np.random.SeedSequence(config.seed).spawn(2)[1])
+    n_topics = len(topic_words)
+    token_strings: list[str] = []
+    for i in range(n):
+        length = int(kw_rng.integers(config.keyword_len_min, config.keyword_len_max + 1))
+        chosen_topics = kw_rng.choice(n_topics, size=length, p=weights[i])
+        tokens = [
+            topic_words[t][int(kw_rng.integers(0, len(topic_words[t])))] for t in chosen_topics
+        ]
+        token_strings.append(" ".join(tokens))
+
+    return Keywords(item_ids=catalog.item_ids, token_strings=token_strings, vocab=vocab)
+
+
+def write_keywords(keywords: Keywords, out_dir: Path = GENERATED_DIR) -> Manifest:
+    """Write the SEPARATE ``keywords.csv.gz`` (NOT a catalog column) and return its manifest."""
+    path = out_dir / "keywords.csv.gz"
+    digest = write_gzip_csv(path, KEYWORD_COLUMNS, keywords.rows())
+    return Manifest(
+        source="synthetic:gen_catalog.keywords",
+        version="1",
+        config={"seed": keywords.item_ids.shape[0], "vocab": len(keywords.vocab)},
+        rowcounts={"keywords": keywords.item_ids.shape[0]},
+        schema={"keywords.csv.gz": KEYWORD_COLUMNS},
+        checksums={"keywords.csv.gz": digest},
+    )
+
+
 def write_catalog(catalog: Catalog, out_dir: Path = GENERATED_DIR) -> Manifest:
     """Write the catalog CSV and return its manifest (source/version/schema/checksums/rowcounts)."""
     path = out_dir / "catalog.csv.gz"
@@ -127,8 +216,11 @@ def main() -> None:
     rng = np.random.default_rng(config.seed)
     catalog = generate_catalog(config, rng)
     manifest = write_catalog(catalog)
+    keyword_manifest = write_keywords(generate_keywords(catalog, config))
     print(f"catalog: {catalog.n_books} books -> {GENERATED_DIR / 'catalog.csv.gz'}")
     print(f"sha256: {manifest.checksums['catalog.csv.gz']}")
+    print(f"keywords: {catalog.n_books} bags -> {GENERATED_DIR / 'keywords.csv.gz'}")
+    print(f"sha256: {keyword_manifest.checksums['keywords.csv.gz']}")
 
 
 if __name__ == "__main__":
