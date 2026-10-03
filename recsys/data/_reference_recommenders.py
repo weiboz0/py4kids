@@ -16,7 +16,7 @@ Scorers
 - ``learned_mf``           — a few-epoch logistic MF trained ONLY on the observed train log (U5).
 - ``affinity_oracle``      — the exposed true affinity (ground-truth taste ceiling, not the log).
 - ``propensity_oracle``    — the generator's exposure log-propensity ``α·log pop + β·z`` (sanity ceiling).
-- ``random``               — a seeded uniform baseline (reported; analytic floor is the denominator).
+- ``random``               — a seeded per-reader uniform baseline (reported; analytic floor is the denominator).
 """
 
 from __future__ import annotations
@@ -82,9 +82,10 @@ def _learned_mf(
     """Few-epoch implicit logistic MF on the OBSERVED train positives; returns reader×item scores.
 
     Standard implicit-feedback training: the observed train **positives** are the signal, paired
-    with uniformly-sampled negatives (the usual implicit-MF practice — NOT the generator oracle).
-    Deterministic (seeded init + seeded negatives, full-batch gradient descent with per-entity-
-    averaged gradients so the step is well-scaled regardless of log size). Learns
+    with negatives drawn from each reader's UNOBSERVED complement (the usual implicit-MF practice —
+    a sampled negative is never one of that reader's own observed positives — NOT the generator
+    oracle). Deterministic (seeded init + seeded negatives, full-batch gradient descent with
+    per-entity-averaged gradients so the step is well-scaled regardless of log size). Learns
     ``sigmoid(P_u · Q_i) ≈ liked`` so recovered scores reflect the latent taste the co-occurrence of
     positives imprints — a learned cousin of item-item CF that should beat popularity and content.
     """
@@ -94,6 +95,14 @@ def _learned_mf(
     n_pos = pos_readers.shape[0]
     neg_readers = np.repeat(pos_readers, negatives)
     neg_items = rng.integers(0, n_books, size=n_pos * negatives)
+    # Sample negatives from each reader's UNOBSERVED complement: resample any draw that collides
+    # with one of that reader's observed positives so no "negative" is actually a known positive.
+    observed = set(zip(pos_readers.tolist(), pos_items.tolist()))
+    neg_reader_list = neg_readers.tolist()
+    pending = [j for j in range(neg_items.shape[0]) if (neg_reader_list[j], int(neg_items[j])) in observed]
+    while pending:
+        neg_items[pending] = rng.integers(0, n_books, size=len(pending))
+        pending = [j for j in pending if (neg_reader_list[j], int(neg_items[j])) in observed]
     u_idx = np.concatenate([pos_readers, neg_readers])
     i_idx = np.concatenate([pos_items, neg_items])
     y = np.concatenate([np.ones(n_pos), np.zeros(n_pos * negatives)])
@@ -212,7 +221,6 @@ def evaluate_recoverability(inter, keyword_tf: np.ndarray, *, k: int = 10, seed:
     propensity = inter.observation_propensity()
 
     rng = np.random.default_rng(seed)
-    random_vec = rng.random(n)
 
     def genre_cos(r: int, seen: list[int]) -> np.ndarray:
         profile = genre_profiles[seen].sum(axis=0)
@@ -223,7 +231,9 @@ def evaluate_recoverability(inter, keyword_tf: np.ndarray, *, k: int = 10, seed:
         return bm25 @ keyword_tf[seen].sum(axis=0)
 
     scorers = {
-        "random": lambda r, seen: random_vec,
+        # A fresh uniform draw PER READER (a one-shared-vector draw reports a misleading single-draw
+        # number); the gates use the analytic floor as the denominator, never this reported value.
+        "random": lambda r, seen: rng.random(n),
         "popularity": lambda r, seen: pop_counts,
         "quality": lambda r, seen: quality_scores(pop_counts, expo_counts, 10.0),
         "genre_cosine": genre_cos,

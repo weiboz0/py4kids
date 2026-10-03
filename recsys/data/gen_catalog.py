@@ -122,6 +122,7 @@ class Keywords:
     item_ids: np.ndarray  # (n_books,) int
     token_strings: list[str]
     vocab: list[str]
+    seed: int  # the dataset seed this bag was sampled under (provenance for the manifest)
 
     def rows(self):
         for item_id, bag in zip(self.item_ids, self.token_strings):
@@ -180,7 +181,9 @@ def generate_keywords(catalog: Catalog, config: DatasetConfig) -> Keywords:
         ]
         token_strings.append(" ".join(tokens))
 
-    return Keywords(item_ids=catalog.item_ids, token_strings=token_strings, vocab=vocab)
+    return Keywords(
+        item_ids=catalog.item_ids, token_strings=token_strings, vocab=vocab, seed=config.seed
+    )
 
 
 def write_keywords(keywords: Keywords, out_dir: Path = GENERATED_DIR) -> Manifest:
@@ -190,7 +193,7 @@ def write_keywords(keywords: Keywords, out_dir: Path = GENERATED_DIR) -> Manifes
     return Manifest(
         source="synthetic:gen_catalog.keywords",
         version="1",
-        config={"seed": keywords.item_ids.shape[0], "vocab": len(keywords.vocab)},
+        config={"seed": keywords.seed, "vocab": len(keywords.vocab)},
         rowcounts={"keywords": keywords.item_ids.shape[0]},
         schema={"keywords.csv.gz": KEYWORD_COLUMNS},
         checksums={"keywords.csv.gz": digest},

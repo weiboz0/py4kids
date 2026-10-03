@@ -79,7 +79,7 @@ def test_count_path_hit_rate_far_exceeds_random_floor(generated: dict[str, objec
         random_floor, interactions_path, catalog_ids=catalog_ids, k=K, cold_readers=cold_readers
     )
 
-    # Direction, not brittle exact values: count path ~0.12, random floor ~0.014.
+    # Direction, not brittle exact values: count path ~0.108, random floor ~0.012.
     assert pop_result.readers == random_result.readers > 0
     assert pop_result.hit_rate_at_k > 0.05
     assert pop_result.hit_rate_at_k > 5 * random_result.hit_rate_at_k
@@ -306,7 +306,7 @@ def test_popularity_coverage_is_far_below_random_coverage(generated: dict[str, o
 
     for value in (pop_coverage, random_coverage, pop_head, random_head):
         assert 0.0 <= value <= 1.0
-    # The popularity "winner" serves almost none of the catalog (bias): ~0.007 vs ~0.84.
+    # The popularity "winner" serves almost none of the catalog (bias): ~0.008 vs ~0.92.
     assert pop_coverage < 0.05
     assert pop_coverage < 0.1 * random_coverage
     # Every popularity slot is a head item; the random floor spreads over the tail.
