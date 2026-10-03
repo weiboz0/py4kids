@@ -156,6 +156,10 @@ regenerated data and authorize these specific edits (inventory from [sol]#2 + [f
   coverage asserts): re-verify they PASS on regenerated data (they do in the α=0.75 regime — pop ~0.10–0.12, ~10×);
   do not weaken unless a measured value forces it (then relax to direction + record why).
 - Update U2 lesson md25 "~0.007 / 14 of 2000" coverage figures to the new seed.
+- **Qualify U2's "exposure is popularity-driven" prose** ([sol]#2, [fable] round-2 nit): grep U2 lesson +
+  teacher-notes for "exposure" and update any pure-popularity-exposure statement — exposure is now **taste-aware**
+  (popularity × affinity), so the popularity-bias-in-the-metric explanation must say the holdout is
+  popularity-*weighted* (not popularity-*only*).
 Add an `ERRATA.md` entry in `unit-01-problem-and-scoreboard/` and `unit-02-popularity-and-bias/` noting the
 recsys-004 regeneration, the figure updates, and the U2 quality-vs-floor correction. Re-run U1/U2 notebooks to the
 new values; keep `execution_count: null`/cleared outputs.
@@ -261,7 +265,13 @@ regime + explicit CF-tuning latitude ([sol]#4); full U1/U2 re-validation invento
 narrative correction and teacher-notes ([fable]#3/#4); guard-has-teeth flips β→0 AND α↑ ([fable]#8). Mechanism
 empirically confirmed on 3 seeds. No [self] blockers.
 
-<!-- [sol] / [fable] round 2 appended -->
+**[fable] — APPROVE** (round 2). All round-1 Must/Should items resolved; verified against `gen_catalog.py` that the
+5-column CSV is byte-identical if keyword draws come after the popularity draw / from a spawned sub-stream (U1 search
+ids + `(5,5)` survive), and raising `latent_noise` changes draw values not counts. Two non-blocking implementer nits
+folded: prefer `SeedSequence.spawn` for keyword draws to keep catalog/interaction rng decoupled; Phase E greps U2 for
+"exposure" prose to qualify now-taste-aware statements. No new blockers.
+
+<!-- [sol] round 2 appended -->
 
 ## Content Review
 
