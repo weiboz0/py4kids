@@ -382,6 +382,51 @@ weekend-skip).
 - **fable#9** `[NOTE]` — MF≥content is the thinnest gate; MF hyperparameters are part of the recoverability contract.
 108 harness/generator + 35 U1/U2 tests green; recsys checks PASS. Full `ci-local` re-run in progress.
 
+### Content-review round 2–3 (on the fixes)
+- **[sol] — APPROVE** (round 3). Round-2 confirmed findings 1,3,4,5 resolved and found only one residual: the string
+  "below the floor" in U2 `ERRATA.md:25` (a floor-relative pin). Reworded (commit `fee61d9`); round-3 verdict:
+  grep clean, quality framed "far below popularity", holdout "popularity-weighted", no floor position pinned.
+- **[fable] — APPROVE WITH NITS** (round 1; all nits folded in the fix pass) and **[self] — APPROVE**.
+
+### Content-review outcome: **CONSENSUS (3-of-4; [glm] weekend-skip)** — [self]/[sol]/[fable] APPROVE. All `[OPEN]` findings resolved or recorded-for-recsys-005. Cleared to ship.
+
 ## Post-Execution Report
 
-<!-- appended before ship -->
+**Shipped (recsys-004 — generator redesign).** A foundational data slice (no student unit) that makes every
+personalization technique in the book *recoverable* and demonstrably better than popularity, and gives the catalog
+the text U3/U7 need — fixing the premise failure (popularity-dominated generator; true-affinity oracle ≈ random
+floor) found at the Unit-3 plan gate.
+
+- **Design §6 amended (v4):** taste-aware exposure (`popularity^α · exp(β·z-affinity)`) + a latent-correlated
+  per-book keyword artifact + a committed recoverability invariant; keywords are a latent-correlated observable
+  (not an affinity input).
+- **Generator:** `recsys/data/` — `vocabulary.py` (608 real-English words), `gen_catalog.py` emits a separate
+  gitignored `keywords.csv.gz` (catalog CSV + `cold_partitions.json` **byte-identical** to before, sha-verified, so
+  Unit-1 search-id/(5,5)/cold pins survive), `gen_interactions.py` taste-aware exposure (α=0.75, β=2.5 on per-reader
+  z-scored affinity, `latent_noise`=0.4, `author_exposure_recur`=0.3, default density), `bookrec/keywords.py`
+  `load_keywords`.
+- **Recoverability harness** (`recsys/data/tests/test_signal_recoverability.py` + `_reference_recommenders.py`), the
+  durable CI guard: on 3 seeds — popularity 6.7–10× analytic floor; genre & keyword BM25 12–16× floor (content<CF);
+  item-item CF 2.2–2.9× popularity; **learned MF** (implicit; from the observed log; corrected negative sampling)
+  0.274 ≈ 2.4× popularity and ≥ content; true-affinity oracle 3.8–4.7× popularity; observation-propensity oracle the
+  ceiling; positive-rate quality weak (<0.5× popularity). Guard has teeth (β→0 and α↑ both turn it red).
+- **Unit 1–2 re-validated** against the regenerated data (direction/rank tests held; prose/pins updated; ERRATA
+  added): 500 scored readers, floor ~0.012, popularity ~0.108 (~9×), quality ~0.016 (~7× below popularity). U2's
+  quality lesson reframed — "far below popularity" on a **popularity-weighted** (not popularity-only) holdout, floor
+  relationship deliberately unpinned (seed-dependent).
+
+**Verification.** `scripts/ci-local.sh` ALL GREEN (recoverability harness + updated generator invariants + U1/U2
+regenerated exec + routed recsys suite + recsys PDFs; other books' editions SKIP as unchanged; pre-merge-guard OK).
+108 generator/harness + 35 U1/U2 tests green.
+
+**Gates.** Plan-review CONSENSUS on v2 (3-of-4; both reviewers empirically prototyped the regime). Content-review
+CONSENSUS after [sol] REJECT → 2 fix passes (U1 eligible-reader relevance; U2 exposure/floor prose;
+MF-negative-sampling; manifest seed; `load_keywords` test) → 3 rounds. `[glm]` skipped all weekend (volcengine-plan
+non-functional; resume Monday 2026-10-05).
+
+**Follow-ups for recsys-005 (Unit 3, lexical — now unblocked):** keyword BM25 ≈ genre cosine on hit@k (keywords
+redundant with genre at `keyword_genre_scale=3.0`), so Unit 3 must either lower `keyword_genre_scale` (+ re-validate
+the harness) to give keywords independent lexical signal, or frame lexical as a COMPLEMENTARY candidate source (not
+"beats genre"). The learned-MF≥content gate is the thinnest margin — MF hyperparameters are part of the recoverability
+contract. Re-draft recsys-005-unit3 on this data (documents are now real repeated-term keyword text; BM25 `k1`/`b`
+meaningful; the lexical/content path beats the floor).
