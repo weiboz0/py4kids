@@ -184,7 +184,11 @@ beats TF-IDF cosine" ([fable]#1); floor-beating test pinned as ≥5× floor / >p
    (`LexicalRetrievalPath(keywords=...)`); `fit(interactions, catalog=None)` conforms exactly / fully substitutable.
 3. `[FIXED v2.1]` **Should** — stray "12" lesson-count in Phase A-verify + Phase G → "9".
 
-<!-- [sol] round 3 appended -->
+**[sol] — APPROVE** (round 3). Both v2.1 items confirmed: `fit(interactions, catalog=None)` matches
+`protocol.py:87` with keywords supplied at construction (substitutable); lesson count 9 in Buildout + Phase-A-verify
++ Phase G.
+
+### Plan-review outcome: **CONSENSUS (3-of-4; [glm] weekend-skip)** — [self]/[sol]/[fable] APPROVE. Premise empirically confirmed (BM25 ~0.158 ≈ 13× floor; honest framing). Cleared to implement (Phase A → G).
 
 ## Content Review
 

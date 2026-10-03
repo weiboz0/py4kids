@@ -29,6 +29,7 @@ so every addition can answer the only question that matters: *did it help?*
 |---|-------|------|---------|----------|
 | 1 | `unit-01-problem-and-scoreboard` | unit | 3 | Turn “what should I read next?” into a recommender you can measure. |
 | 2 | `unit-02-popularity-and-bias` | unit | 3 | Recommend before you know the reader — and learn why the crowd-pleaser isn’t the whole story. |
+| 3 | `unit-03-lexical-retrieval` | unit | 3 | Match a reader to books by the words they share — bag-of-words, TF-IDF, BM25. |
 
 ## How the book is organised
 

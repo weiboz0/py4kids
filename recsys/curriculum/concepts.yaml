@@ -13,3 +13,7 @@ concepts:
 - {id: popularity-ranking, name: "Popularity ranking from interaction counts", category: techniques, kind: technique}
 - {id: bayesian-shrinkage, name: "Bayesian shrinkage (weighted average)", category: techniques, kind: technique}
 - {id: popularity-bias, name: "Popularity bias (coverage and head-share)", category: techniques, kind: technique}
+# --- Unit 3 (recsys-005): lexical retrieval ---
+- {id: bag-of-words, name: "Bag-of-words document representation", category: techniques, kind: technique}
+- {id: tf-idf, name: "TF-IDF weighting and cosine similarity", category: techniques, kind: technique}
+- {id: bm25, name: "Okapi BM25 scoring", category: techniques, kind: technique}
