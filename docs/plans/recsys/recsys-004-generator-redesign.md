@@ -271,7 +271,13 @@ ids + `(5,5)` survive), and raising `latent_noise` changes draw values not count
 folded: prefer `SeedSequence.spawn` for keyword draws to keep catalog/interaction rng decoupled; Phase E greps U2 for
 "exposure" prose to qualify now-taste-aware statements. No new blockers.
 
-<!-- [sol] round 2 appended -->
+**[sol] — APPROVE** (round 2, on v2 `3412e43`). All four prior findings resolved (separate harness gates incl.
+learned-MF-from-interactions + keyword-latent-overlap; full Phase-E U1/U2 inventory; z-scored affinity + analytic
+floor + margins + min-reader counts; CF-recoverability tuning latitude) and the folded [fable] Must-fixes
+(observation-propensity ceiling; no "oracle≥CF"; analytic denominator) confirmed. No new blockers. (v2.1 adds only
+[fable]'s non-blocking exposure-prose + sub-stream nits — additive, consensus unaffected.)
+
+### Plan-review outcome: **CONSENSUS (3-of-4; [glm] weekend-skip)** — [self]/[sol]/[fable] APPROVE. Mechanism empirically confirmed (α=0.75,β=2.5). Cleared to implement (Phase 0 → F).
 
 ## Content Review
 
