@@ -11,7 +11,8 @@ By the end of this unit students can:
   `m` as a prior pseudo-count, and read the algebra `score = C + v·(R−C)/(v+m)` to predict the limits
   (`m→0 ⇒ R`; as `m` grows the scores contract toward the global rate `C`).
 - Distinguish **popularity** (what is consumed most) from **quality** (the per-item positive rate), and explain why,
-  on a holdout whose exposure is itself popularity-driven, a quality-first ranking scores near zero — **the offline
+  on a holdout whose exposure is popularity-weighted (taste-aware, but with a popularity factor riding along), a
+  quality-first ranking that ignores both popularity and the reader scores far below popularity — **the offline
   metric encodes popularity bias.**
 - **Measure** popularity bias directly with **catalog coverage** and **head-share**, and articulate why a recommender
   that wins hit-rate by serving only the head is still a poor system — the motivation for personalisation (Unit 4)
@@ -29,10 +30,10 @@ sittings** (advanced, applied; the assumed baseline is in `curriculum/baseline.y
 
 1. **Sitting 1 (~30 min) — popularity that works.** The cold-start hook and §1: count positives on the **train**
    split, see the heavy tail, build/fit/register `PopularityRetrievalPath`, and score it on `val` against the random
-   floor (≈0.12 vs ≈0.014). Exercises 1–3.
+   floor (≈0.11 vs ≈0.012). Exercises 1–3.
 2. **Sitting 2 (~30–40 min) — popular vs good.** §2: derive the weighted/Bayesian-shrinkage rating by hand, reveal
-   `bookrec.weighted_rating`, re-rank by quality, and **honestly score the quality ranking on `val`** — the near-zero
-   result and the "popularity bias lives in the metric" discussion. This is the conceptual heart; do not rush it.
+   `bookrec.weighted_rating`, re-rank by quality, and **honestly score the quality ranking on `val`** — the
+   far-below-popularity result and the "popularity bias lives in the metric" discussion. This is the conceptual heart; do not rush it.
    Exercises 4–5.
 3. **Sitting 3 (~20 min, + Challenges) — measuring the bias.** §3: catalog coverage and head-share for popularity vs
    random; name the bias and bridge to Units 4 and 13. Exercise 6 and the two stretch Challenges.
@@ -44,8 +45,8 @@ sittings** (advanced, applied; the assumed baseline is in `curriculum/baseline.y
   that adding `val`/`test` or `label==0` rows leaves the counts unchanged.
 - **Forgetting to exclude already-read books.** Score with `rank(exclude=seen)` and pass the reader's `seen` set, or a
   "recommendation" is just a book they have already read.
-- **Reading the quality ranking's ≈0 score as "quality is useless."** The weighted-rating ranking is *better* by
-  quality; it scores near zero because the `val` holdout's exposure is popularity-driven, so the metric rewards
+- **Reading the quality ranking's weak score as "quality is useless."** The weighted-rating ranking is *better* by
+  quality; it scores far below popularity because the `val` holdout's exposure is popularity-weighted, so the metric rewards
   recommending the already-popular. The lesson is about the **metric**, not about quality. Watch for students who
   conclude "shrinkage is broken."
 - **Mis-reading `m`.** `m` is a prior strength in pseudo-counts, not a probability or a threshold. Small `m` trusts
@@ -60,9 +61,9 @@ sittings** (advanced, applied; the assumed baseline is in `curriculum/baseline.y
 
 - A book read 3 times out of 3 exposures has a perfect positive rate. Should it top the recommendations? What does
   your answer say about trusting an average computed from almost no data?
-- Our quality-first ranking scores near zero on the scoreboard. Is the ranking bad, or is the scoreboard bad? What
-  would a holdout have to look like for quality to win?
-- Popularity gets hit-rate ≈0.12 while covering ~0.7% of the catalog. Name a real product where "recommend the
+- Our quality-first ranking scores far below popularity on the scoreboard. Is the ranking bad, or is the scoreboard
+  bad? What would a holdout have to look like for quality to win?
+- Popularity gets hit-rate ≈0.11 while covering ~0.8% of the catalog. Name a real product where "recommend the
   bestsellers" is genuinely good — and one where it is harmful. What distinguishes them?
 - The weighted rating is a convex combination of the item's rate `R` and the global rate `C`. As `m → ∞`, every score
   approaches `C`. Why, then, does the ranking *not* become random — what residual signal survives?

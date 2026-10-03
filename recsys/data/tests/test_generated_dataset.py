@@ -23,6 +23,7 @@ from _common import GENERATED_DIR
 from bookrec import load_catalog
 
 CATALOG_COLUMNS = ["item_id", "title", "author_id", "genres", "year"]
+KEYWORD_COLUMNS = ["item_id", "keywords"]
 INTERACTION_COLUMNS = ["reader_id", "item_id", "session_id", "timestamp", "split", "label"]
 
 
@@ -52,6 +53,7 @@ def _require_generated_dir() -> Path:
         )
     required = {
         "catalog.csv.gz",
+        "keywords.csv.gz",
         "interactions.csv.gz",
         "cold_partitions.json",
         "checksums.json",
@@ -72,10 +74,16 @@ def _read_header(path: Path) -> list[str]:
 def test_ci_generated_artifacts_have_expected_schema_and_checksums() -> None:
     generated_dir = _require_generated_dir()
     assert _read_header(generated_dir / "catalog.csv.gz") == CATALOG_COLUMNS
+    assert _read_header(generated_dir / "keywords.csv.gz") == KEYWORD_COLUMNS
     assert _read_header(generated_dir / "interactions.csv.gz") == INTERACTION_COLUMNS
 
     manifest = json.loads((generated_dir / "checksums.json").read_text(encoding="utf-8"))
-    assert set(manifest) == {"catalog.csv.gz", "interactions.csv.gz", "cold_partitions.json"}
+    assert set(manifest) == {
+        "catalog.csv.gz",
+        "keywords.csv.gz",
+        "interactions.csv.gz",
+        "cold_partitions.json",
+    }
     for name, expected in manifest.items():
         actual = hashlib.sha256((generated_dir / name).read_bytes()).hexdigest()
         assert actual == expected

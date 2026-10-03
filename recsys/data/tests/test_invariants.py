@@ -14,9 +14,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 import slice_books
+import vocabulary
 from _common import GENERATED_DIR
 from _dataset_fixture import small_config
-from gen_catalog import generate_catalog, write_catalog
+from gen_catalog import generate_catalog, generate_keywords, write_catalog, write_keywords
 from gen_interactions import build_dataset, generate_interactions, write_interactions
 from slice_books import main as slice_main
 
@@ -107,6 +108,51 @@ def test_written_files_are_byte_identical_across_runs(tmp_path: Path) -> None:
         outs.append(out)
     for fname in ("catalog.csv.gz", "interactions.csv.gz"):
         assert (outs[0] / fname).read_bytes() == (outs[1] / fname).read_bytes()
+
+
+def test_keywords_regenerate_byte_identically(tmp_path: Path) -> None:
+    config = small_config()
+    outs = []
+    for name in ("a", "b"):
+        rng = np.random.default_rng(config.seed)
+        catalog = generate_catalog(config, rng)
+        out = tmp_path / name
+        write_keywords(generate_keywords(catalog, config), out)
+        outs.append(out)
+    assert (outs[0] / "keywords.csv.gz").read_bytes() == (outs[1] / "keywords.csv.gz").read_bytes()
+
+
+def test_keyword_tokens_are_in_the_committed_vocabulary() -> None:
+    config = small_config()
+    rng = np.random.default_rng(config.seed)
+    catalog = generate_catalog(config, rng)
+    keywords = generate_keywords(catalog, config)
+    committed = set(vocabulary.vocabulary(config.n_genres, config.latent_dim))
+    assert set(keywords.vocab) == committed
+    for bag in keywords.token_strings:
+        assert bag  # every book gets a non-empty keyword bag
+        assert set(bag.split(" ")) <= committed
+
+
+def test_same_genre_books_share_more_keywords_than_random_pairs() -> None:
+    config = small_config()
+    rng = np.random.default_rng(config.seed)
+    catalog = generate_catalog(config, rng)
+    tf = generate_keywords(catalog, config).tf_matrix()
+    unit = tf / np.maximum(np.linalg.norm(tf, axis=1, keepdims=True), 1e-9)
+    genre = catalog.genre_matrix
+    probe = np.random.default_rng(0)
+    same_genre: list[float] = []
+    random_pairs: list[float] = []
+    for _ in range(400):
+        a = int(probe.integers(0, catalog.n_books))
+        genre_sim = genre @ genre[a]
+        genre_sim[a] = -1.0
+        b = int(np.argmax(genre_sim))  # most genre-similar other book
+        c = int(probe.integers(0, catalog.n_books))
+        same_genre.append(float(unit[a] @ unit[b]))
+        random_pairs.append(float(unit[a] @ unit[c]))
+    assert np.mean(same_genre) > np.mean(random_pairs)
 
 
 def test_slice_fails_closed_without_permission(capsys) -> None:

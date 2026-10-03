@@ -132,17 +132,36 @@ a new capability — designed from the start to admit those, so no rewrite is fo
   | Signal built into the generator | Consumed by |
   |---|---|
   | low-rank latent taste factors | U5 MF, U8 two-tower |
-  | taste derived from catalog features (subjects/authors) | U3/U7 content & hybrid, U9 feature towers, cold start |
+  | taste derived from catalog features (subjects/authors/keywords) | U3/U7 content & hybrid, U9 feature towers, cold start |
   | popularity bias | U2 popularity, exposure-bias discussion (U13) |
   | timestamps + ordered sessions; series/author-following; taste drift | U12 sequence model |
   | implicit positives + a defined exposure/observation process + sampled negatives | U4, U8–U9 training |
   | held-out cold items & cold readers; leakage-safe temporal train/val/test splits | U6 eval, U9, U13 |
 
+  **Taste-aware exposure (amended 2026-10-03, recsys-004).** The observation process is NOT popularity-only: a reader
+  is exposed to item `i` with probability ∝ `popularity(i)^α · exp(β · z_u(affinity(reader, i)))`, where `affinity`
+  combines the latent taste dot-product and a **genre** content term, and `z_u` is per-reader standardisation of
+  affinity (so `β` is scale-free). The per-book **keywords** are a *latent-correlated observable* (generated from the
+  book's latent factors + genres), consumed by the lexical/content retrieval paths (U3/U7) — they are NOT an input to
+  the exposure affinity (keeping content retrieval strictly below collaborative/latent on the scoreboard). Positives arise among exposed items; author-following recurs
+  across sessions. **Design invariant:** popularity remains a strong baseline, but content (U3), collaborative (U4),
+  and latent (U5) signals are each **recoverable** and beat popularity on the `val` scoreboard — enforced by a
+  committed **recoverability harness** (per-technique ratio+margin gates against the analytic random floor). A pure
+  positive-RATE estimate stays weak (preserving U2's popularity-bias lesson), because taste is driven by latent
+  affinity, not by per-item rate. The earlier popularity-only exposure made even a true-affinity oracle ≈ the random
+  floor, so no personalization unit could demonstrate value — this amendment fixes that.
+  **Catalog keyword text.** Alongside the 5-column catalog CSV, the generator emits a separate, gitignored per-book
+  **keyword artifact** (`keywords.csv.gz`): variable-length real-English-word token bags (repetition + length
+  variation, so TF-IDF/BM25 `k1`/`b` are meaningful) drawn from a committed topic vocabulary conditioned on each
+  book's latent factors + genres. This is the slice vocabulary the **U7 GloVe subset** derives from, and the
+  document corpus the **U3 lexical** path scores.
+
   Because latent factors are **not identifiable** (rotations give equivalent predictions), students verify
   **recovered scores / rankings / latent subspaces**, not literal factor coordinates.
   No PII: readers are synthetic.
   **First-plan deliverables:** the slice script AND the synthetic generator ship in `recsys-001` (U1's scoreboard
-  needs interactions); the committed GloVe subset lands with U7.
+  needs interactions); **the taste-aware exposure + keyword artifact + recoverability harness land in `recsys-004`**;
+  the committed GloVe subset lands with U7.
 
 ## 7. Tooling, dependency isolation & reproducibility
 
@@ -338,6 +357,13 @@ scaffolds the book + `baseline.yaml` + slice script + synthetic generator + the 
 
 ## 14. Revision history
 
+- **v4 (2026-10-03, via recsys-004):** §6 amended — **taste-aware exposure** (exposure ∝ popularity^α · exp(β·z-affinity))
+  replaces popularity-only exposure so content/collaborative/latent signals are each recoverable and beat popularity
+  (enforced by a committed recoverability harness), while a positive-rate estimate stays weak (preserving U2's
+  popularity-bias lesson); added a seeded **keyword text artifact** (`keywords.csv.gz`, latent-correlated real-word
+  token bags) as the U3 lexical corpus + U7 GloVe vocabulary source. Prompted by the recsys-003/005 finding that the
+  original generator was popularity-dominated (true-affinity oracle ≈ random floor). Reviewed under recsys-004's
+  plan-review gate.
 - **v3 (2026-10-02, via recsys-003):** §10 project-packaging amended — the growing project is the `bookrec` package
   + per-unit milestone notebooks (gated via dedicated tooling, not as `projects/project-*` map entries); the single
   `projects/` registry entry is the Unit-14 capstone. Supersedes the "single `projects/` entry's manifest grows per

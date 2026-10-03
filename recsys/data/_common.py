@@ -42,8 +42,18 @@ class DatasetConfig:
     n_genres: int = 12
     latent_dim: int = 16
     latent_scale: float = 2.0
-    latent_noise: float = 0.2
+    # Independent latent component beyond the genre image. Raised from 0.2 (recsys-004) so latent
+    # taste carries signal *beyond* genre — a learned MF (U5) can then beat genre/keyword content
+    # (U3). Changing this re-scales latent VALUES only; it draws the same standard-normals, so the
+    # downstream popularity draw and ``catalog.csv.gz`` bytes are unaffected.
+    latent_noise: float = 0.4
     genre_latent_scale: float = 1.8
+    # keyword text (plan recsys-004). Per-book token bag conditioned on z-scored latent poles +
+    # genre; drawn from an independent sub-stream so the catalog CSV stays byte-identical.
+    keyword_topic_sharpness: float = 2.0  # softmax temperature over topic weights
+    keyword_genre_scale: float = 3.0  # genre feature weight vs. latent poles in the topic mix
+    keyword_len_min: int = 12  # min tokens per book (with repetition → TF/doc-length vary)
+    keyword_len_max: int = 40
     # readers / interactions
     n_readers: int = 600
     n_cold_items: int = 150
@@ -55,7 +65,14 @@ class DatasetConfig:
     feature_weight: float = 2.0
     drift_scale: float = 0.05
     author_follow_boost: float = 1.5
-    popularity_exposure_weight: float = 1.0
+    # Taste-aware exposure (plan recsys-004): exposure ∝ popularity**α · exp(β · z_u(affinity)),
+    # with z_u the per-reader standardisation of affinity (so β is well-conditioned regardless of
+    # latent_scale/feature_weight). α=popularity_exposure_weight keeps popularity a strong baseline
+    # (α≥0.75 ⇒ popularity ≥5× the random floor); β=exposure_affinity_weight makes latent/content/
+    # collaborative taste recoverable above popularity (the recsys-004 recoverability harness).
+    popularity_exposure_weight: float = 0.75  # α
+    exposure_affinity_weight: float = 2.5  # β, acting on per-reader z-scored affinity
+    author_exposure_recur: float = 0.3  # read → raises exposure of that author's books in later sessions
     positive_threshold: float = 2.0
     logit_temperature: float = 3.0
     # temporal split fractions (per warm reader, by event time)
