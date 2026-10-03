@@ -1,9 +1,9 @@
 """Unit 2 tests (plan recsys-003): the popularity count path, weighted rating, and bias metrics.
 
 Directions are asserted on the committed seed (not brittle exact values). The measured numbers on
-this seed (k=10, cold readers excluded, 368 scored readers, 2000-item catalog, head = top 200):
-popularity-count hit@10 ≈ 0.1196 vs random floor ≈ 0.0136; popularity coverage ≈ 0.007 vs random
-≈ 0.84; popularity head-share = 1.0 vs random ≈ 0.10.
+this seed (k=10, cold readers excluded, 500 scored readers, 2000-item catalog, head = top 200):
+popularity-count hit@10 ≈ 0.108 vs random floor ≈ 0.012; popularity coverage ≈ 0.008 vs random
+≈ 0.92; popularity head-share = 1.0 vs random ≈ 0.10.
 """
 
 from __future__ import annotations
