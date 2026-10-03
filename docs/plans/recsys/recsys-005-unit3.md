@@ -1,4 +1,17 @@
-# Plan recsys-004 — Unit 3: Lexical retrieval (TF-IDF and BM25)
+# Plan recsys-005 — Unit 3: Lexical retrieval (TF-IDF and BM25)
+
+> **STATUS: BLOCKED / SUPERSEDED-FOR-REVISION (renumbered 004→005 on 2026-10-03).** Plan-review round 1 ([sol] +
+> [fable] empirical REJECT, self-confirmed) proved the premise is unsatisfiable on the current data: no surface
+> content/lexical path beats the random floor, and even a true-affinity oracle ≈ the floor because the generator is
+> popularity/exposure-dominated. The user approved a **generator redesign first** (plan **recsys-004**:
+> taste-aware exposure + latent-correlated per-book text + a recoverability harness + Unit 1-2 re-validation). This
+> Unit-3 plan will be **re-drafted on the redesigned data** (documents become real repeated-term text; TF-IDF/BM25
+> `k1`/`b` become meaningful; the lexical/content path must beat the floor and be re-measured). The round-1 review
+> record below is retained as the diagnosis that motivated recsys-004. Do NOT implement this plan as written.
+
+---
+
+# (original) Plan recsys-004 — Unit 3: Lexical retrieval (TF-IDF and BM25)
 
 **Design:** `docs/designs/011-recsys-book.md` (§5, §6 "taste derived from catalog features (subjects/authors)", §8
 Unit 3). **Book:** `recsys` (Book 3). **Autopilot** per AGENTS.md. Third Part-1 unit, on the recsys-001/Unit-1/Unit-2
@@ -129,7 +142,25 @@ Phase G is this plan's named verification phase.
 
 ### Round 1 (on v1)
 
-<!-- verdicts appended -->
+**[self] — APPROVE.** Concepts globally unique; coverage entry closes (`requires`/`practices` = Unit-1 ids, all
+introduced; `practices∩introduces=∅`; no `project` map entry → capstone rule off); buildout holds (9 < 30); named
+verification phase G; project-first; from-scratch→library; ≥6/≥2-stretch/≥3-asserts; teacher-notes 60–90 min;
+milestone notebook via the established mechanism. Data approach is design-§6-aligned (genre+author feature tokens;
+no generator change) and binds empirical floor-beating verification on the authors + the gate. No [self] blockers.
+`[glm]` skipped for the weekend (volcengine-plan non-functional across three prior attempts; resume Monday).
+
+**[sol] — REJECT** (empirical). Probed via `run_validation_scoreboard`: the specified genre+author BM25 path scores
+BELOW the random floor (unique-query 0.00815, multiset 0.00543 vs random 0.01359, 368 readers). Rare author tokens
+dominate IDF; author-following only applies after prior positives and doesn't generalize to `val`. Also: every
+document has TF=1 (each genre/author appears once), so BM25 `k1` saturation is inert on this corpus. Plus: `load`
+round-trip test unspecified. **Premise fails — the data does not support a floor-beating surface-content path.**
+*(Self-confirmed: genre-only cosine 0.0054, genre×IDF 0.0082 — both below floor; all 12 genres have df≈314–358/2000,
+so genre matching barely discriminates and the generator's taste is latent, captured by CF/MF not surface features.)*
+
+**[fable]** — plan-review still running when the data-architecture fork was escalated to the user (premise already
+empirically refuted by [sol] + self-probe; [fable]'s verdict does not change that a data decision is required).
+
+### Plan-review outcome (round 1): **NOT consensus — [sol] REJECT (premise/data).** Escalated to the user: the synthetic catalog lacks the content/text signal that Units 3 (lexical) and 7 (GloVe) require. Revision blocked on the data-architecture decision below.
 
 ## Content Review
 
