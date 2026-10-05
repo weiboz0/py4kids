@@ -1,5 +1,5 @@
 map_version: 1
-# This remains `buildout: true` while the accumulated lessons (now nine: Units 1-3, 3 each) are below the
+# This remains `buildout: true` while the accumulated lessons (now twelve: Units 1-4, 3 each) are below the
 # whole-book lesson budget (30). A later plan removes buildout when the accumulated entries first reach that budget.
 entries:
 - id: unit-01-problem-and-scoreboard
@@ -21,5 +21,12 @@ entries:
   title: "Lexical retrieval: TF-IDF and BM25"
   lessons: 3
   introduces: [bag-of-words, tf-idf, bm25]
+  requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]
+  practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]
+- id: unit-04-neighborhood-cf
+  kind: unit
+  title: "Neighborhood collaborative filtering"
+  lessons: 3
+  introduces: [item-item-cf, knn-similarity, implicit-feedback]
   requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]
   practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]

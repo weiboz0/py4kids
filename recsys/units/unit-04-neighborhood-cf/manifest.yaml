@@ -1,0 +1,9 @@
+id: unit-04-neighborhood-cf
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [item-item-cf, knn-similarity, implicit-feedback]
+  requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]
+  practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]

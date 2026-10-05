@@ -208,7 +208,12 @@ PORTs `_item_item_cf` via the row-mapping duck-typed `fit`, no pandas (fable#5);
 coverage-map `title` + all 3 concepts `name`+`category` (glm#2); Phase B test = two-part gate `≥1.3× pop AND
 ≥ pop+0.03 AND > lexical` (glm#4/fable#1). No [self] blockers.
 
-<!-- [fable] / [glm] round 2 appended -->
+**[fable] — APPROVE** (round 2): all 8 resolved; one non-blocking implementer note (fit precedence: `catalog=` when
+given, else train items — baked into the Phase-B dispatch).
+**[glm] — APPROVE** (round 2): all findings resolved + verified against `gen_interactions.py` (`label==0` = exposed-
+not-liked; per-positive sampled negatives), shipped U3 (~1.46×), and the committed harness/`_learned_mf`. No new blockers.
+
+### Plan-review outcome: **CONSENSUS (3-of-4; [sol] infra-down — Codex at capacity)** — [self]/[fable]/[glm] APPROVE. CF headline corrected (beats BOTH popularity and lexical). Cleared to implement (Phase A → G).
 
 ## Content Review
 
