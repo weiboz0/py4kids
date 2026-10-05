@@ -333,7 +333,12 @@ def test_only_the_checkpoint_solution_touches_the_test_split() -> None:
         repo / "recsys" / "checkpoints" / "checkpoint-01-part-1",
         repo / "recsys" / "projects" / "bookrec" / "milestones",
     ]
-    allowed = {"checkpoint-01-part-1/solutions.ipynb"}
+    # Only Checkpoint A (the authorized Part-1 unseal) may touch the sealed test split — BOTH its
+    # statement (which instructs the one-shot test evaluation) and its solution.
+    allowed = {
+        "checkpoint-01-part-1/checkpoint.ipynb",
+        "checkpoint-01-part-1/solutions.ipynb",
+    }
     offenders: list[str] = []
     for root in roots:
         if not root.exists():
