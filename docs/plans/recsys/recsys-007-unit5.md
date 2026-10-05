@@ -336,12 +336,11 @@ numeric seed-0 CF gate + "on par" wording (Must3); logistic full-batch GD (Shoul
 
 **[sol] — APPROVE (round 3).** All three round-2 findings confirmed resolved in v3; no new blocker.
 
-### Plan-review gate outcome: **[self] APPROVE · [sol] APPROVE · [fable] APPROVE WITH NITS · [glm] round-1 APPROVE WITH NITS (round-2+ tooling-blocked).**
-3 live approvals + [glm]'s standing round-1 approval (no Must; all 5 nits folded; the v2/v3 changes since were
-strictly corrective, aligning the port spec to `_learned_mf` which [fable] independently ported + measured). [glm]'s
-round-2/3 confirmation is unavailable due to an opencode-companion invocation-layer failure (both `opencode-go` and
-`volcengine-plan` models). Per memory, a sub-4 consensus proceed is a user trust decision → surfaced via
-AskUserQuestion before the build begins.
+### Plan-review gate outcome: **CONSENSUS — [self] APPROVE · [sol] APPROVE · [fable] APPROVE WITH NITS.**
+On 2026-10-05 the user directed "remove glm from review rolls" (after the opencode companion failed at the
+invocation layer). Governance updated (AGENTS.md, content-review-gate.md, development-workflow.md, D-003): both gates
+are now **3-way** `[self]`/`[sol]`/`[fable]`. All three APPROVE / APPROVE WITH NITS, no open Must → **full-blocking
+consensus met.** Proceed to the build (Phase A → G).
 
 ## Content Review
 
