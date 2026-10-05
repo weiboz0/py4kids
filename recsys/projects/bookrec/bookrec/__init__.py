@@ -34,6 +34,7 @@ from bookrec.lexical import (
     cosine_similarity,
     tfidf_matrix,
 )
+from bookrec.neighborhood import ItemItemRetrievalPath, item_item_cosine
 from bookrec.popularity import PopularityRetrievalPath, weighted_rating
 from bookrec.protocol import (
     Candidate,
@@ -51,6 +52,7 @@ __all__ = [
     "Book",
     "Candidate",
     "DuplicatePathError",
+    "ItemItemRetrievalPath",
     "LexicalRetrievalPath",
     "PathRegistry",
     "PopularityRetrievalPath",
@@ -65,6 +67,7 @@ __all__ = [
     "head_ids_from_counts",
     "head_share",
     "hit_rate_at_k",
+    "item_item_cosine",
     "load_catalog",
     "load_keywords",
     "order_candidates",

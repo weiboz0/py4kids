@@ -17,3 +17,7 @@ concepts:
 - {id: bag-of-words, name: "Bag-of-words document representation", category: techniques, kind: technique}
 - {id: tf-idf, name: "TF-IDF weighting and cosine similarity", category: techniques, kind: technique}
 - {id: bm25, name: "Okapi BM25 scoring", category: techniques, kind: technique}
+# --- Unit 4 (recsys-006): neighborhood collaborative filtering ---
+- {id: item-item-cf, name: "Item-item collaborative filtering (co-occurrence)", category: techniques, kind: technique}
+- {id: knn-similarity, name: "k-nearest-neighbor similarity retrieval", category: techniques, kind: technique}
+- {id: implicit-feedback, name: "Implicit feedback and sampled negatives", category: techniques, kind: technique}
