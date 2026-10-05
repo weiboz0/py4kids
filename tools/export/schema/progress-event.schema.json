@@ -1,0 +1,115 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "py4kids/progress-event/1.0.0",
+ "title": "py4kids progress event",
+ "description": "One progress event (design 012 D11). `detail` holds results only: never student code or free text.",
+ "type": "object",
+ "properties": {
+  "schema": {
+   "const": "py4kids/progress-event/1.0.0"
+  },
+  "event_id": {
+   "type": "string",
+   "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+   "description": "A UUID; makes sync idempotent."
+  },
+  "book": {
+   "type": "string",
+   "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+  },
+  "item_key": {
+   "type": "string",
+   "pattern": "^[a-z0-9]+(-[a-z0-9]+)*/[^/#\\s]+/[^/#\\s]+/[^/#\\s]+(#\\S+)?$"
+  },
+  "kind": {
+   "enum": [
+    "lesson-run",
+    "slide",
+    "card",
+    "exercise",
+    "checkpoint",
+    "project",
+    "self-check"
+   ]
+  },
+  "result": {
+   "enum": [
+    "pass",
+    "fail",
+    "partial",
+    "done",
+    "seen",
+    "error"
+   ]
+  },
+  "detail": {
+   "type": "object",
+   "properties": {
+    "cases": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "n": {
+        "type": "integer",
+        "minimum": 1
+       },
+       "pass": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "n",
+       "pass"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "self_grade": {
+     "enum": [
+      "got-it",
+      "not-yet"
+     ]
+    },
+    "box": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "checklist": {
+     "type": "array",
+     "items": {
+      "type": "boolean"
+     }
+    }
+   },
+   "additionalProperties": false
+  },
+  "duration_ms": {
+   "type": "integer",
+   "minimum": 0
+  },
+  "timestamp": {
+   "type": "string",
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$",
+   "description": "UTC, ISO 8601."
+  },
+  "content_hash": {
+   "type": "string",
+   "pattern": "^sha256:[0-9a-f]{64}$",
+   "description": "The bundle's release.content_hash."
+  }
+ },
+ "required": [
+  "schema",
+  "event_id",
+  "book",
+  "item_key",
+  "kind",
+  "result",
+  "detail",
+  "duration_ms",
+  "timestamp",
+  "content_hash"
+ ],
+ "additionalProperties": false
+}
