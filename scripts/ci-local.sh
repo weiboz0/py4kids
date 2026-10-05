@@ -121,6 +121,12 @@ while read -r book flags <&3; do
   if has_flag acsl "$flags"; then
     book_run "$book" acsl-check
   fi
+  # The learning-website export (design 012; plan 101): prints its INFO:/WARN: lines and fails on
+  # FAIL:. Its findings are cached by committed tree hashes, so the unit-test run above (which
+  # checks the same books) is not repeated on a clean tree.
+  if has_flag site "$flags"; then
+    book_run "$book" site-check
+  fi
 done 3<<< "$books"
 
 step "5/6 PDF build"

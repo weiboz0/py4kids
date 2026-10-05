@@ -278,3 +278,64 @@ def git_add(root: Path) -> None:
     if not (Path(root) / ".git").exists():
         subprocess.run(["git", "init", "-q", str(root)], check=True)
     subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+
+
+# --- the whole-bundle fixture (plan 101 E) ------------------------------------------------------
+
+GLOSSARY = """# Glossary
+
+**print** — Shows a value on the screen. *(Unit 1)*
+<!-- concept: print -->
+
+**variable** — A name for a value. *(Units 1–2)*
+<!-- concept: variable -->
+
+**for loop** — Repeats code once per value. *(Unit 2)*
+<!-- concept: for-loop -->
+
+**range** — Makes a run of whole numbers. *(Unit 2)*
+<!-- concept: range-function -->
+"""
+
+QUICK_REFERENCE = "# Quick Reference\n\n| Code | Meaning |\n|---|---|\n| `print(x)` | show x |\n"
+
+
+def unit_01_lesson(base: Path, extra_cells=()) -> None:
+    entry = base / "units" / "unit-01-demo"
+    stream = nbformat.v4.new_output
+    write_nb(entry / "lesson.ipynb", [
+        md("l1m0", "# Unit 1 — Demo\n\nThe fair needs a scoreboard. By the end you will print one."),
+        md("l1m1", "### You will learn\n\n- Print a value.\n- Store a value in a variable."),
+        code("l1c1", "x = 3"),
+        code("l1c2", "print(x * 2)", outputs=[stream("stream", name="stdout", text="6\n")]),
+        code("l1c3", "print('hi')", outputs=[stream("stream", name="stdout", text="hi\n")]),
+        code("l1c4", "open('scratch.txt', 'w').write('a')"),
+        md("l1m2", "## Counting\n\nThe helper `assets/count_helper.py` counts for you.\n\n"
+           "### Try it\n\nChange the numbers."),
+        *extra_cells,
+    ])
+    # A verify helper is a solution source (design 010 D3): tracked, but never shipped.
+    write(entry / "assets" / "verify" / "check.py", "def check(value):\n    return value == 6\n")
+
+
+def unit_02_lesson(base: Path) -> None:
+    entry = base / "units" / "unit-02-more"
+    stream = nbformat.v4.new_output
+    write_nb(entry / "lesson.ipynb", [
+        md("l2m0", "# Unit 2 — More\n\nCount the prizes."),
+        code("l2c1", "for i in range(2):\n    print(i)",
+             outputs=[stream("stream", name="stdout", text="0\n1\n")]),
+        md("l2m1", "### Recap\n\n- `for` repeats."),
+    ])
+
+
+def build_site_root(root: Path, extra_lesson_cells=()) -> Path:
+    """The demo book plus lessons and back matter: every part of a bundle (plan 101 E)."""
+    root = build_demo_root(root)
+    base = root / BOOK
+    unit_01_lesson(base, extra_lesson_cells)
+    unit_02_lesson(base)
+    write(base / "back-matter" / "glossary.md", GLOSSARY)
+    write(base / "back-matter" / "quick-reference.md", QUICK_REFERENCE)
+    git_add(root)
+    return root

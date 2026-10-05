@@ -24,9 +24,20 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--book", required=True)
     parser.add_argument("--unit")
-    parser.add_argument("check", choices=(*CHECKS, "fill-outputs", "lesson-outputs-check", "publish", "publish-audit"))
+    parser.add_argument("check", choices=(*CHECKS, "fill-outputs", "lesson-outputs-check", "publish",
+                                          "publish-audit", *SITE_COMMANDS))
     parser.add_argument("--edition", choices=EDITION_CHOICES)
+    # The site export (design 012; plan 101): `export`, `classify`, `site-check`.
+    parser.add_argument("--out", type=Path, help="export: bundle directory (default site/content/<book>)")
+    parser.add_argument("--release", default="unreleased", help="export: the release tag (PDF links)")
+    parser.add_argument("--update-ledger", action="store_true",
+                        help="export: write site/ids/<book>.json from the bundle's keys")
+    parser.add_argument("--apply", action="store_true",
+                        help="classify: write each proposed check-* tag to its heading cell")
     return parser
+
+
+SITE_COMMANDS = ("export", "classify", "site-check")
 
 
 BOOK_LEVEL_CHECKS = {
@@ -45,6 +56,8 @@ def main(argv=None):
         arguments = _parser().parse_args(argv)
     except SystemExit as error:
         return int(error.code)
+    if arguments.check in SITE_COMMANDS:
+        return _site_command(arguments)
     if arguments.unit and arguments.check in BOOK_LEVEL_CHECKS:
         print(f"usage: --unit does not apply to book-level check {arguments.check}",
               file=sys.stderr)
@@ -103,6 +116,59 @@ def main(argv=None):
             print(finding)
         return 1
     print(f"{arguments.check}: PASS")
+    return 0
+
+
+def _site_command(arguments) -> int:
+    from tools.books import book_flag
+
+    root, book = arguments.root, arguments.book
+    try:
+        is_site = book_flag(root, book, "site")
+    except (KeyError, ValueError):
+        is_site = False
+    if not is_site:
+        print(f"usage: {book} is not a site book (books.yaml site: true)", file=sys.stderr)
+        return 2
+    if arguments.check == "export":
+        from tools.export.bundle import ExportError, export_book
+        from tools.export.ids import write_ledger
+
+        out = arguments.out or root / "site" / "content" / book
+        try:
+            result = export_book(root, book, out, release=arguments.release)
+        except ExportError as error:
+            print("\n".join(error.findings))
+            return 1
+        except ValueError as error:
+            print(error)
+            return 1
+        if arguments.update_ledger:
+            write_ledger(root, book, result.keys)
+        print(f"export: {book}: {len(result.keys)} keys, {result.content_hash} -> {out}")
+        return 0
+    if arguments.check == "classify":
+        from tools.export.classify import apply_proposals, classification_rows
+
+        try:
+            if arguments.apply:
+                for key in apply_proposals(root, book, arguments.unit):
+                    print(f"tagged {key}")
+                return 0
+            for row in classification_rows(root, book, arguments.unit):
+                print("\t".join(row))
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 1
+        return 0
+    from tools.export.check import site_check_findings
+
+    findings = site_check_findings(root, book)
+    for finding in findings:
+        print(finding)
+    if any(finding.startswith("FAIL:") for finding in findings):
+        return 1
+    print("site-check: PASS")
     return 0
 
 

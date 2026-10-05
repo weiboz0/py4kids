@@ -10,8 +10,9 @@ from tools.books import book_path, books_with_flag
 from tools.export.cards import concept_cards, glossary_records, predict_cards
 from tools.export.concepts import book_registry
 from tools.export.ids import duplicate_key_findings
+from tools.export.items import entry_content
 from tools.export.lesson import lesson_dirs, lesson_export
-from tools.publish import glossary_entries
+from tools.publish import entries, glossary_entries
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = Path(__file__).parent / "fixtures" / "site" / "units" / "unit-01-demo"
@@ -145,9 +146,10 @@ def test_concept_cards_real_books(book):
 
 
 def test_keys_unique_across_kinds(fixture_lesson):
-    """A predict card's key differs from its block's; block and card keys never collide.
+    """A predict card's key differs from its block's; block, item and card keys never collide.
 
-    Items join this union in Phase E (`site_check_findings` runs it over blocks, items and cards).
+    The union holds lesson blocks, statement intro/outro/`before` blocks, items and cards (the bundle
+    writer runs the same check, `tests/test_site_bundle.py::test_duplicate_key_across_kinds_fails`).
     """
     cards = predict_cards(fixture_lesson.blocks)
     assert cards and all(card["key"] != card["block"] for card in cards)
@@ -163,4 +165,13 @@ def test_keys_unique_across_kinds(fixture_lesson):
             keys += [b["key"] for b in blocks] + [c["key"] for c in predict_cards(blocks)]
         keys += [c["key"] for c in concept_cards(list(registry.concepts),
                                                  glossary_records(glossary(book)), book=book)]
+        items = 0
+        for entry_id, entry_dir in entries(book_path(ROOT, book), "student"):
+            kind = entry_id.split("-", 1)[0]
+            content = entry_content(ROOT, book, entry_dir, kind)
+            keys += [b["key"] for b in [*content.intro, *content.outro]]
+            for item in content.items:
+                keys += [item.key, *(b["key"] for b in item.before)]
+            items += len(content.items)
+        assert items, book
         assert duplicate_key_findings(keys) == [], book
