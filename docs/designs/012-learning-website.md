@@ -1,6 +1,6 @@
 # Design 012 — A learning website for every book
 
-Status: proposed, revision 3 (2026-10-04). Round 1: [sol] REJECT, [fable] REJECT. Round 2: [sol] REJECT (3 findings), [fable] APPROVE WITH NITS. Round 3: [sol] APPROVE WITH NITS. All findings are folded. **Review consensus reached; awaiting the user's spec review.**
+Status: approved, revision 3 (2026-10-04). Round 1: [sol] REJECT, [fable] REJECT. Round 2: [sol] REJECT (3 findings), [fable] APPROVE WITH NITS. Round 3: [sol] APPROVE WITH NITS. All findings are folded. Review consensus reached. **Approved by the user on 2026-10-05 ("Go with autopilot").** Part A: plan 101.
 Extends design 000 ("notebooks are the source of truth"), design 007 (publication), and design 010 (every book publishes).
 
 ## 1. Purpose and agreed understanding
