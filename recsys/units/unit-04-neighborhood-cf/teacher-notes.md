@@ -23,16 +23,16 @@ retrieve-then-rank, catalog search, offline evaluation, and top-k metrics.
 ## Pacing
 
 The unit opens with its **project hook** — *readers who liked the books you liked also read…* — which motivates
-collaborative filtering before any mechanics. Plan **60–90 minutes across two to three sittings**; assign **all**
-exercises (1–N) across the sittings:
+collaborative filtering before any mechanics. Plan **60–90 minutes across two to three sittings**; assign all
+exercises (1–8: 6 core + 2 Challenge) across the sittings:
 
 1. **Sitting 1 (~25 min) — co-occurrence + implicit feedback.** The collaborative idea; implicit vs explicit against
    the real log's positives and `label==0` rows; build the item-item cosine similarity by hand. Exercises 1–2.
 2. **Sitting 2 (~35 min) — k-NN retrieval and the win.** Score by summed similarity to a reader's history; the
    `n_neighbors` cap (and its honest *degradation* here); reveal `ItemItemRetrievalPath`; score on `val` — CF beats
-   both popularity and lexical (~0.25 vs ~0.11 / ~0.16). Exercises 3–5.
+   both popularity and lexical (~0.25 vs ~0.11 / ~0.16). Exercises 3–6.
 3. **Sitting 3 (~20 min, + Challenges) — limits and bridges.** The coverage ceiling (no-neighbor items), cold items,
-   and why co-occurrence is a rank-reduced signal (a bridge to matrix factorization, Unit 5). The stretch exercises.
+   and why MF (Unit 5) is a **low-rank (rank-reduced) approximation** of this full pairwise co-occurrence. The stretch exercises.
 
 ## Common mistakes
 
@@ -66,8 +66,8 @@ exercises (1–N) across the sittings:
 
 - **Support:** give the train-positive filter and the incidence→cosine construction as starter snippets so the
   lesson stays on the CF ideas; pair-program the scoreboard call and the neighbor lookup.
-- **Core:** Exercises 1–N unaided, using `bookrec.item_item_cosine` / `ItemItemRetrievalPath` rather than
+- **Core:** Exercises 1–6 unaided, using `bookrec.item_item_cosine` / `ItemItemRetrievalPath` rather than
   reimplementing the matrix.
-- **Stretch:** the `n_neighbors`-cap degradation, the no-neighbor coverage ceiling, and the "co-occurrence ≈
-  rank-reduced signal" argument bridging to MF. Ask strong students to predict, before running, how CF and content
+- **Stretch:** the `n_neighbors`-cap degradation, the no-neighbor coverage ceiling, and the "MF is a low-rank
+  (rank-reduced) approximation of the full co-occurrence" argument bridging to MF. Ask strong students to predict, before running, how CF and content
   rank a book that is popular-but-off-taste vs niche-but-on-taste.
