@@ -205,7 +205,40 @@ subagents hit the weekly cap, Codex at capacity) — the independent gate is the
   k1=0 NaN-safety fix + fit→artifact→load round-trip + protocol-substitutable fit). No [self] blockers. Deferred to
   [sol]/[fable] blind-solve.
 
-<!-- [sol] / [fable] appended -->
+### Review 2 — fable (2026-10-04)
+- **Verdict**: APPROVE WITH NITS. Blind-solved all 8 (every number matches solutions); empirically verified
+  (lexical 0.158=13.2× floor, 1.46× pop; TF-IDF 0.160≈BM25; k1=0 → 0.170; length bias 35.7→31.6 as b 0→1);
+  code review clean (plus-one IDF monotone; k1=0 NaN-fix finite/binary; protocol-substitutable fit;
+  fit→artifact→load round-trip; numpy-only). No Must-Fix.
+1. `[OPEN]` **Should Fix** — `exercises.ipynb` Ex8 statement says "why the ratio is **so large**" but the measured
+  ratio is a modest ~1.27 (df 42..113). Reword to "why it *can* be very large in general (df=1→≈log N; df≈N→≈0),
+  then report the modest ratio you measure here and say why". (solution already honest.)
+2. `[OPEN]` **Should Fix** — `lesson.ipynb` cell 24 says `retrieve` returns "**calibrated** Candidates"; it returns
+  RAW BM25 scores (calibration is `path.calibrate` at blend time). Fix to "raw BM25 scores (calibrated later, at
+  blend time)" — avoids misteaching the protocol.
+3. `[OPEN]` **Nice** — Ex1 statement: note the single-book-token count may be 0 (generator) + ask for smallest df.
+4. `[OPEN]` **Nice** — Ex5 statement: add the top-10 tf=1 tally (the long doc alone has only 2 contributing tokens).
+5. `[OPEN]` **Nice** — `teacher-notes.md` Pacing: Exercises 5–6 are unassigned to a sitting; assign them.
+6. `[OPEN]` **Nice** — Ex8 "how many tokens it outweighs" is a vacuous assert; ask the top-3 token share instead.
+
+### Review 3 — sol (2026-10-04, INCOMPLETE — Codex capacity)
+- **Verdict**: none (Codex `gpt-5.6-sol` hit "model at capacity" mid-review; turn failed). Before failing it
+  independently confirmed Exercises 1–7 match the solutions and flagged the SAME Ex8 overclaim as [fable]#1
+  (corroborating). Re-dispatched on the fixed content (Monday).
+
+### Fix pass (commits `4957e7b` teacher-notes, `3d493e0` notebooks) — dispositions
+- **fable#1 / sol-partial** `[FIXED]` — Ex8 statement reworded: explain why the idf ratio *can* be large in general
+  (df=1→≈log N; df≈N→≈0), then measure + explain the modest ~1.27 here; solution prose aligned.
+- **fable#2** `[FIXED]` — lesson cell 24: `retrieve` returns "raw BM25 scores (calibrated later, at blend time)",
+  not "calibrated" (grep-confirmed sole occurrence).
+- **fable#3** `[FIXED]` — Ex1 asks for smallest df + notes the single-book count may be 0 (not a bug).
+- **fable#4** `[FIXED]` — Ex5 adds the top-10 tf=1 tally (demonstrates the small-`k1` point).
+- **fable#5** `[FIXED]` — teacher-notes Pacing assigns Exercises 5–6 (Sitting 2).
+- **fable#6** `[FIXED]` — Ex8 vacuous sub-question → top-3-token score share (non-vacuous assert).
+All per-unit checks PASS after the fix pass. Monday: resume full 4-way — re-dispatching [sol] (Codex) + [glm]
+(opencode) on the fixed content.
+
+<!-- [sol] round 2 / [glm] appended -->
 
 ## Post-Execution Report
 
