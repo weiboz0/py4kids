@@ -217,7 +217,20 @@ not-liked; per-positive sampled negatives), shipped U3 (~1.46×), and the commit
 
 ## Content Review
 
-<!-- appended pre-PR -->
+ci-local ALL GREEN (97 bookrec tests incl. test_unit04; lesson/solutions/milestone exec; concept-scan; recsys PDFs;
+pre-merge-guard OK). Ruff step-1 caught an unused `Counter` import in the milestone (fixed, commit `fa6bb98`). 4-way
+gate (Opus back Monday; [sol] retried on Codex).
+
+### Review 1 — self (2026-10-05)
+- **Verdict**: APPROVE. All phases verified: lesson (project-first; co-occurrence→cosine→kNN from scratch then
+  reveal), 8 exercises (6 core + 2 stretch) + mirrored solutions (8 asserts), milestone, teacher-notes. Numbers
+  reproduced (CF 0.252 = 2.33× popularity, 1.60× lexical, 21× floor; cap=10 → 0.142 degrades; 818/2000 unreachable).
+  Honest framing confirmed (CF first COLLABORATIVE path + first to beat BOTH popularity AND lexical, acknowledging
+  U3's ~1.46×; implicit feedback vs the real label==0 rows, no negative sampling in U4). Code tested (neighborhood.py
+  97 tests incl. leakage bit-identical + leaky-0.964 + fit→artifact→load + cap degradation). No [self] blockers;
+  deferred to [fable]/[glm]/[sol] blind-solve.
+
+<!-- [sol] / [fable] / [glm] appended -->
 
 ## Post-Execution Report
 
