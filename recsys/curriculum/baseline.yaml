@@ -89,6 +89,22 @@ library_methods:
 - maximum
 - outer
 - sqrt
+# --- Unit 5 (recsys-007): matrix factorization (bookrec MF API + numpy GD idioms) ---
+- MatrixFactorizationPath
+- calibrate
+- choice
+- concatenate
+- default_rng
+- empty
+- exp
+- bincount
+- int64
+- integers
+- isfinite
+- load
+- normal
+- ones
+- repeat
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}
