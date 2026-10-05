@@ -106,9 +106,12 @@ class ItemItemRetrievalPath(BaseRetrievalPath):
         ``reader_id, item_id, split, label`` (the shape ``DataFrame.to_dict("records")`` and the
         generator's own rows both satisfy — no pandas import, exactly like
         :meth:`~bookrec.popularity.PopularityRetrievalPath.fit`). Only rows with ``split == "train"``
-        **and** ``label == 1`` enter the incidence; val/test rows and ``label == 0`` rows are
-        leakage and are skipped in code (so the fitted similarity is bit-identical with or without
-        them). The **item universe** is ``catalog`` when given, else the train-positive items
+        **and** ``label == 1`` enter the incidence. Two kinds of rows are skipped for two different
+        reasons: val/test rows are **leakage** (folding them in lets the path recover the held-out
+        answer), while train ``label == 0`` rows are *not* leakage — they are valid train
+        exposure-sampled negatives that the positives-only co-occurrence intentionally ignores.
+        Either way the fitted similarity is bit-identical with or without those rows. The **item
+        universe** is ``catalog`` when given, else the train-positive items
         (precedence: catalog if provided, else train items); readers are indexed from the train
         rows themselves. Raises :class:`ValueError` on an empty fit (no train positives).
         """
@@ -152,9 +155,17 @@ class ItemItemRetrievalPath(BaseRetrievalPath):
         """
         state = dict(artifact)
         item_ids = [int(i) for i in state["item_ids"]]
+        similarity = np.array(state["similarity"], dtype=float)
+        n_items = len(item_ids)
+        if similarity.shape != (n_items, n_items):
+            raise ValueError(
+                "ItemItemRetrievalPath.load: similarity shape "
+                f"{similarity.shape} does not match a square ({n_items}, {n_items}) "
+                "for the restored item_ids"
+            )
         self._item_ids = item_ids
         self._row_of = {item: idx for idx, item in enumerate(item_ids)}
-        self._similarity = np.array(state["similarity"], dtype=float)
+        self._similarity = similarity
         if "n_neighbors" in state:
             self.n_neighbors = state["n_neighbors"]
         self._fitted = True
@@ -184,6 +195,12 @@ class ItemItemRetrievalPath(BaseRetrievalPath):
         seen book. ``seen`` items absent from the fitted index are skipped (no ``KeyError`` on a
         hand-built context); an empty ``seen`` — or a ``seen`` with no indexed item — returns ``[]``.
         Seen books are excluded from the recommendations (a re-read is not a recommendation).
+
+        **Coverage ceiling (enforced).** Only candidates with a **strictly positive** co-occurrence
+        score are surfaced: an item with no neighbour the reader has read (a zero-score item — e.g.
+        one nobody co-read, the all-zero-similarity column) is **never** recommended, so a
+        thin-history reader is never handed zero-score filler. The result may therefore hold fewer
+        than ``k`` items — even ``[]`` — when few neighbours exist; that is correct, not a bug.
         """
         del query  # the reader is identified through context["seen"], not the query id
         if self._similarity is None:
@@ -195,9 +212,11 @@ class ItemItemRetrievalPath(BaseRetrievalPath):
         if not seen_cols:
             return []
         scores = self._similarity[:, seen_cols].sum(axis=1)
+        # Enforce the coverage ceiling: only items with a positive co-occurrence signal are
+        # candidates, so a zero-score item (no neighbour the reader has read) is never surfaced.
         candidates = [
             Candidate(item_id, float(scores[row]), self.name)
             for row, item_id in enumerate(self._item_ids)
-            if item_id not in seen
+            if item_id not in seen and scores[row] > 0.0
         ]
         return self._finish(candidates, k)

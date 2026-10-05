@@ -201,6 +201,23 @@ def test_seen_item_not_in_index_is_skipped_no_keyerror() -> None:
     assert path.retrieve(0, {"seen": {999}}, K) == []  # only-absent -> no signal -> []
 
 
+def test_no_neighbour_history_returns_empty_coverage_ceiling() -> None:
+    # Coverage ceiling (enforced): readers 0 and 1 co-read 100/101; reader 2 reads only 102, which
+    # shares no reader with the others -> 102's similarity column is all-zero. A reader whose whole
+    # history is {102} has NO positive-score candidate, so retrieve returns [] rather than handing
+    # back zero-score filler items. An empty seen likewise returns [].
+    rows = [
+        _train_pos(0, 100),
+        _train_pos(0, 101),
+        _train_pos(1, 100),
+        _train_pos(1, 101),
+        _train_pos(2, 102),
+    ]
+    path = ItemItemRetrievalPath().fit(rows)
+    assert path.retrieve(0, {"seen": {102}}, 10) == []  # only neighbourless item seen -> []
+    assert path.retrieve(0, {"seen": set()}, 10) == []
+
+
 def test_retrieve_excludes_seen_and_is_bounded(generated: dict[str, object]) -> None:
     catalog_ids = generated["catalog_ids"]
     path = ItemItemRetrievalPath().fit(generated["rows"], catalog=catalog_ids)
@@ -216,7 +233,17 @@ def test_fit_signature_is_protocol_substitutable(generated: dict[str, object]) -
     path = ItemItemRetrievalPath()
     same = path.fit(generated["rows"])
     assert same is path
-    assert path.retrieve(0, {"seen": {generated["catalog_ids"][5]}}, K) is not None
+    # Seed with an item that HAS train positives AND a real co-occurrence neighbour (a reader who
+    # co-read >=2 books), so the coverage-ceiling retrieve returns a NON-EMPTY, positive-score
+    # result — not the vacuous `is not None` check that a no-positives item would pass trivially.
+    reader_items: dict[int, set[int]] = {}
+    for row in generated["rows"]:
+        if row["split"] == "train" and row["label"] == 1:
+            reader_items.setdefault(int(row["reader_id"]), set()).add(int(row["item_id"]))
+    seen_item = next(next(iter(items)) for items in reader_items.values() if len(items) >= 2)
+    recs = path.retrieve(0, {"seen": {seen_item}}, K)
+    assert recs  # a real neighbour exists -> non-empty
+    assert all(c.score > 0 for c in recs)
 
 
 def test_fit_raises_on_no_train_positives() -> None:
@@ -242,6 +269,16 @@ def test_fit_artifact_load_round_trip(generated: dict[str, object]) -> None:
     loaded = ItemItemRetrievalPath().load(artifact)
     artifact["similarity"][0, 0] = 123.0
     assert loaded.similarity[0, 0] != 123.0
+
+
+def test_load_rejects_malformed_similarity_shape(generated: dict[str, object]) -> None:
+    # load must validate the restored similarity against len(item_ids): a non-square matrix (or any
+    # shape != (n_items, n_items)) is a corrupt artifact and raises ValueError, not a silent load.
+    original = ItemItemRetrievalPath().fit(generated["rows"], catalog=generated["catalog_ids"])
+    artifact = original.artifact()
+    artifact["similarity"] = artifact["similarity"][:-1]  # (n-1, n) — no longer square vs item_ids
+    with pytest.raises(ValueError):
+        ItemItemRetrievalPath().load(artifact)
 
 
 # --- registry ownership ----------------------------------------------------------------------
