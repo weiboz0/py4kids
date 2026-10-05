@@ -323,7 +323,19 @@ round-2/3 fixes only tighten). Not re-attempted.
 - **fable (r2)** `[FIXED]` — Ex8 code-comment old inverted phrasing reworded; lesson cell 14 reader-3 genres now
   include sci-fi. All per-unit checks PASS. Final `ci-local` + [sol] round-3 confirm in progress.
 
-<!-- round 3 appended -->
+**[sol] — REJECT** (round 3): finding #2 still open at a finer level — lesson cell 24's `G = D^{-1/2}RᵀRD^{-1/2}`
+with `D` = column *norms* is not cosine normalization (needs the product of norms, i.e. `D`=squared norms, or
+`D^{-1}`), and zero-norm cold items make the inverse undefined. Ex8/solution correctly scope to pre-zero `G` but
+inherit the mis-defined `G`.
+**Decision (round 4): REMOVE the formal rank/Gram-matrix claim** from lesson cell 24 + Ex8 + solution — it is a
+STRETCH enrichment generating 3 rounds of matrix-normalization pedantry, and matrix rank is NOT a Unit-4 concept
+(the concepts are item-item-cf / knn-similarity / implicit-feedback). Keep a CORRECT QUALITATIVE MF bridge
+(co-occurrence is a memorized pairwise similarity; MF learns a compact low-dimensional latent space that generalizes
+it for WARM items; it cannot invent factors for the 818 cold items → U6/U9) + the verified coverage-ceiling
+computation (reachable 1182 / unreachable 818). This closes #2 by removing the fragile claim rather than chasing a
+finer formula; the bridge stays accurate and taught-before-assessed.
+
+<!-- round 4 appended -->
 
 ## Post-Execution Report
 
