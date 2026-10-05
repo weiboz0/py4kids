@@ -33,7 +33,7 @@ the individual reader. Plan **60–90 minutes across two to three sittings** (ad
 2. **Sitting 2 (~35 min) — BM25 and the path.** Derive BM25; see the `b` length-norm effect on real
    docs and the (small) `k1` effect; build/register `LexicalRetrievalPath` and score it on `val`
    against the random floor and the Unit-2 popularity baseline. The honest reading — strong content
-   source, comparable to simple matching, below the collaborative paths to come. Exercises 3–4.
+   source, comparable to simple matching, below the collaborative paths to come. Exercises 3–6.
 3. **Sitting 3 (~20 min, + Challenges) — the limits.** The `k1→∞` (linear) and `k1→0` (binary)
    limits and why `k1→0` is about the best setting on these short keyword bags; rare-keyword
    dominance. Stretch exercises.
