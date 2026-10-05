@@ -31,14 +31,14 @@ sittings**; assign all exercises (1-8: 6 core + 2 Challenge) across the sittings
 
 1. **Sitting 1 (~30 min) — the model and the loss, from scratch.** The latent-factor model and the dot-product score;
    the logistic implicit-feedback loss over positives + complement negatives; one full-batch, per-entity-averaged
-   gradient-descent step by hand (watch the loss drop); train the toy factors over the pinned epochs and plot the
+   gradient-descent step by hand (watch the loss drop); train the toy factors over the pinned epochs and record the
    loss curve. Exercises 1-4.
 2. **Sitting 2 (~35 min) — reveal the path, the negatives beat, the win.** Reveal `MatrixFactorizationPath` at the
    pinned config; the retrieve contract (a known reader with empty `seen` still gets recs; an unknown reader -> `[]`);
    the **negatives beat** — complement negatives vs the log's `label==0` exposure negatives (the exposure ones
    collapse MF to the floor); register all paths and read the val scoreboard — MF on par with CF, beating lexical and
    popularity. Exercises 5-6.
-3. **Sitting 3 (~20 min, + Challenges) — capacity, the bridge, the limits.** `n_factors`/`reg` capacity and
+3. **Sitting 3 (~20 min, + Challenges) — capacity, the bridge, the limits.** `n_factors` capacity and
    under/overfitting; the score **is** an embedding dot product (the two-tower bridge to Unit 8); the cold story
    (cold reader -> `[]`, cold item scored low). The stretch exercises 7-8.
 
@@ -83,6 +83,6 @@ sittings**; assign all exercises (1-8: 6 core + 2 Challenge) across the sittings
   stays on the latent-factor idea; pair-program the scoreboard call and the retrieve contract.
 - **Core:** Exercises 1-6 unaided, using `MatrixFactorizationPath` rather than reimplementing the full training loop
   after the by-hand step in Exercise 3.
-- **Stretch:** the `n_factors`/`reg` capacity sweep, the embedding dot-product identity, and the MF-vs-CF top-k
+- **Stretch:** the `n_factors` capacity sweep, the embedding dot-product identity, and the MF-vs-CF top-k
   overlap. Ask strong students to predict, before running, whether more factors or more epochs would pull MF clearly
   ahead of CF — and at what cost — then check against the measured numbers.

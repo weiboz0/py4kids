@@ -173,6 +173,22 @@ def test_gradient_descent_reduces_logistic_loss() -> None:
     assert _positive_logistic_loss(two_step, pairs) < _positive_logistic_loss(one_step, pairs)
 
 
+def test_fit_terminates_when_a_reader_covers_the_whole_catalog() -> None:
+    # Regression: a reader whose positives cover EVERY catalog item has an empty unobserved
+    # complement, so every sampled "negative" collides with a known positive. The collision-
+    # resampling loop must not spin forever -- such a reader's negative slots are dropped. Reader 0
+    # covers all four books; reader 1 covers two. fit() must return quickly and still learn a factor
+    # for both readers. (If the guard regressed, this call would hang and CI would time out.)
+    catalog = [10, 11, 12, 13]
+    rows = [_train_pos(0, it) for it in catalog] + [_train_pos(1, 10), _train_pos(1, 11)]
+    path = MatrixFactorizationPath(n_epochs=5, seed=SEED).fit(rows, catalog=catalog)
+    reader_ids = set(path.artifact()["reader_ids"])
+    assert {0, 1} <= reader_ids
+    # The full-coverage reader still trains on its positives and can be scored.
+    recs = path.retrieve(0, {"seen": []}, 3)
+    assert len(recs) == 3
+
+
 # --- leakage safety --------------------------------------------------------------------------
 
 

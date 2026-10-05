@@ -5,8 +5,8 @@ matrix factorization **learns** a low-dimensional factor (embedding) per reader 
 ``sigmoid(P_u . Q_i)`` approximates "reader ``u`` liked book ``i``". The learned reader/item factors
 ARE embeddings scored by a dot product -- the exact shape Unit 8's neural two-tower will learn -- so
 MF is the latent generalization of co-occurrence: on this data it is **on par with item-item CF**
-(about 0.25-0.26 hit@10 vs CF's ~0.25, within noise over 500 readers), while beating the lexical
-content path and popularity by wide margins.
+(about 0.25-0.28 hit@10 across seeds, 0.276 at the pinned seed 0, vs CF's ~0.25 -- within noise over
+500 readers), while beating the lexical content path and popularity by wide margins.
 
 Two ideas live here:
 
@@ -120,26 +120,39 @@ class MatrixFactorizationPath(BaseRetrievalPath):
         complement negatives sampled **per train-positive** (resampling collisions with that
         reader's own positives), a logistic loss over positives + sampled negatives, and a step that
         divides each entity's summed gradient by its interaction count, with L2 regularization.
+
+        A reader whose observed positives already cover the ENTIRE catalog has an empty unobserved
+        complement and can supply no sampled negative; its negative slots are dropped before the
+        collision-resampling loop so the loop always terminates. This guard is inert on the shipped
+        data (no reader covers the whole catalog), so when it does not fire the RNG draw order -- and
+        therefore the learned factors -- is byte-identical to the reference.
         """
         rng = np.random.default_rng(self.seed)
         p = rng.normal(0.0, 0.1, size=(n_readers, self.n_factors))
         q = rng.normal(0.0, 0.1, size=(n_books, self.n_factors))
         n_pos = pos_readers.shape[0]
-        neg_readers = np.repeat(pos_readers, self.n_negatives)
-        neg_items = rng.integers(0, n_books, size=n_pos * self.n_negatives)
         # Sample negatives from each reader's UNOBSERVED complement: resample any draw that collides
         # with one of that reader's observed positives so no "negative" is actually a known positive.
         observed = set(zip(pos_readers.tolist(), pos_items.tolist()))
+        distinct_per_reader: dict[int, int] = {}
+        for reader, _item in observed:
+            distinct_per_reader[reader] = distinct_per_reader.get(reader, 0) + 1
+        full_coverage = {r for r, c in distinct_per_reader.items() if c >= n_books}
+        neg_readers = np.repeat(pos_readers, self.n_negatives)
+        if full_coverage:
+            neg_readers = neg_readers[[r not in full_coverage for r in neg_readers.tolist()]]
+        n_neg = neg_readers.shape[0]
+        neg_items = rng.integers(0, n_books, size=n_neg)
         neg_reader_list = neg_readers.tolist()
         pending = [
-            j for j in range(neg_items.shape[0]) if (neg_reader_list[j], int(neg_items[j])) in observed
+            j for j in range(n_neg) if (neg_reader_list[j], int(neg_items[j])) in observed
         ]
         while pending:
             neg_items[pending] = rng.integers(0, n_books, size=len(pending))
             pending = [j for j in pending if (neg_reader_list[j], int(neg_items[j])) in observed]
         u_idx = np.concatenate([pos_readers, neg_readers])
         i_idx = np.concatenate([pos_items, neg_items])
-        y = np.concatenate([np.ones(n_pos), np.zeros(n_pos * self.n_negatives)])
+        y = np.concatenate([np.ones(n_pos), np.zeros(n_neg)])
         count_u = np.maximum(np.bincount(u_idx, minlength=n_readers), 1)[:, None]
         count_i = np.maximum(np.bincount(i_idx, minlength=n_books), 1)[:, None]
         for _ in range(self.n_epochs):
