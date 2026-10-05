@@ -81,6 +81,14 @@ library_methods:
 - tfidf_matrix
 - update
 - zeros
+# --- Unit 4 (recsys-006): neighborhood CF (bookrec API + numpy idioms) ---
+- ItemItemRetrievalPath
+- diag
+- fill_diagonal
+- item_item_cosine
+- maximum
+- outer
+- sqrt
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}
