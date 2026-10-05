@@ -1,12 +1,14 @@
 """The evaluation scoreboard: top-k retrieval metrics over a held-out relevant set.
 
-These are the U1 metrics (design 011 §8). Deeper metrics (NDCG, calibration, coverage/diversity)
-arrive with Unit 6. Every metric takes a ranked id list and a set of relevant ids and is a pure,
-deterministic function.
+These are the U1 metrics (design 011 §8) plus the Unit-6 rank-position-aware metrics
+(:func:`precision_at_k`, :func:`ndcg_at_k`). Every metric takes a ranked id list and a set of
+relevant ids and is a pure, deterministic function. (Beyond-accuracy metrics — coverage, diversity,
+novelty — live in :mod:`bookrec.diversity`.)
 """
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Sequence
 
 from bookrec.protocol import Candidate
@@ -48,6 +50,58 @@ def recall_at_k(
         return 0.0
     top = set(_ranked_ids(recommendations)[:k])
     return len(top & relevant_set) / len(relevant_set)
+
+
+def precision_at_k(
+    recommendations: Sequence[Candidate] | Sequence[int],
+    relevant: Iterable[int],
+    k: int,
+) -> float:
+    """Fraction of the top-``k`` slots that are relevant: ``|top_k ∩ relevant| / k``.
+
+    Unlike :func:`hit_rate_at_k` (which saturates at the first relevant hit), precision rewards
+    packing *more* of the top ``k`` with relevant items. The denominator is always ``k`` (the
+    standard precision@k convention), so a short recommendation list — e.g. after ``exclude`` drops
+    seen items — is still scored against the full ``k`` budget. Defined as ``0.0`` when ``relevant``
+    is empty (no relevant items ⇒ no precision to earn). Pure and deterministic.
+    """
+    if not isinstance(k, int) or isinstance(k, bool) or k <= 0:
+        raise ValueError(f"k must be a positive int, got {k!r}")
+    relevant_set = set(relevant)
+    if not relevant_set:
+        return 0.0
+    top = _ranked_ids(recommendations)[:k]
+    hits = sum(1 for item_id in top if item_id in relevant_set)
+    return hits / k
+
+
+def ndcg_at_k(
+    recommendations: Sequence[Candidate] | Sequence[int],
+    relevant: Iterable[int],
+    k: int,
+) -> float:
+    """Normalized discounted cumulative gain at ``k`` with **binary** gain (relevant = 1, else 0).
+
+    A relevant item at 1-based rank ``r`` in the top ``k`` contributes ``1 / log2(r + 1)``, so
+    putting the right book *higher* scores more (rank 1 → ``1.0``, rank 2 → ``1/log2 3 ≈ 0.631``,
+    …). The DCG is normalized by the ideal DCG (IDCG) — the DCG of the best possible ordering, which
+    front-loads ``min(|relevant|, k)`` relevant items — so the result lands in ``[0, 1]``. Defined
+    as ``0.0`` when ``relevant`` is empty (IDCG would be 0). Pure and deterministic.
+    """
+    if not isinstance(k, int) or isinstance(k, bool) or k <= 0:
+        raise ValueError(f"k must be a positive int, got {k!r}")
+    relevant_set = set(relevant)
+    if not relevant_set:
+        return 0.0
+    top = _ranked_ids(recommendations)[:k]
+    dcg = sum(
+        1.0 / math.log2(rank + 1)
+        for rank, item_id in enumerate(top, start=1)
+        if item_id in relevant_set
+    )
+    ideal_hits = min(len(relevant_set), k)
+    idcg = sum(1.0 / math.log2(rank + 1) for rank in range(1, ideal_hits + 1))
+    return dcg / idcg if idcg > 0 else 0.0
 
 
 def mean_hit_rate_at_k(
