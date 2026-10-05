@@ -279,3 +279,18 @@ def test_hidden_corpora_accessors(demo):
                              "demo/unit-02-more/exercises/u2e05", "demo/unit-02-more/exercises/u2e09"}
     asserts = answers.shipped_asserts(demo, "demo")
     assert asserts["demo/unit-01-demo/exercises/u1e07"] == "assert double(3) == 6\nassert double(0) == 0"
+
+
+def test_turtle_flag_from_assets_real():
+    """D4 turtle items: starters and solutions live in `assets/*.py`, not notebook cells (plan 101 F)."""
+    from tools.export.answers import item_uses_turtle
+    from tools.export.items import entry_items
+
+    root = Path(__file__).resolve().parents[1]
+    concepts = entry_items(root, "python-concepts",
+                           root / "python-concepts/units/unit-06-turtle-geometry", "unit")
+    assert concepts and all(item_uses_turtle(item) for item in concepts)
+    projects = {item.number: item_uses_turtle(item) for item in entry_items(
+        root, "python-projects", root / "python-projects/units/unit-03-turtle-art-studio", "unit")
+        if item.mode == "exercise"}
+    assert projects[1] and not projects[2] and not projects[10]  # Ex 2 and 10 are headless plans

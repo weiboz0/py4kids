@@ -503,6 +503,23 @@ def self_check_requirements(item: Item) -> tuple[list[str], list[str]]:
 # --- the check object and answer fields --------------------------------------------------------
 
 
+def item_uses_turtle(item: Item) -> bool:
+    """A turtle item (D4's three-part rule applies in part C): its starter or solution code, a
+    starter asset it ships, or its solution asset imports turtle. Course turtle solutions live in
+    `assets/solutions_exN*.py` and starters in named `assets/*.py`, not in notebook cells."""
+    sources = [item.starter, _solution_code(item)]
+    entry = item.entry_dir
+    for path in item.files:
+        rel = path.split("/", 2)[2] if path.count("/") >= 2 else ""
+        if rel.endswith(".py") and (entry / rel).is_file():
+            sources.append((entry / rel).read_text(encoding="utf-8"))
+    if item.entry_kind == "unit" and item.number is not None:
+        assets = (challenge_solution_assets(entry, item.number) if item.mode == "challenge"
+                  else solution_assets(entry, item.number))
+        sources.extend(path.read_text(encoding="utf-8") for path in assets)
+    return any(imports_turtle(source) for source in sources if source)
+
+
 def _check(root: Path, book: str, item: Item, kind: str) -> tuple[dict, list[str]]:
     from .classify import confirmed_kind  # classify imports this module
 
@@ -526,7 +543,7 @@ def _check(root: Path, book: str, item: Item, kind: str) -> tuple[dict, list[str
         body = {"requirements": requirements}
     else:
         raise ValueError(f"FAIL: {item.key}: unknown check kind {kind}")
-    turtle = imports_turtle(item.starter) or imports_turtle(_solution_code(item))
+    turtle = item_uses_turtle(item)
     check = {"kind": kind, **body, "turtle": turtle, "confirmed": confirmed_kind(item) is not None}
     return check, notes
 
