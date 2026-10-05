@@ -392,8 +392,17 @@ consensus met.** Proceed to the build (Phase A → G).
 
 ### Content-gate round 1 outcome: **[self] APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] REJECT (1 Must).**
 All findings resolved in commit `b21760a` (every `[OPEN]` → `[FIXED]`/`[WONTFIX]`): [self]#1 and [sol]#3 = non-issue
-(taught/given API); [fable]#1-5 + [sol]#2 = Must-fix infinite-loop guard + number/wording alignment. Re-run full
-`ci-local.sh`, then re-review [sol] (the sole rejecter) on the Must-fix for round-2 consensus.
+(taught/given API); [fable]#1-5 + [sol]#2 = Must-fix infinite-loop guard + number/wording alignment.
+
+### Round 2 — [sol] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS. Must-fix confirmed resolved — 14 tests pass, the full-coverage probe terminates,
+  the shipped data has zero full-coverage readers so the reference scores are bit-identical and seed-0 hit@10 remains
+  0.276.
+1. `[FIXED]` **Nice** — one missed stale occurrence: `solutions.ipynb` Ex6 statement (cell 12, the mirror of the
+   exercises cell I had already fixed) still read `0.25-0.26`/`0.24x`. → Aligned to `0.25-0.28 (0.276 here)`/`0.24`;
+   a full scan of all four Unit-5 notebooks now shows zero stale `0.25-0.26`/`0.24x`/`~2.3x`/`~21x` tokens.
+
+### Content-gate outcome: **CONSENSUS — [self] APPROVE WITH NITS · [sol] APPROVE WITH NITS · [fable] APPROVE WITH NITS; every finding `[FIXED]`/`[WONTFIX]`.** 3-way roster (GLM removed). Proceed to post-execution report → PR → pre-merge-guard --pr → squash-merge.
 
 <!-- appended pre-PR -->
 
