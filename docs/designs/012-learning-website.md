@@ -1,6 +1,6 @@
 # Design 012 — A learning website for every book
 
-Status: proposed (2026-10-04).
+Status: proposed, revision 2 (2026-10-04), after review round 1 ([sol] REJECT, [fable] REJECT).
 Extends design 000 ("notebooks are the source of truth"), design 007 (publication), and design 010 (every book publishes).
 
 ## 1. Purpose and agreed understanding
@@ -17,139 +17,203 @@ The user also asked to "add any components missing from the list but essential f
 
 **Decisions** (user, 2026-10-04):
 - **Audience:** a public site with a free core and a paid tier. Success for the first release is that a student can self-study a whole book online.
-- **Accounts:** owned by a parent or teacher, who adds child profiles. The free core needs no account at all.
-- **Architecture:** static-first, with a backend added later.
-- **Design sections:** sections 1–4 below were reviewed and approved in conversation.
+- **Accounts:** owned by a parent or teacher, who adds child profiles. The free core needs no account.
+- **Architecture:** static-first, with a backend later.
+- **Answers:** pedagogical gating; check data is public by nature (D5).
+- **Python-book exercises:** tagged by check kind, with a self-check fallback (D4).
+- **Lessons:** the reading view is primary; slides are a step-through and review mode (D6).
+- **Sync:** class sync is free (a child in a teacher's class syncs results to that class); personal cross-device sync and the LLM orchestrator are paid; student code stays on the device unless a parent opts in (D11).
 
-**Assumptions, kept as constraints:**
-- The notebooks stay the single source of truth. The site, like the PDFs, is a generated view.
-- The books' verification machinery (lesson outputs, judge fixtures, `**Answer:**` lines, `verify` helpers) is the site's evaluation engine.
-- The repository is public: it holds no student data, keys or payment code.
+**Constraints:**
+- The notebooks stay the source of truth, and the site is a generated view, like the PDFs.
+- The books' verification machinery is reused, not reinvented.
+- This repository is public: it holds no student data, keys or payment code.
 
-**Essential components added** (user request): navigation and resume, a lesson reading view, an in-browser code runner, answer gating, the glossary, quick reference and search, accessibility, children's-privacy compliance, a teacher and classroom view, report-a-problem, privacy-respecting aggregate analytics, content versioning, offline use, light motivation (streaks and a mastery map), legal pages, payments, and LLM cost and safety controls.
+**Essential components added:**
+- navigation, contents and resume
+- the reading view with an inline runner
+- checking in the browser
+- answer gating
+- glossary, quick reference and search
+- accessibility
+- children's privacy from day one
+- a teacher and classroom view
+- report-a-problem
+- content versioning, and links to the release PDFs
+- offline use
+- light motivation (a streak and a mastery map)
+- legal pages
+- payments
+- LLM cost and safety controls
 
 ## 2. Decisions
 
-- **D1 — One framework, books as data.**
-  - The site lives in this repo under `site/` and renders any book listed in `books.yaml` from that book's content bundle. Adding a book needs no site code.
-  - The static build deploys from the same release tags (the host, GitHub Pages or Cloudflare Pages, is chosen in part D's plan) as the PDFs, so the site and the PDFs always match.
+- **D1 — One framework, books opted in by a flag.**
+  - The site lives in `site/` in this repo and renders every book that `books.yaml` marks `site: true`. The tools key on that flag, never on ids. Adding a book needs no site code.
+  - The first release covers python-projects, python-concepts, usaco-bronze and acsl. **recsys** is out of scope: it stores no lesson outputs and depends on packages Pyodide cannot load (`bookrec`, torch, faiss). It can opt in once it has outputs and a browser-feasible subset.
+  - The site deploys to **Cloudflare Pages**, chosen because it can set the COOP/COEP headers the runner needs (D7), from the same release tags as the PDFs. Each unit page links to that release's PDFs.
 - **D2 — Roadmap in parts**, each with its own plan and gates:
 
-  | Part | Delivers | Depends on | Tier |
-  |---|---|---|---|
-  | **A** Content export | versioned JSON content bundles per book | — | free |
-  | **B** Static site core | catalog, slides, reading view, quiz cards, glossary/reference/search, report-a-problem, accessibility, device-local progress | A | free |
-  | **C** In-browser runner and judge | Pyodide runs and checks lesson code, programs, short answers and turtle drawings | A, B | free |
-  | **D** App experience | installable PWA, offline books, resume | B, C | free |
-  | **E** Accounts, classes, sync, subscriptions | private backend: adult-owned accounts, child profiles, consent, classes, teacher dashboard, synced progress, Stripe, legal pages | B–D | teacher view free; synced personal progress paid |
-  | **F** LLM orchestrator | mastery-driven next step and hint dialogue for subscribers | E | paid |
+  | Part | Delivers | Depends on |
+  |---|---|---|
+  | **A** Content export and classification | JSON bundles; the exercise-classification tool; the standalone-cell probe; the id/hash scheme; schema with a minimal consumer test | — |
+  | **B** Static site core | catalog; reading view (primary); slide mode; quiz cards; glossary, reference and search; privacy notice and terms; accessibility; device-local progress | A |
+  | **C** Isolated runner and checking | the Pyodide runner on its own origin; program, function, short-answer and turtle checks; answer gating; browser acceptance tests | A, B |
+  | **D** App experience | installable PWA, offline books, persistent storage; first public deploy of the free site | B, C |
+  | **E** Accounts, classes, sync, subscriptions | private backend (its own design) | B–D |
+  | **F** LLM orchestrator | subscribers (its own design) | E |
 
-  This design specifies A–D in detail. E and F are outlined here (§2 D8–D9) and get their own designs before any plan, because they need privacy, legal and vendor decisions.
-- **D3 — Content export (part A).** `py4kids-tools export --book <id>` writes `site/content/<book>/` as JSON, with a JSON Schema checked in CI. The bundle is generated, never hand-edited.
-  - **Book manifest:**
-    - id, title and subtitle from `books.yaml`
-    - the release tag and a content hash
-    - the syllabus order (units, checkpoints, projects) and the concepts (`concepts.yaml`)
-    - the per-book publication settings that apply on the web (division ladder for ACSL, lesson heading)
-  - **Slides, from `lesson.ipynb`:**
-    - Each `## Lesson` heading starts a section, and each `###` heading starts a slide.
-    - A code cell with its stored output becomes a Program/Output slide; a `**Notice:**` becomes a callout slide.
-    - "You will learn" opens the unit and "Recap" closes it.
-    - Over-long content splits by a size budget.
-    - Optional cell tags `slide-break` and `slide-skip` override the rules.
-    - Routing reuses the publisher's (try-it, error demo, turtle figure), so the web and print agree.
-  - **Reading view:** the same cells as the book chapter, minus print furniture.
-  - **Quiz cards**, each carrying concept ids (from the unit manifest's `introduces` and `practices`, or the card's own tag):
-    1. **predict-the-output:** a lesson code cell plus its stored output. The answer is already verified by `lesson-outputs-check`. Cells tagged `no-exec`, or whose output is empty or nondeterministic, are excluded.
-    2. **concept:** from the glossary, term → definition and definition → term.
-    3. **authored mastery:** new `quiz`-tagged lesson cells, multiple choice or a short exact answer, with a one-line explanation and a concept tag. They are authored by Opus sessions and verified like exercises (a tool checks the answer key's format and uniqueness), and they arrive per book in later content plans.
-  - **Exercises:** the books' exercise sets unchanged. Each item has:
-    - statement, Starter, division tag, stretch flag, concept ids, and kind (program, short answer, Check-line function, turtle)
-    - check data:
-      - programs: sample and fixture inputs, plus expected outputs
-      - short answers: canonical answer text and a normalisation rule
-      - functions: the top-level asserts
-    - `answer_visibility`:
-      - `after-attempt` for odd-numbered unit exercises, carrying the worked answer exactly as the Student Book's appendix prints it
-      - `none` for even-numbered exercises, checkpoints and projects, which ship **no** answer text, only check data
-  - **Stable ids:** every slide, card and item is keyed by its notebook cell id, so progress survives releases. A tool fails the export if an id is missing or duplicated.
-- **D4 — Static site core (part B).**
-  - **Stack:** **Astro**, a static generator built for content, with small interactive islands for the slide player, quiz deck and exercise runner.
-  - **Pages:** a catalog of all books; a book home with its contents and mastery map; a unit page; the slide player (keyboard and swipe, a "run this code" button on code slides); the reading view; a quiz deck per unit plus a mixed review deck; exercise pages; checkpoint self-tests (timed, no answers); glossary, quick reference and search (**Pagefind**, static).
-  - **Progress:** stored on the device in **IndexedDB** as a log of progress events (D7). From it the site derives:
-    - "continue where you left off"
-    - per-unit completion
-    - a **per-concept mastery level**: card results and exercise results combined; recent results weigh more
-  - **Quiz scheduling:** quiz cards are scheduled by simple **spaced repetition** (Leitner boxes per card).
-  - **Report a problem:** each slide, card and item has a "report a problem" link that opens a prefilled GitHub issue (no account data) for the errata flow.
-  - **Accessibility:** WCAG 2.2 AA is the target (keyboard paths, labels, contrast, alt text for figures, reduced motion).
-  - **Analytics:** aggregate and cookieless only (page and item counts, failure rates per item), or none, until part E's privacy policy exists.
-  - **Motivation:** a streak counter and a mastery map. No leaderboards.
-- **D5 — In-browser runner and judge (part C).**
-  - **Runtime:** **Pyodide** in a Web Worker, so code never blocks the page. Each run has a time limit, and the worker is restarted if it hangs (infinite loops). **CodeMirror** is the editor.
-  - **Checking:**
-    - **Lesson code:** "run" on a code slide executes it and compares with the stored output.
-    - **Programs:** **Run** uses the sample input; **Check** runs every fixture and shows which pass. Matching is per book: line-exact for ACSL, token-based for USACO, as in `tools/judge.py`. Fixtures that are too large for the browser are marked by the export and skipped with a note.
-    - **Function exercises:** Check runs the item's asserts and shows each result as a Check line.
-    - **Short answers:** the input is normalised and compared with the canonical text. The format hint comes from the book's canonical rules.
-    - **Turtle:** a turtle shim draws on a canvas. Checking is "runs without error"; drawings are not compared.
-  - **Answer gating:** an odd exercise's answer appears after a genuine attempt: one Check run, or one submitted short answer. Even-numbered, checkpoint and project items never show answers.
-  - **Server:** none is involved. The judge's matching rules are ported to the worker and tested against the Python implementation on every book's fixtures.
-- **D6 — App experience (part D).**
-  - **Installable PWA:** a web manifest and a service worker (Workbox). "Download this book" caches its pages, content bundle and the Pyodide runtime for offline study; resume works offline, and progress syncs in part E.
-  - **Native store wrappers** (for example Capacitor) are deferred to a later design.
-- **D7 — Interfaces fixed now** (E and F build on these without changing A–D):
-  - **The content bundle schema** (D3), versioned. A breaking change bumps its major version.
-  - **The progress event:** `{book, item_id, kind, result, detail, timestamp, content_hash}`, where `kind` is one of slide, card, exercise or checkpoint. Events are append-only; mastery and completion are derived from them.
-  - **Concept ids:** the registries' ids (`concepts.yaml`).
-- **D8 — Part E outline** (a separate design before any plan):
-  - **Repo:** a private backend repo and service. This public repo never holds student data or secrets.
-  - **Accounts:**
-    - An adult (a parent or teacher) owns the account.
-    - Child profiles carry a display name only: no child email and no free text.
-    - Verifiable parental consent comes before any child data is stored (COPPA and equivalents).
-    - Data export and deletion; minimal retention; no ads or third-party trackers.
-  - **Classes:** a teacher creates a class with a join code. The free teacher view shows per-unit and per-concept progress and lets the teacher assign units.
-  - **Sync and payments:** on sign-in, device events upload into the profile. Synced personal progress across devices is paid, through Stripe, with the adult as payer.
-  - **Legal pages:** terms, privacy policy, contact.
-- **D9 — Part F outline** (a separate design before any plan):
-  - **Mastery-driven next step:** from the mastery map and recent attempts, choose what comes next (review cards, a weak concept's slides, the next exercise) and explain the choice in one sentence.
-  - **Hint dialogue on exercises:** it never reveals the full solution of an even exercise.
+  - **Free:** A–D, teacher classes and class sync.
+  - **Paid:** personal cross-device sync and F.
+- **D3 — Content export (part A).**
+  - **The command:** `py4kids-tools export --book <id>` writes `site/content/<book>/` as JSON against a versioned JSON Schema. A minimal consumer test renders one page of each kind from the bundle, so the schema is proven before it freezes. The bundle is generated, never hand-edited.
+  - **Reuse:** the export **imports** the publisher's routing (`route_code`, the try-it, figure and demo routes, structural subheads), so web and print agree.
+  - **Book manifest:** id, title and subtitle; release tag and content hash; syllabus order; concepts (`concepts.yaml`); the publication settings the web uses (`acsl` division ladder, `lesson_heading`); and the release PDF links.
+  - **Lessons:** each lesson is a sequence of **blocks**:
+    - prose
+    - Notice
+    - code with stored output
+    - try-it
+    - error demo
+    - turtle figure
+    - goals and recap
+  - **Lesson code:**
+    - **The standalone-cell probe:** the export runs every executable lesson cell **on its own**, from the unit directory. A cell that fails or whose output differs gets `needs_prelude: true`, with the ids of the earlier cells it depends on. In review, 61 of 718 lesson cells (8.5%) needed their earlier cells.
+    - **The asset list:** cells that read data files list the unit's `assets/` files they need, so the runner can mount them.
+  - **Exercises:** the books' sets unchanged. Each item carries:
+    - statement, Starter, division tag, stretch flag, and its concept ids
+    - its **check kind** (D4) and check data (D5)
+    - `answer_visibility`: `after-attempt` for odd unit exercises, using exactly the Student Book appendix text, read only through `student_answer_sources`, which is the export's leak guard; `none` for everything else
+  - **Answer formats:** short-answer items carry an `answer_format` hint, derived from the item's statement and the unit's canonical-form rule, or authored where the derivation is ambiguous. The derivation is listed as content work.
+  - **Ids:** every block, card and item has a global key `book/entry/notebook/cell_id`, plus `#n` for parts split out of one cell.
+    - The export fails on a missing or duplicate id.
+    - A **continuity check** compares with the previous release's bundle and lists vanished ids, so content plans can map them. Progress for a vanished id is kept but marked stale.
+- **D4 — Exercise check kinds and classification** (user decision: tag, with a self-check fallback).
+  - **The classification tool** proposes a kind for every exercise; a content plan per book confirms the tags as cell metadata (`check: …`).
+  - **The kinds:**
+    - `fixtures`: contest programs (stdin to stdout, judged on the test cases).
+    - `answer`: short answers (ACSL `short-answer`).
+    - `asserts`: Python items whose statement fixes the inputs, so the solution's top-level asserts are portable. Asserts that test the solution's own choices are not portable, and the tool flags them.
+    - `expected-output`: an item with fixed inputs, checked against its worked output.
+    - `predict`: trace items, where the student enters the predicted output.
+    - `self-check`: open-ended items (random results, free design, interactive input). The student runs their code, compares with the worked example, and marks the item done. The site states plainly that it cannot check these.
+  - **Turtle items** use the existing `# turtle-check:` directives, checked by a browser port of `tools/fake_turtle.py`'s tracked API. "Runs without error" is not a check.
+  - Turning `self-check` items into checked ones is later content work, book by book.
+- **D5 — The answer model** (user decision: pedagogical gating).
+  - **Honest premise:** everything the browser checks against is public, as the repo's `solutions.ipynb` files and the Teacher's Edition PDFs already are. Gating is a study aid, not a security boundary; the About page says so.
+  - **Odd unit exercises:** the worked answer is shown after a genuine attempt (one Check run, or one submitted answer).
+  - **Even exercises, checkpoints and projects:**
+    - **Short answers:** only a **salted hash** of the normalised canonical answer ships, never the plain text. The input is normalised (trimmed; whitespace collapsed for line-exact formats) and compared by hash.
+    - **Programs:** the fixtures ship, because expected output is not the program. Check shows pass or fail for each test case, and reveals input and expected output for the **sample** only.
+    - **Asserts:** Check runs the asserts and shows each result as pass or fail. The assert source is not printed.
+  - **The export test** checks three things:
+    - no plain answer text of any `none` item appears in any bundle
+    - every odd answer equals the Student Book appendix text
+    - every `answer` item's hash matches its canonical answer
+- **D6 — Lesson experience** (user decision: the reading view is primary).
+  - **Reading view:**
+    - The lesson reads as a page with the book's blocks.
+    - Code blocks are **runnable inline with cumulative state**: one namespace per lesson, like the notebook, re-running the earlier cells the probe lists when needed.
+    - Stored outputs show beside "Run" so the student can compare.
+    - Interactive `input()` demos take input from a box filled before the run (live prompts are an enhancement where the headers allow it, D7).
+  - **Slide mode** (step-through and review) comes from cell-level rules:
+    - each code+output pair is one slide
+    - each Notice is one slide
+    - prose is grouped up to a word budget, splitting at headings
+    - goals and recap get their own slides
+    - optional `slide-break` / `slide-skip` tags adjust the split
+    - a **per-book slide audit** (the maximum words or lines per slide) runs in CI like `publish-audit`
+  - Books whose lessons split poorly (python-projects, usaco-bronze) get a `slide-break` authoring pass in their content plans.
+- **D7 — The isolated runner (part C).**
+  - **Origin:** Python runs in Pyodide on a **separate runner origin** (for example `run.<site>`), inside a sandboxed iframe that holds a Web Worker. It has no access to the site's storage or, later, its session.
+  - **Message boundary:** the site sends `{code, stdin, files, check spec, time budget}` and receives `{stdout, stderr, results, timing}`. Nothing else crosses.
+  - **Time limits:** a per-test-case budget (set by measurement in part C, starting at 10× the CPython time and capped). The runner interrupts with `SharedArrayBuffer` interrupts where the COOP/COEP headers allow; otherwise it terminates and restarts the worker, and the reload cost is shown honestly.
+  - **Fixtures:** contest fixtures run in the browser. Every pair is under 130 KB (usaco-bronze totals 1.9 MB, ACSL 40 KB). The export reports any fixture over a measured budget, and the site lists any skipped case. Skips are never silent.
+  - **Matching:** keyed on book flags, not names: line-exact for `acsl` books, token-based otherwise, as in `tools/judge.py`.
+  - **ACSL `assets/verify` helpers** are not shipped. Short answers are checked by hash (D5), and the helpers stay solution sources (design 010 D3).
+- **D8 — Quiz cards and mastery.**
+  - **Card kinds:**
+    - **Predict-the-output:** only cells that pass the standalone probe, or that show their prelude on the card. Single-token or one-line outputs are typed exactly. Multi-line outputs are flip-and-self-grade.
+    - **Concept cards:** from the glossary. Multiple-choice distractors come from concepts in the same `category`.
+    - **Authored `quiz` cells:** added in later content plans.
+  - **Concept attribution is per item, not per unit.** It uses `tools/concept_scan.py` where it applies, an explicit concept tag on authored cards, and the glossary term for concept cards.
+  - **The mastery map** shows a concept only when at least N attributed items exist (N set in part B), so it never pretends.
+  - **Scheduling:** Leitner spaced repetition per card.
+- **D9 — Children's privacy in the free site (B–D).** The site is directed at children, so it collects **no personal data by construction**:
+  - progress only in on-device IndexedDB, with no identifiers
+  - **no analytics**
+  - no third-party scripts, fonts or trackers, and self-hosted assets
+  - a privacy notice and terms **ship with part B**
+  - **report a problem** is labelled for adults and prefills only the item id and content hash, never an attempt
+- **D10 — App experience (part D).**
+  - **Installable PWA:** "download this book" caches its pages, bundle and Pyodide runtime (+10–20 MB), and requests `navigator.storage.persist()`.
+  - **Storage limits:** the site states that some browsers (Safari) can clear storage after long disuse, with an "export my progress" file as the backup.
+  - **Native wrappers** are deferred.
+- **D11 — Interfaces fixed now** (E and F build on these).
+  - **The bundle schema** (D3), with a semantic version.
+  - **The progress event:**
+
+    ```
+    {schema, event_id, book, item_key, kind, result, detail, duration_ms, timestamp, content_hash}
+    ```
+
+    - `kind` is one of `lesson-run`, `slide`, `card`, `exercise`, `checkpoint`, `project`, `self-check`.
+    - `event_id` makes sync idempotent.
+    - `detail` holds **results only** (pass/fail per test case, self-grade, card box). It never holds student code or free text.
+  - **The attempt store** keeps code and answers **on the device only**. Uploading them requires parental opt-in in E, and F uses them only with that opt-in.
+  - **Concept ids** come from the registries.
+- **D12 — Part E outline** (its own design):
+  - **Repo:** a private backend repo and service.
+  - **Accounts:** an adult (parent or teacher) owns the account. Child profiles carry a display name only. Verifiable parental consent comes before any child data is stored.
+  - **Classes:** a teacher creates a class with a join code. A child joins under a consenting adult. **Class sync of results is free**, and the teacher dashboard shows unit and concept progress and lets the teacher assign units.
+  - **Paid:** personal cross-device sync, through Stripe with the adult as payer.
+  - **Policies:** data export and deletion, minimal retention, no ads or trackers.
+- **D13 — Part F outline** (its own design):
+  - **Mastery-driven next step:** chooses what to do next and says why in one sentence.
+  - **Hint dialogue:** never reveals an even item's solution.
   - **Child safety:**
     - a system prompt scoped to the course
     - input and output filtering
-    - only progress data and the current item are sent; no personal data
+    - only results, the current item and opted-in attempts are sent
     - per-subscriber rate limits and cost caps
     - an audit log visible to parents and teachers
-  - **Keys:** a current Claude model, called only from the backend; the static site never holds keys.
+  - **Keys:** a current Claude model, called only from the backend.
 
 ## 3. Verification (for the plans implementing A–D)
 
-- **Export:** schema validation in CI; stable-id and uniqueness checks; and a test that every odd exercise's web answer equals the Student Book's appendix text while no even, checkpoint or project answer text appears in any bundle.
-- **Judge parity:** the browser checker and `tools/judge.py` agree on every fixture of every book (run headless in CI).
+- **Export:**
+  - the schema check, plus the minimal consumer test
+  - the id uniqueness and continuity checks
+  - the standalone-cell probe report
+  - the classification coverage report (every exercise has a confirmed check kind)
+  - the D5 answer-model test
+- **Runner acceptance** (in a headless browser, in CI):
+  - stdin programs, including `input()` at end of input
+  - worker interrupt or restart on a hang
+  - recursion depth and float formatting against CPython
+  - function-assert isolation; short-answer hashing and normalisation
+  - turtle directives; mounted asset files; cumulative lesson state
+- **Reference solvers:** every reference solver (`assets/{l,ex,q,p}N.py`) runs in Pyodide against all its fixtures, with results equal to `tools/judge.py`.
 - **Site:**
-  - **Playwright** end-to-end tests per book: navigate, play slides, run lesson code, check an exercise, answer a card, resume.
-  - **axe** accessibility checks on every page template.
-  - a **Lighthouse** budget (performance, accessibility, PWA)
-  - an offline test with a downloaded book
-- **CI:**
-  - A `site` step in `scripts/ci-local.sh` builds the content and site for the books a change touches (the design 010 D7 scoping) and runs the tests above.
-  - A release builds every book.
+  - Playwright end-to-end tests per book: read a lesson and run code, step through slides, answer a card, check one exercise of each kind, resume
+  - axe on every template
+  - a Lighthouse budget
+  - an offline test
+- **Toolchain:** the site adds a Node toolchain with pinned versions and a lockfile. `ci-local.sh` gains a `site` step, scoped like design 010 D7. Without Node it prints `SKIP (Node missing)` locally, and it is required before a release.
 
 ## 4. Rollout
 
-| plan | scope |
+| order | plan scope |
 |---|---|
-| next | **Part A:** the export command, schema, bundles for all books, and tests. |
-| then | **Part B:** the static site core for all books. |
-| then | **Part C:** the Pyodide runner, judge parity, and answer gating. |
-| then | **Part D:** the PWA and offline mode; first public deploy of the free site. |
-| later | Authored `quiz` cells per book (content plans). |
-| later | A design for part E (accounts, classes, sync, subscriptions, privacy), taking the next free design number. |
-| later | A design for part F (the LLM orchestrator). |
+| 1 | **Part A:** export, classification tool, standalone-cell probe, id/hash scheme, schema + consumer test, `site:` flag. |
+| 2 | **Content plans**, one per book: confirm the check-kind tags; `answer_format` hints; slide-break pass (python-projects, usaco-bronze). |
+| 3 | **Part B:** static site core, privacy notice and terms. |
+| 4 | **Part C:** isolated runner, checks, answer gating, acceptance tests. |
+| 5 | **Part D:** PWA and offline; first public deploy of the free site. |
+| later | Authored `quiz` cards per book; designs for part E and part F (the next free design numbers). |
 
 ## 5. Non-goals (this design)
 
-- Server-side code running, native app-store apps, discussion forums or chat between students, ads.
+- Server-side code running; native app-store apps; forums or student-to-student chat; ads.
 - Any student data, secret or payment code in this public repository.
-- Changing the books' content rules: the site follows the odd-answer rule and the independence rules exactly as the Student Book does.
+- Treating gating as security (D5); changing the books' content rules.
