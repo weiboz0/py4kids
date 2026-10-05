@@ -45,7 +45,8 @@ best at what?* — before any new metric. Plan **60–90 minutes across two to t
   `val`, freeze, then score `test` once.
 - **Assuming a blend always beats the best path — or that "every path contributes".** The measured ablation refutes
   both: the blend wins here only with a sensible pool (30) and down-weighted popularity, and **dropping popularity
-  raises hit@10**. A path earns its place by *reader-dependence*, not by existing.
+  raises hit@10**. A path's contribution is established by its *measured* leave-one-out improvement, not assumed:
+  reader-dependence explains why popularity adds nothing here, but it is the ablation, not the label, that decides.
 - **The calibration pitfall.** Min-max calibration maps every path's top candidate to 1.0, so a flat,
   reader-independent popularity path ties its head books with every reader's true top pick — which is exactly why
   popularity's marginal accuracy value is ≈0. Calibration makes paths comparable but can also let a weak path tie a

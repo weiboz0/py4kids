@@ -47,6 +47,7 @@ from bookrec import (
     novelty,
     precision_at_k,
     rank,
+    recall_at_k,
     run_blended_scoreboard,
     run_validation_scoreboard,
 )
@@ -103,6 +104,17 @@ def test_ndcg_at_k_rewards_higher_placement() -> None:
     low = ndcg_at_k([1, 2, 3, 7], relevant, 4)
     assert top == pytest.approx(1.0)  # one relevant item at rank 1 is the ideal ranking
     assert top > mid > low > 0.0
+
+
+def test_ranking_metrics_are_range_safe_on_duplicate_ids() -> None:
+    # A malformed ranking that repeats an item must not earn relevance credit twice: de-dup keeps
+    # the first occurrence, so precision@2 of [1, 1] against {1} is |{1}|/2 = 0.5 and NDCG stays in
+    # [0, 1] (the single relevant item at rank 1 is the ideal ordering -> 1.0), never 1.63.
+    assert precision_at_k([1, 1], {1}, 2) == pytest.approx(0.5)
+    assert ndcg_at_k([1, 1], {1}, 2) == pytest.approx(1.0)
+    assert 0.0 <= ndcg_at_k([3, 3, 3, 1], {1, 3}, 4) <= 1.0
+    # recall counts each relevant item once regardless of repeats.
+    assert recall_at_k([5, 5], {5, 9}, 2) == pytest.approx(0.5)
 
 
 def test_ndcg_at_k_is_zero_safe_on_empty_relevant() -> None:

@@ -15,9 +15,20 @@ from bookrec.protocol import Candidate
 
 
 def _ranked_ids(recommendations: Sequence[Candidate] | Sequence[int]) -> list[int]:
+    """Item ids in ranked order, **de-duplicated** (first occurrence kept).
+
+    A well-formed recommendation list never repeats an item (``blend``/``rank`` de-duplicate by id),
+    so on real recommendations this is a no-op. The de-dup guards the metrics against a *malformed*
+    input: without it a repeated relevant id earns relevance credit twice, pushing precision@k and
+    NDCG@k above their documented ``[0, 1]`` range (e.g. ``ndcg_at_k([1, 1], {1}, 2)`` → 1.63).
+    """
+    seen: set[int] = set()
     ids: list[int] = []
     for item in recommendations:
-        ids.append(item.item_id if isinstance(item, Candidate) else int(item))
+        item_id = item.item_id if isinstance(item, Candidate) else int(item)
+        if item_id not in seen:
+            seen.add(item_id)
+            ids.append(item_id)
     return ids
 
 

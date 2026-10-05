@@ -2,8 +2,11 @@
 
 This checkpoint closes **Part 1**. It is the one authorized **unseal of the `test` holdout** that has been sealed
 since Unit 1: the student assembles the Part-1 recommender, tunes and freezes it on `val`, and scores it exactly once
-on `test`. It is **strict** — every task draws only on concepts taught in Units 1–6; there are no borrowed tools and
-no cold-start assessment (cold readers appear only as the `cold_readers` exclusion and a robustness note).
+on `test`. It is **strict** — every task draws only on concepts taught in Units 1–6, with no borrowed tools. The **cold-START
+problem** (recommending a brand-new book with no interactions, solved with item features in Unit 9) is **not
+assessed** — it is only an unassessed preview. What Q6 *does* touch, the fact that a calibrated popularity fallback
+keeps serving readers whose personalised paths return `[]`, is **score-blending robustness** — a Unit-6 taught idea,
+not cold-start — and even that is given as context rather than graded (see `## Grading`).
 
 ## Goals
 
@@ -69,8 +72,11 @@ Out of **100 points**, weighted toward honest evaluation over wiring:
   (e.g. MF high hit, low coverage).
 - **Q5 build + FREEZE the blend — 16.** Calibrated weighted blend at a defensible config; honest comparison to the
   best single path; decisions crystallized into frozen constants with the frozen `val` number recorded.
-- **Q6 ablation — 16.** Correct signed leave-one-path-out; identifies popularity's ≈0 marginal accuracy and explains
-  the min-max calibration pitfall; justifies keeping popularity on coverage/robustness grounds.
+- **Q6 ablation — 16.** Correct signed leave-one-path-out; identifies popularity's ≈0 marginal accuracy (dropping it
+  does not lower hit@10) and explains the min-max calibration pitfall. Note for grading: popularity does **not** earn
+  its place on coverage either (dropping it *raises* catalog coverage ~0.333→0.354); the only honest reason to keep it
+  is cold-reader robustness, which is **context, not a graded requirement** — award the 16 points for the ablation +
+  calibration reading alone, so nothing here assesses the (unassessed) cold-reader case.
 - **Q7 one-shot `test` unseal — 18.** Evaluates the FROZEN recommender on `test` exactly once; reports test vs frozen
   val; a correct account of *why* test is scored once (no tuning). **Any evidence of tuning against `test` caps Q7 at
   half and should be flagged in feedback** — test-set hygiene is the checkpoint's central competency.

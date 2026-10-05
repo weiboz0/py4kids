@@ -316,6 +316,58 @@ registry closure + checkpoint-after-unit ordering re-confirmed. New nits, folded
 
 ## Content Review
 
+### Round 1 — [fable] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS (no Must Fix). Blind-solved Ex1/Ex2/Ex7 + checkpoint Q1/Q7 and re-measured
+  (blend 0.306/0.333, test 0.306/0.338/500, ablation −pop +0.002, pinned-weight sweep 0.278/0.306/0.316); honest
+  framing, freeze-then-score, strict-checkpoint, test-hygiene, project-first all verified.
+1. `[OPEN]` **Should** — exercises.ipynb (intro / `POOL`/`WEIGHTS` comments / Ex6 prose+`pool_explanation`) + the same
+  solutions cells frame **val-selection itself** as the sin ("pinned so you never tune it on val — the anti-lesson"),
+  contradicting the book protocol (val IS the selection split; Unit 1 + Checkpoint A Q5 + milestone all say "choose on
+  val, test stays sealed"). Realign to lesson cell 12's precise version: val is for selection, but don't report the
+  val-MAX of a sweep as expected performance (selecting+reporting on the same split biases it), and never touch test.
+2. `[OPEN]` **Should** — lesson.ipynb cells 0 & 11 say item-item reaches "nearly/almost 5x more books"; 0.49/0.0745 =
+  **6.6×** (solutions correctly say 6.6×). Fix to "~6.6×".
+3. `[OPEN]` **Nice** — checkpoint intro (both notebooks) says "five retrieval paths" but Q2 fits/blends FOUR (random
+  floor absent). Say "four signal paths (plus the random floor)".
+4. `[OPEN]` **Nice** — checkpoint intro "build and tune a calibrated blend" vs Q5 pre-filling the config → "adopt the
+  Unit-6 configuration, measure on val, and freeze it".
+5. `[OPEN]` **Nice** — Ex6: coverage FALLS as pool grows (0.379→0.333→0.3075) — a stronger measured reason to pin 30;
+  add a clause.
+6. `[OPEN]` **Nice** — `assert blend_hit >= mf_hit - 0.01` (Ex4 + checkpoint Q5) is slack vs its "at least the best
+  single path" message; the adjacent strict `blend_beats_best_single` already enforces it — drop the −0.01 or reword.
+
+### Round 1 — [sol] (2026-10-05)
+- **Verdict**: REJECT (4 Must + 2 Should). One REJECT blocks.
+1. `[FIXED]` **Must** — `evaluate.py` precision/NDCG gave duplicate rec-ids repeated credit (`ndcg_at_k([1,1],{1},2)`
+   = 1.63 > 1). → `_ranked_ids` now de-dups stably (no-op on real unique recs; fixes range-safety) + regression test
+   `test_ranking_metrics_are_range_safe_on_duplicate_ids` (6 metric tests pass, ruff clean).
+2. `[OPEN]` **Must** — checkpoint Q6 + the `## Grading` rubric assess cold-reader robustness while teacher-notes say
+   "no cold-start assessment". → Resolve: Q6 grades the ablation (popularity ≈0 marginal accuracy) + the calibration
+   pitfall (both taught); the cold-reader/robustness point becomes GIVEN context, not a graded requirement; and the
+   teacher-notes clarify that the cold-START problem (new items/features → U9) is unassessed, distinct from the
+   score-blending robustness U6 teaches.
+3. `[OPEN]` **Must** (= [fable]#1) — "tuning on val is the cardinal sin" contradicts the book protocol + Checkpoint A
+   ("choose on val, freeze, score test once"). → Reframe everywhere: val IS the selection split; the discipline is
+   not reporting the val-MAX of a sweep as expected performance, and keeping `test` sealed for one read.
+4. `[OPEN]` **Must** — "popularity retained for head coverage" is FALSE: dropping popularity RAISES coverage
+   (0.333→0.354). → Fix everywhere: popularity adds neither accuracy (≈0) nor coverage; it is kept ONLY for
+   cold-reader robustness. Separate the claims in prose + the milestone + the checkpoint.
+5. `[OPEN]` **Should** (= [fable]#2) — item-item vs MF coverage is **6.6×** (0.49/0.0745), not "nearly 5×"; 4.5× is
+   blend-vs-MF. → Fix lesson cells.
+6. `[OPEN]` **Should** — "a path earns its place by being reader-dependent" overgeneralizes; the MEASURED
+   leave-one-out improvement is what establishes contribution (reader-dependence explains popularity's weakness but
+   isn't sufficient). → Reword lesson/exercises/checkpoint.
+
+### Content-gate round 1 outcome: **NOT consensus — [sol] REJECT (4 Must) + [fable] APPROVE WITH NITS + [self] (pending).**
+Must#1 fixed in code. Must#2/#3/#4 + Should#5/#6 + [fable]'s 6 nits are prose reframes across the 5 notebooks +
+checkpoint teacher-notes — folding with a single canonical framing (val = selection split; popularity kept only for
+cold-reader robustness, not coverage/accuracy; contribution = measured marginal value; cold-START unassessed vs
+score-blending robustness taught). Then re-run ci-local + re-review [sol].
+
+<!-- [self] content verdict appended; round-2 [sol] after fixes -->
+
+<!-- appended pre-PR -->
+
 <!-- appended pre-PR -->
 
 ## Post-Execution Report
