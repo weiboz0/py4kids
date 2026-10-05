@@ -335,7 +335,38 @@ it for WARM items; it cannot invent factors for the 818 cold items → U6/U9) + 
 computation (reachable 1182 / unreachable 818). This closes #2 by removing the fragile claim rather than chasing a
 finer formula; the bridge stays accurate and taught-before-assessed.
 
-<!-- round 4 appended -->
+**[sol] — APPROVE** (round 4): targeted cells clean of Gram/`RᵀR`/rank/`D^{-1}`; warm-only MF bridge + 818 cold-book
+limitation accurate; Ex8 assesses only the taught coverage computation + qualitative bridge. Finding #2 CLOSED.
+
+### Content-review outcome: **CONSENSUS (4-way)** — [self] APPROVE · [fable] APPROVE · [sol] APPROVE (round 4) · [glm] APPROVE WITH NITS (round 1; round-2/3 re-reviews timed out on opencode, stance stands, all its nits folded). A 4-round gate: [sol]'s math rigor repeatedly (correctly) caught the fragile MF rank-bridge; resolved by removing that non-essential stretch claim and keeping a correct qualitative bridge + the verified coverage ceiling. All `[OPEN]` resolved. Cleared to ship.
+
+## Post-Execution Report
+
+**Shipped (recsys-006 — Unit 4: Neighborhood collaborative filtering, item-item co-occurrence).** The first
+collaborative path and the first to beat **both** popularity and the content/lexical baselines.
+
+- **Phase A** — concepts `item-item-cf`/`knn-similarity`/`implicit-feedback`; coverage-map `unit-04-neighborhood-cf`
+  (title + requires/practices the four Unit-1 concepts); manifest; syllabus row. Buildout retained (lessons total
+  **12** < 30).
+- **Phase B** — `bookrec/neighborhood.py`: `item_item_cosine` (zero-diagonal) + `ItemItemRetrievalPath` — keyword-
+  free, `fit(interactions, catalog=None)` protocol-substitutable duck-typed on train positives (leakage-safe),
+  `retrieve` scores by summed similarity to `context["seen"]` and returns **only positive-score** candidates (the
+  enforced coverage ceiling), empty/all-zero → `[]`, fit→artifact→load round-trip. numpy-only. 99 tests.
+- **Phases C/D/E/F** — lesson (project-first; co-occurrence→cosine→kNN from scratch then reveal; qualitative MF
+  bridge), 8 exercises (6 core + 2 stretch) + mirrored solutions (asserts), the Unit-4 milestone, teacher-notes.
+
+**Numbers (seed 0, k=10, 500 readers):** item-item CF hit@10 **0.252** = 2.33× popularity (0.108), **1.60× lexical**
+(0.158), 21× floor; the `n_neighbors` cap *degrades* (10 → 0.142); **818/2000 items unreachable** (no neighbors, now
+genuinely never recommended); leaky val-fold → 0.964 (the "too good to be true" guard). Implicit feedback taught
+against the real `label==0` exposure-sampled-negative rows (U4 does no negative sampling; U5/U8 use them).
+
+**Verification.** `scripts/ci-local.sh` ALL GREEN (99 bookrec tests incl. test_unit04; lesson/solutions/milestone
+exec; concept-scan; recsys PDFs; pre-merge-guard OK).
+
+**Gates.** Plan-review CONSENSUS (3-of-4; v2 after the "first to beat popularity"→"first to beat both" reframe;
+[sol] Codex-infra-down). Content-review CONSENSUS (4-way) after [sol] REJECT → the coverage-ceiling enforcement
+(retrieve drops zero-score; CF unchanged at 0.252), the MF cold-item overclaim correction, and 4 rounds resolving
+the rank bridge (removed). Opus subagents restored Monday; [glm] opencode intermittently timed out.
 
 ## Post-Execution Report
 
