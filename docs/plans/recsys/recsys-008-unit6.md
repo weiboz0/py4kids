@@ -364,7 +364,27 @@ checkpoint teacher-notes — folding with a single canonical framing (val = sele
 cold-reader robustness, not coverage/accuracy; contribution = measured marginal value; cold-START unassessed vs
 score-blending robustness taught). Then re-run ci-local + re-review [sol].
 
-<!-- [self] content verdict appended; round-2 [sol] after fixes -->
+### Round 1 — [self] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS → all resolved. Project-first, from-scratch→reveal, structure (7 exercises + 7
+  checkpoint Questions), taught-before-assessed (cold-start unassessed), strict checkpoint + freeze-then-score +
+  test-holdout hygiene, honest framing all hold. The [sol]/[fable] findings are folded (below).
+
+### Resolution (commits fdb5921 + 0635b8d) — every finding `[FIXED]`:
+- **[sol]#1** metric dedup — `_ranked_ids` stable de-dup + regression test (range-safe on dup ids; no-op on real recs).
+- **[sol]#2 / cold-case** — checkpoint Q6 grades ablation + calibration pitfall only; cold-reader robustness is
+  explicit "given context, not graded"; teacher-notes split cold-START (U9, unassessed) from taught robustness.
+- **[sol]#3 = [fable]#1 / val-selection** — reframed across lesson/exercises/solutions/milestone/checkpoint: `val` is
+  the selection split; the discipline is not reporting the val-sweep max + keeping `test` sealed.
+- **[sol]#4 / popularity-coverage** — corrected everywhere: popularity adds neither accuracy nor coverage (dropping it
+  raises coverage 0.333→0.354); kept only for cold-reader robustness.
+- **[sol]#5 = [fable]#2 / 6.6×** — item-item-vs-MF coverage fixed to ~6.6× (4.5× left only for blend-vs-MF).
+- **[sol]#6 / reader-dependence** — contribution established by measured leave-one-out, not the label.
+- **[fable]#3** checkpoint "four signal paths (+ random floor)"; **#4** "adopt/measure/freeze" not "tune"; **#5** Ex6
+  coverage-falls clause; **#6** tightened slack assert to `>= mf_hit`.
+All re-verified GREEN (hygiene/structure/cell-lint/noexec/concept-scan/exec-lessons/exec-solutions/milestone-check +
+18 tests incl. the test-holdout guard); measured numbers unchanged.
+
+### Content-gate round 2: re-running full `ci-local.sh` + re-reviewing **[sol]** (sole rejecter) on the fixes; [fable] + [self] already APPROVE/APPROVE-WITH-NITS, all nits folded.
 
 <!-- appended pre-PR -->
 
