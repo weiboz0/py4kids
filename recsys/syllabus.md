@@ -31,6 +31,7 @@ so every addition can answer the only question that matters: *did it help?*
 | 2 | `unit-02-popularity-and-bias` | unit | 3 | Recommend before you know the reader — and learn why the crowd-pleaser isn’t the whole story. |
 | 3 | `unit-03-lexical-retrieval` | unit | 3 | Match a reader to books by the words they share — bag-of-words, TF-IDF, BM25. |
 | 4 | `unit-04-neighborhood-cf` | unit | 3 | Readers who liked what you liked also read… — item-item collaborative filtering. |
+| 5 | `unit-05-matrix-factorization` | unit | 3 | Compress all that co-occurrence into a handful of hidden taste dials — matrix factorization, the bridge to embeddings. |
 
 ## How the book is organised
 

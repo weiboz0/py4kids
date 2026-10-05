@@ -21,3 +21,7 @@ concepts:
 - {id: item-item-cf, name: "Item-item collaborative filtering (co-occurrence)", category: techniques, kind: technique}
 - {id: knn-similarity, name: "k-nearest-neighbor similarity retrieval", category: techniques, kind: technique}
 - {id: implicit-feedback, name: "Implicit feedback and sampled negatives", category: techniques, kind: technique}
+# --- Unit 5 (recsys-007): matrix factorization (the embedding bridge) ---
+- {id: matrix-factorization, name: "Matrix factorization (reader x item as P Q^T)", category: techniques, kind: technique}
+- {id: latent-factors, name: "Latent factors as learned embeddings", category: techniques, kind: technique}
+- {id: gradient-descent, name: "Gradient descent on a logistic implicit-feedback loss", category: techniques, kind: technique}
