@@ -1,7 +1,7 @@
 # Content-Review Gate
 
 The pre-PR quality gate for course content
-(the tailored equivalent of a code-review gate). 4-way, full-blocking consensus.
+(the tailored equivalent of a code-review gate). 3-way, full-blocking consensus.
 
 ## Roster
 
@@ -9,10 +9,12 @@ The pre-PR quality gate for course content
 |---|----------|----------|-------|
 | 1 | Self-review | active session inline | active session model |
 | 2 | Sol reviewer | `codex:codex-rescue` subagent, fresh and read-only (request `--model gpt-6-sol`) | GPT-6-sol |
-| 3 | GLM reviewer | `opencode:opencode-review` subagent, fresh and read-only (pass `--model volcengine-plan/glm-5.3`) | volcengine-plan/glm-5.3 |
-| 4 | Fable reviewer | fresh, read-only Fable 5 subagent (`Agent`, general-purpose) | Fable 5 |
+| 3 | Fable reviewer | fresh, read-only Fable 5 subagent (`Agent`, general-purpose) | Fable 5 |
 
-Dispatch 2–4 in parallel with the inline self-review.
+(The GLM reviewer was removed from the review rolls by user directive on 2026-10-05 after a persistent
+opencode-companion invocation failure; the gate is 3-way.)
+
+Dispatch 2–3 in parallel with the inline self-review.
 Tooling code changes (`tools/`, `scripts/`) in the same plan get conventional code review
 by the same roster in the same round.
 
@@ -45,9 +47,9 @@ Findings append to the plan file's `## Content Review`, one review round per rev
     1. `[OPEN]` Finding with file/section reference. Priority: Must Fix / Should Fix / Nice to Have.
 
 Authors respond inline with `→ Response:` and retag `[FIXED]` / `[WONTFIX]` (with reason).
-Source tags: `[self]` / `[sol]` / `[glm]` / `[fable]`.
+Source tags: `[self]` / `[sol]` / `[fable]`.
 
 ## Acceptance
 
-All four reviewers APPROVE or APPROVE WITH NITS and every `[OPEN]` item is resolved.
+All three reviewers APPROVE or APPROVE WITH NITS and every `[OPEN]` item is resolved.
 One REJECT blocks. Iterate fix → re-review to consensus.

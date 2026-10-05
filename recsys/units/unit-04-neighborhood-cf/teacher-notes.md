@@ -11,8 +11,10 @@ By the end of this unit students can:
   history (`ItemItemRetrievalPath`).
 - Distinguish **implicit vs explicit** feedback against the real log — a read/like is a positive; there are no
   negative *ratings*; the log's `label==0` rows are exposure-sampled negatives (exposed-not-liked). The co-occurrence
-  path uses **positives only**; Unit 4 does **no** negative sampling (it ranks the full catalog); sampled negatives
-  are *used for training* in Unit 5 (MF) and Unit 8 (two-tower).
+  path uses **positives only**; Unit 4 does **no** negative sampling (it ranks the full catalog). Unit 5 (MF) and
+  Unit 8 (two-tower) *do* train against sampled negatives — and Unit 5 discovers *which* negatives are the right ones:
+  not these exposure-biased `label==0` rows (pushing them down destroys the taste signal), but negatives sampled from
+  each reader's unobserved complement.
 - Read the scoreboard honestly: item-item CF (~0.25 hit@10) is the **first path to beat both** the popularity
   baseline (~0.11) **and** the content/lexical path (~0.16) — the decisive personalization win of Part 1 — while
   acknowledging it cannot reach ~41% of the catalog (items with no train positives have no neighbors).

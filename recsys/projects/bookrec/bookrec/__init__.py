@@ -27,6 +27,7 @@ from bookrec.catalog import Book, load_catalog
 from bookrec.data import generated_dir
 from bookrec.diversity import catalog_coverage, head_ids_from_counts, head_share
 from bookrec.evaluate import hit_rate_at_k, recall_at_k
+from bookrec.factorization import MatrixFactorizationPath
 from bookrec.keywords import load_keywords
 from bookrec.lexical import (
     BM25Index,
@@ -54,6 +55,7 @@ __all__ = [
     "DuplicatePathError",
     "ItemItemRetrievalPath",
     "LexicalRetrievalPath",
+    "MatrixFactorizationPath",
     "PathRegistry",
     "PopularityRetrievalPath",
     "RandomRetrievalPath",

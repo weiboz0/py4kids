@@ -1,0 +1,9 @@
+id: unit-05-matrix-factorization
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [matrix-factorization, latent-factors, gradient-descent]
+  requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, implicit-feedback]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, implicit-feedback]

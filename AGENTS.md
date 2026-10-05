@@ -12,8 +12,8 @@ gates, autopilot through merge) tailored for course-content development.
 ## CRITICAL RULES (never skip)
 
 - **Autopilot is the DEFAULT operating mode.** For design, plans, and fixes, run the full
-  lifecycle autonomously through merge — design → 4-way plan-review gate → phase-by-phase
-  implementation → verification (`scripts/ci-local.sh`) → 4-way content-review gate →
+  lifecycle autonomously through merge — design → 3-way plan-review gate → phase-by-phase
+  implementation → verification (`scripts/ci-local.sh`) → 3-way content-review gate →
   post-execution report → PR → `scripts/pre-merge-guard.sh --pr` → squash-merge — without
   per-step approval. **Pause only for:**
   - **Genuine judgment forks** (scope / curriculum-direction / trust decisions) via `AskUserQuestion`.
@@ -28,8 +28,8 @@ gates, autopilot through merge) tailored for course-content development.
   - The user can redirect at any time. Gates are conducted by autopilot, never skipped by it.
 - **Branch BEFORE drafting a plan.** `git checkout -b feature/plan-NNN-description` first;
   the plan file and all review verdicts live on that branch. Never commit directly to `main`.
-- **Run the 4-way plan-review gate before any implementation** (see `## Plan-review gate`).
-- **Run the 4-way content-review gate before opening a PR** (see `docs/content-review-gate.md`).
+- **Run the 3-way plan-review gate before any implementation** (see `## Plan-review gate`).
+- **Run the 3-way content-review gate before opening a PR** (see `docs/content-review-gate.md`).
 - **Self-containedness is law.** The **default** student baseline is ZERO programming experience plus
   typical middle-school math. **A book MAY declare its own baseline in its design doc** — its audience,
   its assumed mathematics, and permission to use named external libraries (e.g. design 011 for `recsys`);
@@ -98,22 +98,23 @@ while the named plan is unshipped.
   unit/project/checkpoint-ID collisions from parallel sessions.
 - Commit messages: what changed and why. Batch related small fixes into one logical commit.
 
-## Plan-review gate (mandatory — 4-way)
+## Plan-review gate (mandatory — 3-way)
 
 | # | Reviewer | Dispatch | Model |
 |---|----------|----------|-------|
 | 1 | Self-review | active session inline; record in `## Plan Review` | active session model |
 | 2 | Sol reviewer | `codex:codex-rescue` subagent, fresh and read-only (request `--model gpt-5.6-sol`) | GPT-5.6-sol |
-| 3 | GLM reviewer | `opencode:opencode-review` subagent, fresh and read-only (pass `--model opencode-go/glm-5.3`; if it does not respond, fall back to `--model volcengine-plan/glm-5.3`) | GLM-5.3 (opencode-go, fallback volcengine-plan) |
-| 4 | Fable reviewer | fresh, read-only Fable 5 subagent (`Agent`, general-purpose) | Fable 5 |
+| 3 | Fable reviewer | fresh, read-only Fable 5 subagent (`Agent`, general-purpose) | Fable 5 |
 
-Dispatch 2–4 in parallel with the inline self-review (one message).
-Consensus is full blocking: all four APPROVE / APPROVE WITH NITS, no open blockers.
-Verdicts use tags `[self]` / `[sol]` / `[glm]` / `[fable]`.
+Dispatch 2–3 in parallel with the inline self-review (one message).
+Consensus is full blocking: all three APPROVE / APPROVE WITH NITS, no open blockers.
+Verdicts use tags `[self]` / `[sol]` / `[fable]`.
+(The GLM reviewer was removed from the review rolls by user directive on 2026-10-05, after a persistent
+opencode-companion invocation failure; the gate is 3-way.)
 Reviewers MUST REJECT a plan shipping units/projects/checkpoints without a named
 verification phase (docs-only and tooling-only plans state the exemption in `## Out of scope`).
 
-## Content-review gate (mandatory — 4-way, pre-PR)
+## Content-review gate (mandatory — 3-way, pre-PR)
 
 Same roster and tags as the plan-review gate.
 Duties and format: `docs/content-review-gate.md`.
@@ -127,7 +128,7 @@ all `[OPEN]` resolve before merge.
 | Planning, review orchestration, curriculum architecture | Active session inline |
 | Lesson content + exercise/checkpoint STATEMENTS | Opus subagent (`Agent`, `model: opus`) |
 | SOLUTIONS to exercises + checkpoints | Opus subagent (`Agent`, `model: opus`) — SEPARATE fresh session, never reads statements' outlines; cross-model verification lives in the gates |
-| Blind independent solving (content gate) | Gate roster (all four reviewers solve blind) |
+| Blind independent solving (content gate) | Gate roster (all three reviewers solve blind) |
 | Tooling code (`tools/`, `scripts/`) | Opus subagent (`Agent`, `model: opus`) |
 | Teacher notes | Active session inline (pedagogy judgment) |
 | Trivially-scoped edits | Inline |
