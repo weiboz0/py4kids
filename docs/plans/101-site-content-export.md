@@ -418,7 +418,8 @@ Rules:
   3. **Odd answers:** every `after-attempt` item's `answer_md` equals `student_answer_text`, and the set of `after-attempt` keys equals the odd unit exercises exactly.
   4. **Hashes:** every `answer`, `predict` and `expected-output` item's `check.hash` equals `answer_hash(key, canonical, case=answer_format.case)`.
   5. **Visibility:** no `none` item has `answer_md` (also enforced by the schema).
-  - Regressions: an even exercise's `solutions_exN.py` body injected into a bundle JSON string fails, and the same injected into a copied file fails; a challenge's `solutions_challengeN*.py` body likewise fails. A fixture's text appears once in the bundle (as its file) and passes; an extra injected copy of it in a JSON string fails the count. An `asserts` item whose solution cell holds only asserts passes; a fixture whose `asserts.source` contains `def helper(): …` fails; a hidden function body copied into a starter fails.
+  6. **Leak, prose:** the hidden prose corpus is every Markdown paragraph (`fenced_paragraphs`) of every `solutions.ipynb` in the book whose normalised length is ≥ 40 characters, minus the paragraphs of the odd answers `student_answer_text` releases, and minus paragraphs that also occur verbatim in a student-visible source (solutions often restate the statement). Each is counted like check 2: its occurrences across all bundle strings and copied files must not exceed its occurrences in the student-visible baseline. This covers worked explanations such as `python-projects/projects/project-01-arcade-night/solutions.ipynb`'s.
+  - Regressions: a distinctive explanation paragraph from an even exercise's, a checkpoint's and a project's solution, injected into a bundle JSON string, fails; the same paragraph injected into a copied file fails; an odd exercise's released explanation passes. An even exercise's `solutions_exN.py` body injected into a bundle JSON string fails, and the same injected into a copied file fails; a challenge's `solutions_challengeN*.py` body likewise fails. A fixture's text appears once in the bundle (as its file) and passes; an extra injected copy of it in a JSON string fails the count. An `asserts` item whose solution cell holds only asserts passes; a fixture whose `asserts.source` contains `def helper(): …` fails; a hidden function body copied into a starter fails.
 - **The consumer test.** `tests/site_consumer.py` is ≈150 lines of plain Python, a stand-in for part B. It renders from a bundle directory **only through fields the schema marks required or declares**:
   - a lesson page (blocks → HTML)
   - an item page per check kind present
@@ -513,6 +514,13 @@ Rules:
   - `[FIXED]` Hidden solution assets (`solutions_exN*.py`, `solutions_challengeN*.py`) join the code-leak corpus, as in the publish audit, with JSON and file injection regressions.
   - `[FIXED]` Fixture text shipped twice: fixtures are now files only, referenced by path from `check.cases`, so each text has multiplicity one; a doubled-copy regression is added.
   - `[FIXED]` The concept-card fallback broke D8: distractors are always category-local; 1–2 peers give a smaller choice card and none gives a flip card; real-book category test.
+
+### Round 5 (73312c4)
+
+- `[self]` APPROVE.
+- `[fable]` **APPROVE**: on real content, 15 hidden solution assets add no false hit, fixture files keep the sample rule, and category-local cards give 3/2/1-distractor and flip cards in every book.
+- `[sol]` **REJECT** (gpt-5.6-sol):
+  - `[FIXED]` Hidden prose answers were outside the leak check: check 6 counts every distinctive solution Markdown paragraph (≥ 40 characters, minus released odd answers and restated statements), with JSON and file injection regressions.
 
 ## Content Review
 
