@@ -62,6 +62,25 @@ library_methods:
 - astype
 - isclose
 - round
+# --- Unit 3 (recsys-005): lexical retrieval (bookrec lexical API + numpy/stdlib) ---
+- BM25Index
+- LexicalRetrievalPath
+- arange
+- artifact
+- array_equal
+- cosine_similarity
+- join
+- load_keywords
+- log
+- max
+- median
+- min
+- most_common
+- norm
+- score
+- tfidf_matrix
+- update
+- zeros
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}

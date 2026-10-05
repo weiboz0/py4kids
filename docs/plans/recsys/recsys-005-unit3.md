@@ -1,139 +1,126 @@
 # Plan recsys-005 — Unit 3: Lexical retrieval (TF-IDF and BM25)
 
-> **STATUS: BLOCKED / SUPERSEDED-FOR-REVISION (renumbered 004→005 on 2026-10-03).** Plan-review round 1 ([sol] +
-> [fable] empirical REJECT, self-confirmed) proved the premise is unsatisfiable on the current data: no surface
-> content/lexical path beats the random floor, and even a true-affinity oracle ≈ the floor because the generator is
-> popularity/exposure-dominated. The user approved a **generator redesign first** (plan **recsys-004**:
-> taste-aware exposure + latent-correlated per-book text + a recoverability harness + Unit 1-2 re-validation). This
-> Unit-3 plan will be **re-drafted on the redesigned data** (documents become real repeated-term text; TF-IDF/BM25
-> `k1`/`b` become meaningful; the lexical/content path must beat the floor and be re-measured). The round-1 review
-> record below is retained as the diagnosis that motivated recsys-004. Do NOT implement this plan as written.
-
----
-
-# (original) Plan recsys-004 — Unit 3: Lexical retrieval (TF-IDF and BM25)
-
-**Design:** `docs/designs/011-recsys-book.md` (§5, §6 "taste derived from catalog features (subjects/authors)", §8
-Unit 3). **Book:** `recsys` (Book 3). **Autopilot** per AGENTS.md. Third Part-1 unit, on the recsys-001/Unit-1/Unit-2
-substrate and the now-established milestone-notebook mechanism (design §10 v3). Ships the first **content/lexical**
-retrieval path — the first **reader-dependent** path — scored against the Unit-1 random floor and the Unit-2
-popularity baseline.
+**Design:** `docs/designs/011-recsys-book.md` (§5, §6 keyword artifact, §8 Unit 3). **Book:** `recsys` (Book 3).
+**Autopilot** per AGENTS.md. This replaces the original Unit-3 draft (preserved in git history + recsys-004's
+motivation), whose premise was infeasible on the popularity-dominated data. recsys-004 (merged, `f44891d`) gave the catalog real
+**keyword text** and a recoverable content signal, so a lexical path now beats the floor by ~13× (seed-0 floor). Ships the first
+content/lexical **reader-dependent** path on the Unit-1/2 substrate + the milestone-notebook mechanism.
 
 ## Scope
-**Unit 3 only** (`recsys/units/unit-03-lexical-retrieval/`). Teaches lexical/content retrieval over the catalog's
-feature tokens: **bag-of-words**, **TF-IDF** (+ cosine), and **Okapi BM25**, and ships a `LexicalRetrievalPath`
-(BM25) in `bookrec` + a Unit-3 milestone notebook. No collaborative filtering (U4), no learned embeddings (U7). No
-real data; **no generator change** — the lexical "document" for each book is its existing **genre tokens + author
-token** (design §6 feature-taste signal), and a reader's query is the token profile of the books they have read.
+**Unit 3 only** (`recsys/units/unit-03-lexical-retrieval/`). Teaches lexical/content retrieval over each book's
+**keyword document** (`keywords.csv.gz`, real repeated-term word bags from recsys-004): **bag-of-words**, **TF-IDF**
+(+cosine), **Okapi BM25**; ships `LexicalRetrievalPath` (BM25) in `bookrec` + a Unit-3 milestone notebook. A reader's
+query is the keyword tokens of the books they have read. No CF (U4), no learned embeddings (U7). No generator change
+(the recsys-004 keyword text + harness stand).
 
-## Why this works on the existing data (empirical, binding)
-The catalog generator (`gen_catalog.py`) gives each book **1–3 of 12 genres** (`genres`, `;`-joined) and one of **300
-authors** (`author_id`), and builds reader taste from the genre-membership matrix + an author-follow boost
-(`gen_interactions.py`). So each book's bag-of-words document = its genre tokens + an `author:<id>` token (vocabulary
-≈ 312), and a reader whose positives share genres/authors will have those books surfaced by a BM25/TF-IDF match →
-the path beats the random floor and captures per-reader taste the (non-personalised) popularity path cannot.
-**Authors MUST empirically confirm on the committed seed** (k=10, cold excluded) that `LexicalRetrievalPath` beats
-the random floor, and report its number vs the Unit-2 popularity baseline; write the measured direction into the
-Phase B tests and the lesson/milestone prose (do not assert brittle exact values).
+## Framing (honest, per recsys-004 [fable] follow-up)
+Keyword BM25 beats the random floor massively (~0.158 vs ~0.012 ≈ 14×) and is a strong **content candidate source**;
+it is **comparable to** a simple genre-matching baseline and sits below collaborative/latent paths (U4/U5) — the
+lesson frames lexical as "retrieve books whose words match what you've read", NOT as "beats everything". (The
+`keyword_genre_scale` signal-independence question is noted but NOT re-tuned here — lexical is a valid floor-beating
+path as shipped; re-tuning would re-open the merged generator for marginal benefit.) Empirical floor-beating is
+BINDING on authors + the gate (reuse recsys-004's harness/probes).
 
 ## Buildout stays
 Whole-book `lessons` total becomes **9** (U1 3 + U2 3 + U3 3) < 30 → `buildout: true` retained.
 
-## Audience & retained laws (design 011 §2)
-Advanced audience; assumed baseline (incl. `vectors`, `dot-product`, `vector-norm`, `logarithms`, `probability`,
-`numpy-*`). Retained: project-first; taught-before-assessed; student notebooks NO solutions / NO outputs
-(`execution_count: null`); solutions + milestone run clean with fixed seeds (seed 0); teacher-notes; dual
-concept∥project tracks; from-scratch→reveal-the-library (derive TF-IDF/BM25 in numpy before packaging). CPU-light
-(numpy/pandas + `bookrec`; no torch/faiss) routed under `--group recsys`.
+## Audience & retained laws
+Advanced baseline (incl. `vectors`, `dot-product`, `vector-norm`, `logarithms`, numpy). Retained: project-first;
+taught-before-assessed; student notebooks NO solutions/outputs (`execution_count: null`); solutions + milestone run
+clean (seed 0); teacher-notes; from-scratch→reveal-the-library (derive TF-IDF/BM25 in numpy before packaging).
+CPU-light (numpy/pandas + `bookrec`; no torch/faiss) routed `--group recsys`.
 
-## Concepts introduced (3) — added to `concepts.yaml`; Unit 3 is their `introduces` home
-- `bag-of-words` — represent a book as a bag of feature **tokens** (its genres + its `author:<id>`); the
-  document–term view, vocabulary, document frequency `df`. `kind: technique`, `category: techniques`.
-- `tf-idf` — term-frequency × inverse-document-frequency weighting and **cosine** similarity between a reader's
-  token profile and item vectors; why IDF down-weights ubiquitous tokens. `kind: technique`, `category: techniques`.
-- `bm25` — Okapi **BM25**: IDF × saturating term frequency (`k1`) × document-length normalization (`b`); why it
-  improves on raw TF-IDF cosine for retrieval, and the `k1`/`b` roles. `kind: technique`, `category: techniques`.
-All three globally unique (confirmed: 0 hits across `*/curriculum/concepts.yaml`).
+## Concepts introduced (3) — `concepts.yaml`
+- `bag-of-words` — a book as a bag of **keyword tokens**; document–term view, vocabulary, document frequency `df`,
+  raw term frequency (real repetition in the keyword text). `kind: technique`, `category: techniques`.
+- `tf-idf` — tf × idf weighting + **cosine** similarity between a reader's keyword profile and item vectors; why IDF
+  down-weights ubiquitous words. `kind: technique`, `category: techniques`.
+- `bm25` — Okapi BM25: IDF × saturating tf (`k1`) × document-length normalization (`b`); **what BM25 adds over raw
+  TF-IDF cosine and when it matters**. On this keyword corpus the **`b` length-normalization effect is demonstrable**
+  (long-doc bias at `b=0`); **`k1` saturation is taught mechanically** (tiny fixture + a Phase-B test) and framed
+  honestly as a *small* effect here because keyword bags repeat terms only lightly (median max-tf 2). The lesson does
+  NOT claim BM25 beats TF-IDF cosine on the scoreboard (empirically TF-IDF cosine ≳ BM25 here).
+  `kind: technique`, `category: techniques`.
+All three globally unique (0 hits in any `*/curriculum/concepts.yaml`).
 
 ### Coverage-map entry
 `unit-03-lexical-retrieval`, `kind: unit`, `lessons: 3`, `introduces: [bag-of-words, tf-idf, bm25]`,
 `requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]`,
-`practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]`. (All required/practised
-ids are Unit-1 introductions → `prereq_findings`/`practice_findings` close under buildout; no `project` map entry so
-the capstone rule does not fire. catalog-search is genuinely practised here — the path reads the catalog's
-genre/author features.)
+`practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]` (Unit-1 ids; closes
+under buildout; no project map entry → capstone rule inert). catalog-search genuinely practised (reads the catalog +
+keyword artifact).
 
 ## Phases
 
-### Phase A — curriculum registry + syllabus (CI-fidelity)
-- `concepts.yaml`: add the three ids (`kind: technique`, `category: techniques`).
-- `coverage-map.yaml`: add the Unit-3 entry (map order after Unit 2); update the buildout comment to "nine".
-- `baseline.yaml`: declare every NEW `x.name(...)` library method the Unit-3 notebooks/code call (confirmed against
-  authored cells; e.g. numpy `log`/`log1p`/`argpartition`/`nonzero`/`unique`, `np.linalg.norm`→`norm`, and the new
-  bookrec API; `Counter`/`defaultdict` are Name calls → not required).
-- `recsys/units/unit-03-lexical-retrieval/manifest.yaml`: mirror the entry.
-- `recsys/syllabus.md`: add the arc row `| 3 | \`unit-03-lexical-retrieval\` | unit | 3 | <hook> |`; rebuild syllabus PDF.
-**Verify:** curriculum checks green; buildout holds (9 < 30).
+### Phase A — registry + syllabus
+- `concepts.yaml`: add the 3 ids. `coverage-map.yaml`: add the Unit-3 entry (buildout comment → "nine").
+- `baseline.yaml`: declare new `x.name(...)` methods the notebooks/code use (e.g. `load_keywords`, numpy
+  `log`/`log1p`/`argpartition`/`nonzero`, `np.linalg.norm`→`norm`, bookrec lexical API; `Counter`/`defaultdict` are
+  Name calls, not required).
+- `unit-03-lexical-retrieval/manifest.yaml`; `syllabus.md` arc row `| 3 | ... | unit | 3 | <hook> |`; rebuild PDF.
+**Verify:** curriculum checks green; buildout holds (9<30).
 
-### Phase B — `bookrec` lexical code (Opus subagent; package code)
-Dispatch an **Opus subagent**. Add `bookrec/lexical.py` (numpy-only; no pandas import in the package):
-- a document builder: for each catalog book, tokens = its genre names (split on `;`) + `author:<author_id>`.
-- `BM25Index` (and a TF-IDF/cosine helper used by the lesson): precompute `df`, `idf`, document lengths, `avgdl`;
-  BM25 score of a document vs a query-token multiset with parameters `k1` (default ~1.2) and `b` (default ~0.75);
-  plus a `tfidf_matrix` / `cosine_similarity` helper for the from-scratch TF-IDF-cosine step.
-- `LexicalRetrievalPath(BaseRetrievalPath)` (name `"lexical"`, version `"1"`): `fit(interactions, catalog)` builds
-  the index from the **catalog** (raise if `catalog` is None/empty); `retrieve(reader_id, context, k)` forms the
-  reader's **query** from the tokens of the books in `context["seen"]`, scores catalog books by BM25, excludes
-  `seen`, returns top-k via `_finish`; an empty `seen` → returns `[]` (no profile). Reader-DEPENDENT. `load` restores
-  the fitted index. Honour the `Candidate`/finite-score/stable-int/tie-break contract.
-- Export the new public names from `bookrec/__init__.py` `__all__`.
-- Tests under `recsys/projects/bookrec/tests/` (routed): index math is correct on a tiny hand-checked fixture
-  (IDF monotonic in `df`; BM25 length-normalization and `k1` saturation behave); the path beats the random floor on
-  the seeded val scoreboard (direction) with `cold_readers` passed; empty-`seen` → `[]`; registers with
-  `artifact_name()=="lexical-v1"`, no collision.
-**Verify:** `uv run --group recsys pytest recsys/projects/bookrec/ -q` green, deterministic, no real data, no pandas
-import under `bookrec/`.
+### Phase B — `bookrec` lexical code (Opus subagent; numpy-only, no pandas in the package)
+`bookrec/lexical.py`: a document builder from `load_keywords` (tokenize the keyword bag per book); `BM25Index`
+(precompute `df`/`idf`/doc-lengths/`avgdl`; BM25 score vs a query-token multiset; `k1`~1.2, `b`~0.75) + a
+`tfidf_matrix`/`cosine_similarity` helper for the from-scratch step; `LexicalRetrievalPath(BaseRetrievalPath)`
+(name `"lexical"`, version `"1"`): the path **owns its keyword corpus** — provided at CONSTRUCTION
+(`LexicalRetrievalPath(keywords: Mapping[int, str])`, mirroring how `RandomRetrievalPath` takes `item_ids`), so
+**`fit(interactions, catalog=None)` conforms EXACTLY to the `RetrievalPath` protocol and is fully substitutable** (a
+generic caller can `path.fit(interactions, catalog)` with no extra args — [sol] round-2 #1). `fit` builds the BM25
+index from the constructor-provided keyword corpus (it may ignore `interactions`; a content path indexes the catalog
+text). Raise at construction if `keywords` is empty. `retrieve(reader_id, context, k)` forms
+the query from the keyword tokens of `context["seen"]` books, scores by BM25, excludes `seen`, top-k via `_finish`;
+empty `seen` → `[]`. **`load(artifact)`** restores the fitted **index object** (the concrete artifact: item ids,
+vocabulary, per-doc tf arrays, `df`/`idf`, doc-lengths/`avgdl`). Export from `__init__`. Tests (routed): hand-checked
+index math (IDF monotone in `df`; the `b` length-norm shifts top results by doc length; `k1` saturation behaves
+mechanically on a tiny fixture); path beats the random floor on the seeded `val` scoreboard with a **stable margin**
+(assert `hit@10 ≥ 5× analytic floor` and/or `> popularity`, NOT the point value — ~13× on seed 0, floor 0.0120),
+`cold_readers` passed; empty-seen → `[]`; `artifact_name()=="lexical-v1"` no collision; **a fit→artifact→load
+round-trip test asserting identical recommendations/scores/ordering/exclusions** ([sol]#2).
+**Verify:** `uv run --group recsys pytest recsys/projects/bookrec/ -q` green, deterministic.
 
 ### Phase C — lesson.ipynb (Opus subagent; project-first)
-First cell = markdown hook ("you've read three space operas and a mystery — which *other* books match your taste,
-before anyone else has rated them?"). Then from scratch → reveal the library:
-1. **Bag-of-words**: build each book's token document (genres + author) from the catalog; vocabulary + `df`.
-2. **TF-IDF + cosine**: derive tf-idf weights and cosine similarity by hand in numpy; score books against a reader's
-   token profile; reveal the `bookrec` TF-IDF helper.
-3. **BM25**: motivate IDF + tf-saturation (`k1`) + length-norm (`b`); derive BM25; reveal `LexicalRetrievalPath`;
-   register it and score on the val scoreboard (seed 0, k=10, `cold_readers` passed) — beats the random floor, and
-   compare to the Unit-2 popularity baseline (show both numbers; interpret where content wins/loses vs popularity).
-ASCII diagrams only; `rank(exclude=seen)`; reuse `bookrec`.
+Hook: "you've read a handful of books — which *other* books use the same words/themes?" From scratch → reveal:
+(1) bag-of-words over the keyword text (vocabulary, `df`, real tf); (2) TF-IDF + cosine by hand → reveal the helper;
+(3) BM25 — teach **what it adds (saturation `k1` + length-norm `b`) and when it matters**: show the `b` effect on the
+real variable-length docs (long-doc bias at `b=0`); present `k1` honestly as a small effect here (keyword bags repeat
+terms only lightly) — do NOT claim BM25 beats TF-IDF cosine on the scoreboard. Reveal `LexicalRetrievalPath`, register
++ score on `val` (seed 0, k=10, `cold_readers`) — beats the floor ~13× (state ">10×", not a point value); compare to
+the random floor and the U2 popularity baseline (honest: strong vs floor, comparable to simple content matching, below
+the collaborative paths to come). ASCII only; `rank(exclude=seen)`; reuse `bookrec`.
 **Verify:** `exec-lessons` clean; non-empty markdown first cell; `concept-scan` clean.
 
 ### Phase D — exercises.ipynb + solutions.ipynb (separate fresh Opus subagents)
-≥6 `## Exercise N`; ≥2 `stretch`; exercises NO solutions/NO outputs; solutions mirror all, run clean (seed 0), ≥3
-non-vacuous asserts. Drill: build bag-of-words + `df`/`idf`; compute tf-idf cosine for a profile; compute BM25 and
-show the effect of `k1`/`b`; register `LexicalRetrievalPath` + read the val scoreboard vs random/popularity.
-Stretch e.g.: show BM25 → TF-ish as `k1→∞` and the `b=0` (no length norm) vs `b=1` contrast; derive why a rare
-genre token dominates the score. Everything assessed is taught in Phase C.
-**Verify:** `hygiene`/`exercise-structure` (≥6, ≥2 stretch, no outputs); `exec-solutions` clean; `concept-scan` clean.
+≥6 `## Exercise N`; ≥2 `stretch`; exercises NO solutions/outputs; solutions mirror all, clean (seed 0), ≥3
+non-vacuous asserts. Drill: build bag-of-words + `df`/`idf` from keyword text; tf-idf cosine for a profile; BM25 +
+the `k1`/`b` effect (now visible on real repeated-term docs); register `LexicalRetrievalPath` + read the val
+scoreboard vs floor/popularity. Stretch e.g.: BM25→tf-ish as `k1→∞` AND **`k1→0` ⇒ binary term presence** (note
+this is empirically ~best on short keyword bags — a real discussion point); `b=0` vs `b=1` on a long vs short doc;
+why a rare keyword dominates. Taught-before-assessed (do not assess a BM25>TF-IDF-cosine win).
+**Verify:** `hygiene`/`structure`/`cell-lint`/`noexec` (≥6, ≥2 stretch, no outputs); `exec-solutions` clean;
+`concept-scan` clean.
 
 ### Phase E — milestone notebook (Opus subagent)
-`recsys/projects/bookrec/milestones/unit-03-lexical.ipynb` — runnable fixed-seed demo (cleared outputs,
-`execution_count: null`, ASCII, opens with a one-line project hook): build + fit + register `LexicalRetrievalPath`,
-score on val vs the random floor and the Unit-2 popularity path, and show a worked example of one reader's profile →
-top recommendations with the matching genre/author tokens. Must pass `milestone-check` + `exec-solutions` +
-`concept-scan`.
+`recsys/projects/bookrec/milestones/unit-03-lexical.ipynb` — runnable fixed-seed demo (cleared outputs, ASCII, opens
+with a hook): build+fit+register `LexicalRetrievalPath`, score on val vs the random floor + U2 popularity, and show
+one reader's keyword profile → top recommendations with the matching words. Passes `milestone-check` +
+`exec-solutions` + `concept-scan`.
 
 ### Phase F — teacher-notes.md (inline)
-`## Goals`, `## Pacing` (60–90 min across 2–3 sittings; project hook stated), `## Common mistakes` (forgetting IDF so
-common genres dominate; no length-norm so multi-genre books win spuriously; building the query from seen vs leaking
-val; cosine vs BM25 confusion), `## Discussion prompts`, `## Differentiation`.
+`## Goals`, `## Pacing` (60–90 min / 2–3 sittings, hook stated), `## Common mistakes` (no IDF → common words
+dominate; no length-norm → long keyword lists win spuriously; query from seen vs leaking val; cosine vs BM25),
+`## Discussion prompts` (include: **why does `k1` saturation barely change results on these short keyword bags, and
+when would it matter?** — because books repeat terms only lightly; it would matter on long free-text documents),
+`## Differentiation`.
 
 ### Phase G — verification (named)
-`TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN with Units 1–3 + the Unit-3 milestone notebook AND
-`bash scripts/pre-merge-guard.sh --pr` OK. buildout holds (lessons 9).
+`TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN with Units 1–3 + the Unit-3 milestone AND
+`bash scripts/pre-merge-guard.sh --pr` OK. buildout holds (9).
 
 ## Out of scope
-No collaborative filtering (U4); no MF/neural/embeddings (U5/U7); no generator/schema change; no free-text titles
-(documents are genre+author tokens); no `projects/project-*` map entry (capstone = U14); no checkpoint; no buildout
-removal; no real data.
+No CF (U4); no MF/neural/embeddings (U5/U7); no generator/`keyword_genre_scale` change (recorded, deferred); no
+`projects/project-*` map entry (capstone=U14); no checkpoint; no buildout removal; no real data.
 
 ## Verification phase declared
 Phase G is this plan's named verification phase.
@@ -142,30 +129,164 @@ Phase G is this plan's named verification phase.
 
 ### Round 1 (on v1)
 
-**[self] — APPROVE.** Concepts globally unique; coverage entry closes (`requires`/`practices` = Unit-1 ids, all
-introduced; `practices∩introduces=∅`; no `project` map entry → capstone rule off); buildout holds (9 < 30); named
-verification phase G; project-first; from-scratch→library; ≥6/≥2-stretch/≥3-asserts; teacher-notes 60–90 min;
-milestone notebook via the established mechanism. Data approach is design-§6-aligned (genre+author feature tokens;
-no generator change) and binds empirical floor-beating verification on the authors + the gate. No [self] blockers.
-`[glm]` skipped for the weekend (volcengine-plan non-functional across three prior attempts; resume Monday).
+**[self] — APPROVE.** Concepts globally unique; coverage entry closes (Unit-1 ids; `practices∩introduces=∅`; no
+project map entry → capstone rule inert); buildout holds (9<30); named verification Phase G; project-first;
+from-scratch→library; ≥6/≥2-stretch/≥3-asserts; teacher-notes; milestone. Feasibility is now real (recsys-004
+keyword text: BM25 ~0.158 ≈ 14× floor, with genuine tf repetition + length variation so `k1`/`b` are meaningful);
+framing is honest per the recsys-004 follow-up (lexical beats the floor + is a content candidate source, NOT "beats
+genre"). No generator re-opening. No [self] blockers. `[glm]` weekend-skip (resume Monday).
 
-**[sol] — REJECT** (empirical). Probed via `run_validation_scoreboard`: the specified genre+author BM25 path scores
-BELOW the random floor (unique-query 0.00815, multiset 0.00543 vs random 0.01359, 368 readers). Rare author tokens
-dominate IDF; author-following only applies after prior positives and doesn't generalize to `val`. Also: every
-document has TF=1 (each genre/author appears once), so BM25 `k1` saturation is inert on this corpus. Plus: `load`
-round-trip test unspecified. **Premise fails — the data does not support a floor-beating surface-content path.**
-*(Self-confirmed: genre-only cosine 0.0054, genre×IDF 0.0082 — both below floor; all 12 genres have df≈314–358/2000,
-so genre matching barely discriminates and the generator's taste is latent, captured by CF/MF not surface features.)*
+**[sol] — REJECT** (premise empirically confirmed: BM25 0.158, random 0.012, genre cosine 0.168, 500 readers;
+1654/2000 docs have repeated terms; `k1`/`b` matter — framing + `keyword_genre_scale` deferral honest).
+1. `[OPEN]` **Must Fix** — `fit(interactions, catalog, keywords)` adds a required 3rd arg, violating the live
+   `RetrievalPath.fit(interactions, catalog=None)` contract (protocol.py:87). Keywords must enter via a
+   substitutable interface — provide them at CONSTRUCTION (the path owns its keyword corpus) or load them inside
+   `fit` from `generated_dir`; `fit` keeps the `(interactions, catalog=None)` signature.
+2. `[OPEN]` **Should Fix** — specify the fitted-artifact concrete shape + a fit→artifact→load round-trip test
+   proving identical recommendations/scores/ordering/exclusions (not just `artifact_name()`).
+3. `[OPEN]` **Should Fix** — lesson total is **9** (U1 3 + U2 3 + U3 3), not 12 (arithmetic slip); buildout still
+   holds (9<30). Fix the Buildout section + the coverage-map comment.
 
-**[fable]** — plan-review still running when the data-architecture fork was escalated to the user (premise already
-empirically refuted by [sol] + self-probe; [fable]'s verdict does not change that a data decision is required).
+**[fable] — APPROVE WITH NITS** (empirically confirmed: BM25 0.158 = 13.2× floor, 1.46× popularity; genre cosine
+0.152; doc-len 12/26/40 min/med/max, `b` sweep 0.152→0.162 so length-norm is demonstrable; 82.7% docs have tf≥2 but
+median max-tf=2, so `k1` is mechanically real but near-flat on the scoreboard).
+1. `[OPEN]` **Should Fix** — the `bm25` concept + lesson over-claim "BM25 improves on raw TF-IDF cosine for retrieval":
+   on this corpus TF-IDF cosine (0.160) ≥ BM25 (0.158) and `k1` saturation is empirically ~neutral. Reword to what IS
+   true: the `b` length-normalization effect is demonstrable on the real variable-length docs; `k1` saturation is
+   taught mechanically (tiny fixture + Phase B test) and framed honestly as "small here because keyword bags repeat
+   terms only lightly". Phase C/D must NOT assert a BM25 > TF-IDF-cosine scoreboard win; "why BM25 improves
+   retrieval" → "what BM25 adds (saturation + length-norm) and when it matters".
+2. `[OPEN]` **Should Fix** — Phase B floor-beating test: pin a stable bound (hit@10 ≥ 5× random floor, or
+   > popularity) not the point value 0.158; cite "~13×" (seed-0 floor 0.0120), or ">10×".
+3. `[OPEN]` **Should Fix** — `fit` signature: `fit(interactions, catalog=None, *, keywords=None)` raising on
+   None/empty (keeps the `RetrievalPath` protocol shape; keyword-only kwarg — resolves [sol]#1). Specify the artifact
+   as the fitted index object (ids/vocab/tf arrays) + a fit→artifact→load round-trip test ([sol]#2).
+4. `[OPEN]` **Nice** — add the stretch mirror "`k1→0` ⇒ binary presence" (empirically the best setting here) + a
+   teacher-notes discussion prompt on why saturation barely matters on short keyword bags.
+5. `[OPEN]` **Nice** — declare `argpartition`/`norm`/`log1p` (+ `load_keywords`) in `baseline.yaml library_methods`.
+6. `[NOTE]` — curriculum checks simulate clean (budget under buildout; no capstone fire; ids unique); merging 3-of-4
+   this weekend is covered by the user's glm ruling (two prior merges shipped that way).
 
-### Plan-review outcome (round 1): **NOT consensus — [sol] REJECT (premise/data).** Escalated to the user: the synthetic catalog lacks the content/text signal that Units 3 (lexical) and 7 (GloVe) require. Revision blocked on the data-architecture decision below.
+### Plan-review outcome (round 1): **NOT consensus — [sol] REJECT + [fable] APPROVE WITH NITS.** Premise empirically confirmed; all findings fold into v2. Re-review round 2.
+
+### Round 2 (on v2)
+**[self] — APPROVE.** v2 folds all findings: `fit(interactions, catalog=None, *, keywords=None)` (protocol-substitutable;
+[sol]#1/[fable]#3) + concrete index artifact + fit→artifact→load round-trip test ([sol]#2); lesson total corrected to
+**9** ([sol]#3); `bm25` concept + Phase C/D reframed to "what BM25 adds (b demonstrable; k1 mechanical/light) — NOT
+beats TF-IDF cosine" ([fable]#1); floor-beating test pinned as ≥5× floor / >popularity, "~13×" not a point value
+([fable]#2); stretch `k1→0` binary mirror + teacher-notes k1-light discussion ([fable]#4); baseline methods incl.
+`argpartition`/`norm`/`log1p`/`load_keywords` ([fable]#5). No [self] blockers.
+
+**[sol] — REJECT** (round 2): findings 2 (artifact/round-trip) + 4 ([fable] BM25 honesty) resolved; two left →
+**v2.1**:
+1. `[FIXED v2.1]` **Must** — keyword-only kwarg raising on None still strengthened the precondition (a generic
+   `fit(interactions, catalog=None)` caller couldn't fit it). → keywords now provided at CONSTRUCTION
+   (`LexicalRetrievalPath(keywords=...)`); `fit(interactions, catalog=None)` conforms exactly / fully substitutable.
+3. `[FIXED v2.1]` **Should** — stray "12" lesson-count in Phase A-verify + Phase G → "9".
+
+**[sol] — APPROVE** (round 3). Both v2.1 items confirmed: `fit(interactions, catalog=None)` matches
+`protocol.py:87` with keywords supplied at construction (substitutable); lesson count 9 in Buildout + Phase-A-verify
++ Phase G.
+
+### Plan-review outcome: **CONSENSUS (3-of-4; [glm] weekend-skip)** — [self]/[sol]/[fable] APPROVE. Premise empirically confirmed (BM25 ~0.158 ≈ 13× floor; honest framing). Cleared to implement (Phase A → G).
 
 ## Content Review
 
-<!-- appended pre-PR -->
+ci-local ALL GREEN (82 bookrec tests incl. test_unit03; lesson/solutions/milestone exec; concept-scan;
+recsys PDFs; pre-merge-guard OK). 3-way gate ([glm] weekend-skip). Content authored by Fable subagents (Opus
+subagents hit the weekly cap, Codex at capacity) — the independent gate is the quality check.
+
+### Review 1 — self (2026-10-04)
+- **Verdict**: APPROVE. Phases verified: lesson (34 cells, project-first hook, bag-of-words→TF-IDF→BM25 from
+  scratch then reveal, exec-clean), 8 exercises (6 core + 2 stretch) + mirrored solutions (8 asserts), milestone,
+  teacher-notes. Numbers independently reproduced (lexical 0.158 = 13.2× floor, 1.46× popularity; TF-IDF cosine
+  0.160 ≈ BM25; k1→0 0.170). Honest framing holds throughout (lexical a strong content candidate source, comparable
+  to simple matching, below CF/latent; no BM25>TF-IDF-cosine claim). Code tested (lexical.py 82 tests incl. the
+  k1=0 NaN-safety fix + fit→artifact→load round-trip + protocol-substitutable fit). No [self] blockers. Deferred to
+  [sol]/[fable] blind-solve.
+
+### Review 2 — fable (2026-10-04)
+- **Verdict**: APPROVE WITH NITS. Blind-solved all 8 (every number matches solutions); empirically verified
+  (lexical 0.158=13.2× floor, 1.46× pop; TF-IDF 0.160≈BM25; k1=0 → 0.170; length bias 35.7→31.6 as b 0→1);
+  code review clean (plus-one IDF monotone; k1=0 NaN-fix finite/binary; protocol-substitutable fit;
+  fit→artifact→load round-trip; numpy-only). No Must-Fix.
+1. `[OPEN]` **Should Fix** — `exercises.ipynb` Ex8 statement says "why the ratio is **so large**" but the measured
+  ratio is a modest ~1.27 (df 42..113). Reword to "why it *can* be very large in general (df=1→≈log N; df≈N→≈0),
+  then report the modest ratio you measure here and say why". (solution already honest.)
+2. `[OPEN]` **Should Fix** — `lesson.ipynb` cell 24 says `retrieve` returns "**calibrated** Candidates"; it returns
+  RAW BM25 scores (calibration is `path.calibrate` at blend time). Fix to "raw BM25 scores (calibrated later, at
+  blend time)" — avoids misteaching the protocol.
+3. `[OPEN]` **Nice** — Ex1 statement: note the single-book-token count may be 0 (generator) + ask for smallest df.
+4. `[OPEN]` **Nice** — Ex5 statement: add the top-10 tf=1 tally (the long doc alone has only 2 contributing tokens).
+5. `[OPEN]` **Nice** — `teacher-notes.md` Pacing: Exercises 5–6 are unassigned to a sitting; assign them.
+6. `[OPEN]` **Nice** — Ex8 "how many tokens it outweighs" is a vacuous assert; ask the top-3 token share instead.
+
+### Review 3 — sol (2026-10-04, INCOMPLETE — Codex capacity)
+- **Verdict**: none (Codex `gpt-5.6-sol` hit "model at capacity" mid-review; turn failed). Before failing it
+  independently confirmed Exercises 1–7 match the solutions and flagged the SAME Ex8 overclaim as [fable]#1
+  (corroborating). Re-dispatched on the fixed content (Monday).
+
+### Fix pass (commits `4957e7b` teacher-notes, `3d493e0` notebooks) — dispositions
+- **fable#1 / sol-partial** `[FIXED]` — Ex8 statement reworded: explain why the idf ratio *can* be large in general
+  (df=1→≈log N; df≈N→≈0), then measure + explain the modest ~1.27 here; solution prose aligned.
+- **fable#2** `[FIXED]` — lesson cell 24: `retrieve` returns "raw BM25 scores (calibrated later, at blend time)",
+  not "calibrated" (grep-confirmed sole occurrence).
+- **fable#3** `[FIXED]` — Ex1 asks for smallest df + notes the single-book count may be 0 (not a bug).
+- **fable#4** `[FIXED]` — Ex5 adds the top-10 tf=1 tally (demonstrates the small-`k1` point).
+- **fable#5** `[FIXED]` — teacher-notes Pacing assigns Exercises 5–6 (Sitting 2).
+- **fable#6** `[FIXED]` — Ex8 vacuous sub-question → top-3-token score share (non-vacuous assert).
+All per-unit checks PASS after the fix pass. Monday: resume full 4-way — re-dispatching [sol] (Codex) + [glm]
+(opencode) on the fixed content.
+
+**[sol] re-dispatch (Monday) — INCOMPLETE** (Codex `gpt-5.6-sol` immediately "at capacity"; persistent infra
+outage). [sol] is infra-unavailable for this gate; its earlier partial run corroborated [fable] (Ex1–7 match; Ex8).
+
+### Review 4 — glm (2026-10-05, opencode-go/glm-5.3)
+- **Verdict**: APPROVE WITH NITS. Independent blind-solve of all 8 (every number matches), lesson/milestone claims
+  reproduced, no BM25-beats-TF-IDF claim, project-first/pacing/hygiene confirmed, 82/82 bookrec tests, lexical.py
+  math + k1=0 guard + construction-time keywords + protocol `fit` + fit→artifact→load + numpy-only all verified. No
+  Must/Should.
+1. `[FIXED]` **Nice** — `lexical.py` `load()` uses `np.asarray(state[...])` without `.copy()`, which can alias a
+   hand-built artifact's arrays (the shipped `artifact()` copies, so shipped usage is isolated). → add defensive
+   `.copy()`.
+2. `[FIXED]` **Nice** — `load()` lets the artifact's `k1`/`b` override the constructor while `name`/`version` are
+   kept. → docstring note ("artifact is truth for k1/b; name is identity, not state").
+3. `[WONTFIX]` **Nice** — milestone cell 9 `rank(exclude=seen)` re-excludes an already-excluded list (harmless,
+   defensive); cosmetic, deferred.
+
+### Content-review outcome: **CONSENSUS (3-of-4; [sol] infra-down — Codex at capacity)** — [self]/[fable]/[glm] APPROVE. Same 3-of-4 shape authorized for the weekend. [glm] Nice nits #1/#2 folded. Cleared to ship.
 
 ## Post-Execution Report
 
-<!-- appended before ship -->
+**Shipped (recsys-005 — Unit 3: Lexical retrieval, TF-IDF and BM25).** The third Part-1 unit and the first
+content/**reader-dependent** retrieval path, on the recsys-004 keyword text.
+
+- **Phase A** — concepts `bag-of-words`/`tf-idf`/`bm25`; coverage-map `unit-03-lexical-retrieval` (requires+practices
+  the four Unit-1 concepts); manifest; syllabus row. Buildout retained (lessons total **9** < 30).
+- **Phase B** — `bookrec/lexical.py`: `BM25Index` (df/idf, per-doc tf, doc-len/avgdl; `k1` saturation + `b`
+  length-norm; division-safe at `k1=0`), `tfidf_matrix`/`cosine_similarity`, and `LexicalRetrievalPath` — keyword
+  corpus **at construction** so `fit(interactions, catalog=None)` is protocol-substitutable; reader query = keyword
+  tokens of `context["seen"]`; empty seen → `[]`; `artifact()`/`load()` round-trip the fitted index. numpy-only.
+- **Phases C/D/E/F** — lesson (project-first; bag-of-words→TF-IDF→BM25 from scratch then reveal), 8 exercises
+  (6 core + 2 stretch) + mirrored solutions (8 asserts), the Unit-3 milestone notebook, teacher-notes.
+
+**Numbers (seed 0, k=10, 500 readers):** lexical BM25 hit@10 **0.158** = **13.2× floor** (0.012), **1.46×**
+popularity (0.108); TF-IDF cosine 0.160 ≈ BM25; `k1→0` binary 0.170. Framed honestly: a strong content candidate
+source, comparable to simple matching, below the collaborative/latent paths to come — **no** claim that BM25 beats
+TF-IDF cosine on the scoreboard.
+
+**Verification.** `scripts/ci-local.sh` ALL GREEN (82 bookrec tests incl. `test_unit03`; lesson/solutions/milestone
+exec; concept-scan; recsys PDFs; pre-merge-guard OK).
+
+**Gates.** Plan-review CONSENSUS (3 rounds; fit-signature → keyword-at-construction; lesson count 9). Content-review
+CONSENSUS **3-of-4** — `[self]`/`[fable]`/`[glm]` APPROVE after a nit fix pass (Ex8 overclaim reworded;
+lesson "raw not calibrated"; teacher-notes pacing; the two `load()` robustness nits); **`[sol]` infra-down** (Codex
+`gpt-5.6-sol` persistently "at capacity" across 3 attempts — it gave a partial review corroborating `[fable]` before
+failing). Per the standing weekend precedent, 3 complete verdicts with the 4th reviewer infra-unavailable.
+
+**Resourcing note.** Opus subagents hit the weekly cap (Sat) and Codex was at capacity, so Unit-3 content was
+authored by **Fable** subagents and the lexical code **inline** (Opus orchestrator) — all vetted by the content
+gate. Opus/Codex expected available again from Monday 2026-10-05; Unit 4 returns to the Opus-subagent dispatch.
+
+**Follow-ups:** recorded `keyword_genre_scale`/lexical-signal note (U3 frames lexical as complementary, not
+"beats genre" — satisfied); `[sol]` to be re-included once Codex capacity recovers.
