@@ -7,10 +7,11 @@ reader/item factors ARE embeddings (a dot-product retriever), foreshadowing the 
 
 ## Scope
 **Unit 5 only** (`recsys/units/unit-05-matrix-factorization/`). Teaches **matrix factorization**: representing the
-reader×item interaction matrix as a product of low-dimensional **latent factors**, trained by **full-batch gradient
-descent** (logistic implicit-feedback loss, L2 regularization) on train positives + **negatives sampled from each
-reader's unobserved complement** (the sampled-negative technique from Unit 4 — but NOT the log's `label==0` exposure
-negatives, which carry taste signal; see Phase C). Ships a
+reader×item interaction matrix as a product of low-dimensional **latent factors**, trained by **full-batch,
+per-entity-averaged gradient descent** (logistic implicit-feedback loss, L2 regularization) on train positives +
+**`n_negatives` negatives per train-positive, sampled from that reader's unobserved complement** (the sampled-negative
+technique from Unit 4 — but NOT the log's `label==0` exposure negatives, which carry taste signal; see Phase C).
+Ships a
 `MatrixFactorizationPath` (numpy-only — **no PyTorch**; torch begins Unit 8) in `bookrec` + a Unit-5 milestone. No
 neural nets, no ANN. No generator change.
 
@@ -91,8 +92,12 @@ harness measures — PORT its logic, not its generator-sized signature), `protoc
   universe = the full catalog** (every catalog item id gets an initialized `Q` row), so retrieval can score any item;
   **readers = those with ≥1 TRAIN positive** (only they get a learned `P` row). Trains `P`/`Q` by **full-batch,
   per-entity-averaged gradient descent on a logistic implicit-feedback loss** (NOT SGD, NOT squared loss) — TRAIN
-  positives as label-1 + **`n_negatives` per reader sampled from that reader's unobserved complement** (NOT the log's
-  `label==0` exposure negatives — those collapse MF to the floor; NOT the whole catalog), L2-regularized; leakage-safe
+  positives as label-1 + **`n_negatives` negatives PER train-positive interaction** (so `n_pos × n_negatives` total —
+  a reader with more positives contributes more negatives; mirrors `_learned_mf:96-97` `np.repeat(pos_readers,
+  n_negatives)`), each sampled from that reader's unobserved complement (resample collisions with the reader's own
+  positives; NOT the log's `label==0` exposure negatives — those collapse MF to the floor; NOT the whole catalog),
+  L2-regularized; the gradient is **per-entity-averaged** (`grad_p / count_u`, `grad_q / count_i` via `bincount`);
+  leakage-safe
   (val/test rows never touch `P`/`Q`). PORT `_reference_recommenders._learned_mf`'s exact objective (the 0.254 depends
   on it); use `bincount`-per-column for the per-entity gradient (fast path). `retrieve(reader_id, context, k)` scores
   **all catalog items** by `P[reader_id] · Qᵀ`, excludes `context["seen"]` (empty `seen` → excludes nothing), top-k
@@ -117,11 +122,14 @@ torch import under `bookrec/`); each fit ~16–21 s, well under the 120 s per-ce
 ### Phase C — lesson.ipynb (Opus subagent; project-first)
 Hook: "what if we could describe every reader and book by a handful of hidden 'taste dials'?". From scratch →
 reveal: (1) the latent-factor model `P Qᵀ` and what the factors mean; **a short "why not plain SVD?" aside** —
-classical low-rank factorization (truncated SVD) decomposes a *dense, explicit-rating* matrix, but our feedback is
-*implicit and sparse* (reads/likes, no ratings; the unobserved entries are not true zeros), so we optimize an
-implicit **logistic** loss by gradient descent instead of SVD (design §8's "SVD" named here, not shipped). (2) the
-logistic implicit-feedback loss + its gradient; train P,Q by **full-batch gradient descent** with L2 regularization
-BY HAND in numpy (small toy), watch the loss fall; reveal `MatrixFactorizationPath`. **(2b) the negatives beat
+truncated SVD also yields low-rank factors (and runs on a sparse matrix), but it minimizes *squared reconstruction
+error over every entry*, so it treats each **unobserved** reader-book pair as a hard 0 to reproduce; our feedback is
+implicit (reads/likes, no ratings) and the unobserved entries are *unknown*, not dislikes — so we instead optimize a
+**logistic** loss over observed positives + *sampled* negatives by gradient descent, which is why MF here is trained,
+not decomposed (design §8's "SVD" named here, not shipped). (2) the
+logistic implicit-feedback loss + its gradient; train P,Q by **full-batch, per-entity-averaged gradient descent**
+(the summed gradient divided by each entity's interaction count) with L2 regularization BY HAND in numpy (small toy),
+watch the loss fall; reveal `MatrixFactorizationPath`. **(2b) the negatives beat
 (reconciles U4):** Unit 4 pointed forward to these sampled negatives feeding U5's training — so try it both ways and
 measure: training on the log's `label==0` **exposure** negatives collapses MF to the random floor (~0.02), because
 exposed-not-engaged books are an *exposure-biased* negative (the generator exposes by popularity+taste), so pushing
@@ -311,7 +319,18 @@ numeric seed-0 CF gate + "on par" wording (Must3); logistic full-batch GD (Shoul
 5. `[NOTED]` **Nice** — Phase B test docstring should cite the shipped-data table (:23-29), not the generator-sized
    harness numbers in historical round-1 text. (Phase B already binds the :23-29 table.)
 
-_([sol] round-2 verdict appended on hand-back. v2.1 amendments below fold [fable]'s round-2 Shoulds/Nices — additive, [sol]-neutral.)_
+**[sol] — REJECT (round 2).** 2 Must + 1 Should — all verified correct against `_learned_mf` and folded into **v3**:
+1. `[OPEN→FIXED v3]` **Must** — negatives are sampled **per train-positive interaction** (`_learned_mf:96-97`
+   `np.repeat(pos_readers, negatives)`, `n_pos × negatives` total — a reader with more positives gets more
+   negatives), NOT "per reader" as Phase B said. Materially changes the objective + the pinned gate. Fixed.
+2. `[OPEN→FIXED v3]` **Must** — per-entity (per-reader/per-item) gradient averaging (`_learned_mf:109,124`
+   `grad_p / count_u`) was in the concept + Phase B but missing from Scope + Phase C, permitting a different gradient
+   scaling. Added to both so the teaching spec pins it.
+3. `[OPEN→FIXED v3]` **Should** — SVD aside mischaracterized truncated SVD as dense/explicit-only; it runs on sparse
+   matrices too. Reworded to contrast treatment of *unobserved entries* (SVD reconstructs them as zeros under squared
+   error; implicit logistic MF treats them as *sampled* negatives) + the objective, not dense-vs-sparse.
+
+### Plan-review outcome (round 2): **NOT consensus — [sol] REJECT (2 Must, objective-spec precision) + [fable] APPROVE WITH NITS + [self] APPROVE; [glm] round-2 tooling-blocked (round-1 APPROVE-WITH-NITS, nits folded).** v3 folds [sol]'s 3 findings. These strictly align the port spec TO `_learned_mf` (the reference [fable] ported + measured), so they are [fable]/[glm]-positive; round-3 re-dispatch is **[sol] only** (the open rejecter), with [self]/[fable] approvals and [glm]'s round-1 standing.
 
 ## Content Review
 
