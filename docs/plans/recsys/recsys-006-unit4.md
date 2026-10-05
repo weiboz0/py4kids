@@ -230,7 +230,59 @@ gate (Opus back Monday; [sol] retried on Codex).
   97 tests incl. leakage bit-identical + leaky-0.964 + fit→artifact→load + cap degradation). No [self] blockers;
   deferred to [fable]/[glm]/[sol] blind-solve.
 
-<!-- [sol] / [fable] / [glm] appended -->
+### Review 2 — fable (2026-10-05)
+- **Verdict**: APPROVE WITH NITS. Blind-solved all 8 (every answer matches solutions); empirically verified (CF
+  0.252 = 2.33× pop / 1.60× lexical; two-part gate clears; bit-identical leakage + leaky 0.964; round-trip identical;
+  cap sweep monotone-degrading); code sound; honest framing confirmed everywhere; 15 test_unit04 pass. No Must.
+1. `[OPEN]` **Should Fix** — `teacher-notes.md` has literal placeholder "Exercises (1–N)"/"1–N" (lines ~27,69) → use
+   1–8 (6 core + 2 Challenge).
+2. `[OPEN]` **Should Fix** — `teacher-notes.md` Pacing leaves **Exercise 6 (the scoreboard) unassigned** (sittings
+   list 1–2, 3–5, stretch); fold Ex6 into Sitting 2.
+3. `[OPEN]` **Should Fix** — "rank-reduced" is INVERTED + untaught: co-occurrence `RᵀR` is the full Gram matrix; **MF
+   is the low-rank (rank-reduced) approximation** of it. Fix Ex8 statement+solution + teacher-notes to
+   "MF is the low-rank (rank-reduced) approximation of this pairwise co-occurrence" (lesson never uses the term).
+4. `[OPEN]` **Nice** — `test_unit04.py::test_fit_signature_is_protocol_substitutable` asserts non-None on item 5,
+   which has no train positives → `[]` (vacuous); use an item with positives (e.g. 307) and assert non-empty.
+5. `[OPEN]` **Nice** — lesson cell 14 genre-overlap hedge: name item 976 (fantasy;romance) as the clean off-genre
+   example rather than a list that partly overlaps reader 3.
+6. `[OPEN]` **Nice** — milestone cell 9 redundant `rank(exclude=seen)` on already-ranked/filtered output.
+7. `[OPEN]` **Nice** — `ItemItemRetrievalPath.load` accepts `n_neighbors` without the constructor's validation.
+
+### Review 3 — glm (2026-10-05)
+- **Verdict**: APPROVE WITH NITS. Independent blind-solve matches all 8; claims verified empirically (CF 0.252 beats
+  both; cap 0.142; 818 unreachable; leaky 0.964; implicit-feedback vs real label==0); project-first/audience/hygiene/
+  code all ✓; ran the suite 97/97. No Must.
+1. `[OPEN]` **Should Fix** — (= fable#1) `teacher-notes.md:27,69` placeholders "1–N" → 1–8.
+2. `[OPEN]` **Nice** — reconcile 5303 positive ROWS vs 4694 distinct PAIRS (609 dup reader-item positives) with one
+   sentence in lesson §1/§2 (also explains why popularity counts rows, CF counts pairs).
+3. `[WONTFIX]` **Nice** — `_cap_neighbors` `np.argsort` not stable; deterministic under the pinned numpy lockfile
+   (CI-safe) and changing tie-break would shift the pinned cap numbers (0.142) in notebooks/tests — leave.
+4. `[OPEN]` **Nice** — (= fable#4) vacuous test assert; + `load` doesn't validate `similarity` shape vs `len(item_ids)`.
+
+### Content-review outcome (pending [sol]): [self]/[fable]/[glm] APPROVE / APPROVE WITH NITS — no Must; fold nits → re-verify → merge (3-of-4 if [sol] Codex stays at capacity).
+
+### Review 4 — sol (2026-10-05, Codex completed)
+- **Verdict**: REJECT. Blind-solve matched E1–7 (and E8 numerics); 15 test_unit04 pass; cosine/fit/leakage/
+  round-trip/numpy-only all check out. But three substantive Must + Shoulds:
+1. `[OPEN]` **Must Fix** — the 818-item **coverage ceiling is NOT enforced**: `retrieve()` ranks every unseen item
+   incl. ZERO-score ones (`neighborhood.py:197`), so a thin-history reader (e.g. reader 350) gets zero-score recs
+   from the "unreachable" 818 — contradicting lesson:151 / milestone:165 / teacher-notes:44. Drop non-positive-score
+   candidates (making the "never recommend" claim true) + a regression for an all-zero-score history. (Verify the
+   val hit@10 0.252 is unchanged — zero-score filler never holds the positive.)
+2. `[OPEN]` **Must Fix** — (= fable#3) Ex8 assesses "rank reduction" but the lesson only says "memorized, pairwise"
+   and the solution explains sparsity, not rank. TEACH the real relation (normalized `RᵀR` has rank ≤ rank(R); MF
+   chooses a smaller latent rank) in the lesson and align Ex8 statement+solution — or drop the term.
+3. `[OPEN]` **Must Fix** — milestone (`:165,:240`) overclaims: it says U5 MF "generalizes" to the 818 zero-positive
+   items; ID-only MF CANNOT infer factors for truly cold items — it fills WARM-item gaps. Cold-start is U6 (blend) /
+   U9 (features) per design §8. Fix the bridge.
+4. `[OPEN]` **Should Fix** — `label==0` rows called "leakage" (milestone:70, neighborhood.py:103 comment); they are
+   valid TRAIN exposure-sampled negatives the algorithm intentionally ignores — only val/test is leakage. Reword.
+5. `[FIXED 9247438]` **Should** — pacing/placeholders ([sol] reviewed the pre-fix commit; teacher-notes now 1–8 +
+   Ex6 in Sitting 2).
+
+### Plan-review—wait, content-review outcome (round 1): **NOT consensus — [sol] REJECT (3 Must) + [fable]/[glm] APPROVE WITH NITS.** [sol]'s deeper pass caught a real code/teaching mismatch (coverage ceiling), an untaught/inverted Ex8, and an MF cold-item overclaim. Fold all (incl. the [fable]/[glm] nits) → v2 → re-review.
+
+<!-- round 2 appended -->
 
 ## Post-Execution Report
 
