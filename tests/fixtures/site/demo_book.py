@@ -339,3 +339,120 @@ def build_site_root(root: Path, extra_lesson_cells=()) -> Path:
     write(base / "back-matter" / "quick-reference.md", QUICK_REFERENCE)
     git_add(root)
     return root
+
+
+# --- the answer-model fixture (plan 101 F) ------------------------------------------------------
+
+DESCRIBE = '''def describe(scores):
+    ordered = sorted(scores)
+    best = ordered[-1]
+    count = len(ordered)
+    return f"{count} scores, best {best}"'''
+
+DESCRIBE_ASSET = '''# A second, longer reference version kept as a solution asset.
+def describe(scores):
+    if not scores:
+        return "no scores yet"
+    total = 0
+    for score in scores:
+        total = total + score
+    return f"{len(scores)} scores, best {max(scores)}, total {total}"
+'''
+
+SHOUT_ASSET = '''def shout_all(words):
+    loud = []
+    for word in words:
+        loud.append(word.upper() + "!")
+    return " ".join(loud)
+'''
+
+EVEN_PROSE = ("The helper sorts a copy of the scores, so the original list is never changed "
+              "by describe.")
+ODD_PROSE = "Fourteen is eight plus four plus two, so its binary digits read one, one, one, zero."
+CHECKPOINT_PROSE = ("The square function multiplies the number by itself, so the square of four "
+                    "is sixteen.")
+PROJECT_PROSE = "Calling upper on the text returns a brand new string in which every letter is a capital."
+SHORT_PROSE = "So the answer is 159."
+VERIFY_159 = 'assert str(2 * 64 + 3 * 8 + 7) == "159"'
+
+
+def _short(number: int, cell_id: str, title: str, question: str):
+    return md(cell_id, f"## Exercise {number}\n\n### {title}\n\n{question}", tags=["short-answer"])
+
+
+def unit_03_leaks(base: Path) -> None:
+    """Even/odd short answers with collisions, verify cells, asserts, solution assets, a challenge."""
+    entry = base / "units" / "unit-03-leaks"
+    write(entry / "manifest.yaml", "id: unit-03-leaks\nkind: unit\nconcepts:\n"
+          "  introduces: []\n  requires: [print, def-function]\n  practices: []\n")
+    write_nb(entry / "exercises.ipynb", [
+        md("u3e00", "# Leak Exercises"),
+        _short(1, "u3e01", "Bits", "Write fourteen in binary."),
+        _short(2, "u3e02", "Comparison", "Is `3 > 2`? Write the value Python prints."),
+        _short(3, "u3e03", "Product", "What is six times seven?"),
+        _short(4, "u3e04", "Big Sum", "Work out `2 * 64 + 3 * 8 + 7`."),
+        _short(5, "u3e05", "Difference", "What is fourteen minus five?"),
+        md("u3e06", "## Exercise 6\n\n### Describe\n\nWrite `describe(scores)` so it returns a "
+           "sentence about the scores."),
+        code("u3e07", "def describe(scores):\n    pass"),
+        _short(7, "u3e08", "Power", "What is two to the sixth power?"),
+        _short(8, "u3e09", "Robot Bits", "Write fourteen in binary for the robot."),
+        _short(9, "u3e10", "Booleans", "Python has the booleans `True` and `False`. How many "
+               "boolean values are there?"),
+        _short(10, "u3e11", "Small Product", "What is four times five?"),
+        md("u3e12", "## Challenge\n\nOne more.", tags=["stretch"]),
+        md("u3e13", "### Challenge 1: Shout All\n\n**Challenge:** write `shout_all(words)`.",
+           tags=["stretch"]),
+        code("u3e14", "def shout_all(words):\n    pass", tags=["stretch"]),
+    ])
+
+    def answer(number: int, cell_id: str, value: str, *extra):
+        return [md(f"{cell_id}h", f"## Exercise {number}"),
+                md(cell_id, "\n\n".join([*extra, f"**Answer:** `{value}`"]))]
+
+    write_nb(entry / "solutions.ipynb", [
+        md("u3s00", "# Leak Solutions"),
+        *answer(1, "u3s01", "1110", ODD_PROSE),
+        *answer(2, "u3s02", "True"),
+        code("u3s02v", 'assert str(3 > 2) == "True"'),
+        *answer(3, "u3s03", "42"),
+        *answer(4, "u3s04", "159", "Multiply first, then add.", SHORT_PROSE),
+        code("u3s04v", VERIFY_159),
+        *answer(5, "u3s05", "9"),
+        md("u3s06h", "## Exercise 6"),
+        md("u3s06", EVEN_PROSE),
+        code("u3s06c", DESCRIBE),
+        code("u3s06a", 'assert describe([3, 4]) == "2 scores, best 4"\n'
+             'assert describe([5]) == "1 scores, best 5"'),
+        *answer(7, "u3s07", "64"),
+        *answer(8, "u3s08", "1110"),
+        *answer(9, "u3s09", "2"),
+        *answer(10, "u3s10", "20"),
+        md("u3s11", "## Challenge"),
+        md("u3s12", "### Challenge 1: Shout All"),
+        code("u3s13", SHOUT_ASSET + '\n\nassert shout_all(["hi"]) == "HI!"'),
+    ])
+    write(entry / "assets" / "solutions_ex6.py", DESCRIBE_ASSET)
+    write(entry / "assets" / "solutions_challenge1.py", SHOUT_ASSET)
+
+
+def _append_cell(path: Path, cell) -> None:
+    notebook = nbformat.read(path, as_version=4)
+    notebook.cells.append(cell)
+    nbformat.write(notebook, path)
+
+
+def build_answer_model_root(root: Path) -> Path:
+    """The whole-bundle fixture plus `unit-03-leaks` and explanation paragraphs in the checkpoint's
+    and the project's solutions (plan 101 F's answer-model regressions)."""
+    root = build_site_root(root)
+    base = root / BOOK
+    unit_03_leaks(base)
+    (base / "syllabus.md").write_text(SYLLABUS + "| 6 | `unit-03-leaks` | Leaks |\n",
+                                      encoding="utf-8")
+    _append_cell(base / "checkpoints" / "checkpoint-01-demo" / "solutions.ipynb",
+                 md("c1s04", CHECKPOINT_PROSE))
+    _append_cell(base / "projects" / "project-01-demo" / "solutions.ipynb",
+                 md("p1s05", PROJECT_PROSE))
+    git_add(root)
+    return root

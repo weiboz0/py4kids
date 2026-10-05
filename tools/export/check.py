@@ -30,16 +30,15 @@ from tools.books import site_config, site_config_errors
 from .bundle import ExportError, dumps, export_book
 from .ids import continuity_findings
 
-CACHE_VERSION = 1
+CACHE_VERSION = 2  # 2: the answer-model checks (plan 101 F)
 
 
 def answer_model_findings(root: Path, book: str, bundle_dir: Path) -> list[str]:
-    """The answer-model checks (D5) over the written bundle in `bundle_dir`.
+    """The answer-model checks (D5) over the written bundle in `bundle_dir`: leaks of hidden code,
+    text and prose; odd answers; hashes; visibility (`tools/export/answer_model.py`)."""
+    from .answer_model import answer_model_findings as findings
 
-    Plan 101 Phase F implements this hook (leaks of hidden code, text and prose; odd answers;
-    hashes; visibility). Until then it returns no findings.
-    """
-    return []
+    return findings(root, book, bundle_dir)
 
 
 def _git(root: Path, *args: str) -> str | None:
