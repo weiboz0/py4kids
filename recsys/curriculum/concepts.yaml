@@ -25,3 +25,7 @@ concepts:
 - {id: matrix-factorization, name: "Matrix factorization (reader x item as P Q^T)", category: techniques, kind: technique}
 - {id: latent-factors, name: "Latent factors as learned embeddings", category: techniques, kind: technique}
 - {id: gradient-descent, name: "Gradient descent on a logistic implicit-feedback loss", category: techniques, kind: technique}
+# --- Unit 6 (recsys-008): evaluation deepened + the first blend (ends Part 1) ---
+- {id: ranking-metrics, name: "Ranking metrics: precision@k and NDCG", category: techniques, kind: technique}
+- {id: beyond-accuracy, name: "Beyond-accuracy: coverage, diversity, novelty", category: techniques, kind: technique}
+- {id: score-blending, name: "Score blending of multiple retrieval paths", category: techniques, kind: technique}
