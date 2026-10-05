@@ -94,8 +94,16 @@ assessment, and earns no cold-start credit.
   e.g. `blend`, `rank`, `ndcg_at_k`, `precision_at_k`, `intra_list_diversity`, `novelty`, numpy idioms).
 - `unit-06-evaluation-and-blending/manifest.yaml`; `checkpoint-01-part-1/manifest.yaml` (`kind: checkpoint`,
   `lessons: 0.5`, `blueprint_version: 1`, `provenance: original`, matching the coverage entry);
-  `syllabus.md` arc row `| 6 | ... |` + note Checkpoint A; rebuild PDF.
-**Verify:** manifest/prereq/coverage checks green for both entries; buildout holds (18.5<30); concepts unique.
+  `syllabus.md` — add TWO real table rows in map order: the U6 arc row `| 6 | \`unit-06-evaluation-and-blending\` |
+  unit | 3 | <hook> |` AND a checkpoint row `| — | \`checkpoint-01-part-1\` | checkpoint | 0.5 | <blurb> |` placed
+  AFTER the U6 row (`tools/curriculum.py syllabus_findings` requires a real row for EVERY map entry in order — a prose
+  note fails coverage-check, match the existing table's column shape); rebuild PDF.
+- `baseline.yaml`: the checkpoint/solution call `run_validation_scoreboard(..., split="test")` is a MODULE function,
+  not an `x.name(...)` attribute call, so `split=` needs NO `library_methods` entry; confirm no spurious add. Only add
+  genuinely new attribute-call methods (e.g. `precision_at_k`/`ndcg_at_k`/`intra_list_diversity`/`novelty` if called
+  as `bookrec.X(...)` vs module fns — confirm against the authored cells).
+**Verify:** manifest/prereq/coverage (incl. `syllabus_findings`) green for both entries; buildout holds (18.5<30);
+concepts unique.
 
 ### Phase B — `bookrec` evaluation/diversity extensions + blend measurement (Opus subagent; numpy-only)
 Dispatch an **Opus subagent**. STUDY `evaluate.py` (`hit_rate_at_k`/`recall_at_k`/`mean_hit_rate_at_k`),
@@ -124,7 +132,8 @@ Dispatch an **Opus subagent**. STUDY `evaluate.py` (`hit_rate_at_k`/`recall_at_k
   one unsealing.
 **Verify:** `uv run --group recsys pytest recsys/projects/bookrec/ -q` green, deterministic, numpy-only; **report the
 measured blend hit@10 + coverage + the signed ablation table so the lesson/checkpoint numbers are bound to the shipped
-code (not [fable]'s scratch script).**
+code (not [fable]'s scratch script); ALSO report the `test`-split reader count after cold exclusion (≈593 w/ positives,
+2339 rows) so Checkpoint A's "how val and test differ" discussion has a concrete number.**
 
 ### Phase C — lesson.ipynb (Opus subagent; project-first)
 Hook: "we have five paths and a scoreboard — but *which* recommender is actually best, and best at *what*?". Arc:
@@ -291,7 +300,19 @@ data-bound (not a free framing choice); checkpoint registration matches the tool
 cold-start is unassessed; the scoreboard extension is additive; checkpoint CI contracts (`## Question`/`## Grading`)
 named; test-hygiene guarded. No [self] blockers.
 
-_([sol] + [fable] round-2 verdicts appended on hand-back.)_
+**[sol] — APPROVE (round 2).** All three round-1 Must + the Should confirmed resolved; no new blocker.
+
+**[fable] — APPROVE WITH NITS (round 2).** All 8 round-1 findings resolved (verified against the tooling line-by-line);
+registry closure + checkpoint-after-unit ordering re-confirmed. New nits, folded as v2.1:
+1. `[FIXED]` **Should** — Phase A must add a real syllabus TABLE row for the checkpoint (not a prose note);
+   `syllabus_findings` requires a row per map entry in order. → Phase A now specifies both rows.
+2. `[FIXED]` **Nice** — `split=` is a module-fn kwarg, no `baseline.yaml` `library_methods` entry needed. → Phase A
+   note added.
+3. `[FIXED]` **Nice** — Phase B should report the `test`-split reader count after cold exclusion (≈593/2339). → added.
+
+### Plan-review gate outcome: **CONSENSUS — [self] APPROVE · [sol] APPROVE · [fable] APPROVE WITH NITS; no open Must.**
+3-way roster (GLM removed). v2 is data-grounded (pinned blend config measured ~0.306 ≥ MF, coverage ~0.33; the
+−popularity↑ ablation is the taught headline). Proceed to the build (Phase A → H).
 
 ## Content Review
 
