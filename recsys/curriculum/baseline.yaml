@@ -66,6 +66,7 @@ library_methods:
 - BM25Index
 - LexicalRetrievalPath
 - arange
+- artifact
 - array_equal
 - cosine_similarity
 - join
