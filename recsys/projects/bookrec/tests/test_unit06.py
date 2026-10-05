@@ -274,7 +274,8 @@ def test_dropping_popularity_raises_hit_rate(measured: dict[str, float]) -> None
     # The taught headline of the leave-one-path-out ablation: removing the reader-INDEPENDENT
     # popularity path RAISES hit@10 (0.308 > 0.306). Min-max calibration maps every path's top
     # candidate to 1.0, so a flat popularity path ties its head books with every reader's true top
-    # pick -- "every path contributes" is false; a path earns its place by reader-dependence.
+    # pick -- "every path contributes" is false; the measured leave-one-out change, not a path's
+    # reader-dependence label, is what settles whether it earns its place.
     assert measured["drop_pop_hit"] > measured["blend_hit"]
     assert measured["drop_pop_hit"] == pytest.approx(0.308, abs=1e-3)
 

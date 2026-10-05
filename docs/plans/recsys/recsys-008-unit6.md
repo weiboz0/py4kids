@@ -384,7 +384,14 @@ score-blending robustness taught). Then re-run ci-local + re-review [sol].
 All re-verified GREEN (hygiene/structure/cell-lint/noexec/concept-scan/exec-lessons/exec-solutions/milestone-check +
 18 tests incl. the test-holdout guard); measured numbers unchanged.
 
-### Content-gate round 2: re-running full `ci-local.sh` + re-reviewing **[sol]** (sole rejecter) on the fixes; [fable] + [self] already APPROVE/APPROVE-WITH-NITS, all nits folded.
+### Round 2 — [sol] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS. All 4 Must + 2 Should confirmed resolved; 18 focused tests pass.
+1. `[FIXED]` **Should** — one stale comment in `test_unit06.py:277` still said a path "earns its place by
+   reader-dependence". → Reworded to "the measured leave-one-out change, not the label, settles it" (comment-only,
+   ci-invariant).
+
+### Content-gate outcome: **CONSENSUS — [self] · [sol] · [fable] all APPROVE WITH NITS; every finding `[FIXED]`.**
+3-way roster. Proceed to PR → pre-merge-guard --pr → squash-merge (closes Part 1: Units 1–6 + Checkpoint A).
 
 <!-- appended pre-PR -->
 
