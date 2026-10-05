@@ -940,6 +940,28 @@ def student_answer_sources(entry: Path):
     return odd, {group['number']: solution_assets(entry, group['number']) for group in odd}
 
 
+def student_answer_text(entry: Path, number: int, lesson_heading: str | None, *,
+                        sources=None, statements: dict[int, set[str]] | None = None) -> str:
+    """The Student Book appendix text of one odd unit exercise (no heading), read only through
+    `student_answer_sources`. `answer_key`'s student branch and the site export (design 012 D5) both
+    print exactly this text, so web and print agree.
+
+    `sources` (`student_answer_sources(entry)`) and `statements` (`statement_paragraphs(entry, 'unit',
+    ...)`) let a caller answering many exercises of one unit read the notebooks once.
+    """
+    groups, assets = sources if sources is not None else student_answer_sources(entry)
+    by_number = {group['number']: group for group in groups}
+    if number not in by_number:
+        raise ValueError(f'{entry}: missing solution Exercise {number}')
+    group = by_number[number]
+    found = title_heading(group)
+    if statements is None:
+        statements = statement_paragraphs(entry, 'unit', 'student')
+    blocks = _answer_blocks(group, 'unit', entry, f'Exercise {number}', found[1] if found else None,
+                            statements.get(number, set()), assets[number], True, lesson_heading)
+    return '\n\n'.join(block.rstrip() for block in blocks)
+
+
 STATEMENT_SOURCE = {'unit': 'exercises.ipynb', 'checkpoint': 'checkpoint.ipynb', 'project': 'brief.ipynb'}
 SOLUTION_ASSET_LABEL = re.compile(r'^\*\*Solution asset\b')
 
@@ -1158,18 +1180,19 @@ def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teache
     if student:
         if kind != 'unit':
             raise ValueError('student answers are unit exercises only')
-        groups, assets = student_answer_sources(entry)
         items = [item for item in items if item['number'] % 2]
+        sources = student_answer_sources(entry)
+        statements = statement_paragraphs(entry, kind, edition)
     else:
         n = notebook(entry / 'solutions.ipynb', 'teacher')
         _, groups = item_groups(n.cells, label)
         assets = {item['number']: solution_assets(entry, item['number']) for item in items}
-    by_number = {g['number']: g for g in groups}
-    statements = statement_paragraphs(entry, kind, edition)
+        by_number = {g['number']: g for g in groups}
+        statements = statement_paragraphs(entry, kind, edition)
     out = [] if student else ['## Answer key\n']
     for item in items:
         number = item['number']
-        if number not in by_number:
+        if not student and number not in by_number:
             raise ValueError(f'{entry}: missing solution {label} {number}')
         # A project's `## Problem N` answer takes its title from the brief's `### Problem N — Title`
         # (the rendered item's title), as unit and checkpoint answers do (plan 099 A2).
@@ -1184,6 +1207,11 @@ def answer_key(entry: Path, kind: str, items: list[dict], edition: str = 'teache
         out.append('### ' + heading + page + '\n')
         if refs:
             out.append(f'```{{=latex}}\n\\label{{ans:{entry.name}:{number}}}\n```')
+        if student:
+            text = student_answer_text(entry, number, lesson_heading, sources=sources, statements=statements)
+            if text:
+                out.append(text)
+            continue
         group = by_number[number]
         found = title_heading(group)
         out.extend(_answer_blocks(group, kind, entry, f'{label} {number}', found[1] if found else None,
