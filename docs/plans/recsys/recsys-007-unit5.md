@@ -357,7 +357,43 @@ consensus met.** Proceed to the build (Phase A → G).
    The concept is taught and the accessors are self-evident convenience properties (not concept-scan-flagged), so this
    is a **Nice to Have** — confirm the reviewers agree the accessor is a natural extension, not an untaught API.
 
-<!-- [sol] + [fable] content-review verdicts appended on hand-back -->
+### Round 1 — [fable] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS (no Must Fix). Blind-solved all 8 exercises (answers match solutions); verified
+  `factorization.py::_train` is a line-for-line port of `_learned_mf`; negatives beat reproduced (exposure negatives
+  → hit@10 0.006, below floor); retrieve contract, cold reader/item, honesty (seeds 0–4 mean 0.268 vs CF 0.252 — "on
+  par, within noise", never "beats"), project-first, hygiene, manifest/taught-before-assessed (catalog-search not
+  assessed), audience fit, provenance all confirmed; 13 tests pass.
+1. `[OPEN]` **Should Fix** — stale pre-port numbers: `exercises.ipynb` Ex6 (cell 12 "~0.25-0.26 vs CF ~0.25"; cell 13
+  comments "expect ~2.3", "expect ~21") and `solutions.ipynb` cell 13 prose ("~2.3x popularity, ~21x floor") contradict
+  the measured/printed 0.276 / 2.56x / 23.0x (the solution cell prints 2.56x/23.0x right under "~2.3x/~21x" prose).
+  Align to "~0.25-0.28 across seeds, 0.276 here; ~2.5x popularity; ~23x floor".
+2. `[OPEN]` **Should Fix** — `unit-04-neighborhood-cf/lesson.ipynb` cell 5 (the in-scope U4 touch) self-contradicts:
+  "the `label==0` rows are genuinely useful … for a different job: training a model to tell positives from negatives"
+  then "Unit 5 even discovers … not these exposure-biased `label==0` rows". Reword the first sentence so the *job*
+  (training against negatives) is what U5/U8 take up, while the `label==0` rows turn out to be the wrong negatives.
+3. `[OPEN]` **Nice** — `lesson.ipynb` cell 14 "it prints about 0.01" → say "well under 0.01 (0.006 here)".
+4. `[OPEN]` **Nice** — `exercises.ipynb` Ex3 prose "add the L2 penalty reg·P, and step downhill" (penalty gradient is
+  +reg·P, subtracted in the update) — minor wording.
+5. `[OPEN]` **Nice** — `teacher-notes.md`: "plot the loss curve" (Ex4 records a list, no plot) and "`n_factors`/`reg`
+  capacity sweep" (Ex7 sweeps `n_factors` only; `reg` pinned) — align to the shipped exercises.
+
+### Round 1 — [sol] (2026-10-05)
+- **Verdict**: REJECT (1 Must Fix + 2 Nice). One REJECT blocks until the Must is resolved.
+1. `[FIXED]` **Must Fix** — `factorization.py` negative resampling could **infinite-loop** when a reader's positives
+   cover the entire catalog (empty complement → every draw collides). → Response: guard added — full-coverage readers'
+   negative slots are dropped before the resample loop; inert on the shipped data so the RNG draw order (and the
+   0.276 result) is byte-identical when it does not fire; regression test `test_fit_terminates_when_a_reader_covers_
+   the_whole_catalog` added (14 tests pass). Commit `b21760a`.
+2. `[FIXED]` **Nice** — stale `0.25-0.26` + erroneous `0.24x` typo in Ex6/solutions/docstring. → Response: aligned to
+   `~0.25-0.28`/`0.276`, `0.24` (dropped `x`), `~2.5x`/`~23x`. Commit `b21760a`. (Same family as [fable]#1.)
+3. `[WONTFIX]` **Nice (no change requested)** — Ex8's `reader_factors`/`item_factors` are supplied scaffold and the
+   lesson demonstrates both accessors, so they are taught/given API, NOT an untaught-API violation. → This also
+   resolves [self]#1 and [fable]'s implicit question: confirmed a non-issue, no change.
+
+### Content-gate round 1 outcome: **[self] APPROVE WITH NITS · [fable] APPROVE WITH NITS · [sol] REJECT (1 Must).**
+All findings resolved in commit `b21760a` (every `[OPEN]` → `[FIXED]`/`[WONTFIX]`): [self]#1 and [sol]#3 = non-issue
+(taught/given API); [fable]#1-5 + [sol]#2 = Must-fix infinite-loop guard + number/wording alignment. Re-run full
+`ci-local.sh`, then re-review [sol] (the sole rejecter) on the Must-fix for round-2 consensus.
 
 <!-- appended pre-PR -->
 
