@@ -178,7 +178,7 @@ def answer_hash(item_key: str, canonical: str, *, case: str) -> str:
     - `concepts[{id,name,category}]`, `glossary[{term,definition_md,concept,units}]`, `reference_md` (the book's `back-matter/quick-reference.md`, for part B's reference page)
     - `settings{lesson_heading,acsl_divisions?}`, `pdfs{edition: url}|null`
   - `entries/<entry-id>.json`: `{schema_version, entry{id,kind,title}, lesson{blocks[]}|null, intro[], items[], outro[], cards[], files[]}`. `intro[]` and `outro[]` (and each item's `before[]`) are `block` arrays of type `prose`, `notice`, `goals`, `recap` or `starter`.
-    - A `block`: `{key, type, md?, code?, output?, route?, stdin?, sample_input?, figure?, needs_prelude, prelude[], files[], concepts[], probe, tags[]}`; `tags` carries the cell's tags (part B's `slide-break` / `slide-skip`).
+    - A `block` (types: `prose`, `opener`, `notice`, `goals`, `recap`, `code`, `tryit`, `error-demo`, `hang-demo`, `turtle-figure`, `program`, `starter`): `{key, type, md?, code?, output?, route?, stdin?, sample_input?, figure?, needs_prelude, prelude[], files[], concepts[], probe, tags[]}`; `tags` carries the cell's tags (part B's `slide-break` / `slide-skip`).
     - An `item`: `{key, kind, number|null, label, title, division[], stretch, concepts[], statement_md, starter, files[], check{…}, answer_visibility, answer_md?, before[]}`. The schema enforces, with `if`/`then`, that `answer_md` is present exactly when `answer_visibility` is `after-attempt`.
     - `check` is a `oneOf` keyed on `kind`:
       - `fixtures{cases[{n,in_file,out_file,sample}], match:"line"|"token", over_budget[]}`. Fixture text is **not** inlined: `in_file`/`out_file` are bundle paths under `files/`, so each fixture text ships exactly once
@@ -218,6 +218,7 @@ Rules:
 
   A route value the map does not know fails the export, naming the route.
 - **Markdown cells:**
+  - the first cell's `# ` H1 line becomes the entry title (not a block); the hook paragraphs after it become one `opener` block, as `markdown_blocks(first=True)` renders the opener panel (it is exported, so it is in the leak baseline)
   - a cell starting `### You will learn` → `goals`; `### Recap` → `recap`
   - a Notice paragraph plus its continuations (as `markdown_blocks` groups them) → `notice`
   - other prose splits at every `##`/`###` heading into `prose` blocks
@@ -261,6 +262,7 @@ Rules:
   - `test_files_tracked_only`: an untracked `scratch.txt` named by a cell is not in `files` (the fixture lives in a `git init` tmp repo).
   - `test_probe_hang_and_input`: c5 `timeout` and c6 `error` within `2 * timeout_s` (timeout 2 s in the test) (Review Focus 2).
   - `test_blocks_types_and_keys`: m2 gives two prose blocks, `…/m2` and `…/m2#2`; c7 is `error-demo`; c8 is `turtle-figure` with 4 segments; m1 is `goals`; m3 is `notice`.
+  - `test_lesson_opener_real`: on python-concepts `unit-01-output-and-variables` and acsl `unit-12-graph-theory`, the entry title equals the lesson's H1 text (as `render_chapter` derives it, `tools/publish.py:1219`), no block contains that H1 line, the hook paragraphs form exactly one `opener` block keyed by cell 0, and its text equals the `::: {.opener}` panel body of `markdown_blocks(cell0, first=True)` (`tools/publish.py:1238-1241`).
   - `test_unknown_route_fails`: monkeypatch `route_code` to return `('weird', '')` → `ValueError` naming `weird`.
   - `test_predict_cards`: c3 typed; a two-line output gives flip; c5 is not a card.
   - `test_concept_cards_deterministic`: a 4-entry fixture glossary gives the same distractors on two runs, all from the same category; a category with 1 peer gives a 2-option `choice` card and a singleton category a `flip` card, deterministically.
@@ -537,6 +539,13 @@ Rules:
 - `[fable]` **APPROVE**: on the 4 real books, any-length whole-token canonicals give 0 false FAILs (short tokens `5`, `0`, `True` in balance), and kept verify-cell asserts give 0 `solution_leak` hits against student code.
 - `[sol]` **REJECT** (gpt-5.6-sol; the exact-only assert removal confirmed):
   - `[FIXED]` The baseline counted the unexported quick reference, which could mask an injected `A + ~B`: allowances come only from material the bundle maps, the quick reference is now exported as `reference_md`, a provenance test checks baseline paths, and a real-acsl `A + ~B` injection regression must fail.
+
+### Round 8 (2f1fd6e)
+
+- `[self]` APPROVE.
+- `[fable]` **APPROVE**: no unmapped student material exists (every statement and lesson cell is mapped; back-matter is exactly glossary + quick reference, both exported); the hook, H1 and `sample_input` hold no canonical not found elsewhere. `[FIXED]` (optional) The lesson hook's export is stated.
+- `[sol]` **REJECT** (gpt-5.6-sol):
+  - `[FIXED]` The publisher's first-cell handling was missing: the H1 becomes the entry title, the hook becomes one `opener` block (added to the block types), with `test_lesson_opener_real` checking parity with `markdown_blocks(first=True)` on two real lessons.
 
 ## Content Review
 
