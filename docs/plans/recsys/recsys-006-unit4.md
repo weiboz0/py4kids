@@ -282,7 +282,27 @@ gate (Opus back Monday; [sol] retried on Codex).
 
 ### Plan-review—wait, content-review outcome (round 1): **NOT consensus — [sol] REJECT (3 Must) + [fable]/[glm] APPROVE WITH NITS.** [sol]'s deeper pass caught a real code/teaching mismatch (coverage ceiling), an untaught/inverted Ex8, and an MF cold-item overclaim. Fold all (incl. the [fable]/[glm] nits) → v2 → re-review.
 
-<!-- round 2 appended -->
+### Fix pass (commits `e0b643b` code, `226d22f` notebooks) — dispositions
+- **sol#1** `[FIXED]` — `retrieve` now returns only positive-score candidates → the 818 no-neighbor items are
+  genuinely never recommended; empty/all-zero profile → `[]`. Re-measured CF hit@10 = **0.252 (unchanged)**; gates
+  still pass; round-trip/leakage/cap intact. Regression test added.
+- **sol#2 / fable#3** `[FIXED]` — lesson now teaches the low-rank bridge (sim = normalized `RᵀR`, rank ≤ rank(R); MF
+  picks a smaller latent rank, warm-only); Ex8 statement+solution reworded to assess that (taught-before-assessed).
+- **sol#3** `[FIXED]` — milestone + lesson corrected: MF generalizes co-occurrence for WARM items; it does NOT rescue
+  the 818 cold items (id-only MF can't invent factors) — cold-start is U6 blend / U9 features.
+- **sol#4** `[FIXED]` — `label==0` reworded as valid train exposure-sampled negatives the algo ignores (not leakage;
+  leakage = val/test) in the milestone + neighborhood.py docstring.
+- **fable#4/glm#4** `[FIXED]` — vacuous test de-vacuoused (item with positives → non-empty) + load shape-guard test.
+- **fable#7/glm#4** `[FIXED]` — `load()` validates `(n_items, n_items)`. **glm#2** `[FIXED]` — reconciliation sentence
+  (5303 rows → 4694 pairs). **fable#5** `[FIXED]` — genre cell names item 976. **fable#6** `[FIXED]` — milestone
+  redundant `rank` dropped. **glm#3** `[WONTFIX]` — argsort stable-sort (CI-safe; would shift pinned cap numbers).
+All per-unit checks PASS; 99 bookrec tests. Full `ci-local` re-run in progress.
+
+### Round 2 (on the fixes)
+**[self] — APPROVE.** All three [sol] Must resolved (coverage ceiling enforced with CF unchanged at 0.252; Ex8 rank
+taught+assessed; MF cold-item overclaim corrected) + the Shoulds/nits. No [self] blockers.
+
+<!-- [sol] / [fable] / [glm] round 2 appended -->
 
 ## Post-Execution Report
 
