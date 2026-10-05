@@ -15,6 +15,7 @@ books_version: 2
 #                new book unless both apply.
 #   acsl:        the ACSL season structure (design 009): the `acsl:` manifest block,
 #                curriculum/season.yaml and the acsl-check.
+#   site:        the learning-website export (design 012): export, classify and site-check.
 #
 # `dependency_group` (string, not a boolean flag): the name of the `pyproject.toml`
 # [dependency-groups] entry a book's heavy commands must run under (design 011 §7). When set,
@@ -35,6 +36,7 @@ books:
   lesson_budget: [28, 44]
   patterns: true
   publication: true
+  site: true
 - id: python-concepts
   number: 1
   root: python-concepts
@@ -46,6 +48,7 @@ books:
   concept_minimum: 40
   lesson_budget: [30, 60]
   publication: true
+  site: true
 - id: usaco-bronze
   number: 2
   root: usaco-bronze
@@ -57,6 +60,7 @@ books:
   - acsl
   publication: true
   judge: true
+  site: true
 - id: acsl
   number: 2
   root: acsl
@@ -69,6 +73,7 @@ books:
   judge: true
   acsl: true
   publication: true
+  site: true
 - id: recsys
   number: 3
   root: recsys

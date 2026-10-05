@@ -1,9 +1,12 @@
 from pathlib import Path
 
+import pytest
 import yaml
 
+from tools.books import SiteConfigError, books_with_flag, site_config, site_config_errors
+
 REPO = Path(__file__).resolve().parents[1]
-FLAGS = ("publication", "judge", "patterns", "acsl")
+FLAGS = ("publication", "judge", "patterns", "acsl", "site")
 
 
 def load_catalog():
@@ -95,6 +98,7 @@ def test_registry_feature_flags_are_booleans():
         "judge": ["usaco-bronze", "acsl"],
         "patterns": ["python-projects"],
         "acsl": ["acsl"],
+        "site": ["python-projects", "python-concepts", "usaco-bronze", "acsl"],
     }
 
 
@@ -108,7 +112,7 @@ def test_registry_documents_every_flag():
 
 def test_ci_local_reads_every_flag():
     text = (REPO / "scripts/ci-local.sh").read_text(encoding="utf-8")
-    assert 'for flag in ("publication", "judge", "patterns", "acsl")' in text
+    assert 'for flag in ("publication", "judge", "patterns", "acsl", "site")' in text
     assert 'has_flag acsl "$flags"' in text and "acsl-check" in text
 
 
@@ -176,3 +180,72 @@ def test_qualified_concept_ids_use_registry_owners(tmp_path):
     )
     assert qualified_concept_id_pattern(tmp_path).fullmatch("usaco-silver:bfs")
     assert not qualified_concept_id_pattern(tmp_path / "empty").fullmatch(":x")
+
+
+# --- the `site` flag and per-book site.yaml (design 012 D1, plan 101 A) ----------------------
+
+
+def make_registry(tmp_path: Path, books: list[dict]) -> Path:
+    """Write a minimal `books.yaml` (books_version 2) and one folder per book under tmp_path."""
+    entries = [{"root": book["id"], "depends_on": [], **book} for book in books]
+    (tmp_path / "books.yaml").write_text(
+        yaml.safe_dump({"books_version": 2, "books": entries}, sort_keys=False), encoding="utf-8"
+    )
+    for book in books:
+        (tmp_path / book["id"]).mkdir(exist_ok=True)
+    return tmp_path
+
+
+def test_site_flag_books():
+    assert books_with_flag(REPO, "site") == [
+        "python-projects", "python-concepts", "usaco-bronze", "acsl",
+    ]
+
+
+def test_site_config_real_books():
+    for book in books_with_flag(REPO, "site"):
+        assert site_config_errors(REPO, book) == []
+        config = site_config(REPO, book)
+        assert config.classification == "proposed"
+        assert config.fixture_budget_kb == 130
+
+
+def test_site_config_validation(tmp_path):
+    root = make_registry(tmp_path, books=[{"id": "b", "site": True}])
+    path = tmp_path / "b" / "site.yaml"
+    path.write_text("classification: maybe\nfixture_budget_kb: 130\n")
+    assert site_config_errors(root, "b") == [
+        "FAIL: b/site.yaml: classification must be one of: proposed, confirmed"
+    ]
+    path.write_text("classification: proposed\nfixture_budget_kb: 130\nextra: 1\n")
+    assert site_config_errors(root, "b") == ["FAIL: b/site.yaml: unknown key: extra"]
+    path.write_text("classification: confirmed\nfixture_budget_kb: 0\n")
+    assert site_config_errors(root, "b") == [
+        "FAIL: b/site.yaml: fixture_budget_kb must be a positive integer"
+    ]
+    path.write_text("classification: proposed\n")
+    assert site_config_errors(root, "b") == ["FAIL: b/site.yaml: missing key: fixture_budget_kb"]
+    path.write_text("[1, 2]\n")
+    assert site_config_errors(root, "b") == ["FAIL: b/site.yaml: must be a mapping"]
+    path.write_text("classification: confirmed\nfixture_budget_kb: 64\n")
+    assert site_config_errors(root, "b") == []
+    config = site_config(root, "b")
+    assert (config.classification, config.fixture_budget_kb) == ("confirmed", 64)
+    with pytest.raises(AttributeError):
+        config.classification = "proposed"  # frozen
+
+
+def test_site_config_invalid_raises(tmp_path):
+    root = make_registry(tmp_path, books=[{"id": "b", "site": True}])
+    (tmp_path / "b" / "site.yaml").write_text("classification: maybe\nfixture_budget_kb: 130\n")
+    with pytest.raises(SiteConfigError, match="classification must be one of"):
+        site_config(root, "b")
+
+
+def test_site_book_needs_site_yaml(tmp_path):
+    root = make_registry(tmp_path, books=[{"id": "b", "site": True}])
+    with pytest.raises(SiteConfigError, match="site: true but b/site.yaml is missing"):
+        site_config(root, "b")
+    assert site_config_errors(root, "b") == [
+        "FAIL: b: site: true but b/site.yaml is missing (design 012 D1)"
+    ]
