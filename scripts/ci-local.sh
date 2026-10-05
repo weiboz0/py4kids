@@ -38,6 +38,10 @@ PY
 echo "registry: $(cut -d' ' -f1 <<< "$books" | paste -sd' ')"
 uv run ruff check tools/ tests/ scripts/ recsys/projects/bookrec recsys/data
 
+# Committed GloVe subset (recsys design 011 §6): a REAL, executed integrity check (never a skip) —
+# the tracked .npy must match its sidecar sha256 and stay under the 1 MB publish-safe cap.
+uv run python -m tools.glove_integrity
+
 # `dependency_group` is a routing VALUE (design 011 §7), read as a SEPARATE line from the boolean
 # feature flags above: "<id> <group-or-empty>". A book with a group runs its heavy notebook/exec
 # and test commands under `uv run --group <group>`; a group-free book runs plain `uv run`.
