@@ -192,7 +192,20 @@ beats TF-IDF cosine" ([fable]#1); floor-beating test pinned as ≥5× floor / >p
 
 ## Content Review
 
-<!-- appended pre-PR -->
+ci-local ALL GREEN (82 bookrec tests incl. test_unit03; lesson/solutions/milestone exec; concept-scan;
+recsys PDFs; pre-merge-guard OK). 3-way gate ([glm] weekend-skip). Content authored by Fable subagents (Opus
+subagents hit the weekly cap, Codex at capacity) — the independent gate is the quality check.
+
+### Review 1 — self (2026-10-04)
+- **Verdict**: APPROVE. Phases verified: lesson (34 cells, project-first hook, bag-of-words→TF-IDF→BM25 from
+  scratch then reveal, exec-clean), 8 exercises (6 core + 2 stretch) + mirrored solutions (8 asserts), milestone,
+  teacher-notes. Numbers independently reproduced (lexical 0.158 = 13.2× floor, 1.46× popularity; TF-IDF cosine
+  0.160 ≈ BM25; k1→0 0.170). Honest framing holds throughout (lexical a strong content candidate source, comparable
+  to simple matching, below CF/latent; no BM25>TF-IDF-cosine claim). Code tested (lexical.py 82 tests incl. the
+  k1=0 NaN-safety fix + fit→artifact→load round-trip + protocol-substitutable fit). No [self] blockers. Deferred to
+  [sol]/[fable] blind-solve.
+
+<!-- [sol] / [fable] appended -->
 
 ## Post-Execution Report
 
