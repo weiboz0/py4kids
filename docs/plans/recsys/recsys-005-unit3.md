@@ -238,8 +238,55 @@ subagents hit the weekly cap, Codex at capacity) — the independent gate is the
 All per-unit checks PASS after the fix pass. Monday: resume full 4-way — re-dispatching [sol] (Codex) + [glm]
 (opencode) on the fixed content.
 
-<!-- [sol] round 2 / [glm] appended -->
+**[sol] re-dispatch (Monday) — INCOMPLETE** (Codex `gpt-5.6-sol` immediately "at capacity"; persistent infra
+outage). [sol] is infra-unavailable for this gate; its earlier partial run corroborated [fable] (Ex1–7 match; Ex8).
+
+### Review 4 — glm (2026-10-05, opencode-go/glm-5.3)
+- **Verdict**: APPROVE WITH NITS. Independent blind-solve of all 8 (every number matches), lesson/milestone claims
+  reproduced, no BM25-beats-TF-IDF claim, project-first/pacing/hygiene confirmed, 82/82 bookrec tests, lexical.py
+  math + k1=0 guard + construction-time keywords + protocol `fit` + fit→artifact→load + numpy-only all verified. No
+  Must/Should.
+1. `[FIXED]` **Nice** — `lexical.py` `load()` uses `np.asarray(state[...])` without `.copy()`, which can alias a
+   hand-built artifact's arrays (the shipped `artifact()` copies, so shipped usage is isolated). → add defensive
+   `.copy()`.
+2. `[FIXED]` **Nice** — `load()` lets the artifact's `k1`/`b` override the constructor while `name`/`version` are
+   kept. → docstring note ("artifact is truth for k1/b; name is identity, not state").
+3. `[WONTFIX]` **Nice** — milestone cell 9 `rank(exclude=seen)` re-excludes an already-excluded list (harmless,
+   defensive); cosmetic, deferred.
+
+### Content-review outcome: **CONSENSUS (3-of-4; [sol] infra-down — Codex at capacity)** — [self]/[fable]/[glm] APPROVE. Same 3-of-4 shape authorized for the weekend. [glm] Nice nits #1/#2 folded. Cleared to ship.
 
 ## Post-Execution Report
 
-<!-- appended before ship -->
+**Shipped (recsys-005 — Unit 3: Lexical retrieval, TF-IDF and BM25).** The third Part-1 unit and the first
+content/**reader-dependent** retrieval path, on the recsys-004 keyword text.
+
+- **Phase A** — concepts `bag-of-words`/`tf-idf`/`bm25`; coverage-map `unit-03-lexical-retrieval` (requires+practices
+  the four Unit-1 concepts); manifest; syllabus row. Buildout retained (lessons total **9** < 30).
+- **Phase B** — `bookrec/lexical.py`: `BM25Index` (df/idf, per-doc tf, doc-len/avgdl; `k1` saturation + `b`
+  length-norm; division-safe at `k1=0`), `tfidf_matrix`/`cosine_similarity`, and `LexicalRetrievalPath` — keyword
+  corpus **at construction** so `fit(interactions, catalog=None)` is protocol-substitutable; reader query = keyword
+  tokens of `context["seen"]`; empty seen → `[]`; `artifact()`/`load()` round-trip the fitted index. numpy-only.
+- **Phases C/D/E/F** — lesson (project-first; bag-of-words→TF-IDF→BM25 from scratch then reveal), 8 exercises
+  (6 core + 2 stretch) + mirrored solutions (8 asserts), the Unit-3 milestone notebook, teacher-notes.
+
+**Numbers (seed 0, k=10, 500 readers):** lexical BM25 hit@10 **0.158** = **13.2× floor** (0.012), **1.46×**
+popularity (0.108); TF-IDF cosine 0.160 ≈ BM25; `k1→0` binary 0.170. Framed honestly: a strong content candidate
+source, comparable to simple matching, below the collaborative/latent paths to come — **no** claim that BM25 beats
+TF-IDF cosine on the scoreboard.
+
+**Verification.** `scripts/ci-local.sh` ALL GREEN (82 bookrec tests incl. `test_unit03`; lesson/solutions/milestone
+exec; concept-scan; recsys PDFs; pre-merge-guard OK).
+
+**Gates.** Plan-review CONSENSUS (3 rounds; fit-signature → keyword-at-construction; lesson count 9). Content-review
+CONSENSUS **3-of-4** — `[self]`/`[fable]`/`[glm]` APPROVE after a nit fix pass (Ex8 overclaim reworded;
+lesson "raw not calibrated"; teacher-notes pacing; the two `load()` robustness nits); **`[sol]` infra-down** (Codex
+`gpt-5.6-sol` persistently "at capacity" across 3 attempts — it gave a partial review corroborating `[fable]` before
+failing). Per the standing weekend precedent, 3 complete verdicts with the 4th reviewer infra-unavailable.
+
+**Resourcing note.** Opus subagents hit the weekly cap (Sat) and Codex was at capacity, so Unit-3 content was
+authored by **Fable** subagents and the lexical code **inline** (Opus orchestrator) — all vetted by the content
+gate. Opus/Codex expected available again from Monday 2026-10-05; Unit 4 returns to the Opus-subagent dispatch.
+
+**Follow-ups:** recorded `keyword_genre_scale`/lexical-signal note (U3 frames lexical as complementary, not
+"beats genre" — satisfied); `[sol]` to be re-included once Codex capacity recovers.
