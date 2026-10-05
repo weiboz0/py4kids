@@ -163,7 +163,13 @@ class LexicalRetrievalPath(BaseRetrievalPath):
         return self
 
     def load(self, artifact: Mapping[str, Any]) -> LexicalRetrievalPath:
-        """Restore the fitted index from its concrete ``artifact()`` state (no re-tokenization)."""
+        """Restore the fitted index from its concrete ``artifact()`` state (no re-tokenization).
+
+        The artifact is the source of truth for the index **state**, including ``k1``/``b`` (which
+        override the constructor's), while ``name``/``version`` remain the path's identity — so a
+        restored path keeps its name even if the artifact came from a differently-parameterised fit.
+        Arrays are copied so a restored index never aliases a (possibly hand-built) artifact's arrays.
+        """
         state = dict(artifact)
         index = BM25Index.__new__(BM25Index)
         index.k1 = float(state["k1"])
@@ -171,11 +177,11 @@ class LexicalRetrievalPath(BaseRetrievalPath):
         index.item_ids = [int(i) for i in state["item_ids"]]
         index._row_of = {item: row for row, item in enumerate(index.item_ids)}
         index.vocab = {str(token): int(col) for token, col in dict(state["vocab"]).items()}
-        index.tf = np.asarray(state["tf"], dtype=float)
-        index.doc_len = np.asarray(state["doc_len"], dtype=float)
+        index.tf = np.array(state["tf"], dtype=float)
+        index.doc_len = np.array(state["doc_len"], dtype=float)
         index.avgdl = float(state["avgdl"])
-        index.df = np.asarray(state["df"], dtype=float)
-        index.idf = np.asarray(state["idf"], dtype=float)
+        index.df = np.array(state["df"], dtype=float)
+        index.idf = np.array(state["idf"], dtype=float)
         self._index = index
         self.k1 = index.k1
         self.b = index.b
