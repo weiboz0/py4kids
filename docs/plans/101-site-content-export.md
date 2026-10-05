@@ -181,7 +181,7 @@ def answer_hash(item_key: str, canonical: str, *, case: str) -> str:
     - A `block`: `{key, type, md?, code?, output?, route?, stdin?, sample_input?, figure?, needs_prelude, prelude[], files[], concepts[], probe, tags[]}`; `tags` carries the cell's tags (part B's `slide-break` / `slide-skip`).
     - An `item`: `{key, kind, number|null, label, title, division[], stretch, concepts[], statement_md, starter, files[], check{…}, answer_visibility, answer_md?, before[]}`. The schema enforces, with `if`/`then`, that `answer_md` is present exactly when `answer_visibility` is `after-attempt`.
     - `check` is a `oneOf` keyed on `kind`:
-      - `fixtures{cases[{n,in,out,sample}], match:"line"|"token", over_budget[]}`
+      - `fixtures{cases[{n,in_file,out_file,sample}], match:"line"|"token", over_budget[]}`. Fixture text is **not** inlined: `in_file`/`out_file` are bundle paths under `files/`, so each fixture text ships exactly once
       - `answer{hash, answer_format{case,hint}}`
       - `asserts{source, functions[]}`
       - `expected-output{hash, answer_format}`
@@ -236,9 +236,9 @@ Rules:
   - `mode: "typed"` when the normalised output is one line; otherwise `"flip"`.
   - `{key: card_key(block key), kind: "predict", block, mode, prelude}`. Lesson outputs are already visible on the page, so no hash is needed.
 - **Concept cards:**
-  - One per glossary entry: `{key: concept_card_key(book, concept), kind: "concept", concept, term, definition_md, distractors[3]}`.
+  - One per glossary entry: `{key: concept_card_key(book, concept), kind: "concept", concept, term, definition_md, mode, distractors[0..3]}`.
   - Distractors are other glossary terms whose concept shares the `category`, sorted by term, taking the first 3 after the entry's own term (deterministic).
-  - Fewer than 3 in the category fill from the whole glossary in term order; that case is listed in the report.
+  - Distractors are **always category-local** (D8). With 1–2 peers, the card is multiple choice with that many distractors (`mode: "choice"`); with none, it is a term → definition flip card (`mode: "flip"`, `distractors: []`). The report lists both cases.
 
 - [ ] **Step 1: failing tests** using a fixture lesson notebook `tests/fixtures/site/unit-01-demo/lesson.ipynb` (ids set). Its cells are:
   - c1: `x = 3`, output none
@@ -263,7 +263,8 @@ Rules:
   - `test_blocks_types_and_keys`: m2 gives two prose blocks, `…/m2` and `…/m2#2`; c7 is `error-demo`; c8 is `turtle-figure` with 4 segments; m1 is `goals`; m3 is `notice`.
   - `test_unknown_route_fails`: monkeypatch `route_code` to return `('weird', '')` → `ValueError` naming `weird`.
   - `test_predict_cards`: c3 typed; a two-line output gives flip; c5 is not a card.
-  - `test_concept_cards_deterministic`: a 4-entry fixture glossary gives the same distractors on two runs, all from the same category; a category with fewer than 3 others gives the same whole-glossary fallback on two runs.
+  - `test_concept_cards_deterministic`: a 4-entry fixture glossary gives the same distractors on two runs, all from the same category; a category with 1 peer gives a 2-option `choice` card and a singleton category a `flip` card, deterministically.
+  - `test_concept_cards_real_books`: on the 4 real books, every distractor's concept has the card's concept's `category`.
   - `test_keys_unique_across_kinds`: a predict card's key differs from its block's key, and the union of block, item and card keys has no duplicate.
   - `test_concept_override_unregistered_fails`: `metadata.concepts: [not-a-concept]` on a lesson cell and on an item heading cell each give a `FAIL:` line.
   - `test_cell_concepts`: `for i in range(3): print(i)` with python-projects' profile includes `for-range` and `print`, or whatever ids python-projects' `concepts.yaml` uses for those features (read the registry in the test, not hard-coded guesses).
@@ -298,7 +299,7 @@ Rules:
   - Checkpoint: `## Question N`.
   - Project: `Problem N` groups when present, else `## Milestone N` sections (`project_sections`).
     A milestone whose solution has no matching numbered section (`project-01-arcade-night`'s solutions use `Lucky Guess`, `Quick Quiz`, …) gets `solution_group = None` → `self-check`, no FAIL, listed in the report.
-  - **Project partition (export-owned, not `item_groups`).** `item_groups(…, 'Problem')` folds every later cell into the current problem, so the export partitions a brief itself: a markdown cell whose first line is a `## ` heading (`## Milestone N…`, `## Make it yours`, `## Requirements…`) ends the current problem. If another item follows, the cell goes to that item's `before[]`; otherwise to `outro[]`. Solutions still map by `item_groups` on `solutions.ipynb`.
+  - **Project partition (export-owned, not `item_groups`).** `item_groups(…, 'Problem')` folds every later cell into the current problem, so the export partitions a brief itself. **In Problem mode** (the brief has `Problem N` headings; in Milestone mode the `## Milestone N` cells are the items), a markdown cell whose first line is a `## ` heading (`## Milestone N…`, `## Make it yours`, `## Requirements…`) ends the current problem. If another item follows, the cell goes to that item's `before[]`; otherwise to `outro[]`. Solutions still map by `item_groups` on `solutions.ipynb`.
     `test_project_partition_real`: python-concepts `project-01-algorithm-challenge` has `p01b002` in Problem 1's `before`, `p01b007` in Problem 3's `before`, and `p01b028`, `p01b029` in `outro`; usaco-bronze `project-03-mock-contest` has `27a38ec3` in Problem 1's `before` and `219d2b81`, `ff8f4935` in `outro`; no problem's `statement_md` contains "Make it yours".
   - **Non-item content is kept, never dropped.** The entry JSON carries `intro[]` (preface cells, notebook H1 removed), each item `before[]` (interlude cells such as a `## Challenge` note), and `outro[]` (cells after the last item that belong to none; for units, a challenge section's lead-in cells from `unit_challenges` (`tools/publish.py:913-920`) go in the first challenge's `before[]`, not `intro[]`; e.g. a brief's "Make it yours" and "Requirements checklist"). These are prose and starter blocks with keys, exactly as the publisher renders them (`render_items`, `tools/publish.py:860-871`).
     `test_every_statement_cell_exported`: every cell of every statement notebook (`exercises`, `checkpoint`, `brief`) in the 4 real books lands in exactly one of `intro`, an item, a `before`, or `outro`.
@@ -325,7 +326,7 @@ Rules:
   - `predict` → the stdout of the statement's code cell, run as in proposal step 5.
   - `expected-output` → the solution's stdout, run the same way.
   - `asserts` ships `source` = only the top-level `assert` statements (`ast.unparse`), and `functions` = the names they call. No function body ever ships.
-  - `fixtures` ships every pair as `{n, in, out, sample}`. `sample` is true for the pair whose input equals the statement's first `Sample Input` code block (whitespace-normalised); the Sample Input block is the first code fence anywhere in the `Sample Input` section, even after prose (as in ACSL unit 15 Exercise 17). If none matches, **no pair is a sample** (nothing is revealed), and `site-check` prints `WARN:` naming the item. Pairs over `fixture_budget_kb` go to `over_budget` and the report. `match` is `"line"` when the book has the `acsl` flag, else `"token"`.
+  - `fixtures` ships every pair once, as files under `files/<entry>/fixtures/<stem>/`, referenced by `{n, in_file, out_file, sample}`. `sample` is true for the pair whose input equals the statement's first `Sample Input` code block (whitespace-normalised); the Sample Input block is the first code fence anywhere in the `Sample Input` section, even after prose (as in ACSL unit 15 Exercise 17). If none matches, **no pair is a sample** (nothing is revealed), and `site-check` prints `WARN:` naming the item. Pairs over `fixture_budget_kb` go to `over_budget` and the report. `match` is `"line"` when the book has the `acsl` flag, else `"token"`.
   - `self-check` → `requirements` from the heading cell's `metadata.requirements` if present; else the statement's bullet and numbered list items (Markdown stripped to text); else one requirement, the statement's first sentence. The report lists `self-check` items with no list.
 - **`answer_format`:** the heading cell's `metadata.answer_format` (`{case, hint}`) if present; else derived:
   - `case: "sensitive"`
@@ -412,12 +413,12 @@ Rules:
 **Files:** `tools/export/check.py` (answer-model findings); `tests/site_consumer.py`; `tests/test_site_consumer.py`, `tests/test_site_answer_model.py`.
 
 - **The answer-model test (D5).** `answer_model_findings(root, book, bundle_dir) -> list[str]`:
-  1. **Leak, code:** the hidden corpus is **every code cell of every `solutions.ipynb`** in the book plus every `is_solution_source` file and `assets/verify/**` file, independent of item mapping, minus the odd unit answers that `student_answer_sources` releases. **Top-level `assert` statements are removed from each hidden cell first**, because `asserts` items ship them as check data by design (an assert-only cell drops out). Separately, every `asserts.source` must parse to top-level `ast.Assert` statements only, or `FAIL: <key>: asserts.source holds non-assert code`. Each remaining cell is tokenised, and the publish audit's `solution_leak(block, sources)` (`tools/publish_audit.py:321`) runs against **every string value in every bundle JSON** (code fences inside Markdown are extracted and checked too) **and every copied file's text** under `files/`. A hit → `FAIL: <book>: <key>: solution code leaked into <bundle path>`.
+  1. **Leak, code:** the hidden corpus is **every code cell of every `solutions.ipynb`** in the book plus every hidden solution asset (`solution_assets(entry, n)` for every even exercise and `challenge_solution_assets(entry, n)` for every challenge, as the publish audit does at `tools/publish_audit.py:380`), every `is_solution_source` file and `assets/verify/**` file, independent of item mapping, minus the odd unit answers that `student_answer_sources` releases. **Top-level `assert` statements are removed from each hidden cell first**, because `asserts` items ship them as check data by design (an assert-only cell drops out). Separately, every `asserts.source` must parse to top-level `ast.Assert` statements only, or `FAIL: <key>: asserts.source holds non-assert code`. Each remaining cell is tokenised, and the publish audit's `solution_leak(block, sources)` (`tools/publish_audit.py:321`) runs against **every string value in every bundle JSON** (code fences inside Markdown are extracted and checked too) **and every copied file's text** under `files/`. A hit → `FAIL: <book>: <key>: solution code leaked into <bundle path>`.
   2. **Leak, text:** every hidden canonical text whose normalised length is ≥ 4, or that has ≥ 2 tokens, is **counted**: its occurrences across all bundle strings and copied files must not exceed its occurrences across the book's student-visible sources (every `lesson`, `exercises`, `checkpoint` and `brief` notebook's cell sources and stored outputs, the glossary, the quick reference, **and every file the export copies**: tracked student assets admitted by `allowed_source(…, 'student')` and the fixture pairs, which ship by design (D5), **and the odd unit answers** rendered by `student_answer_text`. ACSL answers such as `01011` recur in other items' `.out` files, and an even answer can equal an odd one (`1110`: `acsl/units/unit-03-wdtpd-branching` and `unit-08-boolean-algebra`). Regressions: a hidden canonical that also occurs in a shipped fixture `.out` passes; one that equals an odd item's released answer passes. A value that already appears in sources (`1024`, `True`) passes as long as the export adds no occurrence; an injected copy raises the count and fails (Review Focus 5).
   3. **Odd answers:** every `after-attempt` item's `answer_md` equals `student_answer_text`, and the set of `after-attempt` keys equals the odd unit exercises exactly.
   4. **Hashes:** every `answer`, `predict` and `expected-output` item's `check.hash` equals `answer_hash(key, canonical, case=answer_format.case)`.
   5. **Visibility:** no `none` item has `answer_md` (also enforced by the schema).
-  - Regressions: an `asserts` item whose solution cell holds only asserts passes; a fixture whose `asserts.source` contains `def helper(): …` fails; a hidden function body copied into a starter fails.
+  - Regressions: an even exercise's `solutions_exN.py` body injected into a bundle JSON string fails, and the same injected into a copied file fails; a challenge's `solutions_challengeN*.py` body likewise fails. A fixture's text appears once in the bundle (as its file) and passes; an extra injected copy of it in a JSON string fails the count. An `asserts` item whose solution cell holds only asserts passes; a fixture whose `asserts.source` contains `def helper(): …` fails; a hidden function body copied into a starter fails.
 - **The consumer test.** `tests/site_consumer.py` is ≈150 lines of plain Python, a stand-in for part B. It renders from a bundle directory **only through fields the schema marks required or declares**:
   - a lesson page (blocks → HTML)
   - an item page per check kind present
@@ -503,6 +504,15 @@ Rules:
   - `[FIXED]` Fixtures and assets join the leak baseline (acsl false positives).
   - `[FIXED]` A same-cell write-then-read case is `standalone`.
   - `[FIXED]` `definition_md` keeps Markdown; comma unit lists parse; the concept comment is on the next line.
+
+### Round 4 (7d9a71a)
+
+- `[self]` APPROVE.
+- `[fable]` **APPROVE**: re-ran the project partition on all four real briefs (every named id lands as claimed) and the assert-stripped leak scan over every Python-book solution cell (zero false hits). `[FIXED]` (optional) "In Problem mode" added to the partition rule.
+- `[sol]` **REJECT** (gpt-5.6-sol):
+  - `[FIXED]` Hidden solution assets (`solutions_exN*.py`, `solutions_challengeN*.py`) join the code-leak corpus, as in the publish audit, with JSON and file injection regressions.
+  - `[FIXED]` Fixture text shipped twice: fixtures are now files only, referenced by path from `check.cases`, so each text has multiplicity one; a doubled-copy regression is added.
+  - `[FIXED]` The concept-card fallback broke D8: distractors are always category-local; 1–2 peers give a smaller choice card and none gives a flip card; real-book category test.
 
 ## Content Review
 
