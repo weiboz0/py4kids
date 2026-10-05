@@ -1,6 +1,6 @@
 # Design 012 — A learning website for every book
 
-Status: proposed, revision 3 (2026-10-04). Round 1: [sol] REJECT, [fable] REJECT. Round 2: [sol] REJECT (3 findings), [fable] APPROVE WITH NITS. Both rounds' findings are folded.
+Status: proposed, revision 3 (2026-10-04). Round 1: [sol] REJECT, [fable] REJECT. Round 2: [sol] REJECT (3 findings), [fable] APPROVE WITH NITS. Round 3: [sol] APPROVE WITH NITS. All findings are folded. **Review consensus reached; awaiting the user's spec review.**
 Extends design 000 ("notebooks are the source of truth"), design 007 (publication), and design 010 (every book publishes).
 
 ## 1. Purpose and agreed understanding
@@ -115,7 +115,7 @@ The user also asked to "add any components missing from the list but essential f
   - **The export test** checks three things:
     - no plain answer text of any `none` item appears in any bundle
     - every odd answer equals the Student Book appendix text
-    - every `answer` item's hash matches its canonical answer
+    - every `answer`, `predict` and `expected-output` item's hash matches its canonical text
 - **D6 — Lesson experience** (user decision: the reading view is primary).
   - **Reading view:**
     - The lesson reads as a page with the book's blocks.
@@ -140,7 +140,7 @@ The user also asked to "add any components missing from the list but essential f
   - **ACSL `assets/verify` helpers** are not shipped. Short answers are checked by hash (D5), and the helpers stay solution sources (design 010 D3).
 - **D8 — Quiz cards and mastery.**
   - **Card kinds:**
-    - **Predict-the-output:** only cells that pass the standalone probe, or that show their prelude on the card. Single-token or one-line outputs are typed exactly. Multi-line outputs are flip-and-self-grade.
+    - **Predict-the-output:** only cells that pass the standalone probe, or that show their prelude on the card. Single-token or one-line outputs are typed and compared after D5's normalisation (trimmed, internal whitespace collapsed), case-sensitive. Multi-line outputs are flip-and-self-grade.
     - **Concept cards:** from the glossary. Multiple-choice distractors come from concepts in the same `category`.
     - **Authored `quiz` cells:** added in later content plans.
   - **Concept attribution is per item, not per unit.** It uses an explicit concept tag on authored cards and the glossary term for concept cards. For code cells, part A extends `tools/concept_scan.py`'s cell-level scan, which today runs only for `patterns` books, to every `site` book. Where the scan cannot attribute a cell, per-cell `concepts` metadata is listed as content work.
