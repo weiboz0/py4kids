@@ -107,6 +107,10 @@ harness measures — PORT its logic, not its generator-sized signature), `protoc
   leakage (val/test rows don't change `P`/`Q`); **a known reader with empty `seen` still returns k recs**, an
   **unknown reader → `[]`**; fit→artifact→load identical recs; registers as `mf-v1`, no collision. Run at the PINNED
   config (~16–21 s/fit) — do NOT shrink epochs to save time (measured: e100 → 0.153 < lexical, fails the gate).
+**Seed honesty ([fable] round-2 Nice3):** the Opus port will consume `default_rng(0)` differently from the harness,
+so its seed-0 draw is a fresh sample of the measured 0.232–0.270 spread (tolerance 0.03 covers the worst-of-5). If
+the shipped port's seed 0 lands below `cf − 0.03`, do NOT loosen the gate or silently shop seeds — report the draw in
+the Post-Execution Report and pin the test seed explicitly (the number stays traceable either way).
 **Verify:** `uv run --group recsys pytest recsys/projects/bookrec/ -q` green, deterministic, numpy-only (no pandas/
 torch import under `bookrec/`); each fit ~16–21 s, well under the 120 s per-cell budget.
 
@@ -123,8 +127,8 @@ measure: training on the log's `label==0` **exposure** negatives collapses MF to
 exposed-not-engaged books are an *exposure-biased* negative (the generator exposes by popularity+taste), so pushing
 them down destroys the very signal; sampling negatives from each reader's **unobserved complement** is what works
 (a first, concrete encounter with exposure bias → Unit 13). (3) score on `val` (seed 0, k=10, 60 cold readers
-excluded) — MF is **on par with item-item CF** (≈0.26 vs ≈0.25, within noise over 500 readers; more epochs pull
-slightly ahead at a time cost), beating content (0.158) and popularity (0.108): the latent generalization of
+excluded) — MF is **on par with item-item CF** (about 0.25–0.26, within noise of CF's ~0.25 over 500 readers; more
+epochs pull slightly ahead at a time cost), beating content (0.158) and popularity (0.108): the latent generalization of
 co-occurrence. **The hinge:** these learned factors ARE embeddings — a dot-product retriever — which Unit 8 will learn
 with a neural two-tower. **Honest cold story (two distinct cases):** a cold *reader* (0 train positives) has no
 learned factor → `[]`; a cold *item* DOES get an initialized `Q` row, but with no positive signal it is shaped only
@@ -146,7 +150,7 @@ the 120 s cap); show MF's score is a dot product of embeddings (the two-tower br
 ### Phase E — milestone notebook (Opus subagent)
 `recsys/projects/bookrec/milestones/unit-05-matrix-factorization.ipynb` — runnable fixed-seed demo (cleared outputs,
 ASCII, one-line hook): train + register `MatrixFactorizationPath` (pinned config), score on `val` vs
-random/popularity/lexical/CF (**MF on par with CF**, ≈0.26 vs 0.25), show one reader's learned factor → top MF recs
+random/popularity/lexical/CF (**MF on par with CF**, about 0.25–0.26 vs CF's ~0.25, within noise), show one reader's learned factor → top MF recs
 (the score is an embedding dot product — the Part-2 bridge), and illustrate the cold-item limit (a no-train-positive
 item's factor is shaped only by negative gradient → pushed to a low score). Passes `milestone-check` +
 `exec-solutions` + `concept-scan`; ≤4 fits total, stays in budget.
@@ -159,6 +163,14 @@ collapses to the floor** — use complement sampling; forgetting regularization;
 conflating a cold *reader* (→ `[]`) with a cold *item* (gets a negative-shaped factor, scored low); expecting MF to
 beat CF — it is on par, within noise), `## Discussion prompts` (MF vs CF; factors as embeddings → U8; why regularize;
 why are exposure negatives the *wrong* negatives? → exposure bias, U13), `## Differentiation`.
+- **In-scope U4 consistency touch (markdown-only, [fable] round-2 Should1/Nice2):** U5 proves the log's `label==0`
+  exposure negatives are *harmful* for training (MF → ~0.02), so U4's forward pointers that say those negatives are
+  "used as training signal in Unit 5" become misleading once U5 ships. Apply a ≤3-line markdown-only correction to
+  `recsys/units/unit-04-neighborhood-cf/{teacher-notes.md (≈:13-15), lesson.ipynb (cells 5, 24)}`: reword to "Unit 5
+  trains a model to tell positives from *sampled* negatives — and discovers *which* negatives are the right ones (the
+  reader's unobserved complement, not these exposure-biased `label==0` rows)"; and cell 24's "no factors to learn for
+  the 818 cold books" → "no positive signal to learn from". Markdown-only → no re-exec of U4; `hygiene`/`noexec` still
+  pass. This ships atomically with U5 (the unit that makes the correction true), NOT a separate errata.
 
 ### Phase G — verification (named)
 `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN with Units 1–5 + the Unit-5 milestone AND
@@ -170,9 +182,9 @@ No PyTorch/neural (two-tower = U8); no ANN/FAISS (U10); no feature/cold-start fa
 `projects/project-*` map entry (capstone=U14); no checkpoint (Checkpoint A ends Part 1 at U6); no buildout removal.
 **SVD:** design §8/§7 names SVD/`TruncatedSVD` for this unit; we mention it in a Phase-C aside (why plain SVD doesn't
 fit sparse implicit feedback) but **ship gradient-descent MF, not an SVD path** — a deliberate omission, no concept
-id, no `TruncatedSVD` code. **No edit to Unit 4**: U4's forward pointer to U5 training on sampled negatives is honored
-in-scope by the Phase-C negatives beat (we revisit those negatives and show why the complement, not the exposure
-`label==0` rows, is the right training signal) — no cross-unit content change needed.
+id, no `TruncatedSVD` code. **Unit 4 touch is IN-scope (markdown-only, ≤3 lines — Phase F):** U4's forward pointers
+become misleading once U5 ships, so this plan corrects them atomically (see Phase F); this is the only cross-unit
+change and it is markdown-only (no U4 re-exec). The Phase-C negatives beat remains the pedagogical reconciliation.
 
 ## Verification phase declared
 Phase G is this plan's named verification phase.
@@ -264,7 +276,42 @@ table in "Why this works" [fable#3/#6]; (h) **SVD** aside in Phase C + Out-of-sc
 `baseline.yaml` methods pre-declared incl. `bincount` fast path [glm#4/fable#7]; (j) `catalog-search` practice-drop
 confirmed intentional [glm#5/sol#7]; (k) cold-item illustration added to milestone [fable#8].
 
-_(Verdicts appended below after the round-2 re-review dispatch.)_
+**[self] — APPROVE (round 2).** All 6+6 round-1 findings folded and internally consistent: objective is logistic
+full-batch GD throughout (Scope/concept/Phase B/C/D agree); retrieve contract correct for MF (known reader scored by
+`P·Qᵀ` independent of `seen`; unknown → `[]`); Phase-B gate numeric and satisfied at the measured seed-0 values
+(MF 0.262 ≥ CF 0.252 − 0.03, ≥ 1.2×0.108, ≥ 0.108+0.03, ≥ 0.158); defaults pinned to the only config that clears the
+gate (measured cliffs recorded); item universe/cold-reader-vs-cold-item defined honestly; U4 forward pointer honored
+in-scope via the Phase-C negatives beat (no cross-unit edit); SVD mentioned-not-shipped (design §8 reconciled);
+`catalog-search` drop justified. Named Phase G retained; project-first; ≥6/≥2-stretch/≥3-asserts; buildout holds (15).
+No [self] blockers.
+
+**[glm] — round-2 UNAVAILABLE (tooling).** The opencode companion failed at the invocation layer: both
+`opencode-go/glm-5.3` and the `volcengine-plan/glm-5.3` fallback exited 1 with the identical opencode-CLI `--help`
+dump (an invocation-layer problem with the companion, not model selection). No round-2 content. **Standing position:**
+[glm] returned APPROVE WITH NITS in round 1 with NO Must; all 5 nits are folded into v2 (changelog items a/h/c/i/j),
+so its substantive review is satisfied — only a confirmation pass is missing. If [sol]+[fable] APPROVE on round 2,
+this becomes a 3-of-4 consensus (glm round-1 APPROVE-WITH-NITS, all nits resolved) → surface the 3-of-4 trust fork to
+the user before merge (per memory: 3-of-4 needs user OK).
+
+**[fable] — APPROVE WITH NITS (round 2).** All 3 Must + 3 Should from round 1 correctly folded; no new blocker.
+Resolution confirmed: pinned defaults + cliffs + ≤4-fits/cell (Must1); Phase-C (2b) negatives beat honest (Must2);
+numeric seed-0 CF gate + "on par" wording (Must3); logistic full-batch GD (Should4); SVD aside + Out-of-scope
+(Should5); measured table (Should6). New nits:
+1. `[OPEN→FIXED v2.1]` **Should** — U4 as a STANDALONE artifact still states two now-false claims that the Phase-C
+   beat doesn't touch: `unit-04-neighborhood-cf/teacher-notes.md:13-15` and `lesson.ipynb` cells 5 + 24
+   ("the `label==0` negatives are *used as training signal* in Unit 5") — v2 proves they're *harmful* for that job.
+   Fix in-scope: a ≤3-line markdown-only U4 touch added to **Phase F** (reversing the earlier "no edit to Unit 4").
+2. `[OPEN→FIXED v2.1]` **Nice** — related U4 drift (cell 24: "no factors to learn for the 818 cold books") →
+   reword to "no positive signal to learn from" for consistency with U5's two-case cold story. Same Phase-F touch.
+3. `[OPEN→FIXED v2.1]` **Nice** — Phase B: the Opus port will consume `default_rng(0)` differently, so its seed-0 draw
+   is a fresh sample of the 0.232–0.270 spread, not 0.262. If the shipped port's seed 0 lands below `cf − 0.03`, do
+   NOT loosen the gate or shop seeds silently — report it and state the chosen seed in the plan. Added to Phase B.
+4. `[OPEN→FIXED v2.1]` **Nice** — word lesson/milestone prose "about 0.25–0.26, within noise of CF" so a 0.24x draw
+   isn't read as contradicting a printed number. Added to Phase C/E.
+5. `[NOTED]` **Nice** — Phase B test docstring should cite the shipped-data table (:23-29), not the generator-sized
+   harness numbers in historical round-1 text. (Phase B already binds the :23-29 table.)
+
+_([sol] round-2 verdict appended on hand-back. v2.1 amendments below fold [fable]'s round-2 Shoulds/Nices — additive, [sol]-neutral.)_
 
 ## Content Review
 
