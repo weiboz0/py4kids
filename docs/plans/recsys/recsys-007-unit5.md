@@ -344,6 +344,21 @@ consensus met.** Proceed to the build (Phase A → G).
 
 ## Content Review
 
+### Round 1 — [self] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS
+- Project-first upheld (lesson cell 0 is the "hidden taste dials" hook, not concept drill); from-scratch→reveal arc
+  intact; 8 exercises (6 core + Ex7/8 `stretch`, core independent of stretch); taught-before-assessed holds
+  (drills MF/latent-factors/gradient-descent/implicit-feedback + U1 ids; `catalog-search` not assessed); honest
+  "on par with CF / collapses to floor" framing throughout; U4 touch consistent. Full `ci-local.sh` ALL GREEN
+  (exec-lessons/exec-solutions/milestone-check/hygiene/structure/cell-lint/noexec/stretch/concept-scan + recsys PDF +
+  pre-merge-guard). Phase-B gate numeric and honest (no `mf>cf`).
+1. `[OPEN]` Ex8 (stretch) reads `mf.reader_factors` / `mf.item_factors`; the lesson teaches the dot-product identity
+   via `mf.artifact()["reader_ids"]` + the embedding hinge (cell 18-19) rather than those exact accessor properties.
+   The concept is taught and the accessors are self-evident convenience properties (not concept-scan-flagged), so this
+   is a **Nice to Have** — confirm the reviewers agree the accessor is a natural extension, not an untaught API.
+
+<!-- [sol] + [fable] content-review verdicts appended on hand-back -->
+
 <!-- appended pre-PR -->
 
 ## Post-Execution Report
