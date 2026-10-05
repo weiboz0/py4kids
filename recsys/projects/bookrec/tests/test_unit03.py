@@ -179,6 +179,17 @@ def test_k1_saturation_is_monotone_in_k1() -> None:
     assert high > low
 
 
+def test_k1_zero_is_finite_binary_presence() -> None:
+    # k1 -> 0 is the binary-presence limit the unit teaches as a stretch; it must be finite
+    # (no 0/0 NaN for docs that lack the query term) and give every matching doc an equal score.
+    docs = {0: "x x y", 1: "x z", 2: "q r"}
+    scores = BM25Index(docs, k1=0.0, b=0.0).score(["x"])
+    assert np.isfinite(scores).all()
+    assert scores[0] == pytest.approx(scores[1])  # presence, not count (tf=2 ties tf=1)
+    assert scores[0] > 0
+    assert scores[2] == pytest.approx(0.0)  # no "x" -> no contribution
+
+
 def test_index_rejects_bad_params() -> None:
     with pytest.raises(ValueError):
         BM25Index({0: "x"}, k1=-1.0)

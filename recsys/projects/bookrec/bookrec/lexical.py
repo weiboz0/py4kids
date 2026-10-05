@@ -94,7 +94,13 @@ class BM25Index:
         norm = self.k1 * (1.0 - self.b + self.b * self.doc_len / (self.avgdl or 1.0))
         for token, q_count in qtf.items():
             col = self.tf[:, self.vocab[token]]
-            saturated = (col * (self.k1 + 1.0)) / (col + norm)
+            denom = col + norm
+            # A doc without the term contributes 0. ``np.divide(where=...)`` avoids the 0/0 NaN
+            # that would otherwise occur at ``k1 == 0`` (where ``norm`` is 0), so the ``k1 -> 0``
+            # binary-presence limit the unit teaches as a stretch is finite and well defined.
+            saturated = np.divide(
+                col * (self.k1 + 1.0), denom, out=np.zeros_like(col), where=denom > 0
+            )
             scores += q_count * self.idf[self.vocab[token]] * saturated
         return scores
 
