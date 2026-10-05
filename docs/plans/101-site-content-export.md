@@ -553,6 +553,13 @@ Rules:
 - `[fable]` **APPROVE WITH NITS**: all 74 first cells start with `# `. `[FIXED]` The parity target was wrong for hooks that open with a heading (acsl unit 12): the opener is now `render_chapter`'s whole hook, with `markdown_blocks(first=True)` as a secondary check on heading-free hooks.
 - `[sol]` **REJECT** (gpt-5.6-sol): `[FIXED]` the same opener-parity point as [fable]'s nit; the rule and test now use `render_chapter`'s whole-hook contract.
 
+### Round 10 (0a1e49b) — CONSENSUS
+
+- `[self]` APPROVE.
+- `[sol]` **APPROVE** (gpt-5.6-sol).
+- `[fable]` **APPROVE**: the opener fold matches `render_chapter` on both test lessons; no regression.
+- `[glm]` skipped (user decision 2026-09-28).
+
 ## Content Review
 
 _(gate findings recorded here)_
