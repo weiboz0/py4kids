@@ -2,8 +2,9 @@
 
 **Design:** `docs/designs/011-recsys-book.md` (§5, §6, §8 Unit 4). **Book:** `recsys` (Book 3). **Autopilot** per
 AGENTS.md. Fourth Part-1 unit, on the Unit-1/2/3 substrate + the taste-aware generator (recsys-004) + the
-milestone-notebook mechanism. Ships the first **collaborative** path — and the **first path to beat the popularity
-baseline** on the scoreboard (the personalization payoff): item-item co-occurrence CF.
+milestone-notebook mechanism. Ships the first **collaborative** path: item-item co-occurrence CF — the **first
+decisive win over popularity** (~2.3×) and the first path to beat **both** popularity and the content/lexical path
+(Unit 3's lexical already edges popularity ~1.46×; CF beats it ~1.6×).
 
 ## Scope
 **Unit 4 only** (`recsys/units/unit-04-neighborhood-cf/`). Teaches **neighborhood collaborative filtering**:
@@ -14,9 +15,10 @@ Unit-4 milestone notebook. No matrix factorization (U5), no neural (U7+). No gen
 ## Why this works on the data (empirical, binding)
 recsys-004's committed recoverability harness already measures an item-item cosine co-occurrence CF at **~0.25
 hit@10 ≈ 2.3–2.9× popularity (~0.108)** on `val` (k=10, cold excluded) — because taste-aware exposure imprints the
-latent taste into co-occurrence. So CF is the first path to clearly **beat popularity**, the unit's headline. Authors
-MUST re-measure on the committed seed and bind the Phase B test to a stable margin (CF ≥ ~1.3× popularity; the harness
-gate already asserts this).
+latent taste into co-occurrence. So CF is the first path to beat **both** popularity (~0.108) **and** the
+content/lexical path (~0.158) — a decisive ~2.3× popularity / ~1.6× lexical (Unit 3's lexical already modestly beat
+popularity ~1.46×; CF is the first to beat both). Authors MUST re-measure on the committed seed and bind the Phase B
+test to the harness's two-part margin (CF ≥ 1.3× popularity AND ≥ popularity + 0.03) **and** `CF > lexical`.
 
 ## Buildout stays
 Whole-book `lessons` total becomes **12** (U1–U4, 3 each) < 30 → `buildout: true` retained.
@@ -31,13 +33,21 @@ teacher-notes; from-scratch→reveal-the-library. CPU-light (numpy + `bookrec`; 
   the readers who co-engaged two items) from the **train** log; recommend items similar to what a reader has read.
   The shipped `ItemItemRetrievalPath`. `kind: technique`, `category: techniques`.
 - `knn-similarity` — **k-nearest-neighbor** retrieval over the item-similarity matrix: score a candidate by the
-  summed similarity to the reader's seen items (optionally capped to the top-k neighbors). `kind: technique`.
-- `implicit-feedback` — **implicit vs explicit** feedback (a read/like is a positive; there are no negative ratings),
-  the resulting positive-only sparsity, and why evaluation/training **sample negatives**. `kind: technique`.
-All three globally unique (confirmed: 0 hits across `*/curriculum/concepts.yaml`).
+  summed similarity to the reader's seen items, optionally capped to the top **`n_neighbors`** (named `n_neighbors`,
+  NOT `k`, to avoid clashing with the protocol's `k` = candidate count). On this data an uncapped neighbourhood is
+  best; a small cap *degrades* (taught honestly). `kind: technique`, `category: techniques`.
+- `implicit-feedback` — **implicit vs explicit** feedback (a read/like is a positive; there are no negative *ratings*)
+  and the resulting positive-only sparsity. Taught against the CONCRETE log: its `label==0` rows are
+  exposure-sampled negatives (exposed-not-liked) standing in for the unobserved — the rows students have filtered to
+  positives since Unit 1. The co-occurrence path uses **positives only**; **sampled negatives are USED for training
+  in U5 MF / U8 two-tower**, not here — Unit 4 does no negative sampling (full-catalog ranking). `kind: technique`,
+  `category: techniques`.
+All three concepts carry `name`+`category`+`kind: technique`; globally unique (confirmed: 0 hits across
+`*/curriculum/concepts.yaml`). `item-item-cf` → `category: techniques`.
 
 ### Coverage-map entry
-`unit-04-neighborhood-cf`, `kind: unit`, `lessons: 3`, `introduces: [item-item-cf, knn-similarity, implicit-feedback]`,
+`unit-04-neighborhood-cf`, `kind: unit`, **`title: "Neighborhood collaborative filtering"`** (v1 `MAP_ENTRY_KEYS`
+requires `title`), `lessons: 3`, `introduces: [item-item-cf, knn-similarity, implicit-feedback]`,
 `requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]`,
 `practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]` (Unit-1 ids; closes
 under buildout; no project map entry → capstone rule inert).
@@ -51,28 +61,40 @@ under buildout; no project map entry → capstone rule inert).
 **Verify:** curriculum checks green; buildout holds (12<30).
 
 ### Phase B — `bookrec` CF code (Opus subagent; numpy-only, no pandas in the package)
-Dispatch an **Opus subagent** (`Agent`, `model: opus`). STUDY `recsys/data/_reference_recommenders.py` (its item-item
-cosine co-occurrence CF reference scorer — the recoverability-harness implementation to port/mirror), `protocol.py`,
-`scoreboard.py`, `popularity.py`/`lexical.py` (path conventions). Add `bookrec/neighborhood.py`:
-- an item-item **co-occurrence** builder: from the train positives, build a sparse/dense item×item cosine similarity
-  (reader co-engagement); row-normalize; optional top-k neighbor cap.
+Dispatch an **Opus subagent** (`Agent`, `model: opus`). STUDY `recsys/data/_reference_recommenders.py` `_item_item_cf`
+(the recoverability-harness CF scorer — **PORT its logic, do NOT reuse its signature**: it takes a dense reader×item
+matrix sized by the generator config; `bookrec` has no generator object), `protocol.py`, `scoreboard.py`,
+`popularity.py`/`lexical.py` (path conventions). Add `bookrec/neighborhood.py`:
+- an item-item **co-occurrence** builder: from the train positives, build an item×item cosine similarity (reader
+  co-engagement), zero diagonal; an **`n_neighbors` cap is OPTIONAL and defaults to uncapped** (capping degrades on
+  this data — top-10 → 0.142 < lexical). `fit` **duck-types the row-mapping iterable** (`reader_id,item_id,split,
+  label`, as `PopularityRetrievalPath.fit` does — NO pandas), indexes readers/items from the TRAIN rows themselves,
+  and honours `catalog=` as the item universe.
 - `ItemItemRetrievalPath(BaseRetrievalPath)` (name `"item-item"`, version `"1"`): `fit(interactions, catalog=None)` —
-  EXACTLY the protocol signature; builds the similarity from the train log (implicit positives only; leakage-safe —
-  no val/test). `retrieve(reader_id, context, k)` scores each candidate by the summed similarity to the reader's
-  `context["seen"]` items, excludes `seen`, top-k via `_finish`; empty `seen` → `[]`. `load`/`artifact` round-trip the
-  fitted similarity. Export from `__init__`.
-- Tests (routed): CF beats popularity on the seeded `val` scoreboard with a stable margin (≥1.3× popularity, cold
-  excluded, k=10); a tiny hand-checked co-occurrence/cosine fixture; leakage (val/test rows don't affect the
-  similarity); empty-seen → `[]`; fit→artifact→load round-trip returns identical recs; registers as `item-item-v1`,
-  no collision.
+  EXACTLY the protocol signature; builds from the train log (implicit **positives only**, `split=="train"` &
+  `label==1`; leakage-safe — no val/test). `retrieve(reader_id, context, k)` scores each candidate by the summed
+  similarity to the reader's `context["seen"]` items (ignoring any `seen` item absent from the fitted index — no
+  KeyError on hand-built contexts), excludes `seen`, top-k via `_finish`; empty `seen` → `[]`. `load`/`artifact`
+  round-trip the fitted similarity (copy arrays). Export from `__init__`.
+- Tests (routed): CF clears the harness two-part gate on the seeded `val` scoreboard — **hit@10 ≥ 1.3× popularity
+  AND ≥ popularity + 0.03 AND > lexical** (cold excluded, k=10; measured 0.252 vs pop 0.108 / lexical 0.158); a tiny
+  hand-checked co-occurrence/cosine fixture; **leakage: the similarity is bit-identical with vs without val/test rows**
+  (and, as a vivid check, a val-folded "leaky" fit scores wildly higher ~0.96); empty-seen → `[]`; a `seen` item not
+  in the index is skipped; fit→artifact→load round-trip returns identical recs; registers as `item-item-v1`, no
+  collision; a small `n_neighbors` cap *lowers* the score (documents the degradation).
 **Verify:** `uv run --group recsys pytest recsys/projects/bookrec/ -q` green, deterministic, numpy-only.
 
 ### Phase C — lesson.ipynb (Opus subagent; project-first)
 Hook: "readers who liked the books you liked also read…". From scratch → reveal: (1) the co-occurrence idea +
-implicit vs explicit feedback (why there are no negatives, sparsity, sampled negatives); (2) build the item-item
-cosine similarity by hand in numpy; (3) k-NN retrieval — score candidates by similarity to the reader's history;
+implicit vs explicit feedback taught against the real log (count its `label==1` positives vs `label==0`
+exposure-sampled negatives; co-occurrence uses positives only; U5 is where sampled negatives get USED to train);
+(2) build the item-item cosine similarity by hand in numpy; (3) k-NN retrieval — score candidates by summed
+similarity to the reader's history, and show the **`n_neighbors` cap** (if any exercise assesses it) with its honest
+*degradation* on this data; note the coverage ceiling (41% of the catalog has no train positives → unreachable by
+CF, unlike lexical — a bridge to U6 cold-start/blending);
 reveal `ItemItemRetrievalPath`, register + score on `val` (seed 0, k=10, cold excluded) — it **beats popularity**
-(~0.25 vs ~0.108) and the content path (~0.158): the first personalization win, the headline of Part 1. Honest: this
+(~0.25 vs ~0.108) AND the content/lexical path (~0.158): the first DECISIVE personalization win (acknowledge U3's
+lexical already modestly beat popularity ~1.46× — CF is the first to beat both, by the widest margin so far). Honest: this
 is collaborative (uses who-read-what), complementary to the content/lexical path; MF (U5) generalizes it.
 ASCII only; `rank(exclude=seen)`; reuse `bookrec`.
 **Verify:** `exec-lessons` clean; non-empty markdown first cell; `concept-scan` clean.
@@ -80,9 +102,10 @@ ASCII only; `rank(exclude=seen)`; reuse `bookrec`.
 ### Phase D — exercises.ipynb + solutions.ipynb (separate fresh Opus subagents)
 ≥6 `## Exercise N`; ≥2 `stretch`; exercises NO solutions/outputs; solutions mirror all, clean (seed 0), ≥3
 non-vacuous asserts. Drill: build the co-occurrence matrix + cosine similarity; k-NN retrieval; register
-`ItemItemRetrievalPath` + read the val scoreboard vs popularity/lexical/random (CF wins); implicit-feedback +
-sampled-negative reasoning. Stretch e.g.: effect of the top-k neighbor cap; cold-item behavior (an item with no
-co-occurrence → no neighbors); why co-occurrence ≈ a rank-reduced signal (bridge to MF). Taught-before-assessed.
+`ItemItemRetrievalPath` + read the val scoreboard vs popularity/lexical/random (CF wins both); implicit-feedback as
+reasoning/counting over the log's positives vs `label==0` rows (NOT asserted path behaviour). Stretch e.g.: the
+`n_neighbors` cap *degrades* the score here (expect it); cold-item behavior (no co-occurrence → no neighbors → the
+coverage ceiling); why co-occurrence ≈ a rank-reduced signal (bridge to MF). Taught-before-assessed.
 **Verify:** `hygiene`/`structure`/`cell-lint`/`noexec` (≥6, ≥2 stretch, no outputs); `exec-solutions` clean;
 `concept-scan` clean.
 
@@ -93,9 +116,11 @@ ASCII, one-line hook): build + fit + register `ItemItemRetrievalPath`, score on 
 `milestone-check` + `exec-solutions` + `concept-scan`.
 
 ### Phase F — teacher-notes.md (inline)
-`## Goals`, `## Pacing` (60–90 min / 2–3 sittings, hook stated; assign all exercises), `## Common mistakes`
-(leaking val into the similarity; recommending already-seen items; cold items with no neighbors; confusing item-item
-with user-user), `## Discussion prompts`, `## Differentiation`.
+`## Goals`, `## Pacing` (60–90 min / 2–3 sittings, hook stated; assign ALL exercises), `## Common mistakes`
+(leaking val into the similarity — folding val into `fit` jumps hit@10 to ~0.96, a vivid "too good to be true"
+number; recommending already-seen items; cold items with no neighbors and the ~41% coverage ceiling; confusing
+item-item with user-user; assuming a bigger `n_neighbors` cap helps — it doesn't here), `## Discussion prompts`,
+`## Differentiation`.
 
 ### Phase G — verification (named)
 `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN with Units 1–4 + the Unit-4 milestone AND
@@ -119,6 +144,71 @@ committed harness (item-item CF ~0.25 ≈ 2.3–2.9× popularity) — CF is the 
 headline; binds empirical re-measure + the ≥1.3×-popularity margin on the authors + gate. `ItemItemRetrievalPath`
 mirrors the harness's reference CF scorer, keyword/construction pattern not needed (fit builds from the train log).
 No [self] blockers. Monday: full 4-way incl. [glm]; [sol] retried on Codex.
+
+**[sol] — INCOMPLETE** (Codex `gpt-5.6-sol` immediately "at capacity"; persistent infra outage, weekend+Monday).
+Infra-unavailable for this gate.
+
+**[fable] — APPROVE WITH NITS** (empirically verified: CF 0.252 = 2.33× popularity, 1.6× lexical, 21× floor;
+fit→artifact→load identical; leakage val-fold → 0.964; 818/2000 items have no train positives; coverage/prereq pass;
+ids unique).
+1. `[OPEN]` **Must Fix** — "first path to beat popularity" is FALSE and contradicts shipped Unit 3 (lexical already
+   beats popularity 1.46×, and `unit-03`'s lesson/milestone say so). Reframe (plan lines 5–6,17,74–75,118 + Phase C
+   hook): CF is the **first collaborative path** and the **first to beat BOTH popularity AND the content path**, by
+   the widest margin so far (2.33× pop, 1.6× lexical). Add `> lexical` to the Phase B assert (mirrors the harness's
+   content-below-collaborative gate).
+2. `[OPEN]` **Should Fix** — neighbor-cap default must be **uncapped** (or ≥100); capping HURTS on this data
+   (top-10 → 0.142, below lexical, ~1.31× pop — one wobble from failing the gate). Bind headline/test to the
+   uncapped default; the Phase-D stretch "cap effect" must expect **degradation**, not improvement; name the param
+   `n_neighbors` (NOT `k` — clashes with the protocol's `k` = candidate count).
+3. `[OPEN]` **Should Fix** — taught-before-assessed: if any exercise assesses the neighbor cap, teach it in Phase C
+   (the lesson outline currently only teaches summed similarity).
+4. `[OPEN]` **Should Fix** — implicit-feedback honesty: the shipped path + the scoreboard use **no** negative
+   sampling (full-catalog ranking), so do NOT present "sampling negatives" as something Unit 4 DOES. Teach implicit
+   feedback against the concrete log (10457 train `label==0` exposed-not-liked vs 5303 positives; positives-only
+   enter the co-occurrence; label-0 + the unobserved complement are the two "negatives"), and point to U5 MF as where
+   sampled negatives are actually used. Exercises on this concept = reasoning/counting over the log, not asserted
+   `ItemItemRetrievalPath` behaviour.
+5. `[OPEN]` **Should Fix** — Phase B must say "fit duck-types the row-mapping iterable (`reader_id,item_id,split,
+   label`) like `PopularityRetrievalPath.fit`, index readers/items from the train rows, honour `catalog=` as the
+   item universe, no pandas" — the harness `_item_item_cf` takes a dense generator-sized matrix; PORT the logic,
+   don't reuse the signature.
+6. `[OPEN]` **Should Fix** — leakage test: assert the similarity is bit-identical with/without val/test rows (+ the
+   0.964 leaky number as a teacher-notes "common mistake").
+7. `[OPEN]` **Nice** — `retrieve` ignores `seen` items absent from the fitted index (no KeyError on hand-built ctx).
+8. `[OPEN]` **Nice** — 41% of the catalog has no train positives → CF coverage ceiling; one honest lesson sentence +
+   bridge to U6 cold-start/blending.
+9. `[OPEN]` **Nice** — `baseline.yaml` new numpy idioms (fill_diagonal/outer/sqrt/argsort/ItemItemRetrievalPath/
+   artifact/...); Phase A covers it.
+
+**[glm] — REJECT** (corroborates the headline Must-Fix; otherwise verified sound — coverage closes, ids unique,
+design matches protocol/lexical, numbers match committed records).
+1. `[OPEN]` **Must Fix** — (same as [fable]#1) "first path to beat popularity" contradicts shipped U3 (lexical
+   1.46× pop). Reframe all four sites + Phase C/E/F: first **collaborative** path, first **decisive** win over
+   popularity (~2.3× vs lexical's ~1.5×), acknowledging U3's modest win.
+2. `[OPEN]` **Should Fix** — schema fields: the coverage-map entry needs `title` (v1 `MAP_ENTRY_KEYS` exact-set),
+   and all three concepts need `name`+`category` (not just `item-item-cf`). (concepts.yaml/coverage-map will carry
+   them; stated for the authors.)
+3. `[OPEN]` **Should Fix** — (refines [fable]#4) implicit-feedback honesty: the log's `label==0` rows
+   (`gen_interactions.py:226`) ARE exposure-sampled negatives standing in for the unobserved — the rows students have
+   filtered since U1. Teach "no negative ratings" against that concrete log; co-occurrence uses positives only; U5 MF
+   is where sampled negatives are USED for training (design §6 designates U4 for this framing).
+4. `[OPEN]` **Nice** — Phase B test: mirror the harness two-part gate (`≥1.3× popularity` AND `≥ pop+0.03`), not the
+   ratio alone.
+
+### Plan-review outcome (round 1): **NOT consensus — [glm] REJECT + [fable] APPROVE WITH NITS ([sol] infra-down).** Headline empirical error (CF beats BOTH popularity and content, not "first to beat popularity") + solid refinements. Fold → v2 → re-review.
+
+### Round 2 (on v2)
+**[self] — APPROVE.** v2 folds all findings: headline reframed everywhere in the body — CF is the first
+**collaborative** path and the first to beat **both** popularity (~2.3×) and the content/lexical path (~1.6×),
+acknowledging U3's modest ~1.46× win (fable#1/glm#1); `n_neighbors` (not `k`) default **uncapped**, cap *degrades*
+(fable#2); lesson teaches the cap if assessed (fable#3); implicit-feedback taught against the real `label==0`
+exposure-sampled-negative rows, no negative sampling in U4, sampled negatives USED in U5 (fable#4/glm#3); Phase B
+PORTs `_item_item_cf` via the row-mapping duck-typed `fit`, no pandas (fable#5); leakage bit-identical test + the
+~0.96 leaky number (fable#6); `retrieve` skips absent `seen` (fable#7); coverage-ceiling sentence (fable#8);
+coverage-map `title` + all 3 concepts `name`+`category` (glm#2); Phase B test = two-part gate `≥1.3× pop AND
+≥ pop+0.03 AND > lexical` (glm#4/fable#1). No [self] blockers.
+
+<!-- [fable] / [glm] round 2 appended -->
 
 ## Content Review
 
