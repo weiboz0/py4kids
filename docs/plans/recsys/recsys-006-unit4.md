@@ -302,7 +302,28 @@ All per-unit checks PASS; 99 bookrec tests. Full `ci-local` re-run in progress.
 **[self] — APPROVE.** All three [sol] Must resolved (coverage ceiling enforced with CF unchanged at 0.252; Ex8 rank
 taught+assessed; MF cold-item overclaim corrected) + the Shoulds/nits. No [self] blockers.
 
-<!-- [sol] / [fable] / [glm] round 2 appended -->
+**[sol] — REJECT** (round 2): #1 resolved (verified pre/post hit@10 both 0.252; 818 zero-sim == no-train-positive
+set; "unreachable" now true), #3/#4/#5 resolved. **#2 UNRESOLVED Must** — the taught `rank(sim) ≤ rank(R)` is FALSE
+for the SHIPPED similarity: `item_item_cosine` zeroes the diagonal, and zeroing can INCREASE rank (counterexample:
+1 reader → 3 liked items ⇒ rank(R)=1, normalized-Gram rank 1, but zero-diagonal sim rank 3). Fix: make the rank
+argument about the **normalized Gram `RᵀR` BEFORE diagonal-zeroing** (rank ≤ rank(R)); note the shipped similarity
+zeroes the diagonal (self-exclusion convenience) so its rank is not itself bounded — the low-rank STRUCTURE / MF
+bridge lives in the pre-zero Gram. Lesson cell 24 + Ex8 + solution.
+**[fable] — APPROVE** (round 2): all resolved, CF 0.252 unchanged, 17 tests. Non-blocking nits: Ex8 CODE-cell TODO
+comment still has the old inverted "rank-reduced" phrasing (markdown prompt already fixed); lesson cell 14 reader-3
+genre list omits "sci-fi" (cosmetic).
+
+**[glm] — round 2 TIMED OUT** (opencode 20-min SIGTERM). Round-1 APPROVE WITH NITS stands (all nits folded; the
+round-2/3 fixes only tighten). Not re-attempted.
+
+### Round-2 ci-local green (commits e0b643b+226d22f). Round-3 fix (commit `32c5130`) — [sol]#2 + [fable] nits
+- **sol#2** `[FIXED]` — rank claim scoped to the pre-diagonal-zero normalized Gram `G = D^(-1/2)RᵀR D^(-1/2)`
+  (rank(G) ≤ rank(R)); lesson + Ex8 + solution note the shipped similarity zeroes the diagonal (self-exclusion) which
+  can raise rank, so the low-rank/MF bridge is about `G`, not the shipped matrix. Coverage asserts unchanged.
+- **fable (r2)** `[FIXED]` — Ex8 code-comment old inverted phrasing reworded; lesson cell 14 reader-3 genres now
+  include sci-fi. All per-unit checks PASS. Final `ci-local` + [sol] round-3 confirm in progress.
+
+<!-- round 3 appended -->
 
 ## Post-Execution Report
 
