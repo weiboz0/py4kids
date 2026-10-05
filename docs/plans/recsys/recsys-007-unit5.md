@@ -408,4 +408,36 @@ All findings resolved in commit `b21760a` (every `[OPEN]` → `[FIXED]`/`[WONTFI
 
 ## Post-Execution Report
 
-<!-- appended before ship -->
+**Shipped (branch `feature/recsys-007-unit5`):** Book-3 Unit 5, *Matrix factorization — latent factors, the embedding
+bridge*. Phase A registry (concepts `matrix-factorization`/`latent-factors`/`gradient-descent`, coverage-map +
+manifest `unit-05-matrix-factorization`, syllabus arc row, baseline.yaml Unit-5 methods; buildout holds 15<30).
+Phase B `recsys/projects/bookrec/bookrec/factorization.py` — `MatrixFactorizationPath` (numpy-only, no torch) porting
+`_reference_recommenders._learned_mf`: logistic implicit-feedback loss, full-batch per-entity-averaged gradient
+descent, `n_negatives` per train-positive sampled from the reader's unobserved complement, pinned
+`d32/e300/lr0.5/reg0.05/10-neg/seed0`; + 14 tests. Phases C/D/E/F the lesson, 8 exercises (6 core + 2 Challenge),
+independent solutions, milestone notebook, teacher-notes; plus the in-scope markdown-only U4 consistency touch.
+
+**Measured (seed 0, k=10, 60 cold readers excluded, 500 eligible, shipped val):** random 0.012, popularity 0.108,
+lexical 0.158, item-item CF 0.252, **MF 0.276** (~15 s/fit). Across seeds 0–4 MF ≈ 0.25–0.28 (mean ~0.27) — **on par
+with CF, within noise**; the shipped content never claims MF reliably beats CF. The "negatives beat": training on the
+log's `label==0` exposure negatives collapses MF to ~0.006 (below the random floor), motivating complement sampling
+and the first exposure-bias lesson (→ U13).
+
+**Gates.** Plan-review: 3 rounds — [sol]+[fable] REJECT round 1 (SGD→logistic/full-batch, numeric seed-0 gate,
+pinned defaults vs the measured epoch cliff, U4 exposure-negative reconciliation, honest "on par", retrieve contract,
+cold-item universe, SVD), [fable] APPROVE-NITS round 2, [sol] REJECT round 2 (per-positive negatives + per-entity
+averaging + SVD-aside precision) → APPROVE round 3. Consensus 3-way (GLM removed from the rolls by user directive
+mid-plan; governance updated). Content-review: [sol] REJECT round 1 on a real Must (negative-resampling infinite loop
+when a reader covers the whole catalog) → fixed with a determinism-preserving guard + regression test → [sol] APPROVE
+round 2; [self]+[fable] APPROVE-NITS; all findings `[FIXED]`/`[WONTFIX]`.
+
+**Deviations from plan:** none material. The `seed` type-check raises `TypeError` (ruff TRY004) where other
+hyperparameter rejections raise `ValueError`. `reader_factors`/`item_factors` are shipped as given scaffold +
+demonstrated in the lesson (adjudicated taught/given API, not an untaught-API violation). `catalog-search`
+intentionally dropped from `practices` (MF does no catalog search).
+
+**Verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN (registry+lint, unit tests, notebook
+exec+hygiene, manifest/prereq/coverage/stretch, concept-scan, recsys PDF incl. the Unit-5 handout, pre-merge-guard) +
+`pre-merge-guard.sh --pr` OK. buildout retained (15<30). Full ci-local re-run GREEN on the content-gate-fixed tree
+(the subsequent solutions cell-12 prose fix is ci-invariant — no check reads markdown prose). **Status: ready to
+merge.**
