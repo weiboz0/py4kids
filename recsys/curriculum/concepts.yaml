@@ -13,3 +13,15 @@ concepts:
 - {id: popularity-ranking, name: "Popularity ranking from interaction counts", category: techniques, kind: technique}
 - {id: bayesian-shrinkage, name: "Bayesian shrinkage (weighted average)", category: techniques, kind: technique}
 - {id: popularity-bias, name: "Popularity bias (coverage and head-share)", category: techniques, kind: technique}
+# --- Unit 3 (recsys-005): lexical retrieval ---
+- {id: bag-of-words, name: "Bag-of-words document representation", category: techniques, kind: technique}
+- {id: tf-idf, name: "TF-IDF weighting and cosine similarity", category: techniques, kind: technique}
+- {id: bm25, name: "Okapi BM25 scoring", category: techniques, kind: technique}
+# --- Unit 4 (recsys-006): neighborhood collaborative filtering ---
+- {id: item-item-cf, name: "Item-item collaborative filtering (co-occurrence)", category: techniques, kind: technique}
+- {id: knn-similarity, name: "k-nearest-neighbor similarity retrieval", category: techniques, kind: technique}
+- {id: implicit-feedback, name: "Implicit feedback and sampled negatives", category: techniques, kind: technique}
+# --- Unit 5 (recsys-007): matrix factorization (the embedding bridge) ---
+- {id: matrix-factorization, name: "Matrix factorization (reader x item as P Q^T)", category: techniques, kind: technique}
+- {id: latent-factors, name: "Latent factors as learned embeddings", category: techniques, kind: technique}
+- {id: gradient-descent, name: "Gradient descent on a logistic implicit-feedback loss", category: techniques, kind: technique}

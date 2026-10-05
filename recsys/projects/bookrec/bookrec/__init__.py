@@ -27,7 +27,15 @@ from bookrec.catalog import Book, load_catalog
 from bookrec.data import generated_dir
 from bookrec.diversity import catalog_coverage, head_ids_from_counts, head_share
 from bookrec.evaluate import hit_rate_at_k, recall_at_k
+from bookrec.factorization import MatrixFactorizationPath
 from bookrec.keywords import load_keywords
+from bookrec.lexical import (
+    BM25Index,
+    LexicalRetrievalPath,
+    cosine_similarity,
+    tfidf_matrix,
+)
+from bookrec.neighborhood import ItemItemRetrievalPath, item_item_cosine
 from bookrec.popularity import PopularityRetrievalPath, weighted_rating
 from bookrec.protocol import (
     Candidate,
@@ -41,9 +49,13 @@ from bookrec.scoreboard import RandomRetrievalPath, ScoreboardResult, run_valida
 from bookrec.search import search_catalog
 
 __all__ = [
+    "BM25Index",
     "Book",
     "Candidate",
     "DuplicatePathError",
+    "ItemItemRetrievalPath",
+    "LexicalRetrievalPath",
+    "MatrixFactorizationPath",
     "PathRegistry",
     "PopularityRetrievalPath",
     "RandomRetrievalPath",
@@ -52,10 +64,12 @@ __all__ = [
     "blend",
     "calibrate_scores",
     "catalog_coverage",
+    "cosine_similarity",
     "generated_dir",
     "head_ids_from_counts",
     "head_share",
     "hit_rate_at_k",
+    "item_item_cosine",
     "load_catalog",
     "load_keywords",
     "order_candidates",
@@ -63,5 +77,6 @@ __all__ = [
     "recall_at_k",
     "run_validation_scoreboard",
     "search_catalog",
+    "tfidf_matrix",
     "weighted_rating",
 ]

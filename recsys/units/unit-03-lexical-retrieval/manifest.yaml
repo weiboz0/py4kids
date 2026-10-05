@@ -1,0 +1,9 @@
+id: unit-03-lexical-retrieval
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [bag-of-words, tf-idf, bm25]
+  requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]
+  practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics]

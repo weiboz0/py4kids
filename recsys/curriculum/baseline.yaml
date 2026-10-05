@@ -62,6 +62,49 @@ library_methods:
 - astype
 - isclose
 - round
+# --- Unit 3 (recsys-005): lexical retrieval (bookrec lexical API + numpy/stdlib) ---
+- BM25Index
+- LexicalRetrievalPath
+- arange
+- artifact
+- array_equal
+- cosine_similarity
+- join
+- load_keywords
+- log
+- max
+- median
+- min
+- most_common
+- norm
+- score
+- tfidf_matrix
+- update
+- zeros
+# --- Unit 4 (recsys-006): neighborhood CF (bookrec API + numpy idioms) ---
+- ItemItemRetrievalPath
+- diag
+- fill_diagonal
+- item_item_cosine
+- maximum
+- outer
+- sqrt
+# --- Unit 5 (recsys-007): matrix factorization (bookrec MF API + numpy GD idioms) ---
+- MatrixFactorizationPath
+- calibrate
+- choice
+- concatenate
+- default_rng
+- empty
+- exp
+- bincount
+- int64
+- integers
+- isfinite
+- load
+- normal
+- ones
+- repeat
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}

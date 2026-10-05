@@ -13,9 +13,12 @@ Rationale: rigorous CS foundation delivered without pushing students away
 Assessment is lightweight checkpoint notebooks plus milestone projects, not exam-style
 mock tests; grading stays manual with grading notes.
 
-## D-003 (2026-09-05) — Fixed 4-way gate roster
-`[self]` / `[sol]` / `[glm]` / `[fable]` for both gates.
+## D-003 (2026-09-05) — Fixed gate roster
+Originally 4-way: `[self]` / `[sol]` / `[glm]` / `[fable]` for both gates.
 usaaio's dated rotation language is not carried over; this repo starts post-cutoff.
+**Superseded 2026-10-05 (user directive):** the GLM reviewer is removed from the review rolls after a
+persistent opencode-companion invocation-layer failure. Both gates are now **3-way**: `[self]` / `[sol]` /
+`[fable]`, full-blocking consensus. Re-add GLM only on a further user directive once the companion is reliable.
 
 ## D-004 (2026-09-05) — Fresh minimal tooling, usaaio shape
 Gate scripts and tools are written fresh for py4kids rather than ported verbatim;
