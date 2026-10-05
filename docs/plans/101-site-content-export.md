@@ -23,6 +23,7 @@ User, 2026-10-05: "Go with autopilot".
 - The notebooks stay the source of truth; the bundle is generated, never hand-edited (design 012 §1).
 - Tools key on the `site` flag, never on book ids (D1). First release: python-projects, python-concepts, usaco-bronze, acsl; **recsys is not flagged**.
 - Global key: `book/entry/notebook/cell_id`, plus `#n` for parts split out of one cell; the export fails on a missing or duplicate id (D3).
+  Cards derived from a cell use the suffix `#predict`; concept cards are `book/back-matter/glossary/<concept-id>`. Keys are unique across blocks, items and cards together.
 - `answer_visibility` is `after-attempt` only for odd unit exercises, using exactly the Student Book appendix text read through `student_answer_sources`; `none` for everything else (D3, D5).
 - Hidden `answer`, `predict` and `expected-output` items ship only a salted hash of the normalised canonical text: trimmed, internal whitespace collapsed to one space per line, case as `answer_format` states (D5).
 - Check-kind tags are heading-cell tags: `check-fixtures`, `check-answer`, `check-asserts`, `check-expected-output`, `check-predict`, `check-self` (D4).
@@ -79,9 +80,9 @@ User, 2026-10-05: "Go with autopilot".
 ## Review Focus
 
 1. **A lesson cell that writes a file** (python-projects unit 09 writes `savegame.txt`): the probe runs in a temporary copy, so the repo tree is unchanged after export. Test in Phase C.
-2. **A probed cell that hangs or calls `input()`**: each probe run has a timeout and stdin from `/dev/null`; the cell is reported (`probe: "timeout"` / `"error"`), and the export finishes. Test in Phase C.
+2. **A probed cell that hangs or calls `input()`**: each probe run has a timeout and stdin from `/dev/null`; the probe returns `timeout` / `error` and finishes (in `site-check` that status is a `FAIL:` naming the cell). Test in Phase C.
 3. **Canonical answers with CRLF, tabs, NBSP, trailing blank lines or mixed case**: `normalise` treats every Unicode whitespace like a space, drops leading and trailing blank lines, and folds case only when `answer_format.case` is `insensitive`. `hash_vectors.json` pins each case for the JS port. Test in Phase B.
-4. **Re-export under a different `PYTHONHASHSEED`, or after only `git checkout`** (file mtimes, glob order, set order): byte-identical bundle and the same content hash. Test in Phase E.
+4. **Re-export under a different `PYTHONHASHSEED`, or after only `git checkout`, or with an untracked scratch file present** (file mtimes, glob order, set order, `savegame.txt`): byte-identical bundle and the same content hash. Tests in Phases C and E.
 5. **A short hidden answer that also appears in the statement** (for example `5`): the answer-model test flags only hidden canonical text that appears in the bundle **and** in no student-visible source. A real leak (a hidden canonical copied into a field) still fails. Test in Phase F.
 
 ---
@@ -135,7 +136,8 @@ def test_site_book_needs_site_yaml(tmp_path):
 
 **Interfaces — produces:**
 - `item_key(book: str, entry: str, notebook: str, cell_id: str, part: int | None = None) -> str`. The notebook is the file stem (`lesson`, `exercises`, `checkpoint`, `brief`). A non-None `part` appends `#<part>`, so `item_key("acsl","unit-12-graph-theory","lesson","a1b2",2) == "acsl/unit-12-graph-theory/lesson/a1b2#2"`.
-- `duplicate_key_findings(keys: Iterable[str]) -> list[str]`.
+- `duplicate_key_findings(keys: Iterable[str]) -> list[str]`: run over the union of block, item and card keys.
+- `card_key(block_key: str) -> str` returns `block_key + "#predict"`; `concept_card_key(book, concept_id) -> str` returns `f"{book}/back-matter/glossary/{concept_id}"`.
 - `missing_id_findings(nb_path: Path) -> list[str]`.
 - `load_ledger(root, book) -> set[str]`; `write_ledger(root, book, keys)`.
 - `continuity_findings(root, book, keys) -> list[str]`: every ledger key that is neither in `keys` nor listed in `site/ids/<book>-retired.yaml` gives `FAIL: <book>: id vanished since the ledger: <key> (map it in site/ids/<book>-retired.yaml as `<key>: <new key or "retired">`)`.
@@ -176,8 +178,8 @@ def answer_hash(item_key: str, canonical: str, *, case: str) -> str:
     - `concepts[{id,name,category}]`, `glossary[{term,definition_md,concept,units}]`
     - `settings{lesson_heading,acsl_divisions?}`, `pdfs{edition: url}|null`
   - `entries/<entry-id>.json`: `{schema_version, entry{id,kind,title}, lesson{blocks[]}|null, items[], cards[], files[]}`.
-    - A `block`: `{key, type, md?, code?, output?, route?, stdin?, sample_input?, figure?, needs_prelude, prelude[], files[], concepts[], probe}`.
-    - An `item`: `{key, kind, number|null, label, title, division[], stretch, concepts[], statement_md, starter, files[], check{…}, answer_visibility, answer_md?}`.
+    - A `block`: `{key, type, md?, code?, output?, route?, stdin?, sample_input?, figure?, needs_prelude, prelude[], files[], concepts[], probe, tags[]}`; `tags` carries the cell's tags (part B's `slide-break` / `slide-skip`).
+    - An `item`: `{key, kind, number|null, label, title, division[], stretch, concepts[], statement_md, starter, files[], check{…}, answer_visibility, answer_md?}`. The schema enforces, with `if`/`then`, that `answer_md` is present exactly when `answer_visibility` is `after-attempt`.
     - `check` is a `oneOf` keyed on `kind`:
       - `fixtures{cases[{n,in,out,sample}], match:"line"|"token", over_budget[]}`
       - `answer{hash, answer_format{case,hint}}`
@@ -220,19 +222,20 @@ Rules:
   - other prose splits at every `##`/`###` heading into `prose` blocks
   - block `n` of a cell gets key `…/<cell_id>#n` for n ≥ 2; the first part keeps the bare key
   - Lesson asset listings (`asset_blocks`' names) → `program` blocks keyed `…/<cell_id>#asset:<name>`, with the file copied into `files/`.
-- **Probe:** runs only on executed cells that have a stored stream output.
+- **Probe:** runs on **every executed lesson cell** (every code cell without `no-exec`), including output-free setup cells such as `import random` / `random.seed(1)`. An output-free cell passes when it runs without error and prints nothing.
   - Copy `entry_dir` to a temp dir, then run each cell alone under `sys.executable` with cwd at the copy, stdin `/dev/null`, `PYTHONHASHSEED=0` and the timeout.
   - Compare stdout with the stored output, with trailing whitespace stripped per line and trailing blank lines ignored.
-  - On a miss, the prelude is the transitive closure of earlier executed cells that bind a name the cell loads (`ast`: Assign/AugAssign/AnnAssign targets, def, class, import, for-target, with-as). Run prelude + cell in one process, with a sentinel line printed before the cell; compare only the output after the sentinel.
+  - On a miss, the prelude is the transitive closure of earlier executed cells that bind a name the cell loads (`ast`: Assign/AugAssign/AnnAssign targets, def, class, import, for-target, with-as), **plus** earlier cells that call a method on, or assign an attribute or item of, a name in that closure (so `random.seed(1)` follows `import random`; `items.append(…)` follows `items = []`). Run prelude + cell in one process, with a sentinel line printed before the cell; compare only the output after the sentinel.
   - If that still misses, use all earlier executed cells. If it still misses → `mismatch`.
-  - `files`: string constants in the cell (and its prelude) that name an existing file in the entry dir or `assets/`. Solution sources and `assets/verify/**` are excluded.
+  - `files`: string constants in the cell (and its prelude) that name a **git-tracked** file (`git ls-files`) in the entry dir or `assets/`, so a scratch file left by a notebook run (`savegame.txt`) never changes the bundle. Solution sources and `assets/verify/**` are excluded.
+  - A real-lesson `timeout` or `error` is a `FAIL:` in `site-check`, never bundle data (lesson cells already execute in CI), so the content hash cannot flip with machine load. `mismatch` (for example `random` without `seed`) is bundle data: the block is not card-eligible, and it is reported as `WARN:`.
 - **Concepts:** `detect` on the cell's AST with the book's profile, intersected with `registered`. A heading or code cell's `metadata.concepts` list overrides the scan. An empty result goes into the report as `unattributed`.
 - **Predict cards:**
   - Eligible blocks are `code` blocks with `output` and probe status `standalone` or `prelude`.
   - `mode: "typed"` when the normalised output is one line; otherwise `"flip"`.
-  - `{key: block key, kind: "predict", block, mode, prelude}`. Lesson outputs are already visible on the page, so no hash is needed.
+  - `{key: card_key(block key), kind: "predict", block, mode, prelude}`. Lesson outputs are already visible on the page, so no hash is needed.
 - **Concept cards:**
-  - One per glossary entry: `{key: "<book>/glossary/<concept>", kind: "concept", concept, term, definition_md, distractors[3]}`.
+  - One per glossary entry: `{key: concept_card_key(book, concept), kind: "concept", concept, term, definition_md, distractors[3]}`.
   - Distractors are other glossary terms whose concept shares the `category`, sorted by term, taking the first 3 after the entry's own term (deterministic).
   - Fewer than 3 in the category fill from the whole glossary in term order; that case is listed in the report.
 
@@ -252,11 +255,14 @@ Rules:
   Tests:
   - `test_probe_standalone_and_prelude`: c3 is `standalone`; c2 is `prelude` with `["c1"]`.
   - `test_probe_tree_unchanged`: no `scratch.txt` in the fixture dir after the probe (Review Focus 1).
+  - `test_probe_setup_cells`: an output-free `import random` cell and an output-free `random.seed(1)` cell are probed (`standalone`), and a later `print(random.randint(1, 6))` cell gets both as its prelude.
+  - `test_files_tracked_only`: an untracked `scratch.txt` named by a cell is not in `files` (the fixture lives in a `git init` tmp repo).
   - `test_probe_hang_and_input`: c5 `timeout` and c6 `error` within `2 * timeout_s` (timeout 2 s in the test) (Review Focus 2).
   - `test_blocks_types_and_keys`: m2 gives two prose blocks, `…/m2` and `…/m2#2`; c7 is `error-demo`; c8 is `turtle-figure` with 4 segments; m1 is `goals`; m3 is `notice`.
   - `test_unknown_route_fails`: monkeypatch `route_code` to return `('weird', '')` → `ValueError` naming `weird`.
   - `test_predict_cards`: c3 typed; a two-line output gives flip; c5 is not a card.
-  - `test_concept_cards_deterministic`: a 4-entry fixture glossary gives the same distractors on two runs, all from the same category.
+  - `test_concept_cards_deterministic`: a 4-entry fixture glossary gives the same distractors on two runs, all from the same category; a category with fewer than 3 others gives the same whole-glossary fallback on two runs.
+  - `test_keys_unique_across_kinds`: a predict card's key differs from its block's key, and the union of block, item and card keys has no duplicate.
   - `test_cell_concepts`: `for i in range(3): print(i)` with python-projects' profile includes `for-range` and `print`, or whatever ids python-projects' `concepts.yaml` uses for those features (read the registry in the test, not hard-coded guesses).
 - [ ] **Step 2:** run; FAIL. **Step 3:** implement. **Step 4:** run; PASS.
 - [ ] **Step 5:** a smoke run over every real lesson: `uv run python -c "…lesson_blocks for all entries of the 4 books…"` prints, per book, the block counts by type and the probe counts by status. Record them for the post-execution report; design 012 expects about 61 of 718 executed cells to need a prelude.
@@ -288,6 +294,9 @@ Rules:
   - Unit: `## Exercise N` groups, plus unnumbered challenges (kind `challenge`, label `Challenge N`).
   - Checkpoint: `## Question N`.
   - Project: `Problem N` groups when present, else `## Milestone N` sections (`project_sections`).
+    A milestone whose solution has no matching numbered section (`project-01-arcade-night`'s solutions use `Lucky Guess`, `Quick Quiz`, …) gets `solution_group = None` → `self-check`, no FAIL, listed in the report.
+  - **Non-item content is kept, never dropped.** The entry JSON carries `intro[]` (preface cells, notebook H1 removed), each item `before[]` (interlude cells such as a `## Challenge` note), and `outro[]` (cells after the last item that belong to none, e.g. a brief's "Make it yours" and "Requirements checklist"). These are prose and starter blocks with keys, exactly as the publisher renders them (`render_items`, `tools/publish.py:860-871`).
+    `test_every_statement_cell_exported`: every cell of every statement notebook (`exercises`, `checkpoint`, `brief`) in the 4 real books lands in exactly one of `intro`, an item, a `before`, or `outro`.
   - The heading cell's id is the key; a challenge split out of a note cell gets `#2`.
   - `statement_md` is `statement_text` + `markdown_blocks` per markdown cell, as `_item_body` does with `edition='student'`, minus the starter panels; `PLACEHOLDER` paragraphs are dropped.
   - `starter` is the item's code cells (non-`verify`) joined with a blank line.
@@ -300,8 +309,8 @@ Rules:
 - **Proposal order (first match wins):**
   1. `fixtures`: a judge book with solver `assets/<prefix>N.py` and fixture pairs.
   2. `answer`: a `short-answer` heading tag.
-  3. `predict`: the statement asks what code prints (`(?i)\b(what (does|will) .* print|predict( the)? output|trace)\b`) and has a code cell.
-  4. `asserts`: the solution's top-level asserts all call only functions whose names are defined in the statement's starter or named in the statement in backticks (`name(`). Otherwise reason `asserts test the solution's own choices`.
+  3. `predict`: the statement asks what code prints (`(?i)(what (does|will) .* print|predict( the)? output|code to trace|trace (this|the) code)`), has a code cell, **and** that cell's run (as in step 5) gives non-empty stdout. Otherwise fall through.
+  4. `asserts`: the solution has **at least one** top-level assert, and every free `Name` the asserts load (functions **and** variables) is bound in the starter (`def`, `class` or assignment) or named in the statement in backticks. Otherwise fall through with reason `asserts test the solution's own choices` (the common `assert total == 15` with `total` the student's own variable is not portable unless the statement names `total`).
   5. `expected-output`: the solution runs twice (temp copy, stdin `/dev/null`, `PYTHONHASHSEED=0`, timeout 20 s) with identical non-empty stdout, and neither the solution nor the starter calls `input(` or imports `random` without `seed(`.
   6. Else `self-check`.
 
@@ -311,7 +320,7 @@ Rules:
   - `predict` → the stdout of the statement's code cell, run as in proposal step 5.
   - `expected-output` → the solution's stdout, run the same way.
   - `asserts` ships `source` = only the top-level `assert` statements (`ast.unparse`), and `functions` = the names they call. No function body ever ships.
-  - `fixtures` ships every pair as `{n, in, out, sample}`. `sample` is true for the pair whose input equals the statement's first `Sample Input` code block (whitespace-normalised); if none matches, it is pair `1`, and the report lists the item. Pairs over `fixture_budget_kb` go to `over_budget` and the report. `match` is `"line"` when the book has the `acsl` flag, else `"token"`.
+  - `fixtures` ships every pair as `{n, in, out, sample}`. `sample` is true for the pair whose input equals the statement's first `Sample Input` code block (whitespace-normalised); the Sample Input block is the first code fence anywhere in the `Sample Input` section, even after prose (as in ACSL unit 15 Exercise 17). If none matches, **no pair is a sample** (nothing is revealed), and `site-check` prints `WARN:` naming the item. Pairs over `fixture_budget_kb` go to `over_budget` and the report. `match` is `"line"` when the book has the `acsl` flag, else `"token"`.
   - `self-check` → `requirements` from the heading cell's `metadata.requirements` if present; else the statement's bullet and numbered list items (Markdown stripped to text); else one requirement, the statement's first sentence. The report lists `self-check` items with no list.
 - **`answer_format`:** the heading cell's `metadata.answer_format` (`{case, hint}`) if present; else derived:
   - `case: "sensitive"`
@@ -325,13 +334,14 @@ Rules:
 - [ ] **Step 1: failing tests** with a fixture unit: exercises 1–6 plus one challenge, solutions, `assets/ex1.py` with `assets/ex1/{1,2}.in|.out` in a fixture judge book, and a fixture checkpoint and project.
   - `test_items_keys_and_kinds`: keys, labels, the challenge key, the milestone fallback for a project without `Problem` headings.
   - `test_statement_has_no_placeholder_or_starter_panel`.
-  - `test_propose_each_kind`: one fixture item per kind gives that kind, with its reason. Includes a non-portable assert example: `assert my_list == [3, 1, 2]` where `my_list` is the student's own choice → not `asserts`.
+  - `test_propose_each_kind`: one fixture item per kind gives that kind, with its reason. Includes a non-portable assert example (`assert my_list == [3, 1, 2]`, `my_list` the student's own choice → not `asserts`), a function-portable one (`assert double(3) == 6`, `double` in the starter) and a variable-portable one (`assert total == 15`, the statement says "store it in `total`").
+  - `test_predict_not_trace_by_hand`: "trace their counter values by hand" with a turtle code cell is not `predict`.
   - `test_apply_proposals_roundtrip`: the tags are written; a second apply changes nothing; cell ids and outputs are unchanged.
   - `test_tag_findings`: two `check-*` tags; a `check-*` tag on a body cell; `check-bogus`.
   - `test_odd_answer_equals_appendix`: for every odd unit exercise in **all 4 real books**, `student_answer_text` equals the matching slice of `answer_key(entry, 'unit', items, 'student', lesson_heading)` (the appendix text).
   - `test_hidden_items_ship_hash_only`: an even `answer` item's dict has `check.hash` and no canonical text anywhere in `json.dumps(item)`.
   - `test_asserts_ship_no_function_body`.
-  - `test_fixture_sample_and_budget`: the sample matches the statement; a 200 KB fixture pair is `over_budget` with `fixture_budget_kb: 130`.
+  - `test_fixture_sample_and_budget`: the sample matches the statement (also with prose before the fence); an unmatched sample gives no `sample: true` pair; a 200 KB fixture pair is `over_budget` with `fixture_budget_kb: 130`.
   - `test_answer_format_override_and_derivation`.
   - Run `uv run pytest -q tests/test_publication_regression.py` before and after the refactor.
 - [ ] **Step 2:** run; FAIL. **Step 3:** implement. **Step 4:** run; PASS, with the regression tests unchanged.
@@ -360,7 +370,7 @@ After C and D are merged into the plan branch.
 
     Only `FAIL:` lines fail.
 - **CLI:**
-  - `py4kids-tools --book B export [--out DIR] [--release TAG] [--update-ledger]` (default out `site/content/B`)
+  - `py4kids-tools export --book B [--out DIR] [--release TAG] [--update-ledger]` (default out `site/content/B`); argparse also accepts `--book B export`, and `test_site_cli.py` tests both orders
   - `py4kids-tools --book B classify [--apply] [--unit ID]` (prints `key<TAB>proposed<TAB>confirmed<TAB>reason`)
   - `py4kids-tools --book B site-check`
   - All three refuse a book without the `site` flag: exit 2, `usage: <book> is not a site book (books.yaml site: true)`.
@@ -385,7 +395,7 @@ Rules:
   - `test_pdf_links`
   - `test_cli_refuses_non_site_book`: `recsys`
   - `test_classification_confirmed_requires_tags`
-  - `test_site_check_real_books`: `site_check_findings` for each of the 4 books has no `FAIL:` line (marked `slow`, like the existing slow tests)
+  - `test_site_check_real_books`: `site_check_findings` for each of the 4 books has no `FAIL:` line (marked `slow`). To avoid running the probe twice per CI run, `site_check_findings` writes its findings to `build/site-check/<book>/findings.json` keyed by the tree hash of the inputs; the test reuses a fresh one. The measured `site-check` time per book goes in the post-execution report.
 - [ ] **Step 2:** run; FAIL. **Step 3:** implement. **Step 4:** run; PASS.
 - [ ] **Step 5:** `uv run py4kids-tools --book <b> export --update-ledger` for the 4 books. Check `git status`: only `site/ids/*.json` are new tracked files, and `site/content/` is ignored.
 - [ ] **Step 6:** commit `plan 101 E: bundle writer, export/classify/site-check CLI, ci-local site step, first id ledgers`.
@@ -395,8 +405,9 @@ Rules:
 **Files:** `tools/export/check.py` (answer-model findings); `tests/site_consumer.py`; `tests/test_site_consumer.py`, `tests/test_site_answer_model.py`.
 
 - **The answer-model test (D5).** `answer_model_findings(root, book, bundle_dir) -> list[str]`:
-  1. **Leak, code:** for every `none` item, each solution code cell (via `answers.py`) is tokenised. The publish audit's `solution_leak(block, sources)` (`tools/publish_audit.py:321`) is run against every code string in the bundle (starters, blocks, `asserts.source`). A hit → `FAIL: <book>: <key>: solution code leaked into <bundle key>`.
-  2. **Leak, text:** every hidden canonical text whose normalised length is ≥ 4, or that has ≥ 2 tokens, must not occur in any bundle string unless it also occurs in a student-visible source (that item's statement or starter, the entry's lesson, or the glossary) (Review Focus 5).
+  1. **Leak, code:** the hidden corpus is **every code cell of every `solutions.ipynb`** in the book plus every `is_solution_source` file and `assets/verify/**` file, independent of item mapping, minus the odd unit answers that `student_answer_sources` releases. Each is tokenised, and the publish audit's `solution_leak(block, sources)` (`tools/publish_audit.py:321`) runs against **every string value in every bundle JSON** (code fences inside Markdown are extracted and checked too) **and every copied file's text** under `files/`. A hit → `FAIL: <book>: <key>: solution code leaked into <bundle path>`.
+  2. **Leak, text:** every hidden canonical text whose normalised length is ≥ 4, or that has ≥ 2 tokens, must not occur in any bundle string or copied file unless it also occurs in a student-visible source of the book (any `lesson`, `exercises`, `checkpoint` or `brief` notebook text, the glossary, or the quick reference) (Review Focus 5).
+  5. **Visibility:** no `none` item has `answer_md` (also enforced by the schema).
   3. **Odd answers:** every `after-attempt` item's `answer_md` equals `student_answer_text`, and the set of `after-attempt` keys equals the odd unit exercises exactly.
   4. **Hashes:** every `answer`, `predict` and `expected-output` item's `check.hash` equals `answer_hash(key, canonical, case=answer_format.case)`.
 - **The consumer test.** `tests/site_consumer.py` is ≈150 lines of plain Python, a stand-in for part B. It renders from a bundle directory **only through fields the schema marks required or declares**:
@@ -404,6 +415,7 @@ Rules:
   - an item page per check kind present
   - a checkpoint page
   - a card deck
+  - one odd turtle exercise's `answer_md`, which holds publisher Markdown (`::: {.program}` panels, a `{=latex}` TikZ block, `{.python .answer-code}` fences); the consumer strips the `{=latex}` block and renders the rest, so part B inherits a worked example
   - the glossary
 
   `test_site_consumer.py`:
@@ -431,10 +443,30 @@ Rules:
 - **Confirming check-kind tags, authoring `answer_format` hints, per-cell `concepts` and `requirements` metadata:** the per-book content plans (rollout step 2). This plan ships `classify --apply` for them, but tags no real notebook.
 - **Tooling-only plan:** it ships no unit, project or checkpoint content, so the content-review gate reviews tooling, generated bundles and reports, not lessons.
 - recsys (D1).
+- `answer_format` derivation from each unit's canonical-form rule (D3): part A derives from the canonical text only and reports every letter-bearing derived format as content work.
 
 ## Plan Review
 
-_(gate verdicts recorded here)_
+### Round 1 (bb68d05)
+
+- `[self]` APPROVE. Verified on real content: all 287 ACSL `short-answer` solutions carry exactly one `**Answer:**` line; python-projects projects group as 6 and 7 milestones.
+- `[sol]` **REJECT** (ran on gpt-6-sol; AGENTS.md now names gpt-5.6-sol, so round 2 runs on gpt-5.6-sol):
+  - `[FIXED]` Card keys reused block keys: cards get `#predict` / `back-matter/glossary/<id>` keys, unique across blocks, items and cards.
+  - `[FIXED]` Project and entry content outside items was undefined: `intro[]`, `before[]`, `outro[]`, with a every-cell-exported test.
+  - `[FIXED]` The probe skipped output-free cells: every executed cell is probed; the prelude closure follows mutating calls (`random.seed`).
+  - `[FIXED]` The leak scan covered only code strings: every JSON string and every copied file; the schema ties `answer_md` to `after-attempt`.
+  - `[FIXED]` An unmatched sample fell back to pair 1: no sample is revealed, with a `WARN:`; the sample fence may follow prose.
+  - `[FIXED]` (nit) The CLI accepts `export --book B` as the design writes it; both orders tested.
+- `[fable]` **APPROVE WITH NITS**:
+  - `[FIXED]` The assert rule was vacuous for name-only asserts: every free name must be bound in the starter or named in the statement.
+  - `[FIXED]` `trace` over-fired: narrowed regex plus non-empty stdout.
+  - `[FIXED]` Milestones without a numbered solution section → `self-check`, reported; the leak corpus is every solution cell, independent of mapping.
+  - `[FIXED]` `files` read the working tree: tracked files only, with a test.
+  - `[FIXED]` The leak-text whitelist widened to every student-source notebook of the book.
+  - `[FIXED]` `answer_format` canonical-form derivation moved to Out of scope.
+  - `[FIXED]` Runtime: a real-lesson timeout is a FAIL, not data; the slow test reuses fresh findings; timing goes in the report.
+  - `[FIXED]` Blocks carry `tags[]`; the consumer renders one odd turtle answer; the distractor fallback is tested for determinism.
+- `[glm]` skipped (user decision 2026-09-28).
 
 ## Content Review
 
