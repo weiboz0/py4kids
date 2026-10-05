@@ -1,6 +1,6 @@
 # Design 012 — A learning website for every book
 
-Status: proposed, revision 2 (2026-10-04), after review round 1 ([sol] REJECT, [fable] REJECT).
+Status: proposed, revision 3 (2026-10-04). Round 1: [sol] REJECT, [fable] REJECT. Round 2: [sol] REJECT (3 findings), [fable] APPROVE WITH NITS. Both rounds' findings are folded.
 Extends design 000 ("notebooks are the source of truth"), design 007 (publication), and design 010 (every book publishes).
 
 ## 1. Purpose and agreed understanding
@@ -89,21 +89,27 @@ The user also asked to "add any components missing from the list but essential f
     - The export fails on a missing or duplicate id.
     - A **continuity check** compares with the previous release's bundle and lists vanished ids, so content plans can map them. Progress for a vanished id is kept but marked stale.
 - **D4 — Exercise check kinds and classification** (user decision: tag, with a self-check fallback).
-  - **The classification tool** proposes a kind for every exercise; a content plan per book confirms the tags as cell metadata (`check: …`).
+  - **The classification tool** proposes a kind for every checkable item: unit exercises, **checkpoint questions and project problems or milestones**. A content plan per book confirms the tags as **heading-cell tags** (`check-fixtures`, `check-answer`, `check-asserts`, `check-expected-output`, `check-predict`, `check-self`), the same form as `short-answer` and `stretch`, so the tag readers and hygiene checks in `tools/notebooks.py` apply unchanged.
   - **The kinds:**
     - `fixtures`: contest programs (stdin to stdout, judged on the test cases).
     - `answer`: short answers (ACSL `short-answer`).
     - `asserts`: Python items whose statement fixes the inputs, so the solution's top-level asserts are portable. Asserts that test the solution's own choices are not portable, and the tool flags them.
     - `expected-output`: an item with fixed inputs, checked against its worked output.
     - `predict`: trace items, where the student enters the predicted output.
-    - `self-check`: open-ended items (random results, free design, interactive input). The student runs their code, compares with the worked example, and marks the item done. The site states plainly that it cannot check these.
-  - **Turtle items** use the existing `# turtle-check:` directives, checked by a browser port of `tools/fake_turtle.py`'s tracked API. "Runs without error" is not a check.
+    - `self-check`: open-ended items (random results, free design, interactive input). The student runs their code and marks the item done against a short **requirements checklist taken from the statement**, never from the solution. Odd unit items may also show the worked answer after the attempt (D5); `none` items show no answer. The site states plainly that it cannot check these.
+  - **Fixed-answer items** (for example "fix the bug" items, whose fixed program's output is determined) are classified `expected-output` with a **hashed** expected output (D5), not `self-check`, so no solution ships.
+  - **Turtle items** use a browser port of `tools/fake_turtle.py`: its tracked API, plus `bgcolor`. They are checked by the same three-part rule:
+    - at least one pen-down move
+    - fewer than 10,000 moves
+    - a closed path by default, with `# turtle-check: open-path` as the opt-out
+
+    The rule applies to exercise cells as well as assets. "Runs without error" is not a check.
   - Turning `self-check` items into checked ones is later content work, book by book.
 - **D5 — The answer model** (user decision: pedagogical gating).
   - **Honest premise:** everything the browser checks against is public, as the repo's `solutions.ipynb` files and the Teacher's Edition PDFs already are. Gating is a study aid, not a security boundary; the About page says so.
   - **Odd unit exercises:** the worked answer is shown after a genuine attempt (one Check run, or one submitted answer).
   - **Even exercises, checkpoints and projects:**
-    - **Short answers:** only a **salted hash** of the normalised canonical answer ships, never the plain text. The input is normalised (trimmed; whitespace collapsed for line-exact formats) and compared by hash.
+    - **Short answers, `predict` items and `expected-output` items:** only a **salted hash** of the normalised canonical answer or output ships, never the plain text. Normalisation: trimmed, internal whitespace collapsed to one space per line, case as `answer_format` states. The student's input is compared by hash.
     - **Programs:** the fixtures ship, because expected output is not the program. Check shows pass or fail for each test case, and reveals input and expected output for the **sample** only.
     - **Asserts:** Check runs the asserts and shows each result as pass or fail. The assert source is not printed.
   - **The export test** checks three things:
@@ -126,6 +132,7 @@ The user also asked to "add any components missing from the list but essential f
   - Books whose lessons split poorly (python-projects, usaco-bronze) get a `slide-break` authoring pass in their content plans.
 - **D7 — The isolated runner (part C).**
   - **Origin:** Python runs in Pyodide on a **separate runner origin** (for example `run.<site>`), inside a sandboxed iframe that holds a Web Worker. It has no access to the site's storage or, later, its session.
+  - **Isolation headers:** **both** origins send COOP `same-origin` and COEP, the iframe carries `allow="cross-origin-isolated"`, and every asset is self-hosted (D9), so `SharedArrayBuffer` interrupts work. The worker-restart path is the fallback, not the default.
   - **Message boundary:** the site sends `{code, stdin, files, check spec, time budget}` and receives `{stdout, stderr, results, timing}`. Nothing else crosses.
   - **Time limits:** a per-test-case budget (set by measurement in part C, starting at 10× the CPython time and capped). The runner interrupts with `SharedArrayBuffer` interrupts where the COOP/COEP headers allow; otherwise it terminates and restarts the worker, and the reload cost is shown honestly.
   - **Fixtures:** contest fixtures run in the browser. Every pair is under 130 KB (usaco-bronze totals 1.9 MB, ACSL 40 KB). The export reports any fixture over a measured budget, and the site lists any skipped case. Skips are never silent.
@@ -136,7 +143,7 @@ The user also asked to "add any components missing from the list but essential f
     - **Predict-the-output:** only cells that pass the standalone probe, or that show their prelude on the card. Single-token or one-line outputs are typed exactly. Multi-line outputs are flip-and-self-grade.
     - **Concept cards:** from the glossary. Multiple-choice distractors come from concepts in the same `category`.
     - **Authored `quiz` cells:** added in later content plans.
-  - **Concept attribution is per item, not per unit.** It uses `tools/concept_scan.py` where it applies, an explicit concept tag on authored cards, and the glossary term for concept cards.
+  - **Concept attribution is per item, not per unit.** It uses an explicit concept tag on authored cards and the glossary term for concept cards. For code cells, part A extends `tools/concept_scan.py`'s cell-level scan, which today runs only for `patterns` books, to every `site` book. Where the scan cannot attribute a cell, per-cell `concepts` metadata is listed as content work.
   - **The mastery map** shows a concept only when at least N attributed items exist (N set in part B), so it never pretends.
   - **Scheduling:** Leitner spaced repetition per card.
 - **D9 — Children's privacy in the free site (B–D).** The site is directed at children, so it collects **no personal data by construction**:
@@ -146,7 +153,8 @@ The user also asked to "add any components missing from the list but essential f
   - a privacy notice and terms **ship with part B**
   - **report a problem** is labelled for adults and prefills only the item id and content hash, never an attempt
 - **D10 — App experience (part D).**
-  - **Installable PWA:** "download this book" caches its pages, bundle and Pyodide runtime (+10–20 MB), and requests `navigator.storage.persist()`.
+  - **Installable PWA:** "download this book" caches the book's pages and bundle with the **site** origin's service worker. It also asks the runner iframe, through its message channel, to precache the runner page, worker, Pyodide runtime (+10–20 MB) and the book's fixtures and assets with the **runner** origin's own service worker. A service worker controls only its own origin, so each origin caches its own files. Both request `navigator.storage.persist()`.
+  - **Offline status:** the site shows "available offline" only after both caches confirm.
   - **Storage limits:** the site states that some browsers (Safari) can clear storage after long disuse, with an "export my progress" file as the backup.
   - **Native wrappers** are deferred.
 - **D11 — Interfaces fixed now** (E and F build on these).
@@ -185,7 +193,7 @@ The user also asked to "add any components missing from the list but essential f
   - the schema check, plus the minimal consumer test
   - the id uniqueness and continuity checks
   - the standalone-cell probe report
-  - the classification coverage report (every exercise has a confirmed check kind)
+  - the classification coverage report (every unit exercise, checkpoint question and project item has a confirmed check kind)
   - the D5 answer-model test
 - **Runner acceptance** (in a headless browser, in CI):
   - stdin programs, including `input()` at end of input
@@ -198,7 +206,7 @@ The user also asked to "add any components missing from the list but essential f
   - Playwright end-to-end tests per book: read a lesson and run code, step through slides, answer a card, check one exercise of each kind, resume
   - axe on every template
   - a Lighthouse budget
-  - an offline test
+  - an offline test that **runs code and checks an exercise** with the network off, not only reads a lesson
 - **Toolchain:** the site adds a Node toolchain with pinned versions and a lockfile. `ci-local.sh` gains a `site` step, scoped like design 010 D7. Without Node it prints `SKIP (Node missing)` locally, and it is required before a release.
 
 ## 4. Rollout
@@ -206,7 +214,7 @@ The user also asked to "add any components missing from the list but essential f
 | order | plan scope |
 |---|---|
 | 1 | **Part A:** export, classification tool, standalone-cell probe, id/hash scheme, schema + consumer test, `site:` flag. |
-| 2 | **Content plans**, one per book: confirm the check-kind tags; `answer_format` hints; slide-break pass (python-projects, usaco-bronze). |
+| 2 | **Content plans**, one per book, which can run alongside part B (only part C consumes the tags): confirm the check-kind tags; `answer_format` hints; per-cell `concepts` where the scan cannot attribute; slide-break pass (python-projects, usaco-bronze). |
 | 3 | **Part B:** static site core, privacy notice and terms. |
 | 4 | **Part C:** isolated runner, checks, answer gating, acceptance tests. |
 | 5 | **Part D:** PWA and offline; first public deploy of the free site. |
