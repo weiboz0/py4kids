@@ -159,7 +159,22 @@ Phase H is this plan's named verification phase. Units/checkpoint ship with it.
 
 ## Plan Review
 
-<!-- round 1 appended -->
+### Round 1 (on v1)
+
+**[self] — APPROVE.** Registry closes: the unit's `requires` are all introduced by U1–U5; the unit `practices`
+(retrieve-then-rank/offline-evaluation/top-k-ranking-metrics/popularity-bias) keep `practices ∩ introduces = ∅`; and
+the **checkpoint's `practices` provides the practice home for U6's three new concepts** (ranking-metrics/
+beyond-accuracy/score-blending) — which is precisely why bundling U6 + Checkpoint A in one plan is the right call
+(a split would leave the new concepts without a practice home inside recsys-008's own coverage-check). Checkpoint
+introduces nothing (`practices ∩ introduces = ∅` trivially); no `project` entry → capstone rule inert; buildout holds
+(18<30, checkpoints excluded from the lesson budget). Phase B is **additive** (ndcg/precision → evaluate.py,
+diversity/novelty → diversity.py; blend.py/rank.py already exist) with no signature collisions. The Blend-v1 accuracy
+claim is **conditional and measured-first** (the hard-won discipline from U3/U5/U7) with an honest coverage/robustness
+fallback. Checkpoint A is strict, unseals `test` once (no tuning), assesses only U1–U6. Named Phase H present;
+project-first hook; ≥6/≥2-stretch/≥3-asserts; teacher-notes. `cold-start` framed as a thread, registered in U9 where
+taught. No [self] blockers.
+
+_([sol] + [fable] round-1 verdicts appended on hand-back.)_
 
 ## Content Review
 
