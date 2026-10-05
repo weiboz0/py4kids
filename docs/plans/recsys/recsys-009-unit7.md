@@ -154,7 +154,22 @@ Phase G is this plan's named verification phase.
 
 ## Plan Review
 
-<!-- round 1 appended -->
+### Round 1 (on v1)
+
+**[self] — APPROVE.** Registry closes: `requires` ⊆ U1 (retrieve-then-rank/catalog-search/offline-evaluation/
+top-k-ranking-metrics) + U3 (bag-of-words/tf-idf) + U5 (latent-factors), all introduced; `practices ∩ introduces = ∅`;
+buildout 21.5<30 (Checkpoint A 0.5 counted). GloVe artifact is publish-safe (PDDL/Apache, vocab-restricted float16
+.npy, checksum, committed-not-gitignored; gensim derivation OFF the CI exec path — design §6/§7 pre-authorize it).
+The semantic-path accuracy claim is **conditional + measure-first** (the U3/U5/U6 discipline), framed as a content
+path complementary to lexical, not beating collaborative CF/MF. Phase B is protocol-substitutable
+(keyword+GloVe at construction, like `LexicalRetrievalPath`). Named Phase G; project-first; ≥6/≥2-stretch/≥3-asserts;
+teacher-notes; milestone. numpy-only (torch is U8; ANN is U10 — no scope creep). Open items for the gate/Phase B: (a)
+the empirical strength of GloVe-averaged embeddings (the premise — [fable] is probing it); (b) `tf-idf` in
+requires/practices is legitimate only if the book embedding uses IDF weighting (else swap to `bag-of-words`); (c) the
+GloVe checksum/artifact-integrity ci-local check is small new tooling (confirm it piggybacks cleanly). No [self]
+blockers.
+
+_([sol] + [fable] round-1 verdicts appended on hand-back.)_
 
 ## Content Review
 
