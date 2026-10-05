@@ -34,6 +34,7 @@ so every addition can answer the only question that matters: *did it help?*
 | 5 | `unit-05-matrix-factorization` | unit | 3 | Compress all that co-occurrence into a handful of hidden taste dials — matrix factorization, the bridge to embeddings. |
 | 6 | `unit-06-evaluation-and-blending` | unit | 3 | Which recommender is best, and best at *what*? Ranking metrics, beyond-accuracy, and the first blended system. |
 | — | `checkpoint-01-part-1` | checkpoint | 0.5 | Checkpoint A — assemble the Part-1 recommender and score it once on the sealed test holdout. |
+| 7 | `unit-07-semantic-embeddings` | unit | 3 | Match books by *meaning*, not spelling — pretrained GloVe embeddings and brute-force cosine retrieval (Part 2 opens). |
 
 ## How the book is organised
 

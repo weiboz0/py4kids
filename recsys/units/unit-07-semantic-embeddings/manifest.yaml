@@ -1,0 +1,9 @@
+id: unit-07-semantic-embeddings
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [word-embeddings, document-embeddings, embedding-retrieval]
+  requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, bag-of-words, latent-factors, ranking-metrics, score-blending]
+  practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, bag-of-words]
