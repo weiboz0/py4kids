@@ -65,6 +65,7 @@ from bookrec.scoreboard import (
     run_validation_scoreboard,
 )
 from bookrec.search import search_catalog
+from bookrec.two_tower import TwoTowerRetrievalPath
 
 __all__ = [
     "BM25Index",
@@ -82,6 +83,7 @@ __all__ = [
     "RetrievalPath",
     "ScoreboardResult",
     "SemanticEmbeddingRetrievalPath",
+    "TwoTowerRetrievalPath",
     "blend",
     "book_embedding",
     "calibrate_scores",
