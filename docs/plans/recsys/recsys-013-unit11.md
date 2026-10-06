@@ -62,8 +62,10 @@ So the reranker **edges the two-tower by ~+0.03–0.05 (directional, ~1–2 SE) 
 **coverage COLLAPSES to 0.12–0.19** (vs U6's 0.333). An honest win on accuracy, a real loss on coverage.
 
 **3. The lift is from CONTENT features, not score combination (the counterintuitive payoff).** 18 features = 6
-calibrated per-path scores + 6 presence flags + n_paths + content (genre_frac, genre_cos vs the reader's TRAIN-history
-genre vector, author_frac, log_pop). Ablation: **content-only is the BEST reranker (0.384–0.390)**; dropping the
+calibrated per-path scores + 6 presence flags + n_paths + content (genre_frac, genre_cos vs the reader's history
+genre vector, author_frac, log_pop) — where at TRAINING time every feature/statistic uses the **75% profile only**
+(the held-out 25% labels never enter a feature), and at serving the full train. Ablation: **content-only is the BEST
+reranker (0.384–0.390)**; dropping the
 path-score features does NOT hurt; dropping content drops it to ~score-order (0.31–0.36). And **linear ≈ MLP**
 throughout — the non-linear combiner adds nothing here. Why: the generator's taste is feature-derived + author-following
 (`gen_interactions.py §6`), a signal the per-list min-max-calibrated path *scores* don't carry across readers. So the
@@ -131,14 +133,20 @@ key — see API note), `two_tower.py` (lazy-torch/determinism/torch-free-persist
 - **Features (from the PRE-BLEND per-path lists — NOT blend's Candidate):** per reader, take each path's top-`pool=50`
   `retrieve` list, `calibrate` each list to [0,1], union by item id. For each pooled candidate build an **18-dim**
   vector: 6 calibrated per-path scores (absent path → 0.0) + 6 presence flags + n_paths + content (genre_frac,
-  genre_cos of candidate genres vs the reader's TRAIN-history genre vector, author_frac, log_pop from TRAIN counts).
-  Persist the feature ordering/spec in the artifact.
+  genre_cos of candidate genres vs the reader's **history** genre vector, author_frac, log_pop from interaction
+  counts). Persist the feature ordering/spec in the artifact. **CRITICAL (leakage) — every feature uses the reader's
+  PROFILE history, which differs by phase:** at TRAINING time the "history" / counts are the **75% profile only** (see
+  below) so the held-out 25% label items never enter any feature or statistic; at SERVING/val the history is the full
+  train. Same code, phase-dependent profile. (`log_pop` / popularity counts too — compute from the 75% at train, full
+  train at serve.)
 - **Training recipe (THE fix — time-ordered holdout INSIDE train; the naive recipe LEAKS + tanks, see §Why):** per
   reader, split train positives time-ordered — latest ~25% (≥1) = reranker **labels**; earlier 75% = the retrieval
-  **`seen` profile**. Build TRAINING features from paths fit on the **75% profile only** (one extra fit per path;
-  MF+two-tower ≈ 24 s). Train a small MLP (18→32 ReLU→1, BCEWithLogits, Adam, ~30 epochs, ~10 sampled pool negatives
-  per positive). At serving/val, score the pool from the **full-fit** paths with the learned numpy MLP. TRAIN-ONLY
-  throughout; a regression must prove val/test rows cannot change the fitted artifact.
+  **`seen` profile**. Build ALL TRAINING-time inputs from the **75% profile only** — both the retrieval paths used for
+  the per-path-score features (one extra fit per path; MF+two-tower ≈ 24 s) AND the content/popularity statistics
+  (genre-history vector, author history, log_pop counts). The held-out 25% supplies ONLY the positive labels, never a
+  feature. Train a small MLP (18→32 ReLU→1, BCEWithLogits, Adam, ~30 epochs, ~10 sampled pool negatives per positive).
+  At serving/val, score the pool from the **full-fit** paths + full-train content/popularity with the learned numpy
+  MLP. TRAIN-ONLY throughout; a regression must prove val/test rows cannot change the fitted artifact.
 - `NeuralRerankerPath(BaseRetrievalPath)` (name `"reranker"`, version `"1"`). **API (reconcile `rank.py`):** the
   learned per-candidate **ordering key** is authoritative (honours `rank.py`'s "a learned reranker replaces the
   ordering key"); expose it as a `rerank(...)` scoring fn and wrap it in the thin `NeuralRerankerPath` for the
@@ -274,6 +282,19 @@ feature source; time-ordered-holdout training that avoids the memorization leak)
 comparator). The thesis is now honest and richer: a learned reranker edges accuracy via content features (not score
 combination; linear ≈ MLP), at a real coverage cost, and the naive recipe's leak is the headline lesson. No remaining
 [self] blocker; dispatching [sol] round-2 re-review.
+
+### Round 2
+**[sol] — REJECT (round 2)** — all 4 round-1 findings confirmed resolved; 1 NEW Must:
+1. `[OPEN]→[FIXED v3]` **Must** — training-time CONTENT features can still leak the holdout labels: the 75% restriction
+   covered only the fitted retrieval paths, but the content stats (genre-history vector, author history, `log_pop`
+   counts) were still computed from the FULL train history — which includes the held-out 25% label items. → **v3:**
+   every TRAINING-time feature/statistic (content + popularity + path scores) uses the **75% profile only**; full-train
+   history is serving-only (same code, phase-dependent profile). Folded into §Why/#3 + Phase B features & training
+   bullets. ([sol] confirmed the split is feasible — 540 warm readers, ≥2 train positives each.)
+
+**[self] — APPROVE (round 3).** v3 closes the content-feature leak: at training time ALL inputs (paths + content +
+popularity) are the 75% profile; the 25% supplies only labels; serving uses full train. Leakage-safe and symmetric.
+No remaining [self] blocker; dispatching [sol] round-3.
 
 ## Content Review
 
