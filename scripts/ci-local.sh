@@ -38,8 +38,9 @@ PY
 echo "registry: $(cut -d' ' -f1 <<< "$books" | paste -sd' ')"
 uv run ruff check tools/ tests/ scripts/ recsys/projects/bookrec recsys/data
 
-# Committed GloVe subset (recsys design 011 §6): a REAL, executed integrity check (never a skip) —
+# Committed GloVe subset (design 011 §6): a REAL, executed integrity check (never a skip) --
 # the tracked .npy must match its sidecar sha256 and stay under the 1 MB publish-safe cap.
+# (tools.glove_integrity discovers the artifact itself; no book id is pinned here.)
 uv run python -m tools.glove_integrity
 
 # `dependency_group` is a routing VALUE (design 011 §7), read as a SEPARATE line from the boolean

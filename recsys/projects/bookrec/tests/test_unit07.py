@@ -124,8 +124,8 @@ def test_retrieve_cosine_on_toy_fixture() -> None:
     g = _toy_glove()
     keywords = {0: "east", 1: "north", 2: "east north", 3: "void"}
     path = SemanticEmbeddingRetrievalPath(keywords, g).fit(None, catalog=[0, 1, 2, 3])
-    # Reader has seen book 0 (pure east). Book 2 (east+north, 45deg) outranks book 1 (north, 90deg);
-    # book 3 (zero embedding) scores 0. Book 0 is excluded (seen).
+    # Reader has seen item 0 (pure east). Item 2 (east+north, 45deg) outranks item 1 (north, 90deg);
+    # item 3 (zero embedding) scores 0. Item 0 is excluded (seen).
     recs = path.retrieve(0, {"seen": {0}}, K)
     assert [c.item_id for c in recs] == [2, 1, 3]
     assert recs[0].score == pytest.approx(1 / np.sqrt(2), abs=1e-6)  # cos45
