@@ -159,7 +159,22 @@ Phase G is this plan's named verification phase.
 
 ## Plan Review
 
-<!-- round 1 appended -->
+### Round 1 (on v1)
+
+**[self] — APPROVE.** Registry closes: `requires` ⊆ U1 (retrieve-then-rank/offline-evaluation/top-k-ranking-metrics)
++ U4 (implicit-feedback) + U5 (matrix-factorization/latent-factors/gradient-descent) + U7 (embedding-retrieval), all
+introduced; `practices ∩ introduces = ∅`; buildout 24.5<30 (Checkpoint A 0.5 counted); concepts unique (confirm in
+Phase A). Determinism is specified as a hard contract (seed + `use_deterministic_algorithms(True)` + single-thread,
+two bit-identical fits asserted) per design §7; the ≥2×/CI budget is addressed by tiny dims/epochs + a required
+Phase-B timing report (inline training preferred; cached-model fallback only if measured too slow). torch isolation
+required (import only on the routed group; no leak into the group-free suite). The accuracy claim is conditional +
+measure-first (two-tower ≈ MF 0.276, not a new high) with a numeric seed-bound gate. Protocol-substitutable Phase B.
+Named Phase G; project-first; from-scratch single-contrastive-step then reveal; ≥6/≥2-stretch/≥3-asserts;
+teacher-notes; milestone. No scope creep (features/cold-start=U9, ANN=U10, reranker=U11). Open for Phase B/gate: the
+empirical match-to-MF + per-fit timing ([fable] is probing); the artifact should store numpy weights so `load` needs
+no torch (flagged in Phase B). No [self] blockers.
+
+_([sol] + [fable] round-1 verdicts appended on hand-back.)_
 
 ## Content Review
 
