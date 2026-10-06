@@ -570,7 +570,7 @@ Gate roster per `docs/content-review-gate.md` (3-way since 2026-10-05: [glm] rem
    → Response: rule 5 now also requires every non-empty normalised output line of the solution to occur, as a whole token sequence, in the statement or the starter (its code cells and shipped `.py` files) (`answers.output_fixed_by_statement`); otherwise `self-check` with reason `output not fixed by the statement`. Regressions: the demo free-design list and milestone, python-projects unit-01 Exercise 1 and unit-02 Exercise 1 (self-check), unit-01 Exercise 2 (fix-the-bug, output in the starter: expected-output), python-concepts unit-01 `2f6baca29bd1` (worked sample: expected-output). Proposed kinds now: python-projects asserts 91, expected-output 18, predict 5, self-check 122; python-concepts asserts 193, expected-output 164, predict 7, self-check 27; usaco-bronze fixtures 161; acsl answer 287, fixtures 72.
 2. `[FIXED]` **Self-check requirements are a single first sentence** (python-projects unit 02 Exercise 4: "This code is broken on purpose."), which is no checklist. Fix: with no list in the statement, the requirements are the statement's prose sentences (Markdown stripped, no `**No real version:**` / `**Real version:**` notes, at most 6). Priority: Should Fix.
    → Response: with no list, the requirements are the `**Specification:**` paragraph's sentences; else every prose sentence (Markdown stripped; headings, panels, tables, quotes, bold labels and the `**No real version:**` / `**Real version:**` notes left out), at most 6 (`answers.statement_sentences`); the label only as a last resort. Regressions: synthetic Specification and prose statements, python-projects unit 02 Exercise 4, python-concepts `u01e15a`'s Specification.
-3. `[OPEN]` **Curriculum observation (from Phase F):** python-concepts checkpoint-03 Q3 `sum_to_n` and checkpoint-04 Q5 `most_common` print their answers verbatim in lessons (`u07l024`, `u11l028`). The answer model treats them as student-visible. This is not a site defect; it goes to the user as a curriculum question. Priority: Nice to Have.
+3. `[WONTFIX]` **Curriculum observation (from Phase F):** python-concepts checkpoint-03 Q3 `sum_to_n` and checkpoint-04 Q5 `most_common` print their answers verbatim in lessons (`u07l024`, `u11l028`). The answer model treats them as student-visible. This is not a site defect; it goes to the user as a curriculum question. Priority: Nice to Have. → Response: out of scope for this tooling plan; changing checkpoint content would expand it. The site handles it correctly (counted as student-visible), and the curriculum question is listed under Follow-ups for the user to decide (errata or a content plan).
 
 ### Review 1 — [fable] (2026-10-05)
 - **Verdict**: APPROVE WITH NITS. Evidence: independent 2- and 3-line window search of every hidden solution source found none in any bundle field except released odd `answer_md` (shared idioms); 40/40 sampled odd answers are verbatim in the appendix; usaco re-export byte-identical; three lessons cover every cell in order; the turtle fix is correct.
@@ -631,6 +631,47 @@ Gate roster per `docs/content-review-gate.md` (3-way since 2026-10-05: [glm] rem
 - **Verdict**: REJECT.
 1. `[FIXED]` Item-title ties were not exact: `u02e043`'s title set to its hidden canonical `18` passed, because `18` occurs in its statement. Must Fix. → Response: `_tie_titles` now requires each item title to equal the exporter's own title (`entry_content(...).items[].title`, `AnswerModel._exported_titles`); the word-anywhere helper is removed. Regression `test_real_item_title_must_equal_exported_heading` (real python-concepts `u02e043` → `18` FAILs) was seen failing first.
 
+### Review 4 — CONSENSUS (2026-10-05)
+- `[self]` APPROVE.
+- `[sol]` **APPROVE** (gpt-5.6-sol): no findings; the exact title tie rejects the real `u02e043` → `18` case and the clean bundle passes; the C–E deviations are accepted, and Phase F now counts visible hidden streams.
+- `[fable]` **APPROVE**: the title-tie fix gives 0 findings on all four re-exported books.
+
 ## Post-Execution Report
 
-_(written before the PR)_
+**Shipped: design 012 part A.** `py4kids-tools export --book <id>` writes a schema-checked JSON bundle for each of the four `site: true` books, and `site-check` runs in `ci-local.sh` step 4.
+
+| book | bundle | keys | items | proposed check kinds |
+|---|---|---|---|---|
+| python-projects | 0.9 MB | 1,126 | 236 | asserts 91, expected-output 17, predict 6, self-check 122 |
+| python-concepts | 1.5 MB | 1,842 | 391 | asserts 193, expected-output 164, predict 7, self-check 27 |
+| usaco-bronze | 3.5 MB | 803 | 161 | fixtures 161 |
+| acsl | 1.7 MB | 1,370 | 359 | answer 287, fixtures 72 |
+
+- **Lessons:**
+  - 718 executed lesson cells are probed. 648 are standalone and 70 need earlier cells; none mismatches, errors or times out.
+  - The probe takes about 17 s for all four books, and each book's `site-check` takes 20–90 s cold or about 2 s cached.
+  - Cards: 712 predict cards (433 typed, 279 flip), and 174 concept cards whose distractors always come from the card's own category.
+- **Answers:**
+  - Odd unit exercises carry the Student Book appendix text verbatim (one shared `student_answer_text`; the publication regression tests are byte-identical).
+  - Every other answer ships only as a salted hash.
+  - The answer model (6 checks; every bundle string counted or tied to its source) finds 0 issues on all four books. Every injection regression the gates named fails as it should, including on the real bundles (`A + ~B`, `So the answer is 5E.`, a duplicate `sum_to_n`, a title of `18`).
+- **Ids:** the first ledgers are in `site/ids/`. Keys are unique across blocks, items, side blocks and cards.
+- **Determinism:** re-exports under other `PYTHONHASHSEED` values, and with untracked scratch files present, are byte-identical.
+- **Tests:** the global suite has 1,936 passed and 2 skipped (about 300 of them are `tests/test_site_*.py`); the routed recsys suite has 152 passed. `scripts/ci-local.sh` ran ALL GREEN solo at 0824a5d, with every book rendered and audited.
+- **Gates:**
+  - Plan review: 10 rounds to consensus ([sol] on gpt-5.6-sol, [fable]; [glm] skipped).
+  - Content review: 4 rounds. Round 1 found free-design items proposed as `expected-output` (101 of 119 in python-projects) and four leak-check gaps; all were fixed.
+
+**Implementer deviations (accepted at the gates):**
+- Concept cards are stored in the entry of the unit where their term is first taught.
+- Fixtures must be tracked in git.
+- The asserts rule is tightened: an assert that names nothing the student writes is not portable.
+- `statement_md` leaves out asset listings, which ship as `files` instead.
+- A division id is the first word of its `_Division:_` line.
+- The answer model ties every uncounted field (titles, tags, figures, settings and so on) exactly to its source.
+
+**Follow-ups:**
+- **Per-book content plans (rollout step 2):** confirm the `check-*` tags; author `answer_format` hints (323 derived formats contain letters); confirm the single-token `expected-output` items (6 + 8); add per-cell `concepts` where attribution is empty (usaco-bronze 59 and acsl 128 lesson blocks); and run a `slide-break` pass.
+- **Curriculum question for the user:** python-concepts checkpoint-03 Q3 (`sum_to_n`) and checkpoint-04 Q5 (`most_common`) appear verbatim in lessons `u07l024` and `u11l028`.
+- **Governance mismatch for the user:** `docs/content-review-gate.md` names `gpt-6-sol` for [sol], while AGENTS.md names `gpt-5.6-sol` (used here).
+- **Next plans:** part B (the Astro site core, privacy notice and terms) and part C (the isolated runner; its JS port must follow `tools/export/hash_vectors.json`, including the Python-vs-JS `\s` cases).
