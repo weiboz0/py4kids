@@ -301,7 +301,23 @@ No open [self] blockers.
 5. `[OPEN]` **Nice** (= [fable]#3) — nearest-word prose omits the actual #1 (dragon→lantern; robot→monster/dragon
    before spaceship); report ordered results or discuss noisy neighbours.
 
-### Content-gate round 1 outcome: **NOT consensus — [sol] REJECT (2 Must) + [fable] APPROVE WITH NITS + [self] APPROVE WITH NITS.** Shipped code verified correct (zero-safe; the Must are exercise-TEXT honesty/accuracy bugs). Folding [sol] 1-5 + [fable] 1-8 in one coordinated pass (notebooks via subagent; teacher-notes/embeddings-docstring/glove README/plan inline), then re-run ci-local + re-review [sol].
+### Content-gate round 1 outcome: **NOT consensus — [sol] REJECT (2 Must) + [fable] APPROVE WITH NITS + [self] APPROVE WITH NITS.** Shipped code verified correct (zero-safe; the Must are exercise-TEXT honesty/accuracy bugs).
+
+### Resolution (commits b36d891 + 2dcf5c0) — all findings FIXED:
+- **[sol]#1 Must** (notebooks `2dcf5c0`): Ex4 reframed to a ranking disagreement; solution computes + asserts the
+  real 11-token overlap; no "zero overlap" claim remains.
+- **[sol]#2 Must** (`2dcf5c0`): Ex2 OOV text corrected (None only for out-of-vocab; starfall = in-vocab zero row);
+  hand recipe guards zero-norm (all-missing→zero, no NaN) + demo; `tokenize` not `.split()`.
+- **[sol]#3/[fable]#1 Should**: milestone §5 reworded to grab-bag + uniformly-high-cosine honesty (~0.66 vs ~0.12).
+- **[sol]#4/[fable]#2 Should**: max-sim 0.142→**0.146** across notebooks + teacher-notes + plan (re-measured 73/500).
+- **[sol]#5/[fable]#3 Nice**: nearest-word prose reports actual ordered neighbours (dragon→lantern #1) + noisy-neighbour
+  caveat (lesson/exercises/milestone).
+- **[fable]#4** unused `blend` import dropped; **#5** GloVe PDDL-1.0 license + citation in teacher-notes + new
+  `recsys/data/glove/README.md`; **#6** `embeddings.py` `load()` dim-check added; **#7** `tokenize` in Ex2; **#8**
+  anisotropy discussion prompt in teacher-notes.
+All re-verified GREEN (exec-lessons/exec-solutions/milestone-check/hygiene/structure/cell-lint/noexec/concept-scan +
+15 unit07 tests + ruff). Measured numbers unchanged except max-sim→0.146. **Round 2: re-running ci-local + re-reviewing
+[sol]** (sole rejecter); [self]+[fable] already APPROVE WITH NITS.
 
 <!-- appended pre-PR -->
 
