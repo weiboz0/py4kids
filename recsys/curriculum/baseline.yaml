@@ -94,6 +94,24 @@ library_methods:
 - book_embedding
 - load_glove_subset
 - vector
+# --- Unit 8 (recsys-010): two-tower in PyTorch (torch training idioms + bookrec API) ---
+- TwoTowerRetrievalPath
+- Adam
+- Embedding
+- backward
+- detach
+- from_numpy
+- item
+- logsigmoid
+- manual_seed
+- normal_
+- numpy
+- parameters
+- permutation
+- set_num_threads
+- step
+- use_deterministic_algorithms
+- zero_grad
 # --- Unit 5 (recsys-007): matrix factorization (bookrec MF API + numpy GD idioms) ---
 - MatrixFactorizationPath
 - calibrate

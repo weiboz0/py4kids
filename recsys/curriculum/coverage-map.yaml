@@ -1,5 +1,5 @@
 map_version: 1
-# This remains `buildout: true` while the accumulated lessons (now twenty-one and a half: Units 1-7 at 3 each = 21 +
+# This remains `buildout: true` while the accumulated lessons (now twenty-four and a half: Units 1-8 at 3 each = 24 +
 # Checkpoint A at 0.5) are below the whole-book lesson budget (30). A later plan removes buildout when the accumulated
 # entries first reach that budget.
 entries:
@@ -59,3 +59,10 @@ entries:
   introduces: [word-embeddings, document-embeddings, embedding-retrieval]
   requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, bag-of-words, latent-factors, ranking-metrics, score-blending]
   practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, bag-of-words]
+- id: unit-08-two-tower
+  kind: unit
+  title: "The two-tower model"
+  lessons: 3
+  introduces: [two-tower, bpr-loss, neural-training]
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, implicit-feedback, matrix-factorization, latent-factors, gradient-descent, embedding-retrieval]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, implicit-feedback, latent-factors, embedding-retrieval]

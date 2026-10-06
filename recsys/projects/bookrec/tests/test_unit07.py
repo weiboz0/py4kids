@@ -10,7 +10,8 @@ Verifies, on the committed GloVe subset + the seeded recsys-004 keyword text:
 - determinism, empty-``seen`` -> ``[]``, a fit->artifact->load round-trip returning identical recs,
   registry ownership as ``semantic-v1``;
 - quantitative complementarity (lexical-vs-semantic top-10 overlap is low);
-- numpy-only (no gensim / torch imported under ``bookrec/``).
+- no gensim anywhere under ``bookrec/``, and torch is only ever imported **lazily** (inside
+  ``two_tower.fit``), never at any module top level — proven by an import-blocked subprocess.
 """
 
 from __future__ import annotations
@@ -19,6 +20,8 @@ import csv
 import gzip
 import hashlib
 import json
+import subprocess
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -274,12 +277,71 @@ def test_semantic_path_registers_as_semantic_v1(generated: dict[str, object], gl
         registry.register(SemanticEmbeddingRetrievalPath(generated["keywords"], glove))
 
 
-# --- numpy-only: no heavy ML stack imported under bookrec/ -----------------------------------
+# --- no gensim; torch only ever LAZY (Unit 8) ------------------------------------------------
 
 
 def test_bookrec_imports_no_gensim_or_torch() -> None:
+    """gensim is banned everywhere under ``bookrec/``; torch may appear ONLY as a lazy import.
+
+    Unit 8 (``two_tower.py``) imports torch **inside** ``fit`` so that importing the package and
+    calling the torch-free paths (``retrieve``/``load``/``artifact``, over numpy weights) never pull
+    torch. This raw-text scan therefore forbids gensim anywhere and forbids any **top-level**
+    (unindented) ``import torch`` / ``from torch`` in every ``bookrec/*.py`` — including
+    ``two_tower.py`` — while permitting the indented lazy import inside ``fit``.
+    """
     bookrec_dir = Path(__file__).resolve().parents[1] / "bookrec"
-    for source in bookrec_dir.rglob("*.py"):
+    sources = list(bookrec_dir.rglob("*.py"))
+    assert (bookrec_dir / "two_tower.py") in sources  # the Unit-8 module is actually scanned
+    for source in sources:
         text = source.read_text(encoding="utf-8")
-        for forbidden in ("import gensim", "import torch", "from gensim", "from torch"):
-            assert forbidden not in text, f"{source.name} imports a forbidden ML stack: {forbidden}"
+        # gensim is never allowed, in any form, anywhere in the package.
+        for forbidden in ("import gensim", "from gensim"):
+            assert forbidden not in text, f"{source.name} imports gensim: {forbidden}"
+        # torch is allowed ONLY as a lazy (indented) import; never at module top level.
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if line[:1].isspace():
+                continue  # indented -> not a top-level statement (the lazy import inside fit)
+            stripped = line.strip()
+            assert not stripped.startswith(("import torch", "from torch")), (
+                f"{source.name}:{lineno} imports torch at module top level: {stripped!r}"
+            )
+
+
+def test_torch_free_paths_do_not_import_torch() -> None:
+    """Prove the torch-free paths never import torch, even though uv's ``.venv`` physically has it.
+
+    uv installs one shared ``.venv`` that contains torch, so merely running the group-free suite
+    does NOT prove ``bookrec`` avoids importing it. In a subprocess we plant a **sentinel**
+    ``sys.modules["torch"] = None`` (so any real ``import torch`` would raise), import ``bookrec``,
+    then construct a :class:`TwoTowerRetrievalPath`, ``load`` a hand-built numpy artifact and
+    ``retrieve`` — the torch-free paths. The subprocess asserts the sentinel is **untouched**
+    (``sys.modules.get("torch") is None``): if anything had imported torch the key would no longer
+    be ``None``. (``"torch" not in sys.modules`` would be WRONG — the key EXISTS, mapped to None.)
+    """
+    script = (
+        "import sys\n"
+        "sys.modules['torch'] = None  # sentinel: a real `import torch` would now raise\n"
+        "import numpy as np\n"
+        "import bookrec\n"
+        "from bookrec import TwoTowerRetrievalPath\n"
+        "artifact = {\n"
+        "    'reader_embeddings': np.zeros((2, 4), dtype=np.float32),\n"
+        "    'item_embeddings': np.eye(4, dtype=np.float32)[:3],\n"
+        "    'reader_ids': [100, 200],\n"
+        "    'item_ids': [10, 20, 30],\n"
+        "    'params': {},\n"
+        "}\n"
+        "artifact['reader_embeddings'][0, 0] = 1.0  # reader 100 points at item 10\n"
+        "loaded = TwoTowerRetrievalPath().load(artifact)\n"
+        "recs = loaded.retrieve(100, {'seen': set()}, 2)\n"
+        "assert [c.item_id for c in recs][0] == 10, recs\n"
+        "restored = loaded.artifact()  # artifact() must also be torch-free\n"
+        "assert list(restored['item_ids']) == [10, 20, 30], restored\n"
+        "assert sys.modules.get('torch') is None, 'something imported torch on the torch-free path'\n"
+        "print('TORCH_FREE_OK')\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, check=False
+    )
+    assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
+    assert result.stdout.strip().splitlines()[-1] == "TORCH_FREE_OK"

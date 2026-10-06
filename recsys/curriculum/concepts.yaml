@@ -33,3 +33,7 @@ concepts:
 - {id: word-embeddings, name: "Pretrained dense word embeddings (GloVe)", category: techniques, kind: technique}
 - {id: document-embeddings, name: "Document embeddings by pooling word vectors", category: techniques, kind: technique}
 - {id: embedding-retrieval, name: "Brute-force cosine retrieval in embedding space", category: techniques, kind: technique}
+# --- Unit 8 (recsys-010): the two-tower model in PyTorch ---
+- {id: two-tower, name: "Two-tower (dual-encoder) dot-product model", category: techniques, kind: technique}
+- {id: bpr-loss, name: "Bayesian Personalized Ranking (pairwise) loss", category: techniques, kind: technique}
+- {id: neural-training, name: "Training embeddings in PyTorch (Adam, mini-batches)", category: techniques, kind: technique}
