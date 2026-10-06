@@ -1,7 +1,7 @@
 map_version: 1
-# This remains `buildout: true` while the accumulated lessons (now twenty-four and a half: Units 1-8 at 3 each = 24 +
-# Checkpoint A at 0.5) are below the whole-book lesson budget (30). A later plan removes buildout when the accumulated
-# entries first reach that budget.
+# This remains `buildout: true` while the accumulated lessons (now twenty-seven and a half: Units 1-9 at 3 each = 27 +
+# Checkpoint A at 0.5) are below the whole-book lesson budget (30). A later plan (U10) removes buildout when the
+# accumulated entries first reach that budget.
 entries:
 - id: unit-01-problem-and-scoreboard
   kind: unit
@@ -66,3 +66,10 @@ entries:
   introduces: [two-tower, bpr-loss, neural-training]
   requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, implicit-feedback, matrix-factorization, latent-factors, gradient-descent, embedding-retrieval]
   practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, implicit-feedback, latent-factors, embedding-retrieval]
+- id: unit-09-feature-towers
+  kind: unit
+  title: "Feature towers and item cold-start"
+  lessons: 3
+  introduces: [feature-towers, item-cold-start, hard-negatives]
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, latent-factors, embedding-retrieval, two-tower, bpr-loss, neural-training, word-embeddings]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, two-tower, neural-training, word-embeddings]

@@ -37,3 +37,7 @@ concepts:
 - {id: two-tower, name: "Two-tower (dual-encoder) dot-product model", category: techniques, kind: technique}
 - {id: bpr-loss, name: "Bayesian Personalized Ranking (pairwise) loss", category: techniques, kind: technique}
 - {id: neural-training, name: "Training embeddings in PyTorch (Adam, mini-batches)", category: techniques, kind: technique}
+# --- Unit 9 (recsys-011): feature towers & item cold-start ---
+- {id: feature-towers, name: "Feature towers (item tower from id + content features)", category: techniques, kind: technique}
+- {id: item-cold-start, name: "Item cold-start via content features", category: techniques, kind: technique}
+- {id: hard-negatives, name: "Hard-negative sampling (and the false-negative risk)", category: techniques, kind: technique}

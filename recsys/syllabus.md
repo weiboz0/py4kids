@@ -36,6 +36,7 @@ so every addition can answer the only question that matters: *did it help?*
 | — | `checkpoint-01-part-1` | checkpoint | 0.5 | Checkpoint A — assemble the Part-1 recommender and score it once on the sealed test holdout. |
 | 7 | `unit-07-semantic-embeddings` | unit | 3 | Match books by *meaning*, not spelling — pretrained GloVe embeddings and brute-force cosine retrieval (Part 2 opens). |
 | 8 | `unit-08-two-tower` | unit | 3 | Let a neural network learn the taste factors — a two-tower dot-product model trained with BPR in PyTorch (and why regularization decides the win). |
+| 9 | `unit-09-feature-towers` | unit | 3 | Recommend a book nobody has read yet — give the item tower content features (genre, author, GloVe) so cold items get a vector from what they *are*, plus hard-negative sampling. |
 
 ## How the book is organised
 
