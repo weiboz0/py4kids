@@ -129,6 +129,19 @@ library_methods:
 - omp_get_max_threads
 - omp_set_num_threads
 - search
+# --- Unit 11 (recsys-013): neural reranking / learning to rank (reranker API + torch MLP idioms) ---
+# The reranker + its notebooks call these `x.name(...)` idioms not already declared above. `Linear`
+# and `Adam` are already listed (Unit 8/9). `log1p` is the log-popularity feature; `Sequential` /
+# `ReLU` / `relu` / `BCEWithLogitsLoss` / `sigmoid` are the pointwise-logistic MLP idioms.
+- BCEWithLogitsLoss
+- NeuralRerankerPath
+- ReLU
+- RerankerModel
+- Sequential
+- log1p
+- relu
+- rerank
+- sigmoid
 # --- Unit 5 (recsys-007): matrix factorization (bookrec MF API + numpy GD idioms) ---
 - MatrixFactorizationPath
 - calibrate

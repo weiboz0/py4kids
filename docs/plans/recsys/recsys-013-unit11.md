@@ -61,7 +61,7 @@ is applied over the **full-fit** paths at serving/val time. Measured (val, k=10,
 So the reranker **edges the two-tower by ~+0.03–0.05 (directional, ~1–2 SE) and ties/edges the hybrid (0.362)** — but
 **coverage COLLAPSES to 0.12–0.19** (vs U6's 0.333). An honest win on accuracy, a real loss on coverage.
 
-**3. The lift is from CONTENT features, not score combination (the counterintuitive payoff).** 18 features = 6
+**3. The lift is from CONTENT features, not score combination (the counterintuitive payoff).** 17 features = 6
 calibrated per-path scores + 6 presence flags + n_paths + content (genre_frac, genre_cos vs the reader's history
 genre vector, author_frac, log_pop) — where at TRAINING time every feature/statistic uses the **75% profile only**
 (the held-out 25% labels never enter a feature), and at serving the full train. Ablation: **content-only is the BEST
@@ -131,7 +131,7 @@ key — see API note), `two_tower.py` (lazy-torch/determinism/torch-free-persist
 (`_seen_and_relevant`), `evaluate.py`/`diversity.py`, `catalog.py` (genre/author), and the probe reference at
 `scratchpad/probe_rerank.py`. Add `bookrec/rerank.py` (torch lazy in `fit`):
 - **Features (from the PRE-BLEND per-path lists — NOT blend's Candidate):** per reader, take each path's top-`pool=50`
-  `retrieve` list, `calibrate` each list to [0,1], union by item id. For each pooled candidate build an **18-dim**
+  `retrieve` list, `calibrate` each list to [0,1], union by item id. For each pooled candidate build a **17-dim**
   vector: 6 calibrated per-path scores (absent path → 0.0) + 6 presence flags + n_paths + content (genre_frac,
   genre_cos of candidate genres vs the reader's **history** genre vector, author_frac, log_pop from interaction
   counts). Persist the feature ordering/spec in the artifact. **CRITICAL (leakage) — every feature uses the reader's
@@ -173,7 +173,7 @@ Hook: "our paths each see one slice of the signal — popularity, text, behaviou
 reader's candidate pool?" From scratch → reveal: (1) the two-stage split (cheap retrieval pool → expensive precise
 rank) + the score-order baseline `rank.py` already does, and the **pool recall ceiling** (0.716@pool30 / 0.772@pool50
 — the reranker only re-orders the pool, so retrieval caps hit@k; pin pool=50); (2) **ranking features** — build the
-18-dim per-candidate vector from the pre-blend per-path calibrated scores + content signals (genre/author affinity vs
+17-dim per-candidate vector from the pre-blend per-path calibrated scores + content signals (genre/author affinity vs
 the reader's TRAIN history, log-popularity); (3) **the leakage trap (headline)** — train the reranker the *naive* way
 (labels = train positives, paths fit on the same train) and WATCH IT TANK to ~0.28 (below score-order), because the
 paths memorized those positives; then fix it with a **time-ordered holdout inside train** (latest 25% = labels, earlier
