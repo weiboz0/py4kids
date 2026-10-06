@@ -292,6 +292,7 @@ def test_bookrec_imports_no_gensim_or_torch() -> None:
     bookrec_dir = Path(__file__).resolve().parents[1] / "bookrec"
     sources = list(bookrec_dir.rglob("*.py"))
     assert (bookrec_dir / "two_tower.py") in sources  # the Unit-8 module is actually scanned
+    assert (bookrec_dir / "feature_tower.py") in sources  # the Unit-9 module is actually scanned
     for source in sources:
         text = source.read_text(encoding="utf-8")
         # gensim is never allowed, in any form, anywhere in the package.
@@ -323,7 +324,7 @@ def test_torch_free_paths_do_not_import_torch() -> None:
         "sys.modules['torch'] = None  # sentinel: a real `import torch` would now raise\n"
         "import numpy as np\n"
         "import bookrec\n"
-        "from bookrec import TwoTowerRetrievalPath\n"
+        "from bookrec import TwoTowerRetrievalPath, FeatureTowerRetrievalPath, Book, GloveSubset\n"
         "artifact = {\n"
         "    'reader_embeddings': np.zeros((2, 4), dtype=np.float32),\n"
         "    'item_embeddings': np.eye(4, dtype=np.float32)[:3],\n"
@@ -337,6 +338,16 @@ def test_torch_free_paths_do_not_import_torch() -> None:
         "assert [c.item_id for c in recs][0] == 10, recs\n"
         "restored = loaded.artifact()  # artifact() must also be torch-free\n"
         "assert list(restored['item_ids']) == [10, 20, 30], restored\n"
+        "# Unit 9's feature tower is torch-free too on load/retrieve/artifact (it stores the\n"
+        "# COMPOSED numpy item matrix, so no re-composition and no torch are needed to serve it).\n"
+        "books = {i: Book(item_id=i, title=f'b{i}', fields={'genres': 'fantasy', 'author_id': '1'})\n"
+        "         for i in (10, 20, 30)}\n"
+        "glove = GloveSubset(np.zeros((1, 2), dtype=np.float32), {'foo': 0}, ['foo'], 2, [])\n"
+        "ft = FeatureTowerRetrievalPath(books, {10: 'foo', 20: 'foo', 30: 'foo'}, glove).load(artifact)\n"
+        "ft_recs = ft.retrieve(100, {'seen': set()}, 2)\n"
+        "assert [c.item_id for c in ft_recs][0] == 10, ft_recs\n"
+        "assert ft_recs[0].provenance == 'feature-tower'\n"
+        "assert list(ft.artifact()['item_ids']) == [10, 20, 30], ft.artifact()\n"
         "assert sys.modules.get('torch') is None, 'something imported torch on the torch-free path'\n"
         "print('TORCH_FREE_OK')\n"
     )

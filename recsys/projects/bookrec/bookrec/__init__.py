@@ -40,6 +40,7 @@ from bookrec.embeddings import (
 )
 from bookrec.evaluate import hit_rate_at_k, ndcg_at_k, precision_at_k, recall_at_k
 from bookrec.factorization import MatrixFactorizationPath
+from bookrec.feature_tower import FeatureTowerRetrievalPath
 from bookrec.keywords import load_keywords
 from bookrec.lexical import (
     BM25Index,
@@ -73,6 +74,7 @@ __all__ = [
     "Book",
     "Candidate",
     "DuplicatePathError",
+    "FeatureTowerRetrievalPath",
     "GloveSubset",
     "ItemItemRetrievalPath",
     "LexicalRetrievalPath",
