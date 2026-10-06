@@ -21,7 +21,8 @@ By the end of this unit students can:
   path's **hit@10 is identical to the exact two-tower (0.340)** — ANN recovers the same recommendations,
   it does not change them.
 - Reason about **speed**: at 2,000 items there is **no speedup** (brute force is already microseconds);
-  the win is **asymptotic** — a 20k synthetic index is ~10× faster at recall 0.993 — and at fixed
+  the win is **asymptotic and machine-dependent** — a 20k synthetic index is ~3–5× faster at recall ~0.99 (widening
+  toward an order of magnitude at larger scale) — and at fixed
   `efSearch`, recall *falls* as the catalog grows, so the knob must scale with the catalog.
 - Build a **hybrid** path (min-max-normalised weighted sum of BM25 + two-tower over the union of their
   top pools) and read hit@10 AND coverage honestly: the tuned `pool=50, w_dense=0.7` hybrid edges the
@@ -52,7 +53,7 @@ here, hopeless at a million — can we retrieve the same books without looking a
   exact search would. hit@10 is identical to the exact two-tower (0.340). ANN buys *speed at scale*,
   not better recommendations. Grading that rewards a higher hit@10 from "adding ANN" misreads the unit.
 - **Expecting a speedup at 2,000 items.** Brute force over 2k×32 is already microseconds; HNSW is no
-  faster here. The win is **asymptotic** — show it on the 20k synthetic index (~10×). Do not assert a
+  faster here. The win is **asymptotic** — show it on the 20k synthetic index (~3-5x, machine-dependent). Do not assert a
   small-catalog speedup.
 - **Using the default L2 metric.** FAISS `IndexHNSWFlat` defaults to L2, but the two-tower ranks by
   inner product; a mismatched metric makes recall meaningless. Use `METRIC_INNER_PRODUCT`.
