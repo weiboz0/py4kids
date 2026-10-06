@@ -65,11 +65,18 @@ neural network learned them?* Plan **60–90 minutes across two to three sitting
 - A neural tower buys us a place to add *features* (subjects, author, GloVe) for books with no interaction history.
   What would that fix that the ID-only two-tower cannot? (forward to Unit 9 cold-start.)
 
+## Provenance
+
+Original content. The **BPR** pairwise loss is from Rendle, Freudenthaler, Gantner & Schmidt-Thieme,
+*BPR: Bayesian Personalized Ranking from Implicit Feedback* (UAI 2009) — worth a one-line attribution in the lesson
+for a calc/linalg audience; the two-tower / dual-encoder framing is standard retrieval practice, no single source.
+
 ## Differentiation
 
 - **Support:** give the training loop (`nn.Embedding` + Adam + the BPR batch) and the seeding trio as starter
   snippets so the lesson stays on the *ideas* (dot product, pairwise loss, regularization); pair-program Ex3.
 - **Core:** Exercises 1–5 unaided, using `TwoTowerRetrievalPath` after the by-hand step in Ex2.
-- **Stretch:** the `weight_decay` sweep (0 → ~0.14 overfit, 1e-4 → ~0.34 peak — a vivid regularization curve) and
+- **Stretch:** the `weight_decay` sweep at its 20 training epochs (0 → ~0.18 overfit (below CF), 1e-4 → ~0.35 peak —
+  a vivid regularization curve; the lesson's 60-epoch demo overfits harder, ~0.14) and
   reconstructing the path's score by hand from the learned embeddings. Ask strong students to predict the sweep shape
   before running it, and to explain why the biggest `weight_decay` (1e-3) *underfits*.

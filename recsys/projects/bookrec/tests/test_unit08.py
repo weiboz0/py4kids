@@ -141,9 +141,14 @@ def test_two_tower_is_deterministic(
         a = [c.item_id for c in fitted_tt.retrieve(reader_id, {"seen": set()}, K)]
         b = [c.item_id for c in other.retrieve(reader_id, {"seen": set()}, K)]
         assert a == b
-    # Bonus (not the gate): seeded init + seeded sampling are bit-identical on CPU here.
-    assert np.array_equal(fitted_tt.reader_embeddings, other.reader_embeddings)
-    assert np.array_equal(fitted_tt.item_embeddings, other.item_embeddings)
+    # Bonus, NOT the gate (design 011 forbids exact-float as the contract — the gate is identical
+    # ranking + allclose above): on CPU these fits also happen to be bit-identical, but we only
+    # observe it, never assert it (a future torch CPU-kernel change could alter the last ULP).
+    bitwise_identical = bool(
+        np.array_equal(fitted_tt.reader_embeddings, other.reader_embeddings)
+        and np.array_equal(fitted_tt.item_embeddings, other.item_embeddings)
+    )
+    print(f"(bonus) seeded fits bit-identical on this CPU: {bitwise_identical}")
 
 
 # --- a tiny hand-checkable BPR step reduces the pairwise loss --------------------------------

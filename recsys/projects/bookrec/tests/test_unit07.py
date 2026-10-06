@@ -335,6 +335,8 @@ def test_torch_free_paths_do_not_import_torch() -> None:
         "loaded = TwoTowerRetrievalPath().load(artifact)\n"
         "recs = loaded.retrieve(100, {'seen': set()}, 2)\n"
         "assert [c.item_id for c in recs][0] == 10, recs\n"
+        "restored = loaded.artifact()  # artifact() must also be torch-free\n"
+        "assert list(restored['item_ids']) == [10, 20, 30], restored\n"
         "assert sys.modules.get('torch') is None, 'something imported torch on the torch-free path'\n"
         "print('TORCH_FREE_OK')\n"
     )

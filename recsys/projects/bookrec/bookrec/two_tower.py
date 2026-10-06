@@ -18,11 +18,11 @@ Two ideas live here:
   Adam + L2 weight decay.
 
 **Why a ranking objective, and why weight decay.** On this data the two-tower is the **best path in
-the book so far** (measured hit@10 ~0.36 vs MF 0.276 vs CF 0.252) — but **only when regularized**.
+the book so far** (measured hit@10 ~0.340 vs MF 0.276 vs CF 0.252) — but **only when regularized**.
 The same reader.book dot product is MF's; what changed is the *objective and optimizer* (pairwise
 BPR + Adam mini-batches + weight decay vs MF's pointwise logistic full-batch gradient descent), and
 the ranking objective wins on top-k. With ``weight_decay = 0`` the BPR loss collapses toward 0
-(the model memorizes the train pairs) and val hit@10 drops to ~0.20-0.23 (below CF) — the
+(the model memorizes the train pairs) and val hit@10 drops to ~0.144 (below CF and lexical) — the
 hand-delivered overfitting lesson. The constructor default ``weight_decay = 1e-4`` is REQUIRED.
 
 **Implicit feedback + sampled negatives.** A read/like is a positive; there are no negative
@@ -95,7 +95,7 @@ class TwoTowerRetrievalPath(BaseRetrievalPath):
 
     The constructor defaults are **pinned** to the configuration measured on the shipped data
     (``embedding_dim=32, n_epochs=60, learning_rate=0.01, n_negatives=10, batch_size=256,
-    weight_decay=1e-4, seed=0``): at ``weight_decay=1e-4`` the two-tower reaches hit@10 ~0.36 (the
+    weight_decay=1e-4, seed=0``): at ``weight_decay=1e-4`` the two-tower reaches hit@10 ~0.340 (the
     book's best), while ``weight_decay=0`` overfits below CF. ``weight_decay`` may be 0 (the taught
     overfitting demo); every other hyperparameter is strictly positive.
     """

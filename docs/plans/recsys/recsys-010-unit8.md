@@ -321,6 +321,45 @@ the book's new best, not "≈ MF"; wd=0 overfits below CF), and [sol] drove the 
 
 ## Content Review
 
+### Round 1 — [self] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS. Project-first (lesson opens with the "neural net learns the taste factors" hook);
+  honest framing consistent — two-tower ~0.340 is the NEW BEST (> MF 0.276), same reader·item dot product but the
+  pairwise BPR ranking objective + Adam + weight decay wins on top-k; the `weight_decay=0` overfit-below-CF beat is
+  taught (lesson §3b). torch isolation = lazy `fit`-only import, torch-free `retrieve`/`load`/`artifact`, rewritten
+  no-torch test + import-blocked-subprocess sentinel; determinism = ranking+allclose (save/restore globals);
+  taught-before-assessed (two-tower/bpr-loss/neural-training); NO `split="test"`; ≤~3 full fits/notebook (~15 s each).
+1. `[OPEN]` Watch-item for the gate: **by-config number split** — the lesson's wd=0 demo is 60-epoch → ~0.144; the
+  Ex6 sweep is 20-epoch → wd=0 ~0.18 (both below CF, honest). Confirm each cell cites the number matching its OWN
+  epoch config (no cell claiming "~0.14" for a 20-epoch sweep). The milestone blend-with-two-tower trade (hit
+  0.306→0.314, coverage 0.333→0.3095) is reported honestly.
+
+### Round 1 — [sol] (2026-10-05)
+- **Verdict**: REJECT (3 Must + 1 Should) — all fixed:
+1. `[FIXED]` **Must** — Ex6 (20-epoch sweep) cited wd=0 ~0.14; the 20-epoch value is ~0.18 (0.144 is the lesson's
+   60-epoch demo). → exercises/solutions Ex6 + intro + teacher-notes now cite ~0.18 (20-ep) with the 60-ep ~0.14
+   kept only where explicitly the lesson demo.
+2. `[FIXED]` **Must** — `two_tower.py` docstring said ~0.36 / ~0.20–0.23 → corrected to ~0.340 / ~0.144.
+3. `[FIXED]` **Must** — `test_unit08.py` unconditionally `assert np.array_equal` (exact-float gate, violates §184) →
+   demoted to a printed bonus; the gate stays identical-ranking + `allclose`.
+4. `[FIXED]` **Should** — the import-blocked subprocess now also exercises `artifact()` (full torch-free contract).
+
+### Round 1 — [fable] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS (nothing blocking; blind-solved, ran solutions+milestone, confirmed the [sol] fixes).
+1. `[FIXED]` **Should** — wd=1e-3 is the sweep's LOWEST (~0.17, underfitting collapse — loss barely falls), not "a
+   touch lower". → reworded in both Ex6 cells + the solution's `regularization_explanation` (sharp peak, fails both
+   sides).
+2. `[FIXED]` = [sol]#1 (Ex6 numbers). 3. `[FIXED]` = [sol]#2 (docstring). 7. `[FIXED]` = [sol]#3 (array_equal).
+4. `[FIXED]` **Nice** — the sealed-test forward reference is **Checkpoint B** (A already spent its read) — lesson +
+   milestone updated from "Checkpoint A"; teacher-notes already said B → unit now consistent.
+5. `[FIXED]` **Nice** — lesson cell-4 comment now cites "design 011 §7's CPU-determinism requirement".
+6. `[FIXED]` **Nice** — BPR citation (Rendle et al. 2009) added to teacher-notes provenance.
+
+### Content-gate round 1 outcome: **[sol] REJECT (3 Must) + [fable] APPROVE WITH NITS + [self] APPROVE WITH NITS.** All folded; re-run ci-local + re-review [sol] (sole rejecter).
+
+<!-- [sol] round-2 verdict appended -->
+
+<!-- appended pre-PR -->
+
 <!-- appended pre-PR -->
 
 ## Post-Execution Report
