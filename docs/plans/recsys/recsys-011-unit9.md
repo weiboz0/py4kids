@@ -419,6 +419,23 @@ No [self] blockers. Awaiting [sol] + [fable] blind-solve reviews.
   ids->rows explicitly via row_of."
 - **[fable]#5** → `[FIXED]` — exercises Ex5 now "possibly just one such reader exists (one, on this data)".
 
+### Review 4 — [sol] round-2 (2026-10-06)
+- **Verdict**: REJECT (findings #1/#2/#4 confirmed resolved; one Must remains).
+1. `[OPEN]` **Must** — finding #3 is a defect CLASS, not only the cited cells: shipped content still says the cold
+   id row "receives no gradient" / "stuck at random init" (solutions cell 3), "no learned id row/embedding"
+   (milestone cells 1–2), and "no interaction history / no train history / dead letter" (exercises cells 2–3,
+   solutions cells 0/2/7/9, milestone cells 7/13, lesson cell 5). These items DO receive negative gradients.
+   → `[FIXED]` (round-3): swept ALL notebooks — every such claim reworded so the cold id row is **trained only as a
+   sampled negative → negative-shaped, not untrained/random**; "no interaction history/train history" → "no train
+   positives"; "dead letter" → "carries no useful signal (only ever a sampled negative)". Kept the one legitimate
+   "random init" note (lesson cell 6 builds a fresh *illustrative* module, not the fitted path). All 3 executed
+   notebooks re-ran clean; concept-scan/stretch/hygiene/cell-lint/ruff PASS. Verified no "no gradient / no learned id
+   / no train history / no interaction history / stuck at / dead letter" string remains in shipped content.
+
+### Author response (round 3)
+Dispatching [sol] round-3 to confirm the defect-class fix. [self] + [fable] remain satisfied (no new content added,
+only the false-claim wording corrected).
+
 <!-- appended pre-PR -->
 
 ## Post-Execution Report
