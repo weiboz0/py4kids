@@ -12,9 +12,18 @@ import shutil
 from pathlib import Path
 
 import pytest
+import yaml
 
 from tools.export import answers
-from tools.export.answer_model import AnswerModel, load_bundle
+from tools.export.answer_model import (
+    COUNTED_FIELDS,
+    FIELD_TIES,
+    TIES,
+    AnswerModel,
+    counted,
+    load_bundle,
+    tie_of,
+)
 from tools.export.bundle import dumps, export_book
 from tools.export.check import answer_model_findings
 
@@ -138,12 +147,6 @@ def test_extra_copy_of_fixture_text_fails(demo, bundle):
     append_to_statement(bundle, "unit-01-demo", "Exercise 6", "Print 20 greetings.")
     found = fails(demo.model, bundle)
     assert any("demo/unit-03-leaks/exercises/u3e11: hidden answer text" in f for f in found), found
-
-
-def test_canonical_in_title_is_not_content(demo, bundle):
-    """Keys, labels and titles are not content fields."""
-    edit_item(bundle, "unit-03-leaks", "Exercise 4", lambda item: item.update(title="159"))
-    assert fails(demo.model, bundle) == []
 
 
 def test_canonical_in_self_check_requirement_fails(demo, bundle):
@@ -417,6 +420,169 @@ def test_baseline_provenance(demo):
     assert {"demo/back-matter/quick-reference.md", "demo/units/unit-01-demo/assets/ex1/2.out",
             "demo/units/unit-01-demo/lesson.ipynb"} <= origins
     assert sum(1 for s in sources if "#answer:" in s.origin) == len(released)
+    # [sol] 2 (content review 2): the registry gives field-level allowance, exactly the exported
+    # projection's counted field (`name`, one source per concept), never the raw file.
+    registry = [s for s in sources if s.origin.startswith("demo/curriculum/concepts.yaml")]
+    assert sorted((s.origin, s.text) for s in registry) == sorted(
+        (f"demo/curriculum/concepts.yaml#concept:{c['id']}/name", c["name"])
+        for c in book["concepts"])
+
+
+def test_registry_allowance_is_only_the_exported_projection(demo, bundle, tmp_path):
+    """[sol] 2 (content review 2): `159` in an unexported registry field (an extra `kind:` value
+    and a comment) earns no allowance, so `159` injected into a statement still fails."""
+    root = tmp_path / "root"
+    shutil.copytree(demo.root, root, symlinks=True)
+    registry = root / "demo" / "curriculum" / "concepts.yaml"
+    data = yaml.safe_load(registry.read_text(encoding="utf-8"))
+    data["concepts"][0]["kind"] = "159"
+    registry.write_text("# 159 is not exported\n" + yaml.safe_dump(data, sort_keys=False),
+                        encoding="utf-8")
+    model = AnswerModel(root, "demo")
+    assert fails(model, bundle) == []
+    append_to_statement(bundle, "unit-03-leaks", "Exercise 4", "159")
+    found = fails(model, bundle)
+    assert any("u3e04: hidden answer text leaked" in f and "(1 occurrence(s), 0 in exported" in f
+               for f in found), found
+
+
+# --- [sol] 3 (content review 2): every string field is counted or tied ----------------------------
+
+
+def _schema_string_fields() -> set[str]:
+    """Every property name the bundle schema types as a string (or a list of strings)."""
+    schema = json.loads((ROOT / "tools/export/schema/bundle.schema.json").read_text())
+    defs = schema["$defs"]
+
+    def stringy(node) -> bool:
+        if not isinstance(node, dict):
+            return False
+        if "$ref" in node:
+            return stringy(defs[node["$ref"].rsplit("/", 1)[1]])
+        types = node.get("type")
+        types = types if isinstance(types, list) else [types]
+        if "string" in types or "pattern" in node or (
+                "enum" in node and any(isinstance(v, str) for v in node["enum"])):
+            return True
+        if "array" in types:
+            return stringy(node.get("items"))
+        return any(stringy(sub) for key in ("allOf", "anyOf", "oneOf") for sub in node.get(key, []))
+
+    names: set[str] = set()
+
+    def walk(node) -> None:
+        if isinstance(node, dict):
+            for name, sub in (node.get("properties") or {}).items():
+                if stringy(sub):
+                    names.add(name)
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+    walk(schema)
+    return names
+
+
+def test_schema_string_fields_are_classified():
+    """Each string field the schema declares is counted by check 2 or held by a named tie check."""
+    names = _schema_string_fields()
+    assert {"md", "statement_md", "color", "title", "key", "route"} <= names
+    unclassified = names - COUNTED_FIELDS - set(FIELD_TIES)
+    assert unclassified == set(), unclassified
+    assert set(FIELD_TIES.values()) <= set(TIES)
+
+
+def _assert_counted_or_tied(bundle_dir: Path) -> None:
+    for string in load_bundle(bundle_dir).strings:
+        tie = tie_of(string)
+        assert counted(string) == (tie is None), string.where
+        assert tie is None or tie in TIES, (string.where, tie)
+        assert tie is not None or string.field in COUNTED_FIELDS, string.where
+
+
+def test_every_demo_string_field_is_counted_or_tied(demo):
+    _assert_counted_or_tied(demo.bundle)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("book", REAL_BOOKS)
+def test_every_real_string_field_is_counted_or_tied(real, book):
+    _assert_counted_or_tied(real(book)[1])
+
+
+def set_pointer(bundle_dir: Path, where: str, value) -> None:
+    document, _, pointer = where.partition(":")
+    path = bundle_dir / document
+    data = json.loads(path.read_text(encoding="utf-8"))
+    parts = pointer.split("/")
+    node = data
+    for part in parts[:-1]:
+        node = node[int(part)] if isinstance(node, list) else node[part]
+    last = parts[-1]
+    node[int(last) if isinstance(node, list) else last] = value
+    path.write_text(dumps(data), encoding="utf-8")
+
+
+def _uncounted_paths(bundle_dir: Path) -> dict[str, str]:
+    """One location per uncounted field path (list indexes generalised)."""
+    out: dict[str, str] = {}
+    for string in load_bundle(bundle_dir).strings:
+        if not counted(string):
+            out.setdefault(re.sub(r"/\d+", "/#", string.where), string.where)
+    return out
+
+
+def test_hidden_canonical_in_any_uncounted_demo_field_fails(demo, tmp_path):
+    """`159` (u3e04's hidden answer) written into any field check 2 does not count fails a tie."""
+    paths = _uncounted_paths(demo.bundle)
+    assert len(paths) > 40
+    missed = []
+    for n, (general, where) in enumerate(sorted(paths.items())):
+        copy = tmp_path / f"b{n}"
+        shutil.copytree(demo.bundle, copy)
+        set_pointer(copy, where, "159")
+        if not fails(demo.model, copy):
+            missed.append(general)
+    assert missed == [], missed
+
+
+def test_pdf_links_are_tied_to_the_release(demo, bundle):
+    set_pointer(bundle, "book.json:pdfs", {"student": "https://example.org/159.pdf"})
+    found = fails(demo.model, bundle)
+    assert any("pdfs" in f for f in found), found
+
+
+def test_canonical_in_title_is_not_counted_but_tied(demo, bundle):
+    """Titles are not check-2 content (plan 101 F), but the title tie holds them to the source."""
+    edit_item(bundle, "unit-03-leaks", "Exercise 4", lambda item: item.update(title="159"))
+    found = fails(demo.model, bundle)
+    assert not any("hidden answer text" in f for f in found), found
+    assert any("demo/unit-03-leaks/exercises/u3e04: title" in f for f in found), found
+
+
+def _first_where(bundle_dir: Path, pattern: str) -> str:
+    return next(where for general, where in sorted(_uncounted_paths(bundle_dir).items())
+                if re.fullmatch(pattern, general))
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(("book", "pattern", "message"), [
+    ("python-projects", r"entries/.*:lesson/blocks/#/figure/#/color", "turtle figure differs"),
+    ("python-projects", r"entries/.*:lesson/blocks/#/tags/#", "tag"),
+    ("acsl", r"entries/.*:items/#/division/#", "division"),
+    ("acsl", r"book\.json:settings/acsl_divisions/#", "settings"),
+])
+def test_real_hidden_canonical_in_uncounted_field_fails(real, tmp_path, book, pattern, message):
+    """Uncounted fields the demo bundle lacks: a hidden canonical of the book written into a turtle
+    segment `color`, a lesson tag, an item division or a settings value fails its tie."""
+    model, out = real(book)
+    copy = tmp_path / book
+    shutil.copytree(out, copy)
+    canonical = next(text for _kind, text, _case in model.canonicals.values() if text.strip())
+    set_pointer(copy, _first_where(copy, pattern), canonical.strip())
+    found = fails(model, copy)
+    assert any(message in f for f in found), found
 
 
 def test_unexported_quick_reference_gives_no_allowance(demo, bundle):
@@ -502,6 +668,68 @@ def test_real_visible_hidden_code_is_counted_not_dropped(real, tmp_path):
     found = fails(model, copy)
     assert any("solution code leaked into entries/checkpoint-03-functions-and-randomness.json:"
                "items/0/starter" in f and f.endswith(f"(from {hidden.origin})") for f in found), found
+
+
+SUM_TO_N = "checkpoint-03-functions-and-randomness/solutions.ipynb#cp03sol-q3-code"
+
+
+def _concepts_sum_to_n(real, tmp_path):
+    """(model, a copy of the python-concepts bundle, the hidden `sum_to_n` body, the lesson block
+    that shows it): the stream occurs three times in the exported sources and the clean bundle (a
+    unit-07 lesson block, and twice in an odd exercise's released answer)."""
+    model, out = real("python-concepts")
+    hidden = next(c for c in model.hidden_code if c.origin.endswith(SUM_TO_N))
+    copy = tmp_path / "python-concepts"
+    shutil.copytree(out, copy)
+    lesson = json.loads(entry_path(copy, "unit-07-functions").read_text(encoding="utf-8"))
+    block = next(b for b in lesson["lesson"]["blocks"] if "def sum_to_n" in b.get("code", ""))
+    return model, copy, model._strip_shipped(hidden.text), block["key"]
+
+
+def edit_block(bundle_dir: Path, entry: str, key: str, edit) -> None:
+    path = entry_path(bundle_dir, entry)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    edit(next(b for b in data["lesson"]["blocks"] if b["key"] == key))
+    path.write_text(dumps(data), encoding="utf-8")
+
+
+@pytest.mark.slow
+def test_real_hidden_code_counts_occurrences_in_one_field(real, tmp_path):
+    """[sol] 1 (content review 2): occurrences are counted, not containing fields. The lesson's
+    copy moved into ONE starter as two copies keeps the containing fields at two (passing a
+    field count against 3) but makes four occurrences against the three the sources hold."""
+    model, copy, body, key = _concepts_sum_to_n(real, tmp_path)
+    edit_block(copy, "unit-07-functions", key, lambda block: block.update(code="print('moved')\n"))
+    edit_item(copy, "checkpoint-03-functions-and-randomness", "Question 1",
+              lambda item: item.update(starter=item["starter"] + "\n\n" + body + "\n\n" + body))
+    found = fails(model, copy)
+    assert any("solution code leaked into entries/checkpoint-03-functions-and-randomness.json:"
+               "items/0/starter" in f and "(4 occurrence(s), 3 in exported sources)" in f
+               for f in found), found
+
+
+@pytest.mark.slow
+def test_real_hidden_code_extra_copy_in_the_same_field_fails(real, tmp_path):
+    """[sol] 1: a second copy appended to the lesson block that already holds the visible one."""
+    model, copy, body, key = _concepts_sum_to_n(real, tmp_path)
+    edit_block(copy, "unit-07-functions", key,
+               lambda block: block.update(code=block["code"] + "\n\n" + body))
+    found = fails(model, copy)
+    assert any("solution code leaked into entries/unit-07-functions.json:lesson/blocks/" in f
+               and "(4 occurrence(s), 3 in exported sources)" in f for f in found), found
+
+
+@pytest.mark.slow
+def test_real_hidden_code_extra_copy_in_one_copied_file_fails(real, tmp_path):
+    """[sol] 1: the lesson's copy moved into one copied file, plus an extra copy in that file."""
+    model, copy, body, key = _concepts_sum_to_n(real, tmp_path)
+    edit_block(copy, "unit-07-functions", key, lambda block: block.update(code="print('moved')\n"))
+    target = next(path for path, text in load_bundle(copy).files.items()
+                  if text is not None and path.endswith(".py"))
+    append_to_file(copy, target, body + "\n\n" + body)
+    found = fails(model, copy)
+    assert any(f"solution code leaked into {target}" in f
+               and "(4 occurrence(s), 3 in exported sources)" in f for f in found), found
 
 
 @pytest.mark.slow

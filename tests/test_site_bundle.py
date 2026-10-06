@@ -362,6 +362,17 @@ def test_site_check_cache(site_root, monkeypatch):
         site_check_findings(site_root, "demo")
 
 
+def test_report_lists_single_token_outputs():
+    """[fable] 3 (content review 2): the report's `single_token_outputs` list collects the items
+    whose `expected-output` canonical is one numeric token, for a content plan to confirm."""
+    report = {"derived_formats": [], "unmatched_samples": [], "single_token_outputs": [],
+              "notes": {}}
+    bundle_module._note_lists(report, "b/u/exercises/a", [f"{answers.SINGLE_TOKEN_NOTE} (18)"])
+    bundle_module._note_lists(report, "b/u/exercises/b", ["answer_format: derived (token)"])
+    assert report["single_token_outputs"] == ["b/u/exercises/a"]
+    assert report["derived_formats"] == ["b/u/exercises/b"]
+
+
 def test_non_site_book_is_refused(tmp_path):
     root = demo_book.build_demo_root(tmp_path / "root")
     (root / "books.yaml").write_text((root / "books.yaml").read_text().replace("  site: true\n", ""))

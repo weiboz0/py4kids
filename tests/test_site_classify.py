@@ -264,3 +264,16 @@ def test_real_predict_the_values_statement():
     # through to the solution run, whose output the statement's sample fixes.
     assert propose_kind(ROOT, "python-concepts", item) == (
         "expected-output", "the solution prints the same output on two runs")
+
+
+def test_predict_which_message_prints_real():
+    """[fable] 2 (content review 2): "Which one message prints" asks for the printed output
+    (python-projects checkpoint-01 Question 4, the `if`/`elif`/`else` trace)."""
+    assert PREDICT.search("Which one message prints, and why are the other two skipped?")
+    assert PREDICT.search("Which line prints first?")
+    assert PREDICT.search("Which branch runs?")
+    assert not PREDICT.search("Decide which message to print.")
+    item = next(i for i in real_items("python-projects", "checkpoint-01-first-steps").values()
+                if i.label == "Question 4")
+    assert PREDICT.search(item.statement_source)
+    assert propose_kind(ROOT, "python-projects", item)[0] == "predict"

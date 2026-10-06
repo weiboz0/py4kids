@@ -39,7 +39,8 @@ KIND_OF_TAG = {tag: kind for kind, tag in TAG.items()}
 UNFIXED = "output not fixed by the statement"
 PREDICT = re.compile(r"(?i)(what (does|will) .* print|predict( the)? output|code to trace|"
                      r"trace (this|the) code|predict (the )?(values?|result|exact)|"
-                     r"without running|before running)")
+                     r"without running|before running|"
+                     r"which (one )?(message|line|branch) (prints|runs))")
 
 
 def _check_tags(cell) -> list[str]:

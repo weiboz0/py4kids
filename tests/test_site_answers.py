@@ -350,3 +350,30 @@ def test_turtle_flag_from_assets_real():
         root, "python-projects", root / "python-projects/units/unit-03-turtle-art-studio", "unit")
         if item.mode == "exercise"}
     assert projects[1] and not projects[2] and not projects[10]  # Ex 2 and 10 are headless plans
+
+
+def test_plain_keeps_inline_code_verbatim():
+    """[fable] 1 (content review 2): `_plain` strips only the backticks of a code span; emphasis
+    stripping and whitespace collapse apply outside code spans only."""
+    assert answers._plain("Use `a  *b*  c` and **bold**   text.") == "Use a  *b*  c and bold text."
+    assert answers._plain("Call `` x = `y` `` then _stop_.") == "Call x = `y` then stop."
+    entry = ROOT / "python-projects/units/unit-06-secret-codes"
+    item = next(i for i in entry_content(ROOT, "python-projects", entry, "unit").items
+                if i.label == "Exercise 4")
+    requirements, _ = answers.self_check_requirements(item)
+    assert requirements[0] == 'Store "  secret_launch  " in a variable.', requirements
+
+
+def test_single_token_numeric_expected_output_is_flagged():
+    """[fable] 3 (content review 2): a one-token numeric `expected-output` canonical passes
+    `output_fixed_by_statement` trivially, so the report lists it for a content plan to confirm."""
+    entry = ROOT / "python-concepts/units/unit-02-numbers-and-arithmetic"
+    items = {i.key.rsplit("/", 1)[1]: i
+             for i in entry_content(ROOT, "python-concepts", entry, "unit").items}
+    notes = answers.check_notes(ROOT, "python-concepts", items["u02e043"], "expected-output")
+    assert f"{answers.SINGLE_TOKEN_NOTE} (18)" in notes, notes
+    entry = ROOT / "python-projects/checkpoints/checkpoint-01-first-steps"
+    question = next(i for i in entry_content(ROOT, "python-projects", entry, "checkpoint").items
+                    if i.label == "Question 4")
+    notes = answers.check_notes(ROOT, "python-projects", question, "expected-output")
+    assert not any(n.startswith(answers.SINGLE_TOKEN_NOTE) for n in notes), notes

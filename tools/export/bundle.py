@@ -18,7 +18,8 @@ path. `content_hash` is sha256 over the sorted `(relative path, bytes)` of every
 
 The report (probe statuses, unattributed concepts (items per check kind; short answers, which have
 no code, are counted as exempt), classification, self-check reasons, derived
-formats, fixture notes, distractor fallbacks) goes to `build/site-report/<book>.json`, never into
+formats, fixture notes, one-token numeric `expected-output` outputs to confirm
+(`single_token_outputs`), distractor fallbacks) goes to `build/site-report/<book>.json`, never into
 the bundle; `site-check` turns it into findings.
 """
 
@@ -52,6 +53,7 @@ from tools.publish import (
 )
 
 from . import SCHEMA_VERSION
+from .answers import SINGLE_TOKEN_NOTE
 from .cards import concept_cards, glossary_records, predict_cards
 from .classify import tag_findings
 from .concepts import book_registry
@@ -193,6 +195,8 @@ def _note_lists(report: dict, key: str, notes: list[str]) -> None:
             report["derived_formats"].append(key)
         elif note.startswith("fixtures: no pair matches"):
             report["unmatched_samples"].append(key)
+        elif note.startswith(SINGLE_TOKEN_NOTE):
+            report["single_token_outputs"].append(key)
     if notes:
         report["notes"][key] = list(notes)
 
@@ -228,7 +232,8 @@ def export_book(root: Path, book: str, out_dir: Path, release: str = UNRELEASED)
         "book": book, "probes": {}, "concept_findings": [], "tag_findings": [],
         "unattributed": {"blocks": [], "items": {}, "short_answer_exempt": 0},
         "classification": {},
-        "self_check": {}, "derived_formats": [], "unmatched_samples": [], "over_budget": {},
+        "self_check": {}, "derived_formats": [], "unmatched_samples": [], "single_token_outputs": [],
+        "over_budget": {},
         "notes": {}, "distractor_fallbacks": {},
     }
     classification = {"total": 0, "confirmed": 0, "by_kind": {}, "unconfirmed": []}

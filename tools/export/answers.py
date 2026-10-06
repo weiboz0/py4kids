@@ -510,10 +510,28 @@ def fixtures_check(root: Path, book: str, item: Item) -> tuple[dict, list[str]]:
 LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+(.*\S)\s*$")
 
 
-def _plain(text: str) -> str:
+CODE_SPAN = re.compile(r"(`+)(.+?)(?<!`)\1(?!`)", re.DOTALL)
+
+
+def _plain_prose(text: str) -> str:
     text = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", text)
     text = re.sub(r"(\*\*|__|\*|_|`)", "", text)
-    return re.sub(r"\s+", " ", text).strip()
+    return re.sub(r"\s+", " ", text)
+
+
+def _plain(text: str) -> str:
+    """Markdown as plain text: links, emphasis and extra whitespace go, but an inline code span keeps
+    its exact text (only its backticks go; CommonMark strips one space padding both ends)."""
+    out, position = [], 0
+    for match in CODE_SPAN.finditer(text):
+        out.append(_plain_prose(text[position:match.start()]))
+        code = match[2]
+        if code.startswith(" ") and code.endswith(" ") and code.strip():
+            code = code[1:-1]
+        out.append(code)
+        position = match.end()
+    out.append(_plain_prose(text[position:]))
+    return "".join(out).strip()
 
 
 def self_check_requirements(item: Item) -> tuple[list[str], list[str]]:
@@ -577,6 +595,12 @@ def item_uses_turtle(item: Item) -> bool:
     return any(imports_turtle(source) for source in sources if source)
 
 
+# A one-token numeric output passes `output_fixed_by_statement` whenever the statement holds that
+# number anywhere, so the report lists it for a content plan to confirm (content review 2).
+SINGLE_NUMBER = re.compile(r"[-+]?\d+(?:\.\d+)?")
+SINGLE_TOKEN_NOTE = "expected-output: single-token output"
+
+
 def _check(root: Path, book: str, item: Item, kind: str) -> tuple[dict, list[str]]:
     from .classify import confirmed_kind  # classify imports this module
 
@@ -587,6 +611,9 @@ def _check(root: Path, book: str, item: Item, kind: str) -> tuple[dict, list[str
         canonical = canonical_text(item, kind)
         fmt, notes = answer_format(item, canonical)
         body = {"hash": answer_hash(item.key, canonical, case=fmt["case"]), "answer_format": fmt}
+        output = normalise(canonical, case="sensitive")
+        if kind == "expected-output" and SINGLE_NUMBER.fullmatch(output):
+            notes = [*notes, f"{SINGLE_TOKEN_NOTE} ({output})"]
         if kind == "predict":
             body["program"] = statement_program(item) or ""
     elif kind == "asserts":
