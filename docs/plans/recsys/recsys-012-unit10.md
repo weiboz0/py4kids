@@ -353,4 +353,50 @@ All `[OPEN]` findings resolved ([sol] 1 Must + 1 Should + 1 Nice; [fable] 1 Must
 
 ## Post-Execution Report
 
+**Status:** COMPLETE — both gates at full 3-way consensus; `ci-local.sh` ALL GREEN (re-run after the content fold);
+ready to merge.
+
+**What shipped (Unit 10 — ANN/FAISS + hybrid retrieval):**
+- **Registry (Phase A) + buildout removal:** 3 concepts (`ann-retrieval`, `hnsw`, `hybrid-retrieval`), coverage entry
+  `unit-10-ann-and-hybrid`, manifest, syllabus row 10, baseline faiss idioms. **`buildout` removed from `books.yaml`**
+  (whole-book lessons 30.5 ≥ 30 min); with the flag off, lesson-budget-minimum + introduction-completeness are fully
+  enforced and pass; `tests/test_books.py` updated to assert recsys buildout is now False.
+- **`bookrec` (Phase B):** `ann.py` — `HnswIndex` (`IndexHNSWFlat(d, M=32, METRIC_INNER_PRODUCT)`, efC=200,
+  `faiss.omp_set_num_threads(1)` saved/restored, lazy faiss import) + `AnnRetrievalPath(dense_path, efSearch=64)`
+  (over-fetches `k+len(seen)`); `hybrid.py` — `HybridRetrievalPath(sparse, dense, weight=0.7, pool=50, method)`
+  (pure numpy, min-max weighted fusion + RRF). Group-free import pulls neither torch nor faiss (extended
+  `test_unit07` subprocess); `test_unit10.py` (18 tests).
+- **Notebooks (Phases C/D/E):** lesson (project-first: exact brute-force → HNSW → recall/speed → hybrid), exercises
+  (8: 6 core + 2 Challenge), solutions, milestone. Teacher-notes (Phase F).
+
+**Measured (seed0, 40ep two-tower, the lesson binds to these):** ANN recall@10 **0.9991** at efSearch=64 (M=32/
+efC=200); ANN hit@10 **0.340 == exact two-tower** (Δ0) — ANN is a SPEED technique that PRESERVES accuracy, no 2k
+speedup (asymptotic: 20k → ~3–5× machine-dependent at recall ~0.99, widening toward an order of magnitude at larger
+catalogs). Hybrid pinned `pool=50, w_dense=0.7` → hit@10 **0.362** / coverage **0.192** vs two-tower 0.340/0.177 — a
+small, weight-sensitive lift (equal weights HURT ~0.30; RRF loses ~0.328; coverage stays below lexical 0.278 and the
+U6 blend 0.333) — a modest complement, not a new best. Determinism gated on top-k **rank overlap** (1.0) + `allclose`
+(§184), never exact neighbour-id identity; latency gated on a generous absolute ceiling (<1 s), never a timing ratio.
+
+**Gates:**
+- **Plan-review (3-way): CONSENSUS** after 2 rounds — [self]/[sol] APPROVE, [fable] APPROVE WITH NITS. A [fable]
+  empirical probe measured the ANN recall/latency + hybrid curves up front; [sol] round-1 REJECT (missing latency
+  bound; unspecified inner-product geometry; "recall rises" too strong) folded to v2.
+- **Content-review (3-way): CONSENSUS** after 2 rounds — [self] APPROVE, [fable] APPROVE (1 Must + 2 Should + 2 Nice),
+  [sol] APPROVE WITH NITS (1 Must + 1 Should + 1 Nice). Folded: determinism rank-overlap gate (whole defect class incl.
+  the milestone — no `np.array_equal`-on-labels remains); non-vacuous over-fetch test (`heavy_seen` = reader's own
+  top-25); milestone speedup de-gated to deterministic facts + recorded; the "~10×" overclaim corrected to ~3–5×
+  machine-dependent; recall ~0.993→~0.99; set-hoist; Ex8 record-don't-gate clause; stale "identical neighbour" prose.
+- **Self-caught (Phase G):** a ruff I001 import-order in the milestone; the `test_books.py` buildout assertion; and a
+  **pre-existing merged U9-milestone output defect** (my reexec slip in #141) that failed book-level `milestone-check`
+  — cleared on this branch with an ERRATA entry (user-approved; `recsys/units/unit-09-feature-towers/ERRATA.md`).
+
+**Verification (Phase G):** `TMPDIR=/dev/shm bash scripts/ci-local.sh` — **ALL GREEN** (1936+231 unit tests pass,
+2 skipped; notebook exec + hygiene; manifest/prereq/coverage/concept-scan/stretch with buildout OFF; the books.yaml
+change triggered a full edition re-render + publish-audit PASS for all 4 publication books; U10 handout PDF built;
+`pre-merge-guard: OK`). The content fold was re-executed clean and ci-local re-run green.
+
+**Follow-ups / notes:** none blocking. (1) `docs/content-review-gate.md:11` still names Sol model `gpt-6-sol` which
+this account rejects — gates were run with `gpt-5.6-sol` (AGENTS.md); governance-doc reconcile pending user sign-off.
+(2) Part 2 continues: U11 neural reranker (recsys-013), U12 SASRec, U13 ethics + Checkpoint B, U14 capstone.
+
 <!-- appended before ship -->
