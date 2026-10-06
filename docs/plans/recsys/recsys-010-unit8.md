@@ -356,9 +356,40 @@ the book's new best, not "≈ MF"; wd=0 overfits below CF), and [sol] drove the 
 
 ### Content-gate round 1 outcome: **[sol] REJECT (3 Must) + [fable] APPROVE WITH NITS + [self] APPROVE WITH NITS.** All folded; re-run ci-local + re-review [sol] (sole rejecter).
 
-<!-- [sol] round-2 verdict appended -->
+### Round 2 — [sol] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS. All 4 round-1 findings confirmed resolved. One residual Nit:
+5. `[FIXED]` **Nit** — wd=0 (~0.18) was still labelled the sweep's "lowest", but 1e-3 (~0.17) is lower. → reworded
+   in both Ex6 code comments ("overfits, below CF; 1e-3 under-shrinks even lower"); no "lowest" label remains.
 
-<!-- appended pre-PR -->
+### Content-gate outcome: **CONSENSUS — [self] · [sol] · [fable] all APPROVE WITH NITS; every finding FIXED.** 3-way roster. Proceed to PR → pre-merge-guard --pr → squash-merge.
+
+## Post-Execution Report
+
+**Shipped (branch `feature/recsys-010-unit8`):** Book-3 **Unit 8 — the two-tower model in PyTorch** (first torch
+unit). Phase A registry (concepts `two-tower`/`bpr-loss`/`neural-training`; buildout 24.5<30). Phase B
+`bookrec/two_tower.py` — `TwoTowerRetrievalPath` with **torch imported lazily inside `fit()` only** (module +
+`retrieve`/`load`/`artifact` torch-free on numpy weights), BPR `-logσ(s⁺−s⁻)` + Adam + `weight_decay`, CPU-determinism
+(seed + `use_deterministic_algorithms` + single-thread, saved/restored), plus a rewritten no-torch assertion + an
+import-blocked-subprocess sentinel test. Phases C/D/E/F the lesson, 7 exercises (5 core + 2 Challenge), independent
+solutions, milestone, teacher-notes.
+
+**Measured (seed 0, k=10, 500 val):** random 0.012, popularity 0.108, lexical 0.158, item-item CF 0.252, MF 0.276,
+**two-tower (wd=1e-4) 0.340 — the book's new best path** (seeds 1–3 up to 0.366). The **regularization lesson**:
+`weight_decay=0` overfits (BPR loss→~0) to ~0.144 (60-epoch demo) / ~0.18 (20-epoch Ex6 sweep), below CF; `1e-3`
+under-shrinks to ~0.17 (a sharp peak, both sides fail). Honest thesis: the SAME reader·item dot product as U5's MF,
+but the pairwise BPR ranking objective + Adam + weight decay wins on top-k. Milestone: adding the two-tower to the U6
+pinned blend lifts hit (0.306→0.314) but trims coverage (0.333→0.3095) — the mirror of U7's weak-but-diverse semantic.
+
+**Gates.** Plan-review: 4 `[sol]` rounds + `[fable]`'s probe (which corrected the thesis from "≈ MF" to the new best,
+and drove the torch-isolation design — lazy import, torch-free load, sentinel subprocess). Content-review: `[sol]`
+REJECT round 1 (Ex6/docstring numbers by-config, the exact-float determinism gate, subprocess `artifact()`), all
+fixed → APPROVE round 2; `[fable]`/`[self]` APPROVE WITH NITS. Shipped code verified correct throughout.
+
+**Deviations:** none material. torch is lazy (never on the group-free import path — proven by subprocess). Per-fit
+~14–17 s; the pinned loop runs ≥2×/CI, aggregate well under budget. `weight_decay=1e-4` is a required pinned default.
+
+**Verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN (routed suite incl. the torch two-tower + the
+group-free suite with no torch import + recsys PDF) + `pre-merge-guard.sh --pr` OK. <!-- re-confirm final ci-local green before PR -->
 
 <!-- appended pre-PR -->
 
