@@ -38,6 +38,7 @@ so every addition can answer the only question that matters: *did it help?*
 | 8 | `unit-08-two-tower` | unit | 3 | Let a neural network learn the taste factors — a two-tower dot-product model trained with BPR in PyTorch (and why regularization decides the win). |
 | 9 | `unit-09-feature-towers` | unit | 3 | Recommend a book nobody has read yet — give the item tower content features (genre, author, GloVe) so cold items get a vector from what they *are*, plus hard-negative sampling. |
 | 10 | `unit-10-ann-and-hybrid` | unit | 3 | Retrieve without scanning the whole catalog — an exact brute-force baseline vs an approximate HNSW index (FAISS), the recall/speed trade, and a hybrid that fuses BM25 with the two-tower. |
+| 11 | `unit-11-neural-reranking` | unit | 3 | Learn to rank the candidate pool — a PyTorch reranker over per-path + content features; the leakage trap that tanks it, the time-ordered-holdout fix, and why content features (not score-combination) carry the lift. |
 
 ## How the book is organised
 
