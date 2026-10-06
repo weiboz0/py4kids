@@ -149,7 +149,19 @@ Phase G is this plan's named verification phase.
 
 ## Plan Review
 
-<!-- round 1 appended -->
+### Round 1 (on v1)
+
+**[self] — APPROVE.** Registry closes: `requires` ⊆ U1/U4/U5/U6/U7/U8 introductions; `practices ∩ introduces = ∅`;
+buildout 27.5<30 (U10 removes it, not this plan); concepts unique (confirm Phase A). Empirical claim is conditional +
+measure-first — the honest win is **cold-item reach** (the ~818 zero-train-positive items CF/ID-only-two-tower score
+~0) with warm hit@10 held ≈ U8's ~0.34, plus an honest hard-negatives readout. torch isolation reuses U8's proven
+pattern (lazy `fit`-only import, torch-free load, import-blocked subprocess extended to `feature_tower`), determinism
+tolerance-based (§184). cold-start is now legitimately TAUGHT + assessed (U9 introduces `item-cold-start`), resolving
+the U6 unassessed-preview thread. Named Phase G; project-first; ≥6/≥2-stretch/≥3-asserts; teacher-notes; milestone.
+No scope creep (ANN=U10, reranker=U11, sequence=U12). Open for Phase B/gate: a well-posed **cold-item-reach metric**
+([fable] is probing it + the warm-not-tanked check) and the warm-hit tolerance. No [self] blockers.
+
+_([sol] + [fable] round-1 verdicts appended on hand-back.)_
 
 ## Content Review
 
