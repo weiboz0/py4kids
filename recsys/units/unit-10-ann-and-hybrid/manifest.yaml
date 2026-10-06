@@ -1,0 +1,9 @@
+id: unit-10-ann-and-hybrid
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [ann-retrieval, hnsw, hybrid-retrieval]
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, embedding-retrieval, two-tower, bm25, score-blending]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, embedding-retrieval, two-tower, bm25, score-blending]

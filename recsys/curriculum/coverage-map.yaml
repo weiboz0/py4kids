@@ -1,7 +1,7 @@
 map_version: 1
-# This remains `buildout: true` while the accumulated lessons (now twenty-seven and a half: Units 1-9 at 3 each = 27 +
-# Checkpoint A at 0.5) are below the whole-book lesson budget (30). A later plan (U10) removes buildout when the
-# accumulated entries first reach that budget.
+# `buildout` is REMOVED as of recsys-012 (Unit 10): the accumulated lessons are now thirty and a half (Units 1-10 at
+# 3 each = 30 + Checkpoint A at 0.5), which meets the whole-book lesson-budget minimum (30; books.yaml [30,60]). With
+# the flag off, the lesson-budget-minimum and introduction-completeness checks are fully enforced.
 entries:
 - id: unit-01-problem-and-scoreboard
   kind: unit
@@ -73,3 +73,10 @@ entries:
   introduces: [feature-towers, item-cold-start, hard-negatives]
   requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, latent-factors, embedding-retrieval, two-tower, bpr-loss, neural-training, word-embeddings]
   practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, two-tower, neural-training, word-embeddings]
+- id: unit-10-ann-and-hybrid
+  kind: unit
+  title: "Approximate nearest neighbours and hybrid retrieval"
+  lessons: 3
+  introduces: [ann-retrieval, hnsw, hybrid-retrieval]
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, embedding-retrieval, two-tower, bm25, score-blending]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, embedding-retrieval, two-tower, bm25, score-blending]

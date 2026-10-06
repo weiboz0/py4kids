@@ -82,5 +82,4 @@ books:
   depends_on:
   - python-projects
   lesson_budget: [30, 60]
-  buildout: true
   dependency_group: recsys

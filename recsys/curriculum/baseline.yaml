@@ -115,6 +115,20 @@ library_methods:
 # --- Unit 9 (recsys-011): feature towers & item cold-start (feature-tower API + torch idioms) ---
 - FeatureTowerRetrievalPath
 - Linear
+# --- Unit 10 (recsys-012): ANN/FAISS + hybrid retrieval (bookrec ann/hybrid API + faiss idioms) ---
+# faiss `IndexHNSWFlat`/`add`/`search`/`omp_set_num_threads`/`omp_get_max_threads` are call-form
+# idioms the ANN lesson/milestone use (`add` is already declared above). `efSearch`/`efConstruction`
+# are attribute ASSIGNMENTS (`index.hnsw.efSearch = ...`), not calls, so the concept-scan (which
+# flags `x.NAME(...)`) never sees them and they are not declared here. `argpartition` is the exact
+# top-k reference the recall-vs-approx lesson compares the HNSW search against.
+- AnnRetrievalPath
+- HnswIndex
+- HybridRetrievalPath
+- IndexHNSWFlat
+- argpartition
+- omp_get_max_threads
+- omp_set_num_threads
+- search
 # --- Unit 5 (recsys-007): matrix factorization (bookrec MF API + numpy GD idioms) ---
 - MatrixFactorizationPath
 - calibrate
