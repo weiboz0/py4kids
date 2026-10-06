@@ -620,6 +620,17 @@ Gate roster per `docs/content-review-gate.md` (3-way since 2026-10-05: [glm] rem
 3. `[FIXED]` `segment.color` is student-visible but excluded and not tie-checked. Regenerate figures and compare, or count `color`; add a color-injection regression and make field coverage exhaustive. Must Fix.
    → Response: both. The `figures` tie replays every block's own (counted) `code` with `turtle_segments(code, stdin)` (stdin from `sample_input` for `tryit+figure`) and requires the `figure` to equal it. Field coverage is now exhaustive: every string field is either in `COUNTED_FIELDS` (check 2) or held by a named tie check in `TIES` (`tie_of`): `schema` (enums, consts, sha256 hashes), `keys` (a cell id of a mapped notebook, with a part, `asset:` or `predict` suffix, or a glossary card of a registered concept), `ids`, `paths` (a copied file with a repo source), `release` (`unreleased` or `pdfs-<date>`, and `pdfs` its links), `settings`, `routes`, `figures`, `tags` (tags of the source cell), `registry`, `divisions` (the season ladder), `titles` (books.yaml, the entry notebook's H1, the item's own heading text; labels `<kind> <number>`), and the existing `predict program`, `assert functions` and `glossary cards`. A check that cannot read a tampered bundle gives a FAIL instead of crashing. Tests: every schema string property is classified; every string of the demo and the 4 real bundles is counted or tied; `159` written into each uncounted field path of the demo bundle (144 paths: every uncounted field of every bundle file) FAILs; real-bundle injections of a hidden canonical into a segment `color` (python-projects: `turtle figure differs from the replay of its code`), a lesson tag, an ACSL item division and `settings.acsl_divisions` FAIL; a PDF link FAILs. Titles stay out of check 2 (Phase F: "never in keys, labels or titles"), so `test_canonical_in_title_is_not_content` became `test_canonical_in_title_is_not_counted_but_tied`.
 
+### Review 3 — [self] (2026-10-05)
+- **Verdict**: APPROVE. The round-2 fixes were verified through [fable]'s real-bundle runs and the `site-check` passes. The title-tie fix (below) is re-run on all four real books: 65/65 answer-model tests pass.
+
+### Review 3 — [fable] (2026-10-05)
+- **Verdict**: APPROVE. All four r3 bundles show 0 answer-model findings; every string field of every real bundle is counted or tied; the round-2 nits and Must Fixes are verified.
+1. `[FIXED]` (Nice to Have) `_tie_titles` accepted a title whose words appear anywhere in the item's statement. → Response: fixed as [sol] 1 below.
+
+### Review 3 — [sol] (2026-10-05, gpt-5.6-sol)
+- **Verdict**: REJECT.
+1. `[FIXED]` Item-title ties were not exact: `u02e043`'s title set to its hidden canonical `18` passed, because `18` occurs in its statement. Must Fix. → Response: `_tie_titles` now requires each item title to equal the exporter's own title (`entry_content(...).items[].title`, `AnswerModel._exported_titles`); the word-anywhere helper is removed. Regression `test_real_item_title_must_equal_exported_heading` (real python-concepts `u02e043` → `18` FAILs) was seen failing first.
+
 ## Post-Execution Report
 
 _(written before the PR)_

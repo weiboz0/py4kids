@@ -742,3 +742,23 @@ def test_real_acsl_verify_cell_in_starter_fails(real, tmp_path):
     found = fails(model, bundle)
     assert any("solution code leaked into entries/unit-08-boolean-algebra.json:" in f
                and f.endswith(f"(from {hidden.origin})") for f in found), found
+
+
+@pytest.mark.slow
+def test_real_item_title_must_equal_exported_heading(real, tmp_path):
+    """[sol] content review 3: an item title is tied EXACTLY to the exporter's heading title. Its
+    hidden canonical `18` occurs in `u02e043`'s own statement, so a words-anywhere tie let a title of
+    `18` pass; exact equality fails it."""
+    model, out = real("python-concepts")
+    copy = tmp_path / "python-concepts"
+    shutil.copytree(out, copy)
+    path = next(p for p in (copy / "entries").glob("*.json")
+                if '"python-concepts/unit-02-numbers-and-arithmetic/exercises/u02e043"' in p.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
+    item = next(i for i in data["items"] if i["key"].endswith("/u02e043"))
+    assert item["title"] != "18"
+    item["title"] = "18"
+    path.write_text(dumps(data), encoding="utf-8")
+    found = fails(model, copy)
+    assert any(f.startswith("FAIL: python-concepts/unit-02-numbers-and-arithmetic/exercises/u02e043:"
+                            " title") for f in found), found

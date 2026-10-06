@@ -941,15 +941,16 @@ class AnswerModel:
                 return cell.source.splitlines()[0].removeprefix("# ").strip()
         return entry_id
 
-    def _item_text(self, item: dict, starts: dict) -> list[str]:
-        """The words of the item's own statement cells: from its key cell to the next item's."""
-        found = self._key_cell(item["key"])
-        if found is None:
-            return []
-        entry_id, stem, index, cells, _suffix = found
-        later = [i for i in starts.get((entry_id, stem), ()) if i > index]
-        region = cells[index:min(later)] if later else cells[index:]
-        return WORD.findall("\n".join(c.source for c in region if c.cell_type == "markdown"))
+    @cached_property
+    def _exported_titles(self) -> dict[str, str]:
+        """Every item's title as the exporter derives it from its heading (exact tie, content
+        review 3): a title may not carry any other text, even text found in its own statement."""
+        from .items import entry_content
+
+        kinds = {"units": "unit", "checkpoints": "checkpoint", "projects": "project"}
+        return {item.key: item.title for entry_dir in self.entry_dirs.values()
+                for item in entry_content(self.root, self.book, entry_dir,
+                                          kinds[entry_dir.parent.name]).items}
 
     def _tie_titles(self, bundle: Bundle) -> list[str]:
         book = bundle.documents["book.json"]
@@ -957,11 +958,6 @@ class AnswerModel:
         if book["book"]["title"] != book_title(self.root, self.book) or (
                 book["book"]["subtitle"] != book_subtitle(self.root, self.book)):
             out.append(f"FAIL: {self.book}: book.json book title or subtitle is not books.yaml's")
-        starts: dict[tuple[str, str], list[int]] = defaultdict(list)
-        for _record, _index, item in _items(bundle):
-            found = self._key_cell(item["key"])
-            if found:
-                starts[found[0], found[1]].append(found[2])
         for record, document in _entry_docs(bundle):
             expected = self._entry_title(record["id"], record["kind"], bool(document["lesson"]))
             if record["title"] != expected or document["entry"]["title"] != expected:
@@ -973,9 +969,7 @@ class AnswerModel:
                                  and int(label[2]) != item["number"]):
                     out.append(f"FAIL: {item['key']}: label {item['label']} is not "
                                f"`<kind> <number>`")
-                words = WORD.findall(item["title"])
-                if words and not _TokenCounter([" ".join(self._item_text(item, starts))]).count(
-                        words, False):
+                if item["title"] != self._exported_titles.get(item["key"]):
                     out.append(f"FAIL: {item['key']}: title is not the item's heading text")
         return out
 
