@@ -52,10 +52,14 @@ lifts cold coverage to **0.131** (vs 0 for ID-only/CF). So: "a cold item that is
 down; features can't rescue it from its own negative gradient — sample warm-only so features can place it."
 
 **Metric (validation-safe — [sol]+[fable]):** the designated 150 cold_items have NO val positives (relevance only on
-`test`, deferred to Checkpoint B); so the **GATE is cold-item COVERAGE** = `unique zero-train item ids in readers'
-top-10 / 818` (ID-only/CF = exactly 0 → "feature-tower cov > 0 and > ID-only" is sound) plus warm hit@10 ≥ ~0.30
-(not tanked). **Report-only:** cold hit@10 on the 97 incidental readers who DO have a cold val positive (small-n;
-feature tower 0.021 vs ID-only 0.000) — not a gate.
+`test`, deferred to Checkpoint B); so the **GATE is cold-item COVERAGE** = `unique zero-train item ids appearing in the
+top-10 / 818`, computed over **ALL fitted non-cold readers scored from their TRAIN histories only** (each reader's
+train-seen items excluded; NOT the scoreboard's held-out-positive "eligible" cohort — coverage must not depend on who
+has a val positive). (ID-only/CF = exactly 0 → "feature-tower cov > 0 and > ID-only" is sound.) The warm-accuracy gate
+warm hit@10 ≥ ~0.30 (not tanked) is the ordinary val scoreboard over its eligible readers — reported separately.
+**Report-only:** cold hit@10 on the 97 incidental readers who DO have a cold val positive (small-n; feature tower
+0.021 vs ID-only 0.000) — not a gate. The "500 eligible readers" figure in the table above is that val warm-cohort,
+distinct from the train-only coverage cohort.
 
 **Honest headline (NOT "first to serve cold"):** U7 semantic / U3 lexical content paths ALREADY surface cold items
 freely (U7 cov 0.322) — they just ignore interactions. The feature tower is the **first LEARNED-taste/collaborative
@@ -103,7 +107,8 @@ uses GloVe). `practices ∩ introduces = ∅`; no `project` entry → capstone r
 ### Phase A — registry + syllabus
 - `concepts.yaml`: add the 3 ids. `coverage-map.yaml`: add the Unit-9 entry (buildout comment → "twenty-seven and a
   half"). `baseline.yaml`: declare any new `x.name(...)` methods the authored cells use (e.g. torch `cat`/`Linear`/
-  `Parameter` if used; `FeatureTowerRetrievalPath`; feature accessors).
+  `Parameter` if used; `FeatureTowerRetrievalPath`; feature accessors). NOTE: `arange` is already declared
+  (`baseline.yaml:68`) — only add idioms the authored cells newly use.
 - `unit-09-feature-towers/manifest.yaml`; `syllabus.md` arc row `| 9 | \`unit-09-feature-towers\` | unit | 3 | <hook>
   |` after the U8 row; rebuild PDF.
 **Verify:** manifest/prereq/coverage/syllabus green; buildout holds (27.5<30); concepts unique.
@@ -125,9 +130,12 @@ torch-free retrieve/load/artifact), `embeddings.py`/`load_glove_subset` (GloVe k
   still k recs; unknown reader → `[]`. `artifact`/`load` persist the **composed numpy item matrix + reader matrix +
   ids** (NOT the Linear/Embedding weights — so load/retrieve need no torch and no re-composition). A `negative_pool`
   knob also allows `"hard"` (popularity-weighted) as the ablation. Export (no eager torch).
-- Tests (routed): **warm hit@10 ≥ ~0.30** (bind to the measured ≈0.32 at 40ep; must not tank vs U8); **cold-item
-  COVERAGE gate** — `feature_tower cold_cov > 0 AND > id_only_cold_cov` over the 818 zero-train items (ID-only/CF are
-  exactly 0); report (not gate) cold hit@10 on the 97 incidental-cold-val readers; determinism (ranking + allclose,
+- Tests (routed): **warm hit@10 ≥ ~0.30** (≈0.32 was measured at 60ep; Phase B **re-measures at 40ep and pins the gate
+  with headroom** — e.g. ≥0.28 if 40ep lands lower — never pre-bound to an unmeasured number; must not tank vs U8); **cold-item
+  COVERAGE gate** — `feature_tower cold_cov > 0 AND > id_only_cold_cov` over the 818 zero-train items, coverage counted
+  over **ALL fitted non-cold readers scored from TRAIN histories only** (train-seen excluded; NOT the scoreboard's
+  held-out-positive eligible cohort — no val dependency); ID-only/CF are exactly 0. Report (not gate) cold hit@10 on
+  the 97 incidental-cold-val readers; determinism (ranking + allclose,
   array_equal bonus print only); the warm-only-vs-uniform negative-pool effect recorded; empty-seen/unknown-reader
   contract; fit→artifact→load identical, torch-free; registers as `feature-tower-v1`. **EXTEND the import-blocked
   subprocess test** in `recsys/projects/bookrec/tests/test_unit07.py` (`:310` `test_torch_free_paths_do_not_import_torch`
@@ -275,8 +283,8 @@ hard-neg popularity: warm 0.28→0.23 (trades warm for cold, doesn't "sharpen").
   `catalog` stays an item-ids iterable. Phase B signature.
 - **[fable]#7 (named subprocess test + artifact):** Phase B names `tests/test_unit07.py:310` + `:283`; `artifact`
   persists the **composed numpy item matrix** (+ reader matrix + ids), not Linear/Embedding weights.
-- **[fable]#8 (baseline torch idioms):** Phase A baseline.yaml note to add `Linear`, `no_grad`, `cat`, `zeros_`,
-  `arange` beyond U8's list as the authored cells require.
+- **[fable]#8 (baseline torch idioms):** Phase A baseline.yaml note to add `Linear`, `no_grad`, `cat`, `zeros_`
+  beyond U8's list as the authored cells require (`arange` already declared, `baseline.yaml:68`).
 - **[fable]#9 (deterministic cold-book example):** Phase D/E pick the surfaced-cold-book reader from the 97
   incidental-cold-val readers deterministically.
 
@@ -285,6 +293,28 @@ the mechanism (warm 0.320 ≈ U8 0.340, cold-cov 0.131 vs 0); the gate is the va
 (cold hit report-only); the headline is honest (learned/collaborative-first, compromise not dominance); hard-neg is an
 ablation; budget pinned at 40 epochs; features via constructor; artifact persists the composed numpy matrix; subprocess
 test extended. No [self] blockers; dispatching [sol]+[fable] round-2 re-review.
+
+**[fable] — APPROVE WITH NITS (round 2).** Verified all nine round-1 findings genuinely folded into the v2 text (not
+merely claimed), honest-headline framing consistent across Scope/Why/Phase C/D/E/F, registry unique + closure sound
+(24.5→27.5 buildout arithmetic correct), subprocess test line numbers exact (`:310`/`:283`), constructor signature
+matches `protocol.py`/`embeddings.py`. No new blocker. Two **Nice** nits — BOTH FOLDED: (1) Phase B warm-gate was
+pre-bound to an unmeasured "≈0.32 at 40ep" (all measurements were 60ep) → reworded to re-measure at 40ep and pin with
+headroom (≥0.28 if lower); (2) `arange` already declared (`baseline.yaml:68`) → dropped from the Phase-A add list.
+
+**[sol] — REJECT (round 2) → fixed in round 3.** Confirmed round-1 Must #2 resolved (U8 embeds/scores every catalog
+item, cold items get negative-shaped embeddings not exclusion — `two_tower.py:148,231,376`) and no sealed-test leak
+(`gen_interactions.py:183`), closure/buildout/isolation/taught-before all sound. One remaining Must:
+- `[OPEN]→[FIXED r3]` **Must** — the cold-COVERAGE gate still had a hidden val dependency: the plan's measured cohort
+  was the "500 eligible readers", but the scoreboard derives eligibility from readers who HAVE a held-out positive
+  (`scoreboard.py:141,147`), so *which* readers count toward coverage would depend on val. → **v3 fold:** coverage is
+  now counted over **ALL fitted non-cold readers scored from TRAIN histories only** (train-seen excluded), explicitly
+  NOT the held-out-positive cohort; the 500-reader val cohort is kept only for warm hit@10 + report-only cold hit, and
+  Phase B re-measures the coverage bound on the train-only cohort. Folded into the **Why/metric** para + **Phase B**.
+
+**[self] — APPROVE (round 3).** v3 removes the last val dependency: the coverage denominator (818) and the reader
+cohort (all fitted non-cold readers, train-only scoring) are both validation-free; warm hit and report-only cold hit
+stay on the val scoreboard, clearly separated. No remaining [self] blocker. Re-dispatching [sol] round-3 (sole
+rejecter; [fable] already APPROVE WITH NITS).
 
 ## Content Review
 
