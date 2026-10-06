@@ -296,6 +296,16 @@ combination; linear ≈ MLP), at a real coverage cost, and the naive recipe's le
 popularity) are the 75% profile; the 25% supplies only labels; serving uses full train. Leakage-safe and symmetric.
 No remaining [self] blocker; dispatching [sol] round-3.
 
+**[sol] — APPROVE (round 3).** Leak fully closed — every training-time feature/statistic (path scores + genre/author
+history + `log_pop`) uses the 75% profile only; the 25% supplies only labels; full-train is serving/val-only. No
+contradictory requirement, no new blocker.
+
+### Plan-review outcome (FINAL): **CONSENSUS — [self] APPROVE (r3) · [fable] APPROVE WITH NITS (all folded) · [sol] APPROVE (r3).**
+Three would-be-fatal design issues caught + fixed before any content: (1) naive training recipe leaks by memorization
+→ tanks 0.28 (time-ordered holdout fix); (2) per-path features not in blend's Candidate (extract from pre-blend
+lists); (3) training-time content features leaked the 25% labels (all training inputs = 75% profile). Cleared for
+implementation (Phases A→G).
+
 ## Content Review
 
 <!-- appended pre-PR -->
