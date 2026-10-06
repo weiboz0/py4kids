@@ -38,7 +38,7 @@ exact brute-force here).
 The recsys-004 keywords are latent-correlated, so a GloVe-averaged book embedding carries real taste signal — but
 **less than the sparse lexical path**. Measured (seed 0, k=10, 60 cold readers excluded, 500 val readers):
 random 0.012, lexical BM25 **0.158**, **semantic (mean pooling) 0.102** (recall 0.051, NDCG 0.033), IDF-weighted
-0.098 (IDF does NOT help here), max-sim-over-seen 0.142. GloVe covers **607/608** vocab words (`starfall` missing).
+0.098 (IDF does NOT help here), max-sim-over-seen 0.146. GloVe covers **607/608** vocab words (`starfall` missing).
 
 **Honest, binding framing:** semantic is a **content path well above the random floor (~8.5×) but BELOW lexical
 (~0.102 vs 0.158, ≈65%)** — NOT "comparable within noise", and nowhere near the collaborative CF/MF paths
@@ -50,7 +50,7 @@ candidates lexical misses, and adding it to the U6 blend is the quantitative com
 structure; only the 12 genre banks carry GloVe-exploitable meaning. On a real catalog's prose, dense-semantic would
 fare differently — the unit teaches the *method* honestly, not a staged win.
 **Pooling is a documented decision:** mean pooling is the pedagogically clean default (shipped); max-sim-over-seen
-(0.142) is a natural stretch exercise. Phase-B test binds `semantic_hit > 5 × floor` AND
+(0.146) is a natural stretch exercise. Phase-B test binds `semantic_hit > 5 × floor` AND
 `0.5 × lexical ≤ semantic ≤ 1.1 × lexical` (direction + band, like `test_unit03.py`), plus the overlap/blend-ablation
 complementarity number — reviewers re-verify on the shipped code, not a scratch script.
 
@@ -168,7 +168,7 @@ worse" rather than a synthetic-corpus artifact** — the arbitrary topic vocabul
 uncorrelated-by-construction with latent taste, a real catalog differs; treating GloVe cosine as exact; out-of-vocab
 tokens; forgetting L2-normalization), `## Discussion prompts` (semantic vs lexical, and why overlap is only ~0.22;
 pretrained vs learned embeddings → U8; when would meaning-match help on a REAL corpus?), `## Differentiation` (stretch:
-max-sim pooling 0.142 > mean 0.102).
+max-sim pooling 0.146 > mean 0.102).
 
 ### Phase G — verification (named)
 `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN with Units 1–7 + Checkpoint A + the Unit-7 milestone + the GloVe
@@ -282,8 +282,26 @@ No open [self] blockers.
 8. `[OPEN]` **Nice** — teacher-notes discussion prompt: the anisotropy number (book-embedding mean cosine ~0.66 vs
    ~0.12 for words) explains why every cosine looks "high" and why max-sim beats mean.
 
-_([sol] content verdict pending — its codex-rescue forwarder launched a background Codex task; re-dispatch if it
-doesn't hand back. Then fold [fable]+[sol] nits in one coordinated pass + re-verify.)_
+### Round 1 — [sol] (2026-10-05)
+- **Verdict**: REJECT (2 Must + 2 Should + 1 Nice; corroborates/sharpens [fable]). One REJECT blocks.
+1. `[OPEN]` **Must** — Ex4 equates "semantic-only" (absent from lexical top-10) with "no token match"; FALSE — the
+   reference book shares 11 surface tokens with the reader's history. VERIFIED the shipped code is fine; the EXERCISE
+   CLAIM is wrong. → Reframe: semantic and lexical RANK the same book differently even when tokens overlap; compute +
+   show the actual (nonzero) overlap and explain cosine-of-distributed-vectors vs BM25 term-weighting.
+2. `[OPEN]` **Must** — Ex2 says `glove.vector(OOV)` returns None + the hand recipe is zero-safe; but `starfall` is an
+   IN-vocabulary word GloVe lacked → a ZERO ROW (not None), so an `is not None` filter doesn't skip it. VERIFIED:
+   `glove.vector("starfall")`→zero ndarray, `glove.vector("notaword")`→None, shipped `book_embedding(["starfall"])`→
+   zero vector, NO NaN (shipped code IS zero-safe). → Fix the EXERCISE TEXT: None only for tokens absent from the
+   subset vocabulary; `starfall` is a zero row; guard the final L2-normalize against a zero-norm (all-missing) book
+   (as shipped `book_embedding` does). Align the `embeddings.py` docstring wording.
+3. `[OPEN]` **Should** (= [fable]#1) — milestone §5 overclaims "shared meaning"; output shows grab-bags + uniformly
+   high cosines (0.92-0.93). Reword honestly.
+4. `[OPEN]` **Should** (= [fable]#2) — max-sim is 73/500 = **0.146**, not "~0.142" (exercises/solutions/teacher-notes/
+   plan).
+5. `[OPEN]` **Nice** (= [fable]#3) — nearest-word prose omits the actual #1 (dragon→lantern; robot→monster/dragon
+   before spaceship); report ordered results or discuss noisy neighbours.
+
+### Content-gate round 1 outcome: **NOT consensus — [sol] REJECT (2 Must) + [fable] APPROVE WITH NITS + [self] APPROVE WITH NITS.** Shipped code verified correct (zero-safe; the Must are exercise-TEXT honesty/accuracy bugs). Folding [sol] 1-5 + [fable] 1-8 in one coordinated pass (notebooks via subagent; teacher-notes/embeddings-docstring/glove README/plan inline), then re-run ci-local + re-review [sol].
 
 <!-- appended pre-PR -->
 

@@ -172,6 +172,11 @@ class SemanticEmbeddingRetrievalPath(BaseRetrievalPath):
         self._embeddings = np.array(state["embeddings"], dtype=np.float32)
         if self._embeddings.shape[0] != len(self._item_ids):
             raise ValueError("semantic artifact: embeddings/item_ids length mismatch")
+        if self._embeddings.ndim != 2 or self._embeddings.shape[1] != self._glove.dim:
+            raise ValueError(
+                f"semantic artifact: embedding dim {self._embeddings.shape[1:]} "
+                f"disagrees with the GloVe subset dim {self._glove.dim}"
+            )
         self._fitted = True
         return self
 

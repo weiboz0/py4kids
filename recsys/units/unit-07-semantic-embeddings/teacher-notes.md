@@ -67,6 +67,16 @@ meaning?* Plan **60–90 minutes across two to three sittings**; assign all exer
 - **Support:** give `load_glove_subset` + `book_embedding` and the cosine helper as starter snippets so the lesson
   stays on the *meaning* idea; pair-program the reader-embedding aggregation.
 - **Core:** Exercises 1–4 unaided, using the shipped `SemanticEmbeddingRetrievalPath`.
-- **Stretch:** max-sim-over-seen pooling (0.142 > mean 0.102 — a real improvement to notice and explain), adding
+- **Stretch:** max-sim-over-seen pooling (~0.146 > mean 0.102 — a real improvement to notice and explain), adding
   semantic to the pinned blend, and reconstructing the path's score by hand to see the dot-product-retriever bridge.
-  Ask strong students why max-sim beats mean here (a reader's tastes are multi-modal; the mean blurs them).
+  Ask strong students why max-sim beats mean here (a reader's tastes are multi-modal; the mean blurs them). A sharp
+  discussion number: the mean pairwise cosine between *book* embeddings is ~0.66 (vs ~0.12 between the raw *word*
+  vectors) — mean-pooling grab-bag keyword sets collapses them toward a common centroid, which is why every semantic
+  cosine looks "high" and why max-sim (which keeps the peaks) helps.
+
+## Provenance
+
+The GloVe vectors are the `glove-wiki-gigaword-100` model (Wikipedia 2014 + Gigaword 5, 100-d), from Pennington,
+Socher & Manning, *GloVe: Global Vectors for Word Representation* (EMNLP 2014). The committed subset is the catalog's
+607 vocabulary words only; the vector data is licensed **PDDL-1.0** (the GloVe software is Apache-2.0) — see
+`recsys/data/glove/README.md` and the sidecar `glove_subset.json`.
