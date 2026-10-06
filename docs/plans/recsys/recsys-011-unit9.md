@@ -291,8 +291,10 @@ hard-neg popularity: warm 0.28→0.23 (trades warm for cold, doesn't "sharpen").
   `catalog` stays an item-ids iterable. Phase B signature.
 - **[fable]#7 (named subprocess test + artifact):** Phase B names `tests/test_unit07.py:310` + `:283`; `artifact`
   persists the **composed numpy item matrix** (+ reader matrix + ids), not Linear/Embedding weights.
-- **[fable]#8 (baseline torch idioms):** Phase A baseline.yaml note to add `Linear`, `no_grad`, `cat`, `zeros_`
-  beyond U8's list as the authored cells require (`arange` already declared, `baseline.yaml:68`).
+- **[fable]#8 (baseline torch idioms):** Phase A baseline.yaml note to add torch idioms beyond U8's list as the
+  authored cells require. **As built:** only `Linear` was actually used by the authored cells (the lesson's feature
+  skeleton); the shipped tower SUMS (no `torch.cat`) and no notebook uses `no_grad`/`zeros_`, so those were NOT added
+  (`arange`/`from_numpy` already declared). `FeatureTowerRetrievalPath` listed alongside the U7/U8 path-class precedent.
 - **[fable]#9 (deterministic cold-book example):** Phase D/E pick the surfaced-cold-book reader from the 97
   incidental-cold-val readers deterministically.
 
@@ -332,6 +334,14 @@ histories, and exclusions are all train-only; the validation-eligible cohort is 
 All blockers resolved; both [fable] Nice nits and both [sol] Musts folded. Cleared for implementation (Phases A→G).
 
 ## Content Review
+
+### Pre-gate self-caught fixes (during the build)
+- `[FIXED]` **Ex1 degenerate warm/cold contrast** — the exercises scaffold set `warm_book = catalog_ids[0]`, but
+  `catalog_ids[0]` == book 0 == `min(zero_train)` on seed 0, so the "warm" and "cold" demonstration books were the
+  SAME zero-train book (identical genres/author printed). Surfaced by the independent solutions solver. Fixed in BOTH
+  `exercises.ipynb` and `solutions.ipynb`: `warm_book = min(train_pos_items)` (smallest id with a train positive,
+  guaranteed warm); added a contrast-guard assert in the solution (`warm_book in train_pos_items and warm_book !=
+  cold_book`). Solutions re-executed clean.
 
 <!-- appended pre-PR -->
 
