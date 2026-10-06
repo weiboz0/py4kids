@@ -316,11 +316,51 @@ No open [self] blockers.
   `recsys/data/glove/README.md`; **#6** `embeddings.py` `load()` dim-check added; **#7** `tokenize` in Ex2; **#8**
   anisotropy discussion prompt in teacher-notes.
 All re-verified GREEN (exec-lessons/exec-solutions/milestone-check/hygiene/structure/cell-lint/noexec/concept-scan +
-15 unit07 tests + ruff). Measured numbers unchanged except max-sim→0.146. **Round 2: re-running ci-local + re-reviewing
-[sol]** (sole rejecter); [self]+[fable] already APPROVE WITH NITS.
+15 unit07 tests + ruff). Measured numbers unchanged except max-sim→0.146.
+
+### Round 2 — [sol] (2026-10-05)
+- **Verdict**: REJECT (2 Must). (1) Ex2 hand recipe still NaN-unsafe for an ALL-ABSENT book (`np.mean([])`→NaN; the
+  demo only exercised the safe library path). (2) the "share no surface tokens" claim still in `embeddings.py`'s
+  module docstring. → Fixed (`2867cc0`): `embed_by_hand` returns zeros on an empty in-vocab list + the demo runs the
+  HAND path on `["notaword","alsofake"]` (verified norm 0, no NaN); docstring reworded to the ranking-disagreement
+  framing. (The lesson's word-level "share no letters"/"share no exact word" are capability statements, not the
+  banned specific-book claim.)
+
+### Round 3 — [sol] (2026-10-05)
+- **Verdict**: APPROVE (no findings).
+
+### Content-gate outcome: **CONSENSUS — [self] APPROVE WITH NITS · [sol] APPROVE · [fable] APPROVE WITH NITS; every finding FIXED.** 3-way roster. Proceed to PR → pre-merge-guard --pr → squash-merge.
 
 <!-- appended pre-PR -->
 
 ## Post-Execution Report
 
-<!-- appended before ship -->
+**Shipped (branch `feature/recsys-009-unit7`):** Book-3 **Unit 7 — Semantic text embeddings**, the first Part-2 unit.
+Phase A registry (concepts `word-embeddings`/`document-embeddings`/`embedding-retrieval`; coverage-map + manifest
+`unit-07-semantic-embeddings` after Checkpoint A; syllabus row; buildout 21.5<30). Phase B: a **committed GloVe
+subset** (`recsys/data/glove/glove_subset.{npy,json}`, 0.122 MB float16, 607/608 vocab covered, PDDL-1.0, sha256) via
+a **gensim-free** streaming `derive_glove_subset.py`, a **real** `tools/glove_integrity` ci-local check, and
+`bookrec/embeddings.py` (`load_glove_subset`, `book_embedding` mean-pool+L2, `SemanticEmbeddingRetrievalPath`,
+numpy-only). Phases C/D/E/F the lesson, 7 exercises (4 core + 3 Challenge), independent solutions, milestone,
+teacher-notes + a GloVe provenance README.
+
+**Measured (seed 0, k=10, 60 cold readers excluded, 500 val readers):** random 0.012, popularity 0.108, lexical
+0.158, item-item CF 0.252, MF 0.276, **semantic 0.102** (8.5× floor, ~65% of lexical — honestly BELOW lexical, not
+"comparable"). Value is **complementarity**: lexical-overlap 0.216; adding semantic to the Unit-6 pinned blend lifts
+hit (0.306→0.316) AND coverage (0.333→0.353). Max-sim pooling 0.146 > mean 0.102 (stretch). Underperformance is an
+honest synthetic-corpus artifact (arbitrary `GENERAL_POOL` topic slices → GloVe geometry uncorrelated with latent
+taste; only the genre banks carry GloVe-exploitable meaning).
+
+**Gates.** Plan-review: consensus (both externals ran a GloVe probe grounding the empirics). Content-review: **3
+rounds** — `[sol]` caught real bugs each time (R1: Ex4's false "semantic-only ⇒ no shared tokens" + an Ex2 OOV/None
+mis-statement; R2: the Ex2 hand recipe still NaN-unsafe for an all-absent book + a lingering module-docstring claim),
+all fixed → `[sol]` APPROVE R3; `[self]`/`[fable]` APPROVE WITH NITS. Shipped code was verified correct throughout;
+the fixes were exercise-text/honesty corrections.
+
+**Deviations:** none material. The blend-ablation standardized on the Unit-6 PINNED config (pool 30) across all
+notebooks (a draft milestone used equal-weight pool-50; reconciled). gensim is used nowhere (derivation is
+gensim-free). `tf-idf` dropped from the coverage entry (mean pooling, no IDF).
+
+**Verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN (incl. the GloVe integrity check + recsys PDF)
++ `pre-merge-guard.sh --pr` OK. The `test` holdout is untouched by Unit 7 (it stays sealed for Checkpoint A/B).
+<!-- re-confirm final ci-local green at HEAD before PR -->
