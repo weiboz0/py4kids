@@ -31,7 +31,7 @@ if catalog.get("books_version") != 2:
 for book in catalog["books"]:
     if book.get("root") != book["id"] or not Path(book["root"]).is_dir():
         sys.exit(f"FAIL: book {book['id']!r}: root must equal the id and exist")
-    flags = [flag for flag in ("publication", "judge", "patterns", "acsl") if book.get(flag) is True]
+    flags = [flag for flag in ("publication", "judge", "patterns", "acsl", "site") if book.get(flag) is True]
     print(book["id"], *flags)
 PY
 )"
@@ -125,6 +125,12 @@ while read -r book flags <&3; do
   fi
   if has_flag acsl "$flags"; then
     book_run "$book" acsl-check
+  fi
+  # The learning-website export (design 012; plan 101): prints its INFO:/WARN: lines and fails on
+  # FAIL:. Its findings are cached by committed tree hashes, so the unit-test run above (which
+  # checks the same books) is not repeated on a clean tree.
+  if has_flag site "$flags"; then
+    book_run "$book" site-check
   fi
 done 3<<< "$books"
 

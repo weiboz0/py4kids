@@ -21,11 +21,10 @@ SVG_NAMES = {
 }
 
 
-def figure_tikz(source: str, stdin: str | None = None,
-                caption: str = "Drawing made by the program above") -> str:
-    """Execute a turtle script with a fresh tracker and return a TikZ picture.
+def _replay(source: str, stdin: str | None = None) -> list[tuple]:
+    """Execute a turtle script with a fresh tracker and return its pen-down segments.
 
-    The caller adds its unit/cell context to any exception when reporting a build failure.
+    Each segment is `(x1, y1, x2, y2, color, width)`, as `fake_turtle.segments()` records it.
     """
     fake_turtle.reset()
     if stdin is None:
@@ -45,8 +44,34 @@ def figure_tikz(source: str, stdin: str | None = None,
             sys.modules.pop("turtle", None)
         else:
             sys.modules["turtle"] = previous
+    return fake_turtle.segments()
 
-    traced = fake_turtle.segments()
+
+def _coordinate(value: float) -> float:
+    """A stable JSON number: 6 decimals, and never `-0.0`."""
+    rounded = round(float(value), 6)
+    return 0.0 if rounded == 0 else rounded
+
+
+def turtle_segments(source: str, stdin: str | None = None) -> list[dict]:
+    """The replay `figure_tikz` draws, returned as data: one dict per pen-down move.
+
+    Each is `{x1, y1, x2, y2, color, width}` (design 012 D3, the bundle's `turtle-figure` block).
+    """
+    return [
+        {"x1": _coordinate(x1), "y1": _coordinate(y1), "x2": _coordinate(x2), "y2": _coordinate(y2),
+         "color": str(color) or "black", "width": float(width)}
+        for x1, y1, x2, y2, color, width in _replay(source, stdin)
+    ]
+
+
+def figure_tikz(source: str, stdin: str | None = None,
+                caption: str = "Drawing made by the program above") -> str:
+    """Execute a turtle script with a fresh tracker and return a TikZ picture.
+
+    The caller adds its unit/cell context to any exception when reporting a build failure.
+    """
+    traced = _replay(source, stdin)
     coordinates = [(0.0, 0.0)] + [point for x1, y1, x2, y2, _, _ in traced
                                     for point in ((x1, y1), (x2, y2))]
     padding = max(2.2, *(float(pen_width) * 0.2 for *_, pen_width in traced)) + 2

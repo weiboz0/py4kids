@@ -6,6 +6,7 @@ import fnmatch
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Literal
 
 import yaml
 
@@ -241,6 +242,7 @@ def book_flag(root: Path, book: str, flag: str) -> bool:
     ``publication`` (book-publication pipeline), ``judge`` (stdin solvers + subprocess judge),
     ``patterns`` (pattern checks and the coverage-map v2 / markdown concept scan),
     ``acsl`` (the ACSL season structure: manifest ``acsl:`` block, season.yaml, acsl-check).
+    ``site`` (the learning-website export: export, classify, site-check; design 012).
     """
     configured = book_entry(root, book).get(flag, False)
     return configured if isinstance(configured, bool) else False
@@ -572,4 +574,74 @@ def publication_config(root: Path, book: str) -> PublicationConfig:
     config, errors = _parse_publication_config(root, book)
     if config is None:
         raise PublicationConfigError("FAIL: " + "\n  ".join(errors))
+    return config
+
+
+# --- per-book site config (design 012 D1/D4/D7, plan 101) ----------------------------------
+
+SITE_CONFIG = "site.yaml"
+SITE_CLASSIFICATIONS = ("proposed", "confirmed")
+_SITE_KEYS = ("classification", "fixture_budget_kb")
+
+
+class SiteConfigError(ValueError):
+    """A `site: true` book's `site.yaml` is missing or invalid."""
+
+
+@dataclass(frozen=True)
+class SiteConfig:
+    """A site book's export settings (a `<book>/site.yaml`).
+
+    ``classification`` is ``proposed`` until the book's content plan confirms every item's
+    ``check-*`` tag (design 012 D4); ``fixture_budget_kb`` is the per-pair fixture budget the
+    export reports against (D7).
+    """
+
+    classification: Literal["proposed", "confirmed"]
+    fixture_budget_kb: int
+
+
+def _parse_site_config(root: Path, book: str) -> tuple[SiteConfig | None, list[str]]:
+    path = book_path(root, book) / SITE_CONFIG
+    where = f"FAIL: {book}/{SITE_CONFIG}"
+    if not path.is_file():
+        if book_flag(root, book, "site"):
+            missing = f"{book}/{SITE_CONFIG}"
+            return None, [f"FAIL: {book}: site: true but {missing} is missing (design 012 D1)"]
+        return None, [f"FAIL: {book}: not a site book (books.yaml site: true)"]
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as error:
+        return None, [f"{where}: invalid YAML: {error}"]
+    if not isinstance(data, dict):
+        return None, [f"{where}: must be a mapping"]
+    errors: list[str] = []
+    for key in sorted(set(data) - set(_SITE_KEYS), key=str):
+        errors.append(f"{where}: unknown key: {key}")
+    for key in _SITE_KEYS:
+        if key not in data:
+            errors.append(f"{where}: missing key: {key}")
+    classification = data.get("classification")
+    if "classification" in data and classification not in SITE_CLASSIFICATIONS:
+        errors.append(f"{where}: classification must be one of: {', '.join(SITE_CLASSIFICATIONS)}")
+    budget = data.get("fixture_budget_kb")
+    if "fixture_budget_kb" in data and (
+        not isinstance(budget, int) or isinstance(budget, bool) or budget <= 0
+    ):
+        errors.append(f"{where}: fixture_budget_kb must be a positive integer")
+    if errors:
+        return None, errors
+    return SiteConfig(classification=classification, fixture_budget_kb=budget), []
+
+
+def site_config_errors(root: Path, book: str) -> list[str]:
+    """Every problem with a site book's `site.yaml` as `FAIL:` lines (empty when it is valid)."""
+    return _parse_site_config(root, book)[1]
+
+
+def site_config(root: Path, book: str) -> SiteConfig:
+    """Load and validate a site book's `site.yaml`; fail loudly when it is missing or bad."""
+    config, errors = _parse_site_config(root, book)
+    if config is None:
+        raise SiteConfigError("\n  ".join(errors))
     return config

@@ -1607,13 +1607,13 @@ def test_ci_local_reads_books_from_registry():
     # `recsys` book directories are in the static `ruff check` scope (design 011 §7 / plan
     # recsys-001 Phase F) — a path argument, not id-branching — so drop those static paths too.
     unflagged = (
-        text.replace('"acsl")', ")").replace("has_flag acsl", "").replace("acsl-check", "")
+        text.replace('"acsl", "site")', ")").replace("has_flag acsl", "").replace("acsl-check", "")
         .replace("recsys/projects/bookrec", "").replace("recsys/data", "")
     )
     for book in registry["books"]:
         assert book["id"] not in unflagged
     assert 'yaml.safe_load(open("books.yaml"' in text
-    assert '("publication", "judge", "patterns", "acsl")' in text
+    assert '("publication", "judge", "patterns", "acsl", "site")' in text
     for flag, gated in (
         ("acsl", ("acsl-check",)),
         ("patterns", ("technique-spiral", "pattern-marker", "patterns-doc-check")),

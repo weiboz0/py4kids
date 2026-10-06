@@ -1,0 +1,6 @@
+# Learning-website export settings (design 012; plan 101). Read by tools.books.site_config.
+# classification: `proposed` until this book's content plan confirms every item's check-* tag,
+#   then `confirmed`, which makes site-check require a tag on every item (design 012 D4).
+# fixture_budget_kb: the per-pair contest-fixture budget the export reports against (D7).
+classification: proposed
+fixture_budget_kb: 130

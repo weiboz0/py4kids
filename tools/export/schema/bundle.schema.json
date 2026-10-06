@@ -1,0 +1,1147 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "py4kids/bundle/1.0.0",
+ "title": "py4kids site content bundle",
+ "description": "A file of a site bundle (design 012 D3; plan 101): book.json or an entry file. Validate one kind with $defs/book_file or $defs/entry_file.",
+ "oneOf": [
+  {
+   "$ref": "#/$defs/book_file"
+  },
+  {
+   "$ref": "#/$defs/entry_file"
+  }
+ ],
+ "$defs": {
+  "sha256": {
+   "type": "string",
+   "pattern": "^sha256:[0-9a-f]{64}$"
+  },
+  "key": {
+   "type": "string",
+   "pattern": "^[a-z0-9]+(-[a-z0-9]+)*/[^/#\\s]+/[^/#\\s]+/[^/#\\s]+(#\\S+)?$",
+   "description": "A global key `book/entry/notebook/cell_id`, plus `#<part>` for a part split out of one cell (`#2`, `#asset:<name>`, `#predict`)."
+  },
+  "book_id": {
+   "type": "string",
+   "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+  },
+  "concept_id": {
+   "type": "string",
+   "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+   "description": "A concept id from the book's registry (D11)."
+  },
+  "division_id": {
+   "type": "string",
+   "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+   "description": "An ACSL division (design 009), e.g. junior."
+  },
+  "entry_id": {
+   "type": "string",
+   "pattern": "^(unit|checkpoint|project)-[a-z0-9]+(-[a-z0-9]+)*$"
+  },
+  "entry_kind": {
+   "enum": [
+    "unit",
+    "checkpoint",
+    "project"
+   ]
+  },
+  "bundle_path": {
+   "type": "string",
+   "pattern": "^files/[^/\\s]+/([^/\\s][^/]*/)*[^/\\s][^/]*$",
+   "not": {
+    "pattern": "(^|/)\\.\\.(/|$)"
+   },
+   "description": "A file in the bundle, `files/<entry-id>/<path relative to the entry dir>`. The runner mounts it at the path after `files/<entry-id>/`."
+  },
+  "answer_format": {
+   "type": "object",
+   "description": "How the student's input is normalised and what to type (D5).",
+   "properties": {
+    "case": {
+     "enum": [
+      "sensitive",
+      "insensitive"
+     ]
+    },
+    "hint": {
+     "type": "string",
+     "minLength": 1
+    }
+   },
+   "required": [
+    "case",
+    "hint"
+   ],
+   "additionalProperties": false
+  },
+  "segment": {
+   "type": "object",
+   "description": "One pen-down turtle move (turtle_segments).",
+   "properties": {
+    "x1": {
+     "type": "number"
+    },
+    "y1": {
+     "type": "number"
+    },
+    "x2": {
+     "type": "number"
+    },
+    "y2": {
+     "type": "number"
+    },
+    "color": {
+     "type": "string",
+     "minLength": 1
+    },
+    "width": {
+     "type": "number",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "x1",
+    "y1",
+    "x2",
+    "y2",
+    "color",
+    "width"
+   ],
+   "additionalProperties": false
+  },
+  "block": {
+   "type": "object",
+   "description": "A lesson or entry block.",
+   "properties": {
+    "key": {
+     "$ref": "#/$defs/key"
+    },
+    "type": {
+     "enum": [
+      "prose",
+      "opener",
+      "notice",
+      "goals",
+      "recap",
+      "code",
+      "tryit",
+      "error-demo",
+      "hang-demo",
+      "turtle-figure",
+      "program",
+      "starter"
+     ]
+    },
+    "md": {
+     "type": "string",
+     "description": "Markdown (prose-like blocks)."
+    },
+    "code": {
+     "type": "string",
+     "description": "Python source (code-like blocks)."
+    },
+    "output": {
+     "type": "string",
+     "description": "The stored stream output."
+    },
+    "route": {
+     "type": "string",
+     "description": "The publisher's route_code value the block came from."
+    },
+    "stdin": {
+     "type": "boolean",
+     "description": "The cell reads input() (tryit-stdin)."
+    },
+    "sample_input": {
+     "type": "string"
+    },
+    "figure": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/segment"
+     },
+     "description": "The turtle drawing as segments."
+    },
+    "needs_prelude": {
+     "type": "boolean"
+    },
+    "prelude": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/key"
+     },
+     "description": "Keys of the earlier blocks to run first, in order."
+    },
+    "files": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/bundle_path"
+     },
+     "uniqueItems": true
+    },
+    "concepts": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/concept_id"
+     },
+     "uniqueItems": true
+    },
+    "probe": {
+     "enum": [
+      "standalone",
+      "prelude",
+      "mismatch",
+      null
+     ],
+     "description": "The standalone-cell probe status; null when not probed. A probe error or timeout is a site-check FAIL, never bundle data."
+    },
+    "tags": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "The cell's tags (e.g. slide-break, slide-skip).",
+     "uniqueItems": true
+    }
+   },
+   "required": [
+    "key",
+    "type",
+    "needs_prelude",
+    "prelude",
+    "files",
+    "concepts",
+    "probe",
+    "tags"
+   ],
+   "additionalProperties": false,
+   "allOf": [
+    {
+     "if": {
+      "properties": {
+       "type": {
+        "enum": [
+         "prose",
+         "opener",
+         "notice",
+         "goals",
+         "recap"
+        ]
+       }
+      },
+      "required": [
+       "type"
+      ]
+     },
+     "then": {
+      "required": [
+       "md"
+      ]
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "type": {
+        "enum": [
+         "code",
+         "tryit",
+         "error-demo",
+         "hang-demo",
+         "turtle-figure",
+         "program",
+         "starter"
+        ]
+       }
+      },
+      "required": [
+       "type"
+      ]
+     },
+     "then": {
+      "required": [
+       "code"
+      ]
+     }
+    },
+    {
+     "if": {
+      "properties": {
+       "type": {
+        "enum": [
+         "turtle-figure"
+        ]
+       }
+      },
+      "required": [
+       "type"
+      ]
+     },
+     "then": {
+      "required": [
+       "figure"
+      ]
+     }
+    }
+   ]
+  },
+  "side_block": {
+   "description": "An intro, outro or item `before` block: prose, notice, goals, recap or starter.",
+   "allOf": [
+    {
+     "$ref": "#/$defs/block"
+    },
+    {
+     "properties": {
+      "type": {
+       "enum": [
+        "prose",
+        "notice",
+        "goals",
+        "recap",
+        "starter"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  "fixture_case": {
+   "type": "object",
+   "description": "One test case; its text ships once, as files, never inline.",
+   "properties": {
+    "n": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "in_file": {
+     "type": "string",
+     "pattern": "^files/[^/\\s]+/fixtures/[^/\\s]+/[0-9]+\\.in$"
+    },
+    "out_file": {
+     "type": "string",
+     "pattern": "^files/[^/\\s]+/fixtures/[^/\\s]+/[0-9]+\\.out$"
+    },
+    "sample": {
+     "type": "boolean",
+     "description": "The statement's Sample Input; only its input and output are shown."
+    }
+   },
+   "required": [
+    "n",
+    "in_file",
+    "out_file",
+    "sample"
+   ],
+   "additionalProperties": false
+  },
+  "check_fixtures": {
+   "type": "object",
+   "description": "A contest program judged on its fixtures (D4, D7).",
+   "properties": {
+    "kind": {
+     "const": "fixtures"
+    },
+    "cases": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/fixture_case"
+     },
+     "minItems": 1
+    },
+    "match": {
+     "enum": [
+      "line",
+      "token"
+     ]
+    },
+    "over_budget": {
+     "type": "array",
+     "items": {
+      "type": "integer",
+      "minimum": 1
+     },
+     "description": "Case numbers over the fixture budget; the site lists them.",
+     "uniqueItems": true
+    },
+    "turtle": {
+     "type": "boolean"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "A check-* heading tag is present."
+    }
+   },
+   "required": [
+    "kind",
+    "cases",
+    "match",
+    "over_budget",
+    "turtle",
+    "confirmed"
+   ],
+   "additionalProperties": false
+  },
+  "check_answer": {
+   "type": "object",
+   "description": "A short answer, compared by salted hash (D5).",
+   "properties": {
+    "kind": {
+     "const": "answer"
+    },
+    "hash": {
+     "$ref": "#/$defs/sha256"
+    },
+    "answer_format": {
+     "$ref": "#/$defs/answer_format"
+    },
+    "turtle": {
+     "type": "boolean"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "A check-* heading tag is present."
+    }
+   },
+   "required": [
+    "kind",
+    "hash",
+    "answer_format",
+    "turtle",
+    "confirmed"
+   ],
+   "additionalProperties": false
+  },
+  "check_asserts": {
+   "type": "object",
+   "description": "Portable asserts; no function body ships.",
+   "properties": {
+    "kind": {
+     "const": "asserts"
+    },
+    "source": {
+     "type": "string",
+     "description": "Only the top-level assert statements."
+    },
+    "functions": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "minLength": 1
+     },
+     "description": "The names the asserts call.",
+     "uniqueItems": true
+    },
+    "turtle": {
+     "type": "boolean"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "A check-* heading tag is present."
+    }
+   },
+   "required": [
+    "kind",
+    "source",
+    "functions",
+    "turtle",
+    "confirmed"
+   ],
+   "additionalProperties": false
+  },
+  "check_expected_output": {
+   "type": "object",
+   "description": "Fixed inputs; the output is compared by salted hash.",
+   "properties": {
+    "kind": {
+     "const": "expected-output"
+    },
+    "hash": {
+     "$ref": "#/$defs/sha256"
+    },
+    "answer_format": {
+     "$ref": "#/$defs/answer_format"
+    },
+    "turtle": {
+     "type": "boolean"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "A check-* heading tag is present."
+    }
+   },
+   "required": [
+    "kind",
+    "hash",
+    "answer_format",
+    "turtle",
+    "confirmed"
+   ],
+   "additionalProperties": false
+  },
+  "check_predict": {
+   "type": "object",
+   "description": "A trace item: the predicted output is compared by salted hash.",
+   "properties": {
+    "kind": {
+     "const": "predict"
+    },
+    "hash": {
+     "$ref": "#/$defs/sha256"
+    },
+    "answer_format": {
+     "$ref": "#/$defs/answer_format"
+    },
+    "program": {
+     "type": "string",
+     "description": "The code to trace."
+    },
+    "turtle": {
+     "type": "boolean"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "A check-* heading tag is present."
+    }
+   },
+   "required": [
+    "kind",
+    "hash",
+    "answer_format",
+    "program",
+    "turtle",
+    "confirmed"
+   ],
+   "additionalProperties": false
+  },
+  "check_self": {
+   "type": "object",
+   "description": "An open-ended item the site cannot check; the student ticks the checklist.",
+   "properties": {
+    "kind": {
+     "const": "self-check"
+    },
+    "requirements": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "minLength": 1
+     },
+     "description": "The checklist, from the statement.",
+     "minItems": 1
+    },
+    "turtle": {
+     "type": "boolean"
+    },
+    "confirmed": {
+     "type": "boolean",
+     "description": "A check-* heading tag is present."
+    }
+   },
+   "required": [
+    "kind",
+    "requirements",
+    "turtle",
+    "confirmed"
+   ],
+   "additionalProperties": false
+  },
+  "check": {
+   "oneOf": [
+    {
+     "$ref": "#/$defs/check_fixtures"
+    },
+    {
+     "$ref": "#/$defs/check_answer"
+    },
+    {
+     "$ref": "#/$defs/check_asserts"
+    },
+    {
+     "$ref": "#/$defs/check_expected_output"
+    },
+    {
+     "$ref": "#/$defs/check_predict"
+    },
+    {
+     "$ref": "#/$defs/check_self"
+    }
+   ]
+  },
+  "item": {
+   "type": "object",
+   "description": "An exercise, challenge, checkpoint question or project problem/milestone.",
+   "properties": {
+    "key": {
+     "$ref": "#/$defs/key"
+    },
+    "kind": {
+     "enum": [
+      "unit",
+      "challenge",
+      "checkpoint",
+      "project"
+     ]
+    },
+    "number": {
+     "type": [
+      "integer",
+      "null"
+     ],
+     "minimum": 0
+    },
+    "label": {
+     "type": "string",
+     "minLength": 1
+    },
+    "title": {
+     "type": "string"
+    },
+    "division": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/division_id"
+     },
+     "uniqueItems": true
+    },
+    "stretch": {
+     "type": "boolean"
+    },
+    "concepts": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/concept_id"
+     },
+     "uniqueItems": true
+    },
+    "statement_md": {
+     "type": "string"
+    },
+    "starter": {
+     "type": "string"
+    },
+    "files": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/bundle_path"
+     },
+     "uniqueItems": true
+    },
+    "check": {
+     "$ref": "#/$defs/check"
+    },
+    "answer_visibility": {
+     "enum": [
+      "after-attempt",
+      "none"
+     ]
+    },
+    "answer_md": {
+     "type": "string",
+     "description": "The Student Book appendix text; odd unit exercises only."
+    },
+    "before": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/side_block"
+     },
+     "description": "Interlude blocks shown before the item."
+    }
+   },
+   "required": [
+    "key",
+    "kind",
+    "number",
+    "label",
+    "title",
+    "division",
+    "stretch",
+    "concepts",
+    "statement_md",
+    "starter",
+    "files",
+    "check",
+    "answer_visibility",
+    "before"
+   ],
+   "additionalProperties": false,
+   "if": {
+    "properties": {
+     "answer_visibility": {
+      "const": "after-attempt"
+     }
+    },
+    "required": [
+     "answer_visibility"
+    ]
+   },
+   "then": {
+    "required": [
+     "answer_md"
+    ],
+    "properties": {
+     "kind": {
+      "const": "unit"
+     },
+     "number": {
+      "type": "integer",
+      "not": {
+       "multipleOf": 2
+      }
+     }
+    }
+   },
+   "else": {
+    "not": {
+     "required": [
+      "answer_md"
+     ]
+    }
+   }
+  },
+  "predict_card": {
+   "type": "object",
+   "description": "Predict the output of a lesson code block.",
+   "properties": {
+    "key": {
+     "allOf": [
+      {
+       "$ref": "#/$defs/key"
+      },
+      {
+       "pattern": "#predict$"
+      }
+     ]
+    },
+    "kind": {
+     "const": "predict"
+    },
+    "block": {
+     "$ref": "#/$defs/key"
+    },
+    "mode": {
+     "enum": [
+      "typed",
+      "flip"
+     ]
+    },
+    "prelude": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/key"
+     }
+    }
+   },
+   "required": [
+    "key",
+    "kind",
+    "block",
+    "mode",
+    "prelude"
+   ],
+   "additionalProperties": false
+  },
+  "concept_card": {
+   "type": "object",
+   "description": "A glossary concept card: multiple choice, or a flip card with no category peers.",
+   "properties": {
+    "key": {
+     "type": "string",
+     "pattern": "^[a-z0-9]+(-[a-z0-9]+)*/back-matter/glossary/[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "kind": {
+     "const": "concept"
+    },
+    "concept": {
+     "$ref": "#/$defs/concept_id"
+    },
+    "term": {
+     "type": "string",
+     "minLength": 1
+    },
+    "definition_md": {
+     "type": "string",
+     "minLength": 1
+    },
+    "mode": {
+     "enum": [
+      "choice",
+      "flip"
+     ]
+    },
+    "distractors": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "minLength": 1
+     },
+     "description": "Other terms of the same category (D8).",
+     "maxItems": 3,
+     "uniqueItems": true
+    }
+   },
+   "required": [
+    "key",
+    "kind",
+    "concept",
+    "term",
+    "definition_md",
+    "mode",
+    "distractors"
+   ],
+   "additionalProperties": false,
+   "if": {
+    "properties": {
+     "mode": {
+      "const": "flip"
+     }
+    },
+    "required": [
+     "mode"
+    ]
+   },
+   "then": {
+    "properties": {
+     "distractors": {
+      "maxItems": 0
+     }
+    }
+   },
+   "else": {
+    "properties": {
+     "distractors": {
+      "minItems": 1
+     }
+    }
+   }
+  },
+  "card": {
+   "oneOf": [
+    {
+     "$ref": "#/$defs/predict_card"
+    },
+    {
+     "$ref": "#/$defs/concept_card"
+    }
+   ]
+  },
+  "book_file": {
+   "type": "object",
+   "description": "book.json: the book manifest.",
+   "properties": {
+    "schema_version": {
+     "const": "1.0.0"
+    },
+    "book": {
+     "type": "object",
+     "properties": {
+      "id": {
+       "$ref": "#/$defs/book_id"
+      },
+      "title": {
+       "type": "string",
+       "minLength": 1
+      },
+      "subtitle": {
+       "type": "string"
+      },
+      "flags": {
+       "type": "object",
+       "properties": {
+        "acsl": {
+         "type": "boolean"
+        },
+        "judge": {
+         "type": "boolean"
+        }
+       },
+       "required": [
+        "acsl",
+        "judge"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "required": [
+      "id",
+      "title",
+      "subtitle",
+      "flags"
+     ],
+     "additionalProperties": false
+    },
+    "release": {
+     "type": "object",
+     "properties": {
+      "tag": {
+       "type": "string",
+       "minLength": 1
+      },
+      "content_hash": {
+       "$ref": "#/$defs/sha256"
+      }
+     },
+     "required": [
+      "tag",
+      "content_hash"
+     ],
+     "additionalProperties": false
+    },
+    "entries": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "$ref": "#/$defs/entry_id"
+       },
+       "kind": {
+        "$ref": "#/$defs/entry_kind"
+       },
+       "title": {
+        "type": "string"
+       },
+       "number": {
+        "type": [
+         "integer",
+         "null"
+        ],
+        "minimum": 0
+       },
+       "file": {
+        "type": "string",
+        "pattern": "^entries/(unit|checkpoint|project)-[a-z0-9]+(-[a-z0-9]+)*\\.json$"
+       }
+      },
+      "required": [
+       "id",
+       "kind",
+       "title",
+       "number",
+       "file"
+      ],
+      "additionalProperties": false
+     },
+     "description": "In syllabus order."
+    },
+    "concepts": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "$ref": "#/$defs/concept_id"
+       },
+       "name": {
+        "type": "string",
+        "minLength": 1
+       },
+       "category": {
+        "type": "string",
+        "minLength": 1
+       }
+      },
+      "required": [
+       "id",
+       "name",
+       "category"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "glossary": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "term": {
+        "type": "string",
+        "minLength": 1
+       },
+       "definition_md": {
+        "type": "string",
+        "minLength": 1
+       },
+       "concept": {
+        "$ref": "#/$defs/concept_id"
+       },
+       "units": {
+        "type": "array",
+        "items": {
+         "type": "integer",
+         "minimum": 0
+        },
+        "minItems": 1
+       }
+      },
+      "required": [
+       "term",
+       "definition_md",
+       "concept",
+       "units"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "reference_md": {
+     "type": "string",
+     "description": "The book's back-matter/quick-reference.md."
+    },
+    "settings": {
+     "type": "object",
+     "properties": {
+      "lesson_heading": {
+       "type": "string"
+      },
+      "acsl_divisions": {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/division_id"
+       },
+       "description": "The division ladder."
+      }
+     },
+     "required": [
+      "lesson_heading"
+     ],
+     "additionalProperties": false
+    },
+    "pdfs": {
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "propertyNames": {
+        "enum": [
+         "student-print",
+         "student",
+         "answer-key",
+         "teacher"
+        ]
+       },
+       "additionalProperties": {
+        "type": "string",
+        "pattern": "^https://\\S+\\.pdf$"
+       },
+       "required": [
+        "student-print",
+        "student",
+        "answer-key",
+        "teacher"
+       ]
+      }
+     ],
+     "description": "Release PDF links by edition; null when unreleased."
+    }
+   },
+   "required": [
+    "schema_version",
+    "book",
+    "release",
+    "entries",
+    "concepts",
+    "glossary",
+    "reference_md",
+    "settings",
+    "pdfs"
+   ],
+   "additionalProperties": false
+  },
+  "entry_file": {
+   "type": "object",
+   "description": "entries/<entry-id>.json: one unit, checkpoint or project.",
+   "properties": {
+    "schema_version": {
+     "const": "1.0.0"
+    },
+    "entry": {
+     "type": "object",
+     "properties": {
+      "id": {
+       "$ref": "#/$defs/entry_id"
+      },
+      "kind": {
+       "$ref": "#/$defs/entry_kind"
+      },
+      "title": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "id",
+      "kind",
+      "title"
+     ],
+     "additionalProperties": false
+    },
+    "lesson": {
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "object",
+       "properties": {
+        "blocks": {
+         "type": "array",
+         "items": {
+          "$ref": "#/$defs/block"
+         }
+        }
+       },
+       "required": [
+        "blocks"
+       ],
+       "additionalProperties": false
+      }
+     ]
+    },
+    "intro": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/side_block"
+     }
+    },
+    "items": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/item"
+     }
+    },
+    "outro": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/side_block"
+     }
+    },
+    "cards": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/card"
+     }
+    },
+    "files": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/bundle_path"
+     },
+     "uniqueItems": true
+    }
+   },
+   "required": [
+    "schema_version",
+    "entry",
+    "lesson",
+    "intro",
+    "items",
+    "outro",
+    "cards",
+    "files"
+   ],
+   "additionalProperties": false
+  }
+ }
+}
