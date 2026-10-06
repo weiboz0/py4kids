@@ -599,6 +599,21 @@ Gate roster per `docs/content-review-gate.md` (3-way since 2026-10-05: [glm] rem
 3. `[FIXED]` The canonical leak scan skips student-visible fields such as self-check `requirements` (`answer_model.py:60-61, 392-395`). Count every student-visible string field, with injection regressions. Must Fix.
    → Response: check 2 now counts every string field except an exclusion list of non-content fields (keys, ids, bundle paths, hashes, enums, config: `release`, `pdfs`, `settings`, `flags`) plus titles and labels, which the plan's check 2 excludes ("never in keys, labels or titles"), and the tied fields above. Newly counted: `requirements`, `answer_format.hint`, `sample_input`, concept `name`, glossary `term`, `asserts.source`. The baseline gains the matching sources: lesson cells' `sample_input` metadata, `curriculum/concepts.yaml`, and `answers.check_texts` (each item's requirements and hint, computed from the repo, and the asserts `asserts` items ship by design). Regressions: a hidden canonical injected into a self-check requirement, into `answer_format.hint` and into a concept name each FAIL; a changed card term FAILs its tie. All 4 books still pass `site-check`.
 
+### Review 2 — [self] (2026-10-05)
+- **Verdict**: APPROVE. Sampled python-projects units 01–02: free-design items are now `self-check` with usable Specification-sentence checklists; the remaining `expected-output` items are statement-fixed.
+
+### Review 2 — [fable] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS. Every round-1 fix was verified on re-exported real bundles: 0 answer-model findings; 119/164 python-concepts `expected-output` hashes equal the statement's `**Expected output:**` fence, and the rest come from worked samples; all 12 `predict` items trace the statement's program.
+1. `[OPEN]` `_plain` mangles inline code in requirements (`unit-06-secret-codes` Exercise 4: `"  secret_launch  "` becomes `" secretlaunch "`). Keep code spans verbatim. Should Fix.
+2. `[OPEN]` `PREDICT` misses "Which one message prints" (`checkpoint-01` Question 7). Nice to Have.
+3. `[OPEN]` One-token numeric `expected-output` outputs pass `output_fixed_by_statement` trivially; flag them in the report. Nice to Have.
+
+### Review 2 — [sol] (2026-10-05, gpt-5.6-sol)
+- **Verdict**: REJECT.
+1. `[OPEN]` Hidden-code counting counts containing fields, not occurrences: two copies inside one `starter` pass. Count occurrences (or require source-location parity), with same-field and same-file regressions. Must Fix.
+2. `[OPEN]` The canonical allowance includes the whole raw `concepts.yaml`, though only `{id, name, category}` is exported. Build the baseline from the exported projection, with an unmapped-field collision regression. Must Fix.
+3. `[OPEN]` `segment.color` is student-visible but excluded and not tie-checked. Regenerate figures and compare, or count `color`; add a color-injection regression and make field coverage exhaustive. Must Fix.
+
 ## Post-Execution Report
 
 _(written before the PR)_
