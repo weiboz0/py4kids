@@ -337,6 +337,18 @@ non-vacuous over-fetch `heavy_seen`; milestone speedup de-gated to deterministic
 notebook prose/comments; set-hoist; Ex8 record-don't-gate clause), then re-executed clean. Re-review [sol] (rejecter)
 + [fable] after.
 
+### Round 2 (re-review)
+- **[fable] — APPROVE.** Verified all 5 nits fixed + the rank-overlap determinism change error-free; no "~10×"/"~0.993"
+  overclaim remains (the lone surviving `0.993` is a gitignored stale `.tex` build artifact + the historical plan
+  record). No residual.
+- **[sol] — APPROVE WITH NITS.** Both findings confirmed resolved by direct probe (build rank-overlap 1.0, allclose
+  True; `heavy_seen` intersects the unfiltered ANN top-10 10/10, filtered 10 items 0 leaks; no `np.array_equal` gate
+  remains). One `[FIXED]` **Nice** — stale PROSE "identical neighbour ids/neighbours" in `test_unit10.py` docstring +
+  the milestone's §3 markdown → reworded to "top-k rank overlap (1.0 in practice), not exact-id identity".
+
+### Content-review outcome (FINAL): **CONSENSUS — [self] APPROVE · [fable] APPROVE (r2) · [sol] APPROVE WITH NITS (r2).**
+All `[OPEN]` findings resolved ([sol] 1 Must + 1 Should + 1 Nice; [fable] 1 Must + 2 Should + 2 Nice). Cleared for PR.
+
 <!-- appended pre-PR -->
 
 ## Post-Execution Report

@@ -8,8 +8,9 @@ dense source), the two paths this unit ships:
   **speed** technique that *preserves* accuracy: at the pinned ``M=32 / efConstruction=200 /
   efSearch=64`` it recovers the exact top-10 at **recall >= 0.98** (measured ~0.9991) and its hit@10
   equals the exact two-tower (measured 0.340, Δ0). The gate is recall-vs-exact + determinism (design
-  §184: identical neighbour ids + ``allclose`` scores on two single-thread builds — never exact
-  neighbour identity against the brute force), plus a **generous absolute latency ceiling** (< 1 s,
+  §184: top-k **rank overlap** (1.0 in practice) + ``allclose`` scores on two single-thread builds —
+  never exact-id identity, and never exact neighbour identity against the brute force), plus a
+  **generous absolute latency ceiling** (< 1 s,
   measured ~18 ms over the cohort), NOT a 2,000-item speedup (the speed win is asymptotic).
 - :class:`~bookrec.hybrid.HybridRetrievalPath` fusing BM25 (Unit 3) + the two-tower (Unit 8). The
   honest, measured story: the dense tower dominates and only a *tuned, dense-heavy* weighted fusion
