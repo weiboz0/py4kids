@@ -249,6 +249,42 @@ not skipped [sol#2]; complementarity bound to overlap (~0.22) + blend-ablation [
 
 ## Content Review
 
+### Round 1 — [self] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS. Project-first (all notebooks open with the meaning-vs-spelling hook); honest framing
+  consistent everywhere (semantic 0.102 BELOW lexical 0.158, 8.5× floor, value = complementarity with overlap 0.216 +
+  blend lift, synthetic-vocab caveat — nothing overclaims); blend-ablation config unified to the Unit-6 PINNED blend
+  (pool 30; WITHOUT 0.306/0.333 → WITH semantic@0.5 0.316/0.353) across lesson/exercises/solutions/milestone after
+  reconciling the milestone off its equal-weight pool-50 draft; taught-before-assessed (word-embeddings/
+  document-embeddings/embedding-retrieval introduced; no borrowed tools); NO `split="test"` in any Unit-7 notebook;
+  nearest-word demos vocabulary-scoped; GloVe artifact gensim-free, PDDL-1.0 note, 0.122 MB, real integrity check.
+  Nit already caught + fixed in-build: a milestone `FURB192`/import-order class of ruff issue (ruff lints milestones).
+No open [self] blockers.
+
+### Round 1 — [fable] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS (no Must). Blind-solved Ex1/2/4/5/6/7; solutions match; honest framing + pinned-blend
+  config + no-`split=test` + GloVe governance all confirmed consistent.
+1. `[OPEN]` **Should** — milestone §5 (cell 10) OVERCLAIMS: says reader 3's recs "share *meaning*" with seen books,
+   but the output shows grab-bag keyword sets sharing 6–10 SURFACE tokens and uniformly high cosines (mean pairwise
+   book-embedding cosine ~0.66 vs ~0.12 for words — mean-pooling collapses toward a centroid). Reword to the honest
+   "grab-bags + uniformly high cosines = the uncorrelated-by-construction point; genre-bank words are where GloVe
+   meaning shows" (or pick a genre-heavy reader and show shared-token counts honestly).
+2. `[FIXED-pending]` **Should** — max-sim hit@10 is **0.146** (I re-measured + confirmed), not the stated "~0.142"
+   in exercises/solutions (`maxsim_explanation`), teacher-notes, and the plan. Update to ~0.146.
+3. `[OPEN]` **Should (minor)** — nearest-word prose skips the actual #1 neighbor (dragon→`lantern` 0.682 is top;
+   `magic` is wizard's not dragon's) in lesson cell 5 / exercises cell 2 / milestone cell 5. Add one honest sentence
+   that nearest-word lists are noisy (100-d, Wikipedia co-occurrence, 607-word restricted field).
+4. `[OPEN]` **Nice** — unused `blend` import in exercises/solutions cell 1 (no CI effect; units aren't ruff'd).
+5. `[OPEN]` **Nice** — add the GloVe license (PDDL-1.0) + citation (Pennington, Socher & Manning 2014) to the
+   student lesson + teacher-notes (sidecar has it); a short `recsys/data/glove/README.md` would help.
+6. `[OPEN]` **Nice** — `embeddings.py` `load()` ignores the artifact `"dim"`; check `embeddings.shape[1]==glove.dim`.
+7. `[OPEN]` **Nice** — Ex2 uses `keywords[id].split()`; the lesson/library use `tokenize` (identical here) — prefer
+   `tokenize` for robustness-by-construction.
+8. `[OPEN]` **Nice** — teacher-notes discussion prompt: the anisotropy number (book-embedding mean cosine ~0.66 vs
+   ~0.12 for words) explains why every cosine looks "high" and why max-sim beats mean.
+
+_([sol] content verdict pending — its codex-rescue forwarder launched a background Codex task; re-dispatch if it
+doesn't hand back. Then fold [fable]+[sol] nits in one coordinated pass + re-verify.)_
+
 <!-- appended pre-PR -->
 
 ## Post-Execution Report
