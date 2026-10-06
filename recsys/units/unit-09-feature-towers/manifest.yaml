@@ -1,0 +1,9 @@
+id: unit-09-feature-towers
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [feature-towers, item-cold-start, hard-negatives]
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, latent-factors, embedding-retrieval, two-tower, bpr-loss, neural-training, word-embeddings]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, two-tower, neural-training, word-embeddings]

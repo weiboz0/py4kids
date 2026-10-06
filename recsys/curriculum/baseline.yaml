@@ -112,6 +112,9 @@ library_methods:
 - step
 - use_deterministic_algorithms
 - zero_grad
+# --- Unit 9 (recsys-011): feature towers & item cold-start (feature-tower API + torch idioms) ---
+- FeatureTowerRetrievalPath
+- Linear
 # --- Unit 5 (recsys-007): matrix factorization (bookrec MF API + numpy GD idioms) ---
 - MatrixFactorizationPath
 - calibrate
