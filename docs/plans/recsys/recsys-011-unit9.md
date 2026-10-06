@@ -13,32 +13,59 @@ keyword embedding), so a **cold item** (no train interactions) still gets a mean
 embedding ⊕ learned embeddings of the book's **genre(s)** and **author**, ⊕ its **GloVe keyword** vector (U7),
 projected to the shared dim; the reader tower stays id-based; score = dot product; (2) **item cold-start** — a book
 with zero train positives has a useless id embedding, but its feature embedding still places it sensibly, so the
-feature-tower path can surface cold items the ID-only U8 two-tower and CF never reach; (3) **hard negatives** —
-sampling negatives that are harder than uniform (e.g. popular or feature-similar items) to sharpen training. Ships a
-`FeatureTowerRetrievalPath` in `bookrec` (torch, lazy like U8) + a Unit-9 milestone. No ANN/FAISS (U10); no reranker
-(U11); no sequence model (U12).
+feature-tower path reaches cold items the ID-only U8 two-tower and CF bury at ~0; (3) **hard negatives** —
+sampling negatives harder than uniform (popularity-weighted) and the false-negative caveat — an **ablation** knob here,
+since measured it trades warm accuracy for cold reach rather than sharpening both. **The decisive design choice is the
+negative pool:** negatives are drawn from the **warm (train-positive) item universe**, NOT the full catalog — 41% of
+the catalog is zero-train, so a full-catalog sampler makes cold items negatives-only and the tower learns to bury them.
+Ships a `FeatureTowerRetrievalPath` in `bookrec` (torch, lazy like U8) + a Unit-9 milestone. **Honest headline:**
+content paths (U7 semantic / U3 lexical) already serve cold items; the feature tower is the first **learned-taste /
+collaborative** path to serve cold items while holding near the book's best warm hit — a warm/cold compromise, not
+dominance. No ANN/FAISS (U10); no reranker (U11); no sequence model (U12).
 
 ## Determinism & budget (per U8 pattern — binding)
 Same CPU-determinism contract as U8 (`torch.manual_seed` + `use_deterministic_algorithms(True)` + single-thread,
 SAVED/RESTORED around `fit`; torch imported LAZILY inside `fit` only; `retrieve`/`load`/`artifact` torch-free on numpy
 weights; the group-free suite never imports torch — reuse/extend U8's import-blocked-subprocess test). Determinism
-GATE = identical top-k ranking + `allclose` (design §184, never exact-float). Tiny/fast: a feature tower is only
-modestly larger than U8's; pin dims/epochs so each fit stays well under the 120 s/cell cap and the ≥2×/CI budget holds
-— Phase B reports the measured per-fit time + aggregate fit count (as U8 did; ~15–30 s/fit expected).
+GATE = identical top-k ranking + `allclose` (design §184, never exact-float). **Budget caution (measured):** the
+feature tower is ~28–35 s/fit at 60 epochs (≈2× U8, from the extra Linear/feature embeddings); it runs in lesson +
+solutions + milestone + ≥2 determinism/ablation tests, so **Phase B pins `n_epochs=40`** (re-measuring that warm
+stays ≥~0.30 and cold-coverage clearly > ID-only at 40ep) and caps full fits per notebook (≤2–3), and reports the
+AGGREGATE fit count + wall time against the §9 whole-book budget. Each fit stays far under the 120 s/cell cap.
 
-## Why this works on the data (empirical — MUST be measured in Phase B before the lesson claims anything)
-The win is **cold-item reach**, not necessarily a warm-hit record. The committed data has **~818 cold items** (zero
-train positives) that CF and the ID-only two-tower can NEVER surface (no learned signal). A feature tower gives each
-cold item a vector from its genre/author/GloVe features, so it CAN be recommended. Phase B MUST measure and bind the
-lesson honestly to BOTH:
-- **Warm hit@10** (seed, k=10, 60 cold readers excluded): should stay in the neighbourhood of U8's two-tower (~0.34)
-  — feature towers must NOT materially tank warm accuracy to count as a win.
-- **Cold-item reach** — a cold-item metric (e.g. cold-item catalog coverage in top-k, or hit@k restricted to readers
-  whose relevant set includes cold items) that the feature tower IMPROVES over the ID-only two-tower / CF (which score
-  ~0 there). This is the unit's headline — the first path that meaningfully serves cold items.
-- **Hard negatives**: measure whether hard-negative sampling helps/hurts vs uniform (honest either way — it may be a
-  "sharpens but risks false negatives" lesson). Pre-declare the Phase-B gate from the measurement; reviewers verify
-  empirically. If the feature tower can't beat the ID-only path on a cold metric, that is a plan-changing finding.
+## Why this works on the data (empirical, MEASURED — [fable] probe round 1; Phase B re-confirms on shipped code)
+The win is **cold-item COVERAGE at near-best warm accuracy**, via one decisive design choice — the **negative pool**.
+Measured (seed, dim32, BPR+Adam wd=1e-4, 60ep; warm = 500 eligible readers, k=10, 60 cold readers excluded):
+
+| path | warm hit@10 | cold coverage (/818 zero-train) |
+|------|-------------|---------------------------------|
+| U4 item-item CF | 0.252 | 0.000 |
+| U8 ID-only two-tower | 0.340 | 0.000 |
+| U7 semantic (content-only) | 0.102 | 0.322 |
+| feature tower, **uniform-full-catalog negs** | 0.298 | 0.040 |
+| feature tower, **warm-only negs (SHIPPED)** | **0.320** | **0.131** |
+
+**The mechanism (THE lesson):** 41% of the catalog is zero-train, so with U8's uniform-over-the-full-catalog
+sampler a cold item is only EVER a negative — the tower learns to **bury** it (cov 0.04) and even tanks warm.
+Drawing negatives from the **warm (train-positive) item universe** restores warm to **0.320** (≈ U8's 0.340) and
+lifts cold coverage to **0.131** (vs 0 for ID-only/CF). So: "a cold item that is only ever a negative gets pushed
+down; features can't rescue it from its own negative gradient — sample warm-only so features can place it."
+
+**Metric (validation-safe — [sol]+[fable]):** the designated 150 cold_items have NO val positives (relevance only on
+`test`, deferred to Checkpoint B); so the **GATE is cold-item COVERAGE** = `unique zero-train item ids in readers'
+top-10 / 818` (ID-only/CF = exactly 0 → "feature-tower cov > 0 and > ID-only" is sound) plus warm hit@10 ≥ ~0.30
+(not tanked). **Report-only:** cold hit@10 on the 97 incidental readers who DO have a cold val positive (small-n;
+feature tower 0.021 vs ID-only 0.000) — not a gate.
+
+**Honest headline (NOT "first to serve cold"):** U7 semantic / U3 lexical content paths ALREADY surface cold items
+freely (U7 cov 0.322) — they just ignore interactions. The feature tower is the **first LEARNED-taste/collaborative
+path to serve cold items while staying near the book's best warm hit** (0.320 vs semantic's 0.102). It is a
+warm/cold **compromise**, not dominance — its cold hit (0.021) is BELOW U7 semantic's (0.031).
+
+**Hard negatives:** measured popularity-weighted hard negatives did NOT sharpen — they **traded warm for cold**
+(warm 0.28→0.23). Default = uniform-over-warm; hard-neg is the ablation/caveat knob ("trades warm accuracy for cold
+reach / popularity debias", with the false-negative caveat). Pre-declare the Phase-B gate from these numbers;
+reviewers re-verify on the shipped code.
 
 ## Buildout
 Whole-book `lessons` total becomes **27.5** (U1–U9 at 3 each = 27 + Checkpoint A 0.5) < 30 → `buildout: true`
@@ -85,48 +112,63 @@ uses GloVe). `practices ∩ introduces = ∅`; no `project` entry → capstone r
 Dispatch an **Opus subagent**. STUDY `two_tower.py` (the base to extend — lazy torch, BPR, determinism save/restore,
 torch-free retrieve/load/artifact), `embeddings.py`/`load_glove_subset` (GloVe keyword vectors), `catalog.py`/
 `Book` (genre/author fields), `protocol.py`, `scoreboard.py`. Add `bookrec/feature_tower.py` (torch lazy in `fit`):
-- `FeatureTowerRetrievalPath(BaseRetrievalPath)` (name `"feature-tower"`, version `"1"`). Item tower = id embedding ⊕
-  genre-embedding(s) ⊕ author-embedding ⊕ a projection of the book's GloVe keyword vector, combined (concat→Linear, or
-  sum) to the shared dim; reader tower = id embedding. BPR + Adam + weight_decay (reuse U8's recipe). `fit(interactions,
-  catalog=None)` — EXACT protocol; builds the feature maps from the catalog (so EVERY catalog item, incl. cold ones,
-  has a feature vector); leakage-safe. `retrieve` scores all catalog books by the reader·item dot product using numpy
-  weights (torch-free), excludes seen; a **cold item still scores** (feature-based); a reader with no learned embedding
-  → `[]`. **Hard negatives**: a `hard_negatives`/`negative_strategy` knob (uniform vs popular/feature-similar);
-  default from the Phase-B measurement. `load`/`artifact` torch-free. Deterministic. Export (no eager torch).
-- Tests (routed): warm hit@10 bound to the measured number (≈ U8's ~0.34 within a stated tolerance — must not tank);
-  a **cold-item-reach** assertion (feature tower surfaces cold items / improves a cold metric vs the ID-only two-tower
-  which scores them ~0); determinism (ranking + allclose); hard-negative effect recorded; empty-seen/unknown-reader
-  contract; fit→artifact→load identical (torch-free); registers as `feature-tower-v1`. EXTEND U8's import-blocked
-  subprocess test to cover `feature_tower` too.
+- `FeatureTowerRetrievalPath(BaseRetrievalPath)` (name `"feature-tower"`, version `"1"`). **Features come through the
+  CONSTRUCTOR** (like `SemanticEmbeddingRetrievalPath(keywords, glove)`): `FeatureTowerRetrievalPath(catalog_books,
+  keywords, glove, embedding_dim=32, n_epochs=40, learning_rate=0.01, n_negatives=10, batch_size=256, weight_decay=1e-4,
+  negative_pool="warm", seed=0)` — `fit(interactions, catalog=None)` keeps the EXACT protocol signature (`catalog` =
+  item-ids iterable, NOT Book records). Item tower = id embedding ⊕ genre-embedding(s) ⊕ author-embedding ⊕ a
+  `Linear` projection of the book's GloVe keyword vector, combined to the shared dim; reader tower = id embedding.
+  BPR + Adam + weight_decay (reuse U8's recipe; lazy torch). **Negative pool (THE knob): default `negative_pool="warm"`
+  — negatives sampled from the TRAIN-POSITIVE item universe, NOT the full catalog** (uniform-full-catalog makes the
+  41% zero-train items negatives-only and buries them). `retrieve` scores ALL catalog books by `reader·item` using the
+  **composed numpy item matrix stored at fit** (torch-free); a cold item still scores (feature-based); empty `seen` →
+  still k recs; unknown reader → `[]`. `artifact`/`load` persist the **composed numpy item matrix + reader matrix +
+  ids** (NOT the Linear/Embedding weights — so load/retrieve need no torch and no re-composition). A `negative_pool`
+  knob also allows `"hard"` (popularity-weighted) as the ablation. Export (no eager torch).
+- Tests (routed): **warm hit@10 ≥ ~0.30** (bind to the measured ≈0.32 at 40ep; must not tank vs U8); **cold-item
+  COVERAGE gate** — `feature_tower cold_cov > 0 AND > id_only_cold_cov` over the 818 zero-train items (ID-only/CF are
+  exactly 0); report (not gate) cold hit@10 on the 97 incidental-cold-val readers; determinism (ranking + allclose,
+  array_equal bonus print only); the warm-only-vs-uniform negative-pool effect recorded; empty-seen/unknown-reader
+  contract; fit→artifact→load identical, torch-free; registers as `feature-tower-v1`. **EXTEND the import-blocked
+  subprocess test** in `recsys/projects/bookrec/tests/test_unit07.py` (`:310` `test_torch_free_paths_do_not_import_torch`
+  + the top-level-import scan `:283`) to cover `feature_tower` too.
 **Verify:** `uv run --group recsys pytest recsys/projects/bookrec/ -q` green + group-free suite imports no torch;
-**report warm hit@10, the cold-item-reach numbers (feature-tower vs ID-only two-tower / CF), the hard-negative effect,
-and per-fit time + aggregate fit count** so the lesson is data-bound and in budget.
+**report warm hit@10 + cold coverage (feature-tower warm-only vs uniform vs ID-only/CF) + report-only cold hit@10 +
+the hard-neg ablation + per-fit time + aggregate fit count at the pinned n_epochs** so the lesson is data-bound and in
+budget.
 
 ### Phase C — lesson.ipynb (Opus subagent; project-first)
-Hook: "our best recommender (U8) can't recommend a book nobody has read yet — 818 of them. Can features fix that?".
-From scratch → reveal: (1) the cold-item problem made concrete (ID-only two-tower / CF score cold items ~0); (2) the
-**feature tower** — give the item tower genre/author/GloVe inputs so a cold book gets a vector from what it IS; build
-it in PyTorch extending U8; (3) **hard negatives** — uniform vs harder negatives and the false-negative caveat; reveal
-`FeatureTowerRetrievalPath`; score on `val` — warm hit stays ≈ U8 (~0.34) AND cold-item reach jumps (the honest
-Phase-B story: the first path that serves cold items). **The bridge:** features close the cold-start gap U6 flagged;
-U10 makes retrieval fast (ANN), U11 reranks, U13 revisits cold-start in the ethics/beyond-accuracy thread. ASCII only;
-`rank(exclude=seen)`; reuse `bookrec`; tiny/seeded/in-budget.
+Hook: "our best recommender (U8) buries a book nobody has read yet — 818 of them at ~0. Can features fix that?".
+From scratch → reveal: (1) the cold-item problem made concrete (ID-only two-tower / CF give zero-train items
+negative-shaped id embeddings → coverage 0); (2) the **feature tower** — give the item tower genre/author/GloVe inputs
+so a cold book gets a vector from what it IS; build it in PyTorch extending U8; (3) **the negative pool** — show that a
+full-catalog sampler makes cold items negatives-only (cov 0.04, warm tanks) and that **warm-only negatives** restore
+warm (0.320 ≈ U8) and lift cold coverage to 0.131 — THE mechanism; (4) **hard negatives** — uniform vs popularity
+negatives and the false-negative caveat, as the warm↔cold-trade ablation; reveal `FeatureTowerRetrievalPath`; score on
+`val` — warm hit stays ≈ U8 AND cold-item **coverage** jumps from 0 (the honest Phase-B story: the first
+**learned-taste/collaborative** path to serve cold items — content paths like U7 already do — a compromise, not
+dominance). **The bridge:** features close the cold-start gap U6 flagged; U10 makes retrieval fast (ANN), U11 reranks,
+U13 revisits cold-start in the ethics/beyond-accuracy thread. ASCII only; `rank(exclude=seen)`; reuse `bookrec`;
+tiny/seeded/in-budget.
 **Verify:** `exec-lessons` clean (budget); non-empty markdown first cell; `concept-scan` clean.
 
 ### Phase D — exercises.ipynb + solutions.ipynb (separate fresh Opus subagents)
 ≥6 `## Exercise N`; ≥2 `stretch`; exercises NO solutions/outputs; solutions mirror all, clean (fixed seeds,
 deterministic), ≥3 non-vacuous asserts. Drill: build an item feature vector from genre/author/GloVe; train/register
-`FeatureTowerRetrievalPath`; read the val scoreboard (warm ≈ U8) AND a cold-item-reach metric (feature tower vs ID-only
-two-tower / CF); show a specific cold book the feature tower surfaces that U8/CF cannot. Stretch e.g.: ablate the
-feature inputs (id-only vs +genre vs +author vs +GloVe); uniform vs hard negatives; the warm-vs-cold trade. Taught-
-before-assessed (cold-start IS taught here); seeded. **Verify:** `hygiene`/`structure`/`cell-lint`/`noexec`;
+`FeatureTowerRetrievalPath`; read the val scoreboard (warm ≈ U8) AND the **cold-item COVERAGE** metric over the 818
+zero-train items (feature tower > 0 vs ID-only two-tower / CF = 0); show a specific cold book the feature tower
+surfaces — pick a **deterministic reader from the 97 incidental-cold-val readers** so the surfaced cold book is one the
+reader actually read next. Stretch e.g.: the **negative-pool** knob (warm-only vs full-catalog — warm/cold both move);
+ablate the feature inputs (id-only vs +genre vs +author vs +GloVe); uniform vs hard negatives and the warm↔cold trade.
+Taught-before-assessed (cold-start IS taught here); seeded. **Verify:** `hygiene`/`structure`/`cell-lint`/`noexec`;
 `exec-solutions` clean (budget); `concept-scan` clean.
 
 ### Phase E — milestone notebook (Opus subagent)
 `recsys/projects/bookrec/milestones/unit-09-feature-towers.ipynb` — fixed-seed demo: train + register
-`FeatureTowerRetrievalPath`; val scoreboard vs the other paths (warm ≈ U8) + the **cold-item-reach** table (feature
-tower lifts cold coverage/hit where ID-only two-tower / CF are ~0); one cold book surfaced via features; optionally the
-feature tower in the U6 blend. Passes `milestone-check` + `exec-solutions` + `concept-scan`; ≤ budget; no `split="test"`.
+`FeatureTowerRetrievalPath` (warm-only negatives); val scoreboard vs the other paths (warm ≈ U8) + the **cold-item
+COVERAGE** table over the 818 zero-train items (feature tower > 0 where ID-only two-tower / CF are exactly 0); one cold
+book surfaced via features (deterministic reader); optionally the feature tower in the U6 blend. Passes
+`milestone-check` + `exec-solutions` + `concept-scan`; ≤ budget; no `split="test"`.
 
 ### Phase F — teacher-notes.md (inline)
 `## Goals`, `## Pacing` (60–90 min / 2–3 sittings, hook first, all exercises), `## Common mistakes` (expecting a warm
@@ -161,7 +203,88 @@ the U6 unassessed-preview thread. Named Phase G; project-first; ≥6/≥2-stretc
 No scope creep (ANN=U10, reranker=U11, sequence=U12). Open for Phase B/gate: a well-posed **cold-item-reach metric**
 ([fable] is probing it + the warm-not-tanked check) and the warm-hit tolerance. No [self] blockers.
 
-_([sol] + [fable] round-1 verdicts appended on hand-back.)_
+**[sol] — REJECT** (2 Must; closure/buildout/isolation/taught-before-assessed all confirmed correct):
+1. `[OPEN]` **Must** — cold-item reach is ill-defined AND **unmeasurable as hit@k on val**: the generator excludes
+   designated cold items from every non-test exposure (`gen_interactions.py:143-149,181-186`), so `val` has NO
+   positive rows for cold items, and the scoreboard computes hit@k only from held-out positives — while Phases C–E
+   demand the headline on `val` and forbid `test`. → Define ONE validation-safe metric precisely: **cold-item
+   COVERAGE** = `unique cold item ids appearing in readers' top-k / cold-item denominator` (needs no cold positives);
+   be explicit that cold-item *relevance* can't be scored on val (only the sealed test could, at Checkpoint B), so
+   the claim is "surfaces cold items" (+ a qualitative sensible-example), NOT "cold hit@k".
+2. `[OPEN]` **Must** — the "ID-only two-tower can NEVER surface cold items / scores ~0" premise is FALSE: U8 embeds
+   EVERY catalog item and scores every row; zero-train items get **negative-shaped** embeddings (sampled as
+   negatives) → ranked low, NOT hard-excluded. → Replace the categorical claim with the MEASURED baseline cold
+   coverage (the honest story: ID-only buries cold items with negative-shaped id embeddings; the feature tower lifts
+   their coverage via feature-based embeddings).
+
+**[fable] — REJECT** (3 Must + 4 Should + 2 Nice; **ran a thorough seeded torch probe** — premise survives but under
+an unspecified design choice; closure/isolation/taught-before/scope all confirmed). Measured (60ep, dim32, BPR+Adam
+wd=1e-4; warm 500 readers, k=10): cold universe = **150 designated** cold_items (0 val positives by construction;
+54/150 have a TEST positive → Checkpoint B only) **+ 668 incidental** zero-train items (101 val positives across 97
+readers). Paths: U4 CF warm 0.252 / cold-cov 0; U8 ID-only warm **0.340** / cold-cov 0; U7 semantic warm 0.102 /
+cold-cov **0.322** (content already serves cold!); feature tower **uniform-full-catalog negs** 0.298 / cold-cov 0.040
+(buries cold + tanks warm); feature tower **warm-only negs** warm **0.320** / cold-cov **0.131** / cold share 0.085;
+hard-neg popularity: warm 0.28→0.23 (trades warm for cold, doesn't "sharpen"). Two seeded fits allclose + bit-identical.
+1. `[OPEN]` **Must** — the plan silently inherits U8's **uniform-over-full-catalog** negative sampler; since 41% of
+   the catalog is zero-train, cold items become **negatives-only** → the tower learns to BURY them (cov 0.04) and
+   tanks warm. **Negatives must be drawn from the WARM (train-positive) item universe** (the primary design knob +
+   the mechanism lesson: "a cold item that is only ever a negative gets pushed down; features can't rescue it from
+   its own negative gradient"). Warm-only → warm 0.320, cold-cov 0.131.
+2. `[OPEN]` **Must** (= [sol]#1) — define the cold metric precisely: **GATE = cold-item coverage of top-10 (and cold
+   share of slots) over the 818 zero-train items** (deterministic, well-populated; ID-only/CF are exactly 0 so
+   "feature-tower cold-cov > 0 and > ID-only" is a sound bound); **report-only** cold hit@10 on the 97 incidental
+   readers (state small-n); relevance for the 150 designated cold items is measurable only on `test` at Checkpoint B.
+3. `[OPEN]` **Must** — "the first path that serves cold items" is FALSE (U7 semantic/U3 lexical content paths already
+   cover cold freely — U7 cold-cov 0.322). Honest headline: **the first LEARNED-taste/collaborative path to serve
+   cold items while staying near the best warm hit** (0.320 vs semantic's 0.102) — a warm/cold COMPROMISE, not
+   dominance (its cold hit 0.021 is BELOW U7's 0.031).
+4. `[OPEN]` **Should** — hard negatives: popularity-weighted did NOT sharpen — it traded warm for cold. Default =
+   **uniform-over-warm**; hard-neg is the ablation/caveat knob framed as "trades warm accuracy for cold reach /
+   popularity debias" (not "sharpens").
+5. `[OPEN]` **Should** — ~28–35 s/fit at 60 epochs (≈2× U8); feature-tower exec adds ~3–5 CI-min. Pin n_epochs (try
+   **40**) + cap fits/notebook; count the aggregate against the §9 budget.
+6. `[OPEN]` **Should** — `fit(interactions, catalog=None)`'s `catalog` is an iterable of item IDS, not `Book`s.
+   Features (catalog `Book`s + keywords + `GloveSubset`) come through the **constructor**, like
+   `SemanticEmbeddingRetrievalPath(keywords, glove)` → `FeatureTowerRetrievalPath(catalog_books, keywords, glove, …)`.
+7. `[OPEN]` **Should** — name the subprocess test (`tests/test_unit07.py:310` + the top-level scan at `:283`);
+   `artifact()` must persist the **composed numpy item matrix** (not Linear/Embedding weights) so `load`/`retrieve`
+   stay torch-free without re-composition.
+8. `[OPEN]` **Nice** — baseline.yaml likely needs `Linear`, `no_grad`, `cat`, `zeros_`, `arange` beyond U8's list.
+9. `[OPEN]` **Nice** — Phase-D "specific cold book" drill: pick a deterministic reader from the 97 incidental-cold-val
+   readers so the surfaced cold book is one the reader actually read next.
+
+### Plan-review outcome (round 1): **NOT consensus — [sol] REJECT (2 Must) + [fable] REJECT (3 Must, probe) + [self] APPROVE.** The premise HOLDS under warm-only negatives (warm 0.320 ≈ U8, cold-cov 0.131 vs 0). Fold both → **v2**: warm-only negative pool (THE mechanism); cold-COVERAGE gate over 818 (+ report-only cold-hit on 97, designated→ChkptB); honest "first collaborative/learned path to serve cold at near-best warm, a compromise not dominance"; hard-neg = ablation (trades warm↔cold); features via constructor; artifact persists composed numpy matrix; pin n_epochs≈40 + fit budget; baseline torch idioms. Then round-2 re-review (both rejecters).
+
+### Round 2 (v2 changelog — all round-1 Must/Should folded)
+- **[sol]#1 / [fable]#2 (cold metric unmeasurable on val):** GATE redefined as **cold-item COVERAGE** = unique
+  zero-train ids in readers' top-10 / 818 (needs no cold val positives; ID-only/CF = 0). Cold *hit@10* is report-only
+  on the 97 incidental-cold-val readers (small-n); designated-150 relevance deferred to Checkpoint B on sealed `test`.
+  Folded into **Why this works** (metric para), **Phase B** (gate), C/D/E (coverage framing).
+- **[sol]#2 (ID-only "never surfaces cold" is false):** replaced with the MEASURED baseline — ID-only/CF give cold
+  items negative-shaped id embeddings → coverage exactly 0, not hard-excluded. Phase C point (1) + table reframed.
+- **[fable]#1 (negative pool — THE mechanism):** default `negative_pool="warm"` (train-positive universe) added to
+  Scope, Determinism&budget-adjacent, Why-this-works table, and **Phase B** as the primary knob; full-catalog shown as
+  the failure mode (cov 0.04 / warm tanks).
+- **[fable]#3 ("first to serve cold" false):** honest headline = first **learned-taste/collaborative** path to serve
+  cold at near-best warm, a compromise not dominance (U7 content already serves cold). Scope + Why + Phase C.
+- **[fable]#4 (hard negatives):** reframed as the warm↔cold-trade **ablation** knob, not "sharpens". Scope, Why,
+  Phase C/D.
+- **[fable]#5 (budget):** Phase B pins `n_epochs=40`, caps ≤2–3 fits/notebook, reports aggregate fit count + wall time
+  vs §9 budget. Determinism&budget bullet.
+- **[fable]#6 (features via constructor):** `FeatureTowerRetrievalPath(catalog_books, keywords, glove, …)`; `fit`'s
+  `catalog` stays an item-ids iterable. Phase B signature.
+- **[fable]#7 (named subprocess test + artifact):** Phase B names `tests/test_unit07.py:310` + `:283`; `artifact`
+  persists the **composed numpy item matrix** (+ reader matrix + ids), not Linear/Embedding weights.
+- **[fable]#8 (baseline torch idioms):** Phase A baseline.yaml note to add `Linear`, `no_grad`, `cat`, `zeros_`,
+  `arange` beyond U8's list as the authored cells require.
+- **[fable]#9 (deterministic cold-book example):** Phase D/E pick the surfaced-cold-book reader from the 97
+  incidental-cold-val readers deterministically.
+
+**[self] — APPROVE (round 2).** v2 resolves every round-1 Must/Should on the measured numbers: warm-only negatives is
+the mechanism (warm 0.320 ≈ U8 0.340, cold-cov 0.131 vs 0); the gate is the validation-safe cold COVERAGE over 818
+(cold hit report-only); the headline is honest (learned/collaborative-first, compromise not dominance); hard-neg is an
+ablation; budget pinned at 40 epochs; features via constructor; artifact persists the composed numpy matrix; subprocess
+test extended. No [self] blockers; dispatching [sol]+[fable] round-2 re-review.
 
 ## Content Review
 
