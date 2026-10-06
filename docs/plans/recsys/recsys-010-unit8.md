@@ -311,7 +311,13 @@ that a top-level `import torch` WOULD trip, so the rewrite is correctly mandator
 
 ### Round-1→v2 outcome: both REJECT → v2 (thesis corrected). v2 → [fable] APPROVE WITH NITS (3 Nice → v2.1) + [sol] REJECT (1 Must → v2.1). v2.1 folds all; re-review **[sol] round 3** (sole rejecter); [self]+[fable] approve.
 
-_([sol] round-3 verdict appended on hand-back.)_
+**[sol] — REJECT (round 3)** — 1 Must: a stale "torch at module top" bullet (Determinism section) contradicted the
+lazy-import design; "no new blocker." → Fixed v2.2 (reworded to lazy-inside-`fit`). **[sol] — APPROVE (round 4).**
+
+### Plan-review gate outcome: **CONSENSUS — [self] APPROVE · [sol] APPROVE · [fable] APPROVE WITH NITS (all nits folded).**
+3-way roster. The gate reshaped the unit: [fable]'s torch probe corrected the thesis (regularized two-tower ~0.36 is
+the book's new best, not "≈ MF"; wd=0 overfits below CF), and [sol] drove the torch-isolation design to correctness
+(lazy `fit`-only import, torch-free `load`/`retrieve`, sentinel subprocess test). Proceed to the build (Phase A → G).
 
 ## Content Review
 
