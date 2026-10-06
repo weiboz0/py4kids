@@ -432,12 +432,71 @@ No [self] blockers. Awaiting [sol] + [fable] blind-solve reviews.
    notebooks re-ran clean; concept-scan/stretch/hygiene/cell-lint/ruff PASS. Verified no "no gradient / no learned id
    / no train history / no interaction history / stuck at / dead letter" string remains in shipped content.
 
-### Author response (round 3)
-Dispatching [sol] round-3 to confirm the defect-class fix. [self] + [fable] remain satisfied (no new content added,
-only the false-claim wording corrected).
+### Author response (rounds 3–5)
+The id-row false-claim (finding #3) was a defect CLASS; it took rounds 3–5 to sweep every phrasing across all four
+notebooks (body prose, comments, printed strings, and finally the Exercise-1 heading): solutions c0/c2/c3/c7/c9/c11,
+exercises c0/c2/c3/c10/c11 + heading, milestone c1/c2/c7/c12/c13/c16, lesson c0/c5/c15. Every "untrained / receives no
+gradient / stuck at random init / no learned id / no (train/interaction) history / zero interaction / dead letter /
+nothing to learn from / no one has interacted / un-interacted / no history" phrasing is gone; a cold item is now
+consistently described as **zero train positives → sampled only as a negative → negative-shaped id row** (content
+features place it). Legitimate survivors kept: "no reads"/"no train positives", CF "no reader embedding / no
+co-occurrence / unseen", lesson cell 6's illustrative "random init" module. Verified by exhaustive regex scan (0 hits)
+and all three executed notebooks re-ran clean.
 
-<!-- appended pre-PR -->
+### [sol] round-5 — **APPROVE.** Finding #3 fully resolved, no residual.
+
+### Content-review outcome (FINAL): **CONSENSUS — [self] APPROVE · [fable] APPROVE WITH NITS (all 5 nits FIXED) · [sol] APPROVE (r5).**
+All `[OPEN]` findings resolved ([sol] 3 Must + 1 Should across 5 rounds; [fable] 2 Should + 3 Nice). Cleared for PR.
 
 ## Post-Execution Report
+
+**Status:** COMPLETE — both gates at full 3-way consensus; `ci-local.sh` ALL GREEN; ready to merge.
+
+**What shipped (Unit 9 — feature towers & item cold-start):**
+- **Registry (Phase A):** 3 concepts (`feature-towers`, `item-cold-start`, `hard-negatives`), coverage-map entry
+  `unit-09-feature-towers` (requires ⊆ U1/U4/U5/U6/U7/U8; practices ∩ introduces = ∅), manifest, syllabus row 9,
+  baseline torch idiom `Linear` (+ `FeatureTowerRetrievalPath`). Buildout **27.5 < 30** retained (U10 removes it).
+- **`bookrec` (Phase B):** `FeatureTowerRetrievalPath` (name `feature-tower` v1) — item tower = id emb + genre emb +
+  author emb + `Linear`(GloVe) **summed**; reader tower id-based; BPR+Adam+weight_decay, torch lazy in `fit` only,
+  determinism trio saved/restored, composed numpy item+reader matrices persisted → torch-free `retrieve`/`load`/
+  `artifact`. `negative_pool` ∈ {`warm`(default), `full`, `hard`}. `tests/test_unit09.py` (16 tests) + `test_unit07`
+  torch-isolation subprocess extended to `feature_tower`.
+- **Notebooks (Phases C/D/E):** lesson (project-first hook, from-scratch→reveal, 4 beats), exercises (8: 6 core +
+  2 Challenge, no solutions/outputs), solutions (28 asserts, executes clean), milestone (scoreboard + cold-coverage
+  table + surfaced cold book + U6 blend, with executable baseline asserts). Teacher-notes (Phase F).
+
+**Measured (shipped tower, seed0/dim32/40ep — the lesson binds to these):** warm hit@10 **0.298** (vs U8 two-tower
+0.340, within 0.06 — NOT a record); cold-item **COVERAGE 0.138** (113/818) vs ID-only two-tower **0** and item-item
+CF **0**; U7 semantic cold-cov 0.328 (content already serves cold). Negative-pool mechanism: warm-only 0.298/0.138 vs
+full-catalog 0.338/0.048 vs hard 0.172/0.226 — an honest **warm↔cold trade**, not a free lunch. Per-fit ~20–27 s;
+cold COVERAGE is validation-safe (all fitted non-cold readers, TRAIN-only scoring, 818 denominator; cold hit@10 is
+report-only on the 97 incidental readers; designated-150 relevance deferred to Checkpoint B on sealed `test`).
+
+**Thesis correction (caught pre-content by Phase-B measurement):** the round-1 60ep plan probe read full-catalog
+negatives as *tanking* warm; on the shipped sum-composition tower at 40ep full-catalog gives the *higher* warm
+(0.338) and warm-only *costs* ~0.04 warm to buy ~3× cold coverage. Re-bound the plan + all content before any lesson
+copy was written.
+
+**Gates:**
+- **Plan-review (3-way): CONSENSUS** after 3 rounds — [self]/[sol] APPROVE, [fable] APPROVE WITH NITS. [sol]+[fable]
+  round-1 REJECTs (cold metric unmeasurable on val; ID-only "never surfaces cold" false; negative pool; honest
+  headline; constructor features; artifact matrix; budget) all folded; [sol] round-2 (hidden val dependency in the
+  coverage cohort) folded to a train-only cohort in round-3.
+- **Content-review (3-way): CONSENSUS** after 5 [sol] rounds — [self] APPROVE, [fable] APPROVE WITH NITS (all 5 fixed),
+  [sol] APPROVE. Folded: semantic 0.322→0.328; the "features cannot rescue / buried no matter how good" overclaim
+  (full-catalog still surfaces 39/818 → "strongly suppresses, not categorically prevents"); the id-row defect class
+  ("cold = zero train positives", "negative-shaped, not untrained"); executable milestone baseline asserts; the
+  nonexistent feature-input ablation Challenge reframed; plus 3 [fable] Nice nits.
+- **Self-caught (pre-gate):** Ex1 degenerate warm/cold contrast (`warm_book=catalog_ids[0]` was itself cold) fixed to
+  `min(train_pos_items)` + a contrast-guard assert.
+
+**Verification (Phase G):** `TMPDIR=/dev/shm bash scripts/ci-local.sh` — **ALL GREEN** (1936+217 unit tests pass,
+2 skipped; notebook exec + hygiene; manifest/prereq/coverage/concept-scan/stretch across all books; U9 handout PDF
+built; `pre-merge-guard: OK`). After the content-fix rounds, the three executed notebooks were re-run clean and the
+static checks (concept-scan/stretch/hygiene/cell-lint/ruff) re-confirmed PASS.
+
+**Follow-ups / notes:** none blocking. (1) `docs/content-review-gate.md:11` still names Sol model `gpt-6-sol` which
+this account rejects — the gate was run with `gpt-5.6-sol` (AGENTS.md); a governance-doc reconcile is pending user
+sign-off. (2) U10 (recsys-012) adds ANN/FAISS + removes `buildout` (lessons → 30.5 ≥ 30).
 
 <!-- appended before ship -->
