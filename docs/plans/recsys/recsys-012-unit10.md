@@ -29,7 +29,7 @@ no sequence model (U12); no generator change.
 - **Latency bound (design §7 requires recall@k + latency):** gate a **generous ABSOLUTE ceiling**, not a 2k-item
   speedup — e.g. ANN batched query over the ~540-reader cohort **< 1 s** (measured 18 ms; per-query ~34 µs). At 2,000
   items there is **no meaningful speedup** (exact numpy argpartition ~27 µs ≈ HNSW ~34 µs) — the plan must NOT assert
-  one; the speed win is **asymptotic** (measured: 20k items → 90× faster, recall 0.993, build 2.5 s). The scaling demo
+  one; the speed win is **asymptotic** (measured: 20k items → ~10× faster, recall 0.993, build 2.5 s). The scaling demo
   uses **20k** (not 200k: 49 s build threatens the CI budget).
 - `faiss.omp_set_num_threads(1)` is process-global like `torch.set_num_threads` → **save/restore in a `finally`**
   (`faiss.omp_get_max_threads()`), mirroring `two_tower.fit`.
@@ -47,7 +47,7 @@ no sequence model (U12); no generator change.
 
 ANN path **hit@10 = 0.340 at every efSearch ≥ 16 — identical to the exact two-tower (Δ +0.000).** ANN is a *speed*
 technique, not an accuracy one. At 2,000 items there is **no speedup** (numpy argpartition ~27 µs ≈ HNSW ~34 µs); the
-win is **asymptotic** — 20k items → recall 0.993 at **90×** (build 2.5 s), 200k → recall 0.912 (build 49 s, CI-unsafe).
+win is **asymptotic** — 20k items → recall 0.993 at **~10×** (build 2.5 s), 200k → recall 0.912 (build 49 s, CI-unsafe).
 Teaching point: at fixed `efSearch`, recall *falls* as the catalog grows (1.000 @2k → 0.912 @200k) — the knob must
 scale with the catalog. Determinism: two single-thread builds give identical neighbour ids + `allclose` distances.
 
@@ -169,7 +169,7 @@ over the item scores — what every dense path already does) and why it is linea
 navigable graph that visits a few neighbours instead of all items; build it with FAISS single-threaded; the
 `efSearch` recall/speed knob; (3) **ANN recall vs exact** — measure recall@10 (~0.999 at efSearch 64) and show hit@10
 == the exact two-tower (0.340); latency framed honestly — **no speedup at 2k**, demonstrate the asymptotic win on a
-**20k synthetic index** (jittered item-matrix copies: recall 0.993, ~90×, build ~2.5 s — NOT 200k, CI-unsafe), and
+**20k synthetic index** (jittered item-matrix copies: recall 0.993, ~10×, build ~2.5 s — NOT 200k, CI-unsafe), and
 that recall falls with catalog size at fixed `efSearch`; (4) **hybrid** — fuse BM25 + the two-tower (pinned `pool=50,
 w_dense=0.7`) and read hit@10 (0.362) AND coverage (0.192) honestly: a small, weight-sensitive lift on both (equal
 weights hurt; RRF loses), coverage still below lexical/U6. Bridge: U11 reranks the retrieved pool; U12 adds sequence
@@ -194,7 +194,7 @@ BOTH). Passes
 
 ### Phase F — teacher-notes.md (inline)
 `## Goals`, `## Pacing` (60–90 min / 2–3 sittings, hook first, all exercises), `## Common mistakes` (expecting ANN to
-*improve* accuracy — it preserves it; expecting a speedup at 2,000 items — the win is asymptotic (20k → ~90×);
+*improve* accuracy — it preserves it; expecting a speedup at 2,000 items — the win is asymptotic (20k → ~10×);
 non-determinism from multi-thread HNSW builds; using default L2 when the scores are inner products; forgetting to
 over-fetch past `seen`; **assuming any fusion / equal weights helps — equal weights HURT and RRF loses here; only a
 tuned dense-heavy hybrid gives a small lift**; leaking val),
@@ -243,7 +243,7 @@ hit@10≈exact + latency numbers, and the hybrid hit@10/coverage/weight. No [sel
 
 **[fable] — APPROVE WITH NITS (round 1, full seeded probe; faiss-cpu 1.15.1).** Measured and folded:
 - ANN recall@10 vs exact: 0.981/0.996/0.998/**0.9991**/1.000 at efSearch 8/16/32/64/128 (M=32,efC=200); ANN hit@10
-  **0.340 == exact** (Δ0.000); deterministic single-thread; latency 2k ~34 µs ≈ exact (no speedup); 20k → 90×/recall
+  **0.340 == exact** (Δ0.000); deterministic single-thread; latency 2k ~34 µs ≈ exact (no speedup); 20k → ~10×/recall
   0.993/build 2.5 s; 200k → recall 0.912/build 49 s (CI-unsafe).
 - Hybrid: pool 50/w_dense 0.7 → **0.362/cov 0.192** (stable 0.362 across two-tower seeds 0/1/2); pool 100/w 0.6 →
   0.366/0.201; equal weights HURT (0.296–0.328); RRF loses (0.310–0.330); gain small + CI touches 0 + weight-sensitive;

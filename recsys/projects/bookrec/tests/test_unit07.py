@@ -280,51 +280,66 @@ def test_semantic_path_registers_as_semantic_v1(generated: dict[str, object], gl
 # --- no gensim; torch only ever LAZY (Unit 8) ------------------------------------------------
 
 
-def test_bookrec_imports_no_gensim_or_torch() -> None:
-    """gensim is banned everywhere under ``bookrec/``; torch may appear ONLY as a lazy import.
+def test_bookrec_imports_no_gensim_or_torch_or_faiss() -> None:
+    """gensim is banned everywhere under ``bookrec/``; torch **and faiss** may appear ONLY as lazy imports.
 
-    Unit 8 (``two_tower.py``) imports torch **inside** ``fit`` so that importing the package and
-    calling the torch-free paths (``retrieve``/``load``/``artifact``, over numpy weights) never pull
-    torch. This raw-text scan therefore forbids gensim anywhere and forbids any **top-level**
-    (unindented) ``import torch`` / ``from torch`` in every ``bookrec/*.py`` — including
-    ``two_tower.py`` — while permitting the indented lazy import inside ``fit``.
+    Unit 8 (``two_tower.py``) imports torch **inside** ``fit``; Unit 10 (``ann.py``) imports faiss
+    **inside** the HNSW build/search surface — so importing the package and calling the heavy-dep-free
+    surface never pulls torch or faiss. This raw-text scan forbids gensim anywhere and forbids any
+    **top-level** (unindented) ``import torch`` / ``from torch`` / ``import faiss`` / ``from faiss`` in
+    every ``bookrec/*.py`` — including ``two_tower.py`` and ``ann.py`` — while permitting the indented
+    lazy imports inside their methods.
     """
     bookrec_dir = Path(__file__).resolve().parents[1] / "bookrec"
     sources = list(bookrec_dir.rglob("*.py"))
     assert (bookrec_dir / "two_tower.py") in sources  # the Unit-8 module is actually scanned
     assert (bookrec_dir / "feature_tower.py") in sources  # the Unit-9 module is actually scanned
+    assert (bookrec_dir / "ann.py") in sources  # the Unit-10 ANN module is actually scanned
+    assert (bookrec_dir / "hybrid.py") in sources  # the Unit-10 hybrid module is actually scanned
     for source in sources:
         text = source.read_text(encoding="utf-8")
         # gensim is never allowed, in any form, anywhere in the package.
         for forbidden in ("import gensim", "from gensim"):
             assert forbidden not in text, f"{source.name} imports gensim: {forbidden}"
-        # torch is allowed ONLY as a lazy (indented) import; never at module top level.
+        # torch and faiss are allowed ONLY as lazy (indented) imports; never at module top level.
         for lineno, line in enumerate(text.splitlines(), start=1):
             if line[:1].isspace():
-                continue  # indented -> not a top-level statement (the lazy import inside fit)
+                continue  # indented -> not a top-level statement (the lazy import inside a method)
             stripped = line.strip()
-            assert not stripped.startswith(("import torch", "from torch")), (
-                f"{source.name}:{lineno} imports torch at module top level: {stripped!r}"
-            )
+            assert not stripped.startswith(
+                ("import torch", "from torch", "import faiss", "from faiss")
+            ), f"{source.name}:{lineno} imports torch/faiss at module top level: {stripped!r}"
 
 
-def test_torch_free_paths_do_not_import_torch() -> None:
-    """Prove the torch-free paths never import torch, even though uv's ``.venv`` physically has it.
+def test_heavy_dep_free_paths_do_not_import_torch_or_faiss() -> None:
+    """Prove the heavy-dep-free surface never imports torch **or faiss**, though uv's ``.venv`` has both.
 
-    uv installs one shared ``.venv`` that contains torch, so merely running the group-free suite
-    does NOT prove ``bookrec`` avoids importing it. In a subprocess we plant a **sentinel**
-    ``sys.modules["torch"] = None`` (so any real ``import torch`` would raise), import ``bookrec``,
-    then construct a :class:`TwoTowerRetrievalPath`, ``load`` a hand-built numpy artifact and
-    ``retrieve`` — the torch-free paths. The subprocess asserts the sentinel is **untouched**
-    (``sys.modules.get("torch") is None``): if anything had imported torch the key would no longer
-    be ``None``. (``"torch" not in sys.modules`` would be WRONG — the key EXISTS, mapped to None.)
+    uv installs one shared ``.venv`` with both torch and faiss, so merely running the group-free
+    suite does NOT prove ``bookrec`` avoids importing them. In a subprocess we plant TWO **sentinels**
+    ``sys.modules["torch"] = None`` and ``sys.modules["faiss"] = None`` (so any real ``import torch`` /
+    ``import faiss`` would raise), import ``bookrec`` (which imports every unit module, including
+    ``ann.py`` / ``hybrid.py``), then exercise the heavy-dep-free surface:
+
+    - the Unit-8 two-tower and Unit-9 feature tower (``load``/``retrieve``/``artifact`` over numpy);
+    - the Unit-10 :class:`HybridRetrievalPath` — ``fit``/``retrieve``/``artifact`` are pure numpy over
+      its sub-paths' candidates, so a hybrid runs end-to-end with BOTH torch and faiss blocked;
+    - constructing a Unit-10 :class:`AnnRetrievalPath` (construction is faiss-free), and confirming its
+      faiss use is **confined to the index build**: ``fit`` attempts a lazy ``import faiss`` and raises
+      ImportError under the sentinel, which leaves ``sys.modules['faiss']`` as ``None`` (unimported).
+
+    The subprocess finally asserts BOTH sentinels are **untouched** (``sys.modules.get("torch") is
+    None`` AND ``sys.modules.get("faiss") is None``): if anything had imported either, the key would
+    no longer be ``None``. (``"faiss" not in sys.modules`` would be WRONG — the key EXISTS, mapped to
+    None.)
     """
     script = (
         "import sys\n"
         "sys.modules['torch'] = None  # sentinel: a real `import torch` would now raise\n"
+        "sys.modules['faiss'] = None  # sentinel: a real `import faiss` would now raise\n"
         "import numpy as np\n"
-        "import bookrec\n"
-        "from bookrec import TwoTowerRetrievalPath, FeatureTowerRetrievalPath, Book, GloveSubset\n"
+        "import bookrec  # imports every unit module, including ann.py / hybrid.py\n"
+        "from bookrec import (TwoTowerRetrievalPath, FeatureTowerRetrievalPath, Book, GloveSubset,\n"
+        "                     LexicalRetrievalPath, HybridRetrievalPath, AnnRetrievalPath)\n"
         "artifact = {\n"
         "    'reader_embeddings': np.zeros((2, 4), dtype=np.float32),\n"
         "    'item_embeddings': np.eye(4, dtype=np.float32)[:3],\n"
@@ -348,11 +363,28 @@ def test_torch_free_paths_do_not_import_torch() -> None:
         "assert [c.item_id for c in ft_recs][0] == 10, ft_recs\n"
         "assert ft_recs[0].provenance == 'feature-tower'\n"
         "assert list(ft.artifact()['item_ids']) == [10, 20, 30], ft.artifact()\n"
-        "assert sys.modules.get('torch') is None, 'something imported torch on the torch-free path'\n"
-        "print('TORCH_FREE_OK')\n"
+        "# Unit 10's hybrid is pure numpy over its sub-paths -> fit/retrieve/artifact need NO faiss.\n"
+        "lex = LexicalRetrievalPath({10: 'dragon magic', 20: 'space rocket', 30: 'ocean deep'}\n"
+        "                           ).fit([], catalog=[10, 20, 30])\n"
+        "hyb = HybridRetrievalPath(lex, loaded, weight=0.7, pool=5).fit([])\n"
+        "h_recs = hyb.retrieve(100, {'seen': {10}}, 2)\n"
+        "assert len(h_recs) == 2 and all(c.provenance == 'hybrid' for c in h_recs), h_recs\n"
+        "assert hyb.artifact()['params']['method'] == 'weighted', hyb.artifact()\n"
+        "# Unit 10's ANN: construction is faiss-free; its faiss use is CONFINED to the index build,\n"
+        "# so fit() attempts a lazy `import faiss` and raises ImportError under the sentinel (which\n"
+        "# leaves sys.modules['faiss'] as None -- the module was never actually imported).\n"
+        "ann = AnnRetrievalPath(loaded)\n"
+        "try:\n"
+        "    ann.fit([])\n"
+        "    raise AssertionError('AnnRetrievalPath.fit must build a faiss index (import blocked)')\n"
+        "except ImportError:\n"
+        "    pass  # faiss is confined to the HNSW build surface\n"
+        "assert sys.modules.get('torch') is None, 'something imported torch on the heavy-dep-free path'\n"
+        "assert sys.modules.get('faiss') is None, 'something imported faiss on the heavy-dep-free path'\n"
+        "print('HEAVY_DEP_FREE_OK')\n"
     )
     result = subprocess.run(
         [sys.executable, "-c", script], capture_output=True, text=True, check=False
     )
     assert result.returncode == 0, f"stdout={result.stdout!r} stderr={result.stderr!r}"
-    assert result.stdout.strip().splitlines()[-1] == "TORCH_FREE_OK"
+    assert result.stdout.strip().splitlines()[-1] == "HEAVY_DEP_FREE_OK"

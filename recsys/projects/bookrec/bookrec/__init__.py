@@ -22,6 +22,7 @@ retrieval paths (BM25, item-item, matrix factorisation, two-tower, …) land in 
 
 from __future__ import annotations
 
+from bookrec.ann import AnnRetrievalPath, HnswIndex
 from bookrec.blend import blend
 from bookrec.catalog import Book, load_catalog
 from bookrec.data import generated_dir
@@ -41,6 +42,7 @@ from bookrec.embeddings import (
 from bookrec.evaluate import hit_rate_at_k, ndcg_at_k, precision_at_k, recall_at_k
 from bookrec.factorization import MatrixFactorizationPath
 from bookrec.feature_tower import FeatureTowerRetrievalPath
+from bookrec.hybrid import HybridRetrievalPath
 from bookrec.keywords import load_keywords
 from bookrec.lexical import (
     BM25Index,
@@ -69,6 +71,7 @@ from bookrec.search import search_catalog
 from bookrec.two_tower import TwoTowerRetrievalPath
 
 __all__ = [
+    "AnnRetrievalPath",
     "BM25Index",
     "BlendedScoreboardResult",
     "Book",
@@ -76,6 +79,8 @@ __all__ = [
     "DuplicatePathError",
     "FeatureTowerRetrievalPath",
     "GloveSubset",
+    "HnswIndex",
+    "HybridRetrievalPath",
     "ItemItemRetrievalPath",
     "LexicalRetrievalPath",
     "MatrixFactorizationPath",
