@@ -319,7 +319,7 @@ Rules:
   2. `answer`: a `short-answer` heading tag.
   3. `predict`: the statement asks what code prints (`(?i)(what (does|will) .* print|predict( the)? output|code to trace|trace (this|the) code)`), has a code cell, **and** that cell's run (as in step 5) gives non-empty stdout. Otherwise fall through.
   4. `asserts`: the solution has **at least one** top-level assert, and every free `Name` the asserts load other than Python builtins (functions **and** variables) is bound in the starter (`def`, `class` or assignment) or named in the statement in backticks. Otherwise fall through with reason `asserts test the solution's own choices` (the common `assert total == 15` with `total` the student's own variable is not portable unless the statement names `total`).
-  5. `expected-output`: the solution runs twice (temp copy, stdin `/dev/null`, `PYTHONHASHSEED=0`, timeout 20 s) with identical non-empty stdout, and neither the solution nor the starter calls `input(` or imports `random` without `seed(`.
+  5. `expected-output` (amended by content review 1): every non-empty normalised output line occurs, as a whole token sequence, in the statement, the starter or a `.py` file the item ships (`output_fixed_by_statement`; otherwise `self-check`, reason `output not fixed by the statement`); and the solution runs twice (temp copy, stdin `/dev/null`, `PYTHONHASHSEED=0`, timeout 20 s) with identical non-empty stdout, and neither the solution nor the starter calls `input(` or imports `random` without `seed(`.
   6. Else `self-check`.
 
   `turtle: true` when the starter or solution imports turtle (the three-part rule is applied in part C).
@@ -329,7 +329,7 @@ Rules:
   - `expected-output` → the solution's stdout, run the same way.
   - `asserts` ships `source` = only the top-level `assert` statements (`ast.unparse`), and `functions` = the names they call. No function body ever ships.
   - `fixtures` ships every pair once, as files under `files/<entry>/fixtures/<stem>/`, referenced by `{n, in_file, out_file, sample}`. `sample` is true for the pair whose input equals the statement's first `Sample Input` code block (whitespace-normalised); the Sample Input block is the first code fence anywhere in the `Sample Input` section, even after prose (as in ACSL unit 15 Exercise 17). If none matches, **no pair is a sample** (nothing is revealed), and `site-check` prints `WARN:` naming the item. Pairs over `fixture_budget_kb` go to `over_budget` and the report. `match` is `"line"` when the book has the `acsl` flag, else `"token"`.
-  - `self-check` → `requirements` from the heading cell's `metadata.requirements` if present; else the statement's bullet and numbered list items (Markdown stripped to text); else one requirement, the statement's first sentence. The report lists `self-check` items with no list.
+  - `self-check` → `requirements` from the heading cell's `metadata.requirements` if present; else the statement's bullet and numbered list items (Markdown stripped to text); else (amended by content review 1) the `**Specification:**` paragraph's sentences, or the statement's prose sentences without notes, at most 6; the label only as a last resort. The report lists `self-check` items with no list.
 - **`answer_format`:** the heading cell's `metadata.answer_format` (`{case, hint}`) if present; else derived:
   - `case: "sensitive"`
   - `hint`: `"a number"` when the canonical text is numeric, `"one line"` when it is a single line, `"several lines"` otherwise
