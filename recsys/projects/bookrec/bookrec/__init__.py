@@ -25,8 +25,20 @@ from __future__ import annotations
 from bookrec.blend import blend
 from bookrec.catalog import Book, load_catalog
 from bookrec.data import generated_dir
-from bookrec.diversity import catalog_coverage, head_ids_from_counts, head_share
-from bookrec.evaluate import hit_rate_at_k, recall_at_k
+from bookrec.diversity import (
+    catalog_coverage,
+    head_ids_from_counts,
+    head_share,
+    intra_list_diversity,
+    novelty,
+)
+from bookrec.embeddings import (
+    GloveSubset,
+    SemanticEmbeddingRetrievalPath,
+    book_embedding,
+    load_glove_subset,
+)
+from bookrec.evaluate import hit_rate_at_k, ndcg_at_k, precision_at_k, recall_at_k
 from bookrec.factorization import MatrixFactorizationPath
 from bookrec.keywords import load_keywords
 from bookrec.lexical import (
@@ -45,14 +57,22 @@ from bookrec.protocol import (
 )
 from bookrec.rank import rank
 from bookrec.registry import DuplicatePathError, PathRegistry
-from bookrec.scoreboard import RandomRetrievalPath, ScoreboardResult, run_validation_scoreboard
+from bookrec.scoreboard import (
+    BlendedScoreboardResult,
+    RandomRetrievalPath,
+    ScoreboardResult,
+    run_blended_scoreboard,
+    run_validation_scoreboard,
+)
 from bookrec.search import search_catalog
 
 __all__ = [
     "BM25Index",
+    "BlendedScoreboardResult",
     "Book",
     "Candidate",
     "DuplicatePathError",
+    "GloveSubset",
     "ItemItemRetrievalPath",
     "LexicalRetrievalPath",
     "MatrixFactorizationPath",
@@ -61,7 +81,9 @@ __all__ = [
     "RandomRetrievalPath",
     "RetrievalPath",
     "ScoreboardResult",
+    "SemanticEmbeddingRetrievalPath",
     "blend",
+    "book_embedding",
     "calibrate_scores",
     "catalog_coverage",
     "cosine_similarity",
@@ -69,12 +91,18 @@ __all__ = [
     "head_ids_from_counts",
     "head_share",
     "hit_rate_at_k",
+    "intra_list_diversity",
     "item_item_cosine",
     "load_catalog",
+    "load_glove_subset",
     "load_keywords",
+    "ndcg_at_k",
+    "novelty",
     "order_candidates",
+    "precision_at_k",
     "rank",
     "recall_at_k",
+    "run_blended_scoreboard",
     "run_validation_scoreboard",
     "search_catalog",
     "tfidf_matrix",

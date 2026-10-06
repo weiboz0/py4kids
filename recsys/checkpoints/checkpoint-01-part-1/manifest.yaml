@@ -1,0 +1,9 @@
+id: checkpoint-01-part-1
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+concepts:
+  introduces: []
+  requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, popularity-ranking, bayesian-shrinkage, popularity-bias, bag-of-words, tf-idf, bm25, item-item-cf, knn-similarity, implicit-feedback, matrix-factorization, latent-factors, gradient-descent, ranking-metrics, beyond-accuracy, score-blending]
+  practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, popularity-ranking, bayesian-shrinkage, popularity-bias, bag-of-words, tf-idf, bm25, item-item-cf, knn-similarity, implicit-feedback, matrix-factorization, latent-factors, gradient-descent, ranking-metrics, beyond-accuracy, score-blending]

@@ -1,0 +1,9 @@
+id: unit-06-evaluation-and-blending
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [ranking-metrics, beyond-accuracy, score-blending]
+  requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, popularity-ranking, popularity-bias, item-item-cf, matrix-factorization, latent-factors]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, popularity-bias]
