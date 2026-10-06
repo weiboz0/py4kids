@@ -89,6 +89,11 @@ library_methods:
 - maximum
 - outer
 - sqrt
+# --- Unit 7 (recsys-009): semantic embeddings (bookrec GloVe API) ---
+- SemanticEmbeddingRetrievalPath
+- book_embedding
+- load_glove_subset
+- vector
 # --- Unit 5 (recsys-007): matrix factorization (bookrec MF API + numpy GD idioms) ---
 - MatrixFactorizationPath
 - calibrate

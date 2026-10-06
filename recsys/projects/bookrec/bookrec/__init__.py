@@ -32,6 +32,12 @@ from bookrec.diversity import (
     intra_list_diversity,
     novelty,
 )
+from bookrec.embeddings import (
+    GloveSubset,
+    SemanticEmbeddingRetrievalPath,
+    book_embedding,
+    load_glove_subset,
+)
 from bookrec.evaluate import hit_rate_at_k, ndcg_at_k, precision_at_k, recall_at_k
 from bookrec.factorization import MatrixFactorizationPath
 from bookrec.keywords import load_keywords
@@ -66,6 +72,7 @@ __all__ = [
     "Book",
     "Candidate",
     "DuplicatePathError",
+    "GloveSubset",
     "ItemItemRetrievalPath",
     "LexicalRetrievalPath",
     "MatrixFactorizationPath",
@@ -74,7 +81,9 @@ __all__ = [
     "RandomRetrievalPath",
     "RetrievalPath",
     "ScoreboardResult",
+    "SemanticEmbeddingRetrievalPath",
     "blend",
+    "book_embedding",
     "calibrate_scores",
     "catalog_coverage",
     "cosine_similarity",
@@ -85,6 +94,7 @@ __all__ = [
     "intra_list_diversity",
     "item_item_cosine",
     "load_catalog",
+    "load_glove_subset",
     "load_keywords",
     "ndcg_at_k",
     "novelty",

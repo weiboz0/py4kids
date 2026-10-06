@@ -29,3 +29,7 @@ concepts:
 - {id: ranking-metrics, name: "Ranking metrics: precision@k and NDCG", category: techniques, kind: technique}
 - {id: beyond-accuracy, name: "Beyond-accuracy: coverage, diversity, novelty", category: techniques, kind: technique}
 - {id: score-blending, name: "Score blending of multiple retrieval paths", category: techniques, kind: technique}
+# --- Unit 7 (recsys-009): semantic text embeddings (GloVe; begins Part 2) ---
+- {id: word-embeddings, name: "Pretrained dense word embeddings (GloVe)", category: techniques, kind: technique}
+- {id: document-embeddings, name: "Document embeddings by pooling word vectors", category: techniques, kind: technique}
+- {id: embedding-retrieval, name: "Brute-force cosine retrieval in embedding space", category: techniques, kind: technique}

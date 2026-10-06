@@ -1,5 +1,5 @@
 map_version: 1
-# This remains `buildout: true` while the accumulated lessons (now eighteen and a half: Units 1-6 at 3 each = 18 +
+# This remains `buildout: true` while the accumulated lessons (now twenty-one and a half: Units 1-7 at 3 each = 21 +
 # Checkpoint A at 0.5) are below the whole-book lesson budget (30). A later plan removes buildout when the accumulated
 # entries first reach that budget.
 entries:
@@ -52,3 +52,10 @@ entries:
   introduces: []
   requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, popularity-ranking, bayesian-shrinkage, popularity-bias, bag-of-words, tf-idf, bm25, item-item-cf, knn-similarity, implicit-feedback, matrix-factorization, latent-factors, gradient-descent, ranking-metrics, beyond-accuracy, score-blending]
   practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, popularity-ranking, bayesian-shrinkage, popularity-bias, bag-of-words, tf-idf, bm25, item-item-cf, knn-similarity, implicit-feedback, matrix-factorization, latent-factors, gradient-descent, ranking-metrics, beyond-accuracy, score-blending]
+- id: unit-07-semantic-embeddings
+  kind: unit
+  title: "Semantic text embeddings"
+  lessons: 3
+  introduces: [word-embeddings, document-embeddings, embedding-retrieval]
+  requires: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, bag-of-words, latent-factors, ranking-metrics, score-blending]
+  practices: [retrieve-then-rank, catalog-search, offline-evaluation, top-k-ranking-metrics, bag-of-words]
