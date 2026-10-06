@@ -56,9 +56,9 @@ def test_propose_each_kind(demo):
     assert proposed["Challenge 1"][0] == "asserts"  # `triple` is bound in the starter
 
     more = {item.number: item for item in items_of(demo, "units", "unit-02-more", "unit")}
-    # Not portable: `my_list` is the student's own choice; the run is fixed, so expected-output.
+    # Not portable: `my_list` is the student's own choice, and so is the printed list: self-check.
     kind = propose_kind(demo, "demo", more[1])[0]
-    assert kind == "expected-output"
+    assert kind == "self-check"
     # Variable-portable: the statement names `total`.
     assert propose_kind(demo, "demo", more[2])[0] == "asserts"
     # Builtins need no binding: `len(names)` with `names` named in the statement.
@@ -77,7 +77,7 @@ def test_propose_each_kind(demo):
     milestones = items_of(demo, "projects", "project-02-demo", "project")
     assert [propose_kind(demo, "demo", i) for i in milestones] == [
         ("self-check", "no matching solution section"),
-        ("expected-output", "the solution prints the same output on two runs")]
+        ("self-check", "output not fixed by the statement")]  # the score 3 is the solution's
 
 
 def test_non_portable_assert_reason(demo):
@@ -172,3 +172,95 @@ def test_apply_proposals_one_entry(demo):
     changed = apply_proposals(demo, "demo", "checkpoint-01-demo")
     assert changed == ["demo/checkpoint-01-demo/checkpoint/c1c01",
                        "demo/checkpoint-01-demo/checkpoint/c1c02"]
+
+
+# --- content-review round 1 (plan 101) ----------------------------------------------------------
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def real_items(book: str, entry: str) -> dict:
+    from tools.export.classify import _site_entries
+
+    answers.clear_caches()
+    [(entry_dir, kind)] = _site_entries(ROOT, book, entry)
+    items = entry_content(ROOT, book, entry_dir, kind).items
+    return {item.key.rsplit("/", 1)[1]: item for item in items}
+
+
+def test_expected_output_needs_output_fixed_by_statement(demo):
+    """[self] 1 / [fable] 2: a free-design item whose solution prints its own sample choices is
+    self-check, not expected-output; an item whose output the statement spells out stays."""
+    unit = items_of(demo, "units", "unit-01-demo", "unit")
+    assert propose_kind(demo, "demo", unit[4])[0] == "expected-output"  # "1, 2 and 3 ... `done`"
+    more = {item.number: item for item in items_of(demo, "units", "unit-02-more", "unit")}
+    # "Make a list of three numbers in any order and print it": `[3, 1, 2]` is the solution's choice.
+    assert propose_kind(demo, "demo", more[1]) == (
+        "self-check",
+        "asserts test the solution's own choices (my_list); output not fixed by the statement")
+    milestones = items_of(demo, "projects", "project-02-demo", "project")
+    assert propose_kind(demo, "demo", milestones[1]) == (
+        "self-check", "output not fixed by the statement")
+
+
+def test_expected_output_real_free_design_items_are_self_check():
+    items = real_items("python-projects", "unit-01-story-machine")
+    dice = real_items("python-projects", "unit-02-number-detective")["exercise-1"]  # dice roller
+    for item in (items["exercise-one"], dice):  # the greeting card prints the solution's own name
+        kind, reason = propose_kind(ROOT, "python-projects", item)
+        assert kind == "self-check" and reason.endswith("output not fixed by the statement"), reason
+
+
+def test_expected_output_real_fix_the_bug_item_stays():
+    """The fixed program's output is the starter's own text (D4's fix-the-bug items)."""
+    item = real_items("python-projects", "unit-01-story-machine")["exercise-two"]
+    assert "Welcome to the marshmallow castle!" in item.starter
+    assert "Welcome to the marshmallow castle!" not in item.statement_source
+    assert propose_kind(ROOT, "python-projects", item)[0] == "expected-output"
+
+
+def test_expected_output_real_worked_sample_item_stays():
+    item = real_items("python-concepts", "unit-01-output-and-variables")["2f6baca29bd1"]
+    assert "**Expected output:**" in item.statement_source
+    assert propose_kind(ROOT, "python-concepts", item)[0] == "expected-output"
+
+
+def test_statement_program_skips_comment_only_starter(demo):
+    """[fable] 1: a comment-only starter is no program; the statement's ```python fence is."""
+    path = demo / "demo/units/unit-01-demo/exercises.ipynb"
+    notebook = nbformat.read(path, as_version=4)
+    notebook.cells[5].source += "\n\n```python\nprint('from the fence')\n```"
+    notebook.cells[6].source = "# Write your prediction here.\n# Do not run new code."
+    nbformat.write(notebook, path)
+    answers.clear_caches()
+    item = items_of(demo, "units", "unit-01-demo", "unit")[2]
+    assert answers.statement_program(item) == "print('from the fence')\n"
+    assert propose_kind(demo, "demo", item) == ("predict",
+                                                "the statement asks what the program prints")
+
+
+def test_real_predict_with_comment_only_starter():
+    item = real_items("python-concepts", "unit-01-output-and-variables")["u01e15a"]
+    assert item.starter.lstrip().startswith("#")
+    assert propose_kind(ROOT, "python-concepts", item)[0] == "predict"
+    assert answers.canonical_text(item, "predict") == "A B\nx-y-z\nGo!Now\n"
+
+
+def test_predict_phrasings():
+    """[fable] 3: "predict the values", "predict the exact output", "without running"."""
+    assert PREDICT.search("Without running the expressions first, predict the values of `6 + 4`.")
+    assert PREDICT.search("Predict the exact output, then run it.")
+    assert PREDICT.search("Predict the value of `x`.")
+    assert PREDICT.search("Predict the result of each line.")
+    assert PREDICT.search("Write down what appears before running the cell.")
+    assert not PREDICT.search("Trace the turtle's path on paper.")
+    assert not PREDICT.search("Run the turtle program below and trace their counter values by hand.")
+
+
+def test_real_predict_the_values_statement():
+    item = real_items("python-concepts", "unit-02-numbers-and-arithmetic")["u02e058"]
+    assert PREDICT.search(item.statement_source)
+    # Its fenced program is bare expressions (REPL style) that print nothing, so the proposal falls
+    # through to the solution run, whose output the statement's sample fixes.
+    assert propose_kind(ROOT, "python-concepts", item) == (
+        "expected-output", "the solution prints the same output on two runs")

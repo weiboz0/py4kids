@@ -7,6 +7,7 @@ reader; the consumer test swaps in a recording reader to prove that.
 
 from __future__ import annotations
 
+import ast
 import html
 import json
 import re
@@ -96,9 +97,14 @@ def check_control(check, bundle_dir: Path) -> str:
             rows.append(f'<li>case {case["n"]} ({check["match"]} match){sample}</li>')
         return f'<ul class="{css}">{"".join(rows)}</ul>'
     if kind == "asserts":
+        # D5: the assert source runs in the runner but is never printed; the page shows only the
+        # functions checked and one pass/fail line per assert.
         names = ", ".join(check["functions"])
+        total = len(ast.parse(check["source"]).body)
+        results = "".join(f'<li class="assert-result" data-n="{n}">check {n} of {total}: '
+                          f"not run yet</li>" for n in range(1, total + 1))
         return (f'<div class="{css}"><p>Checks: {html.escape(names)}</p>'
-                f'<pre>{html.escape(check["source"])}</pre></div>')
+                f"<ol>{results}</ol></div>")
     if kind == "self-check":
         ticks = "".join(f'<li><input type="checkbox"> {html.escape(r)}</li>'
                         for r in check["requirements"])

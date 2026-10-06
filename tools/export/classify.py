@@ -10,7 +10,10 @@ A content plan confirms each item's check kind as a heading-cell tag (`check-fix
 4. `asserts`: the solution's top-level asserts load only names the starter binds or the statement
    names in backticks (Python builtins aside).
 5. `expected-output`: the solution prints the same non-empty output on two runs, without `input()`
-   or unseeded `random`.
+   or unseeded `random`, and every non-empty output line occurs (as a whole token sequence) in the
+   statement or the starter, so a correct student program can match it (a worked sample, or a
+   fix-the-bug starter's own text). Otherwise the output holds the solution's own choices: the
+   reason is `output not fixed by the statement`.
 6. `self-check`.
 
 `apply_proposals` writes the proposed tags (content-plan work; never run on real books here).
@@ -33,8 +36,10 @@ from .items import Item, entry_content, entry_items
 KINDS = ("fixtures", "answer", "asserts", "expected-output", "predict", "self-check")
 TAG = {k: f"check-{'self' if k == 'self-check' else k}" for k in KINDS}
 KIND_OF_TAG = {tag: kind for kind, tag in TAG.items()}
+UNFIXED = "output not fixed by the statement"
 PREDICT = re.compile(r"(?i)(what (does|will) .* print|predict( the)? output|code to trace|"
-                     r"trace (this|the) code)")
+                     r"trace (this|the) code|predict (the )?(values?|result|exact)|"
+                     r"without running|before running)")
 
 
 def _check_tags(cell) -> list[str]:
@@ -89,9 +94,9 @@ def propose_kind(root: Path, book: str, item: Item) -> tuple[str, str]:
     if not reason.startswith("no top-level assert"):
         skipped.append(reason)
     ok, why = answers.expected_output_runs(item)
-    if ok:
+    if ok and answers.output_fixed_by_statement(item):
         return "expected-output", why
-    skipped.append(why)
+    skipped.append(UNFIXED if ok else why)
     return "self-check", "; ".join(skipped)
 
 

@@ -16,7 +16,8 @@ newline, lists keep document order, sets are sorted, and nothing holds a timesta
 path. `content_hash` is sha256 over the sorted `(relative path, bytes)` of every bundle file, with
 `book.json` hashed without its `release` object (`_content_hash` gives the exact framing).
 
-The report (probe statuses, unattributed concepts, classification, self-check reasons, derived
+The report (probe statuses, unattributed concepts (items per check kind; short answers, which have
+no code, are counted as exempt), classification, self-check reasons, derived
 formats, fixture notes, distractor fallbacks) goes to `build/site-report/<book>.json`, never into
 the bundle; `site-check` turns it into findings.
 """
@@ -225,7 +226,8 @@ def export_book(root: Path, book: str, out_dir: Path, release: str = UNRELEASED)
 
     report: dict = {
         "book": book, "probes": {}, "concept_findings": [], "tag_findings": [],
-        "unattributed": {"blocks": [], "items": []}, "classification": {},
+        "unattributed": {"blocks": [], "items": {}, "short_answer_exempt": 0},
+        "classification": {},
         "self_check": {}, "derived_formats": [], "unmatched_samples": [], "over_budget": {},
         "notes": {}, "distractor_fallbacks": {},
     }
@@ -269,7 +271,11 @@ def export_book(root: Path, book: str, out_dir: Path, release: str = UNRELEASED)
                 if exported.kind == "self-check":
                     report["self_check"][key] = exported.reason
                 if not data["concepts"]:
-                    report["unattributed"]["items"].append(key)
+                    # A short answer has no code to attribute concepts from: not content work.
+                    if exported.kind == "answer":
+                        report["unattributed"]["short_answer_exempt"] += 1
+                    else:
+                        report["unattributed"]["items"].setdefault(exported.kind, []).append(key)
                 if data["check"]["kind"] == "fixtures":
                     from .answers import fixture_files
 

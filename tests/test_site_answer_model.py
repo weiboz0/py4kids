@@ -146,6 +146,63 @@ def test_canonical_in_title_is_not_content(demo, bundle):
     assert fails(demo.model, bundle) == []
 
 
+def test_canonical_in_self_check_requirement_fails(demo, bundle):
+    """[sol] 3: every student-visible string counts, self-check requirements included."""
+    edit_item(bundle, "unit-01-demo", "Exercise 6",
+              lambda item: item["check"]["requirements"].append("The sum is 159."))
+    found = fails(demo.model, bundle)
+    assert any("u3e04: hidden answer text" in f and "check/requirements/2" in f
+               for f in found), found
+
+
+def test_canonical_in_answer_format_hint_fails(demo, bundle):
+    def edit(item):
+        item["check"]["answer_format"]["hint"] = "like 159"
+    edit_item(bundle, "unit-03-leaks", "Exercise 2", edit)
+    found = fails(demo.model, bundle)
+    assert any("u3e04: hidden answer text" in f and "answer_format/hint" in f for f in found), found
+
+
+def test_canonical_in_concept_name_fails(demo, bundle):
+    data = json.loads((bundle / "book.json").read_text())
+    data["concepts"][0]["name"] = "Printing 159"
+    (bundle / "book.json").write_text(dumps(data))
+    found = fails(demo.model, bundle)
+    assert any("u3e04: hidden answer text" in f and "concepts/0/name" in f for f in found), found
+
+
+def test_counted_fields_are_everything_but_non_content(demo):
+    """Every string field is counted except keys, ids, paths, hashes, enums, titles and labels,
+    and the fields tied to a counted one (`check.program`, card terms and definitions)."""
+    bundle = load_bundle(demo.bundle)
+    counted = {s.field for s in bundle.strings if demo.model.counted(s)}
+    assert {"md", "statement_md", "starter", "answer_md", "requirements", "hint", "name",
+            "definition_md", "term", "reference_md", "source", "code", "output"} <= counted
+    assert not counted & {"key", "id", "file", "hash", "kind", "type", "title", "label",
+                          "in_file", "out_file", "content_hash", "program", "functions"}
+
+
+def test_card_terms_are_tied_to_the_glossary(demo, bundle):
+    path = entry_path(bundle, "unit-01-demo")
+    data = json.loads(path.read_text())
+    card = next(c for c in data["cards"] if c["kind"] == "concept")
+    card["term"] = "printing 159"
+    path.write_text(dumps(data))
+    found = fails(demo.model, bundle)
+    assert f"FAIL: {card['key']}: concept card term differs from the glossary" in found, found
+
+
+def test_entry_outside_the_syllabus_is_a_fail_not_a_crash(demo, bundle):
+    """[fable] 7: `_odd_findings` reports an entry the syllabus does not list."""
+    data = json.loads((bundle / "book.json").read_text())
+    record = next(r for r in data["entries"] if r["id"] == "unit-03-leaks")
+    record["id"] = "unit-99-ghost"
+    (bundle / "book.json").write_text(dumps(data))
+    found = fails(demo.model, bundle)
+    assert any(f.startswith("FAIL: demo: unit-99-ghost: entry is not in the syllabus")
+               for f in found), found
+
+
 def test_extra_copy_of_odd_answer_collision_fails(demo, bundle):
     append_to_statement(bundle, "unit-03-leaks", "Exercise 8", "Hint: `1110`.")
     found = fails(demo.model, bundle)
@@ -319,7 +376,10 @@ def test_baseline_provenance(demo):
     answers it releases. No solution source counts."""
     bundle = load_bundle(demo.bundle)
     book = bundle.documents["book.json"]
-    mapped = {"demo/back-matter/glossary.md", "demo/back-matter/quick-reference.md"}
+    mapped = {"demo/back-matter/glossary.md", "demo/back-matter/quick-reference.md",
+              "demo/curriculum/concepts.yaml"}
+    items = {item["key"] for document in bundle.documents.values() if isinstance(document, dict)
+             for item in document.get("items", [])}
     dirs = {"unit": "units", "checkpoint": "checkpoints", "project": "projects"}
     stems = {"unit": "exercises", "checkpoint": "checkpoint", "project": "brief"}
     released = set()
@@ -344,6 +404,12 @@ def test_baseline_provenance(demo):
         if part.startswith("answer:"):
             assert part.removeprefix("answer:") in released, source.origin
             assert path.endswith("/solutions.ipynb")
+        elif part.startswith("asserts:"):  # the asserts an `asserts` item ships by design
+            assert part.removeprefix("asserts:") in items, source.origin
+            assert path.endswith("/solutions.ipynb")
+        elif part.startswith("check:"):  # the export's own check text from the statement
+            assert part.removeprefix("check:") in items, source.origin
+            assert path in mapped, source.origin
         else:
             assert path in mapped, source.origin
             assert not SOLUTION_LIKE.search(path), source.origin
@@ -417,6 +483,25 @@ def test_real_acsl_injected_5e_fails(real, tmp_path, text):
     if text != "5E":
         assert any("unit-01-computer-number-systems/solutions.ipynb#" in f
                    and "solution prose leaked" in f for f in found), found
+
+
+@pytest.mark.slow
+def test_real_visible_hidden_code_is_counted_not_dropped(real, tmp_path):
+    """[sol] 1: checkpoint-03 Q3's `sum_to_n` solution also appears in a lesson, so the clean
+    bundle passes; one more copy in another item's starter raises its count and fails."""
+    model, out = real("python-concepts")
+    hidden = next(c for c in model.hidden_code if c.origin.endswith(
+        "checkpoint-03-functions-and-randomness/solutions.ipynb#cp03sol-q3-code"))
+    assert not [f for f in model.findings(out) if f.startswith("FAIL:")]
+    copy = tmp_path / "python-concepts"
+    shutil.copytree(out, copy)
+    body = model._strip_shipped(hidden.text)
+    assert "def sum_to_n" in body
+    edit_item(copy, "checkpoint-03-functions-and-randomness", "Question 1",
+              lambda item: item.update(starter=item["starter"] + "\n\n" + body))
+    found = fails(model, copy)
+    assert any("solution code leaked into entries/checkpoint-03-functions-and-randomness.json:"
+               "items/0/starter" in f and f.endswith(f"(from {hidden.origin})") for f in found), found
 
 
 @pytest.mark.slow

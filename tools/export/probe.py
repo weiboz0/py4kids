@@ -248,6 +248,17 @@ def named_files(constants, tracked: set[str]) -> list[str]:
     return sorted(found)
 
 
+def sandbox_env() -> dict[str, str]:
+    """The environment of every sandboxed run (lesson probe and answer-model runs alike): the
+    caller's environment without any `PYTHON*` variable or display, plus `PYTHONHASHSEED=0`, UTF-8
+    stdio, no bytecode files and matplotlib's headless `Agg` backend."""
+    env = {key: value for key, value in os.environ.items()
+           if not key.startswith("PYTHON") and key not in ("DISPLAY", "WAYLAND_DISPLAY")}
+    env.update(PYTHONHASHSEED="0", PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1",
+               MPLBACKEND="Agg")
+    return env
+
+
 class _Runner:
     def __init__(self, entry_dir: Path, work: Path, timeout_s: float):
         self.pristine = work / "pristine"
@@ -258,8 +269,7 @@ class _Runner:
             destination = self.pristine / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(entry_dir / relative, destination)
-        self.env = {k: v for k, v in os.environ.items() if not k.startswith("PYTHON")}
-        self.env.update(PYTHONHASHSEED="0", PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1")
+        self.env = sandbox_env()
 
     def run(self, sources: list[str]) -> tuple[str, str, str]:
         """Run `sources` in a fresh copy; return (outcome ok|error|timeout, stdout after the

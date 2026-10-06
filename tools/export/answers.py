@@ -11,7 +11,7 @@ is read here and nowhere else in `tools/export/`. What leaves this module is:
 - concept ids (`solution_concepts`), never code;
 - for the answer-model checks (plan 101 Phase F) only, the hidden corpora as data
   (`solution_code_cells`, `solution_asset_files`, `solution_markdown_paragraphs`, `canonical_texts`,
-  `released_answers`, `shipped_asserts`), which are never written into a bundle.
+  `released_answers`, `shipped_asserts`, `check_texts`), which are never written into a bundle.
 
 Programs run in a temporary copy of the entry's git-tracked files, with stdin from `/dev/null`,
 `PYTHONHASHSEED=0` and a timeout, so a run never touches the repo tree or reads untracked scratch.
@@ -22,7 +22,6 @@ from __future__ import annotations
 import ast
 import builtins
 import functools
-import os
 import re
 import shutil
 import subprocess
@@ -53,6 +52,7 @@ from tools.publish import (
 )
 
 from .normalise import answer_hash, normalise
+from .probe import sandbox_env
 
 if TYPE_CHECKING:  # pragma: no cover
     from .items import Item
@@ -93,9 +93,7 @@ def tracked_paths(directory: Path) -> tuple[str, ...]:
 
 
 def _run_once(entry_dir: Path, source: str, timeout_s: float) -> RunResult:
-    env = {key: value for key, value in os.environ.items() if key not in {"DISPLAY", "WAYLAND_DISPLAY"}}
-    env["PYTHONHASHSEED"] = "0"
-    env["MPLBACKEND"] = "Agg"
+    env = sandbox_env()
     with tempfile.TemporaryDirectory(prefix="py4kids-site-run-") as tmp:
         work = Path(tmp) / Path(entry_dir).name
         work.mkdir()
@@ -304,11 +302,20 @@ def _unseeded_random(source: str) -> bool:
             and "seed(" not in source)
 
 
+def _has_statements(source: str) -> bool:
+    """False for a comment-only (or blank) cell: its AST body is empty. A cell that does not parse
+    (a fix-the-bug starter) still counts as a program."""
+    try:
+        return bool(ast.parse(source).body)
+    except SyntaxError:
+        return True
+
+
 def statement_program(item: Item) -> str | None:
-    """The code a trace item asks about: the item's first non-empty code cell, else the first
-    Python fence in its statement Markdown."""
+    """The code a trace item asks about: the item's first code cell with a statement in it (a
+    comment-only starter is skipped), else the first Python fence in its statement Markdown."""
     for cell in item.cells:
-        if (cell.cell_type == "code" and cell.source.strip()
+        if (cell.cell_type == "code" and cell.source.strip() and _has_statements(cell.source)
                 and VERIFY_TAG not in cell.metadata.get("tags", [])):
             return cell.source
     for match in FENCE.finditer(item.statement_source):
@@ -341,6 +348,34 @@ def expected_output_runs(item: Item) -> tuple[bool, str]:
     if second.status != "ok" or second.stdout != first.stdout:
         return False, "the solution's output differs between two runs"
     return True, "the solution prints the same output on two runs"
+
+
+WORD = re.compile(r"\w+|[^\w\s]")
+
+
+def _contains_tokens(haystack: list[str], needle: list[str]) -> bool:
+    size = len(needle)
+    first = needle[0]
+    return any(haystack[i] == first and haystack[i:i + size] == needle
+               for i in range(len(haystack) - size + 1))
+
+
+def output_fixed_by_statement(item: Item) -> bool:
+    """Whether every non-empty normalised line of the solution's stdout occurs, as a whole token
+    sequence, in the statement or the starter (its code cells and the `.py` files it ships).
+
+    A free-design item's solution prints its own sample choices (`random.seed(4)`, a made-up name),
+    which no correct student program has to reproduce; a worked sample or a fix-the-bug starter
+    fixes the output, so the item can be checked by `expected-output` (plan 101 content review)."""
+    stdout = run_python(item.entry_dir, _solution_code(item), 0).stdout
+    texts = [item.statement_source, item.starter]
+    for path in item.files:
+        relative = path.split("/", 2)[2] if path.count("/") >= 2 else ""
+        if relative.endswith(".py") and (item.entry_dir / relative).is_file():
+            texts.append((item.entry_dir / relative).read_text(encoding="utf-8", errors="replace"))
+    haystack = WORD.findall("\n".join(texts))
+    lines = [line for line in normalise(stdout, case="sensitive").split("\n") if line.strip()]
+    return bool(lines) and all(_contains_tokens(haystack, WORD.findall(line)) for line in lines)
 
 
 def answer_line(item: Item) -> str:
@@ -493,11 +528,33 @@ def self_check_requirements(item: Item) -> tuple[list[str], list[str]]:
     listed = [entry for entry in listed if entry]
     if listed:
         return listed, []
-    prose = [p for p in re.split(r"\n\s*\n", statement)
+    return statement_sentences(statement)[:MAX_REQUIREMENTS] or [item.label], [
+        "self-check: no list in the statement"]
+
+
+MAX_REQUIREMENTS = 6
+SPECIFICATION = re.compile(r"^\*\*Specification:\*\*\s*")
+NOTE = re.compile(r"^\*\*(?:No real version|Real version):\*\*")
+BOLD_LABEL = re.compile(r"^\*\*[^*]+\*\*$")
+SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
+
+
+def _sentences(paragraph: str) -> list[str]:
+    return [s for s in SENTENCE_END.split(_plain(paragraph)) if s]
+
+
+def statement_sentences(statement: str) -> list[str]:
+    """A self-check checklist from statement prose (fences already removed): the sentences of the
+    `**Specification:**` paragraph when there is one; else every prose sentence, with headings,
+    panels, tables, quotes, bold labels and the `**No real version:**` / `**Real version:**` notes
+    left out."""
+    prose = [p.strip() for p in re.split(r"\n\s*\n", statement)
              if p.strip() and not p.lstrip().startswith(("#", ":::", "|", ">", "```"))]
-    first = _plain(prose[0]) if prose else ""
-    sentence = re.split(r"(?<=[.!?])\s+", first)[0] if first else ""
-    return [sentence or item.label], ["self-check: no list in the statement"]
+    specification = [SPECIFICATION.sub("", p) for p in prose if SPECIFICATION.match(p)]
+    if any(p.strip() for p in specification):
+        return [s for p in specification for s in _sentences(p)]
+    return [s for p in prose if not NOTE.match(p) and not SPECIFICATION.match(p)
+            and not BOLD_LABEL.match(p) for s in _sentences(p)]
 
 
 # --- the check object and answer fields --------------------------------------------------------
@@ -762,4 +819,29 @@ def shipped_asserts(root: Path, book: str) -> dict[str, str]:
         for item in entry_items(root, book, entry_dir, kind):
             if item_kind(root, book, item)[0] == "asserts":
                 out[item.key] = asserts_check(item)[0]
+    return out
+
+
+def check_texts(root: Path, book: str) -> list[tuple[str, str, str]]:
+    """(item key, origin, text) of the student-visible text each item's `check` ships, computed from
+    the repo, for check 2's baseline: a self-check item's requirements and a hashed item's
+    `answer_format.hint` (origin `<statement notebook>#check:<key>`: derived from the statement or
+    authored in its heading metadata), and an `asserts` item's shipped asserts (origin
+    `<solutions>#asserts:<key>`, which ship by design)."""
+    from .classify import item_kind
+    from .items import entry_items
+
+    out = []
+    for _entry_id, entry_dir, kind in _site_entries(root, book):
+        for item in entry_items(root, book, entry_dir, kind):
+            check_kind = item_kind(root, book, item)[0]
+            statement = f"{_rel(root, entry_dir / f'{item.notebook}.ipynb')}#check:{item.key}"
+            if check_kind == "self-check":
+                out += [(item.key, statement, text) for text in self_check_requirements(item)[0]]
+            elif check_kind in ("answer", "predict", "expected-output"):
+                fmt, _ = answer_format(item, canonical_text(item, check_kind))
+                out.append((item.key, statement, fmt["hint"]))
+            elif check_kind == "asserts":
+                solutions = f"{_rel(root, entry_dir / 'solutions.ipynb')}#asserts:{item.key}"
+                out.append((item.key, solutions, asserts_check(item)[0]))
     return out

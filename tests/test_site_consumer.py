@@ -7,6 +7,7 @@ and outro ("Make it yours"), a unit shows its card deck, the glossary renders, a
 turtle exercise's `answer_md` renders with its `{=latex}` block stripped.
 """
 
+import html
 import importlib.util
 import json
 import os
@@ -224,7 +225,16 @@ def test_each_check_kind_shows_its_control(demo_bundle, tmp_path):
     assert "<pre>3\n</pre>" in _section(page, kinds["fixtures"])  # only the sample's input shows
     assert "10" not in _section(page, kinds["fixtures"]).split('class="fixture-list"')[1]
     assert "for i in range(3)" in _section(page, kinds["predict"])
-    assert "assert double(3) == 6" in _section(page, kinds["asserts"])
+    asserts = next(i for i in entry["items"] if i["key"] == kinds["asserts"])["check"]
+    section = _section(page, kinds["asserts"])
+    assert "Checks: double" in section  # the function summary
+    assert section.count('class="assert-result"') == 2  # one pass/fail line per assert
+    assert "assert double" not in section and "double(3)" not in section  # D5: no assert source
+    for item in entry["items"]:
+        if item["check"]["kind"] == "asserts":
+            assert html.escape(item["check"]["source"]) not in page
+            assert item["check"]["source"] not in page
+    assert asserts["source"].startswith("assert double(3) == 6")
     assert '<details class="answer">' in _section(page, kinds["predict"])  # odd: after-attempt
     assert '<details class="answer">' not in _section(page, kinds["answer"])  # even: none
 

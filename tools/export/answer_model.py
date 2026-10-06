@@ -8,14 +8,16 @@
    hidden solution file (`solution_asset_files`: even and challenge solution assets, `exN/qN/pN.py`,
    `assets/verify/**`), minus what the Student Book releases as odd answers. Only the exact assert
    statements some item ships as `asserts.source` (compared by `ast.unparse`) are cut from it first.
-   A hidden stream that a student-visible source already contains (`solution_leak` over the
-   baseline's code) is not hidden: a trace exercise's solution is often its statement's own program.
-   `solution_leak` then runs against every JSON string (and every code fence inside one) and every
-   copied file. Every `asserts.source` must parse to top-level `assert` statements only.
+   Each remaining stream is **counted**, never dropped: the JSON strings (with every code fence
+   inside one) and copied files that contain it (`solution_leak`) may not outnumber the baseline
+   sources that contain it (a trace exercise's solution is often its statement's own program, so a
+   visible stream is allowed exactly as many copies as the exported sources hold). Every
+   `asserts.source` must parse to top-level `assert` statements only.
 2. **Leak, text.** Every hidden canonical text (`canonical_texts`), of any length, is counted as a
-   whole token sequence in the content fields (`CONTENT_FIELDS`) and copied files; the count may not
-   exceed its count in the baseline: the source text of exactly the material the bundle maps
-   (`AnswerModel.baseline`).
+   whole token sequence in every counted string (`counted`: all string fields but the non-content
+   ones in `NON_CONTENT_FIELDS` / `NON_CONTENT_TREES`, titles and labels included there, and the
+   tied fields) and in the copied files; the count may not exceed its count in the baseline: the
+   source text of exactly the material the bundle maps (`AnswerModel.baseline`).
 3. **Odd answers.** Every `after-attempt` item's `answer_md` equals `student_answer_text`, and the
    `after-attempt` keys are exactly the odd unit exercises of the statement notebooks.
 4. **Hashes.** Every `answer`, `predict` and `expected-output` item's `check.hash` equals
@@ -25,9 +27,10 @@
    characters (whitespace-normalised), or holding its item's canonical text, is counted like check 2
    over every bundle string and copied file against the same baseline.
 
-Fields that repeat another field by design are not counted in check 2 but are tied to it instead:
-a concept card's `definition_md` must equal its glossary record's, and a predict item's
-`check.program` must be the item's own starter or statement code.
+Fields that repeat another field by design are not counted in checks 1 and 2 but are tied to it
+instead: a concept card's `definition_md` and `term` must equal its glossary record's and its
+`distractors` must be glossary terms, a predict item's `check.program` must be the item's own
+starter or statement code, and an asserts item's `check.functions` must be names its asserts call.
 """
 
 from __future__ import annotations
@@ -36,7 +39,7 @@ import ast
 import json
 import re
 import tokenize
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
@@ -57,8 +60,20 @@ from tools.publish_audit import solution_leak
 from . import answers
 from .normalise import answer_hash
 
-CONTENT_FIELDS = frozenset({"md", "code", "output", "statement_md", "starter", "answer_md",
-                            "definition_md", "reference_md"})
+# Check 2 counts every string field of the bundle except these non-content fields: keys, ids,
+# bundle paths, hashes, enums and config values, plus titles and labels (plan 101 Phase F check 2:
+# "never in keys, labels or titles"). Everything else a student can see is counted.
+NON_CONTENT_FIELDS = frozenset({
+    "key", "id", "file", "in_file", "out_file", "files", "prelude", "block", "hash", "content_hash",
+    "schema_version", "kind", "type", "route", "mode", "probe", "match", "case", "answer_visibility",
+    "color", "tags", "tag", "concepts", "concept", "category", "division", "title", "subtitle",
+    "label",
+    # tied to a counted field instead (`_tie_findings`): a predict item's program repeats its own
+    # starter or statement code; assert function names are identifiers of the counted `source`
+    "program", "functions",
+})
+NON_CONTENT_TREES = frozenset({"release", "pdfs", "settings", "flags"})  # book.json config
+CARD_TIED = frozenset({"definition_md", "term", "distractors"})  # repeat the glossary record
 HASHED_KINDS = ("answer", "predict", "expected-output")
 STEM = {"unit": "exercises", "checkpoint": "checkpoint", "project": "brief"}
 ENTRY_DIR = {"unit": "units", "checkpoint": "checkpoints", "project": "projects"}
@@ -88,6 +103,24 @@ class Bundle:
     documents: dict[str, object]  # `book.json`, `entries/<id>.json`
     files: dict[str, str | None]  # `files/...` -> text (None when not UTF-8)
     strings: list[BundleString] = field(default_factory=list)
+
+
+def _pointer(string: BundleString) -> list[str]:
+    return string.where.split(":", 1)[1].split("/")
+
+
+def tied(string: BundleString) -> bool:
+    """A field that repeats another bundle field by design and is tied to it by `_tie_findings`."""
+    pointer = _pointer(string)
+    return (pointer[0] == "cards" and string.field in CARD_TIED) or (
+        "check" in pointer and string.field in ("program", "functions"))
+
+
+def counted(string: BundleString) -> bool:
+    """Whether check 2 counts this string: every field but the non-content ones."""
+    pointer = _pointer(string)
+    return not (string.field in NON_CONTENT_FIELDS or pointer[0] in NON_CONTENT_TREES
+                or tied(string))
 
 
 def _walk(value, where: str, pointer: list[str], owner: str, out: list[BundleString]) -> None:
@@ -248,6 +281,8 @@ class AnswerModel:
         self.stats: dict[str, int] = {}
         self._read_cache: dict[Path, str] = {}
 
+    counted = staticmethod(counted)
+
     # -- hidden material (answers.py, as data) --
 
     @cached_property
@@ -306,6 +341,10 @@ class AnswerModel:
     def canonicals(self) -> dict[str, tuple[str, str, str]]:
         return answers.canonical_texts(self.root, self.book)
 
+    @cached_property
+    def check_texts(self) -> list[tuple[str, str, str]]:
+        return answers.check_texts(self.root, self.book)
+
     # -- the baseline: source text of exactly what the bundle maps --
 
     def _read(self, path: Path) -> str:
@@ -323,6 +362,9 @@ class AnswerModel:
         out = []
         for cell in notebook.cells:
             out.append(Source(f"{rel}#{cell.get('id')}", cell.source))
+            if isinstance(cell.metadata.get("sample_input"), str):
+                out.append(Source(f"{rel}#{cell.get('id')}:sample_input",
+                                  cell.metadata["sample_input"]))
             if output_keys is None or f"{key_prefix}{cell.get('id')}" not in output_keys:
                 continue
             for output in cell.get("outputs", []):
@@ -333,9 +375,11 @@ class AnswerModel:
 
     def baseline(self, bundle: Bundle) -> list[Source]:
         """The student-visible source text of exactly the material `bundle` maps: its entries'
-        lesson and statement notebooks (lesson outputs where a block ships one), each lesson asset
-        listing, the source of every copied file (fixtures included), the glossary and the quick
-        reference when exported, and `student_answer_text` of every `after-attempt` item."""
+        lesson and statement notebooks (lesson outputs where a block ships one, and a cell's
+        `sample_input`), each lesson asset listing, the source of every copied file (fixtures
+        included), the glossary, the quick reference and the concept registry when exported, the
+        check text each item ships (`answers.check_texts`: requirements, answer-format hints, the
+        asserts of `asserts` items) and `student_answer_text` of every `after-attempt` item."""
         book = bundle.documents["book.json"]
         out: list[Source] = []
         back = self.base / "back-matter"
@@ -344,6 +388,12 @@ class AnswerModel:
         if book.get("reference_md") and (back / "quick-reference.md").is_file():
             out.append(Source(self._rel(back / "quick-reference.md"),
                               self._read(back / "quick-reference.md")))
+        registry = self.base / "curriculum" / "concepts.yaml"
+        if book.get("concepts") and registry.is_file():
+            # The registry is curriculum data, not a publication source; its names ship as-is.
+            out.append(Source(self._rel(registry), registry.read_text(encoding="utf-8")))
+        item_keys = {item["key"] for _record, _index, item in _items(bundle)}
+        out += [Source(origin, text) for key, origin, text in self.check_texts if key in item_keys]
         for record, document in _entry_docs(bundle):
             entry_dir = self.entry_dirs.get(record["id"])
             if entry_dir is None:
@@ -390,8 +440,7 @@ class AnswerModel:
     # -- the checks --
 
     def _content_texts(self, bundle: Bundle) -> list[tuple[str, str]]:
-        texts = [(s.where, s.value) for s in bundle.strings
-                 if s.field in CONTENT_FIELDS and not _is_card_definition(s.where)]
+        texts = [(s.where, s.value) for s in bundle.strings if counted(s)]
         texts += [(path, text) for path, text in bundle.files.items() if text is not None]
         return texts
 
@@ -439,30 +488,35 @@ class AnswerModel:
         return out
 
     def _code_findings(self, bundle: Bundle, baseline: list[Source]) -> list[str]:
+        """Each hidden stream is counted, never dropped: the bundle strings and copied files that
+        contain it (`solution_leak`) may not outnumber the exported sources that do."""
         streams = self._hidden_streams
         index = _StreamIndex([stream for _, stream in streams])
-        visible: set[int] = set()
+        allowed: Counter = Counter()
         for source in baseline:
-            for block in _code_blocks(source.text):
-                visible.update(index.hits(block))
-        hidden = [i for i in range(len(streams)) if i not in visible]
-        index = _StreamIndex([() if i in visible else stream
-                              for i, (_source, stream) in enumerate(streams)])
-        self.stats.update(hidden_code=len(hidden), hidden_code_visible=len(visible))
-        out: list[str] = []
+            allowed.update({i for block in _code_blocks(source.text) for i in index.hits(block)})
         by_value: dict[str, list[BundleString]] = defaultdict(list)
         for string in bundle.strings:
-            by_value[string.value].append(string)
+            if not tied(string):
+                by_value[string.value].append(string)
         located = [(value, [(s.owner, s.where) for s in strings])
                    for value, strings in by_value.items()]
         located += [(text, [(path, path)]) for path, text in bundle.files.items() if text is not None]
-        for value, places in located:
-            leaked = sorted({i for block in _code_blocks(value) for i in index.hits(block)})
-            for i in leaked:
-                origin = streams[i][0].origin
-                for owner, where in places:
-                    out.append(f"FAIL: {self.book}: {owner}: solution code leaked into {where} "
-                               f"(from {origin})")
+        places: dict[int, list[tuple[str, str]]] = defaultdict(list)
+        for value, where in located:
+            for i in {i for block in _code_blocks(value) for i in index.hits(block)}:
+                places[i] += where
+        self.stats.update(hidden_code=len(streams), hidden_code_visible=len(allowed))
+        out: list[str] = []
+        for i in sorted(places):
+            shipped = len(places[i])
+            if shipped <= allowed[i]:
+                continue
+            origin = streams[i][0].origin
+            for owner, where in places[i]:
+                out.append(f"FAIL: {self.book}: {owner}: solution code leaked into {where} "
+                           f"({shipped} occurrence(s), {allowed[i]} in exported sources) "
+                           f"(from {origin})")
         return out
 
     def _text_findings(self, bundle: Bundle, baseline: list[Source]) -> list[str]:
@@ -496,7 +550,13 @@ class AnswerModel:
         out = []
         odd = self._odd_keys()
         seen = set()
+        outside = set()
         for record, _index, item in _items(bundle):
+            if record["id"] not in self.entry_dirs:
+                if record["id"] not in outside:
+                    outside.add(record["id"])
+                    out.append(f"FAIL: {self.book}: {record['id']}: entry is not in the syllabus")
+                continue
             key = item["key"]
             seen.add(key)
             if item.get("answer_visibility") != "after-attempt":
@@ -574,12 +634,19 @@ class AnswerModel:
         out = []
         book = bundle.documents["book.json"]
         glossary = {record["concept"]: record["definition_md"] for record in book.get("glossary", [])}
+        terms = {record["concept"]: record["term"] for record in book.get("glossary", [])}
         for _record, document in _entry_docs(bundle):
             for card in document["cards"]:
-                if card.get("kind") == "concept" and card.get("definition_md") != glossary.get(
-                        card.get("concept")):
+                if card.get("kind") != "concept":
+                    continue
+                if card.get("definition_md") != glossary.get(card.get("concept")):
                     out.append(f"FAIL: {card['key']}: concept card definition_md differs from "
                                f"the glossary")
+                if card.get("term") != terms.get(card.get("concept")):
+                    out.append(f"FAIL: {card['key']}: concept card term differs from the glossary")
+                if not set(card.get("distractors", [])) <= set(terms.values()):
+                    out.append(f"FAIL: {card['key']}: concept card distractor is not a glossary "
+                               f"term")
         for _record, _index, item in _items(bundle):
             check = item["check"]
             if check.get("kind") == "predict":
@@ -587,11 +654,16 @@ class AnswerModel:
                 if program and program not in _squash(item["starter"]) and program not in _squash(
                         item["statement_md"]):
                     out.append(f"FAIL: {item['key']}: check.program is not the item's own code")
+            if check.get("kind") == "asserts":
+                try:
+                    called = {node.func.id for node in ast.walk(ast.parse(check.get("source", "")))
+                              if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+                except SyntaxError:
+                    called = set()
+                if not set(check.get("functions", [])) <= called:
+                    out.append(f"FAIL: {item['key']}: check.functions names a function the "
+                               f"asserts do not call")
         return out
-
-
-def _is_card_definition(where: str) -> bool:
-    return where.split(":", 1)[1].startswith("cards/")
 
 
 def answer_model_findings(root: Path, book: str, bundle_dir: Path) -> list[str]:

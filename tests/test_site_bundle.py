@@ -107,6 +107,13 @@ def test_export_layout_fixture_book(site_root, tmp_path):
                                               "demo/back-matter/glossary/range-function": 1,
                                               "demo/back-matter/glossary/variable": 0}
     assert "demo/unit-01-demo/exercises/u1e11" in report["self_check"]
+    # [fable] 5: unattributed items are reported per check kind; short answers (no code) are exempt.
+    unattributed = report["unattributed"]["items"]
+    assert isinstance(unattributed, dict) and "answer" not in unattributed
+    assert all(isinstance(keys, list) and keys for keys in unattributed.values())
+    assert report["unattributed"]["short_answer_exempt"] == 2  # u1e03 and c1c01
+    assert "concepts: unattributed" not in report["notes"].get(
+        "demo/unit-01-demo/exercises/u1e03", [])
     assert report["classification"]["total"] == sum(len(json.loads(files[f"entries/{e}.json"])["items"])
                                                      for e in ENTRIES)
     assert not any("report" in path for path in files)

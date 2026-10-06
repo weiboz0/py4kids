@@ -468,4 +468,6 @@ def export_item(root: Path, book: str, item: Item) -> ItemExport:
     }
     if kind == "self-check":
         notes = [f"self-check: {reason}", *notes]
-    return ItemExport(data, kind, reason, check["confirmed"], [*item.notes, *notes])
+    item_notes = [note for note in item.notes
+                  if not (kind == "answer" and note == "concepts: unattributed")]
+    return ItemExport(data, kind, reason, check["confirmed"], [*item_notes, *notes])

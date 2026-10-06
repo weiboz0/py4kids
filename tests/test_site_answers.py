@@ -228,6 +228,62 @@ def test_self_check_requirements(demo):
     assert answers.self_check_requirements(unit["Exercise 4"]) == (["defines double", "returns 2n"], [])
 
 
+def test_self_check_requirements_from_prose():
+    """[self] 2 / [fable] 4: with no list, the Specification paragraph's sentences; else the prose
+    sentences without the version notes and bold labels (at most 6)."""
+    specification = ("A printer has three settings.\n\n**Specification:** Print the label. "
+                     "Then print the price!\n\n**Worked sample — given values:**\n\n"
+                     "**No real version:** this exercise fixes code.")
+    assert answers.statement_sentences(specification) == ["Print the label.", "Then print the price!"]
+    prose = ("This code is broken on purpose. Run it and type `12`.\n\n"
+             "Fix the **code** so it prints a verdict.\n\n### Hint\n\n"
+             "**Real version:** read the guess with `input()`.")
+    assert answers.statement_sentences(prose) == [
+        "This code is broken on purpose.", "Run it and type 12.",
+        "Fix the code so it prints a verdict."]
+
+
+def test_self_check_requirements_real_broken_code():
+    """python-projects unit 02 Exercise 4: every prose sentence, not just the first."""
+    entry = ROOT / "python-projects/units/unit-02-number-detective"
+    item = next(i for i in entry_content(ROOT, "python-projects", entry, "unit").items
+                if i.label == "Exercise 4")
+    requirements, notes = answers.self_check_requirements(item)
+    assert requirements[0] == "This code is broken on purpose."
+    assert "Then fix the code so it prints a verdict." in requirements
+    assert 2 <= len(requirements) <= answers.MAX_REQUIREMENTS
+    assert notes == ["self-check: no list in the statement"]
+
+
+def test_self_check_requirements_real_specification():
+    """A python-concepts statement with a `**Specification:**` paragraph uses its sentences."""
+    entry = ROOT / "python-concepts/units/unit-01-output-and-variables"
+    item = next(i for i in entry_content(ROOT, "python-concepts", entry, "unit").items
+                if i.key.endswith("/u01e15a"))
+    requirements, _ = answers.self_check_requirements(item)
+    assert requirements == ["Predict the output of each snippet in order.",
+                            "The third snippet has two print() calls but makes one output line."]
+
+
+def test_sandbox_env(monkeypatch, demo):
+    """[fable] 6: the answer runs and the lesson probe share one environment builder."""
+    from tools.export import probe
+
+    for name, value in {"PYTHONPATH": "/nowhere", "PYTHONSTARTUP": "/x.py", "PYTHONHASHSEED": "7",
+                        "DISPLAY": ":0", "WAYLAND_DISPLAY": "wayland-0", "PY4KIDS_KEEP": "1"}.items():
+        monkeypatch.setenv(name, value)
+    env = probe.sandbox_env()
+    assert answers.sandbox_env is probe.sandbox_env
+    assert not {"PYTHONPATH", "PYTHONSTARTUP", "DISPLAY", "WAYLAND_DISPLAY"} & set(env)
+    assert env["PYTHONHASHSEED"] == "0" and env["MPLBACKEND"] == "Agg"
+    assert env["PY4KIDS_KEEP"] == "1"
+    answers.clear_caches()
+    result = answers.run_python(demo / "demo/units/unit-01-demo",
+                                "import os\nprint(sorted(k for k in os.environ "
+                                "if k.startswith('PYTHON') or 'DISPLAY' in k))")
+    assert result.stdout == "['PYTHONDONTWRITEBYTECODE', 'PYTHONHASHSEED', 'PYTHONIOENCODING']\n"
+
+
 # --- sandboxed runs ----------------------------------------------------------------------------
 
 
