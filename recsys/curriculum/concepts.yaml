@@ -41,3 +41,7 @@ concepts:
 - {id: feature-towers, name: "Feature towers (item tower from id + content features)", category: techniques, kind: technique}
 - {id: item-cold-start, name: "Item cold-start via content features", category: techniques, kind: technique}
 - {id: hard-negatives, name: "Hard-negative sampling (and the false-negative risk)", category: techniques, kind: technique}
+# --- Unit 10 (recsys-012): ANN/FAISS + hybrid retrieval ---
+- {id: ann-retrieval, name: "Approximate nearest-neighbour retrieval (exact vs approximate; recall/speed)", category: techniques, kind: technique}
+- {id: hnsw, name: "HNSW graph index (FAISS)", category: techniques, kind: technique}
+- {id: hybrid-retrieval, name: "Hybrid sparse (BM25) + dense retrieval fusion", category: techniques, kind: technique}
