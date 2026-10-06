@@ -268,6 +268,13 @@ over-fetch, ≥0.98 recall gate, endpoint-not-monotonic, latency<1s gate, pinned
 (absolute latency ceiling; inner-product metric + over-fetch) and the [fable] Must (honest hybrid reframe). No
 remaining blocker; dispatching [sol] round-2 re-review.
 
+**[sol] — APPROVE (round 2).** All 3 findings resolved (absolute latency bound < 1 s separated from any 2k speedup;
+FAISS inner-product metric matches U8's dot product + over-fetch before seen-removal; recall trend gated on non-strict
+endpoints). Hybrid reframe appropriately cautious + directionally gated. No new blocker.
+
+### Plan-review outcome (FINAL): **CONSENSUS — [self] APPROVE (r2) · [fable] APPROVE WITH NITS (all folded) · [sol] APPROVE (r2).**
+Cleared for implementation (Phases A→G).
+
 ## Content Review
 
 <!-- appended pre-PR -->
