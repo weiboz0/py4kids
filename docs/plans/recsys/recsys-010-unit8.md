@@ -29,9 +29,11 @@ or item cold-start (U9); no hard negatives beyond uniform sampled negatives (U9)
   loop runs **≥ 2× per CI pass** (lesson + solutions; milestone a 3rd) — trivially within budget. **Inline training,
   NO cached-artifact machinery** (like U5). Phase B reports the AGGREGATE executed FIT COUNT + total wall time (lesson + solutions + milestone +
   determinism tests) to confirm the whole-book budget.
-- **torch stays in the `recsys` group only:** `two_tower.py` imports torch at module top; it is imported ONLY on the
-  routed `--group recsys` path, so the group-free global test suite never imports torch (mirror the existing routed
-  paths). No torch import leaks into `bookrec/__init__` eager paths that the group-free suite hits — verify.
+- **torch is imported LAZILY, only when training:** `two_tower.py` has NO module-top `import torch`; torch is imported
+  inside `fit()` only. So `import bookrec` / `import two_tower` and `retrieve`/`load`/`artifact` are torch-free (they
+  use the numpy weights stored at fit), and the group-free global test suite never imports torch even though uv's
+  shared `.venv` physically contains it — proven by the import-blocked-subprocess test (Phase B), not by merely
+  running the suite.
 
 ## Why this works on the data (empirical, MEASURED — [fable] probe round 1; Phase B re-confirms on shipped code)
 The two-tower is MF's latent dot-product re-expressed, but trained with a **pairwise ranking objective** (BPR) + Adam
