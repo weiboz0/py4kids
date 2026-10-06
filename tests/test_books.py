@@ -33,8 +33,9 @@ def test_registry_ids_order_and_dependencies():
     assert books[1]["variant_of"] == "python-projects"
     assert books[1]["prereq_policy"] == "fastforward"
     assert books[1].get("buildout", False) is False
-    # recsys ships in buildout state: units/projects/checkpoints land in recsys-002+ (design 011)
-    assert books[4]["buildout"] is True
+    # recsys left buildout at recsys-012 (Unit 10): whole-book lessons reached the 30-lesson minimum
+    # (30.5 = Units 1-10 at 3 each + Checkpoint A 0.5), so the flag was removed (design 011).
+    assert books[4].get("buildout", False) is False
     assert books[4]["lesson_budget"] == [30, 60]
 
 
