@@ -308,6 +308,20 @@ implementation (Phases A→G).
 
 ## Content Review
 
+### Pre-gate self-caught fixes (during the build)
+- `[FIXED]` **Ex3 "disjoint" framing wrong** — the exercises Ex3 statement said "confirm labels disjoint from its
+  profile" with a `prof.isdisjoint(lab)` TODO, but `split_profile_labels` builds SETS and a re-read book lands in both
+  the 75% profile and the 25% labels, so disjoint is False for ~33.5% of readers (reader 0: profile∩labels={296,651}).
+  The leakage guarantee does NOT depend on set-disjointness — it depends on the training **pool excluding the profile**
+  (`seen`), so an overlapping re-read is never a training candidate and the positive rows are exactly `labels −
+  profile`. Surfaced by the independent solutions solver (which already asserted the real invariant). Fixed the
+  exercises Ex3 markdown + scaffold to match (measure the repeat-read overlap; confirm ≥1 genuinely-held-out label;
+  pool-excludes-profile is the invariant). Lesson + teacher-notes carry no disjointness claim (verified). Exercises
+  static checks (hygiene/cell-lint/stretch/concept-scan) re-pass.
+- `[FIXED]` **baseline.yaml** — added the two genuine Phase-B reranker-API idioms the notebooks call
+  (`assemble_training_matrix`, `set_model`); all other candidate idioms rewritten to baseline-safe alternatives
+  (pandas data-load, public API). concept-scan PASS book-wide.
+
 <!-- appended pre-PR -->
 
 ## Post-Execution Report
