@@ -562,7 +562,30 @@ Rules:
 
 ## Content Review
 
-_(gate findings recorded here)_
+Gate roster per `docs/content-review-gate.md` (3-way since 2026-10-05: [glm] removed). [sol] runs on gpt-5.6-sol as AGENTS.md names it; the gate doc's `gpt-6-sol` disagrees and is flagged to the user.
+
+### Review 1 — [self] (2026-10-05)
+- **Verdict**: REJECT
+1. `[OPEN]` **`expected-output` is proposed for free-design and interactive items.** Proposal rule 5 checks only that the *solution* runs deterministically, but the books' solutions replace `input()` and randomness with scripted sample values (`random.seed(4)`, `guess = int("52")`). Measured: in python-projects, 101 of 119 `expected-output` proposals print lines that appear in neither the statement nor the starter (unit 01 Exercise 1 "Print a title and a friendly message"; unit 02 Exercise 1 the dice roller). A correct student program would fail its check. In python-concepts, 168 of 172 are fixed by the statement's worked samples. Fix: rule 5 also requires every non-empty normalised output line to occur in the statement or the starter (this keeps D4's fix-the-bug items); otherwise fall through to `self-check` with reason `output not fixed by the statement`. Add regressions for a free-design item and a fix-the-bug item. Priority: Must Fix.
+2. `[OPEN]` **Self-check requirements are a single first sentence** (python-projects unit 02 Exercise 4: "This code is broken on purpose."), which is no checklist. Fix: with no list in the statement, the requirements are the statement's prose sentences (Markdown stripped, no `**No real version:**` / `**Real version:**` notes, at most 6). Priority: Should Fix.
+3. `[OPEN]` **Curriculum observation (from Phase F):** python-concepts checkpoint-03 Q3 `sum_to_n` and checkpoint-04 Q5 `most_common` print their answers verbatim in lessons (`u07l024`, `u11l028`). The answer model treats them as student-visible. This is not a site defect; it goes to the user as a curriculum question. Priority: Nice to Have.
+
+### Review 1 — [fable] (2026-10-05)
+- **Verdict**: APPROVE WITH NITS. Evidence: independent 2- and 3-line window search of every hidden solution source found none in any bundle field except released odd `answer_md` (shared idioms); 40/40 sampled odd answers are verbatim in the appendix; usaco re-export byte-identical; three lessons cover every cell in order; the turtle fix is correct.
+1. `[OPEN]` `statement_program` picks a comment-only starter over the statement's ```` ```python ```` fence, so python-concepts exports 0 `predict` items (`u01e15a` "Predict the Output", `u07e20a`, `u07e21a`). Skip code cells with an empty AST body. Should Fix.
+2. `[OPEN]` `expected-output` proposed for items a student cannot reproduce (seeded random, "your own …", "your name"); same root cause as [self] 1. Should Fix.
+3. `[OPEN]` `PREDICT` misses "Without running …, predict the values" / "predict the exact output". Extend the regex. Should Fix.
+4. `[OPEN]` The self-check fallback picks the hook sentence; prefer the `**Specification:**` paragraph's sentences (same root as [self] 2). Nice to Have.
+5. `[OPEN]` acsl report noise: 302 `unattributed` short-answer items; report per kind and exempt short-answer items. Nice to Have.
+6. `[OPEN]` `answers._run_once` keeps `PYTHON*` env vars, while the probe strips them; use one env builder. Nice to Have.
+7. `[OPEN]` `_odd_findings` raises `KeyError` for an entry outside the syllabus; emit a `FAIL:` line. Nice to Have.
+8. Curriculum observation, the same as [self] 3.
+
+### Review 1 — [sol] (2026-10-05, gpt-5.6-sol)
+- **Verdict**: REJECT. C, D and E deviations accepted; the Phase F hidden-stream suppression is not.
+1. `[OPEN]` Check 1 drops a whole hidden stream once it occurs in any exported source, so extra copies are never detected (`answer_model.py:441-450`; `sum_to_n`, `most_common`). Count- or location-match visible streams instead, with an extra-copy regression. Must Fix.
+2. `[OPEN]` The minimal consumer prints the full assert source (`tests/site_consumer.py:98-101`), and its test requires it; D5 says assert source is not printed. Render only the result/function summary, and assert the raw source is absent. Must Fix.
+3. `[OPEN]` The canonical leak scan skips student-visible fields such as self-check `requirements` (`answer_model.py:60-61, 392-395`). Count every student-visible string field, with injection regressions. Must Fix.
 
 ## Post-Execution Report
 
