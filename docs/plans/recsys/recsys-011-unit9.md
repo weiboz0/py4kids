@@ -316,6 +316,13 @@ cohort (all fitted non-cold readers, train-only scoring) are both validation-fre
 stay on the val scoreboard, clearly separated. No remaining [self] blocker. Re-dispatching [sol] round-3 (sole
 rejecter; [fable] already APPROVE WITH NITS).
 
+**[sol] — APPROVE (round 3).** Round-2 Must resolved: numerator, denominator (818 zero-train), reader cohort,
+histories, and exclusions are all train-only; the validation-eligible cohort is explicitly separate (verified against
+`scoreboard.py`, `two_tower.py`, `gen_interactions.py`). No remaining or new blocker.
+
+### Plan-review outcome (FINAL): **CONSENSUS — [self] APPROVE (r3) · [sol] APPROVE (r3) · [fable] APPROVE WITH NITS (r2).**
+All blockers resolved; both [fable] Nice nits and both [sol] Musts folded. Cleared for implementation (Phases A→G).
+
 ## Content Review
 
 <!-- appended pre-PR -->
