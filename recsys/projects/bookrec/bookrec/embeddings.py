@@ -18,8 +18,9 @@ vector in a pretrained semantic space:
 
 Honest framing (recsys-009 measurement): semantic mean-pooling clears the random floor by ~8.5x but
 sits **below** lexical BM25 (~0.102 vs ~0.158 hit@10) and far below the collaborative CF/MF paths.
-Its value is **complementarity** — the lexical-vs-semantic top-10 overlap is only ~0.22, so GloVe
-surfaces meaning-related books that share no surface tokens. The package stays numpy-only.
+Its value is **complementarity** — the lexical-vs-semantic top-10 overlap is only ~0.22, because GloVe
+ranks books by the cosine of their pooled word vectors while BM25 ranks by weighted term matches, so
+the two disagree on ordering even when the books share surface tokens. The package stays numpy-only.
 """
 
 from __future__ import annotations
