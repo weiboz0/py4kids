@@ -2,7 +2,8 @@
 
 This unit solves the **item cold-start** problem the course has flagged since Unit 6:
 our best recommender so far (Unit 8's two-tower, hit@10 ~0.340) *buries* any book nobody has read yet —
-818 of the catalog have zero training interactions, and an ID-only tower gives them negative-shaped
+818 of the catalog have zero train-positive interactions (they appear only as sampled negatives), and
+an ID-only tower gives them negative-shaped
 embeddings that rank near the bottom (cold-item coverage **0**).
 The fix is a **feature tower**: the item side stops being a bare per-id embedding and instead combines
 an id embedding with learned embeddings of the book's **genre** and **author** and an `nn.Linear`
@@ -26,9 +27,10 @@ By the end of this unit students can:
   **train** histories only. Explain *why* hit@k on the designated cold items is **not** measurable on
   `val` (they have no held-out val positives by construction — that relevance is sealed for Checkpoint B
   on `test`).
-- Read the result honestly: warm-only negatives lift cold coverage ~3× (0 → **0.138**) at a small warm
-  cost (0.338 → **0.298**, still within 0.06 of the two-tower's 0.340). It is a **compromise, not
-  dominance** — content paths (Unit 7 semantic, coverage 0.322) already serve cold freely; the feature
+- Read the result honestly: warm-only negatives lift cold coverage ~3× (0.048 full-catalog → **0.138**;
+  vs 0 for ID-only/CF) at a small warm cost (0.338 → **0.298**, still within 0.06 of the two-tower's
+  0.340). It is a **compromise, not dominance** — content paths (Unit 7 semantic, coverage 0.328)
+  already serve cold freely; the feature
   tower is the first *learned-taste / collaborative* path to serve cold while staying near the best warm.
 - Explain **hard negatives** (popularity-weighted sampling) and the false-negative risk, and read the
   measurement: here they trade warm for cold *harder* (warm 0.172 / coverage 0.226) — a knob, not a
@@ -86,7 +88,8 @@ keep to two or three fits per sitting and reuse a trained path across cells.
 - The feature tower trades ~0.04 warm hit for ~3× cold coverage. When is that trade worth it for a real
   bookstore — and when would you keep the id-only two-tower instead?
 - Which feature do you expect predicts taste best here — genre, author, or GloVe keywords? How would you
-  measure that (tie to the ablation Challenge)?
+  measure that? (The shipped path has no knob to drop a feature input, so an actual ablation means
+  subclassing `feature_tower.py` — a good extension, but beyond the two shipped Challenges.)
 - Hard negatives traded warm for cold rather than sharpening both. What property of this small log makes
   "harder" negatives not obviously better, and what is the false-negative risk?
 - Trace the cold-start thread: Unit 6 flagged coverage as a blind spot, Unit 9 serves cold items with
@@ -107,8 +110,10 @@ calc/linalg audience, no attribution required.
   the negative pool controls reach); pair-program the first training/scoreboard cell.
 - **Core:** train/register `FeatureTowerRetrievalPath` unaided, read the val scoreboard and the
   cold-coverage table, and surface a cold book for a specific reader.
-- **Stretch:** the negative-pool knob (warm-only vs full-catalog — watch both warm and cold move); the
-  feature-input ablation (id-only vs +genre vs +author vs +GloVe) to see which feature carries the cold
-  reach; uniform vs hard negatives and the warm↔cold trade. Ask strong students to predict the trade
+- **Stretch:** the two shipped Challenges — the negative-pool knob (warm-only vs full-catalog — watch
+  both warm and cold move) and uniform vs hard negatives (the warm↔cold trade and the false-negative
+  risk). For students who want more, a feature-input ablation (id-only vs +genre vs +author vs +GloVe)
+  is a natural extension, but it requires subclassing `feature_tower.py` to expose which inputs the item
+  tower uses — it is not a drop-in knob. Ask strong students to predict the trade
   direction before running it, and to explain why a cold item's coverage can rise while its hit@k stays
   near zero.

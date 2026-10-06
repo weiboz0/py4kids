@@ -44,7 +44,7 @@ cold hit = report-only over the 97 incidental-cold-val readers:
 |------|-------------|---------------------------------|--------------------|
 | U4 item-item CF | 0.252 | 0.000 (0) | 0.000 |
 | U8 ID-only two-tower | 0.340 | 0.000 (0) | 0.000 |
-| U7 semantic (content-only) | 0.102 | 0.322 | 0.031 |
+| U7 semantic (content-only) | 0.102 | 0.328 | 0.031 |
 | feature tower, **full-catalog negs** | 0.338 | 0.048 (39) | 0.010 |
 | feature tower, **warm-only negs (SHIPPED)** | **0.298** | **0.138** (113) | 0.010 |
 | feature tower, **hard negs (ablation)** | 0.172 | 0.226 (185) | 0.031 |
@@ -53,7 +53,7 @@ cold hit = report-only over the 97 incidental-cold-val readers:
 cold item is only EVER a negative — the tower **buries** it (cov 0.048). Drawing negatives from the **warm
 (train-positive) item universe** lifts cold coverage ~3× to **0.138** (vs 0 for ID-only/CF), at a **small warm cost**
 (0.298 vs full-catalog's 0.338 ≈ U8's 0.340). So the knob is an honest **warm↔cold trade**, not a free lunch: "a cold
-item that is only ever a negative gets pushed down; features can't rescue it from its own negative gradient — sample
+item that is only ever a negative gets pushed down; features can only weakly counter its own negative gradient (full-catalog still surfaces 39/818, not 0) — sample
 warm-only so features can place it, and pay a few points of warm hit for ~3× cold reach." (This CORRECTS the round-1
 60ep probe, which read full-catalog as *tanking* warm; on the shipped sum-composition tower at 40ep full-catalog is the
 higher-warm/lower-cold end of the same trade. The cold story — warm-only required for reach, ID-only/CF = 0 — is
@@ -70,7 +70,7 @@ who DO have a cold val positive (small-n; feature tower 0.010 vs ID-only 0.000) 
 the 540 fitted non-cold readers (train-only), distinct from the val warm-cohort.
 
 **Honest headline (NOT "first to serve cold"):** U7 semantic / U3 lexical content paths ALREADY surface cold items
-freely (U7 cov 0.322) — they just ignore interactions. The feature tower is the **first LEARNED-taste/collaborative
+freely (U7 cov 0.328) — they just ignore interactions. The feature tower is the **first LEARNED-taste/collaborative
 path to serve cold items while staying near the book's best warm hit** (0.298 vs semantic's 0.102). It is a
 warm/cold **compromise**, not dominance — its cold hit (0.010) is BELOW U7 semantic's (0.031).
 
@@ -342,6 +342,82 @@ All blockers resolved; both [fable] Nice nits and both [sol] Musts folded. Clear
   `exercises.ipynb` and `solutions.ipynb`: `warm_book = min(train_pos_items)` (smallest id with a train positive,
   guaranteed warm); added a contrast-guard assert in the solution (`warm_book in train_pos_items and warm_book !=
   cold_book`). Solutions re-executed clean.
+
+### Review 1 — [self] (2026-10-06)
+- **Verdict**: APPROVE.
+Reviewed lesson/exercises/solutions/milestone/teacher-notes + `feature_tower.py` + tests against the 8 gate duties,
+on top of a GREEN `ci-local.sh` (all 6 steps; U9 handout PDF built; `pre-merge-guard: OK`) and the independently
+re-run U9+U7 tests (32 passed).
+1. **Project-first** ✓ — lesson cell 0 opens with the problem hook "The book nobody has read yet" (not concept drill).
+2. **Correctness** ✓ — numbers bind to the Phase-B 40ep measurements and are re-confirmed by `exec-lessons` /
+   `exec-solutions` / `milestone-check` under CI. Cold-item COVERAGE is validation-safe (cohort = all fitted non-cold
+   readers scored TRAIN-only, 818 denominator, no `split="test"`); determinism is tolerance/ranking-based (§184), not
+   exact-float.
+3. **Honest framing** ✓ — lesson cells 13 & 16 state plainly the feature tower did NOT set a warm record (0.298 <
+   two-tower 0.340, "gives up about four points"), the win is cold COVERAGE (0.138 vs 0), it is "not the first path to
+   serve cold items" (U7 content already does at 0.33) but the first LEARNED-taste/collaborative one — a compromise,
+   not dominance. No overclaim found.
+4. **Taught-before-assessed / torch isolation** ✓ — feature-towers/item-cold-start/hard-negatives introduced in the
+   lesson and assessed in exercises; the `bookrec` package keeps torch lazy (lesson notebooks importing torch is
+   expected), torch-free `retrieve`/`load`/`artifact`, import-blocked subprocess test extended to `feature_tower`.
+5. **Pacing / stretch** ✓ — ≤3 full ~20–27 s fits per notebook; 8 exercises (6 core + 2 Challenge that reuse core,
+   never gatekeep it); teacher-notes gives a 60–90 min / 2–3 sitting plan.
+6. **Self-caught fix** ✓ — Ex1 degenerate warm/cold contrast fixed pre-gate (see above).
+No [self] blockers. Awaiting [sol] + [fable] blind-solve reviews.
+
+### Review 2 — [sol] (2026-10-06)
+- **Verdict**: REJECT (anchored to HEAD 6bcd6ad; blind solve matched all 8 exercises; coverage impl confirmed
+  train-only/818, numbers confirmed warm 0.298 vs 0.340, cold 113 vs 0, full 39, hard 0.172/185, determinism §184,
+  project-first, 2 non-core Challenges, ~85 min pacing, advanced baseline, torch-free load w/ import-blocked test).
+1. `[OPEN]` **Must** — stale semantic cold-coverage **~0.322** (exercises cells 0/8; solutions cells 0/8–9;
+   teacher-notes:29; and the plan Why-table semantic row) vs the executed **268/818 = 0.328**. Milestone already 0.328.
+2. `[OPEN]` **Must** — negative-pool explanation overclaims causality: features "cannot rescue" a negatives-only item
+   / buried "no matter how good" (lesson cell 7; exercises cell 14; solutions cells 14–15; `feature_tower.py:25`
+   docstring). Full-pool still surfaces **39/818** — teach negative-only pressure **strongly suppresses, not
+   categorically prevents**, cold reach.
+3. `[OPEN]` **Must** — "cold" misstated as **zero training interactions** rather than **zero train-positives**
+   (lesson cell 0; teacher-notes:3; milestone cells 0/12) — 398/818 zero-positive items appear in train `label=0`
+   rows. Milestone cell 12's "never trained" for the ID-only row is false (U8 samples the whole catalog as negatives,
+   `two_tower.py:227`). Use "zero train positives/reads" + "negative-shaped id row".
+4. `[OPEN]` **Should** — milestone cell 12 claims ID-only/CF cannot place book 139 but cell 13 only asserts the
+   feature-tower rank; add executable same-reader baseline checks (as solutions already does).
+
+### Review 3 — [fable] (2026-10-06)
+- **Verdict**: APPROVE WITH NITS (no Must). Full blind solve of all 8 exercises in a standalone script matched the
+  solutions exactly (incl. Ex1 contrast now non-degenerate: warm_book=1 / cold_book=0); confirmed every asserted
+  number (0.298<0.340; 0.138 over 818 vs 0/0; 0.172/0.226 trade; allclose determinism §184), coverage train-only over
+  818, no `split=="test"` read anywhere, project-first, 2 non-core Challenges, ~85 min pacing, torch isolation.
+1. `[OPEN]` **Should** (= [sol]#1) — semantic cold cov ~0.322 should be 0.328 (exercises Ex4 md + cell-9 comment;
+   solutions cell 9; teacher-notes; plan Why-table).
+2. `[OPEN]` **Should** — teacher-notes Differentiation/Stretch + discussion prompt point at a feature-input ablation
+   "Challenge" that does NOT exist (the 2 Challenges are negative-pool + hard-negatives) and the shipped path exposes
+   no feature-drop knob — reword or drop.
+3. `[OPEN]` **Nice** — teacher-notes "lift cold coverage ~3× (0 → 0.138)": the ~3× is vs full-catalog (0.048), not 0.
+4. `[OPEN]` **Nice** — lesson cell 6 indexes `id_tower` with book id 139 directly; works only because ids are
+   contiguous 0..1999 (the path uses an explicit row map) — add a one-line comment.
+5. `[OPEN]` **Nice** — exercises Ex5 "only a few such readers exist": on this data there is exactly one; say so.
+
+### Author responses (2026-10-06)
+- **[sol]#1 / [fable]#1** → `[FIXED]` — swept **all** cells (not just the cited ones) across lesson/exercises/
+  solutions/milestone + teacher-notes + the plan Why-table: every "~0.322" → **0.328** (the shipped 40ep value; the
+  0.322 was a leftover from the round-1 60ep eligible-cohort probe). Milestone already correct.
+- **[sol]#2** → `[FIXED]` — reworded the overclaim everywhere ("features cannot rescue" / "buries no matter how good" /
+  "never trains"): lesson cell 7, exercises cell 14, solutions cells 14–15, `feature_tower.py` docstring, plan
+  mechanism para. Now: negative-only pressure **strongly suppresses, not categorically prevents** cold reach
+  (full-catalog still surfaces **39/818**, not 0; features can only weakly counter an item's own negative gradient).
+- **[sol]#3** → `[FIXED]` — "cold" re-stated as **zero train-POSITIVE** interactions (they appear only as sampled
+  negatives) in lesson cells 0/16, teacher-notes, milestone cells 0/12; and the id row described as
+  **negative-shaped / only ever receives negative gradients** (never "never trained"), fixing milestone cell 12's
+  false "no id row ever trained".
+- **[sol]#4** → `[FIXED]` — milestone cell 13 now runs executable same-reader baseline asserts: the ID-only two-tower
+  and item-item CF top-10 for reader 129 contain NO zero-train book (re-executed clean).
+- **[fable]#2** → `[FIXED]` — teacher-notes Differentiation + discussion prompt reworded: the two shipped Challenges
+  are the negative-pool knob and hard-negatives; the feature-input ablation is flagged as an extension that requires
+  subclassing `feature_tower.py` (no drop-in knob).
+- **[fable]#3** → `[FIXED]` — teacher-notes now "(0.048 full-catalog → 0.138; vs 0 for ID-only/CF)".
+- **[fable]#4** → `[FIXED]` — lesson cell 6 comment added: "ids are 0..1999 here, so id == row; the shipped path maps
+  ids->rows explicitly via row_of."
+- **[fable]#5** → `[FIXED]` — exercises Ex5 now "possibly just one such reader exists (one, on this data)".
 
 <!-- appended pre-PR -->
 

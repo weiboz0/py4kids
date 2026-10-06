@@ -17,14 +17,15 @@ the **item tower from what the book IS**, combining four signals to the shared `
 
 The reader tower stays a bare id embedding; the score is still ``reader_emb . item_emb``. Because the
 genre / author / GloVe-projection parameters are shared across all books and trained from the **warm**
-items, a cold book inherits a sensible vector from its features even though its own id row never
-trains — so the feature tower is the **first learned-taste / collaborative path to surface cold items
+items, a cold book inherits a sensible vector from its features even though its own id row only ever
+receives negative gradients — so the feature tower is the **first learned-taste / collaborative path to surface cold items
 while holding near the book's best warm hit** (a warm/cold *compromise*, not dominance: content paths
 like Unit 7 already serve cold items freely, they just ignore the interaction log).
 
 **The decisive design choice is the negative pool.** 41% of the catalog is zero-train, so Unit 8's
 ``negative_pool="full"`` sampler (uniform over the whole catalog) makes a cold item negatives-only and
-the tower learns to bury it (features cannot rescue an item from its own negative gradient). The
+the tower suppresses it hard — not categorically (full-catalog still surfaces 39 of the 818 cold books),
+but features can only weakly counter an item's own negative gradient. The
 shipped default ``negative_pool="warm"`` draws negatives **only from the train-positive (warm) item
 universe**, so a cold item is never a negative and its features place it. ``negative_pool="hard"``
 (popularity-weighted over the same warm universe) is the **ablation** knob — measured it *trades* warm
