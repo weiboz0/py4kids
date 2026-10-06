@@ -22,12 +22,12 @@ or item cold-start (U9); no hard negatives beyond uniform sampled negatives (U9)
   (design §184 — tolerance-based, NEVER exact-float): two seeded fits yield **identical top-k ranking + `allclose`
   embeddings/scores**; bit-identical weights (`np.array_equal`) hold on CPU here and may be an extra bonus assertion,
   not the gate. **Process-global side-effect:** `use_deterministic_algorithms(True)`/`set_num_threads(1)` mutate
-  process state — the path saves + restores the previous values around `fit` (so later cells/tests are unaffected),
-  OR documents the global set as intentional; Phase B decides + states which.
+  process state — the path **saves and restores** the previous values around `fit` (so later cells/tests are
+  unaffected). torch is imported lazily inside `fit`; `retrieve`/`load`/`artifact` are torch-free (numpy weights).
 - **Tiny + fast (MEASURED, settled):** pinned `embedding_dim=32, n_epochs≈30–60, lr=0.01, n_negatives≈4–10,
   batch_size=256, weight_decay=1e-4` → **~1–4 s per fit** (eval ~2 s), far under the 120 s/cell cap. Every training
   loop runs **≥ 2× per CI pass** (lesson + solutions; milestone a 3rd) — trivially within budget. **Inline training,
-  NO cached-artifact machinery** (like U5). Phase B reports the AGGREGATE exec time (lesson + solutions + milestone +
+  NO cached-artifact machinery** (like U5). Phase B reports the AGGREGATE executed FIT COUNT + total wall time (lesson + solutions + milestone +
   determinism tests) to confirm the whole-book budget.
 - **torch stays in the `recsys` group only:** `two_tower.py` imports torch at module top; it is imported ONLY on the
   routed `--group recsys` path, so the group-free global test suite never imports torch (mirror the existing routed
@@ -104,35 +104,41 @@ ARE learned embeddings scored by a dot product); `implicit-feedback` re-exercise
 ### Phase B — `bookrec` two-tower path (Opus subagent; PyTorch, CPU-deterministic)
 Dispatch an **Opus subagent**. STUDY `factorization.py` (MF — the model the two-tower re-expresses; same val harness),
 `protocol.py` (`BaseRetrievalPath`, `fit`/`retrieve`/`artifact`/`load`, `_finish`), `scoreboard.py`,
-`neighborhood.py`/`embeddings.py` (conventions). Add `bookrec/two_tower.py` (torch at module top — imported only under
-`--group recsys`):
+`neighborhood.py`/`embeddings.py` (conventions). Add `bookrec/two_tower.py` — **torch imported LAZILY inside `fit()`
+only** (NO `import torch` at module top), so importing the module and calling `retrieve`/`load`/`artifact` never
+imports torch; only training does:
 - `TwoTowerRetrievalPath(BaseRetrievalPath)` (name `"two-tower"`, version `"1"`). Constructor with PINNED defaults
   (measured): `embedding_dim=32`, `n_epochs=60` (30–60 fine), `learning_rate=0.01`, `n_negatives=10` (4–10 fine),
   `batch_size=256`, **`weight_decay=1e-4`** (REQUIRED — Adam L2; `wd=0` overfits below CF), `seed=0`.
-  `fit(interactions, catalog=None)` — EXACT protocol signature; item universe = full catalog, readers = ≥1 train
-  positive; builds reader/item `nn.Embedding` towers, trains by **BPR** `-logσ(s⁺−s⁻)` (reader, train-positive,
-  uniform sampled negative from the reader's unobserved complement; numpy RNG) with Adam (`weight_decay`),
-  mini-batches, `torch.manual_seed` + `use_deterministic_algorithms(True)` + `set_num_threads(1)` (save/restore the
-  globals around fit); leakage-safe (train only). **Retrieve contract:** `retrieve(reader_id, context, k)` scores ALL
-  catalog books by `reader_emb · item_embᵀ`, excludes `context["seen"]` (**a known reader with empty `seen` still gets
-  up to k recs** — the score doesn't depend on `seen`), top-k via `_finish`; ONLY a reader with no learned embedding
-  (unknown/cold) → `[]`. `load`/`artifact` store the trained weights as **numpy arrays** (so `load` reconstructs
-  scores WITHOUT importing torch) + ids + params. Export so the group-free suite never imports torch (no eager torch
-  import from `__init__`).
-- Tests (routed `--group recsys`), bound to the measured numbers (seed 0, k=10, 60 cold excl): **`tt_hit ≥ mf_hit −
-  0.03` AND `tt_hit ≥ 1.2×pop` AND `tt_hit ≥ pop + 0.03` AND `tt_hit ≥ lexical`** (regularized ~0.36 clears these; an
+  `fit(interactions, catalog=None)` — EXACT protocol signature; **imports torch lazily here**; item universe = full
+  catalog, readers = ≥1 train positive; builds reader/item `nn.Embedding` towers, trains by **BPR** `-logσ(s⁺−s⁻)`
+  (reader, train-positive, uniform sampled negative from the reader's unobserved complement; numpy RNG) with Adam
+  (`weight_decay`), mini-batches, `torch.manual_seed` + `use_deterministic_algorithms(True)` + `set_num_threads(1)` —
+  **save the previous global values and RESTORE them when `fit` returns** (don't leave a global that slows later
+  cells); leakage-safe (train only). **Retrieve contract (torch-free):** `retrieve(reader_id, context, k)` scores ALL
+  catalog books by `reader_emb · item_embᵀ` **using the numpy weights stored at fit** (no torch), excludes
+  `context["seen"]` (**a known reader with empty `seen` still gets up to k recs** — the score doesn't depend on `seen`;
+  stale `seen` ids absent from the catalog are IGNORED, not an error, as in U5's MF), top-k via `_finish`; ONLY a
+  reader with no learned embedding (unknown/cold) → `[]`. `load`/`artifact` store/restore the trained weights as
+  **numpy arrays** + ids + params (torch-free). `__init__` must NOT eagerly import `two_tower`-with-torch in a way the
+  group-free suite hits.
+- Tests (routed `--group recsys`), bound to the measured numbers (seed 0, k=10, 60 cold excl): **fit MF with the SAME
+  seed/val split IN-TEST and read `mf_hit` live** (not a hard-coded 0.276), then assert **`tt_hit ≥ mf_hit − 0.03` AND
+  `tt_hit ≥ 1.2×pop` AND `tt_hit ≥ pop + 0.03` AND `tt_hit ≥ lexical`** (regularized ~0.36 clears these; an
   unregularized path fails `tt ≥ mf − 0.03`); **determinism = identical top-k ranking + `allclose` embeddings** (bonus
   `np.array_equal`); a tiny hand-checkable BPR step reduces the loss; leakage-safe; a KNOWN reader with empty `seen`
   returns k recs, an UNKNOWN reader → `[]`; fit→artifact→load identical recs (load without torch); registers as
   `two-tower-v1`.
-- **torch-isolation test (replaces the obsolete `test_unit07.py::test_bookrec_imports_no_gensim_or_torch`):** keep a
-  **gensim** prohibition everywhere; assert torch is imported ONLY via `two_tower` (not eagerly from `bookrec`); and
-  add an **import-blocked subprocess** check — `sys.modules["torch"]=None`, then `import bookrec` + exercise the
-  non-torch paths succeed and `"torch" not in sys.modules` (uv's single `.venv` physically has torch, so merely
-  running the group-free suite does NOT prove non-import).
+- **torch-isolation test (rewrites the obsolete `test_unit07.py::test_bookrec_imports_no_gensim_or_torch`):** keep a
+  **gensim** prohibition over all `bookrec/*.py`; assert `two_tower.py` has NO top-level `import torch`/`from torch`
+  (torch is lazy inside `fit`); and add an **import-blocked subprocess** — set `sys.modules["torch"]=None` (a sentinel),
+  then `import bookrec`, exercise the torch-free paths (construct a path, `load` an artifact, `retrieve`), and assert
+  they succeed AND **`sys.modules.get("torch") is None`** (the sentinel is UNTOUCHED → nothing imported torch;
+  `"torch" not in sys.modules` would be wrong — the key exists mapped to None). uv's single `.venv` physically has
+  torch, so merely running the group-free suite does NOT prove non-import.
 **Verify:** `uv run --group recsys pytest recsys/projects/bookrec/ -q` green + deterministic; the import-blocked
-subprocess proves no torch leak on the group-free path; **report two-tower val hit@10 vs MF/CF + the AGGREGATE exec
-time (lesson+solutions+milestone+determinism) so the lesson is bound to data and the ≥2×/CI budget is proven.**
+subprocess proves no torch leak on the torch-free path; **report two-tower val hit@10 vs MF/CF, the aggregate executed
+FIT COUNT, and total wall time (lesson + solutions + milestone + determinism tests) so the ≥2×/CI budget is proven.**
 
 ### Phase C — lesson.ipynb (Opus subagent; project-first)
 Hook: "U5 learned taste factors with numpy gradient descent — what if a neural network learned them instead?". From
@@ -281,7 +287,29 @@ overfitting-without-weight-decay lesson); gate MF-bound + pre-declared; determin
 isolation has a concrete import-blocked-subprocess proof + the `test_unit07` rewrite; artifact stores numpy weights
 (torch-free load); inline + in budget. No [self] blockers.
 
-_([sol] + [fable] round-2 verdicts appended on hand-back.)_
+**[fable] — APPROVE WITH NITS (round 2).** All 3 Must + 3 Should + 2 Nice folded; registry closure + no-scope-creep
+re-confirmed; verified the current `test_unit07.py:280-285` no-torch assertion is a raw-text rglob over `bookrec/*.py`
+that a top-level `import torch` WOULD trip, so the rewrite is correctly mandatory. 3 new Nice (folded into Phase B):
+1. `[FIXED v2.1]` **Nice** — Phase B/retrieve: stale `seen` ids absent from the catalog are IGNORED (not an error),
+   matching U5's MF, so the known-reader/empty-seen test + milestone don't diverge on stale ids.
+2. `[FIXED v2.1]` **Nice** — the gate test fits MF with the SAME seed/val split in-test and reads `mf_hit` live
+   (NOT a hard-coded 0.276) so `tt_hit ≥ mf_hit − 0.03` stays measure-bound if the generator seed changes.
+3. `[FIXED v2.1]` **Nice** — the path **saves+restores** the process-global `set_num_threads`/
+   `use_deterministic_algorithms` around `fit` (don't leave a global that silently slows later cells).
+
+### Plan-review outcome (round 1): **NOT consensus** ([sol]+[fable] REJECT). **v2 folded both; [fable] round-2 APPROVE WITH NITS (3 Nice → v2.1); [self] APPROVE. Awaiting [sol] round-2 for consensus.**
+
+**[sol] — REJECT (round 2)** (1 Must + 1 Should; rest confirmed resolved). Both folded → v2.1:
+1. `[FIXED v2.1]` **Must** — torch-isolation contradiction: a module-top `import torch` makes a torch-free `load()`
+   impossible, and `"torch" not in sys.modules` is always false after `sys.modules["torch"]=None`. → **torch imported
+   lazily inside `fit()` only**; `retrieve`/`load`/`artifact` use the stored numpy weights (torch-free); the subprocess
+   test asserts the sentinel is UNTOUCHED (`sys.modules.get("torch") is None`).
+2. `[FIXED v2.1]` **Should** — report aggregate **fit COUNT** too, not just wall time (lesson/sweep/milestone/
+   determinism do differing fit counts). → Phase-B verify now requires fit count + total wall time.
+
+### Round-1→v2 outcome: both REJECT → v2 (thesis corrected). v2 → [fable] APPROVE WITH NITS (3 Nice → v2.1) + [sol] REJECT (1 Must → v2.1). v2.1 folds all; re-review **[sol] round 3** (sole rejecter); [self]+[fable] approve.
+
+_([sol] round-3 verdict appended on hand-back.)_
 
 ## Content Review
 
