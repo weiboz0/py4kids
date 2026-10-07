@@ -429,8 +429,11 @@ class _FixedPath(BaseRetrievalPath):
         return self
 
     def retrieve(self, query, context, k: int) -> list[Candidate]:
+        # Like every real path, exclude the reader's ``seen`` set (their profile at training time).
         # Descending integer scores so calibration is well-defined; ids are the synthetic pool.
-        cands = [Candidate(int(i), float(len(self._pool_items) - j), self.name) for j, i in enumerate(self._pool_items)]
+        seen = set((context or {}).get("seen", ()))
+        items = [i for i in self._pool_items if i not in seen]
+        cands = [Candidate(int(i), float(len(items) - j), self.name) for j, i in enumerate(items)]
         return cands[:k]
 
 
@@ -440,14 +443,16 @@ class _Book:
 
 
 def test_repeat_read_holdout_event_not_in_training_log_pop() -> None:
-    """A repeat-read item in BOTH the profile and label sets must not leak its held-out event.
+    """A repeat-read held-out event must not leak, ACROSS readers, into the global training ``log_pop``.
 
-    Reader 1 reads item A three times (t=1,2,5), B once (t=3), C once (t=4). The time-ordered 25%
-    holdout makes the last A event a *label* while two earlier A events sit in the profile, so A
-    lands in both the profile set AND the label set. The label-item-excluded profile rows drop EVERY
-    A occurrence, so the training ``log_pop`` count for A is 0 — no held-out (or earlier) A event
-    enters the count. The old profile-membership count (``keep=profile``) would instead have counted
-    all three A events, leaking the held-out one.
+    Reader 1 reads book A (10) three times (t=1,2,5), B (20) at t=3, C (30) at t=4: the time-ordered
+    25% holdout makes the t=5 read of A a *label* while the t=1,2 reads keep A in the *profile*, so A
+    sits in BOTH sets. Reader 1's own pool excludes their profile (``seen``), so A is never reader 1's
+    training positive -- the leak is not self-inflation. Reader 2 reads D/E/F (40/50/60) then A at t=4,
+    so A is a genuine held-out positive for reader 2. ``log_pop`` is a GLOBAL count: the old
+    profile-membership count (``keep=profile``) counts reader 1's held-out t=5 read, inflating the
+    popularity feature on reader 2's positive row for A. The fixed count (from the label-item-excluded
+    profile rows) contains no held-out event, so reader 2's A row carries ``log_pop == 0``.
     """
     rows = [
         {"reader_id": 1, "item_id": 10, "timestamp": 1, "split": "train", "label": 1},  # A
@@ -455,25 +460,29 @@ def test_repeat_read_holdout_event_not_in_training_log_pop() -> None:
         {"reader_id": 1, "item_id": 20, "timestamp": 3, "split": "train", "label": 1},  # B
         {"reader_id": 1, "item_id": 30, "timestamp": 4, "split": "train", "label": 1},  # C
         {"reader_id": 1, "item_id": 10, "timestamp": 5, "split": "train", "label": 1},  # A (held out)
+        {"reader_id": 2, "item_id": 40, "timestamp": 1, "split": "train", "label": 1},  # D
+        {"reader_id": 2, "item_id": 50, "timestamp": 2, "split": "train", "label": 1},  # E
+        {"reader_id": 2, "item_id": 60, "timestamp": 3, "split": "train", "label": 1},  # F
+        {"reader_id": 2, "item_id": 10, "timestamp": 4, "split": "train", "label": 1},  # A (held out)
     ]
     profile, labels = split_profile_labels(rows, 0.25)
-    # The trap condition: A (10) is simultaneously a profile item and a held-out label.
-    assert 10 in profile[1]
-    assert labels[1] == {10}
+    # The trap: A is simultaneously reader 1's profile item AND reader 1's held-out label ...
+    assert 10 in profile[1] and labels[1] == {10}
+    # ... and a genuine (never-in-profile) held-out positive for reader 2.
+    assert 10 not in profile[2] and labels[2] == {10}
 
-    # Helper-level contrast: the OLD profile-membership count keeps all three A events (leak);
-    # the full-train count also sees all three; the label-item-excluded count drops every A event.
     profile_rows = [
         r
         for r in rows
         if not (r["split"] == "train" and int(r["label"]) == 1 and int(r["item_id"]) in labels.get(int(r["reader_id"]), set()))
     ]
-    assert _train_positive_counts(rows)[10] == 3  # full-train (serving) count
-    assert _train_positive_counts(rows, keep=profile)[10] == 3  # OLD buggy count -> leaks held-out event
-    assert _train_positive_counts(profile_rows).get(10, 0) == 0  # NEW count: strictly less, no A event
+    # OLD profile-membership count keeps all three of reader 1's A reads, INCLUDING the held-out t=5
+    # read (only two A reads precede the holdout) -> a held-out event is inside the global count.
+    assert _train_positive_counts(rows, keep=profile)[10] == 3
+    # NEW count from the label-item-excluded rows contains no held-out event (conservatively 0).
+    assert _train_positive_counts(profile_rows).get(10, 0) == 0
 
-    # End-to-end: assemble the training matrix and read A's log_pop feature straight off X.
-    pool_items = [10, 20, 30, 40, 50]  # A positive; B/C/40/50 negatives
+    pool_items = [10, 20, 30, 40, 50, 60, 70, 80]
     catalog_books = {i: _Book(genres="fic", author="auth") for i in pool_items}
     serving = {"p": _FixedPath(pool_items)}
     reranker = NeuralRerankerPath(
@@ -489,11 +498,13 @@ def test_repeat_read_holdout_event_not_in_training_log_pop() -> None:
     names = feature_names(("p",))
     log_pop_col = names.index("log_pop")
     pos_rows = np.flatnonzero(y == 1.0)
-    assert pos_rows.size == 1  # exactly one held-out label (A) landed in the pool
-    # A's held-out event never entered the training count -> its log_pop feature is exactly 0.
+    # Reader 1 contributes NO positive (A is in their seen profile, so the pool excludes it); the only
+    # positive row is reader 2's held-out A -- the leak path runs across readers.
+    assert pos_rows.size == 1
+    # Reader 1's held-out read never reached the global training count -> reader 2's A row has log_pop 0.
     assert X[pos_rows[0], log_pop_col] == 0.0
-    # Serving counts (used at retrieve) are the UNCHANGED full-train statistic.
-    assert reranker._counts[10] == 3
+    # Serving counts (used at retrieve) are the UNCHANGED full-train statistic (all four A reads).
+    assert reranker._counts[10] == 4
 
 
 # --- (8) registry ownership --------------------------------------------------------------------

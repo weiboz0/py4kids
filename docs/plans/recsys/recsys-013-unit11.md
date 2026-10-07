@@ -67,21 +67,22 @@ the U6 blend (0.333). The honest headline is **not** "the learned reranker wins.
 **3. Two leak modes — the real payoff — and where the (small) lift actually lives.** The unit teaches TWO distinct
 leaks: (i) **path-memorization** — the naive recipe (labels = train positives, feature-paths fit on the same train)
 tanks to **0.288** (§1); (ii) **held-out-event inflation of `log_pop`** — before the fix, a repeat-read item's
-held-out event was counted into the global popularity feature of the very items being predicted, inflating the
+held-out (label-period) event was counted into the GLOBAL popularity feature — never that reader's own positive (the
+pool excludes their profile), but a book that is a held-out positive for OTHER readers (cross-reader leak) — inflating the
 all-feature reranker by **+0.018 (0.364 → 0.346)** — a *phantom* win the content gate caught. With both leaks closed:
 the only genuine lift is from **CONTENT features** — **content-only 0.380 > score-order 0.348** (and > two-tower
 0.340), while the **all-feature MLP (0.346) DILUTES** it (the correlated path scores add noise, not signal), and
 **linear ≈ MLP**. 17 features = 6 calibrated per-path scores + 6 presence flags + n_paths + content (genre_frac,
-genre_cos vs the reader's history, author_frac, log_pop); at TRAINING time every input (feature-paths AND the
-popularity count) comes from the **profile rows** that exclude every occurrence of a held-out label item (no held-out
-event enters any training input; a repeat-read item's earlier events are conservatively dropped too), serving uses
-full train. The lesson: "a learned ranker's value is the *content features a single path can't see*, not combining
+genre_cos vs the reader's history, author_frac, log_pop); at TRAINING time the feature-paths AND the popularity count
+come from the **profile rows** that exclude every occurrence of a held-out label item, and the per-reader genre/author
+history comes from the reader's profile item set (a repeat-read keeps its earlier read) — no held-out event enters any
+training input; serving uses full train. The lesson: "a learned ranker's value is the *content features a single path can't see*, not combining
 correlated path scores — and a naive reranker leaks in more than one way."
 
 **4. Pool recall ceiling (retrieval caps reranking).** Any-relevant-in-pool recall: **0.716 @ pool 30, 0.772 @ pool
 50** — hit@10 of *any* reranker is capped there; motivates pool=50. **Pin pool=50.**
 
-**Gate (predeclared, measured-safe — reframed to the honest post-leak-fix story):** (a) `reranker.hit@10 ≥
+**Gate (an honest regression gate, re-pinned after the user-approved post-leak-fix reframe — NOT predeclared):** (a) `reranker.hit@10 ≥
 two_tower.hit − 0.01` (not tanked — 0.346 ≥ 0.330); (b) **the lift is content:** `content_only.hit ≥
 six_way_score_order.hit` (0.380 ≥ 0.348) AND the all-feature reranker ~ties the fixed order within noise
 (`reranker.hit ≥ six_way − 0.01` → 0.346 ≥ 0.338); (c) **RECORD, do not gate:** the all-feature MLP ≤ content-only
@@ -378,6 +379,18 @@ No [self] blockers. Awaiting [sol] + [fable] blind-solve reviews.
   two-tower / ties the hybrid" → tie-with-score-order + content-only lift; (Should) teacher-notes "accuracy up" /
   "trades coverage for accuracy" → tie on accuracy / coverage given up without an all-feature win; (Nice) lesson
   notes linear's 0.364 is within one SE of 0.348; (Nice) teacher-notes Common mistakes gains a leak-#2 bullet.
+
+- **[sol] — REJECT (r2).** Code fix confirmed correct (paths + `log_pop` from label-item-excluded `profile_rows`;
+  serving counts full-train; tests 10/10, numbers reproduced). Residuals, all `[FIXED]` in r3:
+  1. **Must** — the leak explanation + regression test modelled the wrong causal path: the pool excludes each
+     reader's profile, so a repeat-read item is never *that reader's* positive; the real defect is a **cross-reader**
+     leak (a held-out, label-period read inflates the GLOBAL `log_pop` of a book that is a held-out positive for
+     OTHER readers). → reworded lesson cell 18, exercises/solutions Ex3 (cell 6), milestone cell 9, `rerank.py`
+     docstring, plan §3, teacher-notes leak #2; regression test rewritten with a `seen`-respecting fake path and two
+     readers (reader 1's held-out A read leaks via the old `keep=profile` count onto reader 2's held-out A positive;
+     the fix leaves that row's `log_pop` at 0).
+  2. **Should** — wording: genre/author history comes from the profile ITEM SET (not `profile_rows`); the gate was
+     re-pinned after the reframe, so it is an honest regression gate, not "predeclared". → both reworded.
 
 ### Author response (fold) — 2026-10-06
 Folding all. Docs (plan §3 precise prose; teacher-notes pacing) done INLINE. Code + notebooks folded by a focused

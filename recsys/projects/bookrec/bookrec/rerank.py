@@ -21,12 +21,14 @@ memorization**: a path that trained on an item scores it inflatedly, so "high sc
 learned from in-train scores that *validation* candidates never exhibit (distribution shift). It
 **tanks** to ~0.28 hit@10, below plain score-order. The fix is a **time-ordered holdout inside
 train**: per reader the latest ~25% of train positives (>=1) become the reranker's *labels*; the
-earlier 75% is the retrieval **profile**. **Every training-time feature and statistic** — the
-feature-paths, the genre/author history, the popularity counts — is built from the **profile rows
-that exclude every held-out-label-item occurrence**, so no held-out event enters the paths OR the
-popularity count. (A repeat-read item can sit in both the profile set and the label set; excluding
-the label item's rows wholesale — not just the held-out event — keeps the paths and ``log_pop``
-consistent and conservatively leakage-safe.) The held-out 25% supplies *only* positive labels. At
+earlier 75% is the retrieval **profile**. The feature-paths and the popularity counts are built
+from the **profile rows that exclude every held-out-label-item occurrence**; the per-reader
+genre/author history comes from the reader's **profile item set** (a repeat-read item keeps its
+earlier, legitimate read there). No held-out event enters any training input. (A repeat-read item
+can sit in both the profile set and the label set. Counting popularity by profile-set membership
+would count its held-out read; ``log_pop`` is global, so that read would inflate the feature of a
+book that is a held-out positive for *other* readers — a cross-reader leak. Excluding the label
+item's rows wholesale closes it, conservatively.) The held-out 25% supplies *only* positive labels. At
 serving the full-fit paths and the full-train statistics are used. Same feature code, phase-dependent
 input.
 

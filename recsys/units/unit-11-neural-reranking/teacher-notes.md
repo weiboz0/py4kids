@@ -16,8 +16,10 @@ learned reranker does not automatically beat a careful fixed blend.
    from inflated in-train scores that val candidates never show (distribution shift). The fix is a
    **time-ordered holdout inside train**.
 2. **Leak #2 — held-out-event inflation (subtle).** Even with the holdout, a *repeat-read* item's
-   held-out event was being counted into the global popularity feature (`log_pop`) of the very items
-   being predicted — a **+0.018 phantom** win (0.364 → 0.346). Counting training popularity from the
+   held-out (label-period) event was being counted into the *global* popularity feature (`log_pop`).
+   It can never be that reader's own positive (the pool excludes their profile), but it inflated the
+   popularity of books that are held-out positives for **other** readers — a cross-reader leak of the
+   future, worth a **+0.018 phantom** win (0.364 → 0.346). Counting training popularity from the
    label-item-excluded profile rows closes it. This second leak is the sharpest teaching moment:
    "leakage-safe" is an event-level claim, not an item-set one.
 3. **A learned reranker does NOT beat a careful fixed blend here.** With both leaks closed, the
