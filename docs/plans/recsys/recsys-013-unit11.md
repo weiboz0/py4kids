@@ -144,15 +144,16 @@ key — see API note), `two_tower.py` (lazy-torch/determinism/torch-free-persist
   genre_cos of candidate genres vs the reader's **history** genre vector, author_frac, log_pop from interaction
   counts). Persist the feature ordering/spec in the artifact. **CRITICAL (leakage) — every feature uses the reader's
   PROFILE history, which differs by phase:** at TRAINING time the "history" / counts are the **75% profile only** (see
-  below) so the held-out 25% label items never enter any feature or statistic; at SERVING/val the history is the full
-  train. Same code, phase-dependent profile. (`log_pop` / popularity counts too — compute from the 75% at train, full
+  below) so no held-out *event* enters any feature or statistic (a repeat-read item can stay in the profile item set
+  via its earlier read; paths + popularity use the label-item-excluded `profile_rows`); at SERVING/val the history is
+  the full train. Same code, phase-dependent profile. (`log_pop` / popularity counts too — compute from the 75% at train, full
   train at serve.)
 - **Training recipe (THE fix — time-ordered holdout INSIDE train; the naive recipe LEAKS + tanks, see §Why):** per
   reader, split train positives time-ordered — latest ~25% (≥1) = reranker **labels**; earlier 75% = the retrieval
   **`seen` profile**. Build ALL TRAINING-time inputs from the **75% profile only** — both the retrieval paths used for
   the per-path-score features (one extra fit per path; MF+two-tower ≈ 24 s) AND the content/popularity statistics
-  (genre-history vector, author history, log_pop counts). The held-out 25% supplies ONLY the positive labels, never a
-  feature. Train a small MLP (18→32 ReLU→1, BCEWithLogits, Adam, ~30 epochs, ~10 sampled pool negatives per positive).
+  (genre-history vector, author history, log_pop counts). The held-out 25% supplies ONLY the positive labels — no held-out
+  event enters a feature. Train a small MLP (17→32 ReLU→1, BCEWithLogits, Adam, ~30 epochs, ~10 sampled pool negatives per positive).
   At serving/val, score the pool from the **full-fit** paths + full-train content/popularity with the learned numpy
   MLP. TRAIN-ONLY throughout; a regression must prove val/test rows cannot change the fitted artifact.
 - `NeuralRerankerPath(BaseRetrievalPath)` (name `"reranker"`, version `"1"`). **API (reconcile `rank.py`):** the
@@ -392,6 +393,14 @@ No [self] blockers. Awaiting [sol] + [fable] blind-solve reviews.
   2. **Should** — wording: genre/author history comes from the profile ITEM SET (not `profile_rows`); the gate was
      re-pinned after the reframe, so it is an honest regression gate, not "predeclared". → both reworded.
 
+- **[sol] — APPROVE WITH NITS (r3).** Cross-reader causal story correct; simulated the old `keep=profile` count
+  (count 3 → reader 2's positive `log_pop`=1.0 vs 0.0 now), so the regression fails against the pre-fix code. Nits
+  `[FIXED]`: provenance wording in exercises/solutions cell 6, teacher-notes and plan Phase B now says no held-out
+  *event* enters a feature (paths + popularity from `profile_rows`; genre/author from the profile item set); plan MLP
+  input 18→17.
+
+### Content-review outcome (FINAL): **CONSENSUS — [self] APPROVE · [fable] APPROVE WITH NITS (r2, folded) · [sol] APPROVE WITH NITS (r3, folded).**
+
 ### Author response (fold) — 2026-10-06
 Folding all. Docs (plan §3 precise prose; teacher-notes pacing) done INLINE. Code + notebooks folded by a focused
 subagent: event-safe log_pop count + repeat-read regression test in `rerank.py`/`test_unit11.py`; lesson
@@ -416,4 +425,43 @@ re-executed clean. Re-run ci-local + re-review [sol] (rejecter) after.
 
 ## Post-Execution Report
 
-<!-- appended before ship -->
+**Status:** COMPLETE — plan gate CONSENSUS (3 rounds), content gate CONSENSUS (3 rounds incl. a user-approved reframe);
+`ci-local.sh` ALL GREEN on the final code (see below); ready to merge.
+
+**What shipped (Unit 11 — neural reranking):**
+- **Registry (Phase A):** `neural-reranking`, `ranking-features`, `learning-to-rank`; coverage entry; manifest; syllabus
+  row 11; whole-book lessons 30.5 → 33.5 ∈ [30, 60]. Baseline gains the MLP idioms + `assemble_training_matrix`/`set_model`.
+- **`bookrec` (Phase B):** `rerank.py` — `NeuralRerankerPath` (`reranker` v1) + authoritative `rerank()` ordering key +
+  `RerankerModel` (torch lazy in `fit`, numpy serve/load/artifact). 17-dim features from the PRE-blend per-path lists
+  (6 calibrated scores + 6 presence flags + n_paths + 4 content). Leakage-safe time-ordered 75/25 holdout inside train:
+  feature-paths refit + training popularity from the label-item-excluded `profile_rows` (via a `path_factory`),
+  genre/author history from the profile item set; serving uses full-fit paths + full train. `test_unit11.py` (10 tests
+  incl. two leak negatives + val/test invariance); `test_unit07` torch+faiss isolation extended.
+- **Notebooks (C/D/E) + teacher-notes (F):** lesson (project-first; leak #1 → holdout fix → leak #2 → tie → content
+  lift), exercises (8: 6 core + 2 Challenge), solutions, milestone (cleared).
+
+**Measured (seed 0, pool 50, val):** all-feature reranker **0.346 / cov 0.195** — **~ties** the 6-way score-order
+(0.348) and ~matches the two-tower (0.340); content-only **0.380** (the genuine lift); linear 0.364 ≈ MLP; scores-only
+0.346; leaky (naive same-train) **0.288**; pool recall ceiling 0.772 @50 / 0.716 @30; coverage below the U6 blend (0.333).
+
+**Thesis corrections (all caught by the gates before ship):**
+1. Plan probe: the naive training recipe LEAKS by path memorization and tanks (0.288) → time-ordered holdout.
+2. Plan review: per-path features aren't in `blend.py`'s `Candidate` (extract pre-blend); training-time content stats
+   must use the 75% profile.
+3. Content review ([sol]): a **second, cross-reader leak** — repeat-read held-out (label-period) reads were counted into
+   the GLOBAL `log_pop`, inflating books that are other readers' held-out positives. Fixing it removed a **+0.018
+   phantom** (0.364 → 0.346), so the all-feature reranker no longer beats the fixed order. **User-approved reframe:**
+   the unit now teaches that a leakage-safe learned reranker ~ties a careful fixed blend, the lift is content features
+   (all-feature dilutes; linear ≈ MLP), and naive reranking leaks in two distinct ways.
+4. Self-caught: Ex3 originally claimed profile/label sets are disjoint (false for ~1/3 of readers) → the real invariant
+   (pool excludes profile); ruff FURB192 in the milestone; plan's 18→17 feature off-by-one.
+
+**Gates:** plan — [self]/[sol] APPROVE, [fable] APPROVE WITH NITS. Content — [self] APPROVE, [fable] APPROVE WITH
+NITS (r2), [sol] APPROVE WITH NITS (r3); all `[OPEN]` resolved.
+
+**Verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` on the final code commit — ALL GREEN (unit tests,
+notebook exec + hygiene, curriculum, PDF, `pre-merge-guard: OK`). Later commits are prose/markdown only (no
+executable change).
+
+**Follow-ups:** none blocking. `docs/content-review-gate.md:11` still names `gpt-6-sol` (gates ran on `gpt-5.6-sol`);
+reconcile pending user OK. Next: U12 SASRec (recsys-014).

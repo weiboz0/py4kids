@@ -76,8 +76,9 @@ and reuse it, keeping assembly and evaluation in separate cells.
   profile**; the held-out 25% supplies labels only. Full-train history is serving-only.
 - **The second leak: counting a held-out event into a statistic.** Filtering by item *set* membership
   is not enough: a repeat-read item sits in both the profile and label sets, so its held-out event was
-  still counted into the training `log_pop` — a **+0.018 phantom** win (0.364 → 0.346). Build every
-  training statistic from rows that exclude each held-out label item's occurrences.
+  still counted into the global training `log_pop` (inflating books that are other readers' held-out
+  positives) — a **+0.018 phantom** win (0.364 → 0.346). Build training counts from rows that exclude
+  each held-out label item's occurrences, so no held-out *event* enters any feature.
 - **Expecting the win to come from combining path scores.** It doesn't — content-only is the best
   reranker, and linear ≈ MLP. The lift is content affinity the single paths' calibrated scores don't
   carry across readers.
