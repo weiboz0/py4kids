@@ -45,3 +45,7 @@ concepts:
 - {id: ann-retrieval, name: "Approximate nearest-neighbour retrieval (exact vs approximate; recall/speed)", category: techniques, kind: technique}
 - {id: hnsw, name: "HNSW graph index (FAISS)", category: techniques, kind: technique}
 - {id: hybrid-retrieval, name: "Hybrid sparse (BM25) + dense retrieval fusion", category: techniques, kind: technique}
+# --- Unit 11 (recsys-013): neural reranking ---
+- {id: neural-reranking, name: "Neural reranking (learned second-stage re-scoring of the candidate pool)", category: techniques, kind: technique}
+- {id: ranking-features, name: "Ranking features (per-candidate feature vector from paths + content)", category: techniques, kind: technique}
+- {id: learning-to-rank, name: "Learning to rank from implicit feedback", category: techniques, kind: technique}
