@@ -33,8 +33,9 @@ input.
 **Where the lift comes from (the counterintuitive payoff, MEASURED).** On this data the lift is from
 the **content** features (genre/author affinity, log-popularity), *not* clever score combination:
 content-only reranking is the strongest variant and ``linear ~= MLP`` throughout — the non-linear
-combiner adds nothing here. The reranker edges the two-tower / ties the hybrid on hit@10 but **loses
-catalog coverage** (a precise ranker concentrates its picks). The unit reports that honestly.
+combiner adds nothing here. The leakage-safe all-feature reranker only ~ties the fixed 6-way score-order
+on hit@10 (0.346 vs 0.348) and gives up **catalog coverage** relative to the Unit-6 blend; only the
+content-only variant earns a clear lift. The unit reports that honestly.
 
 **Determinism (design 011 §7, same contract as Unit 8).** Training seeds :func:`torch.manual_seed`
 (MLP init) and a numpy RNG (negative sampling / shuffling), enables

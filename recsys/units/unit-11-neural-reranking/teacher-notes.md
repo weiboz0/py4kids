@@ -60,8 +60,8 @@ and reuse it, keeping assembly and evaluation in separate cells.
 1. **Sitting 1 (~30 min) — the two-stage split + features.** The pool and the recall ceiling; build the
    per-candidate feature vector; the score-order baseline `rank.py` already does.
 2. **Sitting 2 (~35 min) — the leak and the fix.** Train the naive way and watch it tank to ~0.28; then
-   the time-ordered holdout; train/register the reranker; read the honest scoreboard (accuracy up,
-   coverage down).
+   the time-ordered holdout; train/register the reranker; read the honest scoreboard (a tie on accuracy,
+   coverage below the Unit-6 blend).
 3. **Sitting 3 (~20 min, + Challenges) — what carries the lift.** The feature ablation (content-only vs
    scores-only), linear vs MLP, and the pool-size knob (pairwise/BPR is a differentiation stretch, not a shipped exercise).
 
@@ -72,6 +72,10 @@ and reuse it, keeping assembly and evaluation in separate cells.
   features memorize the labels; val **tanks to ~0.28**, below score-order. Every training-time
   feature/statistic (path scores, genre/author history, popularity counts) must use only the **75%
   profile**; the held-out 25% supplies labels only. Full-train history is serving-only.
+- **The second leak: counting a held-out event into a statistic.** Filtering by item *set* membership
+  is not enough: a repeat-read item sits in both the profile and label sets, so its held-out event was
+  still counted into the training `log_pop` — a **+0.018 phantom** win (0.364 → 0.346). Build every
+  training statistic from rows that exclude each held-out label item's occurrences.
 - **Expecting the win to come from combining path scores.** It doesn't — content-only is the best
   reranker, and linear ≈ MLP. The lift is content affinity the single paths' calibrated scores don't
   carry across readers.
@@ -95,8 +99,8 @@ and reuse it, keeping assembly and evaluation in separate cells.
   it here.
 - Content-only beat the score features, and linear tied the MLP. What does that tell you about where
   this data's taste signal lives, and when would a non-linear combiner of path scores actually help?
-- The reranker trades coverage for accuracy. For a real bookstore, when is that trade worth it, and how
-  would you claw coverage back (tie to the Unit-6 blend and Unit-13's beyond-accuracy thread)?
+- The all-feature reranker gives up coverage without an accuracy win (only content-only earns one). For a
+  real bookstore, when would a reranker's trade be worth it, and how would you claw coverage back (tie to the Unit-6 blend and Unit-13's beyond-accuracy thread)?
 
 ## Provenance
 

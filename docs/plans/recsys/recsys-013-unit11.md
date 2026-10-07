@@ -370,6 +370,15 @@ No [self] blockers. Awaiting [sol] + [fable] blind-solve reviews.
    Phase B re-measures to confirm reranker ≈ 0.364). The public set-based `split_profile_labels` API (Ex3's overlap
    teaching) is unchanged.
 
+### Round 2 (re-review after the fold + user-approved reframe)
+- **[fable] — APPROVE WITH NITS (r2).** Re-ran test_unit11 (10 passed) + an independent blind solve of Ex3/Ex4/Ex6
+  (+Ex5/Ex7): every number matches code, solutions and lesson outputs; leak fix verified correct (no held-out event
+  of any reader enters any training input); second-leak sections accurate; exercises↔solutions matched; hygiene,
+  project-first, 2 Challenges OK. Nits, all `[FIXED]`: (Should) `rerank.py` docstring still said "edges the
+  two-tower / ties the hybrid" → tie-with-score-order + content-only lift; (Should) teacher-notes "accuracy up" /
+  "trades coverage for accuracy" → tie on accuracy / coverage given up without an all-feature win; (Nice) lesson
+  notes linear's 0.364 is within one SE of 0.348; (Nice) teacher-notes Common mistakes gains a leak-#2 bullet.
+
 ### Author response (fold) — 2026-10-06
 Folding all. Docs (plan §3 precise prose; teacher-notes pacing) done INLINE. Code + notebooks folded by a focused
 subagent: event-safe log_pop count + repeat-read regression test in `rerank.py`/`test_unit11.py`; lesson
