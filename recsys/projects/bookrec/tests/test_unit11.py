@@ -45,7 +45,13 @@ from bookrec import (
     load_keywords,
     run_blended_scoreboard,
 )
-from bookrec.rerank import family_mask
+from bookrec.protocol import BaseRetrievalPath, Candidate
+from bookrec.rerank import (
+    _train_positive_counts,
+    family_mask,
+    feature_names,
+    split_profile_labels,
+)
 from bookrec.scoreboard import _seen_and_relevant
 
 K = 10
@@ -392,6 +398,88 @@ def test_fit_artifact_load_round_trip_is_torch_free(env: dict[str, object], clea
     loaded = NeuralRerankerPath(env["serving"], env["path_factory"], env["catalog"]).load(artifact)
     artifact["model"]["weights"][0][0, 0] = 123.0
     assert loaded.retrieve(readers[0], {"seen": seen_by[readers[0]]}, K)  # still serves
+
+
+# --- (9) REGRESSION: a repeat-read held-out event never leaks into the training log_pop count ---
+
+
+class _FixedPath(BaseRetrievalPath):
+    """A tiny synthetic path that returns a fixed candidate pool (for the leakage regression)."""
+
+    def __init__(self, pool_items: list[int], name: str = "p") -> None:
+        super().__init__(name=name, version="1")
+        self._pool_items = list(pool_items)
+        self._fitted = True
+
+    def fit(self, interactions, catalog=None):
+        return self
+
+    def retrieve(self, query, context, k: int) -> list[Candidate]:
+        # Descending integer scores so calibration is well-defined; ids are the synthetic pool.
+        cands = [Candidate(int(i), float(len(self._pool_items) - j), self.name) for j, i in enumerate(self._pool_items)]
+        return cands[:k]
+
+
+class _Book:
+    def __init__(self, genres: str, author: str) -> None:
+        self.fields = {"genres": genres, "author_id": author}
+
+
+def test_repeat_read_holdout_event_not_in_training_log_pop() -> None:
+    """A repeat-read item in BOTH the profile and label sets must not leak its held-out event.
+
+    Reader 1 reads item A three times (t=1,2,5), B once (t=3), C once (t=4). The time-ordered 25%
+    holdout makes the last A event a *label* while two earlier A events sit in the profile, so A
+    lands in both the profile set AND the label set. The label-item-excluded profile rows drop EVERY
+    A occurrence, so the training ``log_pop`` count for A is 0 — no held-out (or earlier) A event
+    enters the count. The old profile-membership count (``keep=profile``) would instead have counted
+    all three A events, leaking the held-out one.
+    """
+    rows = [
+        {"reader_id": 1, "item_id": 10, "timestamp": 1, "split": "train", "label": 1},  # A
+        {"reader_id": 1, "item_id": 10, "timestamp": 2, "split": "train", "label": 1},  # A
+        {"reader_id": 1, "item_id": 20, "timestamp": 3, "split": "train", "label": 1},  # B
+        {"reader_id": 1, "item_id": 30, "timestamp": 4, "split": "train", "label": 1},  # C
+        {"reader_id": 1, "item_id": 10, "timestamp": 5, "split": "train", "label": 1},  # A (held out)
+    ]
+    profile, labels = split_profile_labels(rows, 0.25)
+    # The trap condition: A (10) is simultaneously a profile item and a held-out label.
+    assert 10 in profile[1]
+    assert labels[1] == {10}
+
+    # Helper-level contrast: the OLD profile-membership count keeps all three A events (leak);
+    # the full-train count also sees all three; the label-item-excluded count drops every A event.
+    profile_rows = [
+        r
+        for r in rows
+        if not (r["split"] == "train" and int(r["label"]) == 1 and int(r["item_id"]) in labels.get(int(r["reader_id"]), set()))
+    ]
+    assert _train_positive_counts(rows)[10] == 3  # full-train (serving) count
+    assert _train_positive_counts(rows, keep=profile)[10] == 3  # OLD buggy count -> leaks held-out event
+    assert _train_positive_counts(profile_rows).get(10, 0) == 0  # NEW count: strictly less, no A event
+
+    # End-to-end: assemble the training matrix and read A's log_pop feature straight off X.
+    pool_items = [10, 20, 30, 40, 50]  # A positive; B/C/40/50 negatives
+    catalog_books = {i: _Book(genres="fic", author="auth") for i in pool_items}
+    serving = {"p": _FixedPath(pool_items)}
+    reranker = NeuralRerankerPath(
+        serving,
+        lambda train_rows: {"p": _FixedPath(pool_items)},
+        catalog_books,
+        pool=POOL,
+        seed=SEED,
+        n_negatives=10,
+        path_names=("p",),
+    )
+    X, y = reranker.assemble_training_matrix(rows)
+    names = feature_names(("p",))
+    log_pop_col = names.index("log_pop")
+    pos_rows = np.flatnonzero(y == 1.0)
+    assert pos_rows.size == 1  # exactly one held-out label (A) landed in the pool
+    # A's held-out event never entered the training count -> its log_pop feature is exactly 0.
+    assert X[pos_rows[0], log_pop_col] == 0.0
+    # Serving counts (used at retrieve) are the UNCHANGED full-train statistic.
+    assert reranker._counts[10] == 3
 
 
 # --- (8) registry ownership --------------------------------------------------------------------

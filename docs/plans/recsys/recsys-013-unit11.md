@@ -56,31 +56,38 @@ is applied over the **full-fit** paths at serving/val time. Measured (val, k=10,
 | U6 4-way blend | 0.306 | 0.333 |
 | U10 hybrid | 0.362 | 0.192 |
 | 6-way equal-weight score-order over the pool (pool 50) | 0.348 | 0.217 |
-| **reranker, clean recipe (pool 50, seeds 0/1/2)** | **0.35–0.39** | **0.12–0.19** |
+| **reranker, clean recipe — all-feature MLP (pool 50, seed 0)** | **0.346** | 0.195 |
+| reranker, **content-only** (ablation) | **0.380** | ~0.12 |
+| reranker, linear (all-feature) | 0.364 | 0.133 |
 
-So the reranker **edges the two-tower by ~+0.03–0.05 (directional, ~1–2 SE) and ties/edges the hybrid (0.362)** — but
-**coverage COLLAPSES to 0.12–0.19** (vs U6's 0.333). An honest win on accuracy, a real loss on coverage.
+So the leakage-safe all-feature reranker **does NOT beat a careful fixed blend — it ~TIES the 6-way score-order
+(0.346 vs 0.348) and ~matches the two-tower (0.340)**; coverage (0.195) edges the two-tower (0.177) but stays below
+the U6 blend (0.333). The honest headline is **not** "the learned reranker wins."
 
-**3. The lift is from CONTENT features, not score combination (the counterintuitive payoff).** 17 features = 6
-calibrated per-path scores + 6 presence flags + n_paths + content (genre_frac, genre_cos vs the reader's history
-genre vector, author_frac, log_pop) — where at TRAINING time every feature/statistic uses the **75% profile only**
-(the held-out 25% labels never enter a feature), and at serving the full train. Ablation: **content-only is the BEST
-reranker (0.384–0.390)**; dropping the
-path-score features does NOT hurt; dropping content drops it to ~score-order (0.31–0.36). And **linear ≈ MLP**
-throughout — the non-linear combiner adds nothing here. Why: the generator's taste is feature-derived + author-following
-(`gen_interactions.py §6`), a signal the per-list min-max-calibrated path *scores* don't carry across readers. So the
-lesson is "a learned ranker wins by seeing *features a single path can't* (content affinity), not by cleverly
-combining correlated scores."
+**3. Two leak modes — the real payoff — and where the (small) lift actually lives.** The unit teaches TWO distinct
+leaks: (i) **path-memorization** — the naive recipe (labels = train positives, feature-paths fit on the same train)
+tanks to **0.288** (§1); (ii) **held-out-event inflation of `log_pop`** — before the fix, a repeat-read item's
+held-out event was counted into the global popularity feature of the very items being predicted, inflating the
+all-feature reranker by **+0.018 (0.364 → 0.346)** — a *phantom* win the content gate caught. With both leaks closed:
+the only genuine lift is from **CONTENT features** — **content-only 0.380 > score-order 0.348** (and > two-tower
+0.340), while the **all-feature MLP (0.346) DILUTES** it (the correlated path scores add noise, not signal), and
+**linear ≈ MLP**. 17 features = 6 calibrated per-path scores + 6 presence flags + n_paths + content (genre_frac,
+genre_cos vs the reader's history, author_frac, log_pop); at TRAINING time every input (feature-paths AND the
+popularity count) comes from the **profile rows** that exclude every occurrence of a held-out label item (no held-out
+event enters any training input; a repeat-read item's earlier events are conservatively dropped too), serving uses
+full train. The lesson: "a learned ranker's value is the *content features a single path can't see*, not combining
+correlated path scores — and a naive reranker leaks in more than one way."
 
 **4. Pool recall ceiling (retrieval caps reranking).** Any-relevant-in-pool recall: **0.716 @ pool 30, 0.772 @ pool
-50** — hit@10 of *any* reranker is capped there; motivates pool=50 (tiny cost, +0.05 ceiling). **Pin pool=50.**
+50** — hit@10 of *any* reranker is capped there; motivates pool=50. **Pin pool=50.**
 
-**Gate (predeclared, measured-safe — no post-hoc metric):** (a) `reranker.hit@10 ≥ two_tower.hit − 0.01` (not tanked);
-(b) `reranker.hit@10 ≥ six_way_score_order.hit@10` over the SAME pool (the reranker must beat the fixed-order pool it
-reranks — satisfied 0.35–0.39 vs 0.348); (c) **RECORD, do not gate,** the hybrid comparison (within noise — seed-0
-mlp-all at pool 30 was 0.346 < 0.362) and report **coverage honestly as a loss**; (d) a **negative test**: the naive
-same-train-label recipe scores below the clean recipe (codifies the leak); (e) `linear ≈ MLP` recorded, never gated.
-Determinism: two seeded fits `allclose` on every weight (§184).
+**Gate (predeclared, measured-safe — reframed to the honest post-leak-fix story):** (a) `reranker.hit@10 ≥
+two_tower.hit − 0.01` (not tanked — 0.346 ≥ 0.330); (b) **the lift is content:** `content_only.hit ≥
+six_way_score_order.hit` (0.380 ≥ 0.348) AND the all-feature reranker ~ties the fixed order within noise
+(`reranker.hit ≥ six_way − 0.01` → 0.346 ≥ 0.338); (c) **RECORD, do not gate:** the all-feature MLP ≤ content-only
+(dilution), `linear ≈ MLP`, the hybrid comparison, and coverage; (d) **two negative tests:** the naive same-train
+recipe tanks below the clean recipe (path-memorization leak), AND no held-out repeat-read event enters the training
+`log_pop` (the event-inflation leak). Determinism: two seeded fits `allclose` on every weight (§184).
 
 ## Audience & retained laws
 Advanced baseline (design 011). Retained in full: project-first; taught-before-assessed (neural-reranking/
@@ -156,12 +163,15 @@ key — see API note), `two_tower.py` (lazy-torch/determinism/torch-free-persist
   scores via the numpy MLP, excludes `seen`, top-k; unknown reader → `[]`. `load`/`artifact` persist numpy MLP weights
   + feature spec (torch-free). Deterministic. Export (no eager torch). A linear-logistic variant + pairwise/BPR =
   stretch knobs (linear ≈ MLP measured).
-- Tests (routed, new `tests/test_unit11.py`): **(gate)** `reranker.hit ≥ two_tower.hit − 0.01` AND `reranker.hit ≥
-  six_way_score_order.hit` over the same pool; **(negative — codifies the leak)** the naive same-train-label recipe
-  scores BELOW the clean recipe; **(record, not gate)** the hybrid comparison, `linear ≈ MLP`, and coverage (reported
-  as a loss); determinism (ranking + allclose; array_equal bonus print only); feature-ablation recorded (content-only
-  ≥ scores-only); empty-seen/unknown-reader contract; fit→artifact→load identical (torch-free); val/test-invariance of
-  the fitted artifact; registers as `reranker-v1`. **EXTEND the import-blocked subprocess test** (`tests/test_unit07.py`)
+- Tests (routed, new `tests/test_unit11.py`): **(gate)** `reranker.hit ≥ two_tower.hit − 0.01` (not tanked) AND
+  `content_only.hit ≥ six_way_score_order.hit` (the content lift) AND all-feature `reranker.hit ≥ six_way − 0.01`
+  (ties within noise); **(two negative tests — codify the TWO leaks)** the naive same-train-label recipe tanks BELOW
+  the clean recipe (path-memorization), AND no held-out repeat-read event enters the training `log_pop`
+  (event-inflation); **(record, not gate)** all-feature MLP ≤ content-only (dilution), `linear ≈ MLP`, the hybrid
+  comparison, and coverage; determinism (ranking + allclose; array_equal bonus print only); feature-ablation recorded
+  (content-only ≥ scores-only); empty-seen/unknown-reader contract; fit→artifact→load identical (torch-free);
+  val/test-invariance of the fitted artifact; registers as `reranker-v1`. **EXTEND the import-blocked subprocess test**
+  (`tests/test_unit07.py`)
   to cover `rerank` (group-free imports no torch/faiss).
 **Verify:** `uv run --group recsys pytest recsys/projects/bookrec/ -q` green + group-free suite imports no torch/faiss;
 **report reranker hit@10 + coverage vs two-tower / 6-way score-order / U6-blend / U10-hybrid, the feature-ablation
@@ -179,11 +189,14 @@ the reader's TRAIN history, log-popularity); (3) **the leakage trap (headline)**
 paths memorized those positives; then fix it with a **time-ordered holdout inside train** (latest 25% = labels, earlier
 75% = profile the feature-paths are fit on); (4) **learning to rank + reveal** `NeuralRerankerPath`: a **linear**
 logistic combiner first (the U6 blend's fixed weights, now *learned*) → the MLP, and show **linear ≈ MLP** here; score
-on `val` — reranker 0.35–0.39 edges the two-tower (0.340) and ties the hybrid (0.362), but read **coverage honestly as
-a LOSS** (0.12–0.19 vs U6's 0.333); (5) the **feature ablation** — the counterintuitive payoff: **content features
-carry the lift, the path scores barely matter** (content-only ≥ scores-only ≈ score-order). Bridge: U12 adds sequence
-features; U13 revisits fairness of a learned ranker + coverage cost; U14 capstone wires retrieval→blend→rerank end to
-end. ASCII only; `rank(exclude=seen)`; reuse `bookrec`; tiny/seeded/in-budget.
+on `val` — the all-feature reranker (**0.346**) **~ties** the 6-way score-order (0.348) and ~matches the two-tower
+(0.340): a leakage-safe learned reranker does NOT beat a careful fixed blend here; (5) **the second leak + the feature
+ablation** — closing the `log_pop` held-out-event leak removes a **+0.018 phantom** win (0.364→0.346), and the only
+genuine lift is **content** (content-only **0.380** > score-order 0.348; the all-feature MLP *dilutes* it with the
+correlated path scores; linear ≈ MLP). Honest headline: the reranker's value is the two-stage architecture + the
+content features, and the unit's payoff is the **two leak modes**. Bridge: U12 adds sequence features; U13 revisits
+fairness of a learned ranker + coverage; U14 capstone wires retrieval→blend→rerank end to end. ASCII only;
+`rank(exclude=seen)`; reuse `bookrec`; tiny/seeded/in-budget.
 **Verify:** `exec-lessons` clean (budget); non-empty markdown first cell; `concept-scan` clean.
 
 ### Phase D — exercises.ipynb + solutions.ipynb (separate fresh Opus subagents)
@@ -204,12 +217,15 @@ the feature ablation; one reader whose ranking the reranker visibly improves. Pa
 `## Goals`, `## Pacing` (60–90 min / 2–3 sittings, hook first, all exercises), `## Common mistakes` — lead with the
 **MEASURED leakage trap** (training the reranker on labels = train positives while the feature-paths are fit on that
 same train → the paths memorized them → the reranker learns inflated in-train scores → val **tanks to ~0.28**, below
-score-order; fix = time-ordered holdout inside train); then: expecting the lift to come from combining path scores
-(it comes from CONTENT — content-only ≥ scores-only; linear ≈ MLP); reporting the accuracy win while hiding the
-**coverage LOSS** (0.12–0.19 vs 0.333); forgetting the reranker only re-orders the POOL (retrieval recall ceiling
-0.72–0.77 caps hit@k); non-determinism. `## Discussion prompts` (why two-stage retrieve-then-rank; why the naive
-label source leaks and the holdout fixes it; what content features see that the path scores can't carry across
-readers; the accuracy↔coverage trade a precise reranker makes; the retrieval recall ceiling). `## Differentiation`.
+score-order; fix = time-ordered holdout inside train); then the **second, subtler leak** (a repeat-read item's
+held-out event counted into the global `log_pop` → a **+0.018 phantom** win, 0.364→0.346; fix = count training
+popularity from the label-item-excluded profile rows); then: **expecting a learned reranker to beat a careful fixed
+blend** (it does NOT here — the all-feature MLP ~ties the 6-way score-order 0.346≈0.348); expecting the lift from
+combining path scores (it comes from CONTENT — content-only 0.380 > 0.348; the all-feature MLP *dilutes*; linear ≈
+MLP); forgetting the reranker only re-orders the POOL (recall ceiling 0.72–0.77 caps hit@k); non-determinism.
+`## Discussion prompts` (why two-stage retrieve-then-rank; the two leak modes and their fixes; why content features
+beat combining correlated scores here; when a learned reranker WOULD beat a fixed blend; the recall ceiling).
+`## Differentiation`.
 
 ### Phase G — verification (named)
 `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN with Units 1–11 + Checkpoint A + the Unit-11 milestone AND
@@ -307,6 +323,58 @@ lists); (3) training-time content features leaked the 25% labels (all training i
 implementation (Phases A→G).
 
 ## Content Review
+
+### Review 1 — [self] (2026-10-06)
+- **Verdict**: APPROVE.
+Reviewed lesson/exercises/solutions/milestone/teacher-notes + `rerank.py` + tests against the 8 gate duties.
+1. **Project-first** ✓ — lesson cell 0 opens with the "each path sees one slice — can a model LEARN to rank the
+   pool?" hook (not drill).
+2. **Correctness / honest thesis** ✓ — the leakage trap is the headline (naive recipe tanks ~0.288; clean
+   time-ordered 75/25 holdout → 0.364); ALL training-time features/paths/stats use the 75% profile, 25% = labels only
+   (leakage-safe); reranker edges two-tower (0.340)/ties hybrid (0.362) but coverage is an honest LOSS (0.186 vs U6
+   0.333); content-only (0.384) ≥ scores-only (0.346), linear ≈ MLP; retrieval recall ceiling (0.772) caps hit@k.
+   Determinism tolerance/rank-based (§184). No overclaim.
+3. **Ex3 invariant** ✓ (self-caught, fixed) — leakage-safety is the training pool EXCLUDING the profile, NOT set
+   disjointness (re-read books sit in both sets, ~33% of readers); exercises Ex3 reframed to match the solution; no
+   residual "disjoint" claim in shipped content; lesson/teacher-notes carry none.
+4. **Taught-before-assessed / heavy-dep isolation** ✓ — the 3 concepts introduced in the lesson, assessed in
+   exercises; torch+faiss lazy, group-free import pulls neither (extended test_unit07), val-only (test sealed).
+5. **Pacing / stretch** ✓ — assemble-once/reuse budget; 8 exercises (6 core + 2 Challenge); teacher-notes 60–90 min.
+No [self] blockers. Awaiting [sol] + [fable] blind-solve reviews.
+
+### Review 2 — [fable] (2026-10-06)
+- **Verdict**: APPROVE WITH NITS (no Must). Full blind solve reproduced every number (0.772/0.716, 0.288, 0.364/0.186,
+  content-only 0.384 ≥ scores-only 0.346, linear 0.366 ≈ MLP 0.364); leakage story sound; no residual "disjoint"
+  claim; heavy-dep isolation confirmed.
+1. `[OPEN]→[FIXED]` **Should** — lesson "a real, if modest, win... within a standard error or two" is
+   self-contradictory (+0.024 ≈ 1 SE) → "a directional, within-noise edge (~1 SE)".
+2. `[OPEN]→[FIXED]` **Should** — teacher-notes Pacing names "pairwise" as if an exercise → relabel as a differentiation
+   stretch (done inline).
+3. `[OPEN]→[FIXED]` **Nice** — lesson/docstring "25% never enters a feature" imprecise given repeat reads → precise
+   wording (subsumed by [sol] Must fix below).
+4. `[OPEN]→[FIXED]` **Nice** — solutions Ex7/Ex8 markdown lack the `stretch` tag their code cells carry → add.
+5. `[OPEN]→[FIXED]` **Nice** — coverage "~0.12–0.19" is a seed range → note it's across seeds 0/1/2 (seed-0 ~0.186).
+
+### Review 3 — [sol] (2026-10-06)
+- **Verdict**: REJECT (blind solve matched all numbers; targeted tests 11/11 pass incl. determinism + torch/faiss
+  isolation; project-first/audience/pacing/coverage-honesty all pass). One Must:
+1. `[OPEN]→[FIXED]` **Must** — the clean recipe is NOT event-level leakage-safe for **repeat reads**:
+   `split_profile_labels` collapses timestamped events into item SETS, so a repeat-read item in BOTH the profile and
+   label sets still has its held-out event counted into the global `log_pop` (`_train_positive_counts(rows,
+   keep=profile)` filters by item-membership), while the path refit excludes every occurrence. The claim "every
+   training-time input comes only from the 75% profile" is therefore false at the event level — unacceptable in a
+   leakage-teaching unit. → **Fix:** compute the training popularity count from the SAME label-item-excluded
+   `profile_rows` the paths use (`train_counts = _train_positive_counts(profile_rows)`), so NO held-out event enters
+   the paths OR log_pop (a repeat-read's earlier events are conservatively dropped too); + a repeat-read regression
+   test; + precise prose (plan §3 + lesson + docstring). Result is unaffected (log_pop is a minor global feature;
+   Phase B re-measures to confirm reranker ≈ 0.364). The public set-based `split_profile_labels` API (Ex3's overlap
+   teaching) is unchanged.
+
+### Author response (fold) — 2026-10-06
+Folding all. Docs (plan §3 precise prose; teacher-notes pacing) done INLINE. Code + notebooks folded by a focused
+subagent: event-safe log_pop count + repeat-read regression test in `rerank.py`/`test_unit11.py`; lesson
+within-noise wording + precise leakage note + seed-range note; solutions Ex7/Ex8 stretch tags; re-measured +
+re-executed clean. Re-run ci-local + re-review [sol] (rejecter) after.
 
 ### Pre-gate self-caught fixes (during the build)
 - `[FIXED]` **Ex3 "disjoint" framing wrong** — the exercises Ex3 statement said "confirm labels disjoint from its

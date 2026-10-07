@@ -21,10 +21,14 @@ memorization**: a path that trained on an item scores it inflatedly, so "high sc
 learned from in-train scores that *validation* candidates never exhibit (distribution shift). It
 **tanks** to ~0.28 hit@10, below plain score-order. The fix is a **time-ordered holdout inside
 train**: per reader the latest ~25% of train positives (>=1) become the reranker's *labels*; the
-earlier 75% is the retrieval **profile**, and **every training-time feature and statistic** — the
-feature-paths, the genre/author history, the popularity counts — is built from that 75% profile
-*only*. The held-out 25% supplies *only* positive labels, never a feature. At serving the full-fit
-paths and the full-train statistics are used. Same feature code, phase-dependent profile.
+earlier 75% is the retrieval **profile**. **Every training-time feature and statistic** — the
+feature-paths, the genre/author history, the popularity counts — is built from the **profile rows
+that exclude every held-out-label-item occurrence**, so no held-out event enters the paths OR the
+popularity count. (A repeat-read item can sit in both the profile set and the label set; excluding
+the label item's rows wholesale — not just the held-out event — keeps the paths and ``log_pop``
+consistent and conservatively leakage-safe.) The held-out 25% supplies *only* positive labels. At
+serving the full-fit paths and the full-train statistics are used. Same feature code, phase-dependent
+input.
 
 **Where the lift comes from (the counterintuitive payoff, MEASURED).** On this data the lift is from
 the **content** features (genre/author affinity, log-popularity), *not* clever score combination:
@@ -319,9 +323,13 @@ def _train_positive_counts(
 ) -> dict[int, int]:
     """``{item_id: train-positive count}``; when ``keep`` is given, only that reader's kept items count.
 
-    ``keep`` restricts counting to each reader's profile items (so the *training-time* popularity
-    statistic sees the 75% profile only, never the held-out 25% labels). ``keep=None`` counts every
-    train positive (the serving-time statistic).
+    ``keep=None`` counts every train positive in the given rows — the serving-time statistic over the
+    full train, and (when the rows are the label-item-excluded *profile* rows) the leakage-safe
+    training count. ``keep`` restricts counting to each reader's kept (profile) items by
+    item-membership; note this canNOT exclude the held-out *event* of a repeat-read item that sits in
+    both the profile and the label set, so the training count is taken over label-item-excluded rows
+    (``keep=None``) rather than by profile membership. ``keep`` is retained for illustrating that
+    contrast.
     """
     counts: dict[int, int] = defaultdict(int)
     for row in interactions:
@@ -486,10 +494,12 @@ class NeuralRerankerPath(BaseRetrievalPath):
     ) -> tuple[np.ndarray, np.ndarray]:
         """Build the leakage-safe ``(X, y)`` training matrix AND fix the serving statistics.
 
-        Builds the per-reader time-ordered holdout; the feature-paths and statistics come from the
-        **75% profile ONLY** (via ``path_factory`` — or the serving paths + full counts when
-        ``leaky``). The held-out 25% supplies only the positive labels. ``train_paths`` may be passed
-        to reuse an already-refit profile-path set (so a test / notebook refits the paths once).
+        Builds the per-reader time-ordered holdout; the feature-paths AND the popularity count come
+        from the **profile rows that exclude every held-out-label-item occurrence** (via
+        ``path_factory`` — or the serving paths + full counts when ``leaky``), so no held-out event
+        enters any training input. The held-out 25% supplies only the positive labels. ``train_paths``
+        may be passed to reuse an already-refit profile-path set (so a test / notebook refits the
+        paths once); the ``log_pop`` count is recomputed from the label-item-excluded rows regardless.
         Side effect: records the FULL-train serving ``counts`` / ``max_log_pop`` / ``known_readers``
         used at :meth:`retrieve` time. Rows need a ``timestamp``. Pure given the fitted paths.
         """
@@ -509,21 +519,28 @@ class NeuralRerankerPath(BaseRetrievalPath):
             train_paths = self._paths  # memorized the label items (the leak)
             train_counts = self._counts
         else:
+            # The label-item-excluded profile rows: EVERY occurrence of a held-out-label item is
+            # dropped (not just the held-out event). A repeat-read item that lands in BOTH the
+            # profile and label sets would keep its held-out event under a profile-membership count
+            # (`keep=profile`), leaking it into log_pop; counting the already-event-filtered rows
+            # (keep=None) drops it — and the feature-paths refit on the SAME rows, so the paths and
+            # the popularity count share one leakage-safe training input. Built UNCONDITIONALLY so
+            # log_pop is label-item-excluded even when a caller passes a pre-refit ``train_paths``.
+            profile_rows = [
+                row
+                for row in rows
+                if not (
+                    row["split"] == "train"
+                    and int(row["label"]) == 1
+                    and int(row["item_id"]) in labels.get(int(row["reader_id"]), set())
+                )
+            ]
             if train_paths is None:
-                profile_rows = [
-                    row
-                    for row in rows
-                    if not (
-                        row["split"] == "train"
-                        and int(row["label"]) == 1
-                        and int(row["item_id"]) in labels.get(int(row["reader_id"]), set())
-                    )
-                ]
                 train_paths = self._path_factory(profile_rows)
             missing = [p for p in self._path_names if p not in train_paths]
             if missing:
                 raise ValueError(f"path_factory did not return the path(s) {missing}")
-            train_counts = _train_positive_counts(rows, keep=profile)
+            train_counts = _train_positive_counts(profile_rows)
         train_max_log_pop = float(np.log1p(max(train_counts.values()))) if train_counts else 1.0
 
         rng = np.random.default_rng(self.seed)

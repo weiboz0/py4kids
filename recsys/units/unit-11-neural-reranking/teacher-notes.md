@@ -6,21 +6,27 @@ one slice of the signal (popularity, text, behaviour); a cheap retrieval step pr
 (the paths' calibrated scores + content features) trained on implicit feedback. `rank.py` has
 anticipated this since Unit 1 ("a learned reranker replaces the ordering key in a later unit").
 
-The unit is built around three honest, measured results — and the first one is a **failure** that is
-the best teaching moment in the book so far:
+The unit is built around three honest, measured results — and the first two are **leakage failures**
+(the best teaching moments in the book so far), while the third is a sobering truth: a leakage-safe
+learned reranker does not automatically beat a careful fixed blend.
 
-1. **The naive recipe LEAKS and tanks.** Train the reranker on a reader's train positives as labels,
-   using paths fit on that *same* train, and it scores **~0.28 on val — below plain score-order and
-   below the two-tower (0.340)**. The paths *memorized* those positives, so "high score ⇒ positive" is
-   learned from inflated in-train scores that val candidates never show (distribution shift). The fix
-   is a **time-ordered holdout inside train**.
-2. **The clean reranker edges accuracy but loses coverage.** With the holdout it lands at
-   **0.35–0.39** (edges the two-tower, ties the U10 hybrid 0.362) — but **coverage collapses to
-   ~0.12–0.19** (vs the Unit-6 blend's 0.333). An honest win on accuracy, a real loss on coverage.
-3. **The lift is from CONTENT features, not score-combining.** Ablation: content-only is the *best*
-   reranker; dropping the path scores barely hurts; and **linear ≈ MLP** — the non-linear combiner adds
-   nothing here. A learned ranker wins by seeing *features a single path can't* (content affinity to
-   the reader's history), not by cleverly combining correlated scores.
+1. **Leak #1 — path memorization.** Train the reranker on a reader's train positives as labels, using
+   paths fit on that *same* train, and it scores **~0.28 on val — below plain score-order and below the
+   two-tower (0.340)**. The paths *memorized* those positives, so "high score ⇒ positive" is learned
+   from inflated in-train scores that val candidates never show (distribution shift). The fix is a
+   **time-ordered holdout inside train**.
+2. **Leak #2 — held-out-event inflation (subtle).** Even with the holdout, a *repeat-read* item's
+   held-out event was being counted into the global popularity feature (`log_pop`) of the very items
+   being predicted — a **+0.018 phantom** win (0.364 → 0.346). Counting training popularity from the
+   label-item-excluded profile rows closes it. This second leak is the sharpest teaching moment:
+   "leakage-safe" is an event-level claim, not an item-set one.
+3. **A learned reranker does NOT beat a careful fixed blend here.** With both leaks closed, the
+   all-feature MLP lands at **0.346 — a tie with the 6-way score-order (0.348), ~matching the two-tower
+   (0.340)**; coverage ~0.195 edges the two-tower (0.177) but stays below the Unit-6 blend's 0.333. The
+   only genuine lift is from **CONTENT features** (content-only **0.380** > 0.348); adding the
+   correlated path scores *dilutes* it, and **linear ≈ MLP**. A learned ranker's value is the *content
+   features a single path can't see* and the two-stage *architecture*, not combining correlated scores —
+   and on this data it is not automatically better than a fixed blend.
 
 ## Goals
 
@@ -57,7 +63,7 @@ and reuse it, keeping assembly and evaluation in separate cells.
    the time-ordered holdout; train/register the reranker; read the honest scoreboard (accuracy up,
    coverage down).
 3. **Sitting 3 (~20 min, + Challenges) — what carries the lift.** The feature ablation (content-only vs
-   scores-only), linear vs MLP, and the pool-size/pairwise knobs.
+   scores-only), linear vs MLP, and the pool-size knob (pairwise/BPR is a differentiation stretch, not a shipped exercise).
 
 ## Common mistakes
 
@@ -69,8 +75,10 @@ and reuse it, keeping assembly and evaluation in separate cells.
 - **Expecting the win to come from combining path scores.** It doesn't — content-only is the best
   reranker, and linear ≈ MLP. The lift is content affinity the single paths' calibrated scores don't
   carry across readers.
-- **Reporting the accuracy win while hiding the coverage loss.** The reranker edges hit@10 but drops
-  coverage to ~0.12–0.19 (vs 0.333). Report both; it is a real trade.
+- **Expecting a learned reranker to beat a careful fixed blend.** It does not here — the all-feature
+  MLP (0.346) ~ties the 6-way score-order (0.348). Treating "we added a neural reranker" as an
+  automatic win is exactly the overclaim the leak fix exposed. Report the tie, the content-only lift,
+  and the coverage honestly.
 - **Forgetting the recall ceiling.** The reranker only re-orders the pool — if retrieval didn't propose
   a relevant item, no reranker can surface it. Pool recall (~0.72–0.77) caps hit@k; that is why pool
   size and retrieval quality still matter.
