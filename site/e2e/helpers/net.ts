@@ -16,6 +16,8 @@ export interface Recorded {
   headers: Record<string, string>;
   body: string | null;
   page: string;
+  /** Made by a service worker itself (plan 105: recorded at context level too). */
+  serviceWorker: boolean;
 }
 
 export class Recorder {
@@ -39,6 +41,7 @@ export class Recorder {
         headers: request.headers(),
         body: request.postData(),
         page,
+        serviceWorker: request.serviceWorker() !== null,
       });
     });
     context.on('serviceworker', (worker) => this.serviceWorkers.push(worker.url()));
@@ -97,6 +100,12 @@ export function assertNoNetwork(recorder: Recorder, secrets: string[], options: 
   const release = builtRelease();
   const ownWorkers = new Set([`${origin}/sw.js?r=${release}`, ...(runner ? [`${runner}/sw.js?r=${release}`] : [])]);
   expect(recorder.serviceWorkers.filter((w) => !ownWorkers.has(w)), 'service workers').toEqual([]);
+  // With service workers allowed (playwright.config.ts project `site-sw`), they must really have
+  // run: each origin's own registered, and the recorder saw requests they made themselves.
+  if (base.info().project.use.serviceWorkers === 'allow') {
+    expect([...ownWorkers].filter((w) => !recorder.serviceWorkers.includes(w)), 'service workers that never started').toEqual([]);
+    expect(recorder.requests.some((r) => r.serviceWorker), 'requests made by a service worker').toBe(true);
+  }
   const foreign = recorder.requests.filter((r) => new URL(r.url).origin !== origin && new URL(r.url).origin !== runner).map((r) => `${r.method} ${r.url} (from ${r.page})`);
   expect(foreign, 'requests to another origin').toEqual([]);
   for (const r of recorder.requests) {

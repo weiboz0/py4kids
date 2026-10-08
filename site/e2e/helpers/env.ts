@@ -1,12 +1,16 @@
 /** Where the browser tests find the site, the runner and a Chromium (plans 103 Phase F, 104). */
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { chromium } from '@playwright/test';
 import { resolveOrigins } from '../../../deploy/origins.mjs';
 
 export const SITE = join(import.meta.dirname, '..', '..');
-export const DIST = join(SITE, 'dist');
-export const RUNNER_DIST = join(SITE, '..', 'runner', 'dist');
+// The built dists under test: site/dist/ and runner/dist/, or (plan 105 Phase E) the test-hooks
+// build in its own folder (scripts/hooks-build.ts), named by PY4KIDS_TEST_SITE_DIST and
+// PY4KIDS_TEST_RUNNER_DIST, so a hooks build never replaces the production dists.
+// (A relative path is taken from site/.)
+export const DIST = resolve(SITE, process.env.PY4KIDS_TEST_SITE_DIST ?? 'dist');
+export const RUNNER_DIST = resolve(SITE, process.env.PY4KIDS_TEST_RUNNER_DIST ?? join('..', 'runner', 'dist'));
 
 // Both origins come from deploy/origins.json via deploy/origins.mjs (or PY4KIDS_SITE_ORIGIN /
 // PY4KIDS_RUNNER_ORIGIN): the runner's build bakes the site origin in (frame-ancestors, the parent

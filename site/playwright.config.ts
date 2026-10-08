@@ -25,8 +25,17 @@ export default defineConfig({
   },
   projects: [
     { name: 'site', testMatch: '*.spec.ts', testIgnore: ['lighthouse.spec.ts', 'solvers.spec.ts'] },
+    // The no-network and request-recording proofs again with the service workers ACTIVE on both
+    // origins (plan 105 Phase E): the recorder sees the workers' own requests too (context level),
+    // and each must still be a body-less GET for a file of the release.
+    {
+      name: 'site-sw',
+      testMatch: ['journey.spec.ts', 'recorder.spec.ts', 'isolation.spec.ts', 'progress-io.spec.ts'],
+      grep: /no network|no-network|cannot make a request|export, clear storage, import/,
+      use: { serviceWorkers: 'allow' },
+    },
     // Lighthouse runs last and alone (its performance score is sensitive to CPU contention).
-    { name: 'lighthouse', testMatch: 'lighthouse.spec.ts', dependencies: ['site'], fullyParallel: false },
+    { name: 'lighthouse', testMatch: 'lighthouse.spec.ts', dependencies: ['site', 'site-sw'], fullyParallel: false },
     // Reference-solver parity (plan 104 Phase D), slow and run on its own: `pnpm e2e:solvers`.
     { name: 'solvers-setup', testMatch: 'solvers.setup.ts' },
     { name: 'solvers', testMatch: 'solvers.spec.ts', dependencies: ['solvers-setup'] },

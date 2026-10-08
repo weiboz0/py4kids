@@ -20,6 +20,12 @@ const run = async (fn: () => void | Promise<void>) => {
 
 test('a clean page passes, and each kind of leak fails the no-network assertions', async ({ page, recorder }) => {
   await page.goto('/');
+  // With service workers active (project site-sw), let the site's worker install first, so its own
+  // requests are part of the clean baseline.
+  if (test.info().project.use.serviceWorkers === 'allow') {
+    await page.evaluate(async () => navigator.serviceWorker.ready);
+    await expect.poll(() => recorder.requests.some((r) => r.serviceWorker)).toBe(true);
+  }
   expect(await run(() => assertNoNetwork(recorder, ['zq9secret']))).toBe('');
 
   const clean = recorder.requests.length;

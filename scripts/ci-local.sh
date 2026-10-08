@@ -184,8 +184,12 @@ if [[ "$decision" == render:* ]]; then
   "${SITE_PNPM[@]}" -C site test
   # The Python runner's envelope tests (plan 104; its harness is tested by pytest in step 2).
   "${SITE_PNPM[@]}" -C runner test
-  # Phase F: Playwright end-to-end, axe, the no-network and header proofs, then Lighthouse,
-  # against the built dist/ served by site/scripts/serve.mjs.
+  # Phase F: Playwright end-to-end, axe, the no-network and header proofs (again with the service
+  # workers active: project site-sw), then Lighthouse, against the built dist/ served by
+  # site/scripts/serve.mjs; then the installable, offline site (plan 105 Phase E,
+  # site/playwright.pwa.config.ts: every book offline with both servers stopped, the update path,
+  # installability, axe on the new UI) on dist/, and its hook tests on a PY4KIDS_TEST_HOOKS=1 build
+  # made into build/site-hooks/ (site/scripts/hooks-build.ts), never into the dists.
   "${SITE_PNPM[@]}" -C site e2e
   # Plan 104 Phase D (slow): every reference solver of every `judge: true` book runs in Pyodide through
   # the runner against all its fixtures, and every verdict must equal tools/judge.py's.

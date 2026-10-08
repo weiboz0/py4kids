@@ -9,7 +9,8 @@
  * - with both servers stopped, the downloaded book still opens, and `crossOriginIsolated` is still
  *   true in the site, the runner page and the runner's worker: Python runs from the cached
  *   Pyodide and a hang is stopped by the SharedArrayBuffer interrupt.
- * The full offline and update-path suite is plan 105 Phase E.
+ * The full offline and update-path suite (plan 105 Phase E) is offline.spec.ts (every book),
+ * update.spec.ts and ui.spec.ts.
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -179,7 +180,7 @@ test('offline (both servers stopped): the book opens and crossOriginIsolated hol
   expect(hang.interrupts).toBe('sab');
 });
 
-test('the update-handshake test hooks exist only in a test build (PY4KIDS_TEST_HOOKS=1)', async ({ page, servers: _ }) => {
+test('the update-handshake test hooks exist only in a test build (PY4KIDS_TEST_HOOKS=1)', { tag: '@hooks' }, async ({ page, servers: _ }) => {
   await page.goto('/');
   await page.evaluate(async () => navigator.serviceWorker.ready);
   const hooks = await page.evaluate(() => {
@@ -196,7 +197,7 @@ test('the update-handshake test hooks exist only in a test build (PY4KIDS_TEST_H
   }
 });
 
-test('test hooks: a download stopped midway (servers down) confirms nothing', async ({ page, servers }) => {
+test('test hooks: a download stopped midway (servers down) confirms nothing', { tag: '@hooks' }, async ({ page, servers }) => {
   test.skip(process.env.PY4KIDS_TEST_HOOKS !== '1', 'needs a build with PY4KIDS_TEST_HOOKS=1');
   await page.goto(`/${BOOK}/`);
   const panel = page.locator('[data-offline-book]');
