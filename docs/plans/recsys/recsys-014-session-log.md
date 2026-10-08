@@ -125,18 +125,20 @@ stop rule fired, so no freeze and no one-shot run happened, and the committed se
 **User decision (AskUserQuestion, 2026-10-08): "Reframe: order paths + SASRec tie".** U12 teaches order-awareness
 with the last-k and transition paths. SASRec is a measured near-tie: it learns order, but at the §7 ceiling it does
 not beat CF, the same honest framing as U11. Consequent amendments:
-- **Goal 4 (amended).** Post-freeze, on ≥ 2 of the 3 held-out seeds 2–4:
+- **Goal 4 (amended).** Post-freeze, **both G4a and G4c must pass on each of at least two** of the 3 held-out seeds
+  2–4 (the same seeds for both):
   - **G4a (required).** Ordered − shuffled ≥ 2 paired SE (one-sided) and ≥ 0.02 absolute.
   - **G4b (reported, not required).** Ordered ≥ bag − 1 SE. The ordered − bag gap is reported with its paired SE and
     95% CI.
-  - **G4c non-inferiority (required; v5 r5).** `sasrec_ordered ≥ bag_cf − 0.04` hit@10. This is the predeclared
+  - **G4c non-inferiority (required; v5 r5).** `sasrec_ordered ≥ bag_cf − 0.04` hit@10 (point estimate; the paired SE and CI are reported, not gated). This is the predeclared
     "near-tie" margin: about 3 SE and about 9% relative at bag ≈ 0.45. The round-3 V1 tuning gaps were −0.017 and
     −0.025. Only if G4c passes may U12 and design §6 say "near-tie". If G4a passes but G4c fails, the claim would be
     "learns order but underperforms CF", which is not what the user approved, so the stop rule pauses.
   The G4 tuning subcriterion becomes G4a + G4c on both tuning seeds; V1 meets both. Round 3's V1 (1,500 readers, dropout 0.3, weight decay 1e-5, 150 epochs) already meets G3a–G3d + G4a on
   seeds 0–1, so **no further tuning rounds**: freeze V1 and run the one-shot evaluation.
 - **Stop rule (unchanged otherwise).** If the one-shot run fails any G3 gate at the committed seed, the G3 held-out
-  robustness rule, or G4a or G4c on ≥ 2/3 of seeds 2–4, pause again without retuning.
+  robustness rule, or the joint G4a + G4c condition (both passing on the same ≥ 2 of seeds 2–4), pause again
+  without retuning.
 - **Pre-registered report.** The one-shot run reports the following for each held-out seed, whatever the outcome, so
   that any re-pause can be decided without another measurement round:
   - ordered, shuffled and bag hit@10;
@@ -153,7 +155,7 @@ not beat CF, the same honest framing as U11. Consequent amendments:
   (§7). Generation measured 19–20 s, but with eight fits running in parallel; a standalone run is expected to take
   about 10–13 s. The standalone time is measured once and reported. **Hard cap: 30 s standalone** (CI budget). The
   15 s figure is a target, not a gate, because data size is not tuned to a timer; above 30 s, pause. SASRec fit time
-  at V1 is about 4 min standalone (535–686 s under contention), measured in the one-shot run. It is recorded as a
+  at V1 is about 4 min standalone, an estimate from 535–686 s measured under contention, **to be measured** in the one-shot run. It is recorded as a
   **recsys-015 constraint**:
   U12's notebooks must use cached or seeded short fits within the book's per-notebook budget, and that is decided in
   recsys-015, not here.
@@ -194,7 +196,7 @@ Per session reader: latent taste + genre prefs (same distributions as the main r
    multiplied by `session_author_decay` (~0.5) each session.
 3. **Persistent genre mood** — per-session mood genre kept with probability `session_mood_persist` (~0.85–0.9),
    exposure boost `session_mood_boost` (~3–5) on that genre.
-4. **Length** — `session_n_readers` (~1000), `session_mean_sessions` (~16–18), `session_max_items` (~5), 2 sampled
+4. **Length** — `session_n_readers` (~1000 start; **frozen at 1500**, v5 R3-V1), `session_mean_sessions` (~16–18), `session_max_items` (~5), 2 sampled
    negatives per positive (main-log convention).
 All knobs in `DatasetConfig` with the `session_` prefix, validated in `__post_init__`. **Seeds:** the catalog,
 keywords and series are always generated at the committed `seed`; the session sub-stream uses
@@ -214,6 +216,9 @@ wall-time delta** (new tests ≤ +60 s against the design §7 whole-book ≤ 15 
 stop rule.
 
 ## Phase C — harness + tests (Opus subagent; numpy only)
+- The `_reference_recommenders.py` / `gen_sessions.py` docstrings note that the harness and the U12 sequence path
+  consume **positives only**. The log's sampled negatives are kept for schema parity with the main log, and a
+  negative that collides with the positive is dropped, not resampled.
 - `recsys/data/_reference_recommenders.py`: add `popularity`, `bag_cf`, `lastk_cf`, `lastk_transition`,
   `last1_transition` over ordered train-positive sequences, the shuffled control, `next_in_series_cohort`, and a
   shared `ordered_train_sequences(path)` loader implementing the Goal-3 ordering key.
@@ -288,8 +293,16 @@ Phase G is this plan's named verification phase.
   - F: negative-sampling drop note → fold into the Phase C docstring.
   - G4a risk at held-out seeds estimated at ~15–30% re-pause; handled by the stop rule.
 
-### Round 6 (plan v5.1)
-<!-- appended after re-gate -->
+### Round 6 (plan v5.1 @ d46e2e8) — CONSENSUS
+- **[self]** APPROVE.
+- **[sol]** APPROVE WITH NITS. r5 blocker RESOLVED. Nit: the joint condition was ambiguous → "both G4a and G4c pass on
+  each of ≥ 2 held-out seeds (the same seeds)". Nit: design §6 overgeneralized the tuning evidence → the §6 sentence
+  now labels it as tuning-seed evidence, and the framing ships only after the held-out gate passes.
+- **[fable]** APPROVE WITH NITS. A–E RESOLVED; F' (negative-sampling note) → Phase C bullet added. Margin 0.04 judged
+  non-vacuous: it separates 7/10 rejected 1000-reader fits from V1, and the estimated held-out failure is ≈ 1–2%.
+  The four nits were folded: G4c tested on the point estimate; the joint seed rule (same as [sol]); "to be measured"
+  tense; Phase B `session_n_readers` frozen at 1500.
+**Gate result:** all three APPROVE / APPROVE WITH NITS, with no open blockers. The freeze + one-shot run may proceed.
 
 ### Round 4 (plan v4 @ 8f5a06a) — CONSENSUS
 - **[self]** APPROVE.
