@@ -111,10 +111,10 @@ class DatasetConfig:
     # --- U12 session log (plan recsys-014; ``sessions.csv.gz``, SUBSTREAM_SESSIONS) --------------
     # ``session_seed`` varies ONLY the session log (the catalog/keywords/series stay at ``seed``);
     # None means the committed ``seed``. The session readers are a separate synthetic population.
-    # Defaults are the Phase-B round-1 knobs (G3 order gates pass on tuning seeds 0-1); they are
-    # NOT yet frozen — the Goal-4 SASRec stop rule fired, so freezing awaits the U12 decision.
+    # Defaults are the Phase-B round-1 knobs with 1,500 readers (round-3 variant V1); they are
+    # frozen (recsys-014 v5, R3-V1).
     session_seed: int | None = None
-    session_n_readers: int = 1000
+    session_n_readers: int = 1500
     session_mean_sessions: float = 16.0  # Poisson mean sessions per reader (floored at min below)
     session_min_sessions: int = 6
     session_max_items: int = 5  # exposure slots per session drawn uniformly from 1..max
