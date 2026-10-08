@@ -23,11 +23,14 @@ User goal, 2026-10-06: "non stop until full working learning website".
 - **Privacy is unchanged:**
   - The service workers make no requests beyond the files the user asked to cache.
   - There are no push notifications, background sync or analytics.
-  - The no-network and request-recording tests from parts B and C extend to the service workers.
-- **Updates:**
-  - A new release changes the content hash, so the cache name includes the book's `release.content_hash`.
-  - On activation, old caches for that book are removed.
-  - The UI offers "a new version is available — reload", and never updates mid-lesson.
+  - **Service-worker requests are recorded too.** Requests made by a service worker do not reach `page.on('request')`, so the tests record at context level (`browserContext.on('request')`, with Playwright's service-worker network events enabled) on both origins. Every request during browsing, precache and update must be on the allowlist: the files the user asked to cache, or the release's own files. Each one is a body-less GET.
+- **Release identity and updates.**
+  - **`release_id`:** the build computes it as a sha256 over the **complete** asset manifests of both origins: every file in `site/dist/` and `runner/dist/`, the Pyodide runtime included. It covers site code, runner code, Pyodide and content. A change to any of them is a new release.
+  - **Cache names:** `site-<release_id>`, `runner-<release_id>` and `book-<book>-<release_id>`.
+  - **Precache requests** carry `release_id`, and the runner refuses a mismatched one.
+  - **A cache is confirmed only after it is fully populated** (`cache.addAll`, which is all-or-nothing). "Available offline" means both origins confirmed the same `release_id`.
+  - **Activation is user-controlled:** a new worker stays *waiting* (no `skipWaiting` on install). An open lesson keeps running on the old release's caches until the user accepts "a new version is available — reload". Only then does the new worker activate (`skipWaiting` on that message). Old caches are deleted in `activate`, after the old clients are gone.
+  - Downloaded books are re-downloaded for the new release in the background, and their status reads "updating" until confirmed.
 - **Hidden answers stay hidden:** caching copies only files already in `dist/`. The part B and C leak tests are rerun on the cached file list.
 
 ## Phases
@@ -45,8 +48,16 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - Test: offline, `crossOriginIsolated` is still true in the runner and its worker.
 - **Phase C: export and import progress.**
   - "Export my progress" writes a JSON file of D11 events plus Leitner state and resume positions. It contains no attempt store (code stays on the device unless the user exports attempts separately, with a clear label).
-  - "Import" validates the file against the schemas and merges by `event_id` (idempotent).
-  - Tests: export → clear storage → import restores the mastery map and resume; a malformed file is rejected with a message.
+  - **Deterministic import merge**, after validating the file against the schemas:
+    - **events:** union by `event_id`
+    - **cards:** per card key, keep the record with the later `updated_at` (every card record now stores `updated_at`); a tie keeps the local record
+    - **resume:** per book, the later `updated_at`
+  - Importing the same file twice changes nothing after the first import. Importing an older file never regresses newer local state.
+  - Tests:
+    - export → clear storage → import restores the mastery map and resume
+    - importing the same file twice into an **existing, newer** store leaves it byte-for-byte unchanged (event count, card boxes, resume)
+    - importing an older export keeps the newer card boxes
+    - a malformed file is rejected with a message
 - **Phase D: deploy configuration (no deploy).**
   - Contents:
     - **Pages projects:** `deploy/README.md` and `deploy/wrangler.toml` (two Pages projects: `py4kids` for the site, `py4kids-run` for the runner, custom domains as placeholders)
@@ -62,7 +73,11 @@ User goal, 2026-10-06: "non stop until full working learning website".
     4. reload again offline: progress persists
 
     This is the D10 test design 012 §3 requires: it runs code and checks an exercise, not only reads.
-  - **Update path:** build release A, cache it, build release B, and confirm the reload prompt and that the old caches are gone.
+  - **Update path:**
+    1. build release A, download a book and open a lesson
+    2. deploy release B (changing only runner code, so the bundle hash is unchanged but `release_id` differs)
+    3. the open lesson keeps running and checking code on A's caches, and the prompt appears
+    4. accept: B activates, A's caches are gone, and the book re-downloads and confirms under B
   - **Requests:** the no-network and request-recording suites with the service workers active.
   - **Accessibility and performance:** Lighthouse PWA installability checks, and axe on the new UI.
   - The parts B and C suites still pass.
@@ -78,6 +93,13 @@ User goal, 2026-10-06: "non stop until full working learning website".
 - Any deploy without explicit user confirmation.
 
 ## Plan Review
+
+### Round 1 (8a4d3e6)
+
+- `[sol]` **REJECT** (gpt-6-sol):
+  - `[FIXED]` Release identity: a `release_id` over both origins' complete assets, versioned cache names, the id bound to precache, confirmation only when fully populated, user-controlled activation, and an update test with an open lesson.
+  - `[FIXED]` Service-worker requests recorded at context level against an allowlist, during browsing, precache and update.
+  - `[FIXED]` Deterministic import merge for cards (`updated_at`) and resume, with re-import and older-file tests.
 
 ## Content Review
 
