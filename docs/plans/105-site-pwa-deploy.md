@@ -35,7 +35,9 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - There are no push notifications, background sync or analytics.
   - **Service-worker requests are recorded too.** Requests made by a service worker do not reach `page.on('request')`, so the tests record at context level (`browserContext.on('request')`, with Playwright's service-worker network events enabled) on both origins. Every request during browsing, precache and update must be on the allowlist: the files the user asked to cache, or the release's own files. Each one is a body-less GET.
 - **Release identity and updates.**
-  - **`release_id`:** the build computes it as a sha256 over the **complete** asset manifests of both origins: every file in `site/dist/` and `runner/dist/`, the Pyodide runtime included. It covers site code, runner code, Pyodide and content. A change to any of them is a new release.
+  - **`release_id`** (no circularity): the build computes it as a sha256 over the sorted `(path, sha256(bytes))` list of every file in `site/dist/` and `runner/dist/`, the Pyodide runtime included, **except the one generated file that carries the id**: `release.json`, in each dist.
+    - No other file embeds the id. The service-worker scripts are byte-identical across releases unless their code changed; each page registers its worker as `/sw.js?r=<release_id>`, read from `/release.json` fetched with `cache: "no-store"`, so a new id is a new script URL and the browser installs the new worker.
+    - A test rebuilds unchanged inputs and gets the same id, recomputes the id from the emitted files to match `release.json`, and changes one runner file to get a different id.
   - **Cache names**, three kinds per origin:
     - app shell: `shell-<release_id>`
     - the Pyodide runtime: `pyodide-0.27.8`, keyed by version and shared by all books
@@ -48,7 +50,11 @@ User goal, 2026-10-06: "non stop until full working learning website".
     - Book files are fetched **in chunks** into the final `book-<book>-<content_hash>` cache, which feeds the progress bar, and the record is written **only at the end**. On worker start, any `book-*` cache without a confirmed record is deleted. That keeps all-or-nothing atomicity without one huge `addAll`.
     - "Available offline" means both origins hold confirmed records for the book with the same `release_id`.
   - **`activate` deletes only non-current `shell-*` and `pyodide-*` caches, never `book-*`.** On an update where a book's `content_hash` is unchanged, "re-download" is a manifest verification (every listed URL is present in the cache) that re-stamps the record with the new `release_id`, not a refetch. A changed `content_hash` downloads into a new cache and deletes the old one after confirmation.
-  - **Activation is user-controlled:** a new worker stays *waiting* (no `skipWaiting` on install). An open lesson keeps running on the old release's caches until the user accepts "a new version is available — reload". Only then does the new worker activate (`skipWaiting` on that message). Old caches are deleted in `activate`, after the old clients are gone.
+  - **Activation is user-controlled and safe for every open page:**
+    - A new worker stays *waiting* (no `skipWaiting` on install). Each open A page keeps running on A's shell and Pyodide caches, including booting **fresh exercise workers** from them.
+    - "A new version is available — reload" activates B only when the reloading page is the site worker's **only** client (`clients.matchAll`). Otherwise it says "close your other py4kids tabs to update", and B waits.
+    - **Both origins move together:** the site worker, on activation, messages the runner iframe `{type: "activate", release_id}`. The runner's waiting worker activates under the same only-client rule; the runner's clients are the iframes of site pages, which are gone by then.
+    - Old `shell-*` and `pyodide-*` caches are deleted in `activate`, which by construction runs only after A's clients have closed.
   - Downloaded books are re-downloaded for the new release in the background, and their status reads "updating" until confirmed.
 - **Size and count.**
   - Per-book downloads, measured on real bundles:
@@ -113,8 +119,8 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - **Update path:**
     1. build release A, download a book and open a lesson
     2. deploy release B (changing only runner code, so the bundle hash is unchanged but `release_id` differs)
-    3. the open lesson keeps running and checking code on A's caches, and the prompt appears
-    4. accept: B activates, and A's shell cache is gone; the book (unchanged `content_hash`) is verified and re-confirmed under B without refetching; a second scenario with changed content downloads the book into a new cache and removes the old one only after confirmation
+    3. the open lesson keeps running and checking code on A's caches (a **fresh exercise worker boots** during the pending update), and the prompt appears; with a second A tab open, accepting asks to close it, and B stays waiting
+    4. accept: B activates, and A's shell cache is gone; the book (unchanged `content_hash`) is verified and re-confirmed under B without refetching; a second scenario with changed content downloads the book into a new cache and removes the old one only after confirmation; a download **interrupted** or **failed** midway (the server stopped during the chunks) leaves A's book cache and confirmed record intact, and the partial new cache is swept on the next worker start
   - **Requests:** the no-network and request-recording suites with the service workers active.
   - **Accessibility and performance:** Lighthouse PWA installability checks, and axe on the new UI.
   - The parts B and C suites still pass.
@@ -152,6 +158,11 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `[FIXED]` Confirmation is a `{book, content_hash, release_id}` record; `activate` never deletes `book-*` caches; an unchanged content hash means verify and re-stamp.
   - `[FIXED]` Chunked fetches with the record written at the end, and unconfirmed caches swept on worker start.
   - `[FIXED]` Formatting.
+
+- `[sol]` **REJECT** (round 2, e8821d0):
+  - `[FIXED]` A circular `release_id`: it now covers every dist file except `release.json` (which carries it); workers are registered by `?r=<release_id>`; a reproducibility test.
+  - `[FIXED]` `skipWaiting` with clients open: B activates only when the reloading page is the sole client, coordinated across both origins via an `activate` message; a fresh exercise worker boots in an open A lesson during a pending update; the second-tab case is tested.
+  - `[FIXED]` Book replacement: already folded in cd8540a (an unchanged content hash is verified and re-stamped, never refetched in place; a changed hash downloads into a new cache), plus interrupted and failed download tests.
 
 ## Content Review
 
