@@ -18,6 +18,9 @@ export default defineConfig({
     baseURL: BASE_URL,
     browserName: 'chromium',
     launchOptions: { executablePath: chromiumPath() },
+    // These suites were written for pages without a service worker; the installable, offline site
+    // (plan 105) has its own suite with workers on and servers it can stop (playwright.pwa.config.ts).
+    serviceWorkers: 'block',
     trace: 'off',
   },
   projects: [

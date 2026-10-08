@@ -5,24 +5,36 @@
  * and this site's own origin (the projections and files).
  */
 
-import { connectRunner, RunnerUnavailableError, type ResultReply, type RunFile, type RunnerClient } from '../lib/runner-client';
+import { connectRunner, RunnerUnavailableError, RunnerVersionError, type ResultReply, type RunFile, type RunnerClient } from '../lib/runner-client';
 import type { ClientFile, Segment } from '../lib/check-model';
 import { turtleSvg } from '../lib/turtle';
 
+let connected: RunnerClient | null = null;
 let connecting: Promise<RunnerClient> | null = null;
 let booted = false;
 
 /** Is Python already booted on this page? (The UI then says "Running…" and not "Starting…".) */
 export const runnerBooted = () => booted;
 
-/** The page's runner client, connected and booted; rejects with `RunnerUnavailableError`. */
-export function runner(): Promise<RunnerClient> {
-  connecting ??= (async () => {
+/**
+ * The page's one runner client, connected but not necessarily booted (plan 105: a download's
+ * `precache` and the update handshake need the runner page, not Python).
+ */
+export function runnerConnection(): RunnerClient {
+  if (!connected) {
     const holder = document.createElement('div');
     holder.className = 'runner-holder';
     holder.hidden = true;
     document.body.append(holder);
-    const { client } = connectRunner(holder);
+    connected = connectRunner(holder).client;
+  }
+  return connected;
+}
+
+/** The page's runner client, connected and booted; rejects with `RunnerUnavailableError`. */
+export function runner(): Promise<RunnerClient> {
+  connecting ??= (async () => {
+    const client = runnerConnection();
     await client.ping();
     booted = true;
     return client;
@@ -138,11 +150,16 @@ export function runOutput(result: ResultReply, options: { drawingLabel: string }
 }
 
 /** The "Python is unavailable" message, with a reload button. */
-export function unavailable(region: HTMLElement): void {
+export function unavailable(region: HTMLElement, error?: unknown): void {
   region.replaceChildren();
   const box = el('div', 'runner-unavailable');
   box.setAttribute('role', 'alert');
-  box.append(el('p', undefined, 'Python is not available right now, so this cannot run. Reloading the page usually fixes it.'));
+  // Version skew (plan 105): this page and the Python runner are different releases.
+  const text =
+    error instanceof RunnerVersionError
+      ? 'Python was updated to a new version of the site. Reload the page to use it.'
+      : 'Python is not available right now, so this cannot run. Reloading the page usually fixes it.';
+  box.append(el('p', undefined, text));
   const reload = el('button', 'button', 'Reload the page');
   reload.type = 'button';
   reload.addEventListener('click', () => location.reload());

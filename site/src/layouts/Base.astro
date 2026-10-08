@@ -12,6 +12,7 @@ import { getBooks, type LoadedBook } from '../lib/bundle';
 import { releaseTag } from '../lib/catalog';
 import { pageContext, pageDataAttributes } from '../lib/page-context';
 import ProgressIsland from '../components/ProgressIsland.astro';
+import PwaIsland from '../components/PwaIsland.astro';
 
 interface Props {
   /** The page's own title; the site name is appended. */
@@ -48,6 +49,7 @@ const bodyData = pageDataAttributes(book ? pageContext(book, Astro.url.pathname)
     <ProgressIsland />
     <a class="skip-link" href="#main">Skip to content</a>
     <Header books={books} current={book?.id} />
+    <PwaIsland />
     <main id="main">
       <slot />
     </main>

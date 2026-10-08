@@ -6,10 +6,15 @@
  *   2. release-specific asset URLs: content-hashed root assets and Pagefind folder
  *      (scripts/fingerprint.ts)
  *   3. one "download this book" manifest per book in `_offline/` (scripts/offline-manifest.ts)
- *   4. the check that only HTML pages, `release.json`, `sw.js` and the books' files keep
+ *   4. the site's service worker, src/sw.ts, bundled to `dist/sw.js` (a classic script; its name
+ *      is stable and its bytes change only with its code)
+ *   5. the check that only HTML pages, `release.json`, `sw.js` and the books' files keep
  *      stable names
+ *
+ * PY4KIDS_TEST_HOOKS=1 is a test build (plan 105 Phase E hooks); the worker itself has none.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { build } from 'esbuild';
 import { dirname, join, resolve } from 'node:path';
 import { fingerprint, releaseSpecificViolations } from './fingerprint.ts';
 import { bookDirs, writeBookManifests } from './offline-manifest.ts';
@@ -25,6 +30,16 @@ export async function pwaBuild(dist: string): Promise<void> {
   }
   fingerprint(dist, ICONS.map((i) => i.path));
   const manifests = writeBookManifests(dist);
+  const sw = await build({
+    entryPoints: [join(SITE, 'src', 'sw.ts')],
+    bundle: true,
+    format: 'iife',
+    target: 'es2023',
+    minify: true,
+    legalComments: 'none',
+    write: false,
+  });
+  writeFileSync(join(dist, 'sw.js'), sw.outputFiles[0]!.text);
   const stable = releaseSpecificViolations(dist, bookDirs(dist));
   if (stable.length > 0) throw new Error(`pwa-build: stable-named assets outside the books: ${stable.join(', ')}`);
   for (const m of manifests) console.log(`pwa-build: ${m.book}: ${m.count} files, ${(m.bytes / 1e6).toFixed(1)} MB`);

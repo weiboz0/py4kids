@@ -58,6 +58,23 @@ describe.skipIf(!built)('site/dist', () => {
     }
   });
 
+  it.skipIf(process.env.PY4KIDS_TEST_HOOKS === '1')('ships no test hooks (plan 105: they exist only in a PY4KIDS_TEST_HOOKS=1 build)', () => {
+    for (const file of all.filter((f) => f.endsWith('.js'))) expect(read(file).includes('__py4kidsPwaTest'), rel(file)).toBe(false);
+  });
+
+  it.skipIf(!existsSync(join(DIST, 'release.json')))('ships the service worker, release.json and a download manifest per book (plan 105)', () => {
+    expect(existsSync(join(DIST, 'sw.js'))).toBe(true);
+    const release = JSON.parse(read(join(DIST, 'release.json'))) as { release_id: string; books: Record<string, { manifest: string; content_hash: string }> };
+    expect(release.release_id).toMatch(/^[0-9a-f]{64}$/);
+    expect(Object.keys(release.books).length).toBeGreaterThan(0);
+    for (const [book, summary] of Object.entries(release.books)) {
+      const manifest = JSON.parse(read(join(DIST, summary.manifest))) as { book: string; content_hash: string; files: { url: string }[] };
+      expect(manifest.book).toBe(book);
+      expect(manifest.content_hash).toBe(summary.content_hash);
+      expect(manifest.files.some((f) => f.url === `/${book}/`)).toBe(true);
+    }
+  });
+
   it('ships no bundle JSON', () => {
     expect(all.filter((f) => f.endsWith('book.json') || /[\\/]entries[\\/][^\\/]+\.json$/.test(f)).map(rel)).toEqual([]);
   });

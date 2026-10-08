@@ -1,0 +1,23 @@
+---
+/**
+ * The installable, offline site's notices (plan 105 Phase A), on every page through the layout:
+ * "you are offline", "a new version is available — reload" (the page-mediated update handshake)
+ * and "install py4kids". The script registers the service worker (src/scripts/pwa.ts).
+ */
+import '../styles/pwa.css';
+---
+<div class="pwa-bar" data-pwa>
+  <p class="pwa-notice" data-pwa-offline role="status" hidden>You are offline. Books you downloaded still work.</p>
+  <div class="pwa-notice" data-pwa-update role="status" hidden>
+    <p data-pwa-update-text>A new version of py4kids is available.</p>
+    <button type="button" class="button button-primary" data-pwa-update-accept>Reload to update</button>
+  </div>
+  <div class="pwa-notice" data-pwa-install hidden>
+    <p>Install py4kids on this device to open it like an app.</p>
+    <button type="button" class="button" data-pwa-install-button>Install</button>
+    <button type="button" class="button" data-pwa-install-dismiss>Not now</button>
+  </div>
+</div>
+<script>
+  import '../scripts/pwa.ts';
+</script>

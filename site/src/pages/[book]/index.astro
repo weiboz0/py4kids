@@ -11,6 +11,7 @@ import { getBooks, type LoadedBook } from '../../lib/bundle';
 import { bookPage, cardsHref } from '../../lib/book-page';
 import MasteryMap from '../../components/MasteryMap.astro';
 import ResumeLink from '../../components/ResumeLink.astro';
+import OfflineBook from '../../components/OfflineBook.astro';
 import { deckSummary } from '../../lib/cards';
 
 export const getStaticPaths = (() =>
@@ -76,6 +77,8 @@ const tools = [
       </ul>
     </section>
   )}
+
+  <OfflineBook book={book.id} />
 
   <MasteryMap book={book} />
 </Base>

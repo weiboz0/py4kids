@@ -42,6 +42,9 @@ export default defineConfig({
     define: {
       'import.meta.env.PY4KIDS_RUNNER_ORIGIN': JSON.stringify(runnerOrigin),
       'import.meta.env.PY4KIDS_ORIGIN_PAIRS': JSON.stringify(originPairs),
+      // Plan 105 Phase E's test-only service-worker hooks: true only for PY4KIDS_TEST_HOOKS=1 (the
+      // minifier drops the hook code otherwise; scripts/build-release.sh refuses such a build).
+      'import.meta.env.PY4KIDS_TEST_HOOKS': JSON.stringify(process.env.PY4KIDS_TEST_HOOKS === '1'),
     },
     build: {
       // Never inline a script or asset as a data: URL or inline <script>.

@@ -1,0 +1,12 @@
+---
+/**
+ * `/offline/` (plan 105 Phase A): what the service worker shows for a page that is not stored on
+ * this device while the network is unreachable. Part of the app shell.
+ */
+import Base from '../layouts/Base.astro';
+---
+<Base title="Offline" description="This page is not stored on this device.">
+  <h1>You are offline</h1>
+  <p>This page is not stored on this device, and the network cannot be reached.</p>
+  <p>Books you downloaded with “Download this book” still work: open them from the <a href="/">catalog</a>.</p>
+</Base>

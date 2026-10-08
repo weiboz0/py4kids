@@ -340,7 +340,7 @@ async function onCheck(ctx: ItemContext): Promise<void> {
     );
     await addAttempt(ctx, { kind: 'check', code, result: outcome });
   } catch (error) {
-    if (isUnavailable(error)) unavailable(ctx.result);
+    if (isUnavailable(error)) unavailable(ctx.result, error);
     else {
       warn(error);
       status(ctx, 'Something went wrong while checking. Try again, or reload the page.');
@@ -375,7 +375,7 @@ async function onRun(ctx: ItemContext): Promise<void> {
     ctx.result.replaceChildren(...parts);
     await addAttempt(ctx, { kind: 'run', code, result: result.status === 'ok' ? 'done' : 'error' });
   } catch (error) {
-    if (isUnavailable(error)) unavailable(ctx.result);
+    if (isUnavailable(error)) unavailable(ctx.result, error);
     else {
       warn(error);
       status(ctx, 'Something went wrong while running. Try again, or reload the page.');

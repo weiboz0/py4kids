@@ -2,8 +2,11 @@
 # The strict CSP: no inline scripts or styles, nothing from another origin; 'wasm-unsafe-eval'
 # is for Pagefind's WebAssembly. The one exception is frame-src: the Python runner's iframe
 # (plan 104, D7) on its own origin, which astro.config.mjs fills in for {{RUNNER_ORIGIN}} from
-# runner/origins.json (or PY4KIDS_RUNNER_ORIGIN). COOP/COEP make the site cross-origin isolated,
-# as the runner's SharedArrayBuffer interrupts need.
+# deploy/origins.json (every runner origin the build accepts; plan 105). COOP/COEP make the site
+# cross-origin isolated, as the runner's SharedArrayBuffer interrupts need.
+# The service worker (/sw.js) and the web app manifest (plan 105) need no new directive:
+# worker-src falls back to script-src 'self' and manifest-src to default-src 'self'; the worker's
+# own fetches are same-origin (default-src 'self'). The `/*` rule covers /sw.js too.
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self'; frame-src {{RUNNER_ORIGIN}}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'
   Cross-Origin-Opener-Policy: same-origin

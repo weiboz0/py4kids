@@ -4,7 +4,7 @@
  * from a blocked call must still fail), with its method, URL, headers and body. WebSockets,
  * beacons and service workers are recorded too.
  */
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { test as base, expect, type BrowserContext, type Page } from '@playwright/test';
 import { BASE_URL, DIST, RUNNER_DIST, RUNNER_URL } from './env';
@@ -51,10 +51,23 @@ export class Recorder {
   }
 }
 
-/** The only query strings a same-origin request may carry: Pagefind's own cache-buster. */
+/**
+ * The only query strings a same-origin request may carry: Pagefind's own cache-buster, and the
+ * service worker's release (`/sw.js?r=<release_id>`, plan 105).
+ */
 export function allowedQuery(url: URL): boolean {
   if (url.search === '') return true;
+  if (url.pathname === '/sw.js') return /^\?r=[0-9a-f]{64}$/.test(url.search);
   return url.pathname.startsWith('/pagefind/') && /^\?ts=\d+$/.test(url.search);
+}
+
+/** The release both dists were built as (their release.json), or null before plan 105's build step. */
+function builtRelease(): string | null {
+  try {
+    return (JSON.parse(readFileSync(join(DIST, 'release.json'), 'utf-8')) as { release_id: string }).release_id;
+  } catch {
+    return null;
+  }
 }
 
 /** The `dist/` file a same-origin path is served from, or null. */
@@ -80,7 +93,10 @@ export function assertNoNetwork(recorder: Recorder, secrets: string[], options: 
   const runner = options.runner ? new URL(RUNNER_URL).origin : null;
   expect(recorder.requests.length, 'requests were recorded').toBeGreaterThan(0);
   expect(recorder.sockets, 'WebSockets').toEqual([]);
-  expect(recorder.serviceWorkers, 'service workers').toEqual([]);
+  // Service workers (plan 105): only each origin's own, for the built release.
+  const release = builtRelease();
+  const ownWorkers = new Set([`${origin}/sw.js?r=${release}`, ...(runner ? [`${runner}/sw.js?r=${release}`] : [])]);
+  expect(recorder.serviceWorkers.filter((w) => !ownWorkers.has(w)), 'service workers').toEqual([]);
   const foreign = recorder.requests.filter((r) => new URL(r.url).origin !== origin && new URL(r.url).origin !== runner).map((r) => `${r.method} ${r.url} (from ${r.page})`);
   expect(foreign, 'requests to another origin').toEqual([]);
   for (const r of recorder.requests) {
@@ -91,7 +107,7 @@ export function assertNoNetwork(recorder: Recorder, secrets: string[], options: 
     expect(r.resourceType, `${what}: beacon`).not.toBe('ping');
     if (url.origin === runner) {
       expect(distFile(url.pathname, RUNNER_DIST), `${what}: not a file in runner/dist/`).not.toBeNull();
-      expect(url.search, `${what}: query string`).toBe('');
+      expect(allowedQuery(url) && !url.pathname.startsWith('/pagefind/'), `${what}: query string`).toBe(true);
     } else {
       expect(distFile(url.pathname), `${what}: not a file in dist/`).not.toBeNull();
       expect(allowedQuery(url), `${what}: query string`).toBe(true);
