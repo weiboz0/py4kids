@@ -55,18 +55,25 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `runner/index.html` is the iframe page.
   - `runner/src/worker.ts` loads Pyodide, keeps one namespace per `session` (a lesson), and executes requests.
   - It builds to `runner/dist/` with its own `_headers`.
+- **Pyodide version:** pinned to the release whose CPython minor equals the CI interpreter's (the repo's `requires-python` floor). The plan's Phase A names the exact version, and the runner's About line shows the Python version.
 - **The Python side of the worker** (`runner/py/harness.py`, loaded into Pyodide). Per request it:
-  - sets up stdin (an `io.StringIO`; `input()` reads from it, and EOF raises `EOFError` as in CPython)
-  - writes the mounted `files` into a per-request directory and `chdir`s there
+  - sets up stdin (an `io.StringIO`; `input()` reads from it, and EOF raises `EOFError` as in CPython; the contest code uses `sys.stdin.read*` (407 uses) and `input()` (229); `open(0)` and `stdin.buffer` do not occur)
+  - **working directory:** one per `session`, so a lesson keeps the files its cells write (python-projects unit 09 writes a save file and reads it later); "Reset" recreates it. Each check gets a fresh directory. The mounted `files` are written there.
+  - **turtle:** installs the `fake_turtle` port as `turtle` for **every** run whose source imports turtle (`imports_turtle`), because Pyodide ships no tkinter; the turtle rule applies only to items with `turtle: true`
+  - **per fixture case:** stdout and stderr are drained, and user modules are cleared from `sys.modules`; empty stdout is reported as "no output", as `tools/judge.py` does
   - captures stdout and stderr
   - for `fixtures`, runs the program once per case in a fresh namespace and compares with `outputs_match` (line-exact for `acsl` books, token-based otherwise), ported verbatim from `tools/judge.py`
   - for `asserts`, runs the student's code, then each shipped assert in that namespace separately, catching `AssertionError` and other errors per assert, and reports pass/fail per assert (never the source)
   - for turtle items, installs `fake_turtle` (the browser port of `tools/fake_turtle.py`) as `turtle` and applies the three-part rule: at least one pen-down move; fewer than 10,000 moves; a closed path unless `# turtle-check: open-path`. It returns the segments, so the site can draw them.
 - **Hashing checks** (`answer`, `predict`, `expected-output`) run in the **site**, with no student code needed: the site normalises the typed answer, or for `expected-output` the runner's stdout of the student's program, with part B's `normalise.ts` (now covering `aliases` and `whitespace`), then compares `answerHash` with `check.hash`. For `expected-output`, the runner runs the student's code; the site compares the stdout hash.
-- **Interrupts:** the site allocates a `SharedArrayBuffer` interrupt buffer and passes it to Pyodide's `setInterruptBuffer`.
-  - On budget expiry, the site sets the buffer: Pyodide raises `KeyboardInterrupt`, reported as "time limit".
-  - If `crossOriginIsolated` is false, the site terminates and restarts the worker instead and shows "restarting Python (≈N s)".
-- **Budgets:** the per-test-case budget starts at max(1 s, 10× the CPython time measured by `tools/judge.py` for the reference solver), capped at 10 s. It is exported per fixtures item as `check.budget_ms` (a schema addition, computed at export from the reference solver's measured time). Other runs get 5 s.
+- **Interrupts are owned by the runner origin.** A `SharedArrayBuffer` cannot be posted across origins (agent clusters are keyed by origin under cross-origin isolation), so the **runner page** allocates it, hands it to its same-origin worker (`pyodide.setInterruptBuffer`), and owns the budget timer from `budget_ms`.
+  - On expiry, the runner page sets the buffer: Pyodide raises `KeyboardInterrupt`, reported as "time limit".
+  - If the runner page's `crossOriginIsolated` is false, it terminates and restarts the worker instead.
+  - Every result carries `interrupts: "sab" | "restart"`, so the UI can honestly show "restarting Python (≈N s)".
+  - The site may also send `{type: "interrupt", id}` (a Stop button).
+- **Budgets:** the per-test-case budget is max(1 s, 10× the reference solver's CPython time), capped at 10 s; other runs get 5 s.
+  - The **site** computes the budget from `check.cpu_ms`, a schema addition holding the CPython time rounded to 100 ms and clamped.
+  - The measurements are cached in a committed `site/runner-timings/<book>.json`, so export stays deterministic and fast and the `content_hash` never depends on machine jitter. The cache is refreshed only by an explicit `--measure` export flag.
 - **Cumulative lesson state (D6):** "Run" on a lesson block sends the block code with `session = <entry id>`.
   - The first run of a block whose probe says `prelude` first replays its `prelude` blocks, silently, in that session.
   - "Reset" clears the session.
@@ -81,13 +88,15 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `site/scripts/serve.mjs` serves both dists on two ports with their `_headers`.
 - **Phase B: check UIs and gating in the site.**
   - **The code editor under the CSP:** CodeMirror 6, self-hosted, prefilled with the Starter.
-    - CodeMirror injects its theme through `style-mod`, which uses constructable stylesheets (`adoptedStyleSheets`) where the browser supports them, not `<style>` elements. Its runtime `element.style` property assignments are CSSOM, which `style-src` does not block.
+    - CodeMirror injects its theme through `style-mod`, which creates a `<style>` element for a `Document` root (blocked by `style-src 'self'`) and uses constructable stylesheets (`adoptedStyleSheets`, CSSOM, which CSP does not govern) only for a `ShadowRoot`.
+    - So **each editor mounts in a shadow root** (`new EditorView({root: shadowRoot, parent: …})`). Its runtime `element.style` assignments are also CSSOM.
     - Phase B must prove this with a **zero-violation editor test** (open, type, scroll, highlight, under the served CSP).
     - If any violation remains, the editor falls back to an accessible plain `<textarea>` with Tab inserting four spaces (Escape then Tab leaves the field). The test decides which one ships.
   - The practice page gains Check controls per kind: answer and predict boxes, with the hint from `answer_format`; per-case and per-assert results; the sample-only reveal; `also_check` checklists; the turtle drawing; and odd-answer gating.
-  - The reading view gains Run, Reset and stdin boxes.
+  - The reading view gains Run, Reset and stdin boxes. A block whose probe status is `mismatch` (unseeded randomness) labels its stored output "may differ when you run it".
+  - Fixture files are fetched lazily, per item, when Check is pressed, never all of `files/` on page load (the Lighthouse budget).
   - Results write D11 events, and attempts go to the attempt store.
-- **Phase C: export additions.** `check.budget_ms` per fixtures item, measured with `tools/judge.py`'s runner at export (deterministic: rounded to 100 ms and capped), and `answer_figures` for odd answers whose program draws with turtle. Schema and answer-model updates (`answer_figures` is tied: regenerated and compared, like lesson figures).
+- **Phase C: export additions.** `check.cpu_ms` per fixtures item, read from the committed timing cache (`export --measure` refreshes it with `tools/judge.py`'s runner), and `answer_figures` for odd answers whose program draws with turtle. Schema and answer-model updates (`answer_figures` is tied: regenerated and compared, like lesson figures).
 - **Phase D: verification (named verification phase), in a headless browser in CI.**
   - **Runner acceptance:** one Playwright test per row of design 012 §3, each named:
     - stdin programs, including `input()` at end of input (`EOFError`, as in CPython)
@@ -121,6 +130,9 @@ User goal, 2026-10-06: "non stop until full working learning website".
     - `also_check` shown beside an automatic check
     - the turtle rule
   - **Gating:** an odd exercise's `answer_md` is absent from the DOM before an attempt, still absent after merely opening the editor, and present after **a failed Check**. An even exercise never shows it.
+    - **For an odd `self-check` item** (63 in python-projects), an attempt is a Run of the student's code plus marking the checklist done; the test covers one.
+  - **Interrupt path proven:** the hang test asserts `interrupts: "sab"` under the served headers, and `"restart"` with isolation disabled.
+  - **CSP on both origins:** zero `securitypolicyviolation` events on the practice page with the editor open, typed in and scrolled, and on the runner page while Pyodide loads and runs.
   - **No network:** part B's request-recording test is extended to the runner origin. Only the two local origins appear, and no request carries code or answers.
   - The part B end-to-end, axe and Lighthouse suites still pass.
   - `scripts/ci-local.sh` runs solo on the final commit.
@@ -141,6 +153,19 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `[FIXED]` CodeMirror vs the CSP: style-mod's constructable stylesheets, a zero-violation editor test, and an accessible textarea fallback.
   - `[FIXED]` Replies are bound by `event.source` and pending ids on both sides; a same-origin foreign window is tested.
   - `[FIXED]` Grading UI tests for every kind and both matching modes, the skipped case, sample-only reveal and gating after a failed Check.
+
+- `[fable]` **REJECT** (round 1, c05bab9):
+  - `[FIXED]` A `SharedArrayBuffer` cannot cross origins: the runner page owns the buffer and the budget timer, and results report `interrupts: sab|restart`, which is tested.
+  - `[FIXED]` CodeMirror's `style-mod` uses a `<style>` element on a Document: each editor now mounts in a shadow root (constructable stylesheets), and zero-violation tests run on the editor page and the runner page. This corrects my round-2 fold for [sol] 3, which wrongly said Document roots use `adoptedStyleSheets`.
+  - `[FIXED]` (nits)
+    - one working directory per session
+    - the turtle stub installed for every turtle import
+    - an "attempt" defined for odd self-check items, with a test
+    - `cpu_ms` from a committed timing cache, so bundles stay deterministic
+    - Pyodide pinned to the CI CPython minor
+    - `mismatch` outputs labelled "may differ"
+    - harness parity details: drain per case, clear `sys.modules`, "no output"
+    - lazy fixture fetching
 
 ## Content Review
 
