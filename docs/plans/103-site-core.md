@@ -97,24 +97,36 @@ User decisions:
 
 - **Slide rules** (`site/src/lib/slides.ts`, one function shared by the player and the audit):
   - opener, goals, recap, each notice and each code(+output) block is one slide
-  - consecutive prose blocks group up to `max_words` (default 90), splitting at headings
+  - **Prose splits inside a block.** A prose block's `md` is cut at paragraph boundaries (blank lines outside code fences; a list, table or fenced block is never cut) into *units*.
+    - Units of consecutive prose blocks are packed into slides of up to `max_words` (default 90).
+    - A heading always starts a new slide.
+    - A unit longer than `max_words` becomes one slide on its own.
+    - Real case: acsl `unit-12-graph-theory/lesson/l-009#2` is 518 words in one block and splits into its paragraphs.
   - try-it, demo and figure blocks are one slide each
   - a block tagged `slide-break` starts a new slide; one tagged `slide-skip` is left out of slides (it still shows in the reading view)
 - **Player:**
   - full-viewport, arrow keys and swipe, a progress bar, the slide number in the URL hash
   - Escape returns to the reading view
   - each slide viewed writes a `slide` event
-- **Slide audit:** `pnpm -C site slide-audit` reports, per book, every slide over `max_words` prose words or `max_code_lines` code lines. The thresholds come from a new optional `slides:` block in `<book>/site.yaml` (`max_words`, `max_code_lines`), validated by `tools/books.py`. Any slide over the limit fails CI.
+- **Slide audit:** `pnpm -C site slide-audit` reports, per book, every **indivisible unit** over `max_unit_words` (default 180: one paragraph too long for a slide) and every code slide over `max_code_lines`.
+  - Packed slides cannot exceed `max_words` by construction, apart from single oversized units, which the audit catches.
+  - Phase C runs the audit on all four real bundles before and after the tag pass, and records the counts. The thresholds come from a new optional `slides:` block in `<book>/site.yaml` (`max_words`, `max_unit_words`, `max_code_lines`), validated by `tools/books.py`. Any slide over the limit fails CI.
 - **Slide-break pass (moved here from plan 102):**
-  - python-projects and usaco-bronze lessons get `slide-break` (and, rarely, `slide-skip`) cell tags until the audit passes.
+  - python-projects and usaco-bronze lessons get `slide-break` (and, rarely, `slide-skip`) cell tags where packing gives poor slides: splits a reader would not choose, or a figure separated from its explanation.
+  - An oversized paragraph that only a text edit could fix is listed in the phase log rather than edited (no notebook text changes), and its book's `max_unit_words` is set to the smallest value that passes. That value is reported.
   - These are cell-tag-only notebook edits: no source text changes, and the PDFs are unchanged (the publication regression digests stay byte-identical, which a test asserts).
   - python-concepts and acsl must pass the audit as they are, or get the same pass.
 
 ## Mastery map and cards (D8)
 
 - **Concept mastery:**
-  - Each card and item carries concept ids. A concept's mastery is the share of its attributed cards in Leitner box ≥ 3.
+  - **Where concepts come from:**
+    - a predict card's concepts are its block's `concepts` (looked up by `block` key)
+    - a concept card's concept is its `concept`
+    - an item's concepts are its `concepts`
+  - A concept's mastery is the share of its attributed cards in Leitner box ≥ 3.
   - The map shows a concept only when it has at least **N = 3** attributed cards or items.
+  - A concept that meets N with items but has no cards shows "practice in exercises" instead of a percentage (part C will add item results).
   - Concepts are grouped by registry `category`.
 - **Predict cards:** a `typed` card compares the student's line with the stored output through `normalise` (case-sensitive). A `flip` card reveals the output for self-grading ("Got it" / "Not yet").
 - **Concept cards:** a `choice` card shuffles the term with its 1–3 distractors, seeded by the card key so the order is stable. A `flip` card shows the definition.
@@ -137,7 +149,13 @@ Never `git stash` in the shared tree.
   - **Done when:** `pnpm -C site build` builds all four books; a vitest unit test runs.
 - **Phase B: reading view and practice pages.**
   - Contents: the Markdown pipeline with containers, Shiki and latex stripping; all block types; turtle SVG; the practice page; prev/next navigation; report-a-problem links.
-  - Tests (vitest): every container class renders; `{=latex}` is dropped; no `answer_md`, `check.source`, `hash` or non-sample `.out` text appears in any built page. That last test greps the whole `dist/` for every hidden canonical and solution stream, reusing plan 101's `answer_model` corpora through a small `uv run` helper that writes them to a temp JSON file.
+  - **Tests (vitest):**
+    - every container class renders
+    - `{=latex}` is dropped
+  - **The structural leak test (poisoned bundle).** The site must never render a field that may hold hidden material. The bundle's own content is already proven by plan 101's answer model.
+    - A test copies each real bundle and writes a unique sentinel string into every forbidden field: `answer_md`, `check.source`, `check.hash`, `check.program` of a hidden item, and every non-sample fixture `.out` file.
+    - It builds the site from the poisoned bundles and searches all of `dist/` for any sentinel: HTML, JS, CSS, JSON, and Pagefind's index and fragment files (decompressed).
+    - Zero hits is required. A regression deliberately renders one forbidden field and must be caught.
 - **Phase C: slides, the slide audit and the slide-break pass.**
   - Contents: `slides.ts`, the player, the audit, `site.yaml` `slides:` validation, then the tag pass on python-projects and usaco-bronze.
   - Tests:
@@ -166,7 +184,10 @@ Never `git stash` in the shared tree.
     - search for a glossary term
   - **Accessibility:** axe (`@axe-core/playwright`) on every page template, with 0 serious or critical violations.
   - **Lighthouse** (CLI, headless Chromium, the built site served locally): on the catalog, a lesson and the card deck, performance ≥ 0.9, accessibility ≥ 0.95, best practices ≥ 0.95.
-  - **No network:** a Playwright test with every non-localhost request blocked: the pages render and work, and no request leaves the origin.
+  - **No network, proven three ways:**
+    - **Request recording:** Playwright records every request (`page.on('request')`) across the end-to-end paths, and any request whose origin is not the local server fails the test. Requests are recorded, not merely blocked, so a page that silently recovers from a blocked call still fails.
+    - **Build audit:** a scan of `dist/` finds no `http(s)://` URL in any `src`, `srcset`, CSS `url()`, `@import`, `fetch`, `import` or `<link>` (other than a hyperlink). The only absolute URLs allowed are plain `<a href>` hyperlinks on an allowlist: the GitHub issue link, the release PDF links and the CC license deed. These are user-initiated navigations, not loads.
+    - **Headers:** the test server (`site/scripts/serve.mjs`) applies `dist/_headers` with the Cloudflare Pages `_headers` semantics. The test asserts that every HTML response carries the CSP and the other headers. A page tested with a deliberately disallowed inline script shows a CSP violation. Part D re-verifies the headers on the real host.
   - **The leak test** from Phase B, run over the full four-book `dist/`.
   - **`scripts/ci-local.sh`** runs solo on the final commit.
 
@@ -187,6 +208,14 @@ Never `git stash` in the shared tree.
 - recsys.
 
 ## Plan Review
+
+### Round 1 (369a818)
+
+- `[sol]` **REJECT** (gpt-6-sol):
+  - `[FIXED]` Prose blocks were indivisible (acsl `l-009#2` is 518 words): paragraph-level units, an audit on indivisible units (`max_unit_words`), run on all four real bundles.
+  - `[FIXED]` A plain grep of `dist/` would flag legitimate shared values: replaced by the poisoned-bundle sentinel test, which is structural and occurrence-free and also covers JS and the Pagefind index.
+  - `[FIXED]` Blocking does not prove no request: requests are recorded, external URLs are audited in the build, and headers are asserted through a local server that applies `_headers`; the adult GitHub link and PDF links are allowlisted hyperlinks.
+  - `[FIXED]` (nit) Predict-card concepts come from their block; concepts with only items show "practice in exercises".
 
 ## Content Review
 
