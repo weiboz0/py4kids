@@ -505,3 +505,19 @@ test('the reading view: Run shows output, a prelude block replays its prelude, R
   await tryit.locator('[data-lesson-run]').click();
   await expect(tryit.locator('[data-run-output] .io-output, [data-run-output] .io-error').first()).toBeVisible({ timeout: 60_000 });
 });
+
+test('a check that runs out of time says so (expected-output and asserts), not "stopped with an error"', async ({ page }) => {
+  const output = findItem((f) => f.item.key === 'python-concepts/unit-01-output-and-variables/exercises/u01e14a', 'u01e14a');
+  await patchCheck(page, output, (c) => ({ ...c, budget_ms: 1_000 }) as ClientCheck);
+  let item = await open(page, output);
+  await setCode(page, item, 'while True:\n    pass\n');
+  await check(item);
+  await expect(item.locator('[data-result]')).toContainText('Output: ');
+  await expect(item.locator('[data-result]')).toContainText('the program ran out of time');
+  const asserts = findItem((f) => f.book === 'python-concepts' && f.item.check.kind === 'asserts', 'a python-concepts asserts item');
+  await patchCheck(page, asserts, (c) => ({ ...c, budget_ms: 1_000 }) as ClientCheck);
+  item = await open(page, asserts);
+  await setCode(page, item, 'while True:\n    pass\n');
+  await check(item);
+  await expect(item.locator('[data-result]')).toContainText('it ran out of time before the tests could run');
+});

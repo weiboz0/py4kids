@@ -306,6 +306,16 @@ def test_runs_use_tracked_files_only(demo):
     assert slow.status == "timeout"
 
 
+def test_repeat_run_uses_another_hash_seed(demo):
+    """[fable] plan 104 content review: Pyodide workers seed str hashing differently, so the
+    expected-output rule's second run uses another seed and set-order output is not deterministic."""
+    entry = demo / "demo/units/unit-01-demo"
+    source = "import os\nprint(os.environ['PYTHONHASHSEED'], list({'apple', 'banana', 'cherry', 'date', 'elder', 'fig'}))"
+    first, second = answers.run_python(entry, source, 0), answers.run_python(entry, source, 1)
+    assert first.stdout.startswith("0 ") and second.stdout.startswith("1 ")
+    assert first.stdout[2:] != second.stdout[2:]
+
+
 # --- the hidden corpora (Phase F) ----------------------------------------------------------------
 
 
