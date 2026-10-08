@@ -383,4 +383,85 @@ No student-facing content. The gate reviewed the generator, harness, tests, load
 
 ## Post-Execution Report
 
-<!-- appended before ship -->
+**Status:** all phases are done (0, A, B, the v5 pause, the freeze and one-shot run, C, D). Phase G results are
+below.
+
+**Commits:**
+- `5cf107b` — Phase 0 design v5.
+- `a94c6d7` — A+B: sub-streams, series and session generator, single-CLI wiring.
+- `b988cd1` / `d46e2e8` / `1cd2aa7` — the v5 pause amendment and re-gate.
+- `bd264dd` — the freeze at R3-V1.
+- `0f04f6e` — C+D: harness, byte-stable and invariant tests, `bookrec` loaders.
+- `8a206d0` / `388664a` — content-gate fixes.
+
+**Goal 1, byte-stability: PASS.** The catalog `e4112a48…`, interactions `151e6443…`, keywords `e3cc89b8…` and
+cold_partitions `ba710208…` are unchanged across every regeneration. The new artifacts are series `5a3ef2e4…` and
+sessions `d230d55d…`, both at the committed seed and frozen config.
+
+**Goal 2, session log at the committed seed 20260930:**
+
+| Readers | Events | Positives | Median / mean train | Transitions | Series books |
+|---|---|---|---|---|---|
+| 1,500 | 181,802 (≤ 200k) | 60,011 | 28 / 27.9 | 40,381 | 1,002 (same-author, 3–5 vols) |
+
+Standalone generation took a median of **10.3 s** (agent measurement; [fable] measured 11.6–24.8 s on a loaded
+machine). That is under the 30 s cap; the 15 s target is met only on an unloaded machine.
+
+**Goal 3, harness.** The one-shot post-freeze run (hit@10; every gate passes):
+
+| Seed | Eligible | Pop | Bag CF | Last-3 CF (G3a) | Transk ord / shuf (G3b) | G3c n, transk / bag | Bag/pop |
+|---|---|---|---|---|---|---|---|
+| committed | 1419 | .113 | .480 | .550 (+.070) | .510 / .343 (1.48×, +.166) | 654, .500 / .301 (1.66×) | 4.23 |
+| 2 | 1418 | .142 | .468 | .542 (+.074) | .536 / .358 (1.50×) | 604, 1.97× | 3.30 |
+| 3 | 1417 | .126 | .461 | .534 (+.073) | .521 / .325 (1.60×) | 625, 2.04× | 3.67 |
+| 4 | 1406 | .117 | .454 | .526 (+.071) | .518 / .317 (1.63×) | 616, 1.72× | 3.90 |
+
+CI pins sit about midway between the floor and the measured value:
+- eligible ≥ 1100;
+- G3a ≥ +0.04;
+- G3b ≥ 1.38× and ≥ +0.11;
+- G3c n ≥ 350, ≥ 1.45× and ≥ +0.14;
+- bag/pop ≥ 3×, with popularity ≥ 0.08.
+
+The series-link diagnostic measured transition 0.835 vs bag-row 0.960; the plan's old 0.7 / 0.3 expectation is
+corrected above.
+
+**Teeth test.** The config is 500 books, 2,400 readers and val share 0.15, with all order mechanisms off (series
+accept 0 too). Across session seeds 0–5 and the pinned seed:
+- Mechanisms OFF: G3b is 0.98–1.03× and G3c n is 43–48 at 0.57–0.93×, so both fail.
+- Mechanisms ON: G3b is ≥ 1.408× and ≥ +0.173, so the positive control passes.
+
+**Goal 4, SASRec (v5 amended).** The recipe was frozen at R3-V1: 1 block, dim 32, len 50, dropout 0.3, wd 1e-5,
+150 epochs, lr 1e-3, batch 64, init std 0.02. Tuning used seeds 0–1 over 3 rounds; G4b failed every round, which
+triggered the pause and the user's reframe decision.
+
+| Seed | Ordered | Shuffled | Bag | G4a ord − shuf (SE, CI) | G4b/G4c ord − bag (SE, CI) | G4a | G4b | G4c |
+|---|---|---|---|---|---|---|---|---|
+| committed (reported) | .434 | .380 | .480 | +.054 (.012, [.030, .079]) | −.046 (.013, [−.071, −.020]) | P | F | **F** |
+| 2 | .451 | .418 | .468 | +.032 (.012, [.010, .055]) | −.017 (.013, [−.041, .006]) | P | F | P |
+| 3 | .452 | .385 | .461 | +.066 (.012, [.042, .089]) | −.009 (.013, [−.035, .016]) | P | P | P |
+| 4 | .423 | .362 | .454 | +.061 (.012, [.036, .085]) | −.032 (.013, [−.058, −.006]) | P | F | P |
+
+**The joint G4a + G4c gate passes on 3 of 3 held-out seeds, so GO.** Next-item hit@10, ordered vs shuffled, is
+.19–.21 vs .15–.16. Each fit takes about 4.6–5.8 min with two running at once.
+
+**Binding constraints handed to recsys-015 (U12):**
+1. "Near-tie" is the **held-out** claim. On the committed seed students run, SASRec is −0.046 behind bag CF (just
+   outside 0.04), and U12 must report that number as it is.
+2. SASRec takes about 5 min per fit at V1, so U12's notebooks need cached or seeded short fits within the
+   per-notebook budget.
+3. U12's lift is carried by **last-k CF** (+0.07 over bag) and the **transition** path; the order evidence is the
+   shuffled-control drop.
+4. U12 uses `series.csv.gz` for diagnostics only.
+5. U12 loads ordered history through `bookrec.load_train_sequences`, and scores with the unchanged
+   `run_validation_scoreboard` on `sessions.csv.gz`.
+
+**Deviations from the plan, recorded:**
+- The v5 Goal-4 amendment (user decision 2026-10-08).
+- The same-session series-accept behaviour (WONTFIX, documented).
+- Three protocol refinements in the harness, documented in Goal 3.
+- A one-shot evaluation set `eval_every = 0` (mid-training scoring only, so training was unaffected).
+- Lint scope: `ruff check` uses the CI scope (`recsys/projects/bookrec recsys/data`). There are pre-existing format
+  diffs in untouched files.
+
+**Phase G:** full `scripts/ci-local.sh` and `pre-merge-guard --pr`; results are recorded at ship.
