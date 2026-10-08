@@ -65,7 +65,10 @@ def test_odd_answer_equals_appendix(book):
             if item.kind == "unit" and item.number % 2:
                 text = student_answer_text(entry, item.number, lesson_heading)
                 assert text == slices[item.number], item.key
+                figures = fields.pop("answer_figures", [])
                 assert fields == {"answer_visibility": "after-attempt", "answer_md": text}
+                # plan 104 C: a figure exactly per turtle drawing the appendix prints
+                assert len(figures) == text.count(r"\begin{tikzpicture}"), item.key
                 checked += 1
             else:
                 assert fields == {"answer_visibility": "none"}, item.key
@@ -153,7 +156,8 @@ def test_fixture_sample_and_budget(demo):
              "out_file": "files/unit-01-demo/fixtures/ex1/1.out", "sample": True},
             {"n": 2, "in_file": "files/unit-01-demo/fixtures/ex1/2.in",
              "out_file": "files/unit-01-demo/fixtures/ex1/2.out", "sample": False}],
-        "match": "token", "over_budget": [], "turtle": False, "confirmed": False}
+        "match": "token", "over_budget": [], "cpu_ms": 100, "turtle": False,
+        "confirmed": False}
     assert [path for path, _ in answers.fixture_files(demo, "demo", item)] == [
         "files/unit-01-demo/fixtures/ex1/1.in", "files/unit-01-demo/fixtures/ex1/1.out",
         "files/unit-01-demo/fixtures/ex1/2.in", "files/unit-01-demo/fixtures/ex1/2.out"]
@@ -163,6 +167,7 @@ def test_fixture_sample_and_budget(demo):
     (fixtures / "1.out").write_text("8\n", encoding="utf-8")
     (fixtures / "10.in").write_text("1" * 150_000 + "\n", encoding="utf-8")  # a 200 KB pair
     (fixtures / "10.out").write_text("2" * 50_000 + "\n", encoding="utf-8")
+    demo_book.write_timings(demo)  # the fixtures changed: a fresh timing entry
     check = answers.check_data(demo, "demo", item, "fixtures")
     assert [case["n"] for case in check["cases"]] == [1, 2, 10]  # numeric order
     assert not any(case["sample"] for case in check["cases"])

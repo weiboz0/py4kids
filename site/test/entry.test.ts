@@ -129,7 +129,7 @@ describe('practice page', () => {
     const base = { turtle: false, confirmed: true };
     const fmt = { case: 'insensitive' as const, hint: '' };
     const lines = ([
-      { ...base, kind: 'fixtures', match: 'line', over_budget: [], cases: [
+      { ...base, kind: 'fixtures', match: 'line', over_budget: [], cpu_ms: 100, cases: [
         { n: 1, in_file: 'a', out_file: 'b', sample: true },
         { n: 2, in_file: 'c', out_file: 'd', sample: false },
       ] },

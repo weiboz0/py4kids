@@ -16,7 +16,7 @@ import { parse as parseYaml } from 'yaml';
 import type { BookFile, EntryFile, EntryRecord } from './types';
 
 export const SCHEMA_RELPATH = 'tools/export/schema/bundle.schema.json';
-export const SCHEMA_ID = 'py4kids/bundle/1.0.0';
+export const SCHEMA_ID = 'py4kids/bundle/1.1.0';
 /** Points the loader at another content directory (tests, the poisoned-bundle build). */
 export const CONTENT_ENV = 'PY4KIDS_SITE_CONTENT';
 

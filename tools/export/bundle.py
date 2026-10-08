@@ -61,6 +61,7 @@ from .ids import duplicate_key_findings, missing_id_findings
 from .items import STEM, entry_content, export_item, item_concept_findings
 from .lesson import lesson_export
 from .probe import tracked_files
+from .timing import TimingCache
 
 SCHEMA_PATH = Path(__file__).parent / "schema" / "bundle.schema.json"
 PDF_EDITIONS = ("student-print", "student", "answer-key", "teacher")
@@ -201,11 +202,16 @@ def _note_lists(report: dict, key: str, notes: list[str]) -> None:
         report["notes"][key] = list(notes)
 
 
-def export_book(root: Path, book: str, out_dir: Path, release: str = UNRELEASED) -> ExportResult:
-    """Export `book` as a bundle under `out_dir` (replacing its `book.json`, `entries/`, `files/`)."""
+def export_book(root: Path, book: str, out_dir: Path, release: str = UNRELEASED,
+                measure: bool = False) -> ExportResult:
+    """Export `book` as a bundle under `out_dir` (replacing its `book.json`, `entries/`, `files/`).
+
+    `check.cpu_ms` comes from the committed timing cache (`tools/export/timings/<book>.json`); with
+    `measure`, every fixtures solver is re-measured and the cache rewritten (`timing.py`)."""
     root, out_dir = Path(root), Path(out_dir)
     if not book_flag(root, book, "site"):
         raise ValueError(f"{book} is not a site book (books.yaml site: true)")
+    timings = TimingCache(root, book, measure=measure)
     base = book_path(root, book)
     registry = book_registry(root, book)
     entry_list = entries(base, "student")
@@ -262,7 +268,7 @@ def export_book(root: Path, book: str, out_dir: Path, release: str = UNRELEASED)
             report["concept_findings"] += item_concept_findings(root, book, content.items)
             for item in content.items:
                 report["tag_findings"] += tag_findings(item)
-                exported = export_item(root, book, item)
+                exported = export_item(root, book, item, timings)
                 data = exported.data
                 item_data.append(data)
                 key = data["key"]
@@ -359,6 +365,7 @@ def export_book(root: Path, book: str, out_dir: Path, release: str = UNRELEASED)
     problems += duplicate_key_findings(keys)
     if problems:
         raise ExportError(problems)
+    timings.save()
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "book.json").unlink(missing_ok=True)

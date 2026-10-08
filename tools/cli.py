@@ -32,6 +32,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--release", default="unreleased", help="export: the release tag (PDF links)")
     parser.add_argument("--update-ledger", action="store_true",
                         help="export: write site/ids/<book>.json from the bundle's keys")
+    parser.add_argument("--measure", action="store_true",
+                        help="export: re-measure every fixtures solver and rewrite "
+                             "tools/export/timings/<book>.json (check.cpu_ms)")
     parser.add_argument("--apply", action="store_true",
                         help="classify: write each proposed check-* tag to its heading cell")
     return parser
@@ -136,7 +139,8 @@ def _site_command(arguments) -> int:
 
         out = arguments.out or root / "site" / "content" / book
         try:
-            result = export_book(root, book, out, release=arguments.release)
+            result = export_book(root, book, out, release=arguments.release,
+                                 measure=arguments.measure)
         except ExportError as error:
             print("\n".join(error.findings))
             return 1
@@ -146,6 +150,10 @@ def _site_command(arguments) -> int:
         if arguments.update_ledger:
             write_ledger(root, book, result.keys)
         print(f"export: {book}: {len(result.keys)} keys, {result.content_hash} -> {out}")
+        if arguments.measure:
+            from tools.export.timing import cache_path
+
+            print(f"export: {book}: timings measured -> {cache_path(root, book)}")
         return 0
     if arguments.check == "classify":
         from tools.export.classify import apply_proposals, classification_rows
