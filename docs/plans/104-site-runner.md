@@ -30,12 +30,12 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - **Process-state isolation.** One Pyodide process shares `sys.modules`, standard-library module globals and `builtins` across namespaces, so a fresh namespace is not enough:
     - **Each exercise check runs in a fresh worker.** The runner keeps one prewarmed spare worker booted, so a check starts without waiting, then retires that worker after the check.
       - **Memory bound:** at most three Pyodide workers ever exist: the lesson worker, the one spare and the worker running a check. A retired worker is terminated before the next spare boots. A Playwright assertion checks the worker count.
-    - **Within one check, between fixture cases,** the harness restores the boot state:
-      - it deletes every `sys.modules` entry not in the boot snapshot, so modules the student imported (stdlib ones included) are re-imported fresh
-      - it restores each **boot-snapshotted module's `__dict__`** from a shallow copy taken at boot. Pyodide boots with `math`, `os`, `json` and others already imported, so this undoes `math.pi = 3`. The per-check fresh worker stays the real boundary between checks.
-      - it restores `builtins` from a snapshot copy
-      - it resets `sys.stdin`, `sys.stdout`, `sys.stderr`, `sys.argv` and the recursion limit, and the working directory
-    - Each case therefore behaves like the fresh process `tools/judge.py` starts.
+    - **Each fixture case also runs in a fresh worker.** A reset inside one Python process cannot give fresh-process parity with `tools/judge.py`: in-place mutations survive, for example `sys.path.append` or the state of objects held by preloaded modules.
+      - So a `fixtures` check runs case 1 in the spare worker and retires it, while the next spare boots in parallel, and so on.
+      - The UI shows per-case progress.
+      - Boot time is excluded from each case's budget.
+      - Expected cost: about 1–1.5 s of boot per case on a desktop, so a 10-case item takes about 10–15 s.
+      - The memory bound below still holds, because only one spare boots at a time.
     - **Lesson sessions** deliberately share one worker and its state, like the notebook kernel. "Reset" restarts that worker.
   - **Exact destinations:** every `postMessage` names its exact `targetOrigin`: the site posts to the runner origin, and the runner posts to the site origin. Never `*`. If the iframe has been navigated elsewhere, the browser drops the message, so student code cannot reach another page.
   - **Binding** (all required, each tested):
@@ -73,7 +73,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - sets up stdin (an `io.StringIO`; `input()` reads from it, and EOF raises `EOFError` as in CPython; the contest code uses `sys.stdin.read*` (407 uses) and `input()` (229); `open(0)` and `stdin.buffer` do not occur)
   - **working directory:** one per `session`, so a lesson keeps the files its cells write (python-projects unit 09 writes a save file and reads it later); "Reset" recreates it. Each check gets a fresh directory. The mounted `files` are written there.
   - **turtle:** installs the `fake_turtle` port as `turtle` for **every** run whose source imports turtle (`imports_turtle`), because Pyodide ships no tkinter; the turtle rule applies only to items with `turtle: true`
-  - **per fixture case:** stdout and stderr are drained, and user modules are cleared from `sys.modules`; empty stdout is reported as "no output", as `tools/judge.py` does
+  - **per fixture case:** a fresh worker (see Process-state isolation); empty stdout is reported as "no output", as `tools/judge.py` does
   - captures stdout and stderr
   - for `fixtures`, runs the program once per case in a fresh namespace and compares with `outputs_match` (line-exact for `acsl` books, token-based otherwise), ported verbatim from `tools/judge.py`
   - for `asserts`, runs the student's code, then each shipped assert in that namespace separately, catching `AssertionError` and other errors per assert, and reports pass/fail per assert (never the source)
@@ -133,7 +133,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
     - reset clears a lesson session
     - after a forced worker restart, the next run replays the prelude and gives the stored output
     - two exercise checks never share variables
-    - **contamination through modules:** check 1 sets `math.pi = 3` and `builtins.print = None` (or imports `random` and seeds it); check 2 sees the real values. Likewise between two fixture cases of one item.
+    - **contamination through modules:** check 1 sets `math.pi = 3`, `builtins.print = None` and `sys.path.append("x")`, and seeds `random`; check 2 sees the original values. The same test runs between two fixture cases of one item (fixture case 1 mutates; case 2 checks `math.pi`, `print` and `sys.path`).
   - **Grading UI, one test per behaviour:**
     - `fixtures` in both matching modes: an acsl item line-exact (a required `15 10 4` on one line rejects `15\n10\n4`), a usaco item token-based, with CPython parity for both cases taken from `tools/judge.py`'s `outputs_match`
     - a skipped over-budget case is listed (a fixture with a forced tiny budget)
@@ -199,6 +199,8 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `[FIXED]` Boot-imported modules: their `__dict__` is now restored, so the `math.pi` test proves it.
   - `[FIXED]` At most three workers, asserted.
   - `[FIXED]` The CI interpreter is pinned, and the parity test checks that the minors agree.
+
+- `[sol]` **REJECT** (round 3, e1064cf): `[FIXED]` A reset inside one process cannot reach fresh-process parity (`sys.path` and preloaded-module mutations survive). Every fixture case now runs in a fresh worker (spare booted in parallel, boot time outside the budget), with a contamination test between cases covering `math.pi`, `print`, `sys.path` and `random`.
 
 ## Content Review
 
