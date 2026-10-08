@@ -5,6 +5,7 @@
  * external stylesheet), and the theme script is the external file public/scripts/theme.js.
  */
 import '../styles/global.css';
+import '../styles/content.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { getBooks, type LoadedBook } from '../lib/bundle';
@@ -31,6 +32,7 @@ const fullTitle = title === 'py4kids' ? title : `${title} · py4kids`;
     <title>{fullTitle}</title>
     {description && <meta name="description" content={description} />}
     <script is:inline src="/scripts/theme.js"></script>
+    <link rel="stylesheet" href="/code.css" />
     <slot name="head" />
   </head>
   <body>

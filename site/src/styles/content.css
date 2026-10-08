@@ -1,0 +1,419 @@
+/* Lesson and practice content (plan 103 Phase B): blocks, panels, code, output, tables, math,
+   turtle figures, the practice page. Token colours follow global.css's light/dark pattern. */
+
+:root {
+  --panel-opener: #eef4ff;
+  --panel-opener-edge: #9db8e8;
+  --panel-goals: #edf8ef;
+  --panel-goals-edge: #8cc79a;
+  --panel-recap: #eef3fb;
+  --panel-recap-edge: #94acd4;
+  --panel-notice: #fdf8e6;
+  --panel-notice-edge: #b8860b;
+  --panel-tryit: #effaf1;
+  --panel-tryit-edge: #8cc79a;
+  --panel-error: #fdf0ef;
+  --panel-error-edge: #d48a85;
+  --panel-hang: #fff3e6;
+  --panel-hang-edge: #e0a060;
+  --panel-program: #eff4fb;
+  --panel-program-edge: #94acd4;
+  --label-goals: #1e6b2f;
+  --label-notice: #7a5a00;
+  --label-tryit: #1e6b2f;
+  --label-error: #a3271f;
+  --label-hang: #8a4500;
+  --label-info: #1f4f8f;
+  --output-bg: #f1f6fd;
+  --badge: #e6e9ee;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --panel-opener: #1b2433;
+    --panel-opener-edge: #3e5a88;
+    --panel-goals: #18271c;
+    --panel-goals-edge: #3d6f48;
+    --panel-recap: #1b2230;
+    --panel-recap-edge: #435a80;
+    --panel-notice: #2a2615;
+    --panel-notice-edge: #b8902a;
+    --panel-tryit: #18271c;
+    --panel-tryit-edge: #3d6f48;
+    --panel-error: #2e1c1b;
+    --panel-error-edge: #8a4a45;
+    --panel-hang: #2e2216;
+    --panel-hang-edge: #8a6030;
+    --panel-program: #1b2230;
+    --panel-program-edge: #435a80;
+    --label-goals: #8fd6a0;
+    --label-notice: #f0cc6a;
+    --label-tryit: #8fd6a0;
+    --label-error: #f3a29b;
+    --label-hang: #f5b87a;
+    --label-info: #9cc2f5;
+    --output-bg: #1a2230;
+    --badge: #2c323b;
+  }
+}
+
+:root[data-theme='dark'] {
+  --panel-opener: #1b2433;
+  --panel-opener-edge: #3e5a88;
+  --panel-goals: #18271c;
+  --panel-goals-edge: #3d6f48;
+  --panel-recap: #1b2230;
+  --panel-recap-edge: #435a80;
+  --panel-notice: #2a2615;
+  --panel-notice-edge: #b8902a;
+  --panel-tryit: #18271c;
+  --panel-tryit-edge: #3d6f48;
+  --panel-error: #2e1c1b;
+  --panel-error-edge: #8a4a45;
+  --panel-hang: #2e2216;
+  --panel-hang-edge: #8a6030;
+  --panel-program: #1b2230;
+  --panel-program-edge: #435a80;
+  --label-goals: #8fd6a0;
+  --label-notice: #f0cc6a;
+  --label-tryit: #8fd6a0;
+  --label-error: #f3a29b;
+  --label-hang: #f5b87a;
+  --label-info: #9cc2f5;
+  --output-bg: #1a2230;
+  --badge: #2c323b;
+}
+
+/* Page furniture */
+.crumbs {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.entry-kind {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  text-transform: capitalize;
+}
+
+.entry-title {
+  margin: 0 0 1rem;
+  line-height: 1.25;
+}
+
+.entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.button-link {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.button-link:hover {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.entry-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2.5rem 0 0;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--border);
+}
+
+.entry-nav a {
+  display: block;
+  max-width: 100%;
+  text-decoration: none;
+}
+
+.entry-nav .nav-dir {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.entry-nav .nav-next {
+  margin-left: auto;
+  text-align: right;
+}
+
+.report {
+  margin: 1.5rem 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.report a {
+  color: var(--muted);
+}
+
+/* Blocks */
+.block {
+  margin: 1rem 0;
+  overflow-wrap: anywhere;
+}
+
+.block > :first-child,
+.callout > :first-child {
+  margin-top: 0;
+}
+
+.block > :last-child,
+.callout > :last-child {
+  margin-bottom: 0;
+}
+
+.panel,
+.callout {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.panel-label,
+.callout-label,
+.io-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.panel-opener { background: var(--panel-opener); border-color: var(--panel-opener-edge); }
+.panel-goals { background: var(--panel-goals); border-color: var(--panel-goals-edge); }
+.panel-goals .panel-label { color: var(--label-goals); font-size: 1rem; }
+.panel-recap { background: var(--panel-recap); border-color: var(--panel-recap-edge); }
+.panel-recap .panel-label { color: var(--label-info); font-size: 1rem; }
+.panel-notice,
+.callout-notice {
+  background: var(--panel-notice);
+  border-color: var(--panel-notice-edge);
+  border-left-width: 4px;
+}
+.panel-notice .panel-label,
+.callout-notice .callout-label { color: var(--label-notice); }
+.panel-tryit,
+.callout-realprog { background: var(--panel-tryit); border-color: var(--panel-tryit-edge); }
+.panel-tryit .panel-label,
+.callout-realprog .callout-label { color: var(--label-tryit); }
+.callout-realprog { border-left-width: 4px; }
+.panel-error-demo { background: var(--panel-error); border-color: var(--panel-error-edge); }
+.panel-error-demo .panel-label { color: var(--label-error); }
+.panel-hang-demo { background: var(--panel-hang); border-color: var(--panel-hang-edge); }
+.panel-hang-demo .panel-label { color: var(--label-hang); }
+.panel-program,
+.panel-starter,
+.callout-program,
+.callout-datafile,
+.callout-goals,
+.callout-recap,
+.callout-opener { background: var(--panel-program); border-color: var(--panel-program-edge); }
+.panel-program .panel-label,
+.callout-program .callout-label { color: var(--label-info); }
+.callout-challenge { background: var(--panel-hang); border-color: var(--panel-hang-edge); }
+.callout-unknown { background: var(--surface); }
+
+/* Code and output */
+pre {
+  margin: 0.5rem 0;
+  padding: 0.75rem 0.9rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  line-height: 1.45;
+  tab-size: 4;
+}
+
+pre code {
+  font-size: 0.9rem;
+}
+
+:not(pre) > code {
+  padding: 0.05em 0.3em;
+  border-radius: 4px;
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+
+.panel :not(pre) > code,
+.callout :not(pre) > code {
+  background: var(--bg);
+}
+
+.io {
+  margin: 0.5rem 0 0;
+}
+
+.output-text {
+  background: var(--output-bg);
+  color: var(--text);
+}
+
+.raw-block {
+  background: var(--surface);
+}
+
+.math-error {
+  color: var(--label-error);
+}
+
+math[display='block'] {
+  margin: 0.75rem 0;
+  overflow-x: auto;
+}
+
+/* Tables */
+.table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+
+.table-wrap table {
+  border-collapse: collapse;
+  min-width: 50%;
+}
+
+.table-wrap th,
+.table-wrap td {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  text-align: left;
+}
+
+.table-wrap th {
+  background: var(--surface);
+}
+
+.align-center { text-align: center !important; }
+.align-right { text-align: right !important; }
+
+/* Turtle figures: a white card in either theme (the SVG draws its own white background). */
+.turtle {
+  margin: 0.75rem 0 0;
+}
+
+.turtle-figure {
+  display: block;
+  width: 100%;
+  max-width: 22rem;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.image-alt {
+  font-style: italic;
+}
+
+/* The practice page */
+.practice-intro,
+.practice-outro {
+  margin: 0 0 1.5rem;
+}
+
+.practice-item {
+  margin: 2rem 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.practice-item > h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.3rem;
+  line-height: 1.3;
+}
+
+.item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: var(--badge);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.tag-stretch {
+  background: var(--panel-hang);
+  color: var(--label-hang);
+  border: 1px solid var(--panel-hang-edge);
+}
+
+.starter-label {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.how-checked {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+}
+
+.format-hint,
+.checking-soon {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.self-check {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.self-check legend {
+  padding: 0 0.3rem;
+  font-weight: 700;
+}
+
+.self-check ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.self-check li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin: 0.35rem 0;
+}
+
+.self-check input {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.25rem;
+  accent-color: var(--accent);
+}

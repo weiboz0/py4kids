@@ -1,0 +1,18 @@
+---
+/**
+ * The deliberate leak (plan 103 Phase B): renders the first `answer_md` in the books through the
+ * site's own Markdown pipeline. Only the leak test's build config injects this page; the test
+ * requires its sentinel to be found here, and nowhere else.
+ */
+import { getBooks } from '../../src/lib/bundle';
+import { renderMarkdown } from '../../src/lib/markdown';
+
+const answer = getBooks()
+  .flatMap((b) => b.entries.flatMap((e) => e.data.items))
+  .find((item) => item.answer_md !== undefined)?.answer_md ?? '';
+---
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Leak regression</title></head>
+  <body><main><Fragment set:html={renderMarkdown(answer)} /></main></body>
+</html>
