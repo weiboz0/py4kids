@@ -324,7 +324,7 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
   - **Privacy:** 173 requests, 0 off-origin, 0 non-GET. The IndexedDB contents match the D11 schema, and no typed sentinel is stored. The privacy, terms and about text is accurate.
   - **Hidden answers:** 12 hidden items across all six kinds checked, with 0 leaks in HTML, JS, JSON or the Pagefind index; 889 hidden fixture outputs scanned.
   - **Lighthouse:** 1.0, 0.99 and 0.99. axe reports 0 serious violations.
-1. `[OPEN]` The plan's Content Review and Post-Execution Report sections are empty. Should Fix (done in the ship step).
+1. `[FIXED]` The plan's Content Review and Post-Execution Report sections are empty. Should Fix. → Response: both are filled in (the reviews above; the report below).
 2. `[FIXED]` Long allow-listed code slides show no scroll cue. Nice to Have.
    → Response: the slide player adds `.is-overflowing` to a code panel while `scrollHeight - scrollTop > clientHeight` (checked on show, scroll and resize); `slides.css` then fades the panel's bottom edge and shows a "Scroll the code for more ↓" label (a class, no inline style), removed once the code is scrolled to the end. Test: `e2e/review-fixes.spec.ts` (the 53-line `l1_cards.py` slide shows the cue and loses it at the end; a short code slide shows none).
 3. `[FIXED]` The mastery map dominates a fresh book page (40 rows at 0%). Nice to Have.
@@ -348,10 +348,75 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 ### Review 2 — [sol] (2026-10-08, gpt-6-sol)
 - **Verdict**: REJECT. Confirms that the Leitner, per-slide-key and WCAG-gate fixes are present.
 1. `[FIXED]` The site step could print SKIP for missing tools and still reach ALL GREEN. Must Fix. → Response: `ci-local.sh` now resolves scope first. An in-scope site change fails if Node ≥ 22.12, pnpm or Chromium is missing; only an out-of-scope change skips, and the skip is printed. `tests/test_ci_scope.py::test_ci_local_site_step` pins this.
-2. `[OPEN]` Normalisation parity: the same point as round 1 [sol] 4. It closes when plan 102 (the Python producer and its 41 vectors) merges first and main is merged into this branch; the parity test then runs on all vectors. Should Fix.
+2. `[FIXED]` Normalisation parity: the same point as round 1 [sol] 4. It closes when plan 102 (the Python producer and its 41 vectors) merges first and main is merged into this branch; the parity test then runs on all vectors. Should Fix. → Response: plan 102 merged (#145) and main was merged into this branch. `site/test/normalise.test.ts` now runs all 44 `hash_vectors.json` vectors, including `whitespace: exact` and `aliases` (105 tests pass), and the full site suite passes on rebuilt bundles (299/299).
 
 ### Review 2 — [fable] (2026-10-08)
 - **Verdict**: APPROVE. Rebuilt a fresh copy: 267/267 vitest and 68/68 e2e pass, Lighthouse 1.0, 0.99 and 0.97, zero WCAG A/AA violations. Every fix was verified in its own browser run (scroll cue, collapsed map, Node guard, resume label, no early promotion, 75 distinct slide keys on acsl unit 12).
 1. `[WONTFIX]` (Nice to Have) A split sub-block gets a double suffix (`l-018#2#slide-2`). → Response: schema-valid and distinct. Recorded as a key-format note for part E's sync design, which must treat everything after the first `#` as one opaque fragment.
 
+### Review 3 — [sol] (2026-10-08, gpt-6-sol)
+- **Verdict**: REJECT.
+1. `[FIXED]` Under `case: insensitive`, the TypeScript port applied alias keys and values unfolded, while Python casefolds them (input `X` with `{"X":"Y"}` gives `y` in Python and `x` in TypeScript). Must Fix. → Response: `normalise.ts`'s `applyAliases` now casefolds keys and values under `insensitive`, as Python's `_apply_aliases` does. A new shared vector pins the case, making 45 in total; Python (55 tests) and TypeScript (107 tests) both pass on all of them. The previous test expectation, which encoded the bug, is corrected.
+
 ## Post-Execution Report
+
+**Shipped: design 012 part B, the static learning website for all four `site: true` books.**
+
+**Pages:** about 222 pages:
+- the catalog
+- per-book contents, with resume, a mastery map, and PDF links when released
+- a reading view and a practice page for every entry
+- slides for every lesson (401, 763, 411 and 994 slides)
+- a quiz-card deck per book
+- glossary and quick reference
+- Pagefind search
+- About, Privacy and Terms (CC BY-NC-SA 4.0; contact via GitHub issues)
+
+**Rendering:**
+- markdown-it (`html: false`) with Pandoc containers and GFM tables
+- Shiki highlighting via classes, with AA-contrast token colours
+- KaTeX MathML-only math under the Pandoc dollar rule
+- inline turtle SVGs
+
+**Progress** (on-device IndexedDB only):
+- D11 `slide`, `card` and `self-check` events
+- Leitner cards, with no early promotion
+- a mastery map with 1/k weighting and N = 3
+- resume, labelled with the page kind
+
+**Privacy and security:**
+- strict CSP, with no inline scripts or styles and no `data:` URLs
+- every asset self-hosted, no analytics, no cookies
+
+**Verification:**
+- vitest: 299 tests, including the poisoned-bundle structural leak test, which runs over HTML, JS, JSON and the Pagefind index
+- Playwright: 68 e2e tests. They cover:
+  - the per-book journey
+  - axe on every template in both colour schemes, failing on any WCAG A/AA violation
+  - three no-network proofs, plus a same-origin audit with sentinels
+  - headers and zero CSP violations
+  - Lighthouse 0.97 to 1.00 (performance, accessibility, best practices)
+- normalisation parity: `normalise.ts` matches Python on all 45 shared vectors, including `exact` whitespace and aliases
+- `scripts/ci-local.sh` solo (see the PR). Its site step now **fails** when the site is in scope but Node, pnpm or Chromium is missing.
+
+**Deviations (accepted at the gates):**
+- 13 complete programs over 40 lines, plus one 13-row ACSL table, are allow-listed slides with reasons; long code panels show a scroll cue
+- generic system-font stacks (a performance fix, and literally no third-party fonts)
+- Pagefind used through its JS API with the site's own CSP-safe UI
+- one syllabus-ordered list on the book page
+- the slide-break tag pass (7 cells) is PDF-neutral
+
+**Defects found and fixed along the way:**
+- code-token contrast
+- slow first layout from long font stacks
+- the mastery island shipping the Markdown pipeline (640 kB)
+- slide events not reaching the progress store
+- the a11y gate missing moderate violations
+- early Leitner promotion
+- duplicate slide keys for split blocks
+- a CI site step that could pass unverified
+
+**Follow-ups:**
+1. **Slide key format:** a split sub-block's key is `…#2#slide-2`. Part E's sync must treat everything after the first `#` as one opaque fragment.
+2. **Part C (plan 104):** Run, checks and answer gating build on this site.
+3. **Part D (plan 105):** the PWA, offline use and the deploy.
