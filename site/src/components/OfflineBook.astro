@@ -3,8 +3,9 @@
  * "Use this book offline" on a book page (plan 105 Phase A): the download size first, then a
  * progress bar; "available offline" only once the site and the runner both confirmed the book for
  * the same release; both origins' storage persistence results; the note that some browsers can
- * clear storage. Wired by src/scripts/offline-book.ts. Always shown (a panel appearing later would
- * shift the page).
+ * clear storage, with a link to "Export my progress" on the catalog page (plan 105 Phase C,
+ * deviation 8). Wired by src/scripts/offline-book.ts. Always shown (a panel appearing later
+ * would shift the page).
  */
 interface Props {
   book: string;
@@ -20,7 +21,7 @@ const { book } = Astro.props;
   <p data-offline-persist hidden></p>
   <p class="muted">
     Everything stays on this device. Some browsers, Safari in particular, can clear a site's storage after weeks without a visit:
-    keep a copy of your work with “Export my progress”.
+    keep a copy of your work with <a href="/#your-progress">“Export my progress” on the home page</a>.
   </p>
 </section>
 <script>

@@ -3,9 +3,11 @@
  * "Export my progress" and "Import progress" (design 012 D11; plan 105 Phase C), on the catalog
  * page. The island (src/scripts/progress-transfer.ts) does the work on the device: nothing is
  * uploaded. Code attempts are exported only when the student ticks the clearly labelled box.
+ * Its id, `your-progress`, is the target of each book page's "Export my progress" link
+ * (src/components/OfflineBook.astro).
  */
 ---
-<section class="transfer" aria-labelledby="transfer-heading" data-transfer>
+<section class="transfer" id="your-progress" aria-labelledby="transfer-heading" data-transfer>
   <h2 id="transfer-heading">Your progress on this device</h2>
   <p>
     Your progress is saved only in this browser. Save a copy as a file to keep it safe, or to bring
