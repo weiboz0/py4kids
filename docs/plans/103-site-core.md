@@ -24,9 +24,10 @@ User decisions:
   - progress lives only in on-device IndexedDB, with no identifiers
   - no analytics, no cookies
   - no third-party scripts, fonts, images or trackers: every asset is self-hosted, the font stack is system fonts
-  - a strict CSP: `default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`
+  - a strict CSP: `default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`
     - `'wasm-unsafe-eval'` is for Pagefind's WebAssembly.
     - There are no inline scripts or styles: Astro's `build.inlineStylesheets: 'never'`, and the theme anti-flash script is an external file.
+    - No `data:` images: Shiki and KaTeX emit none, and turtle figures are inline SVG. The CSP test confirms that no `data:` URL appears in `dist/`.
 - **The site is generated:**
   - `site/content/<book>/` comes only from `py4kids-tools export`; nothing in the site hand-copies book text.
   - The site keys on the `site` flag and `book.json`; it never hard-codes a book id. Adding a book needs no site code.
@@ -51,8 +52,8 @@ User decisions:
   - **A container plugin** for the bundle's Pandoc fenced divs: `notice` and `realprog` occur in real data; `goals`, `recap`, `opener`, `program`, `datafile` and `challenge` are kept for safety. An unknown `::: {.x}` class renders as a visible plain block, never disappears, and a test pins that.
   - **Raw blocks:** `{=latex}` blocks are dropped (none occur today; answer Markdown in part C may contain them).
   - **Code:** highlighted at build time with Shiki (no client JS).
-  - **Math:** present in real data (acsl unit 8 and `reference_md` use `$\overline{A}$`). It is rendered at build time with KaTeX, with self-hosted fonts, under **Pandoc's `tex_math_dollars` rule**: an opening `$` not followed by a space; a closing `$` not preceded by a space and not followed by a digit. So python-concepts unit 3's "Under 13 costs $6. Ages 13–17 cost $8" stays text. Both sentences are vitest fixtures.
-- **No bundle JSON reaches the client.** Pages are rendered at build time. No `site/content/**/entries/*.json` (or `book.json`) is copied into `dist/`. Islands receive only a build-time **projection** as a small inline-free JSON data file per page: a card deck gets card keys, prompts, outputs or terms, modes and concept ids, never `answer_md`, `check.*` or hashes. The leak test also asserts that no `*.json` under `dist/` contains the keys `answer_md`, `source`, `hash` or `program`.
+  - **Math:** present in real data (acsl unit 8 and `reference_md` use `$\overline{A}$`). It is rendered at build time with KaTeX in **MathML-only output** (`output: 'mathml'`). KaTeX's HTML output uses inline `style` attributes, which the CSP forbids; MathML has none and is rendered natively by current browsers, so no KaTeX CSS or fonts ship. Dollar signs follow **Pandoc's `tex_math_dollars` rule**: an opening `$` not followed by a space; a closing `$` not preceded by a space and not followed by a digit. So python-concepts unit 3's "Under 13 costs $6. Ages 13–17 cost $8" stays text. Both sentences are vitest fixtures.
+- **No bundle JSON reaches the client.** Pages are rendered at build time. No `site/content/**/entries/*.json` (or `book.json`) is copied into `dist/`. Islands receive only a build-time **projection** as a small inline-free JSON data file per page: a card deck gets card keys, prompts, outputs or terms, modes and concept ids, never `answer_md`, `check.*` or hashes. The leak test also asserts that no `*.json` under `dist/` contains the keys `answer_md`, `source` or `hash`. (`program` is also a block type name, so `check.program` is covered by the sentinel test instead.)
 - **Client islands are the only JS:**
   - the slide player
   - the card deck
@@ -116,6 +117,7 @@ User decisions:
   - a notice attaches to the adjacent code slide when the pair stays within budget; otherwise it is its own slide (python-projects has 210 notices, many under 20 words). The audit reports notice-only slides as a count, not a failure
   - **Every prose-like block splits inside itself** (prose, opener, goals, recap, notice). Its `md` is cut at paragraph boundaries and at top-level list-item boundaries (blank lines outside code fences; a fenced block is never cut) into *units*.
     - A **pipe table is one atomic unit**, measured by rows (`max_table_rows`, default 12), and its words do not count toward `max_words`.
+    - A list item's indented continuation lines stay with their item, and a nested list is never split from its parent item. The slide-rules test pins usaco-bronze unit 1's 110-word, 6-bullet recap.
     - Units of consecutive prose blocks are packed into slides of up to `max_words` (default 90).
     - A heading always starts a new slide.
     - A unit longer than `max_words` becomes one slide on its own.
@@ -135,7 +137,16 @@ User decisions:
   | python-concepts | 5 | one prose block of 129 words |
   | acsl | 192 | 173 prose blocks over 90 words (max 518), 98 of them containing tables, and 29 single paragraphs over 90 words |
 
-  **Expected after in-block splitting:** recaps, goals and lists split at items; tables are atomic. What can remain is single paragraphs over `max_unit_words` (about 29 in acsl, about 0 elsewhere) and tables over `max_table_rows`. Phase C records the measured result.
+  **Expected after in-block splitting** (re-measured by [fable], round 3):
+  - no paragraph over 150 words in any book
+  - 12 acsl units and 1 usaco-bronze unit between 90 and 150 words
+  - 1 acsl table over 12 rows (the one expected `slides.allow` entry)
+
+  Phase C **asserts** these counts in a test, not just records them.
+- **Two limits, stated plainly:**
+  - `max_words` (90) is the **packing budget**.
+  - `max_unit_words` (150) and `max_table_rows` (12) are the **failure limits**.
+  - A unit between 90 and 150 words becomes one slide over the packing budget. The audit **reports** each such slide (expected: 13) and does not fail on it. Only units over the failure limits fail CI.
 - **Slide audit:** `pnpm -C site slide-audit` reports, per book, every **indivisible unit** over `max_unit_words` (default 150: one paragraph too long for a slide), every table over `max_table_rows`, and every code slide over `max_code_lines`.
   - A remaining oversized unit is either split by a `slide-break` (where it spans blocks) or listed by key in `<book>/site.yaml` `slides.allow: [{key, reason}]`: an explicit, reviewed list, like `[WONTFIX]`. A ceiling is never raised to make the audit pass.
   - The content gate reviews the allow list.
@@ -191,7 +202,8 @@ Never `git stash` in the shared tree.
     - a `<name>` token is escaped
     - the two dollar-sign fixtures
   - **The structural leak test (poisoned bundle).** The site must never render a field that may hold hidden material. The bundle's own content is already proven by plan 101's answer model.
-    - A test copies each real bundle and writes a unique sentinel string into every forbidden field: `answer_md`, `check.source`, `check.hash`, `check.program` of a hidden item, and every non-sample fixture `.out` file.
+    - A test copies each real bundle and writes a unique sentinel into every forbidden field: `answer_md`, `check.source`, `check.hash`, `check.program` of a hidden item, and every non-sample fixture `.out` file.
+      - Sentinels respect the schema so the loader accepts the poisoned bundle: `check.hash` gets `sha256:` plus 64 hex characters derived from its sentinel, and the search looks for that hex. The other fields take free text.
     - It builds the site from the poisoned bundles and searches all of `dist/` for any sentinel: HTML, JS, CSS, JSON, and Pagefind's index and fragment files (decompressed).
     - Zero hits is required. A regression deliberately renders one forbidden field and must be caught.
 - **Phase C: slides, the slide audit and the slide-break pass.**
@@ -232,7 +244,8 @@ Never `git stash` in the shared tree.
     - **Build audit:** a scan of `dist/` finds no `http(s)://` URL in any `src`, `srcset`, CSS `url()`, `@import`, `fetch`, `import` or `<link>` (other than a hyperlink). The only absolute URLs allowed are plain `<a href>` hyperlinks on an allowlist: the GitHub issue link, the release PDF links and the CC license deed. These are user-initiated navigations, not loads.
     - **Headers:** the test server (`site/scripts/serve.mjs`) applies `dist/_headers` with the Cloudflare Pages `_headers` semantics.
       - It asserts that every HTML response carries the CSP and the other headers.
-      - It records `securitypolicyviolation` events on every template, `/search/` included (Pagefind's WebAssembly), and requires zero.
+      - It records `securitypolicyviolation` events on every template, `/search/` included (Pagefind's WebAssembly), plus a real math lesson (acsl unit 08's `$\overline{A}$`) and the acsl reference page, and requires zero.
+      - It also asserts that no element in `dist/` HTML carries a `style` attribute.
       - A deliberately injected inline script is reported as a violation.
       - Part D re-verifies the headers on the real host.
   - **The leak test** from Phase B, run over the full four-book `dist/`.
@@ -279,6 +292,19 @@ Never `git stash` in the shared tree.
     - the `ci_scope --site` interface change
 
 - `[sol]` **REJECT** (round 2, a968ea1): `[FIXED]` Same-origin requests were unaudited. Now every same-origin request must be a body-less GET for an existing `dist/` path, with no unexpected query string and no typed sentinel in any URL or header.
+
+- `[fable]` **APPROVE WITH NITS** (round 3, bb6528b): re-measured, in-block splitting brings every book under the audit with one expected allow entry.
+  - `[FIXED]` (nits)
+    - expected counts asserted
+    - the 90–150-word gap named
+    - list-item continuation rule, with the usaco recap fixture
+    - schema-shaped hash sentinels
+    - `data:` dropped from `img-src`
+    - the JSON key scan without `program`
+
+- `[sol]` **REJECT** (round 3, bb6528b):
+  - `[FIXED]` KaTeX's HTML output uses inline styles, which the CSP forbids. Math is now MathML-only, and the zero-violation test names a real math lesson and checks that no element carries a `style` attribute.
+  - `[FIXED]` (nits) The two slide limits are stated, and slides between them are reported; schema-shaped hash sentinels (already folded from [fable]).
 
 ## Content Review
 
