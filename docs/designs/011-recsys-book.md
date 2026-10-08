@@ -184,6 +184,9 @@ a new capability — designed from the start to admit those, so no rewrite is fo
     (`SUBSTREAM_KEYWORDS = 1`, `SUBSTREAM_SERIES = 2`, `SUBSTREAM_SESSIONS = 3`) and never touch the threaded rng.
     `catalog.csv.gz`, `interactions.csv.gz`, `keywords.csv.gz` and `cold_partitions.json` stay byte-identical
     (sha256-pinned by a test).
+  - **SASRec is a measured near-tie, not the winner (user decision 2026-10-08).** At the §7 ceiling, a tiny SASRec
+    learns order (ordered beats an order-shuffled copy) but stays about 1.5–2 SE short of bag item-item CF. The
+    cheap order-aware paths (last-k CF, transition) carry U12's lift. The unit reports this honestly, as U11 did.
   - A committed **session recoverability harness** gates the order signal. Last-k CF must beat bag CF; a last-k
     transition reference must drop clearly under an order-shuffled control; and next-in-series must beat bag CF.
 

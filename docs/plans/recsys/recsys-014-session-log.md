@@ -5,7 +5,8 @@
 for U12"). This is a **data/tooling foundation slice, not a unit** (like recsys-004): it adds a seeded, separate
 **session log** with real order structure so Unit 12 (sequence-aware retrieval, **recsys-015**) has something true to
 teach, while the main interaction log stays **byte-identical** so no number in Units 1–11 or Checkpoint A moves.
-**Plan v4** (after plan-gate r1–r3; see `## Plan Review`).
+**Plan v5** (after plan-gate r1–r4 and a Phase-B stop-rule pause; see `## Plan Review` and `## Phase-B pause and
+user decision (v5)`).
 
 ## Motivation (empirically established — U12 pre-plan probe, 2026-10-07)
 On the current log (`interactions.csv.gz`; val, k=10, 500 eligible readers, cold excluded, SE ≈ 0.021):
@@ -111,6 +112,29 @@ and seed-unstable. Goal 4 is therefore a **bounded go/no-go with a stop rule**, 
    Goal-4 GO on seeds 2–4 — Phase B stops **without retuning** and the session **pauses via AskUserQuestion** (U12 premise false at the §7 ceiling; options e.g. reframe U12
    around last-k/transition references with SASRec as a measured tie, raise the §7 ceiling, or defer). No
    implementation beyond Phase B proceeds without that answer.
+
+## Phase-B pause and user decision (v5, 2026-10-08)
+Phases A+B were implemented (`a94c6d7`). G1 byte-stability passes. G3a–G3d pass with wide margins on tuning seeds 0–1
+in all three rounds (last-3 CF − bag +0.061–0.073; last-5 transition ordered/shuffled 1.48–1.60×, +0.17–0.19; G3c
+1.67–1.99×, n 417–652). The **G4 tuning subcriterion failed**. SASRec learns order: with 1,500 readers G4a
+ordered − shuffled is +0.027 to +0.046, with the paired CI excluding 0. But G4b parity with bag CF missed on both
+seeds in all three rounds, by 1.5–2 SE (best −0.017 / −0.025). Fits took about 100 s, not the planned 10–20 s. The
+stop rule fired, so no freeze and no one-shot run happened, and the committed seed and seeds 2–4 were never touched.
+**User decision (AskUserQuestion, 2026-10-08): "Reframe: order paths + SASRec tie".** U12 teaches order-awareness
+with the last-k and transition paths. SASRec is a measured near-tie: it learns order, but at the §7 ceiling it does
+not beat CF, the same honest framing as U11. Consequent amendments:
+- **Goal 4 (amended).** G4a stays **required**: post-freeze, on ≥ 2 of the 3 held-out seeds 2–4, ordered −
+  shuffled ≥ 2 paired SE and ≥ 0.02. **G4b becomes reported, not required:** the ordered − bag gap is reported with
+  its paired SE and CI as the near-tie number U12 will cite. The G4 tuning subcriterion becomes G4a on both tuning
+  seeds. Round 3's V1 (1,500 readers, dropout 0.3, weight decay 1e-5, 150 epochs) already meets G3a–G3d + G4a on
+  seeds 0–1, so **no further tuning rounds**: freeze V1 and run the one-shot evaluation.
+- **Stop rule (unchanged otherwise).** If the one-shot run fails any G3 gate at the committed seed, the G3 held-out
+  robustness rule, or G4a on ≥ 2/3 of seeds 2–4, pause again without retuning.
+- **Size and time.** `session_n_readers = 1500` gives about 183k events, still ≤ 200k (§7). Generation is measured
+  standalone against the ≤ 15 s bar. SASRec fit time of about 100 s is recorded as a **recsys-015 constraint**:
+  U12's notebooks must use cached or seeded short fits within the book's per-notebook budget, and that is decided in
+  recsys-015, not here.
+- Design 011 §6 "Session log for U12" gains one sentence on the near-tie framing.
 
 ## Phase 0 — Design 011 amendment (active session inline; reviewed by this plan's gate)
 - **§6** U12 signal row → "**separate session log** (`sessions.csv.gz` + `series.csv.gz`): forced next-volume
@@ -224,6 +248,9 @@ Phase G is this plan's named verification phase.
   `__post_init__` validation → Phases A/B. F7 byte test hashes CI output, NEP-19 note → Phase C/Goal 1.
   F8 §6 amendment: cold exclusion, series diagnostics-only, U13/U14 on session log only → Phase 0. Knob defaults →
   Phase B.
+
+### Round 5 (plan v5 — post-pause amendment)
+<!-- appended after re-gate -->
 
 ### Round 4 (plan v4 @ 8f5a06a) — CONSENSUS
 - **[self]** APPROVE.
