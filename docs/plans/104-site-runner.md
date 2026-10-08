@@ -36,6 +36,10 @@ User goal, 2026-10-06: "non stop until full working learning website".
       - Boot time is excluded from each case's budget.
       - Expected cost: about 1–1.5 s of boot per case on a desktop, so a 10-case item takes about 10–15 s.
       - The memory bound below still holds, because only one spare boots at a time.
+      - **The sample case runs first,** and its verdict shows immediately (about 1 s) while the hidden cases continue. A **Stop** button (`interrupt`) ends a long check.
+      - **The spare is pipelined:** the next spare starts booting the moment the current spare is handed a case, not when the case ends. Still at most three workers.
+      - **Boot timing:** 1–1.5 s is with a warm WebAssembly compile cache, and the first check after a cold load is slower; the UI explains boot. Phase D measures cold and warm boot on a low-end device profile (Chromium CPU throttling ×4) and records both.
+      - Lesson sessions deliberately keep the shared-process model (like a notebook kernel), so no fresh-process parity is claimed there.
     - **Lesson sessions** deliberately share one worker and its state, like the notebook kernel. "Reset" restarts that worker.
   - **Exact destinations:** every `postMessage` names its exact `targetOrigin`: the site posts to the runner origin, and the runner posts to the site origin. Never `*`. If the iframe has been navigated elsewhere, the browser drops the message, so student code cannot reach another page.
   - **Binding** (all required, each tested):
@@ -201,6 +205,8 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `[FIXED]` The CI interpreter is pinned, and the parity test checks that the minors agree.
 
 - `[sol]` **REJECT** (round 3, e1064cf): `[FIXED]` A reset inside one process cannot reach fresh-process parity (`sys.path` and preloaded-module mutations survive). Every fixture case now runs in a fresh worker (spare booted in parallel, boot time outside the budget), with a contamination test between cases covering `math.pi`, `print`, `sys.path` and `random`.
+
+- `[fable]` **APPROVE WITH NITS** (round 4, 3d29d40): fresh-worker-per-case is the honest route. Real data: 233 fixtures items, median 5 cases, max 13, so a typical check takes about 5–8 s. `[FIXED]` (nits) The sample case runs first, with Stop; the spare is pipelined; cold and warm boot are measured on a throttled profile; lesson sessions are stated to share one process.
 
 ## Content Review
 
