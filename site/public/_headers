@@ -1,0 +1,13 @@
+# Response headers for every page (Cloudflare Pages `_headers` format; plan 103 Phase E, D9).
+# The strict CSP: no inline scripts or styles, nothing from another origin; 'wasm-unsafe-eval'
+# is for Pagefind's WebAssembly. The one exception is frame-src: the Python runner's iframe
+# (plan 104, D7) on its own origin, which astro.config.mjs fills in for {{RUNNER_ORIGIN}} from
+# runner/origins.json (or PY4KIDS_RUNNER_ORIGIN). COOP/COEP make the site cross-origin isolated,
+# as the runner's SharedArrayBuffer interrupts need.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self'; frame-src {{RUNNER_ORIGIN}}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), hid=(), magnetometer=(), microphone=(), midi=(), payment=(), serial=(), usb=()

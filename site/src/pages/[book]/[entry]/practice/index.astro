@@ -1,0 +1,152 @@
+---
+/**
+ * The practice page `/<book>/<entry>/practice/` (plan 103 Phase B; plan 104 Phase B): the entry's
+ * intro, then each item's `before` blocks, statement, division tags, stretch marker and a "How
+ * this is checked" line, and its controls by check kind: a code editor (prefilled with the
+ * starter) with Run and Check, or an answer box with its format hint; self-check items show their
+ * requirements as a checklist and say the site cannot check them; `also_check` requirements show
+ * as a self-check list beside the automatic check. Checklists are saved by the progress island,
+ * keyed by `data-item-key` and `data-requirement`. Then the outro.
+ * All bundle data comes through practiceView (site/src/lib/entry.ts): no answer, no check source,
+ * no hash and no hidden fixture is in the page. The check island (src/scripts/practice.ts)
+ * fetches an item's check projection when Check is pressed, and an odd exercise's answer only
+ * after a genuine attempt.
+ */
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../../layouts/Base.astro';
+import { getBook, getBooks } from '../../../../lib/bundle';
+import { practicePaths, practiceView, REPORT_LABEL } from '../../../../lib/entry';
+import '../../../../styles/checks.css';
+
+export const getStaticPaths = (() =>
+  practicePaths(getBooks()).map((p) => ({ params: { book: p.book, entry: p.entry } }))) satisfies GetStaticPaths;
+
+const { book: bookId, entry: entryId } = Astro.params as { book: string; entry: string };
+const book = getBook(bookId);
+const view = practiceView(book, entryId);
+---
+<Base title={`${view.heading}: ${view.title}`} book={book}>
+  <p class="crumbs"><a href={view.bookHref} data-pagefind-meta="book" data-pagefind-filter="book">{view.bookTitle}</a> › <a href={view.readingHref}>{view.title}</a></p>
+  <h1 class="entry-title" data-pagefind-meta="title">{view.heading}: {view.title}</h1>
+  <div data-pagefind-body>
+    {view.intro.length > 0 && (
+      <div class="practice-intro">{view.intro.map((html) => <Fragment set:html={html} />)}</div>
+    )}
+    {view.items.map((item) => (
+      <>
+        {item.before.map((html) => <Fragment set:html={html} />)}
+        <section
+          class="practice-item"
+          id={item.anchor}
+          data-item-key={item.key}
+          data-check-kind={item.checkKind}
+          data-check-href={item.checkHref}
+          data-answer-href={item.answerHref ?? undefined}
+          data-event-kind={item.eventKind}
+          aria-labelledby={`${item.anchor}-h`}
+        >
+          <h2 id={`${item.anchor}-h`}>{item.title ? `${item.label}: ${item.title}` : item.label}</h2>
+          {(item.stretch || item.divisions.length > 0) && (
+            <ul class="item-tags" aria-label="Tags">
+              {item.stretch && <li class="tag tag-stretch">Challenge</li>}
+              {item.divisions.map((d) => <li class="tag tag-division">Division: {d}</li>)}
+            </ul>
+          )}
+          <div class="statement"><Fragment set:html={item.statement} /></div>
+          {item.starter && (
+            <div class="starter">
+              <p class="starter-label">Starter (read-only)</p>
+              <Fragment set:html={item.starter} />
+            </div>
+          )}
+          <p class="how-checked"><strong>How this is checked:</strong> <Fragment set:html={item.checkLine} /></p>
+          {item.formatHint && <p class="format-hint" id={`${item.anchor}-hint`}>Answer format: {item.formatHint}</p>}
+          {item.editor && (
+            <div class="work" data-work>
+              <label class="work-label" for={`${item.anchor}-code`}>Your code</label>
+              <textarea
+                id={`${item.anchor}-code`}
+                class="code-input"
+                data-code
+                rows="10"
+                spellcheck="false"
+                autocapitalize="off"
+                autocomplete="off"
+              >{item.starterCode}</textarea>
+              <div class="work-actions">
+                <button type="button" class="button" data-run-item>{item.checkKind === 'fixtures' ? 'Run on the sample' : 'Run'}</button>
+                {item.checkKind !== 'self-check' && <button type="button" class="button button-primary" data-check-item>Check</button>}
+                <button type="button" class="button" data-stop hidden>Stop</button>
+              </div>
+            </div>
+          )}
+          {item.typed && (
+            <form class="answer-form" data-answer-form>
+              <label class="work-label" for={`${item.anchor}-answer`}>Your answer</label>
+              <textarea
+                id={`${item.anchor}-answer`}
+                class={item.exact ? 'answer-input answer-exact' : 'answer-input'}
+                data-answer
+                data-exact={item.exact ? '' : undefined}
+                rows={item.exact ? 4 : 2}
+                spellcheck="false"
+                autocapitalize="off"
+                autocomplete="off"
+                aria-describedby={item.formatHint ? `${item.anchor}-hint${item.exact ? ` ${item.anchor}-exact` : ''}` : undefined}
+              ></textarea>
+              {item.exact && (
+                <p class="format-hint" id={`${item.anchor}-exact`}>
+                  Spaces and tabs count in this answer: Tab types a tab. To leave the box, press Escape, then Tab.
+                </p>
+              )}
+              <button type="submit" class="button button-primary">Check</button>
+            </form>
+          )}
+          <div class="check-result" data-result aria-live="polite"></div>
+          {item.selfCheck && (
+            <p class="cannot-check" data-cannot-check>
+              The site cannot check this one. Run your program, then tick each item below when your work does it.
+            </p>
+          )}
+          {item.selfCheck && (
+            <fieldset class="self-check" data-self-check data-item-key={item.key}>
+              <legend>Check your work</legend>
+              <ul>
+                {item.selfCheck.map((req) => (
+                  <li>
+                    <input type="checkbox" id={req.id} data-item-key={item.key} data-requirement={req.index} />
+                    <label for={req.id}><Fragment set:html={req.html} /></label>
+                  </li>
+                ))}
+              </ul>
+            </fieldset>
+          )}
+          {item.alsoCheck && (
+            <fieldset class="self-check also-check" data-also-check data-item-key={item.key}>
+              <legend>Also check yourself</legend>
+              <p class="also-note">The automatic check cannot see these, so tick each one when your work does it.</p>
+              <ul>
+                {item.alsoCheck.map((req) => (
+                  <li>
+                    <input type="checkbox" id={req.id} data-item-key={item.key} data-requirement={req.index} />
+                    <label for={req.id}><Fragment set:html={req.html} /></label>
+                  </li>
+                ))}
+              </ul>
+            </fieldset>
+          )}
+          {item.answerHref && <div class="item-answer" data-answer-slot hidden></div>}
+          <p class="report"><a href={item.reportHref}>{REPORT_LABEL}</a></p>
+        </section>
+      </>
+    ))}
+    {view.outro.length > 0 && (
+      <div class="practice-outro">{view.outro.map((html) => <Fragment set:html={html} />)}</div>
+    )}
+  </div>
+  <p><a href={view.readingHref}>Back to {view.title}</a></p>
+</Base>
+
+<script>
+  import '../../../../scripts/practice.ts';
+</script>

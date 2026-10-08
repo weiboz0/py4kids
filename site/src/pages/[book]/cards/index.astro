@@ -1,0 +1,49 @@
+---
+/**
+ * The book's quiz deck, `/<book>/cards/` (plan 103 Pages; "Mastery map and cards (D8)"): due
+ * cards first (Leitner, 5 boxes), filterable by unit. The page is a shell; the deck island
+ * (src/scripts/card-deck.ts) loads `deck.json`, the build-time projection, and the on-device
+ * card states.
+ */
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../layouts/Base.astro';
+import { getBooks, type LoadedBook } from '../../../lib/bundle';
+import { deckSummary } from '../../../lib/cards';
+import { bookHref } from '../../../lib/catalog';
+
+export const getStaticPaths = (() =>
+  getBooks()
+    .filter((book) => book.entries.some((e) => e.data.cards.length > 0))
+    .map((book) => ({ params: { book: book.id }, props: { book } }))) satisfies GetStaticPaths;
+
+interface Props {
+  book: LoadedBook;
+}
+const { book } = Astro.props;
+const summary = deckSummary(book);
+const title = `Quiz cards: ${book.book.book.title}`;
+---
+<Base title={title} description={`Spaced-repetition quiz cards for ${book.book.book.title}.`} book={book}>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href={bookHref(book.id)}>{book.book.book.title}</a></nav>
+  <h1>Quiz cards</h1>
+  <p>
+    {summary.total} cards: predict what a program prints, or match a term to its meaning.
+    Cards you know come back less often; cards you miss come back soon.
+    Your answers stay on this device.
+  </p>
+  <section class="deck" data-deck data-book={book.id} aria-label="Card deck">
+    <p class="deck-needs-js" data-deck-loading>The card deck needs JavaScript to run.</p>
+    <div class="deck-bar" data-deck-bar hidden>
+      <label for="deck-unit">Unit</label>
+      <select id="deck-unit" data-deck-unit>
+        <option value="">All units ({summary.total})</option>
+        {summary.units.map((u) => <option value={u.id}>{u.title} ({u.count})</option>)}
+      </select>
+      <p class="deck-counts" data-deck-counts aria-live="polite"></p>
+    </div>
+    <div class="deck-card" data-deck-card hidden></div>
+  </section>
+</Base>
+<script>
+  import '../../../scripts/card-deck.ts';
+</script>

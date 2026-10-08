@@ -1,0 +1,79 @@
+---
+/**
+ * `/privacy/` (plan 103 Pages; design 012 D9): the privacy notice in plain language. Nothing is
+ * collected; what stays on the device and how to clear it; report-a-problem is a public GitHub
+ * issue for adults; contact through GitHub issues. Not indexed for search.
+ */
+import Base from '../layouts/Base.astro';
+import { ISSUES_LIST_URL } from '../lib/report';
+---
+<Base title="Privacy" description="py4kids collects no personal data. What stays on your device, and how to clear it.">
+  <article class="site-text">
+    <h1>Privacy</h1>
+    <p class="muted">Last updated 7 October 2026.</p>
+    <p>
+      This site is made for children, so it is built to collect <strong>no personal data</strong>.
+      This notice is written for parents, teachers and students.
+    </p>
+
+    <h2>What we collect</h2>
+    <p>Nothing. py4kids has:</p>
+    <ul>
+      <li>no accounts and no sign-in;</li>
+      <li>no analytics, no tracking and no advertising;</li>
+      <li>no cookies;</li>
+      <li>no third-party services: every page, script, picture and search file comes from this site itself, and the site uses your device's own fonts.</li>
+    </ul>
+    <p>
+      Like every website, the server that delivers these pages receives the ordinary technical
+      details of each request (such as an IP address) so that it can send the page back.
+      py4kids adds nothing to them and does not use them to identify anyone.
+    </p>
+
+    <h2>What stays on your device</h2>
+    <p>
+      To remember your progress, the site saves a little information in your browser, on your own
+      device. It is never sent anywhere, and it carries no name or other identifier.
+    </p>
+    <ul>
+      <li>a browser database called <code>py4kids</code> (IndexedDB), which keeps:
+        <ul>
+          <li>which slides you have viewed, your quiz-card results (right or not yet) and the checklist items you ticked;</li>
+          <li>when each quiz card is next due;</li>
+          <li>the last page you read in each book, so "Continue" can take you back;</li>
+          <li>the results of your Runs and Checks (which tests passed);</li>
+          <li>the code you ran or checked and the answers you typed into exercises, so the editor can show your last try and an exercise's answer can open after you have tried it.</li>
+        </ul>
+        Your programs run in your own browser, in a separate, locked-down part of the page; your code
+        and answers are never sent anywhere.
+      </li>
+      <li>your light or dark theme choice (<code>py4kids-theme</code>);</li>
+      <li>a note that the site already told you once that it cannot save in this browser (<code>py4kids-unsaved-notice</code>, removed when the browser tab closes).</li>
+    </ul>
+    <p>
+      What you type into search or into a quiz card is not saved.
+    </p>
+
+    <h2>How to clear it</h2>
+    <p>
+      Clear this site's data in your browser's settings (usually under "Privacy", "Cookies and site
+      data" or "Website data"). This removes all saved progress for py4kids on that browser.
+      In a private window, nothing is kept after you close it.
+    </p>
+
+    <h2>Reporting a problem</h2>
+    <p>
+      Lessons and exercises have a link labelled "For parents and teachers: report a problem".
+      It opens a new issue on GitHub, a public website, filled in with only the exercise's name and
+      a code for the book's version: nothing about the student, and no answers.
+      Sending it needs a GitHub account, and whatever is written there is public.
+      An adult should use it, and should not include a child's name or other personal details.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Questions about this notice: open an issue on the project's
+      <a href={ISSUES_LIST_URL}>GitHub issues page</a> (public, so please leave out personal details).
+    </p>
+  </article>
+</Base>

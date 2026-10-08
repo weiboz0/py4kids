@@ -3,7 +3,15 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tools.books import SiteConfigError, books_with_flag, site_config, site_config_errors
+from tools.books import (
+    SLIDE_DEFAULTS,
+    SiteConfigError,
+    SlideAllow,
+    SlideConfig,
+    books_with_flag,
+    site_config,
+    site_config_errors,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 FLAGS = ("publication", "judge", "patterns", "acsl", "site")
@@ -207,7 +215,7 @@ def test_site_config_real_books():
     for book in books_with_flag(REPO, "site"):
         assert site_config_errors(REPO, book) == []
         config = site_config(REPO, book)
-        assert config.classification == "proposed"
+        assert config.classification == "confirmed"  # plan 102 flipped all four
         assert config.fixture_budget_kb == 130
 
 
@@ -250,3 +258,91 @@ def test_site_book_needs_site_yaml(tmp_path):
     assert site_config_errors(root, "b") == [
         "FAIL: b: site: true but b/site.yaml is missing (design 012 D1)"
     ]
+
+
+# --- the optional `slides:` block (plan 103 D6) ---------------------------------------------
+
+
+def test_slide_defaults_match_the_site():
+    """The site's slide rules (site/src/lib/slides.ts DEFAULT_LIMITS) use the same defaults."""
+    text = (REPO / "site" / "src" / "lib" / "slides.ts").read_text(encoding="utf-8")
+    for key, value in SLIDE_DEFAULTS.items():
+        camel = "".join(part.capitalize() if i else part for i, part in enumerate(key.split("_")))
+        assert f"  {camel}: {value}," in text
+    assert SLIDE_DEFAULTS == {"max_words": 90, "max_unit_words": 150, "max_table_rows": 12,
+                              "max_code_lines": 40}
+
+
+def test_slides_default_when_absent(tmp_path):
+    root = make_registry(tmp_path, books=[{"id": "b", "site": True}])
+    (tmp_path / "b" / "site.yaml").write_text("classification: proposed\nfixture_budget_kb: 130\n")
+    assert site_config(root, "b").slides == SlideConfig()
+    assert SlideConfig().max_words == 90 and SlideConfig().allow == ()
+
+
+def test_slides_block_valid(tmp_path):
+    root = make_registry(tmp_path, books=[{"id": "b", "site": True}])
+    (tmp_path / "b" / "site.yaml").write_text(
+        "classification: proposed\nfixture_budget_kb: 130\nslides:\n  max_words: 80\n"
+        "  max_code_lines: 50\n  allow:\n    - key: b/unit-01-x/lesson/c1\n      reason: ' one table '\n"
+    )
+    assert site_config_errors(root, "b") == []
+    slides = site_config(root, "b").slides
+    assert slides == SlideConfig(max_words=80, max_unit_words=150, max_table_rows=12, max_code_lines=50,
+                                 allow=(SlideAllow(key="b/unit-01-x/lesson/c1", reason="one table"),))
+
+
+@pytest.mark.parametrize(("block", "error"), [
+    ("slides: 3", "slides: must be a mapping"),
+    ("slides:\n  max_lines: 3", "slides: unknown key: max_lines"),
+    ("slides:\n  max_words: 0", "slides: max_words must be a positive integer"),
+    ("slides:\n  max_table_rows: true", "slides: max_table_rows must be a positive integer"),
+    ("slides:\n  max_unit_words: 2.5", "slides: max_unit_words must be a positive integer"),
+    ("slides:\n  max_words: 200", "slides: max_words (200) must not exceed max_unit_words (150)"),
+    ("slides:\n  allow: {key: a}", "slides: allow must be a list of {key, reason} mappings"),
+    ("slides:\n  allow: [a]", "slides: allow[0]: must be a mapping with key and reason"),
+    ("slides:\n  allow: [{key: a}]", "slides: allow[0]: reason must be a non-empty string (a)"),
+    ("slides:\n  allow: [{reason: r}]", "slides: allow[0]: key must be a non-empty string"),
+    ("slides:\n  allow: [{key: a, reason: r, why: x}]", "slides: allow[0]: unknown key: why"),
+    ("slides:\n  allow: [{key: a, reason: r}, {key: a, reason: s}]", "slides: allow[1]: duplicate key: a"),
+])
+def test_slides_block_invalid(tmp_path, block, error):
+    root = make_registry(tmp_path, books=[{"id": "b", "site": True}])
+    (tmp_path / "b" / "site.yaml").write_text(f"classification: proposed\nfixture_budget_kb: 130\n{block}\n")
+    assert site_config_errors(root, "b") == [f"FAIL: b/site.yaml: {error}"]
+    with pytest.raises(SiteConfigError, match="slides"):
+        site_config(root, "b")
+
+
+def test_real_slide_allow_lists():
+    """The reviewed exceptions (plan 103 Phase C): each key belongs to its book and has a reason."""
+    allowed = {book: site_config(REPO, book).slides.allow for book in books_with_flag(REPO, "site")}
+    assert {book: len(entries) for book, entries in allowed.items()} == {
+        "python-projects": 2, "python-concepts": 0, "usaco-bronze": 4, "acsl": 8,
+    }
+    for book, entries in allowed.items():
+        for entry in entries:
+            assert entry.key.startswith(f"{book}/") and "/lesson/" in entry.key
+            assert len(entry.reason) > 40
+
+
+def test_slide_tags_only_on_lesson_cells():
+    """`slide-break` / `slide-skip` are lesson-cell tags (the slide player reads lesson blocks)."""
+    import json
+
+    found: dict[str, int] = {}
+    for path in sorted(REPO.glob("*/units/*/*.ipynb")) + sorted(REPO.glob("*/projects/*/*.ipynb")):
+        for cell in json.loads(path.read_text(encoding="utf-8"))["cells"]:
+            tags = set(cell.get("metadata", {}).get("tags", [])) & {"slide-break", "slide-skip"}
+            if tags:
+                assert path.name == "lesson.ipynb", path
+                key = str(path.parent.relative_to(REPO))
+                found[key] = found.get(key, 0) + 1
+    assert found == {
+        "python-projects/units/unit-03-turtle-art-studio": 1,
+        "python-projects/units/unit-05-function-factory": 1,
+        "python-projects/units/unit-07-high-score-hall": 1,
+        "python-projects/units/unit-09-save-point": 2,
+        "usaco-bronze/units/unit-01-reading-the-input": 1,
+        "usaco-bronze/units/unit-10-stacks-queues-deques": 1,
+    }

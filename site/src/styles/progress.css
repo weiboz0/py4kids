@@ -1,0 +1,226 @@
+/* Progress, cards, mastery and resume (plan 103 Phase D). Uses global.css tokens. */
+
+[hidden] {
+  display: none !important;
+}
+
+.progress-notice {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--focus);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.resume {
+  margin: 0.75rem 0;
+}
+
+.resume-link {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.crumbs {
+  font-size: 0.95rem;
+}
+
+/* Buttons */
+.button {
+  font: inherit;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.button-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.button:focus-visible,
+.card-heading:focus-visible,
+.card-code:focus-visible,
+.deck select:focus-visible,
+.card-typed input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Deck */
+.deck-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 1rem 0;
+}
+
+.deck select,
+.card-typed input {
+  font: inherit;
+  max-width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.deck-counts {
+  margin: 0;
+  color: var(--muted);
+}
+
+.card {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.card-heading {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.card-status,
+.card-report {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.card-report {
+  margin: 1rem 0 0;
+}
+
+.card-label {
+  margin: 0.75rem 0 0.25rem;
+  font-weight: 600;
+}
+
+.card-code {
+  margin: 0.25rem 0 0.75rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.card-prelude .card-code {
+  opacity: 0.85;
+}
+
+.card-term {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.card-definition {
+  margin: 0.5rem 0 1rem;
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--accent);
+  background: var(--bg);
+}
+
+.card-definition code,
+.card-term code {
+  font-family: var(--font-code);
+}
+
+.card-typed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-typed input {
+  flex: 1 1 12rem;
+  font-family: var(--font-code);
+}
+
+.card-options,
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.card-option.is-correct {
+  border: 2px solid #1a7f37;
+  font-weight: 700;
+}
+
+.card-option.is-correct::before {
+  content: '\2713\00a0';
+}
+
+.card-option.is-wrong {
+  border: 2px solid #b42318;
+  text-decoration: line-through;
+}
+
+.card-feedback {
+  min-height: 1.6em;
+  margin: 0.5rem 0;
+  font-weight: 600;
+}
+
+/* Mastery map */
+.mastery-details > summary {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mastery-list {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.mastery-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.mastery-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mastery-value progress {
+  width: 8rem;
+}
+
+.mastery-practice {
+  color: var(--muted);
+  font-style: italic;
+}

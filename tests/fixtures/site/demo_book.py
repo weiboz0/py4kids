@@ -5,7 +5,7 @@
 
 - unit-01-demo: Exercise 1 fixtures (assets/ex1.py, assets/ex1/{1,2}.in|.out; the Sample Input
   fence follows prose), 2 answer (short-answer, authored answer_format), 3 predict, 4 asserts
-  (function in the starter), 5 expected-output (names a tracked lesson asset), 6 self-check
+  (function in the starter; authored `also_check`), 5 expected-output (names a tracked lesson asset), 6 self-check
   (input()), and one unnumbered challenge after a `## Challenge` lead-in.
 - unit-02-more: the asserts portability cases, a turtle "trace by hand" item, a silent trace
   program and unseeded random.
@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -91,7 +92,8 @@ def unit_01(base: Path) -> None:
         md("u1e04", "**Your answer:** _(write your answer here)_"),
         md("u1e05", "## Exercise 3\n\n### Loop Trace\n\nWhat does this code print?"),
         code("u1e06", "for i in range(3):\n    print(i * 2)"),
-        md("u1e07", "## Exercise 4\n\n### Double It\n\nWrite `double(n)` so it returns twice `n`."),
+        md("u1e07", "## Exercise 4\n\n### Double It\n\nWrite `double(n)` so it returns twice `n`.",
+           also_check=["Write `double(n)`"]),
         code("u1e08", "def double(n):\n    pass"),
         md("u1e09", "## Exercise 5\n\n### Count Up\n\nPrint the numbers 1, 2 and 3 on separate "
            "lines, then `done`. You may start from `assets/count_helper.py`."),
@@ -270,8 +272,24 @@ def build_demo_root(root: Path) -> Path:
     checkpoint_01(base)
     project_01(base)
     project_02(base)
+    write_timings(root)
     git_add(root)
     return root
+
+
+def write_timings(root: Path, cpu_ms: int = 100) -> None:
+    """The committed timing cache (plan 104 C) for the demo's one fixtures item, Exercise 1."""
+    from tools.export.answers import solver_fingerprint
+    from tools.export.timing import CACHE_VERSION, cache_path
+
+    assets = Path(root) / BOOK / "units" / "unit-01-demo" / "assets"
+    pairs = sorted((int(inp.stem), inp, inp.with_suffix(".out"))
+                   for inp in (assets / "ex1").glob("*.in"))
+    entry = {"cpu_ms": cpu_ms, "measured_ms": 20, "cases": len(pairs),
+             "fingerprint": solver_fingerprint(assets / "ex1.py", pairs)}
+    data = {"version": CACHE_VERSION, "book": BOOK,
+            "items": {f"{BOOK}/unit-01-demo/exercises/u1e01": entry}}
+    write(cache_path(root, BOOK), json.dumps(data, sort_keys=True, indent=1) + "\n")
 
 
 def git_add(root: Path) -> None:

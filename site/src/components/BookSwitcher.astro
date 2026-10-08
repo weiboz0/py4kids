@@ -1,0 +1,23 @@
+---
+/** The book switcher: a native <details> disclosure, keyboard operable with no script. */
+import { bookLinks } from '../lib/catalog';
+import type { LoadedBook } from '../lib/bundle';
+
+interface Props {
+  books: LoadedBook[];
+  current?: string | undefined;
+}
+const { books, current } = Astro.props;
+const links = bookLinks(books);
+const label = links.find((l) => l.id === current)?.title ?? 'Books';
+---
+<nav class="book-switcher" aria-label="Books">
+  <details>
+    <summary>{label}</summary>
+    <ul>
+      {links.map((l) => (
+        <li><a href={l.href} aria-current={l.id === current ? 'page' : undefined}>{l.title}</a></li>
+      ))}
+    </ul>
+  </details>
+</nav>

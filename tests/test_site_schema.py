@@ -161,7 +161,7 @@ def check(kind: str) -> dict:
              "out_file": "files/unit-03-x/fixtures/ex1/1.out", "sample": True},
             {"n": 2, "in_file": "files/unit-03-x/fixtures/ex1/2.in",
              "out_file": "files/unit-03-x/fixtures/ex1/2.out", "sample": False}],
-            "match": "token", "over_budget": [3]},
+            "match": "token", "over_budget": [3], "cpu_ms": 200},
         "answer": {"hash": HASH, "answer_format": fmt},
         "asserts": {"source": "assert double(3) == 6", "functions": ["double"]},
         "expected-output": {"hash": HASH, "answer_format": fmt},
@@ -187,7 +187,7 @@ def test_schemas_are_valid_2020_12():
     assert BUNDLE["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert EVENT["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert BUNDLE["$id"] == f"py4kids/bundle/{SCHEMA_VERSION}"
-    assert SCHEMA_VERSION == "1.0.0"
+    assert SCHEMA_VERSION == "1.1.0"
 
 
 def _objects(node):
@@ -401,3 +401,27 @@ def test_progress_event_carries_no_code_or_text():
     missing = event("slide")
     del missing["event_id"]
     assert not is_valid(missing, schema=EVENT)
+
+
+def test_answer_format_aliases_and_whitespace():
+    """plan 102 Phase 0: `aliases` ({typed: canonical} strings) and `whitespace` are optional."""
+    fmt = {"case": "sensitive", "hint": "a prefix expression", "aliases": {"^": "↑"},
+           "whitespace": "exact"}
+    assert errors(fmt, definition="answer_format") == []
+    assert errors({"case": "sensitive", "hint": "x", "whitespace": "collapse"},
+                  definition="answer_format") == []
+    for bad in ({"whitespace": "loose"}, {"aliases": {"^": 1}}, {"aliases": {"": "↑"}},
+                {"aliases": {}}, {"aliases": ["^"]}, {"other": 1}):
+        assert not is_valid({"case": "sensitive", "hint": "x", **bad}, definition="answer_format"), bad
+
+
+@pytest.mark.parametrize("kind", ["fixtures", "answer", "asserts", "expected-output", "predict"])
+def test_also_check_on_an_item(kind):
+    """plan 102 Phase 0: an optional self-check list beside an automatic check."""
+    assert errors(item_with(check(kind), also_check=["uses `+`"]), definition="item") == []
+    assert not is_valid(item_with(check(kind), also_check=[]), definition="item")
+    assert not is_valid(item_with(check(kind), also_check=[""]), definition="item")
+
+
+def test_also_check_never_beside_a_self_check():
+    assert not is_valid(item_with(check("self-check"), also_check=["x"]), definition="item")

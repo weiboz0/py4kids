@@ -1,0 +1,972 @@
+{
+ "book": "usaco-bronze",
+ "items": {
+  "usaco-bronze/checkpoint-01-mock-contest-1/checkpoint/1d91dcc2": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:e1993d89b88328a0ff2559e9d8c9e29e8f220a1f4d35b39046272748e0483862",
+   "measured_ms": 30
+  },
+  "usaco-bronze/checkpoint-01-mock-contest-1/checkpoint/26be8659": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:b97da801155c87f5a5d18e560a3cd4934432e98715d195747d441696870eb545",
+   "measured_ms": 14
+  },
+  "usaco-bronze/checkpoint-01-mock-contest-1/checkpoint/4876b88c": {
+   "cases": 5,
+   "cpu_ms": 200,
+   "fingerprint": "sha256:36bafffdd6a1a326b31b6e104ef396fcafbcb9d986740f99372e6af92a57ede8",
+   "measured_ms": 156
+  },
+  "usaco-bronze/checkpoint-01-mock-contest-1/checkpoint/5ae91411": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:b49533248c1192931a06cbf6773427282ab2acd7a82b4a84f3999cb5fdb1902f",
+   "measured_ms": 15
+  },
+  "usaco-bronze/checkpoint-01-mock-contest-1/checkpoint/9ef4724a": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:dd385c5b6d60f4a76cc0827c89ee084bf4560063cec48ca58f168f6cb6f4a7b9",
+   "measured_ms": 15
+  },
+  "usaco-bronze/checkpoint-01-mock-contest-1/checkpoint/da215575": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:27381294ddaee9bccad3872c5b3121ad237df2fc941692447bb99e4f287aac65",
+   "measured_ms": 51
+  },
+  "usaco-bronze/checkpoint-02-mock-contest-2/checkpoint/4e88d05b": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:30d7ee46ff7306bab3a8e83ebae2de88b47677fc639f02fc65b80582bad1ebff",
+   "measured_ms": 24
+  },
+  "usaco-bronze/checkpoint-02-mock-contest-2/checkpoint/725de6ca": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:c0da7f1b25e30e266af239fe01c73b9d3d474aa21a4d0eef5eac44fc095641b5",
+   "measured_ms": 61
+  },
+  "usaco-bronze/checkpoint-02-mock-contest-2/checkpoint/8011e2c3": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:3ec617fafcc6cdc1af440ee82c58e3bdb575daa897e6da73a676baf3d0dc2bd2",
+   "measured_ms": 26
+  },
+  "usaco-bronze/checkpoint-02-mock-contest-2/checkpoint/c0dde012": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:2c17686ca2c27b57ffa692407bd0807bf8193cae54a0713349bdc76750eb9234",
+   "measured_ms": 27
+  },
+  "usaco-bronze/checkpoint-02-mock-contest-2/checkpoint/c5be4a9e": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:f16bca449761142cf732908cacfbc2a37feda2c68ec22fcf8381cc90d6cddaf8",
+   "measured_ms": 48
+  },
+  "usaco-bronze/checkpoint-02-mock-contest-2/checkpoint/c818a5c1": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:be7993576efcd4aebd1d2d52d2524983b97e3fcfaf9901843055313ce542cd06",
+   "measured_ms": 21
+  },
+  "usaco-bronze/checkpoint-03-mock-contest-3/checkpoint/0a3a9763": {
+   "cases": 9,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:ad0fa2501eced6ccd8aac2190a4642692e47362e7cbb2dd79c5fa679dc41a4eb",
+   "measured_ms": 16
+  },
+  "usaco-bronze/checkpoint-03-mock-contest-3/checkpoint/0ef41cdc": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a359810058e67ad75a094afbc15637a3d7145ea1cce8479065f2c487dd69a702",
+   "measured_ms": 29
+  },
+  "usaco-bronze/checkpoint-03-mock-contest-3/checkpoint/7a808c98": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:06a66a5e65ddd8903d4bf4f7f2eace973e549ce2e4e8ce0b1c4bb61a88b58b7a",
+   "measured_ms": 26
+  },
+  "usaco-bronze/checkpoint-03-mock-contest-3/checkpoint/8a50ac24": {
+   "cases": 6,
+   "cpu_ms": 200,
+   "fingerprint": "sha256:551cc0b32cb6a796c82c63c5531abc49da164d6b75300971cf8830f19fa1541d",
+   "measured_ms": 105
+  },
+  "usaco-bronze/checkpoint-03-mock-contest-3/checkpoint/af15971d": {
+   "cases": 6,
+   "cpu_ms": 1400,
+   "fingerprint": "sha256:ca5a6ffb62830c42be7b3ab1d03954d403bf69cc04549cde22c36147b4c5c28a",
+   "measured_ms": 1379
+  },
+  "usaco-bronze/checkpoint-03-mock-contest-3/checkpoint/b2360aa0": {
+   "cases": 6,
+   "cpu_ms": 300,
+   "fingerprint": "sha256:5fe732fe273ddc53aa47767d20f98af6d31fbc34f1c0589b97d928a4b75dde18",
+   "measured_ms": 285
+  },
+  "usaco-bronze/checkpoint-03-mock-contest-3/checkpoint/cbe6b8a4": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:ca6cb46f20ea8f31a864a0841b3e6a285644e220db0f2bd6b92e9b1a2afccf3c",
+   "measured_ms": 46
+  },
+  "usaco-bronze/checkpoint-04-mock-contest-4/checkpoint/17f03587": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:19ceede34d9ec2f5abb7ccd965a31d683ad519a457436b9559c4a134ff0c6538",
+   "measured_ms": 35
+  },
+  "usaco-bronze/checkpoint-04-mock-contest-4/checkpoint/248a0c70": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:c4e14256cbccfdecfddc33c5de25b344daceacfab52c54819e6b19298876a11d",
+   "measured_ms": 14
+  },
+  "usaco-bronze/checkpoint-04-mock-contest-4/checkpoint/39a009c8": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:87e228a32c21e769a4d3e1d23a86bbde7109ac5aac14d0d4c786cd7f4461de4b",
+   "measured_ms": 28
+  },
+  "usaco-bronze/checkpoint-04-mock-contest-4/checkpoint/4772215f": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:22f3c8c2c959aad44da93d6eada3f953d1c44629f2ea37bf08e7c1f6c24d8118",
+   "measured_ms": 27
+  },
+  "usaco-bronze/checkpoint-04-mock-contest-4/checkpoint/543ba2d2": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:3eed101b788b4ac9e9c8057753a2eb140e13c46f62aa133894f14796aa3d5367",
+   "measured_ms": 41
+  },
+  "usaco-bronze/checkpoint-04-mock-contest-4/checkpoint/abc7349b": {
+   "cases": 6,
+   "cpu_ms": 200,
+   "fingerprint": "sha256:b1452684713e8e639a4f9efcdec365ed93a16fbbf4eb10097c46a7473fa1f368",
+   "measured_ms": 162
+  },
+  "usaco-bronze/checkpoint-04-mock-contest-4/checkpoint/d8ff98c9": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:73e05377196cf4e3c6a089a270992efa0bf2e965441f3e5b5f15e5c5fa68ed49",
+   "measured_ms": 16
+  },
+  "usaco-bronze/project-03-mock-contest/brief/3e299aa5": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:8803fc3ca98e4b2b441e34665388ccb5ed1d7d43700faf0a42424a926f4ccda3",
+   "measured_ms": 15
+  },
+  "usaco-bronze/project-03-mock-contest/brief/5016dd6a": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:163cc487b201fce04ed1d8cb7bdbf1660a2be6f106ed73cf26a7c4f89ebfbcd6",
+   "measured_ms": 29
+  },
+  "usaco-bronze/project-03-mock-contest/brief/5193569a": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:b7a3bae04461784e830d117adaf41708287e28f0e7e7e379aa4d8a4622f66848",
+   "measured_ms": 53
+  },
+  "usaco-bronze/project-03-mock-contest/brief/8276d4b4": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:30c4ff44b7a900b7b363439c3aeffe161601f9a65a3b48cdc19886378dc7bba0",
+   "measured_ms": 22
+  },
+  "usaco-bronze/project-03-mock-contest/brief/851efc33": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:d09d891b106101f081869aea14b413ace7792f80a26bcb1ec4aa811f5651ce86",
+   "measured_ms": 27
+  },
+  "usaco-bronze/project-03-mock-contest/brief/8b7dbe4a": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:019bb2bb5532f78b1006e46245e4f08e197394dcf6c69d5b3c307bf78aa62cc6",
+   "measured_ms": 37
+  },
+  "usaco-bronze/project-03-mock-contest/brief/968bcef7": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:0456801780793b2466b5ceeb01ada6539cd49a2fb66ee3ea1c0a3ec72d9fdbdd",
+   "measured_ms": 31
+  },
+  "usaco-bronze/project-03-mock-contest/brief/d887b6c7": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:5af4e39612682b47534c0a05f3ad810f9677e402161300fd7cf85da2a6032790",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-01-reading-the-input/exercises/0783ce46": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:5fe9d19165f8174f2eb2db39175ff8d7f545a6f24e8b8adb06a4880985fce433",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-01-reading-the-input/exercises/29a5e068": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a70ad6806082c49ee31de6d2275a45a8d10a43e202df4f31b066113ec55870af",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-01-reading-the-input/exercises/4bc7028a": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:624ca67f6080cba1a915f27600f50221bbb7433a93b4323738e9ac4b63d8be79",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-01-reading-the-input/exercises/6de924ac": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:4cf074d5e022d1572d550e52ec83d0789f3f99154bf34efc4086eefafcea4b91",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-01-reading-the-input/exercises/8f0b46ce": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:aaefd7575080d56fb3dada8596f9ad5095287a9c9f4ab4a6cfef108ab4158a9d",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-01-reading-the-input/exercises/a12d68e0": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:c48a4eeb602b073b47145961f7a57cd4c550dafa970cab9b5932b0420cb13090",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-01-reading-the-input/exercises/a12d68e1": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:11229b6313a14ff2e1797af18e453f57bce7417138d8e2e010c7d450a203cdd6",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-01-reading-the-input/exercises/c34f8a02": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:076ecded52384685b7e363ed537cca572f517d674637fc2f24e0d0d2c6b690ae",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-01-reading-the-input/exercises/e561ac24": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:232154e51d42d734c68ae08b7a65fd1c317c00cc11f3354638057db3887b27bb",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-02-boolean-logic/exercises/u02e0002": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:4cb41240d998dcdc0fdb2a409e80801a12c30eb3c810abdad8795c5533319d75",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-02-boolean-logic/exercises/u02e0004": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:4f637c818214ebee94cc73b0273d7076833285bbddeec426c1bb08e217e37bf2",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-02-boolean-logic/exercises/u02e0006": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:de70788cd2534909ac5de5a4d352ddeb3906de1d2ec28010da880a540c5eec09",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-02-boolean-logic/exercises/u02e0008": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:21bb0b024de37badfddba5bffb033e11a9a682f4ebc567372f1aeedf44e1de15",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-02-boolean-logic/exercises/u02e0010": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:00fb6f4cac7901b7bb2cd319ee0319aaf60e3f89df6cd2e601f622b80e438741",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-02-boolean-logic/exercises/u02e0012": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:c093c986ba541897dc4ea2d4886c68c7e44c1b906cfb24f0f63b7138a34a7f72",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-02-boolean-logic/exercises/u02e0014": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7d06a9fc30e0ce600f887dd1b7f9e347cedda2b090588a058d242122e6832940",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-02-boolean-logic/exercises/u02e0016": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:21e6477db2b19a457587b2e822e0e1167112fb3d9e88adeb2eaf2eef2e402a65",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-02-boolean-logic/exercises/u02e0018": {
+   "cases": 8,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:38aa937b0af1130e9393c7de3c67c69b4b62d41e8c4b9d75a14be498a6f04a32",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-03-complexity/exercises/2cfb6194": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:8fb791f06472856a833d73021cbae5ee411446645587b6b701f4032048a304df",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-03-complexity/exercises/439fd0ae": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:8a02a2ec46cc800192137c25c6bd8a134ca7bfe768e582e6d139c1ba2d377a08",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-03-complexity/exercises/75ed403b": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:88ea09c0c1ad652b49c38827850292f6c43cfa95dd448ab8226d1b338c513aa8",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-03-complexity/exercises/917b4c2e": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:95c8259f8404a6006108085b6362af4aeab3ce194dda1086717f0c4c3fde3a1f",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-03-complexity/exercises/961c42fa": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:339a48cf824c8ec97c7be345f0f3d3d81e91670b7dd546ecb0dc01cc1e310c42",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-03-complexity/exercises/bc5190e4": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7f13b514269b05201a592d44d29dcc6116962adc3ca5c5bfe618b661ac618ad3",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-03-complexity/exercises/da0912bc": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:dfaeb5d36d2425829a8f73f2952b19f79f4786c9d8dd3728ebe741d3c10a8ca9",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-03-complexity/exercises/e8207a3c": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:10f6866f0d7a7c0bb1fcc39a7a6f7056fea5e6633c886f703bed135b2aa40271",
+   "measured_ms": 18
+  },
+  "usaco-bronze/unit-03-complexity/exercises/f6bd4a18": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:eaee860d1ec6eefa7ce0aaa6c0384133df565cbd3ec970742a6b13263e4a5a80",
+   "measured_ms": 17
+  },
+  "usaco-bronze/unit-04-sets-tuples-sorting/exercises/u04e0002": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:fc2505fe0cbe72dcc0e823ff5e45002b3b8371d68c07d04f5d111a002b33fdf2",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-04-sets-tuples-sorting/exercises/u04e0004": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:4e200b0ed77b1b5e0024759654d771476f6cf29ab95fbdea56a3f5f3631cba5e",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-04-sets-tuples-sorting/exercises/u04e0006": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:23ed008b59da6f344e380ea237441571bdfb9dc08392bcbc4d0de617e212a16a",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-04-sets-tuples-sorting/exercises/u04e0008": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:492ec748fb34dcd81b410d1dbf108deb9a5b2991a6df482add7b65a31970ef2c",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-04-sets-tuples-sorting/exercises/u04e0010": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:9c3dfd64728e372e7a59bf1b61af1678cc0b71d839832d83844fbbc4794fcd8e",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-04-sets-tuples-sorting/exercises/u04e0012": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:c437ed8f61a7c80b5c60d71d838ac8219dcbe461a364c8d841c50715d71a76cf",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-04-sets-tuples-sorting/exercises/u04e0014": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:399a613aa50c7f13bf9eca82c434562ea9187ba61bc6a761c3ef0438f81f3e09",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-04-sets-tuples-sorting/exercises/u04e0016": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:9a34f2dc861ce4b20f04ff34c9ce01961052e999dc71194438aaa09b6af400b3",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-04-sets-tuples-sorting/exercises/u04e0018": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:ca30ef03b51268b817ddd22d27b732b76831597bcdf9de6a97f8fab1c21e055e",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-05-searching-complete-search/exercises/u05e0002": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:5dc0cb0a58436ebae15037a0d2c33d9152d9220118b80b36dcfa0ec6a74b0133",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-05-searching-complete-search/exercises/u05e0004": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:23993203fa7f608470441072b3d4f13736aee2efecfd44b3e7e571bba98f4574",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-05-searching-complete-search/exercises/u05e0006": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:51b48c37d64fae6985bdce6f64553591d44b69a2e12143307576c9e5b877b98a",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-05-searching-complete-search/exercises/u05e0008": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:56bc8ca42df7d3855a377d8e6afa50fa0a511f47a65310e7742f3fa0ec008c42",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-05-searching-complete-search/exercises/u05e0010": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:9308d1c30d67e071aa103c599248ce1a9de6d091d06daf4af496df538a682b63",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-05-searching-complete-search/exercises/u05e0012": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:88a6825265e190d5cf721c6e71e97f72346e87f823335f48545b44808be3eca0",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-05-searching-complete-search/exercises/u05e0014": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:e84a04d7c8768725f5ed3a162c9bc700eb716d30050e19176daea5a1278cb70a",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-05-searching-complete-search/exercises/u05e0016": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:8ffe56aee14d8ef56847bbb98295891e76f555aceb6f0ce8cf3fd165a6140420",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-05-searching-complete-search/exercises/u05e0018": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a4d700ed2dfd7354e8dbcf8c2af520711fa53cdcafe1671221e40232cab163cb",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-06-greedy/exercises/u06e0002": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:cb03179bb01fe32290caac94be128e8ddbf6000539df1eac48e3a43a23adfb61",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-06-greedy/exercises/u06e0004": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a534b6d66ce64160cc213a2fe15dafab71ba1e9e193445a49b8c3c5c5c089849",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-06-greedy/exercises/u06e0006": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:502ba457c73eb6b961fc18a1d23d5217929cf28ffa32215fd2e96348375f2125",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-06-greedy/exercises/u06e0008": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:174c93f284a8ff4ec800fdf02a1cd4090368a53ee43e9cd209d0e74e3256992e",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-06-greedy/exercises/u06e0010": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:93fc450b0f315c7f532dc9bfe9dbb77b85911a0725099c5b2561082358181f1a",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-06-greedy/exercises/u06e0012": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:cad290b054f36a887a1211ee1841d9e58bda15839451eee6711798ef946c93c2",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-06-greedy/exercises/u06e0014": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:6b148481f3773256e64bcc3b73f49284513ac6f9ae625a420930b0a1579d531a",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-06-greedy/exercises/u06e0016": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a5179fd07fedce3f2ab057ce1cc536a442ef9f2fc85a00f965e4020a3663ea0e",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-06-greedy/exercises/u06e0018": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a4a5f93e5f3522244599d9ae5d7ce2827d28abed028aa00b04909df5a3a5e7a8",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-07-simulation/exercises/u07e0002": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:0da604bbbe69b7e6b0bd1b211af9f3ebbb52e05e6d8dcf98a9d3d7d43ce0587a",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-07-simulation/exercises/u07e0004": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:f3c545fcf33bd376e1d741c50d11bcee93efd198eba5ed10b66b66c088da176c",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-07-simulation/exercises/u07e0006": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:4d446f82ced33ef7c798b75bb3e1ea68909e44075b63eeed8ed95715d64e0ff4",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-07-simulation/exercises/u07e0008": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:07ee774e3c1996797926bfbb026d890b4382068741c5fab9d10b4c1454dce3f1",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-07-simulation/exercises/u07e0010": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:f40c3ea0a4743f8a8e2571628576793e8e5ec0e0f19ce706f3f04f7a624b0ddd",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-07-simulation/exercises/u07e0012": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:445e7e30756a24e4c206ff82508902fecdcf1a204a32270d8607533b72eb5a78",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-07-simulation/exercises/u07e0014": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:ff8cf7adce41c5dcf553fbf31e15316445fd5683bf7f0caa3c33ff8d1337586e",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-07-simulation/exercises/u07e0016": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:2bef84b726ee8d3121bfa845ccfc319c60170252b5ca97030cc7824dfe2da85f",
+   "measured_ms": 17
+  },
+  "usaco-bronze/unit-07-simulation/exercises/u07e0018": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:707c2b488b3ba736786dbca998e3d8ce6981927e28ef18c4643668f23b131acb",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-08-prefix-sums/exercises/u08e0002": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:53bc3d2b9dd1dbfa6092549392ceb93617d9f1f51f541ff93a2495a50841870b",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-08-prefix-sums/exercises/u08e0004": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:dfd1390e9d293c191c801ea41ec06d8c0b896481be2bb364d5cf999ef279c2ea",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-08-prefix-sums/exercises/u08e0006": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:570f81bfd5b83d3dd1a86b419919b623927cfb515436f52dca9b0609f2c8bda4",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-08-prefix-sums/exercises/u08e0008": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:4f2f4ae62cf074469f478a674d584883e2954ec5e1d494f8a4c303b653c4047e",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-08-prefix-sums/exercises/u08e0010": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:16ac793c43a341319bdc61ca69893dac333a2881ab6b88b9cbe3a006751d5cff",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-08-prefix-sums/exercises/u08e0012": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:e878b3a50df6e3665b9db7f4eee501add274521a5f00cec048f763afc8f49f40",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-08-prefix-sums/exercises/u08e0014": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:fefa7f380ca9b738dc95ec7d4a8aa20fe67e7fc858913f43b7206bed356e67d1",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-08-prefix-sums/exercises/u08e0016": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:ea1380f75a338f73753becc82c36b300b69412df9d8fe6c76155aa8ccd48fa60",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-08-prefix-sums/exercises/u08e0018": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:0bf0d15a03cf85625d01a36def6906b2f4c978d65b06d8fb67fc3f00c9538736",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-09-recursion-backtracking/exercises/u09e0002": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:0c3216cbdaa5be84ec685fbc00fcb09ddd406de3db4de141dff4d514fa4bc671",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-09-recursion-backtracking/exercises/u09e0004": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:ddc204dd9069db9b3a620856c5185b78df47869ad17a7fd469088031548b5fd5",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-09-recursion-backtracking/exercises/u09e0006": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7e7680ebf5bdb4e9029a42fd3ee98bd1dba7ea028804e169101d71e95263c86f",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-09-recursion-backtracking/exercises/u09e0008": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:0ae64d2aeeac097235325537b89953460afa8acc1debf39fef24d2d8f998ff5e",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-09-recursion-backtracking/exercises/u09e0010": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:3598ede725918c0a722ac4afd504802274c3efcf3781ac295c752ae77a0f4154",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-09-recursion-backtracking/exercises/u09e0012": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:39266fa020205ac87fa197e5d2f4e01a6997f29e0d2d368bda86c5831402baa2",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-09-recursion-backtracking/exercises/u09e0014": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:970176eb870f1137d3068ffff3709328c9c7b8056007bd2b81205751d697c2ac",
+   "measured_ms": 19
+  },
+  "usaco-bronze/unit-09-recursion-backtracking/exercises/u09e0016": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:c9b31085f5ec7c7f264fda174143933a8f70711c0e704d3f62feca489ba7535c",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-09-recursion-backtracking/exercises/u09e0018": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a6a86d571c8b8814cb4a0c9e1272cd3c8fdd506148d06203f0a9b77eb3bc0955",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-10-stacks-queues-deques/exercises/u10e0002": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:869a750bb15bb16d26bd86e4a6feda30fdcf99247155f83fbac54732708df5db",
+   "measured_ms": 18
+  },
+  "usaco-bronze/unit-10-stacks-queues-deques/exercises/u10e0004": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:503c3bfa0904d19b3a83d679f20f1d8f608359a84e353f78a203daf3305fa23e",
+   "measured_ms": 18
+  },
+  "usaco-bronze/unit-10-stacks-queues-deques/exercises/u10e0006": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:fbfd51fe689a0bb290fc4cd29b53ad8aadb9700886f1c7c6e3e2b06dd48b1c0d",
+   "measured_ms": 18
+  },
+  "usaco-bronze/unit-10-stacks-queues-deques/exercises/u10e0008": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:4a22343b46132fc8ea388e9918db4ea910015986db88dca91cb55ff0fa181774",
+   "measured_ms": 18
+  },
+  "usaco-bronze/unit-10-stacks-queues-deques/exercises/u10e0010": {
+   "cases": 2,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:05aeea0b279c37ce848b7fe666dcc97095a65f4578380d0cfd06e1752fa0914d",
+   "measured_ms": 18
+  },
+  "usaco-bronze/unit-10-stacks-queues-deques/exercises/u10e0012": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:fbdcd7bce3776bec43e78ea6ab388f13e20a79409750d4231720f9243c1104a3",
+   "measured_ms": 18
+  },
+  "usaco-bronze/unit-10-stacks-queues-deques/exercises/u10e0014": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:07a00e24c2a17421813ad8c214b72ccae6990ec6addd650e56d49cd8bf9c618f",
+   "measured_ms": 18
+  },
+  "usaco-bronze/unit-10-stacks-queues-deques/exercises/u10e0016": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:af49ff9f64f220530ff6f7e66083aa8f6c6b2c26e816bbcc0dd01059ab7d1ab1",
+   "measured_ms": 18
+  },
+  "usaco-bronze/unit-10-stacks-queues-deques/exercises/u10e0018": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:23a4f533407e1fb806ee7f6ff484d1e8e4c3fe542eca298df299e35433fc0f81",
+   "measured_ms": 18
+  },
+  "usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0002": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:0a1e4c130acc35bf8846420d72dbb757f4214cac9948f856bcda7f37fd25259c",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0004": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:0fef4e93cc93d1d04adc60161d1f0b766d771d537d821492fa6d3315104b4102",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0006": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:b28e80e524e8e39422d91bcd17fef0cbdc63c413567a06d48d47aea46941aa8f",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0008": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7f95ea0b3c5aaad708e0c7fd912c3cf8ac4be7b5cb6adbeca2dfc4fd6e10ef02",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0010": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:f05112653549028c594235e7cf8c5a1df4ed0acd46de16916eee4ed7e5a29c23",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0012": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a9355b15adf41a2d2d0b5be0ae8ee8d942d52acbc0ffd3a4afa5c3bdb2e3e24c",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0014": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:145afb59191f1a874f895617395e9db2c6a744f7d5b6e18aec121d7c143b1bec",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0016": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:72c0f50eb0462546326e2fe916fbea02c5f823fe4d0cb53f559a0651dc61221e",
+   "measured_ms": 17
+  },
+  "usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0018": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:c191112053ac2e1bc191ae3f48977a7fc6d3badd7335433daa94ea0e083dbf66",
+   "measured_ms": 17
+  },
+  "usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0020": {
+   "cases": 3,
+   "cpu_ms": 200,
+   "fingerprint": "sha256:d25bd94de7d49c815d156ce5f4435da4e7c9eeb2b8c8f9c74913f660ba9ac66e",
+   "measured_ms": 114
+  },
+  "usaco-bronze/unit-12-binary-trees/exercises/u12e0002": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7d67649dd1f9509bd191b363417fbfb88bc7119517db0ac52205d655fdec94e8",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-12-binary-trees/exercises/u12e0004": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a62802d90b0f70fd756161dbdee59a2fbccc45d620c5907b633045d18ad6210d",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-12-binary-trees/exercises/u12e0006": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:0c451dc093477edb968e909c9f5375edcb3787840cc350862ae1d45dc960932a",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-12-binary-trees/exercises/u12e0008": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:522943d2225f152eb4dbb66b0ab596eab1ec2eddf3fccddc754ca302ea2b0143",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-12-binary-trees/exercises/u12e0010": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:5a31927b6816f452622b62d7610b6d5cba168c5b7226faa82fc698757a96a583",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-12-binary-trees/exercises/u12e0012": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:bcc772a0a5d6fd26c1faf41fe397032dd073a824fe5ceba548c2f5cd21567fbb",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-12-binary-trees/exercises/u12e0014": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:cb0b45b1fe197d73ad7ad4929d26de0a5d94fa27dd07fd7504e41bbda1bc6c23",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-12-binary-trees/exercises/u12e0016": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7acac24d9181fd284bb8baf23bddb6d881d5890468b3bf9e441dbaf64f472326",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-12-binary-trees/exercises/u12e0018": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:d74d546274520d61d30e97139e80c7ae304abebf2cd448f520de0f5f70261ea8",
+   "measured_ms": 15
+  },
+  "usaco-bronze/unit-13-grids-graphs/exercises/u13e0002": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:9f7b2cc7b7228a1e84dd8354c38a03e4b5340805ba8aa93939f0542a5893b987",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-13-grids-graphs/exercises/u13e0004": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:cd644abe9529359e533aa1dbe9b89369a1a784d14aa0272b721acede31befadf",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-13-grids-graphs/exercises/u13e0006": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:b776ec2c15e048108f217c30ccb31af87c97399cebc1d9a7a94daa504e144e57",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-13-grids-graphs/exercises/u13e0008": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:b5b930f546b0657716586774e9f6e2b3276e1762fee99ab8d4b46f47827099b8",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-13-grids-graphs/exercises/u13e0010": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:07f0ddf8c70bbf8a04973d3e4e6e0a1064e4dee9dc0e41b114a91fc39ca819a3",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-13-grids-graphs/exercises/u13e0012": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a3e1af1baf0307dc4d5478c202b738d473d130348451871c2e94a4349e1ea0a3",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-13-grids-graphs/exercises/u13e0014": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a3d1cd15579626ccd109bf43e28df1ee493b924831a2c26ad1157a3027c08b69",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-13-grids-graphs/exercises/u13e0016": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:acfd158e11ef60ab817d60616cf199e814b4a156a86dc3c1306fd70b3c860a32",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-13-grids-graphs/exercises/u13e0018": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:db5f3aa30aacbe32a258f7dd5d4d4eff16bf9e9970b0eec79a913230dcf98466",
+   "measured_ms": 16
+  },
+  "usaco-bronze/unit-14-two-pointers/exercises/u14e0002": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:c1544e0c06841faa924440f75f32d208e0442a78420bb370b4c5dd023ad64108",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-14-two-pointers/exercises/u14e0004": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:6e483992b5f1ebc2d80b1a24092f52ddeaffa990e1b40394426245574a221ec1",
+   "measured_ms": 13
+  },
+  "usaco-bronze/unit-14-two-pointers/exercises/u14e0006": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:f95453515f66cad6b5c77ba0f51a6200353156d0e8cebe5f678ae58261091989",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-14-two-pointers/exercises/u14e0008": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7b7ca1be2a4123c257af9b8b0b0bb832caf4e57466c6972eb86a02e2e8b89656",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-14-two-pointers/exercises/u14e0010": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a6d6eb6715a4a4c63e9d8b6f37461cbbb05f34459c3e3b716f610e4b6ad6bbc3",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-14-two-pointers/exercises/u14e0012": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:af039daee97a3ef97ab767901a67eb25d507824b032b7fca0e5989b942c67341",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-14-two-pointers/exercises/u14e0014": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:aa8dd91be301fb50df1adc300597b8d51fd7bf653f2072feff9695ac89675273",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-14-two-pointers/exercises/u14e0016": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:d8bd0334a1621bb106ed48a5727475ceb6b5b1e27c45951c55e3db9cf56d752c",
+   "measured_ms": 14
+  },
+  "usaco-bronze/unit-14-two-pointers/exercises/u14e0018": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:df618852c29953ed40b7d954e9df15307a8da482e6a3432eaf9af6dd11e46636",
+   "measured_ms": 14
+  }
+ },
+ "version": 1
+}

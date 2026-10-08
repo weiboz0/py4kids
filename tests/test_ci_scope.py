@@ -105,7 +105,7 @@ def test_unknown_book_fails(repo):
 
 def test_ci_local_step_5_builds_pdfs_for_every_book_and_scopes_renders():
     text = (REPO / 'scripts' / 'ci-local.sh').read_text(encoding='utf-8')
-    step5 = text[text.index('step "5/6 PDF build"'):text.index('step "6/6 pre-merge guard"')]
+    step5 = text[text.index('step "5/7 PDF build"'):text.index('step "6/7 site"')]
     # D5: no judge gate around the handout/syllabus build.
     assert 'has_flag judge' not in step5
     loop = step5.index('while read -r book flags')
@@ -119,3 +119,98 @@ def test_ci_local_step_5_builds_pdfs_for_every_book_and_scopes_renders():
     assert 'SKIP: $book: book editions and publish-audit' in step5
     assert 'book editions rendered:' in step5
     assert '--all-books) scope_args=(--all-books) ;;' in text
+
+
+# --- plan 103 Phase A: `--site` scopes the learning-website build ------------------------------
+
+SITE_ROOTS = ['python-projects', 'acsl']
+
+
+@pytest.mark.parametrize('changed, render, reason', [
+    (['site/src/pages/index.astro'], True, 'site input changed'),
+    (['site/pnpm-lock.yaml'], True, 'site input changed'),
+    (['runner/src/worker.ts'], True, 'site input changed'),
+    (['site/ids/acsl.json'], True, 'site input changed'),
+    (['tools/export/bundle.py'], True, 'site input changed'),
+    (['scripts/build-site.sh'], True, 'site input changed'),
+    (['books.yaml'], True, 'site input changed'),
+    (['.nvmrc'], True, 'site input changed'),
+    (['uv.lock'], True, 'site input changed'),                     # the exporter's dependencies
+    (['acsl/units/unit-05-x/lesson.ipynb'], True, 'site book changed'),
+    (['python-projects/site.yaml'], True, 'site book changed'),
+    (['recsys/units/unit-01-x/lesson.ipynb'], False, 'no change'),   # not a site book
+    (['docs/plans/103.md', 'tests/test_x.py', 'sitex/a.md', 'acslx/a.md'], False, 'no change'),
+    (['site.md', 'x/.nvmrc'], False, 'no change'),
+    ([], False, 'no change'),
+])
+def test_decide_site(changed, render, reason):
+    decision = ci_scope.decide_site(SITE_ROOTS, changed)
+    assert decision[0] is render
+    assert decision[1].startswith(reason)
+
+
+def test_decide_site_all_books_and_reason():
+    assert ci_scope.decide_site(SITE_ROOTS, [], all_books=True) == (True, '--all-books')
+    render, reason = ci_scope.decide_site(SITE_ROOTS, ['docs/a.md'])
+    assert not render
+    assert reason == ('no change under site/, runner/, tools/, scripts/, books.yaml, .nvmrc, pyproject.toml, '
+                      'uv.lock or a site book (python-projects/, acsl/) since origin/main')
+
+
+@pytest.fixture
+def site_repo(repo):
+    (repo / 'books.yaml').write_text(
+        'books:\n- id: alpha\n  root: alpha\n  site: true\n- id: beta\n  root: beta\n',
+        encoding='utf-8')
+    _git(repo, 'commit', '-q', '-am', 'flags')
+    _git(repo, 'update-ref', 'refs/remotes/origin/main', 'HEAD')
+    return repo
+
+
+def test_site_scope_keys_on_the_site_flag(site_repo):
+    assert ci_scope.site_roots(site_repo) == ['alpha']
+    assert ci_scope.site_scope(site_repo)[0] is False
+    (site_repo / 'beta' / 'b.md').write_text('y\n', encoding='utf-8')
+    assert ci_scope.site_scope(site_repo)[0] is False                  # beta has no site flag
+    (site_repo / 'alpha' / 'a.md').write_text('y\n', encoding='utf-8')
+    render, reason = ci_scope.site_scope(site_repo)
+    assert render and reason == 'site book changed: alpha/a.md'
+
+
+def test_site_cli(site_repo, capsys):
+    assert ci_scope.main(['--site', '--repo', str(site_repo)]) == 0
+    assert capsys.readouterr().out.startswith('skip: no change under site/')
+    (site_repo / '.nvmrc').write_text('24\n', encoding='utf-8')         # untracked counts
+    assert ci_scope.main(['--site', '--repo', str(site_repo)]) == 0
+    assert capsys.readouterr().out == 'render: site input changed: .nvmrc\n'
+    assert ci_scope.main(['--site', '--all-books', '--repo', str(site_repo)]) == 0
+    assert capsys.readouterr().out == 'render: --all-books\n'
+    _git(site_repo, 'update-ref', '-d', 'refs/remotes/origin/main')
+    assert ci_scope.main(['--site', '--repo', str(site_repo)]) == 0
+    assert capsys.readouterr().out.startswith('render: cannot compute the change set')
+
+
+@pytest.mark.parametrize('argv', [[], ['--book', 'alpha', '--site']])
+def test_cli_needs_exactly_one_of_book_or_site(site_repo, argv):
+    with pytest.raises(SystemExit) as error:
+        ci_scope.main([*argv, '--repo', str(site_repo)])
+    assert error.value.code == 2
+
+
+def test_ci_local_site_step():
+    text = (REPO / 'scripts' / 'ci-local.sh').read_text(encoding='utf-8')
+    pdf = text.index('step "5/7 PDF build"')
+    site = text.index('step "6/7 site"')
+    guard = text.index('step "7/7 pre-merge guard"')
+    assert pdf < site < guard
+    step6 = text[site:guard]
+    decision = step6.index('uv run python -m tools.ci_scope --site "${scope_args[@]}"')
+    assert decision < step6.index('bash scripts/build-site.sh') < step6.index('-C site test')
+    # Scope first; an in-scope change with a missing tool FAILS (never a silent green); only an
+    # out-of-scope change skips.
+    assert decision < step6.index('if ! site_node_env')
+    assert 'FAIL: site in scope but node >= 22.12 is missing' in step6
+    assert 'FAIL: site in scope but pnpm is missing' in step6
+    assert 'FAIL: site in scope but no Chromium was found' in step6
+    assert 'SKIP (Node missing)' not in step6
+    assert 'SKIP: site (' in step6

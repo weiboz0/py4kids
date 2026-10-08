@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "$id": "py4kids/bundle/1.0.0",
+ "$id": "py4kids/bundle/1.1.0",
  "title": "py4kids site content bundle",
  "description": "A file of a site bundle (design 012 D3; plan 101): book.json or an entry file. Validate one kind with $defs/book_file or $defs/entry_file.",
  "oneOf": [
@@ -67,6 +67,24 @@
     "hint": {
      "type": "string",
      "minLength": 1
+    },
+    "aliases": {
+     "type": "object",
+     "description": "Typed form -> canonical form, applied after whitespace and case before hashing (plan 102 Phase 0), e.g. {\"^\": \"↑\"}.",
+     "propertyNames": {
+      "minLength": 1
+     },
+     "additionalProperties": {
+      "type": "string"
+     },
+     "minProperties": 1
+    },
+    "whitespace": {
+     "enum": [
+      "collapse",
+      "exact"
+     ],
+     "description": "`collapse` (the default when absent) turns whitespace runs into one space; `exact` keeps tabs, indentation and inner runs, stripping only trailing whitespace per line and blank edge lines."
     }
    },
    "required": [
@@ -107,6 +125,27 @@
     "y2",
     "color",
     "width"
+   ],
+   "additionalProperties": false
+  },
+  "answer_figure": {
+   "type": "object",
+   "description": "One turtle drawing of an odd answer (turtle_segments of the answer's program), drawn in place of answer_md's TikZ.",
+   "properties": {
+    "caption": {
+     "type": "string",
+     "minLength": 1
+    },
+    "segments": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/segment"
+     }
+    }
+   },
+   "required": [
+    "caption",
+    "segments"
    ],
    "additionalProperties": false
   },
@@ -365,6 +404,13 @@
      "description": "Case numbers over the fixture budget; the site lists them.",
      "uniqueItems": true
     },
+    "cpu_ms": {
+     "type": "integer",
+     "minimum": 100,
+     "maximum": 10000,
+     "multipleOf": 100,
+     "description": "The reference solver's maximum CPython CPU time across the cases, in ms, rounded up to 100 ms (the committed timing cache); the site's per-case budget is max(1 s, 10 x cpu_ms), capped at 10 s."
+    },
     "turtle": {
      "type": "boolean"
     },
@@ -378,6 +424,7 @@
     "cases",
     "match",
     "over_budget",
+    "cpu_ms",
     "turtle",
     "confirmed"
    ],
@@ -631,6 +678,15 @@
     "check": {
      "$ref": "#/$defs/check"
     },
+    "also_check": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "minLength": 1
+     },
+     "minItems": 1,
+     "description": "Requirements the automatic check cannot see, from the statement; shown as a self-check list beside the check (plan 102 Phase 0). Never on a self-check item."
+    },
     "answer_visibility": {
      "enum": [
       "after-attempt",
@@ -640,6 +696,14 @@
     "answer_md": {
      "type": "string",
      "description": "The Student Book appendix text; odd unit exercises only."
+    },
+    "answer_figures": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/answer_figure"
+     },
+     "minItems": 1,
+     "description": "The answer's turtle drawings; odd unit exercises whose answer draws with turtle only."
     },
     "before": {
      "type": "array",
@@ -694,9 +758,36 @@
    },
    "else": {
     "not": {
-     "required": [
-      "answer_md"
+     "anyOf": [
+      {
+       "required": [
+        "answer_md"
+       ]
+      },
+      {
+       "required": [
+        "answer_figures"
+       ]
+      }
      ]
+    }
+   },
+   "dependentSchemas": {
+    "also_check": {
+     "properties": {
+      "check": {
+       "not": {
+        "properties": {
+         "kind": {
+          "const": "self-check"
+         }
+        },
+        "required": [
+         "kind"
+        ]
+       }
+      }
+     }
     }
    }
   },
@@ -831,7 +922,7 @@
    "description": "book.json: the book manifest.",
    "properties": {
     "schema_version": {
-     "const": "1.0.0"
+     "const": "1.1.0"
     },
     "book": {
      "type": "object",
@@ -1055,7 +1146,7 @@
    "description": "entries/<entry-id>.json: one unit, checkpoint or project.",
    "properties": {
     "schema_version": {
-     "const": "1.0.0"
+     "const": "1.1.0"
     },
     "entry": {
      "type": "object",

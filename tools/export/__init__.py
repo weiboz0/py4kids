@@ -4,4 +4,4 @@
 The bundle schema lives in `schema/bundle.schema.json`; its `$id` ends in SCHEMA_VERSION.
 """
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"  # 1.1.0: check.cpu_ms, answer_figures (plan 104 C)

@@ -1,0 +1,369 @@
+/**
+ * The site's Markdown pipeline (plan 103, Architecture — "Markdown"). Everything renders at build
+ * time to plain HTML with no inline `style` attribute and no client JS, under the strict CSP:
+ *
+ * - markdown-it with `html: false`: a raw `<name>` token is escaped, never dropped.
+ * - GFM pipe tables; header cells get `scope="col"`, and column alignment is a class
+ *   (`align-left|center|right`), not markdown-it's inline `style="text-align:…"`.
+ * - Pandoc fenced divs (`::: {.notice}` … `:::`): the known classes render as labelled panels;
+ *   an unknown class renders as a visible plain block (`callout-unknown`), never disappears.
+ * - Raw blocks: a ```` ```{=latex} ```` fence (and inline `` `…`{=latex} ``) is dropped; any other
+ *   raw format renders as visible, escaped code, never as raw markup.
+ * - Code: highlighted with Shiki (JavaScript regex engine, synchronous) in two themes. The
+ *   `transformerStyleToClass` transformer turns every token style into a class; `codeCss()` is
+ *   the one stylesheet those classes need, light and dark both (served as `/code.css`).
+ * - Math: KaTeX, MathML-only output (no inline styles, no KaTeX CSS or fonts), under Pandoc's
+ *   `tex_math_dollars` rule.
+ */
+
+import markdownit from 'markdown-it';
+import type { MarkdownIt, MarkdownItOptions, RendererRule, StateInline, Token } from 'markdown-it';
+import container from 'markdown-it-container';
+import katex from 'katex';
+import { createHighlighterCoreSync } from 'shiki/core';
+import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
+import python from 'shiki/dist/langs/python.mjs';
+import lisp from 'shiki/dist/langs/lisp.mjs';
+import githubLight from 'shiki/dist/themes/github-light.mjs';
+import githubDark from 'shiki/dist/themes/github-dark.mjs';
+import { transformerStyleToClass } from '@shikijs/transformers';
+
+import { escapeHtml } from './escape';
+
+export { escapeHtml };
+
+// ---------------------------------------------------------------------------------------------
+// Code highlighting
+
+const styleToClass = transformerStyleToClass({ classPrefix: 'sh-' });
+
+/** WCAG relative luminance of a `#rgb` / `#rrggbb` colour. */
+function luminance(hex: string): number {
+  let h = hex.replace('#', '').slice(0, 6);
+  if (h.length === 3) h = [...h].map((c) => c + c).join('');
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = Number.parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  }) as [number, number, number];
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** The WCAG contrast ratio of two colours. */
+export function contrastRatio(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** `fg` mixed toward black (on a light background) or white (on a dark one) until it reaches `min`. */
+function readable(fg: string, bg: string, min: number): string {
+  if (contrastRatio(fg, bg) >= min) return fg;
+  const toward = luminance(bg) > 0.5 ? 0 : 255;
+  let h = fg.replace('#', '').slice(0, 6);
+  if (h.length === 3) h = [...h].map((c) => c + c).join('');
+  const rgb = [0, 2, 4].map((i) => Number.parseInt(h.slice(i, i + 2), 16));
+  for (let step = 1; step <= 50; step += 1) {
+    const mixed = `#${rgb.map((c) => Math.round(c + ((toward - c) * step) / 50).toString(16).padStart(2, '0')).join('')}`;
+    if (contrastRatio(mixed, bg) >= min) return mixed;
+  }
+  return toward === 0 ? '#000000' : '#ffffff';
+}
+
+type Theme = typeof githubLight;
+
+/**
+ * A copy of a Shiki theme whose every token colour meets WCAG AA (4.5:1) on the theme's own
+ * background. GitHub's themes miss it in two places — github-light's orange (#e36209, 3.5:1) and
+ * github-dark's comments (#6a737d, 3.0:1) — which axe reports as serious (plan 103 Phase F).
+ */
+export function accessibleTheme(theme: Theme, min = 4.5): Theme {
+  const copy = structuredClone(theme) as {
+    type?: string;
+    colors?: Record<string, string>;
+    tokenColors?: { settings?: { foreground?: string } }[];
+  };
+  const bg = copy.colors?.['editor.background'] ?? (copy.type === 'dark' ? '#000000' : '#ffffff');
+  const fg = copy.colors?.['editor.foreground'];
+  if (copy.colors && fg) copy.colors['editor.foreground'] = readable(fg, bg, min);
+  for (const rule of copy.tokenColors ?? []) {
+    const colour = rule.settings?.foreground;
+    if (rule.settings && colour && /^#[0-9a-f]{3,8}$/i.test(colour)) rule.settings.foreground = readable(colour, bg, min);
+  }
+  return copy as Theme;
+}
+
+const highlighter = createHighlighterCoreSync({
+  themes: [accessibleTheme(githubLight), accessibleTheme(githubDark)],
+  langs: [python, lisp],
+  engine: createJavaScriptRegexEngine(),
+});
+
+const LANGS: Record<string, string> = { python: 'python', py: 'python', python3: 'python', lisp: 'lisp' };
+const highlighted = new Map<string, string>();
+
+/** Highlighted `<pre class="shiki …"><code>…</code></pre>`; an unknown language is plain text. */
+export function highlightCode(code: string, lang = 'python'): string {
+  const language = LANGS[lang.toLowerCase()] ?? 'text';
+  const id = `${language}\u0000${code}`;
+  let html = highlighted.get(id);
+  if (html === undefined) {
+    html = highlighter.codeToHtml(code.replace(/\n$/, ''), {
+      lang: language,
+      themes: { light: 'github-light', dark: 'github-dark' },
+      defaultColor: false,
+      transformers: [styleToClass],
+    });
+    highlighted.set(id, html);
+  }
+  return html;
+}
+
+/**
+ * The stylesheet the highlighted code needs: one class per token style (from the transformer's
+ * registry), plus the rules that pick the light or dark value. Complete only once every code
+ * string the site renders has been highlighted; `/code.css` warms the pipeline first.
+ */
+export function codeCss(): string {
+  const pick = (scope: string, theme: 'light' | 'dark') =>
+    `${scope}.shiki{color:var(--shiki-${theme});background-color:var(--shiki-${theme}-bg)}` +
+    `${scope}.shiki span{color:var(--shiki-${theme})}`;
+  return (
+    '/* Generated by site/src/lib/markdown.ts (Shiki, transformerStyleToClass). */\n' +
+    `${styleToClass.getCSS()}\n` +
+    `${pick('', 'light')}\n` +
+    `@media (prefers-color-scheme: dark){${pick(":root:not([data-theme='light']) ", 'dark')}}\n` +
+    `${pick(":root[data-theme='dark'] ", 'dark')}\n`
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Math (Pandoc's tex_math_dollars rule, KaTeX MathML-only)
+
+const mathCache = new Map<string, string>();
+
+/** KaTeX MathML for `tex`; a formula KaTeX cannot parse shows as its source in code. */
+export function renderMath(tex: string, display: boolean): string {
+  const id = `${display ? 'D' : 'I'}${tex}`;
+  let html = mathCache.get(id);
+  if (html === undefined) {
+    try {
+      html = katex.renderToString(tex, { output: 'mathml', displayMode: display, throwOnError: true });
+      // MathML carries no style attributes for the commands the books use; strip any that a
+      // future command might add, since the CSP forbids them.
+      html = html.replace(/\sstyle="[^"]*"/g, '');
+    } catch {
+      html = `<code class="math-error">${escapeHtml(tex)}</code>`;
+    }
+    mathCache.set(id, html);
+  }
+  return html;
+}
+
+const isSpace = (ch: string | undefined) => ch === undefined || /\s/.test(ch);
+const isDigit = (ch: string | undefined) => ch !== undefined && ch >= '0' && ch <= '9';
+
+/**
+ * Pandoc's `tex_math_dollars`: `$…$` is inline math when the opening `$` is followed by a
+ * non-space and the closing `$` is preceded by a non-space and not followed by a digit;
+ * `$$…$$` is display math. Anything else stays text ("costs $6. Ages 13–17 cost $8").
+ */
+function dollarMath(state: StateInline, silent: boolean): boolean {
+  const src = state.src;
+  const start = state.pos;
+  if (src[start] !== '$') return false;
+
+  if (src[start + 1] === '$') {
+    const end = src.indexOf('$$', start + 2);
+    if (end === -1 || end === start + 2) return false;
+    if (!silent) {
+      const token = state.push('math_display', 'math', 0);
+      token.content = src.slice(start + 2, end);
+    }
+    state.pos = end + 2;
+    return true;
+  }
+
+  if (isSpace(src[start + 1])) return false;
+  for (let i = start + 1; i < state.posMax; i++) {
+    if (src[i] === '\\') {
+      i++; // an escaped character (such as \$) never closes
+      continue;
+    }
+    if (src[i] !== '$') continue;
+    if (!isSpace(src[i - 1]) && !isDigit(src[i + 1])) {
+      if (!silent) {
+        const token = state.push('math_inline', 'math', 0);
+        token.content = src.slice(start + 1, i);
+      }
+      state.pos = i + 1;
+      return true;
+    }
+  }
+  return false;
+}
+
+function mathPlugin(md: MarkdownIt): void {
+  md.inline.ruler.after('escape', 'dollar_math', dollarMath);
+  md.renderer.rules.math_inline = (tokens, idx) => renderMath(tokens[idx]!.content, false);
+  md.renderer.rules.math_display = (tokens, idx) => renderMath(tokens[idx]!.content, true);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Pandoc fenced divs
+
+/** The known div classes and their labels (as the PDFs label them; null: no label). */
+export const CONTAINER_LABELS: Record<string, string | null> = {
+  notice: 'Notice',
+  realprog: 'Real program',
+  goals: 'You will learn',
+  recap: 'Recap',
+  opener: null,
+  program: 'Program',
+  datafile: 'Data file',
+  challenge: 'Challenge',
+};
+
+/** The classes of a Pandoc div's attributes (`{.a .b #id k=v}` or a bare `name`). */
+export function divClasses(params: string): string[] {
+  const text = params.trim();
+  const braced = /^\{(.*)\}$/.exec(text);
+  if (!braced) return /^[\w-]+$/.test(text) ? [text] : [];
+  return [...braced[1]!.matchAll(/(?:^|\s)\.([\w-]+)/g)].map((m) => m[1]!);
+}
+
+const containerRender: RendererRule = (tokens, idx) => {
+  const token = tokens[idx]!;
+  if (token.nesting !== 1) return '</div>\n';
+  const classes = divClasses(token.info);
+  const known = classes.find((c) => c in CONTAINER_LABELS);
+  if (known) {
+    const label = CONTAINER_LABELS[known];
+    return (
+      `<div class="callout callout-${known}">\n` +
+      (label ? `<p class="callout-label">${escapeHtml(label)}</p>\n` : '')
+    );
+  }
+  // An unknown class stays visible: a plain block that names nothing it does not know.
+  const name = classes[0] ?? 'div';
+  return `<div class="callout callout-unknown" data-div="${escapeHtml(name)}">\n`;
+};
+
+// ---------------------------------------------------------------------------------------------
+// Tables, fences and raw blocks
+
+const RAW_ATTR = /^\{=([\w-]+)\}$/;
+const DROPPED_RAW = new Set(['latex', 'tex', 'beamer']);
+
+function tablePlugin(md: MarkdownIt): void {
+  const cell = (tag: 'th' | 'td'): RendererRule => (tokens, idx, options, _env, self) => {
+    const token = tokens[idx]!;
+    const style = token.attrGet('style');
+    if (style) {
+      const align = /text-align:\s*(left|center|right)/.exec(String(style))?.[1];
+      token.attrs = (token.attrs ?? []).filter(([name]) => name !== 'style');
+      if (align) token.attrJoin('class', `align-${align}`);
+    }
+    if (tag === 'th') token.attrSet('scope', 'col');
+    return self.renderToken(tokens, idx, options);
+  };
+  md.renderer.rules.th_open = cell('th');
+  md.renderer.rules.td_open = cell('td');
+  md.renderer.rules.table_open = () => '<div class="table-wrap"><table>\n';
+  md.renderer.rules.table_close = () => '</table></div>\n';
+}
+
+function fencePlugin(md: MarkdownIt): void {
+  md.renderer.rules.fence = (tokens, idx) => {
+    const token = tokens[idx]!;
+    const info = token.info.trim();
+    const raw = RAW_ATTR.exec(info);
+    if (raw) {
+      if (DROPPED_RAW.has(raw[1]!.toLowerCase())) return '';
+      return `<pre class="raw-block"><code>${escapeHtml(token.content)}</code></pre>\n`;
+    }
+    const lang = info.replace(/^\{\.?/, '').split(/[\s}]/)[0] ?? '';
+    return `${highlightCode(token.content, lang)}\n`;
+  };
+  // Inline raw: `\foo`{=latex} drops the code span and its attribute.
+  md.core.ruler.push('inline_raw', (state) => {
+    for (const block of state.tokens) {
+      const children = block.children;
+      if (block.type !== 'inline' || !children) continue;
+      const kept: Token[] = [];
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i]!;
+        const next = children[i + 1];
+        const attr = next?.type === 'text' ? /^\{=([\w-]+)\}/.exec(next.content) : null;
+        if (child.type === 'code_inline' && next && attr) {
+          next.content = next.content.slice(attr[0].length);
+          if (!DROPPED_RAW.has(attr[1]!.toLowerCase())) kept.push(child);
+          continue;
+        }
+        kept.push(child);
+      }
+      block.children = kept;
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------------------------
+// The renderer
+
+export function createMarkdown(): MarkdownIt {
+  const options: MarkdownItOptions = { html: false, linkify: false, typographer: false };
+  const md = markdownit('default', options);
+  md.use(mathPlugin);
+  md.use(tablePlugin);
+  md.use(fencePlugin);
+  md.use(container, 'pandoc', {
+    marker: ':',
+    validate: (params: string) => divClasses(params).length > 0,
+    render: containerRender,
+  });
+  // Images never load (no remote or data: images; the books have none): show the alt text.
+  md.renderer.rules.image = (tokens, idx) => `<span class="image-alt">${escapeHtml(tokens[idx]!.content)}</span>`;
+  return md;
+}
+
+/**
+ * Drop HTML comments (`<!-- pattern: … -->` authoring marks), as Pandoc does for the PDFs; with
+ * `html: false` they would otherwise show as text. A line holding only a comment goes with its
+ * line break, so it never splits a paragraph. Comments inside fenced code or a code span stay.
+ */
+export function stripComments(text: string): string {
+  if (!text.includes('<!--')) return text;
+  const out: string[] = [];
+  // Alternate prose and fenced-code segments; only prose is touched.
+  const parts = text.split(/(^(?:```|~~~)[^\n]*\n[\s\S]*?^(?:```|~~~)[ \t]*$)/m);
+  parts.forEach((part, i) => {
+    if (i % 2 === 1) {
+      out.push(part);
+      return;
+    }
+    const lines = part.replace(/^[ \t]*<!--[\s\S]*?-->[ \t]*(?:\n|$)/gm, '');
+    out.push(lines.replace(/(`+)[\s\S]*?\1|<!--[\s\S]*?-->/g, (m) => (m.startsWith('`') ? m : '')));
+  });
+  return out.join('');
+}
+
+const shared = createMarkdown();
+const rendered = new Map<string, string>();
+
+/** Block Markdown to HTML (memoised: the same text renders once per build). */
+export function renderMarkdown(text: string): string {
+  let html = rendered.get(text);
+  if (html === undefined) {
+    html = shared.render(stripComments(text));
+    rendered.set(text, html);
+  }
+  return html;
+}
+
+/** One line of Markdown (a title or label) without a wrapping paragraph. */
+export function renderInline(text: string): string {
+  return shared.renderInline(stripComments(text));
+}
+
+/** Stored program output, shown as-is (escaped) in a plain block. */
+export function renderOutput(text: string): string {
+  return `<pre class="output-text"><code>${escapeHtml(text.replace(/\n$/, ''))}</code></pre>`;
+}

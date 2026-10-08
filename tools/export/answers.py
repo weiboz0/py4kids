@@ -22,7 +22,9 @@ from __future__ import annotations
 import ast
 import builtins
 import functools
+import hashlib
 import re
+import resource
 import shutil
 import subprocess
 import sys
@@ -35,7 +37,7 @@ import nbformat
 
 from tools.books import book_flag, book_path, publication_config, site_config
 from tools.fake_turtle import imports_turtle
-from tools.judge import ANSWER_LINE, _fixture_pairs
+from tools.judge import ANSWER_LINE, JUDGE_TIMEOUT_S, REPO_ROOT, _fixture_pairs, outputs_match
 from tools.publish import (
     ITEM,
     SOLUTION_SOURCE,
@@ -47,12 +49,16 @@ from tools.publish import (
     item_groups,
     project_sections,
     solution_assets,
+    student_answer_sources,
     student_answer_text,
     unit_challenges,
 )
+from tools.turtle_figure import turtle_segments
+from tools.turtle_real import real_programs
 
-from .normalise import answer_hash, normalise
+from .normalise import WHITESPACE_MODES, answer_hash, normalise
 from .probe import sandbox_env
+from .timing import TimingCache
 
 if TYPE_CHECKING:  # pragma: no cover
     from .items import Item
@@ -416,21 +422,52 @@ def derive_answer_format(canonical: str) -> dict:
     return {"case": "sensitive", "hint": hint}
 
 
+ANSWER_FORMAT_KEYS = frozenset({"case", "hint", "aliases", "whitespace"})
+
+
+def _valid_answer_format(authored) -> bool:
+    if not isinstance(authored, dict) or not {"case", "hint"} <= set(authored) <= ANSWER_FORMAT_KEYS:
+        return False
+    if authored["case"] not in ("sensitive", "insensitive"):
+        return False
+    if not isinstance(authored["hint"], str) or not authored["hint"].strip():
+        return False
+    if "whitespace" in authored and authored["whitespace"] not in WHITESPACE_MODES:
+        return False
+    aliases = authored.get("aliases", {"-": "-"})
+    return (isinstance(aliases, dict) and bool(aliases)
+            and all(isinstance(k, str) and k and isinstance(v, str) for k, v in aliases.items()))
+
+
 def answer_format(item: Item, canonical: str) -> tuple[dict, list[str]]:
-    """The heading cell's `metadata.answer_format` (`{case, hint}`), else a derived format.
+    """The heading cell's `metadata.answer_format` (`{case, hint, aliases?, whitespace?}`), else a
+    derived format. `aliases` maps a typed form to the canonical one (`{"^": "↑"}`); `whitespace`
+    is `collapse` (the default) or `exact` (plan 102 Phase 0). Only authored keys ship, so a format
+    without them is unchanged.
 
     A derived format on a canonical text with letters is reported (content work, plan 101 D).
     """
     authored = item.heading_cell.metadata.get("answer_format")
     if authored is not None:
-        if (not isinstance(authored, dict) or set(authored) != {"case", "hint"}
-                or authored["case"] not in ("sensitive", "insensitive")
-                or not isinstance(authored["hint"], str) or not authored["hint"].strip()):
+        if not _valid_answer_format(authored):
             raise ValueError(f"FAIL: {item.key}: metadata.answer_format must be {{case, hint}} "
-                             "with case sensitive|insensitive and a non-empty hint")
-        return {"case": authored["case"], "hint": authored["hint"]}, []
+                             "(plus optional aliases, whitespace) with case sensitive|insensitive, "
+                             "a non-empty hint, whitespace collapse|exact and aliases a non-empty "
+                             "map of non-empty typed text to canonical text")
+        fmt = {"case": authored["case"], "hint": authored["hint"]}
+        if "aliases" in authored:
+            fmt["aliases"] = dict(authored["aliases"])
+        if "whitespace" in authored:
+            fmt["whitespace"] = authored["whitespace"]
+        return fmt, []
     notes = ["answer_format: derived (letters)"] if LETTER.search(canonical) else []
     return derive_answer_format(canonical), notes
+
+
+def format_hash(key: str, canonical: str, fmt: dict) -> str:
+    """`answer_hash` of `canonical` under an `answer_format` (its case, whitespace and aliases)."""
+    return answer_hash(key, canonical, case=fmt.get("case", ""),
+                       whitespace=fmt.get("whitespace", "collapse"), aliases=fmt.get("aliases"))
 
 
 # --- fixtures ----------------------------------------------------------------------------------
@@ -482,11 +519,73 @@ def sample_input(statement: str) -> str | None:
     return fence[1] if fence else None
 
 
-def fixtures_check(root: Path, book: str, item: Item) -> tuple[dict, list[str]]:
+def solver_fingerprint(solver: Path, pairs: list[tuple[int, Path, Path]]) -> str:
+    """sha256 over the solver's bytes and every fixture pair's (the timing cache's staleness key)."""
+    digest = hashlib.sha256()
+    for name, data in [("solver", Path(solver).read_bytes()),
+                       *((f"{n}.{part}", path.read_bytes()) for n, inp, outp in pairs
+                         for part, path in (("in", inp), ("out", outp)))]:
+        digest.update(name.encode("utf-8") + b"\0" + str(len(data)).encode("ascii") + b"\0")
+        digest.update(data)
+    return "sha256:" + digest.hexdigest()
+
+
+def item_fingerprint(entry_dir: Path, stem: str) -> str | None:
+    """The fingerprint of the solver `assets/<stem>.py` and its fixtures, or None without one (the
+    answer model's timing tie)."""
+    assets = Path(entry_dir) / "assets"
+    if not (assets / f"{stem}.py").is_file():
+        return None
+    pairs = [(int(inp.stem), inp, outp)
+             for inp, outp in _fixture_pairs(assets / stem, Path(entry_dir).name, stem, [])
+             if inp.stem.isdigit()]
+    return solver_fingerprint(assets / f"{stem}.py", sorted(pairs))
+
+
+MEASURE_REPEATS = 3
+
+
+def _case_cpu_ms(script: Path, inp: Path, outp: Path, line_exact: bool, label: str) -> float:
+    """One case's child CPU time (user + system, ms), run exactly as `tools/judge.py`'s
+    `_run_case` runs it; the output must be judged correct."""
+    before = resource.getrusage(resource.RUSAGE_CHILDREN)
+    try:
+        result = subprocess.run([sys.executable, str(script)],
+                                input=inp.read_text(encoding="utf-8"), text=True,
+                                capture_output=True, timeout=JUDGE_TIMEOUT_S, cwd=REPO_ROOT,
+                                check=False)
+    except subprocess.TimeoutExpired as error:
+        raise ValueError(f"FAIL: {label}: solver exceeded {JUDGE_TIMEOUT_S}s on {inp.name}") from error
+    after = resource.getrusage(resource.RUSAGE_CHILDREN)
+    if (result.returncode != 0 or not result.stdout.strip()
+            or not outputs_match(result.stdout, outp.read_text(encoding="utf-8"),
+                                 line_exact=line_exact)):
+        raise ValueError(f"FAIL: {label}: solver fails its fixture {inp.name}; cannot measure")
+    return 1000 * ((after.ru_utime - before.ru_utime) + (after.ru_stime - before.ru_stime))
+
+
+def measure_solver(solver: Path, pairs: list[tuple[int, Path, Path]], line_exact: bool,
+                   label: str, repeats: int = MEASURE_REPEATS) -> tuple[float, int]:
+    """(the reference solver's maximum CPU ms across the cases, the number of cases); each case
+    is the minimum of `repeats` runs, which drops scheduler noise."""
+    worst = 0.0
+    for _n, inp, outp in pairs:
+        worst = max(worst, min(_case_cpu_ms(solver, inp, outp, line_exact, label)
+                               for _ in range(repeats)))
+    return worst, len(pairs)
+
+
+def fixtures_check(root: Path, book: str, item: Item,
+                   timings: TimingCache | None = None) -> tuple[dict, list[str]]:
     pairs = fixture_pairs(root, book, item)
     if not pairs:
         raise ValueError(f"FAIL: {item.key}: check-fixtures needs a solver and fixture pairs")
     stem = solver_stem(item)
+    timings = timings if timings is not None else TimingCache(root, book)
+    solver = Path(item.entry_dir) / "assets" / f"{stem}.py"
+    line_exact = book_flag(root, book, "acsl")
+    cpu_ms = timings.cpu_ms(item.key, solver_fingerprint(solver, pairs),
+                            lambda: measure_solver(solver, pairs, line_exact, item.key))
     budget = site_config(root, book).fixture_budget_kb * 1024
     sample = sample_input(item.statement_source)
     wanted = None if sample is None else normalise(sample, case="sensitive")
@@ -501,8 +600,8 @@ def fixtures_check(root: Path, book: str, item: Item) -> tuple[dict, list[str]]:
             over.append(n)
     notes = [] if sample_seen else ["fixtures: no pair matches the statement's Sample Input"]
     notes.extend(f"fixtures: case {n} over the {budget // 1024} KB budget" for n in over)
-    match = "line" if book_flag(root, book, "acsl") else "token"
-    return {"cases": cases, "match": match, "over_budget": over}, notes
+    match = "line" if line_exact else "token"
+    return {"cases": cases, "match": match, "over_budget": over, "cpu_ms": cpu_ms}, notes
 
 
 # --- self-check ------------------------------------------------------------------------------
@@ -519,19 +618,33 @@ def _plain_prose(text: str) -> str:
     return re.sub(r"\s+", " ", text)
 
 
-def _plain(text: str) -> str:
-    """Markdown as plain text: links, emphasis and extra whitespace go, but an inline code span keeps
-    its exact text (only its backticks go; CommonMark strips one space padding both ends)."""
-    out, position = [], 0
+def _plain_masked(text: str) -> tuple[str, list[str]]:
+    """`_plain` with each inline code span's text replaced by a placeholder, and those texts."""
+    out, codes, position = [], [], 0
     for match in CODE_SPAN.finditer(text):
         out.append(_plain_prose(text[position:match.start()]))
         code = match[2]
         if code.startswith(" ") and code.endswith(" ") and code.strip():
             code = code[1:-1]
-        out.append(code)
+        out.append(f"\ue000{len(codes)}\ue001")
+        codes.append(code)
         position = match.end()
     out.append(_plain_prose(text[position:]))
-    return "".join(out).strip()
+    return "".join(out).strip(), codes
+
+
+CODE_MARK = re.compile("\ue000(\\d+)\ue001")
+
+
+def _unmask(text: str, codes: list[str]) -> str:
+    return CODE_MARK.sub(lambda match: codes[int(match[1])], text)
+
+
+def _plain(text: str) -> str:
+    """Markdown as plain text: links, emphasis and extra whitespace go, but an inline code span keeps
+    its exact text (only its backticks go; CommonMark strips one space padding both ends)."""
+    masked, codes = _plain_masked(text)
+    return _unmask(masked, codes)
 
 
 def self_check_requirements(item: Item) -> tuple[list[str], list[str]]:
@@ -550,6 +663,47 @@ def self_check_requirements(item: Item) -> tuple[list[str], list[str]]:
         "self-check: no list in the statement"]
 
 
+def also_check(item: Item) -> list[str]:
+    """The heading cell's `metadata.also_check`: requirements an automatic check cannot see (a method
+    the statement demands), shown as a self-check list beside the check (plan 102 Phase 0)."""
+    authored = item.heading_cell.metadata.get("also_check")
+    if authored is None:
+        return []
+    if (not isinstance(authored, list) or not authored
+            or not all(isinstance(entry, str) and entry.strip() for entry in authored)):
+        raise ValueError(f"FAIL: {item.key}: metadata.also_check must be a non-empty list of text")
+    return [entry.strip() for entry in authored]
+
+
+def _tie_text(text: str) -> str:
+    return normalise(_plain(text), case="insensitive")
+
+
+def statement_tie_findings(item: Item, kind: str) -> list[str]:
+    """`FAIL:` per authored `also_check` or `requirements` entry that does not occur in the item's
+    statement (both as plain text, whitespace collapsed and casefolded; an entry's closing `.`, `!`
+    or `?` may end a sentence the statement continues). Authored metadata earns check 2 allowance
+    (`check_texts`), so this tie is what stops an entry copied from a solution (plan 102 rule 5)."""
+    findings = []
+    authored_also = item.heading_cell.metadata.get("also_check")
+    if authored_also is not None and kind == "self-check":
+        findings.append(f"FAIL: {item.key}: metadata.also_check on a self-check item "
+                        "(use requirements)")
+    statement = _tie_text(item.statement_md)
+    for name in ("also_check", "requirements"):
+        authored = item.heading_cell.metadata.get(name)
+        if not isinstance(authored, list) or (name == "also_check" and kind == "self-check"):
+            continue
+        for entry in authored:
+            if not isinstance(entry, str) or not entry.strip():
+                continue
+            text = _tie_text(entry)
+            if text not in statement and text.rstrip(".!?") not in statement:
+                findings.append(f"FAIL: {item.key}: metadata.{name} entry is not in the statement: "
+                                f"{entry.strip()!r}")
+    return findings
+
+
 MAX_REQUIREMENTS = 6
 SPECIFICATION = re.compile(r"^\*\*Specification:\*\*\s*")
 NOTE = re.compile(r"^\*\*(?:No real version|Real version):\*\*")
@@ -558,7 +712,10 @@ SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 
 
 def _sentences(paragraph: str) -> list[str]:
-    return [s for s in SENTENCE_END.split(_plain(paragraph)) if s]
+    """The paragraph's plain sentences. A sentence never ends inside an inline code span
+    (`print("Hi. Bye")`), so the split runs with every span masked (content review 1, [fable] 3)."""
+    masked, codes = _plain_masked(paragraph)
+    return [_unmask(s, codes) for s in SENTENCE_END.split(masked) if s]
 
 
 def statement_sentences(statement: str) -> list[str]:
@@ -601,16 +758,17 @@ SINGLE_NUMBER = re.compile(r"[-+]?\d+(?:\.\d+)?")
 SINGLE_TOKEN_NOTE = "expected-output: single-token output"
 
 
-def _check(root: Path, book: str, item: Item, kind: str) -> tuple[dict, list[str]]:
+def _check(root: Path, book: str, item: Item, kind: str,
+           timings: TimingCache | None = None) -> tuple[dict, list[str]]:
     from .classify import confirmed_kind  # classify imports this module
 
     notes: list[str] = []
     if kind == "fixtures":
-        body, notes = fixtures_check(root, book, item)
+        body, notes = fixtures_check(root, book, item, timings)
     elif kind in ("answer", "predict", "expected-output"):
         canonical = canonical_text(item, kind)
         fmt, notes = answer_format(item, canonical)
-        body = {"hash": answer_hash(item.key, canonical, case=fmt["case"]), "answer_format": fmt}
+        body = {"hash": format_hash(item.key, canonical, fmt), "answer_format": fmt}
         output = normalise(canonical, case="sensitive")
         if kind == "expected-output" and SINGLE_NUMBER.fullmatch(output):
             notes = [*notes, f"{SINGLE_TOKEN_NOTE} ({output})"]
@@ -652,11 +810,39 @@ def is_released(item: Item) -> bool:
 
 
 def answer_fields(root: Path, book: str, item: Item) -> dict:
-    """`answer_visibility` (+ `answer_md`, the Student Book appendix text, for odd unit exercises)."""
+    """`answer_visibility` (+ `answer_md`, the Student Book appendix text, for odd unit exercises,
+    and `answer_figures` when that answer draws with turtle)."""
     if is_released(item):
-        return {"answer_visibility": "after-attempt",
-                "answer_md": student_answer_text(item.entry_dir, item.number, _lesson_heading(root, book))}
+        fields = {"answer_visibility": "after-attempt",
+                  "answer_md": student_answer_text(item.entry_dir, item.number,
+                                                   _lesson_heading(root, book))}
+        figures = answer_figures(item.entry_dir, item.number)
+        if figures:
+            fields["answer_figures"] = figures
+        return fields
     return {"answer_visibility": "none"}
+
+
+def answer_figures(entry_dir: Path, number: int) -> list[dict]:
+    """The turtle drawings the Student Book appendix prints for odd unit Exercise `number`, as
+    segments (`turtle_segments`), in `_answer_blocks`' order: each turtle real program with a sample
+    input, then each printed solution asset that imports turtle. Read only through
+    `student_answer_sources`, as `answer_md` is; the site draws these in place of the dropped TikZ."""
+    groups, assets = student_answer_sources(Path(entry_dir))
+    group = next((g for g in groups if g["number"] == number), None)
+    if group is None:
+        return []
+    out = []
+    for program, sample in real_programs(group):
+        if imports_turtle(program) and sample is not None:
+            out.append({"caption": "Drawing for the sample input: " + ", ".join(sample.splitlines()),
+                        "segments": turtle_segments(program, stdin=sample + "\n")})
+    for path in assets.get(number, []):
+        source = path.read_text(encoding="utf-8")
+        if "import turtle" in source or "from turtle import" in source:
+            out.append({"caption": "Drawing made by the program above",
+                        "segments": turtle_segments(source)})
+    return out
 
 
 # --- the hidden corpora (Phase F's answer-model checks; data only, never bundled) -------------
@@ -851,9 +1037,11 @@ def shipped_asserts(root: Path, book: str) -> dict[str, str]:
 
 def check_texts(root: Path, book: str) -> list[tuple[str, str, str]]:
     """(item key, origin, text) of the student-visible text each item's `check` ships, computed from
-    the repo, for check 2's baseline: a self-check item's requirements and a hashed item's
-    `answer_format.hint` (origin `<statement notebook>#check:<key>`: derived from the statement or
-    authored in its heading metadata), and an `asserts` item's shipped asserts (origin
+    the repo, for check 2's baseline: a self-check item's requirements, any other item's
+    `also_check`, and a hashed item's `answer_format.hint` and alias texts (origin
+    `<statement notebook>#check:<key>`: derived from the statement or authored in its heading
+    metadata; `statement_tie_findings` ties authored requirements and `also_check` to the statement),
+    and an `asserts` item's shipped asserts (origin
     `<solutions>#asserts:<key>`, which ship by design)."""
     from .classify import item_kind
     from .items import entry_items
@@ -865,9 +1053,13 @@ def check_texts(root: Path, book: str) -> list[tuple[str, str, str]]:
             statement = f"{_rel(root, entry_dir / f'{item.notebook}.ipynb')}#check:{item.key}"
             if check_kind == "self-check":
                 out += [(item.key, statement, text) for text in self_check_requirements(item)[0]]
-            elif check_kind in ("answer", "predict", "expected-output"):
+            else:
+                out += [(item.key, statement, text) for text in also_check(item)]
+            if check_kind in ("answer", "predict", "expected-output"):
                 fmt, _ = answer_format(item, canonical_text(item, check_kind))
                 out.append((item.key, statement, fmt["hint"]))
+                out += [(item.key, statement, text)
+                        for pair in fmt.get("aliases", {}).items() for text in pair]
             elif check_kind == "asserts":
                 solutions = f"{_rel(root, entry_dir / 'solutions.ipynb')}#asserts:{item.key}"
                 out.append((item.key, solutions, asserts_check(item)[0]))

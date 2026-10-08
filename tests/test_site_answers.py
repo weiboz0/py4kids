@@ -65,7 +65,10 @@ def test_odd_answer_equals_appendix(book):
             if item.kind == "unit" and item.number % 2:
                 text = student_answer_text(entry, item.number, lesson_heading)
                 assert text == slices[item.number], item.key
+                figures = fields.pop("answer_figures", [])
                 assert fields == {"answer_visibility": "after-attempt", "answer_md": text}
+                # plan 104 C: a figure exactly per turtle drawing the appendix prints
+                assert len(figures) == text.count(r"\begin{tikzpicture}"), item.key
                 checked += 1
             else:
                 assert fields == {"answer_visibility": "none"}, item.key
@@ -153,7 +156,8 @@ def test_fixture_sample_and_budget(demo):
              "out_file": "files/unit-01-demo/fixtures/ex1/1.out", "sample": True},
             {"n": 2, "in_file": "files/unit-01-demo/fixtures/ex1/2.in",
              "out_file": "files/unit-01-demo/fixtures/ex1/2.out", "sample": False}],
-        "match": "token", "over_budget": [], "turtle": False, "confirmed": False}
+        "match": "token", "over_budget": [], "cpu_ms": 100, "turtle": False,
+        "confirmed": False}
     assert [path for path, _ in answers.fixture_files(demo, "demo", item)] == [
         "files/unit-01-demo/fixtures/ex1/1.in", "files/unit-01-demo/fixtures/ex1/1.out",
         "files/unit-01-demo/fixtures/ex1/2.in", "files/unit-01-demo/fixtures/ex1/2.out"]
@@ -163,6 +167,7 @@ def test_fixture_sample_and_budget(demo):
     (fixtures / "1.out").write_text("8\n", encoding="utf-8")
     (fixtures / "10.in").write_text("1" * 150_000 + "\n", encoding="utf-8")  # a 200 KB pair
     (fixtures / "10.out").write_text("2" * 50_000 + "\n", encoding="utf-8")
+    demo_book.write_timings(demo)  # the fixtures changed: a fresh timing entry
     check = answers.check_data(demo, "demo", item, "fixtures")
     assert [case["n"] for case in check["cases"]] == [1, 2, 10]  # numeric order
     assert not any(case["sample"] for case in check["cases"])
@@ -377,3 +382,119 @@ def test_single_token_numeric_expected_output_is_flagged():
                     if i.label == "Question 4")
     notes = answers.check_notes(ROOT, "python-projects", question, "expected-output")
     assert not any(n.startswith(answers.SINGLE_TOKEN_NOTE) for n in notes), notes
+
+
+# --- plan 102 Phase 0: answer_format aliases and whitespace, also_check, the statement tie -------
+
+
+def test_answer_format_accepts_aliases_and_whitespace(demo):
+    item = unit_items(demo)["Exercise 2"]
+    item.heading_cell.metadata["answer_format"] = {
+        "case": "sensitive", "hint": "a prefix expression", "aliases": {"^": "↑"},
+        "whitespace": "exact"}
+    fmt, notes = answers.answer_format(item, "↑ A B")
+    assert fmt == {"case": "sensitive", "hint": "a prefix expression", "aliases": {"^": "↑"},
+                   "whitespace": "exact"}
+    assert notes == []
+    # The shipped hash follows the authored format: the typed `^` form hashes as the canonical.
+    check = answers.check_data(demo, "demo", item, "answer")
+    assert check["answer_format"] == fmt
+    assert check["hash"] == answer_hash(item.key, "ZEBRA", case="sensitive", whitespace="exact",
+                                        aliases={"^": "↑"})
+    # Without the new keys the format (and so the bundle) is exactly what it was.
+    item.heading_cell.metadata["answer_format"] = {"case": "insensitive", "hint": "one word"}
+    assert answers.answer_format(item, "ZEBRA")[0] == {"case": "insensitive", "hint": "one word"}
+
+
+@pytest.mark.parametrize("bad", [
+    {"case": "sensitive", "hint": "x", "extra": 1},
+    {"case": "sensitive", "hint": "x", "whitespace": "loose"},
+    {"case": "sensitive", "hint": "x", "aliases": ["^"]},
+    {"case": "sensitive", "hint": "x", "aliases": {}},
+    {"case": "sensitive", "hint": "x", "aliases": {"": "↑"}},
+    {"case": "sensitive", "hint": "x", "aliases": {"^": 1}},
+    {"case": "sensitive", "aliases": {"^": "↑"}},
+])
+def test_answer_format_rejects_bad_metadata(demo, bad):
+    item = unit_items(demo)["Exercise 2"]
+    item.heading_cell.metadata["answer_format"] = bad
+    with pytest.raises(ValueError, match="metadata.answer_format must be"):
+        answers.answer_format(item, "ZEBRA")
+
+
+def test_also_check_round_trips_from_heading_metadata(demo):
+    """The demo's Exercise 4 heading cell carries `also_check` in the notebook file itself."""
+    unit = unit_items(demo)
+    data = export_item(demo, "demo", unit["Exercise 4"]).data
+    assert data["also_check"] == ["Write `double(n)`"]
+    assert "also_check" not in export_item(demo, "demo", unit["Exercise 3"]).data
+    # Never exported for a self-check item: its checklist is `requirements`.
+    unit["Exercise 6"].heading_cell.metadata["also_check"] = ["Ask for a name"]
+    assert "also_check" not in export_item(demo, "demo", unit["Exercise 6"]).data
+    for bad in ([], "Write it", [""], [3]):
+        unit["Exercise 4"].heading_cell.metadata["also_check"] = bad
+        with pytest.raises(ValueError, match="metadata.also_check must be"):
+            answers.also_check(unit["Exercise 4"])
+
+
+def test_statement_tie_accepts_entries_from_the_statement(demo):
+    unit = unit_items(demo)
+    assert answers.statement_tie_findings(unit["Exercise 4"], "asserts") == []
+    unit["Exercise 6"].heading_cell.metadata["requirements"] = [
+        "Asks for a name with `input()`.", "prints a greeting that uses the name"]
+    assert answers.statement_tie_findings(unit["Exercise 6"], "self-check") == []
+    # Derived (unauthored) requirements are not tied: they come from the statement already.
+    assert answers.statement_tie_findings(unit["Exercise 3"], "predict") == []
+
+
+def test_statement_tie_fails_entries_copied_from_a_solution(demo):
+    unit = unit_items(demo)
+    unit["Exercise 4"].heading_cell.metadata["also_check"] = ["return n * 2"]
+    assert answers.statement_tie_findings(unit["Exercise 4"], "asserts") == [
+        (f"FAIL: {unit['Exercise 4'].key}: metadata.also_check entry is not in the statement: "
+         "'return n * 2'")]
+    unit["Exercise 6"].heading_cell.metadata["requirements"] = ["print(f'Hello, {name}!')"]
+    assert answers.statement_tie_findings(unit["Exercise 6"], "self-check") == [
+        (f"FAIL: {unit['Exercise 6'].key}: metadata.requirements entry is not in the statement: "
+         "\"print(f'Hello, {name}!')\"")]
+
+
+def test_statement_tie_fails_a_hidden_canonical_in_also_check(demo):
+    item = unit_items(demo)["Exercise 2"]
+    item.heading_cell.metadata["also_check"] = ["The answer is ZEBRA"]
+    found = answers.statement_tie_findings(item, "answer")
+    assert len(found) == 1 and "also_check entry is not in the statement" in found[0], found
+
+
+def test_also_check_on_a_self_check_item_fails(demo):
+    item = unit_items(demo)["Exercise 6"]
+    item.heading_cell.metadata["also_check"] = ["Ask for a name"]
+    assert answers.statement_tie_findings(item, "self-check") == [
+        f"FAIL: {item.key}: metadata.also_check on a self-check item (use requirements)"]
+
+
+def test_sentences_never_split_inside_inline_code():
+    """[fable] 3 (plan 102 content review 1): a `.`, `!` or `?` inside an inline code span never
+    ends a checklist sentence."""
+    assert answers.statement_sentences(
+        'Ask `input("How many clues? ")`, then store it. Print `Saved. Done!` last.') == [
+        'Ask input("How many clues? "), then store it.', "Print Saved. Done! last."]
+
+
+@pytest.mark.parametrize(("book", "entry", "suffix", "sentence"), [
+    ("python-projects", "checkpoints/checkpoint-01-first-steps", "/checkpoint-05",
+     ("Write one line of Python that asks How many clues? , converts the typed answer to an "
+      "integer, and stores it in a variable named clue_count.")),
+    ("python-projects", "units/unit-09-save-point", "/0cc7f084",
+     "Print Saved space-race scores. when the save is complete."),
+    ("python-projects", "units/unit-09-save-point", "/e2692eb8",
+     "Print Saved Ada's settings. after the with block."),
+])
+def test_derived_checklists_keep_whole_sentences(book, entry, suffix, sentence):
+    """The three cited items derive whole sentences around their inline code."""
+    entry_dir = ROOT / book / entry
+    kind = "checkpoint" if entry.startswith("checkpoints/") else "unit"
+    item = next(i for i in entry_content(ROOT, book, entry_dir, kind).items
+                if i.key.endswith(suffix))
+    requirements, _ = answers.self_check_requirements(item)
+    assert sentence in requirements, requirements

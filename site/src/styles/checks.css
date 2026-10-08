@@ -1,0 +1,221 @@
+/* Run and Check controls (plan 104 Phase B): the practice page's editors, answer boxes and
+   verdicts, and the reading view's Run, Reset and input boxes. Colours are the site's tokens.
+   The editor's token colours (inherited into its shadow root) keep 4.5:1 on --surface. */
+
+:root {
+  --code-keyword: #b31d28;
+  --code-string: #0a3069;
+  --code-number: #0550ae;
+  --code-comment: #4d535c;
+  --code-function: #6639ba;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --code-keyword: #ff8f87;
+    --code-string: #a5d6ff;
+    --code-number: #79c0ff;
+    --code-comment: #aab1bb;
+    --code-function: #d2a8ff;
+  }
+}
+
+:root[data-theme='dark'] {
+  --code-keyword: #ff8f87;
+  --code-string: #a5d6ff;
+  --code-number: #79c0ff;
+  --code-comment: #aab1bb;
+  --code-function: #d2a8ff;
+}
+
+.button {
+  display: inline-block;
+  min-height: 2.4rem;
+  padding: 0.4rem 0.95rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.button-primary {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.button:focus-visible,
+.code-input:focus-visible,
+.answer-input:focus-visible,
+.stdin-input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.work,
+.answer-form {
+  margin: 0.9rem 0 0;
+}
+
+.work-label {
+  display: block;
+  margin: 0 0 0.3rem;
+  font-weight: 700;
+}
+
+.code-input,
+.answer-input,
+.stdin-input {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  tab-size: 4;
+}
+
+.answer-exact {
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.code-editor {
+  display: block;
+}
+
+.work-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.6rem 0 0;
+}
+
+.answer-form .button {
+  margin: 0.6rem 0 0;
+}
+
+.check-result:empty,
+.run-output:empty {
+  display: none;
+}
+
+.check-result,
+.run-output {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.check-status,
+.run-note {
+  margin: 0.25rem 0;
+  color: var(--muted);
+}
+
+.verdict {
+  margin: 0.25rem 0;
+  font-weight: 700;
+}
+
+.verdict-pass {
+  color: var(--label-goals);
+}
+
+.verdict-fail,
+.verdict-partial,
+.verdict-error {
+  color: var(--label-error);
+}
+
+.case-list {
+  margin: 0.4rem 0;
+  padding-left: 1.4rem;
+}
+
+.case {
+  margin: 0.2rem 0;
+}
+
+.case-pass::marker {
+  color: var(--label-goals);
+}
+
+.case-fail::marker {
+  color: var(--label-error);
+}
+
+.case-skipped,
+.case-stopped,
+.case-waiting {
+  color: var(--muted);
+}
+
+.sample-reveal {
+  margin: 0.4rem 0 0.6rem;
+}
+
+.io-error .output-text {
+  border-color: var(--panel-error-edge);
+}
+
+.cannot-check {
+  margin: 0.75rem 0 0;
+  padding: 0.5rem 0.8rem;
+  border-left: 4px solid var(--panel-error-edge);
+  background: var(--surface);
+  font-weight: 600;
+}
+
+.also-note {
+  margin: 0 0 0.3rem;
+  color: var(--muted);
+}
+
+.item-answer {
+  margin: 0.9rem 0 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--panel-tryit-edge);
+  border-radius: 8px;
+  background: var(--panel-tryit);
+}
+
+.answer-heading {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+}
+
+.turtle-caption {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.runner-unavailable {
+  color: var(--label-error);
+}
+
+.run-controls {
+  margin: 0.6rem 0 0;
+}
+
+.runner-holder {
+  display: none;
+}
