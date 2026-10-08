@@ -19,6 +19,8 @@ REPO = Path(__file__).resolve().parents[1]
 
 VECTORS_PATH = REPO / "tools" / "export" / "hash_vectors.json"
 NBSP = " "
+U01E14A = "python-concepts/unit-01-output-and-variables/exercises/u01e14a"
+TAB_ALIAS = {"\\t": "\t"}
 
 # (input, case, expected normalised text, item key[, whitespace, aliases]) — plan 102 Phase 0
 # adds `whitespace` (default "collapse") and `aliases` (default none) to `answer_format`.
@@ -70,6 +72,15 @@ VECTORS = [
      "exact"),
     ("a\n\n  b", "sensitive", "a\n\n  b", "book/unit-01-x/exercises/exact-internal-blank", "exact"),
     ("A\tB", "insensitive", "a\tb", "book/unit-01-x/exercises/exact-i", "exact"),
+    # plan 102 content review 1 ([fable] 2): a `whitespace: exact` hint says "type a tab as `\t`",
+    # so `aliases: {"\\t": "\t"}` maps a typed backslash-t to a real tab after whitespace handling.
+    # python-concepts u01e14a: the typed form and the real-tab canonical hash equal under the alias.
+    ("Sun comes up\nBirds sing\n\\tThe end\n", "sensitive", "Sun comes up\nBirds sing\n\tThe end",
+     U01E14A, "exact", TAB_ALIAS),
+    ("Sun comes up\nBirds sing\n\tThe end\n", "sensitive", "Sun comes up\nBirds sing\n\tThe end",
+     U01E14A, "exact", TAB_ALIAS),
+    ("Sun comes up\nBirds sing\n\\tThe end\n", "sensitive", "Sun comes up\nBirds sing\n\\tThe end",
+     U01E14A, "exact"),
 ]
 
 
@@ -176,6 +187,22 @@ def test_defaults_leave_existing_hashes_unchanged():
                 "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest())
             assert answer_hash(key, text, case=case) == answer_hash(
                 key, text, case=case, whitespace="collapse", aliases=None)
+
+
+def test_typed_backslash_t_is_a_tab_under_the_tab_alias():
+    """[fable] 2: a literal `\\t` typed for u01e14a's tab hashes as the tab only under the alias;
+    the alias runs after `exact` whitespace handling, so a real tab and leading indentation stay."""
+    canonical = "Sun comes up\nBirds sing\n\tThe end\n"
+    typed = "Sun comes up\nBirds sing\n\\tThe end\n"
+    exact = {"whitespace": "exact"}
+    assert _hash(U01E14A, typed, aliases=TAB_ALIAS, **exact) == _hash(
+        U01E14A, canonical, aliases=TAB_ALIAS, **exact)
+    assert _hash(U01E14A, typed, **exact) != _hash(U01E14A, canonical, **exact)
+    # exact still distinguishes a tab from a space with the alias present
+    assert _hash(U01E14A, canonical.replace("\t", " "), aliases=TAB_ALIAS, **exact) != _hash(
+        U01E14A, canonical, aliases=TAB_ALIAS, **exact)
+    assert _hash(U01E14A, canonical, aliases=TAB_ALIAS, **exact) == _hash(
+        U01E14A, canonical, **exact)
 
 
 def test_unknown_whitespace_mode_is_rejected():

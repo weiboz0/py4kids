@@ -204,19 +204,30 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 
 ### Review 1 — [fable] (2026-10-08)
 - **Verdict**: APPROVE WITH NITS. 104 items sampled blind (27 python-projects, 27 python-concepts, 15 usaco-bronze, 35 acsl). Every confirmed check accepted the correct answer and rejected a plausible wrong one. The `↑`/`^` aliases, hex case, the taught list forms and the lesson citations were all verified.
-1. `[OPEN]` python-projects unit-03 `exercise-1` is `expected-output`, but `side_length` is the student's own choice (rule 1). Retag `check-self`. Should Fix.
-2. `[OPEN]` The `whitespace: exact` hints say "type a tab as `\t`", but a literal `\t` does not hash as a tab. Add an alias `{"\\t": "\t"}` where a hint mentions it, with a vector. Should Fix.
-3. `[OPEN]` Derived self-check checklists split sentences inside inline code (cp01 `checkpoint-05`, u09 `0cc7f084`, `e2692eb8`; about 59 fragments). Fix the splitter. Should Fix.
-4. `[OPEN]` usaco-bronze unit-12 statements (`u12e0002/4/6/8/14/16`) never state the input format; it is only in the unit intro. Follow-up content or errata plan. Should Fix (follow-up).
-5. `[OPEN]` Construct requirements are missing from `also_check` (cp03 `question-6`, cp04 `c400000e`, `u04e22a`, `u04e23a`). Nice to Have.
-6. `[OPEN]` The python-projects log's summary tables are stale after the integration retags. Nice to Have.
-7. `[OPEN]` `u08e002` wording ("Seed with 4" inside the function) is a pre-existing ambiguity. Nice to Have (follow-up).
+1. `[FIXED]` python-projects unit-03 `exercise-1` is `expected-output`, but `side_length` is the student's own choice (rule 1). Retag `check-self`. Should Fix.
+   → Response: Retagged `check-self`; the three former `also_check` entries moved into six statement-quoted `requirements` (variables, loop, pen size, comment and `turtle.done()`, f-string report). Logged in the python-projects retag list and item line.
+2. `[FIXED]` The `whitespace: exact` hints say "type a tab as `\t`", but a literal `\t` does not hash as a tab. Add an alias `{"\\t": "\t"}` where a hint mentions it, with a vector. Should Fix.
+   → Response: All nine `whitespace: exact` items (every hint mentions `\t`) carry `aliases: {"\\t": "\t"}`. `normalise` applies aliases after whitespace handling, so `exact` still keeps tabs, leading and inner spaces and still tells a tab from a space. Three vectors appended to `hash_vectors.json` (the 41 existing vectors unchanged): u01e14a's typed `\tThe end` and its real-tab canonical hash equal under the alias, and differ without it; `test_typed_backslash_t_is_a_tab_under_the_tab_alias` and `test_tab_hints_carry_the_tab_alias` guard it.
+3. `[FIXED]` Derived self-check checklists split sentences inside inline code (cp01 `checkpoint-05`, u09 `0cc7f084`, `e2692eb8`; about 59 fragments). Fix the splitter. Should Fix.
+   → Response: `answers._sentences` now masks inline code spans before splitting, so `.`/`!`/`?` inside code never ends a sentence. Tests cover a synthetic case and the three cited items (cp01 `checkpoint-05`, u09 `0cc7f084`, `e2692eb8`). Re-deriving every self-check item, exactly five derived checklists changed (those three plus u07 `5c20b19f` and python-concepts `u13e042`), all from fragments to whole sentences; no other derived list holds a fragment.
+4. `[WONTFIX]` usaco-bronze unit-12 statements (`u12e0002/4/6/8/14/16`) never state the input format; it is only in the unit intro. Follow-up content or errata plan. Should Fix (follow-up).
+   → Response: Deferred to a follow-up content/errata plan: stating the input format in each statement is a statement change beyond rule 2.
+5. `[FIXED]` Construct requirements are missing from `also_check` (cp03 `question-6`, cp04 `c400000e`, `u04e22a`, `u04e23a`). Nice to Have.
+   → Response: Fixed with [sol] 2's audit of every checked item in all four books (see [sol] 2): cp03 `question-6` (membership-test branch), cp04 `c400000e` (membership test, `if`/`else`), `u04e22a` ("Add the colon"), `u04e23a` ("Indent both body lines …").
+6. `[FIXED]` The python-projects log's summary tables are stale after the integration retags. Nice to Have.
+   → Response: The python-projects summary and per-unit tables are recomputed from the notebooks (asserts 52, expected-output 10, predict 7, self-check 167), and its retag list now includes the seven integration retags and `exercise-1` (48). python-concepts totals and its unit-13 row follow the `u13e057` retag; usaco-bronze's and acsl's `also_check` summary lines follow the audit.
+7. `[WONTFIX]` `u08e002` wording ("Seed with 4" inside the function) is a pre-existing ambiguity. Nice to Have (follow-up).
+   → Response: Deferred to a follow-up content/errata plan: a pre-existing statement ambiguity, outside rule 2.
 
 ### Review 1 — [sol] (2026-10-08, gpt-6-sol)
 - **Verdict**: REJECT. 25 items sampled per book.
-1. `[OPEN]` `u13e057`: the worked sample's `1 1` is not task-fixed output. Retag `check-self` (rule 1). Must Fix.
-2. `[OPEN]` Output checks accept hard-coded output where `also_check` omits required work: cp03 `question-8` and u08 `5703c375` (safe dictionary lookup), `u02e070` (place-value reversal). Add these, and audit every checked item for the same omission. Must Fix.
-3. `[OPEN]` acsl fixtures `63f51404` (recursive function) and `1c6142c9` (tuple storage) lack `also_check` for the required method. Add them, and review the acsl fixtures the log says need none. Must Fix.
-4. `[OPEN]` `u04-ex09`'s derived checklist omits the counter update and printing both totals. Author `requirements`. Should Fix.
+1. `[FIXED]` `u13e057`: the worked sample's `1 1` is not task-fixed output. Retag `check-self` (rule 1). Must Fix.
+   → Response: Retagged `check-self` with three `requirements` from its Specification sentences; logged in the python-concepts retag list and item line.
+2. `[FIXED]` Output checks accept hard-coded output where `also_check` omits required work: cp03 `question-8` and u08 `5703c375` (safe dictionary lookup), `u02e070` (place-value reversal). Add these, and audit every checked item for the same omission. Must Fix.
+   → Response: Audit of every checked item in all four books (925 items: python-projects 69, python-concepts 336, usaco-bronze 161, acsl 359): requirements listed, each marked verified or not, missing ones added to `also_check` verbatim from the statement. Items gaining entries: python-projects 50 (+96 entries), python-concepts 131 (+158), usaco-bronze 3 (+4), acsl 102 (+113). Named: cp03 `question-8` (the safe dictionary-method rewrite), u08 `5703c375` (`.get("fish", "???")`), `u02e070` (place-value reversal with `// 100`, `// 10 % 10`, `% 10`). No existing entry removed; no item's core result found unverifiable. Each log has a content-review-1 audit section and per-item `+N` marks; `test_review1_items_list_their_required_method` guards the named items.
+3. `[FIXED]` acsl fixtures `63f51404` (recursive function) and `1c6142c9` (tuple storage) lack `also_check` for the required method. Add them, and review the acsl fixtures the log says need none. Must Fix.
+   → Response: `63f51404`: "Write `f` as a recursive Python function with two parameters"; `1c6142c9`: "Store the points as tuples". All 72 acsl fixtures reviewed: 27 gained entries (recursion, try-every-pair search, required data structures, hand-trace-then-translate steps), 45 need none. usaco-bronze's 21 "no also_check" items re-checked: `u07e0012` and `u11e0006` gained entries, 19 need none; `u11e0016` also gained its O(log E) bound.
+4. `[FIXED]` `u04-ex09`'s derived checklist omits the counter update and printing both totals. Author `requirements`. Should Fix.
+   → Response: Six authored `requirements` from the statement, ending with "Update the question counter each trip and print both totals at the end."
 
 ## Post-Execution Report

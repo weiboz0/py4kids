@@ -11,9 +11,9 @@ Book: `usaco-bronze` (*Contest Python: USACO Bronze*).
 - Statement edits (rule 2): none, so no allowed-diffs entries and no baseline revert notes are needed.
 - `answer_format`: none authored. Fixture items are matched token-wise by the runner, and no item has a hidden canonical.
 - `whitespace: exact` items: none.
-- `also_check`: 140 items carry 205 entries, each copied verbatim from the statement (the site-check statement tie passes).
+- `also_check`: 142 items carry 209 entries (after the content-review-1 audit; Phase C had 140 items and 205 entries), each copied verbatim from the statement (the site-check statement tie passes).
   They hold the method requirements an output check cannot see: required data structures (set, tuple, deque, dictionary, prefix array), required techniques (binary search, recursion, backtracking, BFS/DFS, two pointers, sieve, Euclid, repeated squaring), banned shortcuts (built-in conversion, `pow`, permutation libraries) and stated time bounds (`O(n)`), because the fixture runner has no time limit.
-  The 21 items without `also_check` state only input/output rules, all verified by the fixtures.
+  The 19 items without `also_check` state only input/output rules, all verified by the fixtures (Phase C listed 21; the audit below added entries to `u07e0012` and `u11e0006`).
 - Sample check: for all 161 items, the statement's Sample Input equals one fixture `.in` and its Sample Output equals that pair's `.out` (token comparison; `u11e0010`'s Sample 1 is checked; `u10e0004` matches pair 2 and `d887b6c7` pair 3).
 - Blind fixture validation is done by a separate agent; its per-item pass counts are recorded in a separate section, not here.
 
@@ -122,6 +122,13 @@ A block that only prepares or sets up a later technique is not attributed to tha
 - `usaco-bronze/unit-12-binary-trees/lesson/0ea3f119`: stores a tree in parallel arrays and reads the root's child; no traversal (only `tree-traversal` is registered)
 - `usaco-bronze/unit-12-binary-trees/lesson/29077c2c`: iterative BST search down one path; not a pre/in/post-order traversal and not array binary search
 
+## Content review 1: also_check audit ([sol] 2 and 3, [fable] 5)
+
+Every checked item (161) was re-read against its statement: its requirements were listed, each marked as verified by the check kind or not, and every unverifiable requirement (a method, construct or data structure, a safe lookup, place value, a loop, a membership test, tuple storage, recursion, a comment or an explanation) was checked for an `also_check` entry quoted verbatim from the statement.
+3 items gained 4 entries (fixtures 3); no existing entry was removed or reworded.
+Each changed item's line below ends with `content review 1 also_check audit: +N [also_check xM]`.
+The 21 items the Phase C summary listed without `also_check` were re-checked for required methods: `u07e0012` (simulate exactly `T` rounds from the unchanged previous state), `u11e0006` (mask `NOT` with `(1 << W) - 1`) and `u11e0016` (O(log E) modular multiplications) gained entries; the other 19 state only input/output rules.
+
 ## Items (one line per item)
 
 - `usaco-bronze/unit-01-reading-the-input/exercises/a12d68e0` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 2 pairs; every stated requirement is verified by the output
@@ -189,7 +196,7 @@ A block that only prepares or sets up a later technique is not attributed to tha
 - `usaco-bronze/unit-07-simulation/exercises/u07e0006` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 3 pairs; also_check 1 (method requirement(s) the fixtures cannot verify)
 - `usaco-bronze/unit-07-simulation/exercises/u07e0008` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 3 pairs; every stated requirement is verified by the output
 - `usaco-bronze/unit-07-simulation/exercises/u07e0010` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 3 pairs; every stated requirement is verified by the output
-- `usaco-bronze/unit-07-simulation/exercises/u07e0012` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 3 pairs; every stated requirement is verified by the output; simultaneous-update rule is observable in the output, so no also_check
+- `usaco-bronze/unit-07-simulation/exercises/u07e0012` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 3 pairs; every stated requirement is verified by the output; simultaneous-update rule is observable in the output, so no also_check; content review 1 also_check audit: +2 [also_check x2]
 - `usaco-bronze/unit-07-simulation/exercises/u07e0014` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 5 pairs; every stated requirement is verified by the output
 - `usaco-bronze/unit-07-simulation/exercises/u07e0016` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 6 pairs; every stated requirement is verified by the output
 - `usaco-bronze/unit-07-simulation/exercises/u07e0018` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 5 pairs; every stated requirement is verified by the output
@@ -228,12 +235,12 @@ A block that only prepares or sets up a later technique is not attributed to tha
 - `usaco-bronze/unit-10-stacks-queues-deques/exercises/u10e0018` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 5 pairs; also_check 1 (method requirement(s) the fixtures cannot verify)
 - `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0002` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 5 pairs; also_check 2 (method requirement(s) the fixtures cannot verify)
 - `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0004` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 4 pairs; also_check 2 (method requirement(s) the fixtures cannot verify)
-- `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0006` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 4 pairs; every stated requirement is verified by the output; the `(1 << W) - 1` mask is a specification of the output (non-negative state), verified by it
+- `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0006` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 4 pairs; every stated requirement is verified by the output; the `(1 << W) - 1` mask is a specification of the output (non-negative state), verified by it; content review 1 also_check audit: +1 [also_check x1]
 - `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0008` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 3 pairs; also_check 2 (method requirement(s) the fixtures cannot verify)
 - `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0010` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 7 pairs; also_check 1 (method requirement(s) the fixtures cannot verify)
 - `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0012` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 3 pairs; also_check 2 (method requirement(s) the fixtures cannot verify)
 - `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0014` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 4 pairs; also_check 2 (method requirement(s) the fixtures cannot verify)
-- `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0016` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 5 pairs; also_check 2 (method requirement(s) the fixtures cannot verify)
+- `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0016` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 5 pairs; also_check 2 (method requirement(s) the fixtures cannot verify); content review 1 also_check audit: +1 [also_check x3]
 - `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0018` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 4 pairs; also_check 1 (method requirement(s) the fixtures cannot verify)
 - `usaco-bronze/unit-11-number-systems-bitwise/exercises/u11e0020` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 3 pairs; also_check 2 (method requirement(s) the fixtures cannot verify)
 - `usaco-bronze/unit-12-binary-trees/exercises/u12e0002` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 4 pairs; also_check 1 (method requirement(s) the fixtures cannot verify)

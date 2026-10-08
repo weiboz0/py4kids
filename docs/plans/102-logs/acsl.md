@@ -10,7 +10,7 @@ Authored in worktree from `feature/plan-102-site-content-confirm` @ 8b07c78.
 - **Retags: none.** Every `check-answer` item is a short-answer question (tag `short-answer`) with exactly one `**Answer:**` line in its solution; every `check-fixtures` item is a stdin program whose statement Sample Input matches fixture pair 1 and whose statement Sample Output equals `1.out` (checked for all 72).
 - **Statement edits: none** (Phase D makes no statement edits; acsl has no publish baseline).
 - **`whitespace: exact` items: none.** No acsl statement makes a tab, indentation or alignment part of an answer.
-- **`also_check`: none.** A short answer has one requirement, the answer itself; the fixtures items' method lines ("translate it into Python", "Predict, then verify") are study advice around an output-verified core.
+- **`also_check`: none in Phase D; 102 items (75 answer, 27 fixtures) carry 113 entries after the content-review-1 audit below.** Phase D's view was: A short answer has one requirement, the answer itself; the fixtures items' method lines ("translate it into Python", "Predict, then verify") are study advice around an output-verified core.
 - **`answer_format` authored on 175 `answer` items:** all 130 multi-token canonicals (59 letter-bearing + 71 digit-only lists; the plan's survey split 90 letter-bearing / 40 digit-only lists, measured here as 59 multi-token letter-bearing + 31 single-token letter-bearing = 90, and 71 digit-only multi-token), all 31 single-token letter-bearing canonicals (so all 90 letter-bearing formats are decided), and 14 single-token digit canonicals whose derived hint "a number" would mislead (bit strings with 0s on the left, a `*` pattern, fractions, a binary point, one single-solution "find all"). The remaining 112 single-token numeric canonicals keep the derived `{case: sensitive, hint: "a number"}`, which is the taught form.
 - **Aliases `{"^": "↑"}`: 5 items** (unit-04 e-024, e-026, e-030, e-040; checkpoint-02 d0aca7dc). The plan and brief list a sixth, unit-04 **e-028**, but its statement (`A B C * + D E - /` to prefix) and canonical (`/ + A * B C - D E`) contain no power, so the alias would be dead; it was left off. Its hint is the plain prefix hint. Flagged for the caller.
 - Case: `insensitive` only for the 5 hexadecimal items (rule 3). LISP (`true`/`NIL`, lists) stays sensitive: unit 07 fixes the spelling ("write "yes" as `true`", "in the same capital letters as the question"). Boolean expressions stay sensitive: no unit rule makes variable names case-free. Program output stays sensitive.
@@ -197,25 +197,32 @@ Each authored format is one of these categories; the item lines below name the c
 - case `sensitive`, hint: "`YES` or `NO`, in capital letters."
 - Citation: unit 12 exercise intro: "A yes-or-no question is answered `YES` or `NO`."; statement: "Answer `YES` or `NO`."
 
+## Content review 1: also_check audit ([sol] 2 and 3, [fable] 5)
+
+Every checked item (359) was re-read against its statement: its requirements were listed, each marked as verified by the check kind or not, and every unverifiable requirement (a method, construct or data structure, a safe lookup, place value, a loop, a membership test, tuple storage, recursion, a comment or an explanation) was checked for an `also_check` entry quoted verbatim from the statement.
+102 items gained 113 entries (answer 75, fixtures 27); no existing entry was removed or reworded.
+Each changed item's line below ends with `content review 1 also_check audit: +N [also_check xM]`.
+Named items: fixtures `63f51404` ("Write `f` as a recursive Python function with two parameters") and `1c6142c9` ("Store the points as tuples"). All 72 fixtures were reviewed for required methods: 27 gained entries (recursion, try-every-pair search, required data structures, the hand-trace-then-translate steps of the program-tracing items, extending earlier work); 45 state only rules that define the output. 75 `answer` items gained the statement's hand-trace instruction ("Work it out by hand first", "Trace it by hand, using ACSL's rules"), "Build the truth table" or "Write the expression of this circuit". This supersedes the Phase D summary's "`also_check`: none".
+
 ## Items (one line each: key, final kind, reason)
 
 ### unit-00-acsl-foundations
 
-- `acsl/unit-00-acsl-foundations/exercises/a19d52eb` — answer — Exercise 1: short answer, one **Answer:** line; answer_format OUT, case sensitive.
+- `acsl/unit-00-acsl-foundations/exercises/a19d52eb` — answer — Exercise 1: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-00-acsl-foundations/exercises/8a4028a4` — fixtures — Exercise 2 "Letter at a Position": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-00-acsl-foundations/exercises/19293a7c` — answer — Exercise 3: short answer, one **Answer:** line; answer_format OUT, case sensitive.
+- `acsl/unit-00-acsl-foundations/exercises/19293a7c` — answer — Exercise 3: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-00-acsl-foundations/exercises/c1650251` — fixtures — Exercise 4 "Spread of the Scores": stdin program, sample pair 1 = statement sample.
 - `acsl/unit-00-acsl-foundations/exercises/5d48a286` — fixtures — Exercise 5 "Evens and Odds Until Zero": stdin program, sample pair 1 = statement sample; concepts ['input-parse'].
-- `acsl/unit-00-acsl-foundations/exercises/cb202366` — answer — Exercise 6: short answer, one **Answer:** line; answer_format OUT, case sensitive.
+- `acsl/unit-00-acsl-foundations/exercises/cb202366` — answer — Exercise 6: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-00-acsl-foundations/exercises/18eca952` — fixtures — Exercise 7 "Honor Roll": stdin program, sample pair 1 = statement sample.
 - `acsl/unit-00-acsl-foundations/exercises/36167514` — fixtures — Exercise 8 "Lines That End in Zero": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-00-acsl-foundations/exercises/7919fee6` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-00-acsl-foundations/exercises/1c6142c9` — fixtures — Exercise 10 "Farthest From Home": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-00-acsl-foundations/exercises/9fe063e5` — fixtures — Exercise 11 "Out-of-Order Pairs": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-00-acsl-foundations/exercises/97e2a653` — answer — Exercise 12: short answer, one **Answer:** line; answer_format OUT, case sensitive.
+- `acsl/unit-00-acsl-foundations/exercises/7919fee6` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-00-acsl-foundations/exercises/1c6142c9` — fixtures — Exercise 10 "Farthest From Home": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-00-acsl-foundations/exercises/9fe063e5` — fixtures — Exercise 11 "Out-of-Order Pairs": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-00-acsl-foundations/exercises/97e2a653` — answer — Exercise 12: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-00-acsl-foundations/exercises/11f3abc1` — fixtures — Exercise 13 "Best Pair Product": stdin program, sample pair 1 = statement sample.
 - `acsl/unit-00-acsl-foundations/exercises/3c8111d7` — fixtures — Exercise 14 "Making Change": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-00-acsl-foundations/exercises/e261d5d8` — fixtures — Exercise 15 "Triangle Sticks": stdin program, sample pair 1 = statement sample.
+- `acsl/unit-00-acsl-foundations/exercises/e261d5d8` — fixtures — Exercise 15 "Triangle Sticks": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
 
 ### unit-01-computer-number-systems
 
@@ -247,39 +254,39 @@ Each authored format is one of these categories; the item lines below name the c
 - `acsl/unit-02-recursive-functions/exercises/0ff04372` — answer — Exercise 2: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-02-recursive-functions/exercises/fe9dfebf` — answer — Exercise 3: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-02-recursive-functions/exercises/80863612` — answer — Exercise 4: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-02-recursive-functions/exercises/4001d04c` — fixtures — Exercise 5 "Implement the Definition": stdin program, sample pair 1 = statement sample.
+- `acsl/unit-02-recursive-functions/exercises/4001d04c` — fixtures — Exercise 5 "Implement the Definition": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-02-recursive-functions/exercises/033f1c90` — answer — Exercise 6: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-02-recursive-functions/exercises/e07cc1a2` — answer — Exercise 7: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-02-recursive-functions/exercises/69eef4bb` — fixtures — Exercise 8 "Three Before": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-02-recursive-functions/exercises/63f51404` — fixtures — Exercise 9 "Two Numbers Meet": stdin program, sample pair 1 = statement sample.
+- `acsl/unit-02-recursive-functions/exercises/e07cc1a2` — answer — Exercise 7: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-02-recursive-functions/exercises/69eef4bb` — fixtures — Exercise 8 "Three Before": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-02-recursive-functions/exercises/63f51404` — fixtures — Exercise 9 "Two Numbers Meet": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-02-recursive-functions/exercises/d4d3e97c` — answer — Exercise 10: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-02-recursive-functions/exercises/c3fe911e` — fixtures — Exercise 11 "Ping and Pong": stdin program, sample pair 1 = statement sample; concepts ['recursion'].
+- `acsl/unit-02-recursive-functions/exercises/c3fe911e` — fixtures — Exercise 11 "Ping and Pong": stdin program, sample pair 1 = statement sample; concepts ['recursion'].; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-02-recursive-functions/exercises/5f23eb55` — answer — Exercise 12: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-02-recursive-functions/exercises/8a598b28` — answer — Exercise 13: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-02-recursive-functions/exercises/a70d36fe` — fixtures — Exercise 14 "Many Questions": stdin program, sample pair 1 = statement sample.
 - `acsl/unit-02-recursive-functions/exercises/3151445d` — answer — Exercise 15: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-02-recursive-functions/exercises/16adc68e` — fixtures — Exercise 16 "Value and Calls": stdin program, sample pair 1 = statement sample.
+- `acsl/unit-02-recursive-functions/exercises/16adc68e` — fixtures — Exercise 16 "Value and Calls": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
 
 ### unit-03-wdtpd-branching
 
-- `acsl/unit-03-wdtpd-branching/exercises/52d47c0a` — answer — Exercise 1: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-03-wdtpd-branching/exercises/0c40ee09` — answer — Exercise 2: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-03-wdtpd-branching/exercises/30181550` — answer — Exercise 3: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-03-wdtpd-branching/exercises/b396abfe` — answer — Exercise 4: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-03-wdtpd-branching/exercises/f16600e9` — answer — Exercise 5: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-03-wdtpd-branching/exercises/8629bc34` — fixtures — Exercise 6 "Parking Fee (predict, then verify)": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-03-wdtpd-branching/exercises/27f14698` — answer — Exercise 7: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-03-wdtpd-branching/exercises/a74edd6f` — answer — Exercise 8: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-03-wdtpd-branching/exercises/35c9216d` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-03-wdtpd-branching/exercises/0a2a8241` — answer — Exercise 10: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-03-wdtpd-branching/exercises/56c02bd7` — answer — Exercise 11: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-03-wdtpd-branching/exercises/ccbad0f3` — answer — Exercise 12: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-03-wdtpd-branching/exercises/db28ebbe` — answer — Exercise 13: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-03-wdtpd-branching/exercises/d0ccc2d3` — answer — Exercise 14: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-03-wdtpd-branching/exercises/e640753c` — answer — Exercise 15: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-03-wdtpd-branching/exercises/fa8f523d` — fixtures — Exercise 16 "Square Steps (predict, then verify)": stdin program, sample pair 1 = statement sample; concepts ['code-tracing', 'acsl-pseudocode'].
-- `acsl/unit-03-wdtpd-branching/exercises/d6b8b0c8` — answer — Exercise 17: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-03-wdtpd-branching/exercises/4bb2c8a5` — answer — Exercise 18: short answer, one **Answer:** line; answer_format OUT, case sensitive.
+- `acsl/unit-03-wdtpd-branching/exercises/52d47c0a` — answer — Exercise 1: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/0c40ee09` — answer — Exercise 2: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/30181550` — answer — Exercise 3: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/b396abfe` — answer — Exercise 4: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/f16600e9` — answer — Exercise 5: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/8629bc34` — fixtures — Exercise 6 "Parking Fee (predict, then verify)": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-03-wdtpd-branching/exercises/27f14698` — answer — Exercise 7: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/a74edd6f` — answer — Exercise 8: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/35c9216d` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/0a2a8241` — answer — Exercise 10: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/56c02bd7` — answer — Exercise 11: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/ccbad0f3` — answer — Exercise 12: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/db28ebbe` — answer — Exercise 13: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/d0ccc2d3` — answer — Exercise 14: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/e640753c` — answer — Exercise 15: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/fa8f523d` — fixtures — Exercise 16 "Square Steps (predict, then verify)": stdin program, sample pair 1 = statement sample; concepts ['code-tracing', 'acsl-pseudocode'].; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-03-wdtpd-branching/exercises/d6b8b0c8` — answer — Exercise 17: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-03-wdtpd-branching/exercises/4bb2c8a5` — answer — Exercise 18: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
 
 ### checkpoint-01-contest-1-practice
 
@@ -344,25 +351,25 @@ Each authored format is one of these categories; the item lines below name the c
 
 ### unit-06-wdtpd-looping
 
-- `acsl/unit-06-wdtpd-looping/exercises/c9aeac8c` — answer — Exercise 1: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-06-wdtpd-looping/exercises/d8eacfd1` — answer — Exercise 2: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-06-wdtpd-looping/exercises/fa934184` — answer — Exercise 3: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-06-wdtpd-looping/exercises/afe7eb96` — answer — Exercise 4: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-06-wdtpd-looping/exercises/9b7f57ab` — answer — Exercise 5: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-06-wdtpd-looping/exercises/5435da91` — answer — Exercise 6: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-06-wdtpd-looping/exercises/93a42355` — fixtures — Exercise 7 "Up and Down to One (predict, then verify)": stdin program, sample pair 1 = statement sample; concepts ['code-tracing', 'acsl-pseudocode'].
-- `acsl/unit-06-wdtpd-looping/exercises/d3796d53` — answer — Exercise 8: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-06-wdtpd-looping/exercises/1c8d4cef` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-06-wdtpd-looping/exercises/044994d3` — answer — Exercise 10: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-06-wdtpd-looping/exercises/9ccd01ab` — fixtures — Exercise 11 "Biggest Leftover (predict, then verify)": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-06-wdtpd-looping/exercises/cce0ac2b` — answer — Exercise 12: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-06-wdtpd-looping/exercises/7d665dc6` — answer — Exercise 13: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-06-wdtpd-looping/exercises/b65b7a35` — answer — Exercise 14: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-06-wdtpd-looping/exercises/e7c1fdf0` — answer — Exercise 15: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-06-wdtpd-looping/exercises/a6114ad2` — answer — Exercise 16: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-06-wdtpd-looping/exercises/60eb1dca` — fixtures — Exercise 17 "Pairs With a Multiple (predict, then verify)": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-06-wdtpd-looping/exercises/5290304a` — answer — Exercise 18: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-06-wdtpd-looping/exercises/63d63e74` — answer — Exercise 19: short answer, one **Answer:** line; answer_format OUT, case sensitive.
+- `acsl/unit-06-wdtpd-looping/exercises/c9aeac8c` — answer — Exercise 1: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/d8eacfd1` — answer — Exercise 2: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/fa934184` — answer — Exercise 3: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/afe7eb96` — answer — Exercise 4: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/9b7f57ab` — answer — Exercise 5: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/5435da91` — answer — Exercise 6: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/93a42355` — fixtures — Exercise 7 "Up and Down to One (predict, then verify)": stdin program, sample pair 1 = statement sample; concepts ['code-tracing', 'acsl-pseudocode'].; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-06-wdtpd-looping/exercises/d3796d53` — answer — Exercise 8: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/1c8d4cef` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/044994d3` — answer — Exercise 10: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/9ccd01ab` — fixtures — Exercise 11 "Biggest Leftover (predict, then verify)": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-06-wdtpd-looping/exercises/cce0ac2b` — answer — Exercise 12: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/7d665dc6` — answer — Exercise 13: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/b65b7a35` — answer — Exercise 14: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/e7c1fdf0` — answer — Exercise 15: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/a6114ad2` — answer — Exercise 16: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/60eb1dca` — fixtures — Exercise 17 "Pairs With a Multiple (predict, then verify)": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-06-wdtpd-looping/exercises/5290304a` — answer — Exercise 18: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-06-wdtpd-looping/exercises/63d63e74` — answer — Exercise 19: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
 
 ### unit-07-lisp
 
@@ -378,14 +385,14 @@ Each authored format is one of these categories; the item lines below name the c
 - `acsl/unit-07-lisp/exercises/a390adc3` — answer — Exercise 10: short answer, one **Answer:** line; answer_format LIST, case sensitive.
 - `acsl/unit-07-lisp/exercises/01430bfd` — answer — Exercise 11: short answer, one **Answer:** line; answer_format TF7, case sensitive.
 - `acsl/unit-07-lisp/exercises/cdfbb60d` — answer — Exercise 12: short answer, one **Answer:** line; answer_format LIST, case sensitive.
-- `acsl/unit-07-lisp/exercises/534096c6` — fixtures — Exercise 13 "REVERSE in Python": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-07-lisp/exercises/cc0952ba` — fixtures — Exercise 14 "CONS in Python": stdin program, sample pair 1 = statement sample.
+- `acsl/unit-07-lisp/exercises/534096c6` — fixtures — Exercise 13 "REVERSE in Python": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-07-lisp/exercises/cc0952ba` — fixtures — Exercise 14 "CONS in Python": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-07-lisp/exercises/d92ef6da` — answer — Exercise 15: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-07-lisp/exercises/a62d6ba9` — answer — Exercise 16: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-07-lisp/exercises/5e1d6d7b` — answer — Exercise 17: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-07-lisp/exercises/68c7b70a` — answer — Exercise 18: short answer, one **Answer:** line; answer_format LIST, case sensitive.
 - `acsl/unit-07-lisp/exercises/1c562367` — answer — Exercise 19: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-07-lisp/exercises/97012381` — fixtures — Exercise 20 "Shortcuts in Python": stdin program, sample pair 1 = statement sample.
+- `acsl/unit-07-lisp/exercises/97012381` — fixtures — Exercise 20 "Shortcuts in Python": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-07-lisp/exercises/d2c16617` — answer — Exercise 21: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 
 ### checkpoint-02-contest-2-practice
@@ -403,7 +410,7 @@ Each authored format is one of these categories; the item lines below name the c
 ### unit-08-boolean-algebra
 
 - `acsl/unit-08-boolean-algebra/exercises/e-002` — answer — Exercise 1: short answer, one **Answer:** line; answer_format TF8, case sensitive.
-- `acsl/unit-08-boolean-algebra/exercises/e-004` — answer — Exercise 2: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
+- `acsl/unit-08-boolean-algebra/exercises/e-004` — answer — Exercise 2: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-08-boolean-algebra/exercises/e-006` — answer — Exercise 3: short answer, one **Answer:** line; answer_format SOP, case sensitive.
 - `acsl/unit-08-boolean-algebra/exercises/e-008` — answer — Exercise 4: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-08-boolean-algebra/exercises/e-010` — answer — Exercise 5: short answer, one **Answer:** line; answer_format OPT_ORDER, case sensitive.
@@ -412,7 +419,7 @@ Each authored format is one of these categories; the item lines below name the c
 - `acsl/unit-08-boolean-algebra/exercises/e-016` — answer — Exercise 8: short answer, one **Answer:** line; answer_format OPT_ORDER, case sensitive.
 - `acsl/unit-08-boolean-algebra/exercises/e-018` — answer — Exercise 9: short answer, one **Answer:** line; answer_format PAIRS, case sensitive.
 - `acsl/unit-08-boolean-algebra/exercises/e-020` — answer — Exercise 10: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-08-boolean-algebra/exercises/e-022` — answer — Exercise 11: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
+- `acsl/unit-08-boolean-algebra/exercises/e-022` — answer — Exercise 11: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-08-boolean-algebra/exercises/e-024` — answer — Exercise 12: short answer, one **Answer:** line; answer_format SOP, case sensitive.
 - `acsl/unit-08-boolean-algebra/exercises/e-026` — answer — Exercise 13: short answer, one **Answer:** line; answer_format SOP, case sensitive.
 - `acsl/unit-08-boolean-algebra/exercises/e-028` — answer — Exercise 14: short answer, one **Answer:** line; answer_format TRIPLES, case sensitive.
@@ -456,32 +463,32 @@ Each authored format is one of these categories; the item lines below name the c
 
 ### unit-10-wdtpd-arrays
 
-- `acsl/unit-10-wdtpd-arrays/exercises/d58a828d` — answer — Exercise 1: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/c91c1886` — answer — Exercise 2: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/b7d59c39` — answer — Exercise 3: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/7c9c0e85` — answer — Exercise 4: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/b59b6dc0` — answer — Exercise 5: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/9d9b8421` — answer — Exercise 6: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/c50d8794` — answer — Exercise 7: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-10-wdtpd-arrays/exercises/63ede1d0` — fixtures — Exercise 8 "Leaders From the Right (predict, then verify)": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-10-wdtpd-arrays/exercises/8825c521` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/dd73c17e` — answer — Exercise 10: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/8e33229f` — answer — Exercise 11: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/1e554a86` — answer — Exercise 12: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/59fd0235` — answer — Exercise 13: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/a55eadbb` — fixtures — Exercise 14 "Frame and Middle (predict, then verify)": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-10-wdtpd-arrays/exercises/ed29c57f` — answer — Exercise 15: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/1ee5e3e7` — answer — Exercise 16: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/76cd9bb9` — fixtures — Exercise 17 "Pascal's Triangle (predict, then verify)": stdin program, sample pair 1 = statement sample.
-- `acsl/unit-10-wdtpd-arrays/exercises/c64b4187` — answer — Exercise 18: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-10-wdtpd-arrays/exercises/d8a8467a` — answer — Exercise 19: short answer, one **Answer:** line; answer_format OUT, case sensitive.
+- `acsl/unit-10-wdtpd-arrays/exercises/d58a828d` — answer — Exercise 1: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/c91c1886` — answer — Exercise 2: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/b7d59c39` — answer — Exercise 3: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/7c9c0e85` — answer — Exercise 4: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/b59b6dc0` — answer — Exercise 5: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/9d9b8421` — answer — Exercise 6: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/c50d8794` — answer — Exercise 7: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/63ede1d0` — fixtures — Exercise 8 "Leaders From the Right (predict, then verify)": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-10-wdtpd-arrays/exercises/8825c521` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/dd73c17e` — answer — Exercise 10: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/8e33229f` — answer — Exercise 11: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/1e554a86` — answer — Exercise 12: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/59fd0235` — answer — Exercise 13: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/a55eadbb` — fixtures — Exercise 14 "Frame and Middle (predict, then verify)": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-10-wdtpd-arrays/exercises/ed29c57f` — answer — Exercise 15: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/1ee5e3e7` — answer — Exercise 16: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/76cd9bb9` — fixtures — Exercise 17 "Pascal's Triangle (predict, then verify)": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-10-wdtpd-arrays/exercises/c64b4187` — answer — Exercise 18: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-10-wdtpd-arrays/exercises/d8a8467a` — answer — Exercise 19: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
 
 ### unit-11-fsas-regular-expressions
 
 - `acsl/unit-11-fsas-regular-expressions/exercises/e2372bb7` — answer — Exercise 1: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
 - `acsl/unit-11-fsas-regular-expressions/exercises/f86170b6` — answer — Exercise 2: short answer, one **Answer:** line; answer_format STATE, case sensitive.
 - `acsl/unit-11-fsas-regular-expressions/exercises/41d2c433` — answer — Exercise 3: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
-- `acsl/unit-11-fsas-regular-expressions/exercises/4e2439c4` — fixtures — Exercise 4 "FSA Simulator": stdin program, sample pair 1 = statement sample.
+- `acsl/unit-11-fsas-regular-expressions/exercises/4e2439c4` — fixtures — Exercise 4 "FSA Simulator": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-11-fsas-regular-expressions/exercises/0927f401` — answer — Exercise 5: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
 - `acsl/unit-11-fsas-regular-expressions/exercises/f9dc79c0` — answer — Exercise 6: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
 - `acsl/unit-11-fsas-regular-expressions/exercises/3d25e5ee` — answer — Exercise 7: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
@@ -489,12 +496,12 @@ Each authored format is one of these categories; the item lines below name the c
 - `acsl/unit-11-fsas-regular-expressions/exercises/1228f477` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
 - `acsl/unit-11-fsas-regular-expressions/exercises/e886b066` — answer — Exercise 10: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
 - `acsl/unit-11-fsas-regular-expressions/exercises/5326950e` — answer — Exercise 11: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
-- `acsl/unit-11-fsas-regular-expressions/exercises/5f561f5c` — fixtures — Exercise 12 "Pattern Checker": stdin program, sample pair 1 = statement sample.
+- `acsl/unit-11-fsas-regular-expressions/exercises/5f561f5c` — fixtures — Exercise 12 "Pattern Checker": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-11-fsas-regular-expressions/exercises/c9c144dc` — answer — Exercise 13: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-11-fsas-regular-expressions/exercises/2359a6b6` — answer — Exercise 14: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
 - `acsl/unit-11-fsas-regular-expressions/exercises/cf8f9d3b` — answer — Exercise 15: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
 - `acsl/unit-11-fsas-regular-expressions/exercises/6663196e` — answer — Exercise 16: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
-- `acsl/unit-11-fsas-regular-expressions/exercises/bc325c67` — fixtures — Exercise 17 "Full Pattern Checker": stdin program, sample pair 1 = statement sample.
+- `acsl/unit-11-fsas-regular-expressions/exercises/bc325c67` — fixtures — Exercise 17 "Full Pattern Checker": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-11-fsas-regular-expressions/exercises/4e3d07ae` — answer — Exercise 18: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 
 ### checkpoint-03-contest-3-practice
@@ -541,12 +548,12 @@ Each authored format is one of these categories; the item lines below name the c
 ### unit-13-digital-electronics
 
 - `acsl/unit-13-digital-electronics/exercises/e-002` — answer — Exercise 1: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-13-digital-electronics/exercises/e-004` — answer — Exercise 2: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
+- `acsl/unit-13-digital-electronics/exercises/e-004` — answer — Exercise 2: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-13-digital-electronics/exercises/e-006` — answer — Exercise 3: short answer, one **Answer:** line; answer_format TUPLES13, case sensitive.
 - `acsl/unit-13-digital-electronics/exercises/e-008` — answer — Exercise 4: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-13-digital-electronics/exercises/e-010` — answer — Exercise 5: short answer, one **Answer:** line; answer_format OPT_ORDER, case sensitive.
 - `acsl/unit-13-digital-electronics/exercises/e-012` — answer — Exercise 6: short answer, one **Answer:** line; answer_format OPT_ORDER, case sensitive.
-- `acsl/unit-13-digital-electronics/exercises/e-014` — answer — Exercise 7: short answer, one **Answer:** line; answer_format SOP, case sensitive.
+- `acsl/unit-13-digital-electronics/exercises/e-014` — answer — Exercise 7: short answer, one **Answer:** line; answer_format SOP, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-13-digital-electronics/exercises/e-016` — answer — Exercise 8: short answer, one **Answer:** line; answer_format OPT_ORDER, case sensitive.
 - `acsl/unit-13-digital-electronics/exercises/e-018` — answer — Exercise 9: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-13-digital-electronics/exercises/e-020` — fixtures — Exercise 10 "Gate by Gate": stdin program, sample pair 1 = statement sample.
@@ -565,25 +572,25 @@ Each authored format is one of these categories; the item lines below name the c
 
 ### unit-14-wdtpd-strings
 
-- `acsl/unit-14-wdtpd-strings/exercises/a54da589` — answer — Exercise 1: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/024cedca` — answer — Exercise 2: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/1f485ade` — answer — Exercise 3: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/a7c48e1b` — answer — Exercise 4: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/ac3b3788` — answer — Exercise 5: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/80d8b772` — answer — Exercise 6: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/c604a077` — answer — Exercise 7: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/44940476` — fixtures — Exercise 8 "Vowel Squeeze (predict, then verify)": stdin program, sample pair 1 = statement sample; concepts ['code-tracing', 'acsl-pseudocode'].
-- `acsl/unit-14-wdtpd-strings/exercises/494f6d6e` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/892676fa` — answer — Exercise 10: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/b7462ec6` — answer — Exercise 11: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-14-wdtpd-strings/exercises/8724e18e` — answer — Exercise 12: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/22ad4d5d` — fixtures — Exercise 13 "Longest Run (predict, then verify)": stdin program, sample pair 1 = statement sample; concepts ['code-tracing', 'acsl-pseudocode'].
-- `acsl/unit-14-wdtpd-strings/exercises/c8e717c9` — answer — Exercise 14: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/a960a37a` — answer — Exercise 15: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/6200941c` — answer — Exercise 16: short answer, one **Answer:** line; answer_format OUT, case sensitive.
-- `acsl/unit-14-wdtpd-strings/exercises/04282687` — fixtures — Exercise 17 "Palindrome Sentences (predict, then verify)": stdin program, sample pair 1 = statement sample; concepts ['code-tracing', 'acsl-pseudocode'].
-- `acsl/unit-14-wdtpd-strings/exercises/e9797ad7` — answer — Exercise 18: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
-- `acsl/unit-14-wdtpd-strings/exercises/73827ea2` — answer — Exercise 19: short answer, one **Answer:** line; answer_format OUT, case sensitive.
+- `acsl/unit-14-wdtpd-strings/exercises/a54da589` — answer — Exercise 1: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/024cedca` — answer — Exercise 2: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/1f485ade` — answer — Exercise 3: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/a7c48e1b` — answer — Exercise 4: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/ac3b3788` — answer — Exercise 5: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/80d8b772` — answer — Exercise 6: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/c604a077` — answer — Exercise 7: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/44940476` — fixtures — Exercise 8 "Vowel Squeeze (predict, then verify)": stdin program, sample pair 1 = statement sample; concepts ['code-tracing', 'acsl-pseudocode'].; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-14-wdtpd-strings/exercises/494f6d6e` — answer — Exercise 9: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/892676fa` — answer — Exercise 10: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/b7462ec6` — answer — Exercise 11: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/8724e18e` — answer — Exercise 12: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/22ad4d5d` — fixtures — Exercise 13 "Longest Run (predict, then verify)": stdin program, sample pair 1 = statement sample; concepts ['code-tracing', 'acsl-pseudocode'].; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-14-wdtpd-strings/exercises/c8e717c9` — answer — Exercise 14: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/a960a37a` — answer — Exercise 15: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/6200941c` — answer — Exercise 16: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/04282687` — fixtures — Exercise 17 "Palindrome Sentences (predict, then verify)": stdin program, sample pair 1 = statement sample; concepts ['code-tracing', 'acsl-pseudocode'].; content review 1 also_check audit: +2 [also_check x2]
+- `acsl/unit-14-wdtpd-strings/exercises/e9797ad7` — answer — Exercise 18: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).; content review 1 also_check audit: +1 [also_check x1]
+- `acsl/unit-14-wdtpd-strings/exercises/73827ea2` — answer — Exercise 19: short answer, one **Answer:** line; answer_format OUT, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
 
 ### unit-15-assembly-language
 
@@ -596,14 +603,14 @@ Each authored format is one of these categories; the item lines below name the c
 - `acsl/unit-15-assembly-language/exercises/a8bb3f09` — answer — Exercise 7: short answer, one **Answer:** line; answer_format PRINTED, case sensitive.
 - `acsl/unit-15-assembly-language/exercises/7b738935` — answer — Exercise 8: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
 - `acsl/unit-15-assembly-language/exercises/e9a45b95` — answer — Exercise 9: short answer, one **Answer:** line; answer_format PRINTED, case sensitive.
-- `acsl/unit-15-assembly-language/exercises/6df28308` — fixtures — Exercise 10 "Digit Loop Translator": stdin program, sample pair 1 = statement sample; concepts ['acsl-assembly'].
+- `acsl/unit-15-assembly-language/exercises/6df28308` — fixtures — Exercise 10 "Digit Loop Translator": stdin program, sample pair 1 = statement sample; concepts ['acsl-assembly'].; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-15-assembly-language/exercises/b9df026e` — fixtures — Exercise 11 "Accumulator Calculator": stdin program, sample pair 1 = statement sample.
 - `acsl/unit-15-assembly-language/exercises/06930b7c` — answer — Exercise 12: short answer, one **Answer:** line; answer_format PRINTED, case sensitive.
 - `acsl/unit-15-assembly-language/exercises/9c30192d` — answer — Exercise 13: short answer, one **Answer:** line; answer_format OPT_ALPHA, case sensitive.
 - `acsl/unit-15-assembly-language/exercises/31700519` — answer — Exercise 14: short answer, one **Answer:** line; answer_format PRINTED, case sensitive.
 - `acsl/unit-15-assembly-language/exercises/ff71d45c` — answer — Exercise 15: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/unit-15-assembly-language/exercises/a22bb998` — fixtures — Exercise 16 "Halve or Triple Translator": stdin program, sample pair 1 = statement sample; concepts ['acsl-assembly'].
-- `acsl/unit-15-assembly-language/exercises/cd7889f5` — fixtures — Exercise 17 "Assembly Interpreter": stdin program, sample pair 1 = statement sample.
+- `acsl/unit-15-assembly-language/exercises/cd7889f5` — fixtures — Exercise 17 "Assembly Interpreter": stdin program, sample pair 1 = statement sample.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/unit-15-assembly-language/exercises/c5ddc410` — answer — Exercise 18: short answer, one **Answer:** line; answer_format PRINTED, case sensitive.
 
 ### checkpoint-04-contest-4-practice
@@ -611,7 +618,7 @@ Each authored format is one of these categories; the item lines below name the c
 - `acsl/checkpoint-04-contest-4-practice/checkpoint/cbbc3277` — answer — Question 1: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/checkpoint-04-contest-4-practice/checkpoint/0b4d4be6` — answer — Question 2: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).
 - `acsl/checkpoint-04-contest-4-practice/checkpoint/d53f3ad4` — answer — Question 3: short answer, one **Answer:** line; answer_format TUPLES13, case sensitive.
-- `acsl/checkpoint-04-contest-4-practice/checkpoint/dba84224` — answer — Question 4: short answer, one **Answer:** line; answer_format SOP, case sensitive.
+- `acsl/checkpoint-04-contest-4-practice/checkpoint/dba84224` — answer — Question 4: short answer, one **Answer:** line; answer_format SOP, case sensitive.; content review 1 also_check audit: +1 [also_check x1]
 - `acsl/checkpoint-04-contest-4-practice/checkpoint/ff235aae` — answer — Question 5: short answer, one **Answer:** line; answer_format OUT, case sensitive.
 - `acsl/checkpoint-04-contest-4-practice/checkpoint/4a015c2f` — answer — Question 6: short answer, one **Answer:** line; answer_format OUT, case sensitive.
 - `acsl/checkpoint-04-contest-4-practice/checkpoint/64957843` — answer — Question 7: short answer, one **Answer:** line; derived format "a number" kept (single numeric token).

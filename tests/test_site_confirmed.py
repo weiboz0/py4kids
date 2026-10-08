@@ -316,3 +316,68 @@ def test_kind_findings_catch_a_reverted_retag():
     tags = [t for t in items[index].heading_cell.metadata["tags"] if not t.startswith("check-")]
     items[index] = _broken(items[index], tags=[*tags, "check-asserts"])
     assert kind_findings(items, RETAGGED, "self-check") == [f"{RETAGGED[-1]}: asserts"]
+
+
+# --- content review 1 ---------------------------------------------------------------------------
+
+REVIEW1_SELF_CHECK = (
+    "python-projects/unit-03-turtle-art-studio/exercises/exercise-1",
+    "python-concepts/unit-13-objects/exercises/u13e057",
+)
+# Items whose required method the reviewers found missing from `also_check` ([sol] 2 and 3,
+# [fable] 5), with a word each entry list must now contain.
+REVIEW1_ALSO_CHECK = {
+    "python-projects/checkpoint-03-data-wrangler/checkpoint/question-8": "dictionary method",
+    "python-projects/unit-08-word-wizard/exercises/5703c375": ".get(",
+    "python-projects/checkpoint-03-data-wrangler/checkpoint/question-6": "membership",
+    "python-projects/checkpoint-04-year-one-finale/checkpoint/c400000e": " in inventory",
+    "python-concepts/unit-02-numbers-and-arithmetic/exercises/u02e070": "place-value",
+    "python-concepts/unit-04-loops-and-counting/exercises/u04e22a": "colon",
+    "python-concepts/unit-04-loops-and-counting/exercises/u04e23a": "indent",
+    "acsl/unit-02-recursive-functions/exercises/63f51404": "recursive",
+    "acsl/unit-00-acsl-foundations/exercises/1c6142c9": "tuple",
+}
+
+
+def also_check_findings(items, expected: dict[str, str]) -> list[str]:
+    by_key = {item.key: item for item in items}
+    findings = []
+    for key, word in expected.items():
+        entries = by_key[key].heading_cell.metadata.get("also_check") or [] if key in by_key else []
+        if not any(word.casefold() in entry.casefold() for entry in entries):
+            findings.append(f"{key}: no also_check entry with {word!r}")
+    return findings
+
+
+def tab_alias_findings(items) -> list[str]:
+    """A `whitespace: exact` hint that says a tab is typed as `\\t` needs the `\\t` alias."""
+    findings = []
+    for item in items:
+        fmt = item.heading_cell.metadata.get("answer_format") or {}
+        if (fmt.get("whitespace") == "exact" and "\\t" in fmt.get("hint", "")
+                and (fmt.get("aliases") or {}).get("\\t") != "\t"):
+            findings.append(f"{item.key}: hint mentions \\t but no tab alias")
+    return findings
+
+
+def test_review1_retags_are_self_check():
+    items = [item for book in BOOKS for item in book_items(book)]
+    assert kind_findings(items, REVIEW1_SELF_CHECK, "self-check") == []
+
+
+def test_review1_items_list_their_required_method():
+    items = [item for book in BOOKS for item in book_items(book)]
+    assert also_check_findings(items, REVIEW1_ALSO_CHECK) == []
+    key = next(iter(REVIEW1_ALSO_CHECK))
+    broken = [_broken(item, also_check=None) if item.key == key else item for item in items]
+    assert also_check_findings(broken, REVIEW1_ALSO_CHECK) == [
+        f"{key}: no also_check entry with 'dictionary method'"]
+
+
+def test_tab_hints_carry_the_tab_alias():
+    items = book_items("python-concepts")
+    assert tab_alias_findings(items) == []
+    item = next(i for i in items if i.key.endswith("/u01e14a"))
+    fmt = {k: v for k, v in item.heading_cell.metadata["answer_format"].items() if k != "aliases"}
+    assert tab_alias_findings([_broken(item, answer_format=fmt)]) == [
+        f"{item.key}: hint mentions \\t but no tab alias"]

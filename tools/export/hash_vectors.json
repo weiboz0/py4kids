@@ -377,5 +377,36 @@
   "normalised": "a\tb",
   "item_key": "book/unit-01-x/exercises/exact-i",
   "hash": "sha256:a3680086231ab22a9dc46212a5cf2f77770c97d3d6c7f7ad309404745ca3a03d"
+ },
+ {
+  "input": "Sun comes up\nBirds sing\n\\tThe end\n",
+  "case": "sensitive",
+  "whitespace": "exact",
+  "aliases": {
+   "\\t": "\t"
+  },
+  "normalised": "Sun comes up\nBirds sing\n\tThe end",
+  "item_key": "python-concepts/unit-01-output-and-variables/exercises/u01e14a",
+  "hash": "sha256:8f5da1c4e89ff981bc029f3de4d7ee9aba295de508f340cd143ca3f353938ae5"
+ },
+ {
+  "input": "Sun comes up\nBirds sing\n\tThe end\n",
+  "case": "sensitive",
+  "whitespace": "exact",
+  "aliases": {
+   "\\t": "\t"
+  },
+  "normalised": "Sun comes up\nBirds sing\n\tThe end",
+  "item_key": "python-concepts/unit-01-output-and-variables/exercises/u01e14a",
+  "hash": "sha256:8f5da1c4e89ff981bc029f3de4d7ee9aba295de508f340cd143ca3f353938ae5"
+ },
+ {
+  "input": "Sun comes up\nBirds sing\n\\tThe end\n",
+  "case": "sensitive",
+  "whitespace": "exact",
+  "aliases": {},
+  "normalised": "Sun comes up\nBirds sing\n\\tThe end",
+  "item_key": "python-concepts/unit-01-output-and-variables/exercises/u01e14a",
+  "hash": "sha256:e9fd83ab6c6694766f00729f1c4c850b996023e0041564106fbb4e39e98c9fa8"
  }
 ]

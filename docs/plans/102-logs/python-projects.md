@@ -8,15 +8,17 @@ Keys below drop the `python-projects/` prefix.
 
 | kind | proposed (classify) | confirmed |
 |---|---:|---:|
-| asserts | 91 | 59 |
-| expected-output | 17 | 11 |
+| asserts | 91 | 52 |
+| expected-output | 17 | 10 |
 | predict | 6 | 7 |
-| self-check | 122 | 159 |
+| self-check | 122 | 167 |
 | total | 236 | 236 |
 
-- Retags: 40 (listed below).
+Counts are the notebooks' heading tags after the integration retags (Phase E) and content review 1 (computed from the notebooks, 2026-10-08).
+
+- Retags: 48 (listed below): 40 in Phase B, 7 at integration (Phase E file and cross-item guards) and 1 in content review 1 (`unit-03 exercise-1`).
 - Statement edits (rule 2): **none**. Every non-portable assert name was checked against its statement; no sentence instructs storing a value under a name and merely fails to mark it (the bare words are prose: 'the running total', 'the midpoint', 'for the champion', 'a verdict'). Names that appear only in a `**Real version:**` panel (`double_message`, `final_message`, `border_total`, `pets`) are not core-task instructions, so marking them would be a wider change. No allowed-diffs entries are needed; the publish baseline is untouched.
-- Authored `requirements`: 42 self-check items (where the derived list misstated the task). Authored `also_check`: 69 items.
+- Authored `requirements`: 44 self-check items (where the derived list misstated the task). Authored `also_check`: 66 checked items (after the integration retags and the content-review-1 audit).
 - `answer_format`: 0 authored; every hidden-answer item keeps the derived, case-sensitive format (see below).
 - `whitespace: exact`: none (no python-projects statement makes tabs, indentation or alignment part of an answer).
 - Concepts: the 3 unattributed lesson blocks are attributed; 0 items were unattributed; gap list empty.
@@ -28,7 +30,7 @@ Keys below drop the `python-projects/` prefix.
 | unit-01-story-machine | 9 | 0 | 1 | 0 | 8 |
 | unit-02-number-detective | 10 | 0 | 0 | 0 | 10 |
 | checkpoint-01-first-steps | 7 | 1 | 0 | 2 | 4 |
-| unit-03-turtle-art-studio | 12 | 3 | 1 | 0 | 8 |
+| unit-03-turtle-art-studio | 12 | 3 | 0 | 0 | 9 |
 | unit-04-quiz-show | 21 | 0 | 0 | 1 | 20 |
 | unit-05-function-factory | 22 | 11 | 1 | 1 | 9 |
 | checkpoint-02-loops-and-functions | 8 | 0 | 0 | 3 | 5 |
@@ -37,9 +39,9 @@ Keys below drop the `python-projects/` prefix.
 | unit-07-high-score-hall | 24 | 9 | 0 | 0 | 15 |
 | unit-08-word-wizard | 23 | 11 | 2 | 0 | 10 |
 | checkpoint-03-data-wrangler | 8 | 5 | 2 | 0 | 1 |
-| unit-09-save-point | 25 | 8 | 2 | 0 | 15 |
+| unit-09-save-point | 25 | 3 | 2 | 0 | 20 |
 | unit-10-pet-simulator | 26 | 5 | 1 | 0 | 20 |
-| checkpoint-04-year-one-finale | 8 | 3 | 1 | 0 | 4 |
+| checkpoint-04-year-one-finale | 8 | 1 | 1 | 0 | 6 |
 | project-02-grand-adventure | 5 | 0 | 0 | 0 | 5 |
 
 ## Retags
@@ -77,6 +79,7 @@ Keys below drop the `python-projects/` prefix.
 - `unit-09-save-point/exercises/0cc7f084`: expected-output -> self-check. the core result is the file contents; the confirmation line alone would pass without writing the file
 - `unit-09-save-point/exercises/e2692eb8`: expected-output -> self-check. the core result is the file contents; the confirmation line alone would pass without writing the file
 - `unit-10-pet-simulator/exercises/c8e092dc`: expected-output -> self-check. the canonical 3 occurs only in the heading 'Exercise 3'; the body never states it, and new_hunger is the solution's own name
+- `unit-03-turtle-art-studio/exercises/exercise-1`: expected-output -> self-check (content review 1, [fable] 1). `side_length` is the student's choice, so the report line is not fixed (rule 1); also_check moved into requirements
 - `unit-10-pet-simulator/exercises/7067fd3f`: asserts -> self-check. pets[0].name == 'Ivy' tests the student's chosen pet names
 - `unit-10-pet-simulator/exercises/23283984`: expected-output -> self-check. which meal and treat to feed is the student's choice, so Buddy's hunger is not fixed
 - `unit-10-pet-simulator/exercises/29dbfcff`: asserts -> self-check. hunger 3 depends on the student's own food dictionary
@@ -85,6 +88,13 @@ Keys below drop the `python-projects/` prefix.
 - `unit-10-pet-simulator/exercises/4dfdb434`: asserts -> self-check. pet names and foods are the student's own
 - `project-02-grand-adventure/brief/milestone-1`: asserts -> self-check. scripted input() (rule 1 named case)
 
+- `unit-09-save-point/exercises/e5a7e9a1`: asserts -> self-check (integration). the asserts read `savegame.txt`, which an earlier exercise writes; run alone, the file is missing
+- `unit-09-save-point/exercises/25c296a7`: asserts -> self-check (integration). depends on the earlier exercise's `savegame.txt`
+- `unit-09-save-point/exercises/exercise-14-linear-search`: asserts -> self-check (integration). depends on the earlier exercise's `settings.txt`
+- `unit-09-save-point/exercises/exercise-15-find-extreme`: asserts -> self-check (integration). depends on the earlier exercise's `savegame.txt`
+- `unit-09-save-point/exercises/exercise-16-filter-into-list`: asserts -> self-check (integration). depends on the earlier exercise's `savegame.txt`
+- `checkpoint-04-year-one-finale/checkpoint/c4000008`: asserts -> self-check (integration). depends on Question 3's `finale.txt`
+- `checkpoint-04-year-one-finale/checkpoint/c400000a`: asserts -> self-check (integration). its asserts use `loaded`, which only Question 4 defines (NameError when run alone)
 Main reasons:
 - Asserts on student-chosen values (rule 1(b)): booleans, sample names, pet names, food amounts, pets lists.
 - Scripted `input()` (rule 1): the seven named items plus `u04 exercises-14` and `u04 u04-ex08`, whose core tasks read `input()`.
@@ -118,7 +128,6 @@ All are program output (`expected-output`, `predict`), so all stay `case: sensit
 | unit-01-story-machine/exercises/exercise-two | expected-output | one line | derived, case-sensitive |
 | checkpoint-01-first-steps/checkpoint/checkpoint-03 | predict | one line | derived, case-sensitive |
 | checkpoint-01-first-steps/checkpoint/checkpoint-07 | predict | one line | derived, case-sensitive |
-| unit-03-turtle-art-studio/exercises/exercise-1 | expected-output | one line | derived, case-sensitive |
 | unit-04-quiz-show/exercises/exercises-11 | predict | one line | derived, case-sensitive |
 | unit-05-function-factory/exercises/exercise-5-heading | predict | several lines | derived, case-sensitive |
 | unit-05-function-factory/exercises/exercise-11-heading | expected-output | several lines | derived, case-sensitive |
@@ -155,12 +164,19 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - Several unit-09 and checkpoint-04 asserts depend on a file that an earlier exercise in the same notebook writes: `savegame.txt`, `settings.txt` or `finale.txt`. They are `e5a7e9a1`, `25c296a7`, `exercise-14-linear-search`, `exercise-15-find-extreme`, `exercise-16-filter-into-list` and `c4000008`. The statements fix the expected values, but the runner must give these items the earlier exercises' file state.
 - Turtle items carry `turtle: true`, and their turtle requirements are in `also_check`.
 
+## Content review 1: also_check audit ([sol] 2 and 3, [fable] 5)
+
+Every checked item (69) was re-read against its statement: its requirements were listed, each marked as verified by the check kind or not, and every unverifiable requirement (a method, construct or data structure, a safe lookup, place value, a loop, a membership test, tuple storage, recursion, a comment or an explanation) was checked for an `also_check` entry quoted verbatim from the statement.
+50 items gained 96 entries (expected-output 10, asserts 39, predict 1); no existing entry was removed or reworded.
+Each changed item's line below ends with `content review 1 also_check audit: +N [also_check xM]`.
+Named items: cp03 `question-8` (the safe dictionary-method rewrite), u08 `5703c375` (`.get("fish", "???")` instead of the crashing lookup), cp03 `question-6` (membership-test branch) and cp04 `c400000e` (membership test and `if`/`else` branch).
+
 ## Per-item lines
 
 ### unit-01-story-machine
 
 - `unit-01-story-machine/exercises/exercise-one` — self-check — open-ended title and message; derived checklist matches
-- `unit-01-story-machine/exercises/exercise-two` — expected-output — fix-the-quote starter fixes the one output line
+- `unit-01-story-machine/exercises/exercise-two` — expected-output — fix-the-quote starter fixes the one output line; content review 1 also_check audit: +2 [also_check x2]
 - `unit-01-story-machine/exercises/exercise-three` — self-check — RETAG asserts->self-check: assert tests the solution's snack while the student chooses their own words (rule 1(b), plan example) [requirements x2]
 - `unit-01-story-machine/exercises/exercise-four` — self-check — student's own story; derived checklist matches
 - `unit-01-story-machine/exercises/exercise-five` — self-check — input() core; student's own message; derived checklist matches
@@ -184,7 +200,7 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 
 ### checkpoint-01-first-steps
 
-- `checkpoint-01-first-steps/checkpoint/checkpoint-01` — asserts — rule 1(b): `clue_message` named, `clues_found = 4` fixed by the shown code [also_check x2]
+- `checkpoint-01-first-steps/checkpoint/checkpoint-01` — asserts — rule 1(b): `clue_message` named, `clues_found = 4` fixed by the shown code [also_check x2]; content review 1 also_check audit: +2 [also_check x4]
 - `checkpoint-01-first-steps/checkpoint/checkpoint-03` — predict — trace question with a printing program
 - `checkpoint-01-first-steps/checkpoint/checkpoint-05` — self-check — RETAG asserts->self-check: scripted input() (rule 1 named case); derived checklist is the one-line task
 - `checkpoint-01-first-steps/checkpoint/checkpoint-07` — predict — trace question with a printing program [also_check x1]
@@ -194,16 +210,16 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 
 ### unit-03-turtle-art-studio
 
-- `unit-03-turtle-art-studio/exercises/exercise-1` — expected-output — statement fixes the report line `4 sides of 80 steps`; turtle drawing listed in also_check [also_check x3]
-- `unit-03-turtle-art-studio/exercises/exercise-2` — asserts — rule 1(b): `n = 7`, `angle`, `side_number` named and fixed [also_check x3]
+- `unit-03-turtle-art-studio/exercises/exercise-1` — self-check — RETAG expected-output->self-check (content review 1, [fable] 1): `side_length` is the student's own choice ("Author meaningful variables"), so the report line `4 sides of 80 steps` only illustrates the pattern (rule 1); the former also_check moved into requirements [requirements x6]
+- `unit-03-turtle-art-studio/exercises/exercise-2` — asserts — rule 1(b): `n = 7`, `angle`, `side_number` named and fixed [also_check x3]; content review 1 also_check audit: +2 [also_check x5]
 - `unit-03-turtle-art-studio/exercises/exercise-3` — self-check — headless plan prints nothing; derived checklist opened with a description [requirements x3]
 - `unit-03-turtle-art-studio/exercises/exercise-4` — self-check — trace table plus own labels; derived checklist matches
 - `unit-03-turtle-art-studio/exercises/exercise-5` — self-check — flagship turtle build with own side_length; derived checklist missed the headless-cell tasks [requirements x6]
-- `unit-03-turtle-art-studio/exercises/exercise-6` — asserts — rule 1(b): starter names and fixed repaired loop counts; labels named [also_check x2]
+- `unit-03-turtle-art-studio/exercises/exercise-6` — asserts — rule 1(b): starter names and fixed repaired loop counts; labels named [also_check x2]; content review 1 also_check audit: +2 [also_check x4]
 - `unit-03-turtle-art-studio/exercises/exercise-7` — self-check — own side length and color; derived checklist matches
 - `unit-03-turtle-art-studio/exercises/exercise-8` — self-check — own side length and color; derived checklist matches
 - `unit-03-turtle-art-studio/exercises/exercise-9` — self-check — turtle ring; derived checklist matches
-- `unit-03-turtle-art-studio/exercises/exercise-10` — asserts — rule 1(b): `shape_count = 3`, `side_count = 5`, `stroke_number` named and fixed [also_check x2]
+- `unit-03-turtle-art-studio/exercises/exercise-10` — asserts — rule 1(b): `shape_count = 3`, `side_count = 5`, `stroke_number` named and fixed [also_check x2]; content review 1 also_check audit: +3 [also_check x5]
 - `unit-03-turtle-art-studio/exercises/challenge-1` — self-check — own side_length, prediction and explanation; derived checklist opened with a description [requirements x4]
 - `unit-03-turtle-art-studio/exercises/challenge-2` — self-check — paper plan with own colors; derived checklist matches
 
@@ -217,7 +233,7 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `unit-04-quiz-show/exercises/exercises-11` — predict — trace-and-predict of a fixed starter
 - `unit-04-quiz-show/exercises/18831267` — self-check — RETAG asserts->self-check: the two asserts (penalty True/score 2, penalty False) need different student-chosen booleans and cannot both hold [requirements x4]
 - `unit-04-quiz-show/exercises/u04-ex08` — self-check — RETAG asserts->self-check: core task reads the answers with input(); asserts compare scripted answers
-- `unit-04-quiz-show/exercises/u04-ex09` — self-check — RETAG asserts->self-check: q/strikes/score depend on the student's three chosen boolean results
+- `unit-04-quiz-show/exercises/u04-ex09` — self-check — RETAG asserts->self-check: q/strikes/score depend on the student's three chosen boolean results; content review 1 ([sol] 4): authored requirements cover the counter update and printing both totals [requirements x6]
 - `unit-04-quiz-show/exercises/u04-ex10` — self-check — RETAG asserts->self-check: scripted input() (rule 1 named case)
 - `unit-04-quiz-show/exercises/u04-ex11` — self-check — RETAG asserts->self-check: scripted input() (rule 1 named case)
 - `unit-04-quiz-show/exercises/u04-count-correct-heading` — self-check — RETAG asserts->self-check: scripted input() (rule 1 named case)
@@ -238,11 +254,11 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `unit-05-function-factory/exercises/exercise-3-heading` — self-check — RETAG asserts->self-check: double_message is named only in the Real version panel, not the core task; expected-output does not fit because the solution prints an extra explanation line [requirements x4]
 - `unit-05-function-factory/exercises/exercise-4-heading` — self-check — outside variable and message are the student's own; derived checklist matches
 - `unit-05-function-factory/exercises/exercise-5-heading` — predict — trace question with a printing program [also_check x3]
-- `unit-05-function-factory/exercises/exercise-6-heading` — asserts — rule 1(b): `last_pen_size`, `side_moves` named, four stamps fixed [also_check x5]
+- `unit-05-function-factory/exercises/exercise-6-heading` — asserts — rule 1(b): `last_pen_size`, `side_moves` named, four stamps fixed [also_check x5]; content review 1 also_check audit: +3 [also_check x8]
 - `unit-05-function-factory/exercises/exercise-8-heading` — self-check — caller's variable is the student's own; derived checklist opened with descriptions [requirements x3]
 - `unit-05-function-factory/exercises/exercise-9-heading` — self-check — RETAG asserts->self-check: turn_angle(7) is portable (rule 1(a)) but final_message is named only in the Real version panel and its text is the student's own f-string [requirements x6]
-- `unit-05-function-factory/exercises/exercise-10-heading` — asserts — rule 1(b): `stamps_drawn` named, 3 x 4 grid fixed [also_check x4]
-- `unit-05-function-factory/exercises/exercise-11-heading` — expected-output — statement fixes both output lines (`20` and `10`) [also_check x2]
+- `unit-05-function-factory/exercises/exercise-10-heading` — asserts — rule 1(b): `stamps_drawn` named, 3 x 4 grid fixed [also_check x4]; content review 1 also_check audit: +5 [also_check x9]
+- `unit-05-function-factory/exercises/exercise-11-heading` — expected-output — statement fixes both output lines (`20` and `10`) [also_check x2]; content review 1 also_check audit: +6 [also_check x8]
 - `unit-05-function-factory/exercises/exercise-7-heading` — self-check — RETAG asserts->self-check: border_total is named only in the Real version panel; the printed 280 does not occur in the statement (single-token rule)
 - `unit-05-function-factory/exercises/b7b2ccf7b701` — asserts — rule 1(a): calls the specified count_bonus_stamps(n) [also_check x1]
 - `unit-05-function-factory/exercises/469f592aa1ac` — asserts — rule 1(a): calls the specified total_even_stamps(n) [also_check x1]
@@ -262,7 +278,7 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `checkpoint-02-loops-and-functions/checkpoint/question-2-heading` — self-check — names are only in the code fence and the single printed 10 does not occur in the statement; derived checklist included a description [requirements x3]
 - `checkpoint-02-loops-and-functions/checkpoint/question-3-heading` — self-check — RETAG asserts->self-check: message == 'Hello, Maya!' depends on the student's sample name and greeting wording (rule 1(b))
 - `checkpoint-02-loops-and-functions/checkpoint/question-4-heading` — self-check — explanation question; derived checklist opened with 'Read the two functions.' [requirements x3]
-- `checkpoint-02-loops-and-functions/checkpoint/question-5-heading` — predict — trace question with a printing program [also_check x2]
+- `checkpoint-02-loops-and-functions/checkpoint/question-5-heading` — predict — trace question with a printing program [also_check x2]; content review 1 also_check audit: +1 [also_check x3]
 - `checkpoint-02-loops-and-functions/checkpoint/question-6-heading` — predict — RETAG self-check->predict: a trace question ('Predict the one message that prints') whose fenced program prints one line; the tool's regex missed the wording [also_check x1]
 - `checkpoint-02-loops-and-functions/checkpoint/question-7-heading` — self-check — turtle trace answered in words (shape name), no program output; derived checklist matches
 - `checkpoint-02-loops-and-functions/checkpoint/question-8-heading` — self-check — sample booleans chosen by the student; derived checklist matches
@@ -287,9 +303,9 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `unit-06-secret-codes/exercises/exercise-9-heading` — self-check — input() core; derived checklist matches
 - `unit-06-secret-codes/exercises/exercise-10-heading` — self-check — stored output names and f-strings are the student's own; derived checklist matches
 - `unit-06-secret-codes/exercises/exercise-11-heading` — self-check — stored result name is the student's own; derived checklist dropped the call and output [requirements x6]
-- `unit-06-secret-codes/exercises/exercise-12-heading` — asserts — rule 1(b): `vowel_count` named, message fixed [also_check x2]
-- `unit-06-secret-codes/exercises/exercise-13-heading` — asserts — rule 1(b): `coded_message` named, message fixed [also_check x2]
-- `unit-06-secret-codes/exercises/exercise-14-heading` — asserts — rule 1(b): `found_position` named, target fixed [also_check x2]
+- `unit-06-secret-codes/exercises/exercise-12-heading` — asserts — rule 1(b): `vowel_count` named, message fixed [also_check x2]; content review 1 also_check audit: +1 [also_check x3]
+- `unit-06-secret-codes/exercises/exercise-13-heading` — asserts — rule 1(b): `coded_message` named, message fixed [also_check x2]; content review 1 also_check audit: +2 [also_check x4]
+- `unit-06-secret-codes/exercises/exercise-14-heading` — asserts — rule 1(b): `found_position` named, target fixed [also_check x2]; content review 1 also_check audit: +1 [also_check x3]
 - `unit-06-secret-codes/exercises/b8560ccca999` — self-check — RETAG expected-output->self-check (rule 4): the 3 is the worked example's illustration; the statement never fixes what the program prints, and the assert names the solution's own result
 - `unit-06-secret-codes/exercises/d6c123b4f1b3` — self-check — counter names and printed format are the student's own; derived checklist matches
 - `unit-06-secret-codes/exercises/3e97d2c30aa2` — self-check — RETAG expected-output->self-check (rule 4): 'Scan a message' leaves the message open; xyzapple -> 3 only illustrates
@@ -303,7 +319,7 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 
 ### unit-07-high-score-hall
 
-- `unit-07-high-score-hall/exercises/34bc0cc9` — asserts — rule 1(b): `scores`, `new_score` named and fixed [also_check x2]
+- `unit-07-high-score-hall/exercises/34bc0cc9` — asserts — rule 1(b): `scores`, `new_score` named and fixed [also_check x2]; content review 1 also_check audit: +1 [also_check x3]
 - `unit-07-high-score-hall/exercises/a1d39a77` — self-check — midpoint/champion/rookie are prose names; derived checklist matches
 - `unit-07-high-score-hall/exercises/0ffe49bf` — self-check — RETAG asserts->self-check: the asserts only re-check the given list, not the fix or the loop output; the first cell errors on purpose, so a whole-program output check does not fit [requirements x4]
 - `unit-07-high-score-hall/exercises/5c20b19f` — self-check — RETAG asserts->self-check: scripted input() (rule 1 named case)
@@ -314,56 +330,56 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `unit-07-high-score-hall/exercises/2af960b7` — self-check — average is not stored under a named variable; derived checklist matches
 - `unit-07-high-score-hall/exercises/f6304b22` — self-check — best is prose ('for the best score'); derived checklist included a retrieval question [requirements x5]
 - `unit-07-high-score-hall/exercises/54467865` — self-check — tiers is the solution's list; derived checklist included spotlight text [requirements x4]
-- `unit-07-high-score-hall/exercises/b770a983` — asserts — rule 1(b): `clean_winners` named, raw names fixed [also_check x2]
+- `unit-07-high-score-hall/exercises/b770a983` — asserts — rule 1(b): `clean_winners` named, raw names fixed [also_check x2]; content review 1 also_check audit: +2 [also_check x4]
 - `unit-07-high-score-hall/exercises/1b327946` — self-check — champion is prose ('for the champion'); derived checklist included spotlight text [requirements x4]
 - `unit-07-high-score-hall/exercises/exercise-14-linear-search` — self-check — RETAG asserts->self-check: the asserts (1050 and 'not found') are for two different bars and cannot both hold [requirements x4]
-- `unit-07-high-score-hall/exercises/exercise-15-find-extreme` — asserts — rule 1(b): `best_name`, `best_score` named, lists fixed [also_check x2]
-- `unit-07-high-score-hall/exercises/exercise-16-filter-into-list` — asserts — rule 1(b): `qualifying_scores` named, list and threshold fixed [also_check x2]
-- `unit-07-high-score-hall/exercises/c0f4354dcb88` — asserts — rule 1(b): `rookie_name`, `rookie_score` named, lists fixed [also_check x1]
+- `unit-07-high-score-hall/exercises/exercise-15-find-extreme` — asserts — rule 1(b): `best_name`, `best_score` named, lists fixed [also_check x2]; content review 1 also_check audit: +2 [also_check x4]
+- `unit-07-high-score-hall/exercises/exercise-16-filter-into-list` — asserts — rule 1(b): `qualifying_scores` named, list and threshold fixed [also_check x2]; content review 1 also_check audit: +1 [also_check x3]
+- `unit-07-high-score-hall/exercises/c0f4354dcb88` — asserts — rule 1(b): `rookie_name`, `rookie_score` named, lists fixed [also_check x1]; content review 1 also_check audit: +2 [also_check x3]
 - `unit-07-high-score-hall/exercises/a293634ac2fe` — self-check — RETAG asserts->self-check: best/worst appear only in the worked example; the task says 'track both the highest and lowest' without naming them, so a correct program may use other names; derived checklist matches
 - `unit-07-high-score-hall/exercises/db46d99c1316` — self-check — own names; derived checklist matches
-- `unit-07-high-score-hall/exercises/fab4a9bad828` — asserts — rule 1(b): the task says to 'set the place' and shows it as `place = 3`; inputs fixed in the starter
+- `unit-07-high-score-hall/exercises/fab4a9bad828` — asserts — rule 1(b): the task says to 'set the place' and shows it as `place = 3`; inputs fixed in the starter; content review 1 also_check audit: +1 [also_check x1]
 - `unit-07-high-score-hall/exercises/e9416bdf353e` — self-check — own names; derived checklist matches
 - `unit-07-high-score-hall/exercises/c0fd1808472b` — self-check — own names; derived checklist matches
-- `unit-07-high-score-hall/exercises/cc86d261` — asserts — rule 1(b): `scores` named and fixed [also_check x1]
-- `unit-07-high-score-hall/exercises/457f59a6` — asserts — rule 1(b): `scores`, `second_scores` named and fixed [also_check x3]
+- `unit-07-high-score-hall/exercises/cc86d261` — asserts — rule 1(b): `scores` named and fixed [also_check x1]; content review 1 also_check audit: +1 [also_check x2]
+- `unit-07-high-score-hall/exercises/457f59a6` — asserts — rule 1(b): `scores`, `second_scores` named and fixed [also_check x3]; content review 1 also_check audit: +2 [also_check x5]
 
 ### unit-08-word-wizard
 
 - `unit-08-word-wizard/exercises/105432ac` — asserts — rule 1(b): `translations` named and fixed [also_check x1]
-- `unit-08-word-wizard/exercises/da9cf3d6` — expected-output — fixed word and lookup default fix the printed `???`
+- `unit-08-word-wizard/exercises/da9cf3d6` — expected-output — fixed word and lookup default fix the printed `???`; content review 1 also_check audit: +2 [also_check x2]
 - `unit-08-word-wizard/exercises/2d315b39` — self-check — RETAG asserts->self-check: `known is True` and `known is False` are the two phases and cannot both hold; the f-string wording is the student's own [requirements x4]
-- `unit-08-word-wizard/exercises/366b84ad` — asserts — rule 1(b): `translations`, `new_words` named and fixed [also_check x3]
-- `unit-08-word-wizard/exercises/65ac3053` — asserts — rule 1(b): `counts`, `cats_lead` named and fixed [also_check x2]
+- `unit-08-word-wizard/exercises/366b84ad` — asserts — rule 1(b): `translations`, `new_words` named and fixed [also_check x3]; content review 1 also_check audit: +1 [also_check x4]
+- `unit-08-word-wizard/exercises/65ac3053` — asserts — rule 1(b): `counts`, `cats_lead` named and fixed [also_check x2]; content review 1 also_check audit: +3 [also_check x5]
 - `unit-08-word-wizard/exercises/b707e4b1` — self-check — clean word name and f-string are the student's own; derived checklist matches
 - `unit-08-word-wizard/exercises/1b6d5913` — self-check — own f-string wording; derived checklist matches
-- `unit-08-word-wizard/exercises/5703c375` — expected-output — RETAG asserts->expected-output: the assert re-checks a literal lookup and passes without the student's result; the fixed lookup prints `???`, which the statement shows [also_check x1]
+- `unit-08-word-wizard/exercises/5703c375` — expected-output — RETAG asserts->expected-output: the assert re-checks a literal lookup and passes without the student's result; the fixed lookup prints `???`, which the statement shows [also_check x1]; content review 1 also_check audit: +2 [also_check x3]
 - `unit-08-word-wizard/exercises/8f10cb43` — self-check — champion_checks is the solution's list; derived checklist matches
-- `unit-08-word-wizard/exercises/f19523bc` — asserts — rule 1(b): `labels`, `visits` named and fixed [also_check x2]
-- `unit-08-word-wizard/exercises/fb534bb7` — asserts — rule 1(b): `visited_words`, `visited_count` named and fixed [also_check x2]
+- `unit-08-word-wizard/exercises/f19523bc` — asserts — rule 1(b): `labels`, `visits` named and fixed [also_check x2]; content review 1 also_check audit: +2 [also_check x4]
+- `unit-08-word-wizard/exercises/fb534bb7` — asserts — rule 1(b): `visited_words`, `visited_count` named and fixed [also_check x2]; content review 1 also_check audit: +1 [also_check x3]
 - `unit-08-word-wizard/exercises/72e56d51` — self-check — owls_lead is the solution's name; derived checklist included spotlight text [requirements x5]
 - `unit-08-word-wizard/exercises/762d0c80` — self-check — new_best_checks is the solution's list; derived checklist included spotlight text [requirements x5]
-- `unit-08-word-wizard/exercises/c7c41c5a` — asserts — rule 1(a)+(b): calls the specified translate(); `translated_words` named [also_check x1]
-- `unit-08-word-wizard/exercises/4d735639` — asserts — rule 1(b): `english_word` named, phrasebook and target fixed [also_check x1]
-- `unit-08-word-wizard/exercises/exercise-16-filter-into-list` — asserts — rule 1(b): `long_words` named, list fixed [also_check x2]
+- `unit-08-word-wizard/exercises/c7c41c5a` — asserts — rule 1(a)+(b): calls the specified translate(); `translated_words` named [also_check x1]; content review 1 also_check audit: +2 [also_check x3]
+- `unit-08-word-wizard/exercises/4d735639` — asserts — rule 1(b): `english_word` named, phrasebook and target fixed [also_check x1]; content review 1 also_check audit: +3 [also_check x4]
+- `unit-08-word-wizard/exercises/exercise-16-filter-into-list` — asserts — rule 1(b): `long_words` named, list fixed [also_check x2]; content review 1 also_check audit: +2 [also_check x4]
 - `unit-08-word-wizard/exercises/a29bfcb25864` — self-check — total is the solution's name and the printed format is free; derived checklist matches
-- `unit-08-word-wizard/exercises/2a2bf0043516` — asserts — rule 1(b): `rarest_word`, `rarest_count` named, counts fixed [also_check x1]
+- `unit-08-word-wizard/exercises/2a2bf0043516` — asserts — rule 1(b): `rarest_word`, `rarest_count` named, counts fixed [also_check x1]; content review 1 also_check audit: +2 [also_check x3]
 - `unit-08-word-wizard/exercises/146ae9190dda` — self-check — known/unknown are parenthetical labels, not instructed names; derived checklist matches
 - `unit-08-word-wizard/exercises/6974b3ca91bb` — self-check — own names; derived checklist matches
 - `unit-08-word-wizard/exercises/931175eff090` — self-check — own names; derived checklist matches
-- `unit-08-word-wizard/exercises/aef2318b` — asserts — rule 1(b): `translations` named and fixed [also_check x2]
-- `unit-08-word-wizard/exercises/challenge-2-flip-prompt` — asserts — rule 1(b): `spanish_to_english` named, source fixed [also_check x1]
+- `unit-08-word-wizard/exercises/aef2318b` — asserts — rule 1(b): `translations` named and fixed [also_check x2]; content review 1 also_check audit: +1 [also_check x3]
+- `unit-08-word-wizard/exercises/challenge-2-flip-prompt` — asserts — rule 1(b): `spanish_to_english` named, source fixed [also_check x1]; content review 1 also_check audit: +1 [also_check x2]
 
 ### checkpoint-03-data-wrangler
 
 - `checkpoint-03-data-wrangler/checkpoint/question-1` — self-check — RETAG asserts->self-check: the assert re-checks the given word, not the student's f-string, whose separators are free
-- `checkpoint-03-data-wrangler/checkpoint/question-2` — asserts — rule 1(b): `cleaned` named and fixed [also_check x1]
-- `checkpoint-03-data-wrangler/checkpoint/question-3` — asserts — rule 1(b): `scores` named and fixed [also_check x1]
-- `checkpoint-03-data-wrangler/checkpoint/question-4` — asserts — rule 1(b): `total` named, scores fixed [also_check x3]
-- `checkpoint-03-data-wrangler/checkpoint/question-5` — asserts — rule 1(b): `scores` named and fixed [also_check x1]
-- `checkpoint-03-data-wrangler/checkpoint/question-6` — expected-output — every printed line is fixed by the statement
-- `checkpoint-03-data-wrangler/checkpoint/question-7` — asserts — rule 1(b): `counts` named, words fixed [also_check x1]
-- `checkpoint-03-data-wrangler/checkpoint/question-8` — expected-output — single token `0` confirmed by the body: 'a missing "fig" price becomes `0`, and print that price' [also_check x1]
+- `checkpoint-03-data-wrangler/checkpoint/question-2` — asserts — rule 1(b): `cleaned` named and fixed [also_check x1]; content review 1 also_check audit: +1 [also_check x2]
+- `checkpoint-03-data-wrangler/checkpoint/question-3` — asserts — rule 1(b): `scores` named and fixed [also_check x1]; content review 1 also_check audit: +1 [also_check x2]
+- `checkpoint-03-data-wrangler/checkpoint/question-4` — asserts — rule 1(b): `total` named, scores fixed [also_check x3]; content review 1 also_check audit: +1 [also_check x4]
+- `checkpoint-03-data-wrangler/checkpoint/question-5` — asserts — rule 1(b): `scores` named and fixed [also_check x1]; content review 1 also_check audit: +1 [also_check x2]
+- `checkpoint-03-data-wrangler/checkpoint/question-6` — expected-output — every printed line is fixed by the statement; content review 1 also_check audit: +5 [also_check x5]
+- `checkpoint-03-data-wrangler/checkpoint/question-7` — asserts — rule 1(b): `counts` named, words fixed [also_check x1]; content review 1 also_check audit: +2 [also_check x3]
+- `checkpoint-03-data-wrangler/checkpoint/question-8` — expected-output — single token `0` confirmed by the body: 'a missing "fig" price becomes `0`, and print that price' [also_check x1]; content review 1 also_check audit: +1 [also_check x2]
 
 ### unit-09-save-point
 
@@ -372,11 +388,11 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `unit-09-save-point/exercises/7241e26c` — self-check — reads the file from Exercise 1; derived checklist matches
 - `unit-09-save-point/exercises/e2692eb8` — self-check — RETAG expected-output->self-check: the core result is the file contents; the confirmation line alone would pass without writing the file
 - `unit-09-save-point/exercises/36533a17` — self-check — reads the settings file; derived checklist split the expected lines [requirements x6]
-- `unit-09-save-point/exercises/3113af24` — expected-output — statement fixes the printed loaded list (a save-load round trip) [also_check x2]
+- `unit-09-save-point/exercises/3113af24` — expected-output — statement fixes the printed loaded list (a save-load round trip) [also_check x2]; content review 1 also_check audit: +1 [also_check x3]
 - `unit-09-save-point/exercises/7b137fa5` — self-check — depends on the Exercise 6 helpers and file; derived checklist matches
-- `unit-09-save-point/exercises/7eb48e53` — asserts — rule 1(b): `dragon_save` named, text fixed [also_check x1]
-- `unit-09-save-point/exercises/96238996` — asserts — rule 1(b): `first_save`, `second_save` named, list fixed [also_check x2]
-- `unit-09-save-point/exercises/180acfe5` — expected-output — statement fixes the printed line `Mina can resume forest.` [also_check x2]
+- `unit-09-save-point/exercises/7eb48e53` — asserts — rule 1(b): `dragon_save` named, text fixed [also_check x1]; content review 1 also_check audit: +2 [also_check x3]
+- `unit-09-save-point/exercises/96238996` — asserts — rule 1(b): `first_save`, `second_save` named, list fixed [also_check x2]; content review 1 also_check audit: +3 [also_check x5]
+- `unit-09-save-point/exercises/180acfe5` — expected-output — statement fixes the printed line `Mina can resume forest.` [also_check x2]; content review 1 also_check audit: +2 [also_check x4]
 - `unit-09-save-point/exercises/4b1cd37e` — self-check — depends on the file from earlier exercises; derived checklist matches
 - `unit-09-save-point/exercises/e5a7e9a1` — self-check — rule 1(b): `loaded` named; the file state from earlier exercises fixes it (statement shows the list) [also_check x2] (retagged at integration: depends on an earlier item's file or name)
 - `unit-09-save-point/exercises/25c296a7` — self-check — rule 1(b): `total` named; earlier file state fixes it (statement shows 4925) [also_check x2] (retagged at integration: depends on an earlier item's file or name)
@@ -385,7 +401,7 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `unit-09-save-point/exercises/exercise-16-filter-into-list` — self-check — rule 1(b): `high_scores` named; file and threshold fix it [also_check x2] (retagged at integration: depends on an earlier item's file or name)
 - `unit-09-save-point/exercises/9a1700000001` — self-check — count name and report format are the student's own; derived checklist matches
 - `unit-09-save-point/exercises/9a1800000001` — self-check — own names and report format; derived checklist matches
-- `unit-09-save-point/exercises/9a1900000001` — asserts — rule 1(b): `lowest` named ('Seed your `lowest` variable'), list fixed [also_check x1]
+- `unit-09-save-point/exercises/9a1900000001` — asserts — rule 1(b): `lowest` named ('Seed your `lowest` variable'), list fixed [also_check x1]; content review 1 also_check audit: +1 [also_check x2]
 - `unit-09-save-point/exercises/9a2000000001` — self-check — position counter name is prose; derived checklist matches
 - `unit-09-save-point/exercises/9a2100000001` — self-check — own names; derived checklist matches
 - `unit-09-save-point/exercises/9a2200000001` — self-check — own names; derived checklist matches
@@ -395,7 +411,7 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 
 ### unit-10-pet-simulator
 
-- `unit-10-pet-simulator/exercises/4ef1ecca` — asserts — rule 1(b): `buddy` named, class fixed [also_check x1]
+- `unit-10-pet-simulator/exercises/4ef1ecca` — asserts — rule 1(b): `buddy` named, class fixed [also_check x1]; content review 1 also_check audit: +1 [also_check x2]
 - `unit-10-pet-simulator/exercises/02e5b720` — self-check — pet variables and names are the student's own; derived checklist matches
 - `unit-10-pet-simulator/exercises/c8e092dc` — self-check — RETAG expected-output->self-check (rule 4): the canonical 3 occurs only in the heading 'Exercise 3'; the body never states it, and new_hunger is the solution's own name
 - `unit-10-pet-simulator/exercises/69aa5fc9` — self-check — status line wording and variable are the student's own; derived checklist matches
@@ -408,14 +424,14 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `unit-10-pet-simulator/exercises/4871eefe` — self-check — own pet names; derived checklist matches
 - `unit-10-pet-simulator/exercises/8968232c` — self-check — buddy and the status line are the student's own; derived checklist matches
 - `unit-10-pet-simulator/exercises/c368d34e` — self-check — RETAG asserts->self-check: the pets list ('several pets') is the student's own [requirements x5]
-- `unit-10-pet-simulator/exercises/3052f533` — expected-output — single token `10` confirmed by the body: `while buddy.happiness < 10:` with play adding 1 ends at exactly 10, so the bound fixes the printed answer [also_check x1]
-- `unit-10-pet-simulator/exercises/exercise-15-filter-into-list` — asserts — rule 1(b): `pets`, `happy_pets`, `happiness_threshold` named and fixed [also_check x2]
+- `unit-10-pet-simulator/exercises/3052f533` — expected-output — single token `10` confirmed by the body: `while buddy.happiness < 10:` with play adding 1 ends at exactly 10, so the bound fixes the printed answer [also_check x1]; content review 1 also_check audit: +1 [also_check x2]
+- `unit-10-pet-simulator/exercises/exercise-15-filter-into-list` — asserts — rule 1(b): `pets`, `happy_pets`, `happiness_threshold` named and fixed [also_check x2]; content review 1 also_check audit: +1 [also_check x3]
 - `unit-10-pet-simulator/exercises/a160c0de0001` — self-check — count name and report are the student's own; derived checklist matches
 - `unit-10-pet-simulator/exercises/a170c0de0001` — self-check — 'a total' is prose; derived checklist matches
-- `unit-10-pet-simulator/exercises/a180c0de0001` — asserts — rule 1(b): `found` flag named, pets fixed [also_check x1]
+- `unit-10-pet-simulator/exercises/a180c0de0001` — asserts — rule 1(b): `found` flag named, pets fixed [also_check x1]; content review 1 also_check audit: +4 [also_check x5]
 - `unit-10-pet-simulator/exercises/a190c0de0001` — self-check — new list name is the student's own; derived checklist matches
 - `unit-10-pet-simulator/exercises/a200c0de0001` — self-check — tracker names are the student's own; derived checklist matches
-- `unit-10-pet-simulator/exercises/a210c0de0001` — asserts — rule 1(b): `counts` named, moods fixed [also_check x1]
+- `unit-10-pet-simulator/exercises/a210c0de0001` — asserts — rule 1(b): `counts` named, moods fixed [also_check x1]; content review 1 also_check audit: +2 [also_check x3]
 - `unit-10-pet-simulator/exercises/a220c0de0001` — self-check — pet variable and counter are the student's own; derived checklist stopped before the break and report [requirements x6]
 - `unit-10-pet-simulator/exercises/a230c0de0001` — self-check — pet variable and counter are the student's own; derived checklist stopped before the report [requirements x5]
 - `unit-10-pet-simulator/exercises/a240c0de0001` — self-check — result list name is the student's own; derived checklist matches
@@ -430,7 +446,7 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `checkpoint-04-year-one-finale/checkpoint/c4000008` — self-check — rule 1(b): `loaded` named; the Question 3 file fixes it [also_check x1] (retagged at integration: depends on an earlier item's file or name)
 - `checkpoint-04-year-one-finale/checkpoint/c400000a` — self-check — rule 1(b): `loaded` named; the loaded list fixes it [also_check x2] (retagged at integration: depends on an earlier item's file or name)
 - `checkpoint-04-year-one-finale/checkpoint/c400000c` — self-check — printed format and lines list are the student's own; derived checklist matches
-- `checkpoint-04-year-one-finale/checkpoint/c400000e` — expected-output — every printed line is fixed by the statement
+- `checkpoint-04-year-one-finale/checkpoint/c400000e` — expected-output — every printed line is fixed by the statement; content review 1 also_check audit: +2 [also_check x2]
 - `checkpoint-04-year-one-finale/checkpoint/c4000010` — self-check — the printed default is the student's own; derived checklist opened with a description [requirements x2]
 
 ### project-02-grand-adventure

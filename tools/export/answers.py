@@ -550,19 +550,33 @@ def _plain_prose(text: str) -> str:
     return re.sub(r"\s+", " ", text)
 
 
-def _plain(text: str) -> str:
-    """Markdown as plain text: links, emphasis and extra whitespace go, but an inline code span keeps
-    its exact text (only its backticks go; CommonMark strips one space padding both ends)."""
-    out, position = [], 0
+def _plain_masked(text: str) -> tuple[str, list[str]]:
+    """`_plain` with each inline code span's text replaced by a placeholder, and those texts."""
+    out, codes, position = [], [], 0
     for match in CODE_SPAN.finditer(text):
         out.append(_plain_prose(text[position:match.start()]))
         code = match[2]
         if code.startswith(" ") and code.endswith(" ") and code.strip():
             code = code[1:-1]
-        out.append(code)
+        out.append(f"\ue000{len(codes)}\ue001")
+        codes.append(code)
         position = match.end()
     out.append(_plain_prose(text[position:]))
-    return "".join(out).strip()
+    return "".join(out).strip(), codes
+
+
+CODE_MARK = re.compile("\ue000(\\d+)\ue001")
+
+
+def _unmask(text: str, codes: list[str]) -> str:
+    return CODE_MARK.sub(lambda match: codes[int(match[1])], text)
+
+
+def _plain(text: str) -> str:
+    """Markdown as plain text: links, emphasis and extra whitespace go, but an inline code span keeps
+    its exact text (only its backticks go; CommonMark strips one space padding both ends)."""
+    masked, codes = _plain_masked(text)
+    return _unmask(masked, codes)
 
 
 def self_check_requirements(item: Item) -> tuple[list[str], list[str]]:
@@ -630,7 +644,10 @@ SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 
 
 def _sentences(paragraph: str) -> list[str]:
-    return [s for s in SENTENCE_END.split(_plain(paragraph)) if s]
+    """The paragraph's plain sentences. A sentence never ends inside an inline code span
+    (`print("Hi. Bye")`), so the split runs with every span masked (content review 1, [fable] 3)."""
+    masked, codes = _plain_masked(paragraph)
+    return [_unmask(s, codes) for s in SENTENCE_END.split(masked) if s]
 
 
 def statement_sentences(statement: str) -> list[str]:

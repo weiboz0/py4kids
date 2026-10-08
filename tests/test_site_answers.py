@@ -466,3 +466,30 @@ def test_also_check_on_a_self_check_item_fails(demo):
     item.heading_cell.metadata["also_check"] = ["Ask for a name"]
     assert answers.statement_tie_findings(item, "self-check") == [
         f"FAIL: {item.key}: metadata.also_check on a self-check item (use requirements)"]
+
+
+def test_sentences_never_split_inside_inline_code():
+    """[fable] 3 (plan 102 content review 1): a `.`, `!` or `?` inside an inline code span never
+    ends a checklist sentence."""
+    assert answers.statement_sentences(
+        'Ask `input("How many clues? ")`, then store it. Print `Saved. Done!` last.') == [
+        'Ask input("How many clues? "), then store it.', "Print Saved. Done! last."]
+
+
+@pytest.mark.parametrize(("book", "entry", "suffix", "sentence"), [
+    ("python-projects", "checkpoints/checkpoint-01-first-steps", "/checkpoint-05",
+     ("Write one line of Python that asks How many clues? , converts the typed answer to an "
+      "integer, and stores it in a variable named clue_count.")),
+    ("python-projects", "units/unit-09-save-point", "/0cc7f084",
+     "Print Saved space-race scores. when the save is complete."),
+    ("python-projects", "units/unit-09-save-point", "/e2692eb8",
+     "Print Saved Ada's settings. after the with block."),
+])
+def test_derived_checklists_keep_whole_sentences(book, entry, suffix, sentence):
+    """The three cited items derive whole sentences around their inline code."""
+    entry_dir = ROOT / book / entry
+    kind = "checkpoint" if entry.startswith("checkpoints/") else "unit"
+    item = next(i for i in entry_content(ROOT, book, entry_dir, kind).items
+                if i.key.endswith(suffix))
+    requirements, _ = answers.self_check_requirements(item)
+    assert sentence in requirements, requirements
