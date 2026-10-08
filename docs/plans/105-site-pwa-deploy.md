@@ -36,7 +36,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - **Service-worker requests are recorded too.** Requests made by a service worker do not reach `page.on('request')`, so the tests record at context level (`browserContext.on('request')`, with Playwright's service-worker network events enabled) on both origins. Every request during browsing, precache and update must be on the allowlist: the files the user asked to cache, or the release's own files. Each one is a body-less GET.
 - **Release identity and updates.**
   - **`release_id`** (no circularity): the build computes it as a sha256 over the sorted `(path, sha256(bytes))` list of every file in `site/dist/` and `runner/dist/`, the Pyodide runtime included, **except the one generated file that carries the id**: `release.json`, in each dist.
-    - No other file embeds the id. The service-worker scripts are byte-identical across releases unless their code changed; each page registers its worker as `/sw.js?r=<release_id>`, read from `/release.json` fetched with `cache: "no-store"`, so a new id is a new script URL and the browser installs the new worker.
+    - No other file embeds the id. The service-worker scripts are byte-identical across releases unless their code changed; each page registers its worker as `/sw.js?r=<release_id>`, read from `/release.json` fetched with `cache: "no-store"`, so a new id is a new script URL and the browser installs the new worker. If that fetch fails (offline, servers down), the page keeps the current registration: no error and no banner. Phase E's offline steps cover this (zero requests, no console error).
     - A test rebuilds unchanged inputs and gets the same id, recomputes the id from the emitted files to match `release.json`, and changes one runner file to get a different id.
   - **Cache names**, three kinds per origin:
     - app shell: `shell-<release_id>`
@@ -53,7 +53,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - **Activation is user-controlled and safe for every open page:**
     - A new worker stays *waiting* (no `skipWaiting` on install). Each open A page keeps running on A's shell and Pyodide caches, including booting **fresh exercise workers** from them.
     - "A new version is available — reload" activates B only when the reloading page is the site worker's **only** client (`clients.matchAll`). Otherwise it says "close your other py4kids tabs to update", and B waits.
-    - **Both origins move together:** the site worker, on activation, messages the runner iframe `{type: "activate", release_id}`. The runner's waiting worker activates under the same only-client rule; the runner's clients are the iframes of site pages, which are gone by then.
+    - **Both origins move together:** the **site page** (a service worker cannot reach an iframe), before it reloads, messages its runner iframe `{type: "activate", release_id}`. The runner's waiting worker activates under the same only-client rule; the runner's clients are the iframes of site pages, which are gone by then.
     - Old `shell-*` and `pyodide-*` caches are deleted in `activate`, which by construction runs only after A's clients have closed.
   - Downloaded books are re-downloaded for the new release in the background, and their status reads "updating" until confirmed.
 - **Size and count.**
@@ -163,6 +163,11 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `[FIXED]` A circular `release_id`: it now covers every dist file except `release.json` (which carries it); workers are registered by `?r=<release_id>`; a reproducibility test.
   - `[FIXED]` `skipWaiting` with clients open: B activates only when the reloading page is the sole client, coordinated across both origins via an `activate` message; a fresh exercise worker boots in an open A lesson during a pending update; the second-tab case is tested.
   - `[FIXED]` Book replacement: already folded in cd8540a (an unchanged content hash is verified and re-stamped, never refetched in place; a changed hash downloads into a new cache), plus interrupted and failed download tests.
+
+- `[fable]` **APPROVE WITH NITS** (round 3, 452f9e4): no new blocker.
+  - `[FIXED]` The offline `release.json` failure keeps the current registration silently.
+  - `[FIXED]` The site page (not the worker) sends `activate`.
+  - `[WONTFIX]` The `resume` bullet was already beside `cards` in Phase C; the reviewer read an intermediate diff.
 
 ## Content Review
 
