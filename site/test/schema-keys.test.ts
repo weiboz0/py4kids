@@ -11,6 +11,7 @@ import { slideDecks } from '../src/lib/slide-view';
 import { deckProjection, deckSummary } from '../src/lib/cards';
 import { attribution, masteryMap, masteryProjection } from '../src/lib/mastery';
 import { pageContext } from '../src/lib/page-context';
+import { entryPaths, practicePaths, practiceView, readingView, warmPipeline } from '../src/lib/entry';
 import { distinctReads, makeDeclared, Recorder, undeclaredReads } from './helpers/schema-keys';
 
 const FIXTURE = join(import.meta.dirname, 'fixtures', 'bundles', 'demo');
@@ -41,6 +42,12 @@ const CONSUMERS: ((books: LoadedBook[]) => unknown)[] = [
   (books) => books.map(masteryMap),
   (books) => books.map(masteryProjection),
   (books) => books.map((b) => b.book.entries.map((e) => pageContext(b, `/${b.id}/${e.id}/`))),
+  // Phase B: the reading view, the practice page and the code stylesheet's warm-up.
+  (books) => entryPaths(books),
+  (books) => practicePaths(books),
+  (books) => books.flatMap((b) => b.book.entries.map((e) => readingView(b, e.id))),
+  (books) => practicePaths(books).map((p) => practiceView(books.find((b) => b.id === p.book)!, p.entry)),
+  (books) => warmPipeline(books),
 ];
 
 function run(books: LoadedBook[]): void {
