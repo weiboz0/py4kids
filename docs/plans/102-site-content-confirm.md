@@ -65,6 +65,7 @@ User, 2026-10-06: "go ahead with the content plans on autopilot", and the goal "
 3. **`answer_format`** (heading-cell metadata `answer_format: {case, hint, aliases?}`):
    - Program output (`expected-output`, `predict`) stays `case: sensitive`, because Python output is case-sensitive, and needs no metadata unless the hint is misleading.
    - **Significant whitespace.** Where the statement makes whitespace part of the answer (a required tab, indentation or alignment: python-concepts unit 01 Exercise 14's `\t`), set `answer_format.whitespace: exact`. Normalisation then keeps internal whitespace, stripping only trailing spaces on each line and trailing blank lines. If even that cannot express the requirement, the item is `self-check`.
+     - Each `whitespace: exact` item's hint says how indentation is entered: "type a tab as `\t`, or with the indent key". Each such item is listed in the phase log so part C's answer box handles it.
    - ACSL short answers get `case: insensitive` exactly where the topic's canonical form is case-free:
      - hexadecimal digits
      - Boolean variable names, where the unit's rule says so
@@ -111,11 +112,12 @@ Each phase runs on its own book. Phases A–D run in four parallel worktrees, on
     - the answer model's hash recompute (`answer_model.py`, which passes only `case`)
     - `hash_vectors.json`
   - **`aliases`:** `answer_format` gains an optional `aliases` map, `{typed: canonical}`, with single-character or token keys.
-  - **`whitespace`:** `answer_format` gains an optional `whitespace: collapse|exact` (default `collapse`). `exact` strips only trailing spaces per line and trailing blank lines.
+  - **`whitespace`:** `answer_format` gains an optional `whitespace: collapse|exact` (default `collapse`). `exact` folds CRLF, strips trailing spaces on each line, and drops leading and trailing blank lines, as `collapse` does; it keeps all other whitespace (tabs, leading indentation, inner runs).
   - The bundle schema, `normalise` (aliases applied after whitespace and case), `answer_hash`, the answer model's check 4, and `hash_vectors.json` all honour both, so part C's JavaScript port follows them.
   - **`also_check`:** items gain an optional `also_check: [string]`, exported from heading-cell metadata for every kind except `self-check`.
     - It is counted by the answer model's check 2 against its statement source, like `requirements`.
-    - It is validated: each entry must be a sentence drawn from the statement, checked by the same tie rule as `requirements`.
+    - It is validated: each entry must be a sentence drawn from the statement.
+  - **The statement tie also applies to authored `requirements`.** `answers.check_texts` puts authored metadata into check 2's baseline, so the tie is the guard against a requirement copied from a solution. Both `also_check` and `requirements` entries must occur, normalised, in the item's statement text, or `site-check` FAILs.
   - Tests:
     - `^` and `↑` hash the same under `aliases: {"^": "↑"}`, and differ without the alias
     - `a\tb` and `a b` hash differently under `whitespace: exact`, and the same under `collapse`
@@ -185,6 +187,16 @@ They take items from each phase log's retag lines and from every rule-1 `expecte
   - `[FIXED]` The asserts fold over-reached: about half the asserts items are function calls with arguments the statement does not show (`u07e10a` `lcm(5, 7) == 35`). Portability is now (a) a call to a specified function, or (b) a named variable against task-fixed inputs. Also added the scripted-`input()` exclusion and its seven known items.
   - `[FIXED]` (nits) Phase 0 names all its touch points; ACSL hint authoring is sized at 130, numeric lists included; blind-solver isolation is enforced with a filtered copy and per-item pass counts; the D4 regression reason requires `plan 102 rule 2`.
 - `[sol]` **APPROVE** (round 3, 022a1b1, gpt-6-sol).
+
+### Round 4 (a2c7c3b) — CONSENSUS
+
+- `[self]` APPROVE.
+- `[sol]` **APPROVE** (gpt-6-sol): the asserts, scripted-input, fixture and answer-format rules hold on sampled items from all four books.
+- `[fable]` **APPROVE WITH NITS**: `u07e10a`, unit 01 Exercises 3, 4 and 14 and the seven scripted-input items were verified.
+  - `[FIXED]` The statement tie covers `requirements` as well as `also_check`.
+  - `[FIXED]` Each `whitespace: exact` hint says how a tab is entered, and these items are listed for part C.
+  - `[FIXED]` `exact` is fully defined.
+- `[glm]` removed from the roster (docs/content-review-gate.md, user directive 2026-10-05).
 
 ## Content Review
 
