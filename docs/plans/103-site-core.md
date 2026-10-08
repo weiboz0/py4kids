@@ -317,4 +317,24 @@ Never `git stash` in the shared tree.
 
 ## Content Review
 
+Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] removed by the user on 2026-10-05). [sol] runs gpt-6-sol, falling back to gpt-5.6-sol.
+
+### Review 1 — [fable] (2026-10-08)
+- **Verdict**: APPROVE WITH NITS. Built and browsed a copy:
+  - **Privacy:** 173 requests, 0 off-origin, 0 non-GET. The IndexedDB contents match the D11 schema, and no typed sentinel is stored. The privacy, terms and about text is accurate.
+  - **Hidden answers:** 12 hidden items across all six kinds checked, with 0 leaks in HTML, JS, JSON or the Pagefind index; 889 hidden fixture outputs scanned.
+  - **Lighthouse:** 1.0, 0.99 and 0.99. axe reports 0 serious violations.
+1. `[OPEN]` The plan's Content Review and Post-Execution Report sections are empty. Should Fix (done in the ship step).
+2. `[OPEN]` Long allow-listed code slides show no scroll cue. Nice to Have.
+3. `[OPEN]` The mastery map dominates a fresh book page (40 rows at 0%). Nice to Have.
+4. `[OPEN]` The leak test fails confusingly on Node 20: add a clear version guard and a README note. Nice to Have.
+5. `[OPEN]` Resume can land on a practice page while the catalog label implies reading. Nice to Have.
+
+### Review 1 — [sol] (2026-10-08, gpt-6-sol)
+- **Verdict**: REJECT.
+1. `[OPEN]` Leitner promotes cards that are not yet due ("Start again" can reach mastery box 3 immediately). Practice on a card that is not due must not advance its box or its mastery. Must Fix.
+2. `[OPEN]` Slide events cannot identify each slide: one block split across slides shares one key (acsl graph-theory, `l-001` ×4). Use a schema-valid per-slide identifier, and test slides split from one block. Must Fix.
+3. `[OPEN]` The a11y gate fails only on serious and critical results; it must fail on every violation carrying a WCAG 2.2 AA tag. Must Fix.
+4. `[OPEN]` Normalisation parity for `exact` and `aliases` is unverified on this branch: the Python producer and the 41 vectors come with plan 102. Should Fix: plan 102 merges first, then main is merged into 103 so the vector test covers all 41 vectors.
+
 ## Post-Execution Report
