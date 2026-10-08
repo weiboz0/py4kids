@@ -100,8 +100,8 @@ and seed-unstable. Goal 4 is therefore a **bounded go/no-go with a stop rule**, 
    epoch count (only the input order differs); SE = paired reader-level SE of the per-reader hit differences
    (reported with bootstrap 95% CI). Recipe tuning is **in scope** and bounded: per-position next-item
    loss over the whole sequence, small-std embedding init (no √dim scaling), lr / epochs ≤ 150 (fits ~10–20 s),
-   still within the §7 ceiling (1 block, dim ≤ 32, seq-len ≤ 50, CPU-deterministic). **Tuning criterion** (seeds 0–1
-   only): G4a and G4b below hold on both tuning seeds. **GO** iff, after freezing, on ≥ 2 of the 3 held-out seeds
+   still within the §7 ceiling (1 block, dim ≤ 32, seq-len ≤ 50, CPU-deterministic). **G4 tuning subcriterion**
+   (seeds 0–1 only): G4a and G4b below hold on both tuning seeds. **GO** iff, after freezing, on ≥ 2 of the 3 held-out seeds
    2–4 (evaluated once):
    G4a `sasrec_ordered − sasrec_shuffled ≥ 2 SE` and ≥ 0.02 absolute, **and** G4b `sasrec_ordered ≥ bag_cf − 1 SE`
    (parity or better on hit@10) — the honest target (the book already teaches ties, recsys-013).
@@ -224,6 +224,13 @@ Phase G is this plan's named verification phase.
   `__post_init__` validation → Phases A/B. F7 byte test hashes CI output, NEP-19 note → Phase C/Goal 1.
   F8 §6 amendment: cold exclusion, series diagnostics-only, U13/U14 on session log only → Phase 0. Knob defaults →
   Phase B.
+
+### Round 4 (plan v4 @ 8f5a06a) — CONSENSUS
+- **[self]** APPROVE.
+- **[sol]** APPROVE WITH NITS — r3 blocker RESOLVED; no seed/byte-stability contradiction (`session_seed` varies only
+  the session sub-stream). NIT "tuning criterion" defined twice → G4 part renamed "G4 tuning subcriterion".
+- **[fable]** APPROVE WITH NITS (r3, nits folded in v4; r4 edits are [sol]-requested wording only).
+**Gate result:** all three APPROVE / APPROVE WITH NITS, no open blockers → implementation may begin.
 
 ### Round 3 (plan v3 @ 4d9d6e9)
 - **[self]** APPROVE — concur with [sol] r3 blocker.
