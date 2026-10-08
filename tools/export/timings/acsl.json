@@ -1,0 +1,438 @@
+{
+ "book": "acsl",
+ "items": {
+  "acsl/checkpoint-01-contest-1-practice/checkpoint/e44078f9": {
+   "cases": 10,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:8c784815774e11b8e2cb935d25c869060622066ade327bb245dbd4694e37a993",
+   "measured_ms": 91
+  },
+  "acsl/checkpoint-02-contest-2-practice/checkpoint/e48f5127": {
+   "cases": 10,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:2bf760421473ec306347d767a13902825aa31408aa715c1172cc56bea75533bf",
+   "measured_ms": 16
+  },
+  "acsl/checkpoint-03-contest-3-practice/checkpoint/8e43f595": {
+   "cases": 10,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:91aa0c55365c327dea93cd4af1543eb82fd808ab7d716fe61bea86e18c381b3d",
+   "measured_ms": 60
+  },
+  "acsl/checkpoint-04-contest-4-practice/checkpoint/2196753b": {
+   "cases": 8,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:94676093744441253b6e41d4e1a6be19bdcf81a2d1277ab483463d4bb2478c8b",
+   "measured_ms": 31
+  },
+  "acsl/unit-00-acsl-foundations/exercises/11f3abc1": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:09f0f57c6036d549522a81951458fbef590aef08cc130cd59959b83a0aaec92c",
+   "measured_ms": 15
+  },
+  "acsl/unit-00-acsl-foundations/exercises/18eca952": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a50d5db09f1d86b8025584b31bd5aaf2bdf13d130a8f3cc73020fefa8b7d9532",
+   "measured_ms": 14
+  },
+  "acsl/unit-00-acsl-foundations/exercises/1c6142c9": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:d232575779f96a92a3a06f98d21abf23be1a423a8e79af08b9fe88e2a59adfa3",
+   "measured_ms": 14
+  },
+  "acsl/unit-00-acsl-foundations/exercises/36167514": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:e65b519626203bd75949e77e02db963ef682d1c1798bf47ac53171eeca7e1833",
+   "measured_ms": 14
+  },
+  "acsl/unit-00-acsl-foundations/exercises/3c8111d7": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7e98f7f8967ae7760ca13e4c8154ee3f458dd4469573d16ff4e8d72c01b13e62",
+   "measured_ms": 24
+  },
+  "acsl/unit-00-acsl-foundations/exercises/5d48a286": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7aed1ed77d3dda494b8e220c8ba706a6ba904961a9209d3d2ac6f20e612cc7ca",
+   "measured_ms": 14
+  },
+  "acsl/unit-00-acsl-foundations/exercises/8a4028a4": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:ec17f4882b5696abcc11187ed26ec74914447070e564a81e5c2efbb7d1076caa",
+   "measured_ms": 14
+  },
+  "acsl/unit-00-acsl-foundations/exercises/9fe063e5": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:d6b0b9aa2a6315c0409199553ca948b3c9fa1bde90851f55d5368e5caa85895a",
+   "measured_ms": 14
+  },
+  "acsl/unit-00-acsl-foundations/exercises/c1650251": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:09c4a4becfb21049f737b6f29e6ca87f18b3aae56e14dad7d3656dbe851433d3",
+   "measured_ms": 14
+  },
+  "acsl/unit-00-acsl-foundations/exercises/e261d5d8": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:2de513bfc27d948b18ff06c3e3190f41069504a108bb668304736e4f992eab7a",
+   "measured_ms": 14
+  },
+  "acsl/unit-01-computer-number-systems/exercises/e-068": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:34db46d945009dc74ef67060d79f4c216d1cb76ab5c47377b43256b5031216a5",
+   "measured_ms": 14
+  },
+  "acsl/unit-01-computer-number-systems/exercises/e-070": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:33b727aa6769ba4f2ea6f4e26448d68f0e4a133e7e0bf38bc9a49120f4ea56bb",
+   "measured_ms": 14
+  },
+  "acsl/unit-01-computer-number-systems/exercises/e-072": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:843dc68dd469884fe742acbf13fc9e01c6013ed45e8f25b5f9f0dd10f9e2b79c",
+   "measured_ms": 69
+  },
+  "acsl/unit-02-recursive-functions/exercises/16adc68e": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:bf2ecd6ca28da4c43d74bc724e4a391306ad3594a3accb96daab5e5b190614ea",
+   "measured_ms": 16
+  },
+  "acsl/unit-02-recursive-functions/exercises/4001d04c": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:e76d30fbe59c03fa2aa9c3e61482eec9e14c63ee762c5016dbf3626ef5a16b7d",
+   "measured_ms": 14
+  },
+  "acsl/unit-02-recursive-functions/exercises/63f51404": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:c2899d88e6382cee2046e359e8a9b2b8767c7bf83026d72f96f688acee042532",
+   "measured_ms": 14
+  },
+  "acsl/unit-02-recursive-functions/exercises/69eef4bb": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:ac6dee292c9901be51e02758ace12e857579c44a190ba50d382f6488a5224e8a",
+   "measured_ms": 24
+  },
+  "acsl/unit-02-recursive-functions/exercises/a70d36fe": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:2178d6c29d333ef2329a51f3116087cd597739e4cc5949a7edf274c17c7c1c5f",
+   "measured_ms": 14
+  },
+  "acsl/unit-02-recursive-functions/exercises/c3fe911e": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:cecf97b8b6d773240e405f7a2be5b0f5018706117041a2f7910b43096df457a6",
+   "measured_ms": 14
+  },
+  "acsl/unit-03-wdtpd-branching/exercises/8629bc34": {
+   "cases": 8,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:6080e4a9885e98720464593117ac87f5721cef99c2325768e5ed24d68ebad426",
+   "measured_ms": 14
+  },
+  "acsl/unit-03-wdtpd-branching/exercises/fa8f523d": {
+   "cases": 8,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:5a9ba5fc305d71b9e938f831c9932898a043cec5680dc93564839ef53b8c31ff",
+   "measured_ms": 15
+  },
+  "acsl/unit-04-prefix-infix-postfix/exercises/e-032": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:997d6b6330b478d2d5a5cb98aee743a216a82d97c0136af30a8411dee38a5f54",
+   "measured_ms": 14
+  },
+  "acsl/unit-04-prefix-infix-postfix/exercises/e-034": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:285afccdbe14670fdaea3a02061da3ec4b79e1aacd01b98ae1a13c5cdb03dc9b",
+   "measured_ms": 14
+  },
+  "acsl/unit-04-prefix-infix-postfix/exercises/e-042": {
+   "cases": 9,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:5f4b3183cb4ed00047b6550bd62fd5145e2fff21f9ae586f4c5e43bbeeacca9e",
+   "measured_ms": 14
+  },
+  "acsl/unit-04-prefix-infix-postfix/exercises/e-046": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:e057556b2fb504e685ed35821b12941d81d9d3a61b9561c683fb404ea4d3cb15",
+   "measured_ms": 14
+  },
+  "acsl/unit-05-bit-string-flicking/exercises/e-026": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:4fd9603773601e62f8d0c75297aacaee6e72acebda8c2527d5e94a7a32d965ec",
+   "measured_ms": 14
+  },
+  "acsl/unit-05-bit-string-flicking/exercises/e-028": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7a8ffb8147f6a498100388c407daf2bd96cf4a0ddaade014951bd019f58d39b8",
+   "measured_ms": 14
+  },
+  "acsl/unit-05-bit-string-flicking/exercises/e-038": {
+   "cases": 8,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:d257edbb00ad2f63bc4d4a23aafb4fc45e4218f97ae2a97cea3869432d9be0ee",
+   "measured_ms": 57
+  },
+  "acsl/unit-05-bit-string-flicking/exercises/e-042": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:b2dc2e525fe64955675311e5c80177fe2c089d4121107ecb9279f85dcc7d63a6",
+   "measured_ms": 15
+  },
+  "acsl/unit-06-wdtpd-looping/exercises/60eb1dca": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:8685ef10b1f4a8058f1276ed604d56adc6fc672cfd2c3cae50afd23d4ebd3560",
+   "measured_ms": 19
+  },
+  "acsl/unit-06-wdtpd-looping/exercises/93a42355": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:31b2ad30809e8ebd391e6ad60c617a11bcca2f35ae5b0bcf177c1df54b50858f",
+   "measured_ms": 16
+  },
+  "acsl/unit-06-wdtpd-looping/exercises/9ccd01ab": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:8cf278b169750a8b305471e4e563af07b3dffa11e7e14121f3aae5a9c009f5e4",
+   "measured_ms": 15
+  },
+  "acsl/unit-07-lisp/exercises/534096c6": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:0cc21c4c29894181080c1f6e103e82d3bf8d285ae3fd3e7daaee130d4d9df1bb",
+   "measured_ms": 16
+  },
+  "acsl/unit-07-lisp/exercises/77163cb4": {
+   "cases": 13,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:f413fee1f34d9f9c2511598ad6165017a57808773cad12473e97d9d174683f1e",
+   "measured_ms": 16
+  },
+  "acsl/unit-07-lisp/exercises/97012381": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a11e7b4e9c19d0f467ad23bf5dc96a50b01c35de5fff96b73891dafa237b94a9",
+   "measured_ms": 16
+  },
+  "acsl/unit-07-lisp/exercises/cc0952ba": {
+   "cases": 3,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:6e832eb86988a8ffcf08bc9ced545311a169a55848a2318c0435004127b13334",
+   "measured_ms": 16
+  },
+  "acsl/unit-08-boolean-algebra/exercises/e-036": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:bd06d31e767c288231df0037ed78f9752e812471a3816dbb75643c7f07725fe7",
+   "measured_ms": 16
+  },
+  "acsl/unit-08-boolean-algebra/exercises/e-038": {
+   "cases": 8,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:4d345f96b46ea5f6c6b9d1de976500b120b5213bc08d48949f7234119ed4f009",
+   "measured_ms": 16
+  },
+  "acsl/unit-08-boolean-algebra/exercises/e-050": {
+   "cases": 8,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:72865c58119c1c6b824e7dc56eaf1db65b09c459f35fd0fa411bb9eb14a12eae",
+   "measured_ms": 17
+  },
+  "acsl/unit-08-boolean-algebra/exercises/e-054": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:5caaa5571990bd5dd3c5110151e9279d606ebeec250e09c53d6a9b19e92bf7b0",
+   "measured_ms": 16
+  },
+  "acsl/unit-09-data-structures/exercises/e-014": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:af586c2f31b6b1852d5ff3dc5589113546e02245e1a31575732e822a8ddd0404",
+   "measured_ms": 16
+  },
+  "acsl/unit-09-data-structures/exercises/e-016": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:97e7d4a8d40225962fc21b238af0daebc9bb4db865694f33bfa6898e6c5b82e2",
+   "measured_ms": 16
+  },
+  "acsl/unit-09-data-structures/exercises/e-032": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:855336781076e6723e48a8bb39f81a440456777281daa314949c2abe36f2b493",
+   "measured_ms": 16
+  },
+  "acsl/unit-09-data-structures/exercises/e-034": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:794f734b35c92d0e7736320c49f64f70f9f15f1cfbbe3029f6c24bfc940f024e",
+   "measured_ms": 15
+  },
+  "acsl/unit-09-data-structures/exercises/e-042": {
+   "cases": 12,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:b52a6dcaa8c1e4e5baf033c598ee9d68d8476e767012108ba61091e83f9cf5e1",
+   "measured_ms": 19
+  },
+  "acsl/unit-10-wdtpd-arrays/exercises/63ede1d0": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:6e6bbf12b5ba15d610a82558508855cf37720de631808dbc615063b52be22af9",
+   "measured_ms": 17
+  },
+  "acsl/unit-10-wdtpd-arrays/exercises/76cd9bb9": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:f3bc2410b712031fd84ce7223c6cbe09c20b49b3e477f2a36487713c4779c2dd",
+   "measured_ms": 17
+  },
+  "acsl/unit-10-wdtpd-arrays/exercises/a55eadbb": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:b18e231c3e602ca21d3938afaa1deca277aa2ac61dad4ef6f5fac3cf161caf2f",
+   "measured_ms": 16
+  },
+  "acsl/unit-11-fsas-regular-expressions/exercises/4e2439c4": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:7502ca03692e7952574e75166f03805a210a369410554d8c7ca7e4db25555080",
+   "measured_ms": 16
+  },
+  "acsl/unit-11-fsas-regular-expressions/exercises/5f561f5c": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:35e8866355fd65ee73149c868b5549a09dd91e05636607a8a2539ca2d0157d4e",
+   "measured_ms": 16
+  },
+  "acsl/unit-11-fsas-regular-expressions/exercises/bc325c67": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:1b4901460e31add15a1ea2c45b9264a24c55b3bbacce47bef2624fa30e741a24",
+   "measured_ms": 16
+  },
+  "acsl/unit-12-graph-theory/exercises/e-034": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:bf232f1e5af6775a818fb3807f701117f74f7729da0ef3b2d13ed0609bd7c3f3",
+   "measured_ms": 16
+  },
+  "acsl/unit-12-graph-theory/exercises/e-036": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:d3e237f115f8fbfc9a612174944eb4abebc22eddda57acac45c646533dfce0a6",
+   "measured_ms": 16
+  },
+  "acsl/unit-12-graph-theory/exercises/e-046": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:e3c10bccfbfc4367df5b5d5fcc10e50c2c508c28c922a8a90c0509f0ac64eda9",
+   "measured_ms": 16
+  },
+  "acsl/unit-12-graph-theory/exercises/e-052": {
+   "cases": 5,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:026c89044ed4e3997ddf4d8d3ff0641a2c57e634278917af8a1e8fda8bb04654",
+   "measured_ms": 16
+  },
+  "acsl/unit-13-digital-electronics/exercises/e-020": {
+   "cases": 4,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:efe47c46e845885238ae6927ee058ef465e28ef7013460cc5d49116173bad1d2",
+   "measured_ms": 16
+  },
+  "acsl/unit-13-digital-electronics/exercises/e-022": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:13a01219415e347556422a23ffcb36a4e2b8a2ea5432355c4c3356a59f781351",
+   "measured_ms": 17
+  },
+  "acsl/unit-13-digital-electronics/exercises/e-024": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:99922e17da3c2968ee025883bbb9cd0429ce3cf7978ae9fe3544ee92a56bcc5f",
+   "measured_ms": 16
+  },
+  "acsl/unit-13-digital-electronics/exercises/e-036": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:5c5d2cef821cbee91c292ba4d2013de4c9ce036b4c0911b72f585a9c346ab470",
+   "measured_ms": 15
+  },
+  "acsl/unit-13-digital-electronics/exercises/e-044": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:d4fbcbd09808cd6b19f153a06f6e83133b6d01d9a08aa1d64fbec142cbb789cd",
+   "measured_ms": 15
+  },
+  "acsl/unit-14-wdtpd-strings/exercises/04282687": {
+   "cases": 9,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:142fff178d439f64b666f00478c4213b0c069a072bb0d6c1e57bc5cfdb8ec013",
+   "measured_ms": 16
+  },
+  "acsl/unit-14-wdtpd-strings/exercises/22ad4d5d": {
+   "cases": 8,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:75a125bc04786cbd3659b6ac88f5ddc5560c73f4ce297c3de95f4e204467c546",
+   "measured_ms": 16
+  },
+  "acsl/unit-14-wdtpd-strings/exercises/44940476": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:daca027d5bf885cbb19ca43371b032dc0c592e5d63947906a211b8765a960da3",
+   "measured_ms": 16
+  },
+  "acsl/unit-15-assembly-language/exercises/2468c666": {
+   "cases": 8,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:2ba82519a8ae67acbf5260ab2c5758984663b63044172acaa771037ae6207e39",
+   "measured_ms": 15
+  },
+  "acsl/unit-15-assembly-language/exercises/6df28308": {
+   "cases": 8,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:c3b714b395a699d8f99926d2449311084aa9e68d4a017215870229c9acdef64d",
+   "measured_ms": 16
+  },
+  "acsl/unit-15-assembly-language/exercises/a22bb998": {
+   "cases": 7,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:a7f433896a4067e715f86c63aa36ea843c0348a23b2aaa6ca68dd52a52ffc4dc",
+   "measured_ms": 16
+  },
+  "acsl/unit-15-assembly-language/exercises/b9df026e": {
+   "cases": 6,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:73a5ba2fae73174c806e772e63525f1090335239fd3880609b5d470f6fc5c123",
+   "measured_ms": 16
+  },
+  "acsl/unit-15-assembly-language/exercises/cd7889f5": {
+   "cases": 11,
+   "cpu_ms": 100,
+   "fingerprint": "sha256:6e6610093e1981cad4a00217a24ac7d7f4a6e5479cfe70ff2cfccbd979c162b9",
+   "measured_ms": 17
+  }
+ },
+ "version": 1
+}

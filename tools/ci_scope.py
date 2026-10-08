@@ -11,7 +11,7 @@ when the change touches it:
 - when the change set cannot be computed (no `origin/main`, not a git checkout), every book renders.
 
 `--site` (plan 103 Phase A) scopes the learning-website build the same way: it renders when the
-change touches `site/`, `tools/`, `scripts/`, `books.yaml`, `.nvmrc`, `pyproject.toml`, `uv.lock`,
+change touches `site/`, `runner/`, `tools/`, `scripts/`, `books.yaml`, `.nvmrc`, `pyproject.toml`, `uv.lock`,
 or the root of any book whose `books.yaml` entry has `site: true` (the site keys on that flag, never
 on a book id).
 
@@ -30,7 +30,7 @@ import yaml
 BASE = 'origin/main'
 SHARED_DIRS = ('tools/', 'scripts/')
 SHARED_FILES = ('books.yaml', 'pyproject.toml', 'uv.lock')
-SITE_DIRS = ('site/', *SHARED_DIRS)
+SITE_DIRS = ('site/', 'runner/', *SHARED_DIRS)
 SITE_FILES = ('books.yaml', '.nvmrc', 'pyproject.toml', 'uv.lock')
 
 
@@ -90,7 +90,7 @@ def decide_site(roots: list[str], changed: list[str], all_books: bool = False) -
     if own:
         return True, f'site book changed: {_examples(own)}'
     books = ', '.join(prefixes) or 'none'
-    return False, ('no change under site/, tools/, scripts/, books.yaml, .nvmrc, pyproject.toml, '
+    return False, ('no change under site/, runner/, tools/, scripts/, books.yaml, .nvmrc, pyproject.toml, '
                    f'uv.lock or a site book ({books}) since {BASE}')
 
 

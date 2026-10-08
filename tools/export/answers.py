@@ -14,7 +14,8 @@ is read here and nowhere else in `tools/export/`. What leaves this module is:
   `released_answers`, `shipped_asserts`, `check_texts`), which are never written into a bundle.
 
 Programs run in a temporary copy of the entry's git-tracked files, with stdin from `/dev/null`,
-`PYTHONHASHSEED=0` and a timeout, so a run never touches the repo tree or reads untracked scratch.
+`PYTHONHASHSEED=0` (1 on the expected-output rule's second run) and a timeout, so a run never
+touches the repo tree or reads untracked scratch.
 """
 
 from __future__ import annotations
@@ -22,7 +23,9 @@ from __future__ import annotations
 import ast
 import builtins
 import functools
+import hashlib
 import re
+import resource
 import shutil
 import subprocess
 import sys
@@ -35,7 +38,7 @@ import nbformat
 
 from tools.books import book_flag, book_path, publication_config, site_config
 from tools.fake_turtle import imports_turtle
-from tools.judge import ANSWER_LINE, _fixture_pairs
+from tools.judge import ANSWER_LINE, JUDGE_TIMEOUT_S, REPO_ROOT, _fixture_pairs, outputs_match
 from tools.publish import (
     ITEM,
     SOLUTION_SOURCE,
@@ -47,12 +50,16 @@ from tools.publish import (
     item_groups,
     project_sections,
     solution_assets,
+    student_answer_sources,
     student_answer_text,
     unit_challenges,
 )
+from tools.turtle_figure import turtle_segments
+from tools.turtle_real import real_programs
 
 from .normalise import WHITESPACE_MODES, answer_hash, normalise
 from .probe import sandbox_env
+from .timing import TimingCache
 
 if TYPE_CHECKING:  # pragma: no cover
     from .items import Item
@@ -92,8 +99,9 @@ def tracked_paths(directory: Path) -> tuple[str, ...]:
     return tuple(sorted(name for name in names if (Path(directory) / name).is_file()))
 
 
-def _run_once(entry_dir: Path, source: str, timeout_s: float) -> RunResult:
+def _run_once(entry_dir: Path, source: str, timeout_s: float, hash_seed: int = 0) -> RunResult:
     env = sandbox_env()
+    env["PYTHONHASHSEED"] = str(hash_seed)
     with tempfile.TemporaryDirectory(prefix="py4kids-site-run-") as tmp:
         work = Path(tmp) / Path(entry_dir).name
         work.mkdir()
@@ -120,10 +128,12 @@ def run_python(entry_dir: Path, source: str, attempt: int = 0,
                timeout_s: float = RUN_TIMEOUT_S) -> RunResult:
     """Run `source` once in a fresh temporary copy of the entry's tracked files.
 
-    stdin is `/dev/null`, `PYTHONHASHSEED=0`, no display. `attempt` separates deliberate repeat runs
-    (the expected-output rule runs a solution twice) in the per-process cache.
+    stdin is `/dev/null`, no display, and `PYTHONHASHSEED=<attempt>`. `attempt` separates deliberate
+    repeat runs (the expected-output rule runs a solution twice) in the per-process cache, and its
+    distinct hash seed exposes output that depends on set or dict-of-str iteration order, which
+    differs between browser (Pyodide) workers.
     """
-    return _run_once(Path(entry_dir), source, timeout_s)
+    return _run_once(Path(entry_dir), source, timeout_s, attempt)
 
 
 def clear_caches() -> None:
@@ -513,11 +523,73 @@ def sample_input(statement: str) -> str | None:
     return fence[1] if fence else None
 
 
-def fixtures_check(root: Path, book: str, item: Item) -> tuple[dict, list[str]]:
+def solver_fingerprint(solver: Path, pairs: list[tuple[int, Path, Path]]) -> str:
+    """sha256 over the solver's bytes and every fixture pair's (the timing cache's staleness key)."""
+    digest = hashlib.sha256()
+    for name, data in [("solver", Path(solver).read_bytes()),
+                       *((f"{n}.{part}", path.read_bytes()) for n, inp, outp in pairs
+                         for part, path in (("in", inp), ("out", outp)))]:
+        digest.update(name.encode("utf-8") + b"\0" + str(len(data)).encode("ascii") + b"\0")
+        digest.update(data)
+    return "sha256:" + digest.hexdigest()
+
+
+def item_fingerprint(entry_dir: Path, stem: str) -> str | None:
+    """The fingerprint of the solver `assets/<stem>.py` and its fixtures, or None without one (the
+    answer model's timing tie)."""
+    assets = Path(entry_dir) / "assets"
+    if not (assets / f"{stem}.py").is_file():
+        return None
+    pairs = [(int(inp.stem), inp, outp)
+             for inp, outp in _fixture_pairs(assets / stem, Path(entry_dir).name, stem, [])
+             if inp.stem.isdigit()]
+    return solver_fingerprint(assets / f"{stem}.py", sorted(pairs))
+
+
+MEASURE_REPEATS = 3
+
+
+def _case_cpu_ms(script: Path, inp: Path, outp: Path, line_exact: bool, label: str) -> float:
+    """One case's child CPU time (user + system, ms), run exactly as `tools/judge.py`'s
+    `_run_case` runs it; the output must be judged correct."""
+    before = resource.getrusage(resource.RUSAGE_CHILDREN)
+    try:
+        result = subprocess.run([sys.executable, str(script)],
+                                input=inp.read_text(encoding="utf-8"), text=True,
+                                capture_output=True, timeout=JUDGE_TIMEOUT_S, cwd=REPO_ROOT,
+                                check=False)
+    except subprocess.TimeoutExpired as error:
+        raise ValueError(f"FAIL: {label}: solver exceeded {JUDGE_TIMEOUT_S}s on {inp.name}") from error
+    after = resource.getrusage(resource.RUSAGE_CHILDREN)
+    if (result.returncode != 0 or not result.stdout.strip()
+            or not outputs_match(result.stdout, outp.read_text(encoding="utf-8"),
+                                 line_exact=line_exact)):
+        raise ValueError(f"FAIL: {label}: solver fails its fixture {inp.name}; cannot measure")
+    return 1000 * ((after.ru_utime - before.ru_utime) + (after.ru_stime - before.ru_stime))
+
+
+def measure_solver(solver: Path, pairs: list[tuple[int, Path, Path]], line_exact: bool,
+                   label: str, repeats: int = MEASURE_REPEATS) -> tuple[float, int]:
+    """(the reference solver's maximum CPU ms across the cases, the number of cases); each case
+    is the minimum of `repeats` runs, which drops scheduler noise."""
+    worst = 0.0
+    for _n, inp, outp in pairs:
+        worst = max(worst, min(_case_cpu_ms(solver, inp, outp, line_exact, label)
+                               for _ in range(repeats)))
+    return worst, len(pairs)
+
+
+def fixtures_check(root: Path, book: str, item: Item,
+                   timings: TimingCache | None = None) -> tuple[dict, list[str]]:
     pairs = fixture_pairs(root, book, item)
     if not pairs:
         raise ValueError(f"FAIL: {item.key}: check-fixtures needs a solver and fixture pairs")
     stem = solver_stem(item)
+    timings = timings if timings is not None else TimingCache(root, book)
+    solver = Path(item.entry_dir) / "assets" / f"{stem}.py"
+    line_exact = book_flag(root, book, "acsl")
+    cpu_ms = timings.cpu_ms(item.key, solver_fingerprint(solver, pairs),
+                            lambda: measure_solver(solver, pairs, line_exact, item.key))
     budget = site_config(root, book).fixture_budget_kb * 1024
     sample = sample_input(item.statement_source)
     wanted = None if sample is None else normalise(sample, case="sensitive")
@@ -532,8 +604,8 @@ def fixtures_check(root: Path, book: str, item: Item) -> tuple[dict, list[str]]:
             over.append(n)
     notes = [] if sample_seen else ["fixtures: no pair matches the statement's Sample Input"]
     notes.extend(f"fixtures: case {n} over the {budget // 1024} KB budget" for n in over)
-    match = "line" if book_flag(root, book, "acsl") else "token"
-    return {"cases": cases, "match": match, "over_budget": over}, notes
+    match = "line" if line_exact else "token"
+    return {"cases": cases, "match": match, "over_budget": over, "cpu_ms": cpu_ms}, notes
 
 
 # --- self-check ------------------------------------------------------------------------------
@@ -690,12 +762,13 @@ SINGLE_NUMBER = re.compile(r"[-+]?\d+(?:\.\d+)?")
 SINGLE_TOKEN_NOTE = "expected-output: single-token output"
 
 
-def _check(root: Path, book: str, item: Item, kind: str) -> tuple[dict, list[str]]:
+def _check(root: Path, book: str, item: Item, kind: str,
+           timings: TimingCache | None = None) -> tuple[dict, list[str]]:
     from .classify import confirmed_kind  # classify imports this module
 
     notes: list[str] = []
     if kind == "fixtures":
-        body, notes = fixtures_check(root, book, item)
+        body, notes = fixtures_check(root, book, item, timings)
     elif kind in ("answer", "predict", "expected-output"):
         canonical = canonical_text(item, kind)
         fmt, notes = answer_format(item, canonical)
@@ -741,11 +814,39 @@ def is_released(item: Item) -> bool:
 
 
 def answer_fields(root: Path, book: str, item: Item) -> dict:
-    """`answer_visibility` (+ `answer_md`, the Student Book appendix text, for odd unit exercises)."""
+    """`answer_visibility` (+ `answer_md`, the Student Book appendix text, for odd unit exercises,
+    and `answer_figures` when that answer draws with turtle)."""
     if is_released(item):
-        return {"answer_visibility": "after-attempt",
-                "answer_md": student_answer_text(item.entry_dir, item.number, _lesson_heading(root, book))}
+        fields = {"answer_visibility": "after-attempt",
+                  "answer_md": student_answer_text(item.entry_dir, item.number,
+                                                   _lesson_heading(root, book))}
+        figures = answer_figures(item.entry_dir, item.number)
+        if figures:
+            fields["answer_figures"] = figures
+        return fields
     return {"answer_visibility": "none"}
+
+
+def answer_figures(entry_dir: Path, number: int) -> list[dict]:
+    """The turtle drawings the Student Book appendix prints for odd unit Exercise `number`, as
+    segments (`turtle_segments`), in `_answer_blocks`' order: each turtle real program with a sample
+    input, then each printed solution asset that imports turtle. Read only through
+    `student_answer_sources`, as `answer_md` is; the site draws these in place of the dropped TikZ."""
+    groups, assets = student_answer_sources(Path(entry_dir))
+    group = next((g for g in groups if g["number"] == number), None)
+    if group is None:
+        return []
+    out = []
+    for program, sample in real_programs(group):
+        if imports_turtle(program) and sample is not None:
+            out.append({"caption": "Drawing for the sample input: " + ", ".join(sample.splitlines()),
+                        "segments": turtle_segments(program, stdin=sample + "\n")})
+    for path in assets.get(number, []):
+        source = path.read_text(encoding="utf-8")
+        if "import turtle" in source or "from turtle import" in source:
+            out.append({"caption": "Drawing made by the program above",
+                        "segments": turtle_segments(source)})
+    return out
 
 
 # --- the hidden corpora (Phase F's answer-model checks; data only, never bundled) -------------

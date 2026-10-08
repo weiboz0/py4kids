@@ -187,8 +187,8 @@ def test_solution_source_listing_fails(site_root, tmp_path, monkeypatch, smuggle
     """A solution source named in any item's `files` stops the export (the writer asserts it)."""
     real = bundle_module.export_item
 
-    def leaky(root, book, item):
-        exported = real(root, book, item)
+    def leaky(root, book, item, *rest):
+        exported = real(root, book, item, *rest)
         if item.key.endswith("/u1e01"):
             exported.data["files"] = [*exported.data["files"], smuggled]
         return exported
@@ -203,8 +203,8 @@ def test_untracked_listed_file_fails(site_root, tmp_path, monkeypatch):
     (site_root / "demo" / "units" / "unit-01-demo" / "assets" / "loose.py").write_text("x = 1\n")
     real = bundle_module.export_item
 
-    def loose(root, book, item):
-        exported = real(root, book, item)
+    def loose(root, book, item, *rest):
+        exported = real(root, book, item, *rest)
         if item.key.endswith("/u1e01"):
             exported.data["files"] = [*exported.data["files"], "files/unit-01-demo/assets/loose.py"]
         return exported
@@ -239,8 +239,8 @@ def test_duplicate_key_across_kinds_fails(site_root, tmp_path, monkeypatch):
     """Items join the key union: an item keyed like a lesson block is a duplicate id."""
     real = bundle_module.export_item
 
-    def clash(root, book, item):
-        exported = real(root, book, item)
+    def clash(root, book, item, *rest):
+        exported = real(root, book, item, *rest)
         if item.key.endswith("/u1e01"):
             exported.data["key"] = "demo/unit-01-demo/lesson/l1c3"
         return exported
@@ -265,8 +265,8 @@ def test_missing_id_fails(site_root, tmp_path):
 def test_schema_error_fails(site_root, tmp_path, monkeypatch):
     real = bundle_module.export_item
 
-    def bad(root, book, item):
-        exported = real(root, book, item)
+    def bad(root, book, item, *rest):
+        exported = real(root, book, item, *rest)
         if item.key.endswith("/u1e01"):
             exported.data["surprise"] = 1
         return exported
@@ -343,7 +343,7 @@ def git(root: Path, *args: str) -> None:
 def test_site_check_cache(site_root, monkeypatch):
     """Committed, clean paths reuse build/site-check/<book>/findings.json; a dirty tree recomputes."""
     (site_root / ".gitignore").write_text("build/\n")
-    (site_root / "tools").mkdir()
+    (site_root / "tools").mkdir(exist_ok=True)  # the demo timing cache is under tools/
     (site_root / "tools" / "x.py").write_text("")
     git(site_root, "add", "-A")
     git(site_root, "commit", "-q", "-m", "fixture")

@@ -13,6 +13,7 @@ import { deckProjection, deckSummary } from '../src/lib/cards';
 import { attribution, masteryMap, masteryProjection } from '../src/lib/mastery';
 import { pageContext } from '../src/lib/page-context';
 import { entryPaths, practicePaths, practiceView, readingView, warmPipeline } from '../src/lib/entry';
+import { answerProjection, bundleFiles, checkProjection, itemRoutes, lessonRunProjection } from '../src/lib/checks';
 import { distinctReads, makeDeclared, Recorder, undeclaredReads } from './helpers/schema-keys';
 
 const FIXTURE = join(import.meta.dirname, 'fixtures', 'bundles', 'demo');
@@ -52,6 +53,11 @@ const CONSUMERS: ((books: LoadedBook[]) => unknown)[] = [
   (books) => books.flatMap((b) => b.book.entries.map((e) => readingView(b, e.id))),
   (books) => practicePaths(books).map((p) => practiceView(books.find((b) => b.id === p.book)!, p.entry)),
   (books) => warmPipeline(books),
+  // Plan 104 Phase B: the check, answer and lesson-run projections and the served files.
+  (books) => itemRoutes(books).map((r) => checkProjection(r.book, r.item)),
+  (books) => itemRoutes(books).map((r) => answerProjection(r.item)),
+  (books) => books.flatMap((b) => b.entries.map((e) => lessonRunProjection(b, e))),
+  (books) => books.map(bundleFiles),
 ];
 
 function run(books: LoadedBook[]): void {
@@ -72,6 +78,17 @@ describe('declared', () => {
     expect(declared('entry_file', unit, ['lesson', 'blocks', 0], 'output')).toBe(true); // optional, absent
     expect(declared('entry_file', unit, ['cards', 1], 'distractors')).toBe(true);
     expect(declared('entry_file', unit, ['cards', 0], 'distractors')).toBe(false); // a predict card
+  });
+
+  it('declares the keys of a data map (`answer_format.aliases`), within any `propertyNames` enum', () => {
+    const checkpoint = structuredClone(raw('entries/checkpoint-01-demo.json')) as unknown as {
+      items: { check: { answer_format: Record<string, unknown> } }[];
+    };
+    checkpoint.items[0]!.check.answer_format.aliases = { '^': '↑' };
+    const format = ['items', 0, 'check', 'answer_format'];
+    expect(declared('entry_file', checkpoint, format, 'aliases')).toBe(true);
+    expect(declared('entry_file', checkpoint, [...format, 'aliases'], '^')).toBe(true);
+    expect(declared('entry_file', checkpoint, format, 'synonyms')).toBe(false);
   });
 });
 

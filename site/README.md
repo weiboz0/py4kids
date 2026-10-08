@@ -85,3 +85,48 @@ pnpm -C site dev                               # local preview of the exported b
 - **Browser tests (Phase F):** `pnpm -C site e2e` runs Playwright (`e2e/*.spec.ts`) on Chromium against `dist/`, served by `scripts/serve.mjs`, which applies `dist/_headers` with the Cloudflare Pages semantics (`test/serve.test.ts`).
   They cover a journey per book (catalog, lesson, self-check, slides by keyboard, cards, search, persistence after reload), axe on every template in both colour schemes, the no-network proofs (request recording, the build audit of absolute URLs, the headers and zero CSP violations) and, last and alone, Lighthouse budgets on the catalog, a lesson and the card deck (median of three runs).
   Playwright's own Chromium is used when downloaded (`pnpm -C site exec playwright install chromium`), else a system Chromium; `PY4KIDS_CHROMIUM` overrides both.
+
+## The Python runner (plan 104)
+
+Student code never runs on the site's origin. `runner/` (a sibling app: Node 24, pnpm, exact pins, its own lockfile) is the runner page that the site embeds in `<iframe sandbox="allow-scripts allow-same-origin" allow="cross-origin-isolated">` on its own origin.
+
+- **Origins:** configured only in `runner/origins.json` (development: site `http://127.0.0.1:4391`, runner `http://localhost:4392`); `PY4KIDS_SITE_ORIGIN` / `PY4KIDS_RUNNER_ORIGIN` override them at build time. The site build fills the CSP's `frame-src` in `dist/_headers`; the runner build fills its `frame-ancestors` and the one parent origin it accepts.
+- **Build:** `scripts/build-site.sh` also runs `pnpm -C runner build` (to `runner/dist/`): the page, a content-hashed worker with `runner/py/harness.py` and the `fake_turtle` port bundled in, and the self-hosted Pyodide 0.27.8 under `pyodide/0.27.8/`.
+- **Envelopes:** `runner/schema/request.schema.json` and `reply.schema.json`; `runner/src/envelope.ts` is their hand-written twin used on both sides (`pnpm -C runner test` proves they agree with Ajv).
+- **Client:** `src/lib/runner-client.ts` (`connectRunner`, `RunnerClient`: `ping`, `run`, `interrupt`, `reset`) binds replies by origin, iframe window and pending id, and times out as "runner unavailable".
+- **Serve both:** `node scripts/serve-both.mjs` (the e2e config starts both servers itself). `e2e/runner.spec.ts` drives the real client, iframe and workers.
+- **Harness tests:** `uv run pytest tests/test_runner_harness.py` (CPython: `outputs_match` parity with `tools/judge.py`, stdin and `EOFError`, grading, the turtle port and rule).
+
+### Checks, Run and answers (plan 104 Phase B)
+
+- **Projections** (`src/lib/checks.ts`; shapes and rules in `src/lib/check-model.ts`), each a small same-origin file fetched only when needed, never bundle JSON:
+  - `/<book>/<entry>/practice/check/<anchor>.json` (every item, fetched on Check or Run): the salted hash and answer format (`answer`, `predict`, `expected-output`), the shipped asserts split one statement each (for the runner only, never rendered), or the fixture cases' file URLs, sample first, with `skipped` for `over_budget` cases and the per-case `budget_ms` (from `check.cpu_ms` when present, else 5 s).
+  - `/<book>/<entry>/practice/answer/<anchor>.json`: only for odd unit exercises (`answer_visibility: after-attempt`): `answer_md` rendered (`{=latex}` dropped) with `answer_figures` drawn as SVG. It is fetched only after a genuine attempt: a Check run, a submitted answer, or, for a self-check item, a Run plus the checklist marked done.
+  - `/<book>/<entry>/run.json`: a lesson's runnable blocks (code, prelude, stdin, files).
+  - `/<book>/files/<entry>/<path>`: the bundle's files (lesson assets, fixture pairs), byte for byte.
+  - The leak tests allow an item's hash and asserts only in its own check file, an odd answer only in its own answer file, and a hidden `.out` only as its served file; a predict item's program is allowed nowhere.
+- **Islands:** `src/scripts/practice.ts` (editors, Run, Check, Stop, answer boxes, gating), `src/scripts/lesson-run.ts` (Run, Reset and input boxes in the reading view; one session per lesson, prelude replay), `src/scripts/run-support.ts` (the page's one runner connection, opened on the first Run or Check).
+- **Editor:** CodeMirror 6 (`src/scripts/editor.ts`), loaded by dynamic import when an editor nears the screen and mounted in a shadow root, so `style-mod` uses constructable stylesheets (zero CSP violations: `e2e/checks.spec.ts`). The page's `<textarea>` holding the starter is the fallback.
+- **Progress:** each Check writes an `exercise`, `checkpoint` or `project` event with `detail.cases`, and each lesson Run a `lesson-run` event; code and typed answers go only to the on-device `attempts` store (database version 2).
+- `test/schema-keys.test.ts` lists the optional keys the site reads before their schema change lands here (`PENDING_KEYS`: plan 102's `also_check`, `aliases` and `whitespace`; Phase C's `cpu_ms` and `answer_figures`); drop each once it is declared.
+
+### Verification (plan 104 Phase D)
+
+`pnpm -C site e2e` runs the browser suites below (with part B's journeys, axe, headers and Lighthouse); `pnpm -C site e2e:solvers` runs the slow reference-solver parity on its own.
+`scripts/ci-local.sh` runs both in its site step.
+
+- **Design 012 §3 runner acceptance**, one named test per row:
+  - stdin, including `input()` at end of input: `runner.spec.ts` "input() reads stdin, and at the end of input raises EOFError as in CPython"; in the reading view, `checks.spec.ts` "the reading view: …input() reads the box".
+  - interrupt on a hang: `runner.spec.ts` "a hang is stopped by the SharedArrayBuffer interrupt…" (`interrupts: "sab"`) and "a loop that swallows the interrupt is stopped by the grace restart"; the restart path with isolation disabled: `runner-unisolated.spec.ts` (`interrupts: "restart"`).
+  - recursion depth and float formatting: `runner.spec.ts` "§3 recursion depth and float formatting match CPython" (20 expressions; CPython's output is computed at test time with `uv run python`).
+  - function-assert isolation: `acceptance.spec.ts` "§3 function-assert isolation…" (six asserts, mixed verdicts, no source in the DOM or the stores); also `runner.spec.ts` "checks grade fixtures…, asserts…" and `checks.spec.ts` "asserts: a verdict per test, never the source".
+  - short-answer hashing and normalisation: `acceptance.spec.ts` "§3 short-answer hashing and normalisation: every hash_vectors.json vector…" (each pinned vector typed into a real answer box under the vector's own item key and hash; blank vectors are refused).
+  - turtle directives: `acceptance.spec.ts` "§3 turtle directives…" (closed, open path with and without `# turtle-check: open-path`, no pen-down move, 10,000 moves).
+  - mounted asset files: `acceptance.spec.ts` "§3 mounted asset files…" (a real asset block runs and draws; a cell reads the mounted file).
+  - cumulative lesson state: `acceptance.spec.ts` "§3 cumulative lesson state: … again after a forced worker restart".
+- **Reference solvers:** `solvers.setup.ts` gets `tools/judge.py`'s verdict on every case (`e2e/helpers/solver_verdicts.py`, the judge's own walk and `_run_case`); `solvers.spec.ts` runs every `assets/{l,ex,q,p}N.py` of usaco-bronze and acsl in Pyodide through the runner (one fresh worker per case, the book's matching mode, the site's budget rule) in four parallel shards and requires the same verdict for every case. Solvers and fixtures are read from the repo, never shipped.
+- **Isolation** (`isolation.spec.ts`): the runner iframe cannot read the site's IndexedDB or localStorage; the runner ignores a wrong-origin message and a valid-looking one from a popup on the site origin; the site drops a reply from a wrong origin, from a second runner-origin iframe, with an unknown id, and an invalid envelope; COEP and `crossOriginIsolated` in the site, runner page and worker: `runner.spec.ts` first test.
+- **Sessions:** reset (`runner.spec.ts` "reset clears a lesson session"); the prelude replay after a forced restart (`acceptance.spec.ts`, above); two checks share nothing (`runner.spec.ts` "two checks share no process state…"); two fixture cases of one item share nothing (`acceptance.spec.ts` "§3 process state…").
+- **Grading UI and gating:** `checks.spec.ts` (both matching modes with `outputs_match` parity, the skipped case, the sample-only reveal, `expected-output`, `predict`, `aliases`, `whitespace: exact`, `self-check`, `also_check` (skipped until plan 102 merges), the turtle rule, odd and even answers, the odd self-check attempt).
+- **Navigation, CSP, network:** `isolation.spec.ts` "navigation…" (twice: with the site CSP, which blocks the navigation, and with the CSP bypassed, so the other page loads and still receives nothing); "zero CSP violations on the runner page…"; "no network…" (only the two local origins, files of `dist/` and `runner/dist/`, no code or answers in any request).
+- **Workers and boot:** at most three workers (`runner.spec.ts`); cold and warm boot under Chromium CPU throttling ×4, with the unthrottled numbers beside them, are printed and attached as test annotations (`runner.spec.ts` "cold and warm Pyodide boot…").

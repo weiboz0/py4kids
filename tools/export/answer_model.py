@@ -32,9 +32,12 @@
 Every string field check 2 does not count is held by a named tie check (`TIES`, `tie_of`): keys
 name cells of mapped notebooks, ids are the syllabus's, paths name copied files, enums and hashes
 validate against the schema, titles and labels are the sources' headings, tags are their cell's,
-turtle figure segments equal the replay of the block's own code, `concepts` is the registry's
+turtle figure segments equal the replay of the block's own code (an odd answer's `answer_figures`, captions
+included, equal the replay of its released answer programs), `concepts` is the registry's
 exported projection, divisions and `settings` are the book's config, and `pdfs` are the release's
-links. Fields that repeat another field by design are also skipped by check 1: a concept card's
+links. A `fixtures` item's `check.cpu_ms` (a number, so never counted) is tied to the committed
+timing cache (`tools/export/timings/<book>.json`): it equals the item's entry, whose fingerprint is
+the current solver's and fixtures'. Fields that repeat another field by design are also skipped by check 1: a concept card's
 `definition_md` and `term` must equal its glossary record's and its `distractors` must be glossary
 terms, a predict item's `check.program` must be the item's own starter or statement code, and an
 asserts item's `check.functions` must be names its asserts call.
@@ -69,6 +72,7 @@ from . import answers
 from .bundle import UNRELEASED, _settings, dumps, pdf_links, schema_findings
 from .concepts import Registry, book_registry
 from .lesson import ROUTE_TYPES
+from .timing import CACHE_DIR, TimingCache
 
 # Every string field of the bundle is either counted by check 2 or held by a named tie check (plan 101
 # content review 2, [sol] 3): no string field is silently left out. The counted fields are the
@@ -89,7 +93,9 @@ TIES = {
     "release": "the release tag is `unreleased` or `pdfs-<date>` and `pdfs` are its links",
     "settings": "`settings` is the book's publication and ACSL season config",
     "routes": "a lesson block's route is a `route_code` route of the block's type",
-    "figures": "a turtle figure equals the replay of the block's own (counted) code",
+    "figures": "a turtle figure equals the replay of the block's own (counted) code; an odd "
+               "answer's figures (segments and captions) equal the replay of its released answer "
+               "programs",
     "tags": "a block's tags are tags of its source cell",
     "registry": "`concepts` is the registry's exported projection; concept references are its ids",
     "divisions": "an item's divisions are the season ladder's",
@@ -99,6 +105,7 @@ TIES = {
     "assert functions": "assert function names are called by the item's counted asserts",
     "glossary cards": "a concept card's term and definition are its glossary record's and its "
                       "distractors are glossary terms",
+    "timings": "a fixtures item's cpu_ms is its current entry in the committed timing cache",
 }
 FIELD_TIES = {
     "key": "keys", "block": "keys", "prelude": "keys",
@@ -110,7 +117,7 @@ FIELD_TIES = {
     "mode": "schema",
     "tag": "release", "content_hash": "schema",
     "lesson_heading": "settings", "acsl_divisions": "settings",
-    "route": "routes", "color": "figures", "tags": "tags",
+    "route": "routes", "color": "figures", "caption": "figures", "tags": "tags",
     "concept": "registry", "concepts": "registry", "category": "registry",
     "division": "divisions",
     "title": "titles", "subtitle": "titles", "label": "titles",
@@ -911,6 +918,38 @@ class AnswerModel:
             if block["figure"] != replay:
                 out.append(f"FAIL: {block['key']}: turtle figure differs from the replay of its "
                            f"code")
+        for record, _index, item in _items(bundle):
+            entry_dir = self.entry_dirs.get(record["id"])
+            expected = []
+            if (entry_dir is not None and item.get("answer_visibility") == "after-attempt"
+                    and isinstance(item.get("number"), int)):
+                try:
+                    expected = json.loads(json.dumps(answers.answer_figures(entry_dir,
+                                                                            item["number"])))
+                except Exception as error:  # noqa: BLE001 - any replay failure is a mismatch
+                    expected = f"replay failed: {error}"
+            if item.get("answer_figures", []) != expected:
+                out.append(f"FAIL: {item['key']}: answer_figures differ from the replay of its "
+                           f"released answer programs")
+        return out
+
+    def _tie_timings(self, bundle: Bundle) -> list[str]:
+        cache = TimingCache(self.root, self.book)
+        out = []
+        for record, _index, item in _items(bundle):
+            check = item["check"]
+            if check.get("kind") != "fixtures":
+                continue
+            entry_dir = self.entry_dirs.get(record["id"])
+            stem = FIXTURE.match(check["cases"][0]["in_file"].split("/", 2)[2])[1]
+            found = cache.entry(item["key"])
+            fingerprint = (answers.item_fingerprint(entry_dir, stem)
+                           if entry_dir is not None else None)
+            if found is None or check.get("cpu_ms") != found.get("cpu_ms"):
+                out.append(f"FAIL: {item['key']}: check.cpu_ms is not its entry in "
+                           f"{CACHE_DIR}/{self.book}.json")
+            elif fingerprint is None or found.get("fingerprint") != fingerprint:
+                out.append(f"FAIL: {item['key']}: stale timing in {CACHE_DIR}/{self.book}.json")
         return out
 
     def _tie_tags(self, bundle: Bundle) -> list[str]:

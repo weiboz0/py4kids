@@ -105,6 +105,10 @@ for (const [book, plan] of Object.entries(BOOKS)) {
     await page.locator('[data-deck-next]').click();
     await page.keyboard.press('ArrowRight');
     await at(3);
+    // The resume position is written after the slide event settles; leave only once it is stored.
+    await expect
+      .poll(async () => (await stores(page)).resume?.find((r) => r.book === book)?.href)
+      .toBe(`/${book}/${plan.lesson}/slides/#3`);
 
     // 5. The cards: a typed predict card (answered with the sentinel) and a choice concept card.
     await page.goto(`/${book}/`);

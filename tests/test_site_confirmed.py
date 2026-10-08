@@ -359,13 +359,12 @@ def also_check_findings(items, expected: dict[str, str]) -> list[str]:
 
 
 def tab_alias_findings(items) -> list[str]:
-    """A `whitespace: exact` hint that says a tab is typed as `\\t` needs the `\\t` alias."""
+    """A `whitespace: exact` item grades program output, so a typed `\\t` must not count as a tab."""
     findings = []
     for item in items:
         fmt = item.heading_cell.metadata.get("answer_format") or {}
-        if (fmt.get("whitespace") == "exact" and "\\t" in fmt.get("hint", "")
-                and (fmt.get("aliases") or {}).get("\\t") != "\t"):
-            findings.append(f"{item.key}: hint mentions \\t but no tab alias")
+        if fmt.get("whitespace") == "exact" and "\t" in (fmt.get("aliases") or {}).values():
+            findings.append(f"{item.key}: exact-whitespace item aliases a tab")
     return findings
 
 
@@ -383,10 +382,10 @@ def test_review1_items_list_their_required_method():
         f"{key}: no also_check entry with 'dictionary method'"]
 
 
-def test_tab_hints_carry_the_tab_alias():
+def test_exact_whitespace_items_do_not_alias_a_tab():
     items = book_items("python-concepts")
     assert tab_alias_findings(items) == []
     item = next(i for i in items if i.key.endswith("/u01e14a"))
-    fmt = {k: v for k, v in item.heading_cell.metadata["answer_format"].items() if k != "aliases"}
+    fmt = dict(item.heading_cell.metadata["answer_format"], aliases={"\\t": "\t"})
     assert tab_alias_findings([_broken(item, answer_format=fmt)]) == [
-        f"{item.key}: hint mentions \\t but no tab alias"]
+        f"{item.key}: exact-whitespace item aliases a tab"]

@@ -9,51 +9,12 @@
  */
 import { readdirSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { watchCsp } from './helpers/csp';
 import { CSP, parseHeaders } from '../test/helpers/headers';
 import { BASE_URL, DIST } from './helpers/env';
 import { search, settle, TEMPLATES } from './helpers/site';
 import { readFileSync } from 'node:fs';
-
-interface Violation {
-  directive: string;
-  blocked: string;
-  source: string;
-  sample: string;
-  page: string;
-}
-
-/** Record every CSP violation of the context's pages (events and console reports alike). */
-async function watchCsp(context: BrowserContext): Promise<{ violations: Violation[]; console: string[] }> {
-  const violations: Violation[] = [];
-  const consoleReports: string[] = [];
-  await context.exposeBinding('__py4kidsCsp', ({ page }, v: Omit<Violation, 'page'>) => {
-    violations.push({ ...v, page: page.url() });
-  });
-  await context.addInitScript(() => {
-    const report = (e: SecurityPolicyViolationEvent) =>
-      (window as unknown as { __py4kidsCsp(v: object): void }).__py4kidsCsp({
-        directive: e.violatedDirective,
-        blocked: e.blockedURI,
-        source: `${e.sourceFile}:${e.lineNumber}`,
-        sample: e.sample,
-      });
-    document.addEventListener('securitypolicyviolation', report, true);
-  });
-  const watch = (page: Page) => {
-    page.on('console', (msg) => {
-      if (/Content Security Policy|Refused to/i.test(msg.text())) consoleReports.push(`${page.url()}: ${msg.text()}`);
-    });
-    page.on('worker', (worker) =>
-      worker.on('console', (msg) => {
-        if (/Content Security Policy|Refused to/i.test(msg.text())) consoleReports.push(`worker ${worker.url()}: ${msg.text()}`);
-      }),
-    );
-  };
-  context.pages().forEach(watch);
-  context.on('page', watch);
-  return { violations, console: consoleReports };
-}
 
 function htmlFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((d) =>
@@ -64,7 +25,14 @@ function htmlFiles(dir: string): string[] {
 test('every HTML page is served with the CSP and the other _headers headers', async ({ request }) => {
   const expected = parseHeaders(readFileSync(join(DIST, '_headers'), 'utf-8')).get('/*')!;
   expect(expected.get('content-security-policy')).toBe(CSP);
-  expect([...expected.keys()].sort()).toEqual(['content-security-policy', 'permissions-policy', 'referrer-policy', 'x-content-type-options']);
+  expect([...expected.keys()].sort()).toEqual([
+    'content-security-policy',
+    'cross-origin-embedder-policy',
+    'cross-origin-opener-policy',
+    'permissions-policy',
+    'referrer-policy',
+    'x-content-type-options',
+  ]);
   const pages = htmlFiles(DIST).map((f) => `/${relative(DIST, f).split(sep).join('/')}`.replace(/index\.html$/, ''));
   expect(pages.length).toBeGreaterThan(200);
   const failures: string[] = [];
@@ -119,7 +87,19 @@ for (const [name, path] of Object.entries(PAGES)) {
     await page.waitForLoadState('load');
     // Violation events are queued as tasks: give any late one time to arrive.
     await page.waitForTimeout(300);
-    expect(await page.locator('[style]').evaluateAll((els) => els.map((e) => e.outerHTML.slice(0, 120)))).toEqual([]);
+    // The code editor (plan 104) sets element.style through CSSOM inside its own shadow root, which
+    // CSP does not govern (and the violation listener below would report otherwise); no markup
+    // anywhere carries a style attribute.
+    expect(
+      await page.locator('[style]').evaluateAll((els) =>
+        els
+          .filter((e) => {
+            const root = e.getRootNode();
+            return !(root instanceof ShadowRoot && root.host.classList.contains('code-editor'));
+          })
+          .map((e) => e.outerHTML.slice(0, 120)),
+      ),
+    ).toEqual([]);
     expect(csp.violations).toEqual([]);
     expect(csp.console).toEqual([]);
   });

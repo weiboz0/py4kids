@@ -37,6 +37,7 @@ const TYPES = {
   '.gif': 'image/gif',
   '.webp': 'image/webp',
   '.wasm': 'application/wasm',
+  '.zip': 'application/zip',
   '.txt': 'text/plain; charset=utf-8',
   '.xml': 'application/xml',
   '.webmanifest': 'application/manifest+json',

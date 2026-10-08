@@ -4,8 +4,9 @@
  * functions (the schema-key test runs them over a recording proxy).
  *
  * Hidden answers stay hidden: nothing here reads `answer_md`, `check.source`, `check.hash`,
- * `check.program` or a fixture's `out_file`. The poisoned-bundle leak test proves the built site
- * carries none of them.
+ * `check.program` or a fixture's `out_file`. The checks' own projections (`checks.ts`) carry what
+ * a check needs, in per-item JSON files fetched on Check; the poisoned-bundle leak test proves the
+ * pages carry none of it and those files carry only their own item's.
  */
 
 import type { LoadedBook, LoadedEntry } from './bundle';
@@ -18,6 +19,8 @@ import { deckProjection } from './cards';
 import { bookPage, glossaryView, referenceView } from './book-page';
 import { slideDecks } from './slide-view';
 import { buildSlides } from './slides';
+import { answerProjection, answerUrl, checkUrl, isRunnable, itemAnchors, itemRoutes, runUrl, shipsAnswer } from './checks';
+import { eventKindOf, type CheckKind, type EventKind } from './check-model';
 import type { Block, Check, EntryKind, Item } from './types';
 
 export { ISSUES_URL, REPORT_LABEL, reportHref };
@@ -56,8 +59,13 @@ export function lastHeading(md: string): string | undefined {
   return headings.at(-1);
 }
 
+export interface RenderOptions {
+  /** A lesson block a reader can run: the run island (src/scripts/lesson-run.ts) adds Run. */
+  runnable?: boolean;
+}
+
 /** One block as HTML. `heading` names the nearest heading above it (for a figure's label). */
-export function renderBlock(block: Block, heading: string): string {
+export function renderBlock(block: Block, heading: string, options: RenderOptions = {}): string {
   const type = block.type;
   const label = BLOCK_LABELS[type];
   const parts: string[] = [];
@@ -68,21 +76,24 @@ export function renderBlock(block: Block, heading: string): string {
     parts.push(`<div class="io"><p class="io-label">Sample input</p>${renderOutput(block.sample_input)}</div>`);
   }
   if (block.output !== undefined && block.output !== '') {
-    parts.push(`<div class="io io-output"><p class="io-label">Output</p>${renderOutput(block.output)}</div>`);
+    // Unseeded randomness: the stored output is one run's (plan 104, D6).
+    const label = block.probe === 'mismatch' ? 'Output (may differ when you run it)' : 'Output';
+    parts.push(`<div class="io io-output"><p class="io-label">${label}</p>${renderOutput(block.output)}</div>`);
   }
   if (type === 'turtle-figure' && block.figure && block.figure.length > 0) {
     parts.push(`<figure class="turtle">${turtleSvg(block.figure, `Drawing for ${heading}`)}</figure>`);
   }
   const classes = ['block', `block-${type}`];
   if (PANEL_TYPES.has(type)) classes.push('panel', `panel-${type}`);
-  return `<div class="${classes.join(' ')}" data-key="${escapeHtml(block.key)}">\n${parts.join('\n')}\n</div>`;
+  const run = options.runnable && isRunnable(block) ? ` data-run${block.stdin ? ' data-stdin' : ''}` : '';
+  return `<div class="${classes.join(' ')}" data-key="${escapeHtml(block.key)}"${run}>\n${parts.join('\n')}\n</div>`;
 }
 
 /** Blocks in order, each labelled for its figure by the nearest heading above it. */
-export function renderBlocks(blocks: Block[], fallbackHeading: string): string[] {
+export function renderBlocks(blocks: Block[], fallbackHeading: string, options: RenderOptions = {}): string[] {
   let heading = fallbackHeading;
   return blocks.map((block) => {
-    const html = renderBlock(block, heading);
+    const html = renderBlock(block, heading, options);
     if (block.md !== undefined) heading = lastHeading(block.md) ?? heading;
     return html;
   });
@@ -137,6 +148,8 @@ export interface ReadingView {
   /** A lesson's blocks, or (for a checkpoint or project, which has none) its intro. */
   blocks: string[];
   hasLesson: boolean;
+  /** The lesson's run data (`run.json`) when it has a runnable block; null otherwise. */
+  runHref: string | null;
   /** `/<book>/<entry>/slides/` when the lesson has slides (exactly the slide player's routes). */
   slidesHref: string | null;
   practiceHref: string | null;
@@ -159,8 +172,9 @@ export function readingView(book: LoadedBook, entryId: string): ReadingView {
     entryId,
     kind: entry.record.kind,
     title,
-    blocks: renderBlocks(lesson ? lesson.blocks : data.intro, title),
+    blocks: renderBlocks(lesson ? lesson.blocks : data.intro, title, { runnable: lesson !== null }),
     hasLesson: lesson !== null,
+    runHref: lesson !== null && lesson.blocks.some(isRunnable) ? runUrl(book.id, entryId) : null,
     // Exactly the entries `slideDecks` builds a deck for (the slide route set).
     slidesHref: lesson !== null && buildSlides(lesson.blocks).length > 0 ? slidesHref(book.id, entryId) : null,
     practiceHref: itemCount > 0 ? practiceHref(book.id, entryId) : null,
@@ -188,7 +202,7 @@ export interface PracticeItem {
   divisions: string[];
   before: string[];
   statement: string;
-  /** Read-only starter code, highlighted; null when the item has none. */
+  /** Read-only starter code, highlighted; null when the item has none or it opens in the editor. */
   starter: string | null;
   /** "How this is checked". */
   checkLine: string;
@@ -196,8 +210,25 @@ export interface PracticeItem {
   formatHint: string | null;
   /** A self-check item's requirements, as a checklist; null for every other kind. */
   selfCheck: Requirement[] | null;
-  /** Every kind but self-check: checking arrives in part C. */
-  checkingSoon: boolean;
+  /** `also_check`: what the automatic check cannot see, as a self-check list beside it. */
+  alsoCheck: Requirement[] | null;
+  /** The check kind (the island's controls follow it). */
+  checkKind: CheckKind;
+  /** The student writes code (an editor prefilled with `starterCode`, Run and Check). */
+  editor: boolean;
+  /** The editor's initial text: the item's starter. */
+  starterCode: string;
+  /** A typed answer (answer, predict); `exact`: whitespace is kept, Tab types a tab. */
+  typed: boolean;
+  exact: boolean;
+  /** The turtle rule applies. */
+  turtle: boolean;
+  /** The check projection's URL (fetched when Check is pressed). */
+  checkHref: string;
+  /** The answer projection's URL: an odd unit exercise only, fetched after a genuine attempt. */
+  answerHref: string | null;
+  /** The D11 event kind its checks write. */
+  eventKind: EventKind;
   reportHref: string;
 }
 
@@ -243,20 +274,19 @@ export function checkLine(check: Check): string {
   }
 }
 
-const slug = (text: string) =>
-  text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') || 'item';
-
 const divisionName = (id: string) => id.charAt(0).toUpperCase() + id.slice(1);
 
-function practiceItem(item: Item, anchor: string, contentHash: string): PracticeItem {
+const EDITOR_KINDS = new Set<CheckKind>(['fixtures', 'asserts', 'expected-output', 'self-check']);
+
+function practiceItem(book: string, entry: string, item: Item, anchor: string, contentHash: string): PracticeItem {
   const check = item.check;
-  const selfCheck =
-    check.kind === 'self-check'
-      ? check.requirements.map((text, index) => ({ id: `${anchor}-req-${index}`, index, html: renderInline(text) }))
-      : null;
+  const requirements = (texts: string[], prefix: string) =>
+    texts.map((text, index) => ({ id: `${anchor}-${prefix}-${index}`, index, html: renderInline(text) }));
+  const selfCheck = check.kind === 'self-check' ? requirements(check.requirements, 'req') : null;
+  const also = item.also_check;
+  const alsoCheck = check.kind !== 'self-check' && also !== undefined && also.length > 0 ? requirements(also, 'also') : null;
+  const editor = EDITOR_KINDS.has(check.kind);
+  const typedFormat = check.kind === 'answer' || check.kind === 'predict' ? check.answer_format : null;
   // Narrow by kind, never with `in`: the schema-key test records every probe.
   const hint =
     check.kind === 'answer' || check.kind === 'expected-output' || check.kind === 'predict'
@@ -271,11 +301,20 @@ function practiceItem(item: Item, anchor: string, contentHash: string): Practice
     divisions: item.division.map(divisionName),
     before: renderBlocks(item.before, item.label),
     statement: renderMarkdown(item.statement_md),
-    starter: item.starter.trim() === '' ? null : highlightCode(item.starter, 'python'),
+    starter: editor || item.starter.trim() === '' ? null : highlightCode(item.starter, 'python'),
     checkLine: renderInline(checkLine(check)),
     formatHint: hint || null,
     selfCheck,
-    checkingSoon: check.kind !== 'self-check',
+    alsoCheck,
+    checkKind: check.kind,
+    editor,
+    starterCode: editor ? item.starter : '',
+    typed: typedFormat !== null,
+    exact: typedFormat?.whitespace === 'exact',
+    turtle: check.turtle,
+    checkHref: checkUrl(book, entry, anchor),
+    answerHref: shipsAnswer(item) ? answerUrl(book, entry, anchor) : null,
+    eventKind: eventKindOf(item.kind),
     reportHref: reportHref(item.key, contentHash),
   };
 }
@@ -285,13 +324,8 @@ export function practiceView(book: LoadedBook, entryId: string): PracticeView {
   const data = entry.data;
   const kind = entry.record.kind;
   const contentHash = book.book.release.content_hash;
-  const used = new Set<string>();
-  const items = data.items.map((item, i) => {
-    let anchor = slug(item.label || `item ${i + 1}`);
-    if (used.has(anchor)) anchor = `${anchor}-${i + 1}`;
-    used.add(anchor);
-    return practiceItem(item, anchor, contentHash);
-  });
+  const anchors = itemAnchors(data.items);
+  const items = data.items.map((item, i) => practiceItem(book.id, entryId, item, anchors[i]!, contentHash));
   return {
     bookId: book.id,
     bookTitle: book.book.book.title,
@@ -313,12 +347,13 @@ export function practiceView(book: LoadedBook, entryId: string): PracticeView {
 /**
  * Render every Markdown and code string any page shows, so the highlighter's class registry is
  * complete before `/code.css` is written (pages and the stylesheet may build in any order).
- * Covers the reading and practice pages, the slides, the glossary, the reference and the cards;
- * never `answer_md` (part B renders none).
+ * Covers the reading and practice pages, the slides, the glossary, the reference, the cards and
+ * the odd answers' projections (plan 104).
  */
 export function warmPipeline(books: LoadedBook[]): void {
   for (const path of entryPaths(books)) readingView(bookOf(books, path.book), path.entry);
   for (const path of practicePaths(books)) practiceView(bookOf(books, path.book), path.entry);
+  for (const route of itemRoutes(books)) answerProjection(route.item);
   for (const book of books) {
     bookPage(book);
     glossaryView(book);

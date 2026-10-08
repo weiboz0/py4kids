@@ -109,17 +109,26 @@ describe('practice page', () => {
     const [item] = practiceView(book, 'unit-01-demo').items;
     expect(item!.anchor).toBe('exercise-1');
     expect(item!.selfCheck).toEqual([{ id: 'exercise-1-req-0', index: 0, html: 'It prints your name.' }]);
-    expect(item!.checkingSoon).toBe(false);
-    expect(item!.starter).toContain('class="shiki');
+    // A code item opens its starter in the editor (plan 104), not as read-only code.
+    expect(item!.editor).toBe(true);
+    expect(item!.starter).toBeNull();
+    expect(item!.starterCode).not.toBe('');
+    expect(item!.checkKind).toBe('self-check');
+    expect(item!.typed).toBe(false);
+    expect(item!.checkHref).toBe('/demo/unit-01-demo/practice/check/exercise-1.json');
     expect(item!.statement).toBe('<p>Print your name.</p>\n');
   });
 
-  it('says checking arrives soon for every other kind, with its format hint', () => {
+  it('gives a typed item an answer box with its format hint', () => {
     const view = practiceView(book, 'checkpoint-01-demo');
     expect(view.heading).toBe('Questions');
     const [item] = view.items;
     expect(item!.selfCheck).toBeNull();
-    expect(item!.checkingSoon).toBe(true);
+    expect(item!.typed).toBe(true);
+    expect(item!.editor).toBe(false);
+    expect(item!.exact).toBe(false);
+    expect(item!.eventKind).toBe('checkpoint');
+    expect(item!.answerHref).toBeNull();
     expect(item!.formatHint).toBe('Type a number.');
     expect(item!.starter).toBeNull();
     expect(item!.checkLine).toContain('comparing your answer');
@@ -129,7 +138,7 @@ describe('practice page', () => {
     const base = { turtle: false, confirmed: true };
     const fmt = { case: 'insensitive' as const, hint: '' };
     const lines = ([
-      { ...base, kind: 'fixtures', match: 'line', over_budget: [], cases: [
+      { ...base, kind: 'fixtures', match: 'line', over_budget: [], cpu_ms: 100, cases: [
         { n: 1, in_file: 'a', out_file: 'b', sample: true },
         { n: 2, in_file: 'c', out_file: 'd', sample: false },
       ] },

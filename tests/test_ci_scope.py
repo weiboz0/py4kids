@@ -129,6 +129,7 @@ SITE_ROOTS = ['python-projects', 'acsl']
 @pytest.mark.parametrize('changed, render, reason', [
     (['site/src/pages/index.astro'], True, 'site input changed'),
     (['site/pnpm-lock.yaml'], True, 'site input changed'),
+    (['runner/src/worker.ts'], True, 'site input changed'),
     (['site/ids/acsl.json'], True, 'site input changed'),
     (['tools/export/bundle.py'], True, 'site input changed'),
     (['scripts/build-site.sh'], True, 'site input changed'),
@@ -152,7 +153,7 @@ def test_decide_site_all_books_and_reason():
     assert ci_scope.decide_site(SITE_ROOTS, [], all_books=True) == (True, '--all-books')
     render, reason = ci_scope.decide_site(SITE_ROOTS, ['docs/a.md'])
     assert not render
-    assert reason == ('no change under site/, tools/, scripts/, books.yaml, .nvmrc, pyproject.toml, '
+    assert reason == ('no change under site/, runner/, tools/, scripts/, books.yaml, .nvmrc, pyproject.toml, '
                       'uv.lock or a site book (python-projects/, acsl/) since origin/main')
 
 

@@ -458,11 +458,12 @@ class ItemExport:
     notes: list[str]
 
 
-def export_item(root: Path, book: str, item: Item) -> ItemExport:
+def export_item(root: Path, book: str, item: Item, timings=None) -> ItemExport:
+    """`timings` is the export's `TimingCache` (`check.cpu_ms`); None reads the committed cache."""
     from .classify import item_kind
 
     kind, reason = item_kind(root, book, item)
-    check, notes = answers._check(root, book, item, kind)
+    check, notes = answers._check(root, book, item, kind, timings)
     data = {
         "key": item.key, "kind": item.kind, "number": item.number, "label": item.label,
         "title": item.title, "division": item.division, "stretch": item.stretch,

@@ -71,7 +71,7 @@ export function fakeBook(id: string, concepts: Concept[], entries: FakeEntry[]):
     id,
     dir: `/fake/${id}`,
     book: {
-      schema_version: '1.0.0',
+      schema_version: '1.1.0',
       book: { id, title: 'Fake', subtitle: 'A fake book', flags: { acsl: false, judge: false } },
       release: { tag: 'unreleased', content_hash: `sha256:${'a'.repeat(64)}` },
       entries: records,
@@ -84,7 +84,7 @@ export function fakeBook(id: string, concepts: Concept[], entries: FakeEntry[]):
     entries: entries.map((e, i) => ({
       record: records[i]!,
       data: {
-        schema_version: '1.0.0',
+        schema_version: '1.1.0',
         entry: { id: e.id, kind: 'unit', title: records[i]!.title },
         lesson: { blocks: e.blocks ?? [] },
         intro: [],

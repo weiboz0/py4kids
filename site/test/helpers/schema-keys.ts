@@ -6,7 +6,8 @@
  *
  * A key counts as declared when some subschema that applies to the instance (following `$ref`,
  * `allOf`, the valid `oneOf`/`anyOf` branches and the `if`/`then`/`else` branch taken) lists it
- * under `properties`. Reading an absent optional key that is declared is fine; reading a key the
+ * under `properties`, or is a map whose keys are data (an `additionalProperties` schema, as
+ * `answer_format.aliases`). Reading an absent optional key that is declared is fine; reading a key the
  * schema never declares is a failure, present or not.
  */
 
@@ -103,6 +104,18 @@ export function makeDeclared(schemaPath?: string) {
   };
 
   const properties = (ptr: string): Node => (resolvePointer(schema, ptr).properties as Node | undefined) ?? {};
+  /** A map whose keys are data (`additionalProperties` holds a schema, e.g. `answer_format.aliases`). */
+  const isMap = (ptr: string): boolean => {
+    const extra = resolvePointer(schema, ptr).additionalProperties;
+    return extra !== undefined && extra !== false;
+  };
+  /** A map key is declared when `propertyNames` allows it (an `enum`, as the PDF links, or any name). */
+  const mapKey = (ptr: string, key: string): boolean => {
+    if (!isMap(ptr)) return false;
+    const names = resolvePointer(schema, ptr).propertyNames as Node | undefined;
+    return !Array.isArray(names?.enum) || (names.enum as unknown[]).includes(key);
+  };
+  const declares = (ptr: string, key: string): boolean => key in properties(ptr) || mapKey(ptr, key);
 
   return function declared(definition: string, raw: unknown, pointer: Pointer, key: string): boolean {
     let nodes = [`/$defs/${definition}`];
@@ -114,12 +127,15 @@ export function makeDeclared(schemaPath?: string) {
           const candNode = resolvePointer(schema, cand);
           if (typeof step === 'number' && candNode.items !== undefined) children.push(`${cand}/items`);
           else if (typeof step === 'string' && step in properties(cand)) children.push(`${cand}/properties/${escape(step)}`);
+          else if (typeof step === 'string' && mapKey(cand, step) && typeof candNode.additionalProperties === 'object') {
+            children.push(`${cand}/additionalProperties`);
+          }
         }
       }
       nodes = children;
       instance = (instance as Record<string | number, unknown>)[step];
     }
-    return nodes.some((node) => candidates(node, instance).some((cand) => key in properties(cand)));
+    return nodes.some((node) => candidates(node, instance).some((cand) => declares(cand, key)));
   };
 }
 

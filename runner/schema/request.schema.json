@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://py4kids.local/runner/request.schema.json",
+  "title": "Runner request (site -> runner)",
+  "description": "Design 012 D7, plan 104: the only messages the runner page accepts. Validated on both sides (runner/src/envelope.ts is the hand-written twin; runner/test/envelope.test.ts proves they agree).",
+  "oneOf": [
+    { "$ref": "#/$defs/run" },
+    { "$ref": "#/$defs/reset" },
+    { "$ref": "#/$defs/ping" },
+    { "$ref": "#/$defs/interrupt" }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "description": "A request id, unique per request; the reply carries it back."
+    },
+    "session": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "description": "A lesson's entry id (shared lesson worker), or a fresh unique id for each check (a fresh worker)."
+    },
+    "file": {
+      "type": "object",
+      "description": "A file written into the run's working directory before the code runs.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9_.-]*(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*$",
+          "description": "Relative; no segment starts with a dot (so no `..`)."
+        },
+        "data": { "type": "string", "maxLength": 8000000 },
+        "encoding": { "enum": ["utf-8", "base64"] }
+      },
+      "required": ["path", "data", "encoding"],
+      "additionalProperties": false
+    },
+    "check_output": {
+      "type": "object",
+      "description": "Run in a fresh worker and return stdout (expected-output: the site hashes it).",
+      "properties": {
+        "kind": { "const": "output" },
+        "turtle": { "type": "boolean" }
+      },
+      "required": ["kind", "turtle"],
+      "additionalProperties": false
+    },
+    "check_fixture": {
+      "type": "object",
+      "description": "One fixture case in a fresh worker, compared with tools/judge.py's outputs_match.",
+      "properties": {
+        "kind": { "const": "fixture" },
+        "expected": { "type": "string", "maxLength": 2000000 },
+        "match": { "enum": ["line", "token"] },
+        "turtle": { "type": "boolean" }
+      },
+      "required": ["kind", "expected", "match", "turtle"],
+      "additionalProperties": false
+    },
+    "check_asserts": {
+      "type": "object",
+      "description": "Run the code, then each shipped assert separately in its namespace.",
+      "properties": {
+        "kind": { "const": "asserts" },
+        "asserts": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 100000 },
+          "minItems": 1,
+          "maxItems": 200
+        },
+        "turtle": { "type": "boolean" }
+      },
+      "required": ["kind", "asserts", "turtle"],
+      "additionalProperties": false
+    },
+    "run": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "run" },
+        "id": { "$ref": "#/$defs/id" },
+        "session": { "$ref": "#/$defs/session" },
+        "code": { "type": "string", "maxLength": 500000 },
+        "stdin": { "type": "string", "maxLength": 2000000 },
+        "files": { "type": "array", "items": { "$ref": "#/$defs/file" }, "maxItems": 64 },
+        "check": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/check_output" },
+            { "$ref": "#/$defs/check_fixture" },
+            { "$ref": "#/$defs/check_asserts" }
+          ]
+        },
+        "budget_ms": { "type": "integer", "minimum": 100, "maximum": 60000 }
+      },
+      "required": ["type", "id", "session", "code", "stdin", "files", "check", "budget_ms"],
+      "additionalProperties": false
+    },
+    "reset": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "reset" },
+        "id": { "$ref": "#/$defs/id" },
+        "session": { "$ref": "#/$defs/session" }
+      },
+      "required": ["type", "id", "session"],
+      "additionalProperties": false
+    },
+    "ping": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "ping" },
+        "id": { "$ref": "#/$defs/id" }
+      },
+      "required": ["type", "id"],
+      "additionalProperties": false
+    },
+    "interrupt": {
+      "type": "object",
+      "description": "The Stop button: `id` names the pending run to stop; that run's result answers it.",
+      "properties": {
+        "type": { "const": "interrupt" },
+        "id": { "$ref": "#/$defs/id" }
+      },
+      "required": ["type", "id"],
+      "additionalProperties": false
+    }
+  }
+}

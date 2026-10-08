@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -271,8 +272,24 @@ def build_demo_root(root: Path) -> Path:
     checkpoint_01(base)
     project_01(base)
     project_02(base)
+    write_timings(root)
     git_add(root)
     return root
+
+
+def write_timings(root: Path, cpu_ms: int = 100) -> None:
+    """The committed timing cache (plan 104 C) for the demo's one fixtures item, Exercise 1."""
+    from tools.export.answers import solver_fingerprint
+    from tools.export.timing import CACHE_VERSION, cache_path
+
+    assets = Path(root) / BOOK / "units" / "unit-01-demo" / "assets"
+    pairs = sorted((int(inp.stem), inp, inp.with_suffix(".out"))
+                   for inp in (assets / "ex1").glob("*.in"))
+    entry = {"cpu_ms": cpu_ms, "measured_ms": 20, "cases": len(pairs),
+             "fingerprint": solver_fingerprint(assets / "ex1.py", pairs)}
+    data = {"version": CACHE_VERSION, "book": BOOK,
+            "items": {f"{BOOK}/unit-01-demo/exercises/u1e01": entry}}
+    write(cache_path(root, BOOK), json.dumps(data, sort_keys=True, indent=1) + "\n")
 
 
 def git_add(root: Path) -> None:

@@ -1,6 +1,6 @@
 /**
  * Types for the plan-101 site bundle, hand-written to
- * `tools/export/schema/bundle.schema.json` (schema_version 1.0.0; design 012 D3, D11).
+ * `tools/export/schema/bundle.schema.json` (schema_version 1.1.0; design 012 D3, D11).
  *
  * The schema is the authority: the loader validates every file against it with Ajv, and
  * `site/test/schema-keys.test.ts` proves every key the site's code reads is declared there.
@@ -20,6 +20,10 @@ export type BundlePath = string;
 export interface AnswerFormat {
   case: 'sensitive' | 'insensitive';
   hint: string;
+  /** Typed form -> canonical form, applied after whitespace and case (plan 102 Phase 0). */
+  aliases?: Record<string, string>;
+  /** `collapse` when absent (plan 102 Phase 0). */
+  whitespace?: 'collapse' | 'exact';
 }
 
 /** One pen-down turtle move. Turtle space has y pointing up. */
@@ -30,6 +34,12 @@ export interface Segment {
   y2: number;
   color: string;
   width: number;
+}
+
+/** One turtle drawing of an odd answer (plan 104 C), drawn in place of its TikZ. */
+export interface AnswerFigure {
+  caption: string;
+  segments: Segment[];
 }
 
 export type ProseBlockType = 'prose' | 'opener' | 'notice' | 'goals' | 'recap';
@@ -88,6 +98,8 @@ export interface CheckFixtures extends CheckBase {
   cases: FixtureCase[];
   match: 'line' | 'token';
   over_budget: number[];
+  /** The reference solver's max CPython ms (rounded up to 100); budget max(1 s, 10x), cap 10 s. */
+  cpu_ms: number;
 }
 
 /** `hash` is never shown (plan 103). */
@@ -143,9 +155,13 @@ export interface Item {
   starter: string;
   files: BundlePath[];
   check: Check;
+  /** Requirements the automatic check cannot see, shown as a self-check list (plan 102). */
+  also_check?: string[];
   answer_visibility: 'after-attempt' | 'none';
   /** Present only when `answer_visibility` is `after-attempt`. Part B never renders it. */
   answer_md?: string;
+  /** The answer's turtle drawings; odd turtle answers only (plan 104 C). */
+  answer_figures?: AnswerFigure[];
   before: SideBlock[];
 }
 
@@ -195,7 +211,7 @@ export interface GlossaryTerm {
 export type PdfEdition = 'student-print' | 'student' | 'answer-key' | 'teacher';
 
 export interface BookFile {
-  schema_version: '1.0.0';
+  schema_version: '1.1.0';
   book: {
     id: string;
     title: string;
@@ -214,7 +230,7 @@ export interface BookFile {
 }
 
 export interface EntryFile {
-  schema_version: '1.0.0';
+  schema_version: '1.1.0';
   entry: { id: EntryId; kind: EntryKind; title: string };
   lesson: { blocks: Block[] } | null;
   intro: SideBlock[];

@@ -61,3 +61,6 @@ site/content/
 site/node_modules/
 site/dist/
 site/.astro/
+# The Python runner (plan 104): dependencies and build output, never committed
+runner/node_modules/
+runner/dist/
