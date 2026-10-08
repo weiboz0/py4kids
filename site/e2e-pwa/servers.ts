@@ -16,15 +16,19 @@ interface Running {
 export class Servers {
   private running: Running[] = [];
 
-  /** Serve `roots` (default: the built dists) at the baked-in origins. */
-  async start(roots: { site: string; runner: string } = { site: DIST, runner: RUNNER_DIST }): Promise<void> {
+  /**
+   * Serve `roots` (default: the built dists) at the baked-in origins. `delayMs` slows chosen files
+   * (by origin and path), standing in for a slow network.
+   */
+  async start(roots: { site: string; runner: string } = { site: DIST, runner: RUNNER_DIST }, delayMs?: (origin: string, path: string) => number): Promise<void> {
     if (this.running.length > 0) return;
     for (const [root, origin] of [
       [roots.site, BASE_URL],
       [roots.runner, RUNNER_URL],
     ] as const) {
       const url = new URL(origin);
-      this.running.push((await startServer({ root, port: Number(url.port), host: url.hostname })) as Running);
+      const delay = delayMs ? (path: string) => delayMs(url.origin, path) : undefined;
+      this.running.push((await startServer({ root, port: Number(url.port), host: url.hostname, delayMs: delay })) as Running);
     }
   }
 

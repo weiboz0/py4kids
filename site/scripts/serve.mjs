@@ -126,13 +126,25 @@ export function resolvePath(root, pathname) {
   return null;
 }
 
-export function startServer({ root = 'dist', port = 4321, host = '127.0.0.1' } = {}) {
+/**
+ * Serve `root` at `host:port`. `delayMs` (tests only: a slow network for one file) is called with
+ * each request's path and holds the response that many milliseconds.
+ * @param {{ root?: string, port?: number, host?: string, delayMs?: (path: string) => number }} [options]
+ */
+export function startServer({ root = 'dist', port = 4321, host = '127.0.0.1', delayMs = undefined } = {}) {
   const base = resolve(root);
   const headersPath = join(base, '_headers');
   const rules = existsSync(headersPath) ? parseHeadersFile(readFileSync(headersPath, 'utf-8')) : [];
   const notFound = join(base, '404.html');
 
   const server = createServer((req, res) => {
+    const wait = delayMs ? delayMs(new URL(req.url ?? '/', 'http://x').pathname) : 0;
+    if (wait > 0) setTimeout(() => respond(req, res), wait);
+    else respond(req, res);
+  });
+
+  function respond(req, res) {
+    if (res.destroyed) return;
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
     for (const [name, value] of headersFor(rules, url.pathname, url.hostname)) res.setHeader(name, value);
     if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -166,7 +178,7 @@ export function startServer({ root = 'dist', port = 4321, host = '127.0.0.1' } =
       return;
     }
     createReadStream(file).pipe(res);
-  });
+  }
 
   return new Promise((resolveStart, reject) => {
     server.once('error', reject);

@@ -23,6 +23,14 @@
  *        new cache and the old one is deleted only after confirmation; a download interrupted
  *        midway leaves A's book cache and record intact, and the partial cache is swept on the
  *        next worker start.
+ * And the content review's cases (plan 105 "Content Review"):
+ *   - B installed (and kept running) before a book was downloaded under A: once B is active it
+ *     serves the book offline (it re-reads the records on activate, and on an offline miss);
+ *   - a visitor who never downloads a book: the update's cleanup still deletes A's shell (and the
+ *     runner's shell and Pyodide);
+ *   - the runner's next release still installing (a slow Pyodide): "Preparing the update…", then
+ *     the handshake, instead of a 10 s step that fails;
+ *   - a site step that keeps failing is given up after 5 attempts: the page simply reloads.
  * Every request of every test, the service workers' own included, is a body-less GET for a file
  * of release A or B (helpers.ts `assertAllowlisted`).
  */
@@ -30,10 +38,10 @@ import { spawnSync } from 'node:child_process';
 import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import type { BrowserContext, Frame, Page } from '@playwright/test';
-import { DIST, RUNNER_DIST, SITE } from '../e2e/helpers/env';
+import { DIST, RUNNER_DIST, RUNNER_URL, SITE } from '../e2e/helpers/env';
 import { allItems, fixturePairs, lookupProgram, type Found } from '../e2e/helpers/content';
 import { check, setCode } from '../e2e/helpers/practice';
-import { runnerFrame } from '../e2e/helpers/runner';
+import { loadClient, runnerFrame, type Browserside } from '../e2e/helpers/runner';
 import { computeReleaseId, writeRelease } from '../../deploy/release.mjs';
 import { writeBookManifests } from '../scripts/offline-manifest';
 import { assertAllowlisted, assertOfflineContract, axe, cacheNames, downloadBook, HOOKS, hookState, NetLog, offlineRecords, type Hooks } from './helpers';
@@ -195,6 +203,23 @@ async function restartServiceWorkers(context: BrowserContext, page: Page): Promi
 
 const accept = (update: ReturnType<Page['locator']>) => update.getByRole('button', { name: 'Reload to update' });
 
+/**
+ * Keep every page's waiting site worker running (a message every 2 s), as a browser may: a worker
+ * started while it installed keeps what it read then, which is what the stale-records case needs.
+ */
+async function keepWaitingWorkersAlive(context: BrowserContext): Promise<void> {
+  await context.addInitScript(() => {
+    setInterval(() => {
+      void navigator.serviceWorker
+        ?.getRegistration('/')
+        .then((reg) => reg?.waiting?.postMessage({ type: 'keep-alive' }))
+        .catch(() => {});
+    }, 2000);
+  });
+}
+
+const STATUS = '[data-offline-book] [data-offline-status]';
+
 test('steps 1-3, 5, 7: the update waits (a fresh worker boots on A; a second tab blocks it), the handshake activates both origins, the unchanged book is re-confirmed without a refetch, cleanup', async ({
   page,
   context,
@@ -312,6 +337,161 @@ test("steps 4-6: the activation interval (both origins on B before the reload): 
   }
 });
 
+test("B installed and running before a book is downloaded under A: once B is active, the book's pages are served offline", async ({ page, context, servers }) => {
+  test.setTimeout(400_000);
+  const book = 'python-projects';
+  const r = releases(book, 'runner');
+  await keepWaitingWorkersAlive(context);
+  try {
+    // A only, not downloaded: the site's worker A controls the book page.
+    await servers.stop();
+    await servers.start(r.A);
+    await page.goto(`/${book}/`);
+    await expect(page.locator(STATUS)).toHaveText('Not downloaded yet.', { timeout: 30_000 });
+    await page.reload();
+    await expect.poll(() => siteController(page), { timeout: 30_000 }).toContain(`r=${r.idA}`);
+    const lesson = (await page.locator('[data-contents] a.contents-title').first().getAttribute('href'))!;
+
+    // Site B is deployed (the runner stays A): B installs, with no record to read, and waits.
+    await servers.stop();
+    await servers.start({ site: r.B.site, runner: r.A.runner });
+    await page.goto(`/${book}/`);
+    await expect.poll(() => waitingOf(page), { timeout: 60_000 }).toContain(`r=${r.idB}`);
+    // Then the book is downloaded, by A's workers (still active).
+    await expect(page.locator(STATUS)).toHaveText('Not downloaded yet.', { timeout: 30_000 });
+    await page.locator('[data-offline-book]').getByRole('button', { name: 'Download this book' }).click();
+    await expect(page.locator(STATUS)).toHaveText('Available offline.', { timeout: 300_000 });
+    expect(await offlineRecords(page)).toEqual([expect.objectContaining({ book, release_id: r.idA })]);
+    expect(await waitingOf(page)).toContain(`r=${r.idB}`);
+
+    // B everywhere: the book page loads the runner (to confirm the book), which installs runner B.
+    await servers.stop();
+    await servers.start(r.B);
+    await page.goto(`/${book}/`);
+    await expect(page.locator(STATUS)).toHaveText('Available offline.', { timeout: 60_000 });
+    await expect.poll(() => waitingOf(runnerFrame(page)), { timeout: 120_000 }).toContain(`r=${r.idB}`);
+    // Accept on a page outside the book (a book page would re-download the book under B at once,
+    // which re-reads the records anyway).
+    await page.goto('/about/');
+    const update = page.locator('[data-pwa-update]');
+    await expect(update).toBeVisible({ timeout: 60_000 });
+    await Promise.all([page.waitForEvent('load', { timeout: 120_000 }), accept(update).click()]);
+    await expect.poll(() => siteController(page), { timeout: 30_000 }).toContain(`r=${r.idB}`);
+
+    // Offline, under B: the lesson comes from the book's confirmed cache, not the offline page.
+    await servers.stop();
+    await page.goto(lesson);
+    await expect(page.locator('article.lesson')).toBeVisible({ timeout: 30_000 });
+    await expect(page).toHaveURL(lesson);
+    expect(await siteController(page)).toContain(`r=${r.idB}`);
+  } finally {
+    rmSync(r.work, { recursive: true, force: true });
+  }
+});
+
+test("a visitor who never downloads a book: after the update, cleanup deletes A's shell on the site and A's shell and Pyodide on the runner", async ({ page, servers }) => {
+  test.setTimeout(400_000);
+  const book = 'python-projects';
+  const r = releases(book, 'runner');
+  try {
+    // Under A: the site's worker controls the page, and the runner has run Python once.
+    await servers.stop();
+    await servers.start(r.A);
+    await page.goto('/');
+    await page.evaluate(async () => void (await navigator.serviceWorker.ready));
+    await page.reload();
+    await expect.poll(() => siteController(page), { timeout: 30_000 }).toContain(`r=${r.idA}`);
+    // Twice: the runner page that registered the runner's worker A is not controlled by it; the
+    // second one is, and its Python boot caches A's Pyodide on first use.
+    for (let i = 0; i < 2; i++) {
+      if (i > 0) await page.reload();
+      await loadClient(page);
+      await page.evaluate(() => {
+        const w = window as unknown as Browserside;
+        w.runner = w.py4kidsRunnerClient.connectRunner(document.body).client;
+        return w.runner.ping();
+      });
+    }
+    await expect.poll(() => cacheNames(runnerFrame(page)), { timeout: 30_000 }).toEqual(expect.arrayContaining([`shell-${r.idA}`, PYODIDE_A]));
+    expect(await cacheNames(page)).toContain(`shell-${r.idA}`);
+    expect(await offlineRecords(page)).toEqual([]);
+
+    // B: accept the update, from a page that never downloaded anything.
+    const update = await deployB(page, servers, r, '/about/');
+    await Promise.all([page.waitForEvent('load', { timeout: 120_000 }), accept(update).click()]);
+    await expect.poll(() => siteController(page), { timeout: 30_000 }).toContain(`r=${r.idB}`);
+    // B's shell was never completed (nothing was downloaded), yet A's goes.
+    await expect.poll(async () => (await cacheNames(page)).filter((n) => n.startsWith('shell-')), { timeout: 60_000 }).toEqual([`shell-${r.idB}`]);
+    // The runner too, from a runner page of release B.
+    await loadClient(page);
+    await page.evaluate(() => {
+      const w = window as unknown as Browserside;
+      w.runner = w.py4kidsRunnerClient.connectRunner(document.body).client;
+      return w.runner.ping();
+    });
+    const runner = runnerFrame(page);
+    expect(await runner.evaluate(() => navigator.serviceWorker.controller?.scriptURL ?? '')).toContain(`r=${r.idB}`);
+    await expect.poll(async () => (await cacheNames(runner)).filter((n) => n === `shell-${r.idA}` || n === PYODIDE_A), { timeout: 60_000 }).toEqual([]);
+  } finally {
+    rmSync(r.work, { recursive: true, force: true });
+  }
+});
+
+test("the runner's next release still installing (a slow Pyodide): \"Preparing the update…\", then the handshake completes", async ({ page, servers }) => {
+  test.setTimeout(400_000);
+  const book = 'python-projects';
+  const r = releases(book, 'runner');
+  try {
+    await downloadUnderA(page, servers, r);
+    // B, with release B's Pyodide runtime 20 s slow: runner B, which must complete it before it
+    // can activate (a book is downloaded), is still installing when the update is accepted.
+    await servers.stop();
+    await servers.start(r.B, (origin, path) => (origin === new URL(RUNNER_URL).origin && path === '/pyodide/0.27.8-b/pyodide.asm.wasm' ? 20_000 : 0));
+    await page.goto('/about/');
+    const update = page.locator('[data-pwa-update]');
+    await expect(update).toBeVisible({ timeout: 60_000 });
+    const loaded = page.waitForEvent('load', { timeout: 300_000 });
+    await accept(update).click();
+    await expect(update).toContainText('Preparing the update…', { timeout: 60_000 });
+    await loaded;
+    await expect.poll(() => siteController(page), { timeout: 30_000 }).toContain(`r=${r.idB}`);
+    await page.goto(`/${book}/`);
+    await expect(page.locator(STATUS)).toHaveText('Available offline.', { timeout: 180_000 });
+    expect(await runnerController(page)).toContain(`r=${r.idB}`);
+  } finally {
+    rmSync(r.work, { recursive: true, force: true });
+  }
+});
+
+test('step 6: a site step that keeps failing is given up after 5 attempts: the page simply reloads, still working, and B is offered again', { tag: '@hooks' }, async ({ page, servers }) => {
+  test.skip(!HOOKS, 'needs a build with PY4KIDS_TEST_HOOKS=1');
+  test.setTimeout(400_000);
+  const book = 'python-projects';
+  const r = releases(book, 'runner');
+  try {
+    await servers.stop();
+    await servers.start(r.A);
+    await page.goto('/');
+    await page.evaluate(async () => void (await navigator.serviceWorker.ready));
+    await page.reload();
+    await expect.poll(() => siteController(page), { timeout: 30_000 }).toContain(`r=${r.idA}`);
+    const update = await deployB(page, servers, r, '/about/');
+    await setHooks(page, { stepTimeoutMs: 1000, fail: [['site', 1000]] });
+    const loaded = page.waitForEvent('load', { timeout: 120_000 });
+    await accept(update).click();
+    await expect(update).toContainText('Finishing the update…', { timeout: 30_000 });
+    await loaded;
+    // The plain reload: the site never activated B (every attempt failed), so the page is A's,
+    // working, and the update is offered again.
+    expect(await siteController(page)).toContain(`r=${r.idA}`);
+    expect(await waitingOf(page)).toContain(`r=${r.idB}`);
+    await expect(page.locator('[data-pwa-update]')).toBeVisible({ timeout: 60_000 });
+    expect(await hookState(page)).toBe('idle');
+  } finally {
+    rmSync(r.work, { recursive: true, force: true });
+  }
+});
+
 test('step 6: a runner step that times out leaves both origins on A ("update failed — try again") and code still checks; a retry completes', { tag: '@hooks' }, async ({ page, context, servers }) => {
   test.skip(!HOOKS, 'needs a build with PY4KIDS_TEST_HOOKS=1');
   test.setTimeout(400_000);
@@ -325,7 +505,12 @@ test('step 6: a runner step that times out leaves both origins on A ("update fai
     await page.locator('body[data-checks-ready]').waitFor({ state: 'attached' });
     await checkAsserts(page, found); // loads the runner iframe, which registers runner B
     await expect.poll(() => waitingOf(runnerFrame(page)), { timeout: 60_000 }).toContain(`r=${r.idB}`);
-    await setHooks(page, { stepTimeoutMs: 2000, fail: [['runner', 1]] });
+    // The runner page ignores the next prepare-activate: the site's real request times out in
+    // its RunnerClient (the same timeout path as a runner that never answers).
+    await runnerFrame(page).evaluate(() => {
+      (window as unknown as { __py4kidsRunnerTest: { swallowPrepareActivate: number } }).__py4kidsRunnerTest.swallowPrepareActivate = 1;
+    });
+    await setHooks(page, { stepTimeoutMs: 2000 });
     await accept(update).click();
     await expect(update).toContainText('Update failed — try again.', { timeout: 30_000 });
     expect(await hookState(page)).toBe('failed');

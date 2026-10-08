@@ -9,17 +9,25 @@
  * - with both servers stopped, the downloaded book still opens, and `crossOriginIsolated` is still
  *   true in the site, the runner page and the runner's worker: Python runs from the cached
  *   Pyodide and a hang is stopped by the SharedArrayBuffer interrupt.
+ * - a runner whose storage the browser cleared (the site's kept) is never "available offline":
+ *   the book says Python's part is gone and offers "Download again", which restores it; offline,
+ *   it cannot be confirmed and says so;
+ * - the release description each service worker keeps in its shell cache is never served;
+ * - (test hooks) a download that stops making progress says so, and "Try again" finishes it.
  * The full offline and update-path suite (plan 105 Phase E) is offline.spec.ts (every book),
  * update.spec.ts and ui.spec.ts.
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Page } from '@playwright/test';
+import type { Frame, Page } from '@playwright/test';
 import { DIST, RUNNER_DIST, RUNNER_URL } from '../e2e/helpers/env';
 import { loadClient, runnerFrame, type Browserside } from '../e2e/helpers/runner';
 import { expect, test } from './servers';
 
 const BOOK = 'python-projects';
+const STATUS = '[data-offline-book] [data-offline-status]';
+const RUNNER_MISSING = /^This book is no longer fully saved on this device: the browser cleared the part that runs Python/;
+const UNVERIFIED = /^Could not check that Python is saved for this book/;
 const release = (dir: string) => JSON.parse(readFileSync(join(dir, 'release.json'), 'utf-8')) as { release_id: string; books?: Record<string, { content_hash: string }> };
 const SITE_RELEASE = release(DIST);
 const RUNNER_RELEASE = release(RUNNER_DIST);
@@ -42,6 +50,63 @@ async function downloadBook(page: Page): Promise<void> {
   // Then the progress bar, then "Available offline" once both origins confirmed.
   await expect(panel.locator('[data-offline-status]')).toHaveText('Available offline.', { timeout: 180_000 });
   await expect(panel.locator('[data-offline-persist]')).toHaveText(/^Storage on this device: .*; Python's storage: /);
+}
+
+/** The records in `py4kids-offline` on the origin of `target`. */
+const records = (target: Page | Frame) =>
+  target.evaluate(
+    () =>
+      new Promise<unknown[]>((resolve) => {
+        const open = indexedDB.open('py4kids-offline');
+        // Never create the database here (a test must not change what it inspects).
+        open.onupgradeneeded = () => open.transaction?.abort();
+        open.onsuccess = () => {
+          if (!open.result.objectStoreNames.contains('books')) return resolve([]);
+          const all = open.result.transaction('books').objectStore('books').getAll();
+          all.onsuccess = () => {
+            open.result.close();
+            resolve(all.result);
+          };
+        };
+        open.onerror = (event) => {
+          event.preventDefault();
+          resolve([]);
+        };
+      }),
+  );
+
+/**
+ * Clear the runner origin's storage as a browser may (its service worker, caches and IndexedDB),
+ * keeping the site's: Chromium's own `Storage.clearDataForStorageKey`, on the storage key of the
+ * runner iframe (its storage is partitioned under the site), then checked from inside the frame.
+ */
+async function clearRunnerStorage(page: Page): Promise<void> {
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    const { frameTree } = (await cdp.send('Page.getFrameTree')) as { frameTree: FrameTree };
+    const all: { id: string; url: string }[] = [];
+    const walk = (t: FrameTree) => {
+      all.push(t.frame);
+      for (const c of t.childFrames ?? []) walk(c);
+    };
+    walk(frameTree);
+    const frame = all.find((f) => f.url.startsWith(`${RUNNER_URL}/`));
+    expect(frame, 'the runner iframe').toBeTruthy();
+    const { storageKey } = (await cdp.send('Storage.getStorageKeyForFrame', { frameId: frame!.id })) as { storageKey: string };
+    await cdp.send('Storage.clearDataForStorageKey', { storageKey, storageTypes: 'all' });
+  } finally {
+    await cdp.detach();
+  }
+  const runner = runnerFrame(page);
+  await expect.poll(() => runner.evaluate(() => caches.keys()), { timeout: 15_000 }).toEqual([]);
+  await expect.poll(() => records(runner), { timeout: 15_000 }).toEqual([]);
+  await expect.poll(() => runner.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length), { timeout: 15_000 }).toBe(0);
+  // The site's side is untouched.
+  expect(await records(page)).toHaveLength(1);
+}
+interface FrameTree {
+  frame: { id: string; url: string };
+  childFrames?: FrameTree[];
 }
 
 test('the web app manifest is valid and installable', async ({ page, request, servers: _ }) => {
@@ -180,6 +245,52 @@ test('offline (both servers stopped): the book opens and crossOriginIsolated hol
   expect(hang.interrupts).toBe('sab');
 });
 
+test("a runner whose storage was cleared is not 'available offline': the book says so and 'Download again' restores it; offline it cannot be confirmed", async ({
+  page,
+  servers,
+}) => {
+  test.setTimeout(300_000);
+  await downloadBook(page);
+  await page.reload();
+  await expect(page.locator(STATUS)).toHaveText('Available offline.', { timeout: 60_000 });
+  // The browser clears the runner origin's storage, and keeps the site's record.
+  await clearRunnerStorage(page);
+  await page.reload();
+  const panel = page.locator('[data-offline-book]');
+  await expect(page.locator(STATUS)).toHaveText(RUNNER_MISSING, { timeout: 60_000 });
+  await expect(panel).toHaveAttribute('data-status', 'runner-missing');
+  // "Download again" puts Python back (the unchanged book is only verified on the site).
+  await panel.getByRole('button', { name: 'Download again' }).click();
+  await expect(page.locator(STATUS)).toHaveText('Available offline.', { timeout: 180_000 });
+  expect(await records(runnerFrame(page))).toEqual([expect.objectContaining({ book: BOOK, release_id: SITE_RELEASE.release_id })]);
+
+  // Cleared again, and offline (both servers stopped): the runner cannot even load, so the book
+  // cannot be confirmed, and never says "available offline".
+  await clearRunnerStorage(page);
+  await servers.stop();
+  await page.reload();
+  await expect(page.locator('h1')).toBeVisible();
+  await expect(page.locator(STATUS)).toHaveText(UNVERIFIED, { timeout: 90_000 });
+  await expect(panel).toHaveAttribute('data-status', 'unverified');
+});
+
+test('the release description each service worker keeps in its shell cache is never served, on either origin', async ({ page, servers: _ }) => {
+  await downloadBook(page);
+  await page.reload();
+  await expect(page.locator(STATUS)).toHaveText('Available offline.', { timeout: 60_000 });
+  const probe = (target: Page | Frame) =>
+    target.evaluate(async () => {
+      const response = await fetch('/__py4kids-sw/release.json');
+      return { controlled: navigator.serviceWorker.controller !== null, status: response.status, release: (await response.text()).includes('"release_id"') };
+    });
+  expect(await probe(page)).toEqual({ controlled: true, status: 404, release: false });
+  // The runner iframe (loaded to confirm the book) is controlled by the runner's worker.
+  expect(await probe(runnerFrame(page))).toEqual({ controlled: true, status: 404, release: false });
+  // The worker still has it (it is only never served).
+  const kept = await page.evaluate(async (id) => Boolean(await (await caches.open(`shell-${id}`)).match('/__py4kids-sw/release.json')), SITE_RELEASE.release_id);
+  expect(kept).toBe(true);
+});
+
 test('the update-handshake test hooks exist only in a test build (PY4KIDS_TEST_HOOKS=1)', { tag: '@hooks' }, async ({ page, servers: _ }) => {
   await page.goto('/');
   await page.evaluate(async () => navigator.serviceWorker.ready);
@@ -195,6 +306,52 @@ test('the update-handshake test hooks exist only in a test build (PY4KIDS_TEST_H
     const text = await (await page.request.get(src)).text();
     if (process.env.PY4KIDS_TEST_HOOKS !== '1') expect(text, src).not.toContain('__py4kidsPwaTest');
   }
+  // The runner page's own hook (it ignores prepare-activate on request), likewise.
+  await loadClient(page);
+  await page.evaluate(() => {
+    const w = window as unknown as Browserside;
+    w.runner = w.py4kidsRunnerClient.connectRunner(document.body).client;
+  });
+  await expect.poll(() => page.frames().some((f) => f.url().startsWith(`${RUNNER_URL}/`)), { timeout: 30_000 }).toBe(true);
+  const runner = runnerFrame(page);
+  await runner.waitForLoadState();
+  const runnerHooks = await runner.evaluate(() => (window as unknown as { __py4kidsRunnerTest?: { swallowPrepareActivate: number } }).__py4kidsRunnerTest ?? null);
+  if (process.env.PY4KIDS_TEST_HOOKS === '1') expect(runnerHooks).toEqual({ swallowPrepareActivate: 0 });
+  else expect(runnerHooks).toBeNull();
+  const runnerScripts = await runner.locator('script[src]').evaluateAll((s) => s.map((e) => (e as HTMLScriptElement).src));
+  expect(runnerScripts.length).toBeGreaterThan(0);
+  for (const src of runnerScripts) {
+    const text = await (await page.request.get(src)).text();
+    if (process.env.PY4KIDS_TEST_HOOKS !== '1') expect(text, src).not.toContain('__py4kidsRunnerTest');
+  }
+});
+
+test('test hooks: a download that stops making progress says "The download stopped. Try again.", and "Try again" finishes it', { tag: '@hooks' }, async ({ page, servers: _ }) => {
+  test.skip(process.env.PY4KIDS_TEST_HOOKS !== '1', 'needs a build with PY4KIDS_TEST_HOOKS=1');
+  await page.goto(`/${BOOK}/`);
+  const panel = page.locator('[data-offline-book]');
+  await expect(panel.locator('[data-offline-status]')).toHaveText('Not downloaded yet.', { timeout: 30_000 });
+  // Each chunk of the book now waits 10 s in the worker, longer than the 2 s stall window.
+  const setHooks = (delay: number, stall: number) =>
+    page.evaluate(
+      ([d, s]) => {
+        const h = (window as unknown as { __py4kidsPwaTest: { downloadDelayMs: number; downloadStallMs: number } }).__py4kidsPwaTest;
+        h.downloadDelayMs = d!;
+        h.downloadStallMs = s!;
+      },
+      [delay, stall],
+    );
+  await setHooks(10_000, 2_000);
+  await panel.getByRole('button', { name: 'Download this book' }).click();
+  await expect(panel.locator('[data-offline-status]')).toHaveText('The download stopped. Try again.', { timeout: 60_000 });
+  await expect(panel).toHaveAttribute('data-status', 'stalled');
+  await expect(panel.locator('[data-offline-progress]')).toBeHidden();
+  expect(await records(page)).toEqual([]);
+  // Try again, at full speed: it finishes (and aborts the stalled one in the worker).
+  await setHooks(0, 60_000);
+  await panel.getByRole('button', { name: 'Try again' }).click();
+  await expect(panel.locator('[data-offline-status]')).toHaveText('Available offline.', { timeout: 180_000 });
+  expect(await records(page)).toEqual([expect.objectContaining({ book: BOOK, release_id: SITE_RELEASE.release_id })]);
 });
 
 test('test hooks: a download stopped midway (servers down) confirms nothing', { tag: '@hooks' }, async ({ page, servers }) => {

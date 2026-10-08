@@ -7,14 +7,23 @@
  * - **Update check:** one `GET /release.json` with `cache: "no-store"` per page load (never
  *   answered by the worker); on success the worker is registered as `/sw.js?r=<release_id>`. On
  *   failure (offline, servers down) the current registration stays: no error, no banner.
+ * - **Offline status** (plan 105 "Offline status"): "available" only when the site's record and the
+ *   runner's own record (asked through the runner iframe, `get-state`) name the same release and
+ *   content. Until the runner answers the status is "checking"; a runner without the record (its
+ *   storage was cleared) is "runner-missing", one that cannot be asked "unverified".
+ * - **Download:** the site's part fails as stalled when no progress arrives for 60 s.
  * - **Handshake** (plan 105 "Activation is user-controlled, page-mediated"), offered only when this
  *   page is the site's only window, each step with a 10 s timeout:
+ *     0. while the runner's next release is still installing (a new Pyodide is about 15 MB), the
+ *        page says "Preparing the update…" and waits (at most 5 minutes) before step 1;
  *     1. the runner iframe gets `prepare-activate`; 2. it activates its waiting worker and answers
  *     `runner-activated`; 3. the site's waiting worker gets `skip-waiting`; 4. on the site's
  *     `controllerchange` the page reloads.
  *   Forward-only recovery: a failure before step 2 leaves both origins on the old release ("update
- *   failed — try again"); after it, step 3 is retried ("finishing the update…") while the page keeps
- *   working (the runner accepts the previous envelope version); after step 3, the reload is retried.
+ *   failed — try again"); after it, step 3 is retried ("finishing the update…"), each attempt with
+ *   the waiting worker read afresh (a newer one is accepted), at most 5 times, then the page simply
+ *   reloads; meanwhile it keeps working (the runner accepts the previous envelope version); after
+ *   step 3, the reload is retried.
  * - **Test hooks** (`window.__py4kidsPwaTest`, see `TestHooks`): built in only when the build sets
  *   PY4KIDS_TEST_HOOKS=1 (`import.meta.env.PY4KIDS_TEST_HOOKS`, false otherwise, so the minifier
  *   drops them from production builds; scripts/build-release.sh refuses a test build).
@@ -37,11 +46,31 @@ export interface WorkerStatus {
 
 const TEST_HOOKS: boolean = import.meta.env.PY4KIDS_TEST_HOOKS === true;
 
+/** A site download with no progress for this long has stalled. */
+export const STALL_MS = 60_000;
+/** How long the handshake waits for the runner's next release to finish installing. */
+export const PREPARE_CAP_MS = 5 * 60_000;
+/** Step 3 (the site's worker) is tried this many times before the page simply reloads. */
+export const SITE_ATTEMPTS = 5;
+/** How long the runner may take to report its state (it loads, then reads its own store). */
+const STATE_TIMEOUT_MS = 2 * STEP_TIMEOUT_MS;
+
+/** The download stopped making progress. */
+export class StalledError extends Error {
+  constructor() {
+    super('the download stopped');
+    this.name = 'StalledError';
+  }
+}
+
 // ------------------------------------------------------------------------------------------------
 // Test hooks (test builds only)
 
-/** The update-handshake steps a test can pause after or force to fail. */
-export type Step = 'runner' | 'site' | 'reload';
+/**
+ * The update-handshake steps a test can force to fail. (The runner step fails in the runner page
+ * itself, `__py4kidsRunnerTest.swallowPrepareActivate`, so the real request times out.)
+ */
+export type Step = 'site' | 'reload';
 /** Points a test can pause at: before step 1, after the runner activated, after the site activated. */
 export type PausePoint = 'before-runner' | 'after-runner' | 'after-site';
 
@@ -49,13 +78,20 @@ export interface TestHooks {
   /** Pause the handshake at a point until `resume(point)`. */
   pause(point: PausePoint): void;
   resume(point: PausePoint): void;
-  /** Make a step fail its next `times` attempts (runner: never sent, so it times out). */
+  /** Make a step fail its next `times` attempts. */
   fail(step: Step, times?: number): void;
   /** The handshake's step timeout in ms (default 10 000). */
   stepTimeoutMs: number;
+  /** How long the handshake waits for the runner's next release to install, in ms (default 5 min). */
+  prepareCapMs: number;
   /** A pause before each chunk of a book download, in ms (default 0), so a test can stop the servers mid-download. */
   downloadDelayMs: number;
-  /** Where the handshake is: idle, runner, site, reload, failed, finishing, paused:<point>, done. */
+  /** A site download with no progress for this long, in ms, has stalled (default 60 000). */
+  downloadStallMs: number;
+  /**
+   * Where the handshake is: idle, preparing, runner, site, reload, failed, finishing, gave-up,
+   * paused:<point>, done.
+   */
   state: string;
   /** Every state the handshake passed through, in order. */
   log: string[];
@@ -85,7 +121,9 @@ function testHooks(): HookState | null {
         },
         fail: (step, times = 1) => void h.failures.set(step, times),
         stepTimeoutMs: STEP_TIMEOUT_MS,
+        prepareCapMs: PREPARE_CAP_MS,
         downloadDelayMs: 0,
+        downloadStallMs: STALL_MS,
         state: 'idle',
         log: [],
       },
@@ -121,6 +159,12 @@ function forcedFailure(step: Step): boolean {
 }
 
 const stepTimeout = () => testHooks()?.api.stepTimeoutMs ?? STEP_TIMEOUT_MS;
+const prepareCap = () => testHooks()?.api.prepareCapMs ?? PREPARE_CAP_MS;
+const stallTimeout = () => testHooks()?.api.downloadStallMs ?? STALL_MS;
+
+/** `record[key]` for an own key only (keys come from pages and data attributes). */
+const own = <T>(record: Record<string, T> | undefined, key: string): T | undefined =>
+  record && Object.hasOwn(record, key) ? record[key] : undefined;
 
 // ------------------------------------------------------------------------------------------------
 // Registration and releases
@@ -202,20 +246,41 @@ export async function pendingUpdate(): Promise<string | null> {
   return waiting && waiting !== releaseOfScript(reg?.active?.scriptURL) ? waiting : null;
 }
 
-/** Send `message` to `worker` with a reply port; resolves with the first reply that is not progress. */
-function ask<T>(worker: ServiceWorker, message: object, onMessage?: (data: Record<string, unknown>) => void, timeoutMs = 0): Promise<T> {
+/**
+ * Send `message` to `worker` with a reply port; resolves with the first reply that is not
+ * progress. `timeoutMs` bounds the whole exchange; `stallMs` fails it with `StalledError` when no
+ * message (progress included) arrives for that long. 0: no limit.
+ */
+function ask<T>(
+  worker: ServiceWorker,
+  message: object,
+  onMessage?: (data: Record<string, unknown>) => void,
+  { timeoutMs = 0, stallMs = 0 }: { timeoutMs?: number; stallMs?: number } = {},
+): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const channel = new MessageChannel();
-    const timer = timeoutMs > 0 ? setTimeout(() => reject(new Error('the service worker did not answer')), timeoutMs) : undefined;
+    let stall: ReturnType<typeof setTimeout> | undefined;
+    const end = () => {
+      clearTimeout(timer);
+      clearTimeout(stall);
+      channel.port1.onmessage = null;
+      channel.port1.close();
+    };
+    const timer = timeoutMs > 0 ? setTimeout(() => (end(), reject(new Error('the service worker did not answer'))), timeoutMs) : undefined;
+    const watch = () => {
+      clearTimeout(stall);
+      if (stallMs > 0) stall = setTimeout(() => (end(), reject(new StalledError())), stallMs);
+    };
     channel.port1.onmessage = (event: MessageEvent<Record<string, unknown>>) => {
       if (event.data?.type === 'progress') {
+        watch();
         onMessage?.(event.data);
         return;
       }
-      clearTimeout(timer);
-      channel.port1.close();
+      end();
       resolve(event.data as T);
     };
+    watch();
     worker.postMessage(message, [channel.port2]);
   });
 }
@@ -233,7 +298,7 @@ export async function workerStatus(): Promise<WorkerStatus | null> {
   const worker = await activeWorker();
   if (!worker) return null;
   try {
-    return await ask<WorkerStatus>(worker, { type: 'status' }, undefined, STEP_TIMEOUT_MS);
+    return await ask<WorkerStatus>(worker, { type: 'status' }, undefined, { timeoutMs: STEP_TIMEOUT_MS });
   } catch {
     return null;
   }
@@ -244,7 +309,7 @@ export async function windowCount(): Promise<number> {
   const worker = await activeWorker();
   if (!worker) return 1;
   try {
-    return (await ask<{ count: number }>(worker, { type: 'client-count' }, undefined, STEP_TIMEOUT_MS)).count;
+    return (await ask<{ count: number }>(worker, { type: 'client-count' }, undefined, { timeoutMs: STEP_TIMEOUT_MS })).count;
   } catch {
     return 2; // unknown: do not risk activating under another open page
   }
@@ -253,8 +318,18 @@ export async function windowCount(): Promise<number> {
 // ------------------------------------------------------------------------------------------------
 // A book offline
 
+/**
+ * A book's offline status on this page: the site record's (`BookStatus`), and, once the site's
+ * record says "available", what the runner's own record says:
+ * - `runner-missing`: the runner answered without a matching record (its storage was cleared,
+ *   while the site's was kept): Python cannot run offline; download again;
+ * - `unverified`: the runner could not be asked (it did not load or answer), so "available" cannot
+ *   be confirmed.
+ */
+export type OfflineStatus = BookStatus | 'runner-missing' | 'unverified';
+
 export interface BookState {
-  status: BookStatus;
+  status: OfflineStatus;
   record: OfflineRecord | null;
   summary: BookSummary | null;
   /** The runner's share (shell and Pyodide), downloaded once for every book. */
@@ -262,16 +337,34 @@ export interface BookState {
   activeRelease: string | null;
 }
 
-export async function bookState(book: string): Promise<BookState> {
+/**
+ * The book's state from the site's record. With `verifyRunner`, a book the site's record shows as
+ * available is "available" only if the runner's own record (asked through the runner iframe)
+ * names the same content and release; it is never taken on the site record's word alone.
+ */
+export async function bookState(book: string, verifyRunner?: () => Promise<RunnerClient>): Promise<BookState> {
   const [record, status] = await Promise.all([getRecord(book).catch(() => null), workerStatus()]);
   const active = status?.release_id ?? (await activeRelease());
-  return {
+  const state: BookState = {
     status: bookStatus(record, active),
     record,
-    summary: status?.books[book] ?? null,
+    summary: own(status?.books, book) ?? null,
     runnerBytes: status?.runner.bytes ?? 0,
     activeRelease: active,
   };
+  if (state.status === 'available' && record && verifyRunner) state.status = await runnerConfirms(book, record, verifyRunner);
+  return state;
+}
+
+/** Does the runner's own record confirm `record` (same content hash and release)? */
+async function runnerConfirms(book: string, record: OfflineRecord, connect: () => Promise<RunnerClient>): Promise<OfflineStatus> {
+  try {
+    const client = await connect();
+    const { record: theirs } = await client.state(book, STATE_TIMEOUT_MS);
+    return theirs && theirs.content_hash === record.content_hash && theirs.release_id === record.release_id ? 'available' : 'runner-missing';
+  } catch {
+    return 'unverified';
+  }
 }
 
 export interface DownloadProgress {
@@ -282,10 +375,11 @@ export interface DownloadProgress {
 }
 export interface DownloadResult {
   ok: boolean;
-  /** navigator.storage.persist() on this (top-level) origin, asked inside the click. */
-  persisted: boolean;
   /** The runner's own persist() result (informational). */
   runnerPersisted: boolean | null;
+  /** The site's part stopped making progress (`StalledError`). */
+  stalled?: boolean;
+  /** For the console, never shown to the student. */
   error?: string;
 }
 
@@ -311,19 +405,26 @@ export async function downloadBook(
   book: string,
   connect: () => Promise<RunnerClient>,
   onProgress: (p: DownloadProgress) => void,
-): Promise<{ ok: boolean; runnerPersisted: boolean | null; error?: string }> {
+): Promise<DownloadResult> {
   const worker = await activeWorker();
   if (!worker) return { ok: false, runnerPersisted: null, error: 'This browser cannot keep the site offline.' };
   const status = await workerStatus();
-  const summary = status?.books[book];
+  const summary = own(status?.books, book);
   if (!status || !summary) return { ok: false, runnerPersisted: null, error: 'This book is not in this version of the site.' };
   const progress: DownloadProgress = { siteBytes: 0, siteTotal: summary.bytes, runnerBytes: 0, runnerTotal: status.runner.bytes };
   const delay = testHooks()?.api.downloadDelayMs ?? 0;
-  const site = ask<{ ok: boolean; error?: string }>(worker, { type: 'download', book, ...(delay > 0 ? { delay_ms: delay } : {}) }, (p) => {
-    progress.siteBytes = Number(p.bytes) || 0;
-    progress.siteTotal = Number(p.total) || progress.siteTotal;
-    onProgress({ ...progress });
-  });
+  // No overall limit (a book can take long on a slow link), but a stall fails it: no progress
+  // message from the site's worker for `stallTimeout()` (a new download aborts the stalled one).
+  const site = ask<{ ok: boolean; error?: string }>(
+    worker,
+    { type: 'download', book, ...(delay > 0 ? { delay_ms: delay } : {}) },
+    (p) => {
+      progress.siteBytes = Number(p.bytes) || 0;
+      progress.siteTotal = Number(p.total) || progress.siteTotal;
+      onProgress({ ...progress });
+    },
+    { stallMs: stallTimeout() },
+  ).catch((error: unknown) => ({ ok: false, stalled: error instanceof StalledError, error: String(error) }));
   const runner = (async () => {
     try {
       const client = await connect();
@@ -338,8 +439,8 @@ export async function downloadBook(
   })();
   // A failed site download ends the attempt at once (the runner's part, if it is still running,
   // is left to finish or fail on its own; nothing is confirmed without the site's record).
-  const siteDone = await site;
-  if (!siteDone.ok) return { ok: false, runnerPersisted: null, error: siteDone.error ?? 'The download did not finish.' };
+  const siteDone: { ok: boolean; stalled?: boolean; error?: string } = await site;
+  if (!siteDone.ok) return { ok: false, runnerPersisted: null, stalled: siteDone.stalled === true, error: siteDone.error ?? 'The download did not finish.' };
   const runnerDone = await runner;
   const runnerPersisted = 'persisted' in runnerDone ? (runnerDone.persisted as boolean | null) : null;
   if (!runnerDone.ok) return { ok: false, runnerPersisted, error: 'Python could not be stored for offline use.' };
@@ -383,6 +484,28 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * Resolves `busy` (another site window is open), `failed` (before the runner activated: both
  * origins stay on the old release), or `reloading`.
  */
+/**
+ * Step 0: wait while the runner's next release is still installing (its new Pyodide can take a
+ * while), saying "Preparing the update…", at most `prepareCap()`. Resolves false when the cap ran
+ * out. A runner that cannot report its state (an older one) is not waited for.
+ */
+async function runnerInstalled(client: RunnerClient, target: string, say: (message: string) => void): Promise<boolean> {
+  const deadline = Date.now() + prepareCap();
+  for (;;) {
+    let state;
+    try {
+      state = await client.state(null, stepTimeout());
+    } catch {
+      return true; // no state: let step 1 decide within its own timeout
+    }
+    if (state.active === target || state.waiting === target || !state.installing) return true;
+    if (Date.now() >= deadline) return false;
+    setState('preparing');
+    say('Preparing the update…');
+    await sleep(Math.min(1000, Math.max(0, deadline - Date.now())));
+  }
+}
+
 export async function applyUpdate(connect: () => Promise<RunnerClient>, say: (message: string) => void): Promise<UpdateOutcome> {
   const sw = container();
   const target = await pendingUpdate();
@@ -391,16 +514,20 @@ export async function applyUpdate(connect: () => Promise<RunnerClient>, say: (me
     say('Close your other py4kids tabs to update.');
     return 'busy';
   }
+  /** The release this page's worker runs now: step 3 is done once another one controls it. */
+  const from = releaseOfScript(sw.controller?.scriptURL);
   await pausePoint('before-runner');
-  // Steps 1-2: the runner activates first.
-  setState('runner');
+  // Steps 0-2: the runner activates first, once its next release has installed.
   say('Updating…');
   try {
-    if (forcedFailure('runner')) {
-      await sleep(stepTimeout());
-      throw new Error('the runner step was forced to fail');
-    }
     const client = await Promise.race([connect(), sleep(stepTimeout()).then(() => Promise.reject(new Error('runner timeout')))]);
+    if (!(await runnerInstalled(client, target, say))) {
+      setState('failed');
+      say('The update is taking too long to download. Try again later.');
+      return 'failed';
+    }
+    setState('runner');
+    say('Updating…');
     await client.prepareActivate(target, stepTimeout());
   } catch {
     setState('failed');
@@ -408,11 +535,21 @@ export async function applyUpdate(connect: () => Promise<RunnerClient>, say: (me
     return 'failed';
   }
   await pausePoint('after-runner');
-  // Step 3, retried until it succeeds (forward only: the runner is already on the new release).
+  // Step 3, retried (forward only: the runner is already on the new release). Each attempt reads
+  // the waiting worker afresh, so a newer release that replaced the one first offered is accepted.
   setState('site');
+  const isNew = (release: string | null) => release !== null && release !== from;
   const siteActive = async () =>
-    releaseOfScript(sw.controller?.scriptURL) === target || (!sw.controller && releaseOfScript((await sw.getRegistration('/'))?.active?.scriptURL) === target);
+    sw.controller ? isNew(releaseOfScript(sw.controller.scriptURL)) : isNew(releaseOfScript((await sw.getRegistration('/'))?.active?.scriptURL));
   for (let attempt = 0; !(await siteActive()); attempt++) {
+    if (attempt >= SITE_ATTEMPTS) {
+      // Give up on the handshake and reload: the reloaded page runs on whichever release is active
+      // and offers the update again if one is still waiting.
+      setState('gave-up');
+      say('Finishing the update…');
+      location.reload();
+      return 'reloading';
+    }
     if (attempt > 0) {
       setState('finishing');
       say('Finishing the update…');
@@ -422,8 +559,8 @@ export async function applyUpdate(connect: () => Promise<RunnerClient>, say: (me
       await sleep(stepTimeout());
       continue;
     }
-    const reg = await sw.getRegistration('/');
-    if (reg?.waiting && releaseOfScript(reg.waiting.scriptURL) === target) reg.waiting.postMessage({ type: 'skip-waiting' });
+    const waiting = (await sw.getRegistration('/'))?.waiting;
+    if (waiting && isNew(releaseOfScript(waiting.scriptURL))) waiting.postMessage({ type: 'skip-waiting' });
     await waitFor(siteActive, { target: sw, type: 'controllerchange' }, stepTimeout());
   }
   await pausePoint('after-site');

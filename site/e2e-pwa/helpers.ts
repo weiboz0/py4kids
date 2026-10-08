@@ -255,7 +255,13 @@ export function offlineRecords(target: Page | Frame): Promise<StoredRecord[]> {
     () =>
       new Promise<StoredRecord[]>((resolve, reject) => {
         const open = indexedDB.open('py4kids-offline');
-        open.onerror = () => reject(open.error);
+        // Never create the database here (a test must not change what it inspects).
+        open.onupgradeneeded = () => open.transaction?.abort();
+        open.onerror = (event) => {
+          event.preventDefault();
+          if (open.error?.name === 'AbortError') resolve([]);
+          else reject(open.error);
+        };
         open.onsuccess = () => {
           const db = open.result;
           if (!db.objectStoreNames.contains('books')) return resolve([]);
