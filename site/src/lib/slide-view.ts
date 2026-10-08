@@ -9,7 +9,7 @@
  */
 
 import type { LoadedBook } from './bundle';
-import { buildSlides, slideKey, type MdUnit, type SlideKind } from './slides';
+import { buildSlides, slideKeys, type MdUnit, type SlideKind } from './slides';
 import { highlightCode, renderMarkdown } from './markdown';
 import { turtleSvg } from './turtle';
 import type { BlockType } from './types';
@@ -77,6 +77,7 @@ export function slideDecks(book: LoadedBook): Deck[] {
     const blocks = data.lesson?.blocks ?? [];
     const slides = buildSlides(blocks);
     if (slides.length === 0) continue;
+    const keys = slideKeys(slides);
     const readingHref = `/${book.id}/${record.id}/`;
     decks.push({
       book: book.id,
@@ -86,7 +87,7 @@ export function slideDecks(book: LoadedBook): Deck[] {
       slidesHref: `${readingHref}slides/`,
       slides: slides.map((slide, i) => ({
         kind: slide.kind,
-        key: slideKey(slide),
+        key: keys[i]!,
         parts: slide.parts.map((part): DeckPart => {
           if (part.kind === 'md') return { kind: 'md', type: part.type, html: renderSlideMarkdown(part.units) };
           const b = part.block;

@@ -98,7 +98,7 @@ class Deck {
     heading.tabIndex = -1;
     const again = button('Start again');
     again.addEventListener('click', () => this.restart());
-    box.append(heading, el('p', undefined, 'Cards you missed come back first next time.'), again);
+    box.append(heading, el('p', undefined, 'Cards you missed come back first next time. A card answered before it is due stays in its box.'), again);
     this.host.append(box);
     heading.focus();
   }

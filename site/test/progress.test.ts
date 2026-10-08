@@ -149,6 +149,17 @@ describe('IndexedDB store', () => {
     expect(await allEventsValid(store)).toBe(2);
   });
 
+  it('records an early correct review as a card event without promoting the card', async () => {
+    const store = await openProgress({ indexedDB: factory });
+    const first = await recordCardReview(store, CARD, true, { content_hash: HASH }, now); // box 2, due in a day
+    const early = await recordCardReview(store, CARD, true, { content_hash: HASH, self_grade: 'got-it' }, new Date(now.getTime() + 60_000));
+    expect(early.state.box).toBe(2);
+    expect(early.state.due).toBe(first.state.due);
+    expect(early.event).toMatchObject({ kind: 'card', result: 'pass', detail: { box: 2, self_grade: 'got-it' } });
+    expect((await store.getCard(CARD.key))?.box).toBe(2);
+    expect(await allEventsValid(store)).toBe(2);
+  });
+
   it('leaves the card state untouched when the event is invalid', async () => {
     const store = await openProgress({ indexedDB: factory });
     await expect(recordCardReview(store, { key: 'bad key', book: 'x' }, true, { content_hash: HASH })).rejects.toThrow(InvalidEventError);

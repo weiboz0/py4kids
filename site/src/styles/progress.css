@@ -189,6 +189,12 @@
 }
 
 /* Mastery map */
+.mastery-details > summary {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .mastery-list {
   margin: 0 0 1rem;
   padding: 0;

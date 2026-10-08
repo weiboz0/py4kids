@@ -232,7 +232,7 @@ Never `git stash` in the shared tree.
     - check a self-check box
     - reload: resume and progress persist
     - search for a glossary term
-  - **Accessibility:** axe (`@axe-core/playwright`) on every page template, plus acsl unit 08's math lesson (MathML is in the accessibility tree), with 0 serious or critical violations.
+  - **Accessibility:** axe (`@axe-core/playwright`) on every page template, plus acsl unit 08's math lesson (MathML is in the accessibility tree), with 0 violations carrying a WCAG 2.2 A or AA tag, whatever their impact (content review 1, [sol] 3).
   - **Lighthouse** (CLI, headless Chromium, the built site served locally): on the catalog, a lesson and the card deck, performance ≥ 0.9, accessibility ≥ 0.95, best practices ≥ 0.95.
   - **No network, proven three ways:**
     - **Request recording:** Playwright records every request (`page.on('request')`) across the end-to-end paths, and any request whose origin is not the local server fails the test. Requests are recorded, not merely blocked, so a page that silently recovers from a blocked call still fails.
@@ -325,16 +325,24 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
   - **Hidden answers:** 12 hidden items across all six kinds checked, with 0 leaks in HTML, JS, JSON or the Pagefind index; 889 hidden fixture outputs scanned.
   - **Lighthouse:** 1.0, 0.99 and 0.99. axe reports 0 serious violations.
 1. `[OPEN]` The plan's Content Review and Post-Execution Report sections are empty. Should Fix (done in the ship step).
-2. `[OPEN]` Long allow-listed code slides show no scroll cue. Nice to Have.
-3. `[OPEN]` The mastery map dominates a fresh book page (40 rows at 0%). Nice to Have.
-4. `[OPEN]` The leak test fails confusingly on Node 20: add a clear version guard and a README note. Nice to Have.
-5. `[OPEN]` Resume can land on a practice page while the catalog label implies reading. Nice to Have.
+2. `[FIXED]` Long allow-listed code slides show no scroll cue. Nice to Have.
+   → Response: the slide player adds `.is-overflowing` to a code panel while `scrollHeight - scrollTop > clientHeight` (checked on show, scroll and resize); `slides.css` then fades the panel's bottom edge and shows a "Scroll the code for more ↓" label (a class, no inline style), removed once the code is scrolled to the end. Test: `e2e/review-fixes.spec.ts` (the 53-line `l1_cards.py` slide shows the cue and loses it at the end; a short code slide shows none).
+3. `[FIXED]` The mastery map dominates a fresh book page (40 rows at 0%). Nice to Have.
+   → Response: the concept rows now sit in a `<details>` ("All N concepts"), collapsed by default; the mastery island opens it once the reader has reviewed at least one card of the book. Test: `e2e/review-fixes.spec.ts` (collapsed on a fresh page, open after one card review).
+4. `[FIXED]` The leak test fails confusingly on Node 20: add a clear version guard and a README note. Nice to Have.
+   → Response: `test/leak.test.ts` now stops at import on Node < 22.12 with a message naming the version and the fix (`source scripts/site-env.sh && site_node_env`), from `test/helpers/node-version.ts` (unit-tested in `test/node-version.test.ts`); `site/README.md` puts that command first in its commands and notes the guard.
+5. `[FIXED]` Resume can land on a practice page while the catalog label implies reading. Nice to Have.
+   → Response: chose labelling over restricting. `pageContext` adds `resumeTitle`, the entry title plus the page kind — `(lesson)`/`(reading)`, `(slides)`, or the practice heading `(exercises)`/`(questions)`/`(problems)` — rendered as `data-resume-title` and stored with the resume position, so the link reads e.g. "Continue: Turtle Art Studio (exercises)". The practice heading moved to `practiceHeading` so the page and the label share it. Tests: `test/cards.test.ts` (every page kind), `e2e/review-fixes.spec.ts` (practice resume) and `e2e/journey.spec.ts` (slides resume).
 
 ### Review 1 — [sol] (2026-10-08, gpt-6-sol)
 - **Verdict**: REJECT.
-1. `[OPEN]` Leitner promotes cards that are not yet due ("Start again" can reach mastery box 3 immediately). Practice on a card that is not due must not advance its box or its mastery. Must Fix.
-2. `[OPEN]` Slide events cannot identify each slide: one block split across slides shares one key (acsl graph-theory, `l-001` ×4). Use a schema-valid per-slide identifier, and test slides split from one block. Must Fix.
-3. `[OPEN]` The a11y gate fails only on serious and critical results; it must fail on every violation carrying a WCAG 2.2 AA tag. Must Fix.
-4. `[OPEN]` Normalisation parity for `exact` and `aliases` is unverified on this branch: the Python producer and the 41 vectors come with plan 102. Should Fix: plan 102 merges first, then main is merged into 103 so the vector test covers all 41 vectors.
+1. `[FIXED]` Leitner promotes cards that are not yet due ("Start again" can reach mastery box 3 immediately). Practice on a card that is not due must not advance its box or its mastery. Must Fix.
+   → Response: `leitner.review` now leaves a card that is not due unchanged on a correct answer (box and due date kept, only `updated_at` moves); the deck still writes its `card` event (`pass`, the unchanged box). Decision, documented in `leitner.ts`: a miss still sends a card to box 1 at any time, since a wrong answer is real evidence and can only lower mastery, never raise it. The mastery-map text now reads "answered right twice, at least a day apart" and the deck's end screen says an early card stays in its box. Tests (`test/leitner.test.ts`, `test/progress.test.ts`): an early correct review does not promote; the same card promotes once due; an early miss resets; ten "Start again" rounds stay in box 2 (below box 3); mastery is unchanged by early reviews; `recordCardReview` records the early event without promoting.
+2. `[FIXED]` Slide events cannot identify each slide: one block split across slides shares one key (acsl graph-theory, `l-001` ×4). Use a schema-valid per-slide identifier, and test slides split from one block. Must Fix.
+   → Response: `slides.ts` `slideKeys` names each slide by its first block's key, and the k-th (k ≥ 2) slide starting with the same block `<block key>#slide-<k>` (so `l-001`, `l-001#slide-2`, `#slide-3`, `#slide-4`); an unsplit block's slide keeps exactly its block key. The schema's `item_key` pattern already accepts any `#…` suffix (block keys such as `…/l-018#2` become `…/l-018#2#slide-2`), so the schema is unchanged. The deck's `data-key`, the `py4kids:slide` event and the stored `slide` event all carry it; resume reads the URL hash and mastery reads only card states, so neither changes. Tests: `test/slides.test.ts` (a split-block fixture, a `#2` block key, and the real acsl unit 12 deck plus every deck of every book: distinct keys, each event valid under the hand-written validator and Ajv) and `e2e/review-fixes.spec.ts` (acsl unit 12 stepped through: distinct `data-key`s and one stored slide event key per slide).
+3. `[FIXED]` The a11y gate fails only on serious and critical results; it must fail on every violation carrying a WCAG 2.2 AA tag. Must Fix.
+   → Response: `e2e/a11y.spec.ts` now fails on every violation carrying `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` or `wcag22aa`, whatever its impact, and prints only best-practice-only ones; a predicate test proves the filter ignores impact. The stricter gate surfaced no site defect: all 32 template × scheme runs report zero violations of any kind.
+4. `[FIXED]` Normalisation parity for `exact` and `aliases` is unverified on this branch: the Python producer and the 41 vectors come with plan 102. Should Fix: plan 102 merges first, then main is merged into 103 so the vector test covers all 41 vectors.
+   → Response: the TS `normalise` is unchanged. `test/normalise.test.ts` adds "parity with Python: every hash_vectors.json vector, all fields": it runs every vector with its `case` and, when present, `whitespace` and `aliases`, checking both the normalised text and the hash, and fails on any vector field it does not know. This branch carries 28 vectors (none with `whitespace`/`aliases`). Parity is complete when plan 102 merges first and main is merged into this branch: the same test then covers all 41 vectors with no change.
 
 ## Post-Execution Report

@@ -1,8 +1,9 @@
 /**
  * The slide rules and the slide audit (plan 103 D6, Phase C).
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { Ajv2020 } from 'ajv/dist/2020.js';
 import { describe, expect, it } from 'vitest';
 import { loadBooks, repoRoot, type LoadedBook } from '../src/lib/bundle';
 import { auditLoadedBook } from '../src/lib/slide-config';
@@ -14,10 +15,12 @@ import {
   countWords,
   DEFAULT_LIMITS,
   formatAudit,
+  slideKeys,
   splitUnits,
   type SlideConfig,
 } from '../src/lib/slides';
 import type { Block, BlockType } from '../src/lib/types';
+import { makeEvent } from '../src/lib/progress';
 
 let n = 0;
 function block(type: BlockType, body: string, extra: Partial<Block> = {}): Block {
@@ -184,6 +187,42 @@ describe('buildSlides', () => {
   });
 });
 
+// --- slide identifiers ([sol] content review 1, finding 2) ----------------------------------
+
+const eventSchema = JSON.parse(readFileSync(join(repoRoot(), 'tools', 'export', 'schema', 'progress-event.schema.json'), 'utf-8')) as object;
+const ajvEvent = new Ajv2020({ strict: true, allErrors: true }).compile(eventSchema);
+const HASH = `sha256:${'d'.repeat(64)}`;
+
+/** Every key makes a `slide` event that both the hand-written validator and Ajv accept. */
+function expectValidSlideKeys(keys: readonly string[]): void {
+  for (const key of keys) {
+    const event = makeEvent({ item_key: key, kind: 'slide', result: 'seen', content_hash: HASH });
+    expect(ajvEvent(event), `${key}: ${JSON.stringify(ajvEvent.errors)}`).toBe(true);
+  }
+}
+
+describe('slideKeys', () => {
+  it('gives every slide of a block split across several slides its own key', () => {
+    const long = block('prose', [words(60), words(60), words(60), words(60)].join('\n\n'));
+    const tail = block('prose', 'Short.');
+    const slides = buildSlides([long, tail]);
+    expect(slides.map((s) => s.parts[0]!.key)).toEqual([long.key, long.key, long.key, long.key]);
+    const keys = slideKeys(slides);
+    expect(keys).toEqual([long.key, `${long.key}#slide-2`, `${long.key}#slide-3`, `${long.key}#slide-4`]);
+    expect(new Set(keys).size).toBe(keys.length);
+    expectValidSlideKeys(keys);
+  });
+
+  it('keeps the plain block key for a block that starts one slide, and suffixes keys that already carry #n', () => {
+    const cell = block('prose', `${words(60)}\n\n${words(60)}`);
+    const part2 = { ...block('prose', `${words(60)}\n\n${words(60)}`), key: `${cell.key}#2` };
+    const code = block('code', 'print(1)');
+    const keys = slideKeys(buildSlides([cell, part2, code]));
+    expect(keys).toEqual([cell.key, `${cell.key}#slide-2`, part2.key, `${part2.key}#slide-2`, code.key]);
+    expectValidSlideKeys(keys);
+  });
+});
+
 describe('auditBook', () => {
   const rows = (k: number) => `| h |\n|---|\n${Array.from({ length: k }, (_, i) => `| ${i} |`).join('\n')}`;
   const lesson = [
@@ -277,6 +316,25 @@ describe.skipIf(books === null)('the real books', () => {
       expect(auditPasses(audit), formatAudit(audit, { ...DEFAULT_LIMITS, allow: [] }).join('\n')).toBe(true);
     }
     expect(got).toEqual(Object.fromEntries(books!.map((b) => [b.id, EXPECTED[b.id]])));
+  });
+
+  it('give every slide a distinct, schema-valid key (acsl graph theory l-001 splits into 4)', () => {
+    const acsl = books!.find((b) => b.id === 'acsl')!;
+    const deck = slideDecks(acsl).find((d) => d.entry === 'unit-12-graph-theory')!;
+    const base = 'acsl/unit-12-graph-theory/lesson/l-001';
+    expect(deck.slides.map((s) => s.key).filter((k) => k.startsWith(base))).toEqual([
+      base,
+      `${base}#slide-2`,
+      `${base}#slide-3`,
+      `${base}#slide-4`,
+    ]);
+    for (const book of books!) {
+      for (const d of slideDecks(book)) {
+        const keys = d.slides.map((s) => s.key);
+        expect(new Set(keys).size, `${book.id}/${d.entry}`).toBe(keys.length);
+        expectValidSlideKeys(keys);
+      }
+    }
   });
 
   it('build a deck for every lesson, with no empty slide', () => {

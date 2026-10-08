@@ -53,6 +53,7 @@ const count = deck.slides.length;
                   {part.label && <figcaption class="slide-label">{part.label}</figcaption>}
                   {part.svg && <Fragment set:html={part.svg} />}
                   <div class="slide-code" set:html={part.codeHtml} />
+                  <p class="slide-scroll-cue" aria-hidden="true">Scroll the code for more ↓</p>
                   {part.output && (
                     <div class="slide-output">
                       <p class="slide-output-label">Output</p>

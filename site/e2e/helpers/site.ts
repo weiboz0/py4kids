@@ -72,3 +72,29 @@ export async function search(page: Page, term: string, bookTitle?: string): Prom
   await page.locator('[data-search-input]').fill(term);
   await page.locator('[data-search-status]').filter({ hasText: /match/ }).waitFor();
 }
+
+/** Everything in the `py4kids` IndexedDB database, by store. */
+export async function stores(page: Page): Promise<Record<string, Record<string, unknown>[]>> {
+  return page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        const open = indexedDB.open('py4kids');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const names = [...db.objectStoreNames];
+          const tx = db.transaction(names, 'readonly');
+          const out: Record<string, Record<string, unknown>[]> = {};
+          for (const name of names) {
+            const req = tx.objectStore(name).getAll();
+            req.onsuccess = () => (out[name] = req.result as Record<string, unknown>[]);
+          }
+          tx.oncomplete = () => {
+            db.close();
+            resolve(out);
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+  );
+}

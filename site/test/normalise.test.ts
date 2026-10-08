@@ -46,6 +46,34 @@ describe('hash_vectors.json', () => {
   });
 });
 
+/**
+ * Normalisation parity with the Python producer (plan 103 content review, [sol] 4): every vector
+ * in hash_vectors.json, with every field it carries (`case`, and `whitespace` and `aliases` when
+ * present), must normalise and hash exactly as Python pinned it. A vector field this test does not
+ * know fails it, so a new rule can never be silently ignored. Plan 102 brings the full set of 41
+ * vectors (with `whitespace: exact` and `aliases`); once it merges into this branch, this test
+ * covers them all with no change.
+ */
+describe('parity with Python: every hash_vectors.json vector, all fields', () => {
+  const KNOWN = new Set(['input', 'case', 'whitespace', 'aliases', 'normalised', 'item_key', 'hash']);
+
+  it('uses only fields the TypeScript normaliser understands', () => {
+    for (const v of vectors) expect(Object.keys(v).filter((k) => !KNOWN.has(k)), v.item_key).toEqual([]);
+  });
+
+  it('reproduces every vector\'s normalised text and hash', async () => {
+    const failures: string[] = [];
+    for (const v of vectors) {
+      const got = normalise(v.input, opts(v));
+      if (got !== v.normalised) failures.push(`${v.item_key}: normalised ${JSON.stringify(got)} != ${JSON.stringify(v.normalised)}`);
+      const hash = await answerHash(v.item_key, v.input, opts(v));
+      if (hash !== v.hash) failures.push(`${v.item_key}: hash ${hash} != ${v.hash}`);
+    }
+    expect(failures).toEqual([]);
+    console.log(`hash_vectors.json parity: ${vectors.length} vectors, ${vectors.filter((v) => v.whitespace).length} with whitespace, ${vectors.filter((v) => v.aliases).length} with aliases`);
+  });
+});
+
 describe('Python \\s, not JavaScript \\s', () => {
   it('collapses U+001C..U+001F and U+0085 (JavaScript \\s does not)', () => {
     for (const ch of ['\x1c', '\x1d', '\x1e', '\x1f', '\x85']) expect(normalise(`a${ch}b`, { case: 'sensitive' })).toBe('a b');

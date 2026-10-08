@@ -1,6 +1,7 @@
 /**
  * The mastery map island (plan 103 "Mastery map and cards (D8)"): fills each concept's
- * percentage from `/<book>/mastery.json` and the on-device card boxes (1/k weighting, box >= 3).
+ * percentage from `/<book>/mastery.json` and the on-device card boxes (1/k weighting, box >= 3),
+ * and opens the map once the reader has reviewed at least one card of the book.
  */
 
 import { conceptMastery, type MasteryProjection } from '../lib/mastery';
@@ -14,7 +15,10 @@ async function main(): Promise<void> {
   if (!response.ok) throw new Error(`mastery.json: HTTP ${response.status}`);
   const projection = (await response.json()) as MasteryProjection;
   const store = await sharedProgress();
-  const mastery = conceptMastery(projection, await store.cards(book));
+  const states = await store.cards(book);
+  const details = section.querySelector<HTMLDetailsElement>('[data-mastery-details]');
+  if (details && states.size > 0) details.open = true;
+  const mastery = conceptMastery(projection, states);
   for (const row of section.querySelectorAll<HTMLElement>('[data-concept]')) {
     const share = mastery.get(row.dataset.concept!);
     if (share === undefined) continue;

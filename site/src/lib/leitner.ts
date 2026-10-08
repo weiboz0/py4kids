@@ -1,8 +1,16 @@
 /**
  * Leitner spaced repetition for the card deck (design 012 D8; plan 103 "Mastery map and cards").
- * Five boxes. A card never reviewed is in box 1 and due now. A correct answer moves a card up
- * one box (at most 5) and schedules it `INTERVAL_DAYS[box]` days later; a miss sends it back to
- * box 1, due again at once. Mastery counts a card as known from box `KNOWN_BOX` (3) up.
+ * Five boxes. A card never reviewed is in box 1 and due now. A correct answer on a card that is
+ * due moves it up one box (at most 5) and schedules it `INTERVAL_DAYS[box]` days later; a miss
+ * sends it back to box 1, due again at once. Mastery counts a card as known from box `KNOWN_BOX`
+ * (3) up.
+ *
+ * Early review (plan 103 content review, [sol] 1): the deck also lets a reader answer cards that
+ * are not due yet (the "not due yet" tail, "Start again"). A correct answer then changes nothing
+ * but `updated_at`: the box and due date stay, so practice cannot promote a card early or move
+ * mastery. A miss still sends the card to box 1 at any time, because a wrong answer is real
+ * evidence that the card is not known (it can only lower mastery, never raise it). The deck page
+ * writes a `card` event for every answer either way.
  */
 
 export const BOXES = 5;
@@ -26,13 +34,16 @@ export interface CardState {
 /** A card's box, treating a card never reviewed as box 1. */
 export const boxOf = (state: CardState | undefined): number => state?.box ?? 1;
 
-/** The card's state after one review. */
+/** The card's state after one review (an early correct answer keeps the box and due date). */
 export function review(
   previous: CardState | undefined,
   card: { key: string; book: string },
   correct: boolean,
   now: Date = new Date(),
 ): CardState {
+  if (correct && previous !== undefined && !isDue(previous, now)) {
+    return { key: card.key, book: card.book, box: previous.box, due: previous.due, updated_at: now.toISOString() };
+  }
   const box = correct ? Math.min(boxOf(previous) + 1, BOXES) : 1;
   const due = new Date(now.getTime() + INTERVAL_DAYS[box as 1 | 2 | 3 | 4 | 5] * DAY_MS);
   return { key: card.key, book: card.book, box, due: due.toISOString(), updated_at: now.toISOString() };

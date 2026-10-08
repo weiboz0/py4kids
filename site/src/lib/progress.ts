@@ -352,7 +352,8 @@ export function resetUnsavedNotice(): void {
 
 /**
  * One card review: the new Leitner state and a `card` event carrying the new box (and the
- * self-grade for flip cards); `pass`/`fail` follows `correct`. The event is validated and
+ * self-grade for flip cards); `pass`/`fail` follows `correct`. A correct answer on a card that
+ * is not due yet is still recorded, but keeps its box (`leitner.review`). The event is validated and
  * written first, so an invalid one leaves the card state untouched.
  */
 export async function recordCardReview(
@@ -392,7 +393,7 @@ export function recordChecklist(
   return store.addEvent({ item_key: itemKey, kind: 'self-check', result, detail: { checklist }, content_hash: contentHash }, now);
 }
 
-/** One slide viewed, keyed by the slide's first block. */
-export function recordSlide(store: ProgressStore, blockKey: string, contentHash: string, now: Date = new Date()): Promise<ProgressEvent> {
-  return store.addEvent({ item_key: blockKey, kind: 'slide', result: 'seen', content_hash: contentHash }, now);
+/** One slide viewed, keyed by the slide's identifier (`slides.ts` `slideKeys`). */
+export function recordSlide(store: ProgressStore, slideKey: string, contentHash: string, now: Date = new Date()): Promise<ProgressEvent> {
+  return store.addEvent({ item_key: slideKey, kind: 'slide', result: 'seen', content_hash: contentHash }, now);
 }

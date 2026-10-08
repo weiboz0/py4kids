@@ -2,8 +2,8 @@
  * The DOM contract between the page islands (plan 103 Phase D).
  *
  * - `py4kids:slide`: the slide player (Phase C) dispatches it on `document` each time a slide is
- *   shown, with `{book, entry, index, key, count}`. `detail.key` is the global key of the slide's
- *   first block; `detail.index` is 0-based. The progress island (a capturing `window` listener)
+ *   shown, with `{book, entry, index, key, count}`. `detail.key` is the slide's identifier (its
+ *   first block's global key, `#slide-<k>` on the k-th slide of a split block; `slideKeys`); `detail.index` is 0-based. The progress island (a capturing `window` listener)
  *   writes a `slide` event and moves the book's resume position to the slide.
  * - Practice-page checklists (Phase B): each requirement of a self-check item is an
  *   `<input type="checkbox" data-item-key="<item key>" data-requirement="<i>">`; an item's boxes,

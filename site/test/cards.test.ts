@@ -157,6 +157,20 @@ describe('pageContext', () => {
     });
     expect(pageDataAttributes(undefined)).toEqual({});
   });
+
+  it('labels the resume position with its page kind ([fable] content review 1, finding 5)', () => {
+    const title = (path: string) => pageContext(demo, path).resumeTitle;
+    expect(title('/demo/unit-01-demo/')).toBe('Unit 1 — Demo (lesson)');
+    expect(title('/demo/unit-01-demo/slides/')).toBe('Unit 1 — Demo (slides)');
+    expect(title('/demo/unit-01-demo/practice/')).toBe('Unit 1 — Demo (exercises)');
+    expect(title('/demo/checkpoint-01-demo/')).toBe('Checkpoint 1 — Demo (reading)');
+    expect(title('/demo/checkpoint-01-demo/practice/')).toBe('Checkpoint 1 — Demo (questions)');
+    expect(title('/demo/')).toBeUndefined();
+    expect(pageDataAttributes(pageContext(demo, '/demo/unit-01-demo/practice/'))).toMatchObject({
+      'data-entry': 'unit-01-demo',
+      'data-resume-title': 'Unit 1 — Demo (exercises)',
+    });
+  });
 });
 
 describe.skipIf(!hasReal)('real bundles', () => {

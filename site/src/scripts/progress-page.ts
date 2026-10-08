@@ -43,9 +43,9 @@ function warn(error: unknown): void {
 }
 
 async function recordPosition(store: ProgressStore, href: string): Promise<void> {
-  const { book, entry, entryTitle } = document.body.dataset;
+  const { book, entry, entryTitle, resumeTitle } = document.body.dataset;
   if (!book || !entry) return;
-  await store.setResume({ book, entry, href, title: entryTitle ?? entry });
+  await store.setResume({ book, entry, href, title: resumeTitle ?? entryTitle ?? entry });
 }
 
 /**

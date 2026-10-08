@@ -13,6 +13,7 @@ import { bookHref } from './catalog';
 import { escapeHtml, highlightCode, renderInline, renderMarkdown, renderOutput } from './markdown';
 import { ISSUES_URL, REPORT_LABEL, reportHref } from './report';
 import { turtleSvg } from './turtle';
+import { practiceHeading } from './page-context';
 import { deckProjection } from './cards';
 import { bookPage, glossaryView, referenceView } from './book-page';
 import { slideDecks } from './slide-view';
@@ -298,7 +299,7 @@ export function practiceView(book: LoadedBook, entryId: string): PracticeView {
     entryId,
     kind,
     title: entry.record.title,
-    heading: kind === 'unit' ? 'Exercises' : kind === 'checkpoint' ? 'Questions' : 'Problems',
+    heading: practiceHeading(kind),
     readingHref: entryHref(book.id, entryId),
     intro: renderBlocks(data.intro, entry.record.title),
     items,

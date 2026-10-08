@@ -7,13 +7,27 @@
  *   link or reload returns to the same slide;
  * - Escape returns to the reading view;
  * - each slide viewed dispatches `py4kids:slide` on `document` with
- *   `{book, entry, index, key, count}` (index is 0-based; key is the slide's first block key).
- *   The progress store (Phase D) listens for it; this module stores nothing itself.
+ *   `{book, entry, index, key, count}` (index is 0-based; key is the slide's identifier, `slideKeys`).
+ *   The progress store (Phase D) listens for it; this module stores nothing itself;
+ * - a code panel whose code runs below its bottom edge gets `.is-overflowing` (a fade and a
+ *   "Scroll the code for more" label, slides.css) until it is scrolled to the end.
  */
 
 import { SLIDE_EVENT, type SlideEventDetail } from '../lib/dom-events';
 
 const SWIPE_MIN_PX = 50;
+
+/** True while some of the element's content is hidden below its bottom edge. */
+const hasMoreBelow = (el: { scrollHeight: number; scrollTop: number; clientHeight: number }): boolean =>
+  el.scrollHeight - el.scrollTop - el.clientHeight > 1;
+
+/** Marks each code panel in `root` that has code hidden below it. */
+function updateScrollCues(root: ParentNode): void {
+  for (const panel of root.querySelectorAll<HTMLElement>('.slide-code')) {
+    const pre = panel.querySelector('pre');
+    panel.classList.toggle('is-overflowing', pre !== null && hasMoreBelow(pre));
+  }
+}
 
 function start(deck: HTMLElement): void {
   const slides = Array.from(deck.querySelectorAll<HTMLElement>('.slide'));
@@ -45,7 +59,15 @@ function start(deck: HTMLElement): void {
     if (location.hash !== hash) history.replaceState(null, '', hash);
     const detail: SlideEventDetail = { book, entry, index, key: slides[index]!.dataset.key ?? '', count: slides.length };
     document.dispatchEvent(new CustomEvent<SlideEventDetail>(SLIDE_EVENT, { detail }));
+    updateScrollCues(slides[index]!);
   };
+
+  for (const pre of deck.querySelectorAll<HTMLElement>('.slide-code pre')) {
+    pre.addEventListener('scroll', () => updateScrollCues(pre.closest('.slide') ?? deck), { passive: true });
+  }
+  window.addEventListener('resize', () => {
+    if (index >= 0) updateScrollCues(slides[index]!);
+  });
 
   deck.classList.add('is-live');
   show(fromHash());

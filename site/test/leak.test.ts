@@ -26,6 +26,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 import { CONTENT_ENV, loadBooks, repoRoot } from '../src/lib/bundle';
 import type { EntryFile } from '../src/lib/types';
+import { nodeVersionProblem } from './helpers/node-version';
+
+// Fail fast, with the fix, on a Node too old to build the site (not deep inside the build).
+const nodeProblem = nodeVersionProblem(process.versions.node);
+if (nodeProblem) throw new Error(nodeProblem);
 
 const SITE = join(import.meta.dirname, '..');
 const CONTENT = join(repoRoot(), 'site', 'content');

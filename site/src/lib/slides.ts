@@ -310,8 +310,23 @@ export function buildSlides(blocks: readonly Block[], limits: Partial<SlideLimit
   return slides;
 }
 
-/** The first block key on a slide (the `item_key` of its progress event). */
-export const slideKey = (slide: Slide): string => slide.parts[0]!.key;
+/**
+ * Each slide's identifier: the `item_key` of its `slide` progress event (plan 103 content review,
+ * [sol] 2). A slide is named by its first block. A long block can be split across several
+ * slides, each starting with that same block, so the first such slide keeps the plain block key
+ * and the k-th (k >= 2) is `<block key>#slide-<k>`. Block keys never contain `#slide-`, and the
+ * schema's `item_key` pattern allows any `#…` suffix, so the keys are distinct and schema-valid
+ * without changing the schema; an unsplit block's slide keeps exactly its block key.
+ */
+export function slideKeys(slides: readonly Slide[]): string[] {
+  const seen = new Map<string, number>();
+  return slides.map((slide) => {
+    const key = slide.parts[0]!.key;
+    const ordinal = (seen.get(key) ?? 0) + 1;
+    seen.set(key, ordinal);
+    return ordinal === 1 ? key : `${key}#slide-${ordinal}`;
+  });
+}
 
 // --- the audit ------------------------------------------------------------------------------
 

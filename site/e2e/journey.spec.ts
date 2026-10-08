@@ -12,7 +12,7 @@
  */
 import type { Page } from '@playwright/test';
 import { assertNoNetwork, expect, test } from './helpers/net';
-import { BOOKS, deckOf, search } from './helpers/site';
+import { BOOKS, deckOf, search, stores } from './helpers/site';
 
 interface Counts {
   due: number;
@@ -25,32 +25,6 @@ async function counts(page: Page): Promise<Counts> {
   const m = /(\d+) due, (\d+) new, (\d+) not due yet/.exec(text);
   if (!m) throw new Error(`unexpected deck counts: ${text}`);
   return { due: Number(m[1]), fresh: Number(m[2]), later: Number(m[3]) };
-}
-
-/** Everything in the `py4kids` IndexedDB database, by store. */
-async function stores(page: Page): Promise<Record<string, Record<string, unknown>[]>> {
-  return page.evaluate(
-    () =>
-      new Promise((resolve, reject) => {
-        const open = indexedDB.open('py4kids');
-        open.onerror = () => reject(open.error);
-        open.onsuccess = () => {
-          const db = open.result;
-          const names = [...db.objectStoreNames];
-          const tx = db.transaction(names, 'readonly');
-          const out: Record<string, Record<string, unknown>[]> = {};
-          for (const name of names) {
-            const req = tx.objectStore(name).getAll();
-            req.onsuccess = () => (out[name] = req.result as Record<string, unknown>[]);
-          }
-          tx.oncomplete = () => {
-            db.close();
-            resolve(out);
-          };
-          tx.onerror = () => reject(tx.error);
-        };
-      }),
-  );
 }
 
 for (const [book, plan] of Object.entries(BOOKS)) {
@@ -208,6 +182,7 @@ for (const [book, plan] of Object.entries(BOOKS)) {
     const resume = page.locator(`[data-resume-book="${book}"]`);
     await expect(resume).toBeVisible();
     await expect(resume.locator('a')).toHaveAttribute('href', `/${book}/${plan.lesson}/slides/#3`);
+    await expect(resume.locator('[data-resume-title]')).toHaveText(/ \(slides\)$/); // the page kind is named
     await resume.locator('a').click();
     await expect(page.locator('li.slide:not([hidden])')).toHaveCount(1);
     await expect(page.locator('progress[data-deck-progress]')).toHaveJSProperty('value', 3);

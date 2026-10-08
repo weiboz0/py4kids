@@ -207,6 +207,26 @@ body:has(.deck) main {
   line-height: 1.45;
 }
 
+/* The scroll cue ([fable] content review 1): the player adds .is-overflowing to a code panel
+   while code is hidden below its bottom edge (scrollHeight > clientHeight, not yet scrolled to
+   the end); the panel then fades out at the bottom and a label says there is more. */
+.slide-scroll-cue {
+  display: none;
+  margin: -0.3em 0 0.5em;
+  font-size: 0.7em;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.slide-code.is-overflowing + .slide-scroll-cue {
+  display: block;
+}
+
+.slide-code.is-overflowing pre {
+  -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent);
+  mask-image: linear-gradient(to bottom, #000 80%, transparent);
+}
+
 .slide-output pre {
   max-height: 30vh;
   background: var(--surface);

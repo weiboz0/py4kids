@@ -49,6 +49,7 @@ Progress is stored under these keys, so a key must not silently vanish.
 `site/` is also the Astro 7 static site that renders every `site: true` book from its bundle.
 
 ```bash
+source scripts/site-env.sh && site_node_env   # first, in each shell: Node >= 22.12 (the .nvmrc Node 24) on PATH
 bash scripts/build-site.sh [--release <tag>]   # export every site book, then build site/dist/
 pnpm -C site test                              # vitest
 pnpm -C site e2e                               # Playwright on the built dist/ (build first)
@@ -56,6 +57,7 @@ pnpm -C site dev                               # local preview of the exported b
 ```
 
 - **Toolchain:** Node 24 LTS (`.nvmrc`; `nvm install`), pnpm at the version in `package.json` `packageManager` (`corepack enable`).
+  The tests need it too: on an older Node `test/leak.test.ts` (which builds the site) stops at once and says so.
   Dependencies are exact-pinned; `pnpm install --frozen-lockfile` is the only install path.
 - **Loader:** `src/lib/bundle.ts` discovers `content/*/book.json`, validates every file against `tools/export/schema/bundle.schema.json` with Ajv, and fails the build on an invalid bundle.
   `PY4KIDS_SITE_CONTENT=<dir>` points it at another content directory.
