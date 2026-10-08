@@ -31,7 +31,17 @@ User, 2026-10-06: "go ahead with the content plans on autopilot", and the goal "
    - **`expected-output`** only when the statement (or the starter) fixes the exact output (D4): it fixes every **input value** the program uses, not only a sample.
      - A worked sample that only illustrates, where the student chooses their own values (python-concepts unit 01 Exercise 7: "your club and day"), is **not** fixed; retag it `self-check`.
      - Retagging an item *to* `expected-output` against the tool's `output not fixed by the statement` verdict needs a phase-log line quoting the statement sentence that fixes each output line. The content gate samples these first.
-   - **`asserts`** only when the statement tells the student the names the asserts use, **and** every asserted value is one the statement fixes. The reviewer compares each assert's operands with the task's fixed inputs and its permitted choices. Example: python-projects unit 01 Exercise 3 asserts the solution's own snack while the student may choose words, so it is not `asserts`.
+   - **`asserts`** only when every assert is portable.
+     - **Portable means one of two things:**
+       - (a) It **calls a function or method the statement specifies**, with any arguments, and compares the result with the specified behaviour. Example: `u07e10a`'s `lcm(5, 7) == 35`, where the statement fixes `lcm(a, b)` and shows only other examples. That is the ideal check.
+       - (b) It **compares a top-level name the statement tells the student to use with a value the task's stated inputs fix.**
+     - The reviewer compares each assert's operands with the task's fixed inputs and permitted choices.
+     - Example: python-projects unit 01 Exercise 3 asserts the solution's own snack while the student chooses "your own words". That fails (b), so it is not `asserts`.
+     - **Scripted input.** When the statement's core task, outside the `**Real version:**` panel, reads `input()`, the asserts compare against the solution's scripted sample input and are not portable, so the item is `self-check`. Known python-projects cases:
+       - `unit-04-quiz-show`: `u04-ex10`, `u04-ex11`, `u04-count-correct-heading`
+       - `unit-07-high-score-hall`: `5c20b19f`, `dfc665d7`
+       - `checkpoint-01`: `checkpoint-05`
+       - `project-02`: `milestone-1`
    - **`predict`** only for trace questions.
    - **`answer`** only for short answers with exactly one canonical `**Answer:**` line.
    - **`fixtures`** only for stdin programs with fixture pairs.
@@ -48,7 +58,7 @@ User, 2026-10-06: "go ahead with the content plans on autopilot", and the goal "
    - Any wider statement change is out of scope; such items stay `self-check`.
    - Every statement edit is listed in the post-execution report.
    - **Regression contract.** The baseline digests (`tests/data/<book>-publish-baseline.json`) stay immutable.
-     - Each file a statement edit changes gets an allowed-diffs entry whose reason cites `design 012 D4 (plan 102 rule 2)` and names the item. `tests/test_publication_regression.py`'s reason rule is extended to accept that citation alongside design 010 D2/D3.
+     - Each file a statement edit changes gets an allowed-diffs entry whose reason cites `design 012 D4 (plan 102 rule 2)` and names the item. `tests/test_publication_regression.py`'s reason rule is extended to accept `D4` only together with the literal `plan 102 rule 2`, so an unrelated D4 reason cannot slip through.
      - The phase log records, for each edit, that reverting exactly that edit reproduces the baseline digest.
      - acsl has no baseline. It relies on `ci-local`'s PDF build and `publish-audit`, and Phase D makes no statement edits.
    - Solutions never change, except to keep a solution's mirror equal to an edited starter.
@@ -94,6 +104,12 @@ Each phase runs on its own book. Phases A–D run in four parallel worktrees, on
    - every retag, every statement edit (with its revert-reproduces-baseline note) and every `answer_format` decision (with its lesson citation)
 
 - **Phase 0: answer-format extensions and `also_check`** (tooling, before Phases A–D).
+  - **Touch points** (all must change together, or `site-check` fails on the first authored item):
+    - `answers.answer_format`, which today rejects any authored metadata whose keys are not exactly `{case, hint}`
+    - the bundle schema's `$defs/answer_format`, which has `additionalProperties: false`
+    - `normalise` / `answer_hash`
+    - the answer model's hash recompute (`answer_model.py`, which passes only `case`)
+    - `hash_vectors.json`
   - **`aliases`:** `answer_format` gains an optional `aliases` map, `{typed: canonical}`, with single-character or token keys.
   - **`whitespace`:** `answer_format` gains an optional `whitespace: collapse|exact` (default `collapse`). `exact` strips only trailing spaces per line and trailing blank lines.
   - The bundle schema, `normalise` (aliases applied after whitespace and case), `answer_hash`, the answer model's check 4, and `hash_vectors.json` all honour both, so part C's JavaScript port follows them.
@@ -109,10 +125,12 @@ Each phase runs on its own book. Phases A–D run in four parallel worktrees, on
 - **Phase B: python-projects** (236 items). Most of the work is the self-check items: confirm each one, backticking named variables only where rule 2 allows (about 5–10 items), and give each a sound checklist. Retag or justify `c8e092dc` (rule 4).
 - **Phase C: usaco-bronze** (161 items, all `fixtures`).
   - Confirm each item's sample pair matches its statement.
-  - **Validate every fixture pair independently.** A separate Opus agent, which never reads the reference solvers (`assets/exN.py`, `qN.py`, `pN.py`) or the solution notebooks, writes its own solver for each item from the statement alone and runs it on every pair. Any mismatch is investigated and the wrong side fixed: a bad `.out` is regenerated from a corrected reference only after review.
+  - **Validate every fixture pair independently.** A separate Opus agent writes its own solver for each item from the statement alone and runs it on every pair.
+    - Isolation is enforced, not promised: the agent gets a filtered copy holding only the statement notebooks and the fixture directories. The reference solvers (`assets/exN.py`, `qN.py`, `pN.py`), which sit beside the fixtures, and the solution notebooks are removed.
+    - The phase log records per-item pass counts. Any mismatch is investigated and the wrong side fixed: a bad `.out` is regenerated from a corrected reference only after review.
   - Attribute 59 lesson blocks and 1 item under rule 6.
 - **Phase D: acsl** (359 items).
-  - Decide all 90 letter-bearing `answer_format`s under rule 3, including the six `↑` aliases.
+  - Author an `answer_format` for all **130** multi-token ACSL `answer` canonicals under rule 3: the 90 letter-bearing ones, plus 40 digit-only lists such as `1 2 3` or `(0,1), (1,0)`, whose hints follow the taught form too (unit 08: "no spaces inside a pair, and a comma and a space between pairs"). This includes the six `↑` aliases.
   - Confirm the 72 `fixtures` items, with the same independent blind-solver validation of every pair as Phase C.
   - Attribute 128 lesson blocks and 1 item under rule 6.
   - Make no statement edits.
@@ -162,6 +180,11 @@ They take items from each phase log's retag lines and from every rule-1 `expecte
 - `[sol]` **REJECT** (gpt-6-sol):
   - `[FIXED]` Method requirements (python-concepts unit 01 Exercise 4: `+`, not an f-string) are invisible to an output check. Every requirement is now accounted for: unverifiable ones go into `also_check` (Phase 0), shown as a self-check list beside the automatic check; an item whose core result is unverifiable is `self-check`.
   - `[FIXED]` Significant whitespace (unit 01 Exercise 14's `\t`) was collapsed. Added `answer_format.whitespace: exact` (Phase 0) and a review rule.
+
+- `[fable]` **REJECT** (round 2, a66aa8f):
+  - `[FIXED]` The asserts fold over-reached: about half the asserts items are function calls with arguments the statement does not show (`u07e10a` `lcm(5, 7) == 35`). Portability is now (a) a call to a specified function, or (b) a named variable against task-fixed inputs. Also added the scripted-`input()` exclusion and its seven known items.
+  - `[FIXED]` (nits) Phase 0 names all its touch points; ACSL hint authoring is sized at 130, numeric lists included; blind-solver isolation is enforced with a filtered copy and per-item pass counts; the D4 regression reason requires `plan 102 rule 2`.
+- `[sol]` **APPROVE** (round 3, 022a1b1, gpt-6-sol).
 
 ## Content Review
 
