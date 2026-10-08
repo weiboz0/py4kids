@@ -247,7 +247,49 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 1. `[FIXED]` python-concepts unit-06 `u06e014`, `u06e09a`, `u06e10a` and `u06e11a`: the same finding as [fable]'s Review 3, already fixed in 44234d1. Must Fix.
 2. `[FIXED]` `exercise-6-heading`'s checklist omitted running the asset and the notebook's numeric proxy. Should Fix. → Response: authored `requirements` (12 statement fragments covering the asset bullets, the run, the proxy and "do not import turtle in the notebook").
 
+### Review 4 (181e90c) — CONSENSUS
+- `[self]` APPROVE.
+- `[sol]` **APPROVE** (gpt-6-sol): no findings. 25 items sampled per book; zero tag or statement-tie findings across all 1,147 items.
+- `[fable]` **APPROVE**: the unit-06 retags and the exercise-6 checklist verified. One cosmetic log nit (stale "the drawing is listed in also_check" phrasing in five unit-06 lines), left as is.
+
 ### Coordinator decision (round-1 audit)
 - The audit added the statements' own hand-trace instruction ("Work it out by hand first" / "Trace it by hand, using ACSL's rules") as `also_check` on 71 ACSL `answer` items. **Kept**: it is a statement requirement that a hashed answer cannot verify, and showing it beside the answer box is honest about what the check covers.
 
 ## Post-Execution Report
+
+**Shipped: every checkable item of the four site books carries a confirmed check kind, and every `site.yaml` is `classification: confirmed`.** `site-check` now fails on any untagged item.
+
+| book | items | confirmed kinds | `also_check` / authored metadata |
+|---|---|---|---|
+| python-projects | 236 | asserts 50, expected-output 9, predict 7, self-check 170 | `also_check` on most checked items; authored `requirements` on 45 self-check items |
+| python-concepts | 391 | asserts 184, expected-output 140, predict 7, self-check 60 | 9 `whitespace: exact` items with the `\t` alias; `also_check` on 310 of 336 checked items |
+| usaco-bronze | 161 | fixtures 161 | `also_check` on 142 items (method, structure and time-bound requirements) |
+| acsl | 359 | answer 287, fixtures 72 | 175 authored `answer_format`s with lesson-cited taught forms; 5 `^`→`↑` aliases; hex is case-insensitive |
+
+- **Phase 0 (tooling):**
+  - `answer_format.aliases` and `whitespace: exact`
+  - `also_check`, with a statement tie on `also_check` and `requirements`
+  - 44 hash vectors
+  - the regression-reason rule for statement edits (unused: no rule-2 statement edits were needed)
+- **Independent fixture validation:** blind solvers, given no reference solutions, passed **669/669** usaco-bronze and **453/453** acsl cases, with 0 fixture defects.
+- **Fixes found along the way:**
+  - `statement_md` lost indentation inside code fences after a blank line (python-concepts `u13e060/063/066`, acsl unit 02); fixed in the exporter with tests.
+  - Seven python-projects items depended on files or names that only an earlier item creates (unit 09 drills; checkpoint 04 Questions 4 and 5) and could never pass alone; now `check-self`. A sandbox guard runs every checked solution with only tracked files (`FileNotFoundError`/`NameError`, with a starter fallback).
+  - Nine turtle items checked only a printed proxy while the drawing is the result (python-projects unit 05 ex 6/10/11; python-concepts unit 06 ×5); now `check-self`, rule 1.
+  - The `also_check` audit added 371 statement-quoted method requirements.
+  - The checklist splitter no longer splits inside inline code.
+- **Gates:**
+  - plan review: 4 rounds
+  - content review: 4 rounds; [fable] and [sol] each blind-solved about 25 or more items per book, and every confirmed check accepted the correct answer and rejected a plausible wrong one
+- **Verification:**
+  - `tests/test_site_confirmed.py` (32 tests, each with a negative case)
+  - the full suite (2030+)
+  - `site-check` on all four books
+  - `scripts/ci-local.sh` solo (see the PR)
+
+**Follow-ups (not in this plan's scope, because they need statement or print changes):**
+1. **usaco-bronze unit 12:** six tree statements (`u12e0002/4/6/8/14/16`) never state the input format; it appears only in the unit intro. Content or errata plan.
+2. **python-concepts `u08e002`:** "Seed with 4" inside the function is ambiguous. Content plan.
+3. **PDF errata:** the print path (`publish.py` `_item_body`, `markdown_blocks` without `keep_fences`) still loses fence indentation, so the PDFs likely print `u13e060/063/066` methods at column 0. Errata plan (AGENTS errata flow).
+4. **Curriculum question for the user:** python-concepts checkpoint-03 Q3 and checkpoint-04 Q5 answers appear verbatim in lessons (from plan 101).
+5. **Part C:** the nine `whitespace: exact` answer boxes; `u06e014`'s open spiral needs the `open-path` turtle marker; the per-case runner must not depend on cross-item state (now guarded).
