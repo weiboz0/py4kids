@@ -37,6 +37,7 @@ from tools.publish import (
     VERIFY_TAG,
     _clean_title,
     allowed_source,
+    fenced_paragraphs,
     group_title,
     item_divisions,
     item_groups,
@@ -208,7 +209,8 @@ def _side_block(ctx: _Context, cell, key: str) -> dict | None:
     for title, type_ in GOALS_RECAP:
         if text.startswith(title + "\n") or text == title:
             return _block(key, type_, cell, md=text[len(title):].strip())
-    md = markdown_blocks(SECTION.sub("### ", text), lesson_heading=ctx.lesson_heading).rstrip()
+    md = markdown_blocks(SECTION.sub("### ", text), lesson_heading=ctx.lesson_heading,
+                         keep_fences=True).rstrip()
     return _block(key, "notice" if NOTICE.match(text) else "prose", cell, md=md)
 
 
@@ -238,7 +240,8 @@ def _statement_md(ctx: _Context, cells, title_line: str | None, challenge_lead: 
             continue
         if ctx.kind == "project":
             text = re.sub(r"(?m)^## Milestone ", "### Milestone ", text)
-        for paragraph in re.split(r"\n\s*\n", text.strip()):
+        # A code fence is one paragraph, kept verbatim (its blank lines and indentation; plan 102).
+        for paragraph in fenced_paragraphs(text.strip()):
             if not paragraph.strip() or PLACEHOLDER.match(paragraph):
                 continue
             if re.match(r"^\*\*(?:Real version|No real version):\*\*", paragraph):
@@ -251,7 +254,8 @@ def _statement_md(ctx: _Context, cells, title_line: str | None, challenge_lead: 
                     paragraph = paragraph[0].upper() + paragraph[1:]
                 parts.append(panel("realprog", paragraph))
             else:
-                parts.append(markdown_blocks(paragraph, lesson_heading=ctx.lesson_heading))
+                parts.append(markdown_blocks(paragraph, lesson_heading=ctx.lesson_heading,
+                                             keep_fences=True))
     return "\n\n".join(part.rstrip() for part in parts) + ("\n" if parts else "")
 
 
@@ -466,6 +470,8 @@ def export_item(root: Path, book: str, item: Item) -> ItemExport:
         "files": item.files, "check": check, **answers.answer_fields(root, book, item),
         "before": item.before,
     }
+    if kind != "self-check" and answers.also_check(item):
+        data["also_check"] = answers.also_check(item)  # plan 102 Phase 0
     if kind == "self-check":
         notes = [f"self-check: {reason}", *notes]
     item_notes = [note for note in item.notes

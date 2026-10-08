@@ -123,6 +123,10 @@ def item(data, bundle_dir: Path) -> str:
     if data["starter"]:
         parts.append(f'<pre class="starter">{html.escape(data["starter"])}</pre>')
     parts.append(check_control(data["check"], bundle_dir))
+    if data.get("also_check"):  # plan 102 Phase 0: a self-check list beside the automatic check
+        ticks = "".join(f'<li><input type="checkbox"> {html.escape(r)}</li>'
+                        for r in data["also_check"])
+        parts.append(f'<ul class="also-check">{ticks}</ul>')
     if data["answer_visibility"] == "after-attempt":
         parts.append(f'<details class="answer"><summary>Answer</summary>'
                      f'{markdown(data["answer_md"])}</details>')

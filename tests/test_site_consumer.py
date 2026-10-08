@@ -237,6 +237,12 @@ def test_each_check_kind_shows_its_control(demo_bundle, tmp_path):
     assert asserts["source"].startswith("assert double(3) == 6")
     assert '<details class="answer">' in _section(page, kinds["predict"])  # odd: after-attempt
     assert '<details class="answer">' not in _section(page, kinds["answer"])  # even: none
+    # plan 102 Phase 0: an item's `also_check` shows as a self-check list beside its check.
+    also = next(i for i in entry["items"] if i.get("also_check"))
+    section = _section(page, also["key"])
+    assert '<ul class="also-check">' in section
+    assert section.count('<input type="checkbox">') == len(also["also_check"])
+    assert html.escape(also["also_check"][0]) in section
 
 
 def test_checkpoint_project_cards_and_glossary(demo_bundle, tmp_path):

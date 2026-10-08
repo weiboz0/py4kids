@@ -710,7 +710,7 @@ def structural_subheads(text: str) -> str:
     label run into a following prose paragraph, or a bold label line before a list or code block."""
     if not re.search(r'(?m)^### ', text):
         return text
-    paragraphs = re.split(r'\n\s*\n', text.strip())
+    paragraphs = fenced_paragraphs(text.strip())  # a code fence stays verbatim (plan 102)
     out = []
     index = 0
     while index < len(paragraphs):

@@ -13,6 +13,9 @@ from tools.export import answers
 from tools.export.items import (
     EntryContent,
     Item,
+    _Context,
+    _side_block,
+    _statement_md,
     entry_content,
     entry_items,
     export_item,
@@ -226,3 +229,55 @@ def test_real_items_validate(book):
             data = export_item(ROOT, book, item).data
             errors = [e.message for e in item_schema.iter_errors(data)]
             assert not errors, (item.key, errors[:3])
+
+
+FENCED = """Trace the class below.
+
+```python
+class Counter:
+    def __init__(self):
+        self.count = 0
+
+    def increment(self, amount):
+        self.count = self.count + amount
+
+
+c = Counter()
+```
+
+Then answer."""
+
+
+def _ctx(kind: str = "unit") -> _Context:
+    return _Context(root=ROOT, book="demo", entry_dir=ROOT / "demo" / "unit-01-demo", kind=kind,
+                    stem="exercises", lesson_heading=None, placement=[])
+
+
+def _fence(md: str) -> str:
+    return md[md.index("```python"):md.index("```", md.index("```python") + 3) + 3]
+
+
+def test_statement_keeps_fenced_code_verbatim():
+    """A blank line inside a code fence never strips the next line's indentation (plan 102)."""
+    cell = nbformat.v4.new_markdown_cell("## Exercise 1\n\n" + FENCED)
+    md = _statement_md(_ctx(), [cell], None, False)
+    assert _fence(md) == _fence(FENCED)
+    assert "Trace the class below." in md and md.rstrip().endswith("Then answer.")
+
+
+def test_side_block_keeps_fenced_code_verbatim():
+    """Intro, `before` and outro prose blocks keep a fenced block verbatim too."""
+    cell = nbformat.v4.new_markdown_cell(FENCED)
+    for kind in ("unit", "project"):
+        block = _side_block(_ctx(kind), cell, "demo/unit-01-demo/exercises/x")
+        assert _fence(block["md"]) == _fence(FENCED)
+
+
+def test_real_statement_keeps_method_indentation():
+    """python-concepts u13e066: the `increment` method stays indented inside its class (plan 102)."""
+    entry_dir = next((book_path(ROOT, "python-concepts") / "units").glob("unit-13-*"))
+    items = {i.key.rsplit("/", 1)[1]: i for i in entry_content(
+        ROOT, "python-concepts", entry_dir, "unit").items}
+    md = items["u13e066"].statement_md
+    assert "\n    def increment(self, amount):\n" in _fence(md)
+    assert "\ndef increment" not in md
