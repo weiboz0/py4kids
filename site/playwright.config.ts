@@ -21,9 +21,12 @@ export default defineConfig({
     trace: 'off',
   },
   projects: [
-    { name: 'site', testMatch: '*.spec.ts', testIgnore: 'lighthouse.spec.ts' },
+    { name: 'site', testMatch: '*.spec.ts', testIgnore: ['lighthouse.spec.ts', 'solvers.spec.ts'] },
     // Lighthouse runs last and alone (its performance score is sensitive to CPU contention).
     { name: 'lighthouse', testMatch: 'lighthouse.spec.ts', dependencies: ['site'], fullyParallel: false },
+    // Reference-solver parity (plan 104 Phase D), slow and run on its own: `pnpm e2e:solvers`.
+    { name: 'solvers-setup', testMatch: 'solvers.setup.ts' },
+    { name: 'solvers', testMatch: 'solvers.spec.ts', dependencies: ['solvers-setup'] },
   ],
   // The site and the Python runner (plan 104) on their two origins, each with its own _headers.
   webServer: [

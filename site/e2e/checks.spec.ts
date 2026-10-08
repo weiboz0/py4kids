@@ -6,7 +6,7 @@
  * on this branch), the item's projection is simulated by intercepting its check JSON (and, for the
  * exact-whitespace box, its one `data-exact` attribute); the island code under test is the same.
  */
-import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { answerHash, type NormaliseOptions } from '../src/lib/normalise';
 import type { ClientCheck } from '../src/lib/check-model';
 import { watchCsp } from './helpers/csp';
@@ -14,47 +14,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { allItems, CONTENT, cpython, findItem, fixturePairs, judgeMatch, lookupProgram, type Found } from './helpers/content';
 import { stores } from './helpers/site';
+import { caseRows, check, open, patchCheck, section, setCode } from './helpers/practice';
 
 test.describe.configure({ mode: 'parallel' });
-
-const section = (page: Page, found: Found) => page.locator(`section.practice-item[data-item-key="${found.item.key}"]`);
-
-async function open(page: Page, found: Found): Promise<Locator> {
-  await page.goto(found.page);
-  await page.locator('body[data-checks-ready]').waitFor({ state: 'attached' });
-  const item = section(page, found);
-  await item.scrollIntoViewIfNeeded();
-  return item;
-}
-
-/** Replace the editor's text (CodeMirror, in its shadow root) with `code`. */
-async function setCode(page: Page, item: Locator, code: string): Promise<void> {
-  await item.locator('[data-work][data-editor-ready]').waitFor();
-  await item.locator('.cm-content').click();
-  await page.keyboard.press('ControlOrMeta+a');
-  await page.keyboard.press('Delete');
-  await page.keyboard.insertText(code);
-}
-
-/** Press Check and wait for the verdict (the buttons come back when the check ends). */
-async function check(item: Locator, timeout = 90_000): Promise<string> {
-  await item.locator('[data-check-item]').click();
-  await expect(item.locator('[data-check-item]')).toBeDisabled();
-  await expect(item.locator('[data-check-item]')).toBeEnabled({ timeout });
-  return (await item.locator('[data-result] .verdict').first().textContent()) ?? '';
-}
-
-const caseRows = (item: Locator) => item.locator('[data-result] .case-list > li').evaluateAll((lis) => lis.map((li) => li.firstChild?.textContent ?? ''));
-
-/** Serve a changed copy of an item's check projection. */
-async function patchCheck(page: Page, found: Found, change: (check: ClientCheck) => Promise<ClientCheck> | ClientCheck): Promise<void> {
-  await page.route(`**${found.page}check/*.json`, async (route: Route) => {
-    const response = await route.fetch();
-    const check = (await response.json()) as ClientCheck;
-    if (check.key !== found.item.key) return route.fulfill({ response });
-    await route.fulfill({ response, json: await change(check) });
-  });
-}
 
 const small = (f: Found) => fixturePairs(f).reduce((n, c) => n + c.input.length + c.output.length, 0) < 150_000;
 
