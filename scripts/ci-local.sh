@@ -161,7 +161,8 @@ echo "book editions rendered: ${rendered[*]:-none}; skipped: ${skipped[*]:-none}
 
 step "6/7 site"
 # The learning website (design 012 part B; plan 103): build-site.sh exports every `site: true`
-# book and builds site/ with Astro, then the site's vitest suite runs. It needs Node >= 22.12
+# book and builds site/ with Astro, then the site's vitest suite and its browser tests run (plan 103
+# Phase F: `pnpm -C site e2e`, Playwright on Chromium). It needs Node >= 22.12
 # (.nvmrc; activated through nvm when the shell's default is older), pnpm and a Chromium. The
 # build is scoped like the editions (design 010 D7): it runs when the change touches site/, tools/,
 # scripts/, books.yaml, .nvmrc or a site book (tools/ci_scope.py --site), or with --all-books.
@@ -179,6 +180,9 @@ else
   if [[ "$decision" == render:* ]]; then
     bash scripts/build-site.sh
     "${SITE_PNPM[@]}" -C site test
+    # Phase F: Playwright end-to-end, axe, the no-network and header proofs, then Lighthouse,
+    # against the built dist/ served by site/scripts/serve.mjs.
+    "${SITE_PNPM[@]}" -C site e2e
   else
     echo "SKIP: site (${decision#skip: })"
   fi

@@ -11,6 +11,7 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "test": "vitest run",
+    "e2e": "playwright test",
     "slide-audit": "node scripts/slide-audit.ts",
     "search-index": "node scripts/search-index.ts"
   },
@@ -26,8 +27,11 @@
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
     "@types/node": "24.19.1",
     "fake-indexeddb": "6.2.5",
+    "lighthouse": "13.5.0",
     "pagefind": "1.5.2",
     "typescript": "6.0.3",
     "vitest": "5.0.3"

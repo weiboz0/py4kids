@@ -41,8 +41,63 @@ export function escapeHtml(text: string): string {
 // Code highlighting
 
 const styleToClass = transformerStyleToClass({ classPrefix: 'sh-' });
+
+/** WCAG relative luminance of a `#rgb` / `#rrggbb` colour. */
+function luminance(hex: string): number {
+  let h = hex.replace('#', '').slice(0, 6);
+  if (h.length === 3) h = [...h].map((c) => c + c).join('');
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = Number.parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  }) as [number, number, number];
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** The WCAG contrast ratio of two colours. */
+export function contrastRatio(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** `fg` mixed toward black (on a light background) or white (on a dark one) until it reaches `min`. */
+function readable(fg: string, bg: string, min: number): string {
+  if (contrastRatio(fg, bg) >= min) return fg;
+  const toward = luminance(bg) > 0.5 ? 0 : 255;
+  let h = fg.replace('#', '').slice(0, 6);
+  if (h.length === 3) h = [...h].map((c) => c + c).join('');
+  const rgb = [0, 2, 4].map((i) => Number.parseInt(h.slice(i, i + 2), 16));
+  for (let step = 1; step <= 50; step += 1) {
+    const mixed = `#${rgb.map((c) => Math.round(c + ((toward - c) * step) / 50).toString(16).padStart(2, '0')).join('')}`;
+    if (contrastRatio(mixed, bg) >= min) return mixed;
+  }
+  return toward === 0 ? '#000000' : '#ffffff';
+}
+
+type Theme = typeof githubLight;
+
+/**
+ * A copy of a Shiki theme whose every token colour meets WCAG AA (4.5:1) on the theme's own
+ * background. GitHub's themes miss it in two places — github-light's orange (#e36209, 3.5:1) and
+ * github-dark's comments (#6a737d, 3.0:1) — which axe reports as serious (plan 103 Phase F).
+ */
+export function accessibleTheme(theme: Theme, min = 4.5): Theme {
+  const copy = structuredClone(theme) as {
+    type?: string;
+    colors?: Record<string, string>;
+    tokenColors?: { settings?: { foreground?: string } }[];
+  };
+  const bg = copy.colors?.['editor.background'] ?? (copy.type === 'dark' ? '#000000' : '#ffffff');
+  const fg = copy.colors?.['editor.foreground'];
+  if (copy.colors && fg) copy.colors['editor.foreground'] = readable(fg, bg, min);
+  for (const rule of copy.tokenColors ?? []) {
+    const colour = rule.settings?.foreground;
+    if (rule.settings && colour && /^#[0-9a-f]{3,8}$/i.test(colour)) rule.settings.foreground = readable(colour, bg, min);
+  }
+  return copy as Theme;
+}
+
 const highlighter = createHighlighterCoreSync({
-  themes: [githubLight, githubDark],
+  themes: [accessibleTheme(githubLight), accessibleTheme(githubDark)],
   langs: [python, lisp],
   engine: createJavaScriptRegexEngine(),
 });

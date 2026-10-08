@@ -12,8 +12,12 @@
   --accent: #0a58ca;
   --accent-text: #ffffff;
   --focus: #b8460b;
-  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
-  --font-code: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  /* The platform's own fonts, by generic name only. Each named family a device lacks costs a font
+     lookup on every text run; on a Linux host with thousands of fonts the old eight-name stacks
+     made a lesson's first layout ~0.4 s and failed the Lighthouse performance budget (plan 103
+     Phase F). system-ui is Segoe UI, San Francisco, Roboto or Cantarell, wherever it runs. */
+  --font-body: system-ui, sans-serif;
+  --font-code: ui-monospace, monospace;
   --measure: 72ch;
   --gutter: 16px;
 }

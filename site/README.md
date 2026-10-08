@@ -51,6 +51,7 @@ Progress is stored under these keys, so a key must not silently vanish.
 ```bash
 bash scripts/build-site.sh [--release <tag>]   # export every site book, then build site/dist/
 pnpm -C site test                              # vitest
+pnpm -C site e2e                               # Playwright on the built dist/ (build first)
 pnpm -C site dev                               # local preview of the exported bundles
 ```
 
@@ -79,3 +80,6 @@ pnpm -C site dev                               # local preview of the exported b
   `/search/` is the site's own small UI (`src/scripts/search.ts`) on Pagefind's JS API, loaded from `/pagefind/` on the same origin.
 - **Headers:** `public/_headers` (Cloudflare Pages format) sets the strict CSP, `X-Content-Type-Options`, `Referrer-Policy` and `Permissions-Policy` for every path; COOP/COEP come with part C.
 - **Favicon:** `public/favicon.svg`, and `public/favicon.ico` written by `node scripts/favicon.ts`.
+- **Browser tests (Phase F):** `pnpm -C site e2e` runs Playwright (`e2e/*.spec.ts`) on Chromium against `dist/`, served by `scripts/serve.mjs`, which applies `dist/_headers` with the Cloudflare Pages semantics (`test/serve.test.ts`).
+  They cover a journey per book (catalog, lesson, self-check, slides by keyboard, cards, search, persistence after reload), axe on every template in both colour schemes, the no-network proofs (request recording, the build audit of absolute URLs, the headers and zero CSP violations) and, last and alone, Lighthouse budgets on the catalog, a lesson and the card deck (median of three runs).
+  Playwright's own Chromium is used when downloaded (`pnpm -C site exec playwright install chromium`), else a system Chromium; `PY4KIDS_CHROMIUM` overrides both.

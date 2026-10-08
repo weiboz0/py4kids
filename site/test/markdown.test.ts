@@ -1,6 +1,6 @@
 /** The Markdown pipeline (plan 103 Phase B tests). */
 import { describe, expect, it } from 'vitest';
-import { CONTAINER_LABELS, codeCss, divClasses, highlightCode, renderMarkdown } from '../src/lib/markdown';
+import { CONTAINER_LABELS, codeCss, contrastRatio, divClasses, highlightCode, renderMarkdown } from '../src/lib/markdown';
 
 const noStyle = (html: string) => expect(html).not.toMatch(/\sstyle=/);
 
@@ -140,6 +140,18 @@ describe('math (Pandoc tex_math_dollars, KaTeX MathML)', () => {
 });
 
 describe('code', () => {
+  it('gives every highlighted token AA contrast (4.5:1) on its background, light and dark', () => {
+    highlightCode('# a comment\ndef f(x, y=2):\n    return f"{x!r}" + str(y) * 3  # end\n');
+    highlightCode('(defun f (x) (car (quote (1 2))))', 'lisp');
+    const css = codeCss();
+    const bg = (theme: string) => new RegExp(`--shiki-${theme}-bg:(#[0-9a-fA-F]{3,8})`).exec(css)?.[1] ?? (theme === 'light' ? '#fff' : '');
+    for (const theme of ['light', 'dark']) {
+      const colours = [...css.matchAll(new RegExp(`--shiki-${theme}:(#[0-9a-fA-F]{3,8})`, 'g'))].map((m) => m[1]!);
+      expect(colours.length, theme).toBeGreaterThan(3);
+      for (const colour of colours) expect(contrastRatio(colour, bg(theme)), `${theme} ${colour}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it('highlights with classes, never inline styles', () => {
     const html = highlightCode('def f(x):\n    return x + 1\n');
     expect(html).toMatch(/^<pre class="shiki [^"]*"/);

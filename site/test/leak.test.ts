@@ -23,6 +23,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, 
 import { join, relative, sep } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
 import { CONTENT_ENV, loadBooks, repoRoot } from '../src/lib/bundle';
 import type { EntryFile } from '../src/lib/types';
 
@@ -185,6 +186,13 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
       expect(count, `${field} sentinels`).toBeGreaterThan(0);
     }
     expect(poisoned.firstAnswer).not.toBe('');
+  });
+
+  it('poisons the full set of site books (every `site: true` book in books.yaml)', () => {
+    const catalog = parse(readFileSync(join(repoRoot(), 'books.yaml'), 'utf-8')) as { books: { id: string; site?: boolean }[] };
+    const siteBooks = catalog.books.filter((b) => b.site === true).map((b) => b.id).sort();
+    expect(siteBooks.length).toBeGreaterThan(0);
+    expect(loadBooks({ contentDir: CONTENT }).map((b) => b.id).sort()).toEqual(siteBooks);
   });
 
   it('built the real pages from the poisoned bundles', () => {
