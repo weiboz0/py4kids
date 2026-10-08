@@ -285,3 +285,13 @@ A block that only prepares or sets up a later technique is not attributed to tha
 - `usaco-bronze/project-03-mock-contest/brief/3e299aa5` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 5 pairs; also_check 1 (method requirement(s) the fixtures cannot verify)
 - `usaco-bronze/project-03-mock-contest/brief/d887b6c7` — fixtures — stdin program; statement Sample Input/Output = fixture pair 3 (both sides); 4 pairs; also_check 1 (method requirement(s) the fixtures cannot verify)
 - `usaco-bronze/project-03-mock-contest/brief/851efc33` — fixtures — stdin program; statement Sample Input/Output = fixture pair 1 (both sides); 5 pairs; also_check 1 (method requirement(s) the fixtures cannot verify)
+
+## Independent blind fixture validation (Phase C requirement)
+
+A separate Opus agent wrote its own solver for each of the 161 items. It worked on a filtered copy holding only the statement notebooks and the fixture directories: no reference solvers and no solution notebooks (verified: 0 `.py` files, 0 solution notebooks in the copy). It ran each solver on every pair with token matching.
+
+**Result:** 161 items, **669/669 cases passed, 0 mismatches**, no timeouts.
+
+Some blind solvers reached the same outputs with a different method than the statement asks for (a set lookup instead of binary search, for example). That confirms why such method requirements are listed in `also_check`: fixtures cannot verify a method.
+
+Report: scratchpad `blind-solvers/usaco-bronze-report.md` (session-local).
