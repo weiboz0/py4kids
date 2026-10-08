@@ -54,16 +54,16 @@ and seed-unstable. Goal 4 is therefore a **bounded go/no-go with a stop rule**, 
      catalog **excluding `cold_items` from exposure entirely** (U12 needs no cold machinery), strictly increasing
      per-reader session timestamps, and a per-reader `train < val < test` split **by session** (val = the session
      block after train; test sealed). Target median ≥ 20 train positives; ≤ 200k events (design §7); generation
-     ≤ 10 s.
+     ≤ 15 s (measured in Phase B; data size is not tuned to a timer).
    - `checksums.json` gains the two new keys (it is NOT in the byte-stable set; the four existing values are).
 3. **Order signal is real and recoverable** — a committed **session recoverability harness** (numpy only, routed with
    the recsys group). **Protocol (fixed):**
    - *Ordering key:* positives only; per reader sorted by `(timestamp, file row order)` (ties broken by file order).
    - *Training data for every reference:* **train-split positives only**; transitions are consecutive pairs *within*
      train positives; the last-train → first-val pair is never counted.
-   - *Common cohort:* every method is scored on the **identical** set of eligible readers (≥ 1 train and ≥ 1 val
-     positive, not cold), with the same relevance set (val positives) and the same candidate exclusion (train
-     positives), k = 10. Gate: **eligible readers ≥ 800**.
+   - *Common cohort (= the book scoreboard's cohort, `scoreboard.py:147-154`):* relevance = **val positives − train
+     positives**; a reader is eligible iff that set is non-empty; candidates exclude train positives; k = 10. Every
+     method is scored on this **identical** cohort. Gate: **eligible readers ≥ 800**.
    - *Methods:* popularity; **bag CF** (item-item cosine over all train positives — the U4 model); **last-k CF**
      (same similarity, query = the reader's last k=3 train positives); **last-k transition** (sum of first-order
      transition rows over the last 5 train positives); diagnostic-only: last-1 transition.
@@ -77,24 +77,34 @@ and seed-unstable. Goal 4 is therefore a **bounded go/no-go with a stop rule**, 
      G3a `lastk_cf ≥ bag_cf + 0.02` (absolute) — order-aware context beats the bag;
      G3b `transk_ordered ≥ 1.3 × transk_shuffled` **and** `transk_ordered − transk_shuffled ≥ 0.06` — order, not the
      item set, carries the lift;
-     G3c **next-in-series**: events where volume v+1 is a val positive and volume v is **any** train positive;
-     require **n ≥ 100** and `transk hit ≥ 2 × bag_cf hit` on that cohort;
+     G3c **next-in-series**: events where volume v+1 is a val positive **not seen in train** (recommendable) and
+     volume v is **among the reader's last 5 train positives** (the last-k query window — the only place a last-k
+     model can see v); require **n ≥ 100**, `transk hit ≥ 1.3 × bag_cf hit` **and** `transk − bag_cf ≥ 0.10` on that
+     cohort ([fable] r2: observed 1.39–1.58×, +0.13–0.18, n ≈ 360–415). Reported, not gated: the series-link
+     diagnostic (v's own transition row ranks v+1 in its top-10 ≈ 0.7 vs bag ≈ 0.3);
      G3d sanity: `bag_cf ≥ 2 × popularity` and popularity ≥ 0.05 (strong-but-beatable; earlier lessons hold).
-   - *Seeds:* knobs are **tuned on seeds 0–1** (Phase B); gates are **confirmed on held-out seeds 2–4** (Phase C
-     robustness run, reported) and CI runs the committed seed (`DatasetConfig().seed`).
-   - *Guard has teeth:* a test regenerates a small session log with all four order mechanisms **disabled**
-     (`session_series_follow_prob=0`, `session_author_bump=0`, `session_mood_boost=0`) and asserts G3b and G3c
-     **fail** (the harness can tell order from no-order).
+   - *Seeds:* all generator knobs and the SASRec recipe are **tuned on seeds 0–1 only** (Phase B); every choice is then
+     **frozen** and seeds 2–4 are evaluated **exactly once** (Goal-3 robustness + Goal-4 confirmation, reported). CI
+     runs the committed seed (`DatasetConfig().seed`). **Held-out robustness rule:** every G3 gate holds at the
+     committed seed; on held-out seeds 2–4, G3b–G3d hold on every seed and G3a holds as `lastk_cf − bag_cf ≥ 0` on
+     every seed with mean ≥ +0.02 (G3a's floor is ~1 SE).
+   - *Guard has teeth:* a test regenerates a small session log with all three order mechanisms **disabled**
+     (`session_series_follow_prob=0`, `session_author_bump=0`, `session_mood_boost=0`) and asserts the **ratio /
+     difference clauses** of G3b and G3c **fail** (the n ≥ 100 / eligible-reader floors are not asserted on the small
+     config, so the failure is the order signal's absence, not a too-small sample).
 4. **SASRec feasibility — bounded go/no-go (measured in Phase B; not a CI gate — the torch path ships in recsys-015).**
    Paired protocol: same cohort as Goal 3; ordered and shuffled fits share initialization seed, sampling seed and
-   epoch count (only the input order differs); 3 seeds (2–4); SE = paired reader-level SE of the per-reader hit
-   differences (reported with bootstrap 95% CI). Recipe tuning is **in scope** and bounded: per-position next-item
+   epoch count (only the input order differs); SE = paired reader-level SE of the per-reader hit differences
+   (reported with bootstrap 95% CI). Recipe tuning is **in scope** and bounded: per-position next-item
    loss over the whole sequence, small-std embedding init (no √dim scaling), lr / epochs ≤ 150 (fits ~10–20 s),
-   still within the §7 ceiling (1 block, dim ≤ 32, seq-len ≤ 50, CPU-deterministic). **GO** iff on ≥ 2 of 3 seeds:
+   still within the §7 ceiling (1 block, dim ≤ 32, seq-len ≤ 50, CPU-deterministic). **Tuning criterion** (seeds 0–1
+   only): G4a and G4b below hold on both tuning seeds. **GO** iff, after freezing, on ≥ 2 of the 3 held-out seeds
+   2–4 (evaluated once):
    G4a `sasrec_ordered − sasrec_shuffled ≥ 2 SE` and ≥ 0.02 absolute, **and** G4b `sasrec_ordered ≥ bag_cf − 1 SE`
    (parity or better on hit@10) — the honest target (the book already teaches ties, recsys-013).
-   **Stop rule:** at most **3 Phase-B tuning rounds** (generator knobs + recipe). If GO is not reached, Phase B stops
-   and the session **pauses via AskUserQuestion** (U12 premise false at the §7 ceiling; options e.g. reframe U12
+   **Stop rule:** at most **3 Phase-B tuning rounds** on seeds 0–1 (generator knobs + recipe). If the tuning criterion
+   is not met within 3 rounds, or the single held-out confirmation on seeds 2–4 fails (no retuning after it), Phase B
+   stops and the session **pauses via AskUserQuestion** (U12 premise false at the §7 ceiling; options e.g. reframe U12
    around last-k/transition references with SASRec as a measured tie, raise the §7 ceiling, or defer). No
    implementation beyond Phase B proceeds without that answer.
 
@@ -144,7 +154,8 @@ recsys/data/gen_interactions.py` → `recsys/data/generated/`) need no change. U
 `required` set (:54) and the `set(manifest) == …` assertion (:81) to include the two new files.
 **Measure + report (binding, recorded in this plan's post-execution report):** the four sha256 values unchanged;
 session-log stats (readers, events, positives, median/mean train history, transitions, generation time); Goal-3
-numbers on tuning seeds 0–1; Goal-4 paired SASRec numbers on seeds 2–4 with SEs and per-fit time; **routed-suite
+numbers on tuning seeds 0–1 per round; then, after freezing, the one-shot held-out run on seeds 2–4 (Goal-3 numbers +
+Goal-4 paired SASRec numbers with SEs and per-fit time); **routed-suite
 wall-time delta** (new tests ≤ +60 s against the design §7 whole-book ≤ 15 min budget). Iterate ≤ 3 rounds per the
 stop rule.
 
@@ -154,7 +165,7 @@ stop rule.
   shared `ordered_train_sequences(path)` loader implementing the Goal-3 ordering key.
 - `recsys/data/tests/test_session_recoverability.py` — G3a–G3d at the committed seed (thresholds pinned from Phase B,
   floors per Goal 3), eligible readers ≥ 800, next-in-series n ≥ 100; the **teeth** test (mechanisms disabled →
-  G3b/G3c fail, on a small config for speed); robustness on seeds 2–4 recorded in the report (not re-run in CI).
+  G3b/G3c ratio/difference clauses fail, on a small config for speed); robustness on seeds 2–4 recorded in the report (not re-run in CI).
 - `recsys/data/tests/test_main_artifacts_byte_stable.py` — hashes the CI-regenerated files in
   `recsys/data/generated/` against the four Goal-1 pins (zero regeneration cost; skips if the dir is absent, like
   `_require_generated_dir`).
@@ -166,7 +177,7 @@ stop rule.
 - `bookrec.load_series(path) -> dict[int, tuple[int, int]]` (`item_id → (series_id, volume)`).
 - `bookrec.load_train_sequences(path) -> dict[int, list[int]]` — each reader's **ordered** train-positive item
   list (the Goal-3 ordering key), because `run_validation_scoreboard` collapses train history into sets
-  (`scoreboard.py:104-115`) and a sequence path needs order. U12 scores with the unchanged
+  (`recsys/projects/bookrec/bookrec/scoreboard.py:104-115`) and a sequence path needs order. U12 scores with the unchanged
   `run_validation_scoreboard(path, generated_dir()/"sessions.csv.gz", ...)` (same schema); the path reads its ordered
   history via this loader at `fit` time.
 - Unit tests for both; exported from `bookrec/__init__.py`; group-free import stays torch/faiss-free.
@@ -206,6 +217,18 @@ Phase G is this plan's named verification phase.
   `__post_init__` validation → Phases A/B. F7 byte test hashes CI output, NEP-19 note → Phase C/Goal 1.
   F8 §6 amendment: cold exclusion, series diagnostics-only, U13/U14 on session log only → Phase 0. Knob defaults →
   Phase B.
+
+### Round 2 (plan v2 @ b362829)
+- **[self]** APPROVE — v2 folds every r1 item; concur with both r2 blockers below.
+- **[sol]** REJECT — B1/B2 of r1 partly open: NEW B1 cohort ≠ scoreboard cohort (`scoreboard.py:147-154` scores
+  `val − train` and skips readers with no unseen target; G3c could include unrecommendable targets) → v3 Common
+  cohort = val − train, non-empty; G3c targets unseen in train. NEW B2 held-out seeds 2–4 consumed by the tuning loop
+  → v3 tuning on seeds 0–1 only, freeze, one-shot held-out run, no retuning after it. Nit "four → three mechanisms"
+  → fixed. B3/N4/N5 RESOLVED (verified hashes, `spawn_key=(1,)` draws identical over 5 seeds).
+- **[fable]** REJECT — F1–F8 RESOLVED. B1 G3c `≥ 2× bag` on "v any train positive" infeasible (measured 1.22–1.40×)
+  → v3 cohort = v in the last-5 window, `≥ 1.3×` and `≥ +0.10`, n ≥ 100. N1 seeds contamination → same fix as [sol]
+  B2. N2 G3a no headroom on seed 1 → held-out robustness rule. N3 teeth test vacuous on n-floors → asserts
+  ratio/difference clauses only. N4 → fixed. N5 → ≤ 15 s. N6 → full path.
 
 ## Content Review
 
