@@ -1,8 +1,22 @@
-/** The strict CSP (plan 103 Global constraints) and a Cloudflare Pages `_headers` parser. */
+/**
+ * The strict CSP (plan 103 Global constraints; plan 104 adds the runner's frame-src) and a
+ * Cloudflare Pages `_headers` parser.
+ */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-export const CSP =
+/** The runner origin the build fills in (runner/origins.json, or PY4KIDS_RUNNER_ORIGIN). */
+export const RUNNER_ORIGIN: string =
+  process.env.PY4KIDS_RUNNER_ORIGIN ??
+  (JSON.parse(readFileSync(join(import.meta.dirname, '..', '..', '..', 'runner', 'origins.json'), 'utf-8')) as { runner: string }).runner;
+
+/** The CSP as written in public/_headers (the runner origin is a placeholder there). */
+export const CSP_TEMPLATE =
   "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self'; " +
-  "object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
+  "frame-src {{RUNNER_ORIGIN}}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
+
+/** The CSP the built site sends. */
+export const CSP = CSP_TEMPLATE.replace('{{RUNNER_ORIGIN}}', RUNNER_ORIGIN);
 
 /**
  * Parse a Cloudflare Pages `_headers` file: a URL pattern on an unindented line, then its

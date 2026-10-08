@@ -4,6 +4,7 @@
 #   2. install the site's pinned dependencies (frozen lockfile) and run `astro build` to site/dist/
 #   3. index the built pages with Pagefind (`pnpm -C site search-index`; self-hosted under /pagefind/)
 #   4. run the slide audit (`pnpm -C site slide-audit`; <book>/site.yaml slides: limits)
+#   5. build the Python runner (plan 104) to runner/dist/: its own origin, served beside the site
 # Usage: scripts/build-site.sh [--release <tag>]   (the tag fills the bundles' PDF links)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -53,5 +54,8 @@ export ASTRO_TELEMETRY_DISABLED=1
 "${SITE_PNPM[@]}" -C site search-index
 # 4. The slide audit (plan 103 D6): every slide within its book's limits, or allow-listed.
 "${SITE_PNPM[@]}" -C site slide-audit
+# 5. The runner (plan 104): the isolated Pyodide app, with the self-hosted Pyodide runtime.
+"${SITE_PNPM[@]}" -C runner install --frozen-lockfile
+"${SITE_PNPM[@]}" -C runner build
 
-echo "build-site: built $(wc -w <<< "$books") book(s) to site/dist/"
+echo "build-site: built $(wc -w <<< "$books") book(s) to site/dist/ and the runner to runner/dist/"

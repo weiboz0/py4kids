@@ -1,0 +1,4 @@
+# pnpm settings for the runner (plan 104). Install only with `pnpm install --frozen-lockfile`.
+# esbuild's postinstall only verifies its platform binary.
+allowBuilds:
+  esbuild: true

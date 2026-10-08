@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { headersFor, parseHeadersFile, startServer } from '../scripts/serve.mjs';
-import { CSP, parseHeaders } from './helpers/headers';
+import { CSP_TEMPLATE, parseHeaders } from './helpers/headers';
 
 const SITE = join(import.meta.dirname, '..');
 
@@ -52,7 +52,7 @@ describe('_headers semantics', () => {
     const mine = headersFor(parseHeadersFile(text), '/acsl/unit-08-boolean-algebra/');
     const theirs = parseHeaders(text).get('/*')!;
     expect(Object.fromEntries(mine)).toEqual(Object.fromEntries(theirs));
-    expect(mine.get('content-security-policy')).toBe(CSP);
+    expect(mine.get('content-security-policy')).toBe(CSP_TEMPLATE);
   });
 });
 

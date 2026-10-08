@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadBook, loadBooks, repoRoot } from '../src/lib/bundle';
 import { runAudit, siteBookIds } from '../src/lib/slide-config';
-import { CSP, parseHeaders } from './helpers/headers';
+import { CSP_TEMPLATE, parseHeaders } from './helpers/headers';
 
 const SITE = join(import.meta.dirname, '..');
 const PUBLIC = join(SITE, 'public');
@@ -20,7 +20,7 @@ describe('_headers', () => {
 
   it('applies the strict CSP and the other headers to every path', () => {
     expect([...rules.keys()]).toEqual(['/*']);
-    expect(all?.get('content-security-policy')).toBe(CSP);
+    expect(all?.get('content-security-policy')).toBe(CSP_TEMPLATE);
     expect(all?.get('x-content-type-options')).toBe('nosniff');
     expect(all?.get('referrer-policy')).toBe('no-referrer');
     const policy = all?.get('permissions-policy') ?? '';
@@ -29,8 +29,9 @@ describe('_headers', () => {
     }
   });
 
-  it('sets no cross-origin isolation headers yet (part C adds COOP/COEP)', () => {
-    for (const name of all?.keys() ?? []) expect(name).not.toMatch(/^cross-origin-/);
+  it("makes the site cross-origin isolated (plan 104: the runner's interrupts)", () => {
+    expect(all?.get('cross-origin-opener-policy')).toBe('same-origin');
+    expect(all?.get('cross-origin-embedder-policy')).toBe('require-corp');
   });
 });
 

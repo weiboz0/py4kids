@@ -37,7 +37,7 @@ for book in catalog["books"]:
 PY
 )"
 echo "registry: $(cut -d' ' -f1 <<< "$books" | paste -sd' ')"
-uv run ruff check tools/ tests/ scripts/ recsys/projects/bookrec recsys/data
+uv run ruff check tools/ tests/ scripts/ runner/py recsys/projects/bookrec recsys/data
 
 # Committed GloVe subset (design 011 §6): a REAL, executed integrity check (never a skip) --
 # the tracked .npy must match its sidecar sha256 and stay under the 1 MB publish-safe cap.
@@ -165,7 +165,7 @@ step "6/7 site"
 # Phase F: `pnpm -C site e2e`, Playwright on Chromium). It needs Node >= 22.12
 # (.nvmrc; activated through nvm when the shell's default is older), pnpm and a Chromium. The
 # build is scoped like the editions (design 010 D7): it runs when the change touches site/, tools/,
-# scripts/, books.yaml, .nvmrc or a site book (tools/ci_scope.py --site), or with --all-books.
+# runner/, scripts/, books.yaml, .nvmrc or a site book (tools/ci_scope.py --site), or with --all-books.
 # A site change with a missing tool fails; an out-of-scope change skips, printed, never silent.
 . scripts/site-env.sh
 # Scope is resolved first. A change in the site's scope MUST be verified: a missing tool then fails
@@ -182,6 +182,8 @@ if [[ "$decision" == render:* ]]; then
   fi
   bash scripts/build-site.sh
   "${SITE_PNPM[@]}" -C site test
+  # The Python runner's envelope tests (plan 104; its harness is tested by pytest in step 2).
+  "${SITE_PNPM[@]}" -C runner test
   # Phase F: Playwright end-to-end, axe, the no-network and header proofs, then Lighthouse,
   # against the built dist/ served by site/scripts/serve.mjs.
   "${SITE_PNPM[@]}" -C site e2e

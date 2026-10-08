@@ -85,3 +85,14 @@ pnpm -C site dev                               # local preview of the exported b
 - **Browser tests (Phase F):** `pnpm -C site e2e` runs Playwright (`e2e/*.spec.ts`) on Chromium against `dist/`, served by `scripts/serve.mjs`, which applies `dist/_headers` with the Cloudflare Pages semantics (`test/serve.test.ts`).
   They cover a journey per book (catalog, lesson, self-check, slides by keyboard, cards, search, persistence after reload), axe on every template in both colour schemes, the no-network proofs (request recording, the build audit of absolute URLs, the headers and zero CSP violations) and, last and alone, Lighthouse budgets on the catalog, a lesson and the card deck (median of three runs).
   Playwright's own Chromium is used when downloaded (`pnpm -C site exec playwright install chromium`), else a system Chromium; `PY4KIDS_CHROMIUM` overrides both.
+
+## The Python runner (plan 104)
+
+Student code never runs on the site's origin. `runner/` (a sibling app: Node 24, pnpm, exact pins, its own lockfile) is the runner page that the site embeds in `<iframe sandbox="allow-scripts allow-same-origin" allow="cross-origin-isolated">` on its own origin.
+
+- **Origins:** configured only in `runner/origins.json` (development: site `http://127.0.0.1:4391`, runner `http://localhost:4392`); `PY4KIDS_SITE_ORIGIN` / `PY4KIDS_RUNNER_ORIGIN` override them at build time. The site build fills the CSP's `frame-src` in `dist/_headers`; the runner build fills its `frame-ancestors` and the one parent origin it accepts.
+- **Build:** `scripts/build-site.sh` also runs `pnpm -C runner build` (to `runner/dist/`): the page, a content-hashed worker with `runner/py/harness.py` and the `fake_turtle` port bundled in, and the self-hosted Pyodide 0.27.8 under `pyodide/0.27.8/`.
+- **Envelopes:** `runner/schema/request.schema.json` and `reply.schema.json`; `runner/src/envelope.ts` is their hand-written twin used on both sides (`pnpm -C runner test` proves they agree with Ajv).
+- **Client:** `src/lib/runner-client.ts` (`connectRunner`, `RunnerClient`: `ping`, `run`, `interrupt`, `reset`) binds replies by origin, iframe window and pending id, and times out as "runner unavailable".
+- **Serve both:** `node scripts/serve-both.mjs` (the e2e config starts both servers itself). `e2e/runner.spec.ts` drives the real client, iframe and workers.
+- **Harness tests:** `uv run pytest tests/test_runner_harness.py` (CPython: `outputs_match` parity with `tools/judge.py`, stdin and `EOFError`, grading, the turtle port and rule).

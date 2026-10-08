@@ -64,7 +64,14 @@ function htmlFiles(dir: string): string[] {
 test('every HTML page is served with the CSP and the other _headers headers', async ({ request }) => {
   const expected = parseHeaders(readFileSync(join(DIST, '_headers'), 'utf-8')).get('/*')!;
   expect(expected.get('content-security-policy')).toBe(CSP);
-  expect([...expected.keys()].sort()).toEqual(['content-security-policy', 'permissions-policy', 'referrer-policy', 'x-content-type-options']);
+  expect([...expected.keys()].sort()).toEqual([
+    'content-security-policy',
+    'cross-origin-embedder-policy',
+    'cross-origin-opener-policy',
+    'permissions-policy',
+    'referrer-policy',
+    'x-content-type-options',
+  ]);
   const pages = htmlFiles(DIST).map((f) => `/${relative(DIST, f).split(sep).join('/')}`.replace(/index\.html$/, ''));
   expect(pages.length).toBeGreaterThan(200);
   const failures: string[] = [];

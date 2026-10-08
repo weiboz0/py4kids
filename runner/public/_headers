@@ -1,0 +1,15 @@
+# Response headers for every runner response (Cloudflare Pages `_headers` format; plan 104 D7).
+# {{SITE_ORIGIN}} is filled in by scripts/build.ts from origins.json (or PY4KIDS_SITE_ORIGIN).
+# - COOP/COEP make the runner cross-origin isolated (SharedArrayBuffer interrupts).
+# - CORP cross-origin lets the site embed the runner under its own COEP: require-corp; it is on
+#   every response (the document, the worker script and the Pyodide files).
+# - The strict CSP: scripts only from this origin plus WebAssembly compilation, Pyodide's own
+#   files fetched from this origin, and only the site may frame the runner.
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors {{SITE_ORIGIN}}
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Resource-Policy: cross-origin
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), hid=(), magnetometer=(), microphone=(), midi=(), payment=(), serial=(), usb=()
