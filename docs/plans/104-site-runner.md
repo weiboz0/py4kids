@@ -29,8 +29,10 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `session` is the lesson's entry id for lesson runs and a fresh unique id for each exercise check.
   - **Process-state isolation.** One Pyodide process shares `sys.modules`, standard-library module globals and `builtins` across namespaces, so a fresh namespace is not enough:
     - **Each exercise check runs in a fresh worker.** The runner keeps one prewarmed spare worker booted, so a check starts without waiting, then retires that worker after the check.
+      - **Memory bound:** at most three Pyodide workers ever exist: the lesson worker, the one spare and the worker running a check. A retired worker is terminated before the next spare boots. A Playwright assertion checks the worker count.
     - **Within one check, between fixture cases,** the harness restores the boot state:
       - it deletes every `sys.modules` entry not in the boot snapshot, so modules the student imported (stdlib ones included) are re-imported fresh
+      - it restores each **boot-snapshotted module's `__dict__`** from a shallow copy taken at boot. Pyodide boots with `math`, `os`, `json` and others already imported, so this undoes `math.pi = 3`. The per-check fresh worker stays the real boundary between checks.
       - it restores `builtins` from a snapshot copy
       - it resets `sys.stdin`, `sys.stdout`, `sys.stderr`, `sys.argv` and the recursion limit, and the working directory
     - Each case therefore behaves like the fresh process `tools/judge.py` starts.
@@ -66,6 +68,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `runner/src/worker.ts` loads Pyodide, keeps one namespace per `session` (a lesson), and executes requests.
   - It builds to `runner/dist/` with its own `_headers`.
 - **Pyodide version: 0.27.8** (CPython 3.12), matching the CI interpreter (Python 3.12.12, the repo's `requires-python` floor), so the CPython parity tests compare like with like. The runner's About line shows the Python version.
+  - The CI interpreter is pinned (`.python-version` set to `3.12`). The parity test asserts that the CPython minor and Pyodide's agree, so the pin cannot drift silently.
 - **The Python side of the worker** (`runner/py/harness.py`, loaded into Pyodide). Per request it:
   - sets up stdin (an `io.StringIO`; `input()` reads from it, and EOF raises `EOFError` as in CPython; the contest code uses `sys.stdin.read*` (407 uses) and `input()` (229); `open(0)` and `stdin.buffer` do not occur)
   - **working directory:** one per `session`, so a lesson keeps the files its cells write (python-projects unit 09 writes a save file and reads it later); "Reset" recreates it. Each check gets a fresh directory. The mounted `files` are written there.
@@ -191,6 +194,11 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `[FIXED]` A SharedArrayBuffer interrupt is catchable: a 1 s grace period, then terminate and restart, tested with code that catches the interrupt.
   - `[FIXED]` Fresh sessions shared process state: a fresh prewarmed worker per check, a boot-state reset between fixture cases, and module and builtins contamination tests.
   - `[FIXED]` (nit) `interrupt` is in the request schema (0e56d8e).
+
+- `[fable]` **APPROVE WITH NITS** (round 3, e1064cf): the [sol] folds are sound.
+  - `[FIXED]` Boot-imported modules: their `__dict__` is now restored, so the `math.pi` test proves it.
+  - `[FIXED]` At most three workers, asserted.
+  - `[FIXED]` The CI interpreter is pinned, and the parity test checks that the minors agree.
 
 ## Content Review
 
