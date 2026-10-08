@@ -26,7 +26,8 @@ const DIST = process.env.PY4KIDS_RUNNER_OUT ?? join(ROOT, 'dist');
 /**
  * Test-only hooks (plan 105 Phase E): built in only with PY4KIDS_TEST_HOOKS=1, never in a release
  * (scripts/build-release.sh refuses it). They let the update-path test move Pyodide to another
- * versioned folder (PY4KIDS_TEST_PYODIDE_DIR) so release B's Pyodide URLs differ from A's.
+ * versioned folder (PY4KIDS_TEST_PYODIDE_DIR) so release B's Pyodide URLs differ from A's, and
+ * the runner page ignore `prepare-activate` on request (`window.__py4kidsRunnerTest`).
  */
 const TEST_HOOKS = process.env.PY4KIDS_TEST_HOOKS === '1';
 const PYODIDE_PKG = join(ROOT, 'node_modules', 'pyodide');
@@ -74,7 +75,7 @@ async function main(): Promise<void> {
   const workerName = `assets/worker-${hash(worker)}.js`;
   writeFileSync(join(DIST, workerName), worker);
 
-  const page = await bundle('src/main.ts', 'esm', { ORIGIN_PAIRS: pairList, WORKER_URL: `/${workerName}` });
+  const page = await bundle('src/main.ts', 'esm', { ORIGIN_PAIRS: pairList, WORKER_URL: `/${workerName}`, __PY4KIDS_TEST_HOOKS__: TEST_HOOKS });
   const pageName = `assets/main-${hash(page)}.js`;
   writeFileSync(join(DIST, pageName), page);
 

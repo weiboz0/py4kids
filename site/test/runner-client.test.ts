@@ -226,6 +226,19 @@ describe('RunnerClient: envelope version 2 (plan 105)', () => {
     await expect(activated).resolves.toMatchObject({ release_id: RID });
   });
 
+  it("asks the runner for its own state (record and workers), and binds the state reply to that request", async () => {
+    const { client, frame, posted } = harness();
+    const asked = client.state('acsl', 1000);
+    await flush();
+    expect(posted[0]!.message).toEqual({ v: 2, type: 'get-state', id: 'id-1', book: 'acsl' });
+    // A record that is not the right shape is no record: dropped as invalid.
+    expect(client.receive({ origin: ORIGIN, source: frame, data: { v: 2, type: 'state', id: 'id-1', active: RID, waiting: null, installing: false, record: { content_hash: HASH } } })).toBe('invalid');
+    expect(client.receive({ origin: ORIGIN, source: frame, data: { v: 2, type: 'runner-activated', id: 'id-1', release_id: RID } })).toBe('unknown-id');
+    const reply = { v: 2, type: 'state', id: 'id-1', active: RID, waiting: null, installing: false, record: null };
+    expect(client.receive({ origin: ORIGIN, source: frame, data: reply })).toBe('accepted');
+    await expect(asked).resolves.toEqual(reply);
+  });
+
   it('times out a prepare-activate the runner never answers', async () => {
     vi.useFakeTimers();
     const { client } = harness();

@@ -64,6 +64,8 @@ const VALID_REQUESTS: unknown[] = [
   { v: 2, type: 'precache', id: 'pc-1', book: 'python-projects', content_hash: HASH, files: [], release_id: RID },
   { v: 2, type: 'precache', id: 'pc-2', book: 'acsl', content_hash: HASH, files: ['/books/acsl/a.txt', '/x'], release_id: RID },
   { v: 2, type: 'prepare-activate', id: 'pa-1', release_id: RID },
+  { v: 2, type: 'get-state', id: 'gs-1', book: 'python-projects' },
+  { v: 2, type: 'get-state', id: 'gs-2', book: null },
 ];
 
 const VALID_REPLIES: unknown[] = [
@@ -118,6 +120,8 @@ const VALID_REPLIES: unknown[] = [
   { v: 2, type: 'precache-progress', id: 'pc-1', bytes: 1024, total: 15_000_000 },
   { v: 2, type: 'precached', id: 'pc-1', ok: true, bytes: 15_000_000, persisted: false },
   { v: 2, type: 'runner-activated', id: 'pa-1', release_id: RID },
+  { v: 2, type: 'state', id: 'gs-1', active: RID, waiting: null, installing: false, record: { content_hash: HASH, release_id: RID } },
+  { v: 2, type: 'state', id: 'gs-2', active: null, waiting: RID, installing: true, record: null },
   { type: 'version-mismatch', id: 'x', supported: [1, 2] },
 ];
 

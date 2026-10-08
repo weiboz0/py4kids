@@ -23,6 +23,9 @@
       "$ref": "#/$defs/runner_activated"
     },
     {
+      "$ref": "#/$defs/state"
+    },
+    {
       "$ref": "#/$defs/version_mismatch"
     }
   ],
@@ -369,6 +372,77 @@
         "type",
         "id",
         "supported"
+      ],
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "description": "Version 2: the answer to get-state. active, waiting: the release of the runner's active and waiting service workers (null: none); installing: a worker is still installing (a new release's Pyodide may take a while); record: the runner's confirmed record for the book asked about, or null when it has none (its storage may have been cleared).",
+      "properties": {
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "state"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "active": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/hex64"
+            }
+          ]
+        },
+        "waiting": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/hex64"
+            }
+          ]
+        },
+        "installing": {
+          "type": "boolean"
+        },
+        "record": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "content_hash": {
+                  "$ref": "#/$defs/hex64"
+                },
+                "release_id": {
+                  "$ref": "#/$defs/hex64"
+                }
+              },
+              "required": [
+                "content_hash",
+                "release_id"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "v",
+        "type",
+        "id",
+        "active",
+        "waiting",
+        "installing",
+        "record"
       ],
       "additionalProperties": false
     }

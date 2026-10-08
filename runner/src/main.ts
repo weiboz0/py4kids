@@ -19,15 +19,28 @@
  *   without `v`) are both served, and each is answered in its own version; a request newer than
  *   this runner gets `version-mismatch`.
  * - **Offline (plan 105 Phase B).** `precache` is forwarded to this origin's service worker
- *   (pwa-page.ts); `prepare-activate` is the runner's step of the update handshake.
+ *   (pwa-page.ts); `prepare-activate` is the runner's step of the update handshake; `get-state`
+ *   reports this origin's own confirmed record for a book and its workers' releases.
  */
 import { ACCEPTED_VERSIONS, ENVELOPE_VERSION, parseReply, parseRequest, versionOf, type ResultReply, type Reply, type RunRequest, type Request } from './envelope';
-import { activate, persist, precache, requestCleanup, startPwa } from './pwa-page';
+import { activate, persist, precache, requestCleanup, runnerState, startPwa } from './pwa-page';
 import type { FromWorker, HarnessOut, Job, ToWorker } from './worker';
 
 // Build-time constants (scripts/build.ts).
 declare const ORIGIN_PAIRS: { site: string; runner: string }[];
 declare const WORKER_URL: string;
+/** Build-time (scripts/build.ts): true only in a PY4KIDS_TEST_HOOKS=1 build (plan 105 Phase E). */
+declare const __PY4KIDS_TEST_HOOKS__: boolean;
+
+/**
+ * Test builds only (`window.__py4kidsRunnerTest`): `swallowPrepareActivate` makes this page ignore
+ * its next n `prepare-activate` requests, so the site's real request times out in its own
+ * RunnerClient (the update-path test's "runner step times out"). Absent from release builds.
+ */
+const runnerTest: { swallowPrepareActivate: number } | null =
+  typeof __PY4KIDS_TEST_HOOKS__ !== 'undefined' && __PY4KIDS_TEST_HOOKS__
+    ? ((globalThis as unknown as { __py4kidsRunnerTest: { swallowPrepareActivate: number } }).__py4kidsRunnerTest = { swallowPrepareActivate: 0 })
+    : null;
 
 /**
  * The one site origin this runner serves: the partner of this runner's own origin in
@@ -360,8 +373,17 @@ async function handle(req: Request): Promise<void> {
       return;
     }
     case 'prepare-activate': {
+      if (runnerTest && runnerTest.swallowPrepareActivate > 0) {
+        runnerTest.swallowPrepareActivate--;
+        return;
+      }
       // Step 2 of the update handshake; no answer when it cannot happen (the site's step times out).
       if (await activate(req.release_id)) reply({ type: 'runner-activated', id: req.id, release_id: req.release_id });
+      return;
+    }
+    case 'get-state': {
+      // This origin's own record and workers (plan 105 "Offline status"): read here, never assumed.
+      reply({ type: 'state', id: req.id, ...(await runnerState(req.book)) });
       return;
     }
   }

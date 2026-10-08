@@ -60,6 +60,10 @@ describe.skipIf(!built)('site/dist', () => {
 
   it.skipIf(process.env.PY4KIDS_TEST_HOOKS === '1')('ships no test hooks (plan 105: they exist only in a PY4KIDS_TEST_HOOKS=1 build)', () => {
     for (const file of all.filter((f) => f.endsWith('.js'))) expect(read(file).includes('__py4kidsPwaTest'), rel(file)).toBe(false);
+    // Nor does the runner page (its hook ignores prepare-activate on request).
+    const runnerDist = join(DIST, '..', '..', 'runner', 'dist');
+    const runnerJs = existsSync(runnerDist) ? files(runnerDist).filter((f) => /\/assets\/main-[0-9a-f]+\.js$/.test(f.split(sep).join('/'))) : [];
+    for (const file of runnerJs) expect(read(file).includes('__py4kidsRunnerTest'), relative(runnerDist, file)).toBe(false);
   });
 
   it.skipIf(!existsSync(join(DIST, 'release.json')))('ships the service worker, release.json and a download manifest per book (plan 105)', () => {

@@ -35,6 +35,24 @@ describe('offline records', () => {
     expect(await getRecord('acsl')).toBeNull();
   });
 
+  it('repairs a database that exists without its store (created by an open without a version after the storage was cleared)', async () => {
+    await new Promise<void>((resolve, reject) => {
+      const bare = indexedDB.open('py4kids-offline');
+      bare.onsuccess = () => {
+        expect(bare.result.objectStoreNames.contains('books')).toBe(false);
+        bare.result.close();
+        resolve();
+      };
+      bare.onerror = () => reject(bare.error);
+    });
+    expect(await allRecords()).toEqual([]);
+    await putRecord(rec('acsl'));
+    expect((await getRecord('acsl'))?.book).toBe('acsl');
+    // Repaired at version 2; later opens (which ask for version 1) still work.
+    await putRecord(rec('python-projects'));
+    expect((await allRecords()).map((r) => r.book).sort()).toEqual(['acsl', 'python-projects']);
+  });
+
   it('refuses to write a malformed record, and ignores one found in the store', async () => {
     await expect(putRecord({ ...rec('acsl'), release_id: 'nope' })).rejects.toThrow();
     await putRecord(rec('acsl'));

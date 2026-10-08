@@ -16,8 +16,8 @@
  *
  * Envelope version (plan 105): every request carries `v: 2` (`ENVELOPE_VERSION`), and only
  * version-2 replies are accepted. A `version-mismatch` reply (an older runner) rejects the request
- * with `RunnerVersionError`: the page asks for a reload. Version 2 adds `precache` (with progress)
- * and the update handshake's `prepareActivate`.
+ * with `RunnerVersionError`: the page asks for a reload. Version 2 adds `precache` (with progress),
+ * the update handshake's `prepareActivate`, and `state` (the runner's own offline record).
  */
 import {
   ENVELOPE_VERSION,
@@ -27,6 +27,7 @@ import {
   type PrecacheProgressReply,
   type PrecachedReply,
   type RunnerActivatedReply,
+  type StateReply,
   type ReadyReply,
   type Reply,
   type Request,
@@ -35,7 +36,7 @@ import {
   type RunFile,
 } from '../../../runner/src/envelope';
 
-export type { Check, PrecachedReply, ReadyReply, RestartedReply, ResultReply, RunFile, RunnerActivatedReply } from '../../../runner/src/envelope';
+export type { Check, PrecachedReply, ReadyReply, RestartedReply, ResultReply, RunFile, RunnerActivatedReply, StateReply } from '../../../runner/src/envelope';
 
 /**
  * The runner origin (deploy/origins.json via astro.config.mjs; plan 105 Phase D): the partner of
@@ -275,6 +276,14 @@ export class RunnerClient {
   /** The update handshake's step 1 (plan 105): resolves once the runner's worker for `release_id` controls it. */
   prepareActivate(releaseId: string, timeoutMs: number): Promise<RunnerActivatedReply> {
     return this.request<RunnerActivatedReply>({ type: 'prepare-activate', id: this.newId(), release_id: releaseId }, 'runner-activated', timeoutMs);
+  }
+
+  /**
+   * The runner's offline state (plan 105): its own confirmed record for `book` (null: none asked
+   * about) and its service workers' releases, read on the runner origin itself.
+   */
+  state(book: string | null, timeoutMs: number): Promise<StateReply> {
+    return this.request<StateReply>({ type: 'get-state', id: this.newId(), book }, 'state', timeoutMs);
   }
 
   /** Stop listening and reject everything still pending. */

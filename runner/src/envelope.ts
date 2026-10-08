@@ -15,8 +15,9 @@
  * than the runner's is answered with `version-mismatch` (a version-independent reply), so a newer
  * site page talking to an older runner asks for a reload.
  * Version 2 adds the offline messages: `precache` (cache a book's runner files and confirm it
- * for a release) with `precache-progress` and `precached`, and the update handshake's
- * `prepare-activate` with `runner-activated`.
+ * for a release) with `precache-progress` and `precached`, the update handshake's
+ * `prepare-activate` with `runner-activated`, and `get-state` with `state` (the runner's own
+ * confirmed record for a book, and its service workers' releases).
  */
 
 export type Id = string;
@@ -86,7 +87,17 @@ export interface PrepareActivateRequest {
   id: Id;
   release_id: string;
 }
-export type Request = RunRequest | ResetRequest | PingRequest | InterruptRequest | PrecacheRequest | PrepareActivateRequest;
+/**
+ * Version 2: the runner's offline state (plan 105 "Offline status"): its own confirmed record for
+ * `book` (null: no book asked about), and the releases of its service workers.
+ */
+export interface GetStateRequest {
+  v: 2;
+  type: 'get-state';
+  id: Id;
+  book: string | null;
+}
+export type Request = RunRequest | ResetRequest | PingRequest | InterruptRequest | PrecacheRequest | PrepareActivateRequest | GetStateRequest;
 
 export interface CaseResult {
   name: string;
@@ -153,6 +164,20 @@ export interface RunnerActivatedReply {
   id: Id;
   release_id: string;
 }
+/**
+ * Version 2: the answer to `get-state`. `active` and `waiting`: the releases of the runner's active
+ * and waiting service workers (null: none); `installing`: a worker is still installing; `record`:
+ * the runner's confirmed record for the book asked about (null: none, e.g. its storage was cleared).
+ */
+export interface StateReply {
+  v: 2;
+  type: 'state';
+  id: Id;
+  active: string | null;
+  waiting: string | null;
+  installing: boolean;
+  record: { content_hash: string; release_id: string } | null;
+}
 /** Any version: the request's `v` is newer than this runner speaks (`supported`): reload. */
 export interface VersionMismatchReply {
   type: 'version-mismatch';
@@ -166,6 +191,7 @@ export type Reply =
   | PrecacheProgressReply
   | PrecachedReply
   | RunnerActivatedReply
+  | StateReply
   | VersionMismatchReply;
 
 // Limits, as in the schemas.
@@ -224,6 +250,8 @@ const bool = (v: unknown): v is boolean => typeof v === 'boolean';
 const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const ms = (v: unknown): v is number => num(v) && v >= 0;
 const id = (v: unknown): v is string => typeof v === 'string' && ID.test(v);
+const hex = (v: unknown): v is string => typeof v === 'string' && HEX64.test(v);
+const hexOrNull = (v: unknown): boolean => v === null || hex(v);
 const arrayOf = (v: unknown, max: number, item: (x: unknown) => boolean, min = 0): v is unknown[] =>
   Array.isArray(v) && v.length >= min && v.length <= max && v.every(item);
 
@@ -321,6 +349,13 @@ export function parseRequest(data: unknown): Request | null {
         HEX64.test(data.release_id)
         ? (data as unknown as PrepareActivateRequest)
         : null;
+    case 'get-state':
+      return exact(data, ['v', 'type', 'id', 'book']) &&
+        data.v === 2 &&
+        id(data.id) &&
+        (data.book === null || (typeof data.book === 'string' && BOOK.test(data.book)))
+        ? (data as unknown as GetStateRequest)
+        : null;
     default:
       return null;
   }
@@ -407,6 +442,18 @@ export function parseReply(data: unknown): Reply | null {
         HEX64.test(data.release_id)
         ? (data as unknown as RunnerActivatedReply)
         : null;
+    case 'state': {
+      const r = (data as Obj).record;
+      return exact(data, ['v', 'type', 'id', 'active', 'waiting', 'installing', 'record']) &&
+        data.v === 2 &&
+        id(data.id) &&
+        hexOrNull(data.active) &&
+        hexOrNull(data.waiting) &&
+        bool(data.installing) &&
+        (r === null || (exact(r, ['content_hash', 'release_id']) && hex(r.content_hash) && hex(r.release_id)))
+        ? (data as unknown as StateReply)
+        : null;
+    }
     case 'version-mismatch':
       return exact(data, ['type', 'id', 'supported']) &&
         id(data.id) &&

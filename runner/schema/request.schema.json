@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://py4kids.local/runner/request.schema.json",
   "title": "Runner request (site -> runner)",
-  "description": "Design 012 D7, plans 104 and 105: the only messages the runner page accepts. Validated on both sides (runner/src/envelope.ts is the hand-written twin; runner/test/envelope.test.ts proves they agree). Envelope version 2 (plan 105) carries \"v\": 2; version 1 (plan 104) has no \"v\", and the runner accepts both (N-1). precache and prepare-activate exist only in version 2.",
+  "description": "Design 012 D7, plans 104 and 105: the only messages the runner page accepts. Validated on both sides (runner/src/envelope.ts is the hand-written twin; runner/test/envelope.test.ts proves they agree). Envelope version 2 (plan 105) carries \"v\": 2; version 1 (plan 104) has no \"v\", and the runner accepts both (N-1). precache, prepare-activate and get-state exist only in version 2.",
   "oneOf": [
     {
       "$ref": "#/$defs/run"
@@ -21,6 +21,9 @@
     },
     {
       "$ref": "#/$defs/prepare_activate"
+    },
+    {
+      "$ref": "#/$defs/get_state"
     }
   ],
   "$defs": {
@@ -336,6 +339,39 @@
         "type",
         "id",
         "release_id"
+      ],
+      "additionalProperties": false
+    },
+    "get_state": {
+      "type": "object",
+      "description": "Version 2: ask the runner page for its offline state: the release of its active, waiting and installing service workers, and its own confirmed record for book (null: none asked). The site shows a book as available offline only when this record matches its own (plan 105 Offline status), and waits while the runner's next release is still installing before the update handshake.",
+      "properties": {
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "get-state"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "book": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+            }
+          ]
+        }
+      },
+      "required": [
+        "v",
+        "type",
+        "id",
+        "book"
       ],
       "additionalProperties": false
     }

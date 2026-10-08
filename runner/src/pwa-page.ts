@@ -9,8 +9,12 @@
  *   (offline) the current registration stays, silently.
  * - **This page's release** is the release of the worker that controlled it at load, else the one
  *   `/release.json` named; the worker asks it (`which-release`) before deleting old caches.
+ * - **State** (`get-state`): this origin's own confirmed record for a book, read from its own store
+ *   (so the site never takes a record on another origin's word), and the releases of its active,
+ *   waiting and installing workers (the site waits while a new release is still installing).
  */
 import { releaseOfScript, STEP_TIMEOUT_MS, workerScriptUrl } from './offline';
+import { getRecord } from './offline-store';
 
 const sw: ServiceWorkerContainer | undefined = 'serviceWorker' in navigator ? navigator.serviceWorker : undefined;
 
@@ -36,8 +40,14 @@ async function fetchRelease(): Promise<string | null> {
   }
 }
 
-/** Register the worker for the server's release and keep this page's release current. */
-export async function startPwa(): Promise<void> {
+let starting: Promise<void> | null = null;
+/** Register the worker for the server's release and keep this page's release current (once per page). */
+export function startPwa(): Promise<void> {
+  starting ??= start();
+  return starting;
+}
+
+async function start(): Promise<void> {
   if (!sw) return;
   sw.addEventListener('message', (event: MessageEvent<{ type?: unknown }>) => {
     if (event.data?.type === 'which-release') event.ports[0]?.postMessage({ release_id: pageRelease });
@@ -69,6 +79,33 @@ export async function activeRelease(): Promise<string | null> {
   if (!sw) return null;
   const reg = await sw.getRegistration('/');
   return releaseOfScript(reg?.active?.scriptURL);
+}
+
+export interface RunnerState {
+  active: string | null;
+  waiting: string | null;
+  installing: boolean;
+  record: { content_hash: string; release_id: string } | null;
+}
+
+/**
+ * This origin's offline state: its confirmed record for `book` (null when there is none, or none
+ * was asked for), and its workers' releases once this page's own update check has registered.
+ */
+export async function runnerState(book: string | null): Promise<RunnerState> {
+  await withTimeout(startPwa(), STEP_TIMEOUT_MS).catch(() => {});
+  const reg = sw ? await sw.getRegistration('/').catch(() => undefined) : undefined;
+  let record: RunnerState['record'] = null;
+  if (book) {
+    const r = await getRecord(book).catch(() => null);
+    record = r ? { content_hash: r.content_hash, release_id: r.release_id } : null;
+  }
+  return {
+    active: releaseOfScript(reg?.active?.scriptURL),
+    waiting: releaseOfScript(reg?.waiting?.scriptURL),
+    installing: Boolean(reg?.installing),
+    record,
+  };
 }
 
 /**

@@ -9,14 +9,31 @@ import { isRecord, type OfflineRecord } from './offline';
 export const OFFLINE_DB = 'py4kids-offline';
 const STORE = 'books';
 
-function open(): Promise<IDBDatabase> {
+/**
+ * Open the database with its store. A database that exists without the store (another script
+ * opened the name first, without a version, after the browser cleared the origin's storage) is
+ * upgraded to the next version to create it, so the records can never be stuck unwritable.
+ */
+function open(version: number | null = 1): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(OFFLINE_DB, 1);
+    const request = version === null ? indexedDB.open(OFFLINE_DB) : indexedDB.open(OFFLINE_DB, version);
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(STORE)) request.result.createObjectStore(STORE, { keyPath: 'book' });
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error('indexedDB.open failed'));
+    request.onsuccess = () => {
+      const db = request.result;
+      if (db.objectStoreNames.contains(STORE)) return resolve(db);
+      const next = db.version + 1;
+      db.close();
+      open(next).then(resolve, reject);
+    };
+    request.onerror = (event) => {
+      // Already past version 1 (an earlier repair): open whatever version is there.
+      if (version === 1 && request.error?.name === 'VersionError') {
+        event.preventDefault();
+        open(null).then(resolve, reject);
+      } else reject(request.error ?? new Error('indexedDB.open failed'));
+    };
     request.onblocked = () => reject(new Error('indexedDB.open blocked'));
   });
 }
