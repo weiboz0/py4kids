@@ -28,7 +28,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - The site asks the runner to precache through the existing message channel, with a new typed request `{type: "precache", id, book, files}` and reply `{type: "precached", id, ok, bytes}`, validated as in part C.
 - **Offline status:**
   - The site shows "available offline" for a book only after both caches confirm.
-  - Both origins call `navigator.storage.persist()`, and the result is shown.
+  - Both origins' persistence results are shown, following the Same site rule: `persist()` is called from the top-level site inside the download gesture, and the runner's result is informational.
   - The site explains that some browsers (Safari) can clear storage after long disuse, and offers "export my progress".
 - **Privacy is unchanged:**
   - The service workers make no requests beyond the files the user asked to cache.
@@ -43,7 +43,11 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - An update replaces the shell cache. It keeps the Pyodide cache unless the version changed. A downloaded book is marked "needs update", and its old cache is deleted **only after the new precache completes**, so a downloaded book never disappears offline.
   - Version skew between site B and runner A is caught by part C's envelope schema version: the site asks for a reload.
   - **Precache requests** carry `release_id`, and the runner refuses a mismatched one.
-  - **A cache is confirmed only after it is fully populated** (`cache.addAll`, which is all-or-nothing). "Available offline" means both origins confirmed the same `release_id`.
+  - **Confirmation is a record, not cache existence.**
+    - Each origin stores `{book, content_hash, release_id}` confirmed records (site: IndexedDB; runner: its own store).
+    - Book files are fetched **in chunks** into the final `book-<book>-<content_hash>` cache, which feeds the progress bar, and the record is written **only at the end**. On worker start, any `book-*` cache without a confirmed record is deleted. That keeps all-or-nothing atomicity without one huge `addAll`.
+    - "Available offline" means both origins hold confirmed records for the book with the same `release_id`.
+  - **`activate` deletes only non-current `shell-*` and `pyodide-*` caches, never `book-*`.** On an update where a book's `content_hash` is unchanged, "re-download" is a manifest verification (every listed URL is present in the cache) that re-stamps the record with the new `release_id`, not a refetch. A changed `content_hash` downloads into a new cache and deletes the old one after confirmation.
   - **Activation is user-controlled:** a new worker stays *waiting* (no `skipWaiting` on install). An open lesson keeps running on the old release's caches until the user accepts "a new version is available — reload". Only then does the new worker activate (`skipWaiting` on that message). Old caches are deleted in `activate`, after the old clients are gone.
   - Downloaded books are re-downloaded for the new release in the background, and their status reads "updating" until confirmed.
 - **Size and count.**
@@ -78,9 +82,9 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - **Deterministic import merge**, after validating the file against the schemas:
     - **events:** union by `event_id`
     - **cards:** per card key, keep the record with the later `updated_at` (every card record now stores `updated_at`); a tie keeps the local record
+    - **resume:** per book, the later `updated_at`
     - an unknown `schema` is rejected, and the file size is bounded (≤ 20 MB)
   - **Export on iOS installed PWAs:** use `showSaveFilePicker` where present, and the Web Share API as the fallback.
-    - **resume:** per book, the later `updated_at`
   - Importing the same file twice changes nothing after the first import. Importing an older file never regresses newer local state.
   - Tests:
     - export → clear storage → import restores the mastery map and resume
@@ -110,7 +114,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
     1. build release A, download a book and open a lesson
     2. deploy release B (changing only runner code, so the bundle hash is unchanged but `release_id` differs)
     3. the open lesson keeps running and checking code on A's caches, and the prompt appears
-    4. accept: B activates, A's caches are gone, and the book re-downloads and confirms under B
+    4. accept: B activates, and A's shell cache is gone; the book (unchanged `content_hash`) is verified and re-confirmed under B without refetching; a second scenario with changed content downloads the book into a new cache and removes the old one only after confirmation
   - **Requests:** the no-network and request-recording suites with the service workers active.
   - **Accessibility and performance:** Lighthouse PWA installability checks, and axe on the new UI.
   - The parts B and C suites still pass.
@@ -143,6 +147,11 @@ User goal, 2026-10-06: "non stop until full working learning website".
     - size and count shown up front, with Pagefind and `_astro` in the manifest
     - one `wrangler.toml` per project, and the 25 MiB check
     - import merge bounds, and iOS export
+
+- `[fable]` **APPROVE WITH NITS** (round 2, e8821d0):
+  - `[FIXED]` Confirmation is a `{book, content_hash, release_id}` record; `activate` never deletes `book-*` caches; an unchanged content hash means verify and re-stamp.
+  - `[FIXED]` Chunked fetches with the record written at the end, and unconfirmed caches swept on worker start.
+  - `[FIXED]` Formatting.
 
 ## Content Review
 
