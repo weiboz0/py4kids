@@ -514,8 +514,12 @@ export async function applyUpdate(connect: () => Promise<RunnerClient>, say: (me
     say('Close your other py4kids tabs to update.');
     return 'busy';
   }
-  /** The release this page's worker runs now: step 3 is done once another one controls it. */
-  const from = releaseOfScript(sw.controller?.scriptURL);
+  /**
+   * The release the site runs now: step 3 is done once another one is active. An uncontrolled page
+   * (a hard reload, the first load) takes it from the registration's active worker, so the old
+   * active release never counts as the new one ([fable] content review round 2).
+   */
+  const from = releaseOfScript(sw.controller?.scriptURL) ?? releaseOfScript((await sw.getRegistration('/'))?.active?.scriptURL);
   await pausePoint('before-runner');
   // Steps 0-2: the runner activates first, once its next release has installed.
   say('Updating…');

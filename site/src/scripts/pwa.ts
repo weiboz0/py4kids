@@ -79,12 +79,13 @@ function start(root: HTMLElement): void {
   void startPwa().then(async (reg) => {
     if (!reg) return;
     // (A blocked or failed registration leaves nothing to update or refresh.)
-    reg.addEventListener('updatefound', () => {
-      const worker = reg.installing;
+    const whenInstalled = (worker: ServiceWorker | null) =>
       worker?.addEventListener('statechange', () => {
         if (worker.state === 'installed') void showUpdate();
       });
-    });
+    reg.addEventListener('updatefound', () => whenInstalled(reg.installing));
+    // A worker already installing when this page loaded (its `updatefound` has fired) is offered too.
+    whenInstalled(reg.installing);
     await showUpdate();
     await refreshBook(connect);
   });

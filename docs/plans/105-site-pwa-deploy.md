@@ -234,6 +234,20 @@ User goal, 2026-10-06: "non stop until full working learning website".
 
 Results after the fixes: runner 26, site 409 unit tests; `pnpm -C site e2e` with 133 main, 22 PWA and 10 hooks tests passing.
 
+### Review 2 (fbf6291) — CONSENSUS
+
+- `[self]` APPROVE.
+- `[sol]` **APPROVE WITH NITS** (gpt-6-sol). All three round-1 findings are fixed, and `get-state`/`state` is validated with exact fields, origin and source.
+  `[WONTFIX]` NIT: the new self-check assertions in the offline test would also pass on the old code. That is correct: the finding was a coverage gap, not a product bug.
+- `[fable]` **APPROVE WITH NITS**. All round-1 items were verified as fixed and tested.
+  - A. `[FIXED]` A page no worker controls had `from = null`, so step 3 could count the old active release as new. → `from` now falls back to the registration's active release.
+    An e2e test then showed the case cannot occur. After a hard reload, no window is left on A, so the browser activates B itself and no prompt appears. With another window on A, the page answers "close your other tabs".
+    The guard stays as defence, and the test pins the browser behaviour.
+    That test also exposed a gap: a release still installing when a page loaded never raised the update prompt. → Fixed: `pwa.ts` now also follows `reg.installing`.
+  - B. `[FIXED]` `runner/origins.json`, brought back by the merge from main, is deleted again (`deploy/origins.json` is the single source).
+  - C. `[WONTFIX]` NIT: the first second of step 0 says "Updating…" before "Preparing the update…". This is cosmetic.
+  - D. `[FIXED]` The runner-missing message is now shorter: "Python is no longer saved on this device, so code will not run offline. Download the book again."
+
 ## Post-Execution Report
 
 **Shipped: design 012 part D. The site is an installable, offline-capable PWA, and both origins are ready to deploy. Nothing has been deployed (Phase F waits for the user).**

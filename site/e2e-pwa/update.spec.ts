@@ -437,6 +437,33 @@ test("a visitor who never downloads a book: after the update, cleanup deletes A'
   }
 });
 
+test('a hard reload (a page no worker controls) while B waits: with no window left on A, the browser activates B by itself, so no prompt and no handshake is needed', async ({ page, servers }) => {
+  test.setTimeout(400_000);
+  const book = 'python-projects';
+  const r = releases(book, 'runner');
+  try {
+    await servers.stop();
+    await servers.start(r.A);
+    await page.goto('/');
+    await page.evaluate(async () => void (await navigator.serviceWorker.ready));
+    await page.reload();
+    await expect.poll(() => siteController(page), { timeout: 30_000 }).toContain(`r=${r.idA}`);
+    await servers.stop();
+    await servers.start(r.B);
+    await page.goto('/about/');
+    await expect.poll(() => waitingOf(page), { timeout: 60_000 }).toContain(`r=${r.idB}`);
+    const cdp = await page.context().newCDPSession(page);
+    await Promise.all([page.waitForEvent('load'), cdp.send('Page.reload', { ignoreCache: true })]);
+    expect(await siteController(page)).toBe('');
+    const active = () => page.evaluate(async () => (await navigator.serviceWorker.getRegistration('/'))?.active?.scriptURL ?? '');
+    await expect.poll(active, { timeout: 30_000 }).toContain(`r=${r.idB}`);
+    await page.waitForTimeout(2000);
+    await expect(page.locator('[data-pwa-update]')).toBeHidden();
+  } finally {
+    rmSync(r.work, { recursive: true, force: true });
+  }
+});
+
 test("the runner's next release still installing (a slow Pyodide): \"Preparing the update…\", then the handshake completes", async ({ page, servers }) => {
   test.setTimeout(400_000);
   const book = 'python-projects';

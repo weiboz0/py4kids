@@ -24,7 +24,7 @@ const MESSAGES = {
   updating: 'Updating…',
   none: 'Not downloaded yet.',
   'runner-missing':
-    'This book is no longer fully saved on this device: the browser cleared the part that runs Python, so code will not run offline. Download it again to fix that.',
+    'Python is no longer saved on this device, so code will not run offline. Download the book again.',
   unverified: 'Could not check that Python is saved for this book, so code may not run offline. Connect to the internet and download it again.',
   stalled: 'The download stopped. Try again.',
   failed: 'The download did not finish. Check the connection and try again.',

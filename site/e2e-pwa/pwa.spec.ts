@@ -26,7 +26,7 @@ import { expect, test } from './servers';
 
 const BOOK = 'python-projects';
 const STATUS = '[data-offline-book] [data-offline-status]';
-const RUNNER_MISSING = /^This book is no longer fully saved on this device: the browser cleared the part that runs Python/;
+const RUNNER_MISSING = /^Python is no longer saved on this device/;
 const UNVERIFIED = /^Could not check that Python is saved for this book/;
 const release = (dir: string) => JSON.parse(readFileSync(join(dir, 'release.json'), 'utf-8')) as { release_id: string; books?: Record<string, { content_hash: string }> };
 const SITE_RELEASE = release(DIST);
