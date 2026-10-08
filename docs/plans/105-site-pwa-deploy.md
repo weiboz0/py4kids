@@ -216,3 +216,62 @@ User goal, 2026-10-06: "non stop until full working learning website".
 ## Content Review
 
 ## Post-Execution Report
+
+**Shipped: design 012 part D. The site is an installable, offline-capable PWA, and both origins are ready to deploy. Nothing has been deployed (Phase F waits for the user).**
+
+**Phase D, deploy configuration:**
+- `deploy/origins.json` (+ `origins.mjs`) is the single source of the origins. `PY4KIDS_TARGET=local|production` chooses the pair.
+- The same-site check uses a built-in subset of the Public Suffix List; the loopback pair is the only exception.
+- The production domain is the placeholder `py4kids.example`, and `scripts/build-release.sh` refuses to build production with it.
+- `deploy/site/wrangler.toml`, `deploy/runner/wrangler.toml` and `deploy/README.md` (custom domain required; `*.pages.dev` previews are read-only).
+- A 25 MiB per-file check.
+- `release_id` is the sha256 of the sorted `site/…`/`runner/…` `path\0sha256` lines, excluding `release.json`. Tests show it is reproducible, recomputable from the emitted files, and changed by a runner rebuild.
+- Every asset URL is release-specific: content-hashed names, Pagefind under `/pagefind/<hash>/`, Pyodide under `/pyodide/0.27.8/`. A build check rejects any other stable name.
+
+**Phase A, the site PWA:**
+- The web manifest, with icons generated from an SVG.
+- A hand-written `sw.js?r=<release_id>`.
+- "Download this book" shows the size, then a progress bar. Downloads are chunked into `book-<book>-<content_hash>` and confirmed by a record in IndexedDB `py4kids-offline`. `persist()` is called inside the click.
+- Install and offline notices.
+- The forward-only page-mediated activation handshake: 10 s step timeouts, the "close your other tabs" rule, and cleanup only when every client reports the current release.
+
+**Phase B, the runner PWA:**
+- The runner's service worker caches its shell and Pyodide.
+- COOP/COEP/CORP survive on cloned cached responses, so `crossOriginIsolated` and SharedArrayBuffer interrupts still work with both servers stopped.
+- Envelope v2 (`v`, `precache`/`precache-progress`/`precached`, `prepare-activate`/`runner-activated`, `version-mismatch`), with N−1 support tested.
+
+**Phase C, export and import:**
+- The JSON schema `py4kids/progress-export/1.0.0`.
+- Saving uses `showSaveFilePicker`, then Web Share, then a download.
+- A deterministic merge:
+  - events and attempts are combined by id;
+  - cards and resume positions keep the later `updated_at`, and a tie keeps the local record.
+- Size, schema and validation checks run before any write.
+- Book pages link to the controls.
+
+**Phase E, verification:**
+- **Offline end to end, per book (all four):** download, then stop both servers. After that, at most one failed `GET /release.json` per document per origin and nothing else. Then a lesson run, a check of every kind the book has, a card, the hang test with `interrupts: "sab"`, and a persistence reload.
+- **The update path:** steps 1–7, including the paused activation interval with A's files served from the retained caches, failure at every step, re-confirmation without a refetch, changed content into a new cache, and an interrupted download swept on the next worker start.
+- **Request recording with service workers active** on both origins.
+- **Installability** through Chromium's DevTools protocol, since Lighthouse 13 removed its PWA category.
+- **axe** on all the new UI.
+- **Lighthouse:** 0.99 / 1 / 1 on a book page.
+- **Results:**
+  - unit tests: 406 site, 25 runner;
+  - `pnpm -C site e2e`: 133 main tests (site, site-sw, lighthouse), 17 PWA tests (plus 7 hook tests that are skipped there), and 8 hook tests in a separate hooks build. Hook tests exist only with `PY4KIDS_TEST_HOOKS=1`, and `build-release.sh` refuses such a build.
+- **A product race fixed:** a self-check box ticked while the page was loading was not recorded.
+
+**Deviations, accepted:**
+1. Navigations normalise to `/x/` (Cloudflare redirects `/x/index.html`).
+2. Envelope messages gained fields: `content_hash`, `persisted`, `precache-progress`, `version-mismatch`, and `v: 2` on every message. Plan 104 had no envelope version, so a visitor still on the plan-104 runner sees "runner unavailable — reload" once.
+3. The runner caches no book files: fixtures and assets live on the site origin and travel inside `run` messages, so the site's book cache holds them, and the runner confirms the book.
+4. `content_hash` covers the book's whole download set (pages, assets, Pagefind). Pagefind's index is shared, so a content change in one book re-downloads every downloaded book. That is correct but costly.
+5. The main Playwright config blocks service workers; the service-worker suites live in `e2e-pwa/` and run afterwards.
+6. Chromium logs one unavoidable "Failed to load resource" line per failed `release.json` update check. The offline contract accepts exactly that line, and any other console error fails.
+
+**Follow-ups:**
+- A real v1-page-against-v2-runner test.
+- Per-book Pagefind indexes, to avoid re-downloading every book.
+- Pyodide memory snapshots.
+- **Phase F (the first public deploy) needs the user's go-ahead, the Cloudflare account and API token, and the domain.**
+- `scripts/ci-local.sh` solo on the final commit: see the PR.
