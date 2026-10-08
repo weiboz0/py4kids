@@ -82,7 +82,9 @@ and seed-unstable. Goal 4 is therefore a **bounded go/no-go with a stop rule**, 
      volume v is **among the reader's last 5 train positives** (the last-k query window — the only place a last-k
      model can see v); require **n ≥ 100**, `transk hit ≥ 1.3 × bag_cf hit` **and** `transk − bag_cf ≥ 0.10` on that
      cohort ([fable] r2: observed 1.39–1.58×, +0.13–0.18, n ≈ 360–415). Reported, not gated: the series-link
-     diagnostic (v's own transition row ranks v+1 in its top-10 ≈ 0.7 vs bag ≈ 0.3);
+     diagnostic. ~~(v's own transition row ranks v+1 in its top-10 ≈ 0.7 vs bag ≈ 0.3)~~ **Corrected by the
+     measurement:** the transition row ranks v+1 at 0.835 and v's own bag-similarity row at 0.960. The forced slot
+     makes v / v+1 co-reads near-universal; the bag-CF *history* query dilutes them to 0.30, which is what G3c gates.;
      G3d sanity: `bag_cf ≥ 2 × popularity` and popularity ≥ 0.05 (strong-but-beatable; earlier lessons hold).
    - *Seeds:* all generator knobs and the SASRec recipe are **tuned on seeds 0–1 only** (Phase B); every choice is then
      **frozen** and the **committed seed** (`DatasetConfig().seed` = 20260930, the one CI runs) plus held-out seeds 2–4
@@ -90,6 +92,12 @@ and seed-unstable. Goal 4 is therefore a **bounded go/no-go with a stop rule**, 
      CI thresholds are pinned from that one-shot committed-seed measurement (with headroom, never below the floors). **Held-out robustness rule:** every G3 gate holds at the
      committed seed; on held-out seeds 2–4, G3b–G3d hold on every seed and G3a holds as `lastk_cf − bag_cf ≥ 0` on
      every seed with mean ≥ +0.02 (G3a's floor is ~1 SE).
+   - *Protocol refinements* (implemented in `_reference_recommenders.py` and documented there; [fable]'s blind
+     re-implementation reproduces every number to 4 decimals with them):
+     (1) the bag-CF query is the reader's **deduplicated** train set;
+     (2) ties break by a `1e-6 · pop / max(pop)` popularity term, which is conservative for the gates: it lowers the
+     G3b ratio 1.55 → 1.48;
+     (3) v is deduplicated within the last-5 window for G3c.
    - *Guard has teeth:* a test regenerates a small session log with all three order mechanisms **disabled**
      (`session_series_follow_prob=0`, `session_author_bump=0`, `session_mood_boost=0`) and asserts the **ratio /
      difference clauses** of G3b and G3c **fail** (the n ≥ 100 / eligible-reader floors are not asserted on the small
@@ -337,7 +345,41 @@ Phase G is this plan's named verification phase.
 
 ## Content Review
 
-<!-- N/A content (no student-facing content); the content gate reviews the generator + harness + design amendment -->
+No student-facing content. The gate reviewed the generator, harness, tests, loaders and the design amendment.
+
+### Round 1 (HEAD 0f04f6e)
+- **[self]** APPROVE. Spot-checked the harness leakage paths:
+  - transitions, similarity and popularity come from train positives only;
+  - test is never read;
+  - the shuffled control shares the exclusion set;
+  - the cohort and windows match Goal 3.
+- **[sol]** REJECT.
+  - **B1** [WONTFIX] — the `pending` next-volume entry is created as soon as v is read, so a v+1 naturally exposed
+    later in the **same** session also gets `session_series_accept`. Measured at the committed seed: 135 of 9,329
+    next-volume reads (1.4%; 0.2% of 60,011 positives) are same-session. Timestamps put v before v+1, so this is a
+    genuine (binge-read) order, not leakage. Changing the frozen generator after the one-shot held-out run would
+    break the seed discipline (Goal 3/4 "freeze, then one shot, no retuning"). Resolution: documented in the
+    `gen_sessions.py` docstring. The behaviour reads "boost from the same session onward; the forced slot from the
+    next session".
+  - **N2** [FIXED] — the teeth test's `MECHANISMS_OFF` now also sets `session_series_accept = 0`.
+  - **N3** [FIXED] — design §6/§14 now carry the one-shot result: held-out 3/3 pass, committed-seed gap −0.046
+    reported only, and "near-tie" is the held-out claim.
+  - Confirmed: the harness contracts, cold exclusion, sub-streams 1/2/3, CI regenerating before pytest, and
+    torch/faiss-free imports.
+- **[fable]** APPROVE WITH NITS. The blind re-implementation reproduces all committed-seed numbers once the three
+  protocol refinements are applied. The scratchpad regeneration is byte-identical, and the held-out G3 gates hold
+  widely.
+  - **NIT-1** [FIXED] — the post-execution report is written, and the plan's "≈ 0.7 vs ≈ 0.3" series-link
+    expectation is struck and corrected (0.835 vs 0.960). No shipped prose repeated it.
+  - **NIT-2** [FIXED] — the teeth G3c n ≥ 30 floor was seed-lucky, so the teeth config was resized (numbers in the
+    post-execution report).
+  - **NIT-3** [FIXED] — the test docstring says G3c teeth are one-sided on the small catalog; G3b is the
+    discriminating contrast.
+  - **NIT-4** [FIXED] — the committed-seed G4c miss is not over-claimed: a design §6 clause plus a recsys-015
+    constraint below.
+  - **NIT-5** [FIXED] — the protocol refinements are documented in Goal 3.
+  - Aside (pre-existing, outside this diff): `vocabulary.py:162` uses a script-style import. Noted for a later
+    slice.
 
 ## Post-Execution Report
 

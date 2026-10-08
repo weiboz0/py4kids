@@ -187,8 +187,13 @@ a new capability — designed from the start to admit those, so no rewrite is fo
   - **SASRec is a measured near-tie, not the winner (user decision 2026-10-08).** At the §7 ceiling, a tiny SASRec
     learns order (ordered beats an order-shuffled copy). On the recsys-014 **tuning** seeds it stayed about 1.5–2 SE short
     of bag item-item CF. "Near-tie" means non-inferiority (within 0.04 hit@10 of bag CF), and the framing ships only
-    after the held-out G4a + G4c gate passes (recsys-014 plan, Goal 4 as amended). The
-    cheap order-aware paths (last-k CF, transition) carry U12's lift. The unit reports this honestly, as U11 did.
+    after the held-out G4a + G4c gate passes (recsys-014 plan, Goal 4 as amended).
+    The recsys-014 one-shot run gave these results. On held-out seeds 2–4, SASRec beat its shuffled copy by +0.032 to
+    +0.066, and its ordered − bag gaps were −0.017, −0.009 and −0.032; the gate passed on 3 of 3 seeds. **On the
+    committed seed (the data students run) the gap is −0.046, just outside the 0.04 margin.** That seed was reported
+    only, by design. So "near-tie" is the held-out claim, not a committed-seed guarantee, and U12 must report the
+    measured committed-seed gap as it is.
+    The cheap order-aware paths (last-k CF, transition) carry U12's lift. The unit reports this honestly, as U11 did.
   - A committed **session recoverability harness** gates the order signal. Last-k CF must beat bag CF; a last-k
     transition reference must drop clearly under an order-shuffled control; and next-in-series must beat bag CF.
 
@@ -392,6 +397,8 @@ scaffolds the book + `baseline.yaml` + slice script + synthetic generator + the 
   harness gates the order signal. §8 row 12 now notes that U12 is scored on the session log. Prompted by the U12
   pre-plan probe, which found the main log's sequence signal order-insensitive (capped SASRec ≤ bag CF and equal to a
   shuffled control). User-approved option; reviewed under recsys-014's gates.
+  The 2026-10-08 follow-up (user decision after a Phase-B pause) adds that SASRec is a measured near-tie. The held-out
+  G4a + G4c gate passed on 3/3 seeds; the committed-seed gap is −0.046, reported only.
 - **v4 (2026-10-03, via recsys-004):** §6 amended — **taste-aware exposure** (exposure ∝ popularity^α · exp(β·z-affinity))
   replaces popularity-only exposure so content/collaborative/latent signals are each recoverable and beat popularity
   (enforced by a committed recoverability harness), while a positive-rate estimate stays weak (preserving U2's
