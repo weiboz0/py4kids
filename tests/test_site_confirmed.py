@@ -37,6 +37,7 @@ RETAGGED = (
     "python-projects/unit-09-save-point/exercises/exercise-15-find-extreme",
     "python-projects/unit-09-save-point/exercises/exercise-16-filter-into-list",
     "python-projects/checkpoint-04-year-one-finale/checkpoint/c4000008",
+    "python-projects/checkpoint-04-year-one-finale/checkpoint/c400000a",
 )
 
 
@@ -253,9 +254,22 @@ def test_hidden_setup_detector():
 
 
 def missing_file_findings(runs) -> list[str]:
-    """`runs`: (key, RunResult) pairs; a FileNotFoundError in any run is a finding."""
+    """`runs`: (key, RunResult) pairs; a FileNotFoundError or NameError in any run is a finding
+    (a name only an earlier item defines, like checkpoint-04 Question 5's `loaded`)."""
     return [f"{key}: {result.stderr.strip().splitlines()[-1]}" for key, result in runs
-            if result.status != "ok" and "FileNotFoundError" in result.stderr]
+            if result.status != "ok"
+            and ("FileNotFoundError" in result.stderr or "NameError" in result.stderr)]
+
+
+def run_as_student(item):
+    """The solution alone; on a NameError, again with the item's starter in front (a student's
+    program includes the starter, which may supply an import). Starters can be deliberately broken
+    (fix-the-bug items), so the starter is only a fallback."""
+    code = answers._solution_code(item)
+    result = answers.run_python(item.entry_dir, code)
+    if result.status != "ok" and "NameError" in result.stderr and (item.starter or "").strip():
+        result = answers.run_python(item.entry_dir, item.starter + "\n\n" + code)
+    return result
 
 
 @pytest.mark.slow
@@ -264,8 +278,7 @@ def test_checked_solutions_run_with_tracked_files_only():
     only); none may need a file that only an earlier exercise or a scratch run wrote."""
     items = checked_items()
     with ThreadPoolExecutor(max_workers=8) as pool:
-        results = list(pool.map(
-            lambda item: answers.run_python(item.entry_dir, answers._solution_code(item)), items))
+        results = list(pool.map(run_as_student, items))
     assert missing_file_findings(zip((item.key for item in items), results)) == []
 
 
@@ -277,6 +290,9 @@ def test_missing_file_finding_from_a_real_sandbox_run(tmp_path):
     assert result.status == "error"
     [finding] = missing_file_findings([("demo/key", result)])
     assert finding.startswith("demo/key: FileNotFoundError")
+    undefined = answers._run_once(entry, "print(loaded)\n", 20)
+    [name_finding] = missing_file_findings([("demo/name", undefined)])
+    assert "NameError" in name_finding
     ok = answers._run_once(entry, "print('fine')\n", 20)
     assert missing_file_findings([("demo/ok", ok)]) == []
 
@@ -290,7 +306,7 @@ def kind_findings(items, keys, kind: str) -> list[str]:
             for key in keys if key not in by_key or confirmed_kind(by_key[key]) != kind]
 
 
-def test_six_file_reading_items_are_self_check():
+def test_cross_item_dependent_items_are_self_check():
     assert kind_findings(book_items("python-projects"), RETAGGED, "self-check") == []
 
 

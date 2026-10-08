@@ -378,11 +378,11 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `unit-09-save-point/exercises/96238996` — asserts — rule 1(b): `first_save`, `second_save` named, list fixed [also_check x2]
 - `unit-09-save-point/exercises/180acfe5` — expected-output — statement fixes the printed line `Mina can resume forest.` [also_check x2]
 - `unit-09-save-point/exercises/4b1cd37e` — self-check — depends on the file from earlier exercises; derived checklist matches
-- `unit-09-save-point/exercises/e5a7e9a1` — asserts — rule 1(b): `loaded` named; the file state from earlier exercises fixes it (statement shows the list) [also_check x2]
-- `unit-09-save-point/exercises/25c296a7` — asserts — rule 1(b): `total` named; earlier file state fixes it (statement shows 4925) [also_check x2]
-- `unit-09-save-point/exercises/exercise-14-linear-search` — asserts — rule 1(b): `found_name` named; settings file fixes it (statement shows Mina) [also_check x2]
-- `unit-09-save-point/exercises/exercise-15-find-extreme` — asserts — rule 1(b): `best_score` named; file fixes it (statement shows 1350) [also_check x1]
-- `unit-09-save-point/exercises/exercise-16-filter-into-list` — asserts — rule 1(b): `high_scores` named; file and threshold fix it [also_check x2]
+- `unit-09-save-point/exercises/e5a7e9a1` — self-check — rule 1(b): `loaded` named; the file state from earlier exercises fixes it (statement shows the list) [also_check x2] (retagged at integration: depends on an earlier item's file or name)
+- `unit-09-save-point/exercises/25c296a7` — self-check — rule 1(b): `total` named; earlier file state fixes it (statement shows 4925) [also_check x2] (retagged at integration: depends on an earlier item's file or name)
+- `unit-09-save-point/exercises/exercise-14-linear-search` — self-check — rule 1(b): `found_name` named; settings file fixes it (statement shows Mina) [also_check x2] (retagged at integration: depends on an earlier item's file or name)
+- `unit-09-save-point/exercises/exercise-15-find-extreme` — self-check — rule 1(b): `best_score` named; file fixes it (statement shows 1350) [also_check x1] (retagged at integration: depends on an earlier item's file or name)
+- `unit-09-save-point/exercises/exercise-16-filter-into-list` — self-check — rule 1(b): `high_scores` named; file and threshold fix it [also_check x2] (retagged at integration: depends on an earlier item's file or name)
 - `unit-09-save-point/exercises/9a1700000001` — self-check — count name and report format are the student's own; derived checklist matches
 - `unit-09-save-point/exercises/9a1800000001` — self-check — own names and report format; derived checklist matches
 - `unit-09-save-point/exercises/9a1900000001` — asserts — rule 1(b): `lowest` named ('Seed your `lowest` variable'), list fixed [also_check x1]
@@ -427,8 +427,8 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `checkpoint-04-year-one-finale/checkpoint/c4000002` — asserts — rule 1(b): `hero` named and fixed [also_check x1]
 - `checkpoint-04-year-one-finale/checkpoint/c4000004` — self-check — new_health is the solution's name; the single printed 13 does not occur in the statement; derived checklist matches
 - `checkpoint-04-year-one-finale/checkpoint/c4000006` — self-check — writes a file and prints nothing; derived checklist matches
-- `checkpoint-04-year-one-finale/checkpoint/c4000008` — asserts — rule 1(b): `loaded` named; the Question 3 file fixes it [also_check x1]
-- `checkpoint-04-year-one-finale/checkpoint/c400000a` — asserts — rule 1(b): `loaded` named; the loaded list fixes it [also_check x2]
+- `checkpoint-04-year-one-finale/checkpoint/c4000008` — self-check — rule 1(b): `loaded` named; the Question 3 file fixes it [also_check x1] (retagged at integration: depends on an earlier item's file or name)
+- `checkpoint-04-year-one-finale/checkpoint/c400000a` — self-check — rule 1(b): `loaded` named; the loaded list fixes it [also_check x2] (retagged at integration: depends on an earlier item's file or name)
 - `checkpoint-04-year-one-finale/checkpoint/c400000c` — self-check — printed format and lines list are the student's own; derived checklist matches
 - `checkpoint-04-year-one-finale/checkpoint/c400000e` — expected-output — every printed line is fixed by the statement
 - `checkpoint-04-year-one-finale/checkpoint/c4000010` — self-check — the printed default is the student's own; derived checklist opened with a description [requirements x2]
@@ -453,3 +453,5 @@ Six asserts items read a file that an **earlier** exercise writes:
 **Change:** all six are retagged `check-self`. Their checklists are derived from the statement sentences (the authored `also_check` was removed, because self-check items take `requirements`). python-projects now counts asserts 53, expected-output 11, predict 7, self-check 165.
 
 Making them checkable later would need the file shipped as a tracked asset. That is content work for a later plan.
+
+- `c400000a` (checkpoint-04 Question 5) is also retagged `check-self` at integration, found by the Phase E guard: its asserts use `loaded`, which only Question 4 defines. Run alone, a correct answer raises `NameError`.
