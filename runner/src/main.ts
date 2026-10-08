@@ -15,8 +15,14 @@
  *   if the worker has not answered 1 s later (the student caught KeyboardInterrupt), or the page
  *   is not cross-origin isolated, it terminates the worker and restarts. Every result reports
  *   `interrupts: "sab"` (the worker survived) or `"restart"`.
+ * - **Envelope versions (plan 105).** Requests of version 2 and of version 1 (N−1, plan 104's,
+ *   without `v`) are both served, and each is answered in its own version; a request newer than
+ *   this runner gets `version-mismatch`.
+ * - **Offline (plan 105 Phase B).** `precache` is forwarded to this origin's service worker
+ *   (pwa-page.ts); `prepare-activate` is the runner's step of the update handshake.
  */
-import { parseReply, parseRequest, type ResultReply, type Reply, type RunRequest, type Request } from './envelope';
+import { ACCEPTED_VERSIONS, ENVELOPE_VERSION, parseReply, parseRequest, versionOf, type ResultReply, type Reply, type RunRequest, type Request } from './envelope';
+import { activate, persist, precache, startPwa } from './pwa-page';
 import type { FromWorker, HarnessOut, Job, ToWorker } from './worker';
 
 // Build-time constants (scripts/build.ts).
@@ -272,7 +278,10 @@ function stopped(req: RunRequest): ResultReply {
 
 // --- the boundary ------------------------------------------------------------------------------
 
-function reply(message: Reply): void {
+/** A reply without its version: `send` adds `v` to match the request's. */
+type Unversioned = Reply extends infer R ? (R extends Reply ? Omit<R, 'v'> : never) : never;
+
+function post(message: Reply): void {
   // Validated on the way out too: the site drops anything that does not validate.
   if (!parseReply(message)) {
     console.error('runner: refusing to send an invalid reply', message.type, message.id);
@@ -282,6 +291,9 @@ function reply(message: Reply): void {
 }
 
 async function handle(req: Request): Promise<void> {
+  // Answer in the request's own envelope version (version 1 has no `v`).
+  const v2 = versionOf(req) === ENVELOPE_VERSION;
+  const reply = (message: Unversioned) => post((v2 ? { v: ENVELOPE_VERSION, ...message } : message) as Reply);
   switch (req.type) {
     case 'ping': {
       ensureSpare();
@@ -326,7 +338,29 @@ async function handle(req: Request): Promise<void> {
         if (cancelled.delete(req.id)) return stopped(req);
         return req.check === null ? runLesson(req) : runCheck(req);
       });
-      reply(out);
+      const { v: _, ...unversioned } = out as ResultReply & { v?: 2 };
+      reply(unversioned);
+      return;
+    }
+    case 'precache': {
+      // Ask for persistent storage here too; the result is informational (the site's counts).
+      const persisted = persist();
+      let lastSent = 0;
+      const done = await precache(
+        { book: req.book, content_hash: req.content_hash, files: req.files, release_id: req.release_id },
+        (bytes, total) => {
+          const now = performance.now();
+          if (now - lastSent < 250) return;
+          lastSent = now;
+          reply({ type: 'precache-progress', id: req.id, bytes, total });
+        },
+      );
+      reply({ type: 'precached', id: req.id, ok: done.ok, bytes: done.bytes, persisted: await persisted });
+      return;
+    }
+    case 'prepare-activate': {
+      // Step 2 of the update handshake; no answer when it cannot happen (the site's step times out).
+      if (await activate(req.release_id)) reply({ type: 'runner-activated', id: req.id, release_id: req.release_id });
       return;
     }
   }
@@ -336,7 +370,15 @@ window.addEventListener('message', (event: MessageEvent) => {
   if (window.parent === window) return;
   if (event.origin !== SITE_ORIGIN || event.source !== window.parent) return;
   const req = parseRequest(event.data);
-  if (!req) return;
+  if (!req) {
+    // A newer site page (a version this runner does not speak): tell it, so it asks for a reload.
+    const v = versionOf(event.data);
+    const id = (event.data as { id?: unknown }).id;
+    if (v !== null && v > ENVELOPE_VERSION && typeof id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(id)) {
+      post({ type: 'version-mismatch', id, supported: [...ACCEPTED_VERSIONS] });
+    }
+    return;
+  }
   void handle(req);
 });
 
@@ -346,5 +388,8 @@ window.addEventListener('message', (event: MessageEvent) => {
   isolated: () => self.crossOriginIsolated,
 };
 
-// Prewarm: boot the first spare as soon as the page loads.
-if (window.parent !== window) ensureSpare();
+// Prewarm: boot the first spare as soon as the page loads; check for an update (plan 105).
+if (window.parent !== window) {
+  ensureSpare();
+  void startPwa();
+}

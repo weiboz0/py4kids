@@ -167,7 +167,8 @@ test('the site drops a reply from a wrong origin, from another runner-origin win
     w.pending = result;
     return id;
   });
-  const forged = { type: 'result', id, session: 'u-iso', stdout: 'FORGED\n', stderr: '', results: [], timing: { boot_ms: 0, run_ms: 0, restart_ms: 0 }, status: 'ok', interrupts: 'sab', session_new: false, truncated: false, segments: [] };
+  // A current (version 2, plan 105) envelope, so only the binding can drop it.
+  const forged = { v: 2, type: 'result', id, session: 'u-iso', stdout: 'FORGED\n', stderr: '', results: [], timing: { boot_ms: 0, run_ms: 0, restart_ms: 0 }, status: 'ok', interrupts: 'sab', session_new: false, truncated: false, segments: [] };
 
   // From the real runner window: an unknown id, then an invalid envelope with the pending id.
   const frame = runnerFrame(page);

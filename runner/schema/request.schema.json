@@ -2,12 +2,26 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://py4kids.local/runner/request.schema.json",
   "title": "Runner request (site -> runner)",
-  "description": "Design 012 D7, plan 104: the only messages the runner page accepts. Validated on both sides (runner/src/envelope.ts is the hand-written twin; runner/test/envelope.test.ts proves they agree).",
+  "description": "Design 012 D7, plans 104 and 105: the only messages the runner page accepts. Validated on both sides (runner/src/envelope.ts is the hand-written twin; runner/test/envelope.test.ts proves they agree). Envelope version 2 (plan 105) carries \"v\": 2; version 1 (plan 104) has no \"v\", and the runner accepts both (N-1). precache and prepare-activate exist only in version 2.",
   "oneOf": [
-    { "$ref": "#/$defs/run" },
-    { "$ref": "#/$defs/reset" },
-    { "$ref": "#/$defs/ping" },
-    { "$ref": "#/$defs/interrupt" }
+    {
+      "$ref": "#/$defs/run"
+    },
+    {
+      "$ref": "#/$defs/reset"
+    },
+    {
+      "$ref": "#/$defs/ping"
+    },
+    {
+      "$ref": "#/$defs/interrupt"
+    },
+    {
+      "$ref": "#/$defs/precache"
+    },
+    {
+      "$ref": "#/$defs/prepare_activate"
+    }
   ],
   "$defs": {
     "id": {
@@ -30,99 +44,299 @@
           "pattern": "^[A-Za-z0-9_-][A-Za-z0-9_.-]*(/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*$",
           "description": "Relative; no segment starts with a dot (so no `..`)."
         },
-        "data": { "type": "string", "maxLength": 8000000 },
-        "encoding": { "enum": ["utf-8", "base64"] }
+        "data": {
+          "type": "string",
+          "maxLength": 8000000
+        },
+        "encoding": {
+          "enum": [
+            "utf-8",
+            "base64"
+          ]
+        }
       },
-      "required": ["path", "data", "encoding"],
+      "required": [
+        "path",
+        "data",
+        "encoding"
+      ],
       "additionalProperties": false
     },
     "check_output": {
       "type": "object",
       "description": "Run in a fresh worker and return stdout (expected-output: the site hashes it).",
       "properties": {
-        "kind": { "const": "output" },
-        "turtle": { "type": "boolean" }
+        "kind": {
+          "const": "output"
+        },
+        "turtle": {
+          "type": "boolean"
+        }
       },
-      "required": ["kind", "turtle"],
+      "required": [
+        "kind",
+        "turtle"
+      ],
       "additionalProperties": false
     },
     "check_fixture": {
       "type": "object",
       "description": "One fixture case in a fresh worker, compared with tools/judge.py's outputs_match.",
       "properties": {
-        "kind": { "const": "fixture" },
-        "expected": { "type": "string", "maxLength": 2000000 },
-        "match": { "enum": ["line", "token"] },
-        "turtle": { "type": "boolean" }
+        "kind": {
+          "const": "fixture"
+        },
+        "expected": {
+          "type": "string",
+          "maxLength": 2000000
+        },
+        "match": {
+          "enum": [
+            "line",
+            "token"
+          ]
+        },
+        "turtle": {
+          "type": "boolean"
+        }
       },
-      "required": ["kind", "expected", "match", "turtle"],
+      "required": [
+        "kind",
+        "expected",
+        "match",
+        "turtle"
+      ],
       "additionalProperties": false
     },
     "check_asserts": {
       "type": "object",
       "description": "Run the code, then each shipped assert separately in its namespace.",
       "properties": {
-        "kind": { "const": "asserts" },
+        "kind": {
+          "const": "asserts"
+        },
         "asserts": {
           "type": "array",
-          "items": { "type": "string", "maxLength": 100000 },
+          "items": {
+            "type": "string",
+            "maxLength": 100000
+          },
           "minItems": 1,
           "maxItems": 200
         },
-        "turtle": { "type": "boolean" }
+        "turtle": {
+          "type": "boolean"
+        }
       },
-      "required": ["kind", "asserts", "turtle"],
+      "required": [
+        "kind",
+        "asserts",
+        "turtle"
+      ],
       "additionalProperties": false
     },
     "run": {
       "type": "object",
       "properties": {
-        "type": { "const": "run" },
-        "id": { "$ref": "#/$defs/id" },
-        "session": { "$ref": "#/$defs/session" },
-        "code": { "type": "string", "maxLength": 500000 },
-        "stdin": { "type": "string", "maxLength": 2000000 },
-        "files": { "type": "array", "items": { "$ref": "#/$defs/file" }, "maxItems": 64 },
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "run"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "session": {
+          "$ref": "#/$defs/session"
+        },
+        "code": {
+          "type": "string",
+          "maxLength": 500000
+        },
+        "stdin": {
+          "type": "string",
+          "maxLength": 2000000
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/file"
+          },
+          "maxItems": 64
+        },
         "check": {
           "oneOf": [
-            { "type": "null" },
-            { "$ref": "#/$defs/check_output" },
-            { "$ref": "#/$defs/check_fixture" },
-            { "$ref": "#/$defs/check_asserts" }
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/check_output"
+            },
+            {
+              "$ref": "#/$defs/check_fixture"
+            },
+            {
+              "$ref": "#/$defs/check_asserts"
+            }
           ]
         },
-        "budget_ms": { "type": "integer", "minimum": 100, "maximum": 60000 }
+        "budget_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000
+        }
       },
-      "required": ["type", "id", "session", "code", "stdin", "files", "check", "budget_ms"],
+      "required": [
+        "type",
+        "id",
+        "session",
+        "code",
+        "stdin",
+        "files",
+        "check",
+        "budget_ms"
+      ],
       "additionalProperties": false
     },
     "reset": {
       "type": "object",
       "properties": {
-        "type": { "const": "reset" },
-        "id": { "$ref": "#/$defs/id" },
-        "session": { "$ref": "#/$defs/session" }
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "reset"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "session": {
+          "$ref": "#/$defs/session"
+        }
       },
-      "required": ["type", "id", "session"],
+      "required": [
+        "type",
+        "id",
+        "session"
+      ],
       "additionalProperties": false
     },
     "ping": {
       "type": "object",
       "properties": {
-        "type": { "const": "ping" },
-        "id": { "$ref": "#/$defs/id" }
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "ping"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        }
       },
-      "required": ["type", "id"],
+      "required": [
+        "type",
+        "id"
+      ],
       "additionalProperties": false
     },
     "interrupt": {
       "type": "object",
       "description": "The Stop button: `id` names the pending run to stop; that run's result answers it.",
       "properties": {
-        "type": { "const": "interrupt" },
-        "id": { "$ref": "#/$defs/id" }
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "interrupt"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        }
       },
-      "required": ["type", "id"],
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "v": {
+      "const": 2,
+      "description": "The envelope version (plan 105): 2; absent on a version-1 (plan 104) message."
+    },
+    "hex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "precache": {
+      "type": "object",
+      "description": "Version 2: cache the runner shell, Pyodide and this book's runner-origin files, and confirm the book for release_id (refused when release_id is not the runner's own).",
+      "properties": {
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "precache"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "book": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+        },
+        "content_hash": {
+          "$ref": "#/$defs/hex64"
+        },
+        "files": {
+          "type": "array",
+          "maxItems": 5000,
+          "items": {
+            "type": "string",
+            "maxLength": 300,
+            "pattern": "^/(?:[A-Za-z0-9_-][A-Za-z0-9_.-]*/)*(?:[A-Za-z0-9_-][A-Za-z0-9_.-]*)?$"
+          },
+          "description": "Runner-origin paths of the book's own runner files (none today: fixtures and assets travel inside run)."
+        },
+        "release_id": {
+          "$ref": "#/$defs/hex64"
+        }
+      },
+      "required": [
+        "v",
+        "type",
+        "id",
+        "book",
+        "content_hash",
+        "files",
+        "release_id"
+      ],
+      "additionalProperties": false
+    },
+    "prepare_activate": {
+      "type": "object",
+      "description": "Version 2: the update handshake's step 1: activate the runner's waiting service worker for release_id and answer runner-activated once it controls the runner page.",
+      "properties": {
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "prepare-activate"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "release_id": {
+          "$ref": "#/$defs/hex64"
+        }
+      },
+      "required": [
+        "v",
+        "type",
+        "id",
+        "release_id"
+      ],
       "additionalProperties": false
     }
   }

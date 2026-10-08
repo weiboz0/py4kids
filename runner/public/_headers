@@ -4,6 +4,9 @@
 # - COOP/COEP make the runner cross-origin isolated (SharedArrayBuffer interrupts).
 # - CORP cross-origin lets the site embed the runner under its own COEP: require-corp; it is on
 #   every response (the document, the worker script and the Pyodide files).
+# - The `/*` rule also covers /sw.js and /release.json (plan 105): Chrome checks a service worker
+#   script's COEP against a COEP document, and the worker's own fetches run under this CSP
+#   (connect-src 'self'; worker-src 'self' already allows registering /sw.js, so no new directive).
 # - The strict CSP: scripts only from this origin plus WebAssembly compilation, Pyodide's own
 #   files fetched from this origin, and only the site may frame the runner.
 /*

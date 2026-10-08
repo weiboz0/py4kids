@@ -7,7 +7,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import { describe, expect, it } from 'vitest';
-import { parseReply, parseRequest } from '../src/envelope';
+import { ACCEPTED_VERSIONS, ENVELOPE_VERSION, parseReply, parseRequest, versionOf } from '../src/envelope';
+
+const RID = 'a'.repeat(64);
+const HASH = '0123456789abcdef'.repeat(4);
 
 const SCHEMA = join(import.meta.dirname, '..', 'schema');
 const ajv = new Ajv2020({ strict: true, allErrors: false });
@@ -53,6 +56,14 @@ const VALID_REQUESTS: unknown[] = [
   { type: 'reset', id: 'r2', session: 'u01' },
   { type: 'ping', id: 'p' },
   { type: 'interrupt', id: 'r-1' },
+  // Version 2 (plan 105): the same requests with v: 2, and the offline messages.
+  { v: 2, type: 'run', id: 'r-2', session: 'u03', code: 'print(1)', stdin: '', files: [], check: null, budget_ms: 5000 },
+  { v: 2, type: 'reset', id: 'r3', session: 'u01' },
+  { v: 2, type: 'ping', id: 'p2' },
+  { v: 2, type: 'interrupt', id: 'r-2' },
+  { v: 2, type: 'precache', id: 'pc-1', book: 'python-projects', content_hash: HASH, files: [], release_id: RID },
+  { v: 2, type: 'precache', id: 'pc-2', book: 'acsl', content_hash: HASH, files: ['/books/acsl/a.txt', '/x'], release_id: RID },
+  { v: 2, type: 'prepare-activate', id: 'pa-1', release_id: RID },
 ];
 
 const VALID_REPLIES: unknown[] = [
@@ -86,6 +97,28 @@ const VALID_REPLIES: unknown[] = [
   },
   { type: 'ready', id: 'p', python: '3.12.7 (main, ...)', pyodide: '0.27.8', isolated: true, boot_ms: 1500 },
   { type: 'restarted', id: 'r', boot_ms: 1100 },
+  // Version 2 (plan 105).
+  { v: 2, type: 'ready', id: 'p', python: '3.12.7', pyodide: '0.27.8', isolated: true, boot_ms: 1500 },
+  { v: 2, type: 'restarted', id: 'r', boot_ms: 1100 },
+  {
+    v: 2,
+    type: 'result',
+    id: 'r-3',
+    session: 'c',
+    stdout: '',
+    stderr: '',
+    results: [],
+    timing: { boot_ms: 0, run_ms: 1, restart_ms: 0 },
+    status: 'ok',
+    interrupts: 'sab',
+    session_new: false,
+    truncated: false,
+    segments: [],
+  },
+  { v: 2, type: 'precache-progress', id: 'pc-1', bytes: 1024, total: 15_000_000 },
+  { v: 2, type: 'precached', id: 'pc-1', ok: true, bytes: 15_000_000, persisted: false },
+  { v: 2, type: 'runner-activated', id: 'pa-1', release_id: RID },
+  { type: 'version-mismatch', id: 'x', supported: [1, 2] },
 ];
 
 // Replacement values that probe types, ranges, patterns and lengths.
@@ -115,6 +148,13 @@ const PROBES: unknown[] = [
   ['assert True'],
   {},
   { kind: 'output', turtle: false },
+  2,
+  3,
+  'b'.repeat(64),
+  'A'.repeat(64),
+  ['/ok'],
+  ['../x'],
+  'python-projects',
 ];
 
 /** Every single-point mutation of `value`: each key removed, a key added, each leaf replaced. */
@@ -201,5 +241,39 @@ describe('reply envelopes', () => {
   it('drops a request posing as a reply and a reply posing as a request', () => {
     for (const r of VALID_REQUESTS) expect(parseReply(r)).toBeNull();
     for (const r of VALID_REPLIES) expect(parseRequest(r)).toBeNull();
+  });
+});
+
+describe('envelope versions (plan 105)', () => {
+  it('speaks version 2 and accepts version N-1 (plan 104 envelopes, without v)', () => {
+    expect(ENVELOPE_VERSION).toBe(2);
+    expect([...ACCEPTED_VERSIONS]).toEqual([ENVELOPE_VERSION - 1, ENVELOPE_VERSION]);
+    // Every plan 104 (version 1) request still parses, and is version 1.
+    for (const r of VALID_REQUESTS.filter((r) => versionOf(r) === 1)) {
+      expect(parseRequest(r), JSON.stringify(r)).not.toBeNull();
+      expect(requestSchema(r)).toBe(true);
+    }
+    expect(VALID_REQUESTS.filter((r) => versionOf(r) === 1).length).toBeGreaterThanOrEqual(4);
+  });
+  it('has the offline messages only in version 2, and refuses any other v', () => {
+    const precache = VALID_REQUESTS.find((r) => (r as { type: string }).type === 'precache') as Record<string, unknown>;
+    const { v: _, ...v1 } = precache;
+    expect(parseRequest(v1)).toBeNull();
+    for (const v of [0, 1, 3, '2', null]) {
+      expect(parseRequest({ ...precache, v })).toBeNull();
+      expect(parseRequest({ type: 'ping', id: 'p', v })).toBeNull();
+      expect(requestSchema({ type: 'ping', id: 'p', v })).toBe(false);
+    }
+    expect(versionOf({ type: 'ping', id: 'p', v: 3 })).toBe(3);
+    expect(versionOf({ type: 'ping', id: 'p' })).toBe(1);
+  });
+  it('refuses a malformed release id, content hash, book or runner path', () => {
+    const precache = VALID_REQUESTS.find((r) => (r as { type: string }).type === 'precache') as Record<string, unknown>;
+    expect(parseRequest({ ...precache, release_id: 'A'.repeat(64) })).toBeNull();
+    expect(parseRequest({ ...precache, content_hash: 'sha256:' + 'a'.repeat(64) })).toBeNull();
+    expect(parseRequest({ ...precache, book: '../acsl' })).toBeNull();
+    for (const path of ['x', '/../x', '/a/../b', '/.git', '//host/x', '/a?b', 'https://x/y']) {
+      expect(parseRequest({ ...precache, files: [path] }), path).toBeNull();
+    }
   });
 });

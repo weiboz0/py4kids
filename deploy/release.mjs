@@ -10,8 +10,8 @@
  *   units), and the id is the hex sha256 of that text.
  * - **`release.json`** (written into both dists, never cached: the service workers fetch it
  *   network-only) carries the id and what each origin's service worker needs to know about the
- *   release: the app shell's URLs, and for the site the books' download summaries, for the runner
- *   the versioned Pyodide runtime.
+ *   release: the app shell's files (URL and size), and for the site the books' download summaries
+ *   and the runner's total size, for the runner the versioned Pyodide runtime.
  * - **Size check:** Cloudflare Pages refuses any file over 25 MiB; the build fails first.
  */
 import { createHash } from 'node:crypto';
@@ -85,7 +85,11 @@ export function urlOf(path) {
   return `/${path}`;
 }
 
-const sizeOf = (dir, paths) => paths.reduce((n, p) => n + statSync(join(dir, p)).size, 0);
+/** `{ files: [{ url, bytes }], bytes }` for dist-relative `paths`. */
+function urlSet(dir, paths) {
+  const files = paths.map((p) => ({ url: urlOf(p), bytes: statSync(join(dir, p)).size }));
+  return { files, bytes: files.reduce((n, f) => n + f.bytes, 0) };
+}
 
 /**
  * The site's release description: the app shell (every file outside the books, Pagefind and the
@@ -105,7 +109,7 @@ export function describeSite(dir) {
     const top = p.split('/')[0];
     return !NEVER_CACHED.has(p) && !bookDirs.has(top) && top !== 'pagefind' && top !== '_offline';
   });
-  return { app: 'site', shell: { urls: shell.map(urlOf), bytes: sizeOf(dir, shell) }, books };
+  return { app: 'site', shell: urlSet(dir, shell), books };
 }
 
 /**
@@ -121,8 +125,8 @@ export function describeRunner(dir) {
   const shell = files.filter((p) => !NEVER_CACHED.has(p) && !p.startsWith('pyodide/'));
   return {
     app: 'runner',
-    shell: { urls: shell.map(urlOf), bytes: sizeOf(dir, shell) },
-    pyodide: { dir: version, cache: `pyodide-${version}`, urls: pyodide.map(urlOf), bytes: sizeOf(dir, pyodide) },
+    shell: urlSet(dir, shell),
+    pyodide: { dir: version, cache: `pyodide-${version}`, ...urlSet(dir, pyodide) },
   };
 }
 
@@ -139,7 +143,9 @@ export function writeRelease({ site, runner }) {
   const siteInfo = describeSite(site);
   const runnerInfo = describeRunner(runner);
   const releaseId = computeReleaseId({ site, runner });
-  writeFileSync(join(site, RELEASE_FILE), `${JSON.stringify({ release_id: releaseId, ...siteInfo })}\n`);
+  // The site's download UI shows the runner's share (its shell and Pyodide) up front too.
+  const runnerBytes = { bytes: runnerInfo.shell.bytes + runnerInfo.pyodide.bytes };
+  writeFileSync(join(site, RELEASE_FILE), `${JSON.stringify({ release_id: releaseId, ...siteInfo, runner: runnerBytes })}\n`);
   writeFileSync(join(runner, RELEASE_FILE), `${JSON.stringify({ release_id: releaseId, ...runnerInfo })}\n`);
   return releaseId;
 }

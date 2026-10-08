@@ -2,99 +2,374 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://py4kids.local/runner/reply.schema.json",
   "title": "Runner reply (runner -> site)",
-  "description": "Design 012 D7, plan 104: the only messages the site accepts from the runner. Validated on both sides (runner/src/envelope.ts is the hand-written twin; runner/test/envelope.test.ts proves they agree).",
+  "description": "Design 012 D7, plans 104 and 105: the only messages the site accepts from the runner. Validated on both sides (runner/src/envelope.ts is the hand-written twin; runner/test/envelope.test.ts proves they agree). Version 2 (plan 105) carries \"v\": 2; the runner answers in the request's own version. version-mismatch is version-independent.",
   "oneOf": [
-    { "$ref": "#/$defs/result" },
-    { "$ref": "#/$defs/ready" },
-    { "$ref": "#/$defs/restarted" }
+    {
+      "$ref": "#/$defs/result"
+    },
+    {
+      "$ref": "#/$defs/ready"
+    },
+    {
+      "$ref": "#/$defs/restarted"
+    },
+    {
+      "$ref": "#/$defs/precache_progress"
+    },
+    {
+      "$ref": "#/$defs/precached"
+    },
+    {
+      "$ref": "#/$defs/runner_activated"
+    },
+    {
+      "$ref": "#/$defs/version_mismatch"
+    }
   ],
   "$defs": {
-    "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$" },
-    "ms": { "type": "number", "minimum": 0 },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$"
+    },
+    "ms": {
+      "type": "number",
+      "minimum": 0
+    },
     "case": {
       "type": "object",
       "description": "One verdict: a fixture case, an assert (never its source) or a part of the turtle rule.",
       "properties": {
-        "name": { "type": "string", "maxLength": 200 },
-        "pass": { "type": "boolean" },
-        "detail": { "type": "string", "maxLength": 2000 }
+        "name": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "pass": {
+          "type": "boolean"
+        },
+        "detail": {
+          "type": "string",
+          "maxLength": 2000
+        }
       },
-      "required": ["name", "pass", "detail"],
+      "required": [
+        "name",
+        "pass",
+        "detail"
+      ],
       "additionalProperties": false
     },
     "segment": {
       "type": "object",
       "properties": {
-        "x1": { "type": "number" },
-        "y1": { "type": "number" },
-        "x2": { "type": "number" },
-        "y2": { "type": "number" },
-        "color": { "type": "string", "maxLength": 100 },
-        "width": { "type": "number" }
+        "x1": {
+          "type": "number"
+        },
+        "y1": {
+          "type": "number"
+        },
+        "x2": {
+          "type": "number"
+        },
+        "y2": {
+          "type": "number"
+        },
+        "color": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "width": {
+          "type": "number"
+        }
       },
-      "required": ["x1", "y1", "x2", "y2", "color", "width"],
+      "required": [
+        "x1",
+        "y1",
+        "x2",
+        "y2",
+        "color",
+        "width"
+      ],
       "additionalProperties": false
     },
     "result": {
       "type": "object",
       "properties": {
-        "type": { "const": "result" },
-        "id": { "$ref": "#/$defs/id" },
-        "session": { "$ref": "#/$defs/id" },
-        "stdout": { "type": "string" },
-        "stderr": { "type": "string" },
-        "results": { "type": "array", "items": { "$ref": "#/$defs/case" }, "maxItems": 300 },
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "result"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "session": {
+          "$ref": "#/$defs/id"
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/case"
+          },
+          "maxItems": 300
+        },
         "timing": {
           "type": "object",
           "properties": {
-            "boot_ms": { "$ref": "#/$defs/ms" },
-            "run_ms": { "$ref": "#/$defs/ms" },
-            "restart_ms": { "$ref": "#/$defs/ms" }
+            "boot_ms": {
+              "$ref": "#/$defs/ms"
+            },
+            "run_ms": {
+              "$ref": "#/$defs/ms"
+            },
+            "restart_ms": {
+              "$ref": "#/$defs/ms"
+            }
           },
-          "required": ["boot_ms", "run_ms", "restart_ms"],
+          "required": [
+            "boot_ms",
+            "run_ms",
+            "restart_ms"
+          ],
           "additionalProperties": false
         },
         "status": {
-          "enum": ["ok", "error", "timeout", "interrupted"],
+          "enum": [
+            "ok",
+            "error",
+            "timeout",
+            "interrupted"
+          ],
           "description": "timeout: the budget ran out; interrupted: the Stop button."
         },
         "interrupts": {
-          "enum": ["sab", "restart"],
+          "enum": [
+            "sab",
+            "restart"
+          ],
           "description": "sab: the worker survived (SharedArrayBuffer interrupts work); restart: the worker was terminated and restarted (a lesson session is lost)."
         },
         "session_new": {
           "type": "boolean",
           "description": "The session had no state before this run (first run, or after a restart): replay the prelude."
         },
-        "truncated": { "type": "boolean", "description": "stdout or stderr hit the size cap." },
-        "segments": { "type": "array", "items": { "$ref": "#/$defs/segment" }, "maxItems": 10000 }
+        "truncated": {
+          "type": "boolean",
+          "description": "stdout or stderr hit the size cap."
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/segment"
+          },
+          "maxItems": 10000
+        }
       },
-      "required": ["type", "id", "session", "stdout", "stderr", "results", "timing", "status", "interrupts", "session_new", "truncated", "segments"],
+      "required": [
+        "type",
+        "id",
+        "session",
+        "stdout",
+        "stderr",
+        "results",
+        "timing",
+        "status",
+        "interrupts",
+        "session_new",
+        "truncated",
+        "segments"
+      ],
       "additionalProperties": false
     },
     "ready": {
       "type": "object",
       "description": "The answer to ping: Python is booted.",
       "properties": {
-        "type": { "const": "ready" },
-        "id": { "$ref": "#/$defs/id" },
-        "python": { "type": "string", "maxLength": 200 },
-        "pyodide": { "type": "string", "maxLength": 50 },
-        "isolated": { "type": "boolean", "description": "crossOriginIsolated in the runner page and its worker." },
-        "boot_ms": { "$ref": "#/$defs/ms" }
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "ready"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "python": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "pyodide": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "isolated": {
+          "type": "boolean",
+          "description": "crossOriginIsolated in the runner page and its worker."
+        },
+        "boot_ms": {
+          "$ref": "#/$defs/ms"
+        }
       },
-      "required": ["type", "id", "python", "pyodide", "isolated", "boot_ms"],
+      "required": [
+        "type",
+        "id",
+        "python",
+        "pyodide",
+        "isolated",
+        "boot_ms"
+      ],
       "additionalProperties": false
     },
     "restarted": {
       "type": "object",
       "description": "The answer to reset: the lesson worker was restarted, so every lesson session is empty.",
       "properties": {
-        "type": { "const": "restarted" },
-        "id": { "$ref": "#/$defs/id" },
-        "boot_ms": { "$ref": "#/$defs/ms" }
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "restarted"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "boot_ms": {
+          "$ref": "#/$defs/ms"
+        }
       },
-      "required": ["type", "id", "boot_ms"],
+      "required": [
+        "type",
+        "id",
+        "boot_ms"
+      ],
+      "additionalProperties": false
+    },
+    "v": {
+      "const": 2,
+      "description": "The envelope version (plan 105): 2; absent on a version-1 (plan 104) message."
+    },
+    "hex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "precache_progress": {
+      "type": "object",
+      "description": "Version 2: bytes now in the runner's caches for a precache, of total.",
+      "properties": {
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "precache-progress"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "bytes": {
+          "$ref": "#/$defs/ms"
+        },
+        "total": {
+          "$ref": "#/$defs/ms"
+        }
+      },
+      "required": [
+        "v",
+        "type",
+        "id",
+        "bytes",
+        "total"
+      ],
+      "additionalProperties": false
+    },
+    "precached": {
+      "type": "object",
+      "description": "Version 2: the answer to precache. persisted is the runner's own navigator.storage.persist() result (informational: the site's own result is what counts).",
+      "properties": {
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "precached"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "$ref": "#/$defs/ms"
+        },
+        "persisted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "v",
+        "type",
+        "id",
+        "ok",
+        "bytes",
+        "persisted"
+      ],
+      "additionalProperties": false
+    },
+    "runner_activated": {
+      "type": "object",
+      "description": "Version 2: the update handshake's step 2 is done: the runner's service worker for release_id controls the runner page.",
+      "properties": {
+        "v": {
+          "$ref": "#/$defs/v"
+        },
+        "type": {
+          "const": "runner-activated"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "release_id": {
+          "$ref": "#/$defs/hex64"
+        }
+      },
+      "required": [
+        "v",
+        "type",
+        "id",
+        "release_id"
+      ],
+      "additionalProperties": false
+    },
+    "version_mismatch": {
+      "type": "object",
+      "description": "Any version: the request's v is newer than this runner speaks; supported lists the versions it accepts. The site asks for a reload.",
+      "properties": {
+        "type": {
+          "const": "version-mismatch"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "supported": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "maxItems": 16
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "supported"
+      ],
       "additionalProperties": false
     }
   }

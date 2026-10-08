@@ -8,7 +8,9 @@
  *   - pyodide/<version>/: the self-hosted Pyodide runtime from the pinned npm package (versioned
  *     path, so its URLs are release-specific; nothing loads from a CDN, and no package is
  *     installed at runtime)
- *   - _headers: public/_headers with the site origin filled in
+ *   - sw.js: src/sw.ts, the runner origin's service worker (plan 105 Phase B). Its name is stable
+ *     (pages register `/sw.js?r=<release_id>`) and its bytes change only when its code does.
+ *   - _headers: public/_headers with the site origins filled in (its `/*` rule covers /sw.js too)
  * Origins come from deploy/origins.json through deploy/origins.mjs (PY4KIDS_TARGET, or the
  * PY4KIDS_SITE_ORIGIN / PY4KIDS_RUNNER_ORIGIN overrides; plan 105 Phase D).
  */
@@ -75,6 +77,9 @@ async function main(): Promise<void> {
   const page = await bundle('src/main.ts', 'esm', { ORIGIN_PAIRS: pairList, WORKER_URL: `/${workerName}` });
   const pageName = `assets/main-${hash(page)}.js`;
   writeFileSync(join(DIST, pageName), page);
+
+  // The service worker: a classic script (every browser runs a classic service worker).
+  writeFileSync(join(DIST, 'sw.js'), await bundle('src/sw.ts', 'iife', {}));
 
   const html = readFileSync(join(ROOT, 'index.html'), 'utf-8')
     .replace('./src/main.ts', `/${pageName}`)

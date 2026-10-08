@@ -108,14 +108,15 @@ describe('the release descriptions', () => {
   it('describes the site shell (no book, Pagefind, manifest, sw.js or _headers) and the books', () => {
     const a = fakeDists('i');
     const site = describeSite(a.site);
-    expect(site.shell.urls.sort()).toEqual(['/', '/_astro/a.B1c2D3e4.js', '/about/']);
+    expect(site.shell.files.map((f) => f.url).sort()).toEqual(['/', '/_astro/a.B1c2D3e4.js', '/about/']);
+    expect(site.shell.bytes).toBe(site.shell.files.reduce((n, f) => n + f.bytes, 0));
     expect(site.books.demo).toEqual({ content_hash: 'ab', bytes: 3, count: 1, manifest: '/_offline/demo.0123456789abcdef.json' });
   });
   it('describes the runner shell and its versioned Pyodide', () => {
     const a = fakeDists('j');
     const runner = describeRunner(a.runner);
-    expect(runner.shell.urls.sort()).toEqual(['/', '/assets/worker-0123456789ab.js']);
-    expect(runner.pyodide).toMatchObject({ dir: '0.27.8', cache: 'pyodide-0.27.8', urls: ['/pyodide/0.27.8/pyodide.asm.wasm'] });
+    expect(runner.shell.files.map((f) => f.url).sort()).toEqual(['/', '/assets/worker-0123456789ab.js']);
+    expect(runner.pyodide).toMatchObject({ dir: '0.27.8', cache: 'pyodide-0.27.8', files: [{ url: '/pyodide/0.27.8/pyodide.asm.wasm', bytes: 4 }], bytes: 4 });
   });
 });
 

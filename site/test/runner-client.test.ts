@@ -5,7 +5,7 @@
  * out as "runner unavailable". The browser proofs are in e2e/runner.spec.ts.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { RunnerClient, RunnerUnavailableError, type Incoming, type ResultReply } from '../src/lib/runner-client';
+import { RunnerClient, RunnerUnavailableError, RunnerVersionError, type Incoming, type ResultReply } from '../src/lib/runner-client';
 
 const ORIGIN = 'http://localhost:4392';
 
@@ -33,6 +33,7 @@ function harness(timeouts = { bootMs: 1000, runSlackMs: 1000 }) {
 
 function resultFor(id: string, session: string, extra: Partial<ResultReply> = {}): ResultReply {
   return {
+    v: 2,
     type: 'result',
     id,
     session,
@@ -62,7 +63,7 @@ describe('RunnerClient', () => {
     await flush();
     expect(posted).toEqual([
       {
-        message: { type: 'run', id, session: 'u01', code: 'print("hi")', stdin: '', files: [], check: null, budget_ms: 5000 },
+        message: { v: 2, type: 'run', id, session: 'u01', code: 'print("hi")', stdin: '', files: [], check: null, budget_ms: 5000 },
         targetOrigin: ORIGIN,
       },
     ]);
@@ -101,7 +102,7 @@ describe('RunnerClient', () => {
     const { id } = client.run({ session: 's', code: '' });
     expect(client.receive({ origin: ORIGIN, source: frame, data: resultFor('nobody', 's') })).toBe('unknown-id');
     expect(client.receive({ origin: ORIGIN, source: frame, data: resultFor(id, 'other') })).toBe('unknown-id');
-    const ready = { type: 'ready', id, python: '3.12', pyodide: '0.27.8', isolated: true, boot_ms: 1 };
+    const ready = { v: 2, type: 'ready', id, python: '3.12', pyodide: '0.27.8', isolated: true, boot_ms: 1 };
     expect(client.receive({ origin: ORIGIN, source: frame, data: ready })).toBe('unknown-id');
     expect(client.isPending(id)).toBe(true);
   });
@@ -116,7 +117,7 @@ describe('RunnerClient', () => {
       { ...resultFor(id, 's'), status: 'passed' },
       { ...resultFor(id, 's'), stdout: 5 },
       { ...resultFor(id, 's'), id: '../x' },
-      { type: 'run', id, session: 's', code: '', stdin: '', files: [], check: null, budget_ms: 5000 },
+      { v: 2, type: 'run', id, session: 's', code: '', stdin: '', files: [], check: null, budget_ms: 5000 },
     ];
     for (const data of bad) expect(client.receive({ origin: ORIGIN, source: frame, data })).toBe('invalid');
     expect(client.isPending(id)).toBe(true);
@@ -126,7 +127,7 @@ describe('RunnerClient', () => {
     const { client, frame, deliver, listening } = harness();
     const ping = client.ping();
     await flush();
-    deliver({ origin: ORIGIN, source: frame, data: { type: 'ready', id: 'id-1', python: '3.12.7', pyodide: '0.27.8', isolated: true, boot_ms: 900 } });
+    deliver({ origin: ORIGIN, source: frame, data: { v: 2, type: 'ready', id: 'id-1', python: '3.12.7', pyodide: '0.27.8', isolated: true, boot_ms: 900 } });
     await expect(ping).resolves.toMatchObject({ pyodide: '0.27.8' });
     const { result } = client.run({ session: 's', code: '' });
     client.dispose();
@@ -161,7 +162,7 @@ describe('RunnerClient', () => {
       ['run', id, ORIGIN],
       ['interrupt', id, ORIGIN],
     ]);
-    expect(client.receive({ origin: ORIGIN, source: frame, data: { type: 'restarted', id: 'id-1', boot_ms: 1000 } })).toBe('accepted');
+    expect(client.receive({ origin: ORIGIN, source: frame, data: { v: 2, type: 'restarted', id: 'id-1', boot_ms: 1000 } })).toBe('accepted');
     await expect(reset).resolves.toMatchObject({ type: 'restarted' });
   });
 
@@ -175,5 +176,62 @@ describe('RunnerClient', () => {
   it('refuses a non-origin runner origin', () => {
     expect(() => new RunnerClient({ runnerOrigin: 'http://localhost:4392/', frame: () => null, listen: () => () => {} })).toThrow();
     expect(() => new RunnerClient({ runnerOrigin: '', frame: () => null, listen: () => () => {} })).toThrow();
+  });
+});
+
+describe('RunnerClient: envelope version 2 (plan 105)', () => {
+  const RID = 'f'.repeat(64);
+  const HASH = '0'.repeat(64);
+
+  it('drops a version-1 reply (this page speaks only version 2)', async () => {
+    const { client, frame, deliver } = harness();
+    const ping = client.ping();
+    await flush();
+    const v1 = { type: 'ready', id: 'id-1', python: '3.12', pyodide: '0.27.8', isolated: true, boot_ms: 1 };
+    expect(client.receive({ origin: ORIGIN, source: frame, data: v1 })).toBe('invalid');
+    expect(client.isPending('id-1')).toBe(true);
+    deliver({ origin: ORIGIN, source: frame, data: { ...v1, v: 2 } });
+    await expect(ping).resolves.toMatchObject({ type: 'ready' });
+  });
+
+  it('rejects with RunnerVersionError on version-mismatch (an older runner): reload', async () => {
+    const { client, frame } = harness();
+    const ping = client.ping();
+    await flush();
+    expect(client.receive({ origin: ORIGIN, source: frame, data: { type: 'version-mismatch', id: 'id-1', supported: [1] } })).toBe('accepted');
+    await expect(ping).rejects.toBeInstanceOf(RunnerVersionError);
+    await expect(ping).rejects.toBeInstanceOf(RunnerUnavailableError);
+  });
+
+  it('precaches with progress, and resolves on precached', async () => {
+    const { client, frame, posted } = harness();
+    const seen: [number, number][] = [];
+    const done = client.precache({ book: 'acsl', content_hash: HASH, release_id: RID }, (b, t) => seen.push([b, t]));
+    await flush();
+    expect(posted[0]!.message).toEqual({ v: 2, type: 'precache', id: 'id-1', book: 'acsl', content_hash: HASH, files: [], release_id: RID });
+    expect(client.receive({ origin: ORIGIN, source: frame, data: { v: 2, type: 'precache-progress', id: 'id-1', bytes: 5, total: 10 } })).toBe('accepted');
+    expect(client.isPending('id-1')).toBe(true);
+    expect(client.receive({ origin: ORIGIN, source: frame, data: { v: 2, type: 'precached', id: 'id-1', ok: true, bytes: 10, persisted: false } })).toBe('accepted');
+    await expect(done).resolves.toMatchObject({ ok: true, bytes: 10 });
+    expect(seen).toEqual([[5, 10]]);
+  });
+
+  it('sends prepare-activate and resolves on runner-activated; progress for another request is dropped', async () => {
+    const { client, frame, posted } = harness();
+    const activated = client.prepareActivate(RID, 1000);
+    await flush();
+    expect(posted[0]!.message).toEqual({ v: 2, type: 'prepare-activate', id: 'id-1', release_id: RID });
+    expect(client.receive({ origin: ORIGIN, source: frame, data: { v: 2, type: 'precache-progress', id: 'id-1', bytes: 1, total: 2 } })).toBe('unknown-id');
+    expect(client.receive({ origin: ORIGIN, source: frame, data: { v: 2, type: 'runner-activated', id: 'id-1', release_id: RID } })).toBe('accepted');
+    await expect(activated).resolves.toMatchObject({ release_id: RID });
+  });
+
+  it('times out a prepare-activate the runner never answers', async () => {
+    vi.useFakeTimers();
+    const { client } = harness();
+    const activated = client.prepareActivate(RID, 10_000);
+    const caught = activated.catch((e: unknown) => e);
+    await vi.advanceTimersByTimeAsync(10_001);
+    expect(await caught).toBeInstanceOf(RunnerUnavailableError);
   });
 });

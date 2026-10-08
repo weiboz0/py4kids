@@ -8,7 +8,7 @@ export interface Dist {
   dir: string;
 }
 export interface UrlSet {
-  urls: string[];
+  files: { url: string; bytes: number }[];
   bytes: number;
 }
 export interface BookSummary {
@@ -22,6 +22,8 @@ export interface SiteRelease {
   app: 'site';
   shell: UrlSet;
   books: Record<string, BookSummary>;
+  /** The runner's shell and Pyodide size (the download UI shows it up front). */
+  runner: { bytes: number };
 }
 export interface RunnerRelease {
   release_id: string;
@@ -37,7 +39,7 @@ export function releaseIdOf(digests: Digest[]): string;
 export function computeReleaseId(dirs: { site: string; runner: string }): string;
 export function oversized(dists: Dist[], limit?: number): { path: string; bytes: number }[];
 export function urlOf(path: string): string;
-export function describeSite(dir: string): Omit<SiteRelease, 'release_id'>;
+export function describeSite(dir: string): Omit<SiteRelease, 'release_id' | 'runner'>;
 export function describeRunner(dir: string): Omit<RunnerRelease, 'release_id'>;
 export function writeRelease(dirs: { site: string; runner: string }): string;
 export function largest(dists: Dist[]): { path: string; bytes: number };
