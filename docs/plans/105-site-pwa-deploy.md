@@ -50,11 +50,17 @@ User goal, 2026-10-06: "non stop until full working learning website".
     - Book files are fetched **in chunks** into the final `book-<book>-<content_hash>` cache, which feeds the progress bar, and the record is written **only at the end**. On worker start, any `book-*` cache without a confirmed record is deleted. That keeps all-or-nothing atomicity without one huge `addAll`.
     - "Available offline" means both origins hold confirmed records for the book with the same `release_id`.
   - **`activate` deletes only non-current `shell-*` and `pyodide-*` caches, never `book-*`.** On an update where a book's `content_hash` is unchanged, "re-download" is a manifest verification (every listed URL is present in the cache) that re-stamps the record with the new `release_id`, not a refetch. A changed `content_hash` downloads into a new cache and deletes the old one after confirmation.
-  - **Activation is user-controlled and safe for every open page:**
-    - A new worker stays *waiting* (no `skipWaiting` on install). Each open A page keeps running on A's shell and Pyodide caches, including booting **fresh exercise workers** from them.
-    - "A new version is available — reload" activates B only when the reloading page is the site worker's **only** client (`clients.matchAll`). Otherwise it says "close your other py4kids tabs to update", and B waits.
-    - **Both origins move together:** the **site page** (a service worker cannot reach an iframe), before it reloads, messages its runner iframe `{type: "activate", release_id}`. The runner's waiting worker activates under the same only-client rule; the runner's clients are the iframes of site pages, which are gone by then.
-    - Old `shell-*` and `pyodide-*` caches are deleted in `activate`, which by construction runs only after A's clients have closed.
+  - **Activation is user-controlled, page-mediated and safe for every open page.**
+    - A new worker on each origin stays *waiting* (no `skipWaiting` on install). Each open A page keeps running on A's shell and Pyodide caches, including booting **fresh exercise workers** from them.
+    - **Handshake**, when the user accepts "a new version is available — reload" (offered only when this page is the site's only client; otherwise "close your other py4kids tabs to update"):
+      1. The site page messages its runner iframe `{type: "prepare-activate", release_id}`.
+      2. The runner page tells its waiting worker to `skipWaiting`, waits for its own `controllerchange`, and replies `{type: "runner-activated", release_id}`.
+      3. The site page then tells the site's waiting worker to `skipWaiting`.
+      4. On the site's `controllerchange`, the page reloads.
+
+      A failure or timeout at any step leaves both origins on A, and the page says "update failed — try again".
+    - **No cache is deleted in `activate`.** Between activation and the reload, the old A page (and its iframe) is controlled by the B workers. Every hashed asset URL is release-specific, and **a B worker serves a request by exact URL match from any retained `shell-*` or `pyodide-*` cache**, so the A page keeps loading A's files.
+    - **Cleanup** runs later: a page loaded under B asks its worker to clean up, and the worker deletes non-current `shell-*` and `pyodide-*` caches only when `clients.matchAll()` shows no client still running an A page (each page reports its `release_id`). `book-*` caches follow the confirmed-record rule.
   - Downloaded books are re-downloaded for the new release in the background, and their status reads "updating" until confirmed.
 - **Size and count.**
   - Per-book downloads, measured on real bundles:
@@ -120,7 +126,9 @@ User goal, 2026-10-06: "non stop until full working learning website".
     1. build release A, download a book and open a lesson
     2. deploy release B (changing only runner code, so the bundle hash is unchanged but `release_id` differs)
     3. the open lesson keeps running and checking code on A's caches (a **fresh exercise worker boots** during the pending update), and the prompt appears; with a second A tab open, accepting asks to close it, and B stays waiting
-    4. accept: B activates, and A's shell cache is gone; the book (unchanged `content_hash`) is verified and re-confirmed under B without refetching; a second scenario with changed content downloads the book into a new cache and removes the old one only after confirmation; a download **interrupted** or **failed** midway (the server stopped during the chunks) leaves A's book cache and confirmed record intact, and the partial new cache is swept on the next worker start
+    4. **the activation interval:** the test pauses the handshake after the runner and site workers have activated but before the reload. The A page must still run a lesson cell and check a fixtures item (fresh workers loading A's runner and Pyodide files from the retained caches), on both origins, with zero network requests and no 404. A's caches still exist then
+    5. after the reload under B, cleanup deletes A's shell and Pyodide caches; a failed handshake (the runner step forced to time out) leaves both origins on A
+    6. B is active, and A's shell cache is gone; the book (unchanged `content_hash`) is verified and re-confirmed under B without refetching; a second scenario with changed content downloads the book into a new cache and removes the old one only after confirmation; a download **interrupted** or **failed** midway (the server stopped during the chunks) leaves A's book cache and confirmed record intact, and the partial new cache is swept on the next worker start
   - **Requests:** the no-network and request-recording suites with the service workers active.
   - **Accessibility and performance:** Lighthouse PWA installability checks, and axe on the new UI.
   - The parts B and C suites still pass.
@@ -168,6 +176,8 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `[FIXED]` The offline `release.json` failure keeps the current registration silently.
   - `[FIXED]` The site page (not the worker) sends `activate`.
   - `[WONTFIX]` The `resume` bullet was already beside `cards` in Phase C; the reviewer read an intermediate diff.
+
+- `[sol]` **REJECT** (round 3, 452f9e4): `[FIXED]` "Sole client" is not "no client". Activation is now a page-mediated handshake across both origins; `activate` deletes nothing; B workers serve any retained cache by exact URL, so the open A page keeps working through the activation interval; cleanup runs from a B page only once no A clients remain. The interval and a failed handshake are tested on both origins.
 
 ## Content Review
 
