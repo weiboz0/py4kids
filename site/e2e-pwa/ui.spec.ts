@@ -1,6 +1,6 @@
 /**
  * The installable site's UI, with service workers on (plan 105 Phase E "Accessibility and
- * performance"; Phase C deviation 8):
+ * performance"; Phase C, the book pages' link to the export controls):
  * - **Installability**, as Chromium itself judges it: Lighthouse 13 no longer has the PWA category
  *   (its `installable-manifest` audit was removed in Lighthouse 12), so the test asks Chromium the
  *   question that audit asked, through the DevTools protocol (`Page.getInstallabilityErrors`,

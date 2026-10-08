@@ -2,10 +2,10 @@
 /**
  * "Use this book offline" on a book page (plan 105 Phase A): the download size first, then a
  * progress bar; "available offline" only once the site and the runner both confirmed the book for
- * the same release; both origins' storage persistence results; the note that some browsers can
- * clear storage, with a link to "Export my progress" on the catalog page (plan 105 Phase C,
- * deviation 8). Wired by src/scripts/offline-book.ts. Always shown (a panel appearing later
- * would shift the page).
+ * the same release (the runner's own record is checked on every visit); both origins' storage persistence results; the note that some browsers can
+ * clear storage, with a link to "Export my progress" on the catalog page (plan 105 Phase C: book
+ * pages link to the export controls). Wired by src/scripts/offline-book.ts. Always shown (a
+ * panel appearing later would shift the page).
  */
 interface Props {
   book: string;
