@@ -14,7 +14,8 @@
     "e2e": "playwright test --project site --project lighthouse",
     "e2e:solvers": "playwright test --project solvers-setup --project solvers --workers 4",
     "slide-audit": "node scripts/slide-audit.ts",
-    "search-index": "node scripts/search-index.ts"
+    "search-index": "node scripts/search-index.ts",
+    "pwa-build": "node scripts/pwa-build.ts"
   },
   "dependencies": {
     "@codemirror/commands": "6.11.1",

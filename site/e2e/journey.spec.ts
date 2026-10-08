@@ -175,8 +175,9 @@ for (const [book, plan] of Object.entries(BOOKS)) {
     // The search ran in Pagefind's worker; its index, fragment and WebAssembly loads are recorded.
     const pagefind = recorder.requests.filter((r) => r.url.includes('/pagefind/')).map((r) => new URL(r.url).pathname);
     expect(pagefind.some((p) => p.endsWith('.pagefind') && p.includes('wasm')), 'Pagefind WebAssembly load recorded').toBe(true);
-    expect(pagefind.some((p) => p.includes('/pagefind/index/')), 'Pagefind index load recorded').toBe(true);
-    expect(pagefind.some((p) => p.includes('/pagefind/fragment/')), 'Pagefind fragment load recorded').toBe(true);
+    // (Plan 105: Pagefind sits in a content-hashed folder, /pagefind/<hash>/.)
+    expect(pagefind.some((p) => /^\/pagefind\/(?:[0-9a-f]{10}\/)?index\//.test(p)), 'Pagefind index load recorded').toBe(true);
+    expect(pagefind.some((p) => /^\/pagefind\/(?:[0-9a-f]{10}\/)?fragment\//.test(p)), 'Pagefind fragment load recorded').toBe(true);
 
     // 7. Reload: the checklist, the card states and the resume link persist.
     // The resume link (catalog, after a reload): the last entry page visited was the slides, at

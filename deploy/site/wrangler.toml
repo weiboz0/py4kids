@@ -1,0 +1,12 @@
+# Cloudflare Pages project for the py4kids site (plan 105 Phase D). Wrangler's Pages config is one
+# project per file; the runner is deploy/runner/wrangler.toml. NOTHING in this repo runs
+# `wrangler pages deploy`: the first deploy is gated on the user (plan 105 Phase F).
+#
+# Custom domain (set on the Pages project, not here): the production site origin in
+# deploy/origins.json ("production".site, e.g. https://<domain>). The runner must be on
+# run.<domain>: see deploy/README.md "Same site".
+#
+# Response headers (CSP, COOP/COEP) come from dist/_headers; Pages serves .wasm as application/wasm.
+name = "py4kids"
+pages_build_output_dir = "../../site/dist"
+compatibility_date = "2026-10-01"

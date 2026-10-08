@@ -1,5 +1,0 @@
-{
-  "$comment": "The site and runner origins (plan 104 D7), configured only here. Development values: the runner is a different host and port, so a different origin. A build for another deployment sets PY4KIDS_SITE_ORIGIN and PY4KIDS_RUNNER_ORIGIN (part D). Read by runner/scripts/build.ts (the runner's _headers and its accepted parent origin), site/astro.config.mjs (the site's frame-src and the client's runner origin) and site/e2e/helpers/env.ts (the test servers' ports).",
-  "site": "http://127.0.0.1:4391",
-  "runner": "http://localhost:4392"
-}

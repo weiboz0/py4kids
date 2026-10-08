@@ -20,8 +20,14 @@ import { parseReply, parseRequest, type ResultReply, type Reply, type RunRequest
 import type { FromWorker, HarnessOut, Job, ToWorker } from './worker';
 
 // Build-time constants (scripts/build.ts).
-declare const SITE_ORIGIN: string;
+declare const ORIGIN_PAIRS: { site: string; runner: string }[];
 declare const WORKER_URL: string;
+
+/**
+ * The one site origin this runner serves: the partner of this runner's own origin in
+ * deploy/origins.json (a production build also lists the preview pair), else the primary pair's.
+ */
+const SITE_ORIGIN: string = (ORIGIN_PAIRS.find((p) => p.runner === location.origin) ?? ORIGIN_PAIRS[0]!).site;
 
 export const GRACE_MS = 1000;
 export const MAX_WORKERS = 3;

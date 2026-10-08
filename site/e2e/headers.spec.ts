@@ -13,6 +13,7 @@ import { expect, test } from '@playwright/test';
 import { watchCsp } from './helpers/csp';
 import { CSP, parseHeaders } from '../test/helpers/headers';
 import { BASE_URL, DIST } from './helpers/env';
+import { pagefindDir } from '../scripts/offline-manifest';
 import { search, settle, TEMPLATES } from './helpers/site';
 import { readFileSync } from 'node:fs';
 
@@ -49,7 +50,15 @@ test('every HTML page is served with the CSP and the other _headers headers', as
   }
   expect(failures).toEqual([]);
   // The other files carry them too (Pagefind's worker runs under the same CSP).
-  for (const path of ['/pagefind/pagefind.js', '/pagefind/pagefind-worker.js', '/code.css', '/scripts/theme.js']) {
+  // (Plan 105: their names are content-hashed; the build's pages name them.)
+  const pagefind = pagefindDir(DIST)!;
+  const hashed = (dir: string, re: RegExp) => `/${dir ? `${dir}/` : ''}${readdirSync(join(DIST, dir)).find((f) => re.test(f))}`;
+  for (const path of [
+    `/${pagefind}/pagefind.js`,
+    `/${pagefind}/pagefind-worker.js`,
+    hashed('', /^code\.[0-9a-f]{10}\.css$/),
+    hashed('scripts', /^theme\.[0-9a-f]{10}\.js$/),
+  ]) {
     const response = await request.head(path);
     expect(response.status(), path).toBe(200);
     expect(response.headers()['content-security-policy'], path).toBe(CSP);

@@ -10,6 +10,7 @@ import { gunzipSync } from 'node:zlib';
 import { loadBooks, repoRoot } from '../src/lib/bundle';
 import { itemRoutes, shipsAnswer, splitAsserts } from '../src/lib/checks';
 import { CSP, parseHeaders } from './helpers/headers';
+import { pagefindDir } from '../scripts/offline-manifest';
 
 const DIST = join(import.meta.dirname, '..', 'dist');
 const built = existsSync(join(DIST, 'index.html'));
@@ -26,6 +27,9 @@ describe.skipIf(!built)('site/dist', () => {
   const html = all.filter((f) => f.endsWith('.html'));
   const read = (f: string) => readFileSync(f, 'utf-8');
   const rel = (f: string) => relative(DIST, f);
+  // Plan 105: the root assets and Pagefind have content-hashed names (scripts/fingerprint.ts).
+  const rootAsset = (re: RegExp) => readdirSync(DIST).find((f) => re.test(f)) ?? '(missing)';
+  const PAGEFIND = built ? pagefindDir(DIST)! : 'pagefind';
 
   it('has no inline script, inline style or style attribute', () => {
     for (const file of html) {
@@ -97,7 +101,7 @@ describe.skipIf(!built)('site/dist', () => {
     // A check projection (`<book>/<entry>/practice/check/<anchor>.json`) carries its item's salted
     // hash; nothing else carries a hash, and nothing carries answer_md, source or program.
     const isCheck = (f: string) => /^[a-z0-9-]+\/[^/]+\/practice\/check\/[a-z0-9-]+\.json$/.test(rel(f).split(sep).join('/'));
-    for (const file of all.filter((f) => f.endsWith('.json') && rel(f) !== join('pagefind', 'pagefind-entry.json'))) {
+    for (const file of all.filter((f) => f.endsWith('.json') && rel(f) !== join(PAGEFIND, 'pagefind-entry.json'))) {
       const forbidden = isCheck(file) ? ['answer_md', 'source', 'program', 'check'] : ['answer_md', 'source', 'hash', 'check', 'program'];
       const found = keys(JSON.parse(read(file))).filter((k) => forbidden.includes(k));
       expect(found, rel(file)).toEqual([]);
@@ -231,11 +235,12 @@ describe.skipIf(!built)('site/dist', () => {
   });
 
   it('defines every highlighted-code class in /code.css, linked from every page', () => {
-    const css = read(join(DIST, 'code.css'));
+    const codeCss = rootAsset(/^code\.[0-9a-f]{10}\.css$/);
+    const css = read(join(DIST, codeCss));
     const defined = new Set([...css.matchAll(/\.(sh-[a-z0-9]+)\{/g)].map((m) => m[1]));
     for (const file of html) {
       const text = read(file);
-      expect(text, rel(file)).toContain('<link rel="stylesheet" href="/code.css">');
+      expect(text, rel(file)).toContain(`<link rel="stylesheet" href="/${codeCss}">`);
       const used = [...text.matchAll(/class="([^"]*)"/g)].flatMap((m) => m[1]!.split(/\s+/)).filter((c) => c.startsWith('sh-'));
       for (const name of new Set(used)) expect(defined.has(name), `${rel(file)}: ${name}`).toBe(true);
     }
@@ -282,12 +287,12 @@ describe.skipIf(!built)('site/dist', () => {
       const text = read(file);
       expect(text, rel(file)).toContain('<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license">');
       for (const page of ['/about/', '/privacy/', '/terms/']) expect(text, rel(file)).toContain(`href="${page}"`);
-      expect(text, rel(file)).toContain('<script src="/scripts/theme.js"></script>');
+      expect(text, rel(file)).toMatch(/<script src="\/scripts\/theme\.[0-9a-f]{10}\.js"><\/script>/);
     }
   });
   // Phase E: the book pages, glossary, reference, search, the site pages, headers and favicon.
   const fragments = (): { url: string; meta: Record<string, string> }[] => {
-    const dir = join(DIST, 'pagefind', 'fragment');
+    const dir = join(DIST, PAGEFIND, 'fragment');
     return readdirSync(dir).map((name) => {
       const text = gunzipSync(readFileSync(join(dir, name))).toString('utf-8');
       expect(text.startsWith('pagefind_dcd'), name).toBe(true);
@@ -370,11 +375,13 @@ describe.skipIf(!built)('site/dist', () => {
     const scripts = loads.filter((u) => u.endsWith('.js')).map((u) => read(join(DIST, u)));
     expect(scripts.some((js) => js.includes('`/pagefind/pagefind.js`') || js.includes('"/pagefind/pagefind.js"'))).toBe(true);
     for (const needed of ['pagefind.js', 'pagefind-worker.js', 'pagefind-entry.json']) {
-      expect(existsSync(join(DIST, 'pagefind', needed)), needed).toBe(true);
+      expect(existsSync(join(DIST, PAGEFIND, needed)), needed).toBe(true);
     }
     // Pagefind's own prebuilt UI is never loaded, so it is not shipped.
-    expect(readdirSync(join(DIST, 'pagefind')).filter((f) => /ui\.(?:js|css)$|highlight/.test(f))).toEqual([]);
-    for (const file of files(join(DIST, 'pagefind')).filter((f) => f.endsWith('.js'))) {
+    expect(readdirSync(join(DIST, PAGEFIND)).filter((f) => /ui\.(?:js|css)$|highlight/.test(f))).toEqual([]);
+    // The search page names the content-hashed Pagefind loader (plan 105).
+    expect(text).toContain(`data-pagefind="/${PAGEFIND}/pagefind.js"`);
+    for (const file of files(join(DIST, PAGEFIND)).filter((f) => f.endsWith('.js'))) {
       expect(read(file), rel(file)).not.toMatch(/\bimport\s*\(\s*["'`]https?:|fetch\(\s*["'`]https?:/);
     }
   });
@@ -382,9 +389,10 @@ describe.skipIf(!built)('site/dist', () => {
   it('ships the _headers file with the strict CSP, and the favicons', () => {
     const rules = parseHeaders(read(join(DIST, '_headers')));
     expect(rules.get('/*')?.get('content-security-policy')).toBe(CSP);
-    expect(existsSync(join(DIST, 'favicon.svg'))).toBe(true);
-    expect(existsSync(join(DIST, 'favicon.ico'))).toBe(true);
-    for (const file of html) expect(read(file), rel(file)).toContain('<link rel="icon" href="/favicon.svg" type="image/svg+xml">');
+    const svg = rootAsset(/^favicon\.[0-9a-f]{10}\.svg$/);
+    expect(existsSync(join(DIST, svg))).toBe(true);
+    expect(rootAsset(/^favicon\.[0-9a-f]{10}\.ico$/)).not.toBe('(missing)');
+    for (const file of html) expect(read(file), rel(file)).toContain(`<link rel="icon" href="/${svg}" type="image/svg+xml">`);
   });
 
   it('shows the release tag in the footer of every page', () => {

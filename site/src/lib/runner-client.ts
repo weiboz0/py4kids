@@ -28,8 +28,15 @@ import {
 
 export type { Check, ReadyReply, RestartedReply, ResultReply, RunFile } from '../../../runner/src/envelope';
 
-/** The runner origin, from runner/origins.json (or PY4KIDS_RUNNER_ORIGIN) via astro.config.mjs. */
-export const RUNNER_ORIGIN: string = import.meta.env.PY4KIDS_RUNNER_ORIGIN ?? '';
+/**
+ * The runner origin (deploy/origins.json via astro.config.mjs; plan 105 Phase D): the partner of
+ * this page's own origin among the build's pairs (a production build also lists the preview
+ * pair), else the primary runner origin.
+ */
+export const RUNNER_ORIGIN: string =
+  (import.meta.env.PY4KIDS_ORIGIN_PAIRS ?? []).find((p) => p.site === globalThis.location?.origin)?.runner ??
+  import.meta.env.PY4KIDS_RUNNER_ORIGIN ??
+  '';
 
 /** The iframe's sandbox and permissions (plan 104 Global constraints). */
 export const SANDBOX = 'allow-scripts allow-same-origin';

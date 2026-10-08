@@ -3,20 +3,24 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
+import { resolveOrigins } from '../deploy/origins.mjs';
 
-// The Python runner's origin (plan 104, D7), configured only in runner/origins.json; a build for
-// another deployment sets PY4KIDS_RUNNER_ORIGIN.
-const origins = JSON.parse(readFileSync(new URL('../runner/origins.json', import.meta.url), 'utf-8'));
-const runnerOrigin = process.env.PY4KIDS_RUNNER_ORIGIN ?? origins.runner;
-if (new URL(runnerOrigin).origin !== runnerOrigin) throw new Error(`not an origin: ${runnerOrigin}`);
+// The Python runner's origins (plan 104, D7), configured only in deploy/origins.json and read
+// through deploy/origins.mjs (plan 105 Phase D): PY4KIDS_TARGET picks local or production (with the
+// preview pair), and PY4KIDS_SITE_ORIGIN / PY4KIDS_RUNNER_ORIGIN override both with one pair.
+const { primary, pairs } = resolveOrigins();
+const runnerOrigin = primary.runner;
+const originPairs = pairs.map(({ site, runner }) => ({ site, runner }));
+// frame-src lists every runner the build accepts; the client picks its partner at run time.
+const frameSrc = originPairs.map((p) => p.runner).join(' ');
 
-/** Fill the runner origin into dist/_headers (the CSP's frame-src). */
+/** Fill the runner origins into dist/_headers (the CSP's frame-src). */
 const runnerHeaders = {
   name: 'py4kids-runner-origin',
   hooks: {
     'astro:build:done': ({ dir }) => {
       const path = fileURLToPath(new URL('_headers', dir));
-      const text = readFileSync(path, 'utf-8').replaceAll('{{RUNNER_ORIGIN}}', runnerOrigin);
+      const text = readFileSync(path, 'utf-8').replaceAll('{{RUNNER_ORIGIN}}', frameSrc);
       if (text.includes('{{')) throw new Error('_headers: an unfilled placeholder');
       writeFileSync(path, text);
     },
@@ -37,6 +41,7 @@ export default defineConfig({
   vite: {
     define: {
       'import.meta.env.PY4KIDS_RUNNER_ORIGIN': JSON.stringify(runnerOrigin),
+      'import.meta.env.PY4KIDS_ORIGIN_PAIRS': JSON.stringify(originPairs),
     },
     build: {
       // Never inline a script or asset as a data: URL or inline <script>.
