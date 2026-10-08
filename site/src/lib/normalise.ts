@@ -55,12 +55,18 @@ export function casefold(text: string): string {
   return out;
 }
 
-function applyAliases(text: string, aliases: Record<string, string>): string {
-  const keys = Object.keys(aliases).filter((k) => k.length > 0);
-  if (keys.length === 0) return text;
-  keys.sort((a, b) => b.length - a.length);
+/** One left-to-right pass, longest key first, never re-scanning a replacement. Under
+ * `insensitive` the keys and values are casefolded too, as in Python's `_apply_aliases`. */
+function applyAliases(text: string, aliases: Record<string, string>, fold: boolean): string {
+  const table = new Map<string, string>();
+  for (const [k, v] of Object.entries(aliases)) {
+    if (k.length === 0) continue;
+    table.set(fold ? casefold(k) : k, fold ? casefold(v) : v);
+  }
+  if (table.size === 0) return text;
+  const keys = [...table.keys()].sort((a, b) => b.length - a.length);
   const pattern = new RegExp(keys.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gu');
-  return text.replace(pattern, (m) => aliases[m]!);
+  return text.replace(pattern, (m) => table.get(m)!);
 }
 
 export function normalise(text: string, options: NormaliseOptions): string {
@@ -75,7 +81,7 @@ export function normalise(text: string, options: NormaliseOptions): string {
   while (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
   let out = lines.join('\n');
   if (options.case === 'insensitive') out = casefold(out);
-  if (options.aliases) out = applyAliases(out, options.aliases);
+  if (options.aliases) out = applyAliases(out, options.aliases, options.case === 'insensitive');
   return out;
 }
 

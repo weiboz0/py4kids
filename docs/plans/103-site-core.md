@@ -354,6 +354,10 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 - **Verdict**: APPROVE. Rebuilt a fresh copy: 267/267 vitest and 68/68 e2e pass, Lighthouse 1.0, 0.99 and 0.97, zero WCAG A/AA violations. Every fix was verified in its own browser run (scroll cue, collapsed map, Node guard, resume label, no early promotion, 75 distinct slide keys on acsl unit 12).
 1. `[WONTFIX]` (Nice to Have) A split sub-block gets a double suffix (`l-018#2#slide-2`). → Response: schema-valid and distinct. Recorded as a key-format note for part E's sync design, which must treat everything after the first `#` as one opaque fragment.
 
+### Review 3 — [sol] (2026-10-08, gpt-6-sol)
+- **Verdict**: REJECT.
+1. `[FIXED]` Under `case: insensitive`, the TypeScript port applied alias keys and values unfolded, while Python casefolds them (input `X` with `{"X":"Y"}` gives `y` in Python and `x` in TypeScript). Must Fix. → Response: `normalise.ts`'s `applyAliases` now casefolds keys and values under `insensitive`, as Python's `_apply_aliases` does. A new shared vector pins the case, making 45 in total; Python (55 tests) and TypeScript (107 tests) both pass on all of them. The previous test expectation, which encoded the bug, is corrected.
+
 ## Post-Execution Report
 
 **Shipped: design 012 part B, the static learning website for all four `site: true` books.**
@@ -392,7 +396,7 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
   - three no-network proofs, plus a same-origin audit with sentinels
   - headers and zero CSP violations
   - Lighthouse 0.97 to 1.00 (performance, accessibility, best practices)
-- normalisation parity: `normalise.ts` matches Python on all 44 shared vectors, including `exact` whitespace and aliases
+- normalisation parity: `normalise.ts` matches Python on all 45 shared vectors, including `exact` whitespace and aliases
 - `scripts/ci-local.sh` solo (see the PR). Its site step now **fails** when the site is in scope but Node, pnpm or Chromium is missing.
 
 **Deviations (accepted at the gates):**

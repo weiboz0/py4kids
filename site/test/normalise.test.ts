@@ -116,7 +116,8 @@ describe('aliases (plan 102 rule 3)', () => {
 
   it('applies after case folding', () => {
     expect(normalise('X', { case: 'insensitive', aliases: { x: 'y' } })).toBe('y');
-    expect(normalise('X', { case: 'insensitive', aliases: { X: 'y' } })).toBe('x');
+    // keys and values fold too under `insensitive` (Python `_apply_aliases`)
+    expect(normalise('X', { case: 'insensitive', aliases: { X: 'Y' } })).toBe('y');
   });
 
   it('applies after whitespace collapsing', () => {
