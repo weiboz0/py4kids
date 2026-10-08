@@ -222,7 +222,7 @@ test('answer with aliases (acsl unit 4 e-024): `^` typed for `↑` is accepted',
   }
 });
 
-test('expected-output with whitespace: exact (python-concepts u01e14a): a typed `\\t` passes, spaces for the tab fail', async ({ page }) => {
+test('expected-output with whitespace: exact (python-concepts u01e14a): printing a real tab passes; a literal backslash-t or spaces fail', async ({ page }) => {
   const found = findItem(
     (f) => f.item.key === 'python-concepts/unit-01-output-and-variables/exercises/u01e14a',
     'python-concepts u01e14a, an exact-whitespace expected-output item',
@@ -231,6 +231,9 @@ test('expected-output with whitespace: exact (python-concepts u01e14a): a typed 
   const item = await open(page, found);
   await setCode(page, item, '# Print the poem.\npoem = "Sun comes up\\nBirds sing\\n\\tThe end"\nprint(poem)\n');
   expect(await check(item)).toBe('Passed.');
+  // The program's output is graded, so printing the two characters `\` and `t` is not a tab.
+  await setCode(page, item, '# Print the poem.\npoem = "Sun comes up\\nBirds sing\\n\\\\tThe end"\nprint(poem)\n');
+  expect(await check(item)).toMatch(/^Not yet/);
   await setCode(page, item, '# Print the poem.\npoem = "Sun comes up\\nBirds sing\\n    The end"\nprint(poem)\n');
   expect(await check(item)).toMatch(/^Not yet/);
   await setCode(page, item, '# Print the poem.\npoem = "Sun comes up\\nBirds  sing\\n\\tThe end"\nprint(poem)\n');

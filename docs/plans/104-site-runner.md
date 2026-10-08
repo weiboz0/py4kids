@@ -217,4 +217,11 @@ User goal, 2026-10-06: "non stop until full working learning website".
 
 ## Content Review
 
+### Pre-gate (self-found during Phase D integration)
+
+- `[self]` [FIXED] The nine python-concepts `whitespace: exact` items are `check-expected-output`, so the site hashes the *program's* output.
+  Their `{"\\t": "\t"}` alias (plan 102) let a program that prints a literal backslash-t pass, and their hints told students to "type" a tab.
+  The alias and the typing phrases are removed (the layout descriptions stay).
+  `tests/test_site_confirmed.py` now asserts no exact-whitespace item aliases a tab, and `site/e2e/checks.spec.ts` proves a printed backslash-t fails on u01e14a.
+
 ## Post-Execution Report
