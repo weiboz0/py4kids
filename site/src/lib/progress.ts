@@ -4,10 +4,14 @@
  * IndexedDB database `py4kids`, with no identifiers and nothing sent anywhere:
  * - `events`: D11 progress events, each validated against
  *   `tools/export/schema/progress-event.schema.json` before it is written (UUID `event_id`,
- *   UTC `Z` timestamps). Part B writes `slide`, `card` and `self-check` events only; reading
- *   position lives in `resume`, so no `lesson-run` event is ever written here.
+ *   UTC `Z` timestamps). Part B writes `slide`, `card` and `self-check` events; part C (plan 104)
+ *   adds `lesson-run` (a Run in the reading view) and `exercise`, `checkpoint` and `project`
+ *   (a Check, with `detail.cases`). An event holds results only, never code or a typed answer.
  * - `cards`: the Leitner state per card key (box 1..5, due date, updated_at).
  * - `resume`: the last position per book (updated_at).
+ * - `attempts` (plan 104, version 2): the student's own work, on this device only: the code of each
+ *   Run and Check and each typed answer, with its outcome. It is never put in an event; it
+ *   restores the editor and records the genuine attempt that unlocks an odd exercise's answer.
  *
  * When IndexedDB is unavailable (a private window, blocked site data), `openProgress` returns an
  * in-memory store with `persistent: false`: the site keeps working for the visit without saving,
@@ -21,13 +25,15 @@
 import { review, type CardState } from './leitner';
 
 export const DB_NAME = 'py4kids';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 export const EVENT_SCHEMA = 'py4kids/progress-event/1.0.0';
 
 export type EventKind = 'lesson-run' | 'slide' | 'card' | 'exercise' | 'checkpoint' | 'project' | 'self-check';
 export type EventResult = 'pass' | 'fail' | 'partial' | 'done' | 'seen' | 'error';
 /** The kinds part B writes. */
 export type PartBKind = 'slide' | 'card' | 'self-check';
+/** The kinds part C (plan 104) adds. */
+export type PartCKind = 'lesson-run' | 'exercise' | 'checkpoint' | 'project';
 
 export interface EventDetail {
   cases?: { n: number; pass: boolean }[];
@@ -51,13 +57,30 @@ export interface ProgressEvent {
 
 export interface EventInput {
   item_key: string;
-  kind: PartBKind;
+  kind: PartBKind | PartCKind;
   result: EventResult;
   detail?: EventDetail;
   duration_ms?: number;
   /** The bundle's `release.content_hash`. */
   content_hash: string;
 }
+
+/** One attempt at an item, kept on this device only (the `attempts` store). */
+export interface Attempt {
+  attempt_id: string;
+  book: string;
+  item_key: string;
+  /** `check`: a Check run; `answer`: a submitted typed answer; `run`: a Run of the item's code. */
+  kind: 'check' | 'answer' | 'run';
+  /** The student's code (Run, Check). */
+  code?: string;
+  /** The typed answer. */
+  answer?: string;
+  result: EventResult;
+  timestamp: string;
+}
+
+export type AttemptInput = Omit<Attempt, 'attempt_id' | 'book' | 'timestamp'>;
 
 export interface ResumeState {
   book: string;
@@ -177,6 +200,16 @@ export interface ProgressStore {
   putCard(state: CardState): Promise<void>;
   getResume(book: string): Promise<ResumeState | undefined>;
   setResume(state: Omit<ResumeState, 'updated_at'>, now?: Date): Promise<ResumeState>;
+  addAttempt(input: AttemptInput, now?: Date): Promise<Attempt>;
+  /** One item's attempts, oldest first. */
+  attempts(itemKey: string): Promise<Attempt[]>;
+}
+
+const byAttemptTime = (a: Attempt, b: Attempt) => a.timestamp.localeCompare(b.timestamp);
+
+function makeAttempt(input: AttemptInput, now: Date): Attempt {
+  if (!ITEM_KEY.test(input.item_key)) throw new Error(`not an item key: ${input.item_key}`);
+  return { ...input, attempt_id: uuid(), book: bookOfKey(input.item_key), timestamp: now.toISOString() };
 }
 
 const byTime = (a: ProgressEvent, b: ProgressEvent) => a.timestamp.localeCompare(b.timestamp);
@@ -187,6 +220,7 @@ export class MemoryProgress implements ProgressStore {
   private log: ProgressEvent[] = [];
   private cardMap = new Map<string, CardState>();
   private resumeMap = new Map<string, ResumeState>();
+  private attemptLog: Attempt[] = [];
 
   async addEvent(input: EventInput, now?: Date): Promise<ProgressEvent> {
     const event = makeEvent(input, now);
@@ -216,6 +250,14 @@ export class MemoryProgress implements ProgressStore {
     this.resumeMap.set(state.book, full);
     return full;
   }
+  async addAttempt(input: AttemptInput, now: Date = new Date()): Promise<Attempt> {
+    const attempt = makeAttempt(input, now);
+    this.attemptLog.push(attempt);
+    return attempt;
+  }
+  async attempts(itemKey: string): Promise<Attempt[]> {
+    return this.attemptLog.filter((a) => a.item_key === itemKey).sort(byAttemptTime);
+  }
 }
 
 const request = <T>(req: IDBRequest<T>): Promise<T> =>
@@ -233,7 +275,10 @@ const done = (tx: IDBTransaction): Promise<void> =>
 
 export class IdbProgress implements ProgressStore {
   readonly persistent = true;
-  constructor(private readonly db: IDBDatabase) {}
+  constructor(private readonly db: IDBDatabase) {
+    // Another tab upgrading the database: let it (this page keeps its open transactions).
+    db.onversionchange = () => db.close();
+  }
 
   private async write(store: string, value: unknown): Promise<void> {
     const tx = this.db.transaction(store, 'readwrite');
@@ -276,6 +321,15 @@ export class IdbProgress implements ProgressStore {
     await this.write('resume', full);
     return full;
   }
+  async addAttempt(input: AttemptInput, now: Date = new Date()): Promise<Attempt> {
+    const attempt = makeAttempt(input, now);
+    await this.write('attempts', attempt);
+    return attempt;
+  }
+  async attempts(itemKey: string): Promise<Attempt[]> {
+    const all = await this.read<Attempt[]>('attempts', (s) => s.index('item_key').getAll(itemKey));
+    return all.sort(byAttemptTime);
+  }
 }
 
 function upgrade(db: IDBDatabase): void {
@@ -286,6 +340,8 @@ function upgrade(db: IDBDatabase): void {
   }
   if (!db.objectStoreNames.contains('cards')) db.createObjectStore('cards', { keyPath: 'key' }).createIndex('book', 'book');
   if (!db.objectStoreNames.contains('resume')) db.createObjectStore('resume', { keyPath: 'book' });
+  // Version 2 (plan 104): the on-device attempt store.
+  if (!db.objectStoreNames.contains('attempts')) db.createObjectStore('attempts', { keyPath: 'attempt_id' }).createIndex('item_key', 'item_key');
 }
 
 export interface OpenOptions {
@@ -396,4 +452,39 @@ export function recordChecklist(
 /** One slide viewed, keyed by the slide's identifier (`slides.ts` `slideKeys`). */
 export function recordSlide(store: ProgressStore, slideKey: string, contentHash: string, now: Date = new Date()): Promise<ProgressEvent> {
   return store.addEvent({ item_key: slideKey, kind: 'slide', result: 'seen', content_hash: contentHash }, now);
+}
+
+/** One Check of an item: an `exercise`, `checkpoint` or `project` event with its cases' results. */
+export function recordCheck(
+  store: ProgressStore,
+  input: {
+    item_key: string;
+    kind: 'exercise' | 'checkpoint' | 'project';
+    result: EventResult;
+    cases: { n: number; pass: boolean }[];
+    duration_ms: number;
+    content_hash: string;
+  },
+  now: Date = new Date(),
+): Promise<ProgressEvent> {
+  const detail: EventDetail = input.cases.length > 0 ? { cases: input.cases.map((c) => ({ n: c.n, pass: c.pass })) } : {};
+  return store.addEvent(
+    { item_key: input.item_key, kind: input.kind, result: input.result, detail, duration_ms: input.duration_ms, content_hash: input.content_hash },
+    now,
+  );
+}
+
+/** One Run of a lesson block: `pass` when it ran to the end, `error` otherwise. */
+export function recordLessonRun(
+  store: ProgressStore,
+  blockKey: string,
+  ok: boolean,
+  durationMs: number,
+  contentHash: string,
+  now: Date = new Date(),
+): Promise<ProgressEvent> {
+  return store.addEvent(
+    { item_key: blockKey, kind: 'lesson-run', result: ok ? 'pass' : 'error', duration_ms: durationMs, content_hash: contentHash },
+    now,
+  );
 }

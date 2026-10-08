@@ -7,7 +7,7 @@
  */
 
 import type { Segment } from './types';
-import { escapeHtml } from './markdown';
+import { escapeHtml } from './escape';
 
 export const PAD = 10;
 

@@ -10,7 +10,14 @@
  *   - every non-sample fixture `.out` file
  * — builds the site from the poisoned copies (`PY4KIDS_SITE_CONTENT`), and searches all of the
  * output (HTML, JS, CSS, JSON, and Pagefind's index and fragments, decompressed) for any
- * sentinel. Zero hits is required.
+ * sentinel. Zero hits is required, except exactly where plan 104's checks need one, each only in
+ * its own item's file, fetched by the check island and never put in a page:
+ *   - an item's hash and asserts in its check projection (`<book>/<entry>/practice/check/<anchor>.json`);
+ *   - an odd unit exercise's `answer_md` in its answer projection (`.../practice/answer/<anchor>.json`),
+ *     fetched only after a genuine attempt;
+ *   - a hidden fixture's `.out` as the served file itself (`<book>/files/<entry>/fixtures/...`).
+ * A predict item's hidden `program` is allowed nowhere. Every allowed copy must be found where it
+ * is allowed (the rule is exact, not a blind spot).
  *
  * The build also injects one page that deliberately renders an `answer_md`
  * (test/leak/regression.astro), marked for search: its sentinel must be found there and in
@@ -25,6 +32,7 @@ import { gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 import { CONTENT_ENV, loadBooks, repoRoot } from '../src/lib/bundle';
+import { itemAnchors, shipsAnswer } from '../src/lib/checks';
 import type { EntryFile } from '../src/lib/types';
 import { nodeVersionProblem } from './helpers/node-version';
 
@@ -60,11 +68,17 @@ interface Poisoned {
   counts: Record<string, number>;
   /** The first answer_md sentinel written (proof that some answer was poisoned). */
   firstAnswer: string;
+  /** The one built file (relative to dist) where a needle may appear, if anywhere. */
+  allowed: Map<string, string>;
+  /** The items that ship an answer projection (odd unit exercises). */
+  shipped: number;
 }
 
 /** Write a sentinel into every forbidden field of every bundle under `contentDir`. */
 function poison(contentDir: string): Poisoned {
   const needles = new Map<string, string>();
+  const allowed = new Map<string, string>();
+  let shipped = 0;
   const counts: Record<string, number> = { answer_md: 0, source: 0, hash: 0, program: 0, fixture: 0 };
   let firstAnswer = '';
   let n = 0;
@@ -78,11 +92,17 @@ function poison(contentDir: string): Poisoned {
     for (const record of bookJson.entries) {
       const path = join(bundle, record.file);
       const entry = JSON.parse(readFileSync(path, 'utf-8')) as EntryFile;
-      for (const item of entry.items) {
+      const anchors = itemAnchors(entry.items);
+      entry.items.forEach((item, i) => {
+        const own = (kind: 'check' | 'answer') => join(book, entry.entry.id, 'practice', kind, `${anchors[i]}.json`);
         if (item.answer_md !== undefined) {
           const s = sentinel('answer');
           item.answer_md = `The answer is ${s}.`;
           needles.set(s, `${item.key} answer_md`);
+          if (shipsAnswer(item)) {
+            allowed.set(s, own('answer'));
+            shipped++;
+          }
           counts.answer_md!++;
           firstAnswer ||= s;
         }
@@ -91,12 +111,14 @@ function poison(contentDir: string): Poisoned {
           const s = sentinel('source');
           check.source = `assert solve() == "${s}"`;
           needles.set(s, `${item.key} check.source`);
+          allowed.set(s, own('check'));
           counts.source!++;
         }
         if (check.kind === 'answer' || check.kind === 'expected-output' || check.kind === 'predict') {
           const hex = sha256(sentinel('hash'));
           check.hash = `sha256:${hex}`;
           needles.set(hex, `${item.key} check.hash`);
+          allowed.set(hex, own('check'));
           counts.hash!++;
         }
         if (check.kind === 'predict' && item.answer_visibility === 'none') {
@@ -111,14 +133,15 @@ function poison(contentDir: string): Poisoned {
             const s = sentinel('fixture');
             writeFileSync(join(bundle, c.out_file), `${s}\n`);
             needles.set(s, `${item.key} ${c.out_file}`);
+            allowed.set(s, join(book, ...c.out_file.split('/')));
             counts.fixture!++;
           }
         }
-      }
+      });
       writeFileSync(path, JSON.stringify(entry));
     }
   }
-  return { needles, counts, firstAnswer };
+  return { needles, counts, firstAnswer, allowed, shipped };
 }
 
 /** A built file's searchable text: Pagefind's gzip-compressed index files are decompressed. */
@@ -221,11 +244,21 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
   const deliberate = (h: { file: string; needle: string }) =>
     h.file === REGRESSION || (h.file.startsWith(`pagefind${sep}`) && regressionNeedles().has(h.needle));
 
-  it('renders no sentinel anywhere in the site', () => {
+  it('renders no sentinel anywhere in the site, except in its own item\'s check, answer or fixture file', () => {
     const leaks = hits
-      .filter((h) => !deliberate(h))
+      .filter((h) => !deliberate(h) && poisoned.allowed.get(h.needle) !== h.file)
       .map((h) => `${h.file}: ${poisoned.needles.get(h.needle)}`);
     expect(leaks).toEqual([]);
+  });
+
+  it('finds every allowed copy exactly where it is allowed (the exception is exact)', () => {
+    const found = new Set(hits.map((h) => `${h.needle} ${h.file}`));
+    const missing = [...poisoned.allowed].filter(([needle, file]) => !found.has(`${needle} ${file}`)).map(([n, f]) => `${f}: ${poisoned.needles.get(n)}`);
+    expect(missing).toEqual([]);
+    // Only odd unit exercises ship an answer (an answer_md elsewhere would be allowed nowhere).
+    const answers = [...poisoned.allowed.values()].filter((f) => f.includes(`${sep}answer${sep}`));
+    expect(answers.length).toBeGreaterThan(0);
+    expect(answers.length).toBe(poisoned.shipped);
   });
 
   it('catches the deliberate leak (the regression page renders one answer_md)', () => {
@@ -264,7 +297,9 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
         continue;
       }
       const text = readFileSync(file, 'utf-8');
-      expect(text, rel).not.toMatch(/"(?:answer_md|source|hash)"\s*:/);
+      // A check projection carries its item's hash (plan 104); nothing carries answer_md or source.
+      const isCheck = /^[a-z0-9-]+\/[^/]+\/practice\/check\/[a-z0-9-]+\.json$/.test(rel.split(sep).join('/'));
+      expect(text, rel).not.toMatch(isCheck ? /"(?:answer_md|source|program)"\s*:/ : /"(?:answer_md|source|hash|program)"\s*:/);
     }
   });
 });

@@ -90,21 +90,25 @@ test('the mastery map is collapsed on a fresh book page and opens once a card is
 test('the resume link names the kind of page it returns to', async ({ page }) => {
   await page.goto('/python-projects/unit-03-turtle-art-studio/practice/');
   await expect(page.locator('h1')).toBeVisible();
-  await page.waitForFunction(async () => {
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const open = indexedDB.open('py4kids');
-      open.onsuccess = () => resolve(open.result);
-      open.onerror = () => reject(open.error);
+  // `waitForFunction` takes the predicate's returned Promise as truthy at once, so poll the store
+  // with `expect.poll`, which awaits each read (the resume write lands after the page's islands).
+  const saved = () =>
+    page.evaluate(async () => {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const open = indexedDB.open('py4kids');
+        open.onsuccess = () => resolve(open.result);
+        open.onerror = () => reject(open.error);
+      });
+      const names = [...db.objectStoreNames];
+      if (!names.includes('resume')) return (db.close(), false);
+      const count = await new Promise<number>((resolve) => {
+        const req = db.transaction('resume').objectStore('resume').count();
+        req.onsuccess = () => resolve(req.result);
+      });
+      db.close();
+      return count > 0;
     });
-    const names = [...db.objectStoreNames];
-    if (!names.includes('resume')) return (db.close(), false);
-    const count = await new Promise<number>((resolve) => {
-      const req = db.transaction('resume').objectStore('resume').count();
-      req.onsuccess = () => resolve(req.result);
-    });
-    db.close();
-    return count > 0;
-  });
+  await expect.poll(saved, { timeout: 15_000 }).toBe(true);
   await page.goto('/');
   const resume = page.locator('[data-resume-book="python-projects"]');
   await expect(resume).toBeVisible();

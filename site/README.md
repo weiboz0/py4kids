@@ -96,3 +96,16 @@ Student code never runs on the site's origin. `runner/` (a sibling app: Node 24,
 - **Client:** `src/lib/runner-client.ts` (`connectRunner`, `RunnerClient`: `ping`, `run`, `interrupt`, `reset`) binds replies by origin, iframe window and pending id, and times out as "runner unavailable".
 - **Serve both:** `node scripts/serve-both.mjs` (the e2e config starts both servers itself). `e2e/runner.spec.ts` drives the real client, iframe and workers.
 - **Harness tests:** `uv run pytest tests/test_runner_harness.py` (CPython: `outputs_match` parity with `tools/judge.py`, stdin and `EOFError`, grading, the turtle port and rule).
+
+### Checks, Run and answers (plan 104 Phase B)
+
+- **Projections** (`src/lib/checks.ts`; shapes and rules in `src/lib/check-model.ts`), each a small same-origin file fetched only when needed, never bundle JSON:
+  - `/<book>/<entry>/practice/check/<anchor>.json` (every item, fetched on Check or Run): the salted hash and answer format (`answer`, `predict`, `expected-output`), the shipped asserts split one statement each (for the runner only, never rendered), or the fixture cases' file URLs, sample first, with `skipped` for `over_budget` cases and the per-case `budget_ms` (from `check.cpu_ms` when present, else 5 s).
+  - `/<book>/<entry>/practice/answer/<anchor>.json`: only for odd unit exercises (`answer_visibility: after-attempt`): `answer_md` rendered (`{=latex}` dropped) with `answer_figures` drawn as SVG. It is fetched only after a genuine attempt: a Check run, a submitted answer, or, for a self-check item, a Run plus the checklist marked done.
+  - `/<book>/<entry>/run.json`: a lesson's runnable blocks (code, prelude, stdin, files).
+  - `/<book>/files/<entry>/<path>`: the bundle's files (lesson assets, fixture pairs), byte for byte.
+  - The leak tests allow an item's hash and asserts only in its own check file, an odd answer only in its own answer file, and a hidden `.out` only as its served file; a predict item's program is allowed nowhere.
+- **Islands:** `src/scripts/practice.ts` (editors, Run, Check, Stop, answer boxes, gating), `src/scripts/lesson-run.ts` (Run, Reset and input boxes in the reading view; one session per lesson, prelude replay), `src/scripts/run-support.ts` (the page's one runner connection, opened on the first Run or Check).
+- **Editor:** CodeMirror 6 (`src/scripts/editor.ts`), loaded by dynamic import when an editor nears the screen and mounted in a shadow root, so `style-mod` uses constructable stylesheets (zero CSP violations: `e2e/checks.spec.ts`). The page's `<textarea>` holding the starter is the fallback.
+- **Progress:** each Check writes an `exercise`, `checkpoint` or `project` event with `detail.cases`, and each lesson Run a `lesson-run` event; code and typed answers go only to the on-device `attempts` store (database version 2).
+- `test/schema-keys.test.ts` lists the optional keys the site reads before their schema change lands here (`PENDING_KEYS`: plan 102's `also_check`, `aliases` and `whitespace`; Phase C's `cpu_ms` and `answer_figures`); drop each once it is declared.

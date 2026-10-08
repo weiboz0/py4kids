@@ -4,10 +4,11 @@
  * further; these keep the skeleton honest from the start.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { gunzipSync } from 'node:zlib';
 import { loadBooks, repoRoot } from '../src/lib/bundle';
+import { itemRoutes, shipsAnswer, splitAsserts } from '../src/lib/checks';
 import { CSP, parseHeaders } from './helpers/headers';
 
 const DIST = join(import.meta.dirname, '..', 'dist');
@@ -37,7 +38,11 @@ describe.skipIf(!built)('site/dist', () => {
 
   it('has no data: URL and loads nothing from another origin', () => {
     for (const file of all.filter((f) => /\.(html|css|js)$/.test(f))) {
-      const text = read(file);
+      // CodeMirror's base theme (plan 104's editor, loaded lazily) styles `.cm-highlightTab` with a
+      // data: SVG background. Nothing here enables highlightWhitespace, so no element ever matches
+      // it and the image is never requested (img-src 'self' would block it anyway; the editor's
+      // zero-violation test proves no request happens). That one declaration is exempt.
+      const text = read(file).replace(".cm-highlightTab\":{backgroundImage:`url('data:image/svg+xml,", '');
       // In HTML, a data: URL can only load from an attribute or a CSS url(); lesson text may
       // say "data:" in prose ("Variation axis — data: …"). In CSS and JS a data: URL has a media
       // type or an empty one ("data:image/png;…", "data:,…"); a `data:` object key is not one.
@@ -76,7 +81,7 @@ describe.skipIf(!built)('site/dist', () => {
     }
   });
 
-  it('ships no JSON carrying an answer_md, source or hash key (plan 103 leak rule)', () => {
+  it('ships no JSON carrying an answer_md, source or hash key (plan 103 leak rule; plan 104: hashes only in check projections)', () => {
     const keys = (value: unknown, out: string[] = []): string[] => {
       if (Array.isArray(value)) value.forEach((v) => keys(v, out));
       else if (value && typeof value === 'object') {
@@ -89,9 +94,52 @@ describe.skipIf(!built)('site/dist', () => {
     };
     // Pagefind's manifest names each language index by its own "hash" (a file-name tag); the
     // leak test pins its keys and scans its content.
+    // A check projection (`<book>/<entry>/practice/check/<anchor>.json`) carries its item's salted
+    // hash; nothing else carries a hash, and nothing carries answer_md, source or program.
+    const isCheck = (f: string) => /^[a-z0-9-]+\/[^/]+\/practice\/check\/[a-z0-9-]+\.json$/.test(rel(f).split(sep).join('/'));
     for (const file of all.filter((f) => f.endsWith('.json') && rel(f) !== join('pagefind', 'pagefind-entry.json'))) {
-      const found = keys(JSON.parse(read(file))).filter((k) => ['answer_md', 'source', 'hash', 'check'].includes(k));
+      const forbidden = isCheck(file) ? ['answer_md', 'source', 'program', 'check'] : ['answer_md', 'source', 'hash', 'check', 'program'];
+      const found = keys(JSON.parse(read(file))).filter((k) => forbidden.includes(k));
       expect(found, rel(file)).toEqual([]);
+    }
+  });
+
+  // Plan 104 Phase B: the check, answer and lesson-run projections.
+  const loaded = built && existsSync(CONTENT) ? loadBooks({ contentDir: CONTENT }) : [];
+  const routes = itemRoutes(loaded);
+  const releaseHash = new Map(loaded.map((b) => [b.id, b.book.release.content_hash]));
+
+  it.skipIf(routes.length === 0)('writes a check projection for every item, and an answer projection for exactly the odd unit exercises', () => {
+    const answers = new Set(
+      all.filter((f) => /[\\/]practice[\\/]answer[\\/][^\\/]+\.json$/.test(f)).map((f) => rel(f).split(sep).join('/')),
+    );
+    const expected = new Set<string>();
+    for (const r of routes) {
+      const check = JSON.parse(read(join(DIST, r.book, r.entry, 'practice', 'check', `${r.anchor}.json`))) as { key: string; kind: string };
+      expect(check.key).toBe(r.item.key);
+      expect(check.kind).toBe(r.item.check.kind);
+      if (shipsAnswer(r.item)) {
+        expect(r.item.kind).toBe('unit');
+        expect(r.item.answer_visibility).toBe('after-attempt');
+        expected.add(`${r.book}/${r.entry}/practice/answer/${r.anchor}.json`);
+      }
+    }
+    expect(expected.size).toBeGreaterThan(0);
+    expect([...answers].sort()).toEqual([...expected].sort());
+  });
+
+  it.skipIf(routes.length === 0)('renders no hash, no assert source and no answer in a practice page', () => {
+    const byPage = new Map<string, typeof routes>();
+    for (const r of routes) byPage.set(join(r.book, r.entry), [...(byPage.get(join(r.book, r.entry)) ?? []), r]);
+    for (const [dir, items] of byPage) {
+      const html = read(join(DIST, dir, 'practice', 'index.html'));
+      // The release content hash (on <body>, and in report links) is public; no item hash may be here.
+      expect(html.replaceAll(releaseHash.get(items[0]!.book)!, ''), dir).not.toMatch(/sha256:[0-9a-f]{64}/);
+      for (const r of items) {
+        const check = r.item.check;
+        if (check.kind === 'asserts') for (const statement of splitAsserts(check.source)) expect(html.includes(statement), `${r.item.key} assert`).toBe(false);
+        if (r.item.answer_md && r.item.answer_md.trim().length > 40) expect(html.includes(r.item.answer_md.trim()), `${r.item.key} answer`).toBe(false);
+      }
     }
   });
 
@@ -163,9 +211,23 @@ describe.skipIf(!built)('site/dist', () => {
   });
 
   it('keeps the build-time pipeline (Shiki, KaTeX, markdown-it) out of every client script', () => {
-    for (const file of all.filter((f) => f.endsWith('.js') && rel(f).startsWith('_astro'))) {
-      expect(statSync(file).size, rel(file)).toBeLessThan(64 * 1024);
+    const scripts = all.filter((f) => f.endsWith('.js') && rel(f).startsWith('_astro'));
+    for (const file of scripts) expect(read(file), rel(file)).not.toMatch(/katex|shiki|markdown-it|markdownit/i);
+    // Every script a page loads up front (its module scripts and their static imports) stays small;
+    // the code editor (CodeMirror, plan 104) is loaded with a dynamic import, only where it is used.
+    const eager = new Set<string>();
+    const visit = (file: string) => {
+      if (eager.has(file)) return;
+      eager.add(file);
+      for (const m of read(file).matchAll(/import\s*(?:[\w$*{}\s,]+from\s*)?["']\.\/([^"']+\.js)["']/g)) visit(join(DIST, '_astro', m[1]!));
+    };
+    for (const page of html) {
+      for (const m of read(page).matchAll(/<script type="module" src="\/(_astro\/[^"]+\.js)"/g)) visit(join(DIST, m[1]!));
     }
+    expect(eager.size).toBeGreaterThan(0);
+    for (const file of eager) expect(statSync(file).size, rel(file)).toBeLessThan(64 * 1024);
+    const lazy = scripts.filter((f) => !eager.has(f));
+    expect(lazy.reduce((n, f) => n + statSync(f).size, 0)).toBeLessThan(640 * 1024);
   });
 
   it('defines every highlighted-code class in /code.css, linked from every page', () => {

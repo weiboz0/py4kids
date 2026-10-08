@@ -20,6 +20,10 @@ export type BundlePath = string;
 export interface AnswerFormat {
   case: 'sensitive' | 'insensitive';
   hint: string;
+  /** Typed form -> canonical form, applied after whitespace and case (plan 102 Phase 0). */
+  aliases?: Record<string, string>;
+  /** `collapse` when absent (plan 102 Phase 0). */
+  whitespace?: 'collapse' | 'exact';
 }
 
 /** One pen-down turtle move. Turtle space has y pointing up. */
@@ -88,6 +92,8 @@ export interface CheckFixtures extends CheckBase {
   cases: FixtureCase[];
   match: 'line' | 'token';
   over_budget: number[];
+  /** The reference solver's maximum CPython time over the cases, in ms (plan 104 Phase C). */
+  cpu_ms?: number;
 }
 
 /** `hash` is never shown (plan 103). */
@@ -143,9 +149,13 @@ export interface Item {
   starter: string;
   files: BundlePath[];
   check: Check;
+  /** Requirements the automatic check cannot see, shown as a self-check list (plan 102). */
+  also_check?: string[];
   answer_visibility: 'after-attempt' | 'none';
   /** Present only when `answer_visibility` is `after-attempt`. Part B never renders it. */
   answer_md?: string;
+  /** The odd answer's turtle drawings (plan 104 Phase C), drawn instead of its TikZ figures. */
+  answer_figures?: Segment[][];
   before: SideBlock[];
 }
 
