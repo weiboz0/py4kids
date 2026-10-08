@@ -316,7 +316,7 @@ recorded('student Python cannot make a request, load a script or post a message 
     'import js',
     `names = ${JSON.stringify(['fetch', 'fetchLater', 'XMLHttpRequest', 'importScripts', 'EventSource', 'WebSocket', 'WebTransport', 'Worker', 'SharedWorker', 'BroadcastChannel', 'caches', 'indexedDB', 'postMessage'])}`,
     'print("global", [n for n in names if js.Reflect.has(js.self, n)])',
-    'print("navigator", [n for n in ["serviceWorker", "sendBeacon"] if js.Reflect.has(js.navigator, n)])',
+    'print("navigator", [n for n in ["serviceWorker", "sendBeacon", "storage", "locks"] if js.Reflect.has(js.navigator, n)])',
     'def attempt(label, action):',
     '    try:',
     '        action()',

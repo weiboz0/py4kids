@@ -237,10 +237,17 @@ User goal, 2026-10-06: "non stop until full working learning website".
   7. `[FIXED]` (Must Fix, procedural) The post-execution report was empty. → Written below.
 - `[sol]` **REQUEST CHANGES** (gpt-6-sol):
   1. `[FIXED]` BLOCKER: student code could post a forged `done` from the worker through Pyodide's `js` module. → After boot the worker deletes `postMessage` (and every other messaging API) from its scope and prototype chain, keeping one captured reference; `eval` is CSP-blocked, so it cannot be rebuilt. An e2e test shows the forged `done` is blocked and the real verdict fails.
-     Residual, by design: a student who rewrites the harness from inside their own Python can still change their *own* on-device verdict, as editing IndexedDB in DevTools can. Verdicts are self-reported and gate pedagogy only (design 012 D2); part E must never treat them as authenticated.
+     Residual, by design: a student who rewrites the harness from inside their own Python can still change their *own* on-device verdict, as editing IndexedDB in DevTools can. Verdicts are self-reported and gate pedagogy only (design 012 D5); part E must never treat them as authenticated.
   2. `[FIXED]` BLOCKER: `connect-src 'self'` let student code send data to the runner host. → The same seal deletes `fetch`, `fetchLater`, `XMLHttpRequest`, `importScripts`, `EventSource`, `WebSocket(Stream)`, `WebTransport`, `Worker`, `SharedWorker`, `BroadcastChannel`, `caches`, `indexedDB`, `navigator.serviceWorker` and `navigator.sendBeacon` once Pyodide and the harness have loaded (nothing is fetched later: jobs carry code, stdin and files). It fails closed. The e2e test tries `fetch`, a prototype-borrowed `fetch` and `run_js` with a marker, and the request recorder sees no request carrying it.
   3. `[FIXED]` MAJOR: an asserts check could pass after the program raised. → A program whose run is not `ok` adds a failing "Your code" row; the asserts still run for feedback. An e2e test covers define-then-raise.
   4. `[FIXED]` MAJOR: the post-execution report was empty. → Written below.
+
+### Review 2 (188fc2d) — CONSENSUS
+
+- `[self]` APPROVE.
+- `[fable]` **APPROVE**. Every round-1 fix was verified, and the seal is sound. One nit: `[FIXED]` `navigator.storage` (OPFS) and `navigator.locks` could carry state between "fresh" check workers; both are now sealed and probed by the e2e test.
+- `[sol]` **APPROVE WITH NITS** (gpt-6-sol). All four round-1 findings are closed. One nit: `[FIXED]` the residual-risk note now cites design 012 D5, not D2.
+- Solo `ci-local` on 188fc2d failed one check: `test_ci_local_reads_books_from_registry`, because a new comment named two books. `[FIXED]` The comment now says "every `judge: true` book".
 
 ## Post-Execution Report
 

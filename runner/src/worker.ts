@@ -68,7 +68,8 @@ const SEALED = [
   'fetch', 'fetchLater', 'XMLHttpRequest', 'importScripts', 'EventSource', 'WebSocket', 'WebSocketStream',
   'WebTransport', 'Worker', 'SharedWorker', 'BroadcastChannel', 'caches', 'indexedDB', 'postMessage',
 ];
-const SEALED_NAVIGATOR = ['serviceWorker', 'sendBeacon'];
+// storage (OPFS) and locks: persistent or shared runner-origin state between "fresh" check workers.
+const SEALED_NAVIGATOR = ['serviceWorker', 'sendBeacon', 'storage', 'locks'];
 
 /** Delete `names` from `target` and every object on its prototype chain; true when none is left. */
 function strip(target: object, names: string[]): boolean {
