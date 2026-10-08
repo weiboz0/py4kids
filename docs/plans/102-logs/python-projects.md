@@ -440,3 +440,16 @@ Gap list: empty (0 unattributed lesson blocks, 0 unattributed items after this p
 - `project-02-grand-adventure/brief/milestone-3` — self-check — input() exploration loop; derived checklist opened with a description [requirements x4]
 - `project-02-grand-adventure/brief/milestone-4` — self-check — depends on the playthrough's hero; derived checklist opened with a description [requirements x3]
 - `project-02-grand-adventure/brief/milestone-5` — self-check — whole-program playthrough with input(); derived checklist matches
+
+## Integration retags (coordinator, after Phase B)
+
+Six asserts items read a file that an **earlier** exercise writes:
+- `savegame.txt`: `unit-09-save-point` `e5a7e9a1`, `25c296a7`, `exercise-15-find-extreme`, `exercise-16-filter-into-list`
+- `settings.txt`: `exercise-14-linear-search`
+- `finale.txt`: `checkpoint-04` `c4000008`
+
+**Why they cannot be checked.** The solutions create the file with a hidden "self-contained setup" block, but the statements ask the student only to read it. Those files are untracked runtime scratch, so the site cannot mount them, and a correct student program fails on its own. Confirmed by running every checked solution in the runner-like sandbox, with only tracked files, across both Python books: `c4000008` raises `FileNotFoundError`, and the five unit-09 drills pass only because of their hidden setup.
+
+**Change:** all six are retagged `check-self`. Their checklists are derived from the statement sentences (the authored `also_check` was removed, because self-check items take `requirements`). python-projects now counts asserts 53, expected-output 11, predict 7, self-check 165.
+
+Making them checkable later would need the file shipped as a tracked asset. That is content work for a later plan.
