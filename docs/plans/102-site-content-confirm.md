@@ -242,6 +242,11 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 - **Verdict**: REJECT, narrowly: the four round-3 retags are confirmed, but the same rule was not yet applied everywhere.
 1. `[FIXED]` python-concepts unit-06 `u06e014`, `u06e09a`, `u06e10a` and `u06e11a` checked a printed counter while the turtle asset is the core result. Must Fix. → Response: all four retagged `check-self` with derived Specification checklists. The Phase A log note that called counters sufficient is struck. Per-item log lines updated, and the keys added to `test_review1_retags_are_self_check`. [fable]'s scan found no other proxy-checked item in any book (26 candidates reviewed: ASCII-picture outputs, file-text outputs, function results and fixtures are genuine results).
 
+### Review 3 — [sol] (2026-10-08, gpt-6-sol; reviewed 8f3100c)
+- **Verdict**: REJECT.
+1. `[FIXED]` python-concepts unit-06 `u06e014`, `u06e09a`, `u06e10a` and `u06e11a`: the same finding as [fable]'s Review 3, already fixed in 44234d1. Must Fix.
+2. `[FIXED]` `exercise-6-heading`'s checklist omitted running the asset and the notebook's numeric proxy. Should Fix. → Response: authored `requirements` (12 statement fragments covering the asset bullets, the run, the proxy and "do not import turtle in the notebook").
+
 ### Coordinator decision (round-1 audit)
 - The audit added the statements' own hand-trace instruction ("Work it out by hand first" / "Trace it by hand, using ACSL's rules") as `also_check` on 71 ACSL `answer` items. **Kept**: it is a statement requirement that a hashed answer cannot verify, and showing it beside the answer box is honest about what the check covers.
 
