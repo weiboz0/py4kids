@@ -19,6 +19,7 @@ from tools.export.answer_model import (
     COUNTED_FIELDS,
     FIELD_TIES,
     TIES,
+    TREE_TIES,
     AnswerModel,
     counted,
     load_bundle,
@@ -466,6 +467,8 @@ def _schema_string_fields() -> set[str]:
             return True
         if "array" in types:
             return stringy(node.get("items"))
+        if "object" in types and isinstance(node.get("additionalProperties"), dict):
+            return stringy(node["additionalProperties"])  # a string map (`aliases`)
         return any(stringy(sub) for key in ("allOf", "anyOf", "oneOf") for sub in node.get(key, []))
 
     names: set[str] = set()
@@ -487,8 +490,10 @@ def _schema_string_fields() -> set[str]:
 def test_schema_string_fields_are_classified():
     """Each string field the schema declares is counted by check 2 or held by a named tie check."""
     names = _schema_string_fields()
-    assert {"md", "statement_md", "color", "title", "key", "route"} <= names
-    unclassified = names - COUNTED_FIELDS - set(FIELD_TIES)
+    assert {"md", "statement_md", "color", "title", "key", "route", "aliases", "also_check",
+            "whitespace"} <= names
+    # `pdfs` (a string map, like `aliases`) is a book.json tree tie.
+    unclassified = names - COUNTED_FIELDS - set(FIELD_TIES) - set(TREE_TIES)
     assert unclassified == set(), unclassified
     assert set(FIELD_TIES.values()) <= set(TIES)
 
@@ -762,3 +767,44 @@ def test_real_item_title_must_equal_exported_heading(real, tmp_path):
     found = fails(model, copy)
     assert any(f.startswith("FAIL: python-concepts/unit-02-numbers-and-arithmetic/exercises/u02e043:"
                             " title") for f in found), found
+
+
+# --- plan 102 Phase 0: also_check and the answer-format extensions -------------------------------
+
+
+def test_also_check_is_counted_like_requirements(demo):
+    bundle = load_bundle(demo.bundle)
+    shipped = [s for s in bundle.strings if s.field == "also_check"]
+    assert shipped and all(counted(s) for s in shipped)
+    assert "also_check" in COUNTED_FIELDS
+    # Its authored text earns allowance through check_texts, from the statement notebook.
+    texts = {(key, text) for key, _origin, text in demo.model.check_texts}
+    assert ("demo/unit-01-demo/exercises/u1e07", "Write `double(n)`") in texts
+
+
+def test_canonical_injected_into_also_check_fails(demo, bundle):
+    edit_item(bundle, "unit-01-demo", "Exercise 4",
+              lambda item: item["also_check"].append("The sum is 159."))
+    found = fails(demo.model, bundle)
+    assert any("u3e04: hidden answer text" in f and "also_check/1" in f for f in found), found
+
+
+def test_answer_format_aliases_are_counted_and_whitespace_is_tied(demo, bundle):
+    def edit(item):
+        item["check"]["answer_format"].update(aliases={"159": "x"}, whitespace="exact")
+    edit_item(bundle, "unit-03-leaks", "Exercise 2", edit)
+    loaded = load_bundle(bundle)
+    whitespace = [s for s in loaded.strings if s.field == "whitespace"]
+    assert whitespace and all(tie_of(s) == "schema" for s in whitespace)
+    found = fails(demo.model, bundle)
+    # An alias key or value is student-visible text: check 2 counts it.
+    assert any("u3e04: hidden answer text" in f and "answer_format/aliases" in f
+               for f in found), found
+
+
+def test_hash_recompute_follows_aliases_and_whitespace(demo, bundle):
+    """Check 4 recomputes with the shipped format's `whitespace` and `aliases`, not just `case`."""
+    def edit(item):
+        item["check"]["answer_format"]["aliases"] = {"zebra": "horse"}
+    edit_item(bundle, "unit-01-demo", "Exercise 2", edit)  # authored insensitive, canonical ZEBRA
+    assert any("u1e03: check.hash does not match" in f for f in fails(demo.model, bundle))

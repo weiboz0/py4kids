@@ -1,7 +1,8 @@
 /** Driving the practice page's check islands (plan 104 Phases B and D). */
 import { expect, type Locator, type Page, type Route } from '@playwright/test';
 import type { ClientCheck } from '../../src/lib/check-model';
-import type { Found } from './content';
+import { answerHash, type NormaliseOptions } from '../../src/lib/normalise';
+import { findItem, type Found } from './content';
 
 export const section = (page: Page, found: Found) => page.locator(`section.practice-item[data-item-key="${found.item.key}"]`);
 
@@ -42,3 +43,19 @@ export async function patchCheck(page: Page, found: Found, change: (check: Clien
   });
 }
 
+
+/**
+ * A turtle-checked item. Plan 102 (rule 1) made every real turtle item a self-check, so none is
+ * checked automatically; an expected-output item's projection is served with `turtle: true` and the
+ * hash of an empty output (a turtle program prints nothing), and the turtle rule runs as for a real one.
+ */
+export async function turtleItem(page: Page): Promise<Found> {
+  const found = findItem(
+    (f) => f.item.check.kind === 'expected-output' && !f.item.check.turtle && f.item.files.length === 0,
+    'an expected-output item to serve as a turtle item',
+  );
+  const format = (found.item.check as { answer_format: NormaliseOptions }).answer_format;
+  const hash = await answerHash(found.item.key, '', { case: format.case });
+  await patchCheck(page, found, (c) => ({ ...c, turtle: true, hash }) as ClientCheck);
+  return found;
+}

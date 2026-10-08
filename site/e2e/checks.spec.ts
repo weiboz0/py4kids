@@ -2,9 +2,9 @@
  * The practice checks and the runnable reading view in a real browser (plan 104 Phase B; the
  * grading-UI rows of Phase D). Real items are picked from the exported bundles at test time
  * (e2e/helpers/content.ts); programs whose output is known are built from the fixtures there.
- * Where the bundle has no item of a kind yet (plan 102's `aliases` and `whitespace: exact` are not
- * on this branch), the item's projection is simulated by intercepting its check JSON (and, for the
- * exact-whitespace box, its one `data-exact` attribute); the island code under test is the same.
+ * Where the bundle has no item of a kind yet (no answer or predict item ships `whitespace: exact`, so
+ * no typed box is an exact one), the item's projection is simulated by intercepting its check JSON
+ * and its one `data-exact` attribute; the island code under test is the same.
  */
 import { expect, test } from '@playwright/test';
 import { answerHash, type NormaliseOptions } from '../src/lib/normalise';
@@ -12,9 +12,9 @@ import type { ClientCheck } from '../src/lib/check-model';
 import { watchCsp } from './helpers/csp';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { allItems, CONTENT, cpython, findItem, fixturePairs, judgeMatch, lookupProgram, type Found } from './helpers/content';
+import { CONTENT, cpython, findItem, fixturePairs, judgeMatch, lookupProgram, type Found } from './helpers/content';
 import { stores } from './helpers/site';
-import { caseRows, check, open, patchCheck, section, setCode } from './helpers/practice';
+import { caseRows, check, open, patchCheck, section, setCode, turtleItem } from './helpers/practice';
 
 test.describe.configure({ mode: 'parallel' });
 
@@ -203,17 +203,18 @@ test('predict: the real program\'s output, typed, passes; a wrong prediction fai
   expect(typed.sort()).toEqual([output, `${output.trim()}!!`].sort());
 });
 
-test('answer with aliases: `^` typed for `↑` is accepted', async ({ page }) => {
-  const found = findItem((f) => f.item.check.kind === 'answer', 'an answer item');
-  const format: NormaliseOptions = { case: 'sensitive', aliases: { '^': '↑' } };
-  const hash = await answerHash(found.item.key, '(x ↑ 2) ↑ y', format);
-  await patchCheck(page, found, (c) => ({ ...c, hash, format: { ...(c as { format: object }).format, ...format } }) as ClientCheck);
+test('answer with aliases (acsl unit 4 e-024): `^` typed for `↑` is accepted', async ({ page }) => {
+  const found = findItem(
+    (f) => f.item.key === 'acsl/unit-04-prefix-infix-postfix/exercises/e-024',
+    'acsl unit 4 e-024, an answer item with aliases',
+  );
+  expect((found.item.check as { answer_format: NormaliseOptions }).answer_format.aliases).toEqual({ '^': '↑' });
   const item = await open(page, found);
   const box = item.locator('textarea[data-answer]');
   for (const [typed, verdict] of [
-    ['(x ^ 2) ^ y', 'Correct.'],
-    ['(x ↑ 2) ^ y', 'Correct.'],
-    ['(x * 2) ^ y', /^Not yet/],
+    ['- * + A B ^ C 2 / D - E F', 'Correct.'],
+    ['- * + A B ↑ C 2 / D - E F', 'Correct.'],
+    ['- * + A B ^ C 2 / D - F E', /^Not yet/],
   ] as const) {
     await box.fill(typed);
     await item.locator('form[data-answer-form] button[type="submit"]').click();
@@ -221,12 +222,27 @@ test('answer with aliases: `^` typed for `↑` is accepted', async ({ page }) =>
   }
 });
 
+test('expected-output with whitespace: exact (python-concepts u01e14a): a typed `\\t` passes, spaces for the tab fail', async ({ page }) => {
+  const found = findItem(
+    (f) => f.item.key === 'python-concepts/unit-01-output-and-variables/exercises/u01e14a',
+    'python-concepts u01e14a, an exact-whitespace expected-output item',
+  );
+  expect((found.item.check as { answer_format: NormaliseOptions }).answer_format.whitespace).toBe('exact');
+  const item = await open(page, found);
+  await setCode(page, item, '# Print the poem.\npoem = "Sun comes up\\nBirds sing\\n\\tThe end"\nprint(poem)\n');
+  expect(await check(item)).toBe('Passed.');
+  await setCode(page, item, '# Print the poem.\npoem = "Sun comes up\\nBirds sing\\n    The end"\nprint(poem)\n');
+  expect(await check(item)).toMatch(/^Not yet/);
+  await setCode(page, item, '# Print the poem.\npoem = "Sun comes up\\nBirds  sing\\n\\tThe end"\nprint(poem)\n');
+  expect(await check(item)).toMatch(/^Not yet/);
+});
+
 test('answer with whitespace: exact — Tab types a tab, spacing counts, Escape then Tab leaves the box', async ({ page }) => {
   const found = findItem((f) => f.item.check.kind === 'answer', 'an answer item');
   const format: NormaliseOptions = { case: 'sensitive', whitespace: 'exact' };
   const hash = await answerHash(found.item.key, 'a\tb\n  c', format);
   await patchCheck(page, found, (c) => ({ ...c, hash, format: { ...(c as { format: object }).format, ...format } }) as ClientCheck);
-  // Until plan 102's exact-whitespace items are in the bundle, mark this item's box as one.
+  // No answer or predict item ships `whitespace: exact`, so mark this item's box as one.
   await page.route(`**${found.page}`, async (route) => {
     const response = await route.fetch();
     const html = (await response.text()).replace(
@@ -291,17 +307,16 @@ test('self-check: a checklist with no automatic verdict, and the "cannot check t
 });
 
 test('also_check: the requirements the check cannot see are listed beside the automatic check', async ({ page }) => {
-  const found = allItems().find((f) => (f.item.also_check?.length ?? 0) > 0);
-  test.skip(!found, 'SKIP (plan 102): no item carries also_check until plan 102 merges into this branch');
-  const item = await open(page, found!);
+  const found = findItem((f) => (f.item.also_check?.length ?? 0) > 0 && f.item.check.kind !== 'self-check', 'an item with also_check');
+  const item = await open(page, found);
   await expect(item.locator('[data-check-item], form[data-answer-form]')).toHaveCount(1);
   const list = item.locator('fieldset[data-also-check]');
   await expect(list.locator('legend')).toHaveText('Also check yourself');
-  await expect(list.locator('input[type="checkbox"]')).toHaveCount(found!.item.also_check!.length);
+  await expect(list.locator('input[type="checkbox"]')).toHaveCount(found.item.also_check!.length);
 });
 
 test('the turtle rule: three verdicts and the drawing; an open path fails "closed path"', async ({ page }) => {
-  const found = findItem((f) => f.item.check.turtle && (f.item.check.kind === 'expected-output' || f.item.check.kind === 'asserts'), 'a turtle item');
+  const found = await turtleItem(page);
   const item = await open(page, found);
   await setCode(page, item, 'import turtle\nt = turtle.Turtle()\nfor _ in range(4):\n    t.forward(50)\n    t.left(90)\n');
   await check(item);

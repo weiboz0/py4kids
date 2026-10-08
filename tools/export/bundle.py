@@ -19,7 +19,7 @@ path. `content_hash` is sha256 over the sorted `(relative path, bytes)` of every
 The report (probe statuses, unattributed concepts (items per check kind; short answers, which have
 no code, are counted as exempt), classification, self-check reasons, derived
 formats, fixture notes, one-token numeric `expected-output` outputs to confirm
-(`single_token_outputs`), distractor fallbacks) goes to `build/site-report/<book>.json`, never into
+(`single_token_outputs`), distractor fallbacks, the statement-tie `FAIL:`s (`metadata_findings`)) goes to `build/site-report/<book>.json`, never into
 the bundle; `site-check` turns it into findings.
 """
 
@@ -53,7 +53,7 @@ from tools.publish import (
 )
 
 from . import SCHEMA_VERSION
-from .answers import SINGLE_TOKEN_NOTE
+from .answers import SINGLE_TOKEN_NOTE, statement_tie_findings
 from .cards import concept_cards, glossary_records, predict_cards
 from .classify import tag_findings
 from .concepts import book_registry
@@ -235,7 +235,7 @@ def export_book(root: Path, book: str, out_dir: Path, release: str = UNRELEASED,
         raise ValueError(f"FAIL: {book}: glossary cites units with no syllabus entry: {orphan}")
 
     report: dict = {
-        "book": book, "probes": {}, "concept_findings": [], "tag_findings": [],
+        "book": book, "probes": {}, "concept_findings": [], "tag_findings": [], "metadata_findings": [],
         "unattributed": {"blocks": [], "items": {}, "short_answer_exempt": 0},
         "classification": {},
         "self_check": {}, "derived_formats": [], "unmatched_samples": [], "single_token_outputs": [],
@@ -270,6 +270,7 @@ def export_book(root: Path, book: str, out_dir: Path, release: str = UNRELEASED,
                 report["tag_findings"] += tag_findings(item)
                 exported = export_item(root, book, item, timings)
                 data = exported.data
+                report["metadata_findings"] += statement_tie_findings(item, exported.kind)
                 item_data.append(data)
                 key = data["key"]
                 classification["total"] += 1

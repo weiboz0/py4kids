@@ -67,6 +67,24 @@
     "hint": {
      "type": "string",
      "minLength": 1
+    },
+    "aliases": {
+     "type": "object",
+     "description": "Typed form -> canonical form, applied after whitespace and case before hashing (plan 102 Phase 0), e.g. {\"^\": \"↑\"}.",
+     "propertyNames": {
+      "minLength": 1
+     },
+     "additionalProperties": {
+      "type": "string"
+     },
+     "minProperties": 1
+    },
+    "whitespace": {
+     "enum": [
+      "collapse",
+      "exact"
+     ],
+     "description": "`collapse` (the default when absent) turns whitespace runs into one space; `exact` keeps tabs, indentation and inner runs, stripping only trailing whitespace per line and blank edge lines."
     }
    },
    "required": [
@@ -660,6 +678,15 @@
     "check": {
      "$ref": "#/$defs/check"
     },
+    "also_check": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "minLength": 1
+     },
+     "minItems": 1,
+     "description": "Requirements the automatic check cannot see, from the statement; shown as a self-check list beside the check (plan 102 Phase 0). Never on a self-check item."
+    },
     "answer_visibility": {
      "enum": [
       "after-attempt",
@@ -743,6 +770,24 @@
        ]
       }
      ]
+    }
+   },
+   "dependentSchemas": {
+    "also_check": {
+     "properties": {
+      "check": {
+       "not": {
+        "properties": {
+         "kind": {
+          "const": "self-check"
+         }
+        },
+        "required": [
+         "kind"
+        ]
+       }
+      }
+     }
     }
    }
   },

@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import type { ClientCheck, LessonRun } from '../src/lib/check-model';
 import { CONTENT, findItem, fixturePairs, REPO, type Found } from './helpers/content';
-import { caseRows, check, open, patchCheck, setCode } from './helpers/practice';
+import { caseRows, check, open, patchCheck, setCode, turtleItem } from './helpers/practice';
 import { stores } from './helpers/site';
 
 test.describe.configure({ mode: 'parallel' });
@@ -25,6 +25,8 @@ const small = (f: Found) => fixturePairs(f).reduce((n, c) => n + c.input.length 
 interface Vector {
   input: string;
   case: 'sensitive' | 'insensitive';
+  whitespace?: 'collapse' | 'exact';
+  aliases?: Record<string, string>;
   normalised: string;
   item_key: string;
   hash: string;
@@ -36,7 +38,7 @@ test('§3 short-answer hashing and normalisation: every hash_vectors.json vector
   const found = findItem((f) => f.item.check.kind === 'answer', 'an answer item');
   let current: Vector = vectors[0]!;
   // The page carries the vector's own item key (the hash's salt), and its check projection the
-  // vector's pinned hash and case rule, so the pinned hash itself is what the page must reproduce.
+  // vector's pinned hash and its case, whitespace and alias rules, so the pinned hash itself is what the page must reproduce.
   await page.route(`**${found.page}`, async (route) => {
     const response = await route.fetch();
     const html = (await response.text()).replaceAll(`data-item-key="${found.item.key}"`, `data-item-key="${current.item_key}"`);
@@ -46,7 +48,7 @@ test('§3 short-answer hashing and normalisation: every hash_vectors.json vector
     const response = await route.fetch();
     const c = (await response.json()) as ClientCheck;
     if (c.key !== found.item.key) return route.fulfill({ response });
-    await route.fulfill({ response, json: { ...c, key: current.item_key, hash: current.hash, format: { case: current.case, hint: '' } } });
+    await route.fulfill({ response, json: { ...c, key: current.item_key, hash: current.hash, format: { case: current.case, whitespace: current.whitespace, aliases: current.aliases, hint: '' } } });
   });
   for (const vector of vectors) {
     current = vector;
@@ -108,7 +110,7 @@ test('§3 function-assert isolation: one failing assert does not stop the others
 });
 
 test('§3 turtle directives: a closed path passes; open-path allows an open one; no pen-down move and too many moves fail', async ({ page }) => {
-  const found = findItem((f) => f.item.check.turtle && (f.item.check.kind === 'expected-output' || f.item.check.kind === 'asserts'), 'a turtle item');
+  const found = await turtleItem(page);
   const item = await open(page, found);
   const turtleRows = async (code: string) => {
     await setCode(page, item, code);

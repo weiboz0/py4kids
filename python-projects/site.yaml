@@ -2,7 +2,7 @@
 # classification: `proposed` until this book's content plan confirms every item's check-* tag,
 #   then `confirmed`, which makes site-check require a tag on every item (design 012 D4).
 # fixture_budget_kb: the per-pair contest-fixture budget the export reports against (D7).
-classification: proposed
+classification: confirmed
 fixture_budget_kb: 130
 # slides: the slide limits and reviewed exceptions (plan 103 D6; validated by tools.books).
 #   The limits default to max_words 90 (packing budget), max_unit_words 150, max_table_rows 12 and

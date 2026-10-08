@@ -2,7 +2,7 @@
  * Every key the site's code reads is declared in the bundle schema (plan 103, Architecture).
  * Add each new bundle-reading view model (Phases B–E) to CONSUMERS.
  */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadBook, loadBooks, repoRoot, type LoadedBook } from '../src/lib/bundle';
@@ -60,15 +60,6 @@ const CONSUMERS: ((books: LoadedBook[]) => unknown)[] = [
   (books) => books.map(bundleFiles),
 ];
 
-/**
- * Keys the site reads that a branch not yet merged here declares: plan 102 (`also_check`,
- * `answer_format.aliases` and `.whitespace`). The site reads each as optional. Each must still be undeclared: once the
- * schema declares it, the 'pending keys' test fails until it is removed from this list.
- */
-const PENDING_KEYS = new Set(['also_check', 'aliases', 'whitespace']);
-const SCHEMA_TEXT = readFileSync(join(repoRoot(), 'tools', 'export', 'schema', 'bundle.schema.json'), 'utf-8');
-const notPending = (reads: string[]) => reads.filter((read) => !PENDING_KEYS.has(read.split(' ').at(-1)!));
-
 function run(books: LoadedBook[]): void {
   for (const consume of CONSUMERS) JSON.stringify(consume(books));
 }
@@ -88,6 +79,17 @@ describe('declared', () => {
     expect(declared('entry_file', unit, ['cards', 1], 'distractors')).toBe(true);
     expect(declared('entry_file', unit, ['cards', 0], 'distractors')).toBe(false); // a predict card
   });
+
+  it('declares the keys of a data map (`answer_format.aliases`), within any `propertyNames` enum', () => {
+    const checkpoint = structuredClone(raw('entries/checkpoint-01-demo.json')) as unknown as {
+      items: { check: { answer_format: Record<string, unknown> } }[];
+    };
+    checkpoint.items[0]!.check.answer_format.aliases = { '^': '↑' };
+    const format = ['items', 0, 'check', 'answer_format'];
+    expect(declared('entry_file', checkpoint, format, 'aliases')).toBe(true);
+    expect(declared('entry_file', checkpoint, [...format, 'aliases'], '^')).toBe(true);
+    expect(declared('entry_file', checkpoint, format, 'synonyms')).toBe(false);
+  });
 });
 
 describe('the site reads only declared keys', () => {
@@ -102,14 +104,10 @@ describe('the site reads only declared keys', () => {
     ]);
   });
 
-  it('pending keys are still undeclared (drop each from PENDING_KEYS once its schema change lands)', () => {
-    for (const key of PENDING_KEYS) expect(SCHEMA_TEXT.includes(`"${key}":`), key).toBe(false);
-  });
-
   it('on the fixture bundle', () => {
     const recorder = new Recorder();
     run([loadBook(FIXTURE, { wrap: recorder.wrap })]);
-    expect(notPending(undeclaredReads(recorder))).toEqual([]);
+    expect(undeclaredReads(recorder)).toEqual([]);
     expect(distinctReads(recorder)).toBeGreaterThan(10);
   });
 
@@ -117,7 +115,7 @@ describe('the site reads only declared keys', () => {
     const recorder = new Recorder();
     const books = loadBooks({ contentDir: CONTENT, wrap: recorder.wrap });
     run(books);
-    expect(notPending(undeclaredReads(recorder))).toEqual([]);
+    expect(undeclaredReads(recorder)).toEqual([]);
     expect(distinctReads(recorder)).toBeGreaterThan(10 * books.length);
   });
 });

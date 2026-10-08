@@ -1,6 +1,6 @@
 """Plan 097/099/100 regression contract: python-concepts', python-projects' and usaco-bronze's
 generated Quarto projects equal their immutable pre-change baselines, except for files listed (with a
-D2/D3 reason) in each book's allowed-diffs list."""
+D2/D3 reason, or a design 012 D4 reason citing `plan 102 rule 2`) in each book's allowed-diffs list."""
 from __future__ import annotations
 
 import hashlib
@@ -57,15 +57,37 @@ def digest(project: Path) -> dict[str, str]:
             if path.suffix == '.qmd' or path.name == 'inventory.json'}
 
 
+def reason_ok(reason: str) -> bool:
+    """An allowed-diffs reason names a design 010 D2/D3 rule, or design 012 D4 together with the
+    literal `plan 102 rule 2` (a statement edit plan 102 allows), so an unrelated D4 cannot pass."""
+    if re.search(r'\bD[23]\b', reason):
+        return True
+    return bool(re.search(r'\bD4\b', reason)) and 'plan 102 rule 2' in reason
+
+
 def allowed_diffs(book: str) -> dict[tuple[str, str], str]:
     entries = yaml.safe_load(allowed_path(book).read_text(encoding='utf-8'))['allowed_diffs'] or []
     allowed = {}
     for entry in entries:
         assert set(entry) == {'edition', 'file', 'reason'}, entry
         assert entry['edition'] in EDITIONS, entry
-        assert re.search(r'\bD[23]\b', entry['reason']), f'reason must name a design 010 D2/D3 rule: {entry}'
+        assert reason_ok(entry['reason']), (
+            f'reason must name a design 010 D2/D3 rule, or design 012 D4 with "plan 102 rule 2": {entry}')
         allowed[(entry['edition'], entry['file'])] = entry['reason']
     return allowed
+
+
+@pytest.mark.parametrize(('reason', 'ok'), [
+    ('design 010 D2: the Teacher\'s Edition adds a panel', True),
+    ('D3 answer slicing', True),
+    ('design 012 D4 (plan 102 rule 2): backtick `total` in Exercise 3', True),
+    ('design 012 D4: backtick `total` in Exercise 3', False),
+    ('plan 102 rule 2 without the design rule', False),
+    ('design 012 D44 (plan 102 rule 2)', False),
+    ('an unrelated change', False),
+])
+def test_allowed_diff_reason_rule(reason, ok):
+    assert reason_ok(reason) is ok
 
 
 @pytest.mark.parametrize('book', BOOKS)
