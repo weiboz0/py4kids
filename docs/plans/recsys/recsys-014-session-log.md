@@ -480,4 +480,11 @@ triggered the pause and the user's reframe decision.
 - Lint scope: `ruff check` uses the CI scope (`recsys/projects/bookrec recsys/data`). There are pre-existing format
   diffs in untouched files.
 
-**Phase G:** full `scripts/ci-local.sh` and `pre-merge-guard --pr`; results are recorded at ship.
+**Phase G:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` reported **ALL GREEN** (exit 0) at code-identical HEAD
+fa0dc4c:
+- unit tests: 1936 passed, 2 skipped;
+- recsys routed suite: 287 passed in 14 m 18 s, under the design §7 limit of ≤ 15 min for the whole book. That is
+  close to the limit, and recsys-015 must watch it.
+- notebook, curriculum and PDF steps green;
+- the other books' editions were skipped, since nothing changed under them.
+`scripts/pre-merge-guard.sh --pr` result: see the PR.
