@@ -22,7 +22,8 @@
 3. **Odd answers.** Every `after-attempt` item's `answer_md` equals `student_answer_text`, and the
    `after-attempt` keys are exactly the odd unit exercises of the statement notebooks.
 4. **Hashes.** Every `answer`, `predict` and `expected-output` item's `check.hash` equals
-   `answer_hash(key, canonical, case=answer_format.case)`.
+   `answer_hash(key, canonical, case=..., whitespace=..., aliases=...)` under its shipped
+   `answer_format` (`answers.format_hash`; plan 102 Phase 0 adds `whitespace` and `aliases`).
 5. **Visibility.** No `none` item carries `answer_md`.
 6. **Leak, prose.** Every hidden solution Markdown paragraph (`fenced_paragraphs`) of at least 40
    characters (whitespace-normalised), or holding its item's canonical text, is counted like check 2
@@ -68,14 +69,13 @@ from . import answers
 from .bundle import UNRELEASED, _settings, dumps, pdf_links, schema_findings
 from .concepts import Registry, book_registry
 from .lesson import ROUTE_TYPES
-from .normalise import answer_hash
 
 # Every string field of the bundle is either counted by check 2 or held by a named tie check (plan 101
 # content review 2, [sol] 3): no string field is silently left out. The counted fields are the
 # content a student reads; an unknown field is counted too (`counted` is `tie_of(...) is None`).
 COUNTED_FIELDS = frozenset({
     "md", "code", "output", "sample_input", "statement_md", "starter", "answer_md", "requirements",
-    "hint", "source", "name", "definition_md", "term", "reference_md",
+    "hint", "source", "name", "definition_md", "term", "reference_md", "also_check", "aliases",
 })
 # The named tie checks (`AnswerModel._tie_findings`): each holds its fields to the repo sources or to
 # a counted field, so a value cannot carry text the sources do not. Keys, ids, paths, enums, titles
@@ -105,7 +105,8 @@ FIELD_TIES = {
     "id": "ids", "file": "ids",
     "files": "paths", "in_file": "paths", "out_file": "paths",
     "hash": "schema", "schema_version": "schema", "kind": "schema", "type": "schema",
-    "probe": "schema", "match": "schema", "case": "schema", "answer_visibility": "schema",
+    "probe": "schema", "match": "schema", "case": "schema", "whitespace": "schema",
+    "answer_visibility": "schema",
     "mode": "schema",
     "tag": "release", "content_hash": "schema",
     "lesson_heading": "settings", "acsl_divisions": "settings",
@@ -182,6 +183,15 @@ def counted(string: BundleString) -> bool:
 
 
 def _walk(value, where: str, pointer: list[str], owner: str, out: list[BundleString]) -> None:
+    if isinstance(value, dict) and pointer and pointer[-1] == "aliases":
+        # An `answer_format.aliases` map: both its typed keys and its canonical values are text a
+        # student sees, so each is a counted string named `aliases` (plan 102 Phase 0).
+        for name in sorted(value):
+            for part, text in (("key", name), ("value", value[name])):
+                if isinstance(text, str):
+                    out.append(BundleString(f"{where}:{'/'.join([*pointer, name, part])}", owner,
+                                            "aliases", text))
+        return
     if isinstance(value, dict):
         if isinstance(value.get("key"), str):
             owner = value["key"]
@@ -708,8 +718,7 @@ class AnswerModel:
             if known is None or known[0] != check["kind"]:
                 out.append(f"FAIL: {key}: {check['kind']} item without a matching canonical text")
                 continue
-            case = check.get("answer_format", {}).get("case", "")
-            if check.get("hash") != answer_hash(key, known[1], case=case):
+            if check.get("hash") != answers.format_hash(key, known[1], check.get("answer_format", {})):
                 out.append(f"FAIL: {key}: check.hash does not match its canonical answer")
         out += [f"FAIL: {key}: canonical text for an item the bundle does not hash"
                 for key in sorted(set(self.canonicals) - seen)]

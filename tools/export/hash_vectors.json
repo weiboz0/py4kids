@@ -2,6 +2,8 @@
  {
   "input": "5",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "5",
   "item_key": "acsl/unit-01-computer-number-systems/exercises/ex1#1",
   "hash": "sha256:d0c45f851739c1cd27ea550ac0bc5c7084a99772d090c7dd98f1db2d3811e925"
@@ -9,6 +11,8 @@
  {
   "input": "  5  ",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "5",
   "item_key": "acsl/unit-01-computer-number-systems/exercises/ex2",
   "hash": "sha256:2dde612825c947ba05f23befd6fd7ca7188026aba615e35ec6f464a36282d601"
@@ -16,6 +20,8 @@
  {
   "input": "a\r\nb\r\n",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a\nb",
   "item_key": "book/unit-01-x/exercises/crlf",
   "hash": "sha256:e57041862dc66e6b7837aab4d9ea716d7cb5f50a158be479da35298e7525784c"
@@ -23,6 +29,8 @@
  {
   "input": "a\rb",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a\nb",
   "item_key": "book/unit-01-x/exercises/cr",
   "hash": "sha256:5da6e27520a706c42f0491598efa6bc59647d2d749c89ea730ddaf94fc35122e"
@@ -30,6 +38,8 @@
  {
   "input": "x  \r\ny\t\r\n",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "x\ny",
   "item_key": "book/unit-01-x/exercises/crlf-trailing",
   "hash": "sha256:129a50366b964f1ff462bd1d96280bf5426555ecc1f609df7ca6e994f66c42f3"
@@ -37,6 +47,8 @@
  {
   "input": "a\t\tb",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a b",
   "item_key": "book/unit-01-x/exercises/tabs",
   "hash": "sha256:5e196f17967d09c49323eb1c902681e9c6fec1ccf52d67a71b355728d01fa3c4"
@@ -44,6 +56,8 @@
  {
   "input": "1 \t 0  1",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "1 0 1",
   "item_key": "book/unit-01-x/exercises/mixed-ws",
   "hash": "sha256:cfd6e61ac3f3bcf882e1c59723e6e1151d288cdf7fa431d3e679588e90e8467f"
@@ -51,6 +65,8 @@
  {
   "input": "a b",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a b",
   "item_key": "book/unit-01-x/exercises/nbsp",
   "hash": "sha256:95d7f78f5d51deea8d6ee038058fdee5752f0a6d9ffad4e4a71bc8fdf6d83799"
@@ -58,6 +74,8 @@
  {
   "input": " x ",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "x",
   "item_key": "book/unit-01-x/exercises/nbsp-edges",
   "hash": "sha256:017f9ea79b3fabfb6f8927d6a02e6632a3363d3c5089aa1fa3215cde22593c6e"
@@ -65,6 +83,8 @@
  {
   "input": "a b　c",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a b c",
   "item_key": "book/unit-01-x/exercises/em-ideographic",
   "hash": "sha256:d5a62bfa19e0c6829e6bafc2ff25b49cf38ee83551e03066f41020f78057e47d"
@@ -72,6 +92,8 @@
  {
   "input": "a\u001fb",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a b",
   "item_key": "book/unit-01-x/exercises/unit-separator",
   "hash": "sha256:dc37bc6a918cdef0d9fce9a9bdc26efa6ac1eb70e2a2088f8b47fc5d92c965cc"
@@ -79,6 +101,8 @@
  {
   "input": "ab",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a b",
   "item_key": "book/unit-01-x/exercises/nel",
   "hash": "sha256:7d306ed488177ba1c6bba8fa9f6fd7cbc5c4db20701efeaa986d7ea9226ddc57"
@@ -86,6 +110,8 @@
  {
   "input": "a b",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a b",
   "item_key": "book/unit-01-x/exercises/line-separator",
   "hash": "sha256:56f3e1918a7d69f8a28092487d868db47d7049ce2912d9a2dac785589745f9cc"
@@ -93,6 +119,8 @@
  {
   "input": "a﻿b",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a﻿b",
   "item_key": "book/unit-01-x/exercises/bom-kept",
   "hash": "sha256:07588e5a6ab6c310943ca4fc3641250454da29ebe982fa0096b6b26b8fcabb4c"
@@ -100,6 +128,8 @@
  {
   "input": "\n\n  \nhello\n\n",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "hello",
   "item_key": "book/unit-01-x/exercises/blank-edges",
   "hash": "sha256:76b172c3ace9c4542be94c7e560a13edc26c749177d3853327a98c1a01aadded"
@@ -107,6 +137,8 @@
  {
   "input": "\r\n \t\r\nhello\r\n\r\n",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "hello",
   "item_key": "book/unit-01-x/exercises/blank-crlf",
   "hash": "sha256:488e3447b612ff8aae8aa505b79149ec8a99a0fb7bee2ced77e80b9c5be0332c"
@@ -114,6 +146,8 @@
  {
   "input": "a\n\nb",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a\n\nb",
   "item_key": "book/unit-01-x/exercises/internal-blank",
   "hash": "sha256:a4a5fd2b64bc3c04c2108ecb4ed58827ee5c528a07cb8e247a6915b09907ed28"
@@ -121,6 +155,8 @@
  {
   "input": "a  \n   \nb",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "a\n\nb",
   "item_key": "book/unit-01-x/exercises/ws-only-line",
   "hash": "sha256:a9699f92b9db08b74936aa61c1af2a7e64da13fe277efdf67978e1e2b641a032"
@@ -128,6 +164,8 @@
  {
   "input": "",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "",
   "item_key": "book/unit-01-x/exercises/empty",
   "hash": "sha256:868c9ae01351418d0c9c6542b358670031bb6166da040e86342c1f45c114aafa"
@@ -135,6 +173,8 @@
  {
   "input": " \n\t\n",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "",
   "item_key": "book/unit-01-x/exercises/blank-only",
   "hash": "sha256:26712aa36313d29a629933265ad3a6c795e51624890f9025a8f3058a7184550a"
@@ -142,6 +182,8 @@
  {
   "input": "Straße",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "Straße",
   "item_key": "book/unit-01-x/exercises/strasse-s",
   "hash": "sha256:b6dd88c3e061cc411f747cdcf84ca7722b19ca5ee5783399d3728e0e707cbccb"
@@ -149,6 +191,8 @@
  {
   "input": "Straße",
   "case": "insensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "strasse",
   "item_key": "book/unit-01-x/exercises/strasse-i",
   "hash": "sha256:99c8255c6c657c5bf2144126b82549b25320459f5beddcabd4e4e42e5ada17bd"
@@ -156,6 +200,8 @@
  {
   "input": "Hello  World",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "Hello World",
   "item_key": "book/unit-01-x/exercises/hello-s",
   "hash": "sha256:f2f869388759c76eb04f828414bcb334e121b9c95147b02544adfc1cc9b516bc"
@@ -163,6 +209,8 @@
  {
   "input": "Hello  World",
   "case": "insensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "hello world",
   "item_key": "book/unit-01-x/exercises/hello-i",
   "hash": "sha256:eef89fdd4a29b9ae7be1047712039b438ff574adebb1cbbc8563dc51953cff91"
@@ -170,6 +218,8 @@
  {
   "input": "ﬁve",
   "case": "insensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "five",
   "item_key": "book/unit-01-x/exercises/ligature",
   "hash": "sha256:d584f32c67fc3e1c6d19ec72fce2c3950fc01d9e210d850a46d92fadfa2c4b96"
@@ -177,6 +227,8 @@
  {
   "input": "A + ~B",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "A + ~B",
   "item_key": "acsl/unit-08-boolean-algebra/exercises/ex6",
   "hash": "sha256:12c2f2c8f2b394f3991d951d238410d7aa613e8db427e1926b7fad30adff6fce"
@@ -184,6 +236,8 @@
  {
   "input": "5E",
   "case": "insensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "5e",
   "item_key": "acsl/unit-01-computer-number-systems/exercises/ex4",
   "hash": "sha256:983da01485276b17c20b7a88e677a4f9fa648b703689ad4360e90b6f6fe34a1e"
@@ -191,8 +245,137 @@
  {
   "input": "True\nFalse\n",
   "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
   "normalised": "True\nFalse",
   "item_key": "book/unit-01-x/exercises/multi",
   "hash": "sha256:3912ba9ac1392c83cecd148c69774c5aa1f518797485a5196f4cccbba77c8489"
+ },
+ {
+  "input": "^ A B",
+  "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {
+   "^": "↑"
+  },
+  "normalised": "↑ A B",
+  "item_key": "acsl/unit-04-x/exercises/alias",
+  "hash": "sha256:6db90bf79a5083f35cbe2e18356b6327ee294312cd474d9eefdff973ccba1737"
+ },
+ {
+  "input": "↑ A B",
+  "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {
+   "^": "↑"
+  },
+  "normalised": "↑ A B",
+  "item_key": "acsl/unit-04-x/exercises/alias",
+  "hash": "sha256:6db90bf79a5083f35cbe2e18356b6327ee294312cd474d9eefdff973ccba1737"
+ },
+ {
+  "input": "^ A B",
+  "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
+  "normalised": "^ A B",
+  "item_key": "acsl/unit-04-x/exercises/alias",
+  "hash": "sha256:67539320d17aed71b8d48a1b241952f409f70220d54e9c0fa82c7bbc5f2e70bd"
+ },
+ {
+  "input": "^  a\tb ",
+  "case": "insensitive",
+  "whitespace": "collapse",
+  "aliases": {
+   "^": "↑",
+   "B": "b"
+  },
+  "normalised": "↑ a b",
+  "item_key": "acsl/unit-04-x/exercises/alias-i",
+  "hash": "sha256:02cf19104aa731c2cc08227c6468cf96ecec3b64faf030da85b5eee15798ad5b"
+ },
+ {
+  "input": "<=>",
+  "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {
+   "<": "‹",
+   "<=": "≤"
+  },
+  "normalised": "≤>",
+  "item_key": "acsl/unit-04-x/exercises/alias-longest",
+  "hash": "sha256:75b5f950f2c534e25fa0c6c3708c1c69857527f7d22d9800dfe0fbfa92d681a7"
+ },
+ {
+  "input": "a\tb",
+  "case": "sensitive",
+  "whitespace": "exact",
+  "aliases": {},
+  "normalised": "a\tb",
+  "item_key": "book/unit-01-x/exercises/exact-tab",
+  "hash": "sha256:5f6171de79db40cab43d356ce3fdd781791dc4d8413f6f929ab1744a22501e60"
+ },
+ {
+  "input": "a b",
+  "case": "sensitive",
+  "whitespace": "exact",
+  "aliases": {},
+  "normalised": "a b",
+  "item_key": "book/unit-01-x/exercises/exact-tab",
+  "hash": "sha256:3c0679572dc950fe9093b2b8ed76c125c0113a2233a16f7b7b48e220f1a4ab9b"
+ },
+ {
+  "input": "a\tb",
+  "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
+  "normalised": "a b",
+  "item_key": "book/unit-01-x/exercises/exact-tab",
+  "hash": "sha256:3c0679572dc950fe9093b2b8ed76c125c0113a2233a16f7b7b48e220f1a4ab9b"
+ },
+ {
+  "input": "a b",
+  "case": "sensitive",
+  "whitespace": "collapse",
+  "aliases": {},
+  "normalised": "a b",
+  "item_key": "book/unit-01-x/exercises/exact-tab",
+  "hash": "sha256:3c0679572dc950fe9093b2b8ed76c125c0113a2233a16f7b7b48e220f1a4ab9b"
+ },
+ {
+  "input": "  x\r\n\ty  \r\nz\t\r\n",
+  "case": "sensitive",
+  "whitespace": "exact",
+  "aliases": {},
+  "normalised": "  x\n\ty\nz",
+  "item_key": "book/unit-01-x/exercises/exact-crlf",
+  "hash": "sha256:32c25c03bbda08a614dd99be98f46701c1b7c71e79f5655033eb5b2d2ac61d7b"
+ },
+ {
+  "input": "\n \t\n  a  b\n\n\t\n",
+  "case": "sensitive",
+  "whitespace": "exact",
+  "aliases": {},
+  "normalised": "  a  b",
+  "item_key": "book/unit-01-x/exercises/exact-blank-edges",
+  "hash": "sha256:15f917eacd82391b11382b8db68ffc94b598028c685411488c4eaa24fef313ff"
+ },
+ {
+  "input": "a\n\n  b",
+  "case": "sensitive",
+  "whitespace": "exact",
+  "aliases": {},
+  "normalised": "a\n\n  b",
+  "item_key": "book/unit-01-x/exercises/exact-internal-blank",
+  "hash": "sha256:523535c49c0444ca90bcfd8ca30bd8a9e8804c42eb302dc8462c5ad412bfca52"
+ },
+ {
+  "input": "A\tB",
+  "case": "insensitive",
+  "whitespace": "exact",
+  "aliases": {},
+  "normalised": "a\tb",
+  "item_key": "book/unit-01-x/exercises/exact-i",
+  "hash": "sha256:a3680086231ab22a9dc46212a5cf2f77770c97d3d6c7f7ad309404745ca3a03d"
  }
 ]

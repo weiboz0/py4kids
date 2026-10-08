@@ -6,7 +6,9 @@ this order:
 1. `site.yaml` errors (then nothing else: the export needs the config);
 2. schema errors, then missing and duplicate ids (the export fails on them, so nothing follows);
 3. continuity against the committed ledger (`site/ids/<book>.json`);
-4. `tag_findings` (misplaced, unknown or several `check-*` tags);
+4. `tag_findings` (misplaced, unknown or several `check-*` tags), then the statement tie
+   (`statement_tie_findings`: an authored `also_check` or `requirements` entry not in the item's
+   statement, or `also_check` on a self-check item; plan 102 Phase 0);
 5. concept-override `FAIL:`s (unregistered `metadata.concepts` ids on lesson cells and items);
 6. the answer-model findings (`answer_model_findings`, plan 101 Phase F);
 7. classification coverage: with `classification: confirmed`, a `FAIL:` per item without a
@@ -30,7 +32,7 @@ from tools.books import site_config, site_config_errors
 from .bundle import ExportError, dumps, export_book
 from .ids import continuity_findings
 
-CACHE_VERSION = 2  # 2: the answer-model checks (plan 101 F)
+CACHE_VERSION = 3  # 2: the answer-model checks (plan 101 F); 3: the statement tie (plan 102)
 
 
 def answer_model_findings(root: Path, book: str, bundle_dir: Path) -> list[str]:
@@ -102,6 +104,7 @@ def _compute(root: Path, book: str, out_dir: Path) -> list[str]:
     report = result.report
     findings = continuity_findings(root, book, result.keys)
     findings += report["tag_findings"]
+    findings += report["metadata_findings"]
     findings += report["concept_findings"]
     findings += answer_model_findings(root, book, out_dir)
     findings += _classification_findings(book, site_config(root, book).classification, report)

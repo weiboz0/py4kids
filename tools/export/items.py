@@ -466,6 +466,8 @@ def export_item(root: Path, book: str, item: Item) -> ItemExport:
         "files": item.files, "check": check, **answers.answer_fields(root, book, item),
         "before": item.before,
     }
+    if kind != "self-check" and answers.also_check(item):
+        data["also_check"] = answers.also_check(item)  # plan 102 Phase 0
     if kind == "self-check":
         notes = [f"self-check: {reason}", *notes]
     item_notes = [note for note in item.notes

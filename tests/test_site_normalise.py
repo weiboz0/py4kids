@@ -20,7 +20,8 @@ REPO = Path(__file__).resolve().parents[1]
 VECTORS_PATH = REPO / "tools" / "export" / "hash_vectors.json"
 NBSP = " "
 
-# (input, case, expected normalised text, item key)
+# (input, case, expected normalised text, item key[, whitespace, aliases]) — plan 102 Phase 0
+# adds `whitespace` (default "collapse") and `aliases` (default none) to `answer_format`.
 VECTORS = [
     ("5", "sensitive", "5", "acsl/unit-01-computer-number-systems/exercises/ex1#1"),
     ("  5  ", "sensitive", "5", "acsl/unit-01-computer-number-systems/exercises/ex2"),
@@ -50,21 +51,51 @@ VECTORS = [
     ("A + ~B", "sensitive", "A + ~B", "acsl/unit-08-boolean-algebra/exercises/ex6"),
     ("5E", "insensitive", "5e", "acsl/unit-01-computer-number-systems/exercises/ex4"),
     ("True\nFalse\n", "sensitive", "True\nFalse", "book/unit-01-x/exercises/multi"),
+    # plan 102 Phase 0: aliases map a typed form to the canonical one, after whitespace and case.
+    ("^ A B", "sensitive", "↑ A B", "acsl/unit-04-x/exercises/alias", "collapse", {"^": "↑"}),
+    ("↑ A B", "sensitive", "↑ A B", "acsl/unit-04-x/exercises/alias", "collapse", {"^": "↑"}),
+    ("^ A B", "sensitive", "^ A B", "acsl/unit-04-x/exercises/alias"),
+    ("^  a\tb ", "insensitive", "↑ a b", "acsl/unit-04-x/exercises/alias-i", "collapse",
+     {"^": "↑", "B": "b"}),
+    ("<=>", "sensitive", "≤>", "acsl/unit-04-x/exercises/alias-longest", "collapse",
+     {"<": "‹", "<=": "≤"}),
+    # plan 102 Phase 0: `exact` keeps tabs, indentation and inner runs.
+    ("a\tb", "sensitive", "a\tb", "book/unit-01-x/exercises/exact-tab", "exact"),
+    ("a b", "sensitive", "a b", "book/unit-01-x/exercises/exact-tab", "exact"),
+    ("a\tb", "sensitive", "a b", "book/unit-01-x/exercises/exact-tab"),
+    ("a b", "sensitive", "a b", "book/unit-01-x/exercises/exact-tab"),
+    ("  x\r\n\ty  \r\nz\t\r\n", "sensitive", "  x\n\ty\nz", "book/unit-01-x/exercises/exact-crlf",
+     "exact"),
+    ("\n \t\n  a  b\n\n\t\n", "sensitive", "  a  b", "book/unit-01-x/exercises/exact-blank-edges",
+     "exact"),
+    ("a\n\n  b", "sensitive", "a\n\n  b", "book/unit-01-x/exercises/exact-internal-blank", "exact"),
+    ("A\tB", "insensitive", "a\tb", "book/unit-01-x/exercises/exact-i", "exact"),
 ]
+
+
+def _options(row: tuple) -> tuple[str, dict]:
+    """(whitespace, aliases) of a vector row, with the defaults."""
+    whitespace = row[4] if len(row) > 4 else "collapse"
+    aliases = row[5] if len(row) > 5 else {}
+    return whitespace, aliases
 
 
 def build_vectors() -> list[dict]:
     """The committed file's content: one object per vector, computed by the code under test."""
-    return [
-        {
+    out = []
+    for row in VECTORS:
+        text, case, _expected, key = row[:4]
+        whitespace, aliases = _options(row)
+        out.append({
             "input": text,
             "case": case,
-            "normalised": normalise(text, case=case),
+            "whitespace": whitespace,
+            "aliases": aliases,
+            "normalised": normalise(text, case=case, whitespace=whitespace, aliases=aliases),
             "item_key": key,
-            "hash": answer_hash(key, text, case=case),
-        }
-        for text, case, _expected, key in VECTORS
-    ]
+            "hash": answer_hash(key, text, case=case, whitespace=whitespace, aliases=aliases),
+        })
+    return out
 
 
 def write_vectors() -> None:
@@ -73,9 +104,11 @@ def write_vectors() -> None:
     )
 
 
-@pytest.mark.parametrize(("text", "case", "expected", "key"), VECTORS)
-def test_vector_normalises(text, case, expected, key):
-    assert normalise(text, case=case) == expected
+@pytest.mark.parametrize("row", VECTORS)
+def test_vector_normalises(row):
+    text, case, expected, _key = row[:4]
+    whitespace, aliases = _options(row)
+    assert normalise(text, case=case, whitespace=whitespace, aliases=aliases) == expected
 
 
 def test_vector_file_matches_code():
@@ -86,8 +119,11 @@ def test_vector_file_pins_every_case():
     vectors = json.loads(VECTORS_PATH.read_text(encoding="utf-8"))
     assert [vector["normalised"] for vector in vectors] == [row[2] for row in VECTORS]
     assert {vector["case"] for vector in vectors} == {"sensitive", "insensitive"}
+    assert {vector["whitespace"] for vector in vectors} == {"collapse", "exact"}
+    assert any(vector["aliases"] for vector in vectors)
     for vector in vectors:
-        assert set(vector) == {"input", "case", "normalised", "item_key", "hash"}
+        assert set(vector) == {"input", "case", "whitespace", "aliases", "normalised", "item_key",
+                               "hash"}
         assert re.fullmatch(r"sha256:[0-9a-f]{64}", vector["hash"])
 
 
@@ -107,6 +143,44 @@ def test_hash_compares_normalised_text():
     assert answer_hash("a/b/c/d", "Yes", case="sensitive") != answer_hash(
         "a/b/c/d", "yes", case="sensitive"
     )
+
+
+def _hash(key: str, text: str, **options) -> str:
+    return answer_hash(key, text, case=options.pop("case", "sensitive"), **options)
+
+
+def test_alias_makes_typed_and_canonical_forms_equal():
+    key = "acsl/unit-04-x/exercises/alias"
+    assert _hash(key, "^ A B", aliases={"^": "↑"}) == _hash(key, "↑ A B", aliases={"^": "↑"})
+    assert _hash(key, "^ A B") != _hash(key, "↑ A B")
+    assert _hash(key, "^ A B", aliases={}) == _hash(key, "^ A B")
+
+
+def test_exact_whitespace_keeps_tabs_and_collapse_does_not():
+    key = "book/unit-01-x/exercises/exact-tab"
+    assert _hash(key, "a\tb", whitespace="exact") != _hash(key, "a b", whitespace="exact")
+    assert _hash(key, "a\tb", whitespace="collapse") == _hash(key, "a b", whitespace="collapse")
+    assert _hash(key, "a\tb") == _hash(key, "a b")  # collapse is the default
+    # exact still folds CRLF, trailing spaces and blank edge lines
+    assert _hash(key, "\r\n  x \r\n\ty\r\n\r\n", whitespace="exact") == _hash(
+        key, "  x\n\ty", whitespace="exact")
+
+
+def test_defaults_leave_existing_hashes_unchanged():
+    """An item without `whitespace` or `aliases` hashes exactly as before plan 102."""
+    for row in VECTORS:
+        text, case, _expected, key = row[:4]
+        if len(row) == 4:
+            payload = f"py4kids-answer-v1\n{key}\n{normalise(text, case=case)}"
+            assert answer_hash(key, text, case=case) == (
+                "sha256:" + hashlib.sha256(payload.encode("utf-8")).hexdigest())
+            assert answer_hash(key, text, case=case) == answer_hash(
+                key, text, case=case, whitespace="collapse", aliases=None)
+
+
+def test_unknown_whitespace_mode_is_rejected():
+    with pytest.raises(ValueError):
+        normalise("a", case="sensitive", whitespace="loose")
 
 
 def test_hash_payload_is_pinned():

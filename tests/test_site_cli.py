@@ -98,3 +98,15 @@ def test_cli_site_check_fails_on_probe_error(tmp_path, capsys):
     root = demo_book.build_site_root(tmp_path / "root", extra_lesson_cells=[boom])
     assert main(["--root", str(root), "site-check", "--book", "demo"]) == 1
     assert "FAIL: demo/unit-01-demo/lesson/boom: lesson probe error" in capsys.readouterr().out
+
+
+def test_cli_site_check_fails_an_also_check_entry_not_in_the_statement(site_root, capsys):
+    """plan 102 Phase 0: an `also_check` entry copied from a solution is a site-check FAIL."""
+    path = site_root / "demo" / "units" / "unit-01-demo" / "exercises.ipynb"
+    notebook = nbformat.read(path, as_version=4)
+    heading = next(cell for cell in notebook.cells if cell.get("id") == "u1e07")
+    heading.metadata["also_check"] = ["return n * 2"]
+    nbformat.write(notebook, path)
+    assert main(["--root", str(site_root), "--book", "demo", "site-check"]) == 1
+    assert ("FAIL: demo/unit-01-demo/exercises/u1e07: metadata.also_check entry is not in the "
+            "statement: 'return n * 2'") in capsys.readouterr().out
