@@ -5,7 +5,7 @@
 
 - unit-01-demo: Exercise 1 fixtures (assets/ex1.py, assets/ex1/{1,2}.in|.out; the Sample Input
   fence follows prose), 2 answer (short-answer, authored answer_format), 3 predict, 4 asserts
-  (function in the starter), 5 expected-output (names a tracked lesson asset), 6 self-check
+  (function in the starter; authored `also_check`), 5 expected-output (names a tracked lesson asset), 6 self-check
   (input()), and one unnumbered challenge after a `## Challenge` lead-in.
 - unit-02-more: the asserts portability cases, a turtle "trace by hand" item, a silent trace
   program and unseeded random.
@@ -91,7 +91,8 @@ def unit_01(base: Path) -> None:
         md("u1e04", "**Your answer:** _(write your answer here)_"),
         md("u1e05", "## Exercise 3\n\n### Loop Trace\n\nWhat does this code print?"),
         code("u1e06", "for i in range(3):\n    print(i * 2)"),
-        md("u1e07", "## Exercise 4\n\n### Double It\n\nWrite `double(n)` so it returns twice `n`."),
+        md("u1e07", "## Exercise 4\n\n### Double It\n\nWrite `double(n)` so it returns twice `n`.",
+           also_check=["Write `double(n)`"]),
         code("u1e08", "def double(n):\n    pass"),
         md("u1e09", "## Exercise 5\n\n### Count Up\n\nPrint the numbers 1, 2 and 3 on separate "
            "lines, then `done`. You may start from `assets/count_helper.py`."),

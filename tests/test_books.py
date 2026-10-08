@@ -215,7 +215,7 @@ def test_site_config_real_books():
     for book in books_with_flag(REPO, "site"):
         assert site_config_errors(REPO, book) == []
         config = site_config(REPO, book)
-        assert config.classification == "proposed"
+        assert config.classification == "confirmed"  # plan 102 flipped all four
         assert config.fixture_budget_kb == 130
 
 

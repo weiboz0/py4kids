@@ -2,5 +2,5 @@
 # classification: `proposed` until this book's content plan confirms every item's check-* tag,
 #   then `confirmed`, which makes site-check require a tag on every item (design 012 D4).
 # fixture_budget_kb: the per-pair contest-fixture budget the export reports against (D7).
-classification: proposed
+classification: confirmed
 fixture_budget_kb: 130
