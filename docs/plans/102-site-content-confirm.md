@@ -230,4 +230,7 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 4. `[FIXED]` `u04-ex09`'s derived checklist omits the counter update and printing both totals. Author `requirements`. Should Fix.
    → Response: Six authored `requirements` from the statement, ending with "Update the question counter each trip and print both totals at the end."
 
+### Coordinator decision (round-1 audit)
+- The audit added the statements' own hand-trace instruction ("Work it out by hand first" / "Trace it by hand, using ACSL's rules") as `also_check` on 71 ACSL `answer` items. **Kept**: it is a statement requirement that a hashed answer cannot verify, and showing it beside the answer box is honest about what the check covers.
+
 ## Post-Execution Report
