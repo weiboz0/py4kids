@@ -215,6 +215,25 @@ User goal, 2026-10-06: "non stop until full working learning website".
 
 ## Content Review
 
+### Review 1 (38a3c32)
+
+- `[self]` APPROVE after the Phase E run.
+- `[sol]` **REQUEST CHANGES** (gpt-6-sol):
+  1. `[FIXED]` MAJOR: "Available offline" trusted the site's stored `runner_release_id`, so a runner origin whose storage was cleared still showed "available". → New envelope-v2 `get-state` / `state` pair: the runner answers from its *own* record. The book page shows "Checking…" until both records agree, and "Download again" when the runner's is missing. Fixing this exposed a real bug: a `py4kids-offline` database recreated without its store could never be written again; it is now repaired by a version upgrade. Tests: pwa.spec "a runner whose storage was cleared is not 'available offline'" (online and with both servers stopped), offline-records.test, runner-client.test.
+  2. `[FIXED]` MAJOR (also `[fable]` 5 and 12): import validation looked up file keys on plain objects (`constructor`/`toString` passed; `__proto__` threw). → Null-prototype rule maps and `Object.hasOwn` everywhere, with the same pattern fixed in `sw.ts` and `pwa-client.ts`. progress-io.test refuses 8 prototype names × 7 record levels with the schema message.
+  3. `[FIXED]` MINOR: the offline per-book test never ticked a self-check checklist. → It ticks every box, waits for the event, and asserts both after the offline reload.
+- `[fable]` **APPROVE WITH NITS**:
+  1. `[FIXED]` The worker's record index went stale after `activate`. → Both workers re-read records on `activate` (deleting nothing) and on an offline miss; update.spec covers B installed before a download under A.
+  2. `[FIXED]` `shell-<old>` caches accumulated for visitors with no downloads. → The completeness gate applies only when the origin has a confirmed book (`cleanupAllowed`); update.spec covers the no-download visitor on both origins.
+  3. `[FIXED]` A site download had no stall detection. → 60 s with no progress gives "The download stopped. Try again."; pwa.spec covers it.
+  4. `[FIXED]` Step 3 retried forever against the click-time release. → Each attempt re-reads the waiting worker and accepts a newer release, and after 5 attempts falls back to a plain reload.
+  5. See [sol] 2.
+  6. `[FIXED]` The stand-in build was not evidenced. → `scripts/build-release.sh pdfs-2026-09-30 --target stand-in` was run: unit tests, 497 pytest and the e2e passed, apart from one journey self-check flake on the first run. Its cause was the test leaving the page milliseconds after the tick, which can abort the IndexedDB write. The test now waits for the saved event; 24/24 repeats pass. A rerun of the stand-in e2e passed in full.
+  7. `[FIXED]` A slow runner install failed the 10 s step. → "Preparing the update…" waits, capped at 5 min, while the runner's next worker is installing.
+  8. `[FIXED]` NITs: raw error text in a tooltip (now `console.warn`), stale deviation references, the release key no longer servable, and the runner-timeout hook now drives the real `RunnerClient` timeout.
+
+Results after the fixes: runner 26, site 409 unit tests; `pnpm -C site e2e` with 133 main, 22 PWA and 10 hooks tests passing.
+
 ## Post-Execution Report
 
 **Shipped: design 012 part D. The site is an installable, offline-capable PWA, and both origins are ready to deploy. Nothing has been deployed (Phase F waits for the user).**
