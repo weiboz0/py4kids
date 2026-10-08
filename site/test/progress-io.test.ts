@@ -158,6 +158,54 @@ describe('the export file', () => {
     }
     for (const value of [null, [], 'x', 3]) expect(validateExport(value).length > 0).toBe(!ajvValidate(value));
   });
+
+  it('refuses Object.prototype key names at every record level with the schema message, never a TypeError', async () => {
+    const base = JSON.parse(await exportProgress(await seeded(new MemoryProgress()), { attempts: true }, at(10))) as Record<string, unknown>;
+    // An event with detail.cases, so the detail and case levels are probed too.
+    const event = { ...(base.events as Record<string, unknown>[])[0]!, kind: 'exercise', item_key: ITEM, book: 'python-projects', result: 'fail', detail: { cases: [{ n: 1, pass: false }] } };
+    const valid: Record<string, unknown> = { ...base, events: [event] };
+    assertValid(valid);
+    /** `value` with one more own key `key` (defined, so even `__proto__` is an own data key). */
+    const withKey = (value: Record<string, unknown>, key: string): Record<string, unknown> =>
+      Object.defineProperty({ ...value }, key, { value: 1, enumerable: true, writable: true, configurable: true });
+    type Level = { name: string; add: (key: string) => Record<string, unknown> };
+    const first = (name: string) => (valid[name] as Record<string, unknown>[])[0]!;
+    const levels: Level[] = [
+      { name: 'top', add: (k) => withKey(valid, k) },
+      { name: 'event', add: (k) => ({ ...valid, events: [withKey(event, k)] }) },
+      { name: 'event detail', add: (k) => ({ ...valid, events: [{ ...event, detail: withKey(event.detail, k) }] }) },
+      { name: 'event case', add: (k) => ({ ...valid, events: [{ ...event, detail: { cases: [withKey(event.detail.cases[0]!, k)] } }] }) },
+      { name: 'card', add: (k) => ({ ...valid, cards: [withKey(first('cards'), k)] }) },
+      { name: 'resume', add: (k) => ({ ...valid, resume: [withKey(first('resume'), k)] }) },
+      { name: 'attempt', add: (k) => ({ ...valid, attempts: [withKey(first('attempts'), k)] }) },
+    ];
+    let probed = 0;
+    for (const key of ['constructor', 'toString', 'hasOwnProperty', '__proto__', 'valueOf', 'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString']) {
+      for (const level of levels) {
+        // Through the text, as a real file arrives: JSON.parse makes `__proto__` an own key.
+        const text = JSON.stringify(level.add(key));
+        expect(text, `${level.name} ${key}`).toContain(`"${key}":1`);
+        const data = JSON.parse(text) as unknown;
+        const what = `${key} on the ${level.name}`;
+        expect(ajvValidate(data), `Ajv refuses ${what}`).toBe(false);
+        expect(() => validateExport(data), what).not.toThrow();
+        expect(validateExport(data).length, `the twin refuses ${what}`).toBeGreaterThan(0);
+        let error: unknown;
+        try {
+          parseExport(text);
+        } catch (e) {
+          error = e;
+        }
+        expect(error, what).toBeInstanceOf(ImportError);
+        expect((error as ImportError).reason, what).toBe('invalid');
+        expect((error as ImportError).message, what).toMatch(/^That progress file has something wrong inside it/);
+        // Named as unexpected (a case's checker reports the whole list of cases as invalid).
+        expect((error as ImportError).details.join('; '), what).toMatch(level.name === 'event case' ? /\/detail\/cases: invalid/ : new RegExp(`unexpected ${key}`));
+        probed++;
+      }
+    }
+    expect(probed).toBe(8 * levels.length);
+  });
 });
 
 describe('import refuses a bad file with a student-friendly message', () => {

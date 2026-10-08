@@ -113,10 +113,12 @@ const isStr = (v: unknown): v is string => typeof v === 'string';
 export function validateEvent(event: unknown): string[] {
   if (!isObject(event)) return ['/: must be an object'];
   const errors: string[] = [];
-  for (const key of EVENT_KEYS) if (!(key in event)) errors.push(`/: missing ${key}`);
+  // Own keys only: the event may come from an imported file (plan 105 Phase C).
+  const has = (o: object, key: string) => Object.hasOwn(o, key);
+  for (const key of EVENT_KEYS) if (!has(event, key)) errors.push(`/: missing ${key}`);
   for (const key of Object.keys(event)) if (!EVENT_KEYS.has(key)) errors.push(`/: unexpected ${key}`);
   const check = (key: string, ok: (v: unknown) => boolean) => {
-    if (key in event && !ok(event[key])) errors.push(`/${key}: invalid`);
+    if (has(event, key) && !ok(event[key])) errors.push(`/${key}: invalid`);
   };
   check('schema', (v) => v === EVENT_SCHEMA);
   check('event_id', (v) => isStr(v) && UUID.test(v));
@@ -127,20 +129,20 @@ export function validateEvent(event: unknown): string[] {
   check('duration_ms', (v) => isInt(v) && v >= 0);
   check('timestamp', (v) => isStr(v) && TIMESTAMP.test(v));
   check('content_hash', (v) => isStr(v) && SHA256.test(v));
-  const detail = event.detail;
-  if ('detail' in event) {
+  const detail = has(event, 'detail') ? event.detail : undefined;
+  if (has(event, 'detail')) {
     if (!isObject(detail)) errors.push('/detail: must be an object');
     else {
       for (const key of Object.keys(detail)) if (!DETAIL_KEYS.has(key)) errors.push(`/detail: unexpected ${key}`);
-      if ('cases' in detail) {
+      if (has(detail, 'cases')) {
         const cases = detail.cases;
         const okCase = (c: unknown) =>
           isObject(c) && isInt(c.n) && c.n >= 1 && typeof c.pass === 'boolean' && Object.keys(c).every((k) => k === 'n' || k === 'pass');
         if (!Array.isArray(cases) || !cases.every(okCase)) errors.push('/detail/cases: invalid');
       }
-      if ('self_grade' in detail && detail.self_grade !== 'got-it' && detail.self_grade !== 'not-yet') errors.push('/detail/self_grade: invalid');
-      if ('box' in detail && !(isInt(detail.box) && detail.box >= 0)) errors.push('/detail/box: invalid');
-      if ('checklist' in detail && !(Array.isArray(detail.checklist) && detail.checklist.every((b) => typeof b === 'boolean'))) {
+      if (has(detail, 'self_grade') && detail.self_grade !== 'got-it' && detail.self_grade !== 'not-yet') errors.push('/detail/self_grade: invalid');
+      if (has(detail, 'box') && !(isInt(detail.box) && detail.box >= 0)) errors.push('/detail/box: invalid');
+      if (has(detail, 'checklist') && !(Array.isArray(detail.checklist) && detail.checklist.every((b) => typeof b === 'boolean'))) {
         errors.push('/detail/checklist: invalid');
       }
     }

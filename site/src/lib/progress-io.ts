@@ -21,7 +21,9 @@
  * file never regresses newer local state.
  *
  * Like `validateEvent`, `validateExport` is a hand-written twin of the schema (the CSP forbids
- * Ajv in the browser); `site/test/progress-io.test.ts` proves the two agree.
+ * Ajv in the browser); `site/test/progress-io.test.ts` proves the two agree. Every key the file
+ * names is looked up as an own key only (`Object.hasOwn`, prototype-free rule maps), so a hostile
+ * file with `__proto__`, `constructor` or `toString` keys is refused like any other unexpected key.
  */
 
 import type { CardState } from './leitner';
@@ -60,7 +62,14 @@ const isTimestamp = matches(TIMESTAMP);
 /** JSON Schema's `maxLength` counts code points, not UTF-16 units. */
 const maxLength = (n: number) => (v: unknown) => isStr(v) && [...v].length <= n;
 
-type Rules = Record<string, (v: unknown) => boolean>;
+type Rules = Readonly<Record<string, (v: unknown) => boolean>>;
+
+/**
+ * The rules for one record's keys, in a map without a prototype: the keys looked up in it come
+ * from the file, so `constructor`, `toString`, `__proto__` and the like must find nothing (and be
+ * reported as unexpected), never `Object.prototype`'s members.
+ */
+const rules = (byKey: Record<string, (v: unknown) => boolean>): Rules => Object.freeze(Object.assign(Object.create(null) as Record<string, (v: unknown) => boolean>, byKey));
 
 function checkRecord(path: string, value: unknown, required: string[], rules: Rules, errors: string[]): void {
   const here = path || '/';
@@ -68,29 +77,29 @@ function checkRecord(path: string, value: unknown, required: string[], rules: Ru
     errors.push(`${here}: must be an object`);
     return;
   }
-  for (const key of required) if (!(key in value)) errors.push(`${here}: missing ${key}`);
+  for (const key of required) if (!Object.hasOwn(value, key)) errors.push(`${here}: missing ${key}`);
   for (const key of Object.keys(value)) {
-    const rule = rules[key];
+    const rule = Object.hasOwn(rules, key) ? rules[key] : undefined;
     if (!rule) errors.push(`${here}: unexpected ${key}`);
     else if (!rule(value[key])) errors.push(`${path}/${key}: invalid`);
   }
 }
 
-const CARD_RULES: Rules = {
+const CARD_RULES: Rules = rules({
   key: matches(KEY),
   book: matches(BOOK),
   box: (v) => isInt(v) && v >= 1 && v <= 5,
   due: isTimestamp,
   updated_at: isTimestamp,
-};
-const RESUME_RULES: Rules = {
+});
+const RESUME_RULES: Rules = rules({
   book: matches(BOOK),
   entry: matches(ENTRY),
   href: (v) => matches(HREF)(v) && maxLength(2000)(v),
   title: maxLength(500),
   updated_at: isTimestamp,
-};
-const ATTEMPT_RULES: Rules = {
+});
+const ATTEMPT_RULES: Rules = rules({
   attempt_id: matches(UUID),
   book: matches(BOOK),
   item_key: matches(KEY),
@@ -99,15 +108,15 @@ const ATTEMPT_RULES: Rules = {
   answer: isStr,
   result: (v) => isStr(v) && RESULTS.has(v),
   timestamp: isTimestamp,
-};
-const TOP_RULES: Rules = {
+});
+const TOP_RULES: Rules = rules({
   schema: (v) => v === EXPORT_SCHEMA,
   exported_at: isTimestamp,
   events: Array.isArray,
   cards: Array.isArray,
   resume: Array.isArray,
   attempts: Array.isArray,
-};
+});
 
 /** Every way `data` breaks the progress-export schema; empty when it is valid. */
 export function validateExport(data: unknown): string[] {
@@ -115,7 +124,7 @@ export function validateExport(data: unknown): string[] {
   checkRecord('', data, ['schema', 'exported_at', 'events', 'cards', 'resume'], TOP_RULES, errors);
   if (!isObject(data)) return errors;
   const each = (name: string, check: (item: unknown, path: string) => void) => {
-    const list = data[name];
+    const list = Object.hasOwn(data, name) ? data[name] : undefined;
     if (Array.isArray(list)) list.forEach((item, i) => check(item, `/${name}/${i}`));
   };
   each('events', (item, path) => {
@@ -163,7 +172,7 @@ export function parseExport(text: string, size: number = new TextEncoder().encod
       `That file is not a py4kids progress file, or it got damaged. Choose the file that "Export my progress" saved. ${NOTHING_CHANGED}`,
     );
   }
-  if (!isObject(data) || !('schema' in data)) {
+  if (!isObject(data) || !Object.hasOwn(data, 'schema')) {
     throw new ImportError(
       'invalid',
       `That file is not a py4kids progress file. Choose the file that "Export my progress" saved. ${NOTHING_CHANGED}`,
