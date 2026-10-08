@@ -1,0 +1,78 @@
+---
+/**
+ * Slide mode `/<book>/<entry>/slides/` (plan 103 D6, Phase C). Slides come from `slideDecks`
+ * (src/lib/slide-view.ts), which uses the slide audit's own rules. Without script every slide
+ * shows in order; the player island (src/scripts/slides.ts) shows one at a time: arrow keys and
+ * swipe, a progress bar, the slide number in the URL hash, Escape back to the reading view, and
+ * a `py4kids:slide` DOM event per slide viewed (the progress store records it).
+ */
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../layouts/Base.astro';
+import { getBooks, type LoadedBook } from '../../../lib/bundle';
+import { slideDecks, type Deck } from '../../../lib/slide-view';
+import '../../../styles/slides.css';
+
+export const getStaticPaths = (() =>
+  getBooks().flatMap((book) =>
+    slideDecks(book).map((deck) => ({ params: { book: book.id, entry: deck.entry }, props: { book, deck } })),
+  )) satisfies GetStaticPaths;
+
+interface Props {
+  book: LoadedBook;
+  deck: Deck;
+}
+const { book, deck } = Astro.props;
+const count = deck.slides.length;
+---
+<Base title={`${deck.title} — slides`} description={`Slides for ${deck.title}`} book={book}>
+  <div
+    class="deck"
+    data-deck
+    data-book={deck.book}
+    data-entry={deck.entry}
+    data-reading={deck.readingHref}
+    data-count={count}
+  >
+    <div class="deck-bar">
+      <a class="deck-exit" href={deck.readingHref}>Exit slides <kbd>Esc</kbd></a>
+      <h1 class="deck-title">{deck.title}</h1>
+      <p class="deck-count" aria-live="polite">
+        Slide <span data-deck-current>1</span> of {count}
+      </p>
+    </div>
+    <progress class="deck-progress" max={count} value="1" aria-label="Slide progress" data-deck-progress></progress>
+    <ol class="deck-slides" aria-label="Slides">
+      {deck.slides.map((slide, i) => (
+        <li class={`slide slide-${slide.kind}`} id={`slide-${i + 1}`} data-key={slide.key} aria-label={`Slide ${i + 1} of ${count}`}>
+          <div class="slide-body">
+            {slide.parts.map((part) =>
+              part.kind === 'md' ? (
+                <div class={`slide-md slide-md-${part.type}`} set:html={part.html} />
+              ) : (
+                <figure class={`slide-block slide-block-${part.type}`}>
+                  {part.label && <figcaption class="slide-label">{part.label}</figcaption>}
+                  {part.svg && <Fragment set:html={part.svg} />}
+                  <div class="slide-code" set:html={part.codeHtml} />
+                  <p class="slide-scroll-cue" aria-hidden="true">Scroll the code for more ↓</p>
+                  {part.output && (
+                    <div class="slide-output">
+                      <p class="slide-output-label">Output</p>
+                      <pre><code>{part.output}</code></pre>
+                    </div>
+                  )}
+                </figure>
+              ),
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
+    <div class="deck-nav">
+      <button type="button" class="deck-button" data-deck-prev>Previous</button>
+      <button type="button" class="deck-button" data-deck-next>Next</button>
+    </div>
+  </div>
+</Base>
+<script>
+  import '../../../scripts/slides.ts';
+</script>

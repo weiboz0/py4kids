@@ -408,5 +408,16 @@
   "normalised": "Sun comes up\nBirds sing\n\\tThe end",
   "item_key": "python-concepts/unit-01-output-and-variables/exercises/u01e14a",
   "hash": "sha256:e9fd83ab6c6694766f00729f1c4c850b996023e0041564106fbb4e39e98c9fa8"
+ },
+ {
+  "input": "X",
+  "case": "insensitive",
+  "whitespace": "collapse",
+  "aliases": {
+   "X": "Y"
+  },
+  "normalised": "y",
+  "item_key": "book/unit-01-x/exercises/alias-fold",
+  "hash": "sha256:8ea480461114e58dc43205474bcebb15146fcc7b56ad30e339de09c8df9a3ab8"
  }
 ]

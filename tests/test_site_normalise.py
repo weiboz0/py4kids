@@ -81,6 +81,9 @@ VECTORS = [
      U01E14A, "exact", TAB_ALIAS),
     ("Sun comes up\nBirds sing\n\\tThe end\n", "sensitive", "Sun comes up\nBirds sing\n\\tThe end",
      U01E14A, "exact"),
+    # plan 103 content review 3: under `insensitive` the alias KEYS and VALUES are casefolded too,
+    # so an upper-case key matches the folded text and the canonical form folds.
+    ("X", "insensitive", "y", "book/unit-01-x/exercises/alias-fold", "collapse", {"X": "Y"}),
 ]
 
 

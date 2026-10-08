@@ -4,3 +4,16 @@
 # fixture_budget_kb: the per-pair contest-fixture budget the export reports against (D7).
 classification: confirmed
 fixture_budget_kb: 130
+# slides: the slide limits and reviewed exceptions (plan 103 D6; validated by tools.books).
+#   The limits default to max_words 90 (packing budget), max_unit_words 150, max_table_rows 12 and
+#   max_code_lines 40 (failure limits). `allow` lists each oversized block key with its reason.
+slides:
+  allow:
+    - key: usaco-bronze/unit-08-prefix-sums/lesson/e549b089
+      reason: "The unit's complete stdin solver (53 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."
+    - key: usaco-bronze/unit-11-number-systems-bitwise/lesson/92fa27a3
+      reason: "The unit's complete stdin solver (45 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."
+    - key: usaco-bronze/unit-13-grids-graphs/lesson/8faec0d8
+      reason: "The unit's complete BFS maze solver (46 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."
+    - key: usaco-bronze/unit-13-grids-graphs/lesson/43160d27
+      reason: "The unit's complete DFS reachability solver (41 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."

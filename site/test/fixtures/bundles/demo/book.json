@@ -1,0 +1,25 @@
+{
+ "book": {
+  "flags": {"acsl": false, "judge": false},
+  "id": "demo",
+  "subtitle": "A tiny hand-written bundle for the site tests",
+  "title": "Demo Book"
+ },
+ "concepts": [
+  {"category": "basics", "id": "print", "name": "print()"},
+  {"category": "basics", "id": "variables", "name": "Variables"}
+ ],
+ "entries": [
+  {"file": "entries/unit-01-demo.json", "id": "unit-01-demo", "kind": "unit", "number": 1, "title": "Unit 1 — Demo"},
+  {"file": "entries/checkpoint-01-demo.json", "id": "checkpoint-01-demo", "kind": "checkpoint", "number": 1, "title": "Checkpoint 1 — Demo"}
+ ],
+ "glossary": [
+  {"concept": "print", "definition_md": "Shows a value on the screen.", "term": "print", "units": [1]},
+  {"concept": "variables", "definition_md": "A name for a value.", "term": "variable", "units": [1]}
+ ],
+ "pdfs": null,
+ "reference_md": "# Quick reference\n\n`print(x)` shows `x`.\n",
+ "release": {"content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "tag": "unreleased"},
+ "schema_version": "1.0.0",
+ "settings": {"lesson_heading": "^## Lesson\\b"}
+}

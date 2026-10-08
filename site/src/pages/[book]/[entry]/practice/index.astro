@@ -1,0 +1,73 @@
+---
+/**
+ * The practice page `/<book>/<entry>/practice/` (plan 103 Phase B): the entry's intro, then each
+ * item's `before` blocks, statement, read-only starter, division tags, stretch marker and a
+ * "How this is checked" line; self-check items show their requirements as a checklist (Phase D's
+ * progress store saves it, keyed by `data-item-key` and `data-requirement`); every other kind says
+ * checking arrives soon (part C). Then the outro.
+ * All bundle data comes through practiceView (site/src/lib/entry.ts): no answer, no check source,
+ * no hash and no hidden fixture is ever read.
+ */
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../../layouts/Base.astro';
+import { getBook, getBooks } from '../../../../lib/bundle';
+import { practicePaths, practiceView, REPORT_LABEL } from '../../../../lib/entry';
+
+export const getStaticPaths = (() =>
+  practicePaths(getBooks()).map((p) => ({ params: { book: p.book, entry: p.entry } }))) satisfies GetStaticPaths;
+
+const { book: bookId, entry: entryId } = Astro.params as { book: string; entry: string };
+const book = getBook(bookId);
+const view = practiceView(book, entryId);
+---
+<Base title={`${view.heading}: ${view.title}`} book={book}>
+  <p class="crumbs"><a href={view.bookHref} data-pagefind-meta="book" data-pagefind-filter="book">{view.bookTitle}</a> › <a href={view.readingHref}>{view.title}</a></p>
+  <h1 class="entry-title" data-pagefind-meta="title">{view.heading}: {view.title}</h1>
+  <div data-pagefind-body>
+    {view.intro.length > 0 && (
+      <div class="practice-intro">{view.intro.map((html) => <Fragment set:html={html} />)}</div>
+    )}
+    {view.items.map((item) => (
+      <>
+        {item.before.map((html) => <Fragment set:html={html} />)}
+        <section class="practice-item" id={item.anchor} data-item-key={item.key} aria-labelledby={`${item.anchor}-h`}>
+          <h2 id={`${item.anchor}-h`}>{item.title ? `${item.label}: ${item.title}` : item.label}</h2>
+          {(item.stretch || item.divisions.length > 0) && (
+            <ul class="item-tags" aria-label="Tags">
+              {item.stretch && <li class="tag tag-stretch">Challenge</li>}
+              {item.divisions.map((d) => <li class="tag tag-division">Division: {d}</li>)}
+            </ul>
+          )}
+          <div class="statement"><Fragment set:html={item.statement} /></div>
+          {item.starter && (
+            <div class="starter">
+              <p class="starter-label">Starter (read-only)</p>
+              <Fragment set:html={item.starter} />
+            </div>
+          )}
+          <p class="how-checked"><strong>How this is checked:</strong> <Fragment set:html={item.checkLine} /></p>
+          {item.formatHint && <p class="format-hint">Answer format: {item.formatHint}</p>}
+          {item.selfCheck && (
+            <fieldset class="self-check" data-self-check data-item-key={item.key}>
+              <legend>Check your work</legend>
+              <ul>
+                {item.selfCheck.map((req) => (
+                  <li>
+                    <input type="checkbox" id={req.id} data-item-key={item.key} data-requirement={req.index} />
+                    <label for={req.id}><Fragment set:html={req.html} /></label>
+                  </li>
+                ))}
+              </ul>
+            </fieldset>
+          )}
+          {item.checkingSoon && <p class="checking-soon">Checking arrives soon.</p>}
+          <p class="report"><a href={item.reportHref}>{REPORT_LABEL}</a></p>
+        </section>
+      </>
+    ))}
+    {view.outro.length > 0 && (
+      <div class="practice-outro">{view.outro.map((html) => <Fragment set:html={html} />)}</div>
+    )}
+  </div>
+  <p><a href={view.readingHref}>Back to {view.title}</a></p>
+</Base>

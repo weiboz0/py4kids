@@ -1,0 +1,8 @@
+# Response headers for every page (Cloudflare Pages `_headers` format; plan 103 Phase E, D9).
+# The strict CSP: no inline scripts or styles, nothing from another origin; 'wasm-unsafe-eval'
+# is for Pagefind's WebAssembly. COOP/COEP are added by part C (the runner), not here.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), hid=(), magnetometer=(), microphone=(), midi=(), payment=(), serial=(), usb=()

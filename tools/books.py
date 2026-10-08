@@ -582,10 +582,34 @@ def publication_config(root: Path, book: str) -> PublicationConfig:
 SITE_CONFIG = "site.yaml"
 SITE_CLASSIFICATIONS = ("proposed", "confirmed")
 _SITE_KEYS = ("classification", "fixture_budget_kb")
+_SITE_OPTIONAL_KEYS = ("slides",)
+# The slide limits (plan 103 D6). `max_words` is the packing budget; `max_unit_words`,
+# `max_table_rows` and `max_code_lines` are the failure limits the slide audit enforces.
+SLIDE_LIMITS = ("max_words", "max_unit_words", "max_table_rows", "max_code_lines")
+SLIDE_DEFAULTS = {"max_words": 90, "max_unit_words": 150, "max_table_rows": 12, "max_code_lines": 40}
 
 
 class SiteConfigError(ValueError):
     """A `site: true` book's `site.yaml` is missing or invalid."""
+
+
+@dataclass(frozen=True)
+class SlideAllow:
+    """One reviewed exception to the slide audit: an oversized unit kept as it is, and why."""
+
+    key: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class SlideConfig:
+    """A site book's slide limits (`site.yaml` `slides:`, plan 103 D6), defaults filled in."""
+
+    max_words: int = SLIDE_DEFAULTS["max_words"]
+    max_unit_words: int = SLIDE_DEFAULTS["max_unit_words"]
+    max_table_rows: int = SLIDE_DEFAULTS["max_table_rows"]
+    max_code_lines: int = SLIDE_DEFAULTS["max_code_lines"]
+    allow: tuple[SlideAllow, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -599,6 +623,60 @@ class SiteConfig:
 
     classification: Literal["proposed", "confirmed"]
     fixture_budget_kb: int
+    slides: SlideConfig = field(default_factory=SlideConfig)
+
+
+def _positive_int(value) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
+def _parse_slides(data, where: str, errors: list[str]) -> SlideConfig | None:
+    """Validate the optional `slides:` block (plan 103 D6); every key in it is optional."""
+    where = f"{where}: slides"
+    if not isinstance(data, dict):
+        errors.append(f"{where}: must be a mapping")
+        return None
+    before = len(errors)
+    for key in sorted(set(data) - {*SLIDE_LIMITS, "allow"}, key=str):
+        errors.append(f"{where}: unknown key: {key}")
+    limits = dict(SLIDE_DEFAULTS)
+    for key in SLIDE_LIMITS:
+        if key in data:
+            if _positive_int(data[key]):
+                limits[key] = data[key]
+            else:
+                errors.append(f"{where}: {key} must be a positive integer")
+    if limits["max_words"] > limits["max_unit_words"]:
+        errors.append(f"{where}: max_words ({limits['max_words']}) must not exceed "
+                      f"max_unit_words ({limits['max_unit_words']})")
+    allow: list[SlideAllow] = []
+    raw = data.get("allow", [])
+    if not isinstance(raw, list):
+        errors.append(f"{where}: allow must be a list of {{key, reason}} mappings")
+        raw = []
+    seen: set[str] = set()
+    for n, entry in enumerate(raw):
+        at = f"{where}: allow[{n}]"
+        if not isinstance(entry, dict):
+            errors.append(f"{at}: must be a mapping with key and reason")
+            continue
+        for key in sorted(set(entry) - {"key", "reason"}, key=str):
+            errors.append(f"{at}: unknown key: {key}")
+        key, reason = entry.get("key"), entry.get("reason")
+        if not isinstance(key, str) or not key.strip():
+            errors.append(f"{at}: key must be a non-empty string")
+            continue
+        if not isinstance(reason, str) or not reason.strip():
+            errors.append(f"{at}: reason must be a non-empty string ({key})")
+            continue
+        if key in seen:
+            errors.append(f"{at}: duplicate key: {key}")
+            continue
+        seen.add(key)
+        allow.append(SlideAllow(key=key, reason=reason.strip()))
+    if len(errors) > before:
+        return None
+    return SlideConfig(**limits, allow=tuple(allow))
 
 
 def _parse_site_config(root: Path, book: str) -> tuple[SiteConfig | None, list[str]]:
@@ -616,7 +694,7 @@ def _parse_site_config(root: Path, book: str) -> tuple[SiteConfig | None, list[s
     if not isinstance(data, dict):
         return None, [f"{where}: must be a mapping"]
     errors: list[str] = []
-    for key in sorted(set(data) - set(_SITE_KEYS), key=str):
+    for key in sorted(set(data) - set(_SITE_KEYS) - set(_SITE_OPTIONAL_KEYS), key=str):
         errors.append(f"{where}: unknown key: {key}")
     for key in _SITE_KEYS:
         if key not in data:
@@ -629,9 +707,10 @@ def _parse_site_config(root: Path, book: str) -> tuple[SiteConfig | None, list[s
         not isinstance(budget, int) or isinstance(budget, bool) or budget <= 0
     ):
         errors.append(f"{where}: fixture_budget_kb must be a positive integer")
-    if errors:
+    slides = _parse_slides(data["slides"], where, errors) if "slides" in data else SlideConfig()
+    if errors or slides is None:
         return None, errors
-    return SiteConfig(classification=classification, fixture_budget_kb=budget), []
+    return SiteConfig(classification=classification, fixture_budget_kb=budget, slides=slides), []
 
 
 def site_config_errors(root: Path, book: str) -> list[str]:

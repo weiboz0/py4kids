@@ -1570,9 +1570,9 @@ def test_unit_narrowing(valid_root, capsys):
     assert output == "FAIL: unit-99-absent: unit directory does not exist\n"
 
 
-def test_ci_local_has_exact_six_real_steps():
+def test_ci_local_has_exact_seven_real_steps():
     text = (REPO / "scripts/ci-local.sh").read_text(encoding="utf-8")
-    assert text.count('step "') == 6
+    assert text.count('step "') == 7
     assert "SKIP (plan" not in text
     assert "export PY4KIDS_CI=1" in text
     commands = [

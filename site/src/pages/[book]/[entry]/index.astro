@@ -1,0 +1,48 @@
+---
+/**
+ * The reading view `/<book>/<entry>/` (plan 103 Phase B): the lesson's blocks in order, code with
+ * its stored output, labelled try-it and demo panels, turtle figures as inline SVG; a lesson-less
+ * checkpoint or project shows its intro. Slides and practice links; prev/next in syllabus order.
+ * All bundle data comes through readingView (site/src/lib/entry.ts).
+ */
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../layouts/Base.astro';
+import { getBook, getBooks } from '../../../lib/bundle';
+import { entryPaths, readingView, REPORT_LABEL } from '../../../lib/entry';
+
+export const getStaticPaths = (() =>
+  entryPaths(getBooks()).map((p) => ({ params: { book: p.book, entry: p.entry } }))) satisfies GetStaticPaths;
+
+const { book: bookId, entry: entryId } = Astro.params as { book: string; entry: string };
+const book = getBook(bookId);
+const view = readingView(book, entryId);
+const practiceLabel = view.kind === 'unit' ? 'Exercises' : view.kind === 'checkpoint' ? 'Questions' : 'Problems';
+---
+<Base title={view.title} book={book}>
+  <p class="crumbs"><a href={view.bookHref} data-pagefind-meta="book" data-pagefind-filter="book">{view.bookTitle}</a></p>
+  <p class="entry-kind">{view.kind}</p>
+  <h1 class="entry-title" data-pagefind-meta="title">{view.title}</h1>
+  {(view.slidesHref || view.practiceHref) && (
+    <ul class="entry-actions">
+      {view.slidesHref && <li><a class="button-link" href={view.slidesHref}>Slides</a></li>}
+      {view.practiceHref && (
+        <li><a class="button-link" href={view.practiceHref}>{practiceLabel} ({view.practiceCount})</a></li>
+      )}
+    </ul>
+  )}
+  <article class="lesson" data-pagefind-body>
+    {view.blocks.map((html) => <Fragment set:html={html} />)}
+  </article>
+  {view.practiceHref && (
+    <p><a class="button-link" href={view.practiceHref}>Go to the {practiceLabel.toLowerCase()} ({view.practiceCount})</a></p>
+  )}
+  <nav class="entry-nav" aria-label="Previous and next">
+    {view.prev && (
+      <a class="nav-prev" href={view.prev.href} rel="prev"><span class="nav-dir">Previous</span>{view.prev.title}</a>
+    )}
+    {view.next && (
+      <a class="nav-next" href={view.next.href} rel="next"><span class="nav-dir">Next</span>{view.next.title}</a>
+    )}
+  </nav>
+  <p class="report"><a href={view.reportHref}>{REPORT_LABEL}</a></p>
+</Base>

@@ -1,0 +1,48 @@
+---
+/**
+ * `/terms/` (plan 103 Pages): free educational use under CC BY-NC-SA 4.0 with attribution
+ * "py4kids"; provided as is; adults supervise children's use; problems via GitHub issues.
+ * Not indexed for search.
+ */
+import Base from '../layouts/Base.astro';
+import { ISSUES_LIST_URL, LICENSE_NAME, LICENSE_URL } from '../lib/report';
+---
+<Base title="Terms" description="py4kids is free for educational use under CC BY-NC-SA 4.0, provided as is.">
+  <article class="site-text">
+    <h1>Terms</h1>
+    <p class="muted">Last updated 7 October 2026.</p>
+
+    <h2>Free to use</h2>
+    <p>
+      py4kids is free for learning and teaching.
+      The course content (the books' text, exercises and PDFs, and the text of this site) is
+      licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+      License (<a href={LICENSE_URL} rel="license">{LICENSE_NAME}</a>).
+      You may copy, share and adapt it for non-commercial purposes if you:
+    </p>
+    <ul>
+      <li>give credit with the attribution "py4kids", link to the license and say what you changed;</li>
+      <li>share your adaptations under the same license.</li>
+    </ul>
+
+    <h2>Provided as is</h2>
+    <p>
+      The site and the course are provided as is, without any warranty.
+      We work to keep them correct, but they may contain mistakes, and the site may change or be
+      unavailable at times.
+    </p>
+
+    <h2>Adults supervise</h2>
+    <p>
+      The site is made for children.
+      A parent, guardian or teacher should supervise a child's use of it, including any link that
+      leads off the site.
+    </p>
+
+    <h2>Problems</h2>
+    <p>
+      Report mistakes or problems on the project's <a href={ISSUES_LIST_URL}>GitHub issues page</a>.
+      Issues there are public, so please leave out personal details.
+    </p>
+  </article>
+</Base>
