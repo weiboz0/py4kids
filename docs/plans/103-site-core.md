@@ -51,7 +51,7 @@ User decisions:
   - **GFM pipe tables** with `<th scope="col">` (acsl has 113 tables).
   - **A container plugin** for the bundle's Pandoc fenced divs: `notice` and `realprog` occur in real data; `goals`, `recap`, `opener`, `program`, `datafile` and `challenge` are kept for safety. An unknown `::: {.x}` class renders as a visible plain block, never disappears, and a test pins that.
   - **Raw blocks:** `{=latex}` blocks are dropped (none occur today; answer Markdown in part C may contain them).
-  - **Code:** highlighted at build time with Shiki (no client JS).
+  - **Code:** highlighted at build time with Shiki (no client JS), using `@shikijs/transformers`' `transformerStyleToClass`. Shiki's default output puts inline `style` attributes on tokens, which the CSP forbids; this transformer gives tokens classes and generates one stylesheet, which also serves the light and dark themes.
   - **Math:** present in real data (acsl unit 8 and `reference_md` use `$\overline{A}$`). It is rendered at build time with KaTeX in **MathML-only output** (`output: 'mathml'`). KaTeX's HTML output uses inline `style` attributes, which the CSP forbids; MathML has none and is rendered natively by current browsers, so no KaTeX CSS or fonts ship. Dollar signs follow **Pandoc's `tex_math_dollars` rule**: an opening `$` not followed by a space; a closing `$` not preceded by a space and not followed by a digit. So python-concepts unit 3's "Under 13 costs $6. Ages 13–17 cost $8" stays text. Both sentences are vitest fixtures.
 - **No bundle JSON reaches the client.** Pages are rendered at build time. No `site/content/**/entries/*.json` (or `book.json`) is copied into `dist/`. Islands receive only a build-time **projection** as a small inline-free JSON data file per page: a card deck gets card keys, prompts, outputs or terms, modes and concept ids, never `answer_md`, `check.*` or hashes. The leak test also asserts that no `*.json` under `dist/` contains the keys `answer_md`, `source` or `hash`. (`program` is also a block type name, so `check.program` is covered by the sentinel test instead.)
 - **Client islands are the only JS:**
@@ -232,7 +232,7 @@ Never `git stash` in the shared tree.
     - check a self-check box
     - reload: resume and progress persist
     - search for a glossary term
-  - **Accessibility:** axe (`@axe-core/playwright`) on every page template, with 0 serious or critical violations.
+  - **Accessibility:** axe (`@axe-core/playwright`) on every page template, plus acsl unit 08's math lesson (MathML is in the accessibility tree), with 0 serious or critical violations.
   - **Lighthouse** (CLI, headless Chromium, the built site served locally): on the catalog, a lesson and the card deck, performance ≥ 0.9, accessibility ≥ 0.95, best practices ≥ 0.95.
   - **No network, proven three ways:**
     - **Request recording:** Playwright records every request (`page.on('request')`) across the end-to-end paths, and any request whose origin is not the local server fails the test. Requests are recorded, not merely blocked, so a page that silently recovers from a blocked call still fails.
@@ -305,6 +305,8 @@ Never `git stash` in the shared tree.
 - `[sol]` **REJECT** (round 3, bb6528b):
   - `[FIXED]` KaTeX's HTML output uses inline styles, which the CSP forbids. Math is now MathML-only, and the zero-violation test names a real math lesson and checks that no element carries a `style` attribute.
   - `[FIXED]` (nits) The two slide limits are stated, and slides between them are reported; schema-shaped hash sentinels (already folded from [fable]).
+
+- `[fable]` **APPROVE WITH NITS** (round 4, 7ff1940): MathML Core renders `\overline` natively. `[FIXED]` Shiki uses `transformerStyleToClass` (no inline styles); axe also runs on the math lesson.
 
 ## Content Review
 
