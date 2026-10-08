@@ -56,8 +56,43 @@ export interface HarnessOut {
 const LIB = '/home/pyodide/py4kids-runner';
 let handle: ((request: string) => string) | null = null;
 
+// Captured before any student code runs: `seal` removes `postMessage` from the global scope.
+const postToPage = self.postMessage.bind(self);
+
 function post(message: FromWorker): void {
-  self.postMessage(message);
+  postToPage(message);
+}
+
+/** Every global that can make a request, start a script or reach another context. */
+const SEALED = [
+  'fetch', 'fetchLater', 'XMLHttpRequest', 'importScripts', 'EventSource', 'WebSocket', 'WebSocketStream',
+  'WebTransport', 'Worker', 'SharedWorker', 'BroadcastChannel', 'caches', 'indexedDB', 'postMessage',
+];
+// storage (OPFS) and locks: persistent or shared runner-origin state between "fresh" check workers.
+const SEALED_NAVIGATOR = ['serviceWorker', 'sendBeacon', 'storage', 'locks'];
+
+/** Delete `names` from `target` and every object on its prototype chain; true when none is left. */
+function strip(target: object, names: string[]): boolean {
+  for (let o: object | null = target; o; o = Object.getPrototypeOf(o)) {
+    for (const name of names) {
+      if (Object.prototype.hasOwnProperty.call(o, name)) Reflect.deleteProperty(o, name);
+    }
+  }
+  return names.every((name) => !(name in target));
+}
+
+/**
+ * [sol] plan 104 content review: student Python reaches this scope through Pyodide's `js`
+ * module, so once Pyodide and the harness have loaded (nothing more is fetched: the page sends
+ * code, stdin and files inside each job) every way to make a request, load a script or post a
+ * message is deleted from the global scope, its prototypes and the navigator. `eval` is already
+ * blocked by the runner's CSP (no 'unsafe-eval'), so a deleted constructor cannot be rebuilt.
+ * Failing closed: a browser where a name cannot be removed does not boot.
+ */
+function seal(): void {
+  if (!strip(self, SEALED) || !strip(self.navigator, SEALED_NAVIGATOR)) {
+    throw new Error('the runner could not remove network access from Python');
+  }
 }
 
 async function boot(interrupt: Int32Array | null): Promise<void> {
@@ -82,6 +117,7 @@ async function boot(interrupt: Int32Array | null): Promise<void> {
     ) as string;
     const fn = pyodide.pyimport('harness').handle as (request: string) => string;
     handle = (request) => fn(request);
+    seal();
     post({
       type: 'booted',
       python,

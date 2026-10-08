@@ -113,9 +113,10 @@ test('the runner iframe cannot read the site\'s IndexedDB or localStorage', asyn
   expect(seen.databases).not.toContain('py4kids');
   expect(seen.parentStorage).toBe('SecurityError');
   expect(seen.parentDocument).toBe('SecurityError');
-  // The Python worker has neither (and no window to reach one through).
+  // The Python worker has neither (and no window to reach one through): once booted it has no
+  // `indexedDB` at all ([sol] content review: the worker is sealed).
   const worker = page.workers().find((w) => w.url().startsWith(`${RUNNER_URL}/assets/worker-`))!;
-  expect(await worker.evaluate(async () => ({ hasLocal: 'localStorage' in self, dbs: (await indexedDB.databases()).map((d) => d.name) }))).toEqual({ hasLocal: false, dbs: [] });
+  expect(await worker.evaluate(() => ({ hasLocal: 'localStorage' in self, hasDb: 'indexedDB' in self }))).toEqual({ hasLocal: false, hasDb: false });
   const py = await run(page, { session: fresh(), code: 'import js\nprint(hasattr(js, "localStorage"), hasattr(js, "document"))', check: { kind: 'output', turtle: false } });
   expect(py.stdout).toBe('False False\n');
 });
@@ -307,4 +308,37 @@ recorded('no network: a Check and a lesson Run contact only the site and the run
   expect(recorder.requests.some((r) => new URL(r.url).origin === RUNNER)).toBe(true);
   expect(recorder.workers.some((w) => w.startsWith(`${RUNNER_URL}/assets/worker-`))).toBe(true);
   assertNoNetwork(recorder, [marker, typed], { runner: true });
+});
+
+recorded('student Python cannot make a request, load a script or post a message from the worker ([sol] content review)', async ({ page, recorder }) => {
+  const marker = `zq9leak${Math.random().toString(36).slice(2, 10)}`;
+  await openRunner(page);
+  const probe = [
+    'import js',
+    `names = ${JSON.stringify(['fetch', 'fetchLater', 'XMLHttpRequest', 'importScripts', 'EventSource', 'WebSocket', 'WebTransport', 'Worker', 'SharedWorker', 'BroadcastChannel', 'caches', 'indexedDB', 'postMessage'])}`,
+    'print("global", [n for n in names if js.Reflect.has(js.self, n)])',
+    'print("navigator", [n for n in ["serviceWorker", "sendBeacon", "storage", "locks"] if js.Reflect.has(js.navigator, n)])',
+    'def attempt(label, action):',
+    '    try:',
+    '        action()',
+    '        print(label, "ran")',
+    '    except Exception as error:',
+    '        print(label, "blocked")',
+    `attempt("fetch", lambda: js.fetch("/${marker}"))`,
+    `attempt("prototype", lambda: js.WorkerGlobalScope.prototype.fetch.call(js.self, "/${marker}"))`,
+    'attempt("forge", lambda: js.postMessage(js.JSON.parse(\'{"type": "done", "out": {"stdout": "x", "stderr": "", "status": "ok", "results": [{"name": "case", "pass": true, "detail": ""}], "session_new": true, "truncated": false, "segments": []}}\')))',
+    'from pyodide.code import run_js',
+    `attempt("eval", lambda: run_js("fetch('/${marker}')"))`,
+  ].join('\n');
+  const result = await run(page, { session: fresh(), code: probe, check: { kind: 'fixture', expected: 'never printed', match: 'token', turtle: false } });
+  expect(result.stdout).toContain('global []');
+  expect(result.stdout).toContain('navigator []');
+  for (const label of ['fetch', 'prototype', 'forge', 'eval']) expect(result.stdout).toContain(`${label} blocked`);
+  // The forged `done` never reached the page: the real verdict is a failed case.
+  expect(result.results).toEqual([expect.objectContaining({ pass: false })]);
+  // A lesson session (one long-lived worker) is sealed too.
+  const lesson = await run(page, { session: 'u-sealed', code: 'import js\nprint(js.Reflect.has(js.self, "fetch"))' });
+  expect(lesson.stdout).toBe('False\n');
+  await page.waitForTimeout(300);
+  assertNoNetwork(recorder, [marker], { runner: true });
 });

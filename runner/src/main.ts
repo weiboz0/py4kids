@@ -203,7 +203,7 @@ async function execute(w: PyWorker, req: RunRequest, onKilled: () => void): Prom
       const status = reason ?? 'error';
       const note = status === 'timeout' ? 'time limit: Python was restarted\n' : status === 'interrupted' ? 'stopped: Python was restarted\n' : 'Python stopped unexpectedly and was restarted\n';
       const out = emptyOut(note);
-      if (req.check?.kind === 'fixture') out.results = [{ name: 'case', pass: false, detail: status === 'timeout' ? 'time limit' : 'stopped' }];
+      if (req.check?.kind === 'fixture') out.results = [{ name: 'case', pass: false, detail: status === 'timeout' ? 'time limit' : status === 'interrupted' ? 'stopped' : 'Python stopped unexpectedly' }];
       settle(
         result(req, out, {
           status,

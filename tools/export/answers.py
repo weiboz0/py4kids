@@ -14,7 +14,8 @@ is read here and nowhere else in `tools/export/`. What leaves this module is:
   `released_answers`, `shipped_asserts`, `check_texts`), which are never written into a bundle.
 
 Programs run in a temporary copy of the entry's git-tracked files, with stdin from `/dev/null`,
-`PYTHONHASHSEED=0` and a timeout, so a run never touches the repo tree or reads untracked scratch.
+`PYTHONHASHSEED=0` (1 on the expected-output rule's second run) and a timeout, so a run never
+touches the repo tree or reads untracked scratch.
 """
 
 from __future__ import annotations
@@ -98,8 +99,9 @@ def tracked_paths(directory: Path) -> tuple[str, ...]:
     return tuple(sorted(name for name in names if (Path(directory) / name).is_file()))
 
 
-def _run_once(entry_dir: Path, source: str, timeout_s: float) -> RunResult:
+def _run_once(entry_dir: Path, source: str, timeout_s: float, hash_seed: int = 0) -> RunResult:
     env = sandbox_env()
+    env["PYTHONHASHSEED"] = str(hash_seed)
     with tempfile.TemporaryDirectory(prefix="py4kids-site-run-") as tmp:
         work = Path(tmp) / Path(entry_dir).name
         work.mkdir()
@@ -126,10 +128,12 @@ def run_python(entry_dir: Path, source: str, attempt: int = 0,
                timeout_s: float = RUN_TIMEOUT_S) -> RunResult:
     """Run `source` once in a fresh temporary copy of the entry's tracked files.
 
-    stdin is `/dev/null`, `PYTHONHASHSEED=0`, no display. `attempt` separates deliberate repeat runs
-    (the expected-output rule runs a solution twice) in the per-process cache.
+    stdin is `/dev/null`, no display, and `PYTHONHASHSEED=<attempt>`. `attempt` separates deliberate
+    repeat runs (the expected-output rule runs a solution twice) in the per-process cache, and its
+    distinct hash seed exposes output that depends on set or dict-of-str iteration order, which
+    differs between browser (Pyodide) workers.
     """
-    return _run_once(Path(entry_dir), source, timeout_s)
+    return _run_once(Path(entry_dir), source, timeout_s, attempt)
 
 
 def clear_caches() -> None:

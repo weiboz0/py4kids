@@ -198,6 +198,9 @@ function resultList(rows: { name: string; pass: boolean; detail: string }[]): HT
 /** A runner verdict's name, for a student. */
 const displayName = (name: string) => name.replace(/^assert (\d+)$/, 'Test $1').replace(/^turtle: /, 'Turtle: ');
 
+/** Why a run that did not finish normally produced no gradable output. */
+const stoppedDetail = (status: string) => (status === 'timeout' ? 'the program ran out of time' : 'the program stopped with an error');
+
 // ---------------------------------------------------------------------------------------------
 // Check kinds
 
@@ -301,11 +304,17 @@ async function checkProgram(ctx: ItemContext, check: ClientCheck, client: Runner
   if (check.kind === 'expected-output') {
     const typed = await answerHash(check.key, result.stdout, check.format);
     const pass = result.status === 'ok' && typed === check.hash;
-    rows.push({ name: 'Output', pass, detail: result.status === 'ok' ? 'does not match the expected output' : 'the program stopped with an error' });
+    rows.push({ name: 'Output', pass, detail: result.status === 'ok' ? 'does not match the expected output' : stoppedDetail(result.status) });
   }
   for (const r of result.results) rows.push({ name: displayName(r.name), pass: r.pass, detail: r.detail });
-  if (check.kind === 'asserts' && result.results.filter((r) => r.name.startsWith('assert ')).length === 0 && result.status !== 'ok') {
-    rows.unshift({ name: 'Your code', pass: false, detail: 'it stopped with an error before the tests could run' });
+  // [sol] plan 104 content review: a program that stops with an error never passes, even when
+  // the asserts (still run, for feedback) pass on what it defined before the error.
+  if (check.kind === 'asserts' && result.status !== 'ok') {
+    const ran = result.results.some((r) => r.name.startsWith('assert '));
+    const detail = result.status === 'timeout'
+      ? `it ran out of time${ran ? '' : ' before the tests could run'}`
+      : ran ? 'it stopped with an error (see the error below); fix it so the whole program runs' : 'it stopped with an error before the tests could run';
+    rows.unshift({ name: 'Your code', pass: false, detail });
   }
   const cases = rows.map((row, i) => ({ n: i + 1, pass: row.pass }));
   const passed = cases.filter((c) => c.pass).length;

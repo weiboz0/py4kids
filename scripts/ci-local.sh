@@ -187,7 +187,7 @@ if [[ "$decision" == render:* ]]; then
   # Phase F: Playwright end-to-end, axe, the no-network and header proofs, then Lighthouse,
   # against the built dist/ served by site/scripts/serve.mjs.
   "${SITE_PNPM[@]}" -C site e2e
-  # Plan 104 Phase D (slow): every usaco-bronze and acsl reference solver runs in Pyodide through
+  # Plan 104 Phase D (slow): every reference solver of every `judge: true` book runs in Pyodide through
   # the runner against all its fixtures, and every verdict must equal tools/judge.py's.
   "${SITE_PNPM[@]}" -C site e2e:solvers
 else
