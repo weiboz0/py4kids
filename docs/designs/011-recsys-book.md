@@ -134,7 +134,7 @@ a new capability — designed from the start to admit those, so no rewrite is fo
   | low-rank latent taste factors | U5 MF, U8 two-tower |
   | taste derived from catalog features (subjects/authors/keywords) | U3/U7 content & hybrid, U9 feature towers, cold start |
   | popularity bias | U2 popularity, exposure-bias discussion (U13) |
-  | timestamps + ordered sessions; series/author-following; taste drift | U12 sequence model |
+  | **separate session log** (`sessions.csv.gz` + `series.csv.gz`, amended v5): forced next-volume exposure, decaying author-follow, persistent genre mood, longer histories | U12 sequence model |
   | implicit positives + a defined exposure/observation process + sampled negatives | U4, U8–U9 training |
   | held-out cold items & cold readers; leakage-safe temporal train/val/test splits | U6 eval, U9, U13 |
 
@@ -162,6 +162,40 @@ a new capability — designed from the start to admit those, so no rewrite is fo
   **First-plan deliverables:** the slice script AND the synthetic generator ship in `recsys-001` (U1's scoreboard
   needs interactions); **the taste-aware exposure + keyword artifact + recoverability harness land in `recsys-004`**;
   the committed GloVe subset lands with U7.
+
+  **Session log for U12 (amended 2026-10-07, recsys-014).** The main log's timestamps and sessions are real, but its
+  sequential signal turned out to be **order-insensitive**: on `interactions.csv.gz` a capped SASRec (0.17–0.21 hit@10)
+  scored below plain item-item CF (0.252) and the same as a shuffled-history control; author-following was at the
+  random level, drift was small, and the median history was 8 positives. Strengthening the main generator would move
+  every pinned number in U2–U11 and Checkpoint A, so U12 gets a **separate seeded session log** instead.
+  - *What it is:* `sessions.csv.gz` (the same 6-column schema as `interactions.csv.gz`) over its own synthetic reader
+    population, plus `series.csv.gz` (`item_id, series_id, volume`; same-author series of 3–5 volumes). Order
+    mechanisms: a **forced next-volume exposure** slot after a series read, a **decaying author-follow** bump, a
+    **persistent per-session genre mood**, and longer histories (median ≥ 20 train positives). Splits are per reader
+    by session (`train < val < test`, test sealed).
+  - *What is shared:* the catalog and the taste-aware exposure form above. *What is not:* the readers — every U12
+    number must say "on the session log", and it is not comparable to main-log numbers.
+  - **Cold items are excluded** from the session log, so U12 needs no cold-start machinery.
+  - `series.csv.gz` is a catalog-side observable. U12 uses it for **diagnostics only** (for example, next-in-series
+    hit rate), not as a model input unless it is taught.
+  - A sequence model has no reader ids, so it *could* run on main-log histories, but there it behaves like a bag model.
+    **U13/U14 score the sequence path on the session log only.**
+  - **Byte-stability guarantee:** the new artifacts draw only from named, independent `SeedSequence` sub-streams
+    (`SUBSTREAM_KEYWORDS = 1`, `SUBSTREAM_SERIES = 2`, `SUBSTREAM_SESSIONS = 3`) and never touch the threaded rng.
+    `catalog.csv.gz`, `interactions.csv.gz`, `keywords.csv.gz` and `cold_partitions.json` stay byte-identical
+    (sha256-pinned by a test).
+  - **SASRec is a measured near-tie, not the winner (user decision 2026-10-08).** At the §7 ceiling, a tiny SASRec
+    learns order (ordered beats an order-shuffled copy). On the recsys-014 **tuning** seeds it stayed about 1.5–2 SE short
+    of bag item-item CF. "Near-tie" means non-inferiority (within 0.04 hit@10 of bag CF), and the framing ships only
+    after the held-out G4a + G4c gate passes (recsys-014 plan, Goal 4 as amended).
+    The recsys-014 one-shot run gave these results. On held-out seeds 2–4, SASRec beat its shuffled copy by +0.032 to
+    +0.066, and its ordered − bag gaps were −0.017, −0.009 and −0.032; the gate passed on 3 of 3 seeds. **On the
+    committed seed (the data students run) the gap is −0.046, just outside the 0.04 margin.** That seed was reported
+    only, by design. So "near-tie" is the held-out claim, not a committed-seed guarantee, and U12 must report the
+    measured committed-seed gap as it is.
+    The cheap order-aware paths (last-k CF, transition) carry U12's lift. The unit reports this honestly, as U11 did.
+  - A committed **session recoverability harness** gates the order signal. Last-k CF must beat bag CF; a last-k
+    transition reference must drop clearly under an order-shuffled control; and next-in-series must beat bag CF.
 
 ## 7. Tooling, dependency isolation & reproducibility
 
@@ -219,7 +253,7 @@ ablations).
 | 9 | **Feature towers** (subjects/author/GloVe + id) → **item cold start**; hard negatives | Strengthens the two-tower path |
 | 10 | **ANN retrieval**: exact vs approximate, recall/speed; **FAISS/HNSW**; **hybrid sparse (BM25) + dense** | Shared retrieval infra (exact brute-force baseline → library) |
 | 11 | **Neural ranking**: candidates → learned reranker; features; blend calibration | Learned reranker + learned path blending |
-| 12 | **Sequence-aware** (tiny capped SASRec-style self-attention over reading history) | **Path: session/sequence** |
+| 12 | **Sequence-aware** (tiny capped SASRec-style self-attention over reading history), scored on the **session log** (§6) | **Path: session/sequence** |
 | 13 | Evaluating the whole system; **ethics & beyond-accuracy**: exposure/popularity bias, feedback loops, filter bubbles, fairness, offline-metric limits; per-path ablations | System-wide eval; **Checkpoint B** |
 | 14 | Capstone | The full **multi-path retrieval + blend + neural rerank** recommender, consuming **bounded/cached** models (regenerated by seeded scripts and validated by a required check, within a total budget), benchmarked vs. the Part-1 build, with an **ablation table AND a beyond-accuracy table** |
 
@@ -357,6 +391,14 @@ scaffolds the book + `baseline.yaml` + slice script + synthetic generator + the 
 
 ## 14. Revision history
 
+- **v5 (2026-10-07, via recsys-014):** §6 amended with a **separate seeded session log** for U12 (`sessions.csv.gz` +
+  `series.csv.gz`; forced next-volume exposure, decaying author-follow, genre mood, longer histories; cold items
+  excluded; named independent sub-streams). The main artifacts stay byte-identical, and a session recoverability
+  harness gates the order signal. §8 row 12 now notes that U12 is scored on the session log. Prompted by the U12
+  pre-plan probe, which found the main log's sequence signal order-insensitive (capped SASRec ≤ bag CF and equal to a
+  shuffled control). User-approved option; reviewed under recsys-014's gates.
+  The 2026-10-08 follow-up (user decision after a Phase-B pause) adds that SASRec is a measured near-tie. The held-out
+  G4a + G4c gate passed on 3/3 seeds; the committed-seed gap is −0.046, reported only.
 - **v4 (2026-10-03, via recsys-004):** §6 amended — **taste-aware exposure** (exposure ∝ popularity^α · exp(β·z-affinity))
   replaces popularity-only exposure so content/collaborative/latent signals are each recoverable and beat popularity
   (enforced by a committed recoverability harness), while a positive-rate estimate stays weak (preserving U2's

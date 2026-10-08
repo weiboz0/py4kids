@@ -56,6 +56,8 @@ def _require_generated_dir() -> Path:
         "keywords.csv.gz",
         "interactions.csv.gz",
         "cold_partitions.json",
+        "series.csv.gz",
+        "sessions.csv.gz",
         "checksums.json",
     }
     missing = sorted(name for name in required if not (GENERATED_DIR / name).is_file())
@@ -83,6 +85,8 @@ def test_ci_generated_artifacts_have_expected_schema_and_checksums() -> None:
         "keywords.csv.gz",
         "interactions.csv.gz",
         "cold_partitions.json",
+        "series.csv.gz",
+        "sessions.csv.gz",
     }
     for name, expected in manifest.items():
         actual = hashlib.sha256((generated_dir / name).read_bytes()).hexdigest()
