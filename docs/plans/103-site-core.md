@@ -224,6 +224,11 @@ Never `git stash` in the shared tree.
   - **Lighthouse** (CLI, headless Chromium, the built site served locally): on the catalog, a lesson and the card deck, performance ≥ 0.9, accessibility ≥ 0.95, best practices ≥ 0.95.
   - **No network, proven three ways:**
     - **Request recording:** Playwright records every request (`page.on('request')`) across the end-to-end paths, and any request whose origin is not the local server fails the test. Requests are recorded, not merely blocked, so a page that silently recovers from a blocked call still fails.
+    - **Same-origin requests carry nothing:** after the card, checklist and progress interactions, every recorded same-origin request must be:
+      - a `GET` (or a `HEAD`) with no body, no `sendBeacon` and no WebSocket
+      - for a path that exists in `dist/`
+      - free of any query string other than Pagefind's own fragment and index paths
+      - free of the test's typed answers, checklist state and card results (the test types unique sentinel strings and asserts that none appears in any request URL or header)
     - **Build audit:** a scan of `dist/` finds no `http(s)://` URL in any `src`, `srcset`, CSS `url()`, `@import`, `fetch`, `import` or `<link>` (other than a hyperlink). The only absolute URLs allowed are plain `<a href>` hyperlinks on an allowlist: the GitHub issue link, the release PDF links and the CC license deed. These are user-initiated navigations, not loads.
     - **Headers:** the test server (`site/scripts/serve.mjs`) applies `dist/_headers` with the Cloudflare Pages `_headers` semantics.
       - It asserts that every HTML response carries the CSP and the other headers.
@@ -272,6 +277,8 @@ Never `git stash` in the shared tree.
     - the turtle SVG spec
     - notices attached to their code slide
     - the `ci_scope --site` interface change
+
+- `[sol]` **REJECT** (round 2, a968ea1): `[FIXED]` Same-origin requests were unaudited. Now every same-origin request must be a body-less GET for an existing `dist/` path, with no unexpected query string and no typed sentinel in any URL or header.
 
 ## Content Review
 
