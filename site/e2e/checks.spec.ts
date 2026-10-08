@@ -521,3 +521,17 @@ test('a check that runs out of time says so (expected-output and asserts), not "
   await check(item);
   await expect(item.locator('[data-result]')).toContainText('it ran out of time before the tests could run');
 });
+
+test('asserts: a program that defines the function and then raises does not pass ([sol] content review)', async ({ page }) => {
+  const found = findItem((f) => f.item.check.kind === 'asserts', 'an asserts item');
+  await patchCheck(page, found, (c) => ({ ...c, asserts: ['assert double(2) == 4'] }) as ClientCheck);
+  const item = await open(page, found);
+  await setCode(page, item, 'def double(n):\n    return 2 * n\n\nprint(1 / 0)\n');
+  expect(await check(item)).toMatch(/^Not yet/);
+  const rows = await caseRows(item);
+  expect(rows[0]).toMatch(/^Your code: .*stopped with an error/);
+  expect(rows.some((r) => /^Test 1: passed/.test(r))).toBe(true);
+  // Without the error, the same asserts pass.
+  await setCode(page, item, 'def double(n):\n    return 2 * n\n');
+  expect(await check(item)).toBe('Passed.');
+});

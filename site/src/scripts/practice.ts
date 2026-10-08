@@ -307,8 +307,14 @@ async function checkProgram(ctx: ItemContext, check: ClientCheck, client: Runner
     rows.push({ name: 'Output', pass, detail: result.status === 'ok' ? 'does not match the expected output' : stoppedDetail(result.status) });
   }
   for (const r of result.results) rows.push({ name: displayName(r.name), pass: r.pass, detail: r.detail });
-  if (check.kind === 'asserts' && result.results.filter((r) => r.name.startsWith('assert ')).length === 0 && result.status !== 'ok') {
-    rows.unshift({ name: 'Your code', pass: false, detail: result.status === 'timeout' ? 'it ran out of time before the tests could run' : 'it stopped with an error before the tests could run' });
+  // [sol] plan 104 content review: a program that stops with an error never passes, even when
+  // the asserts (still run, for feedback) pass on what it defined before the error.
+  if (check.kind === 'asserts' && result.status !== 'ok') {
+    const ran = result.results.some((r) => r.name.startsWith('assert '));
+    const detail = result.status === 'timeout'
+      ? `it ran out of time${ran ? '' : ' before the tests could run'}`
+      : ran ? 'it stopped with an error (see the error below); fix it so the whole program runs' : 'it stopped with an error before the tests could run';
+    rows.unshift({ name: 'Your code', pass: false, detail });
   }
   const cases = rows.map((row, i) => ({ n: i + 1, pass: row.pass }));
   const passed = cases.filter((c) => c.pass).length;
