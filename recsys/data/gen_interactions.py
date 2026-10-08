@@ -12,6 +12,11 @@ Implements the design §6 signal table so the synthetic log can drive every unit
 - **cold items / cold readers + leakage-safe temporal splits** — held-out cold partitions and a
   per-reader ``train < val < test`` split by event time (U6 eval, U9, U13).
 
+**U12 uses a separate session log.** This log's sequence signal is order-insensitive (plan
+recsys-014 probe), so the U12 sequence model is scored on ``sessions.csv.gz`` (+ ``series.csv.gz``)
+from ``gen_sessions.py``. :func:`write_generated_dataset` writes those too, from independent
+sub-streams, so this module's outputs stay byte-identical.
+
 **Exposed ground-truth.** The returned object exposes the base affinity (reader latent . book
 latent + feature affinity) that positives are drawn from, so tests verify observed positives are
 enriched against it. Latent factors are not identifiable, so only scores/rankings are checked.
@@ -36,6 +41,7 @@ try:  # script vs. package-relative import
         write_catalog,
         write_keywords,
     )
+    from gen_sessions import generate_series, generate_sessions, write_series, write_sessions
 except ImportError:  # pragma: no cover - exercised only as a module
     from recsys.data._common import (  # type: ignore[no-redef]
         GENERATED_DIR,
@@ -50,6 +56,12 @@ except ImportError:  # pragma: no cover - exercised only as a module
         generate_keywords,
         write_catalog,
         write_keywords,
+    )
+    from recsys.data.gen_sessions import (  # type: ignore[no-redef]
+        generate_series,
+        generate_sessions,
+        write_series,
+        write_sessions,
     )
 
 INTERACTION_COLUMNS = ["reader_id", "item_id", "session_id", "timestamp", "split", "label"]
@@ -263,10 +275,19 @@ def write_interactions(inter: Interactions, out_dir: Path = GENERATED_DIR) -> Ma
 
 
 def write_generated_dataset(inter: Interactions, out_dir: Path = GENERATED_DIR) -> None:
-    """Persist the complete generated dataset plus cold partitions and exact-byte checksums."""
+    """Persist the complete generated dataset plus cold partitions and exact-byte checksums.
+
+    Also writes the U12 ``series.csv.gz`` + ``sessions.csv.gz`` (plan recsys-014). They draw only
+    from their own ``SeedSequence`` sub-streams, so the four main artifacts are byte-identical.
+    """
     catalog_manifest = write_catalog(inter.catalog, out_dir)
     keyword_manifest = write_keywords(generate_keywords(inter.catalog, inter.config), out_dir)
     interaction_manifest = write_interactions(inter, out_dir)
+    series = generate_series(inter.catalog, inter.config)
+    series_manifest = write_series(series, out_dir)
+    session_manifest = write_sessions(
+        generate_sessions(inter.catalog, series, inter.cold_items, inter.config), out_dir
+    )
 
     cold_path = out_dir / "cold_partitions.json"
     cold_path.write_text(
@@ -285,6 +306,8 @@ def write_generated_dataset(inter: Interactions, out_dir: Path = GENERATED_DIR) 
         **catalog_manifest.checksums,
         **keyword_manifest.checksums,
         **interaction_manifest.checksums,
+        **series_manifest.checksums,
+        **session_manifest.checksums,
         cold_path.name: checksum(cold_path),
     }
     (out_dir / "checksums.json").write_text(

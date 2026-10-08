@@ -18,6 +18,9 @@ Unit 2 (plan recsys-003) ships the first real learned/scored retrieval path:
 :func:`~bookrec.popularity.weighted_rating` quality lens, and the popularity-bias metrics
 :func:`~bookrec.diversity.catalog_coverage` / :func:`~bookrec.diversity.head_share`. Further real
 retrieval paths (BM25, item-item, matrix factorisation, two-tower, …) land in later units.
+
+The U12 session-log loaders (plan recsys-014) — :func:`~bookrec.sessions.load_series` and
+:func:`~bookrec.sessions.load_train_sequences` (ordered train-positive histories) — are stdlib-only.
 """
 
 from __future__ import annotations
@@ -69,6 +72,7 @@ from bookrec.scoreboard import (
     run_validation_scoreboard,
 )
 from bookrec.search import search_catalog
+from bookrec.sessions import load_series, load_train_sequences
 from bookrec.two_tower import TwoTowerRetrievalPath
 
 __all__ = [
@@ -108,6 +112,8 @@ __all__ = [
     "load_catalog",
     "load_glove_subset",
     "load_keywords",
+    "load_series",
+    "load_train_sequences",
     "ndcg_at_k",
     "novelty",
     "order_candidates",

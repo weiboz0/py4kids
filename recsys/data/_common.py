@@ -4,6 +4,12 @@ Determinism contract (design 011 §7, plan recsys-001 global constraints):
 
 - **One seed, threaded.** A single ``numpy.random.default_rng(seed)`` is created once and passed
   through catalog then interaction generation, so the whole dataset is one reproducible stream.
+- **Named independent sub-streams.** Artifacts added after the threaded stream was pinned draw from
+  ``SeedSequence(seed).spawn(...)`` children via :func:`substream_rng`, never from the threaded rng:
+  ``SUBSTREAM_KEYWORDS`` (``keywords.csv.gz``), ``SUBSTREAM_SERIES`` (``series.csv.gz``) and
+  ``SUBSTREAM_SESSIONS`` (``sessions.csv.gz``, the U12 session log). A child's identity is its
+  index (``spawn_key=(index,)``), so adding a stream never moves another; ``catalog.csv.gz``,
+  ``interactions.csv.gz``, ``keywords.csv.gz`` and ``cold_partitions.json`` stay byte-identical.
 - **Fixed float precision.** Floats are written with a fixed number of decimals, so the CSV bytes
   do not depend on platform float repr.
 - **Normalised gzip mtime.** gzip headers are written with ``mtime=0``, so identical content
@@ -25,10 +31,30 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import numpy as np
+
 DATA_DIR = Path(__file__).resolve().parent
 GENERATED_DIR = DATA_DIR / "generated"
 FLOAT_DECIMALS = 6
 SEED = 20260930
+
+# Named, independent SeedSequence sub-streams (design 011 §6). Never renumber: the index IS the
+# stream identity (child ``spawn_key=(index,)``), and the keyword index predates this table.
+SUBSTREAM_KEYWORDS = 1
+SUBSTREAM_SERIES = 2
+SUBSTREAM_SESSIONS = 3
+SERIES_FRACTION = 0.5
+
+
+def substream_rng(seed: int, index: int) -> np.random.Generator:
+    """An rng on the ``index``-th ``SeedSequence(seed)`` child — independent of the threaded rng.
+
+    ``SeedSequence(seed).spawn(n)[i]`` has ``spawn_key=(i,)`` for every ``n > i``, so this equals the
+    historical ``spawn(2)[1]`` keyword stream for ``index=SUBSTREAM_KEYWORDS``.
+    """
+    if index < 0:
+        raise ValueError("sub-stream index must be >= 0")
+    return np.random.default_rng(np.random.SeedSequence(seed).spawn(index + 1)[index])
 
 
 @dataclass(frozen=True)
@@ -78,6 +104,35 @@ class DatasetConfig:
     # temporal split fractions (per warm reader, by event time)
     val_fraction: float = 0.15
     test_fraction: float = 0.15
+    # --- series (plan recsys-014; ``series.csv.gz``, SUBSTREAM_SERIES, always at ``seed``) --------
+    series_fraction: float = SERIES_FRACTION  # target share of catalog books placed in a series
+    series_len_min: int = 3  # volumes per same-author series
+    series_len_max: int = 5
+    # --- U12 session log (plan recsys-014; ``sessions.csv.gz``, SUBSTREAM_SESSIONS) --------------
+    # ``session_seed`` varies ONLY the session log (the catalog/keywords/series stay at ``seed``);
+    # None means the committed ``seed``. The session readers are a separate synthetic population.
+    # Defaults are the Phase-B round-1 knobs with 1,500 readers (round-3 variant V1); they are
+    # frozen (recsys-014 v5, R3-V1).
+    session_seed: int | None = None
+    session_n_readers: int = 1500
+    session_mean_sessions: float = 16.0  # Poisson mean sessions per reader (floored at min below)
+    session_min_sessions: int = 6
+    session_max_items: int = 5  # exposure slots per session drawn uniformly from 1..max
+    session_negatives_per_positive: int = 2
+    # Order mechanism 1 — forced next-volume slot: after reading volume v, v+1 takes the FIRST
+    # exposure slot of each of the next ``window`` sessions with ``follow_prob``, until read, with an
+    # acceptance-logit boost ``accept`` (the plain exposure-logit bonus alone barely surfaces it).
+    session_series_window: int = 3
+    session_series_follow_prob: float = 1.0
+    session_series_accept: float = 4.0
+    # Order mechanism 2 — decaying author-follow: each positive adds ``author_bump`` to the exposure
+    # and acceptance logits of that author's books; the bump decays ×``author_decay`` per session.
+    session_author_bump: float = 3.0
+    session_author_decay: float = 0.5
+    # Order mechanism 3 — persistent genre mood: a per-session mood genre (drawn from the reader's
+    # genre prefs) kept with ``mood_persist``; exposure-logit boost ``mood_boost`` on that genre.
+    session_mood_boost: float = 5.0
+    session_mood_persist: float = 0.9
 
     def __post_init__(self) -> None:
         if self.n_cold_items + 1 >= self.n_books:
@@ -86,6 +141,33 @@ class DatasetConfig:
             raise ValueError("n_cold_readers must leave warm readers")
         if not 0 < self.val_fraction + self.test_fraction < 1:
             raise ValueError("val_fraction + test_fraction must be in (0, 1)")
+        if not 0 < self.series_fraction < 1:
+            raise ValueError("series_fraction must be in (0, 1)")
+        if not 2 <= self.series_len_min <= self.series_len_max:
+            raise ValueError("series lengths must satisfy 2 <= series_len_min <= series_len_max")
+        if self.session_n_readers < 1:
+            raise ValueError("session_n_readers must be >= 1")
+        if self.session_mean_sessions <= 0:
+            raise ValueError("session_mean_sessions must be > 0")
+        if self.session_min_sessions < 3:
+            raise ValueError("session_min_sessions must be >= 3 (train, val and test sessions)")
+        if self.session_max_items < 1:
+            raise ValueError("session_max_items must be >= 1")
+        if self.session_negatives_per_positive < 0:
+            raise ValueError("session_negatives_per_positive must be >= 0")
+        if self.session_series_window < 1:
+            raise ValueError("session_series_window must be >= 1")
+        for name in ("session_series_follow_prob", "session_author_decay", "session_mood_persist"):
+            if not 0.0 <= getattr(self, name) <= 1.0:
+                raise ValueError(f"{name} must be in [0, 1]")
+        for name in ("session_series_accept", "session_author_bump", "session_mood_boost"):
+            if getattr(self, name) < 0.0:
+                raise ValueError(f"{name} must be >= 0")
+
+    @property
+    def effective_session_seed(self) -> int:
+        """The seed the session sub-stream uses: ``session_seed`` if set, else the committed seed."""
+        return self.seed if self.session_seed is None else self.session_seed
 
 
 def fmt_float(value: float) -> str:

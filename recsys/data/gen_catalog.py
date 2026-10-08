@@ -22,13 +22,22 @@ from pathlib import Path
 import numpy as np
 
 try:  # script vs. package-relative import
-    from _common import GENERATED_DIR, DatasetConfig, Manifest, write_gzip_csv
+    from _common import (
+        GENERATED_DIR,
+        SUBSTREAM_KEYWORDS,
+        DatasetConfig,
+        Manifest,
+        substream_rng,
+        write_gzip_csv,
+    )
     from vocabulary import build_topics
 except ImportError:  # pragma: no cover - exercised only as a module
     from recsys.data._common import (  # type: ignore[no-redef]
         GENERATED_DIR,
+        SUBSTREAM_KEYWORDS,
         DatasetConfig,
         Manifest,
+        substream_rng,
         write_gzip_csv,
     )
     from recsys.data.vocabulary import build_topics  # type: ignore[no-redef]
@@ -170,7 +179,8 @@ def generate_keywords(catalog: Catalog, config: DatasetConfig) -> Keywords:
     weights /= weights.sum(axis=1, keepdims=True)
 
     # Independent sub-stream: does not advance the catalog/interaction RNG (byte-stable catalog).
-    kw_rng = np.random.default_rng(np.random.SeedSequence(config.seed).spawn(2)[1])
+    # SUBSTREAM_KEYWORDS = 1 is the historical ``SeedSequence(seed).spawn(2)[1]`` child.
+    kw_rng = substream_rng(config.seed, SUBSTREAM_KEYWORDS)
     n_topics = len(topic_words)
     token_strings: list[str] = []
     for i in range(n):
