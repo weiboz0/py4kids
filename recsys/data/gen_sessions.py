@@ -30,7 +30,9 @@ retrieval) gets a **separate** seeded session log over the same catalog. Two art
     Acceptance mirrors the main log: ``sigmoid(T · (score − threshold))`` where ``score`` is the
     reader's true affinity plus the boosts above (affinity units, like ``author_follow_boost``).
     Each positive draws ``session_negatives_per_positive`` exposure-weighted negatives at the same
-    timestamp. Session timestamps strictly increase per reader; the split is per reader **by
+    timestamp; a sampled negative that collides with its positive is **dropped, not resampled**.
+    The recoverability harness and the U12 sequence path consume **positives only** — the negatives
+    are kept for schema parity with the main log. Session timestamps strictly increase per reader; the split is per reader **by
     session** (``train < val < test``; test is sealed). Rows are written reader by reader in event
     order, so ``(timestamp, file row order)`` is the canonical ordering key.
 
