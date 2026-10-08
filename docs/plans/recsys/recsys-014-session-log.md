@@ -55,7 +55,7 @@ and seed-unstable. Goal 4 is therefore a **bounded go/no-go with a stop rule**, 
      catalog **excluding `cold_items` from exposure entirely** (U12 needs no cold machinery), strictly increasing
      per-reader session timestamps, and a per-reader `train < val < test` split **by session** (val = the session
      block after train; test sealed). Target median ≥ 20 train positives; ≤ 200k events (design §7); generation
-     ≤ 15 s (measured in Phase B; data size is not tuned to a timer).
+     ≤ 15 s (measured in Phase B; data size is not tuned to a timer). [Superseded by v5: see the Phase-B pause section.]
    - `checksums.json` gains the two new keys (it is NOT in the byte-stable set; the four existing values are).
 3. **Order signal is real and recoverable** — a committed **session recoverability harness** (numpy only, routed with
    the recsys group). **Protocol (fixed):**
@@ -97,6 +97,8 @@ and seed-unstable. Goal 4 is therefore a **bounded go/no-go with a stop rule**, 
      unconditionally; the G3c clauses only when the small config's next-in-series cohort has n ≥ 30 (the small
      config is sized so it does — asserted), so the teeth test is neither vacuous nor flaky.
 4. **SASRec feasibility — bounded go/no-go (measured in Phase B; not a CI gate — the torch path ships in recsys-015).**
+   **[Superseded by v5 (see the Phase-B pause section): G4a required, G4b reported, G4c non-inferiority required; fit
+   time is a recsys-015 constraint.]**
    Paired protocol: same cohort as Goal 3; ordered and shuffled fits share initialization seed, sampling seed and
    epoch count (only the input order differs); SE = paired reader-level SE of the per-reader hit differences
    (reported with bootstrap 95% CI). Recipe tuning is **in scope** and bounded: per-position next-item
@@ -123,15 +125,36 @@ stop rule fired, so no freeze and no one-shot run happened, and the committed se
 **User decision (AskUserQuestion, 2026-10-08): "Reframe: order paths + SASRec tie".** U12 teaches order-awareness
 with the last-k and transition paths. SASRec is a measured near-tie: it learns order, but at the §7 ceiling it does
 not beat CF, the same honest framing as U11. Consequent amendments:
-- **Goal 4 (amended).** G4a stays **required**: post-freeze, on ≥ 2 of the 3 held-out seeds 2–4, ordered −
-  shuffled ≥ 2 paired SE and ≥ 0.02. **G4b becomes reported, not required:** the ordered − bag gap is reported with
-  its paired SE and CI as the near-tie number U12 will cite. The G4 tuning subcriterion becomes G4a on both tuning
-  seeds. Round 3's V1 (1,500 readers, dropout 0.3, weight decay 1e-5, 150 epochs) already meets G3a–G3d + G4a on
+- **Goal 4 (amended).** Post-freeze, on ≥ 2 of the 3 held-out seeds 2–4:
+  - **G4a (required).** Ordered − shuffled ≥ 2 paired SE (one-sided) and ≥ 0.02 absolute.
+  - **G4b (reported, not required).** Ordered ≥ bag − 1 SE. The ordered − bag gap is reported with its paired SE and
+    95% CI.
+  - **G4c non-inferiority (required; v5 r5).** `sasrec_ordered ≥ bag_cf − 0.04` hit@10. This is the predeclared
+    "near-tie" margin: about 3 SE and about 9% relative at bag ≈ 0.45. The round-3 V1 tuning gaps were −0.017 and
+    −0.025. Only if G4c passes may U12 and design §6 say "near-tie". If G4a passes but G4c fails, the claim would be
+    "learns order but underperforms CF", which is not what the user approved, so the stop rule pauses.
+  The G4 tuning subcriterion becomes G4a + G4c on both tuning seeds; V1 meets both. Round 3's V1 (1,500 readers, dropout 0.3, weight decay 1e-5, 150 epochs) already meets G3a–G3d + G4a on
   seeds 0–1, so **no further tuning rounds**: freeze V1 and run the one-shot evaluation.
 - **Stop rule (unchanged otherwise).** If the one-shot run fails any G3 gate at the committed seed, the G3 held-out
-  robustness rule, or G4a on ≥ 2/3 of seeds 2–4, pause again without retuning.
-- **Size and time.** `session_n_readers = 1500` gives about 183k events, still ≤ 200k (§7). Generation is measured
-  standalone against the ≤ 15 s bar. SASRec fit time of about 100 s is recorded as a **recsys-015 constraint**:
+  robustness rule, or G4a or G4c on ≥ 2/3 of seeds 2–4, pause again without retuning.
+- **Pre-registered report.** The one-shot run reports the following for each held-out seed, whatever the outcome, so
+  that any re-pause can be decided without another measurement round:
+  - ordered, shuffled and bag hit@10;
+  - the G4a/G4b/G4c differences with paired SE and bootstrap 95% CI;
+  - next-item hit@10;
+  - the standalone fit time.
+  It reports the same SASRec numbers on the committed seed, as a fifth, reported-only seed.
+- **Freeze steps.** Before the one-shot run, set the `DatasetConfig` defaults to V1:
+  - `session_n_readers = 1500`;
+  - replace the "NOT yet frozen" comment with "frozen (recsys-014 v5, R3-V1)";
+  - record V1's recipe (dropout 0.3, weight decay 1e-5, 150 epochs, lr 1e-3, batch 64, init std 0.02) in the report.
+  The CI committed-seed gates are pinned at this frozen size.
+- **Size and time.** `session_n_readers = 1500` gives 183,038 and 183,774 events on seeds 0 and 1, still ≤ 200k
+  (§7). Generation measured 19–20 s, but with eight fits running in parallel; a standalone run is expected to take
+  about 10–13 s. The standalone time is measured once and reported. **Hard cap: 30 s standalone** (CI budget). The
+  15 s figure is a target, not a gate, because data size is not tuned to a timer; above 30 s, pause. SASRec fit time
+  at V1 is about 4 min standalone (535–686 s under contention), measured in the one-shot run. It is recorded as a
+  **recsys-015 constraint**:
   U12's notebooks must use cached or seeded short fits within the book's per-notebook budget, and that is decided in
   recsys-015, not here.
 - Design 011 §6 "Session log for U12" gains one sentence on the near-tie framing.
@@ -249,7 +272,23 @@ Phase G is this plan's named verification phase.
   F8 §6 amendment: cold exclusion, series diagnostics-only, U13/U14 on session log only → Phase 0. Knob defaults →
   Phase B.
 
-### Round 5 (plan v5 — post-pause amendment)
+### Round 5 (plan v5 @ b988cd1 — post-pause amendment)
+- **[self]** APPROVE WITH NITS. I concur with [sol]: "tie" needs a predeclared bound.
+- **[sol]** REJECT. Blocker: G4a alone cannot support "ties CF". → v5.1 adds the **G4c non-inferiority** gate
+  (ordered ≥ bag − 0.04, required on ≥ 2/3 held-out seeds; on failure, pause). It also confirmed: the supersession is
+  clear, seed discipline is intact, constants are 1/2/3, there is no rng param, the cold exclusion holds, and the pins
+  match.
+- **[fable]** APPROVE WITH NITS.
+  - A: mark the stale Goal 4 and Goal 2 text as superseded → markers added.
+  - B: pre-register the one-shot report and state G4a is one-sided → added.
+  - C: generation measured 19–20 s under contention, so decide the action at > 15 s → standalone time reported,
+    30 s hard cap.
+  - D: fit time ≈ 4 min at V1 → corrected.
+  - E: an explicit freeze step for `session_n_readers = 1500` and the comment → added.
+  - F: negative-sampling drop note → fold into the Phase C docstring.
+  - G4a risk at held-out seeds estimated at ~15–30% re-pause; handled by the stop rule.
+
+### Round 6 (plan v5.1)
 <!-- appended after re-gate -->
 
 ### Round 4 (plan v4 @ 8f5a06a) — CONSENSUS
