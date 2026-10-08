@@ -7,7 +7,9 @@
  *   UTC `Z` timestamps). Part B writes `slide`, `card` and `self-check` events; part C (plan 104)
  *   adds `lesson-run` (a Run in the reading view) and `exercise`, `checkpoint` and `project`
  *   (a Check, with `detail.cases`). An event holds results only, never code or a typed answer.
- * - `cards`: the Leitner state per card key (box 1..5, due date, updated_at).
+ * - `cards`: the Leitner state per card key (box 1..5, due date, updated_at). Every record stores
+ *   `updated_at` (plan 105 Phase C: the import merge keeps the later one); a legacy record without
+ *   it counts as the oldest (`progress-io.ts`).
  * - `resume`: the last position per book (updated_at).
  * - `attempts` (plan 104, version 2): the student's own work, on this device only: the code of each
  *   Run and Check and each typed answer, with its outcome. It is never put in an event; it
@@ -203,6 +205,22 @@ export interface ProgressStore {
   addAttempt(input: AttemptInput, now?: Date): Promise<Attempt>;
   /** One item's attempts, oldest first. */
   attempts(itemKey: string): Promise<Attempt[]>;
+  /**
+   * Every record, for "Export my progress" (plan 105 Phase C); the attempt store only when asked
+   * (`attempts` is empty otherwise). Records are returned as stored: a legacy card or resume
+   * record may lack `updated_at`.
+   */
+  records(options?: { attempts?: boolean }): Promise<StoreRecords>;
+  /** Writes an import's merge result (`progress-io.ts` `planMerge`), all in one transaction. */
+  putRecords(records: StoreRecords): Promise<void>;
+}
+
+/** The store's four kinds of record, in bulk (export and import, plan 105 Phase C). */
+export interface StoreRecords {
+  events: ProgressEvent[];
+  cards: CardState[];
+  resume: ResumeState[];
+  attempts: Attempt[];
 }
 
 const byAttemptTime = (a: Attempt, b: Attempt) => a.timestamp.localeCompare(b.timestamp);
@@ -257,6 +275,24 @@ export class MemoryProgress implements ProgressStore {
   }
   async attempts(itemKey: string): Promise<Attempt[]> {
     return this.attemptLog.filter((a) => a.item_key === itemKey).sort(byAttemptTime);
+  }
+  async records(options: { attempts?: boolean } = {}): Promise<StoreRecords> {
+    return {
+      events: this.log.map((e) => structuredClone(e)),
+      cards: [...this.cardMap.values()].map((c) => ({ ...c })),
+      resume: [...this.resumeMap.values()].map((r) => ({ ...r })),
+      attempts: options.attempts ? this.attemptLog.map((a) => ({ ...a })) : [],
+    };
+  }
+  async putRecords(records: StoreRecords): Promise<void> {
+    for (const event of records.events) {
+      if (!this.log.some((e) => e.event_id === event.event_id)) this.log.push(structuredClone(event));
+    }
+    for (const card of records.cards) this.cardMap.set(card.key, { ...card });
+    for (const resume of records.resume) this.resumeMap.set(resume.book, { ...resume });
+    for (const attempt of records.attempts) {
+      if (!this.attemptLog.some((a) => a.attempt_id === attempt.attempt_id)) this.attemptLog.push({ ...attempt });
+    }
   }
 }
 
@@ -329,6 +365,27 @@ export class IdbProgress implements ProgressStore {
   async attempts(itemKey: string): Promise<Attempt[]> {
     const all = await this.read<Attempt[]>('attempts', (s) => s.index('item_key').getAll(itemKey));
     return all.sort(byAttemptTime);
+  }
+  async records(options: { attempts?: boolean } = {}): Promise<StoreRecords> {
+    const names = options.attempts ? ['events', 'cards', 'resume', 'attempts'] : ['events', 'cards', 'resume'];
+    // One read-only transaction: a consistent snapshot of every store.
+    const tx = this.db.transaction(names, 'readonly');
+    const all = (name: string) => request(tx.objectStore(name).getAll());
+    const [events, cards, resume, attempts] = await Promise.all([
+      all('events') as Promise<ProgressEvent[]>,
+      all('cards') as Promise<CardState[]>,
+      all('resume') as Promise<ResumeState[]>,
+      options.attempts ? (all('attempts') as Promise<Attempt[]>) : Promise.resolve([] as Attempt[]),
+    ]);
+    return { events, cards, resume, attempts };
+  }
+  async putRecords(records: StoreRecords): Promise<void> {
+    const tx = this.db.transaction(['events', 'cards', 'resume', 'attempts'], 'readwrite');
+    for (const event of records.events) tx.objectStore('events').put(event);
+    for (const card of records.cards) tx.objectStore('cards').put(card);
+    for (const resume of records.resume) tx.objectStore('resume').put(resume);
+    for (const attempt of records.attempts) tx.objectStore('attempts').put(attempt);
+    await done(tx);
   }
 }
 

@@ -3,7 +3,7 @@
  * Nothing leaves the device: it only reads and writes the IndexedDB store.
  */
 
-import { checklistOf, SLIDE_EVENT, slideKey } from '../lib/dom-events';
+import { checklistOf, PROGRESS_IMPORTED_EVENT, SLIDE_EVENT, slideKey } from '../lib/dom-events';
 import { onceUnsaved, recordChecklist, recordSlide, sharedProgress, type ProgressStore } from '../lib/progress';
 
 const NOTICE_KEY = 'py4kids-unsaved-notice';
@@ -103,6 +103,9 @@ async function main(): Promise<void> {
   if (contentHash) await wireChecklists(store, contentHash);
   if (document.body.dataset.entry) await recordPosition(store, location.pathname + location.hash);
   await fillResumeLinks(store);
+  document.addEventListener(PROGRESS_IMPORTED_EVENT, () => {
+    fillResumeLinks(store).catch(warn);
+  });
 }
 
 main().catch(warn);

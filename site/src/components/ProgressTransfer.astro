@@ -1,0 +1,41 @@
+---
+/**
+ * "Export my progress" and "Import progress" (design 012 D11; plan 105 Phase C), on the catalog
+ * page. The island (src/scripts/progress-transfer.ts) does the work on the device: nothing is
+ * uploaded. Code attempts are exported only when the student ticks the clearly labelled box.
+ */
+---
+<section class="transfer" aria-labelledby="transfer-heading" data-transfer>
+  <h2 id="transfer-heading">Your progress on this device</h2>
+  <p>
+    Your progress is saved only in this browser. Save a copy as a file to keep it safe, or to bring
+    it to another browser or device.
+  </p>
+  <div class="transfer-group">
+    <h3>Save a copy</h3>
+    <p class="transfer-option">
+      <input type="checkbox" id="transfer-attempts" data-transfer-attempts aria-describedby="transfer-attempts-help" />
+      <label for="transfer-attempts">Export my code attempts too</label>
+    </p>
+    <p id="transfer-attempts-help" class="transfer-help">
+      Leave this off to keep your code on this device: the file then holds only your results, quiz-card
+      boxes and reading places. Tick it to add the code and answers you typed.
+    </p>
+    <button type="button" class="button button-primary" data-transfer-export>Export my progress</button>
+  </div>
+  <div class="transfer-group">
+    <h3>Bring progress back</h3>
+    <p class="transfer-file">
+      <label for="transfer-file">Import progress from a file</label>
+      <input type="file" id="transfer-file" accept=".json,application/json" data-transfer-import aria-describedby="transfer-file-help" />
+    </p>
+    <p id="transfer-file-help" class="transfer-help">
+      Choose a file that "Export my progress" saved. It is added to what is here: newer progress on
+      this device is kept.
+    </p>
+  </div>
+  <p class="transfer-status" role="status" aria-live="polite" data-transfer-status></p>
+</section>
+<script>
+  import '../scripts/progress-transfer.ts';
+</script>
