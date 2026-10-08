@@ -283,7 +283,7 @@ Exact-whitespace expected-output items no longer alias a typed tab.
   - isolation, navigation, CSP on both origins, no network, and the sealed worker
 - **Reference solvers:** 314 solvers × 1,409 cases in Pyodide equal `tools/judge.py`'s verdicts, with **0 mismatches**, under the shipped budgets.
 - **Boot:** cold about 2.2 s, about 4 s under ×4 CPU throttling. Warm runs reuse the worker.
-- `scripts/ci-local.sh` solo on the final commit: see the PR.
+- `scripts/ci-local.sh` solo on 04fc125: **ALL GREEN** (2026-10-08): Playwright 118 e2e and 5 solver shards (14.8 min).
 
 **Follow-ups:**
 - Pyodide memory snapshots, to cut the per-worker boot that makes fixture checks slow.
