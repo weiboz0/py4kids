@@ -224,4 +224,63 @@ User goal, 2026-10-06: "non stop until full working learning website".
   The alias and the typing phrases are removed (the layout descriptions stay).
   `tests/test_site_confirmed.py` now asserts no exact-whitespace item aliases a tab, and `site/e2e/checks.spec.ts` proves a printed backslash-t fails on u01e14a.
 
+### Review 1 (2d31e98)
+
+- `[self]` APPROVE after the pre-gate fix above.
+- `[fable]` **APPROVE WITH NITS**:
+  1. `[FIXED]` (Should Fix) Pyodide workers randomise str hashing per worker, but export probed both expected-output runs under `PYTHONHASHSEED=0`, so a set-order-dependent solution would be classified deterministic and then fail every student. → The second run uses `PYTHONHASHSEED=1` (`tools/export/answers.py`), pinned by `test_repeat_run_uses_another_hash_seed`. All 149 shipped expected-output solutions were already order-independent (the reviewer's probe under three seeds), so no item changes.
+  2. `[WONTFIX]` (follow-up) No bundle-wide Pyodide parity for the 149 `expected-output` and 234 `asserts` items, only for `fixtures`. → Not a plan-104 phase; recorded as a follow-up in the report below.
+  3. `[FIXED]` (Should Fix) The solver-parity test derived budgets from a fresh CPython measurement, not from the shipped `cpu_ms`. → It now reads `check.cpu_ms` from the bundle for all 233 shipped fixtures items; only the 81 lesson solvers (not shipped as checks) fall back to the measurement.
+  4. `[FIXED]` (Should Fix) A timed-out asserts or expected-output check said "stopped with an error". → It now says "ran out of time"; an e2e test covers both kinds.
+  5. `[FIXED]` (Nice to Have) A crashed worker labelled a fixture case "stopped". → "Python stopped unexpectedly".
+  6. `[FIXED]` Nits: student code reaching `js` (see [sol] 1–2, now sealed). `[WONTFIX]` Nits: the `interrupts` field on completed runs, a "still starting…" message, an internal-error reply, and UI-level turtle directive tests (pytest covers them); all recorded as follow-ups.
+  7. `[FIXED]` (Must Fix, procedural) The post-execution report was empty. → Written below.
+- `[sol]` **REQUEST CHANGES** (gpt-6-sol):
+  1. `[FIXED]` BLOCKER: student code could post a forged `done` from the worker through Pyodide's `js` module. → After boot the worker deletes `postMessage` (and every other messaging API) from its scope and prototype chain, keeping one captured reference; `eval` is CSP-blocked, so it cannot be rebuilt. An e2e test shows the forged `done` is blocked and the real verdict fails.
+     Residual, by design: a student who rewrites the harness from inside their own Python can still change their *own* on-device verdict, as editing IndexedDB in DevTools can. Verdicts are self-reported and gate pedagogy only (design 012 D2); part E must never treat them as authenticated.
+  2. `[FIXED]` BLOCKER: `connect-src 'self'` let student code send data to the runner host. → The same seal deletes `fetch`, `fetchLater`, `XMLHttpRequest`, `importScripts`, `EventSource`, `WebSocket(Stream)`, `WebTransport`, `Worker`, `SharedWorker`, `BroadcastChannel`, `caches`, `indexedDB`, `navigator.serviceWorker` and `navigator.sendBeacon` once Pyodide and the harness have loaded (nothing is fetched later: jobs carry code, stdin and files). It fails closed. The e2e test tries `fetch`, a prototype-borrowed `fetch` and `run_js` with a marker, and the request recorder sees no request carrying it.
+  3. `[FIXED]` MAJOR: an asserts check could pass after the program raised. → A program whose run is not `ok` adds a failing "Your code" row; the asserts still run for feedback. An e2e test covers define-then-raise.
+  4. `[FIXED]` MAJOR: the post-execution report was empty. → Written below.
+
 ## Post-Execution Report
+
+**Shipped: design 012 part C, the isolated Pyodide runner, checks and answer gating, for all four books.**
+
+**The runner** (`runner/`, its own origin):
+- Pyodide 0.27.8 (CPython 3.12), self-hosted.
+- Typed envelopes (`run`, `reset`, `ping`, `interrupt`) validated on both sides, with exact origin and source checks.
+- Interrupts go through a SharedArrayBuffer, then a 1 s grace period, then a worker restart.
+- A fresh worker per check and per fixture case, at most 3 workers.
+- After boot the worker is sealed: no request, script-loading or messaging API is reachable from Python.
+
+**The site:**
+- A CodeMirror 6 editor in a shadow root, with zero CSP violations.
+- Check UIs for every kind: fixtures, asserts, expected-output, predict, answer, self-check.
+- Also: `also_check`, the turtle rule, sample-only reveal and odd-answer gating.
+- Reading-view Run, Reset and stdin; D11 events and an attempt store.
+
+**Export:** `check.cpu_ms` from the committed timing cache, and `answer_figures`.
+Exact-whitespace expected-output items no longer alias a typed tab.
+
+**Verification:**
+- **Unit tests:** vitest 338 (site) and 7 (runner); pytest on the harness, the export and the confirmations.
+- **Playwright, one named test per design 012 §3 row:**
+  - stdin and `EOFError`
+  - SAB interrupt, plus the restart path with isolation off
+  - 20 CPython-parity expressions
+  - assert isolation
+  - all 45 hash vectors through the UI
+  - turtle
+  - mounted files and cumulative state
+  - cross-check and cross-case contamination
+  - isolation, navigation, CSP on both origins, no network, and the sealed worker
+- **Reference solvers:** 314 solvers × 1,409 cases in Pyodide equal `tools/judge.py`'s verdicts, with **0 mismatches**, under the shipped budgets.
+- **Boot:** cold about 2.2 s, about 4 s under ×4 CPU throttling. Warm runs reuse the worker.
+- `scripts/ci-local.sh` solo on the final commit: see the PR.
+
+**Follow-ups:**
+- Pyodide memory snapshots, to cut the per-worker boot that makes fixture checks slow.
+- A slow, bundle-wide Pyodide parity test for expected-output and asserts solutions.
+- UI-level turtle directive tests; a "still starting…" message; an internal-error reply; tidying the `interrupts` field on completed runs.
+- Part E must treat on-device verdicts as self-reported.
+- Slide keys like `#2#slide-2` are one opaque fragment.
