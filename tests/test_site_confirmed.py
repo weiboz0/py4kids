@@ -323,6 +323,9 @@ def test_kind_findings_catch_a_reverted_retag():
 REVIEW1_SELF_CHECK = (
     "python-projects/unit-03-turtle-art-studio/exercises/exercise-1",
     "python-concepts/unit-13-objects/exercises/u13e057",
+    # content review 2: the core result is a turtle asset; a printed proxy number cannot verify it
+    "python-projects/unit-05-function-factory/exercises/exercise-10-heading",
+    "python-projects/unit-05-function-factory/exercises/exercise-11-heading",
 )
 # Items whose required method the reviewers found missing from `also_check` ([sol] 2 and 3,
 # [fable] 5), with a word each entry list must now contain.

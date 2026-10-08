@@ -471,3 +471,6 @@ Six asserts items read a file that an **earlier** exercise writes:
 Making them checkable later would need the file shipped as a tracked asset. That is content work for a later plan.
 
 - `c400000a` (checkpoint-04 Question 5) is also retagged `check-self` at integration, found by the Phase E guard: its asserts use `loaded`, which only Question 4 defines. Run alone, a correct answer raises `NameError`.
+
+## Content review 2 retags (coordinator)
+- `unit-05-function-factory/exercises/exercise-10-heading` (asserts) and `exercise-11-heading` (expected-output) are now `check-self`. The core result is a turtle asset program, and the shipped check verified only a printed numeric proxy (`stamps_drawn`; `20` / `10`), so a notebook that only prints the number would pass while the asset stayed the warm-up square (rule 1). Their former `also_check` statement fragments become authored `requirements` covering the asset, the accumulator and the run. python-projects is now asserts 51, expected-output 9, predict 7, self-check 169.
