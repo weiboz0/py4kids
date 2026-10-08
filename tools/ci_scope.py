@@ -10,7 +10,12 @@ when the change touches it:
 - `--all-books` renders every publication book (required before a release);
 - when the change set cannot be computed (no `origin/main`, not a git checkout), every book renders.
 
-Usage: python -m tools.ci_scope --book <id> [--all-books]
+`--site` (plan 103 Phase A) scopes the learning-website build the same way: it renders when the
+change touches `site/`, `tools/`, `scripts/`, `books.yaml`, `.nvmrc`, `pyproject.toml`, `uv.lock`,
+or the root of any book whose `books.yaml` entry has `site: true` (the site keys on that flag, never
+on a book id).
+
+Usage: python -m tools.ci_scope (--book <id> | --site) [--all-books]
 Prints one line, `render: <reason>` or `skip: <reason>`, and exits 0 either way.
 """
 
@@ -25,6 +30,8 @@ import yaml
 BASE = 'origin/main'
 SHARED_DIRS = ('tools/', 'scripts/')
 SHARED_FILES = ('books.yaml', 'pyproject.toml', 'uv.lock')
+SITE_DIRS = ('site/', *SHARED_DIRS)
+SITE_FILES = ('books.yaml', '.nvmrc', 'pyproject.toml', 'uv.lock')
 
 
 class ScopeError(RuntimeError):
@@ -71,9 +78,44 @@ def decide(book_root: str, changed: list[str], all_books: bool = False) -> tuple
                    f'since {BASE} (run ci-local.sh --all-books to render it)')
 
 
+def decide_site(roots: list[str], changed: list[str], all_books: bool = False) -> tuple[bool, str]:
+    """(render?, reason) for the learning-website build, given the site books' roots."""
+    if all_books:
+        return True, '--all-books'
+    shared = [path for path in changed if path.startswith(SITE_DIRS) or path in SITE_FILES]
+    if shared:
+        return True, f'site input changed: {_examples(shared)}'
+    prefixes = tuple(root.rstrip('/') + '/' for root in roots)
+    own = [path for path in changed if prefixes and path.startswith(prefixes)]
+    if own:
+        return True, f'site book changed: {_examples(own)}'
+    books = ', '.join(prefixes) or 'none'
+    return False, ('no change under site/, tools/, scripts/, books.yaml, .nvmrc, pyproject.toml, '
+                   f'uv.lock or a site book ({books}) since {BASE}')
+
+
+def _catalog(repo: Path) -> list[dict]:
+    return yaml.safe_load((repo / 'books.yaml').read_text(encoding='utf-8'))['books']
+
+
+def site_roots(repo: Path) -> list[str]:
+    """The roots of the books flagged `site: true`, in registry order."""
+    return [entry.get('root', entry['id']) for entry in _catalog(repo) if entry.get('site') is True]
+
+
+def site_scope(repo: Path, all_books: bool = False) -> tuple[bool, str]:
+    roots = site_roots(repo)
+    if all_books:
+        return decide_site(roots, [], all_books=True)
+    try:
+        changed = changed_files(repo)
+    except ScopeError as error:
+        return True, f'cannot compute the change set ({error}); rendering to be safe'
+    return decide_site(roots, changed)
+
+
 def book_root(repo: Path, book: str) -> str:
-    catalog = yaml.safe_load((repo / 'books.yaml').read_text(encoding='utf-8'))
-    for entry in catalog['books']:
+    for entry in _catalog(repo):
         if entry['id'] == book:
             return entry.get('root', book)
     raise ValueError(f'unknown book: {book}')
@@ -92,12 +134,17 @@ def scope(repo: Path, book: str, all_books: bool = False) -> tuple[bool, str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog='python -m tools.ci_scope',
-                                     description='Decide whether ci-local renders a book.')
-    parser.add_argument('--book', required=True)
+                                     description='Decide whether ci-local renders a book or the site.')
+    target = parser.add_mutually_exclusive_group(required=True)
+    target.add_argument('--book', help="a publication book's editions")
+    target.add_argument('--site', action='store_true', help='the learning-website build')
     parser.add_argument('--all-books', action='store_true')
     parser.add_argument('--repo', type=Path, default=Path('.'))
     args = parser.parse_args(argv)
-    render, reason = scope(args.repo, args.book, args.all_books)
+    if args.site:
+        render, reason = site_scope(args.repo, args.all_books)
+    else:
+        render, reason = scope(args.repo, args.book, args.all_books)
     print(f'{"render" if render else "skip"}: {reason}')
     return 0
 

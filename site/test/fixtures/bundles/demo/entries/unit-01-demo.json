@@ -1,0 +1,36 @@
+{
+ "cards": [
+  {"block": "demo/unit-01-demo/lesson/c2", "key": "demo/unit-01-demo/lesson/c2#predict", "kind": "predict", "mode": "typed", "prelude": []},
+  {"concept": "print", "definition_md": "Shows a value on the screen.", "distractors": ["variable"], "key": "demo/back-matter/glossary/print", "kind": "concept", "mode": "choice", "term": "print"}
+ ],
+ "entry": {"id": "unit-01-demo", "kind": "unit", "title": "Unit 1 — Demo"},
+ "files": [],
+ "intro": [],
+ "items": [
+  {
+   "answer_visibility": "none",
+   "before": [],
+   "check": {"confirmed": true, "kind": "self-check", "requirements": ["It prints your name."], "turtle": false},
+   "concepts": ["print"],
+   "division": [],
+   "files": [],
+   "key": "demo/unit-01-demo/exercises/e1",
+   "kind": "unit",
+   "label": "Exercise 1",
+   "number": 1,
+   "starter": "# your code here\n",
+   "statement_md": "Print your name.",
+   "stretch": false,
+   "title": "Hello"
+  }
+ ],
+ "lesson": {
+  "blocks": [
+   {"concepts": [], "files": [], "key": "demo/unit-01-demo/lesson/c1", "md": "## Lesson\n\nHello, world.", "needs_prelude": false, "prelude": [], "probe": null, "tags": [], "type": "prose"},
+   {"code": "print('hi')\n", "concepts": ["print"], "files": [], "key": "demo/unit-01-demo/lesson/c2", "needs_prelude": false, "output": "hi\n", "prelude": [], "probe": "standalone", "tags": [], "type": "code"},
+   {"code": "forward(10)\n", "concepts": [], "figure": [{"color": "black", "width": 1, "x1": 0, "x2": 10, "y1": 0, "y2": 0}], "files": [], "key": "demo/unit-01-demo/lesson/c3", "needs_prelude": false, "prelude": [], "probe": null, "tags": ["slide-break"], "type": "turtle-figure"}
+  ]
+ },
+ "outro": [],
+ "schema_version": "1.0.0"
+}

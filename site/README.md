@@ -43,3 +43,22 @@ Progress is stored under these keys, so a key must not silently vanish.
   Update it at each public release.
 - A key that leaves the bundle must be mapped in `site/ids/<book>-retired.yaml`, as `<old key>: <new key>` or `<old key>: retired`.
   `site-check` fails on a ledger key that is neither in the bundle nor mapped there.
+
+## The website (plan 103)
+
+`site/` is also the Astro 7 static site that renders every `site: true` book from its bundle.
+
+```bash
+bash scripts/build-site.sh [--release <tag>]   # export every site book, then build site/dist/
+pnpm -C site test                              # vitest
+pnpm -C site dev                               # local preview of the exported bundles
+```
+
+- **Toolchain:** Node 24 LTS (`.nvmrc`; `nvm install`), pnpm at the version in `package.json` `packageManager` (`corepack enable`).
+  Dependencies are exact-pinned; `pnpm install --frozen-lockfile` is the only install path.
+- **Loader:** `src/lib/bundle.ts` discovers `content/*/book.json`, validates every file against `tools/export/schema/bundle.schema.json` with Ajv, and fails the build on an invalid bundle.
+  `PY4KIDS_SITE_CONTENT=<dir>` points it at another content directory.
+- **Types:** `src/lib/types.ts` is hand-written to the schema.
+  `test/schema-keys.test.ts` proves every key the site reads is declared there; add each new bundle-reading view model to its `CONSUMERS`.
+- **No inline scripts or styles** (the strict CSP): styles are external stylesheets, client code is external modules, and the theme script is `public/scripts/theme.js`.
+- `scripts/ci-local.sh` step 6 builds the site and runs its tests when the change touches it (`tools/ci_scope.py --site`).

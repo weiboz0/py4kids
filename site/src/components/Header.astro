@@ -1,0 +1,18 @@
+---
+import BookSwitcher from './BookSwitcher.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import type { LoadedBook } from '../lib/bundle';
+
+interface Props {
+  books: LoadedBook[];
+  current?: string | undefined;
+}
+const { books, current } = Astro.props;
+---
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-name" href="/">py4kids</a>
+    <BookSwitcher books={books} current={current} />
+    <ThemeToggle />
+  </div>
+</header>

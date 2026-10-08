@@ -1,0 +1,27 @@
+{
+ "cards": [],
+ "entry": {"id": "checkpoint-01-demo", "kind": "checkpoint", "title": "Checkpoint 1 — Demo"},
+ "files": [],
+ "intro": [{"concepts": [], "files": [], "key": "demo/checkpoint-01-demo/checkpoint/c0", "md": "Answer every question.", "needs_prelude": false, "prelude": [], "probe": null, "tags": [], "type": "prose"}],
+ "items": [
+  {
+   "answer_visibility": "none",
+   "before": [],
+   "check": {"answer_format": {"case": "sensitive", "hint": "Type a number."}, "confirmed": true, "hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "kind": "answer", "turtle": false},
+   "concepts": ["variables"],
+   "division": [],
+   "files": [],
+   "key": "demo/checkpoint-01-demo/checkpoint/q1",
+   "kind": "checkpoint",
+   "label": "Question 1",
+   "number": 1,
+   "starter": "",
+   "statement_md": "What is `1 + 1`?",
+   "stretch": false,
+   "title": "Adding"
+  }
+ ],
+ "lesson": null,
+ "outro": [],
+ "schema_version": "1.0.0"
+}

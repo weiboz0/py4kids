@@ -1,0 +1,21 @@
+---
+/** The catalog (plan 103 Pages, `/`): each book's title, subtitle and unit count. */
+import Base from '../layouts/Base.astro';
+import { getBooks } from '../lib/bundle';
+import { catalogCards } from '../lib/catalog';
+
+const cards = catalogCards(getBooks());
+---
+<Base title="py4kids" description="Free Python courses for middle school students: read, practise and drill, with nothing leaving your device.">
+  <h1>py4kids</h1>
+  <p>Free Python courses. Pick a book to start.</p>
+  <ul class="catalog">
+    {cards.map((c) => (
+      <li class="catalog-card">
+        <h2><a href={c.href}>{c.title}</a></h2>
+        <p>{c.subtitle}</p>
+        <p>{c.unitCount} {c.unitCount === 1 ? 'unit' : 'units'}</p>
+      </li>
+    ))}
+  </ul>
+</Base>

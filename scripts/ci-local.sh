@@ -5,7 +5,8 @@ cd "$(dirname "$0")/.."
 export PY4KIDS_CI=1
 
 # --all-books renders every publication book's editions (required before a release); without it,
-# step 5 renders only the books the change touches (design 010 D7).
+# step 5 renders only the books the change touches and step 6 builds the site only when the change
+# touches it (design 010 D7).
 scope_args=()
 for arg in "$@"; do
   case "$arg" in
@@ -16,7 +17,7 @@ done
 
 step() { echo; echo "=== $1 ==="; }
 
-step "1/6 registry + lint"
+step "1/7 registry + lint"
 # The book list and each book's feature flags come from books.yaml (design 008); nothing here pins
 # a book id. One line per book: "<id> <flag> <flag> ...".
 books="$(uv run python - <<'PY'
@@ -70,7 +71,7 @@ book_run() {
   fi
 }
 
-step "2/6 unit tests"
+step "2/7 unit tests"
 # The global suite stays GROUP-FREE: it must not require any book's dependency group (design 011
 # §7). A routed book's own tests live OUTSIDE tests/ (under its <root>/**/tests/) precisely so this
 # run does not import that book's heavy stack.
@@ -92,7 +93,7 @@ while read -r book grp <&3; do
   PYTHONHASHSEED=0 uv run --group "$grp" pytest -q "$book"
 done 3<<< "$groups"
 
-step "3/6 notebook structure + execution"
+step "3/7 notebook structure + execution"
 while read -r book flags <&3; do
   for check in hygiene-check structure-check noexec-check cell-lint milestone-check exec-solutions exec-lessons; do
     book_run "$book" "$check"
@@ -102,7 +103,7 @@ while read -r book flags <&3; do
   fi
 done 3<<< "$books"
 
-step "4/6 curriculum + assets"
+step "4/7 curriculum + assets"
 # Per-entry checks iterate existing dirs, so they cover authored entries and are inert for
 # unauthored ones. Flag-gated checks follow each book's books.yaml flags (see the comments there);
 # books without `judge` run the turtle checks. Fastforward relaxation keys on prereq_policy.
@@ -134,7 +135,7 @@ while read -r book flags <&3; do
   fi
 done 3<<< "$books"
 
-step "5/6 PDF build"
+step "5/7 PDF build"
 # Handouts and the syllabus for every book, judge books included (design 010 D5); build-pdf.sh
 # fails on a missing glyph. A publication book's editions render only when the change touches the
 # book, or anything under tools/ or scripts/, or books.yaml (design 010 D7, tools/ci_scope.py), or
@@ -158,7 +159,32 @@ while read -r book flags <&3; do
 done 3<<< "$books"
 echo "book editions rendered: ${rendered[*]:-none}; skipped: ${skipped[*]:-none}"
 
-step "6/6 pre-merge guard"
+step "6/7 site"
+# The learning website (design 012 part B; plan 103): build-site.sh exports every `site: true`
+# book and builds site/ with Astro, then the site's vitest suite runs. It needs Node >= 22.12
+# (.nvmrc; activated through nvm when the shell's default is older), pnpm and a Chromium. The
+# build is scoped like the editions (design 010 D7): it runs when the change touches site/, tools/,
+# scripts/, books.yaml, .nvmrc or a site book (tools/ci_scope.py --site), or with --all-books.
+# Every skip is printed; never silent.
+. scripts/site-env.sh
+if ! site_node_env; then
+  echo "SKIP (Node missing): site build and tests need node >= 22.12 (.nvmrc; nvm install)"
+elif ! site_pnpm; then
+  echo "SKIP: site (pnpm missing; corepack enable)"
+elif ! site_chromium; then
+  echo "SKIP: site (Chromium missing)"
+else
+  decision="$(uv run python -m tools.ci_scope --site "${scope_args[@]}")"
+  echo "site: $decision"
+  if [[ "$decision" == render:* ]]; then
+    bash scripts/build-site.sh
+    "${SITE_PNPM[@]}" -C site test
+  else
+    echo "SKIP: site (${decision#skip: })"
+  fi
+fi
+
+step "7/7 pre-merge guard"
 bash scripts/pre-merge-guard.sh
 
 echo

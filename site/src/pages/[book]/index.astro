@@ -1,0 +1,27 @@
+---
+/**
+ * The book contents page, a Phase A stub so catalog links resolve: entries in syllabus order.
+ * Phase E owns this page (resume, PDF links, mastery map).
+ */
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import { getBooks, type LoadedBook } from '../../lib/bundle';
+import { contents } from '../../lib/catalog';
+
+export const getStaticPaths = (() =>
+  getBooks().map((book) => ({ params: { book: book.id }, props: { book } }))) satisfies GetStaticPaths;
+
+interface Props {
+  book: LoadedBook;
+}
+const { book } = Astro.props;
+const items = contents(book);
+---
+<Base title={book.book.book.title} description={book.book.book.subtitle} book={book}>
+  <h1>{book.book.book.title}</h1>
+  <p>{book.book.book.subtitle}</p>
+  <h2>Contents</h2>
+  <ol>
+    {items.map((e) => <li><a href={e.href}>{e.title}</a></li>)}
+  </ol>
+</Base>
