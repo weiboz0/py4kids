@@ -308,6 +308,13 @@ Never `git stash` in the shared tree.
 
 - `[fable]` **APPROVE WITH NITS** (round 4, 7ff1940): MathML Core renders `\overline` natively. `[FIXED]` Shiki uses `transformerStyleToClass` (no inline styles); axe also runs on the math lesson.
 
+### Round 4 (7ff1940 / 77da698) — CONSENSUS
+
+- `[self]` APPROVE.
+- `[sol]` **APPROVE WITH NITS** (gpt-6-sol): the MathML fix resolves the round-3 blocker. `[FIXED]` Its Shiki inline-style nit was already folded in 77da698 (`transformerStyleToClass`).
+- `[fable]` **APPROVE WITH NITS**: all folds confirmed; its nit was folded in 77da698.
+- `[glm]` removed from the roster (user directive 2026-10-05).
+
 ## Content Review
 
 ## Post-Execution Report
