@@ -4,3 +4,12 @@
 # fixture_budget_kb: the per-pair contest-fixture budget the export reports against (D7).
 classification: proposed
 fixture_budget_kb: 130
+# slides: the slide limits and reviewed exceptions (plan 103 D6; validated by tools.books).
+#   The limits default to max_words 90 (packing budget), max_unit_words 150, max_table_rows 12 and
+#   max_code_lines 40 (failure limits). `allow` lists each oversized block key with its reason.
+slides:
+  allow:
+    - key: python-projects/unit-05-function-factory/lesson/9c5221f8#asset:l1_cards.py
+      reason: "Complete turtle program listing (53 lines) shown as one asset block; a slide-break cannot split a block and plan 103 changes no source text. The code panel scrolls."
+    - key: python-projects/unit-05-function-factory/lesson/628ba2fb#asset:l3_stamps.py
+      reason: "Complete turtle program listing (42 lines) shown as one asset block; a slide-break cannot split a block and plan 103 changes no source text. The code panel scrolls."

@@ -1,0 +1,53 @@
+---
+/**
+ * The layout shell (plan 103 Phase A): header, main, footer, theme. Every page uses it.
+ * No inline scripts or styles (the strict CSP): styles come from global.css (emitted as an
+ * external stylesheet), and the theme script is the external file public/scripts/theme.js.
+ */
+import '../styles/global.css';
+import '../styles/content.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getBooks, type LoadedBook } from '../lib/bundle';
+import { releaseTag } from '../lib/catalog';
+import { pageContext, pageDataAttributes } from '../lib/page-context';
+import ProgressIsland from '../components/ProgressIsland.astro';
+
+interface Props {
+  /** The page's own title; the site name is appended. */
+  title: string;
+  description?: string;
+  /** The book this page belongs to: the switcher marks it, the footer shows its release. */
+  book?: LoadedBook;
+}
+
+const { title, description, book } = Astro.props;
+const books = getBooks();
+const fullTitle = title === 'py4kids' ? title : `${title} · py4kids`;
+// The progress island's page context (plan 103 Phase D): book, content hash, entry.
+const bodyData = pageDataAttributes(book ? pageContext(book, Astro.url.pathname) : undefined);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <script is:inline src="/scripts/theme.js"></script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="stylesheet" href="/code.css" />
+    <slot name="head" />
+  </head>
+  <body {...bodyData}>
+    <ProgressIsland />
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header books={books} current={book?.id} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer release={releaseTag(books, book)} />
+  </body>
+</html>

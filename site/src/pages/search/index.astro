@@ -1,0 +1,41 @@
+---
+/**
+ * `/search/` (plan 103 Pages): search every book's lessons, practice items, glossary and quick
+ * reference. The index is Pagefind's, built over dist/ after `astro build` (scripts/build-site.sh)
+ * and served from the site's own `/pagefind/` files: no network call leaves the site. The UI is
+ * the site's own (src/scripts/search.ts on Pagefind's JS API), so no inline style is injected.
+ * This page is not indexed itself (it has no `data-pagefind-body`).
+ */
+import Base from '../../layouts/Base.astro';
+import { getBooks } from '../../lib/bundle';
+import { bookLinks } from '../../lib/catalog';
+
+const books = bookLinks(getBooks());
+---
+<Base title="Search" description="Search the py4kids books: lessons, exercises, glossaries and quick references.">
+  <h1>Search</h1>
+  <section class="search" data-search aria-label="Search the books">
+    <p data-search-needs-js>Search needs JavaScript to run.</p>
+    <form class="search-form" role="search" data-search-form hidden>
+      <div class="search-field">
+        <label for="search-q">Search for a word or idea</label>
+        <input id="search-q" type="search" autocomplete="off" spellcheck="false" data-search-input />
+      </div>
+      {books.length > 1 && (
+        <div class="search-field">
+          <label for="search-book">Book</label>
+          <select id="search-book" data-search-book>
+            <option value="">All books</option>
+            {books.map((b) => <option value={b.title}>{b.title}</option>)}
+          </select>
+        </div>
+      )}
+    </form>
+    <p class="search-status" data-search-status aria-live="polite"></p>
+    <ol class="search-results" data-search-results></ol>
+    <button type="button" class="button-link search-more" data-search-more hidden>Show more results</button>
+  </section>
+</Base>
+<script>
+  import '../../scripts/search.ts';
+</script>

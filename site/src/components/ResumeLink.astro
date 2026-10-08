@@ -1,0 +1,17 @@
+---
+/**
+ * A "Continue" link to the reader's last position in a book (plan 103 Phase D). Hidden until the
+ * progress island (src/scripts/progress-page.ts) finds a saved position in the `resume` store.
+ */
+interface Props {
+  book: string;
+  /** Show the book's name in the link text (the catalog lists several books). */
+  bookTitle?: string;
+}
+const { book, bookTitle } = Astro.props;
+---
+<p class="resume" data-resume-book={book} hidden>
+  <a href={`/${book}/`} class="resume-link">
+    Continue{bookTitle && <span class="visually-hidden"> {bookTitle}</span>}: <span data-resume-title></span>
+  </a>
+</p>

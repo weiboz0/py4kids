@@ -4,3 +4,24 @@
 # fixture_budget_kb: the per-pair contest-fixture budget the export reports against (D7).
 classification: proposed
 fixture_budget_kb: 130
+# slides: the slide limits and reviewed exceptions (plan 103 D6; validated by tools.books).
+#   The limits default to max_words 90 (packing budget), max_unit_words 150, max_table_rows 12 and
+#   max_code_lines 40 (failure limits). `allow` lists each oversized block key with its reason.
+slides:
+  allow:
+    - key: acsl/unit-03-wdtpd-branching/lesson/60788637
+      reason: "The ACSL-to-Python dialect table (13 body rows) is one reference table and a table is atomic on a slide; splitting it would need a text edit, which plan 103 does not make."
+    - key: acsl/unit-08-boolean-algebra/lesson/l-016
+      reason: "Complete worked program (43 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."
+    - key: acsl/unit-09-data-structures/lesson/l-009
+      reason: "Complete worked program (42 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."
+    - key: acsl/unit-09-data-structures/lesson/l-019
+      reason: "Complete worked program (48 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."
+    - key: acsl/unit-12-graph-theory/lesson/l-022
+      reason: "Complete worked program (47 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."
+    - key: acsl/unit-13-digital-electronics/lesson/l-017
+      reason: "Complete worked program (49 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."
+    - key: acsl/unit-13-digital-electronics/lesson/l-019
+      reason: "Complete worked program (67 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."
+    - key: acsl/unit-15-assembly-language/lesson/f54b9d52
+      reason: "Complete worked program (50 lines) in one try-it cell; a slide-break cannot split a cell and plan 103 changes no source text. The code panel scrolls."

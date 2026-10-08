@@ -1,0 +1,7 @@
+# pnpm settings for the site (plan 103). Install only with `pnpm install --frozen-lockfile`.
+minimumReleaseAgeExclude:
+  - astro@7.3.7
+# esbuild's postinstall only verifies its platform binary.
+allowBuilds:
+  esbuild: true
+  sharp: false
