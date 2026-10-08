@@ -19,9 +19,9 @@ const view = readingView(book, entryId);
 const practiceLabel = view.kind === 'unit' ? 'Exercises' : view.kind === 'checkpoint' ? 'Questions' : 'Problems';
 ---
 <Base title={view.title} book={book}>
-  <p class="crumbs"><a href={view.bookHref}>{view.bookTitle}</a></p>
+  <p class="crumbs"><a href={view.bookHref} data-pagefind-meta="book" data-pagefind-filter="book">{view.bookTitle}</a></p>
   <p class="entry-kind">{view.kind}</p>
-  <h1 class="entry-title">{view.title}</h1>
+  <h1 class="entry-title" data-pagefind-meta="title">{view.title}</h1>
   {(view.slidesHref || view.practiceHref) && (
     <ul class="entry-actions">
       {view.slidesHref && <li><a class="button-link" href={view.slidesHref}>Slides</a></li>}

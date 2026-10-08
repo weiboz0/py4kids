@@ -43,13 +43,3 @@ export function releaseTag(books: LoadedBook[], book?: LoadedBook): string | und
   const tags = new Set(books.map((b) => b.book.release.tag));
   return tags.size === 1 ? [...tags][0] : undefined;
 }
-
-/** The book contents stub: entries in syllabus order (Phase E replaces this page). */
-export function contents(book: LoadedBook): { id: string; kind: string; title: string; href: string }[] {
-  return book.book.entries.map((e) => ({
-    id: e.id,
-    kind: e.kind,
-    title: e.title,
-    href: `${bookHref(book.id)}${e.id}/`,
-  }));
-}

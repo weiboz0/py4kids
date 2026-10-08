@@ -6,7 +6,9 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { gunzipSync } from 'node:zlib';
 import { loadBooks, repoRoot } from '../src/lib/bundle';
+import { CSP, parseHeaders } from './helpers/headers';
 
 const DIST = join(import.meta.dirname, '..', 'dist');
 const built = existsSync(join(DIST, 'index.html'));
@@ -37,10 +39,11 @@ describe.skipIf(!built)('site/dist', () => {
     for (const file of all.filter((f) => /\.(html|css|js)$/.test(f))) {
       const text = read(file);
       // In HTML, a data: URL can only load from an attribute or a CSS url(); lesson text may
-      // say "data:" in prose ("Variation axis — data: …"). CSS and JS carry no prose.
+      // say "data:" in prose ("Variation axis — data: …"). In CSS and JS a data: URL has a media
+      // type or an empty one ("data:image/png;…", "data:,…"); a `data:` object key is not one.
       const dataUrl = file.endsWith('.html')
         ? /=\s*["']?\s*data:|url\(\s*["']?\s*data:/i.test(text)
-        : text.includes('data:');
+        : /\bdata:(?:[a-z]+\/[\w.+-]+)?[;,]/i.test(text);
       expect(dataUrl, `${rel(file)}: data: URL`).toBe(false);
       expect(text.match(/<(?:script|link|img|iframe)[^>]+(?:src|href)="(?:https?:)?\/\//g), `${rel(file)}: remote load`).toBeNull();
     }
@@ -84,7 +87,9 @@ describe.skipIf(!built)('site/dist', () => {
       }
       return out;
     };
-    for (const file of all.filter((f) => f.endsWith('.json'))) {
+    // Pagefind's manifest names each language index by its own "hash" (a file-name tag); the
+    // leak test pins its keys and scans its content.
+    for (const file of all.filter((f) => f.endsWith('.json') && rel(f) !== join('pagefind', 'pagefind-entry.json'))) {
       const found = keys(JSON.parse(read(file))).filter((k) => ['answer_md', 'source', 'hash', 'check'].includes(k));
       expect(found, rel(file)).toEqual([]);
     }
@@ -217,5 +222,129 @@ describe.skipIf(!built)('site/dist', () => {
       for (const page of ['/about/', '/privacy/', '/terms/']) expect(text, rel(file)).toContain(`href="${page}"`);
       expect(text, rel(file)).toContain('<script src="/scripts/theme.js"></script>');
     }
+  });
+  // Phase E: the book pages, glossary, reference, search, the site pages, headers and favicon.
+  const fragments = (): { url: string; meta: Record<string, string> }[] => {
+    const dir = join(DIST, 'pagefind', 'fragment');
+    return readdirSync(dir).map((name) => {
+      const text = gunzipSync(readFileSync(join(dir, name))).toString('utf-8');
+      expect(text.startsWith('pagefind_dcd'), name).toBe(true);
+      return JSON.parse(text.slice('pagefind_dcd'.length)) as { url: string; meta: Record<string, string> };
+    });
+  };
+
+  it.skipIf(books.length === 0)('lists every entry on the book page, in syllabus order, with links that exist', () => {
+    for (const book of books) {
+      const text = read(page(book.id));
+      const listed = [...text.matchAll(/<li class="contents-entry contents-(\w+)" data-entry="([^"]+)">([\s\S]*?)<\/li>/g)];
+      expect(listed.map((m) => m[2]), book.id).toEqual(book.entries.map((e) => e.record.id));
+      for (const [, kind, id, body] of listed) {
+        const entry = book.entries.find((e) => e.record.id === id)!;
+        expect(kind).toBe(entry.record.kind);
+        const hrefs = [...body!.matchAll(/href="([^"]+)"/g)].map((m) => m[1]!);
+        expect(hrefs[0], id).toBe(`/${book.id}/${id}/`);
+        expect(hrefs.includes(`/${book.id}/${id}/practice/`), `${id} practice`).toBe(entry.data.items.length > 0);
+        for (const href of hrefs) expect(existsSync(join(DIST, href, 'index.html')), href).toBe(true);
+      }
+      expect(text, book.id).toContain(`data-resume-book="${book.id}"`);
+    }
+  });
+
+  it.skipIf(books.length === 0)('shows the PDF section exactly when the bundle has a release', () => {
+    for (const book of books) {
+      const text = read(page(book.id));
+      expect(text.includes('data-pdfs'), book.id).toBe(book.book.pdfs !== null);
+      if (book.book.pdfs) for (const href of Object.values(book.book.pdfs)) expect(text).toContain(`href="${href}"`);
+    }
+  });
+
+  it.skipIf(books.length === 0)('links the tools from the book page and builds a glossary and reference page per book', () => {
+    for (const book of books) {
+      const text = read(page(book.id));
+      for (const [tool, has] of [
+        ['glossary', book.book.glossary.length > 0],
+        ['reference', book.book.reference_md.trim() !== ''],
+      ] as const) {
+        expect(existsSync(page(book.id, tool)), `${book.id}/${tool}/`).toBe(has);
+        expect(text.includes(`href="/${book.id}/${tool}/"`), `${book.id}: ${tool} link`).toBe(has);
+        if (has) expect(read(page(book.id, tool))).toContain('data-pagefind-body');
+      }
+      const glossary = read(page(book.id, 'glossary'));
+      expect(glossary.match(/<dt>/g)?.length).toBe(book.book.glossary.length);
+      for (const [, href] of glossary.matchAll(/First taught in <a href="([^"]+)">/g)) {
+        expect(existsSync(join(DIST, href!, 'index.html')), href).toBe(true);
+      }
+    }
+  });
+
+  it('indexes the lessons, items, glossaries and references, and never the site pages', () => {
+    const urls = new Set(fragments().map((f) => f.url));
+    for (const book of books) {
+      expect(urls.has(`/${book.id}/glossary/`), book.id).toBe(true);
+      expect(urls.has(`/${book.id}/reference/`), book.id).toBe(true);
+      expect(urls.has(`/${book.id}/${book.entries[0]!.record.id}/`), book.id).toBe(true);
+    }
+    for (const unindexed of ['/', '/about/', '/privacy/', '/terms/', '/search/']) expect(urls.has(unindexed), unindexed).toBe(false);
+    for (const url of urls) expect(url, url).not.toMatch(/\/(?:cards|slides)\/$|^\/[a-z0-9-]+\/$/);
+    for (const name of ['about', 'privacy', 'terms']) expect(read(page(name))).not.toContain('data-pagefind-body');
+  });
+
+  it('labels each search result with its page title and book', () => {
+    const titles = new Set(books.map((b) => b.book.book.title));
+    for (const f of fragments()) {
+      expect(f.meta.title, f.url).toBeTruthy();
+      expect(titles.has(f.meta.book ?? ''), `${f.url}: ${f.meta.book}`).toBe(true);
+    }
+  });
+
+  it('serves search from the site itself: only same-origin scripts, styles and index files', () => {
+    const text = read(page('search'));
+    const loads = [...text.matchAll(/<(?:script|link)\b[^>]*\s(?:src|href)="([^"]+)"/g)].map((m) => m[1]!);
+    expect(loads.length).toBeGreaterThan(0);
+    for (const url of loads) {
+      expect(url, url).toMatch(/^\/(?!\/)/);
+      expect(existsSync(join(DIST, url)), url).toBe(true);
+    }
+    const scripts = loads.filter((u) => u.endsWith('.js')).map((u) => read(join(DIST, u)));
+    expect(scripts.some((js) => js.includes('`/pagefind/pagefind.js`') || js.includes('"/pagefind/pagefind.js"'))).toBe(true);
+    for (const needed of ['pagefind.js', 'pagefind-worker.js', 'pagefind-entry.json']) {
+      expect(existsSync(join(DIST, 'pagefind', needed)), needed).toBe(true);
+    }
+    // Pagefind's own prebuilt UI is never loaded, so it is not shipped.
+    expect(readdirSync(join(DIST, 'pagefind')).filter((f) => /ui\.(?:js|css)$|highlight/.test(f))).toEqual([]);
+    for (const file of files(join(DIST, 'pagefind')).filter((f) => f.endsWith('.js'))) {
+      expect(read(file), rel(file)).not.toMatch(/\bimport\s*\(\s*["'`]https?:|fetch\(\s*["'`]https?:/);
+    }
+  });
+
+  it('ships the _headers file with the strict CSP, and the favicons', () => {
+    const rules = parseHeaders(read(join(DIST, '_headers')));
+    expect(rules.get('/*')?.get('content-security-policy')).toBe(CSP);
+    expect(existsSync(join(DIST, 'favicon.svg'))).toBe(true);
+    expect(existsSync(join(DIST, 'favicon.ico'))).toBe(true);
+    for (const file of html) expect(read(file), rel(file)).toContain('<link rel="icon" href="/favicon.svg" type="image/svg+xml">');
+  });
+
+  it('shows the release tag in the footer of every page', () => {
+    const tags = new Set(books.map((b) => b.book.release.tag));
+    expect(tags.size).toBe(1);
+    const [tag] = [...tags];
+    for (const file of html) expect(read(file), rel(file)).toContain(`<p>Release: ${tag}</p>`);
+  });
+
+  it('writes the about, privacy and terms pages with their required statements', () => {
+    const about = read(page('about'));
+    expect(about).toContain('This is a study aid, not security.');
+    expect(about).toContain('<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license">CC BY-NC-SA 4.0</a>');
+    for (const book of books) expect(about).toContain(`href="/${book.id}/"`);
+    const privacy = read(page('privacy'));
+    for (const phrase of ['no analytics', 'no cookies', 'no accounts', 'no third-party services', 'IndexedDB', 'py4kids-theme', 'An adult should use it']) {
+      expect(privacy, phrase).toContain(phrase);
+    }
+    const terms = read(page('terms'));
+    expect(terms).toContain('<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license">CC BY-NC-SA 4.0</a>');
+    expect(terms).toContain('without any warranty');
+    expect(terms).toContain('"py4kids"');
+    for (const text of [about, privacy, terms]) expect(text).toContain('href="https://github.com/weiboz0/py4kids/issues"');
   });
 });

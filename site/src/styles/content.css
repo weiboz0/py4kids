@@ -417,3 +417,156 @@ math[display='block'] {
   margin-top: 0.25rem;
   accent-color: var(--accent);
 }
+
+/* The book page (plan 103 Phase E) */
+.book-subtitle {
+  font-size: 1.15rem;
+  color: var(--muted);
+  margin-top: -0.5rem;
+}
+
+.book-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1rem 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.contents {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contents-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.contents-kind {
+  min-width: 6.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.contents-title {
+  font-weight: 600;
+  flex: 1 1 14rem;
+}
+
+.contents-checkpoint,
+.contents-project {
+  background: var(--surface);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.contents-links {
+  display: flex;
+  gap: 0.9rem;
+  font-size: 0.95rem;
+}
+
+.pdf-list {
+  margin-top: 0.25rem;
+}
+
+/* The glossary */
+.glossary-entry {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 1rem;
+}
+
+.glossary dt {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.glossary dd {
+  margin: 0.25rem 0 0;
+}
+
+.glossary dd > p:first-child {
+  margin-top: 0;
+}
+
+.glossary-first {
+  font-size: 0.92rem;
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+/* Search */
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: end;
+}
+
+.search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 14rem;
+}
+
+.search-field input,
+.search-field select {
+  font: inherit;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--muted);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 100%;
+}
+
+.search-results {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-result {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-result p {
+  margin: 0.15rem 0;
+}
+
+.search-result-title {
+  font-weight: 600;
+}
+
+.search-result-book {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.search-result-excerpt mark {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.search-more {
+  margin-top: 1rem;
+  font: inherit;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}

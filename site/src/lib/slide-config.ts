@@ -10,7 +10,9 @@ import { parse as parseYaml } from 'yaml';
 import type { LoadedBook } from './bundle';
 import { auditBook, DEFAULT_LIMITS, type AllowEntry, type BookAudit, type SlideConfig } from './slides.ts';
 
-export { auditPasses, formatAudit } from './slides.ts';
+import { auditPasses, formatAudit } from './slides.ts';
+
+export { auditPasses, formatAudit };
 
 const LIMIT_KEYS = {
   max_words: 'maxWords',
@@ -59,4 +61,39 @@ export function auditLoadedBook(repo: string, book: LoadedBook): { audit: BookAu
   const entries = book.entries.flatMap((e) =>
     e.data.lesson === null ? [] : [{ id: e.record.id, blocks: e.data.lesson.blocks }]);
   return { audit: auditBook(book.id, entries, config), config };
+}
+
+/** Every `site: true` book id in `books.yaml`, in its order (the books the audit must cover). */
+export function siteBookIds(repo: string): string[] {
+  const catalog = parseYaml(readFileSync(join(repo, 'books.yaml'), 'utf-8')) as { books?: { id: string; site?: unknown }[] };
+  return (catalog.books ?? []).filter((b) => b.site === true).map((b) => b.id);
+}
+
+export interface AuditRun {
+  lines: string[];
+  passed: boolean;
+  /** Each audited book with its slide count, in order. */
+  books: { book: string; slides: number; passed: boolean }[];
+}
+
+/**
+ * The whole slide audit: every loaded book's report, then one summary line that names every
+ * book with its slide count. When `expected` is given (the `site: true` books), a book with no
+ * loaded bundle fails the audit, so a book can never drop out of it silently.
+ */
+export function runAudit(repo: string, books: LoadedBook[], expected?: string[]): AuditRun {
+  const lines: string[] = [];
+  const results: AuditRun['books'] = [];
+  for (const book of books) {
+    const { audit, config } = auditLoadedBook(repo, book);
+    lines.push(...formatAudit(audit, config));
+    results.push({ book: book.id, slides: audit.slides, passed: auditPasses(audit) });
+  }
+  const loaded = new Set(books.map((b) => b.id));
+  const missing = (expected ?? []).filter((id) => !loaded.has(id));
+  for (const id of missing) lines.push(`slide-audit: ${id}: FAIL no site bundle (run scripts/build-site.sh to export it)`);
+  const passed = missing.length === 0 && results.every((r) => r.passed);
+  const listed = results.map((r) => `${r.book} (${r.slides} slides${r.passed ? '' : ', FAILING'})`).join(', ');
+  lines.push(`slide-audit: ${passed ? 'OK' : 'FAIL'}: ${results.length} book(s): ${listed}`);
+  return { lines, passed, books: results };
 }

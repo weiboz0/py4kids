@@ -14,5 +14,5 @@ const answer = getBooks()
 <!doctype html>
 <html lang="en">
   <head><meta charset="utf-8" /><title>Leak regression</title></head>
-  <body><main><Fragment set:html={renderMarkdown(answer)} /></main></body>
+  <body><main data-pagefind-body><Fragment set:html={renderMarkdown(answer)} /></main></body>
 </html>

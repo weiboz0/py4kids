@@ -72,3 +72,10 @@ pnpm -C site dev                               # local preview of the exported b
 - **Cards and mastery:** `/<book>/cards/` drills the deck from `deck.json`, and the book page's mastery map reads `mastery.json`.
   Both are build-time projections (`src/lib/cards.ts`, `src/lib/mastery.ts`) with no `answer_md`, `check.*` or hash.
   `src/lib/normalise.ts` ports `tools/export/normalise.py`, checked against every vector in `tools/export/hash_vectors.json`.
+- **Book pages (Phase E):** `/<book>/` lists the contents in syllabus order, with resume, quiz cards, the glossary (`/<book>/glossary/`), the quick reference (`/<book>/reference/`), the mastery map, and the release PDFs only when `book.json` `pdfs` is set (`--release`).
+  Their view models are in `src/lib/book-page.ts`.
+- **Search:** `pnpm -C site search-index` (run by `scripts/build-site.sh` after `astro build`) runs Pagefind over `dist/` and removes Pagefind's prebuilt UI, which the site does not use.
+  Only pages with `data-pagefind-body` are indexed (reading views, practice pages, glossaries, references); the About, privacy, terms, search, catalog, book, card and slide pages are not.
+  `/search/` is the site's own small UI (`src/scripts/search.ts`) on Pagefind's JS API, loaded from `/pagefind/` on the same origin.
+- **Headers:** `public/_headers` (Cloudflare Pages format) sets the strict CSP, `X-Content-Type-Options`, `Referrer-Policy` and `Permissions-Policy` for every path; COOP/COEP come with part C.
+- **Favicon:** `public/favicon.svg`, and `public/favicon.ico` written by `node scripts/favicon.ts`.

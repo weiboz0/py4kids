@@ -1,12 +1,14 @@
 ---
 /**
- * The book contents page, a Phase A stub so catalog links resolve: entries in syllabus order.
- * Phase E owns this page (resume, PDF links, mastery map).
+ * The book page `/<book>/` (plan 103 Phase E): resume, the book's tools (quiz cards, glossary,
+ * quick reference), the contents in syllabus order (each unit, checkpoint and project with its
+ * reading view, practice page and slides), the release PDFs when the bundle has a release, and
+ * the concept mastery map. All bundle data comes through bookPage (site/src/lib/book-page.ts).
  */
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import { getBooks, type LoadedBook } from '../../lib/bundle';
-import { contents } from '../../lib/catalog';
+import { bookPage, cardsHref } from '../../lib/book-page';
 import MasteryMap from '../../components/MasteryMap.astro';
 import ResumeLink from '../../components/ResumeLink.astro';
 import { deckSummary } from '../../lib/cards';
@@ -18,16 +20,62 @@ interface Props {
   book: LoadedBook;
 }
 const { book } = Astro.props;
-const items = contents(book);
+const page = bookPage(book);
+const hasCards = deckSummary(book).total > 0;
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const summary = [
+  plural(page.counts.unit, 'unit'),
+  page.counts.checkpoint > 0 ? plural(page.counts.checkpoint, 'checkpoint') : '',
+  page.counts.project > 0 ? plural(page.counts.project, 'project') : '',
+].filter(Boolean).join(', ');
+const tools = [
+  hasCards ? { href: cardsHref(book.id), label: 'Quiz cards' } : null,
+  page.glossaryHref ? { href: page.glossaryHref, label: 'Glossary' } : null,
+  page.referenceHref ? { href: page.referenceHref, label: 'Quick reference' } : null,
+].filter((t) => t !== null);
 ---
-<Base title={book.book.book.title} description={book.book.book.subtitle} book={book}>
-  <h1>{book.book.book.title}</h1>
-  <p>{book.book.book.subtitle}</p>
+<Base title={page.title} description={page.subtitle} book={book}>
+  <h1>{page.title}</h1>
+  <p class="book-subtitle">{page.subtitle}</p>
   <ResumeLink book={book.id} />
-  {deckSummary(book).total > 0 && <p><a href={`/${book.id}/cards/`}>Quiz cards</a></p>}
-  <h2>Contents</h2>
-  <ol>
-    {items.map((e) => <li><a href={e.href}>{e.title}</a></li>)}
-  </ol>
+  {tools.length > 0 && (
+    <ul class="book-tools" aria-label="Study tools">
+      {tools.map((t) => <li><a class="button-link" href={t.href}>{t.label}</a></li>)}
+    </ul>
+  )}
+
+  <section aria-labelledby="contents-heading">
+    <h2 id="contents-heading">Contents</h2>
+    <p class="muted">{summary}, in the order the course teaches them.</p>
+    <ol class="contents" data-contents>
+      {page.entries.map((e) => (
+        <li class={`contents-entry contents-${e.kind}`} data-entry={e.id}>
+          <span class="contents-kind" aria-hidden="true">{e.kindLabel}</span>
+          <a class="contents-title" href={e.href}><span class="visually-hidden">{e.kindLabel}: </span>{e.name}</a>
+          {(e.practice || e.slidesHref) && (
+            <span class="contents-links">
+              {e.practice && <a href={e.practice.href}>{e.practice.label} ({e.practice.count})<span class="visually-hidden">: {e.title}</span></a>}
+              {e.slidesHref && <a href={e.slidesHref}>Slides<span class="visually-hidden">: {e.title}</span></a>}
+            </span>
+          )}
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  {page.pdfs && (
+    <section aria-labelledby="pdf-heading" data-pdfs>
+      <h2 id="pdf-heading">Printable books (PDF)</h2>
+      <p class="muted">Release {page.release}. The links open the files on GitHub.</p>
+      <ul class="pdf-list">
+        {page.pdfs.filter((p) => p.audience === 'student').map((p) => <li><a href={p.href}>{p.label}</a></li>)}
+      </ul>
+      <p class="muted">For parents and teachers:</p>
+      <ul class="pdf-list">
+        {page.pdfs.filter((p) => p.audience === 'adult').map((p) => <li><a href={p.href}>{p.label}</a></li>)}
+      </ul>
+    </section>
+  )}
+
   <MasteryMap book={book} />
 </Base>

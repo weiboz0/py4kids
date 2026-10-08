@@ -1,13 +1,75 @@
 ---
-/** Placeholder: Phase E writes the About text (the D5 honesty statement and the license). */
+/**
+ * `/about/` (plan 103 Pages; design 012 D5): what py4kids is, its books, how checking works, the
+ * honesty statement (answer gating is a study aid, not security) and the license. Not indexed
+ * for search.
+ */
 import Base from '../layouts/Base.astro';
+import { getBooks } from '../lib/bundle';
+import { catalogCards } from '../lib/catalog';
+import { ISSUES_LIST_URL, LICENSE_NAME, LICENSE_URL } from '../lib/report';
+
+const books = catalogCards(getBooks());
 ---
-<Base title="About">
-  <h1>About py4kids</h1>
-  <p>py4kids is a free set of Python courses for middle school students.</p>
-  <p>
-    The course content is licensed{' '}
-    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license">CC BY-NC-SA 4.0</a>,
-    with attribution "py4kids".
-  </p>
+<Base title="About" description="What py4kids is, how its checking works, and its license.">
+  <article class="site-text">
+    <h1>About py4kids</h1>
+    <p>
+      py4kids is a free set of Python courses for middle school students.
+      It was written by a teacher for a small class and is shared openly so that anyone can use it.
+      No programming experience is needed to start.
+      Every unit opens with something to build, and the ideas are taught along the way.
+    </p>
+
+    <h2>The books</h2>
+    <ul>
+      {books.map((b) => (
+        <li><a href={b.href}>{b.title}</a>: {b.subtitle.charAt(0).toLowerCase() + b.subtitle.slice(1)}.</li>
+      ))}
+    </ul>
+    <p>
+      Each book has lessons you read or step through as slides, exercises, checkpoints, quiz cards,
+      a glossary and a quick reference.
+      Your progress is saved on your own device only; see the <a href="/privacy/">privacy notice</a>.
+    </p>
+
+    <h2>How checking works</h2>
+    <p>Every exercise says how it is checked:</p>
+    <ul>
+      <li>a program is run on test inputs, and its output is compared with the expected output (you see the sample input and output; the others stay hidden);</li>
+      <li>a short answer, or a prediction of what a program prints, is compared with the expected answer, ignoring extra spaces;</li>
+      <li>a function is run by tests, which show whether each one passed;</li>
+      <li>an open-ended exercise, such as a free design, has a short checklist that you tick yourself.</li>
+    </ul>
+    <p>
+      Running your code and checking answers in the browser is coming in a later version of the site.
+      Until then, the exercises say how they will be checked, and you can run your programs in Python on your computer.
+    </p>
+
+    <h2>Hidden answers are a study aid, not a lock</h2>
+    <p>
+      The site keeps some answers out of sight so that you try first: that is where the learning happens.
+      This is a study aid, not security.
+      Everything the site checks against is public by nature: the worked solutions are in the open
+      source repository, and the Teacher's Edition PDFs are published.
+      Someone who wants to find an answer can.
+      Teachers should not use the site's checks for graded tests.
+    </p>
+
+    <h2>License</h2>
+    <p>
+      The course content is licensed under{' '}
+      <a href={LICENSE_URL} rel="license">{LICENSE_NAME}</a>.
+      You may share and adapt it for non-commercial purposes, giving credit to "py4kids" and sharing
+      your changes under the same license.
+      See the <a href="/terms/">terms</a> for the details.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Parents and teachers can report a problem or ask a question on the project's
+      <a href={ISSUES_LIST_URL}>GitHub issues page</a>.
+      Issues there are public.
+    </p>
+  </article>
 </Base>

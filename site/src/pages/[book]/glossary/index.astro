@@ -1,0 +1,42 @@
+---
+/**
+ * The book's glossary `/<book>/glossary/` (plan 103 Pages): every term with its definition and
+ * the unit that first teaches it. Indexed for search (`data-pagefind-body`). All bundle data
+ * comes through glossaryView (site/src/lib/book-page.ts).
+ */
+import type { GetStaticPaths } from 'astro';
+import Base from '../../../layouts/Base.astro';
+import { getBooks, type LoadedBook } from '../../../lib/bundle';
+import { glossaryView, hasGlossary } from '../../../lib/book-page';
+
+export const getStaticPaths = (() =>
+  getBooks().filter(hasGlossary).map((book) => ({ params: { book: book.id }, props: { book } }))) satisfies GetStaticPaths;
+
+interface Props {
+  book: LoadedBook;
+}
+const { book } = Astro.props;
+const view = glossaryView(book);
+---
+<Base title={`Glossary: ${view.bookTitle}`} description={`The words used in ${view.bookTitle}, and where each is first taught.`} book={book}>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href={view.bookHref} data-pagefind-meta="book" data-pagefind-filter="book">{view.bookTitle}</a></nav>
+  <div data-pagefind-body>
+    <h1>Glossary</h1>
+    <dl class="glossary">
+      {view.terms.map((t) => (
+        <div class="glossary-entry" id={t.anchor}>
+          <dt>{t.term}</dt>
+          <dd>
+            <Fragment set:html={t.html} />
+            {t.firstTaught && (
+              <p class="glossary-first">
+                First taught in{' '}
+                {t.firstTaught.href ? <a href={t.firstTaught.href}>{t.firstTaught.label}</a> : t.firstTaught.label}
+              </p>
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</Base>

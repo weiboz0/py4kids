@@ -6,7 +6,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadBook, loadBooks, repoRoot, type LoadedBook } from '../src/lib/bundle';
-import { bookLinks, catalogCards, contents, releaseTag } from '../src/lib/catalog';
+import { bookLinks, catalogCards, releaseTag } from '../src/lib/catalog';
+import { bookPage, glossaryView, referenceView } from '../src/lib/book-page';
 import { slideDecks } from '../src/lib/slide-view';
 import { deckProjection, deckSummary } from '../src/lib/cards';
 import { attribution, masteryMap, masteryProjection } from '../src/lib/mastery';
@@ -33,7 +34,10 @@ const CONSUMERS: ((books: LoadedBook[]) => unknown)[] = [
   catalogCards,
   (books) => releaseTag(books),
   (books) => books.map((b) => releaseTag(books, b)),
-  (books) => books.map(contents),
+  // Phase E: the book page, the glossary and the quick reference.
+  (books) => books.map(bookPage),
+  (books) => books.map(glossaryView),
+  (books) => books.map(referenceView),
   (books) => books.map(slideDecks),
   // Phase D: the card deck, the mastery map and the progress island's page context.
   (books) => books.map(deckProjection),

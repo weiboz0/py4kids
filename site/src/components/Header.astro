@@ -13,6 +13,7 @@ const { books, current } = Astro.props;
   <div class="site-header-inner">
     <a class="site-name" href="/">py4kids</a>
     <BookSwitcher books={books} current={current} />
+    <a class="site-search-link" href="/search/">Search</a>
     <ThemeToggle />
   </div>
 </header>

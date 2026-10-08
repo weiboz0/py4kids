@@ -21,8 +21,8 @@ const book = getBook(bookId);
 const view = practiceView(book, entryId);
 ---
 <Base title={`${view.heading}: ${view.title}`} book={book}>
-  <p class="crumbs"><a href={view.bookHref}>{view.bookTitle}</a> › <a href={view.readingHref}>{view.title}</a></p>
-  <h1 class="entry-title">{view.heading}: {view.title}</h1>
+  <p class="crumbs"><a href={view.bookHref} data-pagefind-meta="book" data-pagefind-filter="book">{view.bookTitle}</a> › <a href={view.readingHref}>{view.title}</a></p>
+  <h1 class="entry-title" data-pagefind-meta="title">{view.heading}: {view.title}</h1>
   <div data-pagefind-body>
     {view.intro.length > 0 && (
       <div class="practice-intro">{view.intro.map((html) => <Fragment set:html={html} />)}</div>

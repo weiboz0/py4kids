@@ -36,6 +36,8 @@ const bodyData = pageDataAttributes(book ? pageContext(book, Astro.url.pathname)
     <title>{fullTitle}</title>
     {description && <meta name="description" content={description} />}
     <script is:inline src="/scripts/theme.js"></script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="stylesheet" href="/code.css" />
     <slot name="head" />
   </head>

@@ -261,3 +261,25 @@ kbd {
     scroll-behavior: auto !important;
   }
 }
+
+/* Header search link (plan 103 Phase E) */
+.site-search-link {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* About, privacy and terms */
+.site-text h2 {
+  margin-top: 2rem;
+}
+
+.site-text li + li {
+  margin-top: 0.3rem;
+}

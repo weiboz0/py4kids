@@ -8,23 +8,21 @@
  *   `slides.allow` with a reason);
  * - every unit between max_words and max_unit_words, and the notice-only slide count (reported,
  *   never failing).
- * A stale `slides.allow` key (one that matches no oversized unit) also fails.
+ * A stale `slides.allow` key (one that matches no oversized unit) also fails. On the default
+ * content directory, every `site: true` book in books.yaml must have a bundle, or the audit
+ * fails. The last line names every audited book with its slide count.
  * Exit status: 0 when every book passes, 1 otherwise.
  */
-import { loadBooks, repoRoot } from '../src/lib/bundle.ts';
-import { auditLoadedBook, auditPasses, formatAudit } from '../src/lib/slide-config.ts';
+import { CONTENT_ENV, loadBooks, repoRoot } from '../src/lib/bundle.ts';
+import { runAudit, siteBookIds } from '../src/lib/slide-config.ts';
 
 const repo = repoRoot();
-let failed = false;
-for (const book of loadBooks()) {
-  const { audit, config } = auditLoadedBook(repo, book);
-  for (const line of formatAudit(audit, config)) console.log(line);
-  if (!auditPasses(audit)) failed = true;
-}
-if (failed) {
+const expected = process.env[CONTENT_ENV] ? undefined : siteBookIds(repo);
+const run = runAudit(repo, loadBooks(), expected);
+for (const line of run.lines) console.log(line);
+if (!run.passed) {
   console.error(
     'slide-audit: FAIL (split the block with a slide-break tag, or list its key with a reason in <book>/site.yaml slides.allow)',
   );
   process.exit(1);
 }
-console.log('slide-audit: OK');

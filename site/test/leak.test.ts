@@ -9,12 +9,13 @@
  *   - `check.program` of a hidden item (`answer_visibility: none`)
  *   - every non-sample fixture `.out` file
  * — builds the site from the poisoned copies (`PY4KIDS_SITE_CONTENT`), and searches all of the
- * output (HTML, JS, CSS, JSON, and Pagefind's index and fragments, decompressed, when Pagefind
- * runs) for any sentinel. Zero hits is required.
+ * output (HTML, JS, CSS, JSON, and Pagefind's index and fragments, decompressed) for any
+ * sentinel. Zero hits is required.
  *
  * The build also injects one page that deliberately renders an `answer_md`
- * (test/leak/regression.astro): its sentinel must be found there, which proves the scan catches
- * a leak, and nowhere else.
+ * (test/leak/regression.astro), marked for search: its sentinel must be found there and in
+ * Pagefind's decompressed index and fragments, which proves the scan catches a leak in both, and
+ * nowhere else.
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -51,7 +52,7 @@ interface Poisoned {
   /** Every needle to search for, with the field it was written to. */
   needles: Map<string, string>;
   counts: Record<string, number>;
-  /** The first answer_md sentinel (the one the regression page renders). */
+  /** The first answer_md sentinel written (proof that some answer was poisoned). */
   firstAnswer: string;
 }
 
@@ -168,12 +169,10 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
     });
     if (build.status !== 0) throw new Error(`poisoned build failed:\n${build.stdout}\n${build.stderr}`);
 
-    // Pagefind (plan 103 Phase E) indexes the poisoned build too, when it is installed.
-    const pagefind = join(SITE, 'node_modules', '.bin', 'pagefind');
-    if (existsSync(pagefind)) {
-      const index = spawnSync(pagefind, ['--site', out], { cwd: SITE, encoding: 'utf-8' });
-      if (index.status !== 0) throw new Error(`pagefind failed:\n${index.stdout}\n${index.stderr}`);
-    }
+    // Pagefind (plan 103 Phase E) indexes the poisoned build exactly as scripts/build-site.sh
+    // indexes the real one.
+    const index = spawnSync(process.execPath, [join(SITE, 'scripts', 'search-index.ts'), out], { cwd: SITE, encoding: 'utf-8' });
+    if (index.status !== 0) throw new Error(`search-index failed:\n${index.stdout}\n${index.stderr}`);
     hits = scan(out, poisoned.needles.keys());
   }, 600_000);
 
@@ -203,9 +202,15 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
     }
   });
 
+  /** The sentinel the regression page renders (the first answer_md in books.yaml order). */
+  const regressionNeedles = () => new Set(hits.filter((h) => h.file === REGRESSION).map((h) => h.needle));
+  /** The deliberate leak's own hits: its page, and (it is indexed) Pagefind's files. */
+  const deliberate = (h: { file: string; needle: string }) =>
+    h.file === REGRESSION || (h.file.startsWith(`pagefind${sep}`) && regressionNeedles().has(h.needle));
+
   it('renders no sentinel anywhere in the site', () => {
     const leaks = hits
-      .filter((h) => h.file !== REGRESSION)
+      .filter((h) => !deliberate(h))
       .map((h) => `${h.file}: ${poisoned.needles.get(h.needle)}`);
     expect(leaks).toEqual([]);
   });
@@ -216,10 +221,37 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
     expect(caught[0]).toMatch(/ answer_md$/);
   });
 
+  it('catches the deliberate leak inside the decompressed Pagefind index and fragments too', () => {
+    const caught = hits.filter((h) => h.file.startsWith(`pagefind${sep}`)).map((h) => h.file.split(sep)[1]);
+    expect(caught).toContain('fragment');
+    expect(caught).toContain('index');
+    const needles = regressionNeedles();
+    expect(needles.size).toBe(1);
+    expect(hits.filter((h) => h.file.startsWith(`pagefind${sep}`)).every((h) => needles.has(h.needle))).toBe(true);
+  });
+
+  it('indexed the poisoned build with Pagefind and scanned its index and fragments', () => {
+    const index = files(join(out, 'pagefind'));
+    expect(index.some((f) => f.includes(`${sep}fragment${sep}`))).toBe(true);
+    expect(index.some((f) => f.includes(`${sep}index${sep}`))).toBe(true);
+    // The fragments are gzip: the scan decompresses them, so it reads real page text there.
+    const fragment = index.find((f) => f.includes(`${sep}fragment${sep}`))!;
+    expect(searchable(fragment)).toMatch(/"url":"\//);
+  });
+
   it('ships no JSON carrying answer_md, source or hash keys', () => {
     for (const file of files(out).filter((f) => f.endsWith('.json'))) {
+      const rel = relative(out, file);
+      // Pagefind's manifest names each language index by its own "hash" (a file-name tag);
+      // it is pinned to Pagefind's keys, and the sentinel scan covers its content.
+      if (rel === join('pagefind', 'pagefind-entry.json')) {
+        const entry = JSON.parse(readFileSync(file, 'utf-8')) as { languages: Record<string, object> };
+        expect(Object.keys(entry).sort()).toEqual(['include_characters', 'languages', 'version']);
+        for (const lang of Object.values(entry.languages)) expect(Object.keys(lang).sort()).toEqual(['hash', 'page_count', 'wasm']);
+        continue;
+      }
       const text = readFileSync(file, 'utf-8');
-      expect(text, relative(out, file)).not.toMatch(/"(?:answer_md|source|hash)"\s*:/);
+      expect(text, rel).not.toMatch(/"(?:answer_md|source|hash)"\s*:/);
     }
   });
 });

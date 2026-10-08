@@ -14,6 +14,7 @@ import { escapeHtml, highlightCode, renderInline, renderMarkdown, renderOutput }
 import { ISSUES_URL, REPORT_LABEL, reportHref } from './report';
 import { turtleSvg } from './turtle';
 import { deckProjection } from './cards';
+import { bookPage, glossaryView, referenceView } from './book-page';
 import { slideDecks } from './slide-view';
 import { buildSlides } from './slides';
 import type { Block, Check, EntryKind, Item } from './types';
@@ -318,8 +319,9 @@ export function warmPipeline(books: LoadedBook[]): void {
   for (const path of entryPaths(books)) readingView(bookOf(books, path.book), path.entry);
   for (const path of practicePaths(books)) practiceView(bookOf(books, path.book), path.entry);
   for (const book of books) {
-    for (const term of book.book.glossary) renderMarkdown(term.definition_md);
-    renderMarkdown(book.book.reference_md);
+    bookPage(book);
+    glossaryView(book);
+    referenceView(book);
     deckProjection(book);
     slideDecks(book);
   }
