@@ -80,3 +80,10 @@ entries:
   introduces: [ann-retrieval, hnsw, hybrid-retrieval]
   requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, embedding-retrieval, two-tower, bm25, score-blending]
   practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, embedding-retrieval, two-tower, bm25, score-blending]
+- id: unit-11-neural-reranking
+  kind: unit
+  title: "Neural reranking"
+  lessons: 3
+  introduces: [neural-reranking, ranking-features, learning-to-rank]
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, score-blending, two-tower, neural-training, hybrid-retrieval]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, score-blending, two-tower, neural-training, hybrid-retrieval]

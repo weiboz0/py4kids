@@ -60,6 +60,7 @@ from bookrec.protocol import (
 )
 from bookrec.rank import rank
 from bookrec.registry import DuplicatePathError, PathRegistry
+from bookrec.rerank import NeuralRerankerPath, RerankerModel, rerank
 from bookrec.scoreboard import (
     BlendedScoreboardResult,
     RandomRetrievalPath,
@@ -84,9 +85,11 @@ __all__ = [
     "ItemItemRetrievalPath",
     "LexicalRetrievalPath",
     "MatrixFactorizationPath",
+    "NeuralRerankerPath",
     "PathRegistry",
     "PopularityRetrievalPath",
     "RandomRetrievalPath",
+    "RerankerModel",
     "RetrievalPath",
     "ScoreboardResult",
     "SemanticEmbeddingRetrievalPath",
@@ -111,6 +114,7 @@ __all__ = [
     "precision_at_k",
     "rank",
     "recall_at_k",
+    "rerank",
     "run_blended_scoreboard",
     "run_validation_scoreboard",
     "search_catalog",

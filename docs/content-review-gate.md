@@ -8,7 +8,7 @@ The pre-PR quality gate for course content
 | # | Reviewer | Dispatch | Model |
 |---|----------|----------|-------|
 | 1 | Self-review | active session inline | active session model |
-| 2 | Sol reviewer | `codex:codex-rescue` subagent, fresh and read-only (request `--model gpt-6-sol`) | GPT-6-sol |
+| 2 | Sol reviewer | `codex:codex-rescue` subagent, fresh and read-only (request `--model gpt-6-sol`; if it is rejected or unavailable, fall back to `--model gpt-5.6-sol`) | GPT-6-sol (fallback GPT-5.6-sol) |
 | 3 | Fable reviewer | fresh, read-only Fable 5 subagent (`Agent`, general-purpose) | Fable 5 |
 
 (The GLM reviewer was removed from the review rolls by user directive on 2026-10-05 after a persistent
