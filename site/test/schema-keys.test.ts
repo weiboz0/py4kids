@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadBook, loadBooks, repoRoot, type LoadedBook } from '../src/lib/bundle';
 import { bookLinks, catalogCards, contents, releaseTag } from '../src/lib/catalog';
+import { slideDecks } from '../src/lib/slide-view';
 import { distinctReads, makeDeclared, Recorder, undeclaredReads } from './helpers/schema-keys';
 
 const FIXTURE = join(import.meta.dirname, 'fixtures', 'bundles', 'demo');
@@ -29,6 +30,7 @@ const CONSUMERS: ((books: LoadedBook[]) => unknown)[] = [
   (books) => releaseTag(books),
   (books) => books.map((b) => releaseTag(books, b)),
   (books) => books.map(contents),
+  (books) => books.map(slideDecks),
 ];
 
 function run(books: LoadedBook[]): void {

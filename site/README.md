@@ -61,4 +61,8 @@ pnpm -C site dev                               # local preview of the exported b
 - **Types:** `src/lib/types.ts` is hand-written to the schema.
   `test/schema-keys.test.ts` proves every key the site reads is declared there; add each new bundle-reading view model to its `CONSUMERS`.
 - **No inline scripts or styles** (the strict CSP): styles are external stylesheets, client code is external modules, and the theme script is `public/scripts/theme.js`.
+- **Slides:** `src/lib/slides.ts` holds the slide rules (plan 103 D6), used by both the player (`/<book>/<entry>/slides/`) and the audit.
+  `pnpm -C site slide-audit` (run by `scripts/build-site.sh`) fails on a unit over `max_unit_words`, a table over `max_table_rows` or a code slide over `max_code_lines`, and reports units over the `max_words` packing budget and notice-only slides.
+  Limits and reviewed exceptions live in `<book>/site.yaml` `slides:` (`tools/books.py` validates it); a lesson cell tagged `slide-break` starts a new slide, one tagged `slide-skip` stays out of the slides.
+  The player dispatches a `py4kids:slide` DOM event (`{book, entry, index, key, count}`) per slide viewed; it stores nothing itself.
 - `scripts/ci-local.sh` step 6 builds the site and runs its tests when the change touches it (`tools/ci_scope.py --site`).

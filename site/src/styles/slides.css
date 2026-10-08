@@ -1,0 +1,269 @@
+/* Slide mode (plan 103 D6). The deck fills the viewport; the site header is hidden on slide
+   pages and the footer sits below the deck. Without script every slide shows in order; the
+   player (src/scripts/slides.ts) adds .is-live and hides all but the current slide. A code
+   panel scrolls when a program is taller than the slide (the audit's max_code_lines). */
+
+body:has(.deck) .site-header {
+  display: none;
+}
+
+body:has(.deck) main {
+  max-width: none;
+  padding: 0;
+}
+
+.deck {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+.deck.is-live {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.deck-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 1rem;
+  padding: 0.5rem var(--gutter);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.deck-exit {
+  font-weight: 600;
+}
+
+.deck-exit kbd {
+  margin-left: 0.25rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+}
+
+.deck-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deck-count {
+  margin: 0;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.deck-progress {
+  display: block;
+  width: 100%;
+  height: 0.35rem;
+  border: 0;
+  appearance: none;
+  background: var(--border);
+  accent-color: var(--accent);
+}
+
+.deck-progress::-webkit-progress-bar {
+  background: var(--border);
+}
+
+.deck-progress::-webkit-progress-value {
+  background: var(--accent);
+}
+
+.deck-progress::-moz-progress-bar {
+  background: var(--accent);
+}
+
+.deck-slides {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  touch-action: pan-y;
+}
+
+.slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem var(--gutter);
+  border-bottom: 1px solid var(--border);
+}
+
+.deck.is-live .slide {
+  height: 100%;
+  overflow: auto;
+  border-bottom: 0;
+}
+
+.slide[hidden] {
+  display: none;
+}
+
+.slide-body {
+  width: 100%;
+  max-width: 60rem;
+  max-height: 100%;
+  font-size: clamp(1.05rem, 0.9rem + 0.9vw, 1.6rem);
+  line-height: 1.5;
+}
+
+.slide-body h2,
+.slide-body h3,
+.slide-body h4 {
+  margin: 0 0 0.6em;
+  line-height: 1.2;
+}
+
+.slide-body h2 {
+  font-size: 1.6em;
+}
+
+.slide-body h3,
+.slide-body h4 {
+  font-size: 1.3em;
+}
+
+.slide-body p,
+.slide-body ul,
+.slide-body ol {
+  margin: 0 0 0.75em;
+}
+
+.slide-body li + li {
+  margin-top: 0.35em;
+}
+
+.slide-md-notice {
+  padding: 0.5em 0.9em;
+  border-left: 4px solid var(--accent);
+  background: var(--surface);
+  border-radius: 0 6px 6px 0;
+}
+
+.slide-md-notice::before {
+  content: 'Notice';
+  display: block;
+  font-weight: 700;
+  font-size: 0.8em;
+  color: var(--muted);
+}
+
+.slide-md-notice p:last-child {
+  margin-bottom: 0;
+}
+
+.slide-md-goals::before,
+.slide-md-recap::before {
+  display: block;
+  margin-bottom: 0.4em;
+  font-size: 1.3em;
+  font-weight: 700;
+}
+
+.slide-md-goals::before {
+  content: 'Goals';
+}
+
+.slide-md-recap::before {
+  content: 'Recap';
+}
+
+.slide-block {
+  margin: 0 0 0.75em;
+}
+
+.slide-label,
+.slide-output-label {
+  margin: 0 0 0.3em;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.slide-code,
+.slide-output pre {
+  margin: 0 0 0.5em;
+  padding: 0.6em 0.8em;
+  overflow: auto;
+  max-height: 70vh;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 0.72em;
+  line-height: 1.45;
+}
+
+.slide-output pre {
+  max-height: 30vh;
+}
+
+.slide-drawing {
+  display: block;
+  max-width: 100%;
+  max-height: 40vh;
+  margin: 0 auto 0.5em;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.slide-table {
+  overflow-x: auto;
+}
+
+.slide-table table {
+  border-collapse: collapse;
+  font-size: 0.8em;
+}
+
+.slide-table th,
+.slide-table td {
+  padding: 0.3em 0.6em;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.deck-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem var(--gutter);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.deck:not(.is-live) .deck-nav,
+.deck:not(.is-live) .deck-progress {
+  display: none;
+}
+
+.deck-button {
+  font: inherit;
+  min-width: 7rem;
+  min-height: 2.75rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.deck-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

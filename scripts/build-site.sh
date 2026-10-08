@@ -3,7 +3,7 @@
 #   1. export every `site: true` book (books.yaml flags; no id is pinned) to site/content/<book>/
 #   2. install the site's pinned dependencies (frozen lockfile) and run `astro build` to site/dist/
 #   3. index the built pages with Pagefind      (plan 103 Phase E: hook below)
-#   4. run the slide audit                      (plan 103 Phase C: hook below)
+#   4. run the slide audit (`pnpm -C site slide-audit`; <book>/site.yaml slides: limits)
 # Usage: scripts/build-site.sh [--release <tag>]   (the tag fills the bundles' PDF links)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -50,6 +50,7 @@ export ASTRO_TELEMETRY_DISABLED=1
 "${SITE_PNPM[@]}" -C site build
 
 # 3. HOOK (plan 103 Phase E): Pagefind indexes site/dist here.
-# 4. HOOK (plan 103 Phase C): the slide audit (`pnpm -C site slide-audit`) runs here.
+# 4. The slide audit (plan 103 D6): every slide within its book's limits, or allow-listed.
+"${SITE_PNPM[@]}" -C site slide-audit
 
 echo "build-site: built $(wc -w <<< "$books") book(s) to site/dist/"

@@ -43,6 +43,29 @@ describe.skipIf(!built)('site/dist', () => {
     expect(all.filter((f) => f.endsWith('book.json') || /[\\/]entries[\\/][^\\/]+\.json$/.test(f)).map(rel)).toEqual([]);
   });
 
+  it('builds a wired slide deck for every lesson of every book', () => {
+    // The built books: every book directory in dist/ that has a page per bundle entry.
+    const books = readdirSync(DIST, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && existsSync(join(DIST, '..', 'content', d.name, 'book.json')))
+      .map((d) => d.name);
+    expect(books.length).toBeGreaterThan(0);
+    const decks = html.filter((f) => /[\\/]slides[\\/]index\.html$/.test(f));
+    for (const book of books) {
+      expect(decks.some((f) => rel(f).startsWith(`${book}/`)), `${book}: no slides page`).toBe(true);
+    }
+    for (const file of decks) {
+      const text = read(file);
+      const [book, entry] = rel(file).split(/[\\/]/);
+      const count = Number(/data-count="(\d+)"/.exec(text)?.[1]);
+      expect(count, rel(file)).toBeGreaterThan(0);
+      expect(text.match(/<li class="slide slide-/g)?.length, rel(file)).toBe(count);
+      expect(text, rel(file)).toContain(`data-reading="/${book}/${entry}/"`);
+      expect(text, rel(file)).toContain(`<a class="deck-exit" href="/${book}/${entry}/">`);
+      expect(text, rel(file)).toMatch(new RegExp(`<progress[^>]*max="${count}"`));
+      expect(text, rel(file)).toMatch(/<script type="module" src="\/_astro\/[^"]+\.js"><\/script>/);
+    }
+  });
+
   it('links the license deed and the site pages from every page', () => {
     expect(html.length).toBeGreaterThan(1);
     for (const file of html) {

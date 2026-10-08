@@ -10,7 +10,8 @@
     "dev": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "slide-audit": "node scripts/slide-audit.ts"
   },
   "dependencies": {
     "ajv": "8.20.0",
