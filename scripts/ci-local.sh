@@ -166,26 +166,27 @@ step "6/7 site"
 # (.nvmrc; activated through nvm when the shell's default is older), pnpm and a Chromium. The
 # build is scoped like the editions (design 010 D7): it runs when the change touches site/, tools/,
 # scripts/, books.yaml, .nvmrc or a site book (tools/ci_scope.py --site), or with --all-books.
-# Every skip is printed; never silent.
+# A site change with a missing tool fails; an out-of-scope change skips, printed, never silent.
 . scripts/site-env.sh
-if ! site_node_env; then
-  echo "SKIP (Node missing): site build and tests need node >= 22.12 (.nvmrc; nvm install)"
-elif ! site_pnpm; then
-  echo "SKIP: site (pnpm missing; corepack enable)"
-elif ! site_chromium; then
-  echo "SKIP: site (Chromium missing)"
-else
-  decision="$(uv run python -m tools.ci_scope --site "${scope_args[@]}")"
-  echo "site: $decision"
-  if [[ "$decision" == render:* ]]; then
-    bash scripts/build-site.sh
-    "${SITE_PNPM[@]}" -C site test
-    # Phase F: Playwright end-to-end, axe, the no-network and header proofs, then Lighthouse,
-    # against the built dist/ served by site/scripts/serve.mjs.
-    "${SITE_PNPM[@]}" -C site e2e
-  else
-    echo "SKIP: site (${decision#skip: })"
+# Scope is resolved first. A change in the site's scope MUST be verified: a missing tool then fails
+# the gate (plan 103 content review). Only an out-of-scope change skips, and the skip is printed.
+decision="$(uv run python -m tools.ci_scope --site "${scope_args[@]}")"
+echo "site: $decision"
+if [[ "$decision" == render:* ]]; then
+  if ! site_node_env; then
+    echo "FAIL: site in scope but node >= 22.12 is missing (.nvmrc; nvm install)" >&2; exit 1
+  elif ! site_pnpm; then
+    echo "FAIL: site in scope but pnpm is missing (corepack enable)" >&2; exit 1
+  elif ! site_chromium; then
+    echo "FAIL: site in scope but no Chromium was found" >&2; exit 1
   fi
+  bash scripts/build-site.sh
+  "${SITE_PNPM[@]}" -C site test
+  # Phase F: Playwright end-to-end, axe, the no-network and header proofs, then Lighthouse,
+  # against the built dist/ served by site/scripts/serve.mjs.
+  "${SITE_PNPM[@]}" -C site e2e
+else
+  echo "SKIP: site (${decision#skip: })"
 fi
 
 step "7/7 pre-merge guard"

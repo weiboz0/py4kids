@@ -205,5 +205,11 @@ def test_ci_local_site_step():
     step6 = text[site:guard]
     decision = step6.index('uv run python -m tools.ci_scope --site "${scope_args[@]}"')
     assert decision < step6.index('bash scripts/build-site.sh') < step6.index('-C site test')
-    assert 'SKIP (Node missing)' in step6
+    # Scope first; an in-scope change with a missing tool FAILS (never a silent green); only an
+    # out-of-scope change skips.
+    assert decision < step6.index('if ! site_node_env')
+    assert 'FAIL: site in scope but node >= 22.12 is missing' in step6
+    assert 'FAIL: site in scope but pnpm is missing' in step6
+    assert 'FAIL: site in scope but no Chromium was found' in step6
+    assert 'SKIP (Node missing)' not in step6
     assert 'SKIP: site (' in step6

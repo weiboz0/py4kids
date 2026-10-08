@@ -187,7 +187,7 @@ Never `git stash` in the shared tree.
     - `scripts/build-site.sh`
     - the layout shell (header, footer, theme), and a catalog page that builds from real bundles
     - `LICENSE.md` at the repo root (course content under CC BY-NC-SA 4.0, as the user chose)
-  - **`ci-local.sh`** gains a step: if `node` (≥ 22.12), `pnpm` and Chromium exist, run `scripts/build-site.sh` and the site tests; otherwise print `SKIP (Node missing)`. The step is scoped like design 010 D7.
+  - **`ci-local.sh`** gains a step: it resolves scope first (`tools/ci_scope.py --site`). When the site is in scope, it requires `node` (≥ 22.12), `pnpm` and Chromium, and **fails** if any is missing (content review, round 2: a site change must never pass unverified), then runs `scripts/build-site.sh` and the site tests. An out-of-scope change prints `SKIP: site (<reason>)`. This is stricter than design 012 §3's local `SKIP (Node missing)`.
     - `tools/ci_scope.py` gains a `--site` mode: an interface change, because it requires `--book` today, so the CLI accepts exactly one of `--book` or `--site`.
     - `--site` returns `render` when `site/`, `tools/`, `scripts/`, `books.yaml` or any site book's root changed, and `skip` with the reason otherwise.
   - **Done when:** `pnpm -C site build` builds all four books; a vitest unit test runs.
@@ -344,5 +344,10 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
    → Response: `e2e/a11y.spec.ts` now fails on every violation carrying `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` or `wcag22aa`, whatever its impact, and prints only best-practice-only ones; a predicate test proves the filter ignores impact. The stricter gate surfaced no site defect: all 32 template × scheme runs report zero violations of any kind.
 4. `[FIXED]` Normalisation parity for `exact` and `aliases` is unverified on this branch: the Python producer and the 41 vectors come with plan 102. Should Fix: plan 102 merges first, then main is merged into 103 so the vector test covers all 41 vectors.
    → Response: the TS `normalise` is unchanged. `test/normalise.test.ts` adds "parity with Python: every hash_vectors.json vector, all fields": it runs every vector with its `case` and, when present, `whitespace` and `aliases`, checking both the normalised text and the hash, and fails on any vector field it does not know. This branch carries 28 vectors (none with `whitespace`/`aliases`). Parity is complete when plan 102 merges first and main is merged into this branch: the same test then covers all 41 vectors with no change.
+
+### Review 2 — [sol] (2026-10-08, gpt-6-sol)
+- **Verdict**: REJECT. Confirms that the Leitner, per-slide-key and WCAG-gate fixes are present.
+1. `[FIXED]` The site step could print SKIP for missing tools and still reach ALL GREEN. Must Fix. → Response: `ci-local.sh` now resolves scope first. An in-scope site change fails if Node ≥ 22.12, pnpm or Chromium is missing; only an out-of-scope change skips, and the skip is printed. `tests/test_ci_scope.py::test_ci_local_site_step` pins this.
+2. `[OPEN]` Normalisation parity: the same point as round 1 [sol] 4. It closes when plan 102 (the Python producer and its 41 vectors) merges first and main is merged into this branch; the parity test then runs on all vectors. Should Fix.
 
 ## Post-Execution Report
