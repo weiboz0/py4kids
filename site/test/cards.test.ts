@@ -6,7 +6,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadBook, loadBooks, repoRoot, type LoadedBook } from '../src/lib/bundle';
-import { deckProjection, deckSummary, inlineMarkdown, stableShuffle } from '../src/lib/cards';
+import { deckProjection, deckSummary, stableShuffle } from '../src/lib/cards';
+import { renderInline } from '../src/lib/markdown';
 import { deckQueue, gradeChoice, gradeTyped, reportHref } from '../src/lib/deck';
 import type { CardState } from '../src/lib/leitner';
 import { masteryProjection } from '../src/lib/mastery';
@@ -49,9 +50,11 @@ describe('stableShuffle', () => {
   });
 });
 
-describe('inlineMarkdown', () => {
-  it('escapes everything and renders code spans', () => {
-    expect(inlineMarkdown('Use `x < y` & <b>bold</b>')).toBe('Use <code>x &lt; y</code> &amp; &lt;b&gt;bold&lt;/b&gt;');
+describe('concept definitions (the shared Markdown pipeline)', () => {
+  it('escapes raw HTML and renders inline Markdown without a paragraph', () => {
+    expect(renderInline('Use `x < y` & <b>bold</b> **now**')).toBe(
+      'Use <code>x &lt; y</code> &amp; &lt;b&gt;bold&lt;/b&gt; <strong>now</strong>',
+    );
   });
 });
 
@@ -135,7 +138,7 @@ describe('grading and order', () => {
     const href = reportHref('acsl/unit-01-x/lesson/c1#predict', `sha256:${'c'.repeat(64)}`);
     expect(href.startsWith('https://github.com/weiboz0/py4kids/issues/new?title=')).toBe(true);
     const url = new URL(href);
-    expect(url.searchParams.get('title')).toBe('Problem with acsl/unit-01-x/lesson/c1#predict');
+    expect(url.searchParams.get('title')).toBe('Problem report: acsl/unit-01-x/lesson/c1#predict');
     expect(url.searchParams.get('body')).toContain(`Content: sha256:${'c'.repeat(64)}`);
   });
 });

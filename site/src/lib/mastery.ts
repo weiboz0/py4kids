@@ -16,7 +16,7 @@
  */
 
 import type { LoadedBook } from './bundle';
-import { blocksByKey } from './cards';
+import { blocksByKey } from './lesson-blocks';
 import { boxOf, KNOWN_BOX, type CardState } from './leitner';
 import type { ConceptId } from './types';
 

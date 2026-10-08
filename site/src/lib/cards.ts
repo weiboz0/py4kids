@@ -7,7 +7,11 @@
  */
 
 import type { LoadedBook } from './bundle';
-import type { Block, ConceptId } from './types';
+import { blocksByKey } from './lesson-blocks';
+import { renderInline } from './markdown';
+import type { ConceptId } from './types';
+
+export { blocksByKey };
 
 interface DeckCardBase {
   key: string;
@@ -30,7 +34,7 @@ export interface DeckConceptCard extends DeckCardBase {
   kind: 'concept';
   mode: 'choice' | 'flip';
   term: string;
-  /** The definition, rendered to HTML at build time. */
+  /** The definition, rendered at build time by the site's Markdown pipeline (`renderInline`). */
   definition_html: string;
   /** `choice` only: the term and its distractors in a stable order seeded by the card key. */
   options: string[];
@@ -73,24 +77,6 @@ export function stableShuffle<T>(items: readonly T[], seed: string): T[] {
   return out;
 }
 
-export const escapeHtml = (text: string): string =>
-  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-
-/**
- * A minimal, escaped rendering of a one-paragraph definition: `code` spans and nothing else.
- * Phase B's Markdown pipeline can replace it after merge; every character is escaped first.
- */
-export function inlineMarkdown(md: string): string {
-  return escapeHtml(md.trim()).replace(/`([^`]+)`/g, '<code>$1</code>');
-}
-
-/** Every lesson block of the book by key (predict cards and preludes reference them). */
-export function blocksByKey(book: LoadedBook): Map<string, Block> {
-  const map = new Map<string, Block>();
-  for (const { data } of book.entries) for (const block of data.lesson?.blocks ?? []) map.set(block.key, block);
-  return map;
-}
-
 const distinct = <T>(values: readonly T[]): T[] => [...new Set(values)];
 
 /** The deck page's projection (`/<book>/cards/deck.json`). */
@@ -127,7 +113,7 @@ export function deckProjection(book: LoadedBook): DeckProjection {
           unit: record.id,
           concepts: [card.concept],
           term: card.term,
-          definition_html: inlineMarkdown(card.definition_md),
+          definition_html: renderInline(card.definition_md.trim()),
           options: card.mode === 'choice' ? stableShuffle([card.term, ...card.distractors], card.key) : [],
         });
       }

@@ -3,8 +3,8 @@
  * site/dist does not exist (ci-local always builds first). Phase F's CSP and network tests go
  * further; these keep the skeleton honest from the start.
  */
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadBooks, repoRoot } from '../src/lib/bundle';
 
@@ -135,9 +135,32 @@ describe.skipIf(!built)('site/dist', () => {
     const expected = books.flatMap((b) =>
       b.entries.flatMap((e) => (e.data.lesson?.blocks ?? []).filter((x) => x.type === 'turtle-figure' && x.figure?.length)),
     ).length;
-    const svgs = html.flatMap((f) => read(f).match(/<svg class="turtle-figure"[^>]*>/g) ?? []);
+    const isSlides = (f: string) => /[\\/]slides[\\/]index\.html$/.test(f);
+    // The reading views draw each figure once; the slide decks draw them again with turtle.ts.
+    const svgs = html.filter((f) => !isSlides(f)).flatMap((f) => read(f).match(/<svg class="turtle-figure"[^>]*>/g) ?? []);
     expect(svgs).toHaveLength(expected);
-    for (const svg of svgs) expect(svg).toMatch(/ role="img" aria-label="Drawing for [^"]+"/);
+    const slideSvgs = html.filter(isSlides).flatMap((f) => read(f).match(/<svg[^>]*>/g) ?? []);
+    expect(slideSvgs.length).toBeGreaterThan(0);
+    for (const svg of [...svgs, ...slideSvgs]) {
+      expect(svg).toMatch(/^<svg class="turtle-figure"/);
+      expect(svg).toMatch(/ role="img" aria-label="Drawing for [^"]+"/);
+    }
+  });
+
+  it.skipIf(books.length === 0)('links "Slides" from exactly the reading pages that have a slide deck', () => {
+    for (const book of books) {
+      for (const entry of book.entries) {
+        const id = entry.record.id;
+        const linked = read(page(book.id, id)).includes(`href="/${book.id}/${id}/slides/"`);
+        expect(linked, `${book.id}/${id}: Slides link vs slides route`).toBe(existsSync(page(book.id, id, 'slides')));
+      }
+    }
+  });
+
+  it('keeps the build-time pipeline (Shiki, KaTeX, markdown-it) out of every client script', () => {
+    for (const file of all.filter((f) => f.endsWith('.js') && rel(f).startsWith('_astro'))) {
+      expect(statSync(file).size, rel(file)).toBeLessThan(64 * 1024);
+    }
   });
 
   it('defines every highlighted-code class in /code.css, linked from every page', () => {
@@ -163,7 +186,17 @@ describe.skipIf(!built)('site/dist', () => {
   });
 
   it.skipIf(books.length === 0)('links "report a problem" with only a key and the content hash', () => {
-    const pages = html.filter((f) => books.some((b) => rel(f).startsWith(`${b.id}${sep}`)) && rel(f).split(sep).length >= 3);
+    // The reading and practice pages (cards render their links in the island; slides have none).
+    const routes = new Set(
+      books.flatMap((b) =>
+        b.entries.flatMap((e) => [
+          join(b.id, e.record.id, 'index.html'),
+          ...(e.data.items.length > 0 ? [join(b.id, e.record.id, 'practice', 'index.html')] : []),
+        ]),
+      ),
+    );
+    const pages = html.filter((f) => routes.has(rel(f)));
+    expect(pages.length).toBe(routes.size);
     expect(pages.length).toBeGreaterThan(0);
     for (const file of pages) {
       const links = [...read(file).matchAll(/<a href="([^"]+)">For parents and teachers: report a problem<\/a>/g)];

@@ -32,14 +32,4 @@ export function deckQueue(cards: DeckCard[], states: Map<string, CardState>, uni
   };
 }
 
-export const ISSUES_URL = 'https://github.com/weiboz0/py4kids/issues/new';
-
-/**
- * The "report a problem" link (plan 103 Pages): a prefilled GitHub new-issue URL carrying only
- * the item key and the bundle content hash.
- */
-export function reportHref(key: string, contentHash: string): string {
-  const title = `Problem with ${key}`;
-  const body = `Item: ${key}\nContent: ${contentHash}\n\nWhat is wrong:\n`;
-  return `${ISSUES_URL}?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
-}
+export { ISSUES_URL, REPORT_LABEL, reportHref } from './report';

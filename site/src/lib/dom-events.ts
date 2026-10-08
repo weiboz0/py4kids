@@ -1,12 +1,13 @@
 /**
  * The DOM contract between the page islands (plan 103 Phase D).
  *
- * - `py4kids:slide`: the slide player (Phase C) dispatches it each time a slide is shown, on
- *   `document` or `window` (or on an element with `bubbles: true`). `detail.key` is the global
- *   key of the slide's first block; `detail.index` is the slide number (optional). The progress
- *   island writes a `slide` event and moves the book's resume position to the slide.
+ * - `py4kids:slide`: the slide player (Phase C) dispatches it on `document` each time a slide is
+ *   shown, with `{book, entry, index, key, count}`. `detail.key` is the global key of the slide's
+ *   first block; `detail.index` is 0-based. The progress island (a capturing `window` listener)
+ *   writes a `slide` event and moves the book's resume position to the slide.
  * - Practice-page checklists (Phase B): each requirement of a self-check item is an
- *   `<input type="checkbox" data-item-key="<item key>">`; an item's boxes, in document order,
+ *   `<input type="checkbox" data-item-key="<item key>" data-requirement="<i>">`; an item's boxes,
+ *   in document order,
  *   are its `detail.checklist`. The progress island restores their state and writes a
  *   `self-check` event on every change.
  * - `[data-resume-book="<book>"]`: a hidden element holding an `<a>` (and optionally a
@@ -16,10 +17,14 @@
 
 export const SLIDE_EVENT = 'py4kids:slide';
 
+/** What the slide player (src/scripts/slides.ts) sends; only `key` is required here. */
 export interface SlideEventDetail {
   key: string;
+  book?: string;
+  entry?: string;
+  /** 0-based slide index. */
   index?: number;
-  total?: number;
+  count?: number;
 }
 
 /** The slide's block key from an event detail; tolerant of `blockKey`/`block` spellings. */

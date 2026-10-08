@@ -192,6 +192,15 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
     const html = files(out).filter((f) => f.endsWith('.html'));
     expect(html.some((f) => f.includes(`${sep}practice${sep}`))).toBe(true);
     expect(html.length).toBeGreaterThan(100);
+    // The scan covers every output: the slide decks, the card decks and the mastery maps too.
+    const all = files(out).map((f) => relative(out, f));
+    const books = loadBooks({ contentDir: CONTENT }).map((b) => b.id);
+    for (const book of books) {
+      expect(all, `${book} deck.json`).toContain(join(book, 'cards', 'deck.json'));
+      expect(all, `${book} mastery.json`).toContain(join(book, 'mastery.json'));
+      expect(all, `${book} cards page`).toContain(join(book, 'cards', 'index.html'));
+      expect(all.some((f) => f.startsWith(`${book}${sep}`) && f.endsWith(`${sep}slides${sep}index.html`)), `${book} slides`).toBe(true);
+    }
   });
 
   it('renders no sentinel anywhere in the site', () => {

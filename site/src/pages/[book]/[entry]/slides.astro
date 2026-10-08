@@ -52,7 +52,7 @@ const count = deck.slides.length;
                 <figure class={`slide-block slide-block-${part.type}`}>
                   {part.label && <figcaption class="slide-label">{part.label}</figcaption>}
                   {part.svg && <Fragment set:html={part.svg} />}
-                  <pre class="slide-code"><code>{part.code}</code></pre>
+                  <div class="slide-code" set:html={part.codeHtml} />
                   {part.output && (
                     <div class="slide-output">
                       <p class="slide-output-label">Output</p>

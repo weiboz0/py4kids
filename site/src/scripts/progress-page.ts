@@ -48,7 +48,11 @@ async function recordPosition(store: ProgressStore, href: string): Promise<void>
   await store.setResume({ book, entry, href, title: entryTitle ?? entry });
 }
 
-/** Listens at once (the player may show its first slide before the store opens). */
+/**
+ * Listens at once (the player may show its first slide before the store opens). A capturing
+ * listener on `window` hears the event wherever it is dispatched (the player dispatches it on
+ * `document`, without bubbling).
+ */
 function wireSlides(storeReady: Promise<ProgressStore>, contentHash: string): void {
   window.addEventListener(SLIDE_EVENT, (event) => {
     const key = slideKey((event as CustomEvent).detail);
@@ -60,7 +64,7 @@ function wireSlides(storeReady: Promise<ProgressStore>, contentHash: string): vo
         await recordPosition(store, location.pathname + location.hash);
       })
       .catch(warn);
-  });
+  }, { capture: true });
 }
 
 async function wireChecklists(store: ProgressStore, contentHash: string): Promise<void> {

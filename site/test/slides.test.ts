@@ -230,12 +230,15 @@ describe('auditBook', () => {
 });
 
 describe('renderSlideMarkdown', () => {
-  it('escapes raw HTML and renders lists, tables and code', () => {
+  it('renders through the shared Markdown pipeline: raw HTML escaped, lists, tables, code', () => {
     const html = renderSlideMarkdown(splitUnits('Use `<name>` and <b>raw</b>.\n\n- **one**\n- two\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n```\nx < 1\n```'));
     expect(html).toContain('<code>&lt;name&gt;</code> and &lt;b&gt;raw&lt;/b&gt;.');
-    expect(html).toContain('<ul><li><p><strong>one</strong></p></li><li><p>two</p></li></ul>');
+    expect(html).toMatch(/<ul>\s*<li>\s*<p><strong>one<\/strong><\/p>\s*<\/li>\s*<li>\s*<p>two<\/p>\s*<\/li>\s*<\/ul>/);
     expect(html).toContain('<th scope="col">a</th>');
-    expect(html).toContain('<pre class="slide-code"><code>x &lt; 1</code></pre>');
+    // Fenced code goes through the shared highlighter: classes, never inline styles.
+    expect(html).toMatch(/<pre class="shiki[^"]*"[^>]*><code>/);
+    expect(html).toContain('&lt;');
+    expect(html).not.toMatch(/\sstyle="/);
   });
 });
 

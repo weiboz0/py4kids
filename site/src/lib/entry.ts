@@ -11,21 +11,14 @@
 import type { LoadedBook, LoadedEntry } from './bundle';
 import { bookHref } from './catalog';
 import { escapeHtml, highlightCode, renderInline, renderMarkdown, renderOutput } from './markdown';
+import { ISSUES_URL, REPORT_LABEL, reportHref } from './report';
 import { turtleSvg } from './turtle';
+import { deckProjection } from './cards';
+import { slideDecks } from './slide-view';
+import { buildSlides } from './slides';
 import type { Block, Check, EntryKind, Item } from './types';
 
-export const ISSUES_URL = 'https://github.com/weiboz0/py4kids/issues/new';
-export const REPORT_LABEL = 'For parents and teachers: report a problem';
-
-/**
- * A prefilled GitHub new-issue link carrying only the item key and the bundle content hash
- * (plan 103, "Report a problem"). A plain link: no script, nothing sent until the adult submits.
- */
-export function reportHref(key: string, contentHash: string): string {
-  const title = `Problem report: ${key}`;
-  const body = `Item: ${key}\nContent: ${contentHash}\n\nWhat is wrong:\n`;
-  return `${ISSUES_URL}?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
-}
+export { ISSUES_URL, REPORT_LABEL, reportHref };
 
 export const entryHref = (book: string, entry: string) => `${bookHref(book)}${entry}/`;
 export const practiceHref = (book: string, entry: string) => `${entryHref(book, entry)}practice/`;
@@ -142,7 +135,7 @@ export interface ReadingView {
   /** A lesson's blocks, or (for a checkpoint or project, which has none) its intro. */
   blocks: string[];
   hasLesson: boolean;
-  /** `/<book>/<entry>/slides/` when the entry has a lesson (the slide player's route). */
+  /** `/<book>/<entry>/slides/` when the lesson has slides (exactly the slide player's routes). */
   slidesHref: string | null;
   practiceHref: string | null;
   practiceCount: number;
@@ -166,7 +159,8 @@ export function readingView(book: LoadedBook, entryId: string): ReadingView {
     title,
     blocks: renderBlocks(lesson ? lesson.blocks : data.intro, title),
     hasLesson: lesson !== null,
-    slidesHref: lesson !== null && lesson.blocks.length > 0 ? slidesHref(book.id, entryId) : null,
+    // Exactly the entries `slideDecks` builds a deck for (the slide route set).
+    slidesHref: lesson !== null && buildSlides(lesson.blocks).length > 0 ? slidesHref(book.id, entryId) : null,
     practiceHref: itemCount > 0 ? practiceHref(book.id, entryId) : null,
     practiceCount: itemCount,
     ...neighbours(book, entryId),
@@ -317,7 +311,7 @@ export function practiceView(book: LoadedBook, entryId: string): PracticeView {
 /**
  * Render every Markdown and code string any page shows, so the highlighter's class registry is
  * complete before `/code.css` is written (pages and the stylesheet may build in any order).
- * Covers the reading and practice pages, the glossary, the reference and the concept cards;
+ * Covers the reading and practice pages, the slides, the glossary, the reference and the cards;
  * never `answer_md` (part B renders none).
  */
 export function warmPipeline(books: LoadedBook[]): void {
@@ -326,9 +320,8 @@ export function warmPipeline(books: LoadedBook[]): void {
   for (const book of books) {
     for (const term of book.book.glossary) renderMarkdown(term.definition_md);
     renderMarkdown(book.book.reference_md);
-    for (const entry of book.entries) {
-      for (const card of entry.data.cards) if (card.kind === 'concept') renderMarkdown(card.definition_md);
-    }
+    deckProjection(book);
+    slideDecks(book);
   }
 }
 

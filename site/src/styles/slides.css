@@ -194,7 +194,8 @@ body:has(.deck) main {
   color: var(--muted);
 }
 
-.slide-code,
+.slide-code pre,
+.slide-md pre,
 .slide-output pre {
   margin: 0 0 0.5em;
   padding: 0.6em 0.8em;
@@ -202,16 +203,16 @@ body:has(.deck) main {
   max-height: 70vh;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--surface);
   font-size: 0.72em;
   line-height: 1.45;
 }
 
 .slide-output pre {
   max-height: 30vh;
+  background: var(--surface);
 }
 
-.slide-drawing {
+.slide-block .turtle-figure {
   display: block;
   max-width: 100%;
   max-height: 40vh;
@@ -220,17 +221,13 @@ body:has(.deck) main {
   border-radius: 6px;
 }
 
-.slide-table {
-  overflow-x: auto;
-}
-
-.slide-table table {
+.slide-md .table-wrap table {
   border-collapse: collapse;
   font-size: 0.8em;
 }
 
-.slide-table th,
-.slide-table td {
+.slide-md .table-wrap th,
+.slide-md .table-wrap td {
   padding: 0.3em 0.6em;
   border: 1px solid var(--border);
   text-align: left;

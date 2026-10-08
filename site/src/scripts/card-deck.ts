@@ -9,7 +9,7 @@
  */
 
 import type { DeckCard, DeckProjection } from '../lib/cards';
-import { deckQueue, gradeChoice, gradeTyped, reportHref, type Queue } from '../lib/deck';
+import { deckQueue, gradeChoice, gradeTyped, REPORT_LABEL, reportHref, type Queue } from '../lib/deck';
 import type { CardState } from '../lib/leitner';
 import { recordCardReview, sharedProgress, type ProgressStore } from '../lib/progress';
 
@@ -79,7 +79,7 @@ class Deck {
     else if (card.mode === 'choice') this.choice(card, body);
     else this.conceptFlip(card, body);
     const report = el('p', 'card-report');
-    const link = el('a', undefined, 'For parents and teachers: report a problem');
+    const link = el('a', undefined, REPORT_LABEL);
     link.href = reportHref(card.key, this.contentHash);
     report.append(link);
     article.append(report);

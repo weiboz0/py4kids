@@ -11,15 +11,7 @@
  *   The progress store (Phase D) listens for it; this module stores nothing itself.
  */
 
-export interface SlideEventDetail {
-  book: string;
-  entry: string;
-  index: number;
-  key: string;
-  count: number;
-}
-
-export const SLIDE_EVENT = 'py4kids:slide';
+import { SLIDE_EVENT, type SlideEventDetail } from '../lib/dom-events';
 
 const SWIPE_MIN_PX = 50;
 
