@@ -19,7 +19,13 @@ retrieval) gets a **separate** seeded session log over the same catalog. Two art
 
     1. *forced next-volume slot* — after a positive on volume ``v``, volume ``v+1`` takes the first
        exposure slot of each of the next ``session_series_window`` sessions with probability
-       ``session_series_follow_prob`` until read, with acceptance boost ``session_series_accept``;
+       ``session_series_follow_prob`` until read, with acceptance boost ``session_series_accept``.
+       The ``pending`` entry for ``v+1`` is created as soon as ``v`` is read, so if ``v+1`` happens
+       to be naturally exposed *later in the same session* it also receives
+       ``session_series_accept`` (a same-session "binge" read; its timestamp still follows ``v``'s,
+       so it is genuine order, not leakage). The forced slot itself only applies from the next
+       session. Measured at the committed seed: 135 of 9,329 next-volume reads (1.4%; 0.2% of the
+       60,011 positives) are same-session. Kept as-is — the generator is frozen post one-shot;
     2. *decaying author-follow* — each positive adds ``session_author_bump`` to the exposure logit
        and the acceptance score of that author's books, decaying ×``session_author_decay`` per
        session;

@@ -14,10 +14,22 @@ positives only, ``(timestamp, file row order)`` ordering, train-only references,
 - **G3d** sanity: bag CF ≥ 2× popularity, popularity ≥ 0.05 (strong-but-beatable baseline).
 
 The committed-seed tests read the CI-regenerated files (zero regeneration cost; skipped when the
-generated directory is absent). The **teeth** tests regenerate a small session log with all three
-order mechanisms disabled and assert the G3b / G3c ratio and difference clauses FAIL, plus a
-positive control (same small config, mechanisms ON) that passes G3b — so the guard is shown to
-detect the signal's absence, not just to pass.
+generated directory is absent). The **teeth** tests regenerate a small session log with every order
+mechanism disabled (forced next-volume slot, its ``session_series_accept`` boost, author-follow and
+genre mood) and assert the G3b / G3c ratio and difference clauses FAIL, plus a positive control
+(same small config, mechanisms ON) that passes the G3b floors — so the guard is shown to detect the
+signal's absence, not just to pass.
+
+**G3b is the discriminating teeth contrast; the G3c teeth clause is one-sided.** On the small
+teeth catalog G3c fails with the mechanisms OFF (asserted, on a non-trivial n ≥ 30 chance cohort),
+but with the mechanisms ON a 500-book catalog lets bag CF rank v+1 too (ON G3c ratio ≈ 1.0–1.15),
+so G3c is NOT used as a positive control here. G3c's real evidence is the committed-seed gate
+below (1.66×, n 654) plus the held-out session seeds of the plan's one-shot measurement.
+
+The teeth sizing (2,400 session readers, val share 0.15; fixture-only knobs) was probed on session
+seeds 0–5 plus the pinned teeth seed: OFF G3c n ≥ 43 (min), OFF G3b ratio ≤ 1.04 / diff ≤ +0.02,
+OFF G3c ratio ≤ 0.93 / diff ≤ −0.02, and ON G3b ratio ≥ 1.40 / diff ≥ +0.17 on every seed — so the
+assertions are not seed-lucky.
 
 Pinned thresholds (plan: "pinned from the one-shot committed-seed measurement with headroom, never
 below the floors"). Committed-seed one-shot values: eligible 1419; popularity .113; bag CF .480;
@@ -70,10 +82,11 @@ PIN_G3B_RATIO, PIN_G3B_DIFF = 1.38, 0.11
 PIN_G3C_N, PIN_G3C_RATIO, PIN_G3C_DIFF = 350, 1.45, 0.14
 PIN_G3D_RATIO, PIN_G3D_POP = 3.0, 0.08
 
-# The teeth config: a small catalog, dense long series and a larger val share, sized so that even
-# with every order mechanism OFF the chance next-in-series cohort reaches n >= 30 (asserted), while
-# the 500-book catalog keeps hit@10 off the ceiling so the mechanisms-ON positive control can clear
-# the G3b floors. Fixture-only knobs (series_len 5..10, val_fraction 0.2) — not the committed data.
+# The teeth config: a small catalog, dense long series and many session readers, sized so that even
+# with every order mechanism OFF the chance next-in-series cohort reaches n >= 30 (asserted; min 43
+# over session seeds 0-5), while the 500-book catalog and a short val window (val_fraction 0.15)
+# keep hit@10 off the ceiling so the mechanisms-ON positive control clears the G3b floors with
+# margin (ON ratio >= 1.40 on seeds 0-5). Fixture-only knobs — not the committed data.
 TEETH_CONFIG = DatasetConfig(
     seed=12345,
     n_books=500,
@@ -84,11 +97,12 @@ TEETH_CONFIG = DatasetConfig(
     series_fraction=0.95,
     series_len_min=5,
     series_len_max=10,
-    val_fraction=0.2,
-    session_n_readers=1200,
+    val_fraction=0.15,
+    session_n_readers=2400,
 )
 MECHANISMS_OFF = {
     "session_series_follow_prob": 0.0,
+    "session_series_accept": 0.0,
     "session_author_bump": 0.0,
     "session_mood_boost": 0.0,
 }
@@ -143,7 +157,7 @@ _TEETH_CACHE: dict[bool, dict] = {}
 
 
 def _teeth_metrics(mechanisms_on: bool) -> dict:
-    """Goal-3 metrics on the small teeth config, order mechanisms ON or all three OFF."""
+    """Goal-3 metrics on the small teeth config, order mechanisms ON or every one OFF."""
     if mechanisms_on not in _TEETH_CACHE:
         config = TEETH_CONFIG if mechanisms_on else replace(TEETH_CONFIG, **MECHANISMS_OFF)
         catalog = generate_catalog(config, np.random.default_rng(config.seed))
