@@ -17,12 +17,21 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - Student code runs only in a **separate runner origin**: in development, `http://localhost:<runner port>`, a different port and so a different origin; in production, `run.<site>`.
   - It runs inside a sandboxed `<iframe sandbox="allow-scripts allow-same-origin" allow="cross-origin-isolated">` that holds a Web Worker running Pyodide.
   - The runner origin has no access to the site's storage. The site never runs student code itself.
-- **Message boundary (D7).** Only `postMessage` with a schema-validated envelope crosses, and it is validated on both sides; anything else is dropped.
-  - The site sends `{id, code, stdin, files, check, budget_ms}`.
-  - The runner returns `{id, stdout, stderr, results, timing, status}`.
-  - Both sides check `event.origin` against the configured counterpart origin.
+- **Message boundary (D7).** Only `postMessage` with a schema-validated envelope crosses (JSON Schema files in `runner/schema/`), and it is validated on both sides; anything else is dropped.
+  - **Requests (site → runner):**
+    - `{type: "run", id, session, code, stdin, files, check, budget_ms}`
+    - `{type: "reset", id, session}`
+    - `{type: "ping", id}`
+  - **Replies (runner → site):**
+    - `{type: "result", id, session, stdout, stderr, results, timing, status}`
+    - `{type: "ready" | "restarted", id}`
+  - `session` is the lesson's entry id for lesson runs and a fresh unique id for each exercise check, so checks never share state.
+  - **Binding** (all required, each tested):
+    - The site accepts a message only if `event.origin` equals the runner origin, `event.source === iframe.contentWindow`, and `id` matches a pending request (a reply for an unknown or completed id is dropped).
+    - The runner accepts a message only if `event.origin` equals the site origin and `event.source === window.parent`.
 - **Headers (D7).**
   - Both origins send `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`, so `crossOriginIsolated` is true and `SharedArrayBuffer` interrupts work.
+  - Under the site's COEP, a cross-origin iframe must opt in, so **every runner response (the document, the worker script and the Pyodide files) also sends `Cross-Origin-Resource-Policy: cross-origin`**. Tests confirm that the iframe loads under the site's COEP, and that `self.crossOriginIsolated` is true inside the runner page and its worker.
   - The site CSP adds `frame-src <runner origin>`.
   - The runner origin has its own strict CSP: `script-src 'self' 'wasm-unsafe-eval'`, `connect-src 'self'` for Pyodide's own files, and `frame-ancestors <site origin>`.
 - **Self-hosted Pyodide (D9).** The Pyodide runtime (pinned version, from the `pyodide` npm package) is copied into the runner build. Nothing loads from a CDN, and no extra packages are installed at runtime: the books use only the standard library, plus turtle, which the browser port of `fake_turtle` provides.
@@ -71,7 +80,11 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `scripts/build-site.sh` builds both apps.
   - `site/scripts/serve.mjs` serves both dists on two ports with their `_headers`.
 - **Phase B: check UIs and gating in the site.**
-  - The practice page gains Check controls per kind: a code editor (CodeMirror 6, self-hosted, no inline styles) prefilled with the Starter; answer and predict boxes, with the hint from `answer_format`; per-case and per-assert results; the sample-only reveal; `also_check` checklists; the turtle drawing; and odd-answer gating.
+  - **The code editor under the CSP:** CodeMirror 6, self-hosted, prefilled with the Starter.
+    - CodeMirror injects its theme through `style-mod`, which uses constructable stylesheets (`adoptedStyleSheets`) where the browser supports them, not `<style>` elements. Its runtime `element.style` property assignments are CSSOM, which `style-src` does not block.
+    - Phase B must prove this with a **zero-violation editor test** (open, type, scroll, highlight, under the served CSP).
+    - If any violation remains, the editor falls back to an accessible plain `<textarea>` with Tab inserting four spaces (Escape then Tab leaves the field). The test decides which one ships.
+  - The practice page gains Check controls per kind: answer and predict boxes, with the hint from `answer_format`; per-case and per-assert results; the sample-only reveal; `also_check` checklists; the turtle drawing; and odd-answer gating.
   - The reading view gains Run, Reset and stdin boxes.
   - Results write D11 events, and attempts go to the attempt store.
 - **Phase C: export additions.** `check.budget_ms` per fixtures item, measured with `tools/judge.py`'s runner at export (deterministic: rounded to 100 ms and capped), and `answer_figures` for odd answers whose program draws with turtle. Schema and answer-model updates (`answer_figures` is tied: regenerated and compared, like lesson figures).
@@ -89,9 +102,25 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - **Isolation:**
     - the runner iframe cannot read the site's IndexedDB or localStorage
     - a message from a wrong origin is ignored
+    - a valid-looking message from **another window on the allowed origin** (a second iframe or a popup) is ignored
+    - a reply with an unknown id is dropped
     - an invalid envelope is dropped
-    - `crossOriginIsolated` is true under the served headers
-  - **Gating:** an odd exercise's `answer_md` is absent from the DOM before an attempt and present after one; an even exercise never shows it.
+    - the iframe loads under the site's COEP, and `crossOriginIsolated` is true in the site, the runner page and the worker
+  - **Sessions:**
+    - reset clears a lesson session
+    - after a forced worker restart, the next run replays the prelude and gives the stored output
+    - two exercise checks never share variables
+  - **Grading UI, one test per behaviour:**
+    - `fixtures` in both matching modes: an acsl item line-exact (a required `15 10 4` on one line rejects `15\n10\n4`), a usaco item token-based, with CPython parity for both cases taken from `tools/judge.py`'s `outputs_match`
+    - a skipped over-budget case is listed (a fixture with a forced tiny budget)
+    - the sample-only reveal: the sample's input and expected output are shown, and no other case's `.out` is in the DOM
+    - `expected-output`: the student's program runs, and a correct one passes by hash while a wrong one fails
+    - `predict`: a typed correct answer passes, and a wrong one fails
+    - `answer` with `aliases` (`^`) and with `whitespace: exact`
+    - `self-check`: a checklist with no automatic verdict, and the "cannot check this" notice
+    - `also_check` shown beside an automatic check
+    - the turtle rule
+  - **Gating:** an odd exercise's `answer_md` is absent from the DOM before an attempt, still absent after merely opening the editor, and present after **a failed Check**. An even exercise never shows it.
   - **No network:** part B's request-recording test is extended to the runner origin. Only the two local origins appear, and no request carries code or answers.
   - The part B end-to-end, axe and Lighthouse suites still pass.
   - `scripts/ci-local.sh` runs solo on the final commit.
@@ -103,6 +132,15 @@ User goal, 2026-10-06: "non stop until full working learning website".
 - Running recsys.
 
 ## Plan Review
+
+### Round 1 (c05bab9)
+
+- `[sol]` **REJECT** (gpt-6-sol):
+  - `[FIXED]` COEP would block the runner iframe: every runner response now sends `Cross-Origin-Resource-Policy: cross-origin`, tested.
+  - `[FIXED]` The envelope had no session: typed `run`/`reset`/`ping`/`result`/`ready`/`restarted` messages, with session tests including a restart.
+  - `[FIXED]` CodeMirror vs the CSP: style-mod's constructable stylesheets, a zero-violation editor test, and an accessible textarea fallback.
+  - `[FIXED]` Replies are bound by `event.source` and pending ids on both sides; a same-origin foreign window is tested.
+  - `[FIXED]` Grading UI tests for every kind and both matching modes, the skipped case, sample-only reveal and gating after a failed Check.
 
 ## Content Review
 
