@@ -350,4 +350,8 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 1. `[FIXED]` The site step could print SKIP for missing tools and still reach ALL GREEN. Must Fix. → Response: `ci-local.sh` now resolves scope first. An in-scope site change fails if Node ≥ 22.12, pnpm or Chromium is missing; only an out-of-scope change skips, and the skip is printed. `tests/test_ci_scope.py::test_ci_local_site_step` pins this.
 2. `[OPEN]` Normalisation parity: the same point as round 1 [sol] 4. It closes when plan 102 (the Python producer and its 41 vectors) merges first and main is merged into this branch; the parity test then runs on all vectors. Should Fix.
 
+### Review 2 — [fable] (2026-10-08)
+- **Verdict**: APPROVE. Rebuilt a fresh copy: 267/267 vitest and 68/68 e2e pass, Lighthouse 1.0, 0.99 and 0.97, zero WCAG A/AA violations. Every fix was verified in its own browser run (scroll cue, collapsed map, Node guard, resume label, no early promotion, 75 distinct slide keys on acsl unit 12).
+1. `[WONTFIX]` (Nice to Have) A split sub-block gets a double suffix (`l-018#2#slide-2`). → Response: schema-valid and distinct. Recorded as a key-format note for part E's sync design, which must treat everything after the first `#` as one opaque fragment.
+
 ## Post-Execution Report
