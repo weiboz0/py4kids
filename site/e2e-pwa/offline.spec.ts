@@ -9,15 +9,17 @@
  *      origin; zero others, and no console error (helpers.ts `assertOfflineContract`);
  *   3. read a lesson and run one of its cells; check one exercise of each check kind the book has
  *      (a fixtures item where the book has them: every case boots a fresh Python worker from the
- *      cached Pyodide); answer a quiz card;
+ *      cached Pyodide; a self-check item is run AND its checklist ticked, the whole self-check);
+ *      answer a quiz card;
  *   4. rerun the hang test offline: `interrupts: "sab"`, the end-to-end proof that the isolation
  *      headers survived the cache;
- *   5. reload offline again: the progress persists.
+ *   5. reload offline again: the progress persists (the card, the lesson run, and the self-check's
+ *      event and ticked checklist).
  * The books are separate tests (one fresh browser context each).
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { CONTENT, cpython, fixturePairs, lookupProgram, allItems, type Found } from '../e2e/helpers/content';
 import { loadClient, type Browserside } from '../e2e/helpers/runner';
 import { BOOKS, stores } from '../e2e/helpers/site';
@@ -94,10 +96,16 @@ async function checkOffline(page: Page, kind: string, found: Found): Promise<str
       return verdict;
     }
     case 'self-check': {
+      // The whole self-check: run the code, then tick every box of the checklist.
       await setCode(page, item, 'print("made offline")\n');
       await item.locator('[data-run-item]').click();
       await expect(item.locator('[data-result] .io-output code')).toHaveText('made offline', { timeout: 90_000 });
-      return 'ran';
+      const boxes = selfCheckBoxes(item);
+      const count = await boxes.count();
+      expect(count, `${found.item.key}: a checklist`).toBeGreaterThan(0);
+      for (let i = 0; i < count; i++) await boxes.nth(i).check();
+      await expect.poll(async () => lastChecklist(await stores(page), found.item.key), { timeout: 30_000 }).toEqual(Array(count).fill(true));
+      return `ran, ${count} ticked`;
     }
     case 'predict':
     case 'answer': {
@@ -111,6 +119,21 @@ async function checkOffline(page: Page, kind: string, found: Found): Promise<str
     default:
       throw new Error(`no offline check for kind ${kind}`);
   }
+}
+
+const selfCheckBoxes = (item: Locator) => item.locator('fieldset[data-self-check] input[type="checkbox"]');
+
+/**
+ * The checklist of the latest self-check event stored for `key` (by timestamp; the store lists
+ * events by their random id), or null. One box ticked after another can share a millisecond, so
+ * of equally late events the one with more ticks is the later.
+ */
+function lastChecklist(saved: Awaited<ReturnType<typeof stores>>, key: string): boolean[] | null {
+  const lists = (saved.events ?? [])
+    .filter((e) => e.kind === 'self-check' && e.item_key === key)
+    .map((e) => ({ at: String(e.timestamp), list: ((e.detail as { checklist?: boolean[] } | undefined)?.checklist ?? []) as boolean[] }))
+    .sort((a, b) => a.at.localeCompare(b.at) || a.list.filter(Boolean).length - b.list.filter(Boolean).length);
+  return lists.at(-1)?.list ?? null;
 }
 
 /** Answer the first card of the deck, whatever its mode. */
@@ -199,6 +222,18 @@ for (const book of Object.keys(BOOKS)) {
     expect(mine(await stores(page))).toEqual(kept);
     // The book page reads the stored progress back (the resume link names the last page visited).
     await expect(page.locator(`[data-resume-book="${book}"]`)).toBeVisible();
+    // The self-check survived: its event, and the ticked checklist restored on its page.
+    const selfCheck = kinds.get('self-check');
+    if (selfCheck) {
+      const ticked = lastChecklist(before, selfCheck.item.key);
+      expect(ticked, 'the self-check event was stored').not.toBeNull();
+      expect(kept.events.some((e) => e.startsWith(`self-check ${selfCheck.item.key} `)), 'the self-check event survived the reload').toBe(true);
+      expect(lastChecklist(await stores(page), selfCheck.item.key)).toEqual(ticked);
+      const item = await open(page, selfCheck);
+      const boxes = selfCheckBoxes(item);
+      await expect(boxes).toHaveCount(ticked!.length);
+      for (let i = 0; i < ticked!.length; i++) await expect(boxes.nth(i), 'the checklist is restored offline').toBeChecked();
+    }
 
     await log.settle();
     const checks = assertOfflineContract(log);
