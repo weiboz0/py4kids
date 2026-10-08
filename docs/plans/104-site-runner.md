@@ -22,6 +22,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
     - `{type: "run", id, session, code, stdin, files, check, budget_ms}`
     - `{type: "reset", id, session}`
     - `{type: "ping", id}`
+    - `{type: "interrupt", id}` (the Stop button)
   - **Replies (runner → site):**
     - `{type: "result", id, session, stdout, stderr, results, timing, status}`
     - `{type: "ready" | "restarted", id}`
@@ -55,7 +56,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `runner/index.html` is the iframe page.
   - `runner/src/worker.ts` loads Pyodide, keeps one namespace per `session` (a lesson), and executes requests.
   - It builds to `runner/dist/` with its own `_headers`.
-- **Pyodide version:** pinned to the release whose CPython minor equals the CI interpreter's (the repo's `requires-python` floor). The plan's Phase A names the exact version, and the runner's About line shows the Python version.
+- **Pyodide version: 0.27.8** (CPython 3.12), matching the CI interpreter (Python 3.12.12, the repo's `requires-python` floor), so the CPython parity tests compare like with like. The runner's About line shows the Python version.
 - **The Python side of the worker** (`runner/py/harness.py`, loaded into Pyodide). Per request it:
   - sets up stdin (an `io.StringIO`; `input()` reads from it, and EOF raises `EOFError` as in CPython; the contest code uses `sys.stdin.read*` (407 uses) and `input()` (229); `open(0)` and `stdin.buffer` do not occur)
   - **working directory:** one per `session`, so a lesson keeps the files its cells write (python-projects unit 09 writes a save file and reads it later); "Reset" recreates it. Each check gets a fresh directory. The mounted `files` are written there.
@@ -73,7 +74,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - The site may also send `{type: "interrupt", id}` (a Stop button).
 - **Budgets:** the per-test-case budget is max(1 s, 10× the reference solver's CPython time), capped at 10 s; other runs get 5 s.
   - The **site** computes the budget from `check.cpu_ms`, a schema addition holding the CPython time rounded to 100 ms and clamped.
-  - The measurements are cached in a committed `site/runner-timings/<book>.json`, so export stays deterministic and fast and the `content_hash` never depends on machine jitter. The cache is refreshed only by an explicit `--measure` export flag.
+  - The measurements are cached in a committed `tools/export/timings/<book>.json`, so export stays deterministic and fast and the `content_hash` never depends on machine jitter. The cache is refreshed only by an explicit `--measure` export flag.
 - **Cumulative lesson state (D6):** "Run" on a lesson block sends the block code with `session = <entry id>`.
   - The first run of a block whose probe says `prelude` first replays its `prelude` blocks, silently, in that session.
   - "Reset" clears the session.
@@ -166,6 +167,11 @@ User goal, 2026-10-06: "non stop until full working learning website".
     - `mismatch` outputs labelled "may differ"
     - harness parity details: drain per case, clear `sys.modules`, "no output"
     - lazy fixture fetching
+
+- `[fable]` **APPROVE WITH NITS** (round 2, 27989c5): both blockers and all nits are folded faithfully, and the [sol] folds are consistent.
+  - `[FIXED]` `interrupt` added to the typed requests.
+  - `[FIXED]` Pyodide pinned at 0.27.8 (CPython 3.12).
+  - `[FIXED]` The timing cache moved to `tools/export/timings/`.
 
 ## Content Review
 
