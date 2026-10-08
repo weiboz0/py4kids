@@ -348,7 +348,7 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 ### Review 2 — [sol] (2026-10-08, gpt-6-sol)
 - **Verdict**: REJECT. Confirms that the Leitner, per-slide-key and WCAG-gate fixes are present.
 1. `[FIXED]` The site step could print SKIP for missing tools and still reach ALL GREEN. Must Fix. → Response: `ci-local.sh` now resolves scope first. An in-scope site change fails if Node ≥ 22.12, pnpm or Chromium is missing; only an out-of-scope change skips, and the skip is printed. `tests/test_ci_scope.py::test_ci_local_site_step` pins this.
-2. `[OPEN]` Normalisation parity: the same point as round 1 [sol] 4. It closes when plan 102 (the Python producer and its 41 vectors) merges first and main is merged into this branch; the parity test then runs on all vectors. Should Fix.
+2. `[FIXED]` Normalisation parity: the same point as round 1 [sol] 4. It closes when plan 102 (the Python producer and its 41 vectors) merges first and main is merged into this branch; the parity test then runs on all vectors. Should Fix. → Response: plan 102 merged (#145) and main was merged into this branch. `site/test/normalise.test.ts` now runs all 44 `hash_vectors.json` vectors, including `whitespace: exact` and `aliases` (105 tests pass), and the full site suite passes on rebuilt bundles (299/299).
 
 ### Review 2 — [fable] (2026-10-08)
 - **Verdict**: APPROVE. Rebuilt a fresh copy: 267/267 vitest and 68/68 e2e pass, Lighthouse 1.0, 0.99 and 0.97, zero WCAG A/AA violations. Every fix was verified in its own browser run (scroll cue, collapsed map, Node guard, resume label, no early promotion, 75 distinct slide keys on acsl unit 12).
