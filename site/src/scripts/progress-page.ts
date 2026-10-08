@@ -67,19 +67,33 @@ function wireSlides(storeReady: Promise<ProgressStore>, contentHash: string): vo
   }, { capture: true });
 }
 
-async function wireChecklists(store: ProgressStore, contentHash: string): Promise<void> {
+/**
+ * Self-check checklists: restore each item's last saved boxes, and record every change. The change
+ * listener is attached at once, before the store opens and the saved states load, so a box ticked
+ * early is recorded (once the store is ready) and is not overwritten by the restore.
+ */
+function wireChecklists(storeReady: Promise<ProgressStore>, contentHash: string): void {
   const boxes = [...document.querySelectorAll<HTMLInputElement>('input[type="checkbox"][data-item-key]')];
   const keys = [...new Set(boxes.map((b) => b.dataset.itemKey!))];
-  for (const key of keys) {
-    const mine = boxes.filter((b) => b.dataset.itemKey === key);
-    const saved = (await store.latestEvent(key, 'self-check'))?.detail.checklist;
-    if (saved && saved.length === mine.length) mine.forEach((box, i) => (box.checked = saved[i]!));
-  }
+  const touched = new Set<string>();
   document.addEventListener('change', (event) => {
     const box = event.target;
     if (!(box instanceof HTMLInputElement) || box.type !== 'checkbox' || !box.dataset.itemKey) return;
-    recordChecklist(store, box.dataset.itemKey, checklistOf(document, box.dataset.itemKey), contentHash).catch(warn);
+    const key = box.dataset.itemKey;
+    touched.add(key);
+    const list = checklistOf(document, key);
+    storeReady.then((store) => recordChecklist(store, key, list, contentHash)).catch(warn);
   });
+  storeReady
+    .then(async (store) => {
+      for (const key of keys) {
+        const saved = (await store.latestEvent(key, 'self-check'))?.detail.checklist;
+        if (touched.has(key)) continue;
+        const mine = boxes.filter((b) => b.dataset.itemKey === key);
+        if (saved && saved.length === mine.length) mine.forEach((box, i) => (box.checked = saved[i]!));
+      }
+    })
+    .catch(warn);
 }
 
 async function fillResumeLinks(store: ProgressStore): Promise<void> {
@@ -98,9 +112,9 @@ async function main(): Promise<void> {
   const storeReady = sharedProgress();
   const contentHash = document.body.dataset.contentHash;
   if (contentHash) wireSlides(storeReady, contentHash);
+  if (contentHash) wireChecklists(storeReady, contentHash);
   const store = await storeReady;
   onceUnsaved(store, showUnsavedNotice, remember);
-  if (contentHash) await wireChecklists(store, contentHash);
   if (document.body.dataset.entry) await recordPosition(store, location.pathname + location.hash);
   await fillResumeLinks(store);
   document.addEventListener(PROGRESS_IMPORTED_EVENT, () => {
