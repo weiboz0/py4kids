@@ -774,3 +774,13 @@ Reasons in brief: WDTPD units (03, 06, 10, 14) trace programs → `code-tracing`
 - `acsl/unit-00-acsl-foundations/lesson/a0bce68f`: `line = input(); print(line)`: echoes one line, parses nothing; no registered concept.
 - `acsl/unit-04-prefix-infix-postfix/lesson/l-025`: `show(value)` prints a whole float without `.0`: answer formatting, not postfix evaluation; no registered concept.
 
+
+## Independent blind fixture validation (Phase D requirement)
+
+A separate Opus agent wrote its own solver for each of the 72 fixtures items. It worked on a filtered copy holding only the statement notebooks and the fixture directories: no reference solvers and no solution notebooks (verified: 0 `.py` files in the copy). It ran each solver on every pair under line-exact matching.
+
+**Result:** 72 items, **453/453 cases passed, 0 mismatches**. Its one first-run failure was a bug in its own solver; fixing it confirmed the fixture (unit-04 ex16 case 6).
+
+Report: scratchpad `blind-solvers/acsl-report.md` (session-local).
+
+**The e-028 alias:** the plan names e-028 among the `↑` items, but its statement and canonical (`/ + A * B C - D E`) contain no `↑`, so no alias is set there. The five aliased items are e-024, e-026, e-030, e-040 and checkpoint-02 d0aca7dc.
