@@ -93,7 +93,7 @@ describe('splitAsserts', () => {
 });
 
 describe('budgets and verdicts', () => {
-  it('budgets a case at max(1 s, 10x cpu_ms), capped at 10 s; 5 s without a measurement', () => {
+  it('budgets a case at max(1 s, 10x cpu_ms), capped at 10 s; 5 s only for a malformed value', () => {
     expect(caseBudget(undefined)).toBe(5000);
     expect(caseBudget(20)).toBe(1000);
     expect(caseBudget(300)).toBe(3000);
@@ -218,25 +218,35 @@ describe('check projections', () => {
     const odd = item({
       answer_visibility: 'after-attempt',
       answer_md: 'Use `print`.\n\n```{=latex}\n\\begin{tikzpicture}\\end{tikzpicture}\n```\n',
-      answer_figures: [[{ x1: 0, y1: 0, x2: 10, y2: 0, color: 'red', width: 2 }]],
+      answer_figures: [
+        { caption: 'A red line', segments: [{ x1: 0, y1: 0, x2: 10, y2: 0, color: 'red', width: 2 }] },
+        { caption: 'Nothing drawn', segments: [] },
+      ],
     });
     expect(shipsAnswer(odd)).toBe(true);
     const answer = answerProjection(odd)!;
     expect(answer.html).toContain('<code>print</code>');
     expect(answer.html).not.toMatch(/tikz|=latex/);
     expect(answer.figures).toHaveLength(1);
-    expect(answer.figures[0]).toMatch(/^<svg class="turtle-figure"[^>]* aria-label="Answer drawing for Exercise 9"/);
+    expect(answer.figures[0]!.caption).toBe('A red line');
+    expect(answer.figures[0]!.svg).toMatch(/^<svg class="turtle-figure"[^>]* aria-label="Answer drawing for Exercise 9[^"]*: A red line"/);
     expect(answerProjection(item({ answer_visibility: 'none' }))).toBeNull();
     expect(answerProjection(item({ ...odd, kind: 'checkpoint' }))).toBeNull();
     expect(answerProjection(item({ ...odd, kind: 'project' }))).toBeNull();
-    // No answer_figures (before plan 104 Phase C): the answer renders without drawings.
+    // An answer without turtle drawings (answer_figures is optional) renders none.
     expect(answerProjection(item({ ...odd, answer_figures: undefined }))!.figures).toEqual([]);
   });
 
   it.skipIf(books.length === 0)('on the real bundles: an answer projection exactly for after-attempt unit items, none leaking into checks', () => {
     let answers = 0;
+    let figures = 0;
     for (const r of itemRoutes(books)) {
       const projection = checkProjection(r.book, r.item);
+      // Schema 1.1.0: every fixtures check carries its measured cpu_ms, so no case falls back to 5 s.
+      if (r.item.check.kind === 'fixtures' && projection.kind === 'fixtures') {
+        expect(typeof r.item.check.cpu_ms, r.item.key).toBe('number');
+        expect(projection.budget_ms, r.item.key).toBe(caseBudget(r.item.check.cpu_ms));
+      }
       const text = JSON.stringify(projection);
       expect(text).not.toMatch(/"(?:answer_md|source|program|out_file)"/);
       if (r.item.answer_md && r.item.answer_md.trim().length > 20) expect(text.includes(r.item.answer_md), r.item.key).toBe(false);
@@ -245,6 +255,11 @@ describe('check projections', () => {
       if (answer) {
         answers++;
         expect(answer.html).not.toContain('{=latex}');
+        for (const figure of answer.figures) {
+          figures++;
+          expect(figure.caption.length, r.item.key).toBeGreaterThan(0);
+          expect(figure.svg, r.item.key).toMatch(/^<svg class="turtle-figure"/);
+        }
       }
       if (projection.kind === 'fixtures') {
         const firstHidden = projection.cases.findIndex((c) => !c.sample);
@@ -252,6 +267,7 @@ describe('check projections', () => {
       }
     }
     expect(answers).toBeGreaterThan(0);
+    expect(figures).toBeGreaterThan(0);
   });
 
   it.skipIf(books.length === 0)('serves every file a projection names', () => {

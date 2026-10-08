@@ -62,11 +62,10 @@ const CONSUMERS: ((books: LoadedBook[]) => unknown)[] = [
 
 /**
  * Keys the site reads that a branch not yet merged here declares: plan 102 (`also_check`,
- * `answer_format.aliases` and `.whitespace`) and plan 104 Phase C (`check.cpu_ms`,
- * `answer_figures`). The site reads each as optional. Each must still be undeclared: once the
+ * `answer_format.aliases` and `.whitespace`). The site reads each as optional. Each must still be undeclared: once the
  * schema declares it, the 'pending keys' test fails until it is removed from this list.
  */
-const PENDING_KEYS = new Set(['also_check', 'aliases', 'whitespace', 'cpu_ms', 'answer_figures']);
+const PENDING_KEYS = new Set(['also_check', 'aliases', 'whitespace']);
 const SCHEMA_TEXT = readFileSync(join(repoRoot(), 'tools', 'export', 'schema', 'bundle.schema.json'), 'utf-8');
 const notPending = (reads: string[]) => reads.filter((read) => !PENDING_KEYS.has(read.split(' ').at(-1)!));
 

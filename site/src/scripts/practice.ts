@@ -108,9 +108,11 @@ async function maybeReveal(ctx: ItemContext): Promise<void> {
     const body = el('div', 'answer-body');
     // Built at build time by the site's own Markdown pipeline (no inline style or script).
     body.innerHTML = answer.html;
-    for (const svg of answer.figures) {
+    for (const drawing of answer.figures) {
       const figure = el('figure', 'turtle');
-      figure.innerHTML = svg;
+      // The SVG is built at build time by turtleSvg (escaped attributes, no script).
+      figure.innerHTML = drawing.svg;
+      figure.append(el('figcaption', 'turtle-caption', drawing.caption));
       body.append(figure);
     }
     slot.replaceChildren(heading, body);

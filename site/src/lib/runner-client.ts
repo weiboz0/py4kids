@@ -29,8 +29,7 @@ import {
 export type { Check, ReadyReply, RestartedReply, ResultReply, RunFile } from '../../../runner/src/envelope';
 
 /** The runner origin, from runner/origins.json (or PY4KIDS_RUNNER_ORIGIN) via astro.config.mjs. */
-export const RUNNER_ORIGIN: string =
-  (import.meta.env as Record<string, string | undefined>).PY4KIDS_RUNNER_ORIGIN ?? '';
+export const RUNNER_ORIGIN: string = import.meta.env.PY4KIDS_RUNNER_ORIGIN ?? '';
 
 /** The iframe's sandbox and permissions (plan 104 Global constraints). */
 export const SANDBOX = 'allow-scripts allow-same-origin';

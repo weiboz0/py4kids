@@ -202,6 +202,12 @@
   font-size: 1.05rem;
 }
 
+.turtle-caption {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
 .runner-unavailable {
   color: var(--label-error);
 }

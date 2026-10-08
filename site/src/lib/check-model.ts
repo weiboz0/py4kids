@@ -88,13 +88,19 @@ export interface SelfCheck extends Base {
 
 export type ClientCheck = FixturesCheck | AssertsCheck | OutputCheck | TypedCheck | SelfCheck;
 
+/** One drawing of an odd answer: its caption (plain text) and the drawing as inline SVG. */
+export interface ClientFigure {
+  caption: string;
+  svg: string;
+}
+
 /** An odd unit item's answer, fetched only after a genuine attempt. */
 export interface ClientAnswer {
   key: string;
   /** `answer_md` through the site's Markdown pipeline (`{=latex}` dropped). */
   html: string;
-  /** Turtle drawings (`answer_figures`), already drawn as inline SVG. */
-  figures: string[];
+  /** Turtle drawings (`answer_figures`): each caption and its inline SVG. */
+  figures: ClientFigure[];
 }
 
 /** One lesson block's run data (`/<book>/<entry>/run.json`). */
@@ -126,7 +132,7 @@ export const CASE_MAX_MS = 10_000;
 
 /**
  * A fixture case's budget: max(1 s, 10x the reference solver's CPython time), capped at 10 s.
- * Without a measured `cpu_ms` (plan 104 Phase C adds it), the default 5 s.
+ * Schema 1.1.0 requires `cpu_ms`; the 5 s default only guards a malformed or missing value.
  */
 export function caseBudget(cpuMs: number | undefined): number {
   if (cpuMs === undefined || !Number.isFinite(cpuMs) || cpuMs < 0) return DEFAULT_BUDGET_MS;

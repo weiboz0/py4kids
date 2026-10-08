@@ -30,7 +30,7 @@ import {
 } from './check-model';
 import { renderMarkdown } from './markdown';
 import { turtleSvg } from './turtle';
-import type { AnswerFormat, Block, BundlePath, Item, Segment } from './types';
+import type { AnswerFormat, Block, BundlePath, Item } from './types';
 
 // ---------------------------------------------------------------------------------------------
 // Anchors and URLs
@@ -175,12 +175,6 @@ export function checkProjection(book: string, item: Item): ClientCheck {
   }
 }
 
-/** Every drawing in `answer_figures`, whether it holds one figure or several. */
-function figureList(figures: Segment[][] | Segment[] | undefined): Segment[][] {
-  if (!figures || figures.length === 0) return [];
-  return Array.isArray(figures[0]) ? (figures as Segment[][]) : [figures as Segment[]];
-}
-
 /** An odd unit item's answer, rendered; null for every other item. */
 export function answerProjection(item: Item): ClientAnswer | null {
   if (!shipsAnswer(item)) return null;
@@ -188,9 +182,12 @@ export function answerProjection(item: Item): ClientAnswer | null {
   return {
     key: item.key,
     html: renderMarkdown(item.answer_md!),
-    figures: figureList(item.answer_figures)
-      .filter((segments) => segments.length > 0)
-      .map((segments, i, all) => turtleSvg(segments, `Answer drawing for ${label}${all.length > 1 ? ` (${i + 1})` : ''}`)),
+    figures: (item.answer_figures ?? [])
+      .filter((figure) => figure.segments.length > 0)
+      .map((figure) => ({
+        caption: figure.caption,
+        svg: turtleSvg(figure.segments, `Answer drawing for ${label}: ${figure.caption}`),
+      })),
   };
 }
 
