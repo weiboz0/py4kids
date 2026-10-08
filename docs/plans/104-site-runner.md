@@ -90,7 +90,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - Every result carries `interrupts: "sab" | "restart"`, so the UI can honestly show "restarting Python (≈N s)".
   - The site may also send `{type: "interrupt", id}` (a Stop button).
 - **Budgets:** the per-test-case budget is max(1 s, 10× the reference solver's CPython time), capped at 10 s; other runs get 5 s.
-  - The **site** computes the budget from `check.cpu_ms`, a schema addition holding the CPython time rounded to 100 ms and clamped.
+  - The **site** computes the budget from `check.cpu_ms`, a schema addition holding the reference solver's **maximum** CPython time across the item's cases, rounded to 100 ms and clamped. Every case of the item gets that budget.
   - The measurements are cached in a committed `tools/export/timings/<book>.json`, so export stays deterministic and fast and the `content_hash` never depends on machine jitter. The cache is refreshed only by an explicit `--measure` export flag.
 - **Cumulative lesson state (D6):** "Run" on a lesson block sends the block code with `session = <entry id>`.
   - The first run of a block whose probe says `prelude` first replays its `prelude` blocks, silently, in that session.
@@ -137,7 +137,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
     - reset clears a lesson session
     - after a forced worker restart, the next run replays the prelude and gives the stored output
     - two exercise checks never share variables
-    - **contamination through modules:** check 1 sets `math.pi = 3`, `builtins.print = None` and `sys.path.append("x")`, and seeds `random`; check 2 sees the original values. The same test runs between two fixture cases of one item (fixture case 1 mutates; case 2 checks `math.pi`, `print` and `sys.path`).
+    - **contamination through modules:** check 1 sets `math.pi = 3`, `builtins.print = None` and `sys.path.append("x")`, and seeds `random`; check 2 sees the original values. The same test runs between two fixture cases of one item (fixture case 1 mutates and seeds `random` with `random.seed(1)`; case 2 checks `math.pi`, `print` and `sys.path`, and that `random.random()` differs from the seeded value).
   - **Grading UI, one test per behaviour:**
     - `fixtures` in both matching modes: an acsl item line-exact (a required `15 10 4` on one line rejects `15\n10\n4`), a usaco item token-based, with CPython parity for both cases taken from `tools/judge.py`'s `outputs_match`
     - a skipped over-budget case is listed (a fixture with a forced tiny budget)
@@ -207,6 +207,13 @@ User goal, 2026-10-06: "non stop until full working learning website".
 - `[sol]` **REJECT** (round 3, e1064cf): `[FIXED]` A reset inside one process cannot reach fresh-process parity (`sys.path` and preloaded-module mutations survive). Every fixture case now runs in a fresh worker (spare booted in parallel, boot time outside the budget), with a contamination test between cases covering `math.pi`, `print`, `sys.path` and `random`.
 
 - `[fable]` **APPROVE WITH NITS** (round 4, 3d29d40): fresh-worker-per-case is the honest route. Real data: 233 fixtures items, median 5 cases, max 13, so a typical check takes about 5–8 s. `[FIXED]` (nits) The sample case runs first, with Stop; the spare is pipelined; cold and warm boot are measured on a throttled profile; lesson sessions are stated to share one process.
+
+### Round 4 (3d29d40 / b54d363) — CONSENSUS
+
+- `[self]` APPROVE.
+- `[sol]` **APPROVE WITH NITS** (gpt-6-sol): the isolation blocker is closed. `[FIXED]` A `random` assertion was added to the cross-case test; `cpu_ms` is the maximum across the item's cases.
+- `[fable]` **APPROVE WITH NITS**: its nits were folded in b54d363.
+- `[glm]` removed from the roster (user directive 2026-10-05).
 
 ## Content Review
 
