@@ -328,6 +328,10 @@ REVIEW1_SELF_CHECK = (
     "python-projects/unit-05-function-factory/exercises/exercise-11-heading",
     "python-projects/unit-05-function-factory/exercises/exercise-6-heading",
     "python-concepts/unit-06-turtle-geometry/exercises/u06e18a",
+    "python-concepts/unit-06-turtle-geometry/exercises/u06e014",
+    "python-concepts/unit-06-turtle-geometry/exercises/u06e09a",
+    "python-concepts/unit-06-turtle-geometry/exercises/u06e10a",
+    "python-concepts/unit-06-turtle-geometry/exercises/u06e11a",
 )
 # Items whose required method the reviewers found missing from `also_check` ([sol] 2 and 3,
 # [fable] 5), with a word each entry list must now contain.

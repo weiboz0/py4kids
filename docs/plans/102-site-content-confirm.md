@@ -238,6 +238,10 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 1. `[FIXED]` python-projects unit-05 `exercise-10-heading` (asserts) and `exercise-11-heading` (expected-output): the core result is a turtle asset, and the check verifies only a printed proxy. Must Fix. → Response: both retagged `check-self` (rule 1). Their checklists are the statement fragments covering the asset, the accumulator and the run (authored `requirements`, statement-tied). Logged, and added to `test_review1_retags_are_self_check`.
   - A coordinator scan for every checked item whose real result is a turtle asset found two more cases of the same pattern: python-projects unit-05 `exercise-6-heading` and python-concepts `u06e18a`. Both are retagged `check-self` with derived checklists and added to the test.
 
+### Review 3 — [fable] (2026-10-08)
+- **Verdict**: REJECT, narrowly: the four round-3 retags are confirmed, but the same rule was not yet applied everywhere.
+1. `[FIXED]` python-concepts unit-06 `u06e014`, `u06e09a`, `u06e10a` and `u06e11a` checked a printed counter while the turtle asset is the core result. Must Fix. → Response: all four retagged `check-self` with derived Specification checklists. The Phase A log note that called counters sufficient is struck. Per-item log lines updated, and the keys added to `test_review1_retags_are_self_check`. [fable]'s scan found no other proxy-checked item in any book (26 candidates reviewed: ASCII-picture outputs, file-text outputs, function results and fixtures are genuine results).
+
 ### Coordinator decision (round-1 audit)
 - The audit added the statements' own hand-trace instruction ("Work it out by hand first" / "Trace it by hand, using ACSL's rules") as `also_check` on 71 ACSL `answer` items. **Kept**: it is a statement requirement that a hashed answer cannot verify, and showing it beside the answer box is honest about what the check covers.
 

@@ -633,3 +633,4 @@ Named items: `u02e070` (the place-value reversal, `// 100`, `// 10 % 10`, `% 10`
 
 ## Content review 2 retag (coordinator)
 - `unit-06-turtle-geometry/exercises/u06e18a` (expected-output) is now `check-self`. Its core result is the turtle asset `assets/ex18_grid_of_squares.py`, and the check verified only the printed `Squares: 9`. The checklist is derived from the Specification sentences. Found by a scan for checked items whose result is a turtle asset (rule 1).
+- Content review 3 ([fable]): `u06e014`, `u06e09a`, `u06e10a` and `u06e11a` (expected-output) are now `check-self` for the same reason as `u06e18a`. Each verified only a printed counter while the turtle asset is the core result. Their checklists are derived from the Specification sentences.
