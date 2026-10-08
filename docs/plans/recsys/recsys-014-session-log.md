@@ -381,6 +381,22 @@ No student-facing content. The gate reviewed the generator, harness, tests, load
   - Aside (pre-existing, outside this diff): `vocabulary.py:162` uses a script-style import. Noted for a later
     slice.
 
+### Round 2 (HEAD fa0dc4c) — CONSENSUS
+- **[self]** APPROVE.
+- **[sol]** APPROVE WITH NITS.
+  - B1 WONTFIX accepted: the boost is causal (v is accepted before `pending[v+1]` exists, with later timestamps),
+    and changing the generator would invalidate the frozen one-shot run.
+  - N2 and N3 RESOLVED; a fresh in-memory teeth check gave OFF G3b 0.979×, G3c n 47 at 0.636×, and ON 1.458×.
+  - New NIT: the post-execution report's held-out G3c rows lacked the absolute differences [FIXED]. The G3b and G3c
+    diffs were added for all four seeds.
+- **[fable]** APPROVE.
+  - NIT-1..5 RESOLVED. NIT-2 was re-verified on fresh seeds 6–8: OFF n 44–49 with every clause failing; ON G3b
+    ≥ 1.430×.
+  - Concurs with the B1 WONTFIX, and the post-execution numbers match its blind held-out log.
+  - New cosmetic NIT [WONTFIX]: the test docstring's "ON G3c ≈ 1.0–1.15" range misses seed 7 (0.968). That clause
+    is explicitly not asserted, so there is no behavioural effect.
+**Gate result:** all three APPROVE / APPROVE WITH NITS, with no `[OPEN]` items.
+
 ## Post-Execution Report
 
 **Status:** all phases are done (0, A, B, the v5 pause, the freeze and one-shot run, C, D). Phase G results are
@@ -411,10 +427,10 @@ machine). That is under the 30 s cap; the 15 s target is met only on an unloaded
 
 | Seed | Eligible | Pop | Bag CF | Last-3 CF (G3a) | Transk ord / shuf (G3b) | G3c n, transk / bag | Bag/pop |
 |---|---|---|---|---|---|---|---|
-| committed | 1419 | .113 | .480 | .550 (+.070) | .510 / .343 (1.48×, +.166) | 654, .500 / .301 (1.66×) | 4.23 |
-| 2 | 1418 | .142 | .468 | .542 (+.074) | .536 / .358 (1.50×) | 604, 1.97× | 3.30 |
-| 3 | 1417 | .126 | .461 | .534 (+.073) | .521 / .325 (1.60×) | 625, 2.04× | 3.67 |
-| 4 | 1406 | .117 | .454 | .526 (+.071) | .518 / .317 (1.63×) | 616, 1.72× | 3.90 |
+| committed | 1419 | .113 | .480 | .550 (+.070) | .510 / .343 (1.48×, +.166) | 654, .500 / .301 (1.66×, +.199) | 4.23 |
+| 2 | 1418 | .142 | .468 | .542 (+.074) | .536 / .358 (1.50×, +.178) | 604, .538 / .273 (1.97×, +.265) | 3.30 |
+| 3 | 1417 | .126 | .461 | .534 (+.073) | .521 / .325 (1.60×, +.196) | 625, .550 / .270 (2.04×, +.280) | 3.67 |
+| 4 | 1406 | .117 | .454 | .526 (+.071) | .518 / .317 (1.63×, +.201) | 616, .544 / .317 (1.72×, +.227) | 3.90 |
 
 CI pins sit about midway between the floor and the measured value:
 - eligible ≥ 1100;
