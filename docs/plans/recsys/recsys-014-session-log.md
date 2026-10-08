@@ -5,7 +5,7 @@
 for U12"). This is a **data/tooling foundation slice, not a unit** (like recsys-004): it adds a seeded, separate
 **session log** with real order structure so Unit 12 (sequence-aware retrieval, **recsys-015**) has something true to
 teach, while the main interaction log stays **byte-identical** so no number in Units 1–11 or Checkpoint A moves.
-**Plan v2** (after plan-gate r1: [sol] REJECT ×3 blockers, [fable] APPROVE WITH NITS + prototype probe).
+**Plan v4** (after plan-gate r1–r3; see `## Plan Review`).
 
 ## Motivation (empirically established — U12 pre-plan probe, 2026-10-07)
 On the current log (`interactions.csv.gz`; val, k=10, 500 eligible readers, cold excluded, SE ≈ 0.021):
@@ -84,14 +84,17 @@ and seed-unstable. Goal 4 is therefore a **bounded go/no-go with a stop rule**, 
      diagnostic (v's own transition row ranks v+1 in its top-10 ≈ 0.7 vs bag ≈ 0.3);
      G3d sanity: `bag_cf ≥ 2 × popularity` and popularity ≥ 0.05 (strong-but-beatable; earlier lessons hold).
    - *Seeds:* all generator knobs and the SASRec recipe are **tuned on seeds 0–1 only** (Phase B); every choice is then
-     **frozen** and seeds 2–4 are evaluated **exactly once** (Goal-3 robustness + Goal-4 confirmation, reported). CI
-     runs the committed seed (`DatasetConfig().seed`). **Held-out robustness rule:** every G3 gate holds at the
+     **frozen** and the **committed seed** (`DatasetConfig().seed` = 20260930, the one CI runs) plus held-out seeds 2–4
+     are evaluated **exactly once** (Goal-3 committed-seed gates + robustness, Goal-4 confirmation; all reported). The
+     CI thresholds are pinned from that one-shot committed-seed measurement (with headroom, never below the floors). **Held-out robustness rule:** every G3 gate holds at the
      committed seed; on held-out seeds 2–4, G3b–G3d hold on every seed and G3a holds as `lastk_cf − bag_cf ≥ 0` on
      every seed with mean ≥ +0.02 (G3a's floor is ~1 SE).
    - *Guard has teeth:* a test regenerates a small session log with all three order mechanisms **disabled**
      (`session_series_follow_prob=0`, `session_author_bump=0`, `session_mood_boost=0`) and asserts the **ratio /
      difference clauses** of G3b and G3c **fail** (the n ≥ 100 / eligible-reader floors are not asserted on the small
-     config, so the failure is the order signal's absence, not a too-small sample).
+     config, so the failure is the order signal's absence, not a too-small sample). The G3b clauses are asserted
+     unconditionally; the G3c clauses only when the small config's next-in-series cohort has n ≥ 30 (the small
+     config is sized so it does — asserted), so the teeth test is neither vacuous nor flaky.
 4. **SASRec feasibility — bounded go/no-go (measured in Phase B; not a CI gate — the torch path ships in recsys-015).**
    Paired protocol: same cohort as Goal 3; ordered and shuffled fits share initialization seed, sampling seed and
    epoch count (only the input order differs); SE = paired reader-level SE of the per-reader hit differences
@@ -102,9 +105,10 @@ and seed-unstable. Goal 4 is therefore a **bounded go/no-go with a stop rule**, 
    2–4 (evaluated once):
    G4a `sasrec_ordered − sasrec_shuffled ≥ 2 SE` and ≥ 0.02 absolute, **and** G4b `sasrec_ordered ≥ bag_cf − 1 SE`
    (parity or better on hit@10) — the honest target (the book already teaches ties, recsys-013).
-   **Stop rule:** at most **3 Phase-B tuning rounds** on seeds 0–1 (generator knobs + recipe). If the tuning criterion
-   is not met within 3 rounds, or the single held-out confirmation on seeds 2–4 fails (no retuning after it), Phase B
-   stops and the session **pauses via AskUserQuestion** (U12 premise false at the §7 ceiling; options e.g. reframe U12
+   **Stop rule:** at most **3 Phase-B tuning rounds** on seeds 0–1 (generator knobs + recipe; tuning criterion =
+   G3a–G3d and G4a/G4b on both tuning seeds). If the tuning criterion is not met within 3 rounds, **or** the single
+   post-freeze evaluation fails — any G3 gate at the committed seed, the G3 held-out robustness rule on seeds 2–4, or
+   Goal-4 GO on seeds 2–4 — Phase B stops **without retuning** and the session **pauses via AskUserQuestion** (U12 premise false at the §7 ceiling; options e.g. reframe U12
    around last-k/transition references with SASRec as a measured tie, raise the §7 ceiling, or defer). No
    implementation beyond Phase B proceeds without that answer.
 
@@ -145,7 +149,10 @@ Per session reader: latent taste + genre prefs (same distributions as the main r
    exposure boost `session_mood_boost` (~3–5) on that genre.
 4. **Length** — `session_n_readers` (~1000), `session_mean_sessions` (~16–18), `session_max_items` (~5), 2 sampled
    negatives per positive (main-log convention).
-All knobs in `DatasetConfig` with the `session_` prefix, validated in `__post_init__`; starting values = [fable]'s
+All knobs in `DatasetConfig` with the `session_` prefix, validated in `__post_init__`. **Seeds:** the catalog,
+keywords and series are always generated at the committed `seed`; the session sub-stream uses
+`substream_rng(config.session_seed if set else config.seed, SUBSTREAM_SESSIONS)` (`session_seed: int | None = None`),
+so "seeds 0–4" vary only the session log over the fixed, byte-pinned catalog (never regenerate the catalog per seed); starting values = [fable]'s
 probe recommendation. Session sorted output; timestamps strictly increasing per reader.
 **Wiring (single CLI):** `write_generated_dataset()` in `gen_interactions.py` also generates + writes
 `series.csv.gz` and `sessions.csv.gz` and adds both to `checksums.json`, so `scripts/ci-local.sh` (which already runs
@@ -154,8 +161,8 @@ recsys/data/gen_interactions.py` → `recsys/data/generated/`) need no change. U
 `required` set (:54) and the `set(manifest) == …` assertion (:81) to include the two new files.
 **Measure + report (binding, recorded in this plan's post-execution report):** the four sha256 values unchanged;
 session-log stats (readers, events, positives, median/mean train history, transitions, generation time); Goal-3
-numbers on tuning seeds 0–1 per round; then, after freezing, the one-shot held-out run on seeds 2–4 (Goal-3 numbers +
-Goal-4 paired SASRec numbers with SEs and per-fit time); **routed-suite
+numbers on tuning seeds 0–1 per round; then, after freezing, the one-shot run on the committed seed 20260930 + seeds
+2–4 (Goal-3 numbers on all four; Goal-4 paired SASRec numbers on 2–4 with SEs and per-fit time); **routed-suite
 wall-time delta** (new tests ≤ +60 s against the design §7 whole-book ≤ 15 min budget). Iterate ≤ 3 rounds per the
 stop rule.
 
@@ -217,6 +224,18 @@ Phase G is this plan's named verification phase.
   `__post_init__` validation → Phases A/B. F7 byte test hashes CI output, NEP-19 note → Phase C/Goal 1.
   F8 §6 amendment: cold exclusion, series diagnostics-only, U13/U14 on session log only → Phase 0. Knob defaults →
   Phase B.
+
+### Round 3 (plan v3 @ 4d9d6e9)
+- **[self]** APPROVE — concur with [sol] r3 blocker.
+- **[fable]** APPROVE WITH NITS — r2 B1/N1–N6 + [sol] r2 items RESOLVED; re-measured v3 floors feasible on seeds
+  0–4 (eligible 908–936; G3a +0.022–0.057; G3b 1.43–1.60×/+0.13–0.17; G3c n 360–414, 1.39–1.62×/+0.12–0.18; G3d
+  3.1–4.6×). N7 stale "v2" label → fixed. N8 committed seed ungoverned → same fix as [sol] r3. N9 G3c teeth flaky at
+  tiny n → G3c clauses asserted only with n ≥ 30 (small config sized for it). Trivial: seed override must not
+  regenerate the catalog → `session_seed` override.
+- **[sol]** REJECT — r2 B1/B2/nit RESOLVED. NEW B: committed-seed (20260930) G3 gate neither measured nor governed in
+  Phase B (no pause path for a committed-seed failure) → v4: the one-shot post-freeze evaluation covers the
+  committed seed + seeds 2–4; CI pins come from it; any committed-seed / held-out G3 / G4 failure pauses without
+  retuning.
 
 ### Round 2 (plan v2 @ b362829)
 - **[self]** APPROVE — v2 folds every r1 item; concur with both r2 blockers below.
