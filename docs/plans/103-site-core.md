@@ -358,6 +358,11 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 - **Verdict**: REJECT.
 1. `[FIXED]` Under `case: insensitive`, the TypeScript port applied alias keys and values unfolded, while Python casefolds them (input `X` with `{"X":"Y"}` gives `y` in Python and `x` in TypeScript). Must Fix. → Response: `normalise.ts`'s `applyAliases` now casefolds keys and values under `insensitive`, as Python's `_apply_aliases` does. A new shared vector pins the case, making 45 in total; Python (55 tests) and TypeScript (107 tests) both pass on all of them. The previous test expectation, which encoded the bug, is corrected.
 
+### Review 4 (4070fc9) — CONSENSUS
+- `[self]` APPROVE.
+- `[sol]` **APPROVE** (gpt-6-sol): no findings. The in-scope CI gate fails on missing tools, and the alias folding matches Python on all 45 shared vectors.
+- `[fable]` **APPROVE** (Review 2), with no later findings.
+
 ## Post-Execution Report
 
 **Shipped: design 012 part B, the static learning website for all four `site: true` books.**
@@ -397,7 +402,7 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
   - headers and zero CSP violations
   - Lighthouse 0.97 to 1.00 (performance, accessibility, best practices)
 - normalisation parity: `normalise.ts` matches Python on all 45 shared vectors, including `exact` whitespace and aliases
-- `scripts/ci-local.sh` solo (see the PR). Its site step now **fails** when the site is in scope but Node, pnpm or Chromium is missing.
+- `scripts/ci-local.sh` solo on 4070fc9: **ALL GREEN** (2026-10-08). Its site step now **fails** when the site is in scope but Node, pnpm or Chromium is missing.
 
 **Deviations (accepted at the gates):**
 - 13 complete programs over 40 lines, plus one 13-row ACSL table, are allow-listed slides with reasons; long code panels show a scroll cue
