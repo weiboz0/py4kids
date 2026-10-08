@@ -11,7 +11,8 @@
  *   5. the check that only HTML pages, `release.json`, `sw.js` and the books' files keep
  *      stable names
  *
- * PY4KIDS_TEST_HOOKS=1 is a test build (plan 105 Phase E hooks); the worker itself has none.
+ * PY4KIDS_TEST_HOOKS=1 is a test build (plan 105 Phase E hooks): the worker then honours a
+ * per-chunk download delay sent by the page's hooks.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { build } from 'esbuild';
@@ -38,6 +39,8 @@ export async function pwaBuild(dist: string): Promise<void> {
     minify: true,
     legalComments: 'none',
     write: false,
+    // The test-only download delay (plan 105 Phase E); dropped by the minifier otherwise.
+    define: { __PY4KIDS_TEST_HOOKS__: JSON.stringify(process.env.PY4KIDS_TEST_HOOKS === '1') },
   });
   writeFileSync(join(dist, 'sw.js'), sw.outputFiles[0]!.text);
   const stable = releaseSpecificViolations(dist, bookDirs(dist));

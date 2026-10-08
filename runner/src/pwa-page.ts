@@ -50,11 +50,18 @@ export async function startPwa(): Promise<void> {
   } catch {
     return; // service workers unavailable (blocked, private mode): the runner works online
   }
-  // A page of the current release asks its worker to delete the other releases' caches.
-  if (loadedUnder && loadedUnder === id) {
-    const controller = sw.controller;
-    controller?.postMessage({ type: 'cleanup' });
-  }
+  // A page of the current release asks its worker to delete the other releases' caches; again a
+  // little later, since a page of the old release may still be closing (it blocks cleanup).
+  if (loadedUnder && loadedUnder === id) for (const ms of CLEANUP_AFTER_MS) setTimeout(requestCleanup, ms);
+}
+
+/** When a page of the current release asks for cleanup (ms after load). */
+const CLEANUP_AFTER_MS = [0, 3000, 15000];
+
+/** Ask the controlling worker (of this page's own release) to delete old releases' caches. */
+export function requestCleanup(): void {
+  const controller = sw?.controller;
+  if (controller && pageRelease && releaseOfScript(controller.scriptURL) === pageRelease) controller.postMessage({ type: 'cleanup' });
 }
 
 /** The active worker's release, or null. */

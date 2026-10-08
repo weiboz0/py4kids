@@ -65,7 +65,8 @@ async function start(root: HTMLElement): Promise<void> {
       persist.hidden = false;
     }
     if (!result.ok) {
-      status.textContent = `The download did not finish: ${result.error ?? 'try again'}.`;
+      status.textContent = 'The download did not finish. Check the connection and try again.';
+      status.title = result.error ?? '';
       button.hidden = false;
       button.textContent = 'Try again';
       return;

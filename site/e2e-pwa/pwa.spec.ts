@@ -195,3 +195,30 @@ test('the update-handshake test hooks exist only in a test build (PY4KIDS_TEST_H
     if (process.env.PY4KIDS_TEST_HOOKS !== '1') expect(text, src).not.toContain('__py4kidsPwaTest');
   }
 });
+
+test('test hooks: a download stopped midway (servers down) confirms nothing', async ({ page, servers }) => {
+  test.skip(process.env.PY4KIDS_TEST_HOOKS !== '1', 'needs a build with PY4KIDS_TEST_HOOKS=1');
+  await page.goto(`/${BOOK}/`);
+  const panel = page.locator('[data-offline-book]');
+  await expect(panel.locator('[data-offline-status]')).toHaveText('Not downloaded yet.', { timeout: 30_000 });
+  await page.evaluate(() => {
+    (window as unknown as { __py4kidsPwaTest: { downloadDelayMs: number } }).__py4kidsPwaTest.downloadDelayMs = 300;
+  });
+  await panel.getByRole('button', { name: 'Download this book' }).click();
+  const bar = panel.locator('[data-offline-progress]');
+  await expect.poll(async () => Number(await bar.getAttribute('value')), { timeout: 60_000 }).toBeGreaterThan(0);
+  await servers.stop();
+  await expect(panel.locator('[data-offline-status]')).toHaveText(/^The download did not finish/, { timeout: 60_000 });
+  const records = await page.evaluate(
+    () =>
+      new Promise<unknown[]>((resolve) => {
+        const open = indexedDB.open('py4kids-offline');
+        open.onsuccess = () => {
+          const all = open.result.transaction('books').objectStore('books').getAll();
+          all.onsuccess = () => resolve(all.result);
+        };
+      }),
+  );
+  expect(records).toEqual([]);
+  await expect(panel.getByRole('button', { name: 'Try again' })).toBeVisible();
+});

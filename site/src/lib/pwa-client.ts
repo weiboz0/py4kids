@@ -53,6 +53,8 @@ export interface TestHooks {
   fail(step: Step, times?: number): void;
   /** The handshake's step timeout in ms (default 10 000). */
   stepTimeoutMs: number;
+  /** A pause before each chunk of a book download, in ms (default 0), so a test can stop the servers mid-download. */
+  downloadDelayMs: number;
   /** Where the handshake is: idle, runner, site, reload, failed, finishing, paused:<point>, done. */
   state: string;
   /** Every state the handshake passed through, in order. */
@@ -83,6 +85,7 @@ function testHooks(): HookState | null {
         },
         fail: (step, times = 1) => void h.failures.set(step, times),
         stepTimeoutMs: STEP_TIMEOUT_MS,
+        downloadDelayMs: 0,
         state: 'idle',
         log: [],
       },
@@ -169,10 +172,18 @@ export function startPwa(): Promise<ServiceWorkerRegistration | null> {
     } catch {
       return null; // blocked or unavailable: the site works online without it
     }
-    if (id && loadedUnder === id) sw.controller?.postMessage({ type: 'cleanup' });
+    // A page of the current release asks its worker to delete the other releases' caches; again a
+    // little later, since a page of the old release may still be closing (it blocks cleanup).
+    if (id && loadedUnder === id) for (const ms of [0, 3000, 15000]) setTimeout(requestCleanup, ms);
     return reg;
   })();
   return registering;
+}
+
+/** Ask the controlling worker (of this page's own release) to delete old releases' caches. */
+export function requestCleanup(): void {
+  const controller = container()?.controller;
+  if (controller && pageRelease && releaseOfScript(controller.scriptURL) === pageRelease) controller.postMessage({ type: 'cleanup' });
 }
 
 /** The active worker's release (what serves this origin now), or null. */
@@ -307,7 +318,8 @@ export async function downloadBook(
   const summary = status?.books[book];
   if (!status || !summary) return { ok: false, runnerPersisted: null, error: 'This book is not in this version of the site.' };
   const progress: DownloadProgress = { siteBytes: 0, siteTotal: summary.bytes, runnerBytes: 0, runnerTotal: status.runner.bytes };
-  const site = ask<{ ok: boolean; error?: string }>(worker, { type: 'download', book }, (p) => {
+  const delay = testHooks()?.api.downloadDelayMs ?? 0;
+  const site = ask<{ ok: boolean; error?: string }>(worker, { type: 'download', book, ...(delay > 0 ? { delay_ms: delay } : {}) }, (p) => {
     progress.siteBytes = Number(p.bytes) || 0;
     progress.siteTotal = Number(p.total) || progress.siteTotal;
     onProgress({ ...progress });
@@ -324,8 +336,11 @@ export async function downloadBook(
       return { ok: false, persisted: null, error: error instanceof RunnerUnavailableError ? error.message : String(error) };
     }
   })();
-  const [siteDone, runnerDone] = await Promise.all([site, runner]);
+  // A failed site download ends the attempt at once (the runner's part, if it is still running,
+  // is left to finish or fail on its own; nothing is confirmed without the site's record).
+  const siteDone = await site;
   if (!siteDone.ok) return { ok: false, runnerPersisted: null, error: siteDone.error ?? 'The download did not finish.' };
+  const runnerDone = await runner;
   const runnerPersisted = 'persisted' in runnerDone ? (runnerDone.persisted as boolean | null) : null;
   if (!runnerDone.ok) return { ok: false, runnerPersisted, error: 'Python could not be stored for offline use.' };
   // Written after the site worker's own record (which it wrote last in its download).
@@ -333,6 +348,7 @@ export async function downloadBook(
   if (!record || record.release_id !== status.release_id) return { ok: false, runnerPersisted, error: 'The download was not confirmed.' };
   await putRecord({ ...record, runner_release_id: status.release_id });
   onProgress({ ...progress, siteBytes: progress.siteTotal, runnerBytes: progress.runnerTotal });
+  requestCleanup();
   return { ok: true, runnerPersisted };
 }
 

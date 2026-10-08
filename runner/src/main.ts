@@ -22,7 +22,7 @@
  *   (pwa-page.ts); `prepare-activate` is the runner's step of the update handshake.
  */
 import { ACCEPTED_VERSIONS, ENVELOPE_VERSION, parseReply, parseRequest, versionOf, type ResultReply, type Reply, type RunRequest, type Request } from './envelope';
-import { activate, persist, precache, startPwa } from './pwa-page';
+import { activate, persist, precache, requestCleanup, startPwa } from './pwa-page';
 import type { FromWorker, HarnessOut, Job, ToWorker } from './worker';
 
 // Build-time constants (scripts/build.ts).
@@ -356,6 +356,7 @@ async function handle(req: Request): Promise<void> {
         },
       );
       reply({ type: 'precached', id: req.id, ok: done.ok, bytes: done.bytes, persisted: await persisted });
+      if (done.ok) requestCleanup();
       return;
     }
     case 'prepare-activate': {

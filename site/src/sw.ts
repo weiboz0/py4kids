@@ -44,6 +44,10 @@ import {
 
 declare const self: ServiceWorkerGlobalScope;
 
+/** Build-time (scripts/pwa-build.ts): true only in a PY4KIDS_TEST_HOOKS=1 build. */
+declare const __PY4KIDS_TEST_HOOKS__: boolean;
+const TEST_HOOKS = typeof __PY4KIDS_TEST_HOOKS__ !== 'undefined' && __PY4KIDS_TEST_HOOKS__;
+
 const RELEASE = releaseOfScript(self.location.href) ?? '';
 const RELEASE_KEY = '/__py4kids-sw/release.json';
 const OFFLINE_PAGE = '/offline/';
@@ -114,9 +118,11 @@ const started = sweep().catch(() => {});
 
 // --- caching helpers -----------------------------------------------------------------------------
 
-async function ensure(cacheName: string, files: FileEntry[], onFile: (f: FileEntry) => void): Promise<void> {
+async function ensure(cacheName: string, files: FileEntry[], onFile: (f: FileEntry) => void, delayMs = 0): Promise<void> {
   const cache = await caches.open(cacheName);
   for (const group of chunks(files, CONCURRENCY)) {
+    // Test builds only: a pause before each chunk, so a test can stop the servers mid-download.
+    if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
     await Promise.all(
       group.map(async (file) => {
         if (await cache.match(file.url)) {
@@ -250,7 +256,7 @@ async function bookManifest(summary: BookSummary, cacheName: string): Promise<Bo
   return manifest;
 }
 
-async function download(book: string, port: MessagePort): Promise<void> {
+async function download(book: string, port: MessagePort, delayMs: number): Promise<void> {
   await started;
   try {
     if (!isActive()) throw new Error('not the active worker');
@@ -280,9 +286,9 @@ async function download(book: string, port: MessagePort): Promise<void> {
       // unless a file has gone missing.
       const absent = await missing(cacheName, manifest.files);
       for (const f of manifest.files) if (!absent.includes(f)) tick(f);
-      await ensure(cacheName, absent, tick);
+      await ensure(cacheName, absent, tick, delayMs);
     } else {
-      await ensure(cacheName, manifest.files, tick);
+      await ensure(cacheName, manifest.files, tick, delayMs);
     }
     tick({ url: '', bytes: 0 }, true);
     const record: OfflineRecord = {
@@ -351,9 +357,12 @@ self.addEventListener('message', (event) => {
     case 'skip-waiting':
       event.waitUntil(self.skipWaiting());
       return;
-    case 'download':
-      if (port && typeof data.book === 'string') event.waitUntil(download(data.book, port));
+    case 'download': {
+      const delay = (data as { delay_ms?: unknown }).delay_ms;
+      const delayMs = TEST_HOOKS && typeof delay === 'number' ? Math.min(Math.max(delay, 0), 10_000) : 0;
+      if (port && typeof data.book === 'string') event.waitUntil(download(data.book, port, delayMs));
       return;
+    }
     case 'cleanup':
       event.waitUntil(cleanup(port));
       return;
