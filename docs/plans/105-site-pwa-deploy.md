@@ -37,7 +37,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
 - **Release identity and updates.**
   - **`release_id`** (no circularity): the build computes it as a sha256 over the sorted `(path, sha256(bytes))` list of every file in `site/dist/` and `runner/dist/`, the Pyodide runtime included, **except the one generated file that carries the id**: `release.json`, in each dist.
     - No other file embeds the id. The service-worker scripts are byte-identical across releases unless their code changed; each page registers its worker as `/sw.js?r=<release_id>`, read from `/release.json` fetched with `cache: "no-store"`, so a new id is a new script URL and the browser installs the new worker. If that fetch fails (offline, servers down), the page keeps the current registration: no error and no banner.
-      - It is the **one network request the offline contract allows**: at most one `GET /release.json` per page load, which must fail without a console error. Phase E's offline steps assert this exactly.
+      - It is the **one network request the offline contract allows**: at most one `GET /release.json` per document load **on each origin** (the site page and its runner iframe each make their own update check), each failing without a console error. Phase E's offline steps assert this exactly.
     - A test rebuilds unchanged inputs and gets the same id, recomputes the id from the emitted files to match `release.json`, and changes one runner file to get a different id.
   - **Cache names**, three kinds per origin:
     - app shell: `shell-<release_id>`
@@ -125,7 +125,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
 - **Phase E: verification (named verification phase).**
   - **Offline end-to-end, per book:**
     1. online, open the book and press "download this book"; wait for "available offline"
-    2. **stop both local servers** (`serve.mjs` for the site and for the runner); `setOffline` alone is not trusted, because service-worker fetches escape page-level emulation. Then reload, recording requests at context level. After the servers are down, the only request allowed is **at most one failed `GET /release.json` per page load** (the update check). Zero others, and no console error
+    2. **stop both local servers** (`serve.mjs` for the site and for the runner); `setOffline` alone is not trusted, because service-worker fetches escape page-level emulation. Then reload, recording requests at context level. After the servers are down, the only requests allowed are **at most one failed `GET /release.json` per document load on each origin** (the update checks). Zero others, and no console error
     3. read a lesson, run a lesson cell, check one exercise of each kind the book has (a `fixtures` item included: every case boots a fresh worker from the cached Pyodide), and answer a card
     4. **rerun the hang test offline** and assert `interrupts: "sab"`, the end-to-end proof that the isolation headers survived the cache
     5. reload again offline: progress persists
@@ -197,12 +197,14 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `[FIXED]` Rollback is impossible after an activation: forward-only recovery per step (retry; N−1 envelope compatibility keeps the mixed runner-B / site-A state working; A's caches kept), with each post-activation failure interval tested.
   - `[FIXED]` A stale "activate deletes old caches" line conflicted: `activate` deletes nothing, and the B-page cleanup is the sole path.
 - `[fable]` **APPROVE WITH NITS** (round 4):
-  - `[FIXED]` Exact-URL serving was unsafe for unhashed URLs: all runner assets now have content-hashed names, Pyodide sits under a versioned path, lookups are release-scoped by `clientId`, and the interval test bumps those paths.
+  - `[FIXED]` Exact-URL serving was unsafe for unhashed URLs: all runner assets now have content-hashed names, Pyodide sits under a versioned path, exact-URL serving over release-specific paths (the `clientId` mapping was dropped in round 5), and the interval test bumps those paths.
   - `[FIXED]` A 10 s step timeout.
 
 - `[sol]` **REJECT** (round 5, 32fd61d):
   - `[FIXED]` The offline contract now allows exactly the one update-check request per page load (`/release.json`, failing silently) and zero others.
   - `[FIXED]` Lookups by `clientId` miss dedicated workers: since every asset URL is content-hashed or versioned, any retained cache serves by exact URL, and the client mapping is dropped.
+
+- `[fable]` **APPROVE WITH NITS** (round 5, 023113d): `[FIXED]` The stale `clientId` record line; the update-check allowance is now counted per document per origin.
 
 ## Content Review
 
