@@ -200,4 +200,23 @@ They take items from each phase log's retag lines and from every rule-1 `expecte
 
 ## Content Review
 
+Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] removed by the user on 2026-10-05).
+
+### Review 1 — [fable] (2026-10-08)
+- **Verdict**: APPROVE WITH NITS. 104 items sampled blind (27 python-projects, 27 python-concepts, 15 usaco-bronze, 35 acsl). Every confirmed check accepted the correct answer and rejected a plausible wrong one. The `↑`/`^` aliases, hex case, the taught list forms and the lesson citations were all verified.
+1. `[OPEN]` python-projects unit-03 `exercise-1` is `expected-output`, but `side_length` is the student's own choice (rule 1). Retag `check-self`. Should Fix.
+2. `[OPEN]` The `whitespace: exact` hints say "type a tab as `\t`", but a literal `\t` does not hash as a tab. Add an alias `{"\\t": "\t"}` where a hint mentions it, with a vector. Should Fix.
+3. `[OPEN]` Derived self-check checklists split sentences inside inline code (cp01 `checkpoint-05`, u09 `0cc7f084`, `e2692eb8`; about 59 fragments). Fix the splitter. Should Fix.
+4. `[OPEN]` usaco-bronze unit-12 statements (`u12e0002/4/6/8/14/16`) never state the input format; it is only in the unit intro. Follow-up content or errata plan. Should Fix (follow-up).
+5. `[OPEN]` Construct requirements are missing from `also_check` (cp03 `question-6`, cp04 `c400000e`, `u04e22a`, `u04e23a`). Nice to Have.
+6. `[OPEN]` The python-projects log's summary tables are stale after the integration retags. Nice to Have.
+7. `[OPEN]` `u08e002` wording ("Seed with 4" inside the function) is a pre-existing ambiguity. Nice to Have (follow-up).
+
+### Review 1 — [sol] (2026-10-08, gpt-6-sol)
+- **Verdict**: REJECT. 25 items sampled per book.
+1. `[OPEN]` `u13e057`: the worked sample's `1 1` is not task-fixed output. Retag `check-self` (rule 1). Must Fix.
+2. `[OPEN]` Output checks accept hard-coded output where `also_check` omits required work: cp03 `question-8` and u08 `5703c375` (safe dictionary lookup), `u02e070` (place-value reversal). Add these, and audit every checked item for the same omission. Must Fix.
+3. `[OPEN]` acsl fixtures `63f51404` (recursive function) and `1c6142c9` (tuple storage) lack `also_check` for the required method. Add them, and review the acsl fixtures the log says need none. Must Fix.
+4. `[OPEN]` `u04-ex09`'s derived checklist omits the counter update and printing both totals. Author `requirements`. Should Fix.
+
 ## Post-Execution Report
