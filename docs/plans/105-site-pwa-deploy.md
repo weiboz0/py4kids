@@ -12,6 +12,16 @@ User goal, 2026-10-06: "non stop until full working learning website".
 
 ## Global constraints
 
+- **Same site.** The runner origin must be a **subdomain of the site's registrable domain** (`run.<domain>`, as D7 says), so the two are same-site. Otherwise:
+  - WebKit refuses service-worker registration in a cross-site iframe
+  - Chrome and Firefox partition a cross-site iframe's Cache Storage and IndexedDB by top-level site
+  - `persist()` from an iframe resolves `false`
+
+  Consequences:
+  - `*.pages.dev` is on the Public Suffix List, so the default Pages preview URLs (`py4kids.pages.dev`, `py4kids-run.pages.dev`) are cross-site and **cannot verify the offline runner**. Production needs a custom domain; the README says so.
+  - `deploy/origins.json` validation rejects a runner origin that is not a subdomain of the site's registrable domain.
+  - **Persistence:** `navigator.storage.persist()` is called from the top-level site inside the "download this book" click (Firefox prompts; calling it on load is noise). The runner's own result is informational. Both are shown.
+
 - **One service worker per origin (D10):**
   - The site's worker caches the site's pages and assets.
   - The runner's worker caches the runner page, its worker script, the pinned Pyodide runtime and the book's fixture and asset files.
@@ -26,11 +36,26 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - **Service-worker requests are recorded too.** Requests made by a service worker do not reach `page.on('request')`, so the tests record at context level (`browserContext.on('request')`, with Playwright's service-worker network events enabled) on both origins. Every request during browsing, precache and update must be on the allowlist: the files the user asked to cache, or the release's own files. Each one is a body-less GET.
 - **Release identity and updates.**
   - **`release_id`:** the build computes it as a sha256 over the **complete** asset manifests of both origins: every file in `site/dist/` and `runner/dist/`, the Pyodide runtime included. It covers site code, runner code, Pyodide and content. A change to any of them is a new release.
-  - **Cache names:** `site-<release_id>`, `runner-<release_id>` and `book-<book>-<release_id>`.
+  - **Cache names**, three kinds per origin:
+    - app shell: `shell-<release_id>`
+    - the Pyodide runtime: `pyodide-0.27.8`, keyed by version and shared by all books
+    - book content: `book-<book>-<content_hash>`
+  - An update replaces the shell cache. It keeps the Pyodide cache unless the version changed. A downloaded book is marked "needs update", and its old cache is deleted **only after the new precache completes**, so a downloaded book never disappears offline.
+  - Version skew between site B and runner A is caught by part C's envelope schema version: the site asks for a reload.
   - **Precache requests** carry `release_id`, and the runner refuses a mismatched one.
   - **A cache is confirmed only after it is fully populated** (`cache.addAll`, which is all-or-nothing). "Available offline" means both origins confirmed the same `release_id`.
   - **Activation is user-controlled:** a new worker stays *waiting* (no `skipWaiting` on install). An open lesson keeps running on the old release's caches until the user accepts "a new version is available — reload". Only then does the new worker activate (`skipWaiting` on that message). Old caches are deleted in `activate`, after the old clients are gone.
   - Downloaded books are re-downloaded for the new release in the background, and their status reads "updating" until confirmed.
+- **Size and count.**
+  - Per-book downloads, measured on real bundles:
+    - usaco-bronze: about 8.6 MB of book files, 1,358 files
+    - acsl: 5.3 MB, 927 files
+    - python-concepts: 1.6 MB
+    - python-projects: 1 MB
+    - plus Pyodide 0.27.8 (about 14–17 MB, once), the runner shell and the rendered pages
+  - **The build-time manifest:** each book's carries its `bytes` and `count`, and includes the hashed `_astro/*` assets its pages import and the Pagefind index chunks for the book (search works offline).
+  - **The UI:** "download this book" shows the size first, then a progress bar.
+  - **The site worker:** it normalises navigations (`/x/` → `/x/index.html`).
 - **Hidden answers stay hidden:** caching copies only files already in `dist/`. The part B and C leak tests are rerun on the cached file list.
 
 ## Phases
@@ -44,13 +69,17 @@ User goal, 2026-10-06: "non stop until full working learning website".
 - **Phase B: runner PWA.**
   - Contents:
     - the runner service worker (`runner/src/sw.ts`), which precaches the runner shell and Pyodide on first use and the book's fixtures and assets on `precache`
-    - COOP/COEP/CORP headers preserved on cached responses (the worker re-attaches them when serving from cache), so `crossOriginIsolated` holds offline
+    - COOP/COEP/CORP headers preserved on cached responses, so `crossOriginIsolated` holds offline:
+      - Responses are **cloned, not rebuilt**: `new Response(cached.body, cached)` keeps `Content-Type: application/wasm`, which `instantiateStreaming` needs; the worker then sets the three isolation headers on the clone.
+      - The `_headers` `/*` rule also covers `/sw.js`, because Chrome checks a service-worker script's COEP against a COEP document.
   - Test: offline, `crossOriginIsolated` is still true in the runner and its worker.
 - **Phase C: export and import progress.**
   - "Export my progress" writes a JSON file of D11 events plus Leitner state and resume positions. It contains no attempt store (code stays on the device unless the user exports attempts separately, with a clear label).
   - **Deterministic import merge**, after validating the file against the schemas:
     - **events:** union by `event_id`
     - **cards:** per card key, keep the record with the later `updated_at` (every card record now stores `updated_at`); a tie keeps the local record
+    - an unknown `schema` is rejected, and the file size is bounded (≤ 20 MB)
+  - **Export on iOS installed PWAs:** use `showSaveFilePicker` where present, and the Web Share API as the fallback.
     - **resume:** per book, the later `updated_at`
   - Importing the same file twice changes nothing after the first import. Importing an older file never regresses newer local state.
   - Tests:
@@ -60,7 +89,10 @@ User goal, 2026-10-06: "non stop until full working learning website".
     - a malformed file is rejected with a message
 - **Phase D: deploy configuration (no deploy).**
   - Contents:
-    - **Pages projects:** `deploy/README.md` and `deploy/wrangler.toml` (two Pages projects: `py4kids` for the site, `py4kids-run` for the runner, custom domains as placeholders)
+    - **Pages projects:** `deploy/README.md`, `deploy/site/wrangler.toml` and `deploy/runner/wrangler.toml`. Wrangler's Pages config is one project per file: `py4kids` for the site, `py4kids-run` for the runner, with custom domains `<domain>` and `run.<domain>`.
+      - Cloudflare serves `.wasm` as `application/wasm` and supports COOP/COEP/CORP in `_headers`.
+      - The build fails if any file exceeds Pages' 25 MiB limit (`pyodide.asm.wasm` is checked).
+      - Preview origins are listed in `origins.json` too, or `frame-src` / `frame-ancestors` would block previews; previews are for reading only (see Same site).
     - **Build:** `scripts/build-release.sh <tag>` builds both apps with `--release <tag>`, so the PDF links point at that GitHub Release, and runs the full site test suite
     - **Domains:** the production origins are configured in one place (`deploy/origins.json`) and read by the site (runner origin, CSP `frame-src`) and the runner (`frame-ancestors`, `targetOrigin`)
   - Test: a preview build with two local origins standing in for production passes the whole suite.
@@ -68,9 +100,10 @@ User goal, 2026-10-06: "non stop until full working learning website".
 - **Phase E: verification (named verification phase).**
   - **Offline end-to-end, per book:**
     1. online, open the book and press "download this book"; wait for "available offline"
-    2. go offline (Playwright `context.setOffline(true)`) and reload
-    3. read a lesson, run a lesson cell, check one exercise of each kind the book has, and answer a card
-    4. reload again offline: progress persists
+    2. **stop both local servers** (`serve.mjs` for the site and for the runner); `setOffline` alone is not trusted, because service-worker fetches escape page-level emulation. Then reload, recording requests at context level: **zero** requests may reach the network after the servers are down
+    3. read a lesson, run a lesson cell, check one exercise of each kind the book has (a `fixtures` item included: every case boots a fresh worker from the cached Pyodide), and answer a card
+    4. **rerun the hang test offline** and assert `interrupts: "sab"`, the end-to-end proof that the isolation headers survived the cache
+    5. reload again offline: progress persists
 
     This is the D10 test design 012 §3 requires: it runs code and checks an exercise, not only reads.
   - **Update path:**
@@ -100,6 +133,16 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `[FIXED]` Release identity: a `release_id` over both origins' complete assets, versioned cache names, the id bound to precache, confirmation only when fully populated, user-controlled activation, and an update test with an open lesson.
   - `[FIXED]` Service-worker requests recorded at context level against an allowlist, during browsing, precache and update.
   - `[FIXED]` Deterministic import merge for cards (`updated_at`) and resume, with re-import and older-file tests.
+
+- `[fable]` **REJECT** (round 1, 8a4d3e6):
+  - `[FIXED]` The runner must be same-site (`run.<domain>`), or Safari refuses its service worker and other browsers partition its storage; `*.pages.dev` previews cannot verify offline; `persist()` is called from the top-level site inside the gesture.
+  - `[FIXED]` Offline proven by stopping both servers, recording at context level (zero requests), and running the hang test offline (`interrupts: "sab"`).
+  - `[FIXED]` (nits)
+    - responses cloned, not rebuilt, and `/sw.js` covered by `_headers`
+    - separate shell, Pyodide and book caches, with books never deleted before their re-download completes, and skew caught by the envelope version
+    - size and count shown up front, with Pagefind and `_astro` in the manifest
+    - one `wrangler.toml` per project, and the 25 MiB check
+    - import merge bounds, and iOS export
 
 ## Content Review
 
