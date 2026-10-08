@@ -236,6 +236,7 @@ Gate roster per `docs/content-review-gate.md`: [self], [sol], [fable] ([glm] rem
 ### Review 2 — [sol] (2026-10-08, gpt-6-sol)
 - **Verdict**: REJECT. 25 items sampled per book; the round-2 fixes, integration retags, ACSL formats, aliases and splitter hold.
 1. `[FIXED]` python-projects unit-05 `exercise-10-heading` (asserts) and `exercise-11-heading` (expected-output): the core result is a turtle asset, and the check verifies only a printed proxy. Must Fix. → Response: both retagged `check-self` (rule 1). Their checklists are the statement fragments covering the asset, the accumulator and the run (authored `requirements`, statement-tied). Logged, and added to `test_review1_retags_are_self_check`.
+  - A coordinator scan for every checked item whose real result is a turtle asset found two more cases of the same pattern: python-projects unit-05 `exercise-6-heading` and python-concepts `u06e18a`. Both are retagged `check-self` with derived checklists and added to the test.
 
 ### Coordinator decision (round-1 audit)
 - The audit added the statements' own hand-trace instruction ("Work it out by hand first" / "Trace it by hand, using ACSL's rules") as `also_check` on 71 ACSL `answer` items. **Kept**: it is a statement requirement that a hashed answer cannot verify, and showing it beside the answer box is honest about what the check covers.

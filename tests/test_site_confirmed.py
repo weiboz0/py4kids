@@ -326,6 +326,8 @@ REVIEW1_SELF_CHECK = (
     # content review 2: the core result is a turtle asset; a printed proxy number cannot verify it
     "python-projects/unit-05-function-factory/exercises/exercise-10-heading",
     "python-projects/unit-05-function-factory/exercises/exercise-11-heading",
+    "python-projects/unit-05-function-factory/exercises/exercise-6-heading",
+    "python-concepts/unit-06-turtle-geometry/exercises/u06e18a",
 )
 # Items whose required method the reviewers found missing from `also_check` ([sol] 2 and 3,
 # [fable] 5), with a word each entry list must now contain.
