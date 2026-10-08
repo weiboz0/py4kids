@@ -1,9 +1,13 @@
 ---
-/** The catalog (plan 103 Pages, `/`): each book's title, subtitle and unit count. */
+/**
+ * The catalog (plan 103 Pages, `/`): each book's title, subtitle and unit count, then
+ * "Export my progress" and "Import progress" (plan 105 Phase C).
+ */
 import Base from '../layouts/Base.astro';
 import { getBooks } from '../lib/bundle';
 import { catalogCards } from '../lib/catalog';
 import ResumeLink from '../components/ResumeLink.astro';
+import ProgressTransfer from '../components/ProgressTransfer.astro';
 
 const cards = catalogCards(getBooks());
 ---
@@ -20,4 +24,5 @@ const cards = catalogCards(getBooks());
       </li>
     ))}
   </ul>
+  <ProgressTransfer />
 </Base>

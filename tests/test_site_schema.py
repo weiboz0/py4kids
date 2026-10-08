@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from jsonschema import Draft202012Validator
+from referencing import Registry, Resource
 
 from tools.export import SCHEMA_VERSION
 
@@ -20,6 +21,7 @@ def load(name: str) -> dict:
 
 BUNDLE = load("bundle.schema.json")
 EVENT = load("progress-event.schema.json")
+EXPORT = load("progress-export.schema.json")
 
 
 def validator(schema: dict, definition: str | None = None) -> Draft202012Validator:
@@ -201,7 +203,7 @@ def _objects(node):
             yield from _objects(value)
 
 
-@pytest.mark.parametrize("schema", [BUNDLE, EVENT], ids=["bundle", "progress-event"])
+@pytest.mark.parametrize("schema", [BUNDLE, EVENT, EXPORT], ids=["bundle", "progress-event", "progress-export"])
 def test_additional_properties_false_throughout(schema):
     objects = list(_objects(schema))
     assert objects
@@ -425,3 +427,53 @@ def test_also_check_on_an_item(kind):
 
 def test_also_check_never_beside_a_self_check():
     assert not is_valid(item_with(check("self-check"), also_check=["x"]), definition="item")
+
+
+# --- the progress export file (plan 105 Phase C) ----------------------------------------------
+
+
+def export_errors(instance) -> list[str]:
+    """Validate against the export schema, its event `$ref` resolved to the event schema."""
+    registry = Registry().with_resource(EVENT["$id"], Resource.from_contents(EVENT))
+    return [e.message for e in Draft202012Validator(EXPORT, registry=registry).iter_errors(instance)]
+
+
+def export_file(**fields) -> dict:
+    base = {
+        "schema": "py4kids/progress-export/1.0.0",
+        "exported_at": "2026-10-08T09:00:00.000Z",
+        "events": [event("card", detail={"box": 2})],
+        "cards": [{"key": "acsl/unit-08-boolean/lesson/l-003#predict", "book": "acsl", "box": 2,
+                   "due": "2026-10-09T09:00:00.000Z", "updated_at": "2026-10-08T09:00:00.000Z"}],
+        "resume": [{"book": "acsl", "entry": "unit-08-boolean", "href": "/acsl/unit-08-boolean/slides/#3",
+                    "title": "Boolean Algebra (slides)", "updated_at": "2026-10-08T09:00:00.000Z"}],
+    }
+    base.update(fields)
+    return base
+
+
+def test_progress_export_schema():
+    Draft202012Validator.check_schema(EXPORT)
+    assert EXPORT["$id"] == EXPORT["properties"]["schema"]["const"] == "py4kids/progress-export/1.0.0"
+    assert export_errors(export_file()) == []
+    attempt = {"attempt_id": "00000000-0000-4000-8000-000000000001", "book": "acsl",
+               "item_key": "acsl/unit-08-boolean/exercises/e1", "kind": "check",
+               "code": "print(1)", "result": "pass", "timestamp": "2026-10-08T09:00:00Z"}
+    assert export_errors(export_file(attempts=[attempt])) == []  # only when the student asks
+    assert "attempts" not in EXPORT["required"]
+
+
+def test_progress_export_rejects():
+    card = export_file()["cards"][0]
+    resume = export_file()["resume"][0]
+    bad = [
+        export_file(schema="py4kids/progress-export/2.0.0"),
+        export_file(events=[event("card", detail={"code": "x"})]),  # events stay results-only
+        export_file(cards=[{**card, "box": 6}]),
+        export_file(cards=[{k: v for k, v in card.items() if k != "updated_at"}]),
+        export_file(resume=[{**resume, "href": "//evil.example/"}]),
+        export_file(resume=[{**resume, "href": "javascript:alert(1)"}]),
+        export_file(extra=1),
+    ]
+    for instance in bad:
+        assert export_errors(instance), instance

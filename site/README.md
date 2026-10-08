@@ -70,6 +70,7 @@ pnpm -C site dev                               # local preview of the exported b
   The player dispatches a `py4kids:slide` DOM event (`{book, entry, index, key, count}`) per slide viewed; it stores nothing itself.
 - `scripts/ci-local.sh` step 6 builds the site and runs its tests when the change touches it (`tools/ci_scope.py --site`).
 - **Progress (Phase D):** `src/lib/progress.ts` is the on-device IndexedDB store `py4kids` (`events`, `cards`, `resume`); every event is validated against `tools/export/schema/progress-event.schema.json` before it is written.
+- **Export and import (plan 105 Phase C):** `src/lib/progress-io.ts`, with the controls on the catalog page (`src/components/ProgressTransfer.astro`). The file follows `tools/export/schema/progress-export.schema.json` (events, cards and resume; the attempt store only when the student ticks "Export my code attempts too"). Import refuses a file over 20 MB or with an unknown `schema`, and merges deterministically: events by `event_id`, cards and resume by the later `updated_at` (a tie keeps the local record).
   Without IndexedDB the site keeps working in memory and says once that nothing is saved.
   The DOM contract the islands share (`py4kids:slide`, `[data-item-key]` checklists, `[data-resume-book]` links) is in `src/lib/dom-events.ts`.
 - **Cards and mastery:** `/<book>/cards/` drills the deck from `deck.json`, and the book page's mastery map reads `mastery.json`.
