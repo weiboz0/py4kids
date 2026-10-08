@@ -70,6 +70,9 @@ for (const [book, plan] of Object.entries(BOOKS)) {
       await box.scrollIntoViewIfNeeded();
       await page.locator(`label[for="${await box.getAttribute('id')}"]`).click();
       await expect(box).toBeChecked();
+      // The tick is saved asynchronously; navigating away within milliseconds can abort the
+      // IndexedDB write, so wait for the event before leaving (no student is that fast).
+      await expect.poll(async () => (await stores(page)).events!.some((e) => e.item_key === itemKey && e.kind === 'self-check')).toBe(true);
     } else {
       await expect(boxes).toHaveCount(0);
     }
