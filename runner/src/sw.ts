@@ -15,7 +15,7 @@
  *   exact match is the right file whoever asks, the Python workers included), cloned with the
  *   COOP/COEP/CORP headers set, so `crossOriginIsolated` holds offline. The page itself (a
  *   navigation) comes from the current shell first. `/release.json` and `/sw.js` are never
- *   intercepted (network only).
+ *   intercepted (network only), and the stored release description is never served.
  * - **Activation is page-mediated:** no `skipWaiting` on install; the page sends `skip-waiting`
  *   during the update handshake. `activate` deletes nothing; `cleanup` (from a page of this
  *   release) deletes other releases' shell and Pyodide caches once no client runs another release.
@@ -28,10 +28,12 @@ import { allRecords, putRecord } from './offline-store';
 import {
   bookCacheName,
   chunks,
+  cleanupAllowed,
   cleanupPlan,
   normaliseNavigation,
   parseCacheName,
   pyodideCacheName,
+  RELEASE_KEY,
   releaseOfScript,
   replacedBookCaches,
   RUNNER_ISOLATION,
@@ -45,8 +47,6 @@ declare const self: ServiceWorkerGlobalScope;
 
 /** This worker's release (its script URL's `?r=`). */
 const RELEASE = releaseOfScript(self.location.href) ?? '';
-/** Where install stores this release's description inside its own shell cache (never served). */
-const RELEASE_KEY = '/__py4kids-sw/release.json';
 const CONCURRENCY = 6;
 const ASK_TIMEOUT_MS = 2000;
 
@@ -145,12 +145,21 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// `activate` deletes no cache (plan 105): cleanup and the sweep are the only deletion paths.
+// `activate` deletes no cache (plan 105): cleanup and the sweep are the only deletion paths. It
+// only re-reads the confirmed records: this worker may have been started (and read them) while it
+// was installing or waiting, before a book was downloaded under the previous release.
+self.addEventListener('activate', (event) => {
+  event.waitUntil(loadRecords());
+});
 
 // --- fetch -------------------------------------------------------------------------------------
 
-/** Exact-URL lookup across the retained caches: current shell, other shells, Pyodide, confirmed books. */
+/**
+ * Exact-URL lookup across the retained caches: current shell, other shells, Pyodide, confirmed
+ * books. The release description each shell keeps (`RELEASE_KEY`) is never served.
+ */
 async function lookup(request: Request | string): Promise<Response | undefined> {
+  if (new URL(typeof request === 'string' ? request : request.url, self.location.origin).pathname === RELEASE_KEY) return undefined;
   const names = await caches.keys();
   const confirmed = new Set(records.map((r) => bookCacheName(r.book, r.content_hash)));
   const ordered = [
@@ -202,6 +211,9 @@ async function respond(request: Request, url: URL): Promise<Response> {
     try {
       return await fromNetwork(request, key);
     } catch (error) {
+      // Offline: any retained copy, with the records read afresh (another worker may have
+      // confirmed a book since this one last read them).
+      await loadRecords();
       const any = await lookup(key);
       if (any) return withIsolation(any, RUNNER_ISOLATION);
       throw error;
@@ -209,7 +221,14 @@ async function respond(request: Request, url: URL): Promise<Response> {
   }
   const hit = await lookup(request);
   if (hit) return withIsolation(hit, RUNNER_ISOLATION);
-  return fromNetwork(request, url.pathname);
+  try {
+    return await fromNetwork(request, url.pathname);
+  } catch (error) {
+    await loadRecords();
+    const again = await lookup(request);
+    if (again) return withIsolation(again, RUNNER_ISOLATION);
+    throw error;
+  }
 }
 
 self.addEventListener('fetch', (event) => {
@@ -217,8 +236,9 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  // Network only, never answered from a cache: the update check and the worker script.
-  if (url.pathname === '/release.json' || url.pathname === '/sw.js') return;
+  // Network only, never answered from a cache: the update check, the worker script, and the
+  // internal key the release description is stored under.
+  if (url.pathname === '/release.json' || url.pathname === '/sw.js' || url.pathname === RELEASE_KEY) return;
   event.respondWith(respond(request, url));
 });
 
@@ -296,7 +316,9 @@ async function cleanup(port: MessagePort | undefined): Promise<void> {
     const releases = await Promise.all(clients.map(askRelease));
     const shellComplete =
       (await complete(shellCacheName(RELEASE), described.shell.files)) && (await complete(described.pyodide.cache, described.pyodide.files));
-    deleted = cleanupPlan(await caches.keys(), { release_id: RELEASE, pyodideCache: described.pyodide.cache }, releases, shellComplete);
+    // Gated on a complete shell only when this origin holds a confirmed book (offline.ts `cleanupAllowed`).
+    const allowed = cleanupAllowed(shellComplete, (await loadRecords()).length);
+    deleted = cleanupPlan(await caches.keys(), { release_id: RELEASE, pyodideCache: described.pyodide.cache }, releases, allowed);
     for (const name of deleted) await caches.delete(name);
   } catch {
     deleted = [];

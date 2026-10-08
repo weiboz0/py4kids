@@ -17,11 +17,13 @@
  *   retained copy, else the offline page. Every other URL is served by exact match from any
  *   retained cache (asset URLs are release-specific), else the network. Responses from a cache
  *   are cloned with COOP/COEP set. `/release.json`, `/sw.js` and `/_offline/*` are never
- *   intercepted (network only).
+ *   intercepted (network only), and the stored release description is never served. Offline,
+ *   a miss re-reads the confirmed records before it gives up.
  * - **Activation is page-mediated:** no `skipWaiting` on install (the page sends `skip-waiting`
- *   in the update handshake); `activate` deletes nothing; `cleanup` deletes other releases' shell
- *   caches once no window runs another release; the active worker sweeps unconfirmed `book-*`
- *   caches on start.
+ *   in the update handshake); `activate` deletes nothing (it re-reads the records); `cleanup`
+ *   deletes other releases' shell caches once no window runs another release (and, while a book
+ *   is downloaded, once this release's shell is complete); the active worker sweeps unconfirmed
+ *   `book-*` caches on start. A new download of a book aborts one still running for it.
  * - **Privacy:** it requests only this origin's release files and the files a download names.
  */
 /// <reference lib="webworker" />
@@ -30,9 +32,11 @@ import {
   bookCacheName,
   bookOfPath,
   chunks,
+  cleanupAllowed,
   cleanupPlan,
   normaliseNavigation,
   parseCacheName,
+  RELEASE_KEY,
   releaseOfScript,
   replacedBookCaches,
   shellCacheName,
@@ -49,7 +53,6 @@ declare const __PY4KIDS_TEST_HOOKS__: boolean;
 const TEST_HOOKS = typeof __PY4KIDS_TEST_HOOKS__ !== 'undefined' && __PY4KIDS_TEST_HOOKS__;
 
 const RELEASE = releaseOfScript(self.location.href) ?? '';
-const RELEASE_KEY = '/__py4kids-sw/release.json';
 const OFFLINE_PAGE = '/offline/';
 const CONCURRENCY = 6;
 const ASK_TIMEOUT_MS = 2000;
@@ -118,18 +121,19 @@ const started = sweep().catch(() => {});
 
 // --- caching helpers -----------------------------------------------------------------------------
 
-async function ensure(cacheName: string, files: FileEntry[], onFile: (f: FileEntry) => void, delayMs = 0): Promise<void> {
+async function ensure(cacheName: string, files: FileEntry[], onFile: (f: FileEntry) => void, delayMs = 0, signal?: AbortSignal): Promise<void> {
   const cache = await caches.open(cacheName);
   for (const group of chunks(files, CONCURRENCY)) {
     // Test builds only: a pause before each chunk, so a test can stop the servers mid-download.
     if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
+    signal?.throwIfAborted();
     await Promise.all(
       group.map(async (file) => {
         if (await cache.match(file.url)) {
           onFile(file);
           return;
         }
-        const response = await fetch(file.url, { cache: 'no-cache', credentials: 'same-origin' });
+        const response = await fetch(file.url, { cache: 'no-cache', credentials: 'same-origin', signal });
         if (!response.ok || response.redirected) throw new Error(`${file.url}: HTTP ${response.status}`);
         await cache.put(file.url, response);
         onFile(file);
@@ -164,7 +168,12 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// `activate` deletes no cache (plan 105).
+// `activate` deletes no cache (plan 105). It only re-reads the confirmed records: this worker may
+// have been started (and read them) while it was installing or waiting, before a book was
+// downloaded under the previous release, and its navigations look books up in them.
+self.addEventListener('activate', (event) => {
+  event.waitUntil(loadRecords());
+});
 
 // --- fetch ---------------------------------------------------------------------------------------
 
@@ -172,8 +181,12 @@ function confirmedCaches(): string[] {
   return records.map((r) => bookCacheName(r.book, r.content_hash));
 }
 
-/** Exact-URL lookup: confirmed books, then this release's shell, then other retained shells. */
+/**
+ * Exact-URL lookup: confirmed books, then this release's shell, then other retained shells. The
+ * release description each shell keeps (`RELEASE_KEY`) is never served.
+ */
 async function lookup(request: Request | string, ignoreSearch = false): Promise<Response | undefined> {
+  if (new URL(typeof request === 'string' ? request : request.url, self.location.origin).pathname === RELEASE_KEY) return undefined;
   const names = await caches.keys();
   const ordered = [
     ...confirmedCaches(),
@@ -196,14 +209,18 @@ async function shellHas(path: string): Promise<boolean> {
   }
 }
 
+/** The page `key` from the confirmed cache of the book it belongs to, if any. */
+async function fromBook(key: string): Promise<Response | undefined> {
+  const book = bookOfPath(key, records.map((r) => r.book));
+  if (!book) return undefined;
+  const record = records.find((r) => r.book === book)!;
+  return (await (await caches.open(bookCacheName(record.book, record.content_hash))).match(key)) ?? undefined;
+}
+
 async function navigate(request: Request, url: URL): Promise<Response> {
   const key = normaliseNavigation(url);
-  const book = bookOfPath(key, records.map((r) => r.book));
-  if (book) {
-    const record = records.find((r) => r.book === book)!;
-    const hit = await (await caches.open(bookCacheName(record.book, record.content_hash))).match(key);
-    if (hit) return withIsolation(hit, SITE_ISOLATION);
-  }
+  const hit = await fromBook(key);
+  if (hit) return withIsolation(hit, SITE_ISOLATION);
   const shell = await (await caches.open(shellCacheName(RELEASE))).match(key);
   if (shell) return withIsolation(shell, SITE_ISOLATION);
   try {
@@ -215,7 +232,10 @@ async function navigate(request: Request, url: URL): Promise<Response> {
     }
     return response;
   } catch (error) {
-    const any = (await lookup(key)) ?? (await lookup(OFFLINE_PAGE));
+    // Offline: read the records afresh first (another worker may have confirmed a book since this
+    // one last read them), then the book, then any retained copy, then the offline page.
+    await loadRecords();
+    const any = (await fromBook(key)) ?? (await lookup(key)) ?? (await lookup(OFFLINE_PAGE));
     if (any) return withIsolation(any, SITE_ISOLATION);
     throw error;
   }
@@ -223,9 +243,19 @@ async function navigate(request: Request, url: URL): Promise<Response> {
 
 async function asset(request: Request, url: URL): Promise<Response> {
   // Pagefind adds a cache-busting `?ts=` to its own (content-hashed) files.
-  const hit = await lookup(request, url.pathname.startsWith('/pagefind/'));
+  const ignoreSearch = url.pathname.startsWith('/pagefind/');
+  const hit = await lookup(request, ignoreSearch);
   if (hit) return withIsolation(hit, SITE_ISOLATION);
-  const response = await fetch(request);
+  let response: Response;
+  try {
+    response = await fetch(request);
+  } catch (error) {
+    // Offline: once more with the records read afresh (a book confirmed by another worker).
+    await loadRecords();
+    const again = await lookup(request, ignoreSearch);
+    if (again) return withIsolation(again, SITE_ISOLATION);
+    throw error;
+  }
   if (response.ok && response.type === 'basic' && !response.redirected && url.search === '' && (await shellHas(url.pathname))) {
     const copy = response.clone();
     void caches.open(shellCacheName(RELEASE)).then((c) => c.put(url.pathname, copy)).catch(() => {});
@@ -238,8 +268,9 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  // Network only: the update check, the worker script and the download manifests.
-  if (url.pathname === '/release.json' || url.pathname === '/sw.js' || url.pathname.startsWith('/_offline/')) return;
+  // Network only: the update check, the worker script, the download manifests, and the internal
+  // key the release description is stored under.
+  if (url.pathname === '/release.json' || url.pathname === '/sw.js' || url.pathname === RELEASE_KEY || url.pathname.startsWith('/_offline/')) return;
   event.respondWith(started.then(() => (request.mode === 'navigate' ? navigate(request, url) : asset(request, url))));
 });
 
@@ -256,12 +287,20 @@ async function bookManifest(summary: BookSummary, cacheName: string): Promise<Bo
   return manifest;
 }
 
+/** The download running for each book: a new one (a retry after a stall) aborts the old one. */
+const downloads = new Map<string, AbortController>();
+
 async function download(book: string, port: MessagePort, delayMs: number): Promise<void> {
   await started;
+  downloads.get(book)?.abort();
+  const control = new AbortController();
+  downloads.set(book, control);
+  const signal = control.signal;
   try {
     if (!isActive()) throw new Error('not the active worker');
     const described = await releaseInfo();
-    const summary = described.books[book];
+    // An own key only: `book` comes from a page, and `books` is a plain object.
+    const summary = Object.hasOwn(described.books, book) ? described.books[book] : undefined;
     if (!summary) throw new Error(`no book ${book} in this release`);
     const cacheName = bookCacheName(book, summary.content_hash);
     const previous = records.find((r) => r.book === book);
@@ -279,17 +318,18 @@ async function download(book: string, port: MessagePort, delayMs: number): Promi
         port.postMessage({ type: 'progress', bytes: done, total, files });
       }
     };
-    await ensure(shellCacheName(RELEASE), shellMissing, tick);
+    await ensure(shellCacheName(RELEASE), shellMissing, tick, 0, signal);
     const manifest = await bookManifest(summary, cacheName);
     if (previous && previous.content_hash === summary.content_hash) {
       // Unchanged content: verify every listed URL is present, then re-stamp. Nothing is refetched
       // unless a file has gone missing.
       const absent = await missing(cacheName, manifest.files);
       for (const f of manifest.files) if (!absent.includes(f)) tick(f);
-      await ensure(cacheName, absent, tick, delayMs);
+      await ensure(cacheName, absent, tick, delayMs, signal);
     } else {
-      await ensure(cacheName, manifest.files, tick, delayMs);
+      await ensure(cacheName, manifest.files, tick, delayMs, signal);
     }
+    signal.throwIfAborted();
     tick({ url: '', bytes: 0 }, true);
     const record: OfflineRecord = {
       book,
@@ -305,6 +345,8 @@ async function download(book: string, port: MessagePort, delayMs: number): Promi
     port.postMessage({ type: 'done', ok: true, content_hash: summary.content_hash, release_id: RELEASE, bytes: done });
   } catch (error) {
     port.postMessage({ type: 'done', ok: false, error: String(error).slice(0, 300) });
+  } finally {
+    if (downloads.get(book) === control) downloads.delete(book);
   }
 }
 
@@ -331,7 +373,10 @@ async function cleanup(port: MessagePort | undefined): Promise<void> {
     const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const releases = await Promise.all(clients.map(askRelease));
     const complete = (await missing(shellCacheName(RELEASE), described.shell.files)).length === 0;
-    deleted = cleanupPlan(await caches.keys(), { release_id: RELEASE }, releases, complete);
+    // Gated on a complete shell only when a book is downloaded (offline.ts `cleanupAllowed`): a
+    // visitor who never downloads one never completes a shell, and must not keep every old one.
+    const allowed = cleanupAllowed(complete, (await loadRecords()).length);
+    deleted = cleanupPlan(await caches.keys(), { release_id: RELEASE }, releases, allowed);
     for (const name of deleted) await caches.delete(name);
   } catch {
     deleted = [];

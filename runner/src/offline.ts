@@ -114,6 +114,19 @@ export function cleanupPlan(
   });
 }
 
+/**
+ * May cleanup delete old releases' caches now? Only once this release's shell is complete, so
+ * nothing a downloaded book still needs is lost; **or when this origin holds no confirmed book**.
+ * With no download, nothing on this device is promised offline: an old shell (and Pyodide) serves
+ * only pages of the old release, and `cleanupPlan`'s client check already proves none is open.
+ * Completing the new shell instead would make every visitor download it for nothing (the shell is
+ * filled only for a download, plan 105 "Privacy"), so without this exception a visitor who never
+ * downloads a book would keep every old release's shell forever.
+ */
+export function cleanupAllowed(currentShellComplete: boolean, confirmedBooks: number): boolean {
+  return currentShellComplete || confirmedBooks === 0;
+}
+
 /** The release a worker script URL names (`/sw.js?r=<release_id>`), or null. */
 export function releaseOfScript(scriptUrl: string | undefined | null): string | null {
   if (!scriptUrl) return null;
@@ -186,6 +199,12 @@ export function withIsolation(response: Response, headers: Record<string, string
   for (const [name, value] of Object.entries(headers)) out.headers.set(name, value);
   return out;
 }
+
+/**
+ * Where each origin's service worker keeps its release description, inside its own shell cache.
+ * Internal: never served, whoever asks for it (a request for it goes to the network).
+ */
+export const RELEASE_KEY = '/__py4kids-sw/release.json';
 
 /** Split `items` into chunks of `size`. */
 export function chunks<T>(items: T[], size: number): T[][] {

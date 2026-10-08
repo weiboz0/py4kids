@@ -9,6 +9,7 @@ import {
   bookOfPath,
   bookStatus,
   chunks,
+  cleanupAllowed,
   cleanupPlan,
   isRecord,
   normaliseNavigation,
@@ -95,6 +96,15 @@ describe('cleanup', () => {
   });
   it("deletes nothing while the current release's shell is incomplete", () => {
     expect(cleanupPlan(names, { release_id: B }, [B], false)).toEqual([]);
+  });
+  it('may clean up with an incomplete shell only when this origin holds no downloaded book', () => {
+    // A visitor who never downloads a book never completes a shell: without this, every old
+    // release's shell would be kept for ever.
+    expect(cleanupAllowed(false, 0)).toBe(true);
+    expect(cleanupAllowed(false, 1)).toBe(false);
+    expect(cleanupAllowed(true, 3)).toBe(true);
+    expect(cleanupPlan(names, { release_id: B }, [B], cleanupAllowed(false, 0))).toEqual([shellCacheName(A)]);
+    expect(cleanupPlan(names, { release_id: B }, [B], cleanupAllowed(false, 2))).toEqual([]);
   });
   it('never deletes a book cache', () => {
     expect(cleanupPlan(names, { release_id: B, pyodideCache: 'pyodide-0.27.8-b' }, [], true)).not.toContain(bookCacheName('acsl', H1));
