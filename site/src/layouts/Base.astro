@@ -9,6 +9,8 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { getBooks, type LoadedBook } from '../lib/bundle';
 import { releaseTag } from '../lib/catalog';
+import { pageContext, pageDataAttributes } from '../lib/page-context';
+import ProgressIsland from '../components/ProgressIsland.astro';
 
 interface Props {
   /** The page's own title; the site name is appended. */
@@ -21,6 +23,8 @@ interface Props {
 const { title, description, book } = Astro.props;
 const books = getBooks();
 const fullTitle = title === 'py4kids' ? title : `${title} · py4kids`;
+// The progress island's page context (plan 103 Phase D): book, content hash, entry.
+const bodyData = pageDataAttributes(book ? pageContext(book, Astro.url.pathname) : undefined);
 ---
 <!doctype html>
 <html lang="en">
@@ -33,7 +37,8 @@ const fullTitle = title === 'py4kids' ? title : `${title} · py4kids`;
     <script is:inline src="/scripts/theme.js"></script>
     <slot name="head" />
   </head>
-  <body>
+  <body {...bodyData}>
+    <ProgressIsland />
     <a class="skip-link" href="#main">Skip to content</a>
     <Header books={books} current={book?.id} />
     <main id="main">

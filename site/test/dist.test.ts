@@ -43,6 +43,50 @@ describe.skipIf(!built)('site/dist', () => {
     expect(all.filter((f) => f.endsWith('book.json') || /[\\/]entries[\\/][^\\/]+\.json$/.test(f)).map(rel)).toEqual([]);
   });
 
+  it('ships no JSON carrying an answer_md, source or hash key (plan 103 leak rule)', () => {
+    const keys = (value: unknown, out: string[] = []): string[] => {
+      if (Array.isArray(value)) value.forEach((v) => keys(v, out));
+      else if (value && typeof value === 'object') {
+        for (const [k, v] of Object.entries(value)) {
+          out.push(k);
+          keys(v, out);
+        }
+      }
+      return out;
+    };
+    for (const file of all.filter((f) => f.endsWith('.json'))) {
+      const found = keys(JSON.parse(read(file))).filter((k) => ['answer_md', 'source', 'hash', 'check'].includes(k));
+      expect(found, rel(file)).toEqual([]);
+    }
+  });
+
+  it('has a card deck page, its deck.json and a mastery.json for every book (plan 103 Phase D)', () => {
+    const bookPages = html.filter((f) => /^[a-z0-9-]+[\\/]index\.html$/.test(rel(f)) && read(f).includes('data-content-hash='));
+    expect(bookPages.length).toBeGreaterThan(0);
+    for (const page of bookPages) {
+      const book = rel(page).split(/[\\/]/)[0]!;
+      const cards = join(DIST, book, 'cards', 'index.html');
+      expect(existsSync(cards), `${book}/cards/`).toBe(true);
+      const text = read(cards);
+      expect(text).toContain(`data-deck data-book="${book}"`);
+      expect(text).toMatch(/<script type="module" src="\/_astro\/[^"]+\.js"><\/script>/);
+      const deck = JSON.parse(read(join(DIST, book, 'cards', 'deck.json'))) as { book: string; cards: { key: string; kind: string }[] };
+      expect(deck.book).toBe(book);
+      expect(deck.cards.length, book).toBeGreaterThan(0);
+      for (const card of deck.cards) expect(card.key.startsWith(`${book}/`), card.key).toBe(true);
+      const mastery = JSON.parse(read(join(DIST, book, 'mastery.json'))) as { book: string; concepts: string[] };
+      expect(mastery.book).toBe(book);
+      // The book page carries the resume link and the mastery map.
+      expect(read(page)).toContain(`data-resume-book="${book}"`);
+      expect(read(page)).toContain('data-mastery');
+    }
+  });
+
+  it('puts a resume link for every book on the catalog', () => {
+    const catalog = read(join(DIST, 'index.html'));
+    expect(catalog.match(/data-resume-book="/g)?.length ?? 0).toBeGreaterThan(0);
+  });
+
   it('links the license deed and the site pages from every page', () => {
     expect(html.length).toBeGreaterThan(1);
     for (const file of html) {
