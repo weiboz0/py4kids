@@ -3,6 +3,7 @@
 import Base from '../layouts/Base.astro';
 import { getBooks } from '../lib/bundle';
 import { catalogCards } from '../lib/catalog';
+import ResumeLink from '../components/ResumeLink.astro';
 
 const cards = catalogCards(getBooks());
 ---
@@ -15,6 +16,7 @@ const cards = catalogCards(getBooks());
         <h2><a href={c.href}>{c.title}</a></h2>
         <p>{c.subtitle}</p>
         <p>{c.unitCount} {c.unitCount === 1 ? 'unit' : 'units'}</p>
+        <ResumeLink book={c.id} bookTitle={c.title} />
       </li>
     ))}
   </ul>

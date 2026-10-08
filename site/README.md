@@ -66,3 +66,9 @@ pnpm -C site dev                               # local preview of the exported b
   Limits and reviewed exceptions live in `<book>/site.yaml` `slides:` (`tools/books.py` validates it); a lesson cell tagged `slide-break` starts a new slide, one tagged `slide-skip` stays out of the slides.
   The player dispatches a `py4kids:slide` DOM event (`{book, entry, index, key, count}`) per slide viewed; it stores nothing itself.
 - `scripts/ci-local.sh` step 6 builds the site and runs its tests when the change touches it (`tools/ci_scope.py --site`).
+- **Progress (Phase D):** `src/lib/progress.ts` is the on-device IndexedDB store `py4kids` (`events`, `cards`, `resume`); every event is validated against `tools/export/schema/progress-event.schema.json` before it is written.
+  Without IndexedDB the site keeps working in memory and says once that nothing is saved.
+  The DOM contract the islands share (`py4kids:slide`, `[data-item-key]` checklists, `[data-resume-book]` links) is in `src/lib/dom-events.ts`.
+- **Cards and mastery:** `/<book>/cards/` drills the deck from `deck.json`, and the book page's mastery map reads `mastery.json`.
+  Both are build-time projections (`src/lib/cards.ts`, `src/lib/mastery.ts`) with no `answer_md`, `check.*` or hash.
+  `src/lib/normalise.ts` ports `tools/export/normalise.py`, checked against every vector in `tools/export/hash_vectors.json`.

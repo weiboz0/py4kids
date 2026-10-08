@@ -8,6 +8,9 @@ import { describe, expect, it } from 'vitest';
 import { loadBook, loadBooks, repoRoot, type LoadedBook } from '../src/lib/bundle';
 import { bookLinks, catalogCards, contents, releaseTag } from '../src/lib/catalog';
 import { slideDecks } from '../src/lib/slide-view';
+import { deckProjection, deckSummary } from '../src/lib/cards';
+import { attribution, masteryMap, masteryProjection } from '../src/lib/mastery';
+import { pageContext } from '../src/lib/page-context';
 import { distinctReads, makeDeclared, Recorder, undeclaredReads } from './helpers/schema-keys';
 
 const FIXTURE = join(import.meta.dirname, 'fixtures', 'bundles', 'demo');
@@ -31,6 +34,13 @@ const CONSUMERS: ((books: LoadedBook[]) => unknown)[] = [
   (books) => books.map((b) => releaseTag(books, b)),
   (books) => books.map(contents),
   (books) => books.map(slideDecks),
+  // Phase D: the card deck, the mastery map and the progress island's page context.
+  (books) => books.map(deckProjection),
+  (books) => books.map(deckSummary),
+  (books) => books.map((b) => [...attribution(b).cards, ...attribution(b).items]),
+  (books) => books.map(masteryMap),
+  (books) => books.map(masteryProjection),
+  (books) => books.map((b) => b.book.entries.map((e) => pageContext(b, `/${b.id}/${e.id}/`))),
 ];
 
 function run(books: LoadedBook[]): void {

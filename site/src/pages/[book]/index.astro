@@ -7,6 +7,9 @@ import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import { getBooks, type LoadedBook } from '../../lib/bundle';
 import { contents } from '../../lib/catalog';
+import MasteryMap from '../../components/MasteryMap.astro';
+import ResumeLink from '../../components/ResumeLink.astro';
+import { deckSummary } from '../../lib/cards';
 
 export const getStaticPaths = (() =>
   getBooks().map((book) => ({ params: { book: book.id }, props: { book } }))) satisfies GetStaticPaths;
@@ -20,8 +23,11 @@ const items = contents(book);
 <Base title={book.book.book.title} description={book.book.book.subtitle} book={book}>
   <h1>{book.book.book.title}</h1>
   <p>{book.book.book.subtitle}</p>
+  <ResumeLink book={book.id} />
+  {deckSummary(book).total > 0 && <p><a href={`/${book.id}/cards/`}>Quiz cards</a></p>}
   <h2>Contents</h2>
   <ol>
     {items.map((e) => <li><a href={e.href}>{e.title}</a></li>)}
   </ol>
+  <MasteryMap book={book} />
 </Base>

@@ -1,0 +1,54 @@
+---
+/**
+ * The book page's concept mastery map (plan 103 "Mastery map and cards (D8)"). The layout is
+ * static (which concepts reach N = 3 attributed cards or items, grouped by category); the
+ * mastery island (src/scripts/mastery-map.ts) fills each percentage from the on-device card
+ * boxes and `/<book>/mastery.json`.
+ */
+import type { LoadedBook } from '../lib/bundle';
+import { masteryMap } from '../lib/mastery';
+import { deckSummary } from '../lib/cards';
+
+interface Props {
+  book: LoadedBook;
+}
+const { book } = Astro.props;
+const map = masteryMap(book);
+const hasCards = deckSummary(book).total > 0;
+const label = (category: string) => {
+  const text = category.replace(/[-_]+/g, ' ');
+  return text.length <= 3 ? text.toUpperCase() : text.charAt(0).toUpperCase() + text.slice(1);
+};
+---
+{map.groups.length > 0 && (
+  <section class="mastery" aria-labelledby="mastery-heading" data-mastery data-book={book.id}>
+    <h2 id="mastery-heading">Concept mastery</h2>
+    <p>
+      The share of each concept's quiz cards you know well (answered right at least twice in a row).
+      {hasCards && <> Practise with the <a href={`/${book.id}/cards/`}>quiz cards</a>.</>}
+    </p>
+    {map.groups.map((group) => (
+      <>
+        <h3>{label(group.category)}</h3>
+        <ul class="mastery-list">
+          {group.concepts.map((c) => (
+            <li class="mastery-row" data-concept={c.id}>
+              <span class="mastery-name">{c.name}</span>
+              {c.mode === 'percent' ? (
+                <span class="mastery-value">
+                  <progress max="100" value="0" aria-label={`${c.name}: mastery`} data-mastery-bar></progress>
+                  <span data-mastery-pct>0%</span>
+                </span>
+              ) : (
+                <span class="mastery-value mastery-practice">practice in exercises</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </>
+    ))}
+  </section>
+)}
+<script>
+  import '../scripts/mastery-map.ts';
+</script>
