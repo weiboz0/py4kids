@@ -28,14 +28,9 @@ import githubLight from 'shiki/dist/themes/github-light.mjs';
 import githubDark from 'shiki/dist/themes/github-dark.mjs';
 import { transformerStyleToClass } from '@shikijs/transformers';
 
-export function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+import { escapeHtml } from './escape';
+
+export { escapeHtml };
 
 // ---------------------------------------------------------------------------------------------
 // Code highlighting

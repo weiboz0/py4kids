@@ -122,7 +122,7 @@ describe('IndexedDB store', () => {
     factory = new IDBFactory();
   });
 
-  it('opens database py4kids with the events, cards and resume stores', async () => {
+  it('opens database py4kids with the events, cards, resume and attempts stores', async () => {
     const store = await openProgress({ indexedDB: factory });
     expect(store.persistent).toBe(true);
     const names = await new Promise<string[]>((resolve) => {
@@ -132,7 +132,7 @@ describe('IndexedDB store', () => {
         req.result.close();
       };
     });
-    expect(names.sort()).toEqual(['cards', 'events', 'resume']);
+    expect(names.sort()).toEqual(['attempts', 'cards', 'events', 'resume']);
   });
 
   it('records a card review: Leitner state plus a schema-valid card event', async () => {
@@ -177,7 +177,7 @@ describe('IndexedDB store', () => {
     expect(slide).toMatchObject({ kind: 'slide', result: 'seen', book: 'acsl', item_key: BLOCK });
     expect((await store.events(ITEM)).map((e) => e.result)).toEqual(['partial', 'done']);
     expect(await allEventsValid(store)).toBe(3);
-    // Part B never writes a lesson-run event.
+    // Only a Run writes a lesson-run event (plan 104); a checklist and a slide do not.
     expect((await store.events()).some((e) => e.kind === 'lesson-run')).toBe(false);
   });
 
