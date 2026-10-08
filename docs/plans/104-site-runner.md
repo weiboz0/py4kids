@@ -26,7 +26,16 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - **Replies (runner → site):**
     - `{type: "result", id, session, stdout, stderr, results, timing, status}`
     - `{type: "ready" | "restarted", id}`
-  - `session` is the lesson's entry id for lesson runs and a fresh unique id for each exercise check, so checks never share state.
+  - `session` is the lesson's entry id for lesson runs and a fresh unique id for each exercise check.
+  - **Process-state isolation.** One Pyodide process shares `sys.modules`, standard-library module globals and `builtins` across namespaces, so a fresh namespace is not enough:
+    - **Each exercise check runs in a fresh worker.** The runner keeps one prewarmed spare worker booted, so a check starts without waiting, then retires that worker after the check.
+    - **Within one check, between fixture cases,** the harness restores the boot state:
+      - it deletes every `sys.modules` entry not in the boot snapshot, so modules the student imported (stdlib ones included) are re-imported fresh
+      - it restores `builtins` from a snapshot copy
+      - it resets `sys.stdin`, `sys.stdout`, `sys.stderr`, `sys.argv` and the recursion limit, and the working directory
+    - Each case therefore behaves like the fresh process `tools/judge.py` starts.
+    - **Lesson sessions** deliberately share one worker and its state, like the notebook kernel. "Reset" restarts that worker.
+  - **Exact destinations:** every `postMessage` names its exact `targetOrigin`: the site posts to the runner origin, and the runner posts to the site origin. Never `*`. If the iframe has been navigated elsewhere, the browser drops the message, so student code cannot reach another page.
   - **Binding** (all required, each tested):
     - The site accepts a message only if `event.origin` equals the runner origin, `event.source === iframe.contentWindow`, and `id` matches a pending request (a reply for an unknown or completed id is dropped).
     - The runner accepts a message only if `event.origin` equals the site origin and `event.source === window.parent`.
@@ -69,6 +78,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
 - **Hashing checks** (`answer`, `predict`, `expected-output`) run in the **site**, with no student code needed: the site normalises the typed answer, or for `expected-output` the runner's stdout of the student's program, with part B's `normalise.ts` (now covering `aliases` and `whitespace`), then compares `answerHash` with `check.hash`. For `expected-output`, the runner runs the student's code; the site compares the stdout hash.
 - **Interrupts are owned by the runner origin.** A `SharedArrayBuffer` cannot be posted across origins (agent clusters are keyed by origin under cross-origin isolation), so the **runner page** allocates it, hands it to its same-origin worker (`pyodide.setInterruptBuffer`), and owns the budget timer from `budget_ms`.
   - On expiry, the runner page sets the buffer: Pyodide raises `KeyboardInterrupt`, reported as "time limit".
+  - **Hard limit:** the interrupt is catchable (a student's `try/except KeyboardInterrupt` or signal handler can swallow it), so if the worker has not returned within a 1 s grace period after the interrupt, the runner page **terminates and restarts the worker**. The result reports `interrupts: "restart"`, and a lesson session is lost (the UI says so).
   - If the runner page's `crossOriginIsolated` is false, it terminates and restarts the worker instead.
   - Every result carries `interrupts: "sab" | "restart"`, so the UI can honestly show "restarting Python (≈N s)".
   - The site may also send `{type: "interrupt", id}` (a Stop button).
@@ -120,6 +130,7 @@ User goal, 2026-10-06: "non stop until full working learning website".
     - reset clears a lesson session
     - after a forced worker restart, the next run replays the prelude and gives the stored output
     - two exercise checks never share variables
+    - **contamination through modules:** check 1 sets `math.pi = 3` and `builtins.print = None` (or imports `random` and seeds it); check 2 sees the real values. Likewise between two fixture cases of one item.
   - **Grading UI, one test per behaviour:**
     - `fixtures` in both matching modes: an acsl item line-exact (a required `15 10 4` on one line rejects `15\n10\n4`), a usaco item token-based, with CPython parity for both cases taken from `tools/judge.py`'s `outputs_match`
     - a skipped over-budget case is listed (a fixture with a forced tiny budget)
@@ -133,6 +144,8 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - **Gating:** an odd exercise's `answer_md` is absent from the DOM before an attempt, still absent after merely opening the editor, and present after **a failed Check**. An even exercise never shows it.
     - **For an odd `self-check` item** (63 in python-projects), an attempt is a Run of the student's code plus marking the checklist done; the test covers one.
   - **Interrupt path proven:** the hang test asserts `interrupts: "sab"` under the served headers, and `"restart"` with isolation disabled.
+    - Code that catches the interrupt (`while True:` around `try: … except KeyboardInterrupt: pass`) is stopped by the grace-period restart within budget + 1 s + restart time.
+  - **Navigation:** the test navigates the runner iframe to another local origin, then presses Run. No code is delivered (the target page records nothing), and the site shows the runner as unavailable and offers a reload.
   - **CSP on both origins:** zero `securitypolicyviolation` events on the practice page with the editor open, typed in and scrolled, and on the runner page while Pyodide loads and runs.
   - **No network:** part B's request-recording test is extended to the runner origin. Only the two local origins appear, and no request carries code or answers.
   - The part B end-to-end, axe and Lighthouse suites still pass.
@@ -172,6 +185,12 @@ User goal, 2026-10-06: "non stop until full working learning website".
   - `[FIXED]` `interrupt` added to the typed requests.
   - `[FIXED]` Pyodide pinned at 0.27.8 (CPython 3.12).
   - `[FIXED]` The timing cache moved to `tools/export/timings/`.
+
+- `[sol]` **REJECT** (round 2, 27989c5):
+  - `[FIXED]` Outbound messages lacked an exact `targetOrigin`: it is now exact in both directions, with a navigation test.
+  - `[FIXED]` A SharedArrayBuffer interrupt is catchable: a 1 s grace period, then terminate and restart, tested with code that catches the interrupt.
+  - `[FIXED]` Fresh sessions shared process state: a fresh prewarmed worker per check, a boot-state reset between fixture cases, and module and builtins contamination tests.
+  - `[FIXED]` (nit) `interrupt` is in the request schema (0e56d8e).
 
 ## Content Review
 
