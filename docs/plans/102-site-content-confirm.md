@@ -38,6 +38,10 @@ User, 2026-10-06: "go ahead with the content plans on autopilot", and the goal "
    - **`self-check`** is the honest fallback.
 
    A tag is never chosen to make an item easier to check than its statement supports.
+   - **Every task requirement is accounted for.** The reviewer lists the statement's requirements and marks each one as either verified by the kind (the output, the asserted values) or not verifiable by it.
+     - A method requirement is an example of the second kind: "use `+`, not an f-string" (python-concepts unit 01 Exercise 4); "use a loop".
+     - Unverifiable requirements go into heading-cell metadata `also_check: [...]` (short sentences from the statement). The site shows them as a self-check list beside the automatic check, so a correct output alone is never presented as full marks.
+     - If the item's **core** result cannot be verified, the item is `self-check`.
 2. **Making an item checkable by a statement edit.** This is allowed only when a statement sentence already **instructs the student to store or name that value** under that name and just fails to mark it. Example: "store the count in total" becomes "store the count in `total`".
    - A word used in prose ("Print a title", "the running total", "a short story") is not a rule-2 case.
    - Expect about 5–10 such edits in total.
@@ -50,6 +54,7 @@ User, 2026-10-06: "go ahead with the content plans on autopilot", and the goal "
    - Solutions never change, except to keep a solution's mirror equal to an edited starter.
 3. **`answer_format`** (heading-cell metadata `answer_format: {case, hint, aliases?}`):
    - Program output (`expected-output`, `predict`) stays `case: sensitive`, because Python output is case-sensitive, and needs no metadata unless the hint is misleading.
+   - **Significant whitespace.** Where the statement makes whitespace part of the answer (a required tab, indentation or alignment: python-concepts unit 01 Exercise 14's `\t`), set `answer_format.whitespace: exact`. Normalisation then keeps internal whitespace, stripping only trailing spaces on each line and trailing blank lines. If even that cannot express the requirement, the item is `self-check`.
    - ACSL short answers get `case: insensitive` exactly where the topic's canonical form is case-free:
      - hexadecimal digits
      - Boolean variable names, where the unit's rule says so
@@ -88,12 +93,18 @@ Each phase runs on its own book. Phases A–D run in four parallel worktrees, on
    - per-unit counts
    - every retag, every statement edit (with its revert-reproduces-baseline note) and every `answer_format` decision (with its lesson citation)
 
-- **Phase 0: answer-format aliases** (tooling, before Phases A–D).
-  - `answer_format` gains an optional `aliases` map, `{typed: canonical}`, with single-character or token keys. The bundle schema, `normalise` (applied after whitespace and case), `answer_hash`, the answer model's check 4, and `hash_vectors.json` all honour it, so part C's JavaScript port follows it.
+- **Phase 0: answer-format extensions and `also_check`** (tooling, before Phases A–D).
+  - **`aliases`:** `answer_format` gains an optional `aliases` map, `{typed: canonical}`, with single-character or token keys.
+  - **`whitespace`:** `answer_format` gains an optional `whitespace: collapse|exact` (default `collapse`). `exact` strips only trailing spaces per line and trailing blank lines.
+  - The bundle schema, `normalise` (aliases applied after whitespace and case), `answer_hash`, the answer model's check 4, and `hash_vectors.json` all honour both, so part C's JavaScript port follows them.
+  - **`also_check`:** items gain an optional `also_check: [string]`, exported from heading-cell metadata for every kind except `self-check`.
+    - It is counted by the answer model's check 2 against its statement source, like `requirements`.
+    - It is validated: each entry must be a sentence drawn from the statement, checked by the same tie rule as `requirements`.
   - Tests:
-    - `^` and `↑` hash the same under `aliases: {"^": "↑"}`
-    - they differ without the alias
-    - the vectors cover it
+    - `^` and `↑` hash the same under `aliases: {"^": "↑"}`, and differ without the alias
+    - `a\tb` and `a b` hash differently under `whitespace: exact`, and the same under `collapse`
+    - `also_check` round-trips from heading metadata into the bundle, and a hidden canonical injected there fails
+    - the vectors cover each case
 - **Phase A: python-concepts** (391 items). Expected to be mostly confirmations: its statements carry worked samples.
 - **Phase B: python-projects** (236 items). Most of the work is the self-check items: confirm each one, backticking named variables only where rule 2 allows (about 5–10 items), and give each a sound checklist. Retag or justify `c8e092dc` (rule 4).
 - **Phase C: usaco-bronze** (161 items, all `fixtures`).
@@ -117,7 +128,7 @@ Each phase runs on its own book. Phases A–D run in four parallel worktrees, on
 
 ## Content-gate focus
 
-Reviewers sample at least 25 items per book across all kinds.
+Reviewers sample at least 25 items per book across all kinds. For each sampled item they also list its requirements and confirm each is either verified by the kind or listed in `also_check`. Items whose statement mentions tabs, spaces, indentation or alignment are sampled first.
 They take items from each phase log's retag lines and from every rule-1 `expected-output` exception first. They solve each item blind from the student-facing statement, then judge whether the confirmed check would accept their correct answer and reject a wrong one. They also review every statement edit and every ACSL `answer_format` decision.
 
 ## Out of scope
@@ -145,6 +156,12 @@ They take items from each phase log's retag lines and from every rule-1 `expecte
   - `[FIXED]` `↑` vs `^`: Phase 0 adds `answer_format.aliases`.
   - `[FIXED]` Hints for multi-token answers state the taught form verbatim, with a lesson citation.
   - `[FIXED]` (nits) Rule 2 sharpened (≈5–10 edits); rule 4 checks the statement body (`c8e092dc`); rule-1 exceptions need a quoted sentence; concepts are features or techniques and only when exercised; acsl has no baseline and no statement edits; the phase log has one line per item.
+
+### Round 2 (a66aa8f)
+
+- `[sol]` **REJECT** (gpt-6-sol):
+  - `[FIXED]` Method requirements (python-concepts unit 01 Exercise 4: `+`, not an f-string) are invisible to an output check. Every requirement is now accounted for: unverifiable ones go into `also_check` (Phase 0), shown as a self-check list beside the automatic check; an item whose core result is unverifiable is `self-check`.
+  - `[FIXED]` Significant whitespace (unit 01 Exercise 14's `\t`) was collapsed. Added `answer_format.whitespace: exact` (Phase 0) and a review rule.
 
 ## Content Review
 
