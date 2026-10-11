@@ -452,4 +452,27 @@ Phase H is this plan's named verification phase.
 
 ## Content Review
 
+### Round 1 (HEAD a96e14f) — CONSENSUS
+- **[self]** APPROVE:
+  - the capstone brief has 6 `## Milestone N` headings, each with a `### Title`, plus `## Make it yours` and
+    `## Requirements checklist`;
+  - `coverage-check` (including the capstone rule) passes with `projects/project-14-bookrec/` present;
+  - the framing is honest: the reranker dilutes, and the deliverable is the frontier.
+- **[sol]** APPROVE, no `[OPEN]` items. Its blind solve matched all 9 U14 exercises and all 6 capstone milestones.
+  It verified:
+  - the leakage-safe reranker recipes in `build_models.py`;
+  - the committed oracle and the non-circular MF/two-tower regeneration checks;
+  - val only, and the honest 0.356 < 0.362;
+  - the 8 concepts genuinely exercised;
+  - the v6 amendment within the approved scope;
+  - the teacher-notes numbers and the tooling.
+- **[fable]** APPROVE WITH NITS. Its blind solve of U14 Ex1–9 and the 6 capstone milestones reproduced every
+  expected number. The shipped cache equals its independent r1 probe pickles (`array_equal`), so the oracle is
+  independently grounded. All 10 ablation rows and the pins reproduce live. Budget: solutions 81 s, capstone
+  solutions 51 s, lesson 123 s, milestone 57 s.
+  - NIT 1 [FIXED `e703b7f`]: the U14 teacher-notes core/stretch lists were realigned with the shipped exercises.
+  - NIT 2 [FIXED `e703b7f`]: a design §9 sentence fragment.
+  - NIT 3 [WONTFIX, noted]: the exercise TODO hints are generous, so the practice credit leans on Ex8/Ex9 and the
+    written explanations. This is acceptable for an integration unit on cached models.
+
 ## Post-Execution Report
