@@ -551,3 +551,72 @@ No re-tuning: the thresholds stay as pinned. Re-gated as round 5.
 **Gate result:** all three APPROVE / APPROVE WITH NITS, with no `[OPEN]` items.
 
 ## Post-Execution Report
+
+**Status:** all phases are done (A–H).
+
+**Commits:**
+- `80d7d65` — A: registry.
+- `d9dee47` / `69aea49` — B: fairness helpers and tests. The WIP stopped on a spec error, followed by the v2.5–v2.6.2
+  stop-and-amend.
+- `1e834c8` — C: lesson.
+- `27cdfef` / `d905672` — D: exercises and solutions.
+- `018d4b9` — E: milestone.
+- `d160578` / `4658824` — F: Checkpoint B statement, notes and solutions.
+- `920ac5c` — G: teacher notes.
+- `c0fa82b`, `e109561`, `efef466`, `f2dbf16` — content fixes.
+
+**Gates on shipped code** (main log, seed 0, 500-reader cohort; the probe was re-run round for round to 1e-9 by
+[fable]):
+- **(a) concentration:** item-item coverage 0.490 → 0.358 (−0.132); Gini 0.7729 → 0.8319 (+0.059). The popularity
+  loop has Gini ≥ 0.9879 and coverage ≤ 0.020. Seeds 1 and 2 also pass.
+- **(b) exploration slot at R:** coverage 0.4210 (+0.063), Gini 0.8124 (−0.0195). `cost_0` = 0.000 and
+  `cost_R` = +0.052 (reported).
+- **(c) λ curve:** item-item hit 0.252/0.244/0.224/0.204/0.112 with Gini 0.7729 → 0.7133. U6 blend hit
+  0.306 → 0.186 with Gini 0.9080 → 0.7930. Anchors are exact; the Gini is strictly decreasing and hit
+  non-increasing.
+- **(d):**
+  - genre H 1.640 → a minimum of 1.182 (round 4) → 1.317;
+  - val positives are 44.1% head;
+  - head/tail hit: item-item 0.356/0.032, MF 0.427/0.000, two-tower 0.517/0.014, U6 blend 0.446/0.024;
+  - zero-train books surfaced: popularity/item-item/MF/two-tower 0, feature tower 109.
+
+**Checkpoint B** (Part-2; the second authorized unseal):
+- The frozen equal-weight {item-item, two-tower, semantic, lexical} blend at pool 30 scores **val 0.298 / coverage
+  0.383**.
+- The one-shot **test: hit 0.286 / coverage 0.381 / 500 readers.** The Gini of 0.857 is carried forward from Q6(a):
+  it is label-free, and computing it on test would require a second unseal.
+- Checkpoint A's Part-1 test was 0.306 / 0.338. For *this* blend, Part 2 bought reach, not accuracy. The accuracy
+  gains live in the two-tower (0.340) and the hybrid (0.362), which the checkpoint teaches as a hit ↔ coverage
+  trade.
+
+**Budget** (loaded, load average 11–20):
+
+| Notebook | Measured | Ceiling |
+|---|---|---|
+| U13 lesson | ~152–159 s | 3.5 min |
+| U13 solutions | ~64 s | 2.5 min |
+| U13 milestone | ~152 s | 3.5 min |
+| CP-B solutions | ~150–155 s | 3.5 min |
+
+That is about **+8.8 min** of notebook exec, within the ≤ 13 min ceiling. `test_unit13.py` took 62 s at load 11.7
+(about at the +60 s target). The book total is now about 53 min loaded. The **user decided (2026-10-11): amend the
+design 011 §9 target to a measured one**, done in a small follow-up before U14.
+
+**Phase H:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` was **ALL GREEN** (7/7 steps) at `6ee2af6`. That HEAD is
+code-identical to the content-gate fixes; the only later commits are plan text. Results: root 2,194 passed; recsys
+routed 332 passed.
+- **The first run failed transiently.** The U11 and U12 milestones, which this branch does not touch, hit a ZeroMQ
+  "Socket operation on non-socket" kernel-transport error. That happened at load average about 32, with another
+  session's `--all-books` CI running concurrently. Both passed on an immediate per-unit re-run, and the full re-run
+  was green.
+
+**Deviations, recorded:**
+- **v2.5 stop-and-amend:** per-item Bernoulli acceptance, which is what the gates were measured under. v2.6 then
+  pinned the draw protocol.
+- **CP-B question numbering:** Q0 became an unnumbered `## Setup` (the checker allows 6–8 numbered questions).
+- **CP-B Q8 Gini:** carried forward, as above.
+- **CP-B solutions ship executed outputs:** as U9–U13 do, unlike CP-A.
+- **Guard robustness:** the AST guard is regression detection, not protection against hostile metaprogramming.
+- **The U6-blend halves of gates (c) and (d):** asserted in the milestone only (pytest budget).
+- **Stray file:** a stray `recsys/projects/bookrec/uv.lock` created by an agent was moved to the scratchpad and never
+  committed.
