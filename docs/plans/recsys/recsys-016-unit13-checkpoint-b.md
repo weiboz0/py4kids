@@ -80,6 +80,26 @@ This is a *stylized exposure-to-consumption loop*: readers take what they are sh
      the model a held-out answer).
   4. Append each accepted item as a train row (`label=1`, `session_id=-1`), with timestamps after the reader's last.
      There are no duplicates.
+- **Exact draw protocol (v2.6, pinned verbatim from the measuring probe `fable016/probe4.py`).** Conforming code
+  must reproduce it:
+  1. There is **one** RNG, `np.random.default_rng(seed)`, shared by every draw below, in this order.
+  2. The **cohort** is the sorted list of eligible val readers. The simulated readers are `rng.choice(cohort,
+     size=n_readers, replace=False)`, kept **in drawn order**; with n_readers = 500 this is a permutation.
+  3. In each round, the path is fit on the current train log. The readers are visited in that drawn order. Each
+     reader's top-k is `rank(path.retrieve(r, {"seen": seen_r}, k), n=k, exclude=seen_r)`, which yields **ordered
+     unique** item ids (duplicate candidates are rejected).
+  4. **Mitigation draws come first.** For the exploration slot, the last top-k slot is replaced by
+     `rng.choice([warm items not in seen_r and not in top])`, drawn before any acceptance draw for that reader. The
+     penalty mitigation has no RNG.
+  5. **Acceptance** walks the top-k in **rank order**. For each item it draws `rng.random()` **first**, always, even
+     if the guard would block the item. The item is accepted iff `draw < accept_prob` **and** the item is not in
+     the reader's val/test positives.
+  6. An accepted item is added to `seen_r` immediately, so the same (reader, item) can never be accepted twice
+     across all rounds. Its row is queued for that round.
+  7. The queued rows are appended to the train log **after** the round's readouts. Timestamps are strictly
+     increasing in acceptance order, after the reader's last train timestamp.
+  8. The readouts (coverage, head-share, Gini, genre H) use the round's top-k lists. Clean hit uses the refit path
+     with the original seen set.
 - **Readouts per round:**
   - coverage, head-share (head frozen at round 0), item Gini and genre entropy of the round's top-k lists;
   - **clean hit@10**: the refit path scored on the **original val** relevance with the **original train seen set**.
@@ -110,7 +130,8 @@ milestone and/or `test_unit13.py`:
   not asserted**, as two signed deltas:
   - `cost_0 = clean_hit_0(mitigated) − clean_hit_0(loop)`, measured 0.000 on all 3 guarded seeds;
   - `cost_R = clean_hit_R(mitigated) − clean_hit_R(loop)`.
-- **(c) The fairness trade-off curve.** The predeclared grid is λ ∈ {0, 0.1, 0.3, 0.5, 1.0}, pool 50, with
+- **(c) The fairness trade-off curve** (v2.5 routing: the item-item half is asserted in pytest, the U6-blend half
+  in the milestone). The predeclared grid is λ ∈ {0, 0.1, 0.3, 0.5, 1.0}, pool 50, with
   `score' = minmax(score) − λ · log1p(count)/log1p(max count)`. On item-item **and** on the U6 blend:
   - the Gini is **strictly decreasing** over the grid;
   - hit@10 is **non-increasing**;
@@ -365,8 +386,17 @@ exploration +0.055 / −0.017, minimum H 1.311 ≤ 1.34, popularity loop held).
    milestone assert, and pytest keeps the item-item half.
 No re-tuning: the thresholds stay as pinned. Re-gated as round 5.
 
-### Round 5 (plan v2.5 — stop-and-amend)
-<!-- appended after re-gate -->
+### Round 5 (plan v2.5 @ 2954f44 — stop-and-amend)
+- **[self]** APPROVE.
+- **[sol]** REJECT. It judged the amendment itself **legitimate** (it restores the rule under which the unchanged
+  thresholds were measured; it is not retuning).
+  - B: the draw protocol was not pinned. → v2.6 pins the probe's exact protocol: one RNG, reader draw order, rank
+    traversal, mitigation draws before acceptance, the acceptance draw before the guard.
+  - B: duplicate and timestamp semantics were ambiguous. → v2.6 requires an ordered unique top-k, a seen-set update
+    on acceptance (so each (reader, item) is accepted at most once across rounds), and strictly increasing
+    timestamps.
+  - NIT: verification routing. → Gate (c)'s split routing is stated.
+- **[fable]** pending.
 
 ### Round 4 (plan v2.3 @ 4d5c376) — CONSENSUS
 - **[self]** APPROVE.
