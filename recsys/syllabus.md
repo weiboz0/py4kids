@@ -42,6 +42,8 @@ so every addition can answer the only question that matters: *did it help?*
 | 12 | `unit-12-sequence-aware` | unit | 3 | You just finished volume 2 — should the recommender care what you read *last*? Recency (last-k CF), item transitions with an order-shuffled control that proves order carries the lift, and a tiny self-attention (SASRec) model that learns order but trails the simple paths — on the separate session log. |
 | 13 | `unit-13-whole-system-ethics` | unit | 3 | Your recommender scores well -- but who is it good for? Exposure fairness (Gini, long tail), a feedback-loop simulation that concentrates the catalog (and a mitigation), filter bubbles, offline-metric limits, and the cold-start readout. |
 | — | `checkpoint-02-part-2` | checkpoint | 0.5 | Checkpoint B — assemble the Part-2 recommender, weigh accuracy against coverage and exposure, and score it once on the sealed test holdout. |
+| 14 | `unit-14-full-system` | unit | 3 | Twelve recommenders, one system: serve the two-tower through HNSW, add the feature tower for cold books, re-rank the full pool with a learned ranker, read the sequence path on the session log -- and measure what each stage really buys (ablation + beyond-accuracy tables vs the Part-1 build). |
+| — | `project-14-bookrec` | project | 3 | Capstone — build, measure and defend your own book recommender: choose paths, blend, re-rank, ablate, weigh hit against reach and exposure, and benchmark it against your Part-1 build. |
 
 ## How the book is organised
 
