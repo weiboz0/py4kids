@@ -74,11 +74,12 @@ This is a *stylized exposure-to-consumption loop*: readers take what they are sh
 - **Each round:**
   1. Fit `path_factory()` on the **augmented train log**: original train rows plus the simulated rows so far.
   2. For each cohort reader, retrieve the top-k, excluding the reader's *augmented* seen set.
-  3. With probability `accept_prob`, the reader reads **one** item, chosen **uniformly at random from the top-k**.
-     The item must be unseen, and must **not** be in the reader's val/test positives (the **leakage guard**: we
-     never let the simulation hand the model a held-out answer).
-  4. Append that item as a train row (`label=1`), with a timestamp after the reader's last. There is at most one new
-     row per reader per round, and no duplicates.
+  3. **(v2.5)** Each of the reader's top-k items is accepted **independently with probability `accept_prob`** (a
+     per-item Bernoulli; the expected number of reads is k·p ≈ 3 per reader per round). An item must be unseen,
+     and must **not** be in the reader's val/test positives (the **leakage guard**: we never let the simulation hand
+     the model a held-out answer).
+  4. Append each accepted item as a train row (`label=1`, `session_id=-1`), with timestamps after the reader's last.
+     There are no duplicates.
 - **Readouts per round:**
   - coverage, head-share (head frozen at round 0), item Gini and genre entropy of the round's top-k lists;
   - **clean hit@10**: the refit path scored on the **original val** relevance with the **original train seen set**.
@@ -340,6 +341,32 @@ include grading guidance (as Checkpoint A's do).
 Phase H is this plan's named verification phase.
 
 ## Plan Review
+
+### v2.5 amendment (Phase B stop-and-amend, 2026-10-11)
+Phase B (WIP `d9dee47`) stopped because three loop gates failed on the shipped code. **The root cause was a spec
+error, not the data.** v2 pinned "read **one** item uniformly from the top-k" (from [sol] r1's "≤ 1 new unseen
+positive per round"). But every loop number and gate came from [fable]'s probe, which accepts **each** top-k item
+independently with probability p.
+
+Under the single-read rule:
+- item-item coverage −0.014 (gate −0.08);
+- Gini +0.022 (gate +0.03);
+- exploration coverage +0.026 (gate +0.04);
+- bubble min-H drop 0.15 (gate 0.3).
+
+A diagnostic copy using the per-item rule reproduced the probe and passed every gate (coverage −0.116, Gini +0.053,
+exploration +0.055 / −0.017, minimum H 1.311 ≤ 1.34, popularity loop held).
+
+**Amendment:**
+1. Re-pin acceptance to the **measured** per-item Bernoulli rule (step 3 above). The leakage guard, the timestamps,
+   the no-duplicates rule and the clean-hit readout are unchanged. The thresholds are unchanged, because they were
+   measured under this rule.
+2. Budget: `test_unit13.py` took 80 s (load 9) against ≤ +60 s. The **U6-blend half of gate (c)** moves to the
+   milestone assert, and pytest keeps the item-item half.
+No re-tuning: the thresholds stay as pinned. Re-gated as round 5.
+
+### Round 5 (plan v2.5 — stop-and-amend)
+<!-- appended after re-gate -->
 
 ### Round 4 (plan v2.3 @ 4d5c376) — CONSENSUS
 - **[self]** APPROVE.
