@@ -305,6 +305,9 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
   - `AnnRetrievalPath.load` **rebuilds** HNSW from the stored vectors (0.2 s), so "cache the ANN" means "cache the
     two-tower and rebuild";
   - `load_cached_models(dir)` raises a clear `FileNotFoundError` naming the build command.
+  - A `manifest.json` sidecar records the `bookrec` artifact versions plus the sha256 of `checksums.json` for the
+    generated data. `load_cached_models` refuses a cache whose data hash no longer matches, so a regenerated
+    dataset invalidates the cache.
   - The amendment names `recsys/data/generated/models/` (gitignored, regenerated-only) as the cache location, not
     `assets/`.
 - **If a ceiling is still exceeded:** stop and amend.
@@ -336,6 +339,17 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
 - **Phase D** — U14 exercises, then solutions (separate fresh Opus subagents). At least 6 exercises, at least 2
   stretch, all on cached models. For example: swap ANN parameters and read recall vs speed; add or remove a reranker
   feature family; build the ablation; a beyond-accuracy table; a cold-start slice; a session-log sequence readout.
+  **v5.2 duty (from [fable] r1 MUST 4, so practice is not vacuous):** U14's exercises must genuinely exercise each
+  of the 8 concepts. The content gate checks each one explicitly:
+
+  | Concept(s) | Exercise |
+  |---|---|
+  | `ann-retrieval`, `hnsw` | an efSearch/M sweep reading recall vs time |
+  | `hard-negatives` | the negative-pool ablation (warm vs hard) |
+  | `feature-towers` | a cold-item slice |
+  | `ranking-features`, `learning-to-rank`, `neural-reranking` | a feature-family mask + refit of the 8-path reranker on the cached training matrix |
+  | `self-attention` | a SASRec readout on the session log |
+
 - **Phase E** — the U14 milestone (Opus). It is shipped cleared and asserts gates (a)–(f).
 - **Phase F** — capstone `brief.ipynb` (Opus), then `solutions.ipynb` (a separate fresh Opus subagent), plus
   `teacher-notes.md` with a grading rubric.
