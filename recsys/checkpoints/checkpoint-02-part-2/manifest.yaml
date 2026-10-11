@@ -1,0 +1,9 @@
+id: checkpoint-02-part-2
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+concepts:
+  introduces: []
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, score-blending, word-embeddings, document-embeddings, embedding-retrieval, two-tower, bpr-loss, neural-training, item-cold-start, hybrid-retrieval, sequential-recommendation, item-transitions, feedback-loops, exposure-fairness, filter-bubbles, bm25, item-item-cf]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, score-blending, word-embeddings, document-embeddings, embedding-retrieval, two-tower, bpr-loss, neural-training, item-cold-start, hybrid-retrieval, sequential-recommendation, item-transitions, feedback-loops, exposure-fairness, filter-bubbles, bm25, item-item-cf]

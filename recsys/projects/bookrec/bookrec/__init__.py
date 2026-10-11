@@ -27,6 +27,10 @@ Unit 12 (plan recsys-015) adds the sequence-aware paths in :mod:`bookrec.sequenc
 (first-order item transitions) and :class:`~bookrec.sequence.SasrecRetrievalPath` (tiny causal
 self-attention; torch only inside ``fit``) — plus :func:`~bookrec.sessions.ordered_train_histories`,
 :func:`~bookrec.sessions.first_unseen_val` and :func:`~bookrec.scoreboard.reader_hits`.
+
+Unit 13 (plan recsys-016) adds :mod:`bookrec.fairness` (numpy-only): exposure Gini over the full
+catalog (items and authors), long-tail share, genre entropy / spread vs history, the
+``pop-penalized`` re-rank path and the leakage-guarded :func:`~bookrec.fairness.simulate_feedback_loop`.
 """
 
 from __future__ import annotations
@@ -50,6 +54,21 @@ from bookrec.embeddings import (
 )
 from bookrec.evaluate import hit_rate_at_k, ndcg_at_k, precision_at_k, recall_at_k
 from bookrec.factorization import MatrixFactorizationPath
+from bookrec.fairness import (
+    PopularityPenalizedPath,
+    RoundMetrics,
+    author_catalog_share,
+    author_exposure_gini,
+    exposure_counts,
+    exposure_gini,
+    genre_entropy,
+    genre_spread_vs_history,
+    gini,
+    long_tail_share,
+    popularity_penalized,
+    simulate_feedback_loop,
+    val_cohort,
+)
 from bookrec.feature_tower import FeatureTowerRetrievalPath
 from bookrec.hybrid import HybridRetrievalPath
 from bookrec.keywords import load_keywords
@@ -105,22 +124,31 @@ __all__ = [
     "MatrixFactorizationPath",
     "NeuralRerankerPath",
     "PathRegistry",
+    "PopularityPenalizedPath",
     "PopularityRetrievalPath",
     "RandomRetrievalPath",
     "RerankerModel",
     "RetrievalPath",
+    "RoundMetrics",
     "SasrecRetrievalPath",
     "ScoreboardResult",
     "SemanticEmbeddingRetrievalPath",
     "TransitionRetrievalPath",
     "TwoTowerRetrievalPath",
+    "author_catalog_share",
+    "author_exposure_gini",
     "blend",
     "book_embedding",
     "calibrate_scores",
     "catalog_coverage",
     "cosine_similarity",
+    "exposure_counts",
+    "exposure_gini",
     "first_unseen_val",
     "generated_dir",
+    "genre_entropy",
+    "genre_spread_vs_history",
+    "gini",
     "head_ids_from_counts",
     "head_share",
     "hit_rate_at_k",
@@ -131,10 +159,12 @@ __all__ = [
     "load_keywords",
     "load_series",
     "load_train_sequences",
+    "long_tail_share",
     "ndcg_at_k",
     "novelty",
     "order_candidates",
     "ordered_train_histories",
+    "popularity_penalized",
     "precision_at_k",
     "rank",
     "reader_hits",
@@ -143,6 +173,8 @@ __all__ = [
     "run_blended_scoreboard",
     "run_validation_scoreboard",
     "search_catalog",
+    "simulate_feedback_loop",
     "tfidf_matrix",
+    "val_cohort",
     "weighted_rating",
 ]

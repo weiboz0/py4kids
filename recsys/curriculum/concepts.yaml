@@ -53,3 +53,7 @@ concepts:
 - {id: sequential-recommendation, name: "Sequential (next-item) recommendation from an ordered history; recency / last-k", category: techniques, kind: technique}
 - {id: item-transitions, name: "First-order item transition (Markov) model learned from consecutive reads", category: techniques, kind: technique}
 - {id: self-attention, name: "Causal self-attention over reading history (SASRec-style)", category: techniques, kind: technique}
+# --- Unit 13 (recsys-016): evaluating the whole system — ethics & beyond-accuracy ---
+- {id: feedback-loops, name: "Feedback loops: a recommender retrained on its own exposures (simulation)", category: techniques, kind: technique}
+- {id: exposure-fairness, name: "Exposure fairness across items/authors (Gini of exposure, long-tail share, trade-off curves)", category: techniques, kind: technique}
+- {id: filter-bubbles, name: "Filter bubbles: narrowing of recommended genre spread vs a reader's history", category: techniques, kind: technique}

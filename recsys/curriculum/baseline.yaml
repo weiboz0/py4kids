@@ -175,6 +175,12 @@ library_methods:
 - perf_counter
 - triu
 - where
+# --- Unit 13 (recsys-016) ---
+# The Unit-13 lesson: `log2` is the by-hand genre entropy (bits) before the `genre_entropy` reveal;
+# `random` is the per-slot acceptance draw (`rng.random()`) of the by-hand feedback-loop round, the
+# same single seeded generator `simulate_feedback_loop` uses.
+- log2
+- random
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}

@@ -140,7 +140,9 @@ def test_retrieve_cosine_on_toy_fixture() -> None:
 # --- the floor + measured band (direction + band, like test_unit03) --------------------------
 
 
-def test_semantic_clears_floor_and_sits_in_measured_band(generated: dict[str, object], glove) -> None:
+def test_semantic_clears_floor_and_sits_in_measured_band(
+    generated: dict[str, object], glove
+) -> None:
     catalog_ids = generated["catalog_ids"]
     cold = generated["cold_readers"]
     interactions = generated["interactions_path"]
@@ -148,12 +150,20 @@ def test_semantic_clears_floor_and_sits_in_measured_band(generated: dict[str, ob
     semantic = SemanticEmbeddingRetrievalPath(generated["keywords"], glove).fit(
         generated["rows"], catalog=catalog_ids
     )
-    lexical = LexicalRetrievalPath(generated["keywords"]).fit(generated["rows"], catalog=catalog_ids)
+    lexical = LexicalRetrievalPath(generated["keywords"]).fit(
+        generated["rows"], catalog=catalog_ids
+    )
     floor = RandomRetrievalPath(catalog_ids, seed=RANDOM_SEED)
 
-    sem = run_validation_scoreboard(semantic, interactions, catalog_ids=catalog_ids, k=K, cold_readers=cold)
-    lex = run_validation_scoreboard(lexical, interactions, catalog_ids=catalog_ids, k=K, cold_readers=cold)
-    rnd = run_validation_scoreboard(floor, interactions, catalog_ids=catalog_ids, k=K, cold_readers=cold)
+    sem = run_validation_scoreboard(
+        semantic, interactions, catalog_ids=catalog_ids, k=K, cold_readers=cold
+    )
+    lex = run_validation_scoreboard(
+        lexical, interactions, catalog_ids=catalog_ids, k=K, cold_readers=cold
+    )
+    rnd = run_validation_scoreboard(
+        floor, interactions, catalog_ids=catalog_ids, k=K, cold_readers=cold
+    )
 
     assert sem.readers == lex.readers == rnd.readers == 500
     # Above the floor (measured ~0.102 vs ~0.012, ~8.5x):
@@ -166,12 +176,16 @@ def test_semantic_is_deterministic(generated: dict[str, object], glove) -> None:
     catalog_ids = generated["catalog_ids"]
     kwargs = {"catalog_ids": catalog_ids, "k": K, "cold_readers": generated["cold_readers"]}
     first = run_validation_scoreboard(
-        SemanticEmbeddingRetrievalPath(generated["keywords"], glove).fit(generated["rows"], catalog=catalog_ids),
+        SemanticEmbeddingRetrievalPath(generated["keywords"], glove).fit(
+            generated["rows"], catalog=catalog_ids
+        ),
         generated["interactions_path"],
         **kwargs,
     )
     second = run_validation_scoreboard(
-        SemanticEmbeddingRetrievalPath(generated["keywords"], glove).fit(generated["rows"], catalog=catalog_ids),
+        SemanticEmbeddingRetrievalPath(generated["keywords"], glove).fit(
+            generated["rows"], catalog=catalog_ids
+        ),
         generated["interactions_path"],
         **kwargs,
     )
@@ -186,7 +200,9 @@ def test_lexical_vs_semantic_overlap_is_low(generated: dict[str, object], glove)
     semantic = SemanticEmbeddingRetrievalPath(generated["keywords"], glove).fit(
         generated["rows"], catalog=catalog_ids
     )
-    lexical = LexicalRetrievalPath(generated["keywords"]).fit(generated["rows"], catalog=catalog_ids)
+    lexical = LexicalRetrievalPath(generated["keywords"]).fit(
+        generated["rows"], catalog=catalog_ids
+    )
 
     seen_by: dict[int, set[int]] = defaultdict(set)
     target_by: dict[int, set[int]] = defaultdict(set)
@@ -246,8 +262,12 @@ def test_fit_signature_is_protocol_substitutable(generated: dict[str, object], g
 def test_fit_artifact_load_round_trip(generated: dict[str, object], glove) -> None:
     catalog_ids = generated["catalog_ids"]
     rows = generated["rows"]
-    original = SemanticEmbeddingRetrievalPath(generated["keywords"], glove).fit(rows, catalog=catalog_ids)
-    restored = SemanticEmbeddingRetrievalPath(generated["keywords"], glove).load(original.artifact())
+    original = SemanticEmbeddingRetrievalPath(generated["keywords"], glove).fit(
+        rows, catalog=catalog_ids
+    )
+    restored = SemanticEmbeddingRetrievalPath(generated["keywords"], glove).load(
+        original.artifact()
+    )
     for reader_seed in (3, 11, 42, 128):
         rng = np.random.default_rng(reader_seed)
         seen = set(rng.choice(catalog_ids, size=4, replace=False).tolist())
@@ -443,6 +463,19 @@ def test_heavy_dep_free_paths_do_not_import_torch_or_faiss() -> None:
         "    raise AssertionError('SasrecRetrievalPath.fit must import torch (import blocked)')\n"
         "except ImportError:\n"
         "    pass  # torch is confined to SASRec training\n"
+        "# Unit 13's fairness helpers + feedback loop are pure numpy end-to-end.\n"
+        "from bookrec import (ItemItemRetrievalPath, exposure_gini, author_exposure_gini,\n"
+        "                     genre_entropy, popularity_penalized, simulate_feedback_loop)\n"
+        "fair_rows = [{'reader_id': r, 'item_id': i, 'timestamp': t, 'split': s, 'label': 1}\n"
+        "             for r, seq in {1: [10, 20, 30], 2: [10, 20, 30], 3: [20, 30, 10]}.items()\n"
+        "             for t, (i, s) in enumerate(zip(seq, ['train', 'train', 'val']))]\n"
+        "assert exposure_gini([[10, 20]], [10, 20, 30]) > 0 and author_exposure_gini([[10]], books) == 0\n"
+        "assert genre_entropy([10, 20], books) == 0.0\n"
+        "pen = popularity_penalized(ItemItemRetrievalPath().fit(fair_rows), 0.3, {10: 2, 20: 3})\n"
+        "assert pen.retrieve(1, {'seen': {10}}, 2) and pen.name == 'pop-penalized'\n"
+        "loop = simulate_feedback_loop(ItemItemRetrievalPath, fair_rows, cohort=[1, 2, 3], catalog=books,\n"
+        "                              seed=0, rounds=2, k=2, accept_prob=1.0, mitigation='explore')\n"
+        "assert len(loop) == 3, loop\n"
         "assert sys.modules.get('torch') is None, 'something imported torch on the heavy-dep-free path'\n"
         "assert sys.modules.get('faiss') is None, 'something imported faiss on the heavy-dep-free path'\n"
         "print('HEAVY_DEP_FREE_OK')\n"
