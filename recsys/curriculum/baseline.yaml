@@ -191,6 +191,14 @@ library_methods:
 - meta
 - part1_build
 - top_lists
+# The Unit-14 lesson: `envelope` / `training_matrix` / `loss_history` read a cached model's envelope,
+# its leakage-safe reranker (X, y) and its stored training curve; `readout` is FullSystem's
+# whole-system metrics row; `session_top_lists` is SASRec's top-10s on the session log.
+- envelope
+- loss_history
+- readout
+- session_top_lists
+- training_matrix
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}
