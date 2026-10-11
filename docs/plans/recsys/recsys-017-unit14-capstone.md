@@ -175,12 +175,16 @@ particular, dropping popularity *raises* hit by 0.008; this is reported honestly
     come from the artifacts it checks.
     - The independent build is [fable]'s probe: the models in `scratchpad/fable017/models/*.pkl`, and for the full
       stack a re-run of `probe.py`'s full-stack section.
-    - **Acceptance threshold:** for every model and every one of the 20 readers, top-10 overlap with the independent
-      build must be **≥ 0.99** (the probe measured 1.0 refit-to-refit).
+    - **Acceptance threshold:** for every model and every one of the 20 readers, top-10 lists must be **identical** to the
+      independent build's (overlap = 1.0; overlap is a multiple of 0.1, so "≥ 0.99" means identical), as the probe
+      measured refit to refit.
     - If any reader is below that, Phase B **stops** (no constants are committed) and the discrepancy goes back to
       the gate.
     - Each CI build regenerates every artifact from scratch, and the test requires rank overlap ≥ 0.9 per reader
-      against the constants (§184 rank/tolerance; exact identity is reported, not gated).
+      against the constants (§184 rank/tolerance; exact identity is reported, not gated). The **durable copy** of the
+      independent probe is `recsys/data/generated/fable-probe/` (gitignored; copied from the session scratchpad on
+      2026-10-11). Phase B re-scores 20 readers from those pickles: `probe2.py` lines 61–68 load the reranker's
+      6 serving paths, and `probe.py` lines 325–341 re-run builds the full8 oracle.
     - **Cheap regeneration in the test:** MF and the two-tower are refit and compared with `allclose` to the
       on-disk cache. The ANN is rebuilt with rank overlap 1.0 and recall@10 ≥ 0.99.
     - The feature tower, reranker and SASRec are verified by the pinned val hit plus the 20-reader oracle, which
@@ -273,15 +277,21 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
   demonstrations.
 
 ## Budget (binding ceilings, loaded)
-- **`build_models.py`:** ≤ 5 min. Probe-measured, roughly MF 17 s + two-tower 18 s + feature tower 26 s + reranker
-  about 90 s + SASRec about 50 s + HNSW about 5 s.
-- **U14 lesson:** ≤ 4 min (one on-screen fit of each heavy model, ≤ 90 s per cell, plus cache loads).
-- **U14 solutions:** ≤ 2.5 min (cache loads only).
-- **U14 milestone:** ≤ 2.5 min (cache loads only).
-- **Capstone solutions:** ≤ 3 min (cache loads only).
-- **Total:** ≤ 15 min of notebook exec, plus the build script inside the routed pytest step.
-- **Routed pytest:** ≤ +90 s, including the required check (it uses the CI-built cache and does not refit the
-  expensive models).
+- **Budget allocation (v5; [fable] r2 NIT 1).** A scoring row costs about 17–24 s loaded, so the original
+  sub-ceilings could not hold 12 table rows plus the asserts. Reallocated:
+  - **`build_models.py` ≤ 8 min.** It fits MF, the two-tower, the feature tower, `reranker-u11` (38 s),
+    `reranker-full8` (about 70 s) and SASRec, and rebuilds HNSW. It also writes **`readouts.json`**: the 10
+    ablation rows, both baselines and the beyond-accuracy rows, computed from the freshly built caches.
+  - **U14 milestone ≤ 3 min.** It **recomputes** the full stack, the fixed blend and the Part-1 build (about 1 min)
+    and asserts gates (e) and (f) on them live. It **loads `readouts.json`** for the other rows and asserts their
+    structure, values and the recomputed deltas (gates (b)/(c)). Because `readouts.json` is regenerated on every
+    CI run from fresh builds, the values are still CI-verified.
+  - **U14 lesson ≤ 4 min:** on-screen fits of MF, the two-tower and HNSW only; the rest loads from the cache.
+  - **U14 solutions ≤ 2.5 min.**
+  - **Capstone solutions ≤ 3 min.**
+  - **Notebook total ≤ 15 min.**
+  - **Routed pytest ≤ +3 min.** That covers the MF and two-tower refit `allclose`, the oracle, the per-model val
+    pins, the two reduced mutation builds and the `readouts.json` structure.
 - **Lesson on-screen fits (v3, pre-declared):** only MF, the two-tower and the HNSW build are fitted on screen
   (≈ 35 s plus 0.2 s). The feature tower, reranker and SASRec load from the cache. Phase B adds an additive
   `loss_history` field to the two-tower, feature-tower and SASRec artifacts and the reranker's training log (with a
@@ -382,7 +392,13 @@ Phase H is this plan's named verification phase.
     path rows vs the fixed blend; Phases B and E assert (a)–(f).
   - **NITs:** the "direction" wording is clarified (a reproducibility pin fixes the measured sign), and the
     duplicate (e) is removed.
-- **[fable]** pending (r2 on v3).
+- **[fable]** APPROVE WITH NITS (r2, on v4). Every pinned number matches its probe. It confirmed v3's definition
+  would have failed: the shipped 6-path model over the 8-path pool scores 0.334, now moot. Nits, folded as v5:
+  - budget reallocation (`readouts.json`, a milestone that recomputes only 3 rows, pytest ≤ +3 min, build ≤ 8 min);
+  - the lesson-fits wording reconciled;
+  - the oracle threshold is "identical top-10";
+  - the probe artifacts are copied durably;
+  - the lesson will note that the path ablations are fixed-blend leave-one-out, not reranked.
 
 ### Round 4 (plan v4 @ 219cf05)
 - **[sol]** REJECT, with one open item. B1, B2 and the B3 baselines are RESOLVED.
