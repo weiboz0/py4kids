@@ -67,7 +67,7 @@ Probe measurements at the committed seed, through the real `run_validation_score
 | A: 30 / 256 / 3e-3 | — | — | +0.031 | — | — |
 | C: 40 / 256 / 3e-3 | — | — | +0.035 | — | — |
 
-D's fit time is about 35 s on an unloaded machine. Two seeded fits gave bit-exact weights and identical top-10 lists
+An unloaded machine should be faster, but that is an estimate, not a measurement. Two seeded fits gave bit-exact weights and identical top-10 lists
 for all 1,419 readers.
 
 **No re-tuning.** If the shipped code at recipe D misses gate (c), Phase B **stops**, the plan is amended, and the
@@ -87,15 +87,16 @@ numpy/torch fidelity). These are additional checks; they never substitute for th
 - **Per-notebook time:** about 2.5 min for the lesson and the milestone, and about 1.5 min for the solutions.
 - **Measurement:** Phase B measures the **current pre-U12 whole-book exec time** (`exec-lessons` + `exec-solutions`
   for recsys) and reports U12's delta against the ≤ ~15 CI-minute target. If the total exceeds the target, the
-  reduction order is (1) drop the lesson's shuffled SASRec fit and use the numpy transition control there, then
-  (2) stop and amend.
+  reduction order is (1) drop the lesson's shuffled SASRec fit and use the numpy transition control there. This
+  fallback **amends** the lesson contract (Phase C step 4) and the fit inventory (to 4 fits), and is recorded in the
+  post-execution report. The milestone keeps both fits, so gate (c) is unaffected. Then (2) stop and amend.
 - **Routed pytest delta:** ≤ +60 s (numpy gates plus reduced-config SASRec contracts).
 
 ## Gate (measured by the probe; the thresholds are re-pinned in Phase B from the shipped code, with headroom)
 On `sessions.csv.gz`, val, k = 10, committed seed, through `run_validation_scoreboard`:
 - **(a) recency lift:** `last_k_cf.hit ≥ item_item.hit + 0.03`. The harness measured +0.070; the bookrec
   `ItemItemRetrievalPath` baseline is re-measured.
-- **(b) order evidence:** `transition.hit ≥ 1.3 × transition_shuffled.hit` and `≥ +0.08`.
+- **(b) order evidence:** `transition.hit ≥ 1.3 × transition_shuffled.hit` and `≥ +0.10`.
 - **(c) SASRec learns order (milestone-asserted at frozen recipe D):** `sasrec.hit − sasrec_shuffled.hit ≥ 0.02`
   **and** `≥ 2 × paired SE`. The paired SE is over per-reader hits (probe: +0.040, SE 0.0105). If this fails, stop,
   amend and re-gate (no re-tuning).
@@ -107,7 +108,7 @@ On `sessions.csv.gz`, val, k = 10, committed seed, through `run_validation_score
   - fit times.
 
 Probe values for gates (a) and (b), on the real scoreboard:
-- (a) last-3 − item-item = **+0.070** (SE 0.0135);
+- (a) distinct last-3 − item-item = **+0.071** (SE 0.0136; hit 0.5511);
 - (b) transition last-5 0.5159 vs shuffled 0.3326, which is **1.55×, +0.183**.
 Item-item on the session rows reproduces the harness bag number exactly (0.4799).
 
@@ -218,7 +219,8 @@ Add `bookrec/sequence.py`, with numpy paths that are torch-free.
 - Tests, in the new `tests/test_unit12.py` (lean; budget ≤ +60 s):
   - gates (a)–(b) on the CI-generated `sessions.csv.gz` (skip if absent, like the data tests). Gate (c) is asserted
     in the milestone (see "Frozen SASRec recipe");
-  - **shuffle and leakage mutants** (named negative tests, each built as a small monkeypatched or subclassed
+  - **shuffle and leakage mutants** (mutants 1–3 run against `LastKItemItemPath(k_last=3)` and
+    `TransitionRetrievalPath` fixtures, never `k_last=None`, where mutant 3 is undetectable by design) (named negative tests, each built as a small monkeypatched or subclassed
     mutant on a hand-made sequence fixture where order is decisive; each must be *detected*):
     1. only learning shuffled, querying ordered;
     2. only querying shuffled, learning ordered;
@@ -272,11 +274,13 @@ non-empty markdown first cell.
   - build a transition table by hand and check it against the path;
   - the shuffled control;
   - next-item vs any-item hit;
-  - read SASRec ordered vs shuffled vs item-item;
+  - read SASRec ordered vs item-item from the solution's own single ordered fit (the ordered-vs-shuffled SASRec
+    comparison is interpretive: a markdown answer that reads the lesson's table, with no numeric assert);
   - coverage per path.
 - Stretch ideas: a second-order transition or a decayed-recency CF; a next-in-series diagnostic (series used only as
   an evaluation lens); a blend of last-k CF and transition.
-- Exercises **reuse** a fitted SASRec, or use a reduced config; there is no extra full fit (budget).
+- The solutions use their own **single ordered** fit (see Exec budget) or a reduced config; there is no other full
+  fit.
 **Verify:** hygiene/structure/cell-lint/noexec; `exec-solutions` clean (within budget); `concept-scan` clean.
 
 ### Phase E — milestone notebook (Opus subagent)
@@ -349,6 +353,23 @@ Phase G is this plan's named verification phase.
   - N6: a numpy/torch fidelity test. → added.
   - N7: the row contract plus a shared ordering helper. → added.
   - The probe tables are folded into the "Frozen SASRec recipe" section and the gates.
+
+### Round 2 (plan v2 @ f2036f9) — CONSENSUS
+- **[self]** APPROVE.
+- **[sol]** APPROVE WITH NITS.
+  - B1–B4 and N5 RESOLVED. It verified that `exec-solutions` executes milestones in CI, so gate (c) is enforced at
+    the shipped recipe.
+  - NIT: the budget fallback conflicted with the lesson contract. → The fallback now explicitly amends the lesson
+    contract and the fit inventory, and the milestone keeps both fits.
+- **[fable]** APPROVE WITH NITS.
+  - N1–N7 RESOLVED; the probe numbers match.
+  - NIT A: the gate (b) floor was inconsistent. → Unified at +0.10.
+  - NIT B: the unloaded-time figure was unsupported. → Now labelled an estimate.
+  - NIT C: the Phase D SASRec drill conflicted with the budget. → It is now interpretive, with the solution's own
+    single fit.
+  - NIT D: (a) had a stale figure. → Distinct +0.071.
+  - NIT E: mutant 3 is vacuous for `k_last=None`. → Mutants run on `k_last=3` and the transition fixtures.
+**Gate result:** all three APPROVE / APPROVE WITH NITS, with no open blockers. Implementation may begin.
 
 ## Content Review
 
