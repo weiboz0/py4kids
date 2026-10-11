@@ -21,6 +21,12 @@ retrieval paths (BM25, item-item, matrix factorisation, two-tower, …) land in 
 
 The U12 session-log loaders (plan recsys-014) — :func:`~bookrec.sessions.load_series` and
 :func:`~bookrec.sessions.load_train_sequences` (ordered train-positive histories) — are stdlib-only.
+
+Unit 12 (plan recsys-015) adds the sequence-aware paths in :mod:`bookrec.sequence` —
+:class:`~bookrec.sequence.LastKItemItemPath` (recency CF), :class:`~bookrec.sequence.TransitionRetrievalPath`
+(first-order item transitions) and :class:`~bookrec.sequence.SasrecRetrievalPath` (tiny causal
+self-attention; torch only inside ``fit``) — plus :func:`~bookrec.sessions.ordered_train_histories`,
+:func:`~bookrec.sessions.first_unseen_val` and :func:`~bookrec.scoreboard.reader_hits`.
 """
 
 from __future__ import annotations
@@ -68,11 +74,18 @@ from bookrec.scoreboard import (
     BlendedScoreboardResult,
     RandomRetrievalPath,
     ScoreboardResult,
+    reader_hits,
     run_blended_scoreboard,
     run_validation_scoreboard,
 )
 from bookrec.search import search_catalog
-from bookrec.sessions import load_series, load_train_sequences
+from bookrec.sequence import LastKItemItemPath, SasrecRetrievalPath, TransitionRetrievalPath
+from bookrec.sessions import (
+    first_unseen_val,
+    load_series,
+    load_train_sequences,
+    ordered_train_histories,
+)
 from bookrec.two_tower import TwoTowerRetrievalPath
 
 __all__ = [
@@ -87,6 +100,7 @@ __all__ = [
     "HnswIndex",
     "HybridRetrievalPath",
     "ItemItemRetrievalPath",
+    "LastKItemItemPath",
     "LexicalRetrievalPath",
     "MatrixFactorizationPath",
     "NeuralRerankerPath",
@@ -95,14 +109,17 @@ __all__ = [
     "RandomRetrievalPath",
     "RerankerModel",
     "RetrievalPath",
+    "SasrecRetrievalPath",
     "ScoreboardResult",
     "SemanticEmbeddingRetrievalPath",
+    "TransitionRetrievalPath",
     "TwoTowerRetrievalPath",
     "blend",
     "book_embedding",
     "calibrate_scores",
     "catalog_coverage",
     "cosine_similarity",
+    "first_unseen_val",
     "generated_dir",
     "head_ids_from_counts",
     "head_share",
@@ -117,8 +134,10 @@ __all__ = [
     "ndcg_at_k",
     "novelty",
     "order_candidates",
+    "ordered_train_histories",
     "precision_at_k",
     "rank",
+    "reader_hits",
     "recall_at_k",
     "rerank",
     "run_blended_scoreboard",
