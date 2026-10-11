@@ -30,13 +30,22 @@ Checkpoint B deliberately skipped these, as the heavy fits. A capstone-only U14 
 So U14 has two entries:
 - **`unit-14-full-system`** (a unit, `lessons: 3`, `introduces: []`). It assembles the whole Part-2 stack and
   **practises those eight concepts**, plus the rest of the pipeline.
-- **The capstone project `capstone-bookrec`** (`kind: project`, `lessons: 3`). The student builds, measures and
+- **The capstone project `project-14-bookrec`** (`kind: project`, `lessons: 3`). The student builds, measures and
   defends their own full recommender.
 
 This mirrors `python-projects`, where projects are separate from units. Design §8 row 14 is amended to say so.
 
 ## Phase 0 — Design 011 amendment v6 (inline; reviewed by this plan's gates)
-1. **§9 exec target.** This is **user decision 2026-10-11 ("Amend the target")**. It replaces "Whole-book exec target:
+1. **§9 exec target.** This is **user decision 2026-10-11 ("Amend the target")**. The **timing procedure** (v2) is
+   objective:
+   - The measurement is the wall time of `py4kids-tools --book recsys exec-lessons` plus `exec-solutions` (which
+     includes milestones, checkpoints and the capstone).
+   - It excludes data generation and `build_models.py`, which belong to the routed pytest step and are reported
+     separately.
+   - It is measured on the project's CI machine, with the 1-minute load average recorded at start and end.
+   - **Exceeding 75 notebook-minutes means stop and amend.** It is never excused as atypical load. The
+     post-execution report records the measurement, the load and the machine.
+   The amended target: It replaces "Whole-book exec target:
    ≤ ~15 CI-minutes" with a measured target:
    - **≤ 75 CI-minutes of recsys notebook exec, measured on the shared CI machine under its typical load.** Pre-U14
      it measures about 53 min loaded; U14 + the capstone have a ≤ 15 min ceiling.
@@ -73,15 +82,17 @@ The lesson assembles, on the main log:
 It runs **val only**. `test` is not unsealed again (the two authorized unseals were CP-A and CP-B), and the global
 AST allowlist is unchanged.
 
-### Capstone (`recsys/projects/capstone-bookrec/`)
-Files: `brief.ipynb`, `solutions.ipynb`, `teacher-notes.md`, `manifest.yaml`. The brief's milestones are:
-1. pick and justify retrieval paths;
+### Capstone (`recsys/projects/project-14-bookrec/`)
+Files: `brief.ipynb`, `solutions.ipynb`, `teacher-notes.md`, `manifest.yaml`. The id `project-14-bookrec` matches the
+tooling pattern `^project-[0-9]{2}-…$`, and discovery scans `projects/project-*`.
+
+The brief has **6 milestone headings** (the tooling allows 3–6). All seven requirements are kept:
+1. pick and justify the retrieval paths;
 2. build the pool + blend;
 3. add the reranker;
-4. run the ablation;
-5. produce the beyond-accuracy table;
-6. benchmark vs Part 1;
-7. write a short design memo on the trade-offs (accuracy vs reach vs exposure; cold start; cost).
+4. the ablation table;
+5. the beyond-accuracy table **and** the Part-1 benchmark;
+6. a design memo on the trade-offs (accuracy vs reach vs exposure; cold start; cost).
 It is val only. It is project-strict: no borrowed tools, everything taught.
 
 ### Cached models (design §8 row 14 requirement, scoped to U14 + the capstone only)
@@ -100,16 +111,74 @@ The wiring:
   - a regeneration in the test **equals** the cached artifact for the cheap models, and the expensive ones are
     checked by rank-overlap against their pinned top-k on a fixed reader sample.
 
-## Gates (pinned by the plan-gate probe; re-measured in Phase B; a miss means stop, amend and re-gate)
-Main log, val, k = 10, committed seed:
-- **(a) The assembled system is coherent:**
-  - every path loaded from the cache reproduces its unit's pinned val hit@10 within ±0.003, for example two-tower
-    0.340, hybrid 0.362, feature tower 0.298 / cold coverage, and reranker 0.346;
-  - ANN recall@10 vs exact ≥ 0.99.
-- **(b) The ablation table is honest and complete:** one row per stage/path removed, with signed Δhit and Δcoverage.
-  It is **recorded, not gated on direction**; the plan does not pre-assume the full stack wins.
-- **(c) The beyond-accuracy table:** coverage, head-share, Gini, novelty and diversity for the full system, the
-  best single path and the Part-1 build. It is recorded.
+## Reranker provenance (v2; [sol] r1 blocker)
+`build_models.py` freezes the **U11 shipped leakage-safe recipe** exactly:
+- train-only rows;
+- per reader, the time-ordered **latest 25% of train positives (≥ 1) = labels** and the earlier 75% = profile;
+- the feature paths are **refit on the profile rows** (excluding every occurrence of a held-out label item);
+- `log_pop` and the genre/author statistics come from the profile;
+- serving uses the full-train paths.
+It calls `NeuralRerankerPath` with the same `path_factory` / `assemble_training_matrix` as U11; nothing is
+re-implemented.
+
+Required provenance tests in `test_unit14.py`:
+1. **val/test mutation invariance.** Regenerating the reranker from rows whose val/test rows were mutated (dropped or
+   relabelled) gives an artifact equal (allclose) to the cached one. This is run on a reduced config to fit the
+   budget, and the same code path is used.
+2. **No held-out label event enters features or statistics.** U11's regression test (the repeat-read `log_pop`
+   case) is re-asserted on the build script's assembly call.
+3. **The cache records its recipe:** the artifact metadata carries `recipe = "u11-holdout-75-25"` and the profile
+   fraction, and the test asserts them.
+
+## Probe evidence (plan-gate r1, [fable] `scratchpad/fable017`; main log val, committed seed, k = 10; load 5–9)
+Each expensive model was built, `artifact()` pickled, reloaded with `load()`, then refit:
+
+| Cached model | Source pin | Loaded val hit@10 | Load top-10 identical | Refit equal | Fit time |
+|---|---|---|---|---|---|
+| MF (U5) | 0.276 | 0.276 | 100% | arrays equal | 16 s |
+| two-tower (U8) | 0.340 | 0.340 | 100% | arrays equal | 17–19 s |
+| feature tower (U9, warm) | 0.298 | 0.298 | 100% | arrays equal | 26–29 s |
+| HNSW over two-tower (U10) | 0.340 | 0.340 (recall@10 vs exact **0.9988**) | 100% | equal | 0.2 s |
+| reranker (U11 recipe) | 0.346 | 0.346 | 100% | equal | 37–38 s |
+| SASRec recipe D (U12, session log) | 0.4228 | 0.4228 (1,419 readers) | 100% | weights equal | 48–63 s |
+
+The feature tower's cold coverage is 113 zero-train items surfaced, 0.138.
+
+Whole-system readouts (hit@10 / coverage / head-share / item Gini / novelty / diversity):
+
+| System | hit@10 | coverage | head-share | item Gini | novelty | diversity |
+|---|---|---|---|---|---|---|
+| Part-1 U6 blend | 0.306 | 0.333 | 0.793 | 0.908 | 8.49 | 0.871 |
+| two-tower | 0.340 | 0.177 | — | — | — | — |
+| U10 hybrid | 0.362 | 0.192 | — | — | — | — |
+| reranker | 0.346 | 0.195 | — | — | — | — |
+| full 8-path fixed blend (ANN) | 0.362 | 0.206 | — | 0.923 | — | — |
+| full 8-path fixed blend (exact) | 0.366 | 0.207 | — | — | — | — |
+| dense-heavy weighting | 0.376 | 0.184 | — | — | — | — |
+
+The 8-path leave-one-out (Δhit / Δcoverage) is small, on the order of ±0.01, with the signs differing by path. In
+particular, dropping popularity *raises* hit by 0.008; this is reported honestly.
+
+## Gates (v2: pinned now from the probe; Phase B re-measures on shipped code; a miss means stop, amend and re-gate)
+- **(a) Cache fidelity (the required check), for every cached model:**
+  - its loaded val hit@10 equals the pin above **within ±0.002**: MF 0.276, two-tower 0.340, feature tower 0.298,
+    HNSW 0.340 (ANN recall@10 ≥ 0.995 vs exact), reranker 0.346, SASRec 0.4228 on the session log;
+  - the feature tower's cold surfaced count is 113 ± 3;
+  - **determinism:** a regeneration (in CI, the build script run twice is too slow, so the test refits the cheap
+    MF and HNSW and compares) gives arrays **equal**. For the two-tower, feature tower, reranker and SASRec, the
+    test checks **top-10 identical for a pinned 50-reader sample**, against digests recorded in the artifact
+    metadata at build time, together with the recipe/version fields.
+  - **Leakage provenance** for the reranker: see "Reranker provenance".
+- **(e) The Part-1 benchmark:** the U6 blend reproduces 0.306 / 0.333 within ±0.002. The full system's
+  hit@10/coverage is reported against it, together with the best single path (the hybrid, 0.362).
+- **(b) The ablation table is structurally gated, but not on direction.** The milestone and tests assert:
+  - exactly one row per named ablation (the set is pinned in Phase B from the probe);
+  - signed Δhit and Δcoverage **recomputed** from the full-system row, matching to 1e-9;
+  - every value finite and in range (hit and coverage in [0, 1]).
+  The *direction* is recorded, not gated: the plan does not pre-assume the full stack wins.
+- **(c) The beyond-accuracy table is structurally gated, but not on direction.** It has exact rows {full system,
+  best single path, Part-1 build}. All five columns (coverage, head-share, exposure Gini, novelty, intra-list
+  diversity) are present, finite and in range. The Gini is computed over the full catalog.
 - **(d) The cache required check passes**, and the U14 notebooks perform zero refits after the lesson's one-time
   demonstrations.
 - **(e) The Part-1 benchmark:** the Part-1 build (the U6 blend) on val is 0.306 / 0.333, and the full system's
@@ -136,7 +205,7 @@ Main log, val, k = 10, committed seed:
     `two-tower`, `embedding-retrieval`, `hybrid-retrieval`, `item-cold-start`, `sequential-recommendation`,
     `exposure-fairness`, and so on.
   - Every `practices` id must already be introduced. `practices ∩ introduces = ∅` holds trivially.
-- **`capstone-bookrec`** (`kind: project`, the last map entry):
+- **`project-14-bookrec`** (`kind: project`, the last map entry):
   - `requires` = the pipeline ids it needs;
   - `practices` = the book-wide set it exercises;
   - once authored, `practice_findings` passes, because U14 practises the 8.
@@ -174,6 +243,23 @@ Main log, val, k = 10, committed seed:
 Phase H is this plan's named verification phase.
 
 ## Plan Review
+
+### Round 1 (plan v1 @ 50dcf47)
+- **[self]** APPROVE WITH NITS.
+- **[sol]** REJECT. Its fixes are folded in v2:
+  - The capstone id/discovery and the milestone count. → `project-14-bookrec`, with 6 headings covering all 7
+    requirements.
+  - Gate (a) was not pinned. → The probe evidence table, a ±0.002 val pin per cached model, ANN recall ≥ 0.995,
+    determinism (arrays equal for MF/HNSW; a pinned 50-reader top-10 digest for the rest), and metadata
+    recipe/version.
+  - Tables (b)/(c) were ungated. → Structural asserts: rows, recomputed signed deltas, finite and in range, the
+    exact comparator rows; the direction stays ungated.
+  - Reranker provenance. → The U11 recipe is frozen in `build_models.py`, with val/test mutation invariance, the
+    `log_pop` no-leak regression and a recipe field.
+  - NIT: the target measurement. → An objective timing procedure; exceeding it means stop and amend.
+  It confirmed that the structure (an integration unit plus the capstone), `introduces: []`, 46 lessons,
+  capstone-rule closure, CI-built caches and val-only are all legitimate.
+- **[fable]** probe complete (numbers above); verdict pending.
 
 ## Content Review
 
