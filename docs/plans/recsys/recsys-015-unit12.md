@@ -22,8 +22,9 @@ handed to recsys-015").
 2. **Item transitions.** A first-order "what do people read *right after* X" model, learned from consecutive train
    pairs: the Markov-chain view. An order-shuffled control *proves* that order, not the item set, carries the lift.
 3. **Self-attention over history.** A tiny SASRec-style causal self-attention model in PyTorch. It learns order
-   (it beats its own shuffled-history copy) but, at the book's model ceiling, it only **near-ties** plain item-item
-   CF. This is the honest readout, like U11's.
+   (it beats its own shuffled-history copy by +0.040, 3.8 paired SE). But at the unit's fast recipe it **trails**
+   plain item-item CF by about 0.06 on the committed seed (−0.057 ± 0.012). The recsys-014 V1 held-out near-tie is
+   cited as *that* recipe's result, not this unit's. This is the honest readout, like U11's.
 
 It ships three `bookrec` paths, a loader-backed ordered-history contract, and a Unit-12 milestone. Everything is
 scored with the unchanged `run_validation_scoreboard` **on `sessions.csv.gz`**. Every U12 number is labelled "on the
@@ -49,30 +50,68 @@ session log" and is not comparable to the main-log numbers of U2–U11 (design �
 5. Ordered history is loaded through `bookrec.load_train_sequences`; scoring uses `run_validation_scoreboard` on
    `sessions.csv.gz`.
 
-## Budget (binding; the probe measures it)
-- The recsys routed pytest suite already takes **14 m 18 s** (recsys-014 Phase G). U12's new tests must be lean:
-  **≤ +60 s routed-suite delta**. Any SASRec test uses a small config, or a deterministic contract check, not a
-  full V1 fit.
-- **Notebook SASRec recipe (the plan-gate probe picks it):** the shipped `SasrecRetrievalPath` defaults to a
-  **fast recipe** whose single fit is **≤ 90 s** standalone, under the 120 s/cell cap. It stays within the §7
-  ceiling (1 block, dim ≤ 32, seq-len ≤ 50). It achieves this with fewer epochs, a larger batch and a higher lr, or
-  a reader subsample — whatever the probe shows is cheapest at an acceptable cost.
-  - Each notebook (lesson, solutions, milestone) fits SASRec **at most twice** (ordered + shuffled), each in its
-    own cell. Exercises add no third fit; reuse the fitted path.
-  - Phase B reports the fast recipe's own committed-seed numbers: ordered, shuffled, bag, and the gap to bag. Those
-    measured numbers are what the unit cites.
-- Numpy paths (last-k CF, transition) fit in < 5 s.
-- Phase B reports the per-notebook total exec time, and the aggregate added to the whole-book exec budget.
+## Frozen SASRec recipe and budget (v2: pinned from the plan-gate probe; binding)
+**Recipe D, frozen before implementation:**
+- architecture (V1): 1 block, 1 head, dim 32, max_len 50, learned positions, causal mask, tied output embedding,
+  per-position next-item full-softmax CE;
+- training: **30 epochs, batch 128, lr 2e-3**, dropout 0.2, weight decay 0, init std 0.02, Adam, seed 0, the full
+  reader set;
+- determinism: single-thread and deterministic.
+
+Probe measurements at the committed seed, through the real `run_validation_scoreboard`, under machine load 4–5:
+
+| Recipe | Ordered | Shuffled | Ordered − shuffled (paired SE) | Gap to bag | Fit time |
+|---|---|---|---|---|---|
+| D (frozen) | 0.4228 | 0.3827 | +0.040 (0.0105) | −0.057 (0.012) | 42–48 s |
+| B: 20 / 256 / 3e-3 | — | — | +0.017 (fails G4a) | — | — |
+| A: 30 / 256 / 3e-3 | — | — | +0.031 | — | — |
+| C: 40 / 256 / 3e-3 | — | — | +0.035 | — | — |
+
+D's fit time is about 35 s on an unloaded machine. Two seeded fits gave bit-exact weights and identical top-10 lists
+for all 1,419 readers.
+
+**No re-tuning.** If the shipped code at recipe D misses gate (c), Phase B **stops**, the plan is amended, and the
+plan-review gate re-runs. No other recipe may be substituted silently.
+
+**Where the gate (c) number is enforced: the milestone notebook (CI-executed), at the shipped recipe.** Two full
+recipe-D fits (about 85–95 s) cannot fit the routed pytest budget. So the milestone notebook *asserts* gate (c) on
+the frozen recipe at the committed seed. CI runs that notebook through `exec-solutions`, so the shipped recipe is
+gated in CI. `test_unit12.py` adds reduced-config **contract** tests (determinism, round-trip, shuffle semantics,
+numpy/torch fidelity). These are additional checks; they never substitute for the gate.
+
+**Exec budget:**
+- **Fits per notebook:** the lesson does 2 SASRec fits (ordered + shuffled); the milestone does 2 (the gate); the
+  solutions do **1** (ordered only, reusing the lesson-measured shuffled number as a stated constant is NOT allowed —
+  any shuffled comparison in the solutions uses the numpy transition control instead). That is 5 fits ≈ 3.5–4 min.
+- **Cell layout:** each fit in its own cell, ≤ 90 s.
+- **Per-notebook time:** about 2.5 min for the lesson and the milestone, and about 1.5 min for the solutions.
+- **Measurement:** Phase B measures the **current pre-U12 whole-book exec time** (`exec-lessons` + `exec-solutions`
+  for recsys) and reports U12's delta against the ≤ ~15 CI-minute target. If the total exceeds the target, the
+  reduction order is (1) drop the lesson's shuffled SASRec fit and use the numpy transition control there, then
+  (2) stop and amend.
+- **Routed pytest delta:** ≤ +60 s (numpy gates plus reduced-config SASRec contracts).
 
 ## Gate (measured by the probe; the thresholds are re-pinned in Phase B from the shipped code, with headroom)
 On `sessions.csv.gz`, val, k = 10, committed seed, through `run_validation_scoreboard`:
 - **(a) recency lift:** `last_k_cf.hit ≥ item_item.hit + 0.03`. The harness measured +0.070; the bookrec
   `ItemItemRetrievalPath` baseline is re-measured.
 - **(b) order evidence:** `transition.hit ≥ 1.3 × transition_shuffled.hit` and `≥ +0.08`.
-- **(c) SASRec learns order:** `sasrec.hit − sasrec_shuffled.hit ≥ +0.02` at the shipped fast recipe. If the fast
-  recipe cannot clear this, the plan gate decides between a longer recipe or cache, and a reframe.
-- **(d) recorded, not gated:** SASRec vs item-item CF (the honest gap); the next-item hit@10; coverage per path; the
-  next-in-series diagnostic (from `series.csv.gz`, diagnostics only); and the fit times.
+- **(c) SASRec learns order (milestone-asserted at frozen recipe D):** `sasrec.hit − sasrec_shuffled.hit ≥ 0.02`
+  **and** `≥ 2 × paired SE`. The paired SE is over per-reader hits (probe: +0.040, SE 0.0105). If this fails, stop,
+  amend and re-gate (no re-tuning).
+- **(d) recorded, not gated:**
+  - SASRec vs item-item CF (the honest gap; probe −0.057 ± 0.012; **not** a near-tie at this recipe);
+  - next-item hit@10;
+  - coverage per path;
+  - the next-in-series diagnostic (from `series.csv.gz`, diagnostics only);
+  - fit times.
+
+Probe values for gates (a) and (b), on the real scoreboard:
+- (a) last-3 − item-item = **+0.070** (SE 0.0135);
+- (b) transition last-5 0.5159 vs shuffled 0.3326, which is **1.55×, +0.183**.
+Item-item on the session rows reproduces the harness bag number exactly (0.4799).
+
+Phase B pins (a) at ≥ +0.03, and (b) at ≥ 1.3× and ≥ +0.10, re-measured on the shipped code.
 
 Determinism: two seeded SASRec fits give an identical top-k ranking and `allclose` weights (§184); never exact-float
 or array_equal on ids. Numpy paths are deterministic by construction.
@@ -131,22 +170,45 @@ Why each required concept is needed:
 **Verify:** manifest/prereq/coverage/syllabus are green; the lesson budget is 36.5 ∈ [30, 60].
 
 ### Phase B — `bookrec` sequence paths (Opus subagent)
-Add `bookrec/sequence.py`, with numpy paths that are torch-free. All paths `fit(interactions_rows, catalog=None)` read
-**train positives only**, ordered by `(timestamp, row order)`, the same key as `load_train_sequences`. They store
-each reader's ordered train history. `retrieve(query=reader_id, context, k)` uses that stored history, excludes
-`context["seen"]`, returns `[]` for an unknown reader, and returns only positive-score items (the U4 coverage-ceiling
-convention).
-- **`LastKItemItemPath(k_last=3)`** (name `"last-k-item-item"`): the item-item cosine (reusing U4's construction),
-  queried with the reader's last `k_last` train positives.
-- **`TransitionRetrievalPath(k_last=5)`** (name `"transition"`): first-order transition counts `T[a, b]` over
+Add `bookrec/sequence.py`, with numpy paths that are torch-free.
+
+**Ordered-history contract (v2; it resolves the loader hand-off).**
+- `bookrec/sessions.py` gains one shared helper, `ordered_train_histories(rows) -> dict[int, list[int]]`.
+  `load_train_sequences(path)` is refactored to call it, so there is **one** ordering implementation: train
+  positives only, ordered by `(timestamp, row order)`, ties broken by row order.
+- Every sequence path's `fit(rows, catalog=None)` calls that helper. **Row contract:** rows must carry `timestamp`,
+  in addition to the U4 keys `reader_id, item_id, split, label`; `fit` raises if it is missing. A test asserts that
+  `fit(rows)`'s stored histories equal `load_train_sequences(path)` exactly.
+- The stored histories (after any `shuffle_seed` permutation) are **persisted in `artifact()` and restored by
+  `load()`**, so a shuffled control's *query* history survives a round-trip.
+- `retrieve(query=reader_id, context, k)` uses the stored history and **never** `context["seen"]` for the query
+  (`seen` is only the exclusion set). It returns `[]` for an unknown reader, and only positive-score items (the U4
+  coverage-ceiling convention).
+
+**Evaluation helpers (v2; they add no change to `run_validation_scoreboard`).**
+- `bookrec.scoreboard.reader_hits(path, interactions_path, *, catalog_ids, k, split="val") -> dict[int, float]`
+  returns per-reader hit@k on exactly the scoreboard cohort. A test asserts its mean equals
+  `run_validation_scoreboard(...).hit_rate_at_k`. It powers the paired SE.
+- `bookrec.sessions.first_unseen_val(path) -> dict[int, int]` returns each reader's time-ordered first val positive
+  that is not in train, for next-item hit@10.
+- Coverage uses the existing `run_blended_scoreboard({name: path}, ..., pool=k)`; the probe verified that a
+  single-path blend reproduces hit@10 to 1e-9.
+- All three names are declared in `baseline.yaml` if notebooks call them.
+- **`LastKItemItemPath(k_last=3)`** (name `"last-k-item-item"`, version `"1"`, artifact `last-k-item-item-v1`):
+  - the item-item cosine (reusing U4's construction), queried with the reader's **last `k_last` distinct** train
+    positives (the most-recent occurrence of each item; 28% of train positives are re-reads);
+  - `k_last=None` means all distinct items, and its top-k must **equal `ItemItemRetrievalPath`'s** (test);
+  - probe: distinct last-5 0.5715 > last-3 0.5511. The default stays 3 as the lesson's starting point, and the
+    exercise sweep reveals 5.
+- **`TransitionRetrievalPath(k_last=5)`** (name `"transition"`, version `"1"`, artifact `transition-v1`): first-order transition counts `T[a, b]` over
   consecutive train positives; the score is the sum of the `T` rows over the last `k_last` items. It takes a
   `shuffle_seed: int | None` knob that permutes each reader's sequence before learning **and** querying. That is the
   order-shuffled control, exposed so the lesson can run the control with the same path.
-- **`SasrecRetrievalPath`** (name `"sasrec"`, torch imported **lazily in `fit` only**; `retrieve`/`artifact`/`load`
-  run torch-free on numpy weights):
+- **`SasrecRetrievalPath`** (name `"sasrec"`, version `"1"`, artifact `sasrec-v1`; torch imported **lazily in `fit`
+  only**; `retrieve`/`artifact`/`load` run torch-free on numpy weights):
   - architecture: 1 block, 1 head, dim 32, max_len 50, learned positions, causal mask, tied output embedding,
     per-position next-item full-softmax cross-entropy, init std 0.02, Adam;
-  - recipe: the fast default chosen by the plan-gate probe, plus the same `shuffle_seed` control;
+  - recipe: frozen recipe D as the defaults, plus the same `shuffle_seed` control;
   - determinism: `torch.manual_seed` + `use_deterministic_algorithms(True)` + single thread, all saved and restored
     around `fit` (mirror `two_tower.py`);
   - `retrieve` runs a numpy forward pass of the last ≤ 50 items and scores every item by its dot product with the
@@ -154,10 +216,20 @@ convention).
 - Export all three from `bookrec/__init__.py` with no eager torch. **Extend** the import-blocked subprocess test in
   `tests/test_unit07.py` to cover `sequence`.
 - Tests, in the new `tests/test_unit12.py` (lean; budget ≤ +60 s):
-  - gate (a)–(b) on the CI-generated `sessions.csv.gz` (skip if absent, like the data tests);
-  - gate (c) on the shipped recipe, *if* it fits the budget; otherwise on a reduced config documented as a
-    contract test, and the full number is measured in Phase B and asserted in the milestone;
-  - determinism;
+  - gates (a)–(b) on the CI-generated `sessions.csv.gz` (skip if absent, like the data tests). Gate (c) is asserted
+    in the milestone (see "Frozen SASRec recipe");
+  - **shuffle and leakage mutants** (named negative tests, each built as a small monkeypatched or subclassed
+    mutant on a hand-made sequence fixture where order is decisive; each must be *detected*):
+    1. only learning shuffled, querying ordered;
+    2. only querying shuffled, learning ordered;
+    3. the query built from unordered `context["seen"]` instead of the stored history;
+    4. a val/test event injected into the rows changes **neither** learned statistics **nor** stored query
+       histories (the shipped path passes; a mutant that reads all splits is caught);
+  - numpy/torch fidelity: right after `fit` on a reduced config, the numpy-forward top-k equals the torch-forward
+    top-k for sampled readers (rank-based, §184);
+  - `fit(rows)` history == `load_train_sequences(path)`; `reader_hits` mean == scoreboard hit;
+    `LastKItemItemPath(k_last=None)` == `ItemItemRetrievalPath`;
+  - determinism (reduced config: identical top-k + allclose);
   - empty/unknown-reader contract;
   - `fit→artifact→load` identical and torch-free;
   - val/test rows cannot change any fitted artifact (train-only);
@@ -180,8 +252,9 @@ treats your history as a bag." The lesson works through these steps:
 4. **Self-attention.** Build a causal mask and one attention step by hand on a toy sequence (numpy) → the
    `SasrecRetrievalPath` reveal. Train it (the fast recipe) and its shuffled copy: it *learns order* (ordered >
    shuffled).
-5. **The honest readout.** SASRec does not beat the simple paths here. Give its measured gap to item-item CF at
-   this recipe, and say that last-k CF / transition are the winners on this data. Explain why: the order effects are
+5. **The honest readout.** SASRec does not beat the simple paths here. At this recipe it **trails** item-item CF by
+   its measured gap (about −0.06 on the committed seed); the recsys-014 near-tie belongs to its longer V1 recipe
+   and its held-out seeds, so cite it only that way. Last-k CF and transition are the winners on this data. Explain why: the order effects are
    short-range and item-to-item, so a counting model captures them, while a tiny attention model at our size budget
    cannot use its extra flexibility.
 **Bridge:** U13 evaluates the whole system (beyond accuracy, fairness, feedback loops) and Checkpoint B; U14 is the
@@ -221,7 +294,7 @@ outputs. There is no `split="test"`.
 - `## Common mistakes`:
   - comparing session-log numbers to main-log numbers;
   - letting val/test rows into the transition counts (leakage);
-  - claiming SASRec "wins" (it does not here; give the measured gap);
+  - claiming SASRec "wins" or "ties" (at this recipe it trails item-item CF by about 0.06; give the measured gap);
   - forgetting that the shuffled control must permute both the learning and the query sequences;
   - using the series table as a model feature (it is a diagnostic);
   - non-determinism.
@@ -251,6 +324,31 @@ milestone. `bash scripts/pre-merge-guard.sh --pr` must be OK. Confirm:
 Phase G is this plan's named verification phase.
 
 ## Plan Review
+
+### Round 1 (plan v1 @ 05d700f)
+- **[self]** APPROVE WITH NITS. The registry closes over U1, U4, U6, U7 and U8; budget 36.5.
+- **[sol]** REJECT.
+  - B1: gate (c) was a loophole (a post-hoc recipe, a reframe escape, a reduced-config substitute). → v2 freezes
+    recipe D before implementation; (c) = ≥ 0.02 and ≥ 2 paired SE, asserted in the CI-executed milestone at the
+    shipped recipe; failure means stop, amend and re-gate.
+  - B2: the budget was not concrete. → v2 pins the recipe, fit time, cell layout, fits per notebook (2/2/1),
+    per-notebook totals, a measured pre-U12 exec baseline plus the delta, and a reduction order.
+  - B3: the ordered-history hand-off conflicted with the loader. → one shared `ordered_train_histories` helper (the
+    loader refactored onto it); histories persisted in the artifact; a `fit == load_train_sequences` test;
+    `first_unseen_val` for next-item hit.
+  - B4: the shuffle and leakage tests lacked teeth. → four named mutant tests.
+  - N5: artifact ids. → `{name}-v1` pinned for all three paths.
+- **[fable]** APPROVE WITH NITS (with a probe).
+  - N1: the honesty wording ("near-ties") must go, because the fast recipe trails by −0.057. → Scope 3, lesson
+    step 5 and the teacher notes are reworded.
+  - N2: gate (c) needs ≥ 2 SE and recipe D. → done.
+  - N3: last-k must use distinct-most-recent items, and `k=None` must equal U4. → done.
+  - N4: per-reader hits, next-item and coverage APIs. → `reader_hits`, `first_unseen_val`, and
+    `run_blended_scoreboard` for coverage.
+  - N5: the full (c) gate does not fit the pytest budget. → milestone-asserted.
+  - N6: a numpy/torch fidelity test. → added.
+  - N7: the row contract plus a shared ordering helper. → added.
+  - The probe tables are folded into the "Frozen SASRec recipe" section and the gates.
 
 ## Content Review
 
