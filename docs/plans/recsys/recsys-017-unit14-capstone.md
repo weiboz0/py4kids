@@ -171,9 +171,14 @@ particular, dropping popularity *raises* hit by 0.008; this is reported honestly
   - **Determinism, with an independent oracle (v3; [sol] r2 B2):** `test_unit14.py` commits, as constants, the
     expected top-10 lists of **20 fixed readers** (the first 20 of the sorted val cohort; for SASRec, the first 20
     of the sorted session-log val cohort) for each cached model and for the full stack. **They are captured once
-    in Phase B and cross-checked against [fable]'s independently built probe models**
-    (`scratchpad/fable017/models/*.pkl`) before being committed, so the oracle does not come from the artifacts
-    it checks.
+    in Phase B and cross-checked against an independent build before being committed**, so the oracle does not
+    come from the artifacts it checks.
+    - The independent build is [fable]'s probe: the models in `scratchpad/fable017/models/*.pkl`, and for the full
+      stack a re-run of `probe.py`'s full-stack section.
+    - **Acceptance threshold:** for every model and every one of the 20 readers, top-10 overlap with the independent
+      build must be **≥ 0.99** (the probe measured 1.0 refit-to-refit).
+    - If any reader is below that, Phase B **stops** (no constants are committed) and the discrepancy goes back to
+      the gate.
     - Each CI build regenerates every artifact from scratch, and the test requires rank overlap ≥ 0.9 per reader
       against the constants (§184 rank/tolerance; exact identity is reported, not gated).
     - **Cheap regeneration in the test:** MF and the two-tower are refit and compared with `allclose` to the
@@ -191,10 +196,22 @@ particular, dropping popularity *raises* hit by 0.008; this is reported honestly
    lexical, item-item, MF, semantic, the two-tower **served through HNSW**, the feature tower (warm) and the U10
    hybrid.
 2. **Blend:** calibrated union (`blend`), excluding seen books.
-3. **Re-rank:** the **shipped U11 all-feature MLP reranker**. Its trained model and feature builder are cached; a
-   candidate from a path outside its 6 gets absent-path features.
+3. **Re-rank (v4; [sol] r3 B1):** an **8-path learned reranker** trained with the **unchanged U11 recipe**,
+   generalised to 8 paths through the shipped API. The configuration is:
+   ```
+   NeuralRerankerPath(full8, fit_eight, catalog, pool=50, seed=0,
+                      path_names=(popularity, lexical, item-item, mf, semantic, two-tower,
+                                  feature-tower, hybrid))
+   ```
+   with `assemble_training_matrix(rows)` (the time-ordered 75/25 profile/label holdout, profile-refit paths and
+   statistics), followed by `set_model(RerankerModel(seed=0).fit(X, y))`. This is exactly the probe's recipe
+   (`scratchpad/fable017/probe.py` lines 325–341). The features number 21 = 8 calibrated scores + 8 presence flags
+   + `n_paths` + 4 content features. At serving the two-tower is served through HNSW.
 
-The U11 6-path reranker artifact is the **same** cached artifact; there is no separate model. Measured by
+There are **two separate cached reranker artifacts**:
+- `reranker-u11` is the shipped 6-path U11 model (fidelity pin 0.346);
+- `reranker-full8` is the full-stack model above.
+The provenance tests apply to **both**. Measured by
 [fable]'s probe (r1):
 
 | System | hit@10 | coverage | head-share | item Gini | novelty | diversity |
@@ -212,7 +229,8 @@ The U11 6-path reranker artifact is the **same** cached artifact; there is no se
 coverage and concentration; no system dominates the Part-1 blend on reach (0.333). The capstone's deliverable is
 the **hit ↔ reach ↔ exposure frontier** and a defended choice on it, not "the full stack wins".
 
-**Gate (f), assembled system (milestone + test):** the full stack reproduces **0.356 / 0.203 within ±0.003**. The
+**Gate (f), assembled system (milestone + test):** the full stack (`reranker-full8`) reproduces **0.356 / 0.203
+within ±0.003**. The
 fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
 
 - **(b) The ablation table is structurally gated, but not on direction** (v3: the rows are pinned now). The row set
@@ -234,11 +252,17 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
   | −feature tower | +0.002 | +0.002 |
   | −hybrid | −0.006 | +0.005 |
 
-  These are recorded, and each row is asserted within ±0.003 of its probe value. That is a reproducibility pin, not
-  a direction gate. **Executable assertions live in `test_unit14.py` (structure, on a cached readout) and in the
+  **Baselines (v4; [sol] r3 B3):** the two **stage rows** are deltas vs the **full stack** (0.356 / 0.203). The
+  eight **path rows** are deltas vs the **fixed 8-path blend** (0.362 / 0.206), with each path removed from the
+  fixed blend. The table carries both baseline rows explicitly.
+
+  Each row is asserted within ±0.003 of its probe value. That is a **reproducibility pin**: for any row with
+  |Δ| > 0.003 it also fixes the measured sign, which comes from the pre-implementation probe and is not a
+  pre-assumed "the full stack must win" direction. **Executable assertions live in `test_unit14.py` (structure, on a cached readout) and in the
   U14 milestone (structure plus values).** They require:
   - exactly these 10 rows;
-  - signed Δhit and Δcoverage **recomputed** from the full-system row, matching to 1e-9;
+  - signed Δhit and Δcoverage **recomputed** from each row's declared baseline row (the full stack for stage rows,
+    the fixed blend for path rows), matching to 1e-9;
   - every value finite and in range (hit and coverage in [0, 1]).
   The *direction* is recorded, not gated: the plan does not pre-assume the full stack wins.
 - **(c) The beyond-accuracy table is structurally gated, but not on direction** (executable in `test_unit14.py` and
@@ -247,8 +271,6 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
   diversity) are present, finite and in range. The Gini is computed over the full catalog.
 - **(d) The cache required check passes**, and the U14 notebooks perform zero refits after the lesson's one-time
   demonstrations.
-- **(e) The Part-1 benchmark:** the Part-1 build (the U6 blend) on val is 0.306 / 0.333, and the full system's
-  numbers are reported against it.
 
 ## Budget (binding ceilings, loaded)
 - **`build_models.py`:** ≤ 5 min. Probe-measured, roughly MF 17 s + two-tower 18 s + feature tower 26 s + reranker
@@ -296,14 +318,14 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
 - **Phase 0** — design amendment v6 (inline).
 - **Phase A** — registry, syllabus rows, manifests, and the AST-guard roots (U14 and the capstone are covered by the
   existing global allowlist, so no change). Check the project-entry tooling requirements.
-- **Phase B** — `build_models.py`, the ci-local wiring, `tests/test_unit14.py` (the required check plus gates
-  (a)/(d)), and any small `bookrec` glue, such as a `load_cached_models(dir)` helper and a `FullSystem` assembly
+- **Phase B** — `build_models.py`, the ci-local wiring, `tests/test_unit14.py` (the required check, gates
+  (a), (b), (c), (d) and (f), and provenance), and any small `bookrec` glue, such as a `load_cached_models(dir)` helper and a `FullSystem` assembly
   helper. Opus subagent; it measures every number in the gates and the budget.
 - **Phase C** — the U14 lesson (Opus).
 - **Phase D** — U14 exercises, then solutions (separate fresh Opus subagents). At least 6 exercises, at least 2
   stretch, all on cached models. For example: swap ANN parameters and read recall vs speed; add or remove a reranker
   feature family; build the ablation; a beyond-accuracy table; a cold-start slice; a session-log sequence readout.
-- **Phase E** — the U14 milestone (Opus). It is shipped cleared and asserts gates (a), (d) and (e).
+- **Phase E** — the U14 milestone (Opus). It is shipped cleared and asserts gates (a)–(f).
 - **Phase F** — capstone `brief.ipynb` (Opus), then `solutions.ipynb` (a separate fresh Opus subagent), plus
   `teacher-notes.md` with a grading rubric.
 - **Phase G** — U14 teacher notes (inline).
@@ -348,6 +370,19 @@ Phase H is this plan's named verification phase.
   - budget numbers, with the lesson's on-screen fits limited to MF, two-tower and HNSW;
   - the capstone thesis is the frontier.
   It also measured the full stack and the reranked ablations.
+
+### Round 3 (plan v3 @ 8fbc58d)
+- **[sol]** REJECT. Fixes, folded in v4:
+  - **B1, the pinned 0.356 came from a newly trained 8-path reranker, not the shipped 6-path model:** → the full
+    stack is defined as the U11 recipe generalised to 8 paths (`path_names`, 21 features), cached as
+    `reranker-full8`, separate from `reranker-u11`.
+  - **B2, the oracle cross-check had no threshold:** → overlap ≥ 0.99 per reader against the independent probe
+    build, or stop.
+  - **B3, wrong ablation baseline, and Phase B/E still listed only (a)/(d):** → stage rows vs the full stack and
+    path rows vs the fixed blend; Phases B and E assert (a)–(f).
+  - **NITs:** the "direction" wording is clarified (a reproducibility pin fixes the measured sign), and the
+    duplicate (e) is removed.
+- **[fable]** pending (r2 on v3).
 
 ### Round 2 (plan v2 @ 3e105c7)
 - **[self]** APPROVE WITH NITS.
