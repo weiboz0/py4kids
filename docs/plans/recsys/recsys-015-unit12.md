@@ -413,4 +413,94 @@ Phase G is this plan's named verification phase.
 
 ## Content Review
 
+### Round 1 (HEAD 66d1bca) — CONSENSUS
+- **[self]** APPROVE:
+  - project-first volume-2 hook;
+  - from-scratch → reveal for all three paths;
+  - a live transition control;
+  - an honest readout, with the cheap order paths as winners and SASRec trailing.
+- **[sol]** APPROVE, no `[OPEN]` items.
+  - Its blind solve matched all 9 exercises, and read-only probes reproduced the bag, last-3 and transition
+    numbers (both ordered and shuffled).
+  - The lesson cell's +0.040 / SE 0.0105 are the inputs to milestone gate cell `d83a2ac8`.
+- **[fable]** APPROVE WITH NITS.
+  - Its blind solve gave zero disagreements across all 9 exercises.
+  - numpy and torch forwards matched at the full recipe-D fit: 0 top-10 mismatches over 215 readers, with a
+    largest |Δlogit| of 1.4e-6.
+  - It reproduced gate (c) end to end: +0.0402, SE 0.01047, 3.84 SE.
+  - Findings:
+    1. [FIXED] The post-execution report was empty; it is now written (below).
+    2. [FIXED] The SASRec forward has no `key_padding_mask`; a code comment now notes it. The behaviour is
+       unchanged, because recipe D is frozen.
+    3. [FIXED] The teacher notes' "(worse)" was unmeasured, so it now reads "different".
+    4. [FIXED] The fit time is now stated as 45–70 s depending on load.
+    5. [WONTFIX] The solutions round Ex6 and Ex1 coverage differently (0.712 vs 0.713, both from 0.7125). It is
+       harmless, and fixing it would need a re-execution.
+
 ## Post-Execution Report
+
+**Status:** all phases are done (A–G).
+
+**Commits:**
+- `f4070ed` — A: registry.
+- `97f3939` — B: paths, helpers and tests.
+- `b984595` / `736b0c7` — the v3 budget amendment and re-gate.
+- `aee8a8c` — F: teacher notes.
+- `8f8a9b4` — C: lesson.
+- `d14ee1a` / `96fe10b` — D: exercises and solutions.
+- `a904963` — E: milestone.
+- `66d1bca` — the Ex7 vectorisation.
+- `989192c` — content-gate fixes.
+
+**Gates** (shipped code; session log, committed seed; val, k = 10; 1,419 readers). Each is asserted in the
+CI-executed milestone:
+
+| Gate | Measured | Threshold | Result |
+|---|---|---|---|
+| (a) last-3 − item-item | +0.0712 (SE 0.0136) | ≥ +0.03 | PASS |
+| (b) transition / shuffled | 0.5159 / 0.3326 = 1.551×, +0.1832 | ≥ 1.3× and ≥ +0.10 | PASS |
+| (c) SASRec ordered − shuffled | +0.0402 (SE 0.0105, 3.8 SE) | ≥ 0.02 and ≥ 2 SE | PASS |
+| (d) SASRec − item-item (recorded) | −0.0571 (SE 0.0121) | — | trails, as reported honestly |
+
+**The lesson's quoted constant matches the milestone.** It quotes +0.040 / SE 0.0105, citing the milestone gate
+cell `d83a2ac8`. [fable] executed the milestone and got +0.0402 / 0.01047. The constant and the milestone agree.
+
+| Path | hit@10 | next-item hit@10 | coverage |
+|---|---|---|---|
+| popularity | 0.1135 | 0.031 | 0.008 |
+| item-item | 0.4799 | 0.245 | 0.336 |
+| last-3 | 0.5511 | 0.369 | 0.713 |
+| last-5 | 0.5715 | 0.388 | 0.606 |
+| transition | 0.5159 | 0.298 | 0.369 |
+| transition, shuffled | 0.3326 | 0.125 | 0.352 |
+| SASRec D | 0.4228 | 0.176 | 0.285 |
+| SASRec D, shuffled | 0.3827 | 0.145 | 0.282 |
+
+**Budget:**
+- Pre-U12 exec time is about 38 min (`exec-lessons` 11 m 12 s plus `exec-solutions` 26 m 44 s, loaded). That is a
+  pre-existing overrun.
+- U12 adds, under load 6–12:
+  - lesson: about 75–86 s (one SASRec fit);
+  - solutions: about 140 s (one fit, plus Ex7 at 4 s after vectorisation);
+  - milestone: about 123 s (two fits).
+  That is about **5.6 min**.
+- Every cell is under 90 s.
+- `test_unit12.py` takes about 26 s alone (within the ≤ +60 s budget). The routed recsys pytest run measured
+  17 m 49 s under heavier load, against 14 m 18 s for recsys-014.
+- **The book-wide exec-budget slice is required before U14.** It is recorded in project memory and will be a
+  prerequisite of recsys-016.
+
+**Phase G:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` was **ALL GREEN** (7/7 steps) at code-identical HEAD
+989192c. That HEAD's only post-start change was a code comment, which the routed step imported after it was
+written. Results:
+- root: 2,194 passed;
+- recsys routed: 313 passed;
+- notebooks, curriculum and PDF green;
+- the site step green.
+
+**Deviations from the plan, recorded:**
+- The v3 budget amendment: the lesson does 1 SASRec fit, so there are 4 in total.
+- The Ex7 solution uses `S[:, cols] @ w[cols]`, the same math avoiding slow multithreaded BLAS; the exercise hint
+  was updated to match.
+- The lesson uses one cached top-10 per path, not `reader_hits` / `run_blended_scoreboard`, to save time. The
+  numbers are identical.
