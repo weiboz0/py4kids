@@ -268,7 +268,7 @@ Concrete execution budget (the exec gate is the authority, not a bypass):
   exceeds 120 s and each notebook stays within a stated per-notebook budget, with a whole-book CI-minutes target.
 - Expensive artifacts (fitted embeddings/models) may be **cached**, but caching is NOT a `no-exec` escape. (Amended
   v6: the U14/capstone model cache lives at `recsys/data/generated/models/`. It is gitignored and regenerated-only,
-  like the data, and is built in CI by `recsys/projects/bookrec/scripts/build_models.py`.) a **required check regenerates the cached artifacts from their seeded scripts and validates them**, so the
+  like the data, and is built in CI by `recsys/projects/bookrec/scripts/build_models.py`.) A **required check regenerates the cached artifacts from their seeded scripts and validates them**, so the
   expensive behavior stays under the authoritative gate.
 - Every unit-shipping plan MUST name its verification phase (the standard gate rule).
 - **Whole-book exec target (amended v6, user decision 2026-10-11):** ≤ **75 CI-minutes** of recsys notebook

@@ -106,13 +106,12 @@ All numbers are measured on the course's own seeded synthetic data.
 - **Support:** give the pool-assembly and readout helpers as starter code, so the sittings stay on *what each stage
   buys*. Pair-program the ablation table.
 - **Core:**
-  - the HNSW recall check;
-  - the feature tower's cold readout and the hard-negative trade;
-  - the reranker over the full pool;
-  - the sequence readout;
-  - the ablation and beyond-accuracy tables.
+  - the HNSW efSearch/M sweep (recall vs time; Exercise 1);
+  - the feature tower's cold slice (Exercise 2) and the hard-negative trade (Exercise 3);
+  - a reranker feature-family refit on the cached training matrix (Exercise 4);
+  - the SASRec readout (Exercise 5);
+  - the ablation and beyond-accuracy tables and the frontier (Exercises 6–7).
 - **Stretch:**
-  - an efSearch sweep (recall vs time);
-  - a reranker feature-family ablation;
-  - your own weighting of the 8-path blend, placed on the frontier.
+  - your own weighting of the 8-path blend, placed on the frontier (Exercise 8);
+  - the `log_pop` ablation of the reranker (Exercise 9).
   Ask strong students to predict, *before* running it, whether adding the learned reranker will raise hit, and why.
