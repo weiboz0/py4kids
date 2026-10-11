@@ -21,7 +21,7 @@ already-measured fits (see Budget).
 built in U2–U10:
 1. **Feedback loops.** A recommender retrained on what it recommended concentrates exposure ("rich get richer"). A
    self-contained multi-round **simulation**:
-   - simulated readers take a top-k recommendation with a fixed probability;
+   - simulated readers take each shown top-k book with a fixed probability;
    - the accepted reads are appended to the train log, and the path is refit;
    - after each round, measure catalog coverage, head-share, the exposure Gini and accuracy.
    Compare a popularity loop with an item-item CF loop, then add one **mitigation** (an exploration slot, or a
@@ -67,7 +67,7 @@ The story: **the most accurate paths are the most concentrated**, and item-item 
 collaborative path. The Gini is computed over the **full catalog** (zeros included), so every path shares the same N.
 
 ## Feedback-loop simulation — pinned semantics (v2)
-`simulate_feedback_loop(path_factory, rows, *, cohort, rounds=6, k=10, accept_prob=0.3, seed, mitigation=None)`.
+`simulate_feedback_loop(path_factory, rows, *, catalog, cohort, rounds=6, k=10, accept_prob=0.3, seed, mitigation=None, penalty=0.3, pool=50)`.
 This is a *stylized exposure-to-consumption loop*: readers take what they are shown with a fixed probability. It is
 **not** a realistic preference model, and the lesson says so.
 - **Cohort:** the 500-reader val cohort (readers with an unseen val positive, not cold), fixed for all rounds.
@@ -88,7 +88,8 @@ This is a *stylized exposure-to-consumption loop*: readers take what they are sh
   3. In each round, the path is fit on the current train log. The readers are visited in that drawn order. Each
      reader's top-k is `rank(path.retrieve(r, {"seen": seen_r}, k), n=k, exclude=seen_r)`, which yields **ordered
      unique** item ids (duplicate candidates are rejected).
-  4. **Mitigation draws come first.** For the exploration slot, the last top-k slot is replaced by
+  4. **Mitigation draws come first.** For the exploration slot, if the top-k is non-empty its **last slot is
+     replaced** (never appended, even when the list is shorter than k), as in the probe, by
      `rng.choice([warm items not in seen_r and not in top])`, drawn before any acceptance draw for that reader. The
      penalty mitigation has no RNG.
   5. **Acceptance** walks the top-k in **rank order**. For each item it draws `rng.random()` **first**, always, even
@@ -244,7 +245,7 @@ New `bookrec/fairness.py`:
 - `genre_entropy(items, catalog)` and a per-reader `genre_spread_vs_history`;
 - `popularity_penalized(path, penalty, counts)`: a thin re-ranking wrapper path (name `"pop-penalized"`, version
   `"1"`);
-- `simulate_feedback_loop(path_factory, rows, *, cohort, rounds=6, k=10, accept_prob=0.3, seed, mitigation=None) ->
+- `simulate_feedback_loop(path_factory, rows, *, catalog, cohort, rounds=6, k=10, accept_prob=0.3, seed, mitigation=None, penalty=0.3, pool=50) ->
   list[RoundMetrics]` (the pinned semantics above are authoritative).
   It is pure numpy and seeded. Each round it appends simulated train positives (new rows tagged `split="train"`) and
   refits through `path_factory`. It never touches val/test rows, and val/test stay the evaluation target for the
@@ -396,7 +397,12 @@ No re-tuning: the thresholds stay as pinned. Re-gated as round 5.
     on acceptance (so each (reader, item) is accepted at most once across rounds), and strictly increasing
     timestamps.
   - NIT: verification routing. → Gate (c)'s split routing is stated.
-- **[fable]** pending.
+- **[fable]** APPROVE WITH NITS. It judged the stop-and-amend legitimate (a spec-transcription fix, not tuning).
+  The WIP code matches the probe point by point: draw before guard, the single-stream order, the seen-set update
+  and the penalty counts.
+  - NIT 1: the RNG contract. → Pinned in v2.6.
+  - NIT 2: the explore short list. → v2.6.1 pins the probe's rule (replace the last slot, never append).
+  - NIT 3: the "a top-k recommendation" wording and the stale signature. → Fixed.
 
 ### Round 4 (plan v2.3 @ 4d5c376) — CONSENSUS
 - **[self]** APPROVE.
