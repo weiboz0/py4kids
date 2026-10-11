@@ -419,6 +419,8 @@ class FeatureTowerRetrievalPath(BaseRetrievalPath):
         self._row_of = {item: idx for idx, item in enumerate(item_ids)}
         self._reader_matrix = reader_matrix
         self._item_matrix = item_matrix
+        # Version-compatible: an artifact saved before recsys-017 has no curve -> empty list.
+        self._loss_history = [float(x) for x in state.get("loss_history", [])]
         self._fitted = True
         return self
 
@@ -435,6 +437,8 @@ class FeatureTowerRetrievalPath(BaseRetrievalPath):
             "item_embeddings": self._item_matrix.copy(),
             "reader_ids": list(self._reader_ids),
             "item_ids": list(self._item_ids),
+            # Additive (recsys-017): the per-epoch training curve travels with a cached artifact.
+            "loss_history": [float(x) for x in self._loss_history],
             "params": {
                 "embedding_dim": self.embedding_dim,
                 "n_epochs": self.n_epochs,
@@ -463,7 +467,11 @@ class FeatureTowerRetrievalPath(BaseRetrievalPath):
 
     @property
     def loss_history(self) -> list[float]:
-        """Mean BPR loss per epoch from the last :meth:`fit` (empty after :meth:`load`)."""
+        """Mean BPR loss per epoch from the last :meth:`fit`.
+
+        Restored by :meth:`load` when the artifact carries one (recsys-017); empty for an artifact
+        saved without it.
+        """
         return list(self._loss_history)
 
     # ------------------------------------------------------------------------------ retrieval
