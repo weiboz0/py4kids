@@ -264,7 +264,7 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
   - signed Δhit and Δcoverage **recomputed** from each row's declared baseline row (the full stack for stage rows,
     the fixed blend for path rows), matching to 1e-9;
   - every value finite and in range (hit and coverage in [0, 1]).
-  The *direction* is recorded, not gated: the plan does not pre-assume the full stack wins.
+  There is no separate assumed-direction gate: the plan does not pre-assume the full stack wins.
 - **(c) The beyond-accuracy table is structurally gated, but not on direction** (executable in `test_unit14.py` and
   the milestone). It has exact rows {full system,
   best single path, Part-1 build}. All five columns (coverage, head-share, exposure Gini, novelty, intra-list
@@ -319,7 +319,7 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
 - **Phase A** — registry, syllabus rows, manifests, and the AST-guard roots (U14 and the capstone are covered by the
   existing global allowlist, so no change). Check the project-entry tooling requirements.
 - **Phase B** — `build_models.py`, the ci-local wiring, `tests/test_unit14.py` (the required check, gates
-  (a), (b), (c), (d) and (f), and provenance), and any small `bookrec` glue, such as a `load_cached_models(dir)` helper and a `FullSystem` assembly
+  (a)–(f), and provenance), and any small `bookrec` glue, such as a `load_cached_models(dir)` helper and a `FullSystem` assembly
   helper. Opus subagent; it measures every number in the gates and the budget.
 - **Phase C** — the U14 lesson (Opus).
 - **Phase D** — U14 exercises, then solutions (separate fresh Opus subagents). At least 6 exercises, at least 2
@@ -383,6 +383,11 @@ Phase H is this plan's named verification phase.
   - **NITs:** the "direction" wording is clarified (a reproducibility pin fixes the measured sign), and the
     duplicate (e) is removed.
 - **[fable]** pending (r2 on v3).
+
+### Round 4 (plan v4 @ 219cf05)
+- **[sol]** REJECT, with one open item. B1, B2 and the B3 baselines are RESOLVED.
+  - Phase B omitted gate (e). → v4.1 has Phase B assert (a)–(f).
+  - NIT: the "not gated" wording. → Now reads "no separate assumed-direction gate".
 
 ### Round 2 (plan v2 @ 3e105c7)
 - **[self]** APPROVE WITH NITS.
