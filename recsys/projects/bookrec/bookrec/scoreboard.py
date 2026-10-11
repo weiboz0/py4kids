@@ -32,7 +32,9 @@ class RandomRetrievalPath(BaseRetrievalPath):
         super().__init__(name="random", version="1", _fitted=True)
         self.seed = seed
         self._items = tuple(sorted(set(item_ids)))
-        if any(not isinstance(item_id, int) or isinstance(item_id, bool) for item_id in self._items):
+        if any(
+            not isinstance(item_id, int) or isinstance(item_id, bool) for item_id in self._items
+        ):
             raise TypeError("random baseline item ids must be stable ints")
         self._rng = np.random.default_rng(self.seed)
 
@@ -163,6 +165,42 @@ def run_validation_scoreboard(
         precision_at_k=sum(precisions) / readers if readers else 0.0,
         ndcg_at_k=sum(ndcgs) / readers if readers else 0.0,
     )
+
+
+def reader_hits(
+    path: Any,
+    interactions_path: str | Path,
+    *,
+    catalog_ids: Iterable[int],
+    k: int,
+    split: str = "val",
+    cold_readers: Iterable[int] = (),
+) -> dict[int, float]:
+    """Per-reader hit@k on EXACTLY the :func:`run_validation_scoreboard` cohort (Unit 12).
+
+    Same seen/relevant construction, same eligibility (a reader needs an unseen positive in
+    ``split`` and must not be a declared cold reader), same ``retrieve`` + :func:`~bookrec.rank.rank`
+    call — so the mean of the returned values equals that scoreboard's ``hit_rate_at_k``. Keyed by
+    reader id (ascending), it lets two paths be **paired** reader by reader for a paired standard
+    error of their hit-rate difference.
+    """
+    if not isinstance(k, int) or isinstance(k, bool) or k <= 0:
+        raise ValueError(f"k must be a positive int, got {k!r}")
+    if split not in ("val", "test"):
+        raise ValueError(f"split must be 'val' or 'test', got {split!r}")
+    known_items = set(catalog_ids)
+    cold = set(cold_readers)
+    seen_by_reader, target_by_reader = _seen_and_relevant(interactions_path, known_items, split)
+    hits: dict[int, float] = {}
+    for reader_id in sorted(target_by_reader):
+        seen = seen_by_reader[reader_id]
+        relevant = target_by_reader[reader_id] - seen
+        if reader_id in cold or not relevant:
+            continue
+        candidates = path.retrieve(reader_id, {"seen": seen}, k)
+        recommendations = rank(candidates, n=k, exclude=seen)
+        hits[reader_id] = hit_rate_at_k(recommendations, relevant, k)
+    return hits
 
 
 def run_blended_scoreboard(

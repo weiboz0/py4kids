@@ -163,6 +163,18 @@ library_methods:
 - normal
 - ones
 - repeat
+# --- Unit 12 (recsys-015): sequence-aware retrieval (sequence paths, paired-SE readout) ---
+# `std` (ddof=1) is the paired standard error of a per-reader hit difference (milestone gate (c)).
+- std
+# The Unit-12 lesson: `triu` + `where` build the by-hand causal mask (the future positions set to
+# -inf before the softmax); `copy` perturbs the toy history for the causality check; `final_state`
+# is SasrecRetrievalPath's numpy forward pass (the reveal of the by-hand attention step);
+# `perf_counter` times the lesson's single SASRec fit.
+- copy
+- final_state
+- perf_counter
+- triu
+- where
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}

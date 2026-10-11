@@ -49,3 +49,7 @@ concepts:
 - {id: neural-reranking, name: "Neural reranking (learned second-stage re-scoring of the candidate pool)", category: techniques, kind: technique}
 - {id: ranking-features, name: "Ranking features (per-candidate feature vector from paths + content)", category: techniques, kind: technique}
 - {id: learning-to-rank, name: "Learning to rank from implicit feedback", category: techniques, kind: technique}
+# --- Unit 12 (recsys-015): sequence-aware retrieval on the session log ---
+- {id: sequential-recommendation, name: "Sequential (next-item) recommendation from an ordered history; recency / last-k", category: techniques, kind: technique}
+- {id: item-transitions, name: "First-order item transition (Markov) model learned from consecutive reads", category: techniques, kind: technique}
+- {id: self-attention, name: "Causal self-attention over reading history (SASRec-style)", category: techniques, kind: technique}
