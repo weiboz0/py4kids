@@ -52,7 +52,7 @@ The unit opens with its **project hook**: *you just finished volume 2 of a serie
 you read it last?*
 Plan **60–90 minutes across two to three sittings**, and assign all exercises.
 The numpy paths fit in under a second.
-The SASRec fit is about **45 s**, so run it once, in its own cell, and reuse the fitted path.
+The SASRec fit takes about **45–70 s**, depending on machine load, so run it once, in its own cell, and reuse the fitted path.
 
 1. **Sitting 1 (~30 min) — sequences and recency.** Meet the session log and one reader's ordered history, with the
    series volumes visible. Run the bag baseline, then the last-k query by hand and the `LastKItemItemPath` reveal.
@@ -74,7 +74,7 @@ The SASRec fit is about **45 s**, so run it once, in its own cell, and reuse the
 - **Querying from the `seen` set.** `context["seen"]` is an unordered *set*: fine for excluding books already
   read, useless for "the last 3". The order lives in the stored history.
 - **Re-reads in last-k.** About 28% of train reads in the session log are re-reads. "Last 3" means the last 3
-  **distinct** books; counting a re-read twice gives a different (worse) model, and `k = all` no longer matches
+  **distinct** books; counting a re-read twice gives a different model, and `k = all` no longer matches
   Unit 4.
 - **Claiming SASRec wins, or ties.** At this unit's recipe it trails item-item CF by about 0.06. Give the measured
   gap.

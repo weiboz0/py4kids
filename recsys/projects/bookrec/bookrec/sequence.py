@@ -433,6 +433,9 @@ def build_sasrec_module(
             keep = (x != 0).float()[..., None]
             h = self.drop(self.item(x) + self.pos(torch.arange(length))[None]) * keep
             # Causal mask: True above the diagonal = position i may not attend to a later j.
+            # No key_padding_mask: real positions may attend to the left-pad positions (a constant
+            # LayerNorm-bias key/value). Standard SASRec masks pads; recipe D is frozen as measured
+            # (recsys-014/015 gates), and the numpy forward reproduces this exact behaviour.
             mask = torch.triu(torch.ones(length, length, dtype=torch.bool), 1)
             # q, k and v are three separate (equal) LayerNorm outputs, exactly as in the recipe-D
             # probe: passing ONE shared tensor routes MultiheadAttention through a packed in-proj
