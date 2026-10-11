@@ -513,4 +513,41 @@ No re-tuning: the thresholds stay as pinned. Re-gated as round 5.
 
 ## Content Review
 
+### Round 1 (HEAD 1e834c8 → fixes)
+- **[self]** APPROVE. The CP-B freeze cell comes before a single unconditional `run_blended_scoreboard(..., split="test")`.
+  The interpretation is honest: for this blend, Part 2 bought reach, not accuracy.
+- **[sol]** REJECT. Its blind solve matched all the U13 exercises and Checkpoint B. `simulate_feedback_loop`
+  matches the pinned protocol; the milestone gates, strictness, framing and teacher-notes numbers are clean.
+  - **B** [FIXED `efef466`]: the once-guard accepted any callee and ignored computed split values. It now requires:
+    - every `split=` to be a string literal;
+    - no `**kwargs` on any scoreboard callee;
+    - exactly one `split="test"` call, to `run_blended_scoreboard`, as the top-level `Expr`/`Assign` value after
+      `# FREEZE`.
+    Five new mutants cover it (wrong callee, computed, named, `**kw`, literal plus computed).
+- **[fable]** APPROVE WITH NITS.
+  - Its blind solve of Ex1–10 matched to the printed precision.
+  - Its independent probe4 re-run of the loop matched shipped `simulate_feedback_loop` round for round to 1e-9, in
+    all 4 configs.
+  - The pedagogy, honesty, the cold-start wording, the CP-B taught-before-assessed check and the teacher-notes
+    numbers are all ✓.
+  - NIT 1 [FIXED `f2dbf16`]: the lesson's held-out set includes the sealed split. The wording now explains that it
+    is a do-not-write list and is never scored.
+  - NIT 2 [FIXED `f2dbf16`]: the lesson said "≥ 10×"; it now reads "≥ 5× (here 11–38×; MF never)", matching the
+    gate.
+  - NIT 3 [recorded]: the CP-B solutions ship executed outputs (as U9–U13 do, unlike CP-A). This is deliberate:
+    the CP-B teacher notes read the Q8 number from the executed run.
+- **Also fixed during authoring:**
+  - the garbled Ex1 Gini paragraph (`c0fa82b`);
+  - the CP-B "content paths buy reach" hint, which was false for lexical (`e109561`).
+
+### Round 2 (HEAD f2dbf16) — CONSENSUS
+- **[self]** APPROVE.
+- **[sol]** APPROVE WITH NITS. The r1 blocker is RESOLVED for authored code.
+  - NIT [WONTFIX]: deliberate metaprogramming (aliasing plus a computed `**kwargs`, `functools.partial`, `getattr`,
+    rebinding the callee) can still bypass the AST check. The guard is documented as **regression detection for
+    authored notebooks, not protection against hostile code**. The shipped solution makes one direct call, and
+    review covers intent.
+- **[fable]** APPROVE WITH NITS (r1; its nits are fixed).
+**Gate result:** all three APPROVE / APPROVE WITH NITS, with no `[OPEN]` items.
+
 ## Post-Execution Report
