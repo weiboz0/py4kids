@@ -392,6 +392,13 @@ exploration +0.055 / −0.017, minimum H 1.311 ≤ 1.34, popularity loop held).
    milestone assert, and pytest keeps the item-item half.
 No re-tuning: the thresholds stay as pinned. Re-gated as round 5.
 
+### Round 7 (plan v2.6.2 @ 4adbc4c) — CONSENSUS
+- **[self]** APPROVE.
+- **[sol]** APPROVE. The pool ordering and the uniqueness source are RESOLVED; it confirmed in code that the item-item
+  and popularity paths emit one candidate per id. No remaining divergence was found on the committed seed.
+- **[fable]** APPROVE WITH NITS (r5; the later edits are [sol]-requested protocol pins).
+**Gate result:** all three APPROVE / APPROVE WITH NITS, with no open blockers. Phase B resumes under v2.6.2.
+
 ### Round 6 (plan v2.6.1 @ 2970e07)
 - **[self]** APPROVE.
 - **[sol]** REJECT.
