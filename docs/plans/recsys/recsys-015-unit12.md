@@ -82,9 +82,11 @@ numpy/torch fidelity). These are additional checks; they never substitute for th
 **Exec budget:**
 - **Fits per notebook:** the lesson does 2 SASRec fits (ordered + shuffled); the milestone does 2 (the gate); the
   solutions do **1** (ordered only, reusing the lesson-measured shuffled number as a stated constant is NOT allowed —
-  any shuffled comparison in the solutions uses the numpy transition control instead). That is 5 fits ≈ 3.5–4 min.
+  any shuffled comparison in the solutions uses the numpy transition control instead). That is 5 fits ≈ 3.5–4 min. **(Superseded by v3: lesson 1 fit; 4 fits total.)** A number is citable as a
+  constant only when CI asserts it at the same recipe and seed: the milestone's ordered − shuffled is; a lesson-measured
+  number never was.
 - **Cell layout:** each fit in its own cell, ≤ 90 s.
-- **Per-notebook time:** about 2.5 min for the lesson and the milestone, and about 1.5 min for the solutions.
+- **Per-notebook time:** about 2.5 min for the lesson (v3: ~1.5 min) and the milestone, and about 1.5 min for the solutions.
 - **Measurement:** Phase B measures the **current pre-U12 whole-book exec time** (`exec-lessons` + `exec-solutions`
   for recsys) and reports U12's delta against the ≤ ~15 CI-minute target. If the total exceeds the target, the
   reduction order is (1) drop the lesson's shuffled SASRec fit and use the numpy transition control there. This
@@ -103,7 +105,8 @@ CI has no hard wall-time gate, so it went unnoticed. A single unit cannot close 
    order evidence, citing the milestone-measured ordered − shuffled number as a labelled constant from this unit's
    shipped milestone; it never asserts on it.
 2. **Record** the baseline and U12's measured delta in the post-execution report.
-3. **Queue a book-wide exec-budget slice** before the capstone (U14), which will also add heavy exec. It will
+3. **Queue a book-wide exec-budget slice** (recorded as a prerequisite in the U13 plan, recsys-016, and in project
+   memory) before the capstone (U14), which will also add heavy exec. It will
    either cache expensive fits under `assets/` with a required regeneration check (design §9), or amend the design
    target, with user review. The slice is out of scope here.
 U12 does not make the overrun materially worse (+≈ 3–4 min on ≈ 38).
@@ -143,7 +146,7 @@ Advanced baseline (design 011). Retained in full:
 - from-scratch → reveal (numpy last-k / transition built by hand → the `bookrec` paths; a hand-written causal mask
   and attention → the `SasrecRetrievalPath`);
 - a stretch exercise.
-It runs CPU-deterministic, routed through `--group recsys`, within budget.
+It runs CPU-deterministic, routed through `--group recsys`, (within the 120 s cell cap and this plan's per-notebook budget; the whole-book target stays open under the pre-U14 budget slice).
 
 ## Concepts introduced (3) — `concepts.yaml`
 - `sequential-recommendation` — "Sequential (next-item) recommendation from an ordered history; recency / last-k".
@@ -280,7 +283,7 @@ treats your history as a bag." The lesson works through these steps:
 capstone.
 ASCII only. Score with `run_validation_scoreboard(path, sessions_path, ...)`. Respect the SASRec fit budget. A
 non-empty markdown first cell.
-**Verify:** `exec-lessons` clean and within budget; `concept-scan` clean.
+**Verify:** `exec-lessons` clean (within the 120 s cell cap and this plan's per-notebook budget; the whole-book target stays open under the pre-U14 budget slice); `concept-scan` clean.
 
 ### Phase D — exercises.ipynb + solutions.ipynb (separate fresh Opus subagents)
 - At least 6 `## Exercise N`, and at least 2 tagged `stretch`.
@@ -292,13 +295,14 @@ non-empty markdown first cell.
   - the shuffled control;
   - next-item vs any-item hit;
   - read SASRec ordered vs item-item from the solution's own single ordered fit (the ordered-vs-shuffled SASRec
-    comparison is interpretive: a markdown answer that reads the lesson's table, with no numeric assert);
+    comparison is interpretive: a markdown answer that reads the lesson's SASRec row:
+    ordered live, shuffled = the cited milestone constant; no numeric assert);
   - coverage per path.
 - Stretch ideas: a second-order transition or a decayed-recency CF; a next-in-series diagnostic (series used only as
   an evaluation lens); a blend of last-k CF and transition.
 - The solutions use their own **single ordered** fit (see Exec budget) or a reduced config; there is no other full
   fit.
-**Verify:** hygiene/structure/cell-lint/noexec; `exec-solutions` clean (within budget); `concept-scan` clean.
+**Verify:** hygiene/structure/cell-lint/noexec; `exec-solutions` clean (within the 120 s cell cap and this plan's per-notebook budget; the whole-book target stays open under the pre-U14 budget slice); `concept-scan` clean.
 
 ### Phase E — milestone notebook (Opus subagent)
 `recsys/projects/bookrec/milestones/unit-12-sequence-aware.ipynb`, a fixed-seed demo:
@@ -332,7 +336,9 @@ milestone. `bash scripts/pre-merge-guard.sh --pr` must be OK. Confirm:
 - no torch/faiss on the group-free path;
 - lesson budget 36.5;
 - the routed-suite delta is ≤ +60 s;
-- the U12 exec time is reported against the whole-book exec target.
+- the U12 exec time is reported against the whole-book exec target;
+- the lesson's quoted ordered − shuffled constant (it names the milestone cell it quotes) equals the milestone's
+  executed value, recorded in the post-execution report.
 
 ## Out of scope
 - No change to the session-log generator or the main log; no new data.
@@ -389,7 +395,21 @@ Phase G is this plan's named verification phase.
 **Gate result:** all three APPROVE / APPROVE WITH NITS, with no open blockers. Implementation may begin.
 
 ### Round 3 (plan v3 — Phase B budget amendment)
-<!-- appended after re-gate -->
+- **[self]** APPROVE. The overrun is pre-existing; reduction (1) is applied, the baseline recorded, and a slice
+  queued.
+- **[sol]** APPROVE WITH NITS. No blocker: design §9's ≤ ~15 min is a target, not a hard cap, and the amendment
+  honestly applies the plan's own stop-and-amend rule. Gate (c) is intact, and the lesson's labelled constant is
+  honest.
+  - NIT: "within budget" was misleading. → Each use is qualified as the 120 s cell cap plus the per-notebook budget,
+    with the whole-book target open under the pre-U14 slice.
+- **[fable]** APPROVE WITH NITS. The ~38 min figure is plausible: 22 notebooks under exec-solutions, about 95
+  `.fit(` calls in U8–U11, and still ≥ 1.7× the target unloaded. Five nits, all folded:
+  1. the stale fit inventory is marked superseded;
+  2. the citable-constant asymmetry is stated;
+  3. Phase G checks that the quoted constant equals the milestone value;
+  4. the Phase D wording is fixed;
+  5. the queued slice has a home (the U13 plan prerequisite plus memory).
+**Gate result (v3):** all three APPROVE / APPROVE WITH NITS.
 
 ## Content Review
 
