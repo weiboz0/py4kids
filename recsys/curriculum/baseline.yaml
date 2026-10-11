@@ -163,6 +163,9 @@ library_methods:
 - normal
 - ones
 - repeat
+# --- Unit 12 (recsys-015): sequence-aware retrieval (sequence paths, paired-SE readout) ---
+# `std` (ddof=1) is the paired standard error of a per-reader hit difference (milestone gate (c)).
+- std
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}
