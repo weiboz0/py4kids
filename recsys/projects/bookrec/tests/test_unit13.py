@@ -27,6 +27,7 @@ import gzip
 import json
 import math
 import re
+from collections import Counter
 from itertools import pairwise
 from pathlib import Path
 from typing import ClassVar
@@ -37,14 +38,11 @@ from bookrec import (
     Book,
     Candidate,
     ItemItemRetrievalPath,
-    LexicalRetrievalPath,
     MatrixFactorizationPath,
     PopularityRetrievalPath,
-    blend,
     generated_dir,
     head_ids_from_counts,
     load_catalog,
-    load_keywords,
     rank,
 )
 from bookrec.fairness import (
@@ -68,7 +66,6 @@ SEED = 0
 REPO = Path(__file__).resolve().parents[4]
 INTERACTIONS = generated_dir() / "interactions.csv.gz"
 LAMBDAS = (0.0, 0.1, 0.3, 0.5, 1.0)
-U6_WEIGHTS = {"popularity": 0.25, "lexical": 0.5, "item-item": 1.0, "mf": 1.0}
 ROUND_COLUMNS = ("coverage", "head_share", "gini", "genre_entropy", "clean_hit", "accepted")
 
 needs_main_log = pytest.mark.skipif(
@@ -231,9 +228,21 @@ def test_loop_is_deterministic_and_leaves_rows_untouched() -> None:
     assert rows == before  # val/test (and train) rows never modified
     assert sum(m.accepted for m in first) > 0
     for m in first:
-        assert m.accepted == len(m.new_rows) <= len(cohort)  # at most one read per reader/round
-        assert len({r["reader_id"] for r in m.new_rows}) == m.accepted
+        # Per-item Bernoulli (plan v2.5): a reader may read several served items in one round.
+        assert m.accepted == len(m.new_rows) <= 5 * len(cohort)
         assert all(r["split"] == "train" and r["label"] == 1 for r in m.new_rows)
+        assert all(r["session_id"] == -1 for r in m.new_rows)
+    # Several reads by one reader in one round do happen (it is not a one-read rule).
+    per_round_reader = [Counter(r["reader_id"] for r in m.new_rows) for m in first]
+    assert max(max(c.values(), default=0) for c in per_round_reader) >= 2
+    reads = [(r["reader_id"], r["item_id"]) for m in first for r in m.new_rows]
+    assert len(reads) == len(set(reads))  # never a duplicate (reader, item) read
+    train_pos = {
+        (r["reader_id"], r["item_id"]) for r in rows if r["split"] == "train" and r["label"] == 1
+    }
+    assert not set(reads) & train_pos  # never an already-seen item
+    held = {(r["reader_id"], r["item_id"]) for r in rows if r["split"] in ("val", "test")}
+    assert not set(reads) & held  # the leakage guard holds
 
 
 class _RecordingLeakyPath(BaseRetrievalPath):
@@ -391,7 +400,6 @@ def main_env() -> dict[str, object]:
         "held": held,
         "counts": popularity.counts,
         "popularity": popularity,
-        "keywords": load_keywords(gen / "keywords.csv.gz"),
     }
 
 
@@ -469,43 +477,25 @@ def _hit(recs: dict[int, list[int]], env) -> float:
     )
 
 
-class _U6Blend:
-    """The pinned Unit-6 blend (pool 30 per member) as a retrieval path for the penalty wrapper.
-
-    The member pools do not depend on the requested ``k`` (always 30 each), so the blended pool is
-    memoised per reader: the five-point penalty curve then re-ranks one cached pool per reader.
-    """
-
-    def __init__(self, members: dict[str, object]) -> None:
-        self.members = members
-        self._cache: dict[tuple[int, frozenset[int]], list[Candidate]] = {}
-
-    def retrieve(self, query, context, k):
-        key = (int(query), frozenset(context.get("seen", ())))
-        if key not in self._cache:
-            per = {n: p.retrieve(query, context, 30) for n, p in self.members.items()}
-            self._cache[key] = blend(per, weights=U6_WEIGHTS)
-        return self._cache[key][:k]
-
-
 @pytest.fixture(scope="module")
 def part1_paths(main_env) -> dict[str, object]:
     rows, ids = main_env["rows"], main_env["ids"]
     members = {
         "popularity": main_env["popularity"],
-        "lexical": LexicalRetrievalPath(main_env["keywords"]).fit(rows, catalog=ids),
         "item-item": ItemItemRetrievalPath().fit(rows, catalog=ids),
         "mf": MatrixFactorizationPath(seed=SEED).fit(rows, catalog=ids),
     }
-    return {**members, "u6-blend": _U6Blend(members)}
+    return members
 
 
 # Plan anchors at lambda = 0.3 (+-0.003 hit / +-0.005 Gini).
-ANCHORS = {"item-item": (0.224, 0.747), "u6-blend": (0.290, 0.858)}
+# The U6-blend half of gate (c) (0.290 / 0.858) is asserted in the Unit-13 milestone (plan v2.5), as
+# are the U6-blend / two-tower head-tail ratios and the feature-tower cold readout (pytest budget).
+ANCHORS = {"item-item": (0.224, 0.747)}
 
 
 @needs_main_log
-@pytest.mark.parametrize("base", ["item-item", "u6-blend"])
+@pytest.mark.parametrize("base", ["item-item"])
 def test_gate_c_penalty_tradeoff_curve(base, main_env, part1_paths) -> None:
     hits, ginis = [], []
     for lam in LAMBDAS:
@@ -529,10 +519,10 @@ def test_gate_d_offline_head_tail_and_cold_readout(main_env, part1_paths) -> Non
     assert np.mean([i in head for i in positives]) == pytest.approx(0.441, abs=0.005)
     zero_train = set(main_env["ids"]) - set(main_env["counts"])
     assert zero_train
-    for name in ("popularity", "item-item", "mf", "u6-blend"):
+    for name in ("popularity", "item-item", "mf"):
         recs = _recs(part1_paths[name], main_env)
-        if name != "u6-blend":  # cold readout: warm-only collaborative paths surface 0 cold items
-            assert not {i for t in recs.values() for i in t} & zero_train, name
+        # Cold readout: warm-only collaborative paths surface 0 zero-train items.
+        assert not {i for t in recs.values() for i in t} & zero_train, name
         if name == "popularity":
             continue
         head_hits, tail_hits = [], []

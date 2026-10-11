@@ -199,7 +199,9 @@ class PopularityPenalizedPath(BaseRetrievalPath):
     ``score' = minmax(score) − penalty · log1p(count) / log1p(max count)``, where ``count`` is an
     item's train-positive count (``counts``; missing = 0) and ``max count`` the largest count. The
     top ``k`` by ``score'`` (ties → smaller id) are returned. ``penalty = 0`` keeps the inner order.
-    ``fit`` refits the inner path; the counts are fixed at construction.
+    ``fit`` refits the inner path; the counts are fixed at construction. ``max_count`` overrides the
+    normaliser's ``max count`` (default: the largest of ``counts``) — the feedback loop pins it to
+    the round-0 maximum so the penalty scale stays fixed while the counts grow.
     """
 
     def __init__(
@@ -209,6 +211,7 @@ class PopularityPenalizedPath(BaseRetrievalPath):
         counts: Mapping[int, int],
         *,
         pool: int = 50,
+        max_count: int | None = None,
     ) -> None:
         super().__init__(name="pop-penalized", version="1", _fitted=True)
         penalty = float(penalty)
@@ -220,7 +223,8 @@ class PopularityPenalizedPath(BaseRetrievalPath):
         self.penalty = penalty
         self.pool = pool
         self.counts = {int(item): int(count) for item, count in counts.items()}
-        max_count = max(self.counts.values(), default=0)
+        if max_count is None:
+            max_count = max(self.counts.values(), default=0)
         self._max_log = math.log1p(max_count) if max_count > 0 else 1.0
 
     def fit(self, interactions: Any, catalog: Any | None = None) -> PopularityPenalizedPath:
@@ -246,10 +250,15 @@ class PopularityPenalizedPath(BaseRetrievalPath):
 
 
 def popularity_penalized(
-    path: Any, penalty: float, counts: Mapping[int, int], *, pool: int = 50
+    path: Any,
+    penalty: float,
+    counts: Mapping[int, int],
+    *,
+    pool: int = 50,
+    max_count: int | None = None,
 ) -> PopularityPenalizedPath:
     """Wrap ``path`` in a :class:`PopularityPenalizedPath` (the pinned U13 re-rank, pool 50)."""
-    return PopularityPenalizedPath(path, penalty, counts, pool=pool)
+    return PopularityPenalizedPath(path, penalty, counts, pool=pool, max_count=max_count)
 
 
 # --------------------------------------------------------------------------------- feedback loops
@@ -307,7 +316,11 @@ def val_cohort(
 
 
 def _top_ids(path: Any, reader: int, seen: set[int], k: int) -> list[int]:
-    return [c.item_id for c in rank(path.retrieve(reader, {"seen": seen}, k), n=k, exclude=seen)]
+    """The reader's ranked top-``k`` ids; a path emitting one item twice is an error, not deduped."""
+    top = [c.item_id for c in rank(path.retrieve(reader, {"seen": seen}, k), n=k, exclude=seen)]
+    if len(set(top)) != len(top):
+        raise ValueError(f"path {getattr(path, 'name', path)!r} returned duplicate items: {top}")
+    return top
 
 
 def simulate_feedback_loop(
@@ -332,11 +345,12 @@ def simulate_feedback_loop(
        rows plus every simulated row so far. No original val/test row ever reaches ``fit``.
     2. Each ``cohort`` reader (fixed for all rounds) gets a top-``k`` excluding its *augmented* seen
        set (original train positives + its simulated reads).
-    3. With probability ``accept_prob`` the reader reads **one** item, chosen uniformly at random
-       from its top-``k`` items that are unseen **and not among its val/test positives** (the
-       **leakage guard**: never hand the model a held-out answer). If none is eligible, no read.
-    4. The read is appended as ``{split: "train", label: 1}`` with a timestamp one past the reader's
-       latest train timestamp — at most one new row per reader per round, never a duplicate.
+    3. (plan v2.5) **Each** of the reader's top-``k`` items is accepted **independently** with
+       probability ``accept_prob`` (a per-item Bernoulli; about ``k·p`` reads per reader per round),
+       provided it is unseen **and not among the reader's val/test positives** (the **leakage
+       guard**: never hand the model a held-out answer).
+    4. Each read is appended as ``{split: "train", label: 1, session_id: -1}`` with a timestamp
+       after the reader's latest train timestamp; never a duplicate (the seen set grows).
 
     Readouts per round (:class:`RoundMetrics`): coverage, head-share (head = top 10% by ORIGINAL
     train count, frozen at round 0), exposure Gini (full catalog) and mean genre entropy of the
@@ -344,11 +358,17 @@ def simulate_feedback_loop(
     positives with the ORIGINAL train seen set, so a growing seen set cannot move the accuracy
     readout for a bookkeeping reason.
 
-    ``mitigation`` changes what is *served* (and so what can be read): ``"explore"`` replaces slot
-    ``k`` with a seeded random warm (original train count > 0) item the reader has not seen and that
+    ``mitigation`` changes what is *served* (and so what can be read): ``"explore"`` replaces the last
+    served slot with a seeded random warm (original train count > 0) item the reader has not seen and that
     is not already in the list; ``"penalty"`` serves a :class:`PopularityPenalizedPath` re-rank
-    (``penalty``, ``pool``) using the current augmented train counts. ``rows`` is never mutated.
-    Deterministic for a given ``seed``.
+    (``penalty``, ``pool``) using the current augmented train counts, normalised by the round-0 max
+    count. ``rows`` is never mutated. Deterministic for a given ``seed``: one generator
+    ``default_rng(seed)`` first draws the readers' processing order (a seeded permutation of the
+    sorted ``cohort``), then, per reader, the exploration item (``rng.choice`` over the round-0 warm
+    items in ascending id order, minus the reader's seen set and current list) and one acceptance
+    draw per served slot in rank order (drawn before the guards) — the exact draw protocol of the
+    plan-gate probe (plan v2.6), so its measured numbers reproduce. The exploration item replaces
+    the last slot whenever the list is non-empty, even a short one (it is never appended).
     """
     if mitigation not in (None, "explore", "penalty"):
         raise ValueError(f"mitigation must be None, 'explore' or 'penalty', got {mitigation!r}")
@@ -382,11 +402,15 @@ def simulate_feedback_loop(
     head = set(head_ids_from_counts(counts, catalog_ids))
     warm = sorted(counts)
 
-    readers = [int(r) for r in cohort]
-    seen = {r: set(seen0.get(r, set())) for r in readers}
-    accept_rng, explore_rng = (
-        np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(2)
+    rng = np.random.default_rng(seed)
+    cohort_ids = sorted(int(r) for r in cohort)
+    readers = (
+        [int(r) for r in rng.choice(cohort_ids, size=len(cohort_ids), replace=False)]
+        if cohort_ids
+        else []
     )
+    seen = {r: set(seen0.get(r, set())) for r in readers}
+    max_count0 = max(counts.values(), default=0)
 
     results: list[RoundMetrics] = []
     for round_no in range(rounds + 1):
@@ -394,7 +418,9 @@ def simulate_feedback_loop(
         path.fit(train_log, catalog=catalog_ids)
         served_path = path
         if mitigation == "penalty":
-            served_path = PopularityPenalizedPath(path, penalty, counts, pool=pool)
+            served_path = PopularityPenalizedPath(
+                path, penalty, counts, pool=pool, max_count=max_count0
+            )
 
         served: dict[int, list[int]] = {}
         clean_hits: list[float] = []
@@ -405,12 +431,9 @@ def simulate_feedback_loop(
             if mitigation == "explore":
                 shown = set(top)
                 options = [i for i in warm if i not in reader_seen and i not in shown]
-                if options:
-                    extra = int(options[int(explore_rng.integers(len(options)))])
-                    if len(top) >= k:
-                        top[-1] = extra
-                    else:
-                        top.append(extra)
+                if top and options:
+                    # Replace the LAST served slot (even on a short list; never append).
+                    top[-1] = int(rng.choice(options))
             served[reader] = top
 
             relevant = positives["val"].get(reader, set()) - seen0.get(reader, set())
@@ -421,25 +444,23 @@ def simulate_feedback_loop(
                     clean = _top_ids(path, reader, original_seen, k)
                 clean_hits.append(1.0 if set(clean) & relevant else 0.0)
 
-            if accept_rng.random() < accept_prob:
-                eligible = [
-                    i for i in top if i not in reader_seen and i not in held_out.get(reader, ())
-                ]
-                if eligible:
-                    item = int(eligible[int(accept_rng.integers(len(eligible)))])
+            guard = held_out.get(reader, set())
+            for item in top:
+                # One draw per served slot (drawn first, as in the probe), then the guards.
+                if rng.random() < accept_prob and item not in reader_seen and item not in guard:
                     stamp = last_time.get(reader, 0) + 1
                     last_time[reader] = stamp
                     new_rows.append(
                         {
                             "reader_id": reader,
-                            "item_id": item,
+                            "item_id": int(item),
                             "session_id": -1,
                             "timestamp": stamp,
                             "split": "train",
                             "label": 1,
                         }
                     )
-                    reader_seen.add(item)
+                    reader_seen.add(int(item))
 
         lists = list(served.values())
         results.append(
