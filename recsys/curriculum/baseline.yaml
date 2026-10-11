@@ -181,6 +181,16 @@ library_methods:
 # same single seeded generator `simulate_feedback_loop` uses.
 - log2
 - random
+# --- Unit 14 (recsys-017): the full system, assembled from the regenerated model cache ---
+# `FullSystem.from_cache` loads every expensive model (no refit); `evaluate` / `top_lists` are its
+# val readouts, `fixed_blend` / `part1_build` the named comparison systems, and `meta` a cached
+# model's build metadata (the reranker recipe).
+- evaluate
+- fixed_blend
+- from_cache
+- meta
+- part1_build
+- top_lists
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}
