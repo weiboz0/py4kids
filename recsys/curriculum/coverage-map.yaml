@@ -94,3 +94,17 @@ entries:
   introduces: [sequential-recommendation, item-transitions, self-attention]
   requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, item-item-cf, knn-similarity, embedding-retrieval, two-tower, neural-training]
   practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, item-item-cf, embedding-retrieval, neural-training]
+- id: unit-13-whole-system-ethics
+  kind: unit
+  title: "Evaluating the whole system: ethics and beyond-accuracy"
+  lessons: 3
+  introduces: [feedback-loops, exposure-fairness, filter-bubbles]
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, popularity-ranking, popularity-bias, item-item-cf, implicit-feedback, ranking-metrics, beyond-accuracy, score-blending, two-tower, feature-towers, item-cold-start, hybrid-retrieval]
+  practices: [offline-evaluation, top-k-ranking-metrics, popularity-bias, item-item-cf, beyond-accuracy, score-blending, item-cold-start]
+- id: checkpoint-02-part-2
+  kind: checkpoint
+  title: "Checkpoint B — the Part-2 recommender"
+  lessons: 0.5
+  introduces: []
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, score-blending, word-embeddings, document-embeddings, embedding-retrieval, two-tower, bpr-loss, neural-training, item-cold-start, hybrid-retrieval, sequential-recommendation, item-transitions, feedback-loops, exposure-fairness, filter-bubbles, bm25, item-item-cf]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, score-blending, word-embeddings, document-embeddings, embedding-retrieval, two-tower, bpr-loss, neural-training, item-cold-start, hybrid-retrieval, sequential-recommendation, item-transitions, feedback-loops, exposure-fairness, filter-bubbles, bm25, item-item-cf]

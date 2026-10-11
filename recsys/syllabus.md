@@ -40,6 +40,8 @@ so every addition can answer the only question that matters: *did it help?*
 | 10 | `unit-10-ann-and-hybrid` | unit | 3 | Retrieve without scanning the whole catalog — an exact brute-force baseline vs an approximate HNSW index (FAISS), the recall/speed trade, and a hybrid that fuses BM25 with the two-tower. |
 | 11 | `unit-11-neural-reranking` | unit | 3 | Learn to rank the candidate pool — a PyTorch reranker over per-path + content features; the leakage trap that tanks it, the time-ordered-holdout fix, and why content features (not score-combination) carry the lift. |
 | 12 | `unit-12-sequence-aware` | unit | 3 | You just finished volume 2 — should the recommender care what you read *last*? Recency (last-k CF), item transitions with an order-shuffled control that proves order carries the lift, and a tiny self-attention (SASRec) model that learns order but trails the simple paths — on the separate session log. |
+| 13 | `unit-13-whole-system-ethics` | unit | 3 | Your recommender scores well -- but who is it good for? Exposure fairness (Gini, long tail), a feedback-loop simulation that concentrates the catalog (and a mitigation), filter bubbles, offline-metric limits, and the cold-start readout. |
+| — | `checkpoint-02-part-2` | checkpoint | 0.5 | Checkpoint B — assemble the Part-2 recommender, weigh accuracy against coverage and exposure, and score it once on the sealed test holdout. |
 
 ## How the book is organised
 
