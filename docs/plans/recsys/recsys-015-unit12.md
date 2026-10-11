@@ -92,6 +92,22 @@ numpy/torch fidelity). These are additional checks; they never substitute for th
   post-execution report. The milestone keeps both fits, so gate (c) is unaffected. Then (2) stop and amend.
 - **Routed pytest delta:** ≤ +60 s (numpy gates plus reduced-config SASRec contracts).
 
+### v3 budget amendment (Phase B finding, 2026-10-11)
+Phase B measured the **pre-U12** recsys exec time under machine load 3–7: `exec-lessons` 11 m 12 s plus
+`exec-solutions` 26 m 44 s, about **38 min**. That is already about 2.5× the design §9 "≤ ~15 CI-minute" target,
+before any U12 notebook. The overrun is **pre-existing**: Units 8–11 (torch, faiss, reranker) accumulated it, and
+CI has no hard wall-time gate, so it went unnoticed. A single unit cannot close a book-wide gap. Decision:
+1. **Apply reduction (1) now.** The lesson uses the numpy transition control as its shuffled comparison (no
+   shuffled SASRec fit). This makes the fit inventory **lesson 1 / milestone 2 / solutions 1 = 4 fits** (≈ 3 min
+   at 44–62 s each). The milestone keeps both fits, so gate (c) is unaffected. The lesson still *reports* SASRec's
+   order evidence, citing the milestone-measured ordered − shuffled number as a labelled constant from this unit's
+   shipped milestone; it never asserts on it.
+2. **Record** the baseline and U12's measured delta in the post-execution report.
+3. **Queue a book-wide exec-budget slice** before the capstone (U14), which will also add heavy exec. It will
+   either cache expensive fits under `assets/` with a required regeneration check (design §9), or amend the design
+   target, with user review. The slice is out of scope here.
+U12 does not make the overrun materially worse (+≈ 3–4 min on ≈ 38).
+
 ## Gate (measured by the probe; the thresholds are re-pinned in Phase B from the shipped code, with headroom)
 On `sessions.csv.gz`, val, k = 10, committed seed, through `run_validation_scoreboard`:
 - **(a) recency lift:** `last_k_cf.hit ≥ item_item.hit + 0.03`. The harness measured +0.070; the bookrec
@@ -252,8 +268,9 @@ treats your history as a bag." The lesson works through these steps:
 3. **Transitions.** Count consecutive pairs by hand → the `TransitionRetrievalPath` reveal. Then **the control**:
    shuffle each history and refit. The lift collapses, which proves *order* carries it.
 4. **Self-attention.** Build a causal mask and one attention step by hand on a toy sequence (numpy) → the
-   `SasrecRetrievalPath` reveal. Train it (the fast recipe) and its shuffled copy: it *learns order* (ordered >
-   shuffled).
+   `SasrecRetrievalPath` reveal. Train it once (the fast recipe; **v3: no shuffled SASRec fit in the lesson**). Its
+   order evidence (ordered − shuffled +0.040, 3.8 SE) is cited as a labelled number measured by this unit's
+   milestone, which asserts it in CI. The lesson's own live shuffled control is the transition one from step 3.
 5. **The honest readout.** SASRec does not beat the simple paths here. At this recipe it **trails** item-item CF by
    its measured gap (about −0.06 on the committed seed); the recsys-014 near-tie belongs to its longer V1 recipe
    and its held-out seeds, so cite it only that way. Last-k CF and transition are the winners on this data. Explain why: the order effects are
@@ -370,6 +387,9 @@ Phase G is this plan's named verification phase.
   - NIT D: (a) had a stale figure. → Distinct +0.071.
   - NIT E: mutant 3 is vacuous for `k_last=None`. → Mutants run on `k_last=3` and the transition fixtures.
 **Gate result:** all three APPROVE / APPROVE WITH NITS, with no open blockers. Implementation may begin.
+
+### Round 3 (plan v3 — Phase B budget amendment)
+<!-- appended after re-gate -->
 
 ## Content Review
 
