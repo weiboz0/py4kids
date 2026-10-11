@@ -332,8 +332,9 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
 - **Phase 0** — design amendment v6 (inline).
 - **Phase A** — registry, syllabus rows, manifests, and the AST-guard roots (U14 and the capstone are covered by the
   existing global allowlist, so no change). Check the project-entry tooling requirements.
-- **Phase B** — `build_models.py`, the ci-local wiring, `tests/test_unit14.py` (the required check, gates
-  (a)–(f), and provenance), and any small `bookrec` glue, such as a `load_cached_models(dir)` helper and a `FullSystem` assembly
+- **Phase B** — `build_models.py`, the ci-local wiring, `tests/test_unit14.py` (the required check, which
+  asserts gate (a), (d) and provenance, plus the `readouts.json` **structure** for (b)/(c) and a full-stack smoke for
+  (f); the milestone asserts the (b)/(c) **values** and recomputes (e)/(f) live), and any small `bookrec` glue, such as a `load_cached_models(dir)` helper and a `FullSystem` assembly
   helper. Opus subagent; it measures every number in the gates and the budget.
 - **Phase C** — the U14 lesson (Opus).
 - **Phase D** — U14 exercises, then solutions (separate fresh Opus subagents). At least 6 exercises, at least 2
@@ -350,7 +351,8 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
   | `ranking-features`, `learning-to-rank`, `neural-reranking` | a feature-family mask + refit of the 8-path reranker on the cached training matrix |
   | `self-attention` | a SASRec readout on the session log |
 
-- **Phase E** — the U14 milestone (Opus). It is shipped cleared and asserts gates (a)–(f).
+- **Phase E** — the U14 milestone (Opus). It is shipped cleared. It asserts the (b)/(c) values from `readouts.json` and recomputes (e)/(f) live; (a)/(d)
+  are covered by the pytest required check, and their key pins are re-shown.
 - **Phase F** — capstone `brief.ipynb` (Opus), then `solutions.ipynb` (a separate fresh Opus subagent), plus
   `teacher-notes.md` with a grading rubric.
 - **Phase G** — U14 teacher notes (inline).
