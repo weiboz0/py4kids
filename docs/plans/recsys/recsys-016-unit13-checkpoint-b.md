@@ -195,21 +195,23 @@ Whole-book lessons go from 36.5 to 40.
 - Add the 2 manifests.
 - Add the syllabus rows: the U13 row, and a checkpoint row `| — | checkpoint-02-part-2 | checkpoint | 0.5 | … |`.
 - `baseline.yaml`: only the idioms actually called.
-- **Test-unseal guard (v2), in `test_unit13.py`:**
-  - **Globally**, across *all* recsys notebooks (**code cells only**: the U10–U12 milestones mention
-    `split="test"` in markdown), the scoped pattern is `test_unit06`'s regex
-    `split\s*={1,2}\s*['"]test['"]` (a `split=` keyword or a `split ==` filter). It may match only in
-    `checkpoint-01-part-1/{checkpoint,solutions}.ipynb` and `checkpoint-02-part-2/{checkpoint,solutions}.ipynb`.
-    U1's temporal-split diagnostic `("min", "test")` is not a split filter or a scoring call, so it stays unaffected
-    and is explicitly allowed.
-  - **"Once" is proved structurally** (an AST check of `checkpoint-02-part-2/solutions.ipynb`). The keyword literal
-    `split="test"` occurs in **exactly one** `ast.Call` across the notebook's code cells. That call is a **top-level
-    statement** of its cell: not inside a `for`/`while`/`def`/`lambda`/comprehension, so it executes exactly once
-    when the notebook runs top to bottom. Its cell comes **after** the cell carrying the `# FREEZE` marker.
-  - Any **indirect** split selection is rejected: a name bound to `"test"`, `"test"` in an f-string, or a `**kwargs`
-    split.
-  - The statement notebook carries the call only as a markdown or TODO-stub comment, not as executable code.
-  - The test also asserts that the CP-A guard in `test_unit06` still passes (so it is not weakened).
+- **Test-unseal guard (v2.3, AST-based), in `test_unit13.py`:**
+  - **Global constant allowlist.** Every Python **string constant equal to `"test"`** in the **code cells** of every
+    recsys notebook (units, checkpoints, milestones; markdown is ignored) must be listed on an exact allowlist:
+    - U1 lesson's temporal-split diagnostic (`("min", "test")`): the specific file and its count;
+    - `checkpoint-01-part-1/{checkpoint,solutions}.ipynb`;
+    - `checkpoint-02-part-2/{checkpoint,solutions}.ipynb`.
+    This catches every form: a keyword, `row["split"] == "test"`, a name bound to `"test"`, or a dict entry. An
+    f-string containing `test` is also rejected outside the allowlist.
+  - **CP-B "once", proved structurally.** In `checkpoint-02-part-2/solutions.ipynb`:
+    - there is **exactly one** `"test"` constant;
+    - it is the `split=` keyword of an `ast.Call`;
+    - that Call is **unconditional**: it is the direct `value` of a top-level `ast.Expr` or `ast.Assign` in its
+      cell, with no enclosing `If`/`For`/`While`/`With`/`Try`/`def`/`lambda`/comprehension/`BoolOp`/`IfExp`;
+    - its cell comes after the cell containing `# FREEZE`.
+  - The CP-B statement notebook may contain the call only in markdown or as a comment (no executable `"test"`
+    constant beyond what the allowlist pins for it: zero).
+  - `test_unit06`'s CP-A guard must still pass.
 **Verify:** manifest/prereq/coverage/checkpoint/syllabus checks are green; the lesson total is 40.
 
 ### Phase B — `bookrec` ethics helpers (Opus subagent; numpy only, torch-free)
@@ -319,7 +321,8 @@ include grading guidance (as Checkpoint A's do).
 
 ### Phase H — verification (named)
 `TMPDIR=/dev/shm bash scripts/ci-local.sh` must be ALL GREEN, and `pre-merge-guard --pr` must be OK. Confirm:
-- the test split is touched only by the Checkpoint B notebooks (guard test);
+- the test split is touched only by the authorized Checkpoint A/B notebooks, and by CP-B exactly once after the
+  freeze (guard test);
 - determinism;
 - the budget delta is reported;
 - the lesson total is 40.
@@ -337,6 +340,18 @@ include grading guidance (as Checkpoint A's do).
 Phase H is this plan's named verification phase.
 
 ## Plan Review
+
+### Round 3 (plan v2.2 @ daf162f)
+- **[self]** APPROVE.
+- **[sol]** REJECT. Only B3 is still open, on three counts:
+  - a top-level call could still be conditional (`and`/`IfExp`);
+  - the regex misses `row["split"] == "test"`;
+  - indirect-selection scope was ambiguous.
+  → v2.3 adds an AST global **string-constant allowlist** (every `"test"` constant in code cells must be listed
+  exactly) and a CP-B **unconditional** direct `Expr`/`Assign` call after `# FREEZE`. NIT: the Phase H "only CP-B"
+  wording is fixed. It judged the gate (b) loosening legitimate; B1, B5, the manifest and all the nits are
+  RESOLVED.
+- **[fable]** APPROVE WITH NITS (r2, on v2.1/v2.2).
 
 ### Round 2 (plan v2 @ 11eea1c)
 - **[self]** APPROVE WITH NITS. I concur with [sol] on the manifest/question mismatch.
