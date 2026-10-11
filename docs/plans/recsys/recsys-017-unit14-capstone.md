@@ -78,7 +78,7 @@ The lesson assembles, on the main log:
 4. **The sequence path on the session log** (U12): **self-attention** (SASRec), plus last-k/transition. It is scored
    separately, per design §6.
 5. **The whole-system readout:**
-   - an **ablation table** (leave-one-stage/path-out);
+   - an **ablation table** (stage rows vs the full stack; path rows as **fixed-blend leave-one-out**, not reranked);
    - a **beyond-accuracy table** (coverage, head-share, the exposure Gini, novelty/diversity; U6/U13);
    - the benchmark vs the **Part-1 build** (the U6/Checkpoint A blend).
 
@@ -189,7 +189,7 @@ particular, dropping popularity *raises* hit by 0.008; this is reported honestly
     - **Cheap regeneration in the test:** MF and the two-tower are refit and compared with `allclose` to the
       on-disk cache. The ANN is rebuilt with rank overlap 1.0 and recall@10 ≥ 0.99.
     - The feature tower, reranker and SASRec are verified by the pinned val hit plus the 20-reader oracle, which
-      keeps the routed pytest within +90 s.
+      keeps the routed pytest within the +3 min ceiling.
     - A session fixture builds the cache if it is absent, so a bare `pytest` is never vacuous.
   - **Leakage provenance** for the reranker: see "Reranker provenance".
 - **(e) The Part-1 benchmark:** the U6 blend reproduces 0.306 / 0.333 within ±0.002. The full system's
@@ -280,14 +280,18 @@ fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
 ## Budget (binding ceilings, loaded)
 - **Budget allocation (v5; [fable] r2 NIT 1).** A scoring row costs about 17–24 s loaded, so the original
   sub-ceilings could not hold 12 table rows plus the asserts. Reallocated:
-  - **`build_models.py` ≤ 8 min.** It fits MF, the two-tower, the feature tower, `reranker-u11` (38 s),
+  - **`build_models.py` ≤ 9 min** (expected about 7.5–8 min loaded, so the margin is tight by design). It fits
+    MF, the two-tower, the feature tower (warm **and** `feature-tower-hard`, the cached hard-negative ablation), `reranker-u11` (38 s),
     `reranker-full8` (about 70 s) and SASRec, and rebuilds HNSW. It also writes **`readouts.json`**: the 10
     ablation rows, both baselines and the beyond-accuracy rows, computed from the freshly built caches.
   - **U14 milestone ≤ 3 min.** It **recomputes** the full stack, the fixed blend and the Part-1 build (about 1 min)
     and asserts gates (e) and (f) on them live. It **loads `readouts.json`** for the other rows and asserts their
     structure, values and the recomputed deltas (gates (b)/(c)). Because `readouts.json` is regenerated on every
     CI run from fresh builds, the values are still CI-verified.
-  - **U14 lesson ≤ 4 min:** on-screen fits of MF, the two-tower and HNSW only; the rest loads from the cache.
+  - **U14 lesson ≤ 4 min:** on-screen fits of MF, the two-tower and HNSW only; the rest loads from the cache. The
+    lesson and the capstone solutions **read the ablation and beyond-accuracy rows from `readouts.json`**, and
+    recompute live only what they teach (the full stack, the fixed blend and Part-1). The hard-negative ablation
+    loads `feature-tower-hard` from the cache.
   - **U14 solutions ≤ 2.5 min.**
   - **Capstone solutions ≤ 3 min.**
   - **Notebook total ≤ 15 min.**
@@ -416,6 +420,18 @@ Phase H is this plan's named verification phase.
   - the oracle threshold is "identical top-10";
   - the probe artifacts are copied durably;
   - the lesson will note that the path ablations are fixed-blend leave-one-out, not reranked.
+
+### Round 5 (plan v5.1/v5.2 @ 484fc59 / b33be21) — CONSENSUS
+- **[self]** APPROVE.
+- **[sol]** APPROVE WITH NITS. The r4 items are RESOLVED, and the `readouts.json` gate is **not circular**: fresh
+  builds are compared against independent pre-pinned constants. NIT: the phase-summary wording. → Fixed in v5.3.
+- **[fable]** APPROVE WITH NITS (r3). Budget realism checked against probe timings. Nits, folded in v5.4:
+  - the stale +90 s line;
+  - `feature-tower-hard` cached for the hard-negative ablation;
+  - the lesson and capstone read rows from `readouts.json`;
+  - the build ceiling raised to 9 min (expected 7.5–8);
+  - line 80 says fixed-blend leave-one-out.
+**Gate result:** all three APPROVE / APPROVE WITH NITS, with no open blockers. Implementation may begin.
 
 ### Round 4 (plan v4 @ 219cf05)
 - **[sol]** REJECT, with one open item. B1, B2 and the B3 baselines are RESOLVED.
