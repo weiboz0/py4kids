@@ -26,7 +26,9 @@ built in U2–U10:
    - after each round, measure catalog coverage, head-share, the exposure Gini and accuracy.
    Compare a popularity loop with an item-item CF loop, then add one **mitigation** (an exploration slot, or a
    popularity-penalised re-rank) and show what it buys and costs.
-2. **Exposure fairness.** Who gets recommended? Measure the distribution of exposure across **books and authors**
+2. **Exposure fairness.** These are *descriptive exposure-inequality proxies*, not a complete fairness judgment.
+   The author Gini is reported alongside each author's **catalog share**, because unequal exposure partly reflects
+   unequal numbers of books. Who gets recommended? Measure the distribution of exposure across **books and authors**
    (Gini coefficient of exposure, long-tail share) for each path and for the Part-1 / U10 blends. Then show the
    accuracy ↔ exposure-fairness **trade-off curve** of a popularity-penalty re-rank (a Pareto readout, not a single
    winner).
@@ -34,10 +36,12 @@ built in U2–U10:
    intra-list diversity from U6) against the reader's own history. Then measure narrowing across the feedback-loop
    rounds.
 
-It also covers **offline-metric limits** (prose plus one measurement: offline hit@k rewards what the logging policy
-already exposed, so popularity bias inflates offline scores). The **cold-start thread closes here**: a per-path
-readout on the cold partitions (cold items via the U9 feature tower, versus every warm-only path, which scores 0 on
-cold items).
+It also covers **offline-metric limits**: offline scores *reflect the logging policy*. Val positives are 44% head
+books, and the head-target hit is at least 5× the tail-target hit for the collaborative paths. It is a descriptive
+measurement, not a causal claim about inflation. The **cold-start thread closes here**: a per-path
+readout on the cold partitions Warm-only **collaborative** paths (popularity, item-item, MF, two-tower) surface 0 zero-train items. The feature
+tower is the only *learned/collaborative* path that serves cold items. Lexical and semantic, which are content paths,
+surface even more of them.
 
 **Checkpoint B** (`recsys/checkpoints/checkpoint-02-part-2/`, `lessons: 0.5`) is the Part-2 assessment. It is
 checkpoint-**strict** (no borrowed tools; it assesses only taught concepts) and is the book's **second authorized
@@ -45,28 +49,96 @@ checkpoint-**strict** (no borrowed tools; it assesses only taught concepts) and 
 No sequence-path test unseal on the session log is required. A Part-2 sequence question is scored on the session
 log's **val** only, unless the plan gate decides otherwise.
 
-## Budget (binding; probe-measured at the plan gate)
-- **Fits allowed in U13 notebooks:** numpy/cheap paths (popularity, lexical, item-item, MF ~15 s, semantic
-  embeddings) plus at most **one** two-tower fit (~15 s). For the cold-start readout, **one** feature-tower fit
-  (~20–27 s) in the lesson and milestone only. **No** reranker, SASRec or ANN index builds in U13.
-- **Feedback-loop simulation:** numpy only (popularity + item-item CF refits are sub-second). The rounds and
-  readers are sized by the probe so that the whole simulation takes ≤ 30 s per notebook.
-- **Checkpoint B solutions:** at most one MF (~15 s) and one two-tower (~15 s); hybrid, if used, reuses the two-tower
-  vectors. The probe measures this, and each notebook ≤ 2.5 min.
-- **Routed pytest delta:** ≤ +60 s.
-- Phase B reports the per-notebook exec time and the U13 + Checkpoint B delta against the recorded ~44 min.
+## Probe evidence (plan-gate r1, [fable]; main log, committed seed, k = 10, val cohort of 500 readers; load ≈ 14)
+| Path | hit@10 | coverage | head-share | item Gini | author Gini | genre H (bits) |
+|---|---|---|---|---|---|---|
+| popularity | 0.108 | 0.008 | 1.000 | 0.995 | 0.970 | 2.14 |
+| lexical | 0.158 | 0.278 | 0.268 | 0.888 | 0.600 | 0.30 |
+| semantic | 0.102 | 0.355 | 0.109 | 0.857 | 0.573 | 1.93 |
+| item-item | 0.252 | 0.490 | 0.491 | 0.773 | 0.474 | 1.64 |
+| MF | 0.276 | 0.075 | 0.994 | 0.972 | 0.843 | 1.38 |
+| two-tower | 0.340 | 0.177 | 0.900 | 0.929 | 0.687 | 0.68 |
+| feature-tower | 0.298 | 0.307 | 0.638 | 0.877 | 0.609 | 0.35 |
+| U10 hybrid | 0.362 | 0.192 | 0.862 | 0.922 | 0.677 | 0.51 |
+| U6 blend | 0.306 | 0.333 | 0.793 | 0.908 | 0.694 | 1.39 |
 
-## Gate (pinned by the plan-gate probe; re-measured in Phase B on shipped code)
-Main log, val, k = 10, committed seed:
-- **(a) feedback loop concentrates:** after R rounds, the item-item CF loop's catalog coverage falls, or its exposure
-  Gini rises, by a pinned margin versus round 0, and the popularity loop is already near its floor.
-- **(b) mitigation helps exposure at a measured accuracy cost:** with the mitigation, the loop's coverage or Gini at
-  round R is better than without it, by a pinned margin. The hit@10 cost is recorded (not hidden).
-- **(c) fairness trade-off is real:** the popularity-penalty re-rank traces a monotone curve. A higher penalty lowers
-  the exposure Gini and changes hit@10. Record at least 3 points.
-- **(d) recorded:** genre-spread narrowing across rounds; per-path Gini/head-share table; the cold-start readout;
-  the offline-metric-limit measurement.
-Determinism: the simulation is seeded, and two runs give identical round metrics (`allclose`).
+The story: **the most accurate paths are the most concentrated**, and item-item is the least concentrated
+collaborative path. The Gini is computed over the **full catalog** (zeros included), so every path shares the same N.
+
+## Feedback-loop simulation — pinned semantics (v2)
+`simulate_feedback_loop(path_factory, rows, *, cohort, rounds=6, k=10, accept_prob=0.3, seed, mitigation=None)`.
+This is a *stylized exposure-to-consumption loop*: readers take what they are shown with a fixed probability. It is
+**not** a realistic preference model, and the lesson says so.
+- **Cohort:** the 500-reader val cohort (readers with an unseen val positive, not cold), fixed for all rounds.
+- **Each round:**
+  1. Fit `path_factory()` on the **augmented train log**: original train rows plus the simulated rows so far.
+  2. For each cohort reader, retrieve the top-k, excluding the reader's *augmented* seen set.
+  3. With probability `accept_prob`, the reader reads **one** item, chosen **uniformly at random from the top-k**.
+     The item must be unseen, and must **not** be in the reader's val/test positives (the **leakage guard**: we
+     never let the simulation hand the model a held-out answer).
+  4. Append that item as a train row (`label=1`), with a timestamp after the reader's last. There is at most one new
+     row per reader per round, and no duplicates.
+- **Readouts per round:**
+  - coverage, head-share (head frozen at round 0), item Gini and genre entropy of the round's top-k lists;
+  - **clean hit@10**: the refit path scored on the **original val** relevance with the **original train seen set**.
+    This is not the grown set; otherwise the accuracy readout changes for a bookkeeping reason.
+- **Mitigation (primary): an exploration slot.** Slot 10 is replaced by a seeded random unseen warm item. The
+  penalty re-rank (λ = 0.3, pool 50) is reported as a second mitigation.
+- **Why the guard matters (measured):** without it, clean hit *rises* from 0.252 to 0.27–0.29, because simulated
+  readers "accept" their own val books. This is a leak, and it is taught as a common mistake.
+- **Measured** (500 readers, p = 0.3, R = 6, 3 seeds, guarded):
+  - item-item coverage 0.490 → 0.354–0.358;
+  - Gini 0.773 → 0.826–0.832;
+  - clean hit 0.252 → 0.090–0.114 (self-training teaches CF the *recommender*, not the readers);
+  - genre H 1.64 → a minimum of 1.18–1.24 (rounds 3–4) → partial rebound;
+  - popularity loop: Gini ≥ 0.988 and coverage ≤ 0.020 throughout;
+  - exploration slot at R: coverage +0.06–0.07 and Gini −0.018 to −0.023;
+  - penalty 0.3: Gini −0.035 to −0.040.
+- **Time:** about 13–15 s per loop loaded, so 3 loops take about 45 s.
+
+## Gates (v2: numeric, pinned now from the probe; Phase B re-measures on shipped code, and a miss means stop, amend and re-gate, with no re-tuning)
+All are measured on the main log, at the committed seed, through the shipped helpers, and asserted in the CI-executed
+milestone and/or `test_unit13.py`:
+- **(a) The loop concentrates** (item-item, p = 0.3, R = 6, the exact config above):
+  - `coverage_R ≤ coverage_0 − 0.08` **and** `gini_R ≥ gini_0 + 0.03`;
+  - the popularity loop has `gini ≥ 0.98` and `coverage ≤ 0.03` in every round.
+- **(b) The exploration slot partially restores exposure** at round R versus the unmitigated loop:
+  `coverage ≥ loop_cov_R + 0.04` **and** `gini ≤ loop_gini_R − 0.015`. The round-0 hit cost is **recorded**
+  (measured ≥ −0.004).
+- **(c) The fairness trade-off curve.** The predeclared grid is λ ∈ {0, 0.1, 0.3, 0.5, 1.0}, pool 50, with
+  `score' = minmax(score) − λ · log1p(count)/log1p(max count)`. On item-item **and** on the U6 blend:
+  - the Gini is **strictly decreasing** over the grid;
+  - hit@10 is **non-increasing**;
+  - signed hit deltas are recorded.
+  Anchors (± 0.003 hit / ± 0.005 Gini): item-item λ = 0.3 → 0.224 / 0.747; U6 blend λ = 0.3 → 0.290 / 0.858.
+  Coverage is **not** gated, because it is non-monotone (item-item peaks at λ = 0.5).
+- **(d) Recorded, with light gates:**
+  - **Filter bubble:** `min(H_1..H_4) ≤ H_0 − 0.3` bits; report the rebound.
+  - **Offline-metric limit:** val positives are 44.1% head items (head = top 10% by train count). Gate:
+    `head_target_hit ≥ 5 × tail_target_hit` for item-item, MF, two-tower and the U6 blend.
+  - **Cold readout:** popularity, item-item, MF and two-tower surface exactly 0 zero-train items; the feature tower
+    surfaces > 0.
+- **Determinism:** two seeded loop runs are `allclose` on every round column.
+- **Leakage test:** the augmented log contains no (reader, item) pair from that reader's val/test positives. A
+  **recording `path_factory` mutant** proves that no original val/test row ever reaches `fit` or the acceptance step.
+
+## Budget (v2: binding ceilings, loaded; the reduce-or-stop rule follows recsys-015)
+Fit inventory (loaded times: MF ≈ 22 s, two-tower ≈ 26 s, feature tower ≈ 35 s):
+
+| Notebook | Fits | Simulation | Ceiling |
+|---|---|---|---|
+| U13 lesson | MF, two-tower, feature tower (cold readout) | 3 loops ≈ 45 s | ≤ 3.5 min |
+| U13 solutions | two-tower | ≤ 2 loops | ≤ 2.5 min |
+| U13 milestone | MF, two-tower, feature tower | 3 loops | ≤ 3.5 min |
+| CP-B solutions | two-tower (**no** feature tower) | 1 short loop | ≤ 3.5 min |
+
+- **Total added ≤ 13 min loaded.** That is about +30% on the ~44 min book. It is recorded, and the book-wide slice
+  before U14 owns the overall fix.
+- **If a ceiling is exceeded:**
+  1. drop the lesson's feature-tower fit (cite the milestone-asserted cold readout);
+  2. cut the simulation to 300 readers (re-measure the gates, and re-gate if any changes);
+  3. stop and amend.
+- **Routed pytest ≤ +60 s:** the gate tests use 1 loop config and the Gini helpers.
 
 ## Audience and retained laws
 Advanced baseline. Retained in full:
@@ -95,7 +167,7 @@ All are `kind: technique`, `category: techniques`, and globally unique (0 hits t
 - `introduces: [feedback-loops, exposure-fairness, filter-bubbles]`.
 - `requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, popularity-ranking, popularity-bias,
   item-item-cf, implicit-feedback, ranking-metrics, beyond-accuracy, score-blending, two-tower, feature-towers,
-  item-cold-start]`.
+  item-cold-start, hybrid-retrieval]`.
 - `practices: [offline-evaluation, top-k-ranking-metrics, popularity-bias, item-item-cf, beyond-accuracy,
   score-blending, item-cold-start]`.
 
@@ -116,9 +188,14 @@ Whole-book lessons go from 36.5 to 40.
 - Add the 2 manifests.
 - Add the syllabus rows: the U13 row, and a checkpoint row `| — | checkpoint-02-part-2 | checkpoint | 0.5 | … |`.
 - `baseline.yaml`: only the idioms actually called.
-- **Test-unseal guard:** extend the `test_unit06` split-guard pattern into the new `test_unit13.py`. Only
-  `checkpoint-02-part-2/{checkpoint,solutions}.ipynb` may contain `split="test"`. Its roots are U13, Checkpoint B and
-  the U13 milestone.
+- **Test-unseal guard (v2), in `test_unit13.py`:**
+  - **Globally**, across *all* recsys notebooks (units, checkpoints, milestones), a `"test"` split literal may appear
+    only in `checkpoint-01-part-1/{checkpoint,solutions}.ipynb` and `checkpoint-02-part-2/{checkpoint,solutions}.ipynb`.
+  - `checkpoint-02-part-2/solutions.ipynb` has **exactly one** executable code cell containing `split="test"`, as a
+    keyword literal in a scoring call. It comes **after** the cell that freezes the val configuration (a marker
+    comment `# FREEZE` asserted to precede it).
+  - Any **indirect** split selection is rejected: a variable bound to `"test"`, or `"test"` in an f-string or join.
+  - The statement notebook may *mention* the call only in markdown or in a TODO stub, not as executable code.
 **Verify:** manifest/prereq/coverage/checkpoint/syllabus checks are green; the lesson total is 40.
 
 ### Phase B — `bookrec` ethics helpers (Opus subagent; numpy only, torch-free)
@@ -185,13 +262,19 @@ It is shipped **cleared**, and contains no `split="test"`.
 2. **The two-tower:** fit one with BPR (one fit), and score it on val.
 3. **Hybrid retrieval:** the U10 BM25 + dense hybrid on val. It reuses the two-tower or semantic vectors, with no
    new fit.
-4. **Cold start:** the cold-item readout. If a feature-tower fit is needed, it is the only extra fit, and the probe
-   decides.
+4. **Cold start** (v2: pinned, **no feature-tower fit**): count the zero-train items each path surfaces, and the
+   hit on cold-target val readers. This uses the paths already fit (semantic, lexical, item-item, two-tower), so the
+   assessed concept is `item-cold-start` only. The finding: content paths serve cold items, and warm-only
+   collaborative paths surface 0.
 5. **Sequence (session log, val only):** last-k CF vs item-item, and the transition path vs its shuffled control.
 6. **Ethics:** the exposure Gini and long-tail share of the Part-2 blend; one short feedback-loop run with the
    mitigation.
-7. **Build the Part-2 blend on val, then FREEZE it.** It is assembled from paths fit above (no new fits). Run a
-   leave-one-path-out ablation.
+7. **Build the Part-2 blend on val, then FREEZE it** (v2: pinned members). The members are an equal-weight
+   {item-item, two-tower, semantic, lexical} blend at pool 30, from paths fit above (no new fits); then a
+   leave-one-path-out ablation over those 4. **Honesty:** the probe found a 5-path Part-2 blend scoring 0.348, below
+   the hybrid alone (0.362). Students must compare the frozen blend with the best single path, and must not assume
+   the blend wins. The hybrid is reported as a single path (it already contains the two-tower; collinear members
+   make the leave-one-out readout odd).
 8. **Unseal `test` once:** the frozen blend on the main-log `test`, giving hit@10 + coverage + Gini. Compare honestly
    with val and with Checkpoint A's test score, and explain the differences.
 
@@ -231,6 +314,41 @@ include grading guidance (as Checkpoint A's do).
 Phase H is this plan's named verification phase.
 
 ## Plan Review
+
+### Round 1 (plan v1 @ 2774c6c)
+- **[self]** APPROVE WITH NITS. The registry closes; the lesson total is 40.
+- **[sol]** REJECT.
+  - B1: the gates were not pinned. → v2 records the full probe recipe and pins numeric, directional thresholds:
+    - one primary concentration metric (coverage plus Gini);
+    - a numeric mitigation improvement;
+    - a predeclared λ grid with strictly decreasing Gini and non-increasing hit;
+    - pool 50 over-retrieval.
+  - B2: the feedback-loop semantics were unspecified. → v2 pins:
+    - a fixed cohort, uniform-over-top-k acceptance, at most one unseen item per reader per round, and the
+      timestamp/duplicate policy;
+    - the augmented seen set;
+    - a leakage guard excluding val/test positives;
+    - a clean-hit readout on the original context;
+    - a recording-path mutant test;
+    - a "stylized loop" disclaimer.
+  - B3: checkpoint strictness was conditional, and "once" was unprovable. → v2 pins Q4 with no feature-tower fit
+    (`item-cold-start` only) and adds a global test-literal allowlist (CP-A, CP-B), exactly one executable test call
+    after `# FREEZE`, and indirect selection rejected.
+  - B4: there was no budget acceptance criterion. → v2 adds a fit inventory, per-notebook ceilings, a total
+    ceiling ≤ 13 min, and the reduce-or-stop order.
+  - B5: the causal offline-bias claim. → Softened to "scores reflect the logging policy", with a head/tail
+    measurement gate (≥ 5×).
+  - N6: fairness proxies. → Labelled descriptive; author catalog share reported alongside.
+- **[fable]** APPROVE WITH NITS (with a probe).
+  - MUST-FIX: the loop leaked val into the train log, so hit rose. → The leakage guard and the clean-hit definition
+    are pinned, with a test.
+  - N1: add `hybrid-retrieval` to the requires list. → done.
+  - N2: cold-start wording. → "learned/collaborative" kept; content paths surface more cold items.
+  - N3: coverage is non-monotone in λ. → Not gated.
+  - N4: genre narrowing is transient. → The minimum-over-rounds is gated, and the rebound taught.
+  - N5: the Part-2 blend may lose to the hybrid. → Blend members pinned, plus an honesty clause.
+  - N6: loaded fit times. → Used in the budget.
+  - N7: the Gini is over the full catalog. → Stated.
 
 ## Content Review
 
