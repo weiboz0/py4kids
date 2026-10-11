@@ -86,11 +86,16 @@ This is a *stylized exposure-to-consumption loop*: readers take what they are sh
   2. The **cohort** is the sorted list of eligible val readers. The simulated readers are `rng.choice(cohort,
      size=n_readers, replace=False)`, kept **in drawn order**; with n_readers = 500 this is a permutation.
   3. In each round, the path is fit on the current train log. The readers are visited in that drawn order. Each
-     reader's top-k is `rank(path.retrieve(r, {"seen": seen_r}, k), n=k, exclude=seen_r)`, which yields **ordered
-     unique** item ids (duplicate candidates are rejected).
+     reader's top-k is `rank(path.retrieve(r, {"seen": seen_r}, k), n=k, exclude=seen_r)`. **Uniqueness comes from
+     the paths, not from `rank`:** `rank` only filters, sorts and slices. `ItemItemRetrievalPath`,
+     `PopularityRetrievalPath` and the penalty wrapper each emit at most one candidate per item id by construction
+     (one score per catalog item). The simulation **asserts** the top-k ids are unique and raises otherwise; it never
+     deduplicates silently.
   4. **Mitigation draws come first.** For the exploration slot, if the top-k is non-empty its **last slot is
      replaced** (never appended, even when the list is shorter than k), as in the probe, by
-     `rng.choice([warm items not in seen_r and not in top])`, drawn before any acceptance draw for that reader. The
+     `rng.choice(pool)`, where `pool` is the list of **round-0 warm items in ascending item-id order**
+     (`warm0 = sorted(PopularityRetrievalPath().fit(original train).counts)`, frozen at round 0), filtered to items not
+     in `seen_r` and not in `top`, keeping ascending order, drawn before any acceptance draw for that reader. The
      penalty mitigation has no RNG.
   5. **Acceptance** walks the top-k in **rank order**. For each item it draws `rng.random()` **first**, always, even
      if the guard would block the item. The item is accepted iff `draw < accept_prob` **and** the item is not in
@@ -386,6 +391,17 @@ exploration +0.055 / −0.017, minimum H 1.311 ≤ 1.34, popularity loop held).
 2. Budget: `test_unit13.py` took 80 s (load 9) against ≤ +60 s. The **U6-blend half of gate (c)** moves to the
    milestone assert, and pytest keeps the item-item half.
 No re-tuning: the thresholds stay as pinned. Re-gated as round 5.
+
+### Round 6 (plan v2.6.1 @ 2970e07)
+- **[self]** APPROVE.
+- **[sol]** REJECT.
+  - B: the exploration-pool ordering was unpinned (`rng.choice` is position-sensitive; the probe sorts `warm0`).
+    → v2.6.2 pins round-0 warm items in ascending id order, frozen at round 0, filtered in order.
+  - B: the "rank yields unique ids" claim was false (`rank` only filters, sorts and slices). → v2.6.2 states that
+    uniqueness comes from the paths (one candidate per item), and the simulation asserts it and raises (no silent
+    dedup).
+  - The timestamp and routing items are RESOLVED.
+- **[fable]** APPROVE WITH NITS (r5), folded in v2.6.1.
 
 ### Round 5 (plan v2.5 @ 2954f44 — stop-and-amend)
 - **[self]** APPROVE.
