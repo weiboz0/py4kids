@@ -106,8 +106,9 @@ torch-free `artifact()`s to `recsys/data/generated/models/` (gitignored, regener
 The wiring:
 - `scripts/ci-local.sh` runs it in the routed recsys step, after data generation.
 - The U14 lesson/solutions/milestone and the capstone notebooks **load** the artifacts with `path.load(...)` instead
-  of refitting. **Exception:** the U14 lesson performs each fit **once on screen** (taught-before-assessed: students
-  see the fit) and then shows that the loaded cache is equivalent.
+  of refitting. **Exception:** the U14 lesson fits **MF, the two-tower and HNSW once on screen** and shows the
+  loaded cache is equivalent. The feature tower, both rerankers and SASRec load from the cache with their stored
+  `loss_history`; students saw those fits performed in U9, U11 and U12.
 - **The required check** (`tests/test_unit14.py`) asserts several things:
   - every artifact exists, matches its schema and version, and is torch-free to load;
   - each loaded path reproduces its pinned val hit@10 (rank/tolerance-based, §184);
