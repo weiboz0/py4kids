@@ -67,7 +67,10 @@ The lesson assembles, on the main log:
 1. **Retrieval:**
    - popularity, lexical/BM25, item-item, MF, semantic;
    - the two-tower **served through an HNSW ANN index** (U10; exact-vs-ANN recall check);
-   - the **feature tower with hard negatives** for cold items (U9);
+   - the **feature tower** for cold items (U9), served as shipped with `negative_pool="warm"` (0.298, cold
+     coverage 0.138). **Hard negatives are practised as an explicit ablation**: switch the pool to `"hard"` and see
+     the measured warm↔cold trade (warm 0.172 / cold coverage 0.226; recsys-011). They are not part of the served
+     stack;
    - the U10 hybrid.
 2. **Candidate pool + blend:** the calibrated union (U6/U10).
 3. **The learned reranker** (U11), with the leakage-safe time-ordered holdout, re-scoring the pool from **ranking
@@ -122,9 +125,10 @@ It calls `NeuralRerankerPath` with the same `path_factory` / `assemble_training_
 re-implemented.
 
 Required provenance tests in `test_unit14.py`:
-1. **val/test mutation invariance.** Regenerating the reranker from rows whose val/test rows were mutated (dropped or
-   relabelled) gives an artifact equal (allclose) to the cached one. This is run on a reduced config to fit the
-   budget, and the same code path is used.
+1. **val/test mutation invariance.** On a **reduced config**, an **unmutated reduced build** and a **mutated
+   reduced build** (val/test rows dropped or relabelled) go through the identical `build_models` code path, and the
+   two must produce `allclose` reranker artifacts. The comparison is reduced vs reduced, never against the
+   production cache.
 2. **No held-out label event enters features or statistics.** U11's regression test (the repeat-read `log_pop`
    case) is re-asserted on the build script's assembly call.
 3. **The cache records its recipe:** the artifact metadata carries `recipe = "u11-holdout-75-25"` and the profile
@@ -164,19 +168,81 @@ particular, dropping popularity *raises* hit by 0.008; this is reported honestly
   - its loaded val hit@10 equals the pin above **within ±0.002**: MF 0.276, two-tower 0.340, feature tower 0.298,
     HNSW 0.340 (ANN recall@10 ≥ 0.995 vs exact), reranker 0.346, SASRec 0.4228 on the session log;
   - the feature tower's cold surfaced count is 113 ± 3;
-  - **determinism:** a regeneration (in CI, the build script run twice is too slow, so the test refits the cheap
-    MF and HNSW and compares) gives arrays **equal**. For the two-tower, feature tower, reranker and SASRec, the
-    test checks **top-10 identical for a pinned 50-reader sample**, against digests recorded in the artifact
-    metadata at build time, together with the recipe/version fields.
+  - **Determinism, with an independent oracle (v3; [sol] r2 B2):** `test_unit14.py` commits, as constants, the
+    expected top-10 lists of **20 fixed readers** (the first 20 of the sorted val cohort; for SASRec, the first 20
+    of the sorted session-log val cohort) for each cached model and for the full stack. **They are captured once
+    in Phase B and cross-checked against [fable]'s independently built probe models**
+    (`scratchpad/fable017/models/*.pkl`) before being committed, so the oracle does not come from the artifacts
+    it checks.
+    - Each CI build regenerates every artifact from scratch, and the test requires rank overlap ≥ 0.9 per reader
+      against the constants (§184 rank/tolerance; exact identity is reported, not gated).
+    - **Cheap regeneration in the test:** MF and the two-tower are refit and compared with `allclose` to the
+      on-disk cache. The ANN is rebuilt with rank overlap 1.0 and recall@10 ≥ 0.99.
+    - The feature tower, reranker and SASRec are verified by the pinned val hit plus the 20-reader oracle, which
+      keeps the routed pytest within +90 s.
+    - A session fixture builds the cache if it is absent, so a bare `pytest` is never vacuous.
   - **Leakage provenance** for the reranker: see "Reranker provenance".
 - **(e) The Part-1 benchmark:** the U6 blend reproduces 0.306 / 0.333 within ±0.002. The full system's
   hit@10/coverage is reported against it, together with the best single path (the hybrid, 0.362).
-- **(b) The ablation table is structurally gated, but not on direction.** The milestone and tests assert:
-  - exactly one row per named ablation (the set is pinned in Phase B from the probe);
+
+## The assembled system — pinned definition (v3; [sol] r2 B1)
+**The full stack:**
+1. **Retrieval:** an equal-weight **8-path pool** with pool size 50 and k = 10. The 8 paths are popularity,
+   lexical, item-item, MF, semantic, the two-tower **served through HNSW**, the feature tower (warm) and the U10
+   hybrid.
+2. **Blend:** calibrated union (`blend`), excluding seen books.
+3. **Re-rank:** the **shipped U11 all-feature MLP reranker**. Its trained model and feature builder are cached; a
+   candidate from a path outside its 6 gets absent-path features.
+
+The U11 6-path reranker artifact is the **same** cached artifact; there is no separate model. Measured by
+[fable]'s probe (r1):
+
+| System | hit@10 | coverage | head-share | item Gini | novelty | diversity |
+|---|---|---|---|---|---|---|
+| **Full stack (8-path pool + MLP reranker, ANN)** | **0.356** | 0.203 | 0.847 | 0.913 | 8.57 | 0.857 |
+| Stage ablation: no reranker (fixed 8-path blend, ANN) | 0.362 | 0.206 | 0.846 | 0.923 | 8.43 | 0.855 |
+| Stage ablation: exact two-tower (no ANN), reranked | 0.354 | 0.203 | — | — | — | — |
+| Reference: dense-heavy fixed weights | 0.376 | 0.184 | 0.885 | — | — | — |
+| Reference: content-only reranker | 0.384 | 0.137 | 0.960 | — | — | — |
+| Reference: U10 hybrid (best single path) | 0.362 | 0.192 | — | — | — | — |
+| Reference: Part-1 U6 blend | 0.306 | 0.333 | — | — | — | — |
+
+**The honest thesis:** the learned reranker over the full pool *dilutes*. It scores 0.356, below the fixed blend's
+0.362, as U11 found. The only hit gains (dense-heavy weights, content-only or linear reranking) buy hit with
+coverage and concentration; no system dominates the Part-1 blend on reach (0.333). The capstone's deliverable is
+the **hit ↔ reach ↔ exposure frontier** and a defended choice on it, not "the full stack wins".
+
+**Gate (f), assembled system (milestone + test):** the full stack reproduces **0.356 / 0.203 within ±0.003**. The
+fixed 8-path blend reproduces 0.362 / 0.206 within ±0.003.
+
+- **(b) The ablation table is structurally gated, but not on direction** (v3: the rows are pinned now). The row set
+  is:
+  - **stage rows:** {no reranker, exact two-tower instead of ANN};
+  - **path rows** of the fixed 8-path blend: {−popularity, −lexical, −item-item, −MF, −semantic, −two-tower,
+    −feature tower, −hybrid}.
+
+  Probe values (Δhit / Δcoverage vs 0.362 / 0.206):
+
+  | Path dropped | Δhit | Δcoverage |
+  |---|---|---|
+  | −popularity | +0.008 | +0.014 |
+  | −lexical | 0.000 | −0.031 |
+  | −item-item | −0.008 | −0.014 |
+  | −MF | −0.008 | +0.032 |
+  | −semantic | −0.004 | −0.021 |
+  | −two-tower | −0.010 | +0.015 |
+  | −feature tower | +0.002 | +0.002 |
+  | −hybrid | −0.006 | +0.005 |
+
+  These are recorded, and each row is asserted within ±0.003 of its probe value. That is a reproducibility pin, not
+  a direction gate. **Executable assertions live in `test_unit14.py` (structure, on a cached readout) and in the
+  U14 milestone (structure plus values).** They require:
+  - exactly these 10 rows;
   - signed Δhit and Δcoverage **recomputed** from the full-system row, matching to 1e-9;
   - every value finite and in range (hit and coverage in [0, 1]).
   The *direction* is recorded, not gated: the plan does not pre-assume the full stack wins.
-- **(c) The beyond-accuracy table is structurally gated, but not on direction.** It has exact rows {full system,
+- **(c) The beyond-accuracy table is structurally gated, but not on direction** (executable in `test_unit14.py` and
+  the milestone). It has exact rows {full system,
   best single path, Part-1 build}. All five columns (coverage, head-share, exposure Gini, novelty, intra-list
   diversity) are present, finite and in range. The Gini is computed over the full catalog.
 - **(d) The cache required check passes**, and the U14 notebooks perform zero refits after the lesson's one-time
@@ -194,8 +260,21 @@ particular, dropping popularity *raises* hit by 0.008; this is reported honestly
 - **Total:** ≤ 15 min of notebook exec, plus the build script inside the routed pytest step.
 - **Routed pytest:** ≤ +90 s, including the required check (it uses the CI-built cache and does not refit the
   expensive models).
-- **If a ceiling is exceeded:** first drop the lesson's on-screen refits of the slowest model (show its loss curve
-  from the cached artifact metadata); otherwise stop and amend.
+- **Lesson on-screen fits (v3, pre-declared):** only MF, the two-tower and the HNSW build are fitted on screen
+  (≈ 35 s plus 0.2 s). The feature tower, reranker and SASRec load from the cache. Phase B adds an additive
+  `loss_history` field to the two-tower, feature-tower and SASRec artifacts and the reranker's training log (with a
+  version-compatible load), so the lesson can show their training curves. Students saw these fits performed in
+  U9, U11 and U12.
+- **Cache facts ([fable] r1):**
+  - the pickle format (protocol 5) is about 2 MB in total;
+  - the reranker artifact loads against the same fitted 6 serving paths (cheap refits plus the cached MF and
+    two-tower);
+  - `AnnRetrievalPath.load` **rebuilds** HNSW from the stored vectors (0.2 s), so "cache the ANN" means "cache the
+    two-tower and rebuild";
+  - `load_cached_models(dir)` raises a clear `FileNotFoundError` naming the build command.
+  - The amendment names `recsys/data/generated/models/` (gitignored, regenerated-only) as the cache location, not
+    `assets/`.
+- **If a ceiling is still exceeded:** stop and amend.
 
 ## Concepts / registry
 - **No new concepts** (both U14 entries introduce `[]`); the lessons total goes from 40 to 46.
@@ -259,7 +338,28 @@ Phase H is this plan's named verification phase.
   - NIT: the target measurement. → An objective timing procedure; exceeding it means stop and amend.
   It confirmed that the structure (an integration unit plus the capstone), `introduces: []`, 46 lessons,
   capstone-rule closure, CI-built caches and val-only are all legitimate.
-- **[fable]** probe complete (numbers above); verdict pending.
+- **[fable]** REJECT (on v1). Its two MUSTs were already fixed in v2: the project id/discovery and ≤ 6 milestones,
+  plus the tooling's required headings (`## Make it yours`, `## Requirements`, a `### Title` per milestone, and a
+  teacher-notes `## Rubric`). SHOULDs, folded in v3:
+  - the feature tower is served warm, with hard negatives as an ablation;
+  - the loss-history fallback (an additive `loss_history` field);
+  - the cache specifics (pickle, reranker load dependencies, ANN rebuild, location, a `FileNotFoundError`, a
+    session fixture);
+  - budget numbers, with the lesson's on-screen fits limited to MF, two-tower and HNSW;
+  - the capstone thesis is the frontier.
+  It also measured the full stack and the reranked ablations.
+
+### Round 2 (plan v2 @ 3e105c7)
+- **[self]** APPROVE WITH NITS.
+- **[sol]** REJECT. Fixes, folded in v3:
+  - **B1, the assembled system unpinned:** → the pinned 8-path pool + U11 MLP definition, with full stack
+    0.356 / 0.203 and gate (f).
+  - **B2, a circular determinism oracle:** → a 20-reader top-10 constant oracle, cross-checked against [fable]'s
+    independent probe models; rank overlap ≥ 0.9; `allclose` for cheap refits.
+  - **B3, ablation rows deferred, (b)/(c) not executable:** → 10 rows pinned now with probe values; executable
+    asserts in `test_unit14.py` and the milestone.
+  - **NIT, the reduced mutation test:** → reduced vs reduced through the identical path.
+  The project id, timing and provenance items are RESOLVED.
 
 ## Content Review
 
