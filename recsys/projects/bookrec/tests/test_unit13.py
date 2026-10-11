@@ -637,51 +637,102 @@ _FORBIDDEN_ANCESTORS = (
 )
 
 
+_SCOREBOARD_CALLEES = frozenset(
+    {"run_blended_scoreboard", "run_validation_scoreboard", "reader_hits"}
+)
+
+
+def _callee_name(call: ast.Call) -> str | None:
+    func = call.func
+    if isinstance(func, ast.Name):
+        return func.id
+    if isinstance(func, ast.Attribute):
+        return func.attr
+    return None
+
+
 def _cpb_once_violations(cells: list[str]) -> list[str]:
-    """Return why a CP-B solutions notebook does NOT unseal ``test`` exactly once (empty = OK)."""
+    """Return why a CP-B solutions notebook does NOT unseal ``test`` exactly once (empty = OK).
+
+    Rules (plan v2.3 + content-gate r1): exactly one ``"test"`` constant in the notebook; every
+    ``split=`` keyword anywhere is a string LITERAL (no computed / named / concatenated split);
+    no scoreboard call uses ``**kwargs``; the single ``split="test"`` belongs to a call of
+    ``run_blended_scoreboard`` that is the direct value of a top-level ``Expr``/``Assign`` of its
+    cell (so it runs unconditionally, exactly once), in a cell after the ``# FREEZE`` cell.
+    """
     freeze = [i for i, src in enumerate(cells) if "# FREEZE" in src]
     if not freeze:
         return ["no cell carries the '# FREEZE' marker"]
+    problems: list[str] = []
     found: list[tuple[int, ast.Module, ast.Constant]] = []
+    test_calls: list[tuple[int, ast.Module, ast.Call]] = []
     for index, source in enumerate(cells):
         tree = ast.parse(source)
         found += [(index, tree, const) for const in _test_constants(tree)]
+        for call in (n for n in ast.walk(tree) if isinstance(n, ast.Call)):
+            callee = _callee_name(call)
+            if callee in _SCOREBOARD_CALLEES and any(kw.arg is None for kw in call.keywords):
+                problems.append(f"{callee} called with **kwargs (split could be hidden)")
+            for kw in call.keywords:
+                if kw.arg != "split":
+                    continue
+                if not (isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str)):
+                    problems.append("a split= argument is not a string literal")
+                elif kw.value.value == "test":
+                    test_calls.append((index, tree, call))
     if len(found) != 1:
-        return [f'expected exactly one "test" constant, found {len(found)}']
-    index, tree, const = found[0]
-    problems = []
+        return [*problems, f'expected exactly one "test" constant, found {len(found)}']
+    if len(test_calls) != 1:
+        return [*problems, f'expected exactly one split="test" call, found {len(test_calls)}']
+    index, tree, call = test_calls[0]
+    if _callee_name(call) != "run_blended_scoreboard":
+        problems.append('split="test" is not passed to run_blended_scoreboard')
     if index <= freeze[0]:
         problems.append("the test call is not after the # FREEZE cell")
-    for stmt in tree.body:
-        if not isinstance(stmt, ast.Expr | ast.Assign):
-            continue
-        call = stmt.value
-        if not isinstance(call, ast.Call):
-            continue
-        if any(kw.arg == "split" and kw.value is const for kw in call.keywords):
-            return problems
-    return [*problems, 'the "test" constant is not split= of a top-level Expr/Assign call']
+    top_level = any(
+        isinstance(stmt, ast.Expr | ast.Assign) and stmt.value is call for stmt in tree.body
+    )
+    if not top_level:
+        problems.append('the split="test" call is not a top-level Expr/Assign value')
+    return problems
 
 
 def test_cpb_once_checker_rejects_mutants() -> None:
     ok = (
-        'm = score(b, split="val")\n',
+        'm = run_blended_scoreboard(b, split="val")\n',
         "# FREEZE\nfrozen = b\n",
-        'res = score(frozen, split="test")\n',
+        'res = run_blended_scoreboard(frozen, split="test")\n',
     )
     assert _cpb_once_violations(list(ok)) == []
     mutants = [
-        ('score(b, split="test")\n', "# FREEZE\n"),  # before the freeze
-        ("# FREEZE\n", 'for _ in range(2):\n    score(b, split="test")\n'),  # loop
-        ("# FREEZE\n", 'if go:\n    score(b, split="test")\n'),  # conditional
-        ("# FREEZE\n", 'x = go and score(b, split="test")\n'),  # BoolOp
-        ("# FREEZE\n", 'x = score(b, split="test") if go else None\n'),  # IfExp
-        ("# FREEZE\n", 'def f():\n    return score(b, split="test")\n'),  # def
-        ("# FREEZE\n", 'x = [score(b, split="test") for _ in "ab"]\n'),  # comprehension
-        ("# FREEZE\n", 's = "test"\nscore(b, split=s)\n'),  # indirect via a name
-        ("# FREEZE\n", 'score(b, **{"split": "test"})\n'),  # **kwargs
-        ("# FREEZE\n", 'score(b, split="test")\nscore(b, split="test")\n'),  # twice
-        ("frozen = b\n", 'score(b, split="test")\n'),  # no freeze marker
+        ('run_blended_scoreboard(b, split="test")\n', "# FREEZE\n"),  # before the freeze
+        ("# FREEZE\n", 'for _ in range(2):\n    run_blended_scoreboard(b, split="test")\n'),  # loop
+        ("# FREEZE\n", 'if go:\n    run_blended_scoreboard(b, split="test")\n'),  # conditional
+        ("# FREEZE\n", 'x = go and run_blended_scoreboard(b, split="test")\n'),  # BoolOp
+        ("# FREEZE\n", 'x = run_blended_scoreboard(b, split="test") if go else None\n'),  # IfExp
+        ("# FREEZE\n", 'def f():\n    return run_blended_scoreboard(b, split="test")\n'),  # def
+        (
+            "# FREEZE\n",
+            'x = [run_blended_scoreboard(b, split="test") for _ in "ab"]\n',
+        ),  # comprehension
+        ("# FREEZE\n", 's = "test"\nrun_blended_scoreboard(b, split=s)\n'),  # indirect via a name
+        ("# FREEZE\n", 'run_blended_scoreboard(b, **{"split": "test"})\n'),  # **kwargs
+        (
+            "# FREEZE\n",
+            'run_blended_scoreboard(b, split="test")\nrun_blended_scoreboard(b, split="test")\n',
+        ),  # twice
+        ("frozen = b\n", 'run_blended_scoreboard(b, split="test")\n'),  # no freeze marker
+        ("# FREEZE\n", 'x = dict(split="test")\n'),  # wrong callee
+        ("# FREEZE\n", 'r = run_blended_scoreboard(b, split="te" + "st")\n'),  # computed split
+        ("# FREEZE\n", 'p = "va" + "l"\nr = run_blended_scoreboard(b, split=p)\n'),  # named split
+        ("# FREEZE\n", "kw = {}\nr = run_validation_scoreboard(b, **kw)\n"),  # **kwargs
+        (  # one literal test call plus a second, computed one
+            "# FREEZE\n",
+            (
+                'r = run_blended_scoreboard(b, split="test")\n'
+                'r2 = run_blended_scoreboard(b, split="te" + "st")\n'
+            ),
+        ),
     ]
     for cells in mutants:
         assert _cpb_once_violations(list(cells)), cells
