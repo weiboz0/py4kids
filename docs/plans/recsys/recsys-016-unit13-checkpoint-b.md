@@ -321,8 +321,8 @@ include grading guidance (as Checkpoint A's do).
 
 ### Phase H — verification (named)
 `TMPDIR=/dev/shm bash scripts/ci-local.sh` must be ALL GREEN, and `pre-merge-guard --pr` must be OK. Confirm:
-- the test split is touched only by the authorized Checkpoint A/B notebooks, and by CP-B exactly once after the
-  freeze (guard test);
+- the test split is scored or unsealed only in the authorized Checkpoint A/B notebooks (CP-B exactly once, after
+  the freeze), apart from U1's temporal-order diagnostic (guard test);
 - determinism;
 - the budget delta is reported;
 - the lesson total is 40.
@@ -340,6 +340,14 @@ include grading guidance (as Checkpoint A's do).
 Phase H is this plan's named verification phase.
 
 ## Plan Review
+
+### Round 4 (plan v2.3 @ 4d5c376) — CONSENSUS
+- **[self]** APPROVE.
+- **[sol]** APPROVE WITH NITS. B3 RESOLVED: the AST allowlist covers direct and indirect uses, and CP-B is proved to
+  make one unconditional call. The facts were verified. NIT: Phase H wording, now fixed (the U1 diagnostic is
+  excepted).
+- **[fable]** APPROVE WITH NITS (r2; the later edits are [sol]-requested guard tightening and wording only).
+**Gate result:** all three APPROVE / APPROVE WITH NITS, with no open blockers.
 
 ### Round 3 (plan v2.2 @ daf162f)
 - **[self]** APPROVE.
