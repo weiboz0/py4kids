@@ -199,6 +199,10 @@ library_methods:
 - readout
 - session_top_lists
 - training_matrix
+# The Unit-14 solutions: `tolist` turns an HNSW search's label row into plain ints for a recall
+# overlap, and `list.index` finds a ranking feature's column (both named in the exercise scaffold).
+- index
+- tolist
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}
