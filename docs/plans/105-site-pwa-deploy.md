@@ -307,4 +307,4 @@ Results after the fixes: runner 26, site 409 unit tests; `pnpm -C site e2e` with
 - Per-book Pagefind indexes, to avoid re-downloading every book.
 - Pyodide memory snapshots.
 - **Phase F (the first public deploy) needs the user's go-ahead, the Cloudflare account and API token, and the domain.**
-- `scripts/ci-local.sh` solo on 29cff0d: **ALL GREEN** (2026-10-12).
+- `scripts/ci-local.sh` solo on 29cff0d and again on cea0a04 after merging main: **ALL GREEN** (2026-10-12): 133 main, 23 PWA, 10 hooks e2e tests and 5 solver shards.
