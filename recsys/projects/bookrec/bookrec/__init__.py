@@ -31,6 +31,11 @@ self-attention; torch only inside ``fit``) — plus :func:`~bookrec.sessions.ord
 Unit 13 (plan recsys-016) adds :mod:`bookrec.fairness` (numpy-only): exposure Gini over the full
 catalog (items and authors), long-tail share, genre entropy / spread vs history, the
 ``pop-penalized`` re-rank path and the leakage-guarded :func:`~bookrec.fairness.simulate_feedback_loop`.
+
+Unit 14 (plan recsys-017) adds :mod:`bookrec.system` (numpy-only at import): the regenerated-only model
+cache (:func:`~bookrec.system.load_cached_models`, built by ``scripts/build_models.py``) and
+:class:`~bookrec.system.FullSystem` — the pinned 8-path pool + learned reranker full stack, its fixed
+blend, the ablations and the beyond-accuracy readout.
 """
 
 from __future__ import annotations
@@ -105,6 +110,15 @@ from bookrec.sessions import (
     load_train_sequences,
     ordered_train_histories,
 )
+from bookrec.system import (
+    BookData,
+    FixedBlendPath,
+    FullSystem,
+    ModelCache,
+    compute_readouts,
+    load_book_data,
+    load_cached_models,
+)
 from bookrec.two_tower import TwoTowerRetrievalPath
 
 __all__ = [
@@ -112,9 +126,12 @@ __all__ = [
     "BM25Index",
     "BlendedScoreboardResult",
     "Book",
+    "BookData",
     "Candidate",
     "DuplicatePathError",
     "FeatureTowerRetrievalPath",
+    "FixedBlendPath",
+    "FullSystem",
     "GloveSubset",
     "HnswIndex",
     "HybridRetrievalPath",
@@ -122,6 +139,7 @@ __all__ = [
     "LastKItemItemPath",
     "LexicalRetrievalPath",
     "MatrixFactorizationPath",
+    "ModelCache",
     "NeuralRerankerPath",
     "PathRegistry",
     "PopularityPenalizedPath",
@@ -141,6 +159,7 @@ __all__ = [
     "book_embedding",
     "calibrate_scores",
     "catalog_coverage",
+    "compute_readouts",
     "cosine_similarity",
     "exposure_counts",
     "exposure_gini",
@@ -154,6 +173,8 @@ __all__ = [
     "hit_rate_at_k",
     "intra_list_diversity",
     "item_item_cosine",
+    "load_book_data",
+    "load_cached_models",
     "load_catalog",
     "load_glove_subset",
     "load_keywords",

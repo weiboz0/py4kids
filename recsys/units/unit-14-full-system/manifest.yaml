@@ -1,0 +1,9 @@
+id: unit-14-full-system
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: []
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, score-blending, popularity-ranking, bm25, item-item-cf, matrix-factorization, embedding-retrieval, two-tower, feature-towers, hard-negatives, item-cold-start, ann-retrieval, hnsw, hybrid-retrieval, neural-reranking, ranking-features, learning-to-rank, sequential-recommendation, self-attention, exposure-fairness]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, score-blending, popularity-ranking, bm25, item-item-cf, matrix-factorization, embedding-retrieval, two-tower, feature-towers, hard-negatives, item-cold-start, ann-retrieval, hnsw, hybrid-retrieval, neural-reranking, ranking-features, learning-to-rank, sequential-recommendation, self-attention, exposure-fairness]

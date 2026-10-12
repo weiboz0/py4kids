@@ -659,7 +659,8 @@ class SasrecRetrievalPath(_SequencePath):
     # --------------------------------------------------------------------------- persistence
     @property
     def loss_history(self) -> list[float]:
-        """Mean training loss per epoch from the last :meth:`fit` (empty after :meth:`load`)."""
+        """Mean training loss per epoch from the last :meth:`fit` (restored by :meth:`load` when the
+        artifact carries one; empty for an artifact saved without it)."""
         return list(self._loss_history)
 
     def artifact(self) -> dict[str, Any]:
@@ -669,6 +670,8 @@ class SasrecRetrievalPath(_SequencePath):
         return {
             **self._base_state(),
             "weights": {key: value.copy() for key, value in self._weights.items()},
+            # Additive (recsys-017): the per-epoch training curve travels with a cached artifact.
+            "loss_history": [float(x) for x in self._loss_history],
             "params": self._params(),
         }
 
@@ -697,6 +700,7 @@ class SasrecRetrievalPath(_SequencePath):
             self.shuffle_seed = _check_seed(params["shuffle_seed"], "shuffle_seed")
         self._weights = weights
         self._w64 = None
-        self._loss_history = []
+        # Version-compatible: an artifact saved before recsys-017 has no curve -> empty list.
+        self._loss_history = [float(x) for x in state.get("loss_history", [])]
         self._fitted = True
         return self

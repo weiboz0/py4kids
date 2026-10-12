@@ -165,6 +165,8 @@ class RerankerModel:
         self.mu: np.ndarray | None = None
         self.sd: np.ndarray | None = None
         self.weights: list[np.ndarray] = []
+        #: Mean BCE loss per epoch from the last :meth:`fit` (the training log; recsys-017, additive).
+        self.loss_history: list[float] = []
 
     def fit(self, X: np.ndarray, y: np.ndarray, *, feature_mask: np.ndarray | None = None) -> RerankerModel:
         """Train on standardised features ``X`` with binary labels ``y`` (torch, imported here)."""
@@ -203,14 +205,19 @@ class RerankerModel:
             yt = torch.tensor(y, dtype=torch.float32).unsqueeze(1)
             generator = torch.Generator().manual_seed(self.seed)
             n = Xt.shape[0]
+            self.loss_history = []
             for _ in range(self.epochs):
                 perm = torch.randperm(n, generator=generator)
+                epoch_loss, n_batches = 0.0, 0
                 for start in range(0, n, self.batch_size):
                     idx = perm[start : start + self.batch_size]
                     optimizer.zero_grad()
                     loss = loss_fn(net(Xt[idx]), yt[idx])
                     loss.backward()
                     optimizer.step()
+                    epoch_loss += loss.item()  # a read-only log; does not touch the training math
+                    n_batches += 1
+                self.loss_history.append(epoch_loss / max(n_batches, 1))
             self.weights = [p.detach().numpy().astype(np.float32).copy() for p in net.parameters()]
         finally:
             torch.use_deterministic_algorithms(prev_deterministic)
@@ -239,6 +246,7 @@ class RerankerModel:
             "mu": self.mu.copy(),
             "sd": self.sd.copy(),
             "weights": [w.copy() for w in self.weights],
+            "loss_history": [float(x) for x in self.loss_history],
             "params": {
                 "hidden": self.hidden,
                 "epochs": self.epochs,
@@ -265,6 +273,8 @@ class RerankerModel:
         model.mu = np.array(state["mu"], dtype=np.float32)
         model.sd = np.array(state["sd"], dtype=np.float32)
         model.weights = [np.array(w, dtype=np.float32) for w in state["weights"]]
+        # Version-compatible: a state saved before recsys-017 has no training log -> empty list.
+        model.loss_history = [float(x) for x in state.get("loss_history", [])]
         return model
 
 

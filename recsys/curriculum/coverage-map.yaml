@@ -108,3 +108,17 @@ entries:
   introduces: []
   requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, score-blending, word-embeddings, document-embeddings, embedding-retrieval, two-tower, bpr-loss, neural-training, item-cold-start, hybrid-retrieval, sequential-recommendation, item-transitions, feedback-loops, exposure-fairness, filter-bubbles, bm25, item-item-cf]
   practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, score-blending, word-embeddings, document-embeddings, embedding-retrieval, two-tower, bpr-loss, neural-training, item-cold-start, hybrid-retrieval, sequential-recommendation, item-transitions, feedback-loops, exposure-fairness, filter-bubbles, bm25, item-item-cf]
+- id: unit-14-full-system
+  kind: unit
+  title: "The full system"
+  lessons: 3
+  introduces: []
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, score-blending, popularity-ranking, bm25, item-item-cf, matrix-factorization, embedding-retrieval, two-tower, feature-towers, hard-negatives, item-cold-start, ann-retrieval, hnsw, hybrid-retrieval, neural-reranking, ranking-features, learning-to-rank, sequential-recommendation, self-attention, exposure-fairness]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, score-blending, popularity-ranking, bm25, item-item-cf, matrix-factorization, embedding-retrieval, two-tower, feature-towers, hard-negatives, item-cold-start, ann-retrieval, hnsw, hybrid-retrieval, neural-reranking, ranking-features, learning-to-rank, sequential-recommendation, self-attention, exposure-fairness]
+- id: project-14-bookrec
+  kind: project
+  title: "Capstone — your book recommender"
+  lessons: 3
+  introduces: []
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, ranking-metrics, beyond-accuracy, score-blending, popularity-ranking, popularity-bias, bm25, item-item-cf, matrix-factorization, embedding-retrieval, two-tower, feature-towers, item-cold-start, ann-retrieval, hybrid-retrieval, neural-reranking, ranking-features, learning-to-rank, exposure-fairness]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, ranking-metrics, beyond-accuracy, score-blending, popularity-ranking, popularity-bias, bm25, item-item-cf, matrix-factorization, embedding-retrieval, two-tower, feature-towers, item-cold-start, ann-retrieval, hybrid-retrieval, neural-reranking, ranking-features, learning-to-rank, exposure-fairness]

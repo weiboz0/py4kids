@@ -90,6 +90,13 @@ while read -r book grp <&3; do
     PYTHONHASHSEED=0 uv run --group "$grp" python "$book/data/gen_catalog.py"
     PYTHONHASHSEED=0 uv run --group "$grp" python "$book/data/gen_interactions.py"
   fi
+  # A book's seeded model cache (design 011 §9; the U14 plan): regenerated-only like the data and
+  # rebuilt from that fresh data every run, BEFORE the suite whose required check validates it.
+  for build_models in "$book"/projects/*/scripts/build_models.py; do
+    if [[ -f "$build_models" ]]; then
+      PYTHONHASHSEED=0 uv run --group "$grp" python "$build_models"
+    fi
+  done
   PYTHONHASHSEED=0 uv run --group "$grp" pytest -q "$book"
 done 3<<< "$groups"
 

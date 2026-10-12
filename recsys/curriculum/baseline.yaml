@@ -181,6 +181,28 @@ library_methods:
 # same single seeded generator `simulate_feedback_loop` uses.
 - log2
 - random
+# --- Unit 14 (recsys-017): the full system, assembled from the regenerated model cache ---
+# `FullSystem.from_cache` loads every expensive model (no refit); `evaluate` / `top_lists` are its
+# val readouts, `fixed_blend` / `part1_build` the named comparison systems, and `meta` a cached
+# model's build metadata (the reranker recipe).
+- evaluate
+- fixed_blend
+- from_cache
+- meta
+- part1_build
+- top_lists
+# The Unit-14 lesson: `envelope` / `training_matrix` / `loss_history` read a cached model's envelope,
+# its leakage-safe reranker (X, y) and its stored training curve; `readout` is FullSystem's
+# whole-system metrics row; `session_top_lists` is SASRec's top-10s on the session log.
+- envelope
+- loss_history
+- readout
+- session_top_lists
+- training_matrix
+# The Unit-14 solutions: `tolist` turns an HNSW search's label row into plain ints for a recall
+# overlap, and `list.index` finds a ranking feature's column (both named in the exercise scaffold).
+- index
+- tolist
 entries:
 # --- advanced Python (beyond the python-projects dependency baseline) ---
 - {id: class-definition, name: "Defining classes"}
