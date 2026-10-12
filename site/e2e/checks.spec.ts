@@ -199,8 +199,10 @@ test('predict: the real program\'s output, typed, passes; a wrong prediction fai
   const events = db.events!.filter((e) => e.item_key === found.item.key);
   expect(events.map((e) => e.result).sort()).toEqual(['fail', 'pass']);
   expect(JSON.stringify(events)).not.toContain(output.trim());
-  const typed = db.attempts!.filter((a) => a.item_key === found.item.key).map((a) => a.answer as string);
-  expect(typed.sort()).toEqual([output, `${output.trim()}!!`].sort());
+  // The attempt is stored after the verdict shows: wait for the second one.
+  await expect
+    .poll(async () => ((await stores(page)).attempts ?? []).filter((a) => a.item_key === found.item.key).map((a) => a.answer as string).sort())
+    .toEqual([output, `${output.trim()}!!`].sort());
 });
 
 test('answer with aliases (acsl unit 4 e-024): `^` typed for `↑` is accepted', async ({ page }) => {

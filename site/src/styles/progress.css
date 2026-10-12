@@ -224,3 +224,71 @@
   color: var(--muted);
   font-style: italic;
 }
+
+/* Export and import (plan 105 Phase C) */
+.transfer {
+  margin: 2.5rem 0 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.transfer h2 {
+  margin-top: 0;
+}
+
+.transfer-group {
+  margin: 1.25rem 0;
+}
+
+.transfer-group h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.transfer-option,
+.transfer-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.transfer-option input {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.transfer-file label {
+  font-weight: 600;
+}
+
+.transfer-file input {
+  max-width: 100%;
+  font: inherit;
+}
+
+.transfer-help {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.transfer-option input:focus-visible,
+.transfer-file input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.transfer-status {
+  min-height: 1.6em;
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+
+.transfer-status[data-state='error'] {
+  padding-left: 0.75rem;
+  border-left: 4px solid var(--focus);
+}

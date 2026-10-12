@@ -87,7 +87,7 @@ async function onRun(holder: HTMLElement, out: HTMLElement, stdinBox: HTMLTextAr
       .then((store) => recordLessonRun(store, key, ok, performance.now() - started, contentHash))
       .catch(warn);
   } catch (error) {
-    if (isUnavailable(error)) unavailable(out);
+    if (isUnavailable(error)) unavailable(out, error);
     else {
       warn(error);
       out.replaceChildren(el('p', 'check-status', 'Something went wrong while running. Try again, or reload the page.'));
@@ -110,7 +110,7 @@ async function onReset(out: HTMLElement): Promise<void> {
     for (const region of document.querySelectorAll<HTMLElement>('[data-run-output]')) region.replaceChildren();
     out.replaceChildren(el('p', 'run-note', 'Reset: Python starts fresh for this lesson.'));
   } catch (error) {
-    if (isUnavailable(error)) unavailable(out);
+    if (isUnavailable(error)) unavailable(out, error);
     else warn(error);
   } finally {
     busy = false;

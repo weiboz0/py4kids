@@ -2,13 +2,10 @@
  * The strict CSP (plan 103 Global constraints; plan 104 adds the runner's frame-src) and a
  * Cloudflare Pages `_headers` parser.
  */
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { resolveOrigins } from '../../../deploy/origins.mjs';
 
-/** The runner origin the build fills in (runner/origins.json, or PY4KIDS_RUNNER_ORIGIN). */
-export const RUNNER_ORIGIN: string =
-  process.env.PY4KIDS_RUNNER_ORIGIN ??
-  (JSON.parse(readFileSync(join(import.meta.dirname, '..', '..', '..', 'runner', 'origins.json'), 'utf-8')) as { runner: string }).runner;
+/** The runner origins the build fills in (deploy/origins.json via deploy/origins.mjs). */
+export const RUNNER_ORIGIN: string = resolveOrigins().pairs.map((p) => p.runner).join(' ');
 
 /** The CSP as written in public/_headers (the runner origin is a placeholder there). */
 export const CSP_TEMPLATE =

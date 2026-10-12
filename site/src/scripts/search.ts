@@ -21,6 +21,10 @@ interface Pagefind {
 }
 
 const PAGE = 10;
+/**
+ * Pagefind's loader. The build moves Pagefind into a content-hashed folder (plan 105: every asset
+ * URL is release-specific) and rewrites the search page's `data-pagefind` to name it.
+ */
 const PAGEFIND = '/pagefind/pagefind.js';
 
 const root = document.querySelector<HTMLElement>('[data-search]');
@@ -37,7 +41,7 @@ async function start(root: HTMLElement): Promise<void> {
 
   let pagefind: Pagefind;
   try {
-    pagefind = (await import(/* @vite-ignore */ PAGEFIND)) as Pagefind;
+    pagefind = (await import(/* @vite-ignore */ root.dataset.pagefind ?? PAGEFIND)) as Pagefind;
     await pagefind.options({ excerptLength: 24 });
   } catch {
     if (needsJs) needsJs.textContent = 'Search is not available in this copy of the site (its index was not built).';

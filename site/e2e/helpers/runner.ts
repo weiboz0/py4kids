@@ -7,7 +7,7 @@
 import { build } from 'esbuild';
 import { join } from 'node:path';
 import type { Frame, Page } from '@playwright/test';
-import { RUNNER_URL, SITE } from './env';
+import { BASE_URL, RUNNER_URL, SITE } from './env';
 import type { ReadyReply, ResultReply, RunOptions } from '../../src/lib/runner-client';
 
 let bundled: Promise<string> | null = null;
@@ -22,7 +22,10 @@ export function clientBundle(): Promise<string> {
     target: 'es2023',
     write: false,
     footer: { js: 'globalThis.py4kidsRunnerClient = py4kidsRunnerClient;' },
-    define: { 'import.meta.env.PY4KIDS_RUNNER_ORIGIN': JSON.stringify(RUNNER_URL) },
+    define: {
+      'import.meta.env.PY4KIDS_RUNNER_ORIGIN': JSON.stringify(RUNNER_URL),
+      'import.meta.env.PY4KIDS_ORIGIN_PAIRS': JSON.stringify([{ site: BASE_URL, runner: RUNNER_URL }]),
+    },
   }).then((out) => out.outputFiles[0]!.text);
   return bundled;
 }

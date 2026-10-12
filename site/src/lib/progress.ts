@@ -7,7 +7,9 @@
  *   UTC `Z` timestamps). Part B writes `slide`, `card` and `self-check` events; part C (plan 104)
  *   adds `lesson-run` (a Run in the reading view) and `exercise`, `checkpoint` and `project`
  *   (a Check, with `detail.cases`). An event holds results only, never code or a typed answer.
- * - `cards`: the Leitner state per card key (box 1..5, due date, updated_at).
+ * - `cards`: the Leitner state per card key (box 1..5, due date, updated_at). Every record stores
+ *   `updated_at` (plan 105 Phase C: the import merge keeps the later one); a legacy record without
+ *   it counts as the oldest (`progress-io.ts`).
  * - `resume`: the last position per book (updated_at).
  * - `attempts` (plan 104, version 2): the student's own work, on this device only: the code of each
  *   Run and Check and each typed answer, with its outcome. It is never put in an event; it
@@ -111,10 +113,12 @@ const isStr = (v: unknown): v is string => typeof v === 'string';
 export function validateEvent(event: unknown): string[] {
   if (!isObject(event)) return ['/: must be an object'];
   const errors: string[] = [];
-  for (const key of EVENT_KEYS) if (!(key in event)) errors.push(`/: missing ${key}`);
+  // Own keys only: the event may come from an imported file (plan 105 Phase C).
+  const has = (o: object, key: string) => Object.hasOwn(o, key);
+  for (const key of EVENT_KEYS) if (!has(event, key)) errors.push(`/: missing ${key}`);
   for (const key of Object.keys(event)) if (!EVENT_KEYS.has(key)) errors.push(`/: unexpected ${key}`);
   const check = (key: string, ok: (v: unknown) => boolean) => {
-    if (key in event && !ok(event[key])) errors.push(`/${key}: invalid`);
+    if (has(event, key) && !ok(event[key])) errors.push(`/${key}: invalid`);
   };
   check('schema', (v) => v === EVENT_SCHEMA);
   check('event_id', (v) => isStr(v) && UUID.test(v));
@@ -125,20 +129,20 @@ export function validateEvent(event: unknown): string[] {
   check('duration_ms', (v) => isInt(v) && v >= 0);
   check('timestamp', (v) => isStr(v) && TIMESTAMP.test(v));
   check('content_hash', (v) => isStr(v) && SHA256.test(v));
-  const detail = event.detail;
-  if ('detail' in event) {
+  const detail = has(event, 'detail') ? event.detail : undefined;
+  if (has(event, 'detail')) {
     if (!isObject(detail)) errors.push('/detail: must be an object');
     else {
       for (const key of Object.keys(detail)) if (!DETAIL_KEYS.has(key)) errors.push(`/detail: unexpected ${key}`);
-      if ('cases' in detail) {
+      if (has(detail, 'cases')) {
         const cases = detail.cases;
         const okCase = (c: unknown) =>
           isObject(c) && isInt(c.n) && c.n >= 1 && typeof c.pass === 'boolean' && Object.keys(c).every((k) => k === 'n' || k === 'pass');
         if (!Array.isArray(cases) || !cases.every(okCase)) errors.push('/detail/cases: invalid');
       }
-      if ('self_grade' in detail && detail.self_grade !== 'got-it' && detail.self_grade !== 'not-yet') errors.push('/detail/self_grade: invalid');
-      if ('box' in detail && !(isInt(detail.box) && detail.box >= 0)) errors.push('/detail/box: invalid');
-      if ('checklist' in detail && !(Array.isArray(detail.checklist) && detail.checklist.every((b) => typeof b === 'boolean'))) {
+      if (has(detail, 'self_grade') && detail.self_grade !== 'got-it' && detail.self_grade !== 'not-yet') errors.push('/detail/self_grade: invalid');
+      if (has(detail, 'box') && !(isInt(detail.box) && detail.box >= 0)) errors.push('/detail/box: invalid');
+      if (has(detail, 'checklist') && !(Array.isArray(detail.checklist) && detail.checklist.every((b) => typeof b === 'boolean'))) {
         errors.push('/detail/checklist: invalid');
       }
     }
@@ -203,6 +207,22 @@ export interface ProgressStore {
   addAttempt(input: AttemptInput, now?: Date): Promise<Attempt>;
   /** One item's attempts, oldest first. */
   attempts(itemKey: string): Promise<Attempt[]>;
+  /**
+   * Every record, for "Export my progress" (plan 105 Phase C); the attempt store only when asked
+   * (`attempts` is empty otherwise). Records are returned as stored: a legacy card or resume
+   * record may lack `updated_at`.
+   */
+  records(options?: { attempts?: boolean }): Promise<StoreRecords>;
+  /** Writes an import's merge result (`progress-io.ts` `planMerge`), all in one transaction. */
+  putRecords(records: StoreRecords): Promise<void>;
+}
+
+/** The store's four kinds of record, in bulk (export and import, plan 105 Phase C). */
+export interface StoreRecords {
+  events: ProgressEvent[];
+  cards: CardState[];
+  resume: ResumeState[];
+  attempts: Attempt[];
 }
 
 const byAttemptTime = (a: Attempt, b: Attempt) => a.timestamp.localeCompare(b.timestamp);
@@ -257,6 +277,24 @@ export class MemoryProgress implements ProgressStore {
   }
   async attempts(itemKey: string): Promise<Attempt[]> {
     return this.attemptLog.filter((a) => a.item_key === itemKey).sort(byAttemptTime);
+  }
+  async records(options: { attempts?: boolean } = {}): Promise<StoreRecords> {
+    return {
+      events: this.log.map((e) => structuredClone(e)),
+      cards: [...this.cardMap.values()].map((c) => ({ ...c })),
+      resume: [...this.resumeMap.values()].map((r) => ({ ...r })),
+      attempts: options.attempts ? this.attemptLog.map((a) => ({ ...a })) : [],
+    };
+  }
+  async putRecords(records: StoreRecords): Promise<void> {
+    for (const event of records.events) {
+      if (!this.log.some((e) => e.event_id === event.event_id)) this.log.push(structuredClone(event));
+    }
+    for (const card of records.cards) this.cardMap.set(card.key, { ...card });
+    for (const resume of records.resume) this.resumeMap.set(resume.book, { ...resume });
+    for (const attempt of records.attempts) {
+      if (!this.attemptLog.some((a) => a.attempt_id === attempt.attempt_id)) this.attemptLog.push({ ...attempt });
+    }
   }
 }
 
@@ -329,6 +367,27 @@ export class IdbProgress implements ProgressStore {
   async attempts(itemKey: string): Promise<Attempt[]> {
     const all = await this.read<Attempt[]>('attempts', (s) => s.index('item_key').getAll(itemKey));
     return all.sort(byAttemptTime);
+  }
+  async records(options: { attempts?: boolean } = {}): Promise<StoreRecords> {
+    const names = options.attempts ? ['events', 'cards', 'resume', 'attempts'] : ['events', 'cards', 'resume'];
+    // One read-only transaction: a consistent snapshot of every store.
+    const tx = this.db.transaction(names, 'readonly');
+    const all = (name: string) => request(tx.objectStore(name).getAll());
+    const [events, cards, resume, attempts] = await Promise.all([
+      all('events') as Promise<ProgressEvent[]>,
+      all('cards') as Promise<CardState[]>,
+      all('resume') as Promise<ResumeState[]>,
+      options.attempts ? (all('attempts') as Promise<Attempt[]>) : Promise.resolve([] as Attempt[]),
+    ]);
+    return { events, cards, resume, attempts };
+  }
+  async putRecords(records: StoreRecords): Promise<void> {
+    const tx = this.db.transaction(['events', 'cards', 'resume', 'attempts'], 'readwrite');
+    for (const event of records.events) tx.objectStore('events').put(event);
+    for (const card of records.cards) tx.objectStore('cards').put(card);
+    for (const resume of records.resume) tx.objectStore('resume').put(resume);
+    for (const attempt of records.attempts) tx.objectStore('attempts').put(attempt);
+    await done(tx);
   }
 }
 

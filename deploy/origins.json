@@ -1,0 +1,6 @@
+{
+  "$comment": "The site and runner origins (design 012 D1, D7; plan 105 Phase D), configured only here and read through deploy/origins.mjs by the runner build (frame-ancestors, the parent it accepts and replies to), the site build (frame-src, the runner origin), the test servers and the e2e helpers. `local` is development and the tests: the runner is another host and port, so another origin. `production` is the custom domain (the runner on run.<domain>, so the two are same-site); `.example` is a placeholder until the first deploy (plan 105 Phase F), and scripts/build-release.sh refuses it. `preview` lists the Cloudflare Pages default hosts: they are cross-site (pages.dev is a public suffix), so a preview is for reading only and cannot verify the offline runner; it is listed so frame-src / frame-ancestors do not block it. PY4KIDS_SITE_ORIGIN / PY4KIDS_RUNNER_ORIGIN override everything with one pair.",
+  "local": { "site": "http://127.0.0.1:4391", "runner": "http://localhost:4392" },
+  "production": { "site": "https://py4kids.example", "runner": "https://run.py4kids.example" },
+  "preview": { "site": "https://py4kids.pages.dev", "runner": "https://py4kids-run.pages.dev" }
+}

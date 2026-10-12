@@ -1,0 +1,13 @@
+# Cloudflare Pages project for the py4kids Python runner (plan 105 Phase D), the isolated origin the
+# site embeds (design 012 D7). NOTHING in this repo runs `wrangler pages deploy`: the first deploy
+# is gated on the user (plan 105 Phase F).
+#
+# Custom domain (set on the Pages project, not here): the production runner origin in
+# deploy/origins.json ("production".runner), which must be run.<domain> of the site's domain so
+# the two are same-site (deploy/README.md "Same site").
+#
+# Response headers (CSP with frame-ancestors, COOP/COEP/CORP, also on /sw.js) come from
+# dist/_headers; Pages serves pyodide.asm.wasm as application/wasm (instantiateStreaming needs it).
+name = "py4kids-run"
+pages_build_output_dir = "../../runner/dist"
+compatibility_date = "2026-10-01"

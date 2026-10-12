@@ -1,18 +1,24 @@
 /** Where the browser tests find the site, the runner and a Chromium (plans 103 Phase F, 104). */
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { chromium } from '@playwright/test';
+import { resolveOrigins } from '../../../deploy/origins.mjs';
 
 export const SITE = join(import.meta.dirname, '..', '..');
-export const DIST = join(SITE, 'dist');
-export const RUNNER_DIST = join(SITE, '..', 'runner', 'dist');
+// The built dists under test: site/dist/ and runner/dist/, or (plan 105 Phase E) the test-hooks
+// build in its own folder (scripts/hooks-build.ts), named by PY4KIDS_TEST_SITE_DIST and
+// PY4KIDS_TEST_RUNNER_DIST, so a hooks build never replaces the production dists.
+// (A relative path is taken from site/.)
+export const DIST = resolve(SITE, process.env.PY4KIDS_TEST_SITE_DIST ?? 'dist');
+export const RUNNER_DIST = resolve(SITE, process.env.PY4KIDS_TEST_RUNNER_DIST ?? join('..', 'runner', 'dist'));
 
-// Both origins come from runner/origins.json (or PY4KIDS_SITE_ORIGIN / PY4KIDS_RUNNER_ORIGIN): the
-// runner's build bakes the site origin in (frame-ancestors, the parent it accepts) and the site's
-// build bakes the runner origin in (frame-src), so the test servers listen exactly there.
-const origins = JSON.parse(readFileSync(join(SITE, '..', 'runner', 'origins.json'), 'utf-8')) as { site: string; runner: string };
-export const BASE_URL = process.env.PY4KIDS_SITE_ORIGIN ?? origins.site;
-export const RUNNER_URL = process.env.PY4KIDS_RUNNER_ORIGIN ?? origins.runner;
+// Both origins come from deploy/origins.json via deploy/origins.mjs (or PY4KIDS_SITE_ORIGIN /
+// PY4KIDS_RUNNER_ORIGIN): the runner's build bakes the site origin in (frame-ancestors, the parent
+// it accepts) and the site's build bakes the runner origin in (frame-src), so the test servers
+// listen exactly at the primary pair.
+const { primary } = resolveOrigins();
+export const BASE_URL = primary.site;
+export const RUNNER_URL = primary.runner;
 export const PORT = Number(new URL(BASE_URL).port);
 export const RUNNER_PORT = Number(new URL(RUNNER_URL).port);
 

@@ -13,9 +13,13 @@
  * - `[data-resume-book="<book>"]`: a hidden element holding an `<a>` (and optionally a
  *   `[data-resume-title]` span); the progress island points the link at the book's last
  *   position and unhides it.
+ * - `py4kids:progress-imported` (plan 105 Phase C): the export/import island dispatches it on
+ *   `document` after an import wrote to the store; the progress island fills the "Continue" links
+ *   again.
  */
 
 export const SLIDE_EVENT = 'py4kids:slide';
+export const PROGRESS_IMPORTED_EVENT = 'py4kids:progress-imported';
 
 /** What the slide player (src/scripts/slides.ts) sends; only `key` is required here. */
 export interface SlideEventDetail {

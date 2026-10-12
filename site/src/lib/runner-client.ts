@@ -13,11 +13,21 @@
  *   the runner as unavailable and offers a reload).
  *
  * Phase B's check UIs build on `connectRunner` (or `RunnerClient` directly in tests).
+ *
+ * Envelope version (plan 105): every request carries `v: 2` (`ENVELOPE_VERSION`), and only
+ * version-2 replies are accepted. A `version-mismatch` reply (an older runner) rejects the request
+ * with `RunnerVersionError`: the page asks for a reload. Version 2 adds `precache` (with progress),
+ * the update handshake's `prepareActivate`, and `state` (the runner's own offline record).
  */
 import {
+  ENVELOPE_VERSION,
   parseReply,
   parseRequest,
   type Check,
+  type PrecacheProgressReply,
+  type PrecachedReply,
+  type RunnerActivatedReply,
+  type StateReply,
   type ReadyReply,
   type Reply,
   type Request,
@@ -26,10 +36,17 @@ import {
   type RunFile,
 } from '../../../runner/src/envelope';
 
-export type { Check, ReadyReply, RestartedReply, ResultReply, RunFile } from '../../../runner/src/envelope';
+export type { Check, PrecachedReply, ReadyReply, RestartedReply, ResultReply, RunFile, RunnerActivatedReply, StateReply } from '../../../runner/src/envelope';
 
-/** The runner origin, from runner/origins.json (or PY4KIDS_RUNNER_ORIGIN) via astro.config.mjs. */
-export const RUNNER_ORIGIN: string = import.meta.env.PY4KIDS_RUNNER_ORIGIN ?? '';
+/**
+ * The runner origin (deploy/origins.json via astro.config.mjs; plan 105 Phase D): the partner of
+ * this page's own origin among the build's pairs (a production build also lists the preview
+ * pair), else the primary runner origin.
+ */
+export const RUNNER_ORIGIN: string =
+  (import.meta.env.PY4KIDS_ORIGIN_PAIRS ?? []).find((p) => p.site === globalThis.location?.origin)?.runner ??
+  import.meta.env.PY4KIDS_RUNNER_ORIGIN ??
+  '';
 
 /** The iframe's sandbox and permissions (plan 104 Global constraints). */
 export const SANDBOX = 'allow-scripts allow-same-origin';
@@ -54,6 +71,17 @@ export class RunnerUnavailableError extends Error {
     this.name = 'RunnerUnavailableError';
   }
 }
+
+/** The runner speaks an older envelope version than this page (plan 105): reload the page. */
+export class RunnerVersionError extends RunnerUnavailableError {
+  constructor(supported: number[]) {
+    super(`the Python runner is a different version (it speaks ${supported.join(', ')}); reload the page`);
+    this.name = 'RunnerVersionError';
+  }
+}
+
+/** A request this client sends: the envelope minus the version, which the client adds. */
+type Outgoing = Request extends infer R ? (R extends { v?: 2 } ? Omit<R, 'v'> : never) : never;
 
 /** The window the client posts to (the iframe's `contentWindow`). */
 export interface RunnerPort {
@@ -94,6 +122,8 @@ interface Pending {
   resolve: (reply: Reply) => void;
   reject: (error: Error) => void;
   timer: ReturnType<typeof setTimeout>;
+  /** `precache` only: its progress replies. */
+  onProgress?: (reply: PrecacheProgressReply) => void;
 }
 
 /** Why `receive` dropped a message (for tests and debugging); `accepted` when it did not. */
@@ -126,8 +156,22 @@ export class RunnerClient {
     if (!frame || event.source !== frame) return 'wrong-source';
     const reply = parseReply(event.data);
     if (!reply) return 'invalid';
+    // Only this page's own envelope version, or the version-independent mismatch reply.
+    if (reply.type !== 'version-mismatch' && reply.v !== ENVELOPE_VERSION) return 'invalid';
     const pending = this.pending.get(reply.id);
-    if (!pending || pending.type !== reply.type) return 'unknown-id';
+    if (!pending) return 'unknown-id';
+    if (reply.type === 'version-mismatch') {
+      this.pending.delete(reply.id);
+      clearTimeout(pending.timer);
+      pending.reject(new RunnerVersionError(reply.supported));
+      return 'accepted';
+    }
+    if (reply.type === 'precache-progress') {
+      if (pending.type !== 'precached') return 'unknown-id';
+      pending.onProgress?.(reply);
+      return 'accepted';
+    }
+    if (pending.type !== reply.type) return 'unknown-id';
     if (reply.type === 'result' && reply.session !== pending.session) return 'unknown-id';
     this.pending.delete(reply.id);
     clearTimeout(pending.timer);
@@ -135,7 +179,8 @@ export class RunnerClient {
     return 'accepted';
   }
 
-  private async post(request: Request): Promise<void> {
+  private async post(outgoing: Outgoing): Promise<void> {
+    const request = { v: ENVELOPE_VERSION, ...outgoing } as Request;
     if (!parseRequest(request)) throw new TypeError(`invalid runner request (${request.type})`);
     await this.options.loaded;
     const frame = this.options.frame();
@@ -143,7 +188,13 @@ export class RunnerClient {
     frame.postMessage(request, this.options.runnerOrigin);
   }
 
-  private request<T extends Reply>(request: Request, type: T['type'], timeoutMs: number, session?: string): Promise<T> {
+  private request<T extends Reply>(
+    request: Outgoing,
+    type: T['type'],
+    timeoutMs: number,
+    session?: string,
+    onProgress?: (reply: PrecacheProgressReply) => void,
+  ): Promise<T> {
     if (this.disposed) return Promise.reject(new RunnerUnavailableError('the runner client is closed'));
     if (this.pending.has(request.id)) return Promise.reject(new Error(`duplicate request id ${request.id}`));
     return new Promise<T>((resolve, reject) => {
@@ -151,7 +202,7 @@ export class RunnerClient {
         this.pending.delete(request.id);
         reject(new RunnerUnavailableError(`the runner did not answer (${request.type})`));
       }, timeoutMs);
-      this.pending.set(request.id, { type, session, resolve: resolve as (r: Reply) => void, reject, timer });
+      this.pending.set(request.id, { type, session, resolve: resolve as (r: Reply) => void, reject, timer, onProgress });
       this.post(request).catch((error: unknown) => {
         clearTimeout(timer);
         this.pending.delete(request.id);
@@ -177,7 +228,7 @@ export class RunnerClient {
   run(options: RunOptions): { id: string; result: Promise<ResultReply> } {
     const id = this.newId();
     const budget = options.budget_ms ?? DEFAULT_BUDGET_MS;
-    const request: Request = {
+    const request: Outgoing = {
       type: 'run',
       id,
       session: options.session,
@@ -200,6 +251,39 @@ export class RunnerClient {
   /** Clear a lesson session (the runner restarts the lesson worker). */
   reset(session: string): Promise<RestartedReply> {
     return this.request<RestartedReply>({ type: 'reset', id: this.newId(), session }, 'restarted', this.timeouts.bootMs);
+  }
+
+  /**
+   * Ask the runner to cache its shell, Pyodide and this book's runner files, and confirm the book
+   * for `release_id` (plan 105). `ok: false` when the runner refuses (another release) or fails.
+   */
+  precache(
+    options: { book: string; content_hash: string; files?: string[]; release_id: string },
+    onProgress?: (bytes: number, total: number) => void,
+    timeoutMs = 600_000,
+  ): Promise<PrecachedReply> {
+    const request: Outgoing = {
+      type: 'precache',
+      id: this.newId(),
+      book: options.book,
+      content_hash: options.content_hash,
+      files: options.files ?? [],
+      release_id: options.release_id,
+    };
+    return this.request<PrecachedReply>(request, 'precached', timeoutMs, undefined, (p) => onProgress?.(p.bytes, p.total));
+  }
+
+  /** The update handshake's step 1 (plan 105): resolves once the runner's worker for `release_id` controls it. */
+  prepareActivate(releaseId: string, timeoutMs: number): Promise<RunnerActivatedReply> {
+    return this.request<RunnerActivatedReply>({ type: 'prepare-activate', id: this.newId(), release_id: releaseId }, 'runner-activated', timeoutMs);
+  }
+
+  /**
+   * The runner's offline state (plan 105): its own confirmed record for `book` (null: none asked
+   * about) and its service workers' releases, read on the runner origin itself.
+   */
+  state(book: string | null, timeoutMs: number): Promise<StateReply> {
+    return this.request<StateReply>({ type: 'get-state', id: this.newId(), book }, 'state', timeoutMs);
   }
 
   /** Stop listening and reject everything still pending. */

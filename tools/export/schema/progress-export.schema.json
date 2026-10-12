@@ -1,0 +1,178 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "py4kids/progress-export/1.0.0",
+ "title": "py4kids progress export",
+ "description": "The file \"Export my progress\" writes and \"Import progress\" reads (design 012 D11; plan 105 Phase C): progress events, Leitner card state and resume positions. The attempt store (the student's own code and answers) is included only when the student ticks \"export my code attempts too\".",
+ "type": "object",
+ "properties": {
+  "schema": {
+   "const": "py4kids/progress-export/1.0.0"
+  },
+  "exported_at": {
+   "$ref": "#/$defs/timestamp"
+  },
+  "events": {
+   "type": "array",
+   "items": {
+    "$ref": "../progress-event/1.0.0"
+   }
+  },
+  "cards": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/card"
+   }
+  },
+  "resume": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/resume"
+   }
+  },
+  "attempts": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/attempt"
+   }
+  }
+ },
+ "required": [
+  "schema",
+  "exported_at",
+  "events",
+  "cards",
+  "resume"
+ ],
+ "additionalProperties": false,
+ "$defs": {
+  "timestamp": {
+   "type": "string",
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$",
+   "description": "UTC, ISO 8601."
+  },
+  "book": {
+   "type": "string",
+   "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+  },
+  "key": {
+   "type": "string",
+   "pattern": "^[a-z0-9]+(-[a-z0-9]+)*/[^/#\\s]+/[^/#\\s]+/[^/#\\s]+(#\\S+)?$"
+  },
+  "card": {
+   "type": "object",
+   "description": "One card's Leitner state (site/src/lib/leitner.ts CardState).",
+   "properties": {
+    "key": {
+     "$ref": "#/$defs/key"
+    },
+    "book": {
+     "$ref": "#/$defs/book"
+    },
+    "box": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 5
+    },
+    "due": {
+     "$ref": "#/$defs/timestamp"
+    },
+    "updated_at": {
+     "$ref": "#/$defs/timestamp"
+    }
+   },
+   "required": [
+    "key",
+    "book",
+    "box",
+    "due",
+    "updated_at"
+   ],
+   "additionalProperties": false
+  },
+  "resume": {
+   "type": "object",
+   "description": "One book's last reading position (site/src/lib/progress.ts ResumeState).",
+   "properties": {
+    "book": {
+     "$ref": "#/$defs/book"
+    },
+    "entry": {
+     "type": "string",
+     "pattern": "^[^/#\\s]+$"
+    },
+    "href": {
+     "type": "string",
+     "pattern": "^/([^/\\\\\\s][^\\\\\\s]*)?$",
+     "maxLength": 2000,
+     "description": "A same-site path: one leading slash, never `//` or a backslash."
+    },
+    "title": {
+     "type": "string",
+     "maxLength": 500
+    },
+    "updated_at": {
+     "$ref": "#/$defs/timestamp"
+    }
+   },
+   "required": [
+    "book",
+    "entry",
+    "href",
+    "title",
+    "updated_at"
+   ],
+   "additionalProperties": false
+  },
+  "attempt": {
+   "type": "object",
+   "description": "One attempt from the on-device attempt store (site/src/lib/progress.ts Attempt).",
+   "properties": {
+    "attempt_id": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "book": {
+     "$ref": "#/$defs/book"
+    },
+    "item_key": {
+     "$ref": "#/$defs/key"
+    },
+    "kind": {
+     "enum": [
+      "check",
+      "answer",
+      "run"
+     ]
+    },
+    "code": {
+     "type": "string"
+    },
+    "answer": {
+     "type": "string"
+    },
+    "result": {
+     "enum": [
+      "pass",
+      "fail",
+      "partial",
+      "done",
+      "seen",
+      "error"
+     ]
+    },
+    "timestamp": {
+     "$ref": "#/$defs/timestamp"
+    }
+   },
+   "required": [
+    "attempt_id",
+    "book",
+    "item_key",
+    "kind",
+    "result",
+    "timestamp"
+   ],
+   "additionalProperties": false
+  }
+ }
+}

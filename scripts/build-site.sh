@@ -4,7 +4,14 @@
 #   2. install the site's pinned dependencies (frozen lockfile) and run `astro build` to site/dist/
 #   3. index the built pages with Pagefind (`pnpm -C site search-index`; self-hosted under /pagefind/)
 #   4. run the slide audit (`pnpm -C site slide-audit`; <book>/site.yaml slides: limits)
-#   5. build the Python runner (plan 104) to runner/dist/: its own origin, served beside the site
+#   5. the offline site (plan 105): icons, content-hashed asset names, per-book download manifests
+#      (`pnpm -C site pwa-build`)
+#   6. build the Python runner (plan 104) to runner/dist/: its own origin, served beside the site
+#   7. the release identity (plan 105 Phase D): fail on any file over Cloudflare Pages' 25 MiB
+#      limit, then compute release_id over both dists and write release.json into each
+# Origins come from deploy/origins.json (PY4KIDS_TARGET=local|production, or the
+# PY4KIDS_SITE_ORIGIN / PY4KIDS_RUNNER_ORIGIN overrides); PY4KIDS_TEST_HOOKS=1 builds the test-only
+# service-worker hooks in (never for a deploy: scripts/build-release.sh refuses it).
 # Usage: scripts/build-site.sh [--release <tag>]   (the tag fills the bundles' PDF links)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -54,8 +61,12 @@ export ASTRO_TELEMETRY_DISABLED=1
 "${SITE_PNPM[@]}" -C site search-index
 # 4. The slide audit (plan 103 D6): every slide within its book's limits, or allow-listed.
 "${SITE_PNPM[@]}" -C site slide-audit
-# 5. The runner (plan 104): the isolated Pyodide app, with the self-hosted Pyodide runtime.
+# 5. The offline site (plan 105): icons, release-specific asset names, the books' manifests.
+"${SITE_PNPM[@]}" -C site pwa-build
+# 6. The runner (plan 104): the isolated Pyodide app, with the self-hosted Pyodide runtime.
 "${SITE_PNPM[@]}" -C runner install --frozen-lockfile
 "${SITE_PNPM[@]}" -C runner build
+# 7. The release (plan 105 Phase D): the 25 MiB check, release_id, release.json in both dists.
+node deploy/release.mjs site/dist runner/dist
 
 echo "build-site: built $(wc -w <<< "$books") book(s) to site/dist/ and the runner to runner/dist/"

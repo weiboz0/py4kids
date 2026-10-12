@@ -1,7 +1,8 @@
 /**
- * Lighthouse budgets (plan 103 Phase F): on the catalog, a lesson and the card deck, with the
- * default (mobile, simulated throttling) configuration in headless Chromium against the built
- * site served locally: performance >= 0.9, accessibility >= 0.95, best practices >= 0.95.
+ * Lighthouse budgets (plan 103 Phase F): on the catalog, a book page (plan 105: its download
+ * panel), a lesson and the card deck, with the default (mobile, simulated throttling)
+ * configuration in headless Chromium against the built site served locally: performance >= 0.9,
+ * accessibility >= 0.95, best practices >= 0.95.
  * This project runs after every other one (playwright.config.ts), one page at a time, so CPU
  * contention from parallel tests does not skew the performance score.
  */
@@ -12,6 +13,8 @@ import { BASE_URL, fullChromiumPath } from './helpers/env';
 
 const PAGES: Record<string, string> = {
   catalog: '/',
+  // The book page carries the download panel (plan 105 Phase E).
+  'book page': '/python-projects/',
   lesson: '/python-projects/unit-03-turtle-art-studio/',
   'card deck': '/python-projects/cards/',
 };
@@ -30,8 +33,25 @@ function freePort(): Promise<number> {
   });
 }
 
-/** One Lighthouse run of `url` in a fresh headless Chromium. */
+/**
+ * One Lighthouse run of `url` in a fresh headless Chromium. A run whose trace recording failed
+ * (`NO_NAVSTART`: "Something went wrong with recording the trace over your page load. Please run
+ * Lighthouse again.") says nothing about the page, and is run again, up to twice; it happens
+ * intermittently here with the site's service worker blocked too.
+ */
 async function audit(url: string) {
+  for (let attempt = 1; ; attempt += 1) {
+    const lhr = await auditOnce(url);
+    if (lhr.runtimeError?.code === 'NO_NAVSTART' && attempt < 3) {
+      console.log(`Lighthouse ${url}: trace recording failed (NO_NAVSTART), run again (attempt ${attempt + 1})`);
+      continue;
+    }
+    expect(lhr.runtimeError, 'Lighthouse runtime error').toBeUndefined();
+    return lhr;
+  }
+}
+
+async function auditOnce(url: string) {
   const port = await freePort();
   const browser = await chromium.launch({
     executablePath: fullChromiumPath(),
@@ -40,7 +60,6 @@ async function audit(url: string) {
   try {
     const result = await lighthouse(url, { port, output: 'json', logLevel: 'error', onlyCategories: Object.keys(BUDGET) });
     expect(result, 'Lighthouse returned a result').toBeDefined();
-    expect(result!.lhr.runtimeError, 'Lighthouse runtime error').toBeUndefined();
     return result!.lhr;
   } finally {
     await browser.close();

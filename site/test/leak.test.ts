@@ -33,6 +33,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 import { CONTENT_ENV, loadBooks, repoRoot } from '../src/lib/bundle';
 import { itemAnchors, shipsAnswer } from '../src/lib/checks';
+import { fileOf, pagefindDir } from '../scripts/offline-manifest';
 import type { EntryFile } from '../src/lib/types';
 import { nodeVersionProblem } from './helpers/node-version';
 
@@ -173,6 +174,8 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
   let out = '';
   let poisoned: Poisoned;
   let hits: { file: string; needle: string }[] = [];
+  /** Pagefind's (content-hashed) folder in the poisoned build, relative to it. */
+  let pf = 'pagefind';
 
   beforeAll(() => {
     // Under node_modules (never committed, and on the site's filesystem: Astro renames its
@@ -202,6 +205,11 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
     // indexes the real one.
     const index = spawnSync(process.execPath, [join(SITE, 'scripts', 'search-index.ts'), out], { cwd: SITE, encoding: 'utf-8' });
     if (index.status !== 0) throw new Error(`search-index failed:\n${index.stdout}\n${index.stderr}`);
+    // Plan 105: the offline post-build too (content-hashed assets, Pagefind moved into its hashed
+    // folder, the books' download manifests), so the scan covers exactly what a download caches.
+    const pwa = spawnSync(process.execPath, [join(SITE, 'scripts', 'pwa-build.ts'), out], { cwd: SITE, encoding: 'utf-8' });
+    if (pwa.status !== 0) throw new Error(`pwa-build failed:\n${pwa.stdout}\n${pwa.stderr}`);
+    pf = pagefindDir(out)!.split('/').join(sep);
     hits = scan(out, poisoned.needles.keys());
   }, 600_000);
 
@@ -268,7 +276,7 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
   });
 
   it('catches the deliberate leak inside the decompressed Pagefind index and fragments too', () => {
-    const caught = hits.filter((h) => h.file.startsWith(`pagefind${sep}`)).map((h) => h.file.split(sep)[1]);
+    const caught = hits.filter((h) => h.file.startsWith(`${pf}${sep}`)).map((h) => h.file.slice(pf.length + 1).split(sep)[0]);
     expect(caught).toContain('fragment');
     expect(caught).toContain('index');
     const needles = regressionNeedles();
@@ -277,7 +285,7 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
   });
 
   it('indexed the poisoned build with Pagefind and scanned its index and fragments', () => {
-    const index = files(join(out, 'pagefind'));
+    const index = files(join(out, pf));
     expect(index.some((f) => f.includes(`${sep}fragment${sep}`))).toBe(true);
     expect(index.some((f) => f.includes(`${sep}index${sep}`))).toBe(true);
     // The fragments are gzip: the scan decompresses them, so it reads real page text there.
@@ -290,7 +298,7 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
       const rel = relative(out, file);
       // Pagefind's manifest names each language index by its own "hash" (a file-name tag);
       // it is pinned to Pagefind's keys, and the sentinel scan covers its content.
-      if (rel === join('pagefind', 'pagefind-entry.json')) {
+      if (rel === join(pf, 'pagefind-entry.json')) {
         const entry = JSON.parse(readFileSync(file, 'utf-8')) as { languages: Record<string, object> };
         expect(Object.keys(entry).sort()).toEqual(['include_characters', 'languages', 'version']);
         for (const lang of Object.values(entry.languages)) expect(Object.keys(lang).sort()).toEqual(['hash', 'page_count', 'wasm']);
@@ -301,5 +309,30 @@ describe.skipIf(!hasRealBundles)('the poisoned-bundle leak test', () => {
       const isCheck = /^[a-z0-9-]+\/[^/]+\/practice\/check\/[a-z0-9-]+\.json$/.test(rel.split(sep).join('/'));
       expect(text, rel).not.toMatch(isCheck ? /"(?:answer_md|source|program)"\s*:/ : /"(?:answer_md|source|hash|program)"\s*:/);
     }
+  });
+
+  // Plan 105 ("Hidden answers stay hidden"): the leak rules rerun on the cached file list. Every
+  // file a "download this book" caches is a scanned file of the poisoned dist, and holds no
+  // sentinel outside the exact allowances above.
+  it('caches only scanned dist files, and no cached file leaks', () => {
+    const manifests = readdirSync(join(out, '_offline'));
+    const books = loadBooks({ contentDir: CONTENT }).map((b) => b.id).sort();
+    expect(manifests.map((m) => m.split('.')[0]).sort()).toEqual(books);
+    const cached = new Set<string>();
+    for (const m of manifests) {
+      const manifest = JSON.parse(readFileSync(join(out, '_offline', m), 'utf-8')) as { files: { url: string }[] };
+      for (const { url } of manifest.files) {
+        const file = fileOf(url).split('/').join(sep);
+        expect(existsSync(join(out, file)), url).toBe(true);
+        cached.add(file);
+      }
+    }
+    expect(cached.size).toBeGreaterThan(1000);
+    const leaks = hits
+      .filter((h) => cached.has(h.file) && !deliberate(h) && poisoned.allowed.get(h.needle) !== h.file)
+      .map((h) => `${h.file}: ${poisoned.needles.get(h.needle)}`);
+    expect(leaks).toEqual([]);
+    // The deliberate leak's page is not a book page, so no download caches it.
+    expect(cached.has(REGRESSION)).toBe(false);
   });
 });
