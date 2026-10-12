@@ -1,0 +1,9 @@
+id: unit-12-sequence-aware
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [sequential-recommendation, item-transitions, self-attention]
+  requires: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, item-item-cf, knn-similarity, embedding-retrieval, two-tower, neural-training]
+  practices: [retrieve-then-rank, offline-evaluation, top-k-ranking-metrics, beyond-accuracy, implicit-feedback, item-item-cf, embedding-retrieval, neural-training]
