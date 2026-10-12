@@ -476,3 +476,62 @@ Phase H is this plan's named verification phase.
     written explanations. This is acceptable for an integration unit on cached models.
 
 ## Post-Execution Report
+
+**Status:** all phases are done (0, A–H).
+This slice completes Book 3: all 14 units, both checkpoints and the capstone are shipped.
+
+**Commits:**
+- `35b040f` / `e703b7f` — Phase 0: design 011 v6 (a measured ≤ 75 CI-min exec target, the model-cache location,
+  §8 row 14 = integration unit plus capstone).
+- `621a255` — A: registry (`unit-14-full-system` introduces nothing and practises the 8 previously unpractised
+  concepts; `project-14-bookrec`; lessons total 46).
+- `95e9fb3` — B: `build_models.py`, `bookrec.system` (`load_cached_models`, `FullSystem`, `FixedBlendPath`,
+  `check_readouts`), the additive `loss_history`, the `ci-local.sh` wiring and `tests/test_unit14.py`.
+- `ea9d8e4` — C: lesson.
+- `f2546a3` / `a96e14f` — D: exercises and solutions.
+- `5bbafbe` — E: milestone.
+- `262ac4a` / `28c6147` — F: capstone brief, teacher notes and solutions.
+- `9294f09` — G: Unit 14 teacher notes.
+- `e703b7f` / `39c8d9f` — content-gate fixes and the review record.
+
+**Gates on shipped code** (main log val, committed seed, k = 10, 500 readers):
+- **(a) cache fidelity:**
+  - MF 0.276, two-tower 0.340, feature tower 0.298 (113 cold books surfaced), HNSW 0.340 (ANN recall@10 0.9988),
+    reranker 0.346, SASRec 0.4228 (session log). All are within ±0.002 of the pins.
+  - The 20-reader oracle is **identical (160/160 top-10 lists)** to the independent probe build. The shipped cache
+    pickles equal [fable]'s r1 probe pickles (`array_equal`).
+  - The build is byte-deterministic across runs.
+- **(b)/(c) ablation and beyond-accuracy:** all 10 rows reproduce the probe pins (±0.003). Deltas are recomputed
+  from the declared baselines to 1e-9 in the milestone.
+- **(e) Part-1 benchmark:** 0.306 / 0.333.
+- **(f) the assembled system:** full stack (8-path pool plus `reranker-full8`) **0.356 / 0.203**; fixed 8-path blend
+  0.362 / 0.206; hybrid 0.362 / 0.192. The reranker *dilutes* (0.356 < 0.362), as it did in U11. The unit and
+  the capstone teach the hit ↔ reach ↔ exposure frontier, not a single winner.
+- **Capstone reference** (reach-first 4-path blend without the reranker): 0.352 / 0.376.
+
+**Budget** (loaded):
+- `build_models.py` **298 s** (ceiling 9 min), in the CI run at load about 6.
+- Notebooks: milestone 57 s (≤ 3 min), lesson 123 s (≤ 4 min), U14 solutions 81 s (≤ 2.5 min), capstone
+  solutions 51 s (≤ 3 min); total about 5.2 min (≤ 15 min).
+- Routed recsys pytest 348 passed in 1019 s; `test_unit14.py` takes about 112 s (≤ +3 min).
+- **Design §9 measured target (≤ 75 CI-min):** **55.6 min — PASS.**
+  The measurement is `exec-lessons` 1046 s plus `exec-solutions` 2290 s (the latter includes milestones,
+  checkpoints and projects), 3336 s in total, both PASS. It was taken on 2026-10-12 from 12:48 to 13:44. The 1-min
+  load average was 11.6 at the start, 6.5 between the two steps and 6.8 at the end. Another session's CI was running
+  concurrently. Data and model builds are excluded.
+
+**CI:** `scripts/ci-local.sh` **ALL GREEN** (`EXIT 0`):
+- root unit tests: 2194 passed, 2 skipped;
+- routed recsys: 348 passed;
+- notebooks, curriculum and PDF all pass;
+- site: 338 + 7 unit tests and 118 e2e;
+- pre-merge guard passes.
+
+The first full run failed two site e2e tests: journey-checkbox IndexedDB persistence in python-projects and
+python-concepts. They are unrelated to this branch, which touches no site code. A standalone `pnpm -C site e2e` then
+passed 118/118, and the full re-run above is green.
+
+**Deviations:**
+- None from the gates; every pin held first time on shipped code.
+- The budget was reallocated in plan v5, before implementation ([fable] r2).
+- Content nit 3 is WONTFIX, as recorded in the Content Review.
