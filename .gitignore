@@ -64,3 +64,7 @@ site/.astro/
 # The Python runner (plan 104): dependencies and build output, never committed
 runner/node_modules/
 runner/dist/
+
+# Editor undo/backup files (vim): an undo file of .env holds its secrets.
+*.un~
+*~
