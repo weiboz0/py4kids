@@ -308,3 +308,34 @@ Results after the fixes: runner 26, site 409 unit tests; `pnpm -C site e2e` with
 - Pyodide memory snapshots.
 - **Phase F (the first public deploy) needs the user's go-ahead, the Cloudflare account and API token, and the domain.**
 - `scripts/ci-local.sh` solo on 29cff0d and again on cea0a04 after merging main: **ALL GREEN** (2026-10-12): 133 main, 23 PWA, 10 hooks e2e tests and 5 solver shards.
+
+### Phase F: the first public deploy (2026-10-22)
+
+The user confirmed the deploy, provided the Cloudflare account and an API token (Pages Edit, DNS Edit) in `.env`, and chose the domain:
+
+- **Site:** https://learn.futurespark.cc (Pages project `py4kids`).
+- **Runner:** https://run-learn.futurespark.cc (`py4kids-run`). It is same-site with the site, as D7 requires.
+- **Alias:** https://py4kids.futurespark.cc (`py4kids-alias`), a static `_redirects` 301 to the site. At the user's request it is a redirect rather than a second copy, which would split progress and offline downloads.
+- Release `pdfs-2026-09-30` (`release_id` `9a1e6ecd…`).
+  It was built by `scripts/build-release.sh`: the full stand-in suite, then the production build.
+- It was deployed by the new `scripts/deploy-pages.sh`, which the user approved for Claude to run.
+
+**Live smoke test** (`pnpm -C site e2e:live`, new):
+
+- Every functional step passed:
+  - headers and `crossOriginIsolated` on both origins
+  - a lesson run
+  - an expected-output check
+  - a usaco fixtures check
+  - "Download this book" reaching "Available offline"
+  - the alias redirect
+- It failed on console errors only. The `futurespark.cc` zone has Cloudflare Web Analytics automatic injection on. The CSP blocks the beacon, so nothing is collected.
+  **Open, for the user:** disable it for the zone; the token cannot. Then rerun `e2e:live`.
+
+**Fixes made along the way:**
+
+- `site/test/origins.test.ts` asserted the pre-deploy placeholder. It now asserts a real, same-site production pair.
+- The cleared-runner PWA test flaked twice in six runs, because a running worker refilled its caches. It now asserts the record. It passed 8/8.
+- `.gitignore` gains `*.un~` and `*~`: an untracked vim undo file of `.env` sat in the checkout. It also gains `.wrangler/` and `site/test-results/`.
+
+`scripts/ci-local.sh` solo on ce8eedd: **ALL GREEN**.

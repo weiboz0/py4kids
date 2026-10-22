@@ -1,0 +1,7 @@
+# Cloudflare Pages project `py4kids-alias` (plan 105 Phase F, user request): py4kids.futurespark.cc
+# answers every path with a 301 to the same path on learn.futurespark.cc, the one real site origin.
+# The site is not served twice: a second site origin would split progress (IndexedDB is per
+# origin), duplicate offline downloads and need its own runner origin (deploy/README.md).
+name = "py4kids-alias"
+pages_build_output_dir = "public"
+compatibility_date = "2026-10-01"

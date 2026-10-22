@@ -90,3 +90,17 @@ The PDFs are published as GitHub Releases on `weiboz0/py4kids`, never committed.
    ```
 
 The Teacher's Edition is included in the release, by the user's choice (2026-09-29), even though the release is public.
+
+## The learning website (design 012; plan 105 Phase F)
+
+Deployed to Cloudflare Pages from release `pdfs-2026-09-30` (`release_id` `9a1e6ecd…`) on 2026-10-22:
+
+| Pages project | Serves | Address |
+|---|---|---|
+| `py4kids` | `site/dist/` | https://learn.futurespark.cc |
+| `py4kids-run` | `runner/dist/` | https://run-learn.futurespark.cc |
+| `py4kids-alias` | `deploy/alias/public/` | https://py4kids.futurespark.cc (301 to the site) |
+
+Procedure: `scripts/build-release.sh <tag>`, then `scripts/deploy-pages.sh all` (token and account id from `.env`), then the live smoke test `pnpm -C site e2e:live`.
+The smoke test checks the headers and `crossOriginIsolated`, runs a lesson cell, passes an expected-output check and a fixtures check, downloads a book to "Available offline", and follows the alias redirect.
+On 2026-10-22 every step passed. The one failure was Cloudflare Web Analytics, automatically injected into the `futurespark.cc` zone's pages (blocked by the CSP, so nothing was collected); it must be disabled for the zone (the privacy page promises no analytics).

@@ -50,8 +50,12 @@ describe('checkPair', () => {
 describe('deploy/origins.json', () => {
   it('validates, with production same-site and the preview pair listed', () => {
     const config = readOrigins(TEXT);
-    expect(config.production.runner.startsWith('https://run.')).toBe(true);
-    expect(isPlaceholder(config.production)).toBe(true); // until plan 105 Phase F sets the domain
+    // Plan 105 Phase F set the real domain: no placeholder, and the runner is same-site with the site.
+    expect(isPlaceholder(config.production)).toBe(false);
+    const site = new URL(config.production.site).hostname;
+    const runner = new URL(config.production.runner).hostname;
+    expect(runner).not.toBe(site);
+    expect(registrableDomain(runner)).toBe(registrableDomain(site));
   });
 
   it('refuses a cross-site production runner', () => {
