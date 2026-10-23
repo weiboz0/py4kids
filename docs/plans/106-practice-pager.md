@@ -21,43 +21,74 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 
 ## Global constraints
 
-- **No change to checking, gating or data:** `practice.ts` check logic, the projections, odd-answer gating, events and attempts are untouched.
+- **No change to checking, gating or data:** what is checked, how, what is revealed, the projections, events and attempts are untouched.
+  The only change to `practice.ts` is one notification dispatched after a check result is saved (see Events); the only change to `progress-page.ts` is recording the position on pager navigation and one notification after a checklist is saved.
   An item that is not shown is only hidden (`hidden`), never removed, so its editor state, checklists and results survive switching away and back.
-- **Progressive enhancement:** the server-rendered page shows all items; the pager enhances it after load. A page with one item shows no pager chrome.
+- **Progressive enhancement:** the server-rendered page shows all items; the pager enhances it after load. A page with one item shows no pager chrome (no instance exists today; kept as a rule).
 - **Strict CSP unchanged:** no inline script or style; styles go in `site/src/styles/checks.css` (or a new stylesheet imported by the page).
+- **Groups.** Every `before` block in the bundles is a heading that opens a *run* of items ("Milestone 2", "Challenge — Exercises 25–28 combine file skills", "Algorithm Extension — optional enrichment"; 35 blocks on 25 items).
+  A `before` heading starts a group that lasts until the next one:
+  - the jump list is grouped under those headings (a sub-list per group);
+  - every item in a group shows the group heading as a small kicker above its own heading, so Exercise 26 still says it is optional stretch work and Problem 5 still says "Milestone 2";
+  - the full `before` content (heading plus any paragraph) is shown with the group's first item, as today.
 - **Accessibility (WCAG 2.1 AA, axe clean in both colour schemes):**
   - The list is a `<nav aria-label="Exercises on this page">` of links; the current one carries `aria-current="step"`.
-  - Previous / Next are real buttons or links with text labels ("Previous: Exercise 3", "Next: Exercise 5"), disabled at the ends.
-  - Changing item moves focus to the shown item's heading (`tabindex="-1"`), and a polite live region announces "Exercise 4 of 12".
+  - Previous / Next are links with text labels using the item labels ("Previous: Exercise 3", "Next: Challenge 1"), absent or disabled at the ends.
+  - Changing item by a pager control moves focus to the shown item's heading (`tabindex="-1"`). The heading carries a visually hidden position ("4 of 12"), so no separate live region announces navigation (no double announcement).
   - Keyboard only: every control is reachable; no keyboard trap. Arrow-key shortcuts are not added (they would fight the code editor).
-- **Layout:** on wide screens the list is a sticky side column; at phone width it collapses into a `<details>` "All exercises (12)" above the item, with no horizontal scroll at 320 px.
-- **Status in the list,** from the progress store (IndexedDB, read-only here): ✓ passed (latest check event `pass`, or a self-check marked `done`), • tried (any event), nothing otherwise, each with a visually hidden text equivalent ("passed", "tried").
-  A Challenge (stretch) item is tagged in the list. The list updates when a Check or a self-check completes on the page (listen for the events the page already writes, or re-read on the existing result event).
-- **Addressing:**
-  - `#<anchor>` of an item shows that item. Any other id inside a step (the item heading `#<anchor>-h`, which Pagefind's sub-results link to, or an element in a `before` block) shows the step that contains it, then scrolls to that element. An empty or unknown hash shows the first item and does not push history.
-  - Choosing an item pushes a history entry (`#anchor`), so Back returns to the previous exercise; `hashchange` drives the view.
-  - Resume already records `pathname + hash`; it must keep landing on the item.
-- **What travels with an item:** each item's `before` blocks (context paragraphs authored before it) are shown with that item. The entry intro is shown above the first item and collapsible on later items ("About these exercises"); the outro is shown after the last item.
+- **Layout:** the practice page gets a wider layout (a `wide` option on `Base.astro`, or a `.practice-layout` grid that escapes the 72ch measure) so that on wide screens the list is a sticky side column with its own `max-height: 100dvh; overflow: auto` (pages have up to 37 items); the item itself keeps the reading measure.
+  At phone width the list collapses into a `<details>` "All exercises (12)" above the item, with no horizontal scroll at 320 px.
+- **Status in the list,** derived by pure functions in `site/src/lib/pager.ts` from the progress store's events (IndexedDB, read-only here):
+  - ✓ passed: for an automatic-check item, **any** check event with result `pass` (a later failed experiment does not take the ✓ away); for a `self-check` item, its latest self-check event is `done`.
+  - • tried: any other event for the item, including an `also_check` checklist (which never counts as passed: it is not the automatic check).
+  - nothing otherwise. Each symbol has a visually hidden text equivalent ("passed", "tried").
+  - A Challenge (stretch) item is tagged in the list.
+  - While a check runs on an item, its list entry says "checking…" (glyph plus hidden text).
+- **Events** (added to the `dom-events.ts` contract):
+  - `py4kids:check` `{ key, result }`, dispatched by `practice.ts` after a check or typed answer's event is recorded;
+  - `py4kids:checklist` `{ key, done }`, dispatched by `progress-page.ts` after a checklist is recorded;
+  - `py4kids:step` `{ href }`, dispatched by the pager after every navigation (control, list, Back/Forward), which `progress-page.ts` records as the resume position, as it does for `py4kids:slide`.
+  The pager updates the list from the first two. When a check completes on a **hidden** item, a page-level polite live region announces "Exercise 2: Passed" (or "Not yet"), since the item's own `aria-live` region does not speak while hidden. Stop stays on the item; switching away does not stop a running check.
+- **Addressing and history:**
+  - Hash resolution: `document.getElementById(hash)?.closest('[data-step]')`. The item anchor, the heading `#<anchor>-h` (which Pagefind sub-results link to), and any id inside a `before` block or the item all show their step. For an id other than the step or its heading, the pager scrolls that element into view after showing the step and does not move focus. An empty or unknown hash shows the first item and does not touch history.
+  - **Jump-list choices are real `<a href="#anchor">` links:** native fragment navigation pushes a history entry and fires `hashchange`, which drives the view. Back and Forward step through the items the student chose.
+  - **Previous / Next replace the current entry** (`history.replaceState`, then show directly, since `replaceState` fires no `hashchange`), matching the slide player, so 36 presses of Next do not leave 36 Back steps; Back still leaves the page or returns to the last list choice.
+- **Intro and outro:** the entry intro is shown above the first item; on later items it is a `<details>` "About these exercises", open by default when the intro is a single short block (checkpoint rules stay visible). The outro is shown after the last item.
+- **Search:** the jump list and the Previous / Next controls are outside `data-pagefind-body` (or carry `data-pagefind-ignore`), so they do not pollute excerpts. On practice pages the search results link to the matched item through Pagefind's `sub_results` heading anchors (`search.ts`), so a hit lands on that exercise rather than on item 1.
+- **Print:** `@media print` shows every step and hides the pager chrome.
 - **Checkpoints and projects** use the same page template and get the same pager.
 
 ## Phases
 
-- **Phase A: markup.** In `practice/index.astro`, wrap each item's `before` blocks and its `<section class="practice-item">` in one step container (`<div class="practice-step" data-step data-anchor=…>`), and render the jump list and Previous / Next controls server-side (hidden until the island enables them; `[hidden]` attribute, no inline style). The list's labels come from the same `item.label` / `item.title` the headings use.
-- **Phase B: the island.** `site/src/scripts/practice-pager.ts`, imported by the page: reads the hash, shows one step and hides the rest, wires the list and Previous / Next, manages focus, the live region and history, and fills list statuses from the progress store. It must not break `practice.ts`: lazily mounted editors (IntersectionObserver) mount when their step is shown; a Check running on a hidden step finishes and still records its result.
+- **Phase A: markup and layout.** In `practice/index.astro`: wrap each item (and, for a group's first item, its `before` blocks) in a step container (`<div class="practice-step" data-step data-anchor=…>`); compute the groups (in `entry.ts`'s practice view, exposing a group label per item) and render the group kicker per item; render the grouped jump list and Previous / Next server-side, hidden until the island enables them (`[hidden]`, no inline style), outside the Pagefind body; the wide layout; the print rule.
+- **Phase B: the island and events.**
+  - `site/src/lib/pager.ts` (pure, unit-tested): hash → step resolution, Previous / Next targets, status derivation.
+  - `site/src/scripts/practice-pager.ts`, imported by the page: shows one step, wires the list and controls with the history rules above, focus, the hidden-check live region, the "checking…" state, and the list statuses.
+  - `dom-events.ts`: the three events; `practice.ts` dispatches `py4kids:check`; `progress-page.ts` dispatches `py4kids:checklist` and records `py4kids:step` as the resume position.
+  - `search.ts`: practice-page results link to the matching sub-result anchor.
+  - It must not break `practice.ts`: lazily mounted editors (IntersectionObserver) mount when their step is shown; a check running on a hidden step finishes, records and announces its result.
 - **Phase C: tests (the named verification phase).**
-  - Unit (vitest): hash → step resolution (known, unknown, empty), Previous / Next bounds, status derivation from events (pass, tried, self-check done, none).
+  - Unit (vitest, `site/test/pager.test.ts`): hash resolution (item anchor, heading id, an id inside a `before` block, unknown, empty); Previous / Next at both ends; the status rule (any pass → ✓ after a later fail; a self-check `done` → ✓; an automatic item whose `also_check` list is done but whose check failed → •; no events → nothing); grouping from `before` blocks.
   - Playwright (`site/e2e/pager.spec.ts`):
-    - one item visible on load (the first); `#<anchor>` and the heading's `#<anchor>-h` deep links show that item;
-    - list navigation and Previous / Next change the shown item, push history, and Back returns to the previous item;
-    - focus moves to the item heading and the live region announces the position;
-    - a Check passed on item 2, then a jump to item 5 and back to item 2: the code and the result are still there, and the list shows ✓ for item 2;
-    - a self-check ticked shows • or ✓ per the rule;
-    - resume: leaving from item 3 and following "Continue" lands on item 3;
-    - phone width (360 px): the list is a collapsed `<details>`, no horizontal scroll;
+    - one item visible on load (the first); `#<anchor>` and `#<anchor>-h` deep links show that item;
+    - a jump-list choice pushes history (Back returns to the previous item, Forward again); Previous / Next replace it (after Next×3, one Back leaves the page or returns to the last list choice);
+    - focus moves to the item heading on a control or list choice; the heading's position text reads "4 of 12";
+    - a Check passed on item 2, a jump to item 5 and back: the code and the result are still there, and the list shows ✓ for item 2; a failed re-check keeps the ✓;
+    - a check started on item 2, then a jump to item 5 before it ends: item 2's list entry says "checking…", then the page live region announces its result;
+    - a self-check ticked to done shows ✓; an `also_check` list ticked on a failed automatic item shows •;
+    - group kickers: an item in the middle of a group (Exercise 26 of unit 12, Problem 5 of project 1) shows its group heading; the list shows the groups;
+    - resume: navigate to item 3 by Next, assert the saved resume href ends with item 3's anchor, leave, follow "Continue", land on item 3;
+    - a search for words unique to a later exercise links to that exercise's anchor and lands on it;
+    - print (`page.emulateMedia({ media: 'print' })`): every item visible and the pager chrome hidden;
+    - phone width (360 px): the list is a collapsed `<details>`, no horizontal scroll; wide width: the side list scrolls on its own;
     - with JavaScript disabled, every item is visible;
-    - a one-item page shows no pager chrome;
-    - axe on the pager in light and dark; zero CSP violations.
-  - The existing site, site-sw, PWA and lighthouse suites still pass (some e2e tests address items on a practice page directly and may need the hash or a helper that shows the item first: update `e2e/helpers/practice.ts` `open()` to navigate to `#<anchor>`).
+    - axe on the pager in light and dark (list open and closed); zero CSP violations.
+  - **Existing tests that address items directly are updated:**
+    - `e2e/helpers/content.ts`: `Found` gains `anchor` (from `itemAnchors`);
+    - `e2e/helpers/practice.ts` `open()` navigates to `page + '#' + anchor`;
+    - `acceptance.spec.ts` (≈55–58: its own goto and fill) and `journey.spec.ts` (≈63–70: the first self-check box on the page) go to the item's anchor first;
+    - `review-fixes.spec.ts` (≈115: the resume href has no hash on first load) stays as is: an empty hash touches nothing.
+  - The existing site, site-sw, PWA and lighthouse suites still pass.
   - `scripts/ci-local.sh` solo on the final commit.
 
 ## Out of scope
@@ -72,6 +103,31 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 ### Round 1 (d9b756e)
 
 - `[self]` APPROVE after one fix: search results (Pagefind sub-results) and other links target ids *inside* a step, such as the heading `#<anchor>-h`, not only the step anchor. Hash resolution now maps any contained id to its step (Addressing), and Phase C's deep-link test covers a heading hash.
+
+- `[sol]` **REQUEST CHANGES** (gpt-6-sol). All five findings are folded into round 2:
+  - resume is not recorded on navigation (now `py4kids:step`);
+  - the status list has no event source (now `py4kids:check` and `py4kids:checklist`);
+  - an `also_check` list must not count as passed;
+  - print contradicts hiding (now a print rule, with a test);
+  - the history mechanism must be explicit (links push; Previous / Next replace).
+  It also named `acceptance.spec.ts` and `journey.spec.ts`.
+- `[fable]` **REQUEST CHANGES**. All folded into round 2:
+  - MAJOR: `before` blocks are group headers. They now form groups, with a kicker on every item and a grouped list.
+  - MAJOR: the resume mechanism and the missing check event, as [sol] found.
+  - MINOR:
+    - closest-step hash resolution;
+    - search hits on hidden items (sub-result anchors; the chrome is outside the Pagefind body);
+    - push vs replace;
+    - hidden-check silence ("checking…" plus a page live region);
+    - the wide layout;
+    - the named e2e files;
+    - status as "any pass";
+    - the logic in `src/lib/pager.ts`.
+  - NIT, all taken:
+    - item labels in the position text;
+    - no double announcement (position text in the heading);
+    - print;
+    - the intro `<details>` open when short.
 
 ## Content Review
 
