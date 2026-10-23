@@ -34,7 +34,7 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 - **Status in the list,** from the progress store (IndexedDB, read-only here): ✓ passed (latest check event `pass`, or a self-check marked `done`), • tried (any event), nothing otherwise, each with a visually hidden text equivalent ("passed", "tried").
   A Challenge (stretch) item is tagged in the list. The list updates when a Check or a self-check completes on the page (listen for the events the page already writes, or re-read on the existing result event).
 - **Addressing:**
-  - `#<anchor>` of an item shows that item; an empty or unknown hash shows the first item and does not push history.
+  - `#<anchor>` of an item shows that item. Any other id inside a step (the item heading `#<anchor>-h`, which Pagefind's sub-results link to, or an element in a `before` block) shows the step that contains it, then scrolls to that element. An empty or unknown hash shows the first item and does not push history.
   - Choosing an item pushes a history entry (`#anchor`), so Back returns to the previous exercise; `hashchange` drives the view.
   - Resume already records `pathname + hash`; it must keep landing on the item.
 - **What travels with an item:** each item's `before` blocks (context paragraphs authored before it) are shown with that item. The entry intro is shown above the first item and collapsible on later items ("About these exercises"); the outro is shown after the last item.
@@ -47,7 +47,7 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 - **Phase C: tests (the named verification phase).**
   - Unit (vitest): hash → step resolution (known, unknown, empty), Previous / Next bounds, status derivation from events (pass, tried, self-check done, none).
   - Playwright (`site/e2e/pager.spec.ts`):
-    - one item visible on load (the first), and `#<anchor>` deep links show that item;
+    - one item visible on load (the first); `#<anchor>` and the heading's `#<anchor>-h` deep links show that item;
     - list navigation and Previous / Next change the shown item, push history, and Back returns to the previous item;
     - focus moves to the item heading and the live region announces the position;
     - a Check passed on item 2, then a jump to item 5 and back to item 2: the code and the result are still there, and the list shows ✓ for item 2;
@@ -68,6 +68,10 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 - No unit, project or checkpoint content changes, so the curriculum checks are unaffected (a site-only plan; the verification phase is Phase C).
 
 ## Plan Review
+
+### Round 1 (d9b756e)
+
+- `[self]` APPROVE after one fix: search results (Pagefind sub-results) and other links target ids *inside* a step, such as the heading `#<anchor>-h`, not only the step anchor. Hash resolution now maps any contained id to its step (Addressing), and Phase C's deep-link test covers a heading hash.
 
 ## Content Review
 
