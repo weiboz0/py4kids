@@ -22,11 +22,11 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 ## Global constraints
 
 - **No change to checking, gating or data:** what is checked, how, what is revealed, the projections, events and attempts are untouched.
-  The only change to `practice.ts` is one notification dispatched after a check result is saved (see Events); the only change to `progress-page.ts` is recording the position on pager navigation and one notification after a checklist is saved.
+  The only changes to `practice.ts` are the `check-start` and terminal `check` notifications (see Events); the only changes to `progress-page.ts` are recording the position on `py4kids:step` and the `checklist` notification after a checklist is saved.
   An item that is not shown is only hidden (`hidden`), never removed, so its editor state, checklists and results survive switching away and back.
 - **Progressive enhancement:** the server-rendered page shows all items; the pager enhances it after load. A page with one item shows no pager chrome (no instance exists today; kept as a rule).
 - **Strict CSP unchanged:** no inline script or style; styles go in `site/src/styles/checks.css` (or a new stylesheet imported by the page).
-- **Groups.** Every `before` block in the bundles is a heading that opens a *run* of items ("Milestone 2", "Challenge — Exercises 25–28 combine file skills", "Algorithm Extension — optional enrichment"; 35 blocks on 25 items).
+- **Groups.** Most `before` blocks are headings that open a *run* of items ("Milestone 2", "Challenge — Exercises 25–28 combine file skills", "Algorithm Extension — optional enrichment"); some are marker comments or short paragraphs.
   A `before` block **that contains a heading** starts a group that lasts until the next one; its label is the heading text (`lastHeading` in `entry.ts`). A `before` block without a heading (a marker comment, or a "Try these…" paragraph) starts no group and travels with its item:
   - the jump list is grouped under those headings (a sub-list per group);
   - every item in a group shows the group heading as a small kicker above its own heading (a `<p class="step-kicker">`, not a heading element, so the outline stays h1 → h2 and Pagefind makes no sub-result of it), so Exercise 26 still says it is optional stretch work and Problem 5 still says "Milestone 2". A Challenge tag is not repeated on an item whose kicker already says "Challenge";
@@ -46,10 +46,10 @@ Without JavaScript (and for search indexing and printing), the page renders exac
   - While a check runs on an item, its list entry says "checking…" (glyph plus hidden text).
 - **Events** (added to the `dom-events.ts` contract):
   - `py4kids:check-start` `{ key }`, dispatched by `practice.ts` when a check or typed answer starts (where it sets the item busy);
-  - `py4kids:check` `{ key, result }`, the terminal notification, dispatched by `practice.ts` from the end of **every** path: `pass`, `fail`, `partial` after the event is recorded, and `error` (runner unavailable or an unexpected failure, nothing recorded) and `stopped` (Stop pressed). Only a recorded `pass` can make ✓;
+  - `py4kids:check` `{ key, result }`, the terminal notification, dispatched by `practice.ts` from the end of **every** path: `pass`, `fail`, `partial` after the save was attempted, and `error` (runner unavailable or an unexpected failure) and `stopped` (Stop pressed). The event says what happened, not what was stored: `withStore` swallows storage failures, so the event's result is used only to clear "checking…" and for the announcement;
   - `py4kids:checklist` `{ key, done }`, dispatched by `progress-page.ts` after a checklist is recorded;
   - `py4kids:step` `{ href }`, dispatched once per shown step from the pager's single show function (reached from the controls, the list, Back/Forward and load), which `progress-page.ts` records as the resume position, as it does for `py4kids:slide`.
-  The pager sets "checking…" on `check-start` and clears it on the terminal `check`, and updates statuses from `check` and `checklist`. When a check ends on a **hidden** item, a page-level polite live region announces "Exercise 2: Passed" (or "Not yet", "Could not check", "Stopped"), since the item's own `aria-live` region does not speak while hidden. Stop stays on the item; switching away does not stop a running check.
+  The pager sets "checking…" on `check-start` and clears it on the terminal `check`. **Statuses always come from the store:** on every `check` and `checklist` notification the pager re-reads that item's events and derives its status (`lib/pager.ts`), so ✓ appears only for a `pass` that was actually recorded, and a failed save leaves the list as it was (the store's existing unsaved-progress notice already tells the student). When a check ends on a **hidden** item, a page-level polite live region announces "Exercise 2: Passed" (or "Not yet", "Could not check", "Stopped"), since the item's own `aria-live` region does not speak while hidden. Stop stays on the item; switching away does not stop a running check.
 - **Addressing and history:**
   - Hash resolution: `document.getElementById(hash)?.closest('[data-step]')`. The item anchor, the heading `#<anchor>-h` (which Pagefind sub-results link to), and any id inside a `before` block or the item all show their step. For an id other than the step or its heading, the pager scrolls that element into view after showing the step and does not move focus.
   - **At load**, an empty or unresolvable hash shows the first item and does not touch history. **On a later `hashchange`**, a hash that resolves to no step (the skip link `#main`, any in-page link outside a step) leaves the current step shown and lets the browser jump normally.
@@ -66,7 +66,7 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 - **Phase B: the island and events.**
   - `site/src/lib/pager.ts` (pure, unit-tested): hash → step resolution, Previous / Next targets, status derivation.
   - `site/src/scripts/practice-pager.ts`, imported by the page: shows one step, wires the list and controls with the history rules above, focus, the hidden-check live region, the "checking…" state, and the list statuses.
-  - `dom-events.ts`: the three events; `practice.ts` dispatches `py4kids:check`; `progress-page.ts` dispatches `py4kids:checklist` and records `py4kids:step` as the resume position.
+  - `dom-events.ts`: the four events; `practice.ts` dispatches `py4kids:check-start` and the terminal `py4kids:check`; `progress-page.ts` dispatches `py4kids:checklist` and records `py4kids:step` as the resume position.
   - `search.ts`: practice-page results link to the matching sub-result anchor.
   - It must not break `practice.ts`: lazily mounted editors (IntersectionObserver) mount when their step is shown; a check running on a hidden step finishes, records and announces its result.
 - **Phase C: tests (the named verification phase).**
@@ -80,6 +80,7 @@ Without JavaScript (and for search indexing and printing), the page renders exac
     - a check that ends without a result (Stop pressed on item 2 after a jump away and back, and a runner failure forced by blocking the runner origin): "checking…" clears and the outcome is announced;
     - the skip link on item 5 (`#main`) keeps item 5 shown;
     - a group whose first item has two `before` blocks (a heading and a marker comment, unit-04-quiz-show Exercise 11; a heading and a paragraph, unit-05-function-factory Challenge 1): one group, both blocks with the first item, the kicker from the heading only;
+    - a passing check whose save fails (the store's write rejected through the test harness, e.g. IndexedDB made unavailable before the check) clears "checking…" and shows no ✓;
     - a self-check ticked to done shows ✓; an `also_check` list ticked on a failed automatic item shows •;
     - group kickers: an item in the middle of a group (Exercise 26 of unit 12, Problem 5 of project 1) shows its group heading; the list shows the groups;
     - resume: navigate to item 3 by Next, assert the saved resume href ends with item 3's anchor, leave, follow "Continue", land on item 3;
@@ -144,6 +145,13 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 - `[sol]` **REQUEST CHANGES** (gpt-6-sol). Both folded; each is the same as one of [fable]'s:
   - MAJOR: start and terminal check notifications, including unsaved failures, with a test.
   - MINOR: group only on an actual heading, keep other blocks with their item, and test a multi-block case.
+
+### Round 3 (9a3a903)
+
+- `[fable]` **APPROVE WITH NITS**. Both nits fixed: the `## Content Review` heading, deleted by the round-2 edit, is restored, and the fixture is named "Exercise 11".
+- `[sol]` **REQUEST CHANGES** (gpt-6-sol). Folded:
+  - MAJOR: `withStore` swallows save failures, so a terminal `pass` could show ✓ for an unrecorded pass. → Statuses are always re-derived from the store on each notification, and the event result only clears "checking…" and drives the announcement. A save-failure test is added. The stale "one notification" constraint and the Phase B summary are corrected.
+  - MINOR: the Exercise 11 fixture is fixed, and the claim that every `before` block is a heading is removed.
 
 ## Content Review
 
