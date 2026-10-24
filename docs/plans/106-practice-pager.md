@@ -79,7 +79,7 @@ Without JavaScript (and for search indexing and printing), the page renders exac
     - a check started on item 2, then a jump to item 5 before it ends: item 2's list entry says "checking…", then the page live region announces its result;
     - a check that ends without a result (Stop pressed on item 2 after a jump away and back, and a runner failure forced by blocking the runner origin): "checking…" clears and the outcome is announced;
     - the skip link on item 5 (`#main`) keeps item 5 shown;
-    - a group whose first item has two `before` blocks (a heading and a marker comment, unit-04-quiz-show item 10; a heading and a paragraph, unit-05-function-factory Challenge 1): one group, both blocks with the first item, the kicker from the heading only;
+    - a group whose first item has two `before` blocks (a heading and a marker comment, unit-04-quiz-show Exercise 11; a heading and a paragraph, unit-05-function-factory Challenge 1): one group, both blocks with the first item, the kicker from the heading only;
     - a self-check ticked to done shows ✓; an `also_check` list ticked on a failed automatic item shows •;
     - group kickers: an item in the middle of a group (Exercise 26 of unit 12, Problem 5 of project 1) shows its group heading; the list shows the groups;
     - resume: navigate to item 3 by Next, assert the saved resume href ends with item 3's anchor, leave, follow "Continue", land on item 3;
@@ -145,6 +145,6 @@ Without JavaScript (and for search indexing and printing), the page renders exac
   - MAJOR: start and terminal check notifications, including unsaved failures, with a test.
   - MINOR: group only on an actual heading, keep other blocks with their item, and test a multi-block case.
 
-
+## Content Review
 
 ## Post-Execution Report
