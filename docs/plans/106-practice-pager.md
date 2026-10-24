@@ -80,7 +80,7 @@ Without JavaScript (and for search indexing and printing), the page renders exac
     - a check that ends without a result (Stop pressed on item 2 after a jump away and back, and a runner failure forced by blocking the runner origin): "checking…" clears and the outcome is announced;
     - the skip link on item 5 (`#main`) keeps item 5 shown;
     - a group whose first item has two `before` blocks (a heading and a marker comment, unit-04-quiz-show Exercise 11; a heading and a paragraph, unit-05-function-factory Challenge 1): one group, both blocks with the first item, the kicker from the heading only;
-    - a passing check whose save fails (the store's write rejected through the test harness, e.g. IndexedDB made unavailable before the check) clears "checking…" and shows no ✓;
+    - a passing check whose save fails clears "checking…" and shows no ✓. The harness makes an **open** IndexedDB store's write reject (an init script stubs `IDBObjectStore.prototype.put` / `add` to throw for the `events` store before Check is pressed). Making IndexedDB unavailable would not do: the store would fall back to memory, where the write succeeds;
     - a self-check ticked to done shows ✓; an `also_check` list ticked on a failed automatic item shows •;
     - group kickers: an item in the middle of a group (Exercise 26 of unit 12, Problem 5 of project 1) shows its group heading; the list shows the groups;
     - resume: navigate to item 3 by Next, assert the saved resume href ends with item 3's anchor, leave, follow "Continue", land on item 3;
