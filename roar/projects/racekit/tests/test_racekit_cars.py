@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import random
 
 import pytest
 from racekit.cars import Car, KinematicCar
@@ -83,3 +84,78 @@ def test_kinematic_car_satisfies_the_car_protocol():
         assert callable(getattr(car, name))
     with pytest.raises(ValueError):
         KinematicCar(integrator="leapfrog")
+
+
+# --- actuator jitter (plan roar-002 Phase 1) -----------------------------------------------------
+
+
+class _Raising:
+    """A stand-in random stream that fails on any draw."""
+
+    def __getattr__(self, name):
+        raise AssertionError(f"jitter = 0 must draw no random numbers (called {name})")
+
+
+def _drive(car: KinematicCar, actions, seed: int = 0):
+    car.seed(seed)
+    car.reset(0.0, 0.0, 0.0, 10.0)
+    states = []
+    for throttle, steer, brake in actions:
+        car.advance(throttle, steer, brake, 0.0, 0.0, 0.05, 10)
+        states.append((car.x, car.y, car.yaw, car.v))
+    return states
+
+
+ACTIONS = [(0.6, 0.05, 0.0), (1.0, -1.0, 0.0), (0.0, 0.2, 0.7), (0.98, 0.99, 0.0)] * 25
+
+
+def test_jitter_is_seeded_and_deterministic():
+    first = _drive(KinematicCar(jitter=0.05), ACTIONS, seed=7)
+    again = _drive(KinematicCar(jitter=0.05), ACTIONS, seed=7)
+    other = _drive(KinematicCar(jitter=0.05), ACTIONS, seed=8)
+    assert first == again and first != other
+    clean = _drive(KinematicCar(), ACTIONS)
+    assert first != clean
+    car = KinematicCar(jitter=0.05)
+    car.seed(7)
+    restarted = _drive(car, ACTIONS, seed=7)  # seed() restarts the stream
+    assert restarted == first
+
+
+def test_jitter_draws_throttle_then_steer_clipped_and_never_touches_the_brake():
+    """The protocol: per tick, throttle + gauss(0, σ) clipped to [0, 1], THEN steer + gauss(0, σ)
+    clipped to [-1, 1]; the brake is passed through."""
+    sigma = 0.3
+    jittered = KinematicCar(jitter=sigma)
+    reference = KinematicCar()
+    stream = random.Random(11)
+    jittered.seed(11)
+    jittered.reset(0.0, 0.0, 0.0, 10.0)
+    reference.reset(0.0, 0.0, 0.0, 10.0)
+    for throttle, steer, brake in ACTIONS:
+        expected_throttle = min(1.0, max(0.0, throttle + stream.gauss(0.0, sigma)))
+        expected_steer = min(1.0, max(-1.0, steer + stream.gauss(0.0, sigma)))
+        jittered.advance(throttle, steer, brake, 0.0, 0.0, 0.05, 10)
+        reference.advance(expected_throttle, expected_steer, brake, 0.0, 0.0, 0.05, 10)
+        assert (jittered.x, jittered.y, jittered.yaw, jittered.v) == (reference.x, reference.y, reference.yaw,
+                                                                         reference.v)
+
+
+def test_jitter_zero_draws_nothing_and_is_byte_identical():
+    car = KinematicCar(jitter=0.0)
+    car.seed(5)
+    car._rng = _Raising()
+    assert _drive_unseeded(car) == _drive_unseeded(KinematicCar())
+    with pytest.raises(ValueError):
+        KinematicCar(jitter=-0.1)
+    with pytest.raises(ValueError):
+        KinematicCar(jitter=float("nan"))
+
+
+def _drive_unseeded(car: KinematicCar):
+    car.reset(0.0, 0.0, 0.0, 10.0)
+    states = []
+    for throttle, steer, brake in ACTIONS:
+        car.advance(throttle, steer, brake, 0.0, 0.0, 0.05, 10)
+        states.append((car.x, car.y, car.yaw, car.v))
+    return states

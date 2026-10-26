@@ -179,9 +179,9 @@ def test_driver_generates_twice_identically_within_budget(tmp_path):
     first = generate.generate(tmp_path / "a")
     elapsed = time.perf_counter() - start
     second = generate.generate(tmp_path / "b")
-    assert elapsed <= 10.0  # plan roar-001: generation takes ≤ 10 s
+    assert elapsed <= 10.0  # plan roar-001: generation takes ≤ 10 s (with roar-002's lab race, too)
     assert first == second
-    assert sorted(first) == [f"tracks/{name}.npz" for name in sorted(g.TRACK_NAMES)]
+    assert sorted(first) == ["lab/sample_telemetry.csv"] + [f"tracks/{name}.npz" for name in sorted(g.TRACK_NAMES)]
     for path in first:
         assert (tmp_path / "a" / path).read_bytes() == (tmp_path / "b" / path).read_bytes()
     stored = json.loads((tmp_path / "a" / "checksums.json").read_text(encoding="utf-8"))
@@ -193,11 +193,11 @@ def test_driver_generates_twice_identically_within_budget(tmp_path):
 def test_driver_fails_on_a_two_run_mismatch(tmp_path, monkeypatch):
     calls = iter(range(10))
 
-    def unstable():
+    def unstable(out_dir):
         arrays = g.build("oval").arrays()
         arrays["x"] = arrays["x"] + next(calls)
         return {"tracks/oval.npz": (g.npz_bytes(arrays), g.content_hash(arrays))}
 
-    monkeypatch.setattr(generate, "STEPS", (("tracks", unstable),))
+    monkeypatch.setattr(generate, "STEPS", (("tracks", unstable, generate.rehash_track),))
     with pytest.raises(SystemExit, match="disagree"):
         generate.generate(tmp_path)

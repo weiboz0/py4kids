@@ -204,25 +204,48 @@ def test_every_racekit_module_is_python_3_8(path):
     assert [alias.name for alias in first.names] == ["annotations"]
 
 
+def _top_level_modules(nodes):
+    found = set()
+    for node in nodes:
+        if isinstance(node, ast.Import):
+            found |= {alias.name.split(".")[0] for alias in node.names}
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            found.add(node.module.split(".")[0])
+    return found
+
+
 def test_racekit_core_imports_numpy_only():
-    third_party = set()
+    """Module-level imports are numpy and the 3.8 standard library only; matplotlib is imported
+    lazily, inside the functions of the analysis module ``plots`` only."""
+    module_level = set()
+    lazy = {}
     for path in _racekit_modules():
-        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
-            if isinstance(node, ast.Import):
-                third_party |= {alias.name.split(".")[0] for alias in node.names}
-            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-                third_party.add(node.module.split(".")[0])
-    assert third_party - py38_stdlib() == {"numpy"}
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        module_level |= _top_level_modules(tree.body)
+        nested = _top_level_modules(ast.walk(tree)) - _top_level_modules(tree.body) - py38_stdlib() - {"numpy"}
+        if nested:
+            lazy[path.name] = nested
+    assert module_level - py38_stdlib() == {"numpy"}
+    assert lazy == {"plots.py": {"matplotlib"}}
+
+
+AGENTS = sorted((RACEKIT / "agents").glob("*.py"))
+
+
+def test_unit_01_is_the_starter_copied():
+    assert (RACEKIT / "agents" / "unit-01.py").read_bytes() == STARTER.read_bytes()
+    assert [path.name for path in AGENTS][:2] == ["starter.py", "unit-01.py"]
 
 
 @pytest.mark.slow
-def test_isolated_python_3_8_check_submission_run():
-    """The isolated 3.8 run (design 013 §4.1). Needs uv's managed CPython 3.8: if it cannot be
-    fetched, this test FAILS rather than skips."""
+@pytest.mark.parametrize("agent", AGENTS, ids=lambda path: path.name)
+def test_isolated_python_3_8_check_submission_run(agent):
+    """The isolated 3.8 run (design 013 §4.1), for every reference submission in ``agents/``.
+    Needs uv's managed CPython 3.8: if it cannot be fetched, this test FAILS rather than skips."""
     command = [
         "uv", "run", "--no-project", "--python", "3.8",
         "--with", "numpy<1.25", "--with", "scipy<1.11", "--with-editable", "roar/projects/racekit",
-        "python", "-m", "racekit.check_submission", "roar/projects/racekit/agents/starter.py",
+        "python", "-m", "racekit.check_submission", agent.relative_to(REPO).as_posix(),
     ]
     run = subprocess.run(command, cwd=REPO, capture_output=True, text=True, timeout=600, check=False)
     assert run.returncode == 0, run.stdout + run.stderr

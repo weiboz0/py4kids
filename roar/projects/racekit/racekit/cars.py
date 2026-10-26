@@ -7,6 +7,7 @@ Every number a racekit car produces is a *model* number: re-measure on the offic
 from __future__ import annotations
 
 import math
+import random
 from typing import Protocol, Tuple  # typing.Protocol exists from Python 3.8
 
 
@@ -37,7 +38,13 @@ class KinematicCar:
       ``a_brake · brake`` against the motion, minus quadratic drag ``c_drag · v · |v|``;
       braking stops the car, it never reverses it;
     * integration: RK4 (or explicit Euler, for teaching) over ``substeps`` equal substeps per tick,
-      in plain ``math`` scalars.
+      in plain ``math`` scalars;
+    * **actuator jitter** (plan roar-002; design 013 §4.4 puts noise on roar-004's carla-like car,
+      which reuses this protocol): with ``jitter = σ > 0`` each tick adds ``gauss(0, σ)`` to the
+      throttle (clipped to [0, 1]) and then ``gauss(0, σ)`` to the steer (clipped to [-1, 1]), drawn
+      from ``random.Random(seed)``; the brake is never jittered. ``run_race(seed=...)`` calls
+      ``seed()`` before each race. With ``jitter = 0`` (the default) no random number is drawn and
+      the car is exactly deterministic.
 
     The steady-state circle radius is ``L / tan δ``.
     """
@@ -50,16 +57,25 @@ class KinematicCar:
         a_brake: float = 8.0,
         c_drag: float = 4.0e-4,
         integrator: str = "rk4",
+        jitter: float = 0.0,
     ) -> None:
         if integrator not in ("rk4", "euler"):
             raise ValueError("integrator must be 'rk4' or 'euler'")
+        if not jitter >= 0.0:
+            raise ValueError("jitter must be a standard deviation >= 0")
         self.wheelbase = wheelbase
         self.max_steer = max_steer
         self.a_throttle = a_throttle
         self.a_brake = a_brake
         self.c_drag = c_drag
         self.integrator = integrator
+        self.jitter = float(jitter)
+        self._rng = random.Random(0)
         self.x = self.y = self.yaw = self.v = 0.0
+
+    def seed(self, seed: int) -> None:
+        """Restart the jitter's random stream (``run_race`` calls it with the race seed)."""
+        self._rng = random.Random(seed)
 
     def reset(self, x: float, y: float, yaw: float, v: float = 0.0) -> None:
         self.x, self.y, self.yaw, self.v = float(x), float(y), float(yaw), float(v)
@@ -72,6 +88,10 @@ class KinematicCar:
         dt: float, substeps: int,
     ) -> None:
         """Advance one control tick of ``dt`` seconds with the action held constant."""
+        if self.jitter != 0.0:
+            gauss = self._rng.gauss
+            throttle = min(1.0, max(0.0, throttle + gauss(0.0, self.jitter)))
+            steer = min(1.0, max(-1.0, steer + gauss(0.0, self.jitter)))
         tan_delta = math.tan(-steer * self.max_steer)
         k_yaw = tan_delta / self.wheelbase
         drive = self.a_throttle * throttle * (-1.0 if reverse >= 0.5 else 1.0)

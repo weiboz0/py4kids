@@ -8,4 +8,7 @@ is Python 3.8-compatible.
 
 from __future__ import annotations
 
+from .variants import write_variant
+
 __version__ = "0.1.0"
+__all__ = ["write_variant"]
