@@ -1,6 +1,6 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4.1 (2026-10-26). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.2 (2026-10-26). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
@@ -289,7 +289,7 @@ Challenge), `solutions.ipynb`, `teacher-notes.md` and `manifest.yaml`.
 | # | Unit | Project hook | Introduces | Gate |
 |---|---|---|---|---|
 | 1 | The race and the baseline 🏁 | "Here is the starter agent. How fast is it, and where does it lose time?" | Race rules; the submission ABI; the step loop; telemetry; sector splits; **repeated runs, median and spread** | The starter completes `oval` and `monza-like` with 0 collisions in all of N noisy runs; the median and spread lie in pinned intervals |
-| 2 | Geometry of a track | "Why does the baseline cut corners and wobble?" | Frames, heading, `atan2`, angle wrapping; windowed nearest-waypoint search; cross-track error; Menger curvature | Functions match analytic circles within tolerance |
+| 2 | Geometry of a track | "The starter steers at a point three waypoints ahead and never looks further: where exactly is the car relative to the track, and what is coming?" (v4.2) | Frames, heading, `atan2`, angle wrapping; windowed nearest-waypoint search; cross-track error; Menger curvature | Functions match analytic circles within tolerance |
 | 3 | Modelling the car | "Predict where the car is in 1 s." | Kinematic bicycle and longitudinal map; Euler vs RK; timestep error | Circle radius matches the analytic value; RK error < Euler error |
 | 4 | PID control | "Hold 20 m/s, then follow the line." | P/I/D; discrete PID; windup; step-response tuning; steering from heading error | Overshoot and settling in bounds; cross-track error below the starter's |
 | 5 | Geometric steering 🏁 | "Steer like a driver looks ahead." | Pure pursuit; speed-scaled lookahead; Stanley; stability vs corner-cutting | Pure pursuit lowers cross-track error at speed (noise-aware) |
@@ -590,3 +590,6 @@ Pairings may be adjusted by each plan's gate without a design change.
   - the universal p99 budget, host-failure handling and a wider deny-list.
 - v4.1 (2026-10-26): factual correction from the roar-001 content gate ([fable] M1, verified against
   `ab19e1b`). Respawn resets progress to 0 after a 20-step hold, and the finish uses a 5-waypoint margin.
+- v4.2 (2026-10-26): the §6 Unit 2 hook is reframed (plan `roar-003`, [fable] N6). On racekit's kinematic car the
+  starter neither wobbles nor cuts corners (probe: steer sign flips ≤ 0.08/s, max |offset| ≤ 0.85 m, all clean), so
+  the hook asks where the car is and what is coming; wobble and corner-cutting arrive with grip in Unit 6.

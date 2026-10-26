@@ -64,5 +64,7 @@ Comparisons are noise-aware: one agent beats another only by more than the sprea
 | # | Id | Kind | Lessons | The question it answers |
 |---|----|------|---------|-------------------------|
 | 1 | `unit-01-the-race-and-baseline` | unit | 3 | How fast is the official starter agent, and where does it lose time? Race rules, telemetry, sector splits and honest repeated-run measurement. |
+| 2 | `unit-02-track-geometry` | unit | 3 | The starter steers at a point three waypoints ahead and never looks further: where exactly is the car relative to the track, and what is coming? Frames, heading, angle wrapping, projection, cross-track error and curvature, used to measure the starter. |
+| 3 | `unit-03-modelling-the-car` | unit | 3 | Where will the car be in one second? The kinematic bicycle, the longitudinal map, and Euler vs RK4 integration with their error orders. |
 
 *Later units, the checkpoints and the capstone are added by the plans that follow.*

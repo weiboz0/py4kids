@@ -1,0 +1,9 @@
+id: unit-02-track-geometry
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [frames-and-heading, waypoint-projection, cross-track-error, menger-curvature]
+  requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting]
+  practices: [race-telemetry, repeated-run-measurement, telemetry-plotting]
