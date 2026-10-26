@@ -22,7 +22,7 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 ## Global constraints
 
 - **No change to checking, gating or data:** what is checked, how, what is revealed, the projections, events and attempts are untouched.
-  The only changes to `practice.ts` are the `check-start` and terminal `check` notifications (see Events); the only changes to `progress-page.ts` are recording the position on `py4kids:step` and the `checklist` notification after a checklist is saved.
+  The only changes to `practice.ts` are the `check-start` and terminal `check` notifications, `withStore` returning whether its write succeeded (a boolean), and, in **both** the code-check and typed-answer paths, the not-saved note in the result area when it did not (see Events); the only changes to `progress-page.ts` are recording the position on `py4kids:step` and the `checklist` notification after a checklist is saved.
   An item that is not shown is only hidden (`hidden`), never removed, so its editor state, checklists and results survive switching away and back.
 - **Progressive enhancement:** the server-rendered page shows all items; the pager enhances it after load. A page with one item shows no pager chrome (no instance exists today; kept as a rule).
 - **Strict CSP unchanged:** no inline script or style; styles go in `site/src/styles/checks.css` (or a new stylesheet imported by the page).
@@ -68,7 +68,7 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 - **Phase B: the island and events.**
   - `site/src/lib/pager.ts` (pure, unit-tested): hash → step resolution, Previous / Next targets, status derivation.
   - `site/src/scripts/practice-pager.ts`, imported by the page: shows one step, wires the list and controls with the history rules above, focus, the hidden-check live region, the "checking…" state, and the list statuses.
-  - `dom-events.ts`: the four events; `practice.ts` dispatches `py4kids:check-start` and the terminal `py4kids:check`; `progress-page.ts` dispatches `py4kids:checklist` and records `py4kids:step` as the resume position.
+  - `dom-events.ts`: the four events; `practice.ts` dispatches `py4kids:check-start` and the terminal `py4kids:check` (with `saved`), makes `withStore` return a boolean, and shows the not-saved note in both the code-check and typed-answer paths; `progress-page.ts` dispatches `py4kids:checklist` and records `py4kids:step` as the resume position.
   - `search.ts`: practice-page results link to the matching sub-result anchor.
   - It must not break `practice.ts`: lazily mounted editors (IntersectionObserver) mount when their step is shown; a check running on a hidden step finishes, records and announces its result.
 - **Phase C: tests (the named verification phase).**
@@ -82,7 +82,7 @@ Without JavaScript (and for search indexing and printing), the page renders exac
     - a check that ends without a result (Stop pressed on item 2 after a jump away and back, and a runner failure forced by blocking the runner origin): "checking…" clears and the outcome is announced;
     - the skip link on item 5 (`#main`) keeps item 5 shown;
     - a group whose first item has two `before` blocks (a heading and a marker comment, unit-04-quiz-show Exercise 11; a heading and a paragraph, unit-05-function-factory Challenge 1): one group, both blocks with the first item, the kicker from the heading only;
-    - a passing check whose save fails clears "checking…", shows no ✓, and shows the not-saved note on the item; done on a hidden item, the announcement says "Passed, but not saved". The harness makes an **open** IndexedDB store's write reject (an init script stubs `IDBObjectStore.prototype.put` / `add` to throw for the `events` store before Check is pressed). Making IndexedDB unavailable would not do: the store would fall back to memory, where the write succeeds;
+    - a passing check whose save fails (and, separately, a correct typed answer whose save fails) clears "checking…", shows no ✓, and shows the not-saved note on the item; done on a hidden item, the announcement says "Passed, but not saved". The harness makes an **open** IndexedDB store's write reject (an init script stubs `IDBObjectStore.prototype.put` / `add` to throw for the `events` store before Check is pressed). Making IndexedDB unavailable would not do: the store would fall back to memory, where the write succeeds;
     - a self-check ticked to done shows ✓; an `also_check` list ticked on a failed automatic item shows •;
     - group kickers: an item in the middle of a group (Exercise 26 of unit 12, Problem 5 of project 1) shows its group heading; the list shows the groups;
     - resume: navigate to item 3 by Next, assert the saved resume href ends with item 3's anchor, leave, follow "Continue", land on item 3;
@@ -166,6 +166,10 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 - `[fable]` **APPROVE WITH NITS**. Both nits fixed:
   - the round-record edit had split a Round 3 line and created a stray second Content Review heading; the records are rebuilt in order;
   - the duplicated hidden-item announcement sentence is merged.
+
+- `[sol]` **REQUEST CHANGES** (gpt-6-sol). Folded:
+  - MAJOR: the global constraint still limited `practice.ts` to notifications, contradicting the round-4 fix. → The constraint and Phase B now require the boolean `withStore` and the not-saved note in both the code-check and typed-answer paths, and the test covers both paths.
+  - MINOR: the malformed record, already rebuilt in 0c29b02.
 
 ## Content Review
 
