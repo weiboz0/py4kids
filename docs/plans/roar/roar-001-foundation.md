@@ -1,6 +1,6 @@
 # Plan roar-001 — Foundation: registry, `racekit` core, seeded tracks, CI wiring
 
-**v3** folds plan-review round 2 ([sol] REJECT on two items). **v2** folded plan-review round 1 ([sol] REJECT, [fable] APPROVE WITH NITS, [self] nits).
+**v3.1** folds plan-review rounds 2–3 ([sol] REJECT on three items in round 2, then on one leftover in round 3). **v2** folded plan-review round 1 ([sol] REJECT, [fable] APPROVE WITH NITS, [self] nits).
 **Design:** `docs/designs/013-roar-book.md` (v4, gate CLOSED). **Autopilot** per AGENTS.md (the author set the whole
 book to autopilot on 2026-10-25, with questions recorded as follow-ups).
 This is the foundation for the advanced `roar` book: **registration, scaffolding, the `racekit` harness core, the
@@ -204,7 +204,8 @@ The package `pyproject.toml` (hatchling) declares `requires-python = ">=3.8"` an
   2. **imports** must be `numpy`, `roar_py_interface`, or **any Python 3.8 standard-library module** (the design's
      ABI). The stdlib set is a **committed, exhaustive** list, `racekit/contract/py38_stdlib.txt` ([sol] r2 B2):
      - it is generated under the uv-managed CPython 3.8 from `sys.builtin_module_names` plus the top-level modules
-       and packages in the 3.8 stdlib directory, excluding `site-packages`, `test` and `idlelib`;
+       and packages in the 3.8 stdlib directory, **with no exclusions** other than `site-packages`, which is not
+       stdlib ([sol] r3 B2);
      - the generation command and the interpreter version are in its header;
      - a test checks that it contains, for example, `operator`, `contextlib`, `asyncio`, `math` and `typing`, and
        excludes `numpy`, `scipy` and `graphlib` (which is 3.9+).
@@ -333,6 +334,11 @@ No stub unit is added; `buildout: true` covers the empty state.
   - r2 S3, the self-referential hash: [FIXED v3, sidecar].
 - **[fable]** APPROVE WITH NITS (round 1; all folded in v2).
 - **[self]** APPROVE.
+
+### Round 3 (v3 @ 56ed5d5)
+- **[sol]** REJECT. r2 B1 and r2 S3 were RESOLVED.
+  - r2 B2: the stdlib list still excluded `test` and `idlelib`. [FIXED v3.1: no exclusions].
+  - N1, the header count: [FIXED v3.1].
 
 ## Content Review
 This plan ships no student content. The 3-way content-review gate still runs, on the shipped code, docs and
