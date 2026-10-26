@@ -333,3 +333,52 @@ Static checks, exec-lessons, milestone-check, ruff and `check_submission` pass; 
   - Round-2 S1, N1 and [sol] S1 verified FIXED. The creep is bounded by a_B·h = 0.04 m/s and was observed at 0.3–2 cm/s.
   - **N1** [FIXED] The record above now states the fuzz's steer range, and the full-range figure of 2.1e-3 m.
   - **N2** [FIXED] Lesson cell 640652b7 now includes the held-at-rest clause.
+
+## Post-Execution Report
+
+**Status: SHIPPED. Units 2–3 are complete. The submission has its instruments (Unit 2) and a model of the car that predicts (Unit 3); it still drives exactly like the starter.**
+
+- **Commits** (on `feature/roar-003-units2-3`):
+
+  | Commit | What |
+  |---|---|
+  | fbbaa45 | plan v2.1 (3-way plan gate consensus, round 3) |
+  | cd0a7cb | Phase 0: the Unit 1 lab ride-along (hold rows carry the CARLA crash pose; the min-speed print skips held rows) |
+  | 2be6b48 | Phase A: the registry (7 concepts, coverage, manifests, closed-list additions, syllabus rows, design 013 v4.2) |
+  | 48acbb7 | Phases B–D: lessons, exercise statements, `agents/unit-02.py` and `unit-03.py`, milestones, teacher notes |
+  | 1e1c76e | Phases B–C: the blind solutions |
+  | 6f64e7e | ruff fixes in the Unit 3 milestone |
+  | 32858d6, a886307, 0dbe505 | content gate rounds 1–3 |
+
+- **Gates.** The milestones assert every gate.
+  - **G2.1:** the geometry functions match analytic circles.
+  - **G2.2:** the student's cross-track error equals racekit's `offset` on every row to 1e-6.
+  - **G2.3 and G3.4:** both reference submissions race exactly like the starter, at 223.50 / 412.75 / 882.55 s with 0 collisions.
+  - **G2.4:** the `STEER_GAIN` sweep matches its pins.
+  - **G2.5:** the cross-track scorecard is pinned for Units 4–5.
+  - **G3.1:** the circle radius matches L / tan δ.
+  - **G3.2:** prediction from telemetry over 180 rows: RK4 max error 1.35e-8 m; Euler up to about 0.38 m.
+  - **G3.3:** the convergence orders are 1 and 4.
+  - **New in the content gate:** braking near a stop. `predict` agrees with racekit's car on 32 cases, reversing starts included, with max error 6.9e-8.
+- **Blind solve:** all 16 exercise answers agree across the statements authors, the separate-session solutions authors, [sol] and [fable].
+- **Execution time:**
+
+  | Notebook | Unit 2 | Unit 3 |
+  |---|---|---|
+  | lesson | about 35 s | about 7 s |
+  | milestone | about 60 s | about 15 s |
+  | solutions | about 18 s | about 10 s |
+
+  The total is about 2.5 minutes, within the 3-minute budget.
+- **Deviations** are recorded under "Implementation deviations":
+  - the windowed target is farther, not nearer;
+  - the "3 clamped rows" threshold;
+  - `monza-like` runs clockwise;
+  - `predict` joins the closed list;
+  - MPC belongs to Unit 10.
+- **Content gate:** 3 rounds.
+  - Round 1: [sol] found that `predict` was wrong near a braking stop (B1).
+  - Round 2: the stop test was extended to reversing starts and drag, and the "stops at rest" wording was corrected.
+  - Round 3: consensus.
+- **Carried to roar-004:** racekit's `KinematicCar` creeps at up to a few cm/s under full brake instead of stopping. `agents/unit-03.py`'s `stopping_tick` mirrors that creep and must be updated with the car.
+- **Verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN (unit tests 2244 passed, 2 skipped; the recsys group 348 passed; the roar group 226 passed; all 7 steps pass).
