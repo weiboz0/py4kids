@@ -255,3 +255,67 @@ def test_isolated_python_3_8_check_submission_run(agent):
     assert (int(match.group(3)), int(match.group(4))) < (1, 25)
     assert "PASS" in run.stdout
     assert not (REPO / "roar/projects/racekit/uv.lock").exists()
+
+
+# The 3.8 smoke race (plan roar-004 G4.9): one lap of `oval` on carla_like(noise=True), which exercises
+# DynamicCar, racekit._truth, the section grip, attach_track and the per-tick spin-out check.
+SMOKE_RACE = '''\
+import math, platform
+import numpy as np
+from racekit.cars import DynamicCar, carla_like
+from racekit.runner import run_race
+
+class Gentle:
+    def __init__(self, waypoints, vehicle, camera, location, velocity, rpy, occupancy, collision):
+        self.points = np.array([w.location[:2] for w in waypoints], dtype=float)
+        self.vehicle, self.location, self.velocity, self.rpy = vehicle, location, velocity, rpy
+        self.index = 0
+
+    async def initialize(self):
+        pass
+
+    async def step(self):
+        here = np.asarray(self.location.get_last_gym_observation()[:2], dtype=float)
+        yaw = float(self.rpy.get_last_gym_observation()[2])
+        speed = float(np.linalg.norm(self.velocity.get_last_gym_observation()))
+        n = len(self.points)
+        window = [(self.index + k) % n for k in range(20)]
+        self.index = min(window, key=lambda i: float(np.sum((self.points[i] - here) ** 2)))
+        ahead = self.points[(self.index + 5) % n] - here
+        alpha = math.atan2(ahead[1], ahead[0]) - yaw
+        alpha = (alpha + math.pi) % (2 * math.pi) - math.pi
+        delta = math.atan2(2 * 2.875 * math.sin(alpha), float(np.hypot(*ahead)))
+        command = 0.2 * (12.0 - speed)
+        await self.vehicle.apply_action({"throttle": min(1.0, max(0.0, command)),
+                                         "steer": min(1.0, max(-1.0, -delta / math.radians(70.0))),
+                                         "brake": min(1.0, max(0.0, -command)), "hand_brake": 0.0,
+                                         "reverse": 0, "target_gear": 0})
+
+car = carla_like(noise=True)
+result = run_race(Gentle, "oval", car=car, laps=1, max_seconds=300.0, seed=0)
+assert isinstance(car, DynamicCar) and car.per_section and len(set(car.mu)) == 6
+assert result.finished and result.collisions == 0 and result.respawn_causes == [], result
+car.reset(0.0, 0.0, 0.0, 0.0)
+car.vx, car.vy = 10.0, 6.0  # |beta| = 31 degrees at 11.7 m/s
+assert car.spun_out()
+print("python=%s numpy=%s %r" % (platform.python_version(), np.__version__, result))
+'''
+
+
+@pytest.mark.slow
+def test_isolated_python_3_8_dynamic_car_smoke_race(tmp_path):
+    script = tmp_path / "smoke_race.py"
+    script.write_text(SMOKE_RACE, encoding="utf-8")
+    command = [
+        "uv", "run", "--no-project", "--python", "3.8",
+        "--with", "numpy<1.25", "--with-editable", "roar/projects/racekit",
+        "python", str(script),
+    ]
+    run = subprocess.run(command, cwd=REPO, capture_output=True, text=True, timeout=600, check=False)
+    assert run.returncode == 0, run.stdout + run.stderr
+    match = re.search(r"python=(\d+)\.(\d+)\.\d+ numpy=(\d+)\.(\d+)", run.stdout)
+    assert match, run.stdout
+    assert (int(match.group(1)), int(match.group(2))) == (3, 8)
+    assert (int(match.group(3)), int(match.group(4))) < (1, 25)
+    assert "finished" in run.stdout and "0 collisions" in run.stdout
+    assert not (REPO / "roar/projects/racekit/uv.lock").exists()

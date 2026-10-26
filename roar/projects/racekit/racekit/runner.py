@@ -20,16 +20,24 @@ The rules mirror the pinned official runner (``ROAR_Competition`` @ ``ab19e1b``,
   world advances **20 control ticks (1.0 s) without calling the agent** (the car stays put), and
   then the **progress index resets to 0** with the last position set to the start pose: the race
   effectively restarts while the clock keeps running;
+* a car with a ``spun_out()`` predicate (``DynamicCar``) that spins out has a **spin-out major
+  collision** (design 013 §4.2): the same respawn as the wall. ``RaceResult.respawn_causes`` records
+  ``"wall"`` or ``"spin"`` per respawn; a tick that both leaves the drivable width and spins out is a
+  ``"wall"``. A car with ``attach_track(track)`` gets it called once per race, before the start;
 * the result is the elapsed simulated time.
 
 Known differences from the official runner (each an approximation, labelled wherever it is taught):
 
 * **what counts as a major collision**: the official runner uses CARLA's collision sensor (impulse
   norm > 100 N·s, e.g. hitting a wall); racekit uses leaving the drivable width (``|offset| >
-  half-width``) as the wall approximation (roar-004's dynamic car adds a spin-out rule);
-* **the collision-sensor reading**: after a major collision racekit reports a lateral impulse of
-  ``CRASH_IMPULSE`` N·s on the first agent step after the hold, and zeros otherwise; CARLA reports
-  the real contact impulse;
+  half-width``) as the wall approximation;
+* **spin-out**: racekit also counts a spin-out (``|β| > 25°`` above 5 m/s, the dynamic car's
+  ``spun_out()``) as a major collision. This is an approximation: most spins at racing speed end in
+  the wall, but CARLA would **not** respawn a spin that touches no wall (no impulse, no collision);
+  the car would recover and drive on, losing time instead of restarting the race;
+* **the collision-sensor reading**: after a major collision (a spin-out included) racekit reports a
+  lateral impulse of ``CRASH_IMPULSE`` N·s on the first agent step after the hold, and zeros
+  otherwise; CARLA reports the real contact impulse;
 * **the first step after the hold**: the pinned runner does not re-read the sensors after the
   respawn, so on CARLA that step sees the collision impulse together with the **stale crash-pose**
   location, rotation and velocity (the start pose arrives one step later); racekit already reports
@@ -109,6 +117,7 @@ class RaceResult:
         progress_total: int,
         progress_required: int,
         seed: int,
+        respawn_causes: Optional[List[str]] = None,
     ) -> None:
         self.track = track
         self.laps = laps
@@ -123,6 +132,8 @@ class RaceResult:
         self.progress_total = progress_total  # the length of the repeated waypoint list
         self.progress_required = progress_required  # finished at progress >= this (5-waypoint margin)
         self.seed = seed
+        # per respawn, in order: "wall" (left the drivable width) or "spin" (a spin-out)
+        self.respawn_causes = list(respawn_causes) if respawn_causes is not None else []
 
     @property
     def ticks(self) -> int:
@@ -259,6 +270,9 @@ async def _race(
     sensors = _Sensors()
     vehicle._sensors = [sensors.location, sensors.rpy, sensors.velocity, sensors.collision]
     start_x, start_y, start_yaw = track.start_pose()
+    attach = getattr(car, "attach_track", None)
+    if attach is not None:
+        attach(track)  # once per race (the dynamic car's section grip)
     car.reset(start_x, start_y, start_yaw, 0.0)
     no_impulse = (0.0, 0.0, 0.0)
     sensors.update(car, vehicle, no_impulse)
@@ -283,6 +297,8 @@ async def _race(
     last_x, last_y = start_x, start_y
     hint = 0
     respawn_times: List[float] = []
+    respawn_causes: List[str] = []
+    spun_out = getattr(car, "spun_out", None)
     finished = False
     tick = 0
     t = 0.0
@@ -306,10 +322,17 @@ async def _race(
         rows.append((t, x, y, car.yaw, car.v, action["throttle"], action["steer"], action["brake"],
                      furthest, offset, 0))
         impulse = no_impulse
+        cause = None
         if abs(offset) > half_width:
-            # A major collision: back to the start pose at rest, a 1.0 s hold without calling the
-            # agent, then progress resets to 0 (the race restarts; the clock keeps running).
+            cause = "wall"
+        elif spun_out is not None and spun_out():
+            cause = "spin"
+        if cause is not None:
+            # A major collision (the wall, or a spin-out): back to the start pose at rest, a 1.0 s
+            # hold without calling the agent, then progress resets to 0 (the race restarts; the
+            # clock keeps running).
             respawn_times.append(t)
+            respawn_causes.append(cause)
             side = 1.0 if offset > 0 else -1.0
             impulse = (0.0, -side * CRASH_IMPULSE, 0.0)
             car.reset(start_x, start_y, start_yaw, 0.0)
@@ -334,7 +357,7 @@ async def _race(
         track=track.name, laps=laps, finished=finished, total_time=t, collisions=len(respawn_times),
         respawn_times=respawn_times, sector_splits=sector_splits(telemetry, total, laps, SECTORS_PER_LAP),
         telemetry=telemetry, step_ms=np.asarray(step_ms, dtype=np.float64), progress=furthest,
-        progress_total=total, progress_required=required, seed=seed,
+        progress_total=total, progress_required=required, seed=seed, respawn_causes=respawn_causes,
     )
 
 
