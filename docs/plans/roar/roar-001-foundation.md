@@ -384,3 +384,21 @@ syllabus, per `docs/content-review-gate.md`.
 - **[self]** APPROVE.
 
 ## Post-Execution Report
+
+**Status: SHIPPED (foundation; no student content).**
+
+- **Commits** (on `feature/roar-001-foundation`, design 013 v1–v4.1 included):
+  691cf4b Phase A (registry + skeleton, `buildout: true`) ·
+  44e484c Phase B (`roar` dependency group, routed suite in `ci-local.sh`) ·
+  0ce1628 Phase C (seeded tracks via `roar/data/gen_tracks.py` + `generate.py`) ·
+  8707ebf Phase D (racekit core) ·
+  78b8441 Phase E (routed guard tests) ·
+  35625a6 content-gate fixes · 0a53890 / ac168f5 design v4.1 corrections · 5da2763 content review record.
+- **Tracks** (generated, gitignored): oval 1434 m, test-circuit 2661.8 m, monza-like 5714.5 m.
+- **Starter agent** (`agents/starter.py`, KinematicCar, 3 laps, 0 collisions): oval 223.50 s, test-circuit 412.75 s, monza-like 882.55 s; sim cost ≈ 0.05 ms/tick.
+- **Tests:** routed roar suite 181 passed (~17 s); the isolated Python 3.8 `check_submission` run passes on the starter.
+- **Deviations:** the respawn rule was corrected mid-flight (design v4.1: the pinned runner resets progress to 0 after a 20-step hold; finish at a 5-waypoint margin), and racekit mirrors it.
+  `check_submission` now rejects non-finishing agents, flags dynamic imports and dict-union operands, and fails on SyntaxError cells.
+  Carried nits: N6 and N9 go to `roar-002` Phase 1; N8 goes to the Unit 11 plan.
+- **Verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` → **ALL GREEN** (unit tests 2197 passed / 2 skipped; notebooks 348 passed; recsys + roar routed suites passed; PDF build; e2e incl. solver parity 0 mismatches; pre-merge guard OK).
+- **Follow-ups** (deferred to the end of the full run, per the autopilot directive): author CARLA qualification logistics; the 329 s bar; title/subtitle; the Fall 2026 deadline; the respawn-vs-report wording.
