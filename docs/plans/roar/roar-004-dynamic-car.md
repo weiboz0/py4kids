@@ -259,10 +259,11 @@ These use `drivers.py` on `DynamicCar()` defaults.
 
 ### G4.5, the Unit 7 premise
 On `carla_like(noise=True)` on `test-circuit`, seeds 0–4, with a 45 m/s cap and look-ahead braking over 300 m at 6 m/s²:
-- **The grid is {3.5, 3.6, …, 4.0}** ([sol] r3 S). Global a_lat **3.7** is clean in 5/5 runs, and **each** of 3.8, 3.9 and 4.0 has collisions on at least one seed (probe: 4/5, 5/5 and 5/5), so 3.7 is the fastest clean global on the grid. The unclean runs use a 600 s cap to keep the test short;
+- **The grid is {3.5, 3.6, …, 4.0}** ([sol] r3 S). Global a_lat **3.7** is clean in 5/5 runs, and **each** of 3.8, 3.9 and 4.0 has collisions on at least one seed; all five seeds run and the gate asserts the exact colliding sets (3.8 → {0, 1, 2, 4}; 3.9 and 4.0 → all five), so 3.7 is the fastest clean global on the grid. The unclean runs use a 600 s cap to keep the test short;
 - section grip **[1.35, 1.35, 1.2, 1, 1, 1.1]** on top of 3.7 is clean in 5/5 runs;
+- the G4.1 clean completed limit lap runs this setting (seed 0, 300 s cap): completed, 0 collisions, peak acceleration 0.9995 μg;
 - **noise-aware:** its median beats global 3.7 by more than both spreads **and** by at least **5 s** (probe: 9.55 s);
-- **interaction** ([sol] r3 B2): on base 3.5, each single-section knob of [1.5, 1.5, 1.3, 1.15, 1, 1.15] is clean alone in 5/5 runs, and the stack is **not** clean in 5/5 (probe: 2 of 5 seeds collide). The gate runs the five non-trivial singles (section 4's ×1 is the base run), the base and the stack.
+- **interaction** ([sol] r3 B2): on base 3.5, each single-section knob of [1.5, 1.5, 1.3, 1.15, 1, 1.15] is clean alone in 5/5 runs, and the stack is **not** clean in 5/5 (the gate asserts the exact colliding set {0, 4}). The gate runs the five non-trivial singles (section 4's ×1 is the base run), the base and the stack.
 
 A miss on the shipped code means stop, amend and re-gate, never a silent re-pin.
 
@@ -468,3 +469,88 @@ The immutable freeze `scratchpad/u04/dyn_af442a6f.py` (md5 af442a6f…) is the r
   - **N2** → roar-006: show `DynamicCar` through its docstring and `_rhs`, not the unrolled `advance`.
   - **N3** [WONTFIX] `carla_like().mu` reads 1.0 before `attach_track`, and the message for a scalar set on an attached car is misleading. Content never touches `carla_like()` internals (the `_truth` rule is reviewer-enforced), so this is harmless. Revisit if roar-008 exposes μ.
   - **N4** → roar-007: the driver's float32 section index can differ from `track.s` by one waypoint at a boundary.
+
+### Round 2 (fixes @ f6c7c77): CONSENSUS
+- [self] APPROVE. B1/B2 fixes assert the exact behaviour; full CI ALL GREEN on f6c7c77.
+- [sol] APPROVE. B1 and B2 verified fixed; no new findings.
+- [fable] APPROVE WITH NITS:
+  - **S1** [FIXED] The post-execution report is written (below).
+  - **N1** [WONTFIX] `Job.until_crash` is now unused by the suite; it is harmless and kept for future crash probes.
+  - **N2** [FIXED] The G4.5 text states the exact colliding-seed sets the tests assert.
+  - **N3** [FIXED] The clean limit lap's peak (0.9995 μg) is quoted in G4.5.
+
+## Post-Execution Report
+
+**Status: SHIPPED.** The dynamic car, the carla-like truth car, noise, the sensor-log generator and the premise tests are in place. No unit content (a tooling-only plan).
+
+### Commits
+On `feature/roar-004-dynamic-car`:
+
+| Commit | What |
+|---|---|
+| 298feb5 → cf33753 | plan v1 → v3.2 (5 plan-gate rounds; the prototype was frozen as `dyn_af442a6f.py`) |
+| 48636b1 | Phase A: `DynamicCar`, `carla_like`, `_truth`, grip sections, runner spin-out and `attach_track`, `drivers.py`, G4.1/G4.2/G4.4/G4.9 tests |
+| f62910b | Phase B: the sensor-log format, `gen_sysid.py`, `generate.py` step 2, G4.7 tests |
+| 8843ae1 | Phase C: G4.3/G4.5/G4.6 premise tests, the `_truth` scan, pinned μ tables |
+| f6c7c77 (and later) | content-gate fixes and review records |
+
+### Gates
+Every pin reproduces on the shipped code to the tick. Nothing was re-pinned.
+
+**G4.1, the dynamic car:**
+- **Circle radius:** error 0.01%.
+- **Friction:** the limit fuzz holds, and so does a clean completed limit lap at ≤ 1.02 μg. The low-speed bound is 1.000 with the wheel ramped and preset, at lag 0 and 1. The 3,000-case lateral-state fuzz also gives 1.000.
+- **RK4 order:** ratios 17.4 and 16.7.
+- **Brake stop:** exact, never reverses, and the stop deceleration is capped at μg.
+- **Lag:** k + 1 ticks.
+- **Spin-out:** trips at 27.3° and 68° on the true spins, and never on the legitimate turns.
+
+**G4.2, the runner:**
+- spin and wall respawn are identical, and the wall wins a tie;
+- the Unit 1–3 pins are unchanged.
+
+**G4.3, the Unit 6 premise:**
+- flat 20 m/s gives 16 collisions on `test-circuit`;
+- the curvature-limited speed is clean at 217.65 / 413.70 / 873.00 s on the three tracks;
+- on the kinematic car the flat run is clean.
+
+**G4.4, noise:** `monza-like` median 542.00 s, spread 0.25 s, with σ = 0.1 on the throttle only.
+
+**G4.5, the Unit 7 premise:**
+- the fastest clean global setting on the {3.5 … 4.0} grid is 3.7, at 323.05 s;
+- the per-section combined setting gives 313.50 s, 9.55 s faster and well above both spreads;
+- the knob-interaction stack collides on seeds {0, 4}.
+
+**G4.6, the Unit 8 premise:**
+- the lag fit is best at 1;
+- a_B is off by −0.7%, a_T by −4.2% and c by −9.4%. The c error is a thin margin, deterministic on the fixed seed-0 log;
+- δ_max fits as 65.71°;
+- the μ lower bound holds;
+- per-section μ identification is deferred to roar-008.
+
+**G4.7, generation:** two logs, byte-stable.
+
+**G4.8, cost:**
+- `carla_like` costs 0.18 ms per tick (median, `track.nearest` included); a whole race costs 0.32 ms per tick;
+- the routed racekit and roar/tests pytest takes about 98 s (130.7 s for `pytest roar`);
+- generation takes 14.5 s (limit 60 s).
+
+**G4.9, Python 3.8:** the isolated 3.8 smoke race on `carla_like` runs.
+
+### Plan gate
+5 rounds. The decisive catches were:
+- the v1 probes never attached the grip ([fable]);
+- a low-speed blend broke μg, and so did two stop shortcuts ([sol] ×3);
+- the best-global comparison was missing.
+
+### Content gate
+See `## Content Review`.
+
+### Carried to later plans
+- **roar-006:** the Unit 6 hook is reframed (the car runs wide; the starter spins), and the lesson shows `DynamicCar` through its docstring and `_rhs`.
+- **roar-007:** the section boundary must be taught exactly.
+- **roar-008:** the per-section μ identification excitation.
+- **User follow-up:** the `KinematicCar` brake creep.
+
+### Verification
+`TMPDIR=/dev/shm bash scripts/ci-local.sh`: ALL GREEN unit tests 2244 passed, 2 skipped; notebooks 348 passed; checks 309 passed; PDF build PASS; pre-merge guard OK.
