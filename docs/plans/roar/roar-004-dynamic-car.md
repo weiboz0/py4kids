@@ -3,7 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.2** (§4.2 the spin-out rule, §4.3 the generator driver step 2, §4.4 items 2–3, §4.5, §5, §7.1).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-003` merges (#158).
-**v3.2** folds round 4. Both reviewers found the second stop shortcut, the sign-change clamp, which zeroed v_y (up to about 10 g in a substep). It now clamps v_x only. The prototype is re-frozen as an **immutable copy** ([fable] r4 S1): `scratchpad/u04/dyn_af442a6f.py` (read-only), md5 `af442a6f096e1654c38af75790c2a9fe`. Every pin, including the six base-3.5 singles, was re-run on it, and none moved. This copy is the reference for Phase A.
+**v3.2** folds round 4. Both reviewers found the second stop shortcut, the sign-change clamp, which zeroed v_y (up to about 10 g in a substep). It now clamps v_x only. The prototype is re-frozen as an **immutable copy** ([fable] r4 S1): `scratchpad/u04/dyn_af442a6f.py` (read-only), md5 `af442a6f096e1654c38af75790c2a9fe`. Every pin, including the five base-3.5 singles (section 4's knob is ×1, which is the base run itself), was re-run on it, and none moved. This copy is the reference for Phase A.
 **v3.1** folds round 3. [sol]'s two blockers were the stop shortcut ignoring grip and a stacked pin that was not a true interaction. [fable] approved with nits. The prototype is re-frozen at md5 `ad3896a7ffe72f4ca679f0fb0a3a9f83` (the stop's deceleration is capped at μg), and every race pin was re-run on it unchanged.
 **v3** folds plan-review round 2. [sol] found three blockers: the low-speed regime broke μg; the comparison was not against the best global setting; the Unit 8 μ premise was unstated. [fable] found that the low-speed gates did not match the prototype. The prototype is now **frozen** at `scratchpad/u04/dyn.py` md5 `94808dd3…` (superseded by v3.1's `ad3896a7…`), and every number below was measured on it.
 **v2** folds plan-review round 1. Both [sol] and [fable] rejected. The decisive finding was [fable] B1: the v1 probes never attached the section grip, so every truth-car number was measured at μ = 1.0. Every probe below was re-run with the grip attached, with the prototype's low-speed and brake-stop physics fixed.
@@ -161,7 +161,7 @@ All numbers are re-pinned on the shipped code.
     - dr → (r_k − r)/0.1 s.
   - No state is projected after a step; projection was the source of v1's non-physical spikes.
   - **Measured:**
-    - over μ ∈ {0.78, 1}, v₀ ∈ {0 … 5} m/s and 7 throttle, brake and steer combinations, the worst per-tick |a|/(μg) is **1.000**;
+    - over μ ∈ {0.78, 1}, v₀ ∈ {0 … 5} m/s and the 10 throttle, brake, steer and reverse combinations of the G4.1 set, the worst per-tick |a|/(μg) is **1.000**;
     - from rest under throttle 0.3 at steer 0, 0.5 and 1, v_x never goes negative and is non-decreasing while below 1 m/s.
   - **Spin rule against legitimate turns** (frozen prototype, defaults and truth parameters): full lock at throttle 0.3 from 5, 6, 8 and 10 m/s peaks at |β| = 4.5–11.7° over ticks above 5 m/s, with no trip.
     The true spins trip:
@@ -221,7 +221,7 @@ All are routed tests under `roar/projects/racekit/tests/`, plus the existing sui
     - Each case draws μ ∈ {0.78, 0.9, 1}, v_x ∈ [−0.5, 3], v_y ∈ [−1.5, 1.5] m/s and r ∈ [−4, 4] rad/s.
     - Actions are random throttle, steer and brake, with reverse.
     - Each case runs for 10 ticks.
-    - Every tick must have |Δv_world|/(0.05·μg) ≤ 1.02. The probe gives 1.000, and [sol]'s counterexample (v_x 0.2, v_y −0.49, r −3, full brake, steer −1) is now 0.918.
+    - Every tick must have |Δv_world|/(0.05·μg) ≤ 1.02. The probe gives 1.000, and [sol]'s counterexample (v_x 0.2, v_y −0.49, r −3, full brake, steer −1) is now 0.918 (wheel pre-settled, μ 0.78, one tick; 0.811 with a ramped wheel).
   - From rest under throttle 0.3 at steer ∈ {0, 0.5, 1}, for 4 s:
     - v_x ≥ 0 throughout;
     - v_x is non-decreasing while |v_x| < 1 m/s;
@@ -262,7 +262,7 @@ On `carla_like(noise=True)` on `test-circuit`, seeds 0–4, with a 45 m/s cap an
 - **The grid is {3.5, 3.6, …, 4.0}** ([sol] r3 S). Global a_lat **3.7** is clean in 5/5 runs, and **each** of 3.8, 3.9 and 4.0 has collisions on at least one seed (probe: 4/5, 5/5 and 5/5), so 3.7 is the fastest clean global on the grid. The unclean runs use a 600 s cap to keep the test short;
 - section grip **[1.35, 1.35, 1.2, 1, 1, 1.1]** on top of 3.7 is clean in 5/5 runs;
 - **noise-aware:** its median beats global 3.7 by more than both spreads **and** by at least **5 s** (probe: 9.55 s);
-- **interaction** ([sol] r3 B2): on base 3.5, each single-section knob of [1.5, 1.5, 1.3, 1.15, 1, 1.15] is clean alone in 5/5 runs, and the stack is **not** clean in 5/5 (probe: 2 of 5 seeds collide). The gate runs all six singles and the stack.
+- **interaction** ([sol] r3 B2): on base 3.5, each single-section knob of [1.5, 1.5, 1.3, 1.15, 1, 1.15] is clean alone in 5/5 runs, and the stack is **not** clean in 5/5 (probe: 2 of 5 seeds collide). The gate runs the five non-trivial singles (section 4's ×1 is the base run), the base and the stack.
 
 A miss on the shipped code means stop, amend and re-gate, never a silent re-pin.
 
@@ -307,7 +307,7 @@ If roar-008 finds it infeasible, roar-008 amends the design.
 - Tests for G4.1, G4.2, G4.4 and G4.9.
 - `_truth.NOISE_SIGMA` is confirmed against G4.4.
 
-The prototype `scratchpad/u04/dyn.py` is the reference for the physics. The implementation unrolls its RK4 stage tuples for speed ([fable] note).
+The immutable freeze `scratchpad/u04/dyn_af442a6f.py` (md5 af442a6f…) is the reference for the physics ([sol] r5 S). The exact stop's reset of the yaw rate r to 0 is a labelled model simplification ([sol] r5 N): it is an angular state jump at rest, and translationally μg-bounded. The implementation unrolls its RK4 stage tuples for speed ([fable] note).
 
 ### Phase B: the driver and the telemetry generator (Opus subagent, tooling)
 - `roar/data/drivers.py`: one pure-pursuit driver class. It takes the cap, a_lat, section grips, look-ahead braking and recording on or off, and records sensor rows when recording is on.
@@ -416,7 +416,7 @@ The prototype `scratchpad/u04/dyn.py` is the reference for the physics. The impl
 ### Round 4 (v3.1 @ 9cb9863)
 - [self] APPROVE.
 - [sol] REJECT:
-  - **B** [FIXED] The sign-change clamp zeroed v_y: a sliding low-speed state stopped at 1.38 μg. The clamp now zeroes only v_x. A 3,000-case lateral-state fuzz gate was added, with a worst case of 1.000; the counterexample is now 0.918.
+  - **B** [FIXED] The sign-change clamp zeroed v_y: a sliding low-speed state stopped at 1.38 μg. The clamp now zeroes only v_x. A 3,000-case lateral-state fuzz gate was added, with a worst case of 1.000; the counterexample is now 0.918 (wheel pre-settled, μ 0.78, one tick; 0.811 with a ramped wheel).
   - The other round-3 findings were verified resolved: the base-3.5 singles are clean, the grid gate is falsifiable, the 3.8 count is right, and the reverse-plus-brake probes pass.
 - [fable] REJECT:
   - **B1** [FIXED] Same clamp, found through a ramped wheel (1.417 on ad3896a7, because the author's probe pre-set the wheel). The friction gate now runs with ramped and pre-set wheels at lag 0 and 1, all 1.000 on af442a6f.
@@ -435,3 +435,13 @@ The prototype `scratchpad/u04/dyn.py` is the reference for the physics. The impl
   - the Unit 6 races: flat 16 and 21 collisions; limited 217.65 / 413.70 / 873.00 s;
   - the starter: 34 spins, one repeated event;
   - the limit lap: max |a|/(μg) 0.992.
+
+### Round 5 (v3.2 @ 98fdfdc): CONSENSUS
+- [self] APPROVE.
+- [sol] APPROVE WITH NITS:
+  - **S** [FIXED] Phase A now points at the immutable freeze.
+  - **N** [FIXED] The exact stop's yaw-rate reset is labelled a simplification.
+- [fable] APPROVE WITH NITS. It independently re-ran the gates and pins on the freeze, which reproduced them, including the per-substep bound (flick then brake: 0.81, against 10.157 before).
+  - **N1** [FIXED] "Five singles".
+  - **N2** [FIXED] The combination count.
+  - **N3** [FIXED] The counterexample's conditions are stated. The freeze also gets a durable copy for the implementer: Phase A copies it into the implementation subagent's brief.
