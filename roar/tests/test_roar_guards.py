@@ -12,6 +12,9 @@
    ``roar/data/generated/``.
 3. **Labs-tracked** (design 013 §7.2): under any ``roar/**/labs/`` only ``*.ipynb`` and
    ``README.md`` may be tracked (the repo is public; lab outputs stay on the student's machine).
+4. **The ``_truth`` rule** (plan roar-004): the carla-like car's hidden-parameter module is never
+   named in a student-facing source (units, checkpoints, the projects' notebooks and agents, labs,
+   learner docs, reference, the syllabus). ``racekit`` itself and its tests are exempt.
 """
 
 from __future__ import annotations
@@ -413,3 +416,68 @@ def test_the_labs_guard_catches_lab_data():
         "recsys/units/unit-01-x/labs/data.csv",
     ]
     assert [finding.split(":")[0] for finding in labs_findings(paths)] == paths[2:4]
+
+
+# --- 4. The _truth rule (plan roar-004) ----------------------------------------------------------
+
+TRUTH = "_" + "truth"  # spelled in two parts, so this guard does not flag itself
+STUDENT_DIRS = ("units", "checkpoints", "labs", "docs", "reference")
+
+
+def student_facing(path: str) -> bool:
+    """Is ``path`` (repo-relative, POSIX) a student-facing source of the book?"""
+    parts = path.split("/")
+    if parts[0] != BOOK or len(parts) < 2 or "__pycache__" in parts:
+        return False
+    if parts[1] in STUDENT_DIRS or path == f"{BOOK}/syllabus.md" or "labs" in parts[1:-1]:
+        return True
+    if parts[1] == "projects":
+        if path.startswith((f"{BOOK}/projects/racekit/racekit/", f"{BOOK}/projects/racekit/tests/")):
+            return False
+        return path.endswith(".ipynb") or "agents" in parts[2:-1]
+    return False
+
+
+def student_sources(root: Path) -> list[str]:
+    paths = []
+    for file in (root / BOOK).rglob("*"):
+        relative = file.relative_to(root).as_posix()
+        if file.is_file() and student_facing(relative):
+            paths.append(relative)
+    return sorted(paths)
+
+
+def truth_findings(root: Path, paths: list[str]) -> list[str]:
+    return [
+        f"{path}: names the carla-like car's hidden-parameter module (racekit.{TRUTH}); never in teaching material"
+        for path in paths
+        if TRUTH in (root / path).read_text(encoding="utf-8", errors="replace")
+    ]
+
+
+def test_no_student_facing_source_names_the_truth_module():
+    paths = student_sources(REPO)
+    assert any(path.endswith(".ipynb") for path in paths) and f"{BOOK}/syllabus.md" in paths
+    assert any("/agents/" in path for path in paths)
+    assert truth_findings(REPO, paths) == []
+
+
+def test_the_truth_rule_scope_and_its_catch(tmp_path):
+    assert student_facing("roar/units/unit-06-x/lesson.ipynb")
+    assert student_facing("roar/checkpoints/cp-a/checkpoint.ipynb")
+    assert student_facing("roar/projects/racekit/milestones/unit-06.ipynb")
+    assert student_facing("roar/projects/racekit/agents/unit-06.py")
+    assert student_facing("roar/labs/README.md") and student_facing("roar/units/u/labs/real-sim.ipynb")
+    assert student_facing("roar/docs/README.md") and student_facing("roar/reference/upstream.md")
+    assert student_facing("roar/syllabus.md")
+    assert not student_facing("roar/projects/racekit/racekit/cars.py")
+    assert not student_facing("roar/projects/racekit/tests/test_racekit_noise.py")
+    assert not student_facing("roar/data/gen_sysid.py") and not student_facing("roar/tests/test_roar_guards.py")
+    assert not student_facing("docs/plans/roar/roar-004-dynamic-car.md")
+    lesson = tmp_path / "roar" / "units" / "unit-08-x" / "lesson.ipynb"
+    lesson.parent.mkdir(parents=True)
+    lesson.write_text('{"cells": [{"source": "from racekit import ' + TRUTH + '"}]}', encoding="utf-8")
+    (tmp_path / "roar" / "syllabus.md").write_text("Unit 8 identifies the car.\n", encoding="utf-8")
+    paths = student_sources(tmp_path)
+    assert paths == ["roar/syllabus.md", "roar/units/unit-08-x/lesson.ipynb"]
+    assert [finding.split(":")[0] for finding in truth_findings(tmp_path, paths)] == [paths[1]]

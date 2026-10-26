@@ -6,6 +6,7 @@ The suite races on the generated tracks; CI regenerates them first (ci-local's r
 
 from __future__ import annotations
 
+import sys
 import textwrap
 from pathlib import Path
 
@@ -15,6 +16,10 @@ from racekit.tracks import TRACK_NAMES, tracks_dir
 RACEKIT = Path(__file__).resolve().parents[1]
 REPO = RACEKIT.parents[2]
 STARTER = RACEKIT / "agents" / "starter.py"
+DATA = REPO / "roar" / "data"
+# the data-side driver module (roar/data/drivers.py, plan roar-004) is imported by the premise tests
+if str(DATA) not in sys.path:
+    sys.path.insert(0, str(DATA))
 
 SUBMISSION_HEADER = '''\
 from __future__ import annotations
@@ -64,3 +69,11 @@ def write_submission(tmp_path):
         return target
 
     return write
+
+
+@pytest.fixture(scope="session")
+def premise():
+    """The premise races (plan roar-004 G4.3–G4.5), raced once per session in parallel."""
+    from _premise import premise_jobs, race_all
+
+    return race_all(premise_jobs())

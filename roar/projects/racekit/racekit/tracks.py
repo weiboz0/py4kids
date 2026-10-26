@@ -17,6 +17,7 @@ from .roar_py_interface import RoarPyWaypoint
 
 FIELDS = ("x", "y", "z", "yaw", "half_width", "s", "curvature")
 TRACK_NAMES = ("oval", "test-circuit", "monza-like")
+GRIP_SECTIONS = 6  # the public grip-section rule (plan roar-004): equal arc-length sixths of a lap
 # roar/projects/racekit/racekit/tracks.py -> roar/data/generated/tracks
 _DEFAULT_DIR = Path(__file__).resolve().parents[3] / "data" / "generated" / "tracks"
 
@@ -110,6 +111,16 @@ class Track:
 
     def arrays(self) -> Dict[str, np.ndarray]:
         return {field: getattr(self, field) for field in FIELDS}
+
+
+def grip_sections(track: Track) -> np.ndarray:
+    """The grip section of every waypoint: the lap cut into ``GRIP_SECTIONS`` equal arc-length
+    sections from the start waypoint (waypoint 0 opens section 0).
+
+    The rule is public (any generated track, seeded checkpoint tracks included); the μ of each
+    section is not.
+    """
+    return np.minimum((track.s / track.length * GRIP_SECTIONS).astype(int), GRIP_SECTIONS - 1)
 
 
 def load_track(name_or_path: Union[str, Path, Track]) -> Track:

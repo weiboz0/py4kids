@@ -6,7 +6,10 @@ It runs its steps in a declared order and writes everything into ``roar/data/gen
 (gitignored, regenerated on every CI run, never committed):
 
 1. tracks (``gen_tracks.py``): ``generated/tracks/<name>.npz``;
-2. the carla-like telemetry logs (added by roar-004);
+2. the carla-like car's sensor logs (``gen_sysid.py``, plan roar-004): a noisy ``monza-like`` race
+   at global a_lat 3.5 and a noisy steady 15 m/s ``oval`` lap, recorded by the data-side driver
+   (``drivers.py``) in the racekit sensor-log format, at ``generated/sysid/monza-like-seed0.csv``
+   and ``generated/sysid/oval-steady-seed0.csv`` (Unit 8's system-identification data);
 3. the ``lab-check`` sample CSV (plan roar-002): the starter on ``monza-like`` with actuator
    jitter 0.05 and seed 0, in the racekit-telemetry v1 format, at ``generated/lab/sample_telemetry.csv``
    (named by ``roar/curriculum/labs.yaml``; the lab notebooks are executed against it).
@@ -36,6 +39,7 @@ DATA_DIR = Path(__file__).resolve().parent
 if str(DATA_DIR) not in sys.path:
     sys.path.insert(0, str(DATA_DIR))
 
+import gen_sysid
 import gen_tracks
 
 GENERATED = DATA_DIR / "generated"
@@ -63,7 +67,7 @@ def rehash_track(path: Path) -> str:
         return gen_tracks.content_hash({field: loaded[field] for field in gen_tracks.FIELDS})
 
 
-def telemetry_hash(telemetry: np.ndarray, meta: dict[str, int]) -> str:
+def telemetry_hash(telemetry: np.ndarray, meta: dict) -> str:
     """sha256 over the meta and ``np.round(column, 6)`` in the fixed column order (never raw bytes)."""
     digest = hashlib.sha256(json.dumps(meta, sort_keys=True).encode("ascii"))
     for name in telemetry.dtype.names:
@@ -71,6 +75,27 @@ def telemetry_hash(telemetry: np.ndarray, meta: dict[str, int]) -> str:
         digest.update(name.encode("ascii") + b"\0")
         digest.update(np.ascontiguousarray(values, dtype="<f8").tobytes())
     return digest.hexdigest()
+
+
+def sysid_outputs(out_dir: Path) -> dict[str, tuple[bytes, str]]:
+    """Step 2: the sensor logs, raced on the track step's freshly written tracks."""
+    from racekit.telemetry import read_log_csv, write_log_csv
+
+    outputs = {}
+    for spec in gen_sysid.LOGS:
+        log, meta = gen_sysid.record(spec, out_dir / "tracks")
+        with tempfile.TemporaryDirectory() as scratch:
+            path = write_log_csv(log, Path(scratch) / "log.csv", meta)
+            payload = path.read_bytes()
+            reread, reread_meta = read_log_csv(path)  # hash what a reader sees
+        outputs[spec.name] = (payload, telemetry_hash(reread, reread_meta))
+    return outputs
+
+
+def rehash_log(path: Path) -> str:
+    from racekit.telemetry import read_log_csv
+
+    return telemetry_hash(*read_log_csv(path))
 
 
 def lab_outputs(out_dir: Path) -> dict[str, tuple[bytes, str]]:
@@ -97,7 +122,11 @@ def rehash_csv(path: Path) -> str:
 
 
 # (step, produce(out_dir) -> {relative path: (bytes, content hash)}, rehash(written path) -> hash)
-STEPS = (("tracks", track_outputs, rehash_track), ("lab", lab_outputs, rehash_csv))
+STEPS = (
+    ("tracks", track_outputs, rehash_track),
+    ("sysid", sysid_outputs, rehash_log),
+    ("lab", lab_outputs, rehash_csv),
+)
 
 
 def generate(out_dir: Path = GENERATED) -> dict[str, str]:
