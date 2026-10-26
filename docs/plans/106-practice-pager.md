@@ -180,4 +180,57 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 
 ## Content Review
 
+### Review 1 (d1a2d5a) — CONSENSUS
+
+- `[self]` APPROVE.
+- `[sol]` **APPROVE WITH NITS** (gpt-6-sol). No blocking findings, and the three deviations are sound.
+  Its caveat is recorded below: the phone-width axe check excludes the code editor, so it does not prove the whole page clean at phone width.
+- `[fable]` **APPROVE WITH NITS**. Every plan rule holds in the code, every Phase C bullet has a test, and there are no regressions. Responses, all in `6ecf4ee`:
+  1. `[FIXED]` (Should Fix) On wide screens, keyboard and screen-reader users tabbed through the whole list (up to 37 links) before reaching the exercise. → A "Skip to the exercise" link, visually hidden until focused, is now the nav's first child and moves focus to the current heading; an e2e test covers it.
+  2. `[FIXED]` (Should Fix) The kicker repeated the heading directly above it on a group's first item. → The kicker is not rendered on a group's first item; the tests assert it on later items only.
+  3. `[FIXED]` NIT: the position text ran into the heading. → It now reads ", 4 of 12".
+  4. `[FIXED]` NIT: a control pressed before checks were ready leaked the position into the editor label. → Positions are added only once checks are ready.
+  5. `[FIXED]` NIT: the intro threshold closed usaco-bronze checkpoint-04's rules. → `SHORT_INTRO` is 600; an e2e test covers it.
+  6. `[FIXED]` NIT: wide print left an empty grid column. → The layout is `display: block` in print; the test asserts it at 1280 px.
+  7. `[FIXED]` NIT: two announcements within 50 ms lost the first. → They are joined; an e2e test covers it.
+  8. `[WONTFIX]` (follow-ups): kind-aware nouns ("All questions" on checkpoints, "problems" on projects); `before`-block headings have no ids, so a search hit there lands one item early; a junk hash at load is saved as the resume href, which is harmless because it resolves to item 1.
+- The deviations were accepted by both reviewers:
+  - test-file edits beyond the named list (`e2e-pwa/update.spec.ts`, `helpers/site.ts` `settle()`, `helpers/practice.ts` `check()`, which now waits on `py4kids:check` and fixes a pre-existing race);
+  - "4 of 12" inserted by the island once checks are ready (`practice.ts` names editors from the heading text);
+  - axe skips `.code-editor` at phone width.
+
 ## Post-Execution Report
+
+**Shipped: practice pages show one exercise at a time, with Previous / Next and a grouped jump list.**
+
+- **The pager:** a client-side pager (`site/src/scripts/practice-pager.ts`) over the unchanged static page. Every item stays in the DOM, and without JavaScript every item shows.
+  - Each item is addressed by its anchor. Jump-list links push history; Previous / Next (buttons, disabled at the ends) replace it.
+  - Inner ids (Pagefind heading sub-results) resolve to their step, and the skip link keeps the current step.
+- **Groups and the list:**
+  - Groups start at `before` headings ("Milestone 2", "Challenge — …").
+  - Each later item in a group carries a kicker, and the list is grouped.
+  - List statuses (✓ passed, • tried, "checking…") are always derived from the store (`site/src/lib/pager.ts`).
+- **Events:** `py4kids:check-start`, a terminal `py4kids:check {key, result, saved}` from every exit path, `py4kids:checklist` and `py4kids:step`. The step event drives resume.
+- **Saving:** `withStore` reports whether the write succeeded, and a failed save is shown on the item.
+- **Presentation:**
+  - A wide layout with a sticky side list; a `<details>` list at phone width.
+  - A "Skip to the exercise" link.
+  - Print shows every item.
+  - Search hits on practice pages land on the matched exercise.
+- **No change** to what is checked, how, or what is revealed; the CSP is unchanged.
+
+**Verification:**
+
+- Vitest: 426 tests.
+- `e2e/pager.spec.ts`: 26 tests.
+- Full `pnpm -C site e2e`: 159 site, site-sw and lighthouse tests, 23 PWA and 10 hooks, 0 failed.
+- `astro check` and `tsc` clean.
+- `scripts/ci-local.sh` solo on the final commit: see the PR.
+
+**Follow-ups:**
+
+- The code editor fails axe `scrollable-region-focusable` at phone width on every practice page (pre-existing; the CodeMirror scroller is not keyboard-focusable). A fix in `editor.ts` (e.g. `contentAttributes: { tabindex: '0' }`) needs its own plan.
+- Kind-aware nouns in the pager chrome.
+- Ids on `before`-block headings, for search.
+- `e2e:live` uses the updated `check()` helper, so it passes only once this release is deployed.
+- Redeploying learn.futurespark.cc needs the user's go-ahead.
