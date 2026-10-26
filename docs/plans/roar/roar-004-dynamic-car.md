@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.2** (§4.2 the spin-out rule, §4.3 the generator driver step 2, §4.4 items 2–3, §4.5, §5, §7.1).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-003` merges (#158).
+**v2** folds plan-review round 1. Both [sol] and [fable] rejected. The decisive finding was [fable] B1: the v1 probes never attached the section grip, so every truth-car number was measured at μ = 1.0. Every probe below was re-run with the grip attached, with the prototype's low-speed and brake-stop physics fixed.
 
 ## Scope
 This plan is **infrastructure plus probes** (design §8).
@@ -11,175 +12,309 @@ It ships no unit, no checkpoint and no student-facing notebook.
   - saturating tyres and a per-axle friction circle;
   - longitudinal force, brake and drag;
   - a steering-rate limit and 0–2 ticks of actuator lag;
-  - an exact brake stop;
-  - a low-speed kinematic blend;
+  - an exact brake stop and a low-speed kinematic blend;
   - a spin-out predicate;
   - optional section-varying grip.
 - `racekit._truth` plus `racekit.cars.carla_like(noise=False)`: the stand-in for CARLA.
   It has its own parameters and per-section grip, and an optional seeded throttle jitter.
-- `racekit.tracks.GRIP_SECTIONS` and `grip_sections(track)`: the **public** section rule. It is six equal arc-length sections per lap, counted from the start waypoint. Units 7 and 8 tune and identify one μ per section.
-- Runner: it calls `car.attach_track(track)` when the car has one. It adds the **spin-out major collision** (design §4.2) with the same respawn rule as the wall, and `RaceResult.respawn_causes`.
+- `racekit.tracks.GRIP_SECTIONS = 6` and `grip_sections(track)`: the **public** section rule.
+  It divides each lap into six equal arc-length sections from the start waypoint.
+- Runner:
+  - it calls `car.attach_track(track)` once per race when the car has it;
+  - it adds the **spin-out major collision** (design §4.2), with the same respawn as the wall;
+  - it adds `RaceResult.respawn_causes`.
+- `roar/data/drivers.py`: **one** data-side pure-pursuit driver module.
+  It is used by the generator and imported by the premise tests ([fable] S4), and is never student-facing.
 - Telemetry generator (`roar/data/generate.py` step 2, `roar/data/gen_sysid.py`).
-  It writes **sensor-observable** logs of the carla-like car, recorded by an agent from its own sensors as a CARLA recorder would.
-  The logs go to `generated/sysid/`, in a new `racekit` log format (`write_log_csv` / `read_log_csv`).
-- Routed tests for all of it, and the probe facts that roar-005 to roar-008 build on, pinned as tests.
+  It writes **sensor-observable** logs of the carla-like car.
+  A driver records its own sensor observations and commanded actions every step, as a CARLA recorder would.
+  The logs go to `generated/sysid/`, written by `racekit.telemetry.write_log_csv` and read by `read_log_csv`.
+- Routed tests for all of it.
+  The premise facts that roar-005 to roar-008 build on are pinned as tests.
 
-## Probe evidence (`scratchpad/u04/`, prototype `dyn.py` / `truthcar.py`; numbers re-pinned on the shipped code)
-- **The dynamic car reproduces the Unit 6 premise.**
-  A pure-pursuit agent (lookahead max(6, 0.5·v) m) at a flat 20 m/s finishes `oval` (224.65 s).
-  It fails `test-circuit` (DNF, 16 collisions in 1500 s) and `monza-like` (DNF, 21 collisions) by running wide at the tight corners.
-  The same agent with a **curvature-limited speed** (v ≤ √(a_lat/κ), a_lat = 0.7g, braking at 5 m/s² towards each cap 120 m ahead) finishes all three cleanly: 217.65 / 413.70 / 873.00 s.
-  On the kinematic car the 20 m/s pure-pursuit agent is clean everywhere.
-- **Spin-outs are real, not universal.**
-  The starter's steering (gain 8/√v with δ_max = 70°) whips the wheel by ±0.3 at 18 m/s and **spins** the dynamic car on `test-circuit` (37 spins in 1500 s).
-  Pure pursuit at 20 to 45 m/s never spins.
-  At 60 m/s pure pursuit spins on `oval` (18 spins).
+## Probe evidence
+The prototype lives in `scratchpad/u04/`: `dyn.py`, `truthcar.py`, `pp*.py` and `probe1–9.py`.
+Every truth-car number below has μ **attached** per section.
+All numbers are re-pinned on the shipped code.
+
+- **The truth μ tables.** They are drawn with `random.Random`, seeded from sha256, uniform in [0.78, 1.05] and rounded to 3 decimals:
+
+  | Track | Section μ |
+  |---|---|
+  | `oval` | [0.930, 1.001, 0.802, 0.975, 1.024, 0.880] |
+  | `test-circuit` | [0.817, 1.002, 0.886, 0.816, 0.849, 0.838] |
+  | `monza-like` | [0.836, 0.941, 0.951, 0.940, 0.996, 0.819] |
+- **Unit 6 premise, on `DynamicCar()` defaults (μ = 1, no sections).**
+  A pure-pursuit driver (lookahead max(6, 0.5·v) m) at a flat 20 m/s finishes `oval` (224.65 s).
+  It fails both `test-circuit` (DNF, 16 collisions in 1500 s) and `monza-like` (DNF, 21 collisions) by running wide at the tight corners.
+  With a **curvature-limited speed** it finishes all three clean: 217.65 / 413.70 / 873.00 s.
+  The limit is v ≤ √(a_lat/κ) with a_lat = 0.7g, braking at 5 m/s² towards each cap within 120 m.
+  On `KinematicCar` the flat agent is clean everywhere.
+  The starter's own steering (gain 8/√v with δ_max = 70°) **spins** the dynamic car on `test-circuit`: 37 spins in 1500 s.
+  Pure pursuit spins only at 60 m/s.
 - **Unit 7 premise (late braking).**
   Pure pursuit with a 45 m/s cap and only 120 m of look-ahead braking fails `test-circuit` (18 collisions).
-  It finishes `monza-like` (476.70 s) and `oval` (132.50 s).
-- **Unit 7 premise (per-section grip).**
-  On `carla_like()` on `test-circuit`, with a 45 m/s cap and 300 m of look-ahead at 6 m/s², a global a_lat sweep runs clean at 5.0 (294.75 s), 5.25 and 5.5 (287.95 s), and crashes at 6.0.
-  One knob per section on top of global 5.5:
-  - section 0 stays clean up to ×1.45 (286.2 s);
-  - section 3 stays clean up to ×1.3 (284.45 s), crashing at ×1.45;
-  - section 5 stays clean at ×1.1 (286.7 s);
-  - sections 1, 2 and 4 crash already at ×1.1.
+- **Unit 7 premise (per-section grip, noise-aware).**
+  The setup is `carla_like` with throttle noise σ = 0.1, seeds 0–4, on `test-circuit`, with a 45 m/s cap and look-ahead braking over 300 m at 6 m/s².
+  - **Global a_lat sweep:** 3.5 is clean in 5/5 runs (median 327.40 s, spread 0.30 s); 4.0, 4.25 and 4.5 are DNF on every seed.
+  - **One knob per section on top of global 3.5 (5 seeds each):**
 
-  Per-section tuning therefore beats the best global value by more than 1 s per section, well above the noise spread.
-  The sections that accept more grip are not simply the highest-μ ones: corner geometry and the controller matter too.
-  That is the honest framing of "find the grip that is really there".
+    | Section (μ) | Clean up to | Median at that knob | Crashes at |
+    |---|---|---|---|
+    | 0 (0.817) | ×1.5 | 325.35 s | — |
+    | 1 (1.002, the highest) | ×1.5 | 321.30 s | — |
+    | 2 (0.886) | ×1.3 | 323.60 s | ×1.5 |
+    | 3 (0.816) | ×1.15 | 324.95 s | ×1.3 |
+    | 4 (0.849) | — | — | ×1.15 |
+    | 5 (0.838) | ×1.15 | 325.25 s | ×1.3 |
+
+    The knob a section accepts follows its μ, modulated by the section's corners.
+  - **Combined:** [1.3, 1.5, 1.3, 1, 1, 1] is clean in 5/5 runs, median 316.35 s (spread 0.55 s). That is **11.05 s faster than global 3.5**, about 20× either spread.
+  - **Stacking every individually clean knob crashes:** [1.5, 1.5, 1.3, 1.15, 1, 1.15] has collisions on 2 of 5 seeds. Knobs interact, which is a Unit 7 lesson.
+  - At μ = 1 (the v1 mistake) the same fixture runs clean at global 5.25. The grip is what binds.
 - **Noise.**
-  White **steer** jitter is unrealistic at speed: σ = 0.01 is about 0.7° of wheel angle per tick, roughly 8 m/s² of lateral transient at 45 m/s, and crashes most runs.
-  Throttle-only jitter σ = 0.1 over seeds 0–4 gives a spread of 0.25 s on `monza-like` (median 502.15 s) and 0.10 s on `test-circuit`, all runs clean.
-  The carla-like noise is therefore **throttle-only**, with σ pinned in Phase A to give a `monza-like` spread in the band of G4.4.
-- **Unit 8 premise (identification).**
-  Least squares on one noisy `monza-like` race (10,046 non-held rows) of dv/dt = a_T·throttle − a_B·brake − c·v|v|, with the action lagged by L ticks:
-  - the residual RMS is smallest at **L = 1** (0.482 against 0.601 at L = 0 and 0.546 at L = 2), the truth lag;
-  - a_B = 8.64 (truth 8.6) and c = 3.32e-4 (truth 3.4e-4);
-  - a_T = 5.16 (truth 5.4): about 4% low, from the clipped throttle jitter and rear-axle traction limits.
-- **Cost.** The prototype costs 0.40–0.50 ms per tick against 0.15 for the kinematic car, which is about 3–4.5 s for a 6,400-tick race.
+  White **steer** jitter is unrealistic at speed: σ = 0.01 is about 0.7° of wheel angle per tick and crashes most runs at 45 m/s.
+  Throttle-only jitter σ = 0.1 gives these spreads with every run clean:
+  - `monza-like` at global 3.5: median 542.00 s, spread 0.25 s;
+  - `test-circuit` at global 3.5: spread 0.30 s.
+- **Unit 8 premise (identification from logs, attached).**
+  - **Longitudinal fit.** One noisy `monza-like` race (a_lat 3.5, 10,840 rows) fitted to dv/dt = a_T·throttle − a_B·brake − c·v|v|, with the action lagged L ticks.
+    - The residual is smallest at **L = 1**: RMS 0.436, against 0.569 at L = 0 and 0.537 at L = 2.
+    - a_B = 8.56 (truth 8.6, −0.4%).
+    - c = 3.15e-4 (truth 3.4e-4, −7%).
+    - a_T = 5.17 (truth 5.4, −4.3%). The throttle jitter clipping and traction limits bias it low.
+  - **Steering gain.** From a **steady oval log** at 10, 15 or 20 m/s, using rows where the lagged steer is steady (rolling σ < 0.002 over 10 ticks), atan(r·L/v) against the steer gives δ_max = 66.16° / 65.72° / 65.94° (truth 66°) from 186 to 1,051 rows.
+    The same fit on race logs is unstable: 45° on `test-circuit` from 13 rows. The yaw rate lags fast steering, so the steady log is the one to use.
+  - **Per-section μ is not yet identifiable from these logs.**
+    Peak |a_y| per section gives 0.91–0.99 of μ·g, a correct lower bound, but only for the sections a driver actually pushes to the limit. Single-lap limit runs reached three of six.
+    Designing the excitation that identifies every section's μ is **roar-008's** probe ([sol] B3, [fable] S1).
+    roar-008 may extend `generate.py` step 2 (new logs, new driver settings). G4.7's checksums are byte-stability checks, not a frozen contract.
+- **Friction circle.** Over a limit-probing `test-circuit` lap, the per-tick |a|/(μg) has p99 0.990 and max 0.999.
+  v1's post-step low-speed projection gave non-physical spikes of 24× and 36×; the fix is below.
+- **Cost.** About 0.30 ms per tick for `carla_like` with `track.nearest` included ([fable] measurement), against 0.15 ms for `KinematicCar`.
 
 ## Deviations from design (recorded)
 - **The Unit 6 hook.**
-  The design's hook is "Why does the car spin at Parabolica?".
+  The design asks "Why does the car spin at Parabolica?".
   On this model the 20 m/s failure is **running wide at the tight corners** (the `test-circuit` hairpin and chicane, the Rettifilo).
-  Spins come from aggressive steering (the starter's gain) or very high speed, and the Parabolica (R = 140 m) is safe at 20 m/s.
-  roar-006 reframes the hook from this evidence. This plan only records it.
-- **The noise is throttle-only** (see Probe evidence). Design §4.4 says "a seeded actuator jitter", which this satisfies.
-  `KinematicCar` keeps its two-channel jitter: Unit 1's pins depend on it.
-- **Grip sections are equal arc-length sixths**, a public rule. The design says "section-varying grip" without fixing the sections.
-  Equal sections are reproducible on any generated track, seeded checkpoint tracks included, and students can compute them.
+  Spins come from aggressive steering (the starter's gain) or very high speed.
+  The Parabolica (R = 140 m) is safe at 20 m/s.
+  roar-006 reframes the hook from this evidence; this plan only records it.
+- **The spin-out rule uses sideslip only** ([fable] S3).
+  Design §4.2 says "|β| or |r| beyond a pinned threshold".
+  A yaw-rate threshold cannot tell a legitimate full-lock turn at low speed (r ≈ 4.8 rad/s at 5 m/s) from a spin, and β can.
+  The rule is |β| > 25° at a speed above 5 m/s.
+  At 5–10 m/s and full lock the probe's max |β| is 18.8°, so the rule does not trip.
+- **The noise is throttle-only** (see Probe evidence).
+  Design §4.4 says "a seeded actuator jitter", and this satisfies it.
+  `KinematicCar` keeps its two-channel jitter, because Unit 1's pins depend on it.
+- **Grip sections are equal arc-length sixths**, a public rule.
+  The design says "section-varying grip" without fixing the sections.
+  Equal sections are reproducible on any generated track, seeded checkpoint tracks included.
+- **A spin-out is a respawn although CARLA would not respawn a spin that touches no wall.**
+  This is the design's approximation (most spins end in the wall), labelled in the runner docstring.
 
 ## Design of the dynamic car (`DynamicCar`, the public defaults)
-- **State:** x, y (the centre of gravity, ROAR frame), ψ, v_x and v_y (body frame), r (yaw rate), δ (the actual wheel angle), and the lag FIFO of past actions.
-  `v` is the signed speed, ±‖(v_x, v_y)‖ with the sign of v_x, so telemetry's `v` keeps its meaning.
-  `velocity()` returns the world-frame vector.
-- **Parameters (defaults):**
-  - mass 1845 kg, I_z 2900 kg·m², l_f 1.40 m, L 2.875 m (l_r = L − l_f);
-  - δ_max 70° (steer s → target δ = −s·δ_max, as in `KinematicCar`), steering rate 360°/s;
-  - a_throttle 6, a_brake 8, c_drag 4e-4 (the kinematic car's longitudinal map, so Units 1–5 numbers carry over);
-  - μ = 1.0, tyre B = 10, C = 1.6, lag 1 tick;
+- **State.**
+  - x, y (the centre of gravity, ROAR frame), ψ, v_x and v_y (body frame), r (yaw rate), δ (the actual wheel angle), and the lag FIFO.
+  - `v` is the signed speed ±‖(v_x, v_y)‖, with the sign of v_x.
+  - `velocity()` is world-frame.
+- **Parameters (defaults).**
+  - mass 1845 kg, I_z 2900 kg·m², l_f 1.40 m, L 2.875 m;
+  - δ_max 70°: steer s gives the target δ = −s·δ_max, as in `KinematicCar`;
+  - steering rate 360°/s;
+  - a_throttle 6, a_brake 8 and c_drag 4e-4, which is `KinematicCar`'s longitudinal map;
+  - μ = 1.0, tyre B = 10 and C = 1.6;
+  - lag 1 tick;
   - kinematic blend between 3 and 5 m/s;
   - spin-out at |β| > 25° above 5 m/s.
-- **Forces:**
-  - static axle loads F_z,f = m·g·l_r/L and F_z,r = m·g·l_f/L (no load transfer, a labelled model limit);
-  - longitudinal force m·(drive − brake against the motion − drag), split between the axles in proportion to their load, each clipped to ±μF_z;
-  - lateral force F_y = −√((μF_z)² − F_x²) · sin(C·atan(B·α)), a saturating curve with fall-off past its peak (about 8.6° at B = 10) under the friction circle;
-  - slip angles α_f = atan2(v_y + l_f·r, u) − δ and α_r = atan2(v_y − l_r·r, u), with u = max(|v_x|, 3 m/s).
-- **Integration:** RK4 per substep (10 per tick, as the runner passes).
-  The steering moves towards its target at the rate limit once per substep, before the RK4 stages.
-- **Brake stop (no creep):** if the brake is on and |v_x| ≤ (braking + |drive|)·h at the start of a substep, and the brake beats the drive, the car stops: v_x = v_y = r = 0.
-  A sign change of v_x under braking also clamps to 0.
-  This is deliberately unlike `KinematicCar`, whose RK4 substeps creep at a few cm/s (roar-003 content gate). See Out of scope.
-- **Low speed:** after each substep, with weight w = clip((|v_x| − 3)/(5 − 3), 0, 1), v_y and r blend towards the kinematic values: r_k = v_x·tan δ / L and v_y,k = l_r·r_k.
-- **Section grip:**
-  - `DynamicCar(mu=...)` takes a scalar, or a length-6 sequence that is applied per grip section;
-  - a per-section μ requires `attach_track(track)`, which the runner calls;
-  - the car finds its section with `track.nearest` and a carried hint, which resets on `reset()`;
-  - μ is read once per tick, at the start of `advance`.
-- **Noise:** `jitter` (throttle) and `steer_jitter` are separate, both drawn from `random.Random(seed)`. `seed()` follows `KinematicCar`.
+- **Forces.**
+  - Static axle loads. There is no load transfer, a labelled model limit.
+  - The longitudinal force is m·(drive − brake against the motion − drag), split between the axles in proportion to load: an **all-wheel-drive model choice**, labelled ([self] N2). Each axle's force is clipped to ±μF_z.
+  - Lateral: F_y = −√((μF_z)² − F_x²) · sin(C·atan(B·α)), with α_f = atan2(v_y + l_f·r, u) − δ, α_r = atan2(v_y − l_r·r, u) and u = max(|v_x|, 3 m/s).
+  - Reversing at speed is not modelled: the slip-angle sign assumes forward motion ([self] N1). The runner's agents never reverse; the kinematic blend covers manoeuvres below 3 m/s.
+- **Low speed** ([fable] B2, fixed in the prototype).
+  - Below 5 m/s the **derivatives** blend towards the kinematic bicycle, with weight w = clip((|v_x| − 3)/2, 0, 1):
+    - dv_x → the pure longitudinal map;
+    - dv_y → (l_r·r_k − v_y)/0.1 s, clipped to ±μg;
+    - dr → (r_k − r)/0.1 s, where r_k = v_x·tan δ / L.
+  - No state is projected after a step, which was the source of v1's non-physical spikes.
+  - From rest under throttle at any steer, v_x rises monotonically from 0 (v1 reversed at −1.2 m/s).
+- **Integration.** RK4 per substep (10 per tick). The steering moves towards its target at the rate limit once per substep, before the stages.
+- **Brake stop** ([sol] B1, [fable] N1). The car stops (v_x = v_y = r = 0) when, at the start of a substep, all three hold:
+  - the brake is on;
+  - the brake beats the drive;
+  - ‖v‖ ≤ (braking − drive·sign(v_x) + c·v_x²)·h, which is the direction-aware net deceleration.
+  Under braking, a sign change of v_x also clamps to 0, but only below 0.5 m/s, so a spinning car's v_x may cross zero.
+  This is deliberately unlike `KinematicCar`, whose RK4 substeps creep (see Out of scope).
+- **Section grip.** `mu` takes a scalar, or a length-6 sequence applied per grip section.
+  A per-section μ requires `attach_track(track)`.
+  The car locates its section with `track.nearest` and a carried hint, which resets on `reset()`. μ is read once per tick, at the start of `advance`.
+  A per-section car that is raced without a track raises a clear error rather than silently using μ = 1 (the v1 probe bug, now impossible).
+- **Noise.** `jitter` (throttle) and `steer_jitter` are separate, both drawn from `random.Random(seed)`; `seed()` behaves as in `KinematicCar`.
 
 ## The carla-like car
-- `racekit/_truth.py` holds its parameters. Its module docstring says: "do not read this in teaching material".
-  - The values are chosen so that each parameter Unit 8 identifies differs from `DynamicCar`'s defaults by at least 5%: mass 1845, I_z 3100, l_f 1.45, δ_max 66°, a_throttle 5.4, a_brake 8.6, c_drag 3.4e-4, B 9, C 1.45, lag 1.
-  - μ per section comes from `numpy.random.default_rng(seed)` with the seed taken from sha256("racekit-grip:" + track name), uniform in [0.78, 1.05] and rounded to 3 decimals.
-  - This gives a reproducible μ for any track name, including seeded checkpoint tracks.
-- `carla_like(noise=False)` returns a configured `DynamicCar`. With `noise=True`, its throttle jitter is `_truth.NOISE_SIGMA`, pinned in Phase A.
-- **The rule that content never reads `_truth`:** a routed test fails if any file under `roar/units/`, `roar/checkpoints/`, `roar/projects/racekit/agents/`, `roar/projects/racekit/milestones/`, `roar/projects/*/` notebooks or `roar/labs/` contains `_truth`.
+- `racekit/_truth.py` holds its parameters. Its module docstring says "do not read this in teaching material".
+- **Parameters that Unit 8 identifies differ from `DynamicCar`'s defaults** ([sol] S, [fable] N4):
+
+  | Parameter | `DynamicCar` default | `_truth` | Difference |
+  |---|---|---|---|
+  | δ_max | 70° | 66° | 5.7% |
+  | a_throttle | 6 | 5.4 | 10% |
+  | a_brake | 8 | 8.6 | 7.5% |
+  | c_drag | 4e-4 | 3.4e-4 | 15% |
+
+  μ is per section, in [0.78, 1.05] against 1.0.
+- **Intentionally shared:** mass 1845, L 2.875 and lag 1. Unit 8 *finds* the lag rather than recovering a changed one.
+- **Other differences, not identification targets:** I_z 3100, l_f 1.45, tyre B 9 and C 1.45.
+- **The μ table** is `random.Random(int(sha256("racekit-grip:" + name)[:16], 16))`, uniform in [0.78, 1.05], rounded to 3 decimals ([fable] S2). The three named tracks' tables are also **hard-pinned in a test**.
+- `carla_like(noise=False)` returns a configured `DynamicCar`. With `noise=True` it adds throttle jitter `_truth.NOISE_SIGMA` (0.1 from the probe, confirmed in Phase A against G4.4).
+- **The `_truth` rule.**
+  - A routed test fails if the string `_truth` appears in any student-facing source: `roar/units/`, `roar/checkpoints/`, `roar/projects/` notebooks and agents, `roar/labs/`, `roar/docs/`, `roar/reference/` and `roar/syllabus.md` ([sol] S).
+  - It excludes `roar/projects/racekit/racekit/` (where `cars.py` imports it) and the racekit tests.
+  - The object `carla_like()` returns exposes its parameters as attributes, so introspection (`carla_like().a_brake`) is a **reviewer-enforced** rule in the content gates ([fable] N3).
 
 ## Gates (pinned from the probes; a miss means stop, amend and re-gate)
-All gates are routed tests under `roar/projects/racekit/tests/`, plus the existing suite.
-- **G4.1, the analytic car checks** (design §7.1):
-  - circle radius: at 8 m/s with steer 0.02 the steady radius is within 3% of L/tan δ (low lateral acceleration);
-  - friction circle: in a seeded 500-case random-action fuzz, every substep's tyre forces satisfy √(F_x² + F_y²) ≤ μF_z + 1e-9 per axle;
-  - longitudinal: a straight full-throttle run below the traction limit matches the longitudinal map to 1e-3 m/s over 2 s;
-  - brake stop: from every v₀ in {0.005, 0.01, 0.03, 0.2, 1, 5} m/s, 1 s of full brake leaves v == 0.0 exactly, and the car never reverses;
-  - lag: with `lag_ticks = k`, a throttle step first changes v_x on tick k + 1;
-  - the steering rate is respected;
-  - from rest at full lock and 0.3 throttle, |v_y| stays ≤ 0.5 m/s (no sideways slide at low speed);
-  - spin-out: a scripted 40 m/s full-lock flick triggers `spun_out()`, and a steady 15 m/s, 0.3g circle never does.
-- **G4.2, the runner:**
-  - a spin-out triggers the same respawn as the wall: start pose, a 20-tick hold, progress reset to 0 and `respawn_causes == ["spin"]`;
-  - `attach_track` is called once per race;
-  - `KinematicCar` races are unchanged: the existing Unit 1–3 pins (223.50 / 412.75 / 882.55 s and Unit 1's per-seed times) still pass;
-  - the default car is still `KinematicCar`.
-- **G4.3, the Unit 6 premise:**
-  - the test-fixture pure-pursuit agent at a flat 20 m/s on `DynamicCar()` fails `test-circuit` with at least 5 collisions within a 600 s cap;
-  - the same agent with the curvature-limited speed finishes `test-circuit` with 0 collisions and 0 spins;
-  - on `KinematicCar` the flat 20 m/s agent finishes `test-circuit` with 0 collisions, so the failure belongs to the dynamic model.
-- **G4.4, noise:**
-  - `carla_like(noise=True)` gives a `monza-like` spread over seeds 0–4 in **[0.15, 0.6] s** with the fixture's limited agent at a 45 m/s cap (clean in all 5);
-  - `noise=False` is exactly deterministic, and the same seed gives identical times.
-- **G4.5, the Unit 7 premise:**
-  - on `carla_like()` on `test-circuit`, the fixture with global a_lat 5.5 is clean;
-  - the per-section vector found by the probe's one-knob sweep, combined, is clean and faster than global 5.5 by more than 1.0 s;
-  - if the combined vector is not clean, the plan records the best clean combination that the sweep finds and pins that.
-- **G4.6, the Unit 8 premise:**
-  - on one generated noisy `monza-like` log, lagged least squares has its residual minimum at lag 1;
-  - a_B and c_drag are recovered within 5%, and a_T within 10%.
-- **G4.7, the generator:**
-  - `generate.py` step 2 writes `generated/sysid/test-circuit-seed0.csv` and `monza-like-seed0.csv`;
-  - it is byte-stable under the existing checksum contract (two in-process runs, rounded hashes, re-read and re-hash);
-  - the log reader round-trips;
-  - total generation (tracks, logs and lab sample) is **≤ 1 min** (design §7.1).
-- **G4.8, cost:** the median `DynamicCar` cost per tick is **≤ 0.6 ms** on the CI machine, measured and recorded. The racekit pytest stays within the 5-min routed budget.
-- **G4.9, Python 3.8:** the new modules pass the existing AST deny-list test and `from __future__ import annotations`. The isolated 3.8 run is unchanged.
+All are routed tests under `roar/projects/racekit/tests/`, plus the existing suite.
+
+### G4.1, analytic car checks (design §7.1)
+- **Circle radius:** at 8 m/s with steer 0.02, the steady radius is within 3% of L/tan δ ([fable] measured 0.1%).
+- **Friction circle** (a regression guard, true by construction, [fable] N2): in a seeded random-action fuzz of 500 cases, every substep has √(F_x² + F_y²) ≤ μF_z + 1e-9 per axle. In addition, the per-tick |a|/(μg) stays ≤ 1.02 over a limit lap.
+- **Integrator order** ([sol] S, [fable] N2): halving the substep size shrinks the end-state error of a 2 s smooth manoeuvre at 15 m/s by a ratio ≥ 12 (RK4), checked over two halvings. The wheel angle starts at its target, so the piecewise-constant steering update does not limit the order, and no tyre is saturated.
+- **Longitudinal:** a straight full-throttle run below the traction limit matches the map to 1e-3 m/s over 2 s.
+- **Brake stop:**
+  - from every v₀ in {0.005, 0.01, 0.03, 0.2, 1, 5} m/s, 1 s of full brake leaves v == 0.0 and never reverses;
+  - with full throttle **and** full brake from 0.05 m/s, the car takes at least 3 substeps to stop, so it is not an early snap ([sol] B1);
+  - with throttle 0.75 and full brake from 5 m/s, the car reaches v == 0.0 within 2 s.
+- **Low speed:** from rest under throttle 0.3 at steer ∈ {0, 0.5, 1}, v_x is monotone non-decreasing and ≥ 0 for 3 s. Below 3 m/s, β is within 2° of the kinematic atan(l_r·tan δ / L).
+- **Lag:** with `lag_ticks = k`, a throttle step first changes v_x on tick k + 1.
+- **Steering rate:** the rate limit is respected.
+- **Spin-out:**
+  - a scripted 40 m/s full-lock flick triggers `spun_out()`;
+  - a steady 15 m/s, 0.3g circle never does;
+  - full lock at 5, 6, 8 and 10 m/s with throttle 0.3 for 4 s never does.
+- **Grip:** a per-section `DynamicCar` raced without `attach_track` raises.
+
+### G4.2, the runner
+- A spin-out triggers the same respawn as the wall: start pose, 20-tick hold, progress reset to 0, `respawn_causes == ["spin"]`.
+- If the wall and a spin coincide in one tick, the cause is `"wall"`.
+- A spin reports `CRASH_IMPULSE` on the collision sensor, as the wall does ([fable] N5).
+- `attach_track` is called once per race.
+- `KinematicCar` races are unchanged: the existing Unit 1–3 pins (223.50 / 412.75 / 882.55 s and Unit 1's per-seed times) still pass, and the default car is still `KinematicCar`.
+
+### G4.3, the Unit 6 premise
+These use `drivers.py` on `DynamicCar()` defaults.
+- At a flat 20 m/s the driver fails `test-circuit` with at least 5 collisions within a 600 s cap.
+- With the curvature-limited speed (0.7g) it finishes `test-circuit` with 0 collisions and 0 spins.
+- On `KinematicCar` the flat 20 m/s driver finishes `test-circuit` cleanly.
+
+### G4.4, noise
+- `carla_like(noise=True)` with `drivers.py` at global a_lat 3.5 and a 45 m/s cap, on `monza-like`, seeds 0–4: all 5 runs clean, with a spread in **[0.15, 0.6] s**.
+- `noise=False` is exactly deterministic, and the same seed gives identical times.
+
+### G4.5, the Unit 7 premise
+On `carla_like(noise=True)` on `test-circuit`, seeds 0–4, with a 45 m/s cap and look-ahead braking over 300 m at 6 m/s²:
+- global a_lat **3.5** is clean in 5/5 runs, and global 4.0 is not;
+- section grip **[1.3, 1.5, 1.3, 1, 1, 1]** on top of 3.5 is clean in 5/5 runs;
+- **noise-aware:** its median is faster than global 3.5 by more than both spreads **and** by at least **5 s** (probe: 11.05 s);
+- the stacked vector [1.5, 1.5, 1.3, 1.15, 1, 1.15] is **not** clean on all 5 seeds (the interaction premise).
+
+A miss on the shipped code means stop, amend and re-gate, never a silent re-pin.
+
+### G4.6, the Unit 8 premise (on the generated logs)
+On `monza-like-seed0` (race):
+- lagged least squares has its residual minimum at lag 1;
+- a_B is within 5%, c within 10% and a_T within 10%.
+
+On `oval-steady-seed0`:
+- the steady-row fit gives δ_max within 3% of 66°.
+
+Per-section μ: on the race log, peak |a_y|/g per section is ≤ 1.02·μ in every section, which is a correct lower bound. Identification is deferred to roar-008 (see Probe evidence).
+
+### G4.7, the generator
+- `generate.py` step 2 writes `generated/sysid/monza-like-seed0.csv` (a noisy race at global 3.5) and `generated/sysid/oval-steady-seed0.csv` (a noisy steady 15 m/s oval lap), via `drivers.py`.
+- Both are byte-stable under the existing checksum contract.
+- The log reader round-trips.
+- Total generation (tracks, logs and lab sample) is **≤ 1 min** (design §7.1).
+
+### G4.8, cost
+- The median `carla_like` cost per tick, `track.nearest` included, is **≤ 0.6 ms** on the CI machine, measured and recorded.
+- The routed pytest stays within its 5-min budget, measured.
+
+### G4.9, Python 3.8
+- The new modules pass the AST deny-list test and use `from __future__ import annotations`.
+- The isolated 3.8 run gains a **smoke race** through `carla_like(noise=True)` on `oval` for 1 lap. It exercises `DynamicCar`, `_truth`, the section grip, `attach_track` and the spin-out check ([sol] S).
 
 ## Phases
 ### Phase A: `racekit` cars and runner (Opus subagent, tooling)
-`cars.py` (`DynamicCar`, `carla_like`), `_truth.py`, `tracks.py` (`GRIP_SECTIONS`, `grip_sections`), `runner.py` (`attach_track`, spin-out, `respawn_causes`).
-The runner docstring's "Known differences" adds the spin-out approximation.
-Tests for G4.1, G4.2, G4.4 and G4.9.
-`_truth.NOISE_SIGMA` is pinned here from a σ sweep on the shipped code.
+- `cars.py`: `DynamicCar` and `carla_like`.
+- `_truth.py`.
+- `tracks.py`: `GRIP_SECTIONS` and `grip_sections`.
+- `runner.py`: `attach_track`, spin-out and `respawn_causes`. The "Known differences" docstring gains the spin-out approximation and the spin-without-wall caveat.
+- `KinematicCar`'s docstring gains the brake-creep note ([fable] point 5).
+- Tests for G4.1, G4.2, G4.4 and G4.9.
+- `_truth.NOISE_SIGMA` is confirmed against G4.4.
 
-### Phase B: the telemetry generator (Opus subagent, tooling)
-- `roar/data/sysid_driver.py`: a recording agent, data-side and never student-facing. It is pure pursuit with a curvature-limited speed, and it logs its own sensor observations and commanded actions every step.
+The prototype `scratchpad/u04/dyn.py` is the reference for the physics. The implementation unrolls its RK4 stage tuples for speed ([fable] note).
+
+### Phase B: the driver and the telemetry generator (Opus subagent, tooling)
+- `roar/data/drivers.py`: one pure-pursuit driver class. It takes the cap, a_lat, section grips, look-ahead braking and recording on or off, and records sensor rows when recording is on.
 - `roar/data/gen_sysid.py`.
 - `generate.py` step 2 and its docstring.
-- `racekit.telemetry` gains `LOG_COLUMNS = (t, x, y, yaw, vx, vy, throttle, steer, brake)` with `write_log_csv` / `read_log_csv`, in the v1 CSV conventions with a meta header (track, seed, noise).
+- `racekit.telemetry`: `LOG_COLUMNS = (t, x, y, yaw, vx, vy, throttle, steer, brake)` with `write_log_csv` / `read_log_csv`, following the v1 CSV conventions with a meta header (track, seed, noise, kind).
 - Tests for G4.7.
 
-### Phase C: the premise probes as tests (Opus subagent, tooling)
-- `roar/projects/racekit/tests/fixtures/`: the pure-pursuit fixture agent, parametrised by cap, a_lat and section grips (a test fixture, not a reference submission).
-- Tests for G4.3, G4.5 and G4.6. The G4.5 vector is re-derived on the shipped code and pinned.
-- The test that content never reads `_truth`.
+### Phase C: the premise tests (Opus subagent, tooling)
+- Tests for G4.3, G4.5 and G4.6, importing `drivers.py`.
+- The `_truth` scan test.
+- The hard-pinned μ tables.
 
 ### Phase D: verification (named)
-- `uv run --group roar pytest -q roar/projects/racekit/tests roar/tests`.
+- `uv run --group roar pytest -q roar/projects/racekit/tests roar/tests`, timed.
 - `PYTHONHASHSEED=0 uv run --group roar python roar/data/generate.py`, timed.
-- `py4kids-tools --book roar` all checks.
-- `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN.
-- Then the 3-way content gate, which for this plan reviews the code, the physics and the pinned premises.
+- `py4kids-tools --book roar`: all checks.
+- `TMPDIR=/dev/shm bash scripts/ci-local.sh`: ALL GREEN.
+- The 3-way content gate, which for this plan reviews the code, the physics and the pinned premises.
 
 ## Out of scope
-- **No unit content.** There are no lessons, exercises, milestones or teacher notes. This is a tooling-only plan, and the content laws are exercised by roar-005 onwards. The verification phase above is the named verification.
-- **`KinematicCar`'s brake creep** (the roar-003 follow-up). It is left unchanged and documented in its docstring as a known model artefact.
-  - Changing it would change Unit 3's taught parity (`agents/unit-03.py`'s `stopping_tick`, the Unit 3 milestone and lesson §8), which is errata scope.
-  - The races never brake to rest, so no race time is affected.
+- **No unit content** (no lessons, exercises, milestones or teacher notes).
+  This is a tooling-only plan.
+  The content laws are exercised from roar-005 onward; the verification phase above is the named verification.
+- **`KinematicCar`'s brake creep** (the roar-003 follow-up).
+  - It stays unchanged, documented in the car's docstring.
+  - Changing it would change Unit 3's taught parity: `agents/unit-03.py`'s `stopping_tick`, the Unit 3 milestone and lesson §8. That is errata scope.
+  - No race brakes to rest, so no race time is affected.
   - `DynamicCar` stops exactly.
+  - roar-006's Unit 6 lesson labels the difference where the two cars are compared.
   - The follow-up is listed for the user.
-- Load transfer, gears, power limits and tyre temperature are labelled model limits.
-- `racekit.sysid_data` and the analysis helpers enter with Unit 8 (roar-008, design §5).
-- Any change to `KinematicCar`, the telemetry v1 format or the lab-check format.
+- **Per-section μ identification** (excitation design): roar-008.
+- **Model limits, labelled:** load transfer, gears, power limits, tyre temperature and reversing at speed.
+- `racekit.sysid_data` and the analysis helpers, which enter with Unit 8 (roar-008, design §5).
+- Any change to `KinematicCar`'s behaviour, to the telemetry v1 format or to the lab-check format.
 
 ## Plan Review
+
+### Round 1 (v1 @ 298feb5)
+- [self] APPROVE WITH NITS.
+  - N1 [FIXED]: reverse slip-angle sign, now stated as a model limit.
+  - N2 [FIXED]: the load-split drive is all-wheel drive, now labelled.
+- [sol] REJECT.
+  - **B1** [FIXED] The brake-stop threshold was not direction-aware, so the stop rule snapped a car with opposing throttle to rest early. It now uses the net deceleration, and a G4.1 case covers throttle plus brake.
+  - **B2** [FIXED] The Unit 7 advantage had not been probed as a combined, noise-aware comparison. Both are now probed (5 seeds, combined vector) and pinned in G4.5 with no silent re-pin.
+  - **B3** [FIXED] G4.6 covered only the longitudinal fit. Added: lag, steering gain from a steady log (probed at 66 ± 0.3°), and a μ lower bound. Per-section μ identification is explicitly roar-008's.
+  - **S** [FIXED] The parameter-separation claim was wrong; the table now lists which parameters differ and which are shared.
+  - **S** [FIXED] The isolated 3.8 run did not exercise the new car; it gains a smoke race.
+  - **S** [FIXED] Added the integrator-order check, and widened the `_truth` scan to all student-facing sources.
+- [fable] REJECT.
+  - **B1** [FIXED] The v1 truth-car probes ran at μ = 1.0 because nothing called `attach_track`. All probes were re-run attached and every pin was rewritten: global 3.5, not 5.5; the combined grip vector; the noise band; the fits. The car now raises if a per-section car is raced without a track.
+  - **B2** [FIXED] A steered car from rest drove backwards. The low-speed blend now acts on the derivatives (v_x, v_y and r), with gates for monotone v_x ≥ 0 from rest, kinematic β and no spin trip at full lock from 5 to 10 m/s. The same fix removed the friction-bound spikes.
+  - **S1** [FIXED] μ identification was not probed. Recorded as a lower bound now, with excitation in roar-008 and a note that generator checksums are not a frozen contract.
+  - **S2** [FIXED] μ now comes from `random.Random`, and the named tables are hard-pinned.
+  - **S3** [FIXED] The β-only spin rule is recorded as a deviation, with the reason.
+  - **S4** [FIXED] There is now one `drivers.py` shared by the generator and the tests.
+  - **N1** [FIXED] Net-deceleration stop threshold.
+  - **N2** [FIXED] Friction-circle fuzz labelled a regression guard; convergence check added.
+  - **N3** [FIXED] Introspection is reviewer-enforced, and the scan exclusions are stated.
+  - **N4** [FIXED] Mass dropped from the "differs" list.
+  - **N5** [FIXED] Spin impulse and precedence specified.
+  - **N6** noted.
