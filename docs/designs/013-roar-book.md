@@ -1,8 +1,9 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** DRAFT, v3 (2026-10-25).
+**Status:** DRAFT, v4 (2026-10-25).
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
-([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). See the Design Review section.
+([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
+non-blocking. v4 folds round 3. See the Design Review section.
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -104,7 +105,8 @@ outside CI (§7.3). The book teaches toward the frontier but promises only this 
 - **dependency_group:** `roar` (numpy, scipy, matplotlib, and the editable `racekit` package via
   `[tool.uv.sources] racekit = { path = "roar/projects/racekit", editable = true }`). No torch, CARLA or `ROAR_PY`.
 - **flags:**
-  - `site` is set by the plan that first passes `site-check`;
+  - `site` is set in `roar-014` together with publication. The book is not shown on the public site before its
+    CARLA qualification.
   - `publication` is set only after the §7.3 qualification, in `roar-014`.
 - **lesson_budget:** `[30, 50]`, a whole-book total over 13 units at 2–3 sittings each.
   `roar-001` sets **`buildout: true`** on the book's `books.yaml` entry (as recsys did) and removes it once the
@@ -114,6 +116,14 @@ outside CI (§7.3). The book teaches toward the frontier but promises only this 
 
 `roar/projects/racekit/racekit/` is an importable harness package, the analogue of recsys's `bookrec`. It depends
 only on numpy and scipy, and is tested by the routed suite.
+
+**`racekit` is itself Python 3.8-compatible** ([sol] r3 B1, [fable] r3 M1):
+- its own `pyproject.toml` declares `requires-python = ">=3.8"`;
+- every module starts with `from __future__ import annotations` and avoids 3.9+ syntax and APIs (the §4.1 deny-list);
+- scipy usage stays within 1.10.x, and scipy is imported lazily, only inside the analysis modules that need it.
+
+The core (the shim, the runner, track loading, cars, `check_submission`) imports numpy only. A routed test parses
+every `racekit` module with `ast.parse(feature_version=(3, 8))` and the deny-list.
 **It is a harness, never a dependency of a submission** (§4.1).
 
 ### 4.1 The submission ABI: one self-contained file
@@ -146,15 +156,25 @@ only on numpy and scipy, and is tested by the routed suite.
   derived from the MIT-licensed `ROAR_PY` at the pinned commit. The fixture is recorded with provenance: commit,
   file, licence. It is the only `ROAR_PY`-derived artifact in the repo, and it carries the MIT notice.
 - **`racekit.check_submission(path)`** proves exactly the following, and nothing more:
-  1. the file parses with `ast.parse(src, feature_version=(3, 8))`, and a small deny-list catches the 3.9+ runtime
-     APIs named in §2. It defines `RoarCompetitionSolution` with the official constructor signature.
+  1. the file parses with `ast.parse(src, feature_version=(3, 8))`, and an AST deny-list catches the 3.9+ runtime
+     APIs:
+     - `str.removeprefix` / `removesuffix`;
+     - `functools.cache`, `math.lcm`, `itertools.pairwise`, `int.bit_count`;
+     - `zip(..., strict=)`;
+     - `dict | dict` and `|=` on dicts;
+     - `np.trapezoid`.
+     It also catches `X | Y` and builtin-generic subscripts (`list[int]`) in annotation positions, which
+     `from __future__ import annotations` would hide from the 3.8 run. It defines `RoarCompetitionSolution` with the official constructor signature.
   2. its imports are within the allowed set;
   3. it completes a racekit race on `test-circuit` without an action-validation error or an exception, and with
-     `step()` compute **p99 ≤ the budget**, the first 50 warm-up ticks excluded (§7.1). The official sim is
+     `step()` compute **p99 ≤ 5 ms**, the universal per-submission budget, with the first 50 warm-up ticks excluded. The official sim is
      synchronous, so compute time never changes the scored time; the budget protects CI wall time and flags a
      controller too slow to be practical.
-  - A routed test runs every `agents/unit-NN.py` through `check_submission` under
-    `uv run --python 3.8 --with "numpy<1.25"`. It is the one deliberately slow test, and the interpreter is cached.
+  - A routed test runs every `agents/unit-NN.py` through `check_submission` in an **isolated** 3.8 environment:
+    `uv run --no-project --python 3.8 --with "numpy<1.25" --with "scipy<1.11" --with-editable roar/projects/racekit
+    python -m racekit.check_submission <file>`. It asserts, inside the run, that `sys.version_info[:2] == (3, 8)`
+    and `numpy.__version__ < "1.25"`. The [fable] r3 probe measured it at about 3 s warm. It is the one deliberately
+    slow test, and it stays within the routed 5-minute budget.
   It does **not** prove CARLA performance. That is what the real-sim labs and §7.3 are for.
 
 ### 4.2 The race runner mirrors the real rules
@@ -313,12 +333,22 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   1. Every callable a student may call is listed in `baseline.yaml` `library_methods`, so `concept-scan` (whose
      library exemption is global, `tools/concept_scan.py`) accepts it. This includes the shim API, `racekit`
      harness calls, numpy names, and the **taught** scipy, matplotlib and `racekit` analysis calls.
-  2. `roar/curriculum/api-order.yaml` maps each **taught** callable to the **concept id** that teaches it. That
+  2. `roar/curriculum/api-order.yaml` maps each **taught** callable to the **concept id** that teaches it. Keys are
+     bare names with an optional `module:` qualifier for collisions (`fit`, `solve`, `plot`). numpy names that belong
+     to **in-book-taught math** (`np.linalg.lstsq`, `solve`, `inv`, `polyfit`) are mapped to their teaching concept
+     (Unit 8), **not** listed as infrastructure. Otherwise "numpy is assumed" would let least squares leak into Unit 4. That
      concept is introduced by exactly one entry in `concepts.yaml` and `coverage-map.yaml`. There is no second copy
      of the order: a routed test **derives** each concept's introducing position from the coverage map's entry order
      and `introduces` lists.
+  **Call resolution ([sol] r3 S2, [fable] r3 S2):** the test resolves calls to canonical names. It follows `import m`
+  and `import m as a` (so `a.f(...)` → `m.f`), `from m import f` and `from m import f as g` (so `g(...)` → `m.f`),
+  and attribute calls (`x.f(...)` → `f`). A negative test covers each form.
+  **Scan scope ([fable] r3 S3):** each unit's lesson, exercises and solutions; its milestone; its
+  `agents/unit-NN.py`; and its lab are all positioned at that unit. Checkpoints and the capstone sit at their map
+  position. Verify cells are excluded, mirroring `concept-scan`.
   The test fails when:
-  - a taught callable appears in a notebook code cell of an entry that comes before its introducing entry;
+  - a taught callable appears in an entry (or entry-positioned file) that comes before its introducing entry;
+  - an `api-order.yaml` key is **not** in `library_methods` (the reverse direction);
   - a callable in `library_methods` is in **neither** `api-order.yaml` **nor** the explicit `infrastructure:` list at
     the top of `api-order.yaml`;
   - an `api-order.yaml` concept id is unknown.
@@ -337,9 +367,13 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - Notebooks size their runs to a few full races per cell.
 - **`ci-local.sh` wiring (`roar-001`):**
   - add `roar/projects/racekit roar/data` to the ruff path list;
-  - extend the data-regeneration hook: when `$book/data/generate.py` exists, run it. Otherwise keep recsys's
+  - extend the data-regeneration hook: when `$book/data/generate.py` exists, run it with
+    `PYTHONHASHSEED=0 uv run --group "$grp"`. The driver verifies `checksums.json` byte-stability for every output
+    (tracks, telemetry, lab CSV). Otherwise keep recsys's
     existing `gen_catalog.py` / `gen_interactions.py` branch unchanged. Run it before the routed pytest;
   - add the `roar` group and the `racekit` source to `pyproject.toml`.
+  - ruff targets `py312` with the default E/F rules, so it never rewrites `racekit` to 3.9+ syntax. If `UP` rules are
+    ever enabled, add `[tool.ruff.per-file-target-version] "roar/projects/racekit/**" = "py38"`.
 
 ### 7.2 Real-sim labs (CI checks their analysis, not CARLA)
 - 🏁 units ship `labs/real-sim.ipynb`, labelled "runs on your machine with CARLA 0.9.12 and `ROAR_PY`".
@@ -377,7 +411,8 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - `roar-013`: the Unit 13 reference, timed.
   These checks need the author's Windows machine, so the shipping plan **does not block** on them. Each plan records
   its check as `PENDING (author)` in `qualification.md` and in its post-execution report, and surfaces it as a
-  follow-up. When the author runs a check and it fails, an errata/fix plan follows before the next part ships. Only
+  follow-up. A PENDING check is also a **named risk** in the `## Plan Review` of the next part's first plan
+  (`roar-008` for the Unit 7 check, `roar-014` for the Unit 13 check), so gate reviewers see it. When the author runs a check and it fails, an errata/fix plan follows before the next part ships. Only
   the final qualification hard-gates the `publication` flag.
 - Before `roar-014` sets the `publication` flag, the author runs the **final reference submission** on the pinned
   stack:
@@ -388,6 +423,8 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   The run is **exactly 5 consecutive official-runner launches** ([sol] r2 S1), all recorded in
   `roar/docs/qualification.md`: hardware, OS, GPU, versions, the submission file's **SHA-256** and repository commit,
   and **every** launch's outcome (time, collisions, timeout or crash). No launch is discarded or restarted.
+  A **host failure** (the CARLA server exits, or the agent never receives its first tick) is not an agent failure. It
+  is recorded, the 5-launch block restarts, and both blocks stay in the record.
 - The §1.3 proxy (every run clean, median ≤ 329 s) must hold. **Otherwise stop and amend.** The fix is a plan that
   re-tunes, not a relaxed proxy without author sign-off.
 - The record contains only the author's reference agent, never student results.
@@ -414,11 +451,11 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
 | `roar-002` | Unit 1; `lab-check`; the first lab; the starter re-implementation as `agents/unit-01.py` |
 | `roar-003` | Units 2–3 |
 | `roar-004` | `racekit` dynamic car, spin-out, the carla-like truth car, noise, the telemetry generator (infrastructure plus probes) |
-| `roar-005` / `roar-006` | Units 4–5 / Units 6–7 (plus the interim untimed CARLA check, §7.3) |
+| `roar-005` / `roar-006` | Units 4–5 / Units 6–7 (records the interim untimed CARLA check as PENDING (author), §7.3) |
 | `roar-007` | Checkpoint A |
 | `roar-008` / `roar-009` / `roar-010` | Units 8–9 / Unit 10 / Unit 11 |
 | `roar-011` | Checkpoint B |
-| `roar-012` / `roar-013` | Unit 12 / Unit 13 (integration; plus the interim timed CARLA check) |
+| `roar-012` / `roar-013` | Unit 12 / Unit 13 (integration; records the interim timed CARLA check as PENDING (author)) |
 | `roar-014` | Capstone; site flag; §7.3 qualification; publication flag |
 
 Pairings may be adjusted by each plan's gate without a design change.
@@ -491,6 +528,25 @@ Pairings may be adjusted by each plan's gate without a design change.
   - F10, the per-tick target: [FIXED v3, §7.1].
 - **[self]** APPROVE.
 
+### Round 3 (v3.1 @ e40b9cf)
+- **[sol]** REJECT. B2, S1, S2 and S3 were verified RESOLVED.
+  - New B1, the 3.8 run is impossible under the repo's `requires-python`: [FIXED v4, §4 racekit is 3.8-compatible,
+    plus the isolated `--no-project` command with version asserts].
+  - S2, alias and `from`-import resolution plus the reverse check: [FIXED v4, §7.1].
+  - N3, version labels: [FIXED v4].
+- **[fable]** APPROVE WITH NITS. All round-2 items were verified RESOLVED; it judged the v3.1 non-blocking interim
+  policy acceptable. uv feasibility was confirmed: Python 3.8.20 with numpy 1.24.4 and scipy 1.10.1, about 3 s warm.
+  - M1, 3.8 executability: [FIXED v4, option (a)].
+  - S2, call granularity and taught numpy math: [FIXED v4].
+  - S3, scan scope: [FIXED v4].
+  - S4, PENDING as a named risk, §8 wording, the site flag: [FIXED v4, §3, §7.3, §8].
+  - N5, the universal 5 ms p99: [FIXED v4].
+  - N6, the hook seed and checksums: [FIXED v4].
+  - N7, host failure: [FIXED v4, §7.3].
+  - N8, deny-list breadth: [FIXED v4, §4.1].
+  - N9, ruff: [FIXED v4, §7.1].
+- **[self]** APPROVE.
+
 ## 10. Revision history
 - v1 (2026-10-25): the initial draft from the author-agreed brainstorming sections 1–5.
 - v2 (2026-10-25): folds round 1, and re-grounds the race in the Summer 2026 reports. Changes:
@@ -505,7 +561,7 @@ Pairings may be adjusted by each plan's gate without a design change.
   - `lab-check`;
   - the budgets made precise;
   - the provenance record.
-- v3 (2026-10-25): folds round 2. Changes:
+- v3 / v3.1 (2026-10-25): folds round 2; v3.1 makes the interim CARLA checks non-blocking. Changes:
   - two-layer API ordering;
   - the Python 3.8 / numpy < 1.25 submission target;
   - the shim's lifetime and loading;
@@ -515,3 +571,9 @@ Pairings may be adjusted by each plan's gate without a design change.
   - the qualification stopping rule;
   - `ROAR_LAB_CSV`;
   - the U7 one-knob sweep.
+- v4 (2026-10-25): folds round 3. Changes:
+  - `racekit` is Python 3.8-compatible, with an isolated `--no-project` 3.8 run;
+  - alias-aware API-order resolution, the reverse check, and the full scan scope;
+  - interim checks become named risks;
+  - the site flag moves to `roar-014`;
+  - the universal p99 budget, host-failure handling and a wider deny-list.
