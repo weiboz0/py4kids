@@ -375,7 +375,10 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
 - **Early warnings ([fable] r2 F6):** the author runs two interim CARLA checks, recorded in the same file:
   - `roar-006`: the Unit 7 reference, untimed, must complete 3 laps with 0 collisions;
   - `roar-013`: the Unit 13 reference, timed.
-  A failure at either point is a stop-and-amend for that plan, not a surprise at the end.
+  These checks need the author's Windows machine, so the shipping plan **does not block** on them. Each plan records
+  its check as `PENDING (author)` in `qualification.md` and in its post-execution report, and surfaces it as a
+  follow-up. When the author runs a check and it fails, an errata/fix plan follows before the next part ships. Only
+  the final qualification hard-gates the `publication` flag.
 - Before `roar-014` sets the `publication` flag, the author runs the **final reference submission** on the pinned
   stack:
   - CARLA 0.9.12;
