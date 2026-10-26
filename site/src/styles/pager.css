@@ -21,6 +21,30 @@
   outline-offset: 2px;
 }
 
+/* "Skip to the exercise": visually hidden until focused. */
+.pager-skip {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.pager-skip:focus {
+  position: static;
+  display: inline-block;
+  width: auto;
+  height: auto;
+  margin: 0 0 0.5rem;
+  padding: 0.35rem 0.7rem;
+  overflow: visible;
+  clip: auto;
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
 /* The list. */
 .pager-nav {
   margin: 0 0 1rem;
@@ -195,6 +219,10 @@
 /* Print: every step, no pager chrome. `!important` beats progress.css's site-wide
    `[hidden] { display: none !important; }`. */
 @media print {
+  .practice-layout.is-paged {
+    display: block;
+  }
+
   .practice-step[hidden],
   .practice-outro[hidden] {
     display: block !important;

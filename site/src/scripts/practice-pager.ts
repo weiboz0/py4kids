@@ -51,7 +51,7 @@ interface Step {
 /** Wide screens: the list is an always-open side column. */
 const WIDE = '(min-width: 62rem)';
 /** An intro this short (one block) stays open on later steps (checkpoint rules stay visible). */
-const SHORT_INTRO = 400;
+const SHORT_INTRO = 600;
 
 function warn(error: unknown): void {
   console.warn('py4kids pager:', error);
@@ -75,6 +75,7 @@ function start(layout: HTMLElement, stepEls: HTMLElement[]): void {
   const prev = layout.querySelector<HTMLButtonElement>('[data-pager-prev]');
   const next = layout.querySelector<HTMLButtonElement>('[data-pager-next]');
   const live = layout.querySelector<HTMLElement>('[data-pager-live]');
+  const skip = layout.querySelector<HTMLAnchorElement>('[data-pager-skip]');
   if (!nav || !list || !controls || !prev || !next || !live) return;
   const intro = layout.querySelector<HTMLElement>('[data-practice-intro]');
   const outro = layout.querySelector<HTMLElement>('[data-practice-outro]');
@@ -133,17 +134,19 @@ function start(layout: HTMLElement, stepEls: HTMLElement[]): void {
   // The position in each heading ("4 of 12"), added once the check island has read the headings
   // (it names each editor after its heading's text).
   let positioned = false;
+  const checksReady = () => document.body.dataset.checksReady !== undefined;
   const addPositions = () => {
-    if (positioned) return;
+    if (positioned || !checksReady()) return;
     positioned = true;
     steps.forEach((step, i) => {
       const pos = document.createElement('span');
       pos.className = 'visually-hidden step-pos';
-      pos.textContent = positionText(i, steps.length);
-      step.heading.append(' ', pos);
+      // The separator is part of the hidden text: "Draw a star, 4 of 12".
+      pos.textContent = `, ${positionText(i, steps.length)}`;
+      step.heading.append(pos);
     });
   };
-  if (document.body.dataset.checksReady !== undefined) addPositions();
+  if (checksReady()) addPositions();
   else {
     const watch = new MutationObserver(() => {
       if (document.body.dataset.checksReady === undefined) return;
@@ -189,6 +192,7 @@ function start(layout: HTMLElement, stepEls: HTMLElement[]): void {
     const { prev: p, next: n } = neighbours(index, steps.length);
     label(prev, 'Previous', p);
     label(next, 'Next', n);
+    if (skip) skip.href = `#${steps[index]!.anchor}`;
     notify<StepEventDetail>(STEP_EVENT, { href: location.pathname + location.hash });
 
     const step = steps[index]!;
@@ -206,6 +210,12 @@ function start(layout: HTMLElement, stepEls: HTMLElement[]): void {
     const el = document.getElementById(hashId(location.hash));
     return el && el !== step.section && el !== step.heading ? el : null;
   };
+
+  // "Skip to the exercise": the first link of the list moves focus past it to the item heading.
+  skip?.addEventListener('click', (event) => {
+    event.preventDefault();
+    show(current, { focus: true });
+  });
 
   // Previous / Next replace the current history entry, then show (replaceState fires no hashchange).
   const go = (target: number | null) => {
@@ -268,11 +278,15 @@ function start(layout: HTMLElement, stepEls: HTMLElement[]): void {
     }
     render(step);
   };
+  // Announcements made close together are joined, so none is lost; the region is cleared first,
+  // then set, so a repeated message is still announced.
+  const queued: string[] = [];
   const say = (text: string) => {
+    queued.push(text);
+    if (queued.length > 1) return; // already scheduled
     live.textContent = '';
-    // Cleared first, then set, so a repeated message is still announced.
     setTimeout(() => {
-      live.textContent = text;
+      live.textContent = queued.splice(0).join('. ');
     }, 50);
   };
 

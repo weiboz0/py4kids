@@ -39,6 +39,7 @@ const paged = view.items.length > 1;
   <div class="practice-layout" data-practice-layout>
     {paged && (
       <nav class="pager-nav" aria-label="Exercises on this page" data-pager-nav hidden>
+        <a class="pager-skip" href="#main" data-pager-skip>Skip to the exercise</a>
         <details class="pager-list" data-pager-list>
           <summary class="pager-summary">All exercises ({view.items.length})</summary>
           <ol class="jump-list">
@@ -78,7 +79,7 @@ const paged = view.items.length > 1;
               data-event-kind={item.eventKind}
               aria-labelledby={`${item.anchor}-h`}
             >
-              {item.group && <p class="step-kicker">{item.group}</p>}
+              {item.group && !item.groupStart && <p class="step-kicker">{item.group}</p>}
               <h2 id={`${item.anchor}-h`}>{item.title ? `${item.label}: ${item.title}` : item.label}</h2>
               {(item.stretchTag || item.divisions.length > 0) && (
                 <ul class="item-tags" aria-label="Tags">

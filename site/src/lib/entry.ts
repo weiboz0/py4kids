@@ -206,7 +206,8 @@ export interface PracticeItem {
   before: string[];
   /**
    * The group the item belongs to (plan 106): the heading of the last `before` block with a
-   * heading at or above it, shown as a kicker above the item's heading; null before any group.
+   * heading at or above it, shown as a kicker above the heading of each item after the group's
+   * first (whose `before` heading is right above it); null before any group.
    */
   group: string | null;
   /** The item opens its group (its `before` blocks hold the heading). */

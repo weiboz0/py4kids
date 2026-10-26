@@ -177,8 +177,9 @@ test('focus moves to the item heading on a control or a list choice; the heading
   await page.locator('[data-pager-next]').click();
   const heading = page.locator(`#${U03[3]!.anchor}-h`);
   await expect(heading).toBeFocused();
-  await expect(heading.locator('.step-pos')).toHaveText('4 of 12');
-  await expect(heading).toHaveAccessibleName(new RegExp(`^${U03[3]!.item.label}.* 4 of 12$`));
+  // Chromium names the hidden span as its own run ("Exercise 4 , 4 of 12"); the comma is the pause.
+  await expect(heading.locator('.step-pos')).toHaveText(', 4 of 12');
+  await expect(heading).toHaveAccessibleName(new RegExp(`^${U03[3]!.item.label}.* ?, 4 of 12$`));
   await page.locator('[data-pager-prev]').click();
   await expect(page.locator(`#${U03[2]!.anchor}-h`)).toBeFocused();
   // Keyboard: the list link, then Enter.
@@ -281,6 +282,24 @@ test('a runner failure (its origin blocked) on a hidden item: "checking…" clea
   await expect(step(page, two.anchor).locator('.runner-unavailable')).toHaveCount(1);
 });
 
+test('"Skip to the exercise", the list\'s first link, takes the keyboard past the list to the item heading', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await openPage(page, `${U10[0]!.page}#${U10[4]!.anchor}`);
+  const skip = page.locator('[data-pager-nav] > a[data-pager-skip]');
+  await expect(skip).toHaveText('Skip to the exercise');
+  // It is the first focusable element of the nav, right after the breadcrumbs.
+  await page.locator('.crumbs a').last().focus();
+  await page.keyboard.press('Tab');
+  await expect(skip).toBeFocused();
+  expect((await skip.boundingBox())!.width).toBeGreaterThan(20); // visible while focused
+  await page.keyboard.press('Enter');
+  await expect(page.locator(`#${U10[4]!.anchor}-h`)).toBeFocused();
+  await expectShown(page, U10[4]!.anchor);
+  // The next Tab is inside the item, not back in the list.
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[data-step]')))).toBe(true);
+});
+
 test('the skip link on item 5 (#main) keeps item 5 shown', async ({ page }) => {
   await openPage(page, `${U01_PAGE}#${U01[4]!.anchor}`);
   await page.locator('.skip-link').focus();
@@ -380,7 +399,7 @@ test('a self-check ticked to done shows ✓; an also_check list ticked on a fail
 // ---------------------------------------------------------------------------------------------
 // Groups and kickers
 
-test('a group whose first item has two before blocks: one group, both blocks with the first item, the kicker from the heading', async ({ page }) => {
+test('a group whose first item has two before blocks: one group, both blocks with the first item, the next item\'s kicker from the heading', async ({ page }) => {
   const cases = [
     { book: 'python-projects', entry: 'unit-04-quiz-show', label: 'Exercise 11', group: 'Algorithm Extension' },
     { book: 'python-projects', entry: 'unit-05-function-factory', label: 'Challenge 1', group: 'Challenge' },
@@ -393,7 +412,8 @@ test('a group whose first item has two before blocks: one group, both blocks wit
     await openPage(page, `${first.page}#${first.anchor}`);
     const s = step(page, first.anchor);
     await expect(s.locator(':scope > .block')).toHaveCount(2);
-    await expect(s.locator('.step-kicker')).toHaveText(c.group);
+    // The group's first item has no kicker: its before heading is right above it.
+    await expect(s.locator('.step-kicker')).toHaveCount(0);
     await expect(page.locator('.jump-group-label').filter({ hasText: new RegExp(`^${c.group}$`) })).toHaveCount(1);
     // The next item is in the same group, with no before blocks of its own.
     const next = items[i + 1];
@@ -427,6 +447,17 @@ test('group kickers: an item in the middle of a group shows its group heading; t
   const m2 = page.locator('.jump-group').nth(1);
   await expect(m2.locator('a[data-jump]')).toHaveCount(3);
   await expect(m2.locator('a[data-jump]').nth(2)).toHaveAttribute('aria-current', 'step');
+});
+
+test('the intro: above the first item; on later items "About these exercises", open for short checkpoint rules', async ({ page }) => {
+  const cp = itemsOf('usaco-bronze', 'checkpoint-04-mock-contest-4');
+  await openPage(page, cp[0]!.page);
+  await expect(page.locator('details.intro-details')).toBeHidden();
+  await expect(page.locator('[data-practice-intro]')).toBeVisible();
+  await page.locator('[data-pager-next]').click();
+  await expect(page.locator('details.intro-details > summary')).toHaveText('About these exercises');
+  await expect(page.locator('details.intro-details')).toHaveAttribute('open');
+  await expect(page.locator('details.intro-details [data-practice-intro]')).toBeVisible();
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -498,8 +529,28 @@ test('print shows every item and hides the pager chrome', async ({ page }) => {
   await expect(visibleSteps(page)).toHaveCount(U01.length);
   await expect(page.locator('[data-pager-nav]')).toBeHidden();
   await expect(page.locator('[data-pager-controls]')).toBeHidden();
+  // Wide print: one column, no empty list column.
+  await page.setViewportSize({ width: 1280, height: 720 });
+  expect(await page.locator('[data-practice-layout]').evaluate((el) => getComputedStyle(el).display)).toBe('block');
   await page.emulateMedia({ media: 'screen' });
   await expect(visibleSteps(page)).toHaveCount(1);
+});
+
+test('two checks ending on hidden items at once are both announced', async ({ page }) => {
+  const [two, three, five] = [U01[1]!, U01[2]!, U01[4]!];
+  const held = gate();
+  await passWith(page, two, 'both\n', held.wait);
+  await passWith(page, three, 'both\n', held.wait);
+  await openPage(page, `${U01_PAGE}#${two.anchor}`);
+  await setCode(page, step(page, two.anchor), 'print("both")\n');
+  await pressCheck(page, two);
+  await jump(page, three.anchor).click();
+  await setCode(page, step(page, three.anchor), 'print("both")\n');
+  await pressCheck(page, three);
+  await jump(page, five.anchor).click();
+  held.open();
+  await expect(live(page)).toContainText(`${two.item.label}: Passed`, { timeout: 90_000 });
+  await expect(live(page)).toContainText(`${three.item.label}: Passed`, { timeout: 90_000 });
 });
 
 test('phone width: the list is a collapsed <details>, no horizontal scroll', async ({ page }) => {
