@@ -22,6 +22,7 @@ taught:
   plot_speed_map: telemetry-plotting
   plot_telemetry: telemetry-plotting
   plot_track: telemetry-plotting
+  predict: numerical-integration
   read_csv: race-telemetry
   repeat_races: repeated-run-measurement
   scatter: telemetry-plotting

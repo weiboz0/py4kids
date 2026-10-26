@@ -35,6 +35,20 @@
   adds the model and a `predict()` rollout. The windowed-search result is taught honestly in Unit 2: a sharper
   instrument is not a better controller, and Unit 4/5 build controllers that use it.
 
+## Implementation deviations (measured while building)
+- **The windowed-search explanation was backwards.** The plan said the windowed target is *nearer*. On the gain-8
+  `test-circuit` telemetry the reached-radius index sits 1.99 m *behind* the car (target 4.00 m ahead), while the
+  windowed-nearest index sits at the car (target 6.00 m ahead): the windowed target is *farther*, which weakens the
+  correction per metre of offset, so windowed gain 2 behaves like starter gain ≈ 1.3. The lesson teaches and asserts
+  the corrected explanation (windowed: gain 8 412.70 s / 0.40 m; gain 4 413.75 s / 1.93 m; gain 2 DNF, 8 crashes in a
+  450 s cap, which the lesson uses instead of 1500 s for its time budget).
+- **"3 clamped rows" (G2.2) is qualified:** the naive version differs by more than 1e-9 on exactly 3 rows, all
+  clamped (1.05e-6, 6.9e-7 and 4.875e-4 m); only 2 exceed 1e-6. The lesson asserts the > 1e-9 form.
+- `monza-like` runs clockwise (total turning −2π; 65% of corner rows are right-handers); the lesson says so.
+- `predict` is added to the closed callable list, taught under `numerical-integration` (it is called on the loaded
+  submission in the Unit 3 lesson and milestone).
+- The Unit 3 text numbers MPC as Unit 10 (the design §6 table), correcting a stray "Unit 9".
+
 ## Buildout stays
 The whole-book lesson total becomes 3 + 3 + 3 = 9, under 30.
 
