@@ -57,12 +57,15 @@ export const TEMPLATES: Record<string, string> = {
   'math lesson (acsl unit 08)': '/acsl/unit-08-boolean-algebra/',
 };
 
-/** Wait until the page's own islands have run: the card deck, search and the slide player. */
+/** Wait until the page's own islands have run: the card deck, search, the slide player and the practice pager. */
 export async function settle(page: Page): Promise<void> {
   const path = new URL(page.url()).pathname;
   if (path.endsWith('/cards/')) await page.locator('[data-deck-card] .card').first().waitFor();
   if (path === '/search/') await page.locator('[data-search-form]').waitFor();
   if (path.endsWith('/slides/')) await page.locator('.deck.is-live').waitFor();
+  if (path.endsWith('/practice/') && (await page.locator('[data-step]').count()) > 1) {
+    await page.locator('[data-practice-layout][data-pager-ready][data-statuses-ready]').waitFor({ state: 'attached' });
+  }
 }
 
 /** Run a search on /search/ and wait for its result count. */

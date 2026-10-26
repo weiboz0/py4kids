@@ -52,7 +52,8 @@ test('§3 short-answer hashing and normalisation: every hash_vectors.json vector
   });
   for (const vector of vectors) {
     current = vector;
-    await page.goto(found.page);
+    // The pager shows one item at a time (plan 106): open the page at the item.
+    await page.goto(`${found.page}#${found.anchor}`);
     await page.locator('body[data-checks-ready]').waitFor({ state: 'attached' });
     const item = page.locator(`section.practice-item[data-item-key="${vector.item_key}"]`);
     await item.scrollIntoViewIfNeeded();

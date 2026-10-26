@@ -234,7 +234,7 @@ test('steps 1-3, 5, 7: the update waits (a fresh worker boots on A; a second tab
     // 3. B deployed: an A page (loaded under A's worker) keeps checking code, booting a fresh
     // exercise worker from A's caches, while B waits on both origins and the prompt shows.
     const found = assertsItem(book);
-    const update = await deployB(page, servers, r, found.page);
+    const update = await deployB(page, servers, r, `${found.page}#${found.anchor}`);
     await page.locator('body[data-checks-ready]').waitFor({ state: 'attached' });
     await checkAsserts(page, found);
     await expect.poll(() => waitingOf(runnerFrame(page)), { timeout: 60_000 }).toContain(`r=${r.idB}`);
@@ -293,7 +293,7 @@ test("steps 4-6: the activation interval (both origins on B before the reload): 
   try {
     await downloadUnderA(page, servers, r);
     const found = smallFixtures(book);
-    const update = await deployB(page, servers, r, found.page);
+    const update = await deployB(page, servers, r, `${found.page}#${found.anchor}`);
     await page.locator('body[data-checks-ready]').waitFor({ state: 'attached' });
     await setHooks(page, { pause: 'after-site', fail: [['reload', 1]] });
     await accept(update).click();
@@ -528,7 +528,7 @@ test('step 6: a runner step that times out leaves both origins on A ("update fai
   try {
     await downloadUnderA(page, servers, r);
     const found = assertsItem(book);
-    const update = await deployB(page, servers, r, found.page);
+    const update = await deployB(page, servers, r, `${found.page}#${found.anchor}`);
     await page.locator('body[data-checks-ready]').waitFor({ state: 'attached' });
     await checkAsserts(page, found); // loads the runner iframe, which registers runner B
     await expect.poll(() => waitingOf(runnerFrame(page)), { timeout: 60_000 }).toContain(`r=${r.idB}`);
@@ -564,7 +564,7 @@ test('step 6: a site step that fails after the runner activated leaves runner B 
   try {
     await downloadUnderA(page, servers, r);
     const found = assertsItem(book);
-    const update = await deployB(page, servers, r, found.page);
+    const update = await deployB(page, servers, r, `${found.page}#${found.anchor}`);
     await page.locator('body[data-checks-ready]').waitFor({ state: 'attached' });
     await setHooks(page, { stepTimeoutMs: 2000, pause: 'after-runner', fail: [['site', 1]] });
     await accept(update).click();

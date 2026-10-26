@@ -6,8 +6,9 @@ import { findItem, type Found } from './content';
 
 export const section = (page: Page, found: Found) => page.locator(`section.practice-item[data-item-key="${found.item.key}"]`);
 
+/** Open the item's practice page at the item (the pager shows one item at a time, plan 106). */
 export async function open(page: Page, found: Found): Promise<Locator> {
-  await page.goto(found.page);
+  await page.goto(`${found.page}#${found.anchor}`);
   await page.locator('body[data-checks-ready]').waitFor({ state: 'attached' });
   const item = section(page, found);
   await item.scrollIntoViewIfNeeded();

@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SITE } from './env';
+import { itemAnchors } from '../../src/lib/checks';
 import type { EntryFile, Item } from '../../src/lib/types';
 
 export const CONTENT = join(SITE, 'content');
@@ -18,6 +19,8 @@ export interface Found {
   item: Item;
   /** `/<book>/<entry>/practice/`. */
   page: string;
+  /** The item's anchor on its practice page (`itemAnchors`): `page + '#' + anchor` shows it (plan 106). */
+  anchor: string;
 }
 
 /** Every item of every exported book. */
@@ -27,7 +30,10 @@ export function allItems(): Found[] {
     const dir = join(CONTENT, book, 'entries');
     for (const file of readdirSync(dir).sort()) {
       const entry = JSON.parse(readFileSync(join(dir, file), 'utf-8')) as EntryFile;
-      for (const item of entry.items) out.push({ book, entry: entry.entry.id, item, page: `/${book}/${entry.entry.id}/practice/` });
+      const anchors = itemAnchors(entry.items);
+      entry.items.forEach((item, i) =>
+        out.push({ book, entry: entry.entry.id, item, page: `/${book}/${entry.entry.id}/practice/`, anchor: anchors[i]! }),
+      );
     }
   }
   return out;

@@ -67,6 +67,10 @@ for (const [book, plan] of Object.entries(BOOKS)) {
       itemKey = (await box.getAttribute('data-item-key')) ?? '';
       expect(itemKey).not.toBe('');
       secrets.push(itemKey);
+      // The pager shows one item at a time (plan 106): go to the box's item first.
+      const anchor = await page.locator(`section.practice-item[data-item-key="${itemKey}"]`).getAttribute('id');
+      await page.locator(`a[data-jump="${anchor}"]`).click();
+      await expect(page.locator(`section.practice-item[data-item-key="${itemKey}"]`)).toBeVisible();
       await box.scrollIntoViewIfNeeded();
       await page.locator(`label[for="${await box.getAttribute('id')}"]`).click();
       await expect(box).toBeChecked();
