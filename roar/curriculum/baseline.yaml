@@ -1,0 +1,24 @@
+baseline_version: 1
+# Assumed-baseline concepts for this advanced book (design 013 §2; AGENTS.md "Self-containedness is
+# law"): concepts a student is assumed to already know. They are legal to USE without being
+# introduced, earn no teaching or practice credit, and are never assessed. The declared baseline
+# overrides only the audience, the assumed mathematics and the named libraries; every other law is
+# retained. None of these ids may also appear in this book's concepts.yaml.
+entries:
+# --- advanced Python (beyond the Python by Projects dependency baseline) ---
+- {id: classes-and-objects, name: "Classes, objects and methods"}
+- {id: python-modules, name: "Modules and imports"}
+- {id: comprehension-syntax, name: "List, dict and set comprehensions"}
+- {id: async-await-usage, name: "Using async def and await"}
+- {id: exception-handling, name: "Raising and handling exceptions"}
+- {id: type-annotations, name: "Type hints and annotations"}
+# --- numerical Python ---
+- {id: numpy-fluency, name: "NumPy arrays, indexing and broadcasting"}
+# --- mathematics ---
+- {id: single-variable-calculus, name: "Single-variable calculus (derivatives, integrals, chain rule, Taylor)"}
+- {id: trigonometry, name: "Trigonometry"}
+- {id: vectors-and-dot-product, name: "2-D and 3-D vectors and the dot product"}
+# Every callable a student may call (design 013 §7.1, layer 1). Each name must also appear in
+# api-order.yaml, either under `infrastructure:` or as a `taught:` key. Empty in roar-001: the
+# foundation ships no student notebooks, and roar-002 adds Unit 1's names.
+library_methods: []

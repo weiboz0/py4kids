@@ -74,6 +74,16 @@ Folders and PDF file names use the book id from `books.yaml`; the PDFs themselve
 `recsys` ships in **buildout** state (design 011): units, projects, and checkpoints — and therefore the handouts — land in `recsys-002+`.
 It is not a `publication` book, so it renders no student/teacher editions; `build-pdf.sh` replaces `syllabus.pdf` and `handouts/`.
 
+## `output/roar/` — Applied Python: Autonomous Racing
+
+| File | What it is | Made by |
+|---|---|---|
+| `syllabus.pdf` | The Applied Python: Autonomous Racing syllabus | `scripts/build-pdf.sh --book roar` |
+| `handouts/<unit>.pdf` | One exercise handout per unit, printed from its `exercises.ipynb` | `scripts/build-pdf.sh --book roar` |
+
+`roar` ships in **buildout** state (design 013): units, checkpoints and the capstone, and therefore the handouts, land in `roar-002` and later.
+It is not a `publication` book yet, so it renders no student/teacher editions; `build-pdf.sh` replaces `syllabus.pdf` and `handouts/`.
+
 ## Publishing a release
 
 The PDFs are published as GitHub Releases on `weiboz0/py4kids`, never committed.

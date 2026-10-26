@@ -37,7 +37,8 @@ for book in catalog["books"]:
 PY
 )"
 echo "registry: $(cut -d' ' -f1 <<< "$books" | paste -sd' ')"
-uv run ruff check tools/ tests/ scripts/ runner/py recsys/projects/bookrec recsys/data
+uv run ruff check tools/ tests/ scripts/ runner/py recsys/projects/bookrec recsys/data \
+  roar/projects/racekit roar/data roar/tests
 
 # Committed GloVe subset (design 011 §6): a REAL, executed integrity check (never a skip) --
 # the tracked .npy must match its sidecar sha256 and stay under the 1 MB publish-safe cap.
@@ -86,7 +87,12 @@ uv run pytest -q
 while read -r book grp <&3; do
   [[ -n "$grp" ]] || continue
   echo "routed suite: $book (uv run --group $grp)"
-  if [[ -f "$book/data/gen_catalog.py" && -f "$book/data/gen_interactions.py" ]]; then
+  # A book with a single generator driver (design 013 §4.3) regenerates through it; the driver
+  # generates every output twice in-process and fails on a checksum mismatch. Otherwise the
+  # catalog + interactions generator pair runs, unchanged.
+  if [[ -f "$book/data/generate.py" ]]; then
+    PYTHONHASHSEED=0 uv run --group "$grp" python "$book/data/generate.py"
+  elif [[ -f "$book/data/gen_catalog.py" && -f "$book/data/gen_interactions.py" ]]; then
     PYTHONHASHSEED=0 uv run --group "$grp" python "$book/data/gen_catalog.py"
     PYTHONHASHSEED=0 uv run --group "$grp" python "$book/data/gen_interactions.py"
   fi
