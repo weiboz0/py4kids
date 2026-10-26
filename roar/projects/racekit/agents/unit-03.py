@@ -143,8 +143,8 @@ def predict(state: Sequence[float], actions: Sequence[Sequence[float]], dt: floa
     """Roll the model forward one RK4 step of ``dt`` per (throttle, steer, brake) action.
 
     A tick in which the car could reach rest under the brake uses ``stopping_tick``: the brake is on
-    and |v| is within one tick of the largest deceleration towards zero, throttle (which slows a
-    reversing car) plus brake plus drag.
+    and |v| is within one tick of an upper bound on the deceleration towards zero, throttle (which
+    slows a reversing car) plus brake plus drag.
     Returns the final (x, y, psi, v); psi is not wrapped.
     """
     current = (float(state[0]), float(state[1]), float(state[2]), float(state[3]))

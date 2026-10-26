@@ -320,5 +320,16 @@ The race times are unchanged: 223.50 / 412.75 / 882.55 s.
   - **N1** [FIXED] Drag at the threshold: the new bound includes c·v².
   - All round-1 [fable] fixes and [sol] S2/S3 verified.
 
-After the fixes, a 4000-case fuzz of `predict` against `KinematicCar` (speeds −3 to 25 m/s, 1–20 ticks, random throttle, steer and brake) gives a worst error of 1.3e-6 m, from a smooth 25 m/s case where one RK4 step is compared with ten.
+After the fixes, a 4000-case fuzz of `predict` against `KinematicCar` (speeds −3 to 25 m/s, 1–20 ticks, random throttle and brake, race-realistic steer in [−0.3, 0.3]) gives a worst error of 1.3e-6 m, from a smooth 25 m/s case where one RK4 step is compared with ten. With steer over the full [−1, 1] [fable] measured up to 2.1e-3 m (yaw rate about 6 rad/s at 24.5 m/s): ordinary single-step truncation, which lesson §8 scopes.
 Static checks, exec-lessons, milestone-check, ruff and `check_submission` pass; the race times are unchanged.
+
+### Round 3: CONSENSUS
+
+- [self] APPROVE.
+- [sol] APPROVE WITH NITS:
+  - S1 and N1 from round 2 verified FIXED. A 20,000-case low-speed fuzz found no single-stepped tick that crosses zero.
+  - **N2** [FIXED] The docstring now calls the threshold "an upper bound on the deceleration towards zero", because throttle opposes slowing for a forward car.
+- [fable] APPROVE WITH NITS:
+  - Round-2 S1, N1 and [sol] S1 verified FIXED. The creep is bounded by a_B·h = 0.04 m/s and was observed at 0.3–2 cm/s.
+  - **N1** [FIXED] The record above now states the fuzz's steer range, and the full-range figure of 2.1e-3 m.
+  - **N2** [FIXED] Lesson cell 640652b7 now includes the held-at-rest clause.
