@@ -334,4 +334,12 @@ Repeated-run drills use `oval`; one `monza-like` set only ([fable] N2).
   - Blind solve: all 9 exercises match.
 - **[self]** APPROVE: hook first, the crash rule correct, pins asserted.
 
+### Round 2 (after ba36989): CONSENSUS
+- **[sol]** APPROVE. B1, S2 and N are verified resolved. Its sandbox could not start pytest, so the in-memory run reproduced the G1–G3 pins instead; CI runs the tests.
+- **[fable]** APPROVE WITH NITS. M1, S1–S4, N1–N5 and [sol] B1 are verified, including against the pinned runner loop order. It ran the roar suite (224 passed), `test_labs` (45), lab-check, exec-lessons and the 3.8 byte-compile of the spliced recorder.
+  - N1, the hold rows on CARLA also carry the crash pose: [carried to the `roar-003` lab, which reuses the recorder template].
+  - N2, the lab's "min after 10 s" print includes hold rows: [carried to `roar-003`].
+  - N3, `from conftest import` collides when the racekit tests and `tests/` run in one pytest call: [WONTFIX, pre-existing; ci-local is unaffected].
+- **[self]** APPROVE.
+
 ## Post-Execution Report
