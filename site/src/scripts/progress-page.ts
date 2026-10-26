@@ -3,7 +3,17 @@
  * Nothing leaves the device: it only reads and writes the IndexedDB store.
  */
 
-import { checklistOf, PROGRESS_IMPORTED_EVENT, SLIDE_EVENT, slideKey } from '../lib/dom-events';
+import {
+  CHECKLIST_EVENT,
+  checklistOf,
+  notify,
+  PROGRESS_IMPORTED_EVENT,
+  SLIDE_EVENT,
+  slideKey,
+  STEP_EVENT,
+  type ChecklistEventDetail,
+  type StepEventDetail,
+} from '../lib/dom-events';
 import { onceUnsaved, recordChecklist, recordSlide, sharedProgress, type ProgressStore } from '../lib/progress';
 
 const NOTICE_KEY = 'py4kids-unsaved-notice';
@@ -68,6 +78,18 @@ function wireSlides(storeReady: Promise<ProgressStore>, contentHash: string): vo
 }
 
 /**
+ * The practice pager's steps (plan 106): each shown step is the book's resume position, as a slide
+ * is. Listens at once, like the slides, and capturing on `window`.
+ */
+function wireSteps(storeReady: Promise<ProgressStore>): void {
+  window.addEventListener(STEP_EVENT, (event) => {
+    const href = (event as CustomEvent<StepEventDetail>).detail?.href;
+    if (typeof href !== 'string' || !href.startsWith('/')) return;
+    storeReady.then((store) => recordPosition(store, href)).catch(warn);
+  }, { capture: true });
+}
+
+/**
  * Self-check checklists: restore each item's last saved boxes, and record every change. The change
  * listener is attached at once, before the store opens and the saved states load, so a box ticked
  * early is recorded (once the store is ready) and is not overwritten by the restore.
@@ -82,7 +104,11 @@ function wireChecklists(storeReady: Promise<ProgressStore>, contentHash: string)
     const key = box.dataset.itemKey;
     touched.add(key);
     const list = checklistOf(document, key);
-    storeReady.then((store) => recordChecklist(store, key, list, contentHash)).catch(warn);
+    storeReady
+      .then((store) => recordChecklist(store, key, list, contentHash))
+      // Plan 106: the pager re-reads the item's status once the checklist is recorded.
+      .then(() => notify<ChecklistEventDetail>(CHECKLIST_EVENT, { key, done: list.length > 0 && list.every(Boolean) }))
+      .catch(warn);
   });
   storeReady
     .then(async (store) => {
@@ -113,6 +139,7 @@ async function main(): Promise<void> {
   const contentHash = document.body.dataset.contentHash;
   if (contentHash) wireSlides(storeReady, contentHash);
   if (contentHash) wireChecklists(storeReady, contentHash);
+  if (document.body.dataset.entry) wireSteps(storeReady);
   const store = await storeReady;
   onceUnsaved(store, showUnsavedNotice, remember);
   if (document.body.dataset.entry) await recordPosition(store, location.pathname + location.hash);
