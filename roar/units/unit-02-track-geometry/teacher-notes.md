@@ -28,17 +28,17 @@ test-circuit 412.75 s, monza-like 882.55 s at jitter 0). It only adds the instru
 
 Plan for **two to three 60–90 min sittings**. There is no lab.
 
-1. **Sitting 1: frames, heading, wrapping** (lesson §§1–3).
+1. **Sitting 1: frames, heading, wrapping** (lesson §§1–2).
    - Open with the hook: *the starter steers at a point three waypoints ahead and never looks further. Where
      exactly is the car relative to the track, and what is coming?*
    - Derive the rotation into the car frame on the board.
    - Make students predict `wrap_angle(math.pi)` before running it. The half-open interval surprises people.
-2. **Sitting 2: projection and the cross-track error** (lesson §§4–5).
+2. **Sitting 2: projection and the cross-track error** (lesson §§3–4).
    - Derive the foot parameter t = ((p − a)·d)/|d|², and *why* the clamp is used only to choose the segment.
    - The G2.2 check is the payoff: the student's offset equals racekit's on every row to 1e-6.
    - Show the naive "sign × distance to the clamped foot" version failing on 3 rows (max 4.9e-4 m). Students who
      write that version first learn more from the discrepancy than from being told.
-3. **Sitting 3: curvature, and measuring the starter** (lesson §§6–9).
+3. **Sitting 3: curvature, and measuring the starter** (lesson §§5–8).
    - Menger curvature on a circle first (exact to 1e-9), then the generator's profile.
    - The `STEER_GAIN` sweep: gain 8, 4, 2 finish clean while the car runs ever wider (0.51 → 1.76 → 4.40 m); gain 1
      does not finish (16 collisions). Have students predict, before running, *where* on the track the offset

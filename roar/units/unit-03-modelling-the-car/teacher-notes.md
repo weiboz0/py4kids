@@ -43,7 +43,7 @@ Plan for **two to three 60–90 min sittings**. There is no lab.
 3. **Sitting 3: prediction from telemetry and the reality check** (lesson §§7–8).
    - Replay recorded actions from 180 starting rows: RK4 reproduces racekit to about 1e-8 m; Euler's *median* error
      is tiny (about 2e-6 m) because the straights sit at equilibrium, but its max is about 0.38 m in the corners.
-   - Close with "this is the *model* car": what changes on CARLA (grip, load transfer, actuator lag), pointing to
+   - Close with "this is the *model* car": what changes on CARLA (tyre slip, guessed parameters, actuator delay and the asynchronous tick), pointing to
      Units 6 and 8.
 
 ## Common mistakes

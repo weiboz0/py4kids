@@ -9,7 +9,9 @@ What Unit 3 adds is the kinematic bicycle with its longitudinal map, and a rollo
 
 * ``predict(state, actions, dt=0.05)`` takes the state (x, y, psi, v) and a sequence of
   (throttle, steer, brake) actions, applies one RK4 step of ``dt`` per action with the action held,
-  and returns the final (x, y, psi, v) (psi is not wrapped);
+  and returns the final (x, y, psi, v) (psi is not wrapped). A tick in which the brake can bring the
+  car to rest is the exception: there v' jumps at v = 0, RK4's smoothness assumption fails, and the
+  tick is integrated the way the car does it, in substeps that stop at rest;
 * every tick ``step()`` stores ``predicted_state``: where the car will be in 1 s if it holds the
   action it is about to apply. Nothing uses it for control yet.
 
@@ -113,14 +115,40 @@ def rk4_step(state: State, action: Action, h: float) -> State:
     )
 
 
+STOP_SUBSTEPS = 10  # substeps for a tick that may end at rest (as racekit integrates every tick)
+
+
+def stopping_tick(state: State, action: Action, dt: float) -> State:
+    """A tick in which the brake can stop the car: v' jumps at v = 0, so one RK4 step across the stop
+    is wrong (it can even predict reversing). Integrate in substeps, and hold v at 0 once the brake
+    brings the car to rest, as the car does."""
+    throttle, _, brake = action
+    h = dt / STOP_SUBSTEPS
+    current = state
+    for _ in range(STOP_SUBSTEPS):
+        v_old = current[3]
+        current = rk4_step(current, action, h)
+        v = current[3]
+        crossed_zero = (v_old > 0.0 > v) or (v_old < 0.0 < v)
+        held_at_rest = v_old == 0.0 and A_THROTTLE * throttle <= A_BRAKE * brake
+        if crossed_zero or held_at_rest:
+            current = (current[0], current[1], current[2], 0.0)
+    return current
+
+
 def predict(state: Sequence[float], actions: Sequence[Sequence[float]], dt: float = CONTROL_DT) -> State:
     """Roll the model forward one RK4 step of ``dt`` per (throttle, steer, brake) action.
 
+    A tick whose brake could stop the car (|v| <= A_BRAKE * brake * dt) uses ``stopping_tick``.
     Returns the final (x, y, psi, v); psi is not wrapped.
     """
     current = (float(state[0]), float(state[1]), float(state[2]), float(state[3]))
     for action in actions:
-        current = rk4_step(current, (float(action[0]), float(action[1]), float(action[2])), dt)
+        held = (float(action[0]), float(action[1]), float(action[2]))
+        if held[2] > 0.0 and abs(current[3]) <= A_BRAKE * held[2] * dt:
+            current = stopping_tick(current, held, dt)
+        else:
+            current = rk4_step(current, held, dt)
     return current
 
 

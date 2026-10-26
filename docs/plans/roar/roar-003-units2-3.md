@@ -29,7 +29,7 @@
 - **Units 2–3 do not change the driving.**
   A windowed nearest-waypoint search with the same 3-waypoint lookahead drives *worse* at low gain
   (`probe003b.py`: `test-circuit` at gain 2.0 fails with 32 collisions, where the starter's reached-radius search
-  finishes). Its target is nearer, so the controller is effectively retuned.
+  finishes). Its target is nearer, so the controller is effectively retuned. [superseded: the target is *farther*; see Implementation deviations]
   `agents/unit-02.py` therefore keeps the starter's control law. It adds the geometry functions and computes the
   cross-track error and the curvature ahead each tick (stored on `self`, unused for control). `agents/unit-03.py`
   adds the model and a `predict()` rollout. The windowed-search result is taught honestly in Unit 2: a sharper
@@ -266,3 +266,39 @@ The whole-book lesson total becomes 3 + 3 + 3 = 9, under 30.
 - **[sol]** APPROVE. G3.4's full-state check was reproduced over 180 rows, and there are no new issues.
 - **[fable]** APPROVE WITH NITS (round 2; all its nits are folded in v2.1).
 - **[self]** APPROVE.
+
+## Content Review
+
+### Round 1
+
+- [self] APPROVE pending the fixes below; ruled B1 a real defect and confirmed it with the prototype (`scratchpad/proto_stop.py`, 24 cases, worst error 2.95e-8 m after the fix).
+- [sol] REJECT:
+  - **B1** [FIXED] Near a braking stop, `predict` disagrees with racekit: from v = 0.01 under full brake it predicts x −0.0028 m against racekit's +0.000167 m, because a single RK4 step crosses zero without the stop clamp.
+    `unit-03.py` now detects up front, with `|v| ≤ a_B·brake·dt`, when a tick can reach a stop.
+    It then integrates that tick with `stopping_tick`: 10 RK4 substeps with racekit's clamp (crossed zero, or held at rest when the throttle cannot beat the brake).
+    A new milestone cell checks braking to a stop against `KinematicCar.advance` (v0 ∈ {0, 0.01, 0.2, 1, 3, 8} × 4 actions, max error < 1e-6, v ≥ 0).
+    The lesson notes the stop exception.
+  - **S2** [FIXED] The lesson stated the integrator conclusion as universal.
+    It now limits the claim to smooth ODEs and the windows measured.
+    It names the half-step lag as the circle's picture, and says a jump (the stop) must be stepped to or across.
+  - **S3** [FIXED] The lesson stated Σκ·ds = ±2π as an identity.
+    It is now an approximation: the unit square gives 4√2 ≈ 5.66.
+    The exact turning of a polygon is the sum of its exterior angles.
+- [fable] APPROVE WITH NITS:
+  - **S1** [FIXED] The Unit 2 teacher-notes sitting section refs are now §§1–2 / 3–4 / 5–8.
+  - **N1** [FIXED] Corrected the Dκ/2 wording.
+  - **N2** [FIXED] Added the high-gain clause.
+  - **N3** [FIXED] Exercise 10 now says "(a track may have none)".
+  - **N4** [FIXED] The Unit 3 teacher notes now list the sources of model error: tyre slip, guessed parameters, actuator delay and the asynchronous tick.
+  - **N5** [FIXED] The plan's "nearer target" line is now marked superseded.
+  - **N6** [FIXED] Dropped the unused `cumsum`, `dot`, `set_xscale` and `set_yscale` from the closed list. `advance` and `reset` are now listed as infrastructure, for the milestone's racekit check.
+
+The checks re-run after the fixes all pass:
+- every static book check;
+- exec-lessons, exec-solutions and milestone-check;
+- racekit pytest (187 passed);
+- ruff over the CI scope;
+- `check_submission` on `unit-03.py`;
+- G3.4 (180 rows, RK4 max error 1.35e-8 m).
+
+The race times are unchanged: 223.50 / 412.75 / 882.55 s.
