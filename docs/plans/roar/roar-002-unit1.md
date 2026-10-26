@@ -23,6 +23,7 @@ its first lab.
 ## Deviations from design (recorded)
 - **Jitter lives on `KinematicCar`** (design §4.4 places noise on the carla-like car in `roar-004`). Unit 1 needs a
   realistic spread now. `roar-004` reuses the same `seed()` / jitter protocol on its cars ([fable] S5).
+- **Content deviations** (Phases B–E): the plan's "time to first reach 19 m/s ≈ 4–5 s" is wrong; it is 11.35 s (15 m/s at 4.70 s), so Exercise 3 asks for both. `monza-like` is 5714.5 m, not 5.8 km (285.7 s per lap at 20 m/s), and the standing-start penalty is 3.55 s. The lab recorder adds `reanchor_after_respawn` so that after a CARLA respawn the one-lap index restarts near 0. The closed `library_methods` list was extended with the shim callables (`initialize`, `step`, `apply_action`, `get_last_gym_observation`), stdlib helpers and `update` (taught: race-telemetry).
 - **Implementation deviations** (Phase 0/1, recorded at hand-back):
   - `sector_splits(..., finished=False)`: a recorded CSV never sees the finishing tick, because the agent is not
     called on it. `finished=True` closes the last sector at the last row's t + 0.05. With it, the recorded and runner

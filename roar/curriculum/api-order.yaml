@@ -7,7 +7,7 @@ api_order_version: 1
 #                   entry that introduces its concept.
 # Every `library_methods` name must be in exactly one of the two; every `taught` key must be in
 # `library_methods`. roar-002 added the first names with Unit 1.
-infrastructure: [KinematicCar, Path, abs, argmax, argmin, array, check_submission, diff, enumerate, float, get, int, isinstance, len, list, load_submission, load_track, max, mean, median, min, nonzero, print, race_meta, range, round, run_race, seed, sorted, spread, sqrt, str, where, write_variant, zip]
+infrastructure: [KinematicCar, Path, TemporaryDirectory, abs, apply_action, argmax, argmin, array, check_submission, diff, enumerate, float, get, get_last_gym_observation, getsource, initialize, int, isinstance, isnan, items, join, len, list, load_submission, load_track, max, mean, median, min, mkdtemp, nonzero, print, race_meta, range, read, readline, round, run_race, seed, shim_installed, sorted, spread, sqrt, step, str, sum, where, write, write_variant, zip]
 taught:
   CumulativeProgress: race-telemetry
   axhline: telemetry-plotting
@@ -31,4 +31,5 @@ taught:
   show: telemetry-plotting
   subplots: telemetry-plotting
   tight_layout: telemetry-plotting
+  update: race-telemetry
   write_csv: race-telemetry

@@ -41,9 +41,9 @@ ideas.
    - Do the deterministic `oval` run first (223.50 s, every time).
 2. **Sitting 2: where the time goes** (lesson §§5–6; Exercises 3–5).
    - Move to `monza-like` telemetry, the speed trace, the speed map and the sector splits.
-   - Derive the 20 m/s budget on the board: about 5.8 km per lap at 20 m/s is about 290 s per lap, against about
+   - Derive the 20 m/s budget on the board: the 5.7 km `monza-like` lap at 20 m/s is about 286 s per lap, against about
      107 s per lap on the podium.
-   - Flat splits are the fingerprint of a speed cap. The slow lap-1 sector 1 is the standing start.
+   - Flat splits are the fingerprint of a speed cap. The slow lap-1 sector 1 is the standing start (about 3.5 s).
 3. **Sitting 3: one run lies; the price of a crash; checking a submission** (lesson §§7–9; Exercises 6 onward, and
    the stretch exercises).
    - Turn on jitter, take 5 runs, and report the median and range.
