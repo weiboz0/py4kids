@@ -171,6 +171,13 @@ Without JavaScript (and for search indexing and printing), the page renders exac
   - MAJOR: the global constraint still limited `practice.ts` to notifications, contradicting the round-4 fix. → The constraint and Phase B now require the boolean `withStore` and the not-saved note in both the code-check and typed-answer paths, and the test covers both paths.
   - MINOR: the malformed record, already rebuilt in 0c29b02.
 
+
+### Round 6 (808f4a4) — CONSENSUS
+
+- `[self]` APPROVE.
+- `[sol]` **APPROVE** (gpt-6-sol): no remaining findings.
+- `[fable]` **APPROVE**: the plan is internally consistent, with no new problem.
+
 ## Content Review
 
 ## Post-Execution Report
