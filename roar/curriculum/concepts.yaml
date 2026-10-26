@@ -7,3 +7,10 @@ concepts:
 - {id: race-telemetry, name: "Race telemetry and sector splits", category: techniques, kind: technique}
 - {id: repeated-run-measurement, name: "Repeated runs, median and range, noise-aware comparison", category: techniques, kind: technique}
 - {id: telemetry-plotting, name: "Plotting telemetry and the track", category: techniques, kind: technique}
+- {id: frames-and-heading, name: "World and car frames, atan2 heading and angle wrapping", category: techniques, kind: technique}
+- {id: waypoint-projection, name: "Projecting onto a polyline and windowed nearest-waypoint search", category: techniques, kind: technique}
+- {id: cross-track-error, name: "Signed cross-track error against the track half-width", category: techniques, kind: technique}
+- {id: menger-curvature, name: "Menger curvature from three points; the curvature profile", category: techniques, kind: technique}
+- {id: kinematic-bicycle, name: "The kinematic bicycle model and its steady-state circle", category: techniques, kind: technique}
+- {id: longitudinal-map, name: "Throttle, brake and drag: the longitudinal map and terminal speed", category: techniques, kind: technique}
+- {id: numerical-integration, name: "Euler and RK4 integration, error orders and timestep error", category: techniques, kind: technique}
