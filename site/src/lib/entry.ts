@@ -21,6 +21,7 @@ import { slideDecks } from './slide-view';
 import { buildSlides } from './slides';
 import { answerProjection, answerUrl, checkUrl, isRunnable, itemAnchors, itemRoutes, runUrl, shipsAnswer } from './checks';
 import { eventKindOf, type CheckKind, type EventKind } from './check-model';
+import { groupLabels, saysChallenge } from './pager';
 import type { Block, Check, EntryKind, Item } from './types';
 
 export { ISSUES_URL, REPORT_LABEL, reportHref };
@@ -199,8 +200,17 @@ export interface PracticeItem {
   label: string;
   title: string;
   stretch: boolean;
+  /** Show the Challenge tag on the item: a stretch item whose group kicker does not say it. */
+  stretchTag: boolean;
   divisions: string[];
   before: string[];
+  /**
+   * The group the item belongs to (plan 106): the heading of the last `before` block with a
+   * heading at or above it, shown as a kicker above the item's heading; null before any group.
+   */
+  group: string | null;
+  /** The item opens its group (its `before` blocks hold the heading). */
+  groupStart: boolean;
   statement: string;
   /** Read-only starter code, highlighted; null when the item has none or it opens in the editor. */
   starter: string | null;
@@ -244,6 +254,23 @@ export interface PracticeView {
   intro: string[];
   items: PracticeItem[];
   outro: string[];
+  /** The pager's jump list (plan 106), in item order: ungrouped items and groups of items. */
+  jump: JumpEntry[];
+}
+
+/** One entry of the jump list: an ungrouped item, or a group of items (indexes into `items`). */
+export type JumpEntry = { kind: 'item'; index: number } | { kind: 'group'; label: string; indexes: number[] };
+
+/** The jump list's entries, from each item's group. */
+export function jumpEntries(items: Pick<PracticeItem, 'group' | 'groupStart'>[]): JumpEntry[] {
+  const out: JumpEntry[] = [];
+  items.forEach((item, index) => {
+    const last = out.at(-1);
+    if (item.group === null) out.push({ kind: 'item', index });
+    else if (!item.groupStart && last?.kind === 'group') last.indexes.push(index);
+    else out.push({ kind: 'group', label: item.group, indexes: [index] });
+  });
+  return out;
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -298,8 +325,11 @@ function practiceItem(book: string, entry: string, item: Item, anchor: string, c
     label: item.label,
     title: item.title,
     stretch: item.stretch,
+    stretchTag: item.stretch,
     divisions: item.division.map(divisionName),
     before: renderBlocks(item.before, item.label),
+    group: null,
+    groupStart: false,
     statement: renderMarkdown(item.statement_md),
     starter: editor || item.starter.trim() === '' ? null : highlightCode(item.starter, 'python'),
     checkLine: renderInline(checkLine(check)),
@@ -325,7 +355,15 @@ export function practiceView(book: LoadedBook, entryId: string): PracticeView {
   const kind = entry.record.kind;
   const contentHash = book.book.release.content_hash;
   const anchors = itemAnchors(data.items);
-  const items = data.items.map((item, i) => practiceItem(book.id, entryId, item, anchors[i]!, contentHash));
+  const groups = groupLabels(
+    data.items.map((item) => item.before.map((b) => b.md)),
+    lastHeading,
+  );
+  const items = data.items.map((item, i) => {
+    const view = practiceItem(book.id, entryId, item, anchors[i]!, contentHash);
+    const { label, start } = groups[i]!;
+    return { ...view, group: label, groupStart: start, stretchTag: view.stretch && !saysChallenge(label) };
+  });
   return {
     bookId: book.id,
     bookTitle: book.book.book.title,
@@ -338,6 +376,7 @@ export function practiceView(book: LoadedBook, entryId: string): PracticeView {
     intro: renderBlocks(data.intro, entry.record.title),
     items,
     outro: renderBlocks(data.outro, entry.record.title),
+    jump: jumpEntries(items),
   };
 }
 
