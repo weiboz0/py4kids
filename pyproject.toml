@@ -73,6 +73,12 @@ line-length = 100
 [tool.ruff.per-file-target-version]
 "roar/projects/racekit/**" = "py38"
 
+# ...and its annotations keep the typing.List / Optional / Union forms: `from __future__ import
+# annotations` would let builtin generics and `X | Y` pass a 3.8 run, but racekit.check_submission's
+# deny-list refuses them in annotation positions (design 013 §4.1), and racekit holds itself to it.
+[tool.ruff.lint.per-file-ignores]
+"roar/projects/racekit/**" = ["UP006", "UP007", "UP035", "UP045"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["slow: real LaTeX/Quarto renders (plan 097); ci-local runs them"]

@@ -1,0 +1,66 @@
+"""Shared helpers for the racekit suite (plan roar-001 Phase D).
+
+The suite races on the generated tracks; CI regenerates them first (ci-local's routed step runs
+``roar/data/generate.py`` before ``pytest roar``).
+"""
+
+from __future__ import annotations
+
+import textwrap
+from pathlib import Path
+
+import pytest
+from racekit.tracks import TRACK_NAMES, tracks_dir
+
+RACEKIT = Path(__file__).resolve().parents[1]
+REPO = RACEKIT.parents[2]
+STARTER = RACEKIT / "agents" / "starter.py"
+
+SUBMISSION_HEADER = '''\
+from __future__ import annotations
+
+import math
+
+import numpy as np
+import roar_py_interface
+
+
+'''
+CONSTRUCTOR = '''\
+    def __init__(self, maneuverable_waypoints, vehicle, camera_sensor=None, location_sensor=None,
+                 velocity_sensor=None, rpy_sensor=None, occupancy_map_sensor=None,
+                 collision_sensor=None):
+        self.waypoints = maneuverable_waypoints
+        self.vehicle = vehicle
+        self.location_sensor = location_sensor
+        self.velocity_sensor = velocity_sensor
+        self.rpy_sensor = rpy_sensor
+        self.collision_sensor = collision_sensor
+'''
+
+
+@pytest.fixture(scope="session", autouse=True)
+def generated_tracks():
+    missing = [name for name in TRACK_NAMES if not (tracks_dir() / f"{name}.npz").is_file()]
+    if missing:
+        pytest.fail(
+            f"generated tracks missing ({missing}); run "
+            "`PYTHONHASHSEED=0 uv run --group roar python roar/data/generate.py` first"
+        )
+
+
+@pytest.fixture
+def write_submission(tmp_path):
+    """Write a submission file; ``body`` is the class body after the standard constructor."""
+
+    def write(body: str, name: str = "submission.py", header: str = SUBMISSION_HEADER,
+              constructor: str = CONSTRUCTOR, folder: Path | None = None) -> Path:
+        target = (folder or tmp_path) / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        source = header + "class RoarCompetitionSolution:\n" + constructor + textwrap.indent(
+            textwrap.dedent(body), "    "
+        )
+        target.write_text(source, encoding="utf-8")
+        return target
+
+    return write

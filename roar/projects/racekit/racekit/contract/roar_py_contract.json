@@ -1,0 +1,838 @@
+{
+  "action": {
+    "class": "RoarPyVehicleManualGearActor",
+    "keys": {
+      "brake": {
+        "high": 1.0,
+        "low": 0.0,
+        "shape": [
+          1
+        ],
+        "space": "Box"
+      },
+      "hand_brake": {
+        "high": 1.0,
+        "low": 0.0,
+        "shape": [
+          1
+        ],
+        "space": "Box"
+      },
+      "reverse": {
+        "n": 1,
+        "space": "MultiBinary"
+      },
+      "steer": {
+        "high": 1.0,
+        "low": -1.0,
+        "shape": [
+          1
+        ],
+        "space": "Box"
+      },
+      "target_gear": {
+        "n": "num_gears",
+        "space": "Discrete",
+        "start": 1
+      },
+      "throttle": {
+        "high": 1.0,
+        "low": 0.0,
+        "shape": [
+          1
+        ],
+        "space": "Box"
+      }
+    }
+  },
+  "classes": {
+    "RoarPyActor": {
+      "bases": [],
+      "fields": [],
+      "methods": {
+        "__del__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "__init__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "name",
+            "control_timestep",
+            "force_real_control_timestep"
+          ]
+        },
+        "_apply_action": {
+          "async": true,
+          "decorators": [],
+          "params": [
+            "self",
+            "action"
+          ]
+        },
+        "apply_action": {
+          "async": true,
+          "decorators": [],
+          "params": [
+            "self",
+            "action"
+          ]
+        },
+        "close": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "control_timestep": {
+          "async": false,
+          "decorators": [
+            "property"
+          ],
+          "params": [
+            "self"
+          ]
+        },
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "observation"
+          ]
+        },
+        "force_real_control_timestep": {
+          "async": false,
+          "decorators": [
+            "property"
+          ],
+          "params": [
+            "self"
+          ]
+        },
+        "get_action_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "get_last_gym_observation": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "get_last_observation": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "get_sensors": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "is_closed": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "receive_observation": {
+          "async": true,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/actors/actor.py"
+    },
+    "RoarPyCameraSensor": {
+      "bases": [
+        "RoarPySensor"
+      ],
+      "fields": [],
+      "methods": {
+        "__init__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "name",
+            "control_timestep",
+            "target_data_type"
+          ]
+        },
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "obs"
+          ]
+        },
+        "fov": {
+          "async": false,
+          "decorators": [
+            "property"
+          ],
+          "params": [
+            "self"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "image_size_height": {
+          "async": false,
+          "decorators": [
+            "property"
+          ],
+          "params": [
+            "self"
+          ]
+        },
+        "image_size_width": {
+          "async": false,
+          "decorators": [
+            "property"
+          ],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/sensors/camera_sensor.py"
+    },
+    "RoarPyCollisionSensor": {
+      "bases": [
+        "RoarPySensor"
+      ],
+      "fields": [],
+      "methods": {
+        "__init__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "name",
+            "control_timestep"
+          ]
+        },
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "obs"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/sensors/collision_sensor.py"
+    },
+    "RoarPyCollisionSensorData": {
+      "bases": [
+        "RoarPyRemoteSupportedSensorData"
+      ],
+      "fields": [
+        "actor",
+        "other_actor",
+        "impulse_normal"
+      ],
+      "methods": {
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/sensors/collision_sensor.py"
+    },
+    "RoarPyLocationInWorldSensor": {
+      "bases": [
+        "RoarPySensor"
+      ],
+      "fields": [],
+      "methods": {
+        "__init__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "name",
+            "control_timestep"
+          ]
+        },
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "obs"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/sensors/location_in_world_sensor.py"
+    },
+    "RoarPyLocationInWorldSensorData": {
+      "bases": [
+        "RoarPyRemoteSupportedSensorData"
+      ],
+      "fields": [
+        "x",
+        "y",
+        "z"
+      ],
+      "methods": {
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/sensors/location_in_world_sensor.py"
+    },
+    "RoarPyOccupancyMapSensor": {
+      "bases": [
+        "RoarPySensor"
+      ],
+      "fields": [],
+      "methods": {
+        "__init__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "name"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/sensors/occupancy_map_sensor.py"
+    },
+    "RoarPyRollPitchYawSensor": {
+      "bases": [
+        "RoarPySensor"
+      ],
+      "fields": [],
+      "methods": {
+        "__init__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "name",
+            "control_timestep"
+          ]
+        },
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "obs"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/sensors/rotation_sensor.py"
+    },
+    "RoarPyRollPitchYawSensorData": {
+      "bases": [
+        "RoarPyRemoteSupportedSensorData"
+      ],
+      "fields": [
+        "roll_pitch_yaw"
+      ],
+      "methods": {
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/sensors/rotation_sensor.py"
+    },
+    "RoarPySensor": {
+      "bases": [
+        "typing.Generic"
+      ],
+      "fields": [
+        "sensordata_type"
+      ],
+      "methods": {
+        "__del__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "__init__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "name",
+            "control_timestep"
+          ]
+        },
+        "close": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "control_timestep": {
+          "async": false,
+          "decorators": [
+            "property"
+          ],
+          "params": [
+            "self"
+          ]
+        },
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "obs"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "get_last_gym_observation": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "get_last_observation": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "is_closed": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "receive_observation": {
+          "async": true,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/base/sensor.py"
+    },
+    "RoarPyVehicleAutoGearActor": {
+      "bases": [
+        "RoarPyActor"
+      ],
+      "fields": [],
+      "methods": {
+        "__init__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "name",
+            "control_timestep",
+            "force_real_control_timestep"
+          ]
+        },
+        "get_action_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/actors/vehicle.py"
+    },
+    "RoarPyVehicleManualGearActor": {
+      "bases": [
+        "RoarPyActor"
+      ],
+      "fields": [],
+      "methods": {
+        "__init__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "name",
+            "control_timestep",
+            "force_real_control_timestep",
+            "num_gears"
+          ]
+        },
+        "get_action_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/actors/vehicle.py"
+    },
+    "RoarPyVelocimeterSensor": {
+      "bases": [
+        "RoarPySensor",
+        "RoarPyRemoteSupportedSensorData"
+      ],
+      "fields": [],
+      "methods": {
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "obs"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/sensors/velocimeter_sensor.py"
+    },
+    "RoarPyVelocimeterSensorData": {
+      "bases": [
+        "RoarPyRemoteSupportedSensorData"
+      ],
+      "fields": [
+        "velocity"
+      ],
+      "methods": {
+        "convert_obs_to_gym_obs": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        },
+        "get_gym_observation_spec": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/sensors/velocimeter_sensor.py"
+    },
+    "RoarPyWaypoint": {
+      "bases": [],
+      "fields": [
+        "location",
+        "roll_pitch_yaw",
+        "lane_width"
+      ],
+      "methods": {
+        "__eq__": {
+          "async": false,
+          "decorators": [],
+          "params": [
+            "self",
+            "__value"
+          ]
+        },
+        "distance_to_waypoint_polygon": {
+          "async": false,
+          "decorators": [
+            "staticmethod"
+          ],
+          "params": [
+            "waypoint1",
+            "waypoint2",
+            "point"
+          ]
+        },
+        "from_line_representation": {
+          "async": false,
+          "decorators": [
+            "staticmethod"
+          ],
+          "params": [
+            "point_1",
+            "point_2",
+            "roll_pitch_yaw"
+          ]
+        },
+        "interpolate": {
+          "async": false,
+          "decorators": [
+            "staticmethod"
+          ],
+          "params": [
+            "point_1",
+            "point_2",
+            "alpha"
+          ]
+        },
+        "line_representation": {
+          "async": false,
+          "decorators": [
+            "cached_property"
+          ],
+          "params": [
+            "self"
+          ]
+        },
+        "load_waypoint_list": {
+          "async": false,
+          "decorators": [
+            "staticmethod"
+          ],
+          "params": [
+            "waypoint_dict"
+          ]
+        },
+        "save_waypoint_list": {
+          "async": false,
+          "decorators": [
+            "staticmethod"
+          ],
+          "params": [
+            "waypoints"
+          ]
+        }
+      },
+      "source": "roar_py_core/roar_py_interface/worlds/waypoint.py"
+    }
+  },
+  "extractor": {
+    "path": "roar/projects/racekit/scripts/extract_roar_py_contract.py",
+    "version": 1
+  },
+  "fixture_version": 1,
+  "observations": {
+    "collision": {
+      "data_class": "RoarPyCollisionSensorData",
+      "data_fields": [
+        "actor",
+        "other_actor",
+        "impulse_normal"
+      ],
+      "dtype": "float32",
+      "frame": "vehicle-local x, y, z",
+      "high": "inf",
+      "low": "-inf",
+      "sensor": "RoarPyCollisionSensor",
+      "shape": [
+        3
+      ],
+      "space": "Box",
+      "units": "N*s",
+      "units_source": {
+        "source": "docs",
+        "url": "https://roar.gitbook.io/roar-competition-documentation"
+      }
+    },
+    "location": {
+      "data_class": "RoarPyLocationInWorldSensorData",
+      "data_fields": [
+        "x",
+        "y",
+        "z"
+      ],
+      "dtype": "float32",
+      "frame": "world, right-handed: x forward, y left, z up",
+      "high": "inf",
+      "low": "-inf",
+      "sensor": "RoarPyLocationInWorldSensor",
+      "shape": [
+        3
+      ],
+      "space": "Box",
+      "units": "m",
+      "units_source": {
+        "source": "docs",
+        "url": "https://roar.gitbook.io/roar-competition-documentation"
+      }
+    },
+    "roll_pitch_yaw": {
+      "data_class": "RoarPyRollPitchYawSensorData",
+      "data_fields": [
+        "roll_pitch_yaw"
+      ],
+      "dtype": "float32",
+      "frame": "roll, pitch, yaw, each normalized to [-pi, pi)",
+      "high": 3.141593,
+      "low": -3.141593,
+      "sensor": "RoarPyRollPitchYawSensor",
+      "shape": [
+        3
+      ],
+      "space": "Box",
+      "units": "rad",
+      "units_source": {
+        "source": "docs",
+        "url": "https://roar.gitbook.io/roar-competition-documentation"
+      }
+    },
+    "velocity": {
+      "data_class": "RoarPyVelocimeterSensorData",
+      "data_fields": [
+        "velocity"
+      ],
+      "dtype": "float32",
+      "frame": "world, right-handed: x forward, y left, z up",
+      "high": "inf",
+      "low": "-inf",
+      "sensor": "RoarPyVelocimeterSensor",
+      "shape": [
+        3
+      ],
+      "space": "Box",
+      "units": "m/s",
+      "units_source": {
+        "source": "docs",
+        "url": "https://roar.gitbook.io/roar-competition-documentation"
+      }
+    }
+  },
+  "source": {
+    "commit": "3cbb087ccc5198248815b57742a945e81ef55b64",
+    "license": "MIT",
+    "license_file": "LICENSE-ROAR_PY",
+    "paths": [
+      "roar_py_core/roar_py_interface/actors/actor.py",
+      "roar_py_core/roar_py_interface/actors/vehicle.py",
+      "roar_py_core/roar_py_interface/base/sensor.py",
+      "roar_py_core/roar_py_interface/sensors/camera_sensor.py",
+      "roar_py_core/roar_py_interface/sensors/collision_sensor.py",
+      "roar_py_core/roar_py_interface/sensors/location_in_world_sensor.py",
+      "roar_py_core/roar_py_interface/sensors/occupancy_map_sensor.py",
+      "roar_py_core/roar_py_interface/sensors/rotation_sensor.py",
+      "roar_py_core/roar_py_interface/sensors/velocimeter_sensor.py",
+      "roar_py_core/roar_py_interface/worlds/waypoint.py"
+    ],
+    "repository": "https://github.com/augcog/ROAR_PY"
+  },
+  "waypoint": {
+    "class": "RoarPyWaypoint",
+    "fields": {
+      "lane_width": {
+        "dtype": "float64",
+        "frame": "scalar",
+        "shape": [],
+        "source": "docs",
+        "units": "m",
+        "url": "https://roar.gitbook.io/roar-competition-documentation"
+      },
+      "location": {
+        "dtype": "float64",
+        "frame": "world, right-handed: x forward, y left, z up",
+        "shape": [
+          3
+        ],
+        "source": "docs",
+        "units": "m",
+        "url": "https://roar.gitbook.io/roar-competition-documentation"
+      },
+      "roll_pitch_yaw": {
+        "dtype": "float64",
+        "frame": "road roll, pitch, yaw",
+        "shape": [
+          3
+        ],
+        "source": "docs",
+        "units": "rad",
+        "url": "https://roar.gitbook.io/roar-competition-documentation"
+      }
+    }
+  }
+}
