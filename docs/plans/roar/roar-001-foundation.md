@@ -340,6 +340,11 @@ No stub unit is added; `buildout: true` covers the empty state.
   - r2 B2: the stdlib list still excluded `test` and `idlelib`. [FIXED v3.1: no exclusions].
   - N1, the header count: [FIXED v3.1].
 
+### Round 4 (v3.1 @ 65c3103): CONSENSUS
+- **[sol]** APPROVE.
+- **[fable]** APPROVE WITH NITS (round 1; folded).
+- **[self]** APPROVE.
+
 ## Content Review
 This plan ships no student content. The 3-way content-review gate still runs, on the shipped code, docs and
 syllabus, per `docs/content-review-gate.md`.
