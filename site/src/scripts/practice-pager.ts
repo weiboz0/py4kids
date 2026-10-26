@@ -270,10 +270,10 @@ function start(layout: HTMLElement, stepEls: HTMLElement[]): void {
   };
   const say = (text: string) => {
     live.textContent = '';
-    // A fresh node each time, so a repeated message is still announced.
-    requestAnimationFrame(() => {
+    // Cleared first, then set, so a repeated message is still announced.
+    setTimeout(() => {
       live.textContent = text;
-    });
+    }, 50);
   };
 
   document.addEventListener(CHECK_START_EVENT, (event) => {

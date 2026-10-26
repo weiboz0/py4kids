@@ -24,10 +24,24 @@ export async function setCode(page: Page, item: Locator, code: string): Promise<
   await page.keyboard.insertText(code);
 }
 
-/** Press Check and wait for the verdict (the buttons come back when the check ends). */
+/**
+ * Press Check and wait for the verdict. The check island's terminal `py4kids:check` event (plan
+ * 106) marks the end, so a check fast enough to re-enable its button before a "disabled" probe
+ * could see it is still waited for; then the buttons are back.
+ */
 export async function check(item: Locator, timeout = 90_000): Promise<string> {
+  const page = item.page();
+  const key = (await item.getAttribute('data-item-key')) ?? '';
+  await page.evaluate((k) => {
+    const w = window as unknown as { __py4kidsChecked?: Record<string, boolean> };
+    w.__py4kidsChecked ??= {};
+    w.__py4kidsChecked[k] = false;
+    document.addEventListener('py4kids:check', (event) => {
+      if ((event as CustomEvent<{ key: string }>).detail?.key === k) w.__py4kidsChecked![k] = true;
+    });
+  }, key);
   await item.locator('[data-check-item]').click();
-  await expect(item.locator('[data-check-item]')).toBeDisabled();
+  await page.waitForFunction((k) => (window as unknown as { __py4kidsChecked: Record<string, boolean> }).__py4kidsChecked[k], key, { timeout });
   await expect(item.locator('[data-check-item]')).toBeEnabled({ timeout });
   return (await item.locator('[data-result] .verdict').first().textContent()) ?? '';
 }
