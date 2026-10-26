@@ -40,7 +40,7 @@ PROJECT_REQUIRED_FILES = (
 )
 MANIFEST_KEYS = {"id", "kind", "blueprint_version", "lessons", "concepts", "provenance"}
 # Optional manifest keys, each allowed only on books with the named books.yaml flag.
-FLAGGED_MANIFEST_KEYS = {"acsl": "acsl"}
+FLAGGED_MANIFEST_KEYS = {"acsl": "acsl", "lab": "labs"}
 MANIFEST_CONCEPT_KEYS = {
     1: {"introduces", "requires", "practices"},
     2: {"introduces", "requires", "practices", "auxiliary"},

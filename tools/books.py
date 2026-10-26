@@ -243,6 +243,7 @@ def book_flag(root: Path, book: str, flag: str) -> bool:
     ``patterns`` (pattern checks and the coverage-map v2 / markdown concept scan),
     ``acsl`` (the ACSL season structure: manifest ``acsl:`` block, season.yaml, acsl-check).
     ``site`` (the learning-website export: export, classify, site-check; design 012).
+    ``labs`` (real-simulator labs: manifest ``lab:`` key, curriculum/labs.yaml, lab-check).
     """
     configured = book_entry(root, book).get(flag, False)
     return configured if isinstance(configured, bool) else False

@@ -14,7 +14,7 @@ from tools.books import (
 )
 
 REPO = Path(__file__).resolve().parents[1]
-FLAGS = ("publication", "judge", "patterns", "acsl", "site")
+FLAGS = ("publication", "judge", "patterns", "acsl", "site", "labs")
 
 
 def load_catalog():
@@ -117,6 +117,7 @@ def test_registry_feature_flags_are_booleans():
         "patterns": ["python-projects"],
         "acsl": ["acsl"],
         "site": ["python-projects", "python-concepts", "usaco-bronze", "acsl"],
+        "labs": ["roar"],
     }
 
 
@@ -130,8 +131,9 @@ def test_registry_documents_every_flag():
 
 def test_ci_local_reads_every_flag():
     text = (REPO / "scripts/ci-local.sh").read_text(encoding="utf-8")
-    assert 'for flag in ("publication", "judge", "patterns", "acsl", "site")' in text
+    assert 'for flag in ("publication", "judge", "patterns", "acsl", "site", "labs")' in text
     assert 'has_flag acsl "$flags"' in text and "acsl-check" in text
+    assert 'has_flag labs "$flags"' in text and "lab-check" in text
 
 
 def test_acsl_is_covered_by_the_id_guards():
