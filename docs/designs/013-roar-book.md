@@ -1,8 +1,8 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** DRAFT, v2 (2026-10-25).
-v2 folds the round-1 design review ([sol] REJECT, [fable] APPROVE WITH NITS, [self] nits; see the Design Review
-section) and a re-check of the Summer 2026 season's published reports.
+**Status:** DRAFT, v3 (2026-10-25).
+v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
+([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). See the Design Review section.
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -17,9 +17,12 @@ ROAR (Robot Open Autonomous Racing, UC Berkeley FHL Vive Center) runs a **Simula
 for high-school students.
 - Competitors fork `augcog/ROAR_Competition` and submit a GitHub repository URL.
 - The repository contains their `submission.py` plus the **unmodified** `competition_runner.py` and
-  `infrastructure.py`, and optionally an `instruction.txt` for extra dependencies.
-- The stack is CARLA **0.9.12** with the **Monza map v1.1** and the `ROAR_PY` interface (series instructions,
-  checked 2026-10-25).
+  `infrastructure.py`. Extra dependencies go in an optional `instruction.txt` (series page) or `requirements.txt`
+  (gitbook); the two sources disagree, and Unit 13 checks the current season's wording.
+- The stack is CARLA **0.9.12** with the **Monza map v1.1** and the `ROAR_PY` interface. The official environment is
+  **Python 3.8** (`conda create -n roar_competition python=3.8`, gitbook installation page), so numpy is at most
+  1.24.x there. The Monza v1.1 executable ships for **Windows AMD64** (series instructions and gitbook, checked
+  2026-10-25).
 - The current season's deadline is 2026-12-11.
 
 ### 1.2 Facts about the real race
@@ -71,6 +74,12 @@ outside CI (§7.3). The book teaches toward the frontier but promises only this 
 - **Assumed programming:** Python fluency (classes, modules, comprehensions, `async def` / `await` *usage*) and
   numpy fluency. These are declared assumed-baseline concepts in `roar/curriculum/baseline.yaml`, earning no teaching
   credit.
+- **Submission target: Python 3.8 with numpy < 1.25** ([fable] r2 F1). Notebooks run on the repo's Python 3.12+,
+  but every **submission file** must be 3.8-compatible:
+  - no `match`;
+  - no runtime `X | Y` types or `list[int]` subscripts;
+  - no `str.removeprefix`, `functools.cache` or `np.trapezoid`.
+  Unit 1 states this, and Unit 13's packaging checklist re-checks it.
 - **Libraries:** numpy (assumed). **scipy** (`optimize`, `interpolate`) and **matplotlib** are **taught before
   assessed**, as ordered concepts (§7.1).
 - **Retained laws (normative):** the declared baseline overrides only the audience, the assumed math and the named
@@ -115,8 +124,14 @@ only on numpy and scipy, and is tested by the routed suite.
 - All of a student's control code lives **in that file**. The book's units teach techniques in notebooks, and each
   unit's milestone grows a **reference submission file**: `roar/projects/racekit/agents/unit-NN.py`, each one a
   complete official-shape submission.
-- **`racekit.roar_py_interface`** is a **shim module** that `racekit` installs under the name `roar_py_interface`
-  while it loads a submission, so the file's `import roar_py_interface` line works unchanged. It provides:
+- **`racekit.roar_py_interface`** is a **shim module**. `run_race` and `check_submission` install it in
+  `sys.modules` under the name `roar_py_interface` **for the whole call**, covering loading and every tick, so
+  function-local imports work. They restore the previous entry afterwards. They **refuse** to overwrite a real
+  `roar_py_interface` that is already importable.
+  - Submissions are loaded with `importlib.util.spec_from_file_location` under a **unique module name per load**, so
+    two milestones in one kernel never collide.
+  - The file's `import roar_py_interface` line therefore works unchanged.
+  - The shim provides:
   - `RoarPyWaypoint` (`.location` (3,) float64 in metres, `.roll_pitch_yaw` (3,) radians, `.lane_width` metres);
   - sensor objects with `get_last_gym_observation()`:
     - location (3,) in metres, world frame;
@@ -131,10 +146,15 @@ only on numpy and scipy, and is tested by the routed suite.
   derived from the MIT-licensed `ROAR_PY` at the pinned commit. The fixture is recorded with provenance: commit,
   file, licence. It is the only `ROAR_PY`-derived artifact in the repo, and it carries the MIT notice.
 - **`racekit.check_submission(path)`** proves exactly the following, and nothing more:
-  1. the file parses and defines `RoarCompetitionSolution` with the official constructor signature;
+  1. the file parses with `ast.parse(src, feature_version=(3, 8))`, and a small deny-list catches the 3.9+ runtime
+     APIs named in §2. It defines `RoarCompetitionSolution` with the official constructor signature.
   2. its imports are within the allowed set;
-  3. it completes a racekit race on `test-circuit` without an action-validation error, an exception, or a `step()`
-     tick slower than the budget (§7.1).
+  3. it completes a racekit race on `test-circuit` without an action-validation error or an exception, and with
+     `step()` compute **p99 ≤ the budget**, the first 50 warm-up ticks excluded (§7.1). The official sim is
+     synchronous, so compute time never changes the scored time; the budget protects CI wall time and flags a
+     controller too slow to be practical.
+  - A routed test runs every `agents/unit-NN.py` through `check_submission` under
+    `uv run --python 3.8 --with "numpy<1.25"`. It is the one deliberately slow test, and the interpreter is cached.
   It does **not** prove CARLA performance. That is what the real-sim labs and §7.3 are for.
 
 ### 4.2 The race runner mirrors the real rules
@@ -164,6 +184,11 @@ only on numpy and scipy, and is tested by the routed suite.
   clothoid transitions with continuous curvature, plus a per-segment drivable width.
 - It emits waypoints at about 2 m spacing (like `maneuverable_waypoints`) into **`roar/data/generated/`**
   (gitignored), with sha256 entries in `roar/data/generated/checksums.json`, regenerated in CI and byte-stable.
+- **One generator driver** ([sol] r2 S2, [fable] r2 F3): `roar/data/generate.py` runs, in a declared order:
+  1. tracks;
+  2. the carla-like telemetry logs (from `roar-004`);
+  3. the `lab-check` sample CSV.
+  It runs in `ci-local.sh` step 2, before step 3's `lab-check` reads the CSV.
 - It ships these tracks:
   - `oval` (Units 1–4);
   - `test-circuit` (mixed corners and a chicane);
@@ -243,7 +268,7 @@ Challenge), `solutions.ipynb`, `teacher-notes.md` and `manifest.yaml`.
 | 4 | PID control | "Hold 20 m/s, then follow the line." | P/I/D; discrete PID; windup; step-response tuning; steering from heading error | Overshoot and settling in bounds; cross-track error below the starter's |
 | 5 | Geometric steering 🏁 | "Steer like a driver looks ahead." | Pure pursuit; speed-scaled lookahead; Stanley; stability vs corner-cutting | Pure pursuit lowers cross-track error at speed (noise-aware) |
 | 6 | Grip and the speed limit | "Why does the car spin at Parabolica?" | Dynamic bicycle; tyre saturation; friction circle; v_max = √(μg/κ); the spin-out failure | A curvature-limited speed controller removes spin-outs and collisions on `test-circuit` |
-| 7 | Speed planning 🏁 | "Brake *before* the corner, and find the grip that is really there." | Forward–backward speed profile; lookahead planning; **per-section μ, tuned empirically** against collisions | A large median race-time gain over Unit 6 at 0 collisions; per-section μ beats a single global μ (noise-aware) |
+| 7 | Speed planning 🏁 | "Brake *before* the corner, and find the grip that is really there." | Forward–backward speed profile; lookahead planning; **per-section μ by a one-knob sweep** (one parameter per section, accepted by Unit 1's median-and-spread rule; Unit 12 generalizes to many knobs) | A large median race-time gain over Unit 6 at 0 collisions; per-section μ beats a single global μ (noise-aware) |
 | CP-A | **Checkpoint A** | A complete clean agent on an unseen-for-tuning seeded track | — (strict) | Finishes within a target time, with 0 collisions |
 
 ### Part 2: Measuring the real car
@@ -284,28 +309,36 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   is an `assert` in its milestone notebook.
 - **The standard laws:** manifest, prereq, coverage (including the capstone rule), hygiene, stretch, cell-lint and
   concept-scan.
-- **API ordering ([sol] B2):** `baseline.yaml` `library_methods` lists only **interface and infrastructure** names
-  (the shim API, `racekit` harness calls, assumed numpy names). Taught APIs (`scipy.optimize`, `scipy.interpolate`,
-  matplotlib calls, each `racekit` analysis module) are **concepts** in `concepts.yaml`, introduced by a named unit.
-  `roar-001` adds a routed test that parses every `roar` notebook's code cells. It fails when a taught API name
-  appears in an entry that precedes its introducing unit, using the ordered table in `roar/curriculum/api-order.yaml`.
-  The test has a negative case showing a premature use fails.
+- **API ordering ([sol] r1 B2, r2 B2; [fable] r2 F5).** It works in two layers, and `concept-scan` is unchanged:
+  1. Every callable a student may call is listed in `baseline.yaml` `library_methods`, so `concept-scan` (whose
+     library exemption is global, `tools/concept_scan.py`) accepts it. This includes the shim API, `racekit`
+     harness calls, numpy names, and the **taught** scipy, matplotlib and `racekit` analysis calls.
+  2. `roar/curriculum/api-order.yaml` maps each **taught** callable to the **concept id** that teaches it. That
+     concept is introduced by exactly one entry in `concepts.yaml` and `coverage-map.yaml`. There is no second copy
+     of the order: a routed test **derives** each concept's introducing position from the coverage map's entry order
+     and `introduces` lists.
+  The test fails when:
+  - a taught callable appears in a notebook code cell of an entry that comes before its introducing entry;
+  - a callable in `library_methods` is in **neither** `api-order.yaml` **nor** the explicit `infrastructure:` list at
+    the top of `api-order.yaml`;
+  - an `api-order.yaml` concept id is unknown.
+  Negative cases prove a premature use fails and an unmapped name fails.
 - **Budgets** (measured targets; an overrun means stop and amend):
   - **Book notebook exec ≤ 15 CI-minutes:** `exec-lessons` + `exec-solutions` wall time, with the 1-minute load
     average recorded at start and end. It **excludes** track and telemetry generation, which are reported
     separately and must stay ≤ 1 min.
   - **Routed pytest ≤ 5 min.**
   - The per-cell 120 s cap is retained.
-  - **Per-tick:** the simulation costs ≤ 0.2 ms per tick (the [fable] probe measured 0.17–0.18 ms with the agent in
-    the loop), so a 17,000-tick baseline race takes ≤ 4 s.
-  - **MPC:** the Unit 10 agent's `step()` has **p99 ≤ 5 ms** on the CI machine. Over budget, it falls back to pure
+  - **Per-tick (a measured target from the [fable] probe, not a cap the runner enforces):** the simulation costs
+    about 0.2 ms per tick, and a 17,000-tick starter-baseline race takes ≤ 4 s. A student's `step()` adds to that.
+  - **MPC:** the Unit 10 agent's `step()` has **p99 ≤ 5 ms** on the CI machine, warm-up excluded. Over budget, it falls back to pure
     pursuit for that tick, and counts and reports the fallbacks. scipy's constrained solvers (about 90–300 ms per
     tick in the probe) are used only on a single-corner segment of a few hundred ticks.
   - Notebooks size their runs to a few full races per cell.
 - **`ci-local.sh` wiring (`roar-001`):**
   - add `roar/projects/racekit roar/data` to the ruff path list;
-  - generalize the data-regeneration hook to run each `$book/data/gen_*.py` in sorted order (recsys's names keep
-    working) before the routed pytest;
+  - extend the data-regeneration hook: when `$book/data/generate.py` exists, run it. Otherwise keep recsys's
+    existing `gen_catalog.py` / `gen_interactions.py` branch unchanged. Run it before the routed pytest;
   - add the `roar` group and the `racekit` source to `pyproject.toml`.
 
 ### 7.2 Real-sim labs (CI checks their analysis, not CARLA)
@@ -325,22 +358,33 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - its CARLA cells are tagged;
   - it is excluded from `publish` and the site export.
   Then it **executes a copy** of the lab with the `no-exec` cells removed, against a seeded **sample telemetry CSV**
-  that `racekit` writes into `roar/data/generated/`. So the analysis code is under CI even though the CARLA run is
-  not.
+  that `roar/data/generate.py` writes into `roar/data/generated/`. So the analysis code is under CI even though the
+  CARLA run is not.
+- **Data path ([sol] r2 S3, [fable] r2 F8):**
+  - Every lab's first cell, tagged `parameters`, sets `TELEMETRY_PATH = os.environ.get("ROAR_LAB_CSV",
+    "telemetry.csv")`. Every analysis cell reads only through `TELEMETRY_PATH`.
+  - `lab-check` sets `ROAR_LAB_CSV` to the fixture.
+  - Negative tests: a lab that hard-codes a CSV path elsewhere, lacks the parameters cell, or reads data inside a
+    `no-exec` cell fails `lab-check`.
 - **No student data in the repo (the repo is PUBLIC):** lab outputs stay on the student's machine. `.gitignore`
   covers `roar/**/labs/**/*.csv`, `*.json`, `*.npz`, `*.parquet`, `*.log` and `*.png`. The sample fixture lives
   only in the gitignored generated directory. A routed test fails if any file under a `labs/` directory other than
   `*.ipynb` and `README.md` is tracked. Teacher notes say so.
 
 ### 7.3 Author qualification (outside CI): the "reasonable ranking" proxy
+- **Early warnings ([fable] r2 F6):** the author runs two interim CARLA checks, recorded in the same file:
+  - `roar-006`: the Unit 7 reference, untimed, must complete 3 laps with 0 collisions;
+  - `roar-013`: the Unit 13 reference, timed.
+  A failure at either point is a stop-and-amend for that plan, not a surprise at the end.
 - Before `roar-014` sets the `publication` flag, the author runs the **final reference submission** on the pinned
   stack:
   - CARLA 0.9.12;
   - Monza v1.1;
   - `ROAR_Competition` at the pinned commit;
   - `ROAR_PY` at the pinned commit.
-  The run is at least 5 races, recorded in `roar/docs/qualification.md`: hardware, OS, GPU, versions, every race
-  time, collisions, median and spread.
+  The run is **exactly 5 consecutive official-runner launches** ([sol] r2 S1), all recorded in
+  `roar/docs/qualification.md`: hardware, OS, GPU, versions, the submission file's **SHA-256** and repository commit,
+  and **every** launch's outcome (time, collisions, timeout or crash). No launch is discarded or restarted.
 - The §1.3 proxy (every run clean, median ≤ 329 s) must hold. **Otherwise stop and amend.** The fix is a plan that
   re-tunes, not a relaxed proxy without author sign-off.
 - The record contains only the author's reference agent, never student results.
@@ -363,15 +407,15 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
 | Plan | Ships |
 |---|---|
 | design 013 (this doc) | The design, through the 3-way gate (docs-only) |
-| `roar-001` foundation | the `books.yaml` entry (`buildout: true`, `dependency_group: roar`); the `roar/` skeleton (syllabus, curriculum, baseline, concepts, `api-order.yaml`); pyproject group and source; the `racekit` core (shim plus contract fixture, the sync runner with the real progress/respawn rule, the kinematic car with its longitudinal map, telemetry, `measure`, `check_submission`); `gen_tracks.py`; the ci-local generalizations (§7.1); the routed tests (API-order, deny-list, labs-tracked); `upstream.md`; `.gitignore`. No units. |
+| `roar-001` foundation | the `books.yaml` entry (`buildout: true`, `dependency_group: roar`); the `roar/` skeleton (syllabus, curriculum, baseline, concepts, `api-order.yaml`); pyproject group and source; the `racekit` core (shim plus contract fixture, the sync runner with the real progress/respawn rule, the kinematic car with its longitudinal map, telemetry, `measure`, `check_submission`); `gen_tracks.py` and the `generate.py` driver; the ci-local generalizations (§7.1); the routed tests (API-order with its exhaustiveness check, deny-list, labs-tracked, the Python 3.8 `check_submission` run); `upstream.md`; `.gitignore`. No units. |
 | `roar-002` | Unit 1; `lab-check`; the first lab; the starter re-implementation as `agents/unit-01.py` |
 | `roar-003` | Units 2–3 |
 | `roar-004` | `racekit` dynamic car, spin-out, the carla-like truth car, noise, the telemetry generator (infrastructure plus probes) |
-| `roar-005` / `roar-006` | Units 4–5 / Units 6–7 |
+| `roar-005` / `roar-006` | Units 4–5 / Units 6–7 (plus the interim untimed CARLA check, §7.3) |
 | `roar-007` | Checkpoint A |
 | `roar-008` / `roar-009` / `roar-010` | Units 8–9 / Unit 10 / Unit 11 |
 | `roar-011` | Checkpoint B |
-| `roar-012` / `roar-013` | Unit 12 / Unit 13 (integration) |
+| `roar-012` / `roar-013` | Unit 12 / Unit 13 (integration; plus the interim timed CARLA check) |
 | `roar-014` | Capstone; site flag; §7.3 qualification; publication flag |
 
 Pairings may be adjusted by each plan's gate without a design change.
@@ -424,6 +468,26 @@ Pairings may be adjusted by each plan's gate without a design change.
   - Probe evidence: 0.17–0.18 ms/tick; monza-like profile ≈ 2× faster than fixed 20 m/s; scipy MPC 91–293 ms/tick
     vs LTV least squares 0.167 ms/tick.
 
+### Round 2 (v2 @ f6fc342)
+- **[sol]** REJECT on r1 B2 only. B1, B3, B4, S5, S6, S7, N8 and N9 were verified RESOLVED.
+  - B2, the API-order test is disjoint from `concept-scan`: [FIXED v3, §7.1, the two-layer scheme].
+  - S1, the qualification stopping rule: [FIXED v3, §7.3].
+  - S2, generator ordering: [FIXED v3, §4.3 single driver].
+  - S3, the lab data path: [FIXED v3, §7.2 `ROAR_LAB_CSV`].
+- **[fable]** APPROVE WITH NITS. All round-1 items were verified RESOLVED; its shim probe confirmed both sync
+  `run_race` paths.
+  - F1 MUST, the Python 3.8 runtime: [FIXED v3, §1.1, §2, §4.1].
+  - F2, shim lifetime and loading: [FIXED v3, §4.1].
+  - F3, generator order: [FIXED v3, §4.3].
+  - F4, the p99 tick check: [FIXED v3, §4.1].
+  - F5, `api-order.yaml` as a map with derived order: [FIXED v3, §7.1].
+  - F6, interim CARLA checks and Windows-only Monza: [FIXED v3, §1.1, §7.3].
+  - F7, the U7 one-knob sweep: [FIXED v3, §6].
+  - F8, the lab path: [FIXED v3, §7.2].
+  - F9, the number is not unique: no change.
+  - F10, the per-tick target: [FIXED v3, §7.1].
+- **[self]** APPROVE.
+
 ## 10. Revision history
 - v1 (2026-10-25): the initial draft from the author-agreed brainstorming sections 1–5.
 - v2 (2026-10-25): folds round 1, and re-grounds the race in the Summer 2026 reports. Changes:
@@ -438,3 +502,13 @@ Pairings may be adjusted by each plan's gate without a design change.
   - `lab-check`;
   - the budgets made precise;
   - the provenance record.
+- v3 (2026-10-25): folds round 2. Changes:
+  - two-layer API ordering;
+  - the Python 3.8 / numpy < 1.25 submission target;
+  - the shim's lifetime and loading;
+  - a single generator driver;
+  - the p99 tick check;
+  - interim CARLA checks;
+  - the qualification stopping rule;
+  - `ROAR_LAB_CSV`;
+  - the U7 one-knob sweep.
