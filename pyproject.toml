@@ -68,6 +68,11 @@ packages = ["tools"]
 target-version = "py312"
 line-length = 100
 
+# racekit is Python 3.8-compatible (design 013 §4, §7.1): with the pyupgrade (UP) rules on, ruff must
+# never rewrite it to 3.9+ syntax (builtin generics, `X | Y`), so it is linted as py38.
+[tool.ruff.per-file-target-version]
+"roar/projects/racekit/**" = "py38"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["slow: real LaTeX/Quarto renders (plan 097); ci-local runs them"]
