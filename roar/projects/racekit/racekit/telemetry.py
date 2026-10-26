@@ -17,7 +17,9 @@ The columns (``COLUMNS``), one row per control tick:
 ``offset`` may be all zero in a real-simulator recording. The Unit 1 lab recorder writes the hold
 itself: ``RESPAWN_HOLD_TICKS`` rows with ``held`` 1 at the runner's hold times, with progress 0
 (``sector_splits`` never reads progress on a held row), then the first row after the hold at the
-same time as the last held row.
+same time as the last held row. On CARLA the held rows and that first row carry the **crash pose**
+(the runner does not read the sensors again after the respawn); racekit's held rows are at the start
+pose. Analyses that care about position or speed should skip ``held`` rows.
 
 The v1 CSV starts with one comment line carrying the integer meta, then the column header, then
 the rows::
