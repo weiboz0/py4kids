@@ -445,3 +445,26 @@ The immutable freeze `scratchpad/u04/dyn_af442a6f.py` (md5 af442a6f…) is the r
   - **N1** [FIXED] "Five singles".
   - **N2** [FIXED] The combination count.
   - **N3** [FIXED] The counterexample's conditions are stated. The freeze also gets a durable copy for the implementer: Phase A copies it into the implementation subagent's brief.
+
+## Content Review
+
+### Round 1 (implementation @ 8843ae1)
+- [self] APPROVE. The runner diff is additive: the wall is checked before the spin, and `attach_track` is called once before the first reset.
+- [sol] REJECT:
+  - **B1** [FIXED] The G4.1 "limit lap" never completed a lap: 9 respawns kept it in the opening corner.
+    It is now a **clean completed lap** at the Unit 7 combined grip, the fastest clean setting and near the limit, asserting completion and 0 collisions.
+    The over-the-limit run with respawns is kept as a second, honestly named check. Both stay ≤ 1.02 μg.
+  - **B2** [FIXED] The unclean grid values stopped at their first collision.
+    All five seeds now run, and the test asserts the exact colliding seed sets: 3.8 → {0, 1, 2, 4}; 3.9 and 4.0 → all five; the base-3.5 stack → {0, 4}.
+  - Verified: the port matches the freeze (identical over 600 mixed ticks); the G4.6 drag fit is deterministic at −9.38% against the 10% bound, a thin margin on a fixed generated log.
+- [fable] APPROVE WITH NITS:
+  - Verified:
+    - the twin is bit-exact against the freeze over 6 × 21,045 ticks;
+    - `carla_like` twins on all three tracks;
+    - mutation checks (no μg cap on the stop, a v_y-zeroing clamp, a 30° spin threshold) each fail a gate;
+    - the runner, the `_truth` scan scope, the log format and the checksum contract are correct.
+  - **S1** [FIXED] The G4.8 cost and timings are recorded in the post-execution report.
+  - **N1** [FIXED] The "0.3 g circle" test now is one: steer 0.0307, throttle 0.03, speed held at about 15 m/s, 0.3 g.
+  - **N2** → roar-006: show `DynamicCar` through its docstring and `_rhs`, not the unrolled `advance`.
+  - **N3** [WONTFIX] `carla_like().mu` reads 1.0 before `attach_track`, and the message for a scalar set on an attached car is misleading. Content never touches `carla_like()` internals (the `_truth` rule is reviewer-enforced), so this is harmless. Revisit if roar-008 exposes μ.
+  - **N4** → roar-007: the driver's float32 section index can differ from `track.s` by one waypoint at a boundary.

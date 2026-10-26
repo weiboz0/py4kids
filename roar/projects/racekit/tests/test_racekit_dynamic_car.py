@@ -122,16 +122,27 @@ def test_friction_circle_holds_at_every_stage_in_a_random_action_fuzz():
         assert math.hypot(fx_r, fy_r) <= fmax_r + 1e-9
 
 
-def test_per_tick_acceleration_stays_within_mu_g_over_a_limit_lap(limit_lap_ratios):
-    """Over a limit-probing test-circuit lap on the carla-like car (probe max 0.992)."""
-    assert limit_lap_ratios.size > 500
-    assert float(limit_lap_ratios.max()) <= 1.02
+def test_per_tick_acceleration_stays_within_mu_g_over_a_clean_limit_lap(limit_laps):
+    """A completed, clean test-circuit lap on the carla-like car at the Unit 7 combined grip (the
+    fastest clean setting, near the grip limit): every tick above 5 m/s stays within 1.02 μg."""
+    clean, _ = limit_laps
+    result, ratios = clean
+    assert result.finished and result.collisions == 0, result
+    assert ratios.size > 1000
+    assert float(ratios.max()) <= 1.02
 
 
-@pytest.fixture(scope="module")
-def limit_lap_ratios():
-    from drivers import pure_pursuit
+def test_per_tick_acceleration_stays_within_mu_g_in_an_over_the_limit_run(limit_laps):
+    """An over-the-limit run with respawns (a_lat 8 against μg ≈ 8–9.8): sliding, spinning and
+    wall-hitting states stay within 1.02 μg too (probe max 0.992). It never completes a lap."""
+    _, crashing = limit_laps
+    result, ratios = crashing
+    assert result.collisions > 0
+    assert ratios.size > 500
+    assert float(ratios.max()) <= 1.02
 
+
+def _recorded_race(driver, seed, max_seconds):
     car = carla_like(noise=True)
     ratios = []
     advance = car.advance
@@ -145,9 +156,18 @@ def limit_lap_ratios():
             ratios.append(math.hypot(vx1 - vx0, vy1 - vy0) / DT / (car.mu_now * G))
 
     car.advance = recording
-    run_race(pure_pursuit(45.0, 8.0, None, 6.0, 150), "test-circuit", car=car, max_seconds=150.0,
-             seed=1, laps=1)
-    return np.array(ratios)
+    result = run_race(driver, "test-circuit", car=car, max_seconds=max_seconds, seed=seed, laps=1)
+    return result, np.array(ratios)
+
+
+@pytest.fixture(scope="module")
+def limit_laps():
+    from _premise import UNIT7_BEST_GLOBAL, UNIT7_COMBINED
+    from drivers import pure_pursuit
+
+    clean = _recorded_race(pure_pursuit(45.0, UNIT7_BEST_GLOBAL, UNIT7_COMBINED, 6.0, 150), 0, 300.0)
+    crashing = _recorded_race(pure_pursuit(45.0, 8.0, None, 6.0, 150), 1, 150.0)
+    return clean, crashing
 
 
 # --- the brake stop --------------------------------------------------------------------------------
@@ -320,7 +340,7 @@ def test_spin_out_trips_on_real_spins():
 
 
 def test_spin_out_never_trips_on_legitimate_turns():
-    assert not _spins(15.0, [(0.12, 0.012, 0.0, 120)])  # a steady 15 m/s, about 0.3 g circle
+    assert not _spins(15.0, [(0.03, 0.0307, 0.0, 120)])  # a steady 15 m/s, 0.3 g circle (R ≈ 76 m, speed held)
     for v0 in (5.0, 6.0, 8.0, 10.0):  # full lock at throttle 0.3 for 4 s
         assert not _spins(v0, [(0.3, 1.0, 0.0, 80)]), v0
     # a held full lock or a half-lock L/R/L at 40 m/s understeers

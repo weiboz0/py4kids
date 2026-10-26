@@ -89,6 +89,9 @@ def race_all(jobs: Dict[str, Job]) -> Dict[str, List[Outcome]]:
 
 UNIT7_GRID_CLEAN = (3.5, 3.6, 3.7)  # global a_lat on the 0.1 grid: clean in 5/5 (probe)
 UNIT7_GRID_UNCLEAN = (3.8, 3.9, 4.0)  # collisions on at least one seed (probe: 4/5, 5/5, 5/5)
+# the seeds that collide, per unclean grid value (probe on the frozen prototype)
+UNIT7_GRID_UNCLEAN_SEEDS = {3.8: (0, 1, 2, 4), 3.9: (0, 1, 2, 3, 4), 4.0: (0, 1, 2, 3, 4)}
+UNIT7_STACK_SEEDS = (0, 4)  # the stack's colliding seeds (probe)
 UNIT7_BEST_GLOBAL = 3.7
 UNIT7_COMBINED = (1.35, 1.35, 1.2, 1.0, 1.0, 1.1)  # per-section knobs on top of 3.7
 UNIT7_STACK = (1.5, 1.5, 1.3, 1.15, 1.0, 1.15)  # on base 3.5: each knob clean alone, the stack not
@@ -120,8 +123,8 @@ def premise_jobs() -> Dict[str, Job]:
     }
     for a_lat in UNIT7_GRID_CLEAN:
         jobs[f"u7-global-{a_lat}"] = unit7(a_lat, max_seconds=CRASH_CAP)
-    for a_lat in UNIT7_GRID_UNCLEAN:
-        jobs[f"u7-global-{a_lat}"] = unit7(a_lat, max_seconds=CRASH_CAP, until_crash=True)
+    for a_lat in UNIT7_GRID_UNCLEAN:  # all five seeds ([sol] content r1 B2)
+        jobs[f"u7-global-{a_lat}"] = unit7(a_lat, max_seconds=CRASH_CAP)
     for section, grip in unit7_singles():
         jobs[f"u7-single-{section}"] = unit7(3.5, grip, max_seconds=CRASH_CAP)
     return jobs

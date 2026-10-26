@@ -8,7 +8,13 @@ quoted beside each gate; a miss means stop, amend and re-gate, never a silent re
 from __future__ import annotations
 
 import numpy as np
-from _premise import UNIT7_GRID_CLEAN, UNIT7_GRID_UNCLEAN, unit7_singles
+from _premise import (
+    UNIT7_GRID_CLEAN,
+    UNIT7_GRID_UNCLEAN,
+    UNIT7_GRID_UNCLEAN_SEEDS,
+    UNIT7_STACK_SEEDS,
+    unit7_singles,
+)
 
 
 def _clean(outcomes):
@@ -52,7 +58,9 @@ def test_g4_5_global_3_7_is_the_fastest_clean_global_on_the_grid(premise):
     assert medians[3.7] < medians[3.6] < medians[3.5], medians
     for a_lat in UNIT7_GRID_UNCLEAN:  # probe: collisions on 4/5, 5/5 and 5/5 seeds
         outcomes = premise[f"u7-global-{a_lat}"]
-        assert any(o.collisions > 0 for o in outcomes), (a_lat, outcomes)
+        assert len(outcomes) == 5, (a_lat, outcomes)
+        colliding = tuple(seed for seed, o in enumerate(outcomes) if o.collisions > 0)
+        assert colliding == UNIT7_GRID_UNCLEAN_SEEDS[a_lat], (a_lat, outcomes)
 
 
 def test_g4_5_section_grip_beats_the_best_global_beyond_the_noise(premise):
@@ -73,4 +81,5 @@ def test_g4_5_knobs_clean_alone_can_crash_when_stacked(premise):
         assert len(outcomes) == 5 and _clean(outcomes), (section, outcomes)
     assert _clean(premise["u7-global-3.5"])  # the base itself (section 4's ×1)
     stack = premise["u7-stack"]
-    assert len(stack) == 5 and not _clean(stack), stack  # probe: seeds 0 and 4 collide
+    assert len(stack) == 5 and not _clean(stack), stack
+    assert tuple(seed for seed, o in enumerate(stack) if o.collisions > 0) == UNIT7_STACK_SEEDS, stack
