@@ -302,3 +302,23 @@ The checks re-run after the fixes all pass:
 - G3.4 (180 rows, RK4 max error 1.35e-8 m).
 
 The race times are unchanged: 223.50 / 412.75 / 882.55 s.
+
+### Round 2
+
+- [sol] REJECT (its finding was rated S, so the verdict and severity disagree; treated as blocking anyway):
+  - **S1** [FIXED] A reversing start (v = −0.41, throttle 1, brake 1) still took one RK4 step: the throttle also slows a reversing car.
+    `predict` now uses the substepped tick whenever the brake is on and |v| ≤ (a_T·throttle + a_B·brake + c·v²)·dt, the largest deceleration towards zero over one tick.
+  - **N1** [FIXED] The milestone's stop check now also compares the wrapped heading, and covers reversing starts (−3, −0.41): 32 cases, max error 6.9e-8.
+  - B1 verified fixed for forward speeds (105 extra cases, worst 2.4e-8 m); S2 and S3 resolved.
+- [fable] REJECT (narrow, wording only):
+  - **S1** [FIXED] The new prose said the substepped tick "holds v at 0, as the car does".
+    It does not: racekit's RK4 car creeps at a few cm/s under full brake, because a substep starting just above 0 straddles the jump and the stages cancel (from v = 0.01, 1 s of full brake leaves v ≈ 0.0099).
+    `predict` agrees with it exactly, so the milestone's assertion was valid parity.
+    The docstrings, the lesson cell and the milestone section ("Braking near a stop") now claim agreement, not a stop.
+    Lesson §8 now says the cure for a jump is stepping *to* it; substepping only shrinks the straddle.
+    racekit's creep itself is roar-002 code, out of this plan's scope; it is logged as a follow-up for roar-004, which reworks the cars.
+  - **N1** [FIXED] Drag at the threshold: the new bound includes c·v².
+  - All round-1 [fable] fixes and [sol] S2/S3 verified.
+
+After the fixes, a 4000-case fuzz of `predict` against `KinematicCar` (speeds −3 to 25 m/s, 1–20 ticks, random throttle, steer and brake) gives a worst error of 1.3e-6 m, from a smooth 25 m/s case where one RK4 step is compared with ten.
+Static checks, exec-lessons, milestone-check, ruff and `check_submission` pass; the race times are unchanged.

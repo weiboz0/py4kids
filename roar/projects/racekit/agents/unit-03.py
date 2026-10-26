@@ -9,9 +9,10 @@ What Unit 3 adds is the kinematic bicycle with its longitudinal map, and a rollo
 
 * ``predict(state, actions, dt=0.05)`` takes the state (x, y, psi, v) and a sequence of
   (throttle, steer, brake) actions, applies one RK4 step of ``dt`` per action with the action held,
-  and returns the final (x, y, psi, v) (psi is not wrapped). A tick in which the brake can bring the
-  car to rest is the exception: there v' jumps at v = 0, RK4's smoothness assumption fails, and the
-  tick is integrated the way the car does it, in substeps that stop at rest;
+  and returns the final (x, y, psi, v) (psi is not wrapped). A tick in which the car can reach rest
+  under the brake is the exception: there v' jumps at v = 0, RK4's smoothness assumption fails, and
+  the tick is integrated exactly the way racekit's car integrates it (10 RK4 substeps, v set to 0 on
+  a sign change or when the brake holds the car at rest), so the two agree;
 * every tick ``step()`` stores ``predicted_state``: where the car will be in 1 s if it holds the
   action it is about to apply. Nothing uses it for control yet.
 
@@ -119,9 +120,11 @@ STOP_SUBSTEPS = 10  # substeps for a tick that may end at rest (as racekit integ
 
 
 def stopping_tick(state: State, action: Action, dt: float) -> State:
-    """A tick in which the brake can stop the car: v' jumps at v = 0, so one RK4 step across the stop
-    is wrong (it can even predict reversing). Integrate in substeps, and hold v at 0 once the brake
-    brings the car to rest, as the car does."""
+    """A tick in which the car can reach rest under the brake: v' jumps at v = 0, so one RK4 step
+    across the jump is wrong (it can even predict reversing). Integrate the tick exactly as racekit's
+    car does: 10 RK4 substeps, with v set to 0 on a sign change or when the brake holds the car at
+    rest. (Neither removes the straddle: a substep that starts just above 0 can leave the car
+    creeping at a few cm/s. The point here is to agree with the car, creep included.)"""
     throttle, _, brake = action
     h = dt / STOP_SUBSTEPS
     current = state
@@ -139,13 +142,17 @@ def stopping_tick(state: State, action: Action, dt: float) -> State:
 def predict(state: Sequence[float], actions: Sequence[Sequence[float]], dt: float = CONTROL_DT) -> State:
     """Roll the model forward one RK4 step of ``dt`` per (throttle, steer, brake) action.
 
-    A tick whose brake could stop the car (|v| <= A_BRAKE * brake * dt) uses ``stopping_tick``.
+    A tick in which the car could reach rest under the brake uses ``stopping_tick``: the brake is on
+    and |v| is within one tick of the largest deceleration towards zero, throttle (which slows a
+    reversing car) plus brake plus drag.
     Returns the final (x, y, psi, v); psi is not wrapped.
     """
     current = (float(state[0]), float(state[1]), float(state[2]), float(state[3]))
     for action in actions:
         held = (float(action[0]), float(action[1]), float(action[2]))
-        if held[2] > 0.0 and abs(current[3]) <= A_BRAKE * held[2] * dt:
+        v = current[3]
+        towards_zero = A_THROTTLE * held[0] + A_BRAKE * held[2] + C_DRAG * v * v
+        if held[2] > 0.0 and abs(v) <= towards_zero * dt:
             current = stopping_tick(current, held, dt)
         else:
             current = rk4_step(current, held, dt)
