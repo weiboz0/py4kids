@@ -23,7 +23,7 @@ its first lab.
 ## Deviations from design (recorded)
 - **Jitter lives on `KinematicCar`** (design §4.4 places noise on the carla-like car in `roar-004`). Unit 1 needs a
   realistic spread now. `roar-004` reuses the same `seed()` / jitter protocol on its cars ([fable] S5).
-- **Content deviations** (Phases B–E): the plan's "time to first reach 19 m/s ≈ 4–5 s" is wrong; it is 11.35 s (15 m/s at 4.70 s), so Exercise 3 asks for both. `monza-like` is 5714.5 m, not 5.8 km (285.7 s per lap at 20 m/s), and the standing-start penalty is 3.55 s. The lab recorder adds `reanchor_after_respawn` so that after a CARLA respawn the one-lap index restarts near 0. The closed `library_methods` list was extended with the shim callables (`initialize`, `step`, `apply_action`, `get_last_gym_observation`), stdlib helpers and `update` (taught: race-telemetry).
+- **Content deviations** (Phases B–E): the plan's "time to first reach 19 m/s ≈ 4–5 s" is wrong; it is 11.35 s (15 m/s at 4.70 s), so Exercise 3 asks for both. `monza-like` is 5714.5 m, not 5.8 km (285.7 s per lap at 20 m/s), and the standing-start penalty is 3.55 s. The lab recorder (after the content gate) re-anchors to `start_index` on the respawn impulse, without reading the stale crash-pose sensor, and writes the 20 hold rows itself, so recordings carry the explicit respawn signal. The closed `library_methods` list was extended with the shim callables (`initialize`, `step`, `apply_action`, `get_last_gym_observation`), stdlib helpers and `update` (taught: race-telemetry).
 - **Implementation deviations** (Phase 0/1, recorded at hand-back):
   - `sector_splits(..., finished=False)`: a recorded CSV never sees the finishing tick, because the agent is not
     called on it. `finished=True` closes the last sector at the last row's t + 0.05. With it, the recorded and runner
@@ -317,5 +317,21 @@ Repeated-run drills use `oval`; one `monza-like` set only ([fable] N2).
 - **[self]** APPROVE.
 
 ## Content Review
+
+### Round 1
+- **[sol]** REJECT:
+  - B1, a respawn at progress 0 is invisible in a recording: [FIXED ba36989; the recorder writes 20 `held` rows at the runner's hold times, and a test covers a CSV crash at progress 0].
+  - S2, the parameters cell could reassign `TELEMETRY_PATH`: [FIXED ba36989; exactly one assignment, none in other cells, with tests].
+  - N, the Exercise 5 "but one" prose: [FIXED].
+  - Blind solve: all 9 exercises match.
+- **[fable]** APPROVE WITH NITS:
+  - M1, a stale crash-pose observation after a CARLA respawn (a false lap wrap): [FIXED ba36989; re-anchor to `start_index` after `advance_index`, the prose explains it, and the runner's "Known differences" list records it].
+  - S1, the lab recorder was never executed: [FIXED; `test_racekit_lab_recorder.py` splices the marked cell into the starter and covers the clean, saboteur and stale-pose cases, plus a teeth check].
+  - S2, the ROAR_PY install path and the numpy pin: [FIXED; `requirements.txt` plus `roar_py_core` / `roar_py_carla`, and `numpy<1.25`].
+  - S3, the Exercise 5 prose: [FIXED].
+  - S4, 285.7 vs 290 s: [FIXED].
+  - N1–N5: [FIXED; including a `write_variant` → `check_submission` demo in §8].
+  - Blind solve: all 9 exercises match.
+- **[self]** APPROVE: hook first, the crash rule correct, pins asserted.
 
 ## Post-Execution Report
