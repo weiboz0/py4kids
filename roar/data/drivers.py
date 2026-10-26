@@ -15,12 +15,14 @@
 * **recording** (``record=True``): every step the driver keeps one row of what it observed and what
   it commanded, as a CARLA recorder would, ``(t, x, y, yaw, vx, vy, throttle, steer, brake)``:
   the sensor readings before the action (world-frame velocity) and the commanded action (before
-  any actuator jitter). ``t`` counts control ticks from the driver's own steps, adding the runner's
-  1.0 s respawn hold when the collision sensor reports a major-collision impulse.
+  any actuator jitter), in ``racekit.telemetry.LOG_COLUMNS`` order. ``t`` counts control ticks
+  from the driver's own steps, adding the runner's 1.0 s respawn hold when the collision sensor
+  reports a major-collision impulse.
 
 The arithmetic is the roar-004 probe drivers' (``pp.py``, ``pp_sec.py``, ``pp_flat.py``),
 including the float32 sensor values, so the plan's pinned race times reproduce; only the
-look-ahead minimum is vectorised (exactly: ``√`` is monotone and correctly rounded).
+look-ahead minimum is vectorised (exactly: ``√`` is monotone and correctly rounded), and the
+waypoint-distance tests are decided in float64 when they are clearly away from the threshold.
 """
 
 from __future__ import annotations
@@ -44,7 +46,6 @@ SECTIONS = 6
 CONTROL_DT = 0.05
 RESPAWN_HOLD_TICKS = 20
 RESPAWN_IMPULSE = 100.0  # N·s, the official major-collision threshold
-LOG_COLUMNS = ("t", "x", "y", "yaw", "vx", "vy", "throttle", "steer", "brake")
 DECIDE_MARGIN = 1e-3  # m: a float64 distance this far from a threshold decides the float32 test
 
 

@@ -299,3 +299,65 @@ def test_cumulative_progress_wraps_and_resets():
     assert recorder.update(8, (50.0, 50.0, 0.0)) == 8 and not recorder.respawned  # ≈ 71: a bump only
     with pytest.raises(ValueError):
         CumulativeProgress(0)
+
+
+# --- the sensor log (plan roar-004 G4.7) -----------------------------------------------------------
+
+
+def _log_rows():
+    rng = np.random.default_rng(5)
+    rows = []
+    for k in range(50):
+        values = rng.normal(size=8)
+        rows.append((k * 0.05, *values[:5], abs(values[5]) % 1.0, float(np.clip(values[6], -1, 1)), 0.0))
+    rows.append((50 * 0.05 + 1.0, -1e-9, 0.0, -0.0, 1.0, 2.0, 0.5, -0.5, 1.0))
+    return rows
+
+
+LOG_META = {"track": "monza-like", "seed": 0, "noise": 0.1, "kind": "race"}
+
+
+def test_the_sensor_log_round_trips(tmp_path):
+    from racekit.telemetry import LOG_COLUMNS, log_array, read_log_csv, write_log_csv
+
+    path = write_log_csv(_log_rows(), tmp_path / "log.csv", LOG_META)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "# racekit-log v1 track=monza-like seed=0 noise=0.1 kind=race"
+    assert lines[1] == ",".join(LOG_COLUMNS) == "t,x,y,yaw,vx,vy,throttle,steer,brake"
+    assert "-0.000000" not in path.read_text(encoding="utf-8")
+    log, meta = read_log_csv(path)
+    assert meta == LOG_META and log.dtype.names == LOG_COLUMNS and log.size == 51
+    assert np.allclose(log.view((np.float64, 9)), log_array(_log_rows()).view((np.float64, 9)), atol=5e-7)
+    again = write_log_csv(log, tmp_path / "again.csv", meta)
+    assert again.read_bytes() == path.read_bytes()
+
+
+@pytest.mark.parametrize("meta", [
+    {"track": "monza like", "seed": 0, "noise": 0.1, "kind": "race"},
+    {"track": "monza-like", "seed": -1, "noise": 0.1, "kind": "race"},
+    {"track": "monza-like", "seed": 0, "noise": -0.1, "kind": "race"},
+    {"track": "monza-like", "seed": 0, "noise": 0.1},
+    {"track": "monza-like", "seed": True, "noise": 0.1, "kind": "race"},
+])
+def test_the_sensor_log_writer_validates_its_meta(tmp_path, meta):
+    from racekit.telemetry import write_log_csv
+
+    with pytest.raises(ValueError):
+        write_log_csv(_log_rows(), tmp_path / "log.csv", meta)
+
+
+@pytest.mark.parametrize(("first", "header", "row"), [
+    ("# racekit-telemetry v1 progress_total=3 laps=1 per_lap=3 waypoints_per_lap=3", None, None),
+    ("# racekit-log v1 track=oval seed=x noise=0.1 kind=race", None, None),
+    (None, "t,x,y,yaw,v,throttle,steer,brake", None),
+    (None, None, "0.0,1.0"),
+])
+def test_the_sensor_log_reader_validates_its_input(tmp_path, first, header, row):
+    from racekit.telemetry import read_log_csv
+
+    lines = [first or "# racekit-log v1 track=oval seed=0 noise=0.1 kind=steady",
+             header or "t,x,y,yaw,vx,vy,throttle,steer,brake", row or "0,0,0,0,0,0,0,0,0"]
+    path = tmp_path / "bad.csv"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError):
+        read_log_csv(path)

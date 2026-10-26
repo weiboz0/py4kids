@@ -179,9 +179,13 @@ def test_driver_generates_twice_identically_within_budget(tmp_path):
     first = generate.generate(tmp_path / "a")
     elapsed = time.perf_counter() - start
     second = generate.generate(tmp_path / "b")
-    assert elapsed <= 10.0  # plan roar-001: generation takes ≤ 10 s (with roar-002's lab race, too)
+    # design 013 §7.1: total generation (tracks, roar-004's sysid logs and the lab sample) ≤ 1 min
+    assert elapsed <= 60.0
     assert first == second
-    assert sorted(first) == ["lab/sample_telemetry.csv"] + [f"tracks/{name}.npz" for name in sorted(g.TRACK_NAMES)]
+    assert sorted(first) == (
+        ["lab/sample_telemetry.csv", "sysid/monza-like-seed0.csv", "sysid/oval-steady-seed0.csv"]
+        + [f"tracks/{name}.npz" for name in sorted(g.TRACK_NAMES)]
+    )
     for path in first:
         assert (tmp_path / "a" / path).read_bytes() == (tmp_path / "b" / path).read_bytes()
     stored = json.loads((tmp_path / "a" / "checksums.json").read_text(encoding="utf-8"))

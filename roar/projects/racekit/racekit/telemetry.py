@@ -27,6 +27,24 @@ the rows::
     # racekit-telemetry v1 progress_total=1407 laps=3 per_lap=3 waypoints_per_lap=469
     t,x,y,yaw,v,throttle,steer,brake,progress,offset,held
     0.050000,...
+
+**The sensor log** (plan roar-004; ``write_log_csv`` / ``read_log_csv``) is a separate, smaller
+format: what a driver can record about itself every step, as a CARLA recorder would, for system
+identification (Unit 8). The columns (``LOG_COLUMNS``), one row per agent step:
+
+* ``t``: the observation time in simulated seconds (the steps' clock, including any 1.0 s respawn
+  hold, so a gap larger than one control tick marks a respawn);
+* ``x``, ``y`` (location sensor), ``yaw`` (roll-pitch-yaw sensor), ``vx``, ``vy`` (velocimeter,
+  **world frame**): the sensor readings the step saw, before its action;
+* ``throttle``, ``steer``, ``brake``: the action the step commanded (before any actuator jitter or
+  lag).
+
+It follows the v1 CSV conventions (one comment line of meta, the header, six-decimal floats) with
+its own meta: the ``track`` name, the race ``seed``, the actuator ``noise`` σ and the log ``kind``::
+
+    # racekit-log v1 track=monza-like seed=0 noise=0.1 kind=race
+    t,x,y,yaw,vx,vy,throttle,steer,brake
+    0.000000,...
 """
 
 from __future__ import annotations
@@ -216,3 +234,92 @@ def read_csv(path: Union[str, Path]) -> Tuple[np.ndarray, Dict[str, int]]:
                               for name, value in zip(COLUMNS, record)))
     telemetry = np.array(rows, dtype=TELEMETRY_DTYPE) if rows else np.zeros(0, TELEMETRY_DTYPE)
     return telemetry, meta
+
+
+# --- the sensor log (plan roar-004) --------------------------------------------------------------
+
+LOG_COLUMNS = ("t", "x", "y", "yaw", "vx", "vy", "throttle", "steer", "brake")
+LOG_DTYPE = np.dtype([(name, "f8") for name in LOG_COLUMNS])
+LOG_META_KEYS = ("track", "seed", "noise", "kind")
+LOG_MAGIC = "# racekit-log v1"
+_LOG_META_LINE = re.compile(r"# racekit-log v1 track=(\S+) seed=(\S+) noise=(\S+) kind=(\S+)")
+_TOKEN = re.compile(r"[A-Za-z0-9_.-]+")
+
+
+def _checked_log_meta(meta: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(meta, dict) or set(meta) != set(LOG_META_KEYS):
+        raise ValueError(f"log meta keys must be exactly {', '.join(LOG_META_KEYS)}")
+    for key in ("track", "kind"):
+        if not isinstance(meta[key], str) or not _TOKEN.fullmatch(meta[key]):
+            raise ValueError(f"log meta {key} must be a name of letters, digits, '_', '.' or '-'")
+    if not _is_int(meta["seed"]) or meta["seed"] < 0:
+        raise ValueError(f"log meta seed must be an int >= 0, got {meta['seed']!r}")
+    noise = meta["noise"]
+    if isinstance(noise, bool) or not isinstance(noise, (int, float)) or not 0.0 <= float(noise) < float("inf"):
+        raise ValueError(f"log meta noise must be a finite number >= 0, got {noise!r}")
+    return {"track": meta["track"], "seed": int(meta["seed"]), "noise": float(noise), "kind": meta["kind"]}
+
+
+def log_array(rows: Any) -> np.ndarray:
+    """Rows (a sequence of 9-tuples in ``LOG_COLUMNS`` order, or a structured array) as a
+    ``LOG_DTYPE`` array."""
+    if isinstance(rows, np.ndarray) and rows.dtype.names is not None:
+        if rows.dtype.names != LOG_COLUMNS:
+            raise ValueError(f"log columns must be {LOG_COLUMNS}")
+        return rows.astype(LOG_DTYPE)
+    rows = [tuple(float(value) for value in row) for row in rows]
+    if any(len(row) != len(LOG_COLUMNS) for row in rows):
+        raise ValueError(f"every log row needs {len(LOG_COLUMNS)} values")
+    return np.array(rows, dtype=LOG_DTYPE) if rows else np.zeros(0, LOG_DTYPE)
+
+
+def _log_number(value: float) -> str:
+    text = FLOAT_FORMAT.format(value)
+    return text[1:] if text == "-" + FLOAT_FORMAT.format(0.0) else text  # no "-0.000000"
+
+
+def write_log_csv(rows: Any, path: Union[str, Path], meta: Dict[str, Any]) -> Path:
+    """Write a sensor log: the meta line, the fixed header, then the rows with six-decimal floats."""
+    path = Path(path)
+    log = log_array(rows)
+    checked = _checked_log_meta(meta)
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        handle.write(
+            f"{LOG_MAGIC} track={checked['track']} seed={checked['seed']} noise={checked['noise']!r} "
+            f"kind={checked['kind']}\n"
+        )
+        writer = csv.writer(handle, lineterminator="\n")
+        writer.writerow(LOG_COLUMNS)
+        for row in log.tolist():
+            writer.writerow([_log_number(value) for value in row])
+    return path
+
+
+def read_log_csv(path: Union[str, Path]) -> Tuple[np.ndarray, Dict[str, Any]]:
+    """Read a sensor log: ``(log, meta)`` with ``log`` a ``LOG_DTYPE`` array. The meta line and
+    the header are validated."""
+    with Path(path).open(newline="", encoding="utf-8") as handle:
+        first = handle.readline().rstrip("\r\n")
+        match = _LOG_META_LINE.fullmatch(first)
+        if match is None:
+            raise ValueError(
+                f"log CSV line 1 must be '{LOG_MAGIC} track=<name> seed=<int> noise=<float> kind=<name>'"
+            )
+        track, seed, noise, kind = match.groups()
+        if not re.fullmatch(r"[0-9]+", seed):
+            raise ValueError(f"log CSV meta seed must be an int, got {seed!r}")
+        try:
+            noise_value = float(noise)
+        except ValueError:
+            raise ValueError(f"log CSV meta noise must be a number, got {noise!r}") from None
+        meta = _checked_log_meta({"track": track, "seed": int(seed), "noise": noise_value, "kind": kind})
+        reader = csv.reader(handle)
+        header = next(reader, None)
+        if header is None or tuple(header) != LOG_COLUMNS:
+            raise ValueError(f"log CSV header must be {','.join(LOG_COLUMNS)}")
+        rows = []
+        for number, record in enumerate(reader, start=3):
+            if len(record) != len(LOG_COLUMNS):
+                raise ValueError(f"line {number}: expected {len(LOG_COLUMNS)} fields, got {len(record)}")
+            rows.append(tuple(float(value) for value in record))
+    return log_array(rows), meta
