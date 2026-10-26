@@ -87,9 +87,41 @@ def race_all(jobs: Dict[str, Job]) -> Dict[str, List[Outcome]]:
     return merged
 
 
+UNIT7_GRID_CLEAN = (3.5, 3.6, 3.7)  # global a_lat on the 0.1 grid: clean in 5/5 (probe)
+UNIT7_GRID_UNCLEAN = (3.8, 3.9, 4.0)  # collisions on at least one seed (probe: 4/5, 5/5, 5/5)
+UNIT7_BEST_GLOBAL = 3.7
+UNIT7_COMBINED = (1.35, 1.35, 1.2, 1.0, 1.0, 1.1)  # per-section knobs on top of 3.7
+UNIT7_STACK = (1.5, 1.5, 1.3, 1.15, 1.0, 1.15)  # on base 3.5: each knob clean alone, the stack not
+
+
+def unit7_singles():
+    """The non-trivial single-section knobs of the stack (section 4's ×1 is the base run)."""
+    for section, knob in enumerate(UNIT7_STACK):
+        if knob != 1.0:
+            grip = [1.0] * 6
+            grip[section] = knob
+            yield section, tuple(grip)
+
+
 def premise_jobs() -> Dict[str, Job]:
     """Every premise race of the suite, keyed by name."""
-    return {
+    flat = (("target_speed", 20.0), ("mode", "flat"))
+    limited = (("target_speed", 20.0), ("a_lat", 0.7 * 9.81), ("a_dec", 5.0), ("ahead", 60))
+    jobs = {
+        # G4.3: the Unit 6 premise on DynamicCar() defaults, test-circuit
+        "u6-flat-dynamic": Job("test-circuit", "dynamic", flat, seeds=(0,), max_seconds=CRASH_CAP),
+        "u6-limited-dynamic": Job("test-circuit", "dynamic", limited, seeds=(0,), max_seconds=1500.0),
+        "u6-flat-kinematic": Job("test-circuit", "kinematic", flat, seeds=(0,), max_seconds=1500.0),
         # G4.4: noise on the carla-like car (monza-like, global 3.5, seeds 0–4)
         "noise-monza-3.5": unit7(3.5)._replace(track="monza-like"),
+        # G4.5: the Unit 7 premise (clean races finish well inside the crash cap)
+        "u7-combined": unit7(UNIT7_BEST_GLOBAL, UNIT7_COMBINED, max_seconds=CRASH_CAP),
+        "u7-stack": unit7(3.5, UNIT7_STACK, max_seconds=CRASH_CAP),
     }
+    for a_lat in UNIT7_GRID_CLEAN:
+        jobs[f"u7-global-{a_lat}"] = unit7(a_lat, max_seconds=CRASH_CAP)
+    for a_lat in UNIT7_GRID_UNCLEAN:
+        jobs[f"u7-global-{a_lat}"] = unit7(a_lat, max_seconds=CRASH_CAP, until_crash=True)
+    for section, grip in unit7_singles():
+        jobs[f"u7-single-{section}"] = unit7(3.5, grip, max_seconds=CRASH_CAP)
+    return jobs
