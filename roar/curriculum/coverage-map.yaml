@@ -3,4 +3,11 @@ map_version: 1
 # Units, Checkpoints A and B and the capstone land from roar-002 on, each adding its entry here,
 # with `lessons` sized so the whole-book total lands inside the [30, 50] budget. The first plan whose
 # entries bring the total to at least 30 and introduce every catalog concept removes `buildout`.
-entries: []
+entries:
+- id: unit-01-the-race-and-baseline
+  kind: unit
+  title: "The race and the baseline"
+  lessons: 3
+  introduces: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting]
+  requires: []
+  practices: []

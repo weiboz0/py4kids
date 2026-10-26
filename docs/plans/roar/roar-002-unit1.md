@@ -23,6 +23,17 @@ its first lab.
 ## Deviations from design (recorded)
 - **Jitter lives on `KinematicCar`** (design §4.4 places noise on the carla-like car in `roar-004`). Unit 1 needs a
   realistic spread now. `roar-004` reuses the same `seed()` / jitter protocol on its cars ([fable] S5).
+- **Implementation deviations** (Phase 0/1, recorded at hand-back):
+  - `sector_splits(..., finished=False)`: a recorded CSV never sees the finishing tick, because the agent is not
+    called on it. `finished=True` closes the last sector at the last row's t + 0.05. With it, the recorded and runner
+    splits match exactly. The lab passes `finished=True`.
+  - The G6 saboteur steers 0.25 at t = 60 s, not full lock: on the kinematic car full lock circles on the spot and
+    never leaves the track. Measured: crash at 60.60 s, total 285.10 = 223.50 + 60.60 + 1.0.
+  - The recorder's tick clock adds `RESPAWN_HOLD_TICKS` when it sees the respawn impulse, because the agent is not
+    stepped during the hold.
+  - Additions: `race_meta(result)`; `write_variant` accepts int and float values. `labs.yaml` has exactly one key,
+    `sample_csv`.
+  - The lab-check simulator-mention rule matches lower-case names only.
 
 ## Buildout stays
 The whole-book `lessons` total is 3, which is under 30.

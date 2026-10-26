@@ -6,6 +6,29 @@ api_order_version: 1
 #                   may not appear in any entry (or entry-positioned file) before the coverage-map
 #                   entry that introduces its concept.
 # Every `library_methods` name must be in exactly one of the two; every `taught` key must be in
-# `library_methods`. Both start empty: roar-002 adds the first names with Unit 1.
-infrastructure: []
-taught: {}
+# `library_methods`. roar-002 added the first names with Unit 1.
+infrastructure: [KinematicCar, Path, abs, argmax, argmin, array, check_submission, diff, enumerate, float, get, int, isinstance, len, list, load_submission, load_track, max, mean, median, min, nonzero, print, race_meta, range, round, run_race, seed, sorted, spread, sqrt, str, where, write_variant, zip]
+taught:
+  CumulativeProgress: race-telemetry
+  axhline: telemetry-plotting
+  axvline: telemetry-plotting
+  colorbar: telemetry-plotting
+  grid: telemetry-plotting
+  legend: telemetry-plotting
+  noise_aware_better: repeated-run-measurement
+  plot: telemetry-plotting
+  plot_speed_map: telemetry-plotting
+  plot_telemetry: telemetry-plotting
+  plot_track: telemetry-plotting
+  read_csv: race-telemetry
+  repeat_races: repeated-run-measurement
+  scatter: telemetry-plotting
+  sector_splits: race-telemetry
+  set_aspect: telemetry-plotting
+  set_title: telemetry-plotting
+  set_xlabel: telemetry-plotting
+  set_ylabel: telemetry-plotting
+  show: telemetry-plotting
+  subplots: telemetry-plotting
+  tight_layout: telemetry-plotting
+  write_csv: race-telemetry
