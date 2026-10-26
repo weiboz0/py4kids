@@ -186,7 +186,7 @@ All are routed tests under `roar/projects/racekit/tests/`, plus the existing sui
   - from every v₀ in {0.005, 0.01, 0.03, 0.2, 1, 5} m/s, 1 s of full brake leaves v == 0.0 and never reverses;
   - with full throttle **and** full brake from 0.05 m/s, the car takes at least 3 substeps to stop, so it is not an early snap ([sol] B1);
   - with throttle 0.75 and full brake from 5 m/s, the car reaches v == 0.0 within 2 s.
-- **Low speed:** from rest under throttle 0.3 at steer ∈ {0, 0.5, 1}, v_x is monotone non-decreasing and ≥ 0 for 3 s. Below 3 m/s, β is within 2° of the kinematic atan(l_r·tan δ / L).
+- **Low speed:** from rest under throttle 0.3 at steer ∈ {0, 0.5, 1}, v_x is monotone non-decreasing and ≥ 0 for 3 s. Below 3 m/s, once the wheel has settled (after 0.5 s), |v_y − l_r·v_x·tan δ / L| ≤ 0.1 m/s at half lock and ≤ 0.3 m/s at full lock. That is the relaxation's first-order lag of τ = 0.1 s behind an accelerating kinematic value (probe: 0.065 and 0.257). It is an absolute bound: at walking pace a small lag is a large angle, so β is not used.
 - **Lag:** with `lag_ticks = k`, a throttle step first changes v_x on tick k + 1.
 - **Steering rate:** the rate limit is respected.
 - **Spin-out:**
