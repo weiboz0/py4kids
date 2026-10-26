@@ -34,6 +34,16 @@ recsys = [
     "faiss-cpu",
     "bookrec",
 ]
+# The `roar` book's stack (design 013 §3/§7.1). Selected only when `ci-local.sh` routes that book
+# through `uv run --group roar`. `racekit` is the editable local harness package; it is itself
+# Python 3.8-compatible (the official race runs Python 3.8), and a routed test runs its
+# check_submission in an isolated `uv run --no-project --python 3.8` environment.
+roar = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "racekit",
+]
 
 # CPU-only torch: the explicit index is used ONLY for packages routed to it via
 # [tool.uv.sources] (explicit=true), so it never shadows the default index for anything else.
@@ -45,6 +55,7 @@ explicit = true
 [tool.uv.sources]
 torch = { index = "pytorch-cpu" }
 bookrec = { path = "recsys/projects/bookrec", editable = true }
+racekit = { path = "roar/projects/racekit", editable = true }
 
 [build-system]
 requires = ["hatchling"]

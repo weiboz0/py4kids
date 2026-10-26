@@ -1606,9 +1606,11 @@ def test_ci_local_reads_books_from_registry():
     # tokens (flag list entry, flag guard, acsl-check) before looking for pinned book ids. The
     # `recsys` book directories are in the static `ruff check` scope (design 011 §7 / plan
     # recsys-001 Phase F) — a path argument, not id-branching — so drop those static paths too.
+    # The same holds for the `roar` book's paths (design 013 §7.1, plan roar-001 Phase B).
     unflagged = (
         text.replace('"acsl", "site")', ")").replace("has_flag acsl", "").replace("acsl-check", "")
         .replace("recsys/projects/bookrec", "").replace("recsys/data", "")
+        .replace("roar/projects/racekit", "").replace("roar/data", "").replace("roar/tests", "")
     )
     for book in registry["books"]:
         assert book["id"] not in unflagged
