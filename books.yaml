@@ -16,6 +16,8 @@ books_version: 2
 #   acsl:        the ACSL season structure (design 009): the `acsl:` manifest block,
 #                curriculum/season.yaml and the acsl-check.
 #   site:        the learning-website export (design 012): export, classify and site-check.
+#   labs:        real-simulator labs (design 013 §7.2): the `lab:` manifest key, a unit's
+#                labs/real-sim.ipynb, curriculum/labs.yaml and the lab-check.
 #
 # `dependency_group` (string, not a boolean flag): the name of the `pyproject.toml`
 # [dependency-groups] entry a book's heavy commands must run under (design 011 §7). When set,
@@ -95,3 +97,4 @@ books:
   # the whole-book `lessons` total to at least 30 AND introduce every catalog concept removes this flag.
   buildout: true
   dependency_group: roar
+  labs: true

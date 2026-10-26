@@ -34,6 +34,7 @@ CHECK_NAMES = (
     "judge-check",
     "source-policy",
     "acsl-check",
+    "lab-check",
 )
 REAL_BOOK_EXEC_CHECKS = {"exec-solutions", "exec-lessons"}
 
@@ -1608,16 +1609,17 @@ def test_ci_local_reads_books_from_registry():
     # recsys-001 Phase F) — a path argument, not id-branching — so drop those static paths too.
     # The same holds for the `roar` book's paths (design 013 §7.1, plan roar-001 Phase B).
     unflagged = (
-        text.replace('"acsl", "site")', ")").replace("has_flag acsl", "").replace("acsl-check", "")
+        text.replace('"acsl", "site", "labs")', ")").replace("has_flag acsl", "").replace("acsl-check", "")
         .replace("recsys/projects/bookrec", "").replace("recsys/data", "")
         .replace("roar/projects/racekit", "").replace("roar/data", "").replace("roar/tests", "")
     )
     for book in registry["books"]:
         assert book["id"] not in unflagged
     assert 'yaml.safe_load(open("books.yaml"' in text
-    assert '("publication", "judge", "patterns", "acsl", "site")' in text
+    assert '("publication", "judge", "patterns", "acsl", "site", "labs")' in text
     for flag, gated in (
         ("acsl", ("acsl-check",)),
+        ("labs", ("lab-check",)),
         ("patterns", ("technique-spiral", "pattern-marker", "patterns-doc-check")),
         ("judge", ("judge-check", "source-policy")),
         ("publication", ("lesson-outputs-check", "build-book.sh", "publish-audit")),

@@ -1,0 +1,10 @@
+id: unit-01-the-race-and-baseline
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+lab: true
+concepts:
+  introduces: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting]
+  requires: []
+  practices: []

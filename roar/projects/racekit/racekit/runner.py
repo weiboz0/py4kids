@@ -14,6 +14,8 @@ The rules mirror the pinned official runner (``ROAR_Competition`` @ ``ab19e1b``,
   waypoint reached, found by projecting the waypoints of a **forward window of 15** onto the car's
   latest motion segment;
 * the race is finished when ``progress + 5 >= len(repeated waypoint list)`` (the 5-waypoint margin);
+  a major collision is checked **first**, so a tick that both crosses the finish margin and
+  collides is a collision (as upstream orders it);
 * a **major collision** puts the car back at the race **start pose** with zero velocity, then the
   world advances **20 control ticks (1.0 s) without calling the agent** (the car stays put), and
   then the **progress index resets to 0** with the last position set to the start pose: the race
@@ -28,6 +30,11 @@ Known differences from the official runner (each an approximation, labelled wher
 * **the collision-sensor reading**: after a major collision racekit reports a lateral impulse of
   ``CRASH_IMPULSE`` N·s on the first agent step after the hold, and zeros otherwise; CARLA reports
   the real contact impulse;
+* **the first step after the hold**: the pinned runner does not re-read the sensors after the
+  respawn, so on CARLA that step sees the collision impulse together with the **stale crash-pose**
+  location, rotation and velocity (the start pose arrives one step later); racekit already reports
+  the start pose on that step. An agent that re-anchors on the impulse must not trust that step's
+  location (the Unit 1 lab recorder resets to its start index instead);
 * **during the 1 s hold** CARLA keeps applying the last control to a car placed at rest; racekit
   holds the car exactly still;
 * **physics**: racekit's car models are simple models of CARLA's vehicle (design 013 §4.4).
@@ -268,11 +275,6 @@ async def _race(
     wx = [float(track.x[i]) for i in order] * laps
     wy = [float(track.y[i]) for i in order] * laps
     total = len(wx)
-    sector_count = laps * SECTORS_PER_LAP
-    # sector boundaries; the last one is the finish line (the 5-waypoint margin)
-    boundaries = [min(total - FINISH_MARGIN, round(k * total / sector_count)) for k in range(1, sector_count + 1)]
-    crossings: List[float] = []
-
     max_ticks = math.floor(max_seconds / CONTROL_DT + 1e-9)
     required = total - FINISH_MARGIN
     rows: List[Tuple[float, ...]] = []
@@ -281,7 +283,6 @@ async def _race(
     last_x, last_y = start_x, start_y
     hint = 0
     respawn_times: List[float] = []
-    split_origin = 0.0
     finished = False
     tick = 0
     t = 0.0
@@ -304,11 +305,6 @@ async def _race(
         hint, offset, _, half_width = track.nearest(x, y, hint)
         rows.append((t, x, y, car.yaw, car.v, action["throttle"], action["steer"], action["brake"],
                      furthest, offset, 0))
-        while len(crossings) < sector_count and furthest >= boundaries[len(crossings)]:
-            crossings.append(t)
-        if furthest + FINISH_MARGIN >= total:
-            finished = True
-            break
         impulse = no_impulse
         if abs(offset) > half_width:
             # A major collision: back to the start pose at rest, a 1.0 s hold without calling the
@@ -326,19 +322,17 @@ async def _race(
                 rows.append((t, car.x, car.y, car.yaw, 0.0, 0.0, 0.0, 0.0, furthest, offset, 1))
             furthest = 0
             last_x, last_y = car.x, car.y
-            crossings = []
-            split_origin = t
+        elif furthest + FINISH_MARGIN >= total:
+            finished = True
+            break
         sensors.update(car, vehicle, impulse)
 
-    splits = np.full(sector_count, np.nan)
-    previous = split_origin
-    for k, crossed in enumerate(crossings):
-        splits[k] = crossed - previous
-        previous = crossed
+    from .telemetry import sector_splits  # telemetry imports this module, so import it here
+
     telemetry = np.array(rows, dtype=TELEMETRY_DTYPE) if rows else np.zeros(0, TELEMETRY_DTYPE)
     return RaceResult(
         track=track.name, laps=laps, finished=finished, total_time=t, collisions=len(respawn_times),
-        respawn_times=respawn_times, sector_splits=splits.reshape(laps, SECTORS_PER_LAP),
+        respawn_times=respawn_times, sector_splits=sector_splits(telemetry, total, laps, SECTORS_PER_LAP),
         telemetry=telemetry, step_ms=np.asarray(step_ms, dtype=np.float64), progress=furthest,
         progress_total=total, progress_required=required, seed=seed,
     )
@@ -388,8 +382,9 @@ def run_race(
     """Race ``submission`` (a submission ``.py`` path or an agent class) on ``track``.
 
     A plain synchronous function: no ``await`` needed, in a script or in a notebook.
-    ``seed`` is recorded on the result and passed to cars that take one (the kinematic car is
-    deterministic and ignores it).
+    ``seed`` is recorded on the result and passed to the car's ``seed()`` when it has one (the
+    kinematic car's actuator jitter draws from it; with ``jitter=0`` the race is deterministic and
+    the seed changes nothing).
     """
     track_obj = load_track(track)
     if car is None:

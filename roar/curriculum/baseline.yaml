@@ -19,6 +19,6 @@ entries:
 - {id: trigonometry, name: "Trigonometry"}
 - {id: vectors-and-dot-product, name: "2-D and 3-D vectors and the dot product"}
 # Every callable a student may call (design 013 §7.1, layer 1). Each name must also appear in
-# api-order.yaml, either under `infrastructure:` or as a `taught:` key. Empty in roar-001: the
-# foundation ships no student notebooks, and roar-002 adds Unit 1's names.
-library_methods: []
+# api-order.yaml, either under `infrastructure:` or as a `taught:` key. A CLOSED list: a unit plan
+# extends it in its registry phase only (roar-002 added Unit 1's names).
+library_methods: [CumulativeProgress, KinematicCar, Path, TemporaryDirectory, abs, apply_action, argmax, argmin, array, axhline, axvline, check_submission, colorbar, diff, enumerate, float, get, get_last_gym_observation, getsource, grid, initialize, int, isinstance, isnan, items, join, legend, len, list, load_submission, load_track, max, mean, median, min, mkdtemp, noise_aware_better, nonzero, plot, plot_speed_map, plot_telemetry, plot_track, print, race_meta, range, read, read_csv, readline, repeat_races, round, run_race, scatter, sector_splits, seed, set_aspect, set_title, set_xlabel, set_ylabel, shim_installed, show, sorted, spread, sqrt, step, str, subplots, sum, tight_layout, update, where, write, write_csv, write_variant, zip]

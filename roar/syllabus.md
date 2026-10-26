@@ -38,7 +38,7 @@ The part closes with Checkpoint A, a complete clean agent on a track it was not 
 System identification from logged telemetry with least squares;
 the racing line and the honest question of whether it helps;
 model predictive control within a fixed compute budget per tick;
-and robustness, because a single crash costs a full lap.
+and robustness, because a single crash sends the car back to the start with its progress reset, so the race begins again while the clock keeps running.
 The part closes with Checkpoint B, a full agent under parameter uncertainty.
 
 **Part 3: Going fast.**
@@ -59,4 +59,10 @@ Every number `racekit` produces is a *model* number:
 units with a real-simulator lab show how to re-measure gains, grip and lap times on the official simulator.
 Comparisons are noise-aware: one agent beats another only by more than the spread of repeated runs.
 
-*Units, checkpoints and the capstone are authored in the plans that follow this foundation.*
+## Units
+
+| # | Id | Kind | Lessons | The question it answers |
+|---|----|------|---------|-------------------------|
+| 1 | `unit-01-the-race-and-baseline` | unit | 3 | How fast is the official starter agent, and where does it lose time? Race rules, telemetry, sector splits and honest repeated-run measurement. |
+
+*Later units, the checkpoints and the capstone are added by the plans that follow.*

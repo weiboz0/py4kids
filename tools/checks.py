@@ -5,6 +5,7 @@ from tools.concept_scan import concept_scan_findings
 from tools.curriculum import coverage_findings, prereq_findings
 from tools.fake_turtle import turtle_findings
 from tools.judge import judge_findings
+from tools.labs import lab_findings
 from tools.notebooks import (
     cell_lint_findings,
     exec_lessons_findings,
@@ -47,6 +48,9 @@ CHECKS = {
     "judge-check": judge_findings,
     "source-policy": source_policy_findings,
     "acsl-check": acsl_findings,
+    "lab-check": lab_findings,
 }
 
-UNIT_ONLY_CHECKS = {"noexec-check", "stretch-check", "exec-lessons", "turtle-check", "turtle-real-check"}
+UNIT_ONLY_CHECKS = {
+    "noexec-check", "stretch-check", "exec-lessons", "turtle-check", "turtle-real-check", "lab-check",
+}

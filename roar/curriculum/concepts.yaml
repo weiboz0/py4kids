@@ -1,7 +1,9 @@
 concepts_version: 1
 # Applied Python: Autonomous Racing (design 013). Concepts land unit by unit from roar-002 on.
-# This foundation plan (roar-001) ships exactly one seed concept so the registry's
-# `concept_minimum` is met while units are still absent (`buildout: true`). The id is globally
-# unique across every registered book (global_concept_uniqueness_findings).
+# roar-001 shipped the seed concept; roar-002 (Unit 1) introduces it with three more. Every id is
+# globally unique across every registered book (global_concept_uniqueness_findings).
 concepts:
 - {id: roar-race-and-submission, name: "The ROAR race and its submission interface", category: techniques, kind: technique}
+- {id: race-telemetry, name: "Race telemetry and sector splits", category: techniques, kind: technique}
+- {id: repeated-run-measurement, name: "Repeated runs, median and range, noise-aware comparison", category: techniques, kind: technique}
+- {id: telemetry-plotting, name: "Plotting telemetry and the track", category: techniques, kind: technique}

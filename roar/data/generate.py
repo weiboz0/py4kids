@@ -7,7 +7,9 @@ It runs its steps in a declared order and writes everything into ``roar/data/gen
 
 1. tracks (``gen_tracks.py``): ``generated/tracks/<name>.npz``;
 2. the carla-like telemetry logs (added by roar-004);
-3. the ``lab-check`` sample CSV (added by roar-002).
+3. the ``lab-check`` sample CSV (plan roar-002): the starter on ``monza-like`` with actuator
+   jitter 0.05 and seed 0, in the racekit-telemetry v1 format, at ``generated/lab/sample_telemetry.csv``
+   (named by ``roar/curriculum/labs.yaml``; the lab notebooks are executed against it).
 
 The checksum contract (plan roar-001 Phase C):
 
@@ -21,8 +23,10 @@ The checksum contract (plan roar-001 Phase C):
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -37,7 +41,14 @@ import gen_tracks
 GENERATED = DATA_DIR / "generated"
 
 
-def track_outputs() -> dict[str, tuple[bytes, str]]:
+LAB_SAMPLE = "lab/sample_telemetry.csv"
+LAB_TRACK = "monza-like"
+LAB_JITTER = 0.05
+LAB_SEED = 0
+STARTER = DATA_DIR.parent / "projects" / "racekit" / "agents" / "starter.py"
+
+
+def track_outputs(out_dir: Path) -> dict[str, tuple[bytes, str]]:
     """Step 1: every named track, as ``relative path -> (npz bytes, content hash)``."""
     outputs = {}
     for name in gen_tracks.TRACK_NAMES:
@@ -47,14 +58,53 @@ def track_outputs() -> dict[str, tuple[bytes, str]]:
     return outputs
 
 
-STEPS = (("tracks", track_outputs),)
+def rehash_track(path: Path) -> str:
+    with np.load(path) as loaded:
+        return gen_tracks.content_hash({field: loaded[field] for field in gen_tracks.FIELDS})
+
+
+def telemetry_hash(telemetry: np.ndarray, meta: dict[str, int]) -> str:
+    """sha256 over the meta and ``np.round(column, 6)`` in the fixed column order (never raw bytes)."""
+    digest = hashlib.sha256(json.dumps(meta, sort_keys=True).encode("ascii"))
+    for name in telemetry.dtype.names:
+        values = np.round(np.asarray(telemetry[name], dtype=np.float64), 6) + 0.0  # -0.0 -> 0.0
+        digest.update(name.encode("ascii") + b"\0")
+        digest.update(np.ascontiguousarray(values, dtype="<f8").tobytes())
+    return digest.hexdigest()
+
+
+def lab_outputs(out_dir: Path) -> dict[str, tuple[bytes, str]]:
+    """Step 3: the lab sample CSV, raced on the track step's freshly written ``monza-like``."""
+    from racekit.cars import KinematicCar
+    from racekit.runner import run_race
+    from racekit.telemetry import race_meta, read_csv, write_csv
+
+    track = out_dir / "tracks" / f"{LAB_TRACK}.npz"
+    result = run_race(STARTER, track, car=KinematicCar(jitter=LAB_JITTER), seed=LAB_SEED)
+    if not (result.finished and result.collisions == 0):
+        raise SystemExit(f"FAIL: lab: the starter must finish {LAB_TRACK} cleanly ({result!r})")
+    with tempfile.TemporaryDirectory() as scratch:
+        path = write_csv(result.telemetry, Path(scratch) / "sample.csv", race_meta(result))
+        payload = path.read_bytes()
+        telemetry, meta = read_csv(path)  # hash what a reader sees
+    return {LAB_SAMPLE: (payload, telemetry_hash(telemetry, meta))}
+
+
+def rehash_csv(path: Path) -> str:
+    from racekit.telemetry import read_csv
+
+    return telemetry_hash(*read_csv(path))
+
+
+# (step, produce(out_dir) -> {relative path: (bytes, content hash)}, rehash(written path) -> hash)
+STEPS = (("tracks", track_outputs, rehash_track), ("lab", lab_outputs, rehash_csv))
 
 
 def generate(out_dir: Path = GENERATED) -> dict[str, str]:
     checksums: dict[str, str] = {}
-    for step, produce in STEPS:
-        first = produce()
-        second = produce()
+    for step, produce, rehash in STEPS:
+        first = produce(out_dir)
+        second = produce(out_dir)
         hashes_first = {path: digest for path, (_, digest) in first.items()}
         hashes_second = {path: digest for path, (_, digest) in second.items()}
         if hashes_first != hashes_second:
@@ -63,8 +113,7 @@ def generate(out_dir: Path = GENERATED) -> dict[str, str]:
             target = out_dir / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(payload)
-            with np.load(target) as loaded:
-                reread = gen_tracks.content_hash({field: loaded[field] for field in gen_tracks.FIELDS})
+            reread = rehash(target)
             if reread != digest:
                 raise SystemExit(f"FAIL: {path}: the written file does not re-hash to its checksum")
             checksums[path] = digest
