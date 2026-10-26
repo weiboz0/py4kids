@@ -1,0 +1,7 @@
+concepts_version: 1
+# Applied Python: Autonomous Racing (design 013). Concepts land unit by unit from roar-002 on.
+# This foundation plan (roar-001) ships exactly one seed concept so the registry's
+# `concept_minimum` is met while units are still absent (`buildout: true`). The id is globally
+# unique across every registered book (global_concept_uniqueness_findings).
+concepts:
+- {id: roar-race-and-submission, name: "The ROAR race and its submission interface", category: techniques, kind: technique}

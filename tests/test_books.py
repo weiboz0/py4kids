@@ -26,9 +26,9 @@ def test_registry_ids_order_and_dependencies():
     assert catalog["books_version"] == 2
     books = catalog["books"]
     assert [b["id"] for b in books] == [
-        "python-projects", "python-concepts", "usaco-bronze", "acsl", "recsys",
+        "python-projects", "python-concepts", "usaco-bronze", "acsl", "recsys", "roar",
     ]
-    assert [b["number"] for b in books] == [1, 1, 2, 2, 3]  # a series ordinal only; drives no tooling
+    assert [b["number"] for b in books] == [1, 1, 2, 2, 3, 3]  # a series ordinal only; drives no tooling
     assert books[0]["depends_on"] == []  # python-projects
     assert books[1]["depends_on"] == []  # python-concepts: self-contained variant of python-projects
     assert books[2]["depends_on"] == ["python-projects"]  # usaco-bronze
@@ -45,21 +45,26 @@ def test_registry_ids_order_and_dependencies():
     # (30.5 = Units 1-10 at 3 each + Checkpoint A 0.5), so the flag was removed (design 011).
     assert books[4].get("buildout", False) is False
     assert books[4]["lesson_budget"] == [30, 60]
+    # roar ships in buildout (design 013 §3, plan roar-001); its units land from roar-002 on.
+    assert books[5]["depends_on"] == ["python-projects"]
+    assert books[5]["buildout"] is True
+    assert books[5]["lesson_budget"] == [30, 50]
 
 
 def test_recsys_declares_its_dependency_group_as_a_string_not_a_flag():
     # `dependency_group` is a routing VALUE, not a boolean feature flag (design 011 §7): it names
     # the pyproject [dependency-groups] entry ci-local runs the book's heavy commands under. It must
     # be a string, and must NOT be one of FLAGS (else test_registry_feature_flags_are_booleans and
-    # the step-1 flag tuple would break). Only recsys declares one today.
+    # the step-1 flag tuple would break). recsys and roar (design 013 §3) declare one.
     books = {b["id"]: b for b in load_catalog()["books"]}
     assert "dependency_group" not in FLAGS
     assert books["recsys"]["dependency_group"] == "recsys"
+    assert books["roar"]["dependency_group"] == "roar"
     for book_id, book in books.items():
         value = book.get("dependency_group")
         assert value is None or isinstance(value, str), book_id
     declared = {i for i, b in books.items() if b.get("dependency_group")}
-    assert declared == {"recsys"}
+    assert declared == {"recsys", "roar"}
     text = (REPO / "books.yaml").read_text(encoding="utf-8")
     assert "`dependency_group`" in text  # documented in the registry comment block
 
@@ -94,6 +99,10 @@ def test_registry_titles_and_subtitles():
     assert books["acsl"]["subtitle"] == "From Elementary to Senior, one contest at a time"
     assert books["recsys"]["title"] == "Applied Python: Recommendation Systems"
     assert books["recsys"]["subtitle"] == "Build a book recommender — from counting to neural retrieval"
+    assert books["roar"]["title"] == "Applied Python: Autonomous Racing"
+    assert books["roar"]["subtitle"] == (
+        "Build a competitive ROAR agent, from waypoints to optimal control"
+    )
 
 
 def test_registry_feature_flags_are_booleans():

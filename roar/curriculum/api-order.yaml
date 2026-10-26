@@ -1,0 +1,11 @@
+api_order_version: 1
+# The API-ordering map (design 013 §7.1), checked by roar/tests/test_roar_guards.py.
+#   infrastructure: callables in baseline.yaml `library_methods` that need no teaching (the shim
+#                   API, racekit harness calls, assumed numpy and standard-library names).
+#   taught:         `name` or `module:name` -> the concept id that teaches it. A taught callable
+#                   may not appear in any entry (or entry-positioned file) before the coverage-map
+#                   entry that introduces its concept.
+# Every `library_methods` name must be in exactly one of the two; every `taught` key must be in
+# `library_methods`. Both start empty: roar-002 adds the first names with Unit 1.
+infrastructure: []
+taught: {}

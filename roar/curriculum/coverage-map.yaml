@@ -1,0 +1,6 @@
+map_version: 1
+# No entries yet: this is a `buildout: true` foundation (design 013 §3, plan roar-001).
+# Units, Checkpoints A and B and the capstone land from roar-002 on, each adding its entry here,
+# with `lessons` sized so the whole-book total lands inside the [30, 50] budget. The first plan whose
+# entries bring the total to at least 30 and introduce every catalog concept removes `buildout`.
+entries: []
