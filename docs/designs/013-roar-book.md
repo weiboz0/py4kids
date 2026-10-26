@@ -198,9 +198,10 @@ every `racekit` module with `ast.parse(feature_version=(3, 8))` and the deny-lis
   5-waypoint margin.
 - It returns:
   - total time and completion;
-  - collision count and the time lost to respawns;
+  - collision count and the sim times of each respawn (`respawn_times`);
   - per-sector splits;
-  - per-tick telemetry (time, pose, velocity, actions, progress, track-relative offset).
+  - per-tick telemetry (time, pose, velocity, actions, progress, track-relative offset, and a `held` flag for the
+    20 respawn-hold ticks).
 - **Ticks:** at the real winning pace (320 s) a race is about **6,400 ticks**. The 20 m/s starter baseline needs
   about 17,000 ticks on `monza-like`.
 
