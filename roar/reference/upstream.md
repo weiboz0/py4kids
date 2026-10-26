@@ -30,6 +30,15 @@ This file is the provenance record for *Applied Python: Autonomous Racing* (desi
 
 - Repository: <https://github.com/augcog/ROAR_Competition>.
 - Commit read for the race rules: `ab19e1b` (`competition_code/competition_runner.py`).
+  The rules racekit mirrors from it (design 013 §1.2, v4.1): three laps over a tripled waypoint list;
+  a 0.05 s control step with 0.005 s physics substeps; `step()` then the world step each tick;
+  progress over a 15-waypoint forward window; finished at progress + 5 ≥ the list length;
+  and on a major collision a respawn at the race start pose with zero velocity,
+  20 control steps (1.0 s) without calling the agent, and progress reset to 0.
+  The published Summer 2026 winner's report ("a single crash costs a full lap") is milder than this pinned code;
+  racekit follows the code.
+  `racekit/runner.py` lists the known differences (what counts as a collision, the collision-sensor reading,
+  the car held still during the hold, and the car physics).
 - It has **no LICENSE file** (checked 2026-10-25).
   Nothing from it is copied into this repository: no code, no waypoint data, no configuration.
   A routed test (`roar/tests/test_roar_guards.py`) fails if a file named `competition_runner.py` or

@@ -77,10 +77,24 @@ def test_py38_stdlib_list_is_exhaustive_and_header_documented():
     ("def f(x) -> list[int]:\n    return [x]", "in an annotation"),
     ("y: dict[str, int] = {}", "in an annotation"),
     ("def f(x: 'list[int]'):\n    pass", "in an annotation"),
+    ("a = {'x': 1}\nb = dict(y=2)\nc = a | b", "dict | dict"),
+    ("from typing import Dict\ndef f(a: Dict[str, int], b):\n    a |= b", "on a dict"),
+    ("a = {k: 1 for k in 'ab'}\nb: dict = {}\nb |= a", "on a dict"),
+    ("import math\nx = math.nextafter(1.0, 2.0)", "math.nextafter"),
+    ("import random\nx = random.randbytes(4)", "random.randbytes"),
+    ("from statistics import correlation", "statistics.correlation"),
+    ("import statistics\nx = statistics.covariance([1, 2], [3, 4])", "statistics.covariance"),
+    ("from typing import Optional\nT = Optional[int] | None", "runtime `X | Y`"),
+    ("import typing\nT = typing.List[int] | None", "runtime `X | Y`"),
 ])
 def test_deny_list_catches_each_form(source, reason):
     findings = _findings(source)
     assert findings and any(reason in finding for finding in findings), findings
+
+
+def test_attribute_denials_say_they_are_by_name():
+    findings = _findings("class S:\n    def removeprefix(self):\n        pass\nS().removeprefix()\n")
+    assert findings and all("flagged by attribute name" in finding for finding in findings)
 
 
 def test_deny_list_allows_3_8_forms():
@@ -102,8 +116,13 @@ def test_import_allow_list():
                      "import roar_py_interface\nfrom roar_py_interface import RoarPyWaypoint\n")
     assert import_findings(tree) == []
     for bad in ("import scipy", "from scipy import optimize", "import pandas", "from . import helper",
-                "import graphlib", "import racekit"):
+                "import graphlib", "import racekit",
+                "import importlib\nm = importlib.import_module('scipy')",
+                "from importlib import import_module\nm = import_module('json')",
+                "m = __import__('scipy')"):
         assert import_findings(ast.parse(bad)), bad
+    dynamic = import_findings(ast.parse("m = __import__('json')"))
+    assert dynamic and "dynamic import" in dynamic[0]
 
 
 def test_shape_findings():
@@ -137,6 +156,20 @@ def test_negative_submissions_fail_with_the_right_reason(write_submission, body,
     report = check_submission(path, max_seconds=5.0)
     assert not report.ok
     assert any(expected in finding for finding in report.findings), str(report)
+
+
+def test_a_valid_agent_that_never_finishes_fails(write_submission):
+    path = write_submission(STEP.replace('"throttle": 0.3', '"throttle": 0.0'))
+    report = check_submission(path, max_seconds=5.0)
+    assert not report.ok
+    assert report.findings == [
+        f"race: the race did not finish within 5.0 s: progress 0 of the required {report.race.progress_required}"
+    ]
+
+
+def test_the_report_says_the_ast_stage_is_not_a_proof():
+    text = str(check_submission(STARTER))
+    assert "deny-list, not a proof" in text and "isolated 3.8 run" in text
 
 
 def test_a_slow_step_fails_the_p99_budget(write_submission):

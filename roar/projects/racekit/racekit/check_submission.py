@@ -1,20 +1,27 @@
-"""``check_submission``: prove a submission file has the official shape and runs (design 013 §4.1).
+"""``check_submission``: check a submission file's official shape and that it runs (design 013 §4.1).
 
 ``python -m racekit.check_submission path/to/submission.py`` (exit status 0 on success, 1 on failure).
 
-It proves exactly the following, and nothing more:
+It checks exactly the following, and nothing more:
 
-1. the file parses as **Python 3.8** (``ast.parse(..., feature_version=(3, 8))``) and an AST deny-list
-   finds no 3.9+ runtime API: ``str.removeprefix`` / ``removesuffix``, ``functools.cache``,
-   ``math.lcm``, ``itertools.pairwise``, ``int.bit_count``, ``zip(..., strict=)``, ``dict | dict``
-   and ``|=`` on dicts, ``np.trapezoid``, runtime ``X | Y`` types and builtin-generic subscripts
+1. the file parses with ``ast.parse(..., feature_version=(3, 8))`` and an AST **deny-list** of known
+   3.9+ forms finds nothing: ``str.removeprefix`` / ``removesuffix``, ``int.bit_count`` and
+   ``np.trapezoid`` (flagged by attribute name, conservatively: a user method with the same name is
+   flagged too), ``functools.cache``, ``math.lcm``, ``math.nextafter``, ``random.randbytes``,
+   ``statistics.correlation`` / ``covariance``, ``itertools.pairwise``, ``zip(..., strict=)``,
+   ``dict | dict`` and ``|=`` on dicts (literals, and names bound to dicts anywhere in the file),
+   runtime ``X | Y`` types (including ``Optional[...] | None``) and builtin-generic subscripts
    (``list[int]``); ``X | Y`` and builtin generics are also refused in **annotation positions**,
-   which ``from __future__ import annotations`` would hide from a 3.8 run;
+   which ``from __future__ import annotations`` would hide from a 3.8 run.
+   The deny-list is **not a proof** of 3.8 compatibility; only running the file on Python 3.8 (the
+   routed isolated 3.8 run) proves it;
 2. its imports are ``numpy``, ``roar_py_interface`` or a Python 3.8 standard-library module (the
-   committed list ``racekit/contract/py38_stdlib.txt``); it defines ``RoarCompetitionSolution``
-   with the official constructor, and ``initialize`` and ``step`` as ``async def``;
-3. it completes a racekit race on ``test-circuit`` with no exception and no action-validation
-   error, and with ``step()`` compute p99 ≤ 5 ms after 50 warm-up ticks.
+   committed list ``racekit/contract/py38_stdlib.txt``), with no dynamic imports
+   (``importlib.import_module``, ``__import__``) that the allow-list cannot see; it defines
+   ``RoarCompetitionSolution`` with the official constructor, and ``initialize`` and ``step`` as
+   ``async def``;
+3. it finishes a racekit race on ``test-circuit`` with no exception and no action-validation
+   error, and with ``step()`` compute p99 ≤ 5 ms after 50 warm-up steps.
 
 It does not prove performance on the official simulator.
 """
@@ -47,17 +54,32 @@ BUILTIN_GENERICS = frozenset({"list", "dict", "set", "frozenset", "tuple", "type
 BUILTIN_TYPES = frozenset(
     {"int", "float", "complex", "str", "bytes", "bool", "list", "dict", "set", "frozenset", "tuple", "type"}
 )
+# Flagged by attribute name alone, conservatively: a user-defined method with one of these names is
+# flagged too (rename it), because the AST cannot tell a str from another object.
+_BY_NAME = " (flagged by attribute name: rename any method of your own with this name)"
 DENIED_ATTRIBUTES = {
-    "removeprefix": "str.removeprefix is Python 3.9+",
-    "removesuffix": "str.removesuffix is Python 3.9+",
-    "bit_count": "int.bit_count is Python 3.10+",
-    "trapezoid": "np.trapezoid needs numpy 2.0 (use np.trapz on numpy < 1.25)",
+    "removeprefix": "str.removeprefix is Python 3.9+" + _BY_NAME,
+    "removesuffix": "str.removesuffix is Python 3.9+" + _BY_NAME,
+    "bit_count": "int.bit_count is Python 3.10+" + _BY_NAME,
+    "trapezoid": "np.trapezoid needs numpy 2.0 (use np.trapz on numpy < 1.25)" + _BY_NAME,
 }
 DENIED_MODULE_NAMES = {
     ("functools", "cache"): "functools.cache is Python 3.9+",
     ("math", "lcm"): "math.lcm is Python 3.9+",
     ("itertools", "pairwise"): "itertools.pairwise is Python 3.10+",
+    ("math", "nextafter"): "math.nextafter is Python 3.9+",
+    ("random", "randbytes"): "random.randbytes is Python 3.9+",
+    ("statistics", "correlation"): "statistics.correlation is Python 3.10+",
+    ("statistics", "covariance"): "statistics.covariance is Python 3.10+",
 }
+TYPING_GENERICS = frozenset(
+    {"Optional", "Union", "List", "Dict", "Set", "FrozenSet", "Tuple", "Type", "Callable", "Sequence",
+     "Mapping", "Iterable", "Iterator", "Any"}
+)
+NOT_A_PROOF = (
+    "note: the AST stage is a Python 3.8 deny-list, not a proof; only running the file on "
+    "Python 3.8 (the isolated 3.8 run) proves 3.8 compatibility"
+)
 
 
 def py38_stdlib() -> FrozenSet[str]:
@@ -72,9 +94,37 @@ def _is_dict_expr(node: ast.AST) -> bool:
     return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "dict"
 
 
+def _is_dict_annotation(node: Optional[ast.AST]) -> bool:
+    if node is None:
+        return False
+    target = node.value if isinstance(node, ast.Subscript) else node
+    name = target.attr if isinstance(target, ast.Attribute) else getattr(target, "id", None)
+    return name in ("dict", "Dict")
+
+
+def _dict_names(tree: ast.AST) -> Set[str]:
+    """Names bound anywhere in the file to a dict literal, comprehension, ``dict()`` call, or
+    annotated ``dict`` / ``Dict[...]`` (conservative: one name space for the whole file)."""
+    names: Set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and _is_dict_expr(node.value):
+            names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            if _is_dict_annotation(node.annotation) or (node.value is not None and _is_dict_expr(node.value)):
+                names.add(node.target.id)
+        elif isinstance(node, ast.arg) and _is_dict_annotation(node.annotation):
+            names.add(node.arg)
+    return names
+
+
 def _is_runtime_type(node: ast.AST) -> bool:
     if isinstance(node, ast.Name) and node.id in BUILTIN_TYPES:
         return True
+    if isinstance(node, ast.Subscript):  # Optional[int], typing.List[str], ...
+        target = node.value
+        name = target.attr if isinstance(target, ast.Attribute) else getattr(target, "id", None)
+        if name in TYPING_GENERICS:
+            return True
     if isinstance(node, ast.Constant) and node.value is None:
         return True
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
@@ -110,6 +160,11 @@ def deny_list_findings(tree: ast.AST) -> List[str]:
             for alias in node.names:
                 aliases[alias.asname or alias.name.split(".")[0]] = alias.name
     annotation_ids: Set[int] = set()
+    dict_names = _dict_names(tree)
+
+    def is_dict(node: ast.AST) -> bool:
+        return _is_dict_expr(node) or (isinstance(node, ast.Name) and node.id in dict_names)
+
     for node in ast.walk(tree):
         line = getattr(node, "lineno", 0)
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -150,12 +205,12 @@ def deny_list_findings(tree: ast.AST) -> List[str]:
         elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
             if id(node) in annotation_ids:
                 continue
-            if _is_dict_expr(node.left) or _is_dict_expr(node.right):
+            if is_dict(node.left) or is_dict(node.right):
                 findings.append(f"line {line}: `dict | dict` is Python 3.9+ (use {{**a, **b}})")
             elif _is_runtime_type(node):
                 findings.append(f"line {line}: a runtime `X | Y` type is Python 3.10+ (use a tuple)")
         elif isinstance(node, ast.AugAssign) and isinstance(node.op, ast.BitOr):
-            if _is_dict_expr(node.value):
+            if is_dict(node.value) or is_dict(node.target):
                 findings.append(f"line {line}: `|=` on a dict is Python 3.9+ (use dict.update)")
         elif (
             isinstance(node, ast.Subscript)
@@ -172,6 +227,15 @@ def import_findings(tree: ast.AST, stdlib: Optional[FrozenSet[str]] = None) -> L
     allowed = ALLOWED_THIRD_PARTY | (py38_stdlib() if stdlib is None else stdlib)
     findings = []
     for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            called = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", None)
+            if called in ("import_module", "__import__"):
+                findings.append(
+                    f"line {node.lineno}: a dynamic import ({called}) cannot be checked against the "
+                    "allow-list; use a plain import statement"
+                )
+            continue
         if isinstance(node, ast.Import):
             names = [alias.name for alias in node.names]
         elif isinstance(node, ast.ImportFrom):
@@ -235,13 +299,13 @@ class SubmissionReport:
         return not self.findings and not self.skipped
 
     def __str__(self) -> str:
-        lines = [f"check_submission {self.path}: {'PASS' if self.ok else 'FAIL'}"]
+        lines = [f"check_submission {self.path}: {'PASS' if self.ok else 'FAIL'}", f"  {NOT_A_PROOF}"]
         lines += [f"  FAIL {finding}" for finding in self.findings]
         lines += [f"  SKIP {stage} (an earlier stage failed)" for stage in self.skipped]
         if self.race is not None:
             lines.append(
                 f"  race: {self.race!r}; step() p99 {self.step_p99_ms:.3f} ms "
-                f"(budget {STEP_P99_BUDGET_MS} ms, {WARMUP_TICKS} warm-up ticks excluded)"
+                f"(budget {STEP_P99_BUDGET_MS} ms, {WARMUP_TICKS} warm-up steps excluded)"
             )
         return "\n".join(lines)
 
@@ -277,6 +341,11 @@ def check_submission(
         return report
     report.race = result
     report.step_p99_ms = result.step_ms_p99(WARMUP_TICKS)
+    if not result.finished:
+        report.stages["race"].append(
+            f"the race did not finish within {result.total_time:.1f} s: progress {result.progress} "
+            f"of the required {result.progress_required}"
+        )
     if report.step_p99_ms > STEP_P99_BUDGET_MS:
         report.stages["race"].append(
             f"step() p99 {report.step_p99_ms:.2f} ms exceeds the {STEP_P99_BUDGET_MS} ms budget"

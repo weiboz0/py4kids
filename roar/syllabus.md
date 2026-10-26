@@ -52,7 +52,8 @@ The book ends with a capstone: the agent you submit, with an engineering report 
 The book's simulator, `racekit`, is a harness and never part of a submission.
 It runs a submission file under the real race rules:
 a fixed control tick, three laps, progress measured over a short forward window of waypoints,
-and a crash that sends the car back to the start line with its progress kept.
+and a crash that sends the car back to the start line, holds it there for a second
+and resets its progress to zero, so the race starts again while the clock keeps running.
 Tracks are produced by seeded generation scripts, never copied from the official map.
 Every number `racekit` produces is a *model* number:
 units with a real-simulator lab show how to re-measure gains, grip and lap times on the official simulator.

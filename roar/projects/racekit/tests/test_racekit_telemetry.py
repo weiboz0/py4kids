@@ -13,7 +13,7 @@ def test_csv_round_trip_with_the_fixed_schema(tmp_path):
     result = run_race(STARTER, "oval", max_seconds=5.0)
     path = write_csv(result.telemetry, tmp_path / "telemetry.csv")
     lines = path.read_text(encoding="utf-8").splitlines()
-    assert lines[0] == "t,x,y,yaw,v,throttle,steer,brake,progress,offset"
+    assert lines[0] == "t,x,y,yaw,v,throttle,steer,brake,progress,offset,held"
     assert COLUMNS == result.telemetry.dtype.names
     assert len(lines) == 1 + result.ticks
     back = read_csv(path)

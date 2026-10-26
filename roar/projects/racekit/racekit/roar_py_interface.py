@@ -23,9 +23,11 @@ from typing import Any, Dict, Iterable, List, Optional
 import numpy as np
 
 OBS_DTYPE = np.float32
+_PI32 = np.nextafter(np.float32(math.pi), np.float32(0.0))  # the largest float32 below pi
 
 # The action dictionary (design 013 §1.2, §4.1): name -> (kind, low, high). `target_gear` is
-# optional (an auto-gear vehicle ignores it); every other key is required.
+# optional: the race vehicle is auto-gear and ignores it (the competition skeleton sends 0), so it
+# is only type-checked as an int. Every other key is required.
 ACTION_SPEC = {
     "throttle": ("real", 0.0, 1.0),
     "steer": ("real", -1.0, 1.0),
@@ -84,10 +86,13 @@ class RoarPyLocationInWorldSensorData:
 
 
 class RoarPyRollPitchYawSensorData:
-    """Roll, pitch and yaw in radians, normalized to [-pi, pi)."""
+    """Roll, pitch and yaw in radians; the constructor wraps each angle to [-pi, pi)."""
 
     def __init__(self, roll_pitch_yaw: Any) -> None:
-        self.roll_pitch_yaw = np.asarray(roll_pitch_yaw, dtype=OBS_DTYPE).reshape(3).copy()
+        angles = np.asarray(roll_pitch_yaw, dtype=np.float64).reshape(3)
+        wrapped = (angles + math.pi) % (2.0 * math.pi) - math.pi
+        # float32 rounding must not push an angle onto or past ±pi
+        self.roll_pitch_yaw = np.clip(wrapped.astype(OBS_DTYPE), -_PI32, _PI32)
 
     def get_gym_observation_spec(self) -> Dict[str, Any]:
         return {"shape": (3,), "dtype": "float32"}

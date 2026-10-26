@@ -181,12 +181,14 @@ The package `pyproject.toml` (hatchling) declares `requires-python = ">=3.8"` an
     - a 0.05 s control tick with 10 substeps;
     - each tick runs `await agent.step()`, then advances the car (the official order);
   - **progress** follows the real rule: segment projection inside a forward window of 15 waypoints over the
-    tripled waypoint list;
-  - **major collision:** `|offset| > half-width`, which **respawns at the start pose** with zero velocity and
-    retains progress;
-  - `RaceResult` holds: `finished`, `total_time`, `collisions`, `time_lost_respawn`, `sector_splits`, `telemetry`
-    (a structured numpy array: t, x, y, yaw, v, throttle, steer, brake, progress, offset) and `step_ms` (per-tick
-    compute).
+    tripled waypoint list; the race finishes at `progress + 5 >= len(tripled list)` (corrected per design v4.1);
+  - **major collision:** `|offset| > half-width`, which **respawns at the start pose** with zero velocity, holds
+    the car for 20 ticks (1.0 s) without calling the agent, then **resets progress to 0** (corrected per design
+    v4.1: the pinned runner restarts progress; an earlier draft said it was retained);
+  - `RaceResult` holds: `finished`, `total_time`, `collisions`, `respawn_times` (corrected per design v4.1; was
+    `time_lost_respawn`), `sector_splits`, `telemetry`
+    (a structured numpy array: t, x, y, yaw, v, throttle, steer, brake, progress, offset, held) and `step_ms`
+    (per agent step).
   - **The shim lifetime:**
     - install `racekit.roar_py_interface` in `sys.modules["roar_py_interface"]` for the whole call;
     - refuse when a different real module is already importable or installed;
@@ -228,7 +230,8 @@ The package `pyproject.toml` (hatchling) declares `requires-python = ">=3.8"` an
   equal dt; drag decelerates monotonically;
 - the runner:
   - a scripted perfect follower finishes `oval` in the expected time band;
-  - a scripted "drive off" agent triggers respawn at the start pose with progress retained;
+  - a scripted "drive off" agent triggers respawn at the start pose, a 20-tick hold and progress reset to 0
+    (corrected per design v4.1); a parked-after-crash agent never regains progress; the 5-waypoint finish margin;
   - the forward window ignores far-ahead waypoints;
   - the 3-lap finish detection;
   - both sync paths (no running loop; inside a running loop in a thread);

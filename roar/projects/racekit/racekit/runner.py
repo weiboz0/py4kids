@@ -3,7 +3,8 @@
 ``run_race(submission, track)`` loads a competition submission (a ``.py`` file, or an agent class
 defined in a notebook), drives it for ``laps`` laps and returns a ``RaceResult``.
 
-The rules mirror the official runner's described behaviour (design 013 §1.2), re-implemented here:
+The rules mirror the pinned official runner (``ROAR_Competition`` @ ``ab19e1b``,
+``competition_runner.py``; design 013 §1.2, v4.1), re-implemented here from its described behaviour:
 
 * a 0.05 s control tick with 10 physics substeps; each tick runs ``await agent.step()`` and then
   advances the car (the official order);
@@ -12,10 +13,24 @@ The rules mirror the official runner's described behaviour (design 013 §1.2), r
 * the waypoint list is repeated once per lap (three laps by default); progress is the furthest
   waypoint reached, found by projecting the waypoints of a **forward window of 15** onto the car's
   latest motion segment;
-* a **major collision** respawns the car at the race **start pose** with zero velocity, and the
-  progress index is **kept**; here a major collision is leaving the drivable width (an
-  approximation of hitting a wall);
+* the race is finished when ``progress + 5 >= len(repeated waypoint list)`` (the 5-waypoint margin);
+* a **major collision** puts the car back at the race **start pose** with zero velocity, then the
+  world advances **20 control ticks (1.0 s) without calling the agent** (the car stays put), and
+  then the **progress index resets to 0** with the last position set to the start pose: the race
+  effectively restarts while the clock keeps running;
 * the result is the elapsed simulated time.
+
+Known differences from the official runner (each an approximation, labelled wherever it is taught):
+
+* **what counts as a major collision**: the official runner uses CARLA's collision sensor (impulse
+  norm > 100 N·s, e.g. hitting a wall); racekit uses leaving the drivable width (``|offset| >
+  half-width``) as the wall approximation (roar-004's dynamic car adds a spin-out rule);
+* **the collision-sensor reading**: after a major collision racekit reports a lateral impulse of
+  ``CRASH_IMPULSE`` N·s on the first agent step after the hold, and zeros otherwise; CARLA reports
+  the real contact impulse;
+* **during the 1 s hold** CARLA keeps applying the last control to a car placed at rest; racekit
+  holds the car exactly still;
+* **physics**: racekit's car models are simple models of CARLA's vehicle (design 013 §4.4).
 
 The simulation is deterministic and never reads the wall clock; ``step()``'s compute time is
 measured (``RaceResult.step_ms``) but never fed back. Every number is a *model* number.
@@ -47,13 +62,15 @@ PROGRESS_WINDOW = 15
 SECTORS_PER_LAP = 3
 DEFAULT_LAPS = 3
 DEFAULT_MAX_SECONDS = 1800.0
-RESUME_RADIUS = 2  # waypoints: the car has re-driven into its retained progress
+FINISH_MARGIN = 5  # the race is finished at progress + 5 >= len(waypoints) (check_step=5)
+RESPAWN_HOLD_TICKS = 20  # control ticks the world advances after a respawn, agent not called
 CRASH_IMPULSE = 1000.0  # N·s reported on the collision sensor after a major collision (an approximation)
 
 TELEMETRY_DTYPE = np.dtype(
     [
         ("t", "f8"), ("x", "f8"), ("y", "f8"), ("yaw", "f8"), ("v", "f8"),
         ("throttle", "f8"), ("steer", "f8"), ("brake", "f8"), ("progress", "i8"), ("offset", "f8"),
+        ("held", "i8"),  # 1 on the respawn-hold ticks (the agent is not called), else 0
     ]
 )
 SOLUTION_CLASS = "RoarCompetitionSolution"
@@ -77,40 +94,42 @@ class RaceResult:
         finished: bool,
         total_time: float,
         collisions: int,
-        time_lost_respawn: float,
+        respawn_times: List[float],
         sector_splits: np.ndarray,
         telemetry: np.ndarray,
         step_ms: np.ndarray,
         progress: int,
         progress_total: int,
+        progress_required: int,
         seed: int,
-        respawns: Optional[List[Tuple[float, int]]] = None,
     ) -> None:
         self.track = track
         self.laps = laps
         self.finished = finished
         self.total_time = total_time
         self.collisions = collisions
-        self.time_lost_respawn = time_lost_respawn
+        self.respawn_times = respawn_times  # sim time of each major collision (start of its hold)
         self.sector_splits = sector_splits
         self.telemetry = telemetry
         self.step_ms = step_ms
         self.progress = progress
-        self.progress_total = progress_total
+        self.progress_total = progress_total  # the length of the repeated waypoint list
+        self.progress_required = progress_required  # finished at progress >= this (5-waypoint margin)
         self.seed = seed
-        self.respawns = respawns or []  # (time, retained progress index) per major collision
 
     @property
     def ticks(self) -> int:
         return int(self.telemetry.shape[0])
 
     def step_ms_p99(self, warmup: int = 50) -> float:
-        """The 99th percentile of ``step()`` compute time, excluding ``warmup`` ticks."""
+        """The 99th percentile of ``step()`` compute time, excluding the first ``warmup`` steps.
+
+        ``step_ms`` has one entry per agent step (respawn-hold ticks call no step)."""
         tail = self.step_ms[warmup:] if self.step_ms.size > warmup else self.step_ms
         return float(np.percentile(tail, 99)) if tail.size else 0.0
 
     def __repr__(self) -> str:
-        state = "finished" if self.finished else f"did not finish ({self.progress}/{self.progress_total})"
+        state = "finished" if self.finished else f"did not finish ({self.progress}/{self.progress_required})"
         return (
             f"RaceResult({self.track}, {self.laps} laps, {state}, {self.total_time:.2f} s, "
             f"{self.collisions} collisions)"
@@ -250,76 +269,78 @@ async def _race(
     wy = [float(track.y[i]) for i in order] * laps
     total = len(wx)
     sector_count = laps * SECTORS_PER_LAP
-    boundaries = [min(total - 1, round(k * total / sector_count)) for k in range(1, sector_count + 1)]
+    # sector boundaries; the last one is the finish line (the 5-waypoint margin)
+    boundaries = [min(total - FINISH_MARGIN, round(k * total / sector_count)) for k in range(1, sector_count + 1)]
     crossings: List[float] = []
 
     max_ticks = math.floor(max_seconds / CONTROL_DT + 1e-9)
+    required = total - FINISH_MARGIN
     rows: List[Tuple[float, ...]] = []
     step_ms: List[float] = []
     furthest = 0
     last_x, last_y = start_x, start_y
     hint = 0
-    collisions = 0
-    time_lost = 0.0
-    respawned_at: Optional[float] = None
-    respawns: List[Tuple[float, int]] = []
+    respawn_times: List[float] = []
+    split_origin = 0.0
     finished = False
+    tick = 0
     t = 0.0
     perf = time.perf_counter
     advance = car.advance
-    action = vehicle.last_action
+    impulse = no_impulse
 
-    for tick in range(max_ticks):
+    while tick < max_ticks:
         started = perf()
         await agent.step()
         step_ms.append((perf() - started) * 1000.0)
         action = vehicle.last_action
         advance(action["throttle"], action["steer"], action["brake"], action["hand_brake"],
                 action["reverse"], CONTROL_DT, SUBSTEPS)
-        t = (tick + 1) * CONTROL_DT
+        tick += 1
+        t = tick * CONTROL_DT
         x, y = car.x, car.y
         furthest = advance_progress(wx, wy, furthest, last_x, last_y, x, y)
         last_x, last_y = x, y
         hint, offset, _, half_width = track.nearest(x, y, hint)
         rows.append((t, x, y, car.yaw, car.v, action["throttle"], action["steer"], action["brake"],
-                     furthest, offset))
+                     furthest, offset, 0))
         while len(crossings) < sector_count and furthest >= boundaries[len(crossings)]:
             crossings.append(t)
-        if furthest >= total - 1:
+        if furthest + FINISH_MARGIN >= total:
             finished = True
             break
         impulse = no_impulse
-        if respawned_at is not None:
-            lap_index = order[furthest % n]
-            gap = (lap_index - hint) % n
-            if min(gap, n - gap) <= RESUME_RADIUS:
-                time_lost += t - respawned_at
-                respawned_at = None
-        if abs(offset) > half_width:  # a major collision: respawn at the start pose, keep progress
-            collisions += 1
-            respawns.append((t, furthest))
+        if abs(offset) > half_width:
+            # A major collision: back to the start pose at rest, a 1.0 s hold without calling the
+            # agent, then progress resets to 0 (the race restarts; the clock keeps running).
+            respawn_times.append(t)
             side = 1.0 if offset > 0 else -1.0
             impulse = (0.0, -side * CRASH_IMPULSE, 0.0)
             car.reset(start_x, start_y, start_yaw, 0.0)
-            last_x, last_y = start_x, start_y
-            hint = 0
-            if respawned_at is None:
-                respawned_at = t
+            hint, offset, _, _ = track.nearest(start_x, start_y, 0)
+            for _ in range(RESPAWN_HOLD_TICKS):
+                if tick >= max_ticks:
+                    break
+                tick += 1
+                t = tick * CONTROL_DT
+                rows.append((t, car.x, car.y, car.yaw, 0.0, 0.0, 0.0, 0.0, furthest, offset, 1))
+            furthest = 0
+            last_x, last_y = car.x, car.y
+            crossings = []
+            split_origin = t
         sensors.update(car, vehicle, impulse)
-    if respawned_at is not None:
-        time_lost += t - respawned_at
 
     splits = np.full(sector_count, np.nan)
-    previous = 0.0
+    previous = split_origin
     for k, crossed in enumerate(crossings):
         splits[k] = crossed - previous
         previous = crossed
     telemetry = np.array(rows, dtype=TELEMETRY_DTYPE) if rows else np.zeros(0, TELEMETRY_DTYPE)
     return RaceResult(
-        track=track.name, laps=laps, finished=finished, total_time=t, collisions=collisions,
-        time_lost_respawn=time_lost, sector_splits=splits.reshape(laps, SECTORS_PER_LAP),
+        track=track.name, laps=laps, finished=finished, total_time=t, collisions=len(respawn_times),
+        respawn_times=respawn_times, sector_splits=splits.reshape(laps, SECTORS_PER_LAP),
         telemetry=telemetry, step_ms=np.asarray(step_ms, dtype=np.float64), progress=furthest,
-        progress_total=total - 1, seed=seed, respawns=respawns,
+        progress_total=total, progress_required=required, seed=seed,
     )
 
 

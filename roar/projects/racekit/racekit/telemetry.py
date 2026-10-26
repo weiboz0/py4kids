@@ -14,7 +14,8 @@ import numpy as np
 
 from .runner import TELEMETRY_DTYPE
 
-COLUMNS = TELEMETRY_DTYPE.names  # ("t", "x", "y", "yaw", "v", "throttle", "steer", "brake", "progress", "offset")
+COLUMNS = TELEMETRY_DTYPE.names  # t, x, y, yaw, v, throttle, steer, brake, progress, offset, held
+INT_COLUMNS = ("progress", "held")
 FLOAT_FORMAT = "{:.6f}"
 
 
@@ -28,7 +29,7 @@ def write_csv(telemetry: np.ndarray, path: Union[str, Path]) -> Path:
         writer.writerow(COLUMNS)
         for row in telemetry:
             writer.writerow([
-                str(int(row[name])) if name == "progress" else FLOAT_FORMAT.format(float(row[name]))
+                str(int(row[name])) if name in INT_COLUMNS else FLOAT_FORMAT.format(float(row[name]))
                 for name in COLUMNS
             ])
     return path
@@ -45,6 +46,6 @@ def read_csv(path: Union[str, Path]) -> np.ndarray:
         for number, record in enumerate(reader, start=2):
             if len(record) != len(COLUMNS):
                 raise ValueError(f"line {number}: expected {len(COLUMNS)} fields, got {len(record)}")
-            rows.append(tuple(int(value) if name == "progress" else float(value)
+            rows.append(tuple(int(value) if name in INT_COLUMNS else float(value)
                               for name, value in zip(COLUMNS, record)))
     return np.array(rows, dtype=TELEMETRY_DTYPE) if rows else np.zeros(0, TELEMETRY_DTYPE)

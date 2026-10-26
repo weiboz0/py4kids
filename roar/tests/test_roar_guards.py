@@ -4,7 +4,9 @@
    only at or after the coverage-map entry that introduces its concept; every ``library_methods``
    name is either infrastructure or taught; every ``api-order`` key is in ``library_methods``;
    every concept id is known. Calls are resolved through ``import m``, ``import m as a``,
-   ``from m import f``, ``from m import f as g`` and attribute calls.
+   ``from m import f``, ``from m import f as g`` and attribute calls. Not resolved (a known limit):
+   a callable bound to another name first (``f = scipy.optimize.minimize; f(...)``) and
+   ``getattr(module, "name")(...)``. A file or code cell that does not parse is itself a finding.
 2. **Deny-list** (design 013 §7.4): no tracked CARLA map, OpenDRIVE or Unreal asset, no vendored
    ``competition_runner.py`` / ``infrastructure.py``, and no waypoint dump outside the gitignored
    ``roar/data/generated/``.
@@ -65,11 +67,10 @@ def _key_parts(key: str) -> tuple[str | None, str]:
 
 
 def resolve_calls(source: str) -> list[Call]:
-    """Every call in ``source``, resolved to a canonical (module, name) where imports allow."""
-    try:
-        tree = ast.parse(source)
-    except SyntaxError:
-        return []
+    """Every call in ``source``, resolved to a canonical (module, name) where imports allow.
+
+    Raises ``SyntaxError`` when ``source`` does not parse (the caller reports it)."""
+    tree = ast.parse(source)
     modules: dict[str, str] = {}  # local name -> module
     functions: dict[str, tuple[str, str]] = {}  # local name -> (module, name)
     for node in ast.walk(tree):
@@ -195,7 +196,15 @@ def api_order_findings(root: Path) -> list[str]:
     for position, entry in enumerate(entries):
         for path in entry_files(root, entry):
             for source in _sources(path):
-                for call in resolve_calls(source):
+                try:
+                    calls = resolve_calls(source)
+                except SyntaxError as error:
+                    findings.append(
+                        f"{path.relative_to(root)}: cannot parse a code cell or file "
+                        f"(SyntaxError: {error.msg}, line {error.lineno}); API order cannot be checked"
+                    )
+                    continue
+                for call in calls:
                     for key, module, name, intro in rules:
                         if call.name != name or position >= intro:
                             continue
@@ -282,6 +291,18 @@ def test_premature_use_fails_in_every_call_form(tmp_path, code):
 def test_a_qualified_key_ignores_a_same_named_call_from_another_module(tmp_path):
     code = "import mylib\nmylib.minimize(f)\nminimize = min\nminimize(1, 2)\n"
     assert api_order_findings(make_book(tmp_path, code)) == []
+
+
+def test_a_syntax_error_is_a_finding_not_a_skip(tmp_path):
+    findings = api_order_findings(make_book(tmp_path, "def broken(:\n    pass\n"))
+    assert len(findings) == 1 and "cannot parse" in findings[0] and "lesson.ipynb" in findings[0]
+    book = tmp_path / "second"
+    make_book(book)
+    agents = book / BOOK / "projects" / "racekit" / "agents"
+    agents.mkdir(parents=True)
+    (agents / "unit-01.py").write_text("x = = 1\n")
+    findings = api_order_findings(book)
+    assert len(findings) == 1 and "agents/unit-01.py: cannot parse" in findings[0]
 
 
 def test_premature_use_in_a_verify_cell_is_ignored(tmp_path):
