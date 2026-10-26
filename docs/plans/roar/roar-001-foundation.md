@@ -1,6 +1,6 @@
 # Plan roar-001 — Foundation: registry, `racekit` core, seeded tracks, CI wiring
 
-**v2** folds plan-review round 1 ([sol] REJECT, [fable] APPROVE WITH NITS, [self] nits).
+**v3** folds plan-review round 2 ([sol] REJECT on two items). **v2** folded plan-review round 1 ([sol] REJECT, [fable] APPROVE WITH NITS, [self] nits).
 **Design:** `docs/designs/013-roar-book.md` (v4, gate CLOSED). **Autopilot** per AGENTS.md (the author set the whole
 book to autopilot on 2026-10-25, with questions recorded as follow-ups).
 This is the foundation for the advanced `roar` book: **registration, scaffolding, the `racekit` harness core, the
@@ -119,8 +119,11 @@ runs; recsys's routed step is unchanged.
   identical output, and different seeds give different tracks, so the determinism test is not vacuous.
 - **Tests (`roar/data/tests/`):**
   - closure: the last-to-first gap is under 2.5 m, and the heading is continuous within 0.5°;
-  - **curvature continuity**, including the lap seam: the numerical curvature (three-point Menger) has no jump
-    larger than the clothoid ramp rate allows, between any consecutive waypoints including last→first ([sol] r1 B4);
+  - **curvature continuity**, including the lap seam ([sol] r1 B4, r2 B1):
+    - compute **signed** cyclic curvature `κ[i]` from consecutive heading differences, `wrap(yaw[i+1] − yaw[i]) / Δs`;
+    - assert `|κ[i+1] − κ[i]| ≤ r_max·Δs + 1e-3` for every i, **including the last-to-first wrap**, where `r_max` is
+      the spec's steepest clothoid ramp rate (dκ/ds);
+    - a negative test builds a spec with a +κ → −κ step at the seam and must fail;
   - the total turn equals 2π;
   - spacing within 2.0 ± 0.05 m;
   - curvature matches the specs on arcs (±2%);
@@ -156,8 +159,9 @@ The package `pyproject.toml` (hatchling) declares `requires-python = ">=3.8"` an
     3. parses the named source files with `ast`;
     4. normalizes the result (sorted keys, fixed float format);
     5. writes the fixture.
-  - The fixture records the commit, the source paths, the extractor version and its own sha256. A test checks that
-    sha256 and the fixture's schema. Re-extraction is a manual, documented step, not CI, because it needs network
+  - The fixture records the commit, the source paths and the extractor version. Its sha256 lives in a **sidecar**,
+    `roar_py_contract.json.sha256`, computed over the fixture file's exact bytes, which the extractor writes as
+    canonical JSON ([sol] r2 S3). A test checks the sidecar and the schema. Re-extraction is a manual, documented step, not CI, because it needs network
     access.
 - **`racekit/tracks.py`:** loads a generated track as waypoints (`RoarPyWaypoint` list); provides track-relative
   queries (offset from the centreline, progress s) for the runner.
@@ -197,11 +201,15 @@ The package `pyproject.toml` (hatchling) declares `requires-python = ">=3.8"` an
   real-sim lab sample later.
 - **`racekit/check_submission.py`** (also `python -m racekit.check_submission <file>`):
   1. a 3.8 AST parse plus the deny-list (design §4.1, including the annotation-position checks);
-  2. an **explicit import allow-list**, 3.8-safe because it does not rely on `sys.stdlib_module_names` (3.10+):
-     - `numpy`, `roar_py_interface`;
-     - the stdlib modules `math`, `typing`, `collections`, `dataclasses`, `functools`, `itertools`, `enum`, `abc`,
-       `asyncio`, `time`, `copy`, `random`, `statistics`, `heapq`, `bisect`, `__future__`.
-     Then the official class, the constructor signature, and **`initialize` and `step` defined as `async def`**;
+  2. **imports** must be `numpy`, `roar_py_interface`, or **any Python 3.8 standard-library module** (the design's
+     ABI). The stdlib set is a **committed, exhaustive** list, `racekit/contract/py38_stdlib.txt` ([sol] r2 B2):
+     - it is generated under the uv-managed CPython 3.8 from `sys.builtin_module_names` plus the top-level modules
+       and packages in the 3.8 stdlib directory, excluding `site-packages`, `test` and `idlelib`;
+     - the generation command and the interpreter version are in its header;
+     - a test checks that it contains, for example, `operator`, `contextlib`, `asyncio`, `math` and `typing`, and
+       excludes `numpy`, `scipy` and `graphlib` (which is 3.9+).
+     This replaces `sys.stdlib_module_names`, which only exists from 3.10. Then the official class, the constructor
+     signature, and **`initialize` and `step` defined as `async def`**;
   3. one `test-circuit` race with no exception or validation error, and `step()` p99 ≤ 5 ms after 50 warm-up ticks.
   It returns a structured report, and exits non-zero on failure.
 - **`roar/projects/racekit/agents/starter.py`** sits **outside** the importable package, alongside design §5's
@@ -317,6 +325,14 @@ No stub unit is added; `buildout: true` covers the empty state.
   - N9, the seed hook: [FIXED v2].
   - N10, names: [FIXED v2].
   - N11, the gitignore note: the labs-tracked test is the guard (acknowledged).
+
+### Round 2 (v2 @ d719715)
+- **[sol]** REJECT. B1, B2, B3, S5 and N6, the [self] items and the [fable] items were verified RESOLVED.
+  - B4 (the seam oracle), now r2 B1, signed curvature with a pinned bound: [FIXED v3].
+  - r2 B2, the allow-list narrowed the ABI: [FIXED v3, the exhaustive committed 3.8 stdlib list].
+  - r2 S3, the self-referential hash: [FIXED v3, sidecar].
+- **[fable]** APPROVE WITH NITS (round 1; all folded in v2).
+- **[self]** APPROVE.
 
 ## Content Review
 This plan ships no student content. The 3-way content-review gate still runs, on the shipped code, docs and
