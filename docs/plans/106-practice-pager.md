@@ -225,7 +225,7 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 - `e2e/pager.spec.ts`: 26 tests.
 - Full `pnpm -C site e2e`: 159 site, site-sw and lighthouse tests, 23 PWA and 10 hooks, 0 failed.
 - `astro check` and `tsc` clean.
-- `scripts/ci-local.sh` solo on the final commit: see the PR.
+- `scripts/ci-local.sh` solo on 06b7158: **ALL GREEN** (159 site/site-sw/lighthouse, 23 PWA, 10 hooks e2e, 5 solver shards).
 
 **Follow-ups:**
 
