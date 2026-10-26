@@ -1,6 +1,6 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4 (2026-10-25). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.1 (2026-10-26). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
@@ -34,11 +34,15 @@ independent readings in this design's review:
 - `world.set_control_steps(0.05, 0.005)`: the control step is 0.05 s with 0.005 s physics substeps, and the world is
   synchronous. Each tick runs `await solution.step()` and then `await world.step()`.
 - Progress is the furthest waypoint reached. It is found by projecting waypoints onto the car's latest motion
-  segment, inside a **forward window of 15 waypoints**.
-- A **major collision** (collision impulse norm > 100) **respawns the car at the race start pose** with zero
-  velocity. The progress index is **retained**, and progress resumes only once the car re-drives into the forward
-  window. The published Summer 2026 winner's report puts it this way: "a single crash costs a full lap." **Zero
-  collisions is therefore the dominant ranking lever.**
+  segment, inside a **forward window of 15 waypoints**. The race ends when the progress index is within **5
+  waypoints** of the end of the tripled list (`lap_finished(check_step=5)`).
+- A **major collision** (collision impulse norm > 100) **respawns the car at the race start pose** with zero linear
+  and angular velocity. The world then advances **20 control steps (1.0 s) without calling the agent**, and **the
+  progress index is reset to 0** (`respawn()`, corrected in v4.1 after the roar-001 content gate re-read the pinned
+  code). Because the waypoint list covers all 3 laps, a major collision at the pinned commit effectively
+  **restarts the race with the clock still running**. The published Summer 2026 winner's report says "a single
+  crash costs a full lap", which is milder than the pinned code; the book mirrors the pinned code and notes the
+  discrepancy. **Either way, zero collisions is the dominant ranking lever.**
 - The agent is a `RoarCompetitionSolution(maneuverable_waypoints, vehicle, camera_sensor, location_sensor,
   velocity_sensor, rpy_sensor, occupancy_map_sensor, collision_sensor)` with `async initialize()` and `async step()`.
   It reads sensors with `get_last_gym_observation()` and acts with `await vehicle.apply_action({"throttle", "steer",
@@ -189,8 +193,9 @@ every `racekit` module with `ast.parse(feature_version=(3, 8))` and the deny-lis
 - **Major collision** (both are labelled as approximations wherever they are taught):
   - leaving the drivable width (the wall approximation);
   - or, on the dynamic car, a **spin-out** (sideslip |β| or yaw rate |r| beyond a pinned threshold).
-  Either one **respawns the car at the start pose** with zero velocity, and the progress index is retained, as in
-  the real runner.
+  Either one **respawns the car at the start pose** with zero velocity, holds it for 20 ticks without calling the
+  agent, and **resets progress to 0**, as the pinned runner does (§1.2). The finish rule is the runner's
+  5-waypoint margin.
 - It returns:
   - total time and completion;
   - collision count and the time lost to respawns;
@@ -582,3 +587,5 @@ Pairings may be adjusted by each plan's gate without a design change.
   - interim checks become named risks;
   - the site flag moves to `roar-014`;
   - the universal p99 budget, host-failure handling and a wider deny-list.
+- v4.1 (2026-10-26): factual correction from the roar-001 content gate ([fable] M1, verified against
+  `ab19e1b`). Respawn resets progress to 0 after a 20-step hold, and the finish uses a 5-waypoint margin.
