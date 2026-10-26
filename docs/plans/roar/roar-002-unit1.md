@@ -343,3 +343,40 @@ Repeated-run drills use `oval`; one `monza-like` set only ([fable] N2).
 - **[self]** APPROVE.
 
 ## Post-Execution Report
+
+**Status: SHIPPED. Unit 1 is complete and the real-sim lab machinery is in place.**
+
+- **Commits** (on `feature/roar-002-unit1`):
+
+  | Commit | What |
+  |---|---|
+  | d1ce92f | plan |
+  | a136fd7 | Phase 0: lab tooling (the `labs` flag, the `lab` key, `lab-check`, the exclusion pin) |
+  | 56837fa | Phase 1: racekit (jitter, `sector_splits`, CSV v1, `CumulativeProgress`, `write_variant`, plots, the lab sample, `agents/unit-01.py`) |
+  | af25f08 | Phase A: the registry |
+  | 0b65fdd | Phase F: the teacher notes |
+  | 8df456d | Phases B–E: the lesson, the exercise statements, the milestone and the lab |
+  | 4e47e94 | Phase C: the blind solutions |
+  | ba36989 | content-gate fixes |
+  | ed6aba6 and the round-2 commit | review records |
+
+- **Gates.** The milestone asserts each of these; the lesson asserts most of them too.
+  - **G1:** 3 laps with 0 collisions, on both tracks, in all runs.
+  - **G2:** the exact per-seed times.
+    - oval: 220.60 / 220.75 / 220.75 / 220.95 / 220.60;
+    - monza-like: 870.30 / 870.50 / 870.70 / 870.75 / 870.45;
+    - jitter 0 on oval: 223.50.
+  - **G3:** the telemetry `sector_splits` equals `result.sector_splits` with max difference 0.0, including through the CSV round trip.
+  - **G4:** `check_submission(unit-01.py).ok`, plus the isolated 3.8 run parametrized over `agents/*.py`.
+  - **G5:** `lab-check` PASS, and its negative fixtures fail.
+  - **G6:** the saboteur crashes at 60.60 s and the total is 285.10 = 223.50 + 60.60 + 1.0, with 1 respawn and 20 held rows.
+- **Blind solve.** The solutions author and both gate reviewers each solved all 9 exercises independently, and every answer matched.
+- **Execution time:** lesson about 31 s, solutions about 34 s, milestone about 23 s, lab analysis about 5 s. That is under 2 minutes in total, which meets the Phase G budget.
+- **Tests:** the roar routed suite has 224 tests and `tests/test_labs.py` has 45.
+- **Deviations** are recorded under "Deviations from design":
+  - `finished=True`;
+  - the saboteur steers at 0.25;
+  - the recorder writes the hold rows and re-anchors at the start;
+  - the plan's "19 m/s at 4–5 s", "5.8 km" and "3.4 s" figures were corrected to 11.35 s, 5714.5 m and 3.55 s.
+- **Carried:** [fable] r2 N1 and N2 go to `roar-003` Phase 0.
+- **Verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN (unit tests 2244 passed, 2 skipped; all 7 steps pass).
