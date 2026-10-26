@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.2** (§4.2 the spin-out rule, §4.3 the generator driver step 2, §4.4 items 2–3, §4.5, §5, §7.1).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-003` merges (#158).
+**v3** folds plan-review round 2. [sol] found three blockers: the low-speed regime broke μg; the comparison was not against the best global setting; the Unit 8 μ premise was unstated. [fable] found that the low-speed gates did not match the prototype. The prototype is now **frozen** at `scratchpad/u04/dyn.py` md5 `94808dd3a5d0a2a9c49817536a67fcb1`, and every number below was measured on it.
 **v2** folds plan-review round 1. Both [sol] and [fable] rejected. The decisive finding was [fable] B1: the v1 probes never attached the section grip, so every truth-car number was measured at μ = 1.0. Every probe below was re-run with the grip attached, with the prototype's low-speed and brake-stop physics fixed.
 
 ## Scope
@@ -50,13 +51,18 @@ All numbers are re-pinned on the shipped code.
   With a **curvature-limited speed** it finishes all three clean: 217.65 / 413.70 / 873.00 s.
   The limit is v ≤ √(a_lat/κ) with a_lat = 0.7g, braking at 5 m/s² towards each cap within 120 m.
   On `KinematicCar` the flat agent is clean everywhere.
-  The starter's own steering (gain 8/√v with δ_max = 70°) **spins** the dynamic car on `test-circuit`: 37 spins in 1500 s.
+  The starter's own steering (gain 8/√v with δ_max = 70°) **spins** the dynamic car on `test-circuit`: one spin location at about 15 m/s, about 42 s into each restart, repeated after every respawn (34 times in 1500 s). It never completes a lap.
   Pure pursuit spins only at 60 m/s.
 - **Unit 7 premise (late braking).**
   Pure pursuit with a 45 m/s cap and only 120 m of look-ahead braking fails `test-circuit` (18 collisions).
 - **Unit 7 premise (per-section grip, noise-aware).**
   The setup is `carla_like` with throttle noise σ = 0.1, seeds 0–4, on `test-circuit`, with a 45 m/s cap and look-ahead braking over 300 m at 6 m/s².
-  - **Global a_lat sweep:** 3.5 is clean in 5/5 runs (median 327.40 s, spread 0.30 s); 4.0, 4.25 and 4.5 are DNF on every seed.
+  - **Global a_lat sweep on a 0.1 grid** ([sol] r2 B2):
+    - 3.5: median 327.40 s (spread 0.30 s);
+    - 3.6: median 325.05 s (spread 0.35 s);
+    - **3.7: median 323.05 s (spread 0.40 s), the fastest clean global**;
+    - 3.8: collisions on 1 of 5 seeds;
+    - 3.9 and 4.0: DNF on every seed.
   - **One knob per section on top of global 3.5 (5 seeds each):**
 
     | Section (μ) | Clean up to | Median at that knob | Crashes at |
@@ -69,8 +75,19 @@ All numbers are re-pinned on the shipped code.
     | 5 (0.838) | ×1.15 | 325.25 s | ×1.3 |
 
     The knob a section accepts follows its μ, modulated by the section's corners.
-  - **Combined:** [1.3, 1.5, 1.3, 1, 1, 1] is clean in 5/5 runs, median 316.35 s (spread 0.55 s). That is **11.05 s faster than global 3.5**, about 20× either spread.
-  - **Stacking every individually clean knob crashes:** [1.5, 1.5, 1.3, 1.15, 1, 1.15] has collisions on 2 of 5 seeds. Knobs interact, which is a Unit 7 lesson.
+  - **One knob per section on top of the best global 3.7:**
+    - sections 0 and 1 are clean to ×1.35 (321.80 s and 318.70 s);
+    - section 2 is clean to ×1.2 (320.60 s);
+    - section 5 is clean at ×1.1 (321.80 s);
+    - sections 3 (μ 0.816) and 4 (μ 0.849) crash already at ×1.1.
+  - **Combined on 3.7:** [1.35, 1.35, 1.2, 1, 1, 1.1] is clean in 5/5 runs, median **313.50 s** (spread 0.45 s). That is **9.55 s faster than the best clean global**, about 20× either spread.
+    The milder [1.2, 1.35, 1.2, 1, 1, 1] gives 315.35 s (spread 0.35 s).
+  - **Stacking knobs that are each clean alone can crash:**
+    - on 3.7, adding ×1.1 on section 3, which is clean alone at 3.5 but not at 3.7, gives [1.35, 1.35, 1.2, 1.1, 1, 1.1], with collisions on 1 of 5 seeds;
+    - on 3.5, [1.5, 1.5, 1.3, 1.15, 1, 1.15] has collisions on 2 of 5 seeds.
+    
+    Knobs interact, which is a Unit 7 lesson.
+  - (On global 3.5, [1.3, 1.5, 1.3, 1, 1, 1] gave 316.35 s, 11.05 s faster than 3.5 but measured against a non-optimal base.)
   - At μ = 1 (the v1 mistake) the same fixture runs clean at global 5.25. The grip is what binds.
 - **Noise.**
   White **steer** jitter is unrealistic at speed: σ = 0.01 is about 0.7° of wheel angle per tick and crashes most runs at 45 m/s.
@@ -126,24 +143,35 @@ All numbers are re-pinned on the shipped code.
   - a_throttle 6, a_brake 8 and c_drag 4e-4, which is `KinematicCar`'s longitudinal map;
   - μ = 1.0, tyre B = 10 and C = 1.6;
   - lag 1 tick;
-  - kinematic blend between 3 and 5 m/s;
-  - spin-out at |β| > 25° above 5 m/s.
+  - kinematic blend between **1 and 2 m/s**, where even full lock (R ≈ 1.05 m) needs at most v²/R ≈ 3.8 m/s², within μg;
+  - spin-out at |β| > 25° with ‖v‖ > `SPIN_MIN_SPEED` = 5 m/s, a constant separate from the blend band ([fable] r2).
 - **Forces.**
   - Static axle loads. There is no load transfer, a labelled model limit.
   - The longitudinal force is m·(drive − brake against the motion − drag), split between the axles in proportion to load: an **all-wheel-drive model choice**, labelled ([self] N2). Each axle's force is clipped to ±μF_z.
   - Lateral: F_y = −√((μF_z)² − F_x²) · sin(C·atan(B·α)), with α_f = atan2(v_y + l_f·r, u) − δ, α_r = atan2(v_y − l_r·r, u) and u = max(|v_x|, 3 m/s).
   - Reversing at speed is not modelled: the slip-angle sign assumes forward motion ([self] N1). The runner's agents never reverse; the kinematic blend covers manoeuvres below 3 m/s.
-- **Low speed** ([fable] B2, fixed in the prototype).
-  - Below 5 m/s the **derivatives** blend towards the kinematic bicycle, with weight w = clip((|v_x| − 3)/2, 0, 1):
-    - dv_x → the pure longitudinal map;
-    - dv_y → (l_r·r_k − v_y)/0.1 s, clipped to ±μg;
-    - dr → (r_k − r)/0.1 s, where r_k = v_x·tan δ / L.
-  - No state is projected after a step, which was the source of v1's non-physical spikes.
-  - From rest under throttle at any steer, v_x rises monotonically from 0 (v1 reversed at −1.2 m/s).
+- **Low speed** ([fable] r1 B2, [sol] r2 B1).
+  - Below 2 m/s the **derivatives** blend towards a kinematic bicycle whose **acceleration vector is capped at μg**, with weight w = clip((|v_x| − 1)/(2 − 1), 0, 1).
+  - The kinematic lateral acceleration is a_y,k = v_x·r_k + clip((l_r·r_k − v_y)/0.1 s, ±μg), itself clipped to ±μg, with r_k = v_x·tan δ / L.
+  - The longitudinal part is a_x,k = the longitudinal map, clipped to ±√((μg)² − a_y,k²). The friction circle binds at low speed too, so neither the drive nor the brake exceeds the grip that turning leaves.
+  - The blended derivatives are:
+    - dv_x → a_x,k + v_y·r;
+    - dv_y → a_y,k − v_x·r;
+    - dr → (r_k − r)/0.1 s.
+  - No state is projected after a step; projection was the source of v1's non-physical spikes.
+  - **Measured:**
+    - over μ ∈ {0.78, 1}, v₀ ∈ {0 … 5} m/s and 7 throttle, brake and steer combinations, the worst per-tick |a|/(μg) is **1.000**;
+    - from rest under throttle 0.3 at steer 0, 0.5 and 1, v_x never goes negative and is non-decreasing while below 1 m/s.
+  - **Spin rule against legitimate turns** (frozen prototype, defaults and truth parameters): full lock at throttle 0.3 from 5, 6, 8 and 10 m/s peaks at |β| = 4.5–11.7°, with no trip.
+    The true spins trip:
+    - 40 m/s full lock with full brake (|β| 27–34°);
+    - full throttle at full lock from rest, power oversteer (40–68°);
+    - the starter's whip on `test-circuit`.
+    A held full lock or a half-lock L/R/L at 40 m/s understeers (|β| ≤ 11°) and does not trip ([fable] r2 S1).
 - **Integration.** RK4 per substep (10 per tick). The steering moves towards its target at the rate limit once per substep, before the stages.
 - **Brake stop** ([sol] B1, [fable] N1). The car stops (v_x = v_y = r = 0) when, at the start of a substep, all three hold:
   - the brake is on;
-  - the brake beats the drive;
+  - the brake is at least the drive (braking ≥ |drive|, [fable] r2 N2);
   - ‖v‖ ≤ (braking − drive·sign(v_x) + c·v_x²)·h, which is the direction-aware net deceleration.
   Under braking, a sign change of v_x also clamps to 0, but only below 0.5 m/s, so a spinning car's v_x may cross zero.
   This is deliberately unlike `KinematicCar`, whose RK4 substeps creep (see Out of scope).
@@ -186,13 +214,24 @@ All are routed tests under `roar/projects/racekit/tests/`, plus the existing sui
   - from every v₀ in {0.005, 0.01, 0.03, 0.2, 1, 5} m/s, 1 s of full brake leaves v == 0.0 and never reverses;
   - with full throttle **and** full brake from 0.05 m/s, the car takes at least 3 substeps to stop, so it is not an early snap ([sol] B1);
   - with throttle 0.75 and full brake from 5 m/s, the car reaches v == 0.0 within 2 s.
-- **Low speed:** from rest under throttle 0.3 at steer ∈ {0, 0.5, 1}, v_x is monotone non-decreasing and ≥ 0 for 3 s. Below 3 m/s, once the wheel has settled (after 0.5 s), |v_y − l_r·v_x·tan δ / L| ≤ 0.1 m/s at half lock and ≤ 0.3 m/s at full lock. That is the relaxation's first-order lag of τ = 0.1 s behind an accelerating kinematic value (probe: 0.065 and 0.257). It is an absolute bound: at walking pace a small lag is a large angle, so β is not used.
+- **Low speed:**
+  - **Friction bound:** over μ ∈ {0.78, 1}, v₀ ∈ {0, 0.5, 1, 1.5, 2, 3, 5} m/s and the action set {(1, 1, 0), (1, 0.5, 0), (0.3, 1, 0), (0, 1, 1), (0, 0, 1), (0, 0.5, 1), (0.5, −1, 0.3)} for 3 s each, every tick has |Δv|/(0.05·μg) ≤ 1.02 (probe 1.000).
+  - From rest under throttle 0.3 at steer ∈ {0, 0.5, 1}, for 4 s:
+    - v_x ≥ 0 throughout;
+    - v_x is non-decreasing while |v_x| < 1 m/s;
+    - `spun_out()` never trips.
+
+    Above the blend band, v_x is a body-frame component, and v_y·r coupling may legitimately move it ([fable] r2 N3).
+  - While |v_x| < 1 m/s and after 0.5 s, |v_y − l_r·v_x·tan δ / L| ≤ 0.1 m/s at half lock and ≤ 0.4 m/s at full lock (probe 0.062 and 0.308).
+    That bound is the relaxation lag, an absolute bound: at walking pace a small lag is a large angle.
 - **Lag:** with `lag_ticks = k`, a throttle step first changes v_x on tick k + 1.
 - **Steering rate:** the rate limit is respected.
 - **Spin-out:**
-  - a scripted 40 m/s full-lock flick triggers `spun_out()`;
+  - 40 m/s with full lock and full brake for 1 s triggers `spun_out()` (probe |β| 27.3°, truth car 34°);
+  - full throttle at full lock from rest for 4 s triggers it (power oversteer);
   - a steady 15 m/s, 0.3g circle never does;
-  - full lock at 5, 6, 8 and 10 m/s with throttle 0.3 for 4 s never does.
+  - full lock at throttle 0.3 from 5, 6, 8 and 10 m/s for 4 s never does (max |β| 11.7°);
+  - the tests call the car's own `spun_out()`, never a re-implementation of the threshold.
 - **Grip:** a per-section `DynamicCar` raced without `attach_track` raises.
 
 ### G4.2, the runner
@@ -209,15 +248,15 @@ These use `drivers.py` on `DynamicCar()` defaults.
 - On `KinematicCar` the flat 20 m/s driver finishes `test-circuit` cleanly.
 
 ### G4.4, noise
-- `carla_like(noise=True)` with `drivers.py` at global a_lat 3.5 and a 45 m/s cap, on `monza-like`, seeds 0–4: all 5 runs clean, with a spread in **[0.15, 0.6] s**.
+- `carla_like(noise=True)` with `drivers.py` at global a_lat 3.5 and a 45 m/s cap, on `monza-like`, seeds 0–4: all 5 runs clean, with a spread in **[0.15, 0.6] s** (probe 0.25 s = 5 ticks; the band is 3–12 ticks, so a last-bit difference from the unrolled RK4 cannot fail it, [fable] r2 N1).
 - `noise=False` is exactly deterministic, and the same seed gives identical times.
 
 ### G4.5, the Unit 7 premise
 On `carla_like(noise=True)` on `test-circuit`, seeds 0–4, with a 45 m/s cap and look-ahead braking over 300 m at 6 m/s²:
-- global a_lat **3.5** is clean in 5/5 runs, and global 4.0 is not;
-- section grip **[1.3, 1.5, 1.3, 1, 1, 1]** on top of 3.5 is clean in 5/5 runs;
-- **noise-aware:** its median is faster than global 3.5 by more than both spreads **and** by at least **5 s** (probe: 11.05 s);
-- the stacked vector [1.5, 1.5, 1.3, 1.15, 1, 1.15] is **not** clean on all 5 seeds (the interaction premise).
+- global a_lat **3.7** is clean in 5/5 runs, and global 3.8 is not: 3.7 is the fastest clean global on the 0.1 grid;
+- section grip **[1.35, 1.35, 1.2, 1, 1, 1.1]** on top of 3.7 is clean in 5/5 runs;
+- **noise-aware:** its median beats global 3.7 by more than both spreads **and** by at least **5 s** (probe: 9.55 s);
+- the stacked vector [1.35, 1.35, 1.2, 1.1, 1, 1.1] on 3.7 is **not** clean on all 5 seeds (the interaction premise).
 
 A miss on the shipped code means stop, amend and re-gate, never a silent re-pin.
 
@@ -229,7 +268,14 @@ On `monza-like-seed0` (race):
 On `oval-steady-seed0`:
 - the steady-row fit gives δ_max within 3% of 66°.
 
-Per-section μ: on the race log, peak |a_y|/g per section is ≤ 1.02·μ in every section, which is a correct lower bound. Identification is deferred to roar-008 (see Probe evidence).
+Per-section μ, a consistency check only:
+- The estimator is the probe's. Per respawn-free segment, drop the first and last 10 rows and keep rows with body speed > 5 m/s.
+- Take the 98th percentile of |a_y| from central differences of the world velocity, projected on the body y axis.
+- On the race log that value is ≤ 1.02·μ·g in every section that has at least 20 such rows ([fable] r2 S3).
+
+**This plan does not establish the Unit 8 per-section μ identification premise** ([sol] r2 B3).
+That premise (design §6 Unit 8, "per-section μ from data") is roar-008's to probe and gate, with a designed excitation.
+If roar-008 finds it infeasible, roar-008 amends the design.
 
 ### G4.7, the generator
 - `generate.py` step 2 writes `generated/sysid/monza-like-seed0.csv` (a noisy race at global 3.5) and `generated/sysid/oval-steady-seed0.csv` (a noisy steady 15 m/s oval lap), via `drivers.py`.
@@ -318,3 +364,23 @@ The prototype `scratchpad/u04/dyn.py` is the reference for the physics. The impl
   - **N4** [FIXED] Mass dropped from the "differs" list.
   - **N5** [FIXED] Spin impulse and precedence specified.
   - **N6** noted.
+
+### Round 2 (v2 @ f31a0f3)
+- [self] APPROVE (spot-checked the convergence order: ratios 16.5, 16.2 and 16.1 per halving).
+- [sol] REJECT:
+  - **B1** [FIXED] The low-speed blend broke μg in combined turning with throttle or brake (1.30 μg and 1.12 μg). The blend band is now 1–2 m/s, where the kinematic path is feasible, and the kinematic acceleration vector is capped at μg. The probe's worst case is 1.000, gated in G4.1 over the same cases.
+  - **B2** [FIXED] The comparison was not against the best clean global. A 0.1-grid sweep finds 3.7 (323.05 s). The per-section sweep and the combined vector were redone on 3.7 (313.50 s, 9.55 s faster), and G4.5 is re-pinned.
+  - **B3** [FIXED] The Unit 8 μ premise is now stated explicitly as not established here and assigned to roar-008, with the lower-bound check kept as a consistency gate.
+  - **S** [FIXED] The monotonicity gate is restricted to |v_x| < 1 m/s.
+- [fable] REJECT:
+  - **B1** [FIXED] The low-speed gates did not match the prototype.
+    - The prototype is frozen (md5 recorded), and the low-speed section and gates were rewritten to match it.
+    - `SPIN_MIN_SPEED` is separate from the blend band. [fable]'s 5–8 m/s trips came from a gate script that used `v_hi` (now 2 m/s) as the speed threshold; the car's own `spun_out()` peaks at |β| 11.7° there.
+    - An "excess over kinematic β" rule was tried and rejected, because it trips on a legitimately understeering full lock.
+    - All probes through the low-speed regime were re-run on the frozen prototype: the Unit 6 races (unchanged: 16 and 21 collisions, and clean when limited), the starter spins, the stacked vectors and the friction lap (max 0.992).
+  - **S1** [FIXED] The spin scripts are now spelled out.
+  - **S2** [FIXED] The starter's spins are one repeated event.
+  - **S3** [FIXED] The μ estimator is pinned.
+  - **N1** [FIXED] The spread band is stated in ticks.
+  - **N2** [FIXED] The stop condition reads braking ≥ |drive|.
+  - **N3** [FIXED] The monotonicity is restricted to the blend band.
