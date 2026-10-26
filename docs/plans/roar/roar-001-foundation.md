@@ -352,4 +352,35 @@ No stub unit is added; `buildout: true` covers the empty state.
 This plan ships no student content. The 3-way content-review gate still runs, on the shipped code, docs and
 syllabus, per `docs/content-review-gate.md`.
 
+
+### Round 1 (@ 78b8441)
+- **[self]** APPROVE: the starter matches the described behaviour; the API surface is reviewed.
+- **[sol]** REJECT:
+  - B1, a non-finishing agent passed `check_submission`: [FIXED `35625a6`].
+  - B2, progress was not frozen after a respawn: [FIXED `35625a6`, superseded by the reset-to-0 mirror].
+  - B3, dict unions on named variables: [FIXED `35625a6`].
+- **[fable]** REJECT:
+  - M1, the pinned runner resets progress to 0 after a 20-step hold and finishes at a 5-waypoint margin: [FIXED
+    `0a53890` (design v4.1) + `35625a6`]. The design §1.2 claim was wrong; the content gate caught it by re-reading
+    the pinned code.
+  - S1, document the differences: [FIXED].
+  - S2, the 3.8 over-claim, dynamic imports and extra APIs: [FIXED].
+  - N1, a SyntaxError cell is now a finding: [FIXED].
+  - N2, roll-pitch-yaw wrapping: [FIXED].
+  - N3, the conservative attribute denial is documented: [FIXED].
+  - N4, the `target_gear` note: [FIXED].
+  - N5, exact respawn assertions: [FIXED].
+
+### Round 2 (@ 35625a6): CONSENSUS
+- **[sol]** APPROVE WITH NITS. All three items RESOLVED.
+  - N, design result wording: [FIXED `ac168f5`].
+- **[fable]** APPROVE WITH NITS. M1, S1 and S2 RESOLVED, verified by probes (crash total 429.65 s = t_crash + 1.0 +
+  clean 356.30 s; parked agent stays at 0; finish at total − 5). 142 tests passed, including the isolated 3.8 run.
+  - N6, upstream checks the collision before the finish on the same tick: [WONTFIX here → folded into `roar-002`
+    Phase 1, which touches the runner].
+  - N7, the dict-name tracking is file-global: [WONTFIX, documented as conservative].
+  - N8, the Unit 11 hook wording: [carried to the Unit 11 plan, which must teach the v4.1 rule].
+  - N9, `held` rows keep the pre-reset progress: [WONTFIX here → a telemetry column note in `roar-002` Phase 1].
+- **[self]** APPROVE.
+
 ## Post-Execution Report
