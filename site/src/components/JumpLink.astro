@@ -1,0 +1,21 @@
+---
+/**
+ * One entry of the practice page's jump list (plan 106): a real link to the item's anchor (native
+ * fragment navigation pushes a history entry), its label and title, a Challenge tag on a stretch
+ * item, and a status slot the pager fills ("passed", "tried", "checking…": a glyph plus its
+ * visually hidden text).
+ */
+import type { PracticeItem } from '../lib/entry';
+
+interface Props {
+  item: PracticeItem;
+}
+
+const { item } = Astro.props;
+---
+<a class="jump-link" href={`#${item.anchor}`} data-jump={item.anchor}>
+  <span class="jump-label">{item.label}</span>
+  {item.title && item.title !== item.label && <span class="jump-title">{item.title}</span>}
+  {item.stretch && <span class="tag tag-stretch jump-tag">Challenge</span>}
+  <span class="jump-status" data-jump-status></span>
+</a>

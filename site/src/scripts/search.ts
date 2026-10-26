@@ -5,10 +5,39 @@
  * `'wasm-unsafe-eval'` for it). Nothing typed here is sent anywhere or saved.
  */
 
+interface SubResult {
+  title: string;
+  url: string;
+  excerpt: string;
+  anchor?: { element: string; id: string; text?: string };
+  weighted_locations?: { weight: number; balanced_score: number; location: number }[];
+}
+
 interface ResultData {
   url: string;
   excerpt: string;
   meta: Record<string, string | undefined>;
+  sub_results?: SubResult[];
+}
+
+/**
+ * On a practice page (one item shown at a time, plan 106), the item the hit is in: the sub-result
+ * (a heading anchor, `#<anchor>-h`) that scores highest, so the link lands on that exercise rather
+ * than on item 1. Other pages, and a hit outside any item heading, link to the page.
+ */
+function practiceTarget(data: ResultData): SubResult | null {
+  if (!/\/practice\/(index\.html)?$/.test(data.url)) return null;
+  let best: SubResult | null = null;
+  let bestScore = 0;
+  for (const sub of data.sub_results ?? []) {
+    if (!sub.anchor?.id) continue;
+    const score = (sub.weighted_locations ?? []).reduce((sum, w) => sum + w.balanced_score, 0);
+    if (score > bestScore) {
+      best = sub;
+      bestScore = score;
+    }
+  }
+  return best;
 }
 
 interface Pagefind {
@@ -95,8 +124,9 @@ function resultItem(data: ResultData): HTMLLIElement {
   const li = document.createElement('li');
   li.className = 'search-result';
   const link = document.createElement('a');
-  link.href = data.url;
-  link.textContent = data.meta.title ?? data.url;
+  const sub = practiceTarget(data);
+  link.href = sub ? sub.url : data.url;
+  link.textContent = sub ? `${data.meta.title ?? data.url} › ${sub.title}` : (data.meta.title ?? data.url);
   const heading = document.createElement('p');
   heading.className = 'search-result-title';
   heading.append(link);
@@ -109,7 +139,7 @@ function resultItem(data: ResultData): HTMLLIElement {
   }
   const excerpt = document.createElement('p');
   excerpt.className = 'search-result-excerpt';
-  excerpt.append(...excerptNodes(data.excerpt));
+  excerpt.append(...excerptNodes(sub ? sub.excerpt : data.excerpt));
   li.append(excerpt);
   return li;
 }

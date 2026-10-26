@@ -9,7 +9,10 @@
  *   are shown; hidden cases report pass/fail only; asserts report per assert, never their source;
  * - every Check writes a D11 `exercise` / `checkpoint` / `project` event with `detail.cases`, and
  *   the code or typed answer goes only to the on-device attempt store;
- * - an odd unit exercise (`data-answer-href`) shows its answer only after a genuine attempt.
+ * - an odd unit exercise (`data-answer-href`) shows its answer only after a genuine attempt;
+ * - plan 106: a Check or typed answer dispatches `py4kids:check-start` when it starts and the
+ *   terminal `py4kids:check` (with `saved`) from every way it ends (src/lib/dom-events.ts); when its
+ *   event could not be written, the result area says so.
  */
 
 import { answerHash } from '../lib/normalise';
@@ -28,7 +31,7 @@ import {
   type FixturesCheck,
   type Outcome,
 } from '../lib/check-model';
-import { checklistOf } from '../lib/dom-events';
+import { CHECK_EVENT, CHECK_START_EVENT, checklistOf, notify, type CheckEventDetail, type CheckStartDetail } from '../lib/dom-events';
 import { recordCheck, sharedProgress, type Attempt, type ProgressStore } from '../lib/progress';
 import type { ResultReply, RunnerClient } from '../lib/runner-client';
 import { mountEditor, tabInserts, textareaEditor, type CodeEditor } from './editor';
@@ -75,12 +78,30 @@ function warn(error: unknown): void {
   console.warn('py4kids checks:', error);
 }
 
-async function withStore(action: (store: ProgressStore) => Promise<unknown>): Promise<void> {
+/** Runs a store write; false (after logging) when it failed, so a caller can say so (plan 106). */
+async function withStore(action: (store: ProgressStore) => Promise<unknown>): Promise<boolean> {
   try {
     await action(await storeReady);
+    return true;
   } catch (error) {
     warn(error);
+    return false;
   }
+}
+
+const NOT_SAVED = 'Your result could not be saved on this device, so it will not count toward your progress.';
+
+/** The result area's note when a check's event could not be written. */
+function notSaved(ctx: ItemContext): void {
+  ctx.result.append(el('p', 'not-saved', NOT_SAVED));
+}
+
+function checkStarted(ctx: ItemContext): void {
+  notify<CheckStartDetail>(CHECK_START_EVENT, { key: ctx.key });
+}
+
+function checkEnded(ctx: ItemContext, end: Omit<CheckEventDetail, 'key'>): void {
+  notify<CheckEventDetail>(CHECK_EVENT, { key: ctx.key, ...end });
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -327,6 +348,8 @@ async function checkProgram(ctx: ItemContext, check: ClientCheck, client: Runner
 async function onCheck(ctx: ItemContext): Promise<void> {
   if (ctx.busy || !ctx.editor) return;
   setBusy(ctx, true);
+  checkStarted(ctx);
+  let end: Omit<CheckEventDetail, 'key'> = { result: 'error', saved: true };
   const started = performance.now();
   const code = ctx.editor.getValue();
   status(ctx, startingText());
@@ -335,9 +358,12 @@ async function onCheck(ctx: ItemContext): Promise<void> {
     if (check.key !== ctx.key) throw new Error(`check for ${check.key}, not ${ctx.key}`);
     status(ctx, 'Checking…');
     const cases = check.kind === 'fixtures' ? await checkFixtures(ctx, check, client, code) : await checkProgram(ctx, check, client, code);
-    if (cases.length === 0 && ctx.stopped) return;
+    if (cases.length === 0 && ctx.stopped) {
+      end = { result: 'stopped', saved: true };
+      return;
+    }
     const outcome = outcomeOf(cases);
-    await withStore((store) =>
+    const saved = await withStore((store) =>
       recordCheck(store, {
         item_key: ctx.key,
         kind: ctx.eventKind,
@@ -347,6 +373,8 @@ async function onCheck(ctx: ItemContext): Promise<void> {
         content_hash: contentHash,
       }),
     );
+    if (!saved) notSaved(ctx);
+    end = { result: ctx.stopped ? 'stopped' : outcome, saved };
     await addAttempt(ctx, { kind: 'check', code, result: outcome });
   } catch (error) {
     if (isUnavailable(error)) unavailable(ctx.result, error);
@@ -356,6 +384,7 @@ async function onCheck(ctx: ItemContext): Promise<void> {
     }
   } finally {
     setBusy(ctx, false);
+    checkEnded(ctx, end);
   }
 }
 
@@ -402,6 +431,8 @@ async function onAnswer(ctx: ItemContext, field: HTMLTextAreaElement): Promise<v
     return;
   }
   setBusy(ctx, true);
+  checkStarted(ctx);
+  let end: Omit<CheckEventDetail, 'key'> = { result: 'error', saved: true };
   try {
     const check = await fetchJson<ClientCheck>(ctx.checkHref);
     if ((check.kind !== 'answer' && check.kind !== 'predict') || check.key !== ctx.key) throw new Error(`not a typed check: ${ctx.key}`);
@@ -410,15 +441,18 @@ async function onAnswer(ctx: ItemContext, field: HTMLTextAreaElement): Promise<v
       el('p', `verdict verdict-${pass ? 'pass' : 'fail'}`, pass ? 'Correct.' : 'Not yet: that is not the expected answer.'),
     );
     const outcome = pass ? 'pass' : 'fail';
-    await withStore((store) =>
+    const saved = await withStore((store) =>
       recordCheck(store, { item_key: ctx.key, kind: ctx.eventKind, result: outcome, cases: [{ n: 1, pass }], duration_ms: 0, content_hash: contentHash }),
     );
+    if (!saved) notSaved(ctx);
+    end = { result: outcome, saved };
     await addAttempt(ctx, { kind: 'answer', answer: typed, result: outcome });
   } catch (error) {
     warn(error);
     status(ctx, 'Something went wrong while checking. Try again, or reload the page.');
   } finally {
     setBusy(ctx, false);
+    checkEnded(ctx, end);
   }
 }
 

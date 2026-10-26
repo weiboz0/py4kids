@@ -16,10 +16,52 @@
  * - `py4kids:progress-imported` (plan 105 Phase C): the export/import island dispatches it on
  *   `document` after an import wrote to the store; the progress island fills the "Continue" links
  *   again.
+ * - Practice-page pager (plan 106), all dispatched on `document` without bubbling:
+ *   - `py4kids:check-start` `{key}`: the check island (src/scripts/practice.ts) starts a Check or a
+ *     typed answer on an item (where it sets the item busy);
+ *   - `py4kids:check` `{key, result, saved}`: the terminal notification, from the end of every
+ *     path: `pass`, `fail` or `partial` after the save was attempted, `error` (runner
+ *     unavailable, an unexpected failure) and `stopped` (Stop pressed). It says what happened,
+ *     not what was stored; `saved` is false when the check's event could not be written;
+ *   - `py4kids:checklist` `{key, done}`: the progress island recorded an item's checklist;
+ *   - `py4kids:step` `{href}`: the pager showed a step (once per shown step, from its one show
+ *     function); the progress island records `href` as the book's resume position.
+ *   The pager reads every status back from the store on `check` and `checklist`.
  */
 
 export const SLIDE_EVENT = 'py4kids:slide';
 export const PROGRESS_IMPORTED_EVENT = 'py4kids:progress-imported';
+export const CHECK_START_EVENT = 'py4kids:check-start';
+export const CHECK_EVENT = 'py4kids:check';
+export const CHECKLIST_EVENT = 'py4kids:checklist';
+export const STEP_EVENT = 'py4kids:step';
+
+export interface CheckStartDetail {
+  key: string;
+}
+
+export interface CheckEventDetail {
+  key: string;
+  result: 'pass' | 'fail' | 'partial' | 'error' | 'stopped';
+  /** False when the check's progress event could not be written. */
+  saved: boolean;
+}
+
+export interface ChecklistEventDetail {
+  key: string;
+  /** Every box ticked. */
+  done: boolean;
+}
+
+export interface StepEventDetail {
+  /** The shown step's same-site path and hash. */
+  href: string;
+}
+
+/** Dispatch one of the contract's events on `document` (no bubbling). */
+export function notify<T>(name: string, detail: T): void {
+  document.dispatchEvent(new CustomEvent<T>(name, { detail }));
+}
 
 /** What the slide player (src/scripts/slides.ts) sends; only `key` is required here. */
 export interface SlideEventDetail {

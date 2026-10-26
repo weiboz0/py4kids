@@ -219,3 +219,10 @@
 .runner-holder {
   display: none;
 }
+
+/* A check whose result could not be saved (plan 106). */
+.not-saved {
+  margin: 0.4rem 0 0.25rem;
+  color: var(--label-error);
+  font-weight: 600;
+}

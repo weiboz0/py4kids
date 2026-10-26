@@ -7,6 +7,10 @@
  * requirements as a checklist and say the site cannot check them; `also_check` requirements show
  * as a self-check list beside the automatic check. Checklists are saved by the progress island,
  * keyed by `data-item-key` and `data-requirement`. Then the outro.
+ * Plan 106: each item (with its `before` blocks) is a step (`[data-step]`); the pager island
+ * (src/scripts/practice-pager.ts) shows one step at a time, with the grouped jump list and
+ * Previous / Next rendered here hidden, outside the Pagefind body. Without JavaScript every step
+ * shows, as before.
  * All bundle data comes through practiceView (site/src/lib/entry.ts): no answer, no check source,
  * no hash and no hidden fixture is in the page. The check island (src/scripts/practice.ts)
  * fetches an item's check projection when Check is pressed, and an odd exercise's answer only
@@ -16,7 +20,9 @@ import type { GetStaticPaths } from 'astro';
 import Base from '../../../../layouts/Base.astro';
 import { getBook, getBooks } from '../../../../lib/bundle';
 import { practicePaths, practiceView, REPORT_LABEL } from '../../../../lib/entry';
+import JumpLink from '../../../../components/JumpLink.astro';
 import '../../../../styles/checks.css';
+import '../../../../styles/pager.css';
 
 export const getStaticPaths = (() =>
   practicePaths(getBooks()).map((p) => ({ params: { book: p.book, entry: p.entry } }))) satisfies GetStaticPaths;
@@ -24,129 +30,168 @@ export const getStaticPaths = (() =>
 const { book: bookId, entry: entryId } = Astro.params as { book: string; entry: string };
 const book = getBook(bookId);
 const view = practiceView(book, entryId);
+// The pager (plan 106): one item at a time, with a jump list; a page with one item has none.
+const paged = view.items.length > 1;
 ---
 <Base title={`${view.heading}: ${view.title}`} book={book}>
   <p class="crumbs"><a href={view.bookHref} data-pagefind-meta="book" data-pagefind-filter="book">{view.bookTitle}</a> › <a href={view.readingHref}>{view.title}</a></p>
   <h1 class="entry-title" data-pagefind-meta="title">{view.heading}: {view.title}</h1>
-  <div data-pagefind-body>
-    {view.intro.length > 0 && (
-      <div class="practice-intro">{view.intro.map((html) => <Fragment set:html={html} />)}</div>
+  <div class="practice-layout" data-practice-layout>
+    {paged && (
+      <nav class="pager-nav" aria-label="Exercises on this page" data-pager-nav hidden>
+        <a class="pager-skip" href="#main" data-pager-skip>Skip to the exercise</a>
+        <details class="pager-list" data-pager-list>
+          <summary class="pager-summary">All exercises ({view.items.length})</summary>
+          <ol class="jump-list">
+            {view.jump.map((entry, g) =>
+              entry.kind === 'item' ? (
+                <li class="jump-item"><JumpLink item={view.items[entry.index]!} /></li>
+              ) : (
+                <li class="jump-group">
+                  <p class="jump-group-label" id={`jump-group-${g}`}>{entry.label}</p>
+                  <ol class="jump-sublist" aria-labelledby={`jump-group-${g}`}>
+                    {entry.indexes.map((i) => (
+                      <li class="jump-item"><JumpLink item={view.items[i]!} /></li>
+                    ))}
+                  </ol>
+                </li>
+              ),
+            )}
+          </ol>
+        </details>
+      </nav>
     )}
-    {view.items.map((item) => (
-      <>
-        {item.before.map((html) => <Fragment set:html={html} />)}
-        <section
-          class="practice-item"
-          id={item.anchor}
-          data-item-key={item.key}
-          data-check-kind={item.checkKind}
-          data-check-href={item.checkHref}
-          data-answer-href={item.answerHref ?? undefined}
-          data-event-kind={item.eventKind}
-          aria-labelledby={`${item.anchor}-h`}
-        >
-          <h2 id={`${item.anchor}-h`}>{item.title ? `${item.label}: ${item.title}` : item.label}</h2>
-          {(item.stretch || item.divisions.length > 0) && (
-            <ul class="item-tags" aria-label="Tags">
-              {item.stretch && <li class="tag tag-stretch">Challenge</li>}
-              {item.divisions.map((d) => <li class="tag tag-division">Division: {d}</li>)}
-            </ul>
-          )}
-          <div class="statement"><Fragment set:html={item.statement} /></div>
-          {item.starter && (
-            <div class="starter">
-              <p class="starter-label">Starter (read-only)</p>
-              <Fragment set:html={item.starter} />
-            </div>
-          )}
-          <p class="how-checked"><strong>How this is checked:</strong> <Fragment set:html={item.checkLine} /></p>
-          {item.formatHint && <p class="format-hint" id={`${item.anchor}-hint`}>Answer format: {item.formatHint}</p>}
-          {item.editor && (
-            <div class="work" data-work>
-              <label class="work-label" for={`${item.anchor}-code`}>Your code</label>
-              <textarea
-                id={`${item.anchor}-code`}
-                class="code-input"
-                data-code
-                rows="10"
-                spellcheck="false"
-                autocapitalize="off"
-                autocomplete="off"
-              >{item.starterCode}</textarea>
-              <div class="work-actions">
-                <button type="button" class="button" data-run-item>{item.checkKind === 'fixtures' ? 'Run on the sample' : 'Run'}</button>
-                {item.checkKind !== 'self-check' && <button type="button" class="button button-primary" data-check-item>Check</button>}
-                <button type="button" class="button" data-stop hidden>Stop</button>
-              </div>
-            </div>
-          )}
-          {item.typed && (
-            <form class="answer-form" data-answer-form>
-              <label class="work-label" for={`${item.anchor}-answer`}>Your answer</label>
-              <textarea
-                id={`${item.anchor}-answer`}
-                class={item.exact ? 'answer-input answer-exact' : 'answer-input'}
-                data-answer
-                data-exact={item.exact ? '' : undefined}
-                rows={item.exact ? 4 : 2}
-                spellcheck="false"
-                autocapitalize="off"
-                autocomplete="off"
-                aria-describedby={item.formatHint ? `${item.anchor}-hint${item.exact ? ` ${item.anchor}-exact` : ''}` : undefined}
-              ></textarea>
-              {item.exact && (
-                <p class="format-hint" id={`${item.anchor}-exact`}>
-                  Spaces and tabs count in this answer: Tab types a tab. To leave the box, press Escape, then Tab.
+    <div class="practice-main">
+      <div data-pagefind-body>
+        {view.intro.length > 0 && (
+          <div class="practice-intro" data-practice-intro>{view.intro.map((html) => <Fragment set:html={html} />)}</div>
+        )}
+        {view.items.map((item, index) => (
+          <div class="practice-step" data-step data-anchor={item.anchor} data-label={item.label} data-index={index}>
+            {item.before.map((html) => <Fragment set:html={html} />)}
+            <section
+              class="practice-item"
+              id={item.anchor}
+              data-item-key={item.key}
+              data-check-kind={item.checkKind}
+              data-check-href={item.checkHref}
+              data-answer-href={item.answerHref ?? undefined}
+              data-event-kind={item.eventKind}
+              aria-labelledby={`${item.anchor}-h`}
+            >
+              {item.group && !item.groupStart && <p class="step-kicker">{item.group}</p>}
+              <h2 id={`${item.anchor}-h`}>{item.title ? `${item.label}: ${item.title}` : item.label}</h2>
+              {(item.stretchTag || item.divisions.length > 0) && (
+                <ul class="item-tags" aria-label="Tags">
+                  {item.stretchTag && <li class="tag tag-stretch">Challenge</li>}
+                  {item.divisions.map((d) => <li class="tag tag-division">Division: {d}</li>)}
+                </ul>
+              )}
+              <div class="statement"><Fragment set:html={item.statement} /></div>
+              {item.starter && (
+                <div class="starter">
+                  <p class="starter-label">Starter (read-only)</p>
+                  <Fragment set:html={item.starter} />
+                </div>
+              )}
+              <p class="how-checked"><strong>How this is checked:</strong> <Fragment set:html={item.checkLine} /></p>
+              {item.formatHint && <p class="format-hint" id={`${item.anchor}-hint`}>Answer format: {item.formatHint}</p>}
+              {item.editor && (
+                <div class="work" data-work>
+                  <label class="work-label" for={`${item.anchor}-code`}>Your code</label>
+                  <textarea
+                    id={`${item.anchor}-code`}
+                    class="code-input"
+                    data-code
+                    rows="10"
+                    spellcheck="false"
+                    autocapitalize="off"
+                    autocomplete="off"
+                  >{item.starterCode}</textarea>
+                  <div class="work-actions">
+                    <button type="button" class="button" data-run-item>{item.checkKind === 'fixtures' ? 'Run on the sample' : 'Run'}</button>
+                    {item.checkKind !== 'self-check' && <button type="button" class="button button-primary" data-check-item>Check</button>}
+                    <button type="button" class="button" data-stop hidden>Stop</button>
+                  </div>
+                </div>
+              )}
+              {item.typed && (
+                <form class="answer-form" data-answer-form>
+                  <label class="work-label" for={`${item.anchor}-answer`}>Your answer</label>
+                  <textarea
+                    id={`${item.anchor}-answer`}
+                    class={item.exact ? 'answer-input answer-exact' : 'answer-input'}
+                    data-answer
+                    data-exact={item.exact ? '' : undefined}
+                    rows={item.exact ? 4 : 2}
+                    spellcheck="false"
+                    autocapitalize="off"
+                    autocomplete="off"
+                    aria-describedby={item.formatHint ? `${item.anchor}-hint${item.exact ? ` ${item.anchor}-exact` : ''}` : undefined}
+                  ></textarea>
+                  {item.exact && (
+                    <p class="format-hint" id={`${item.anchor}-exact`}>
+                      Spaces and tabs count in this answer: Tab types a tab. To leave the box, press Escape, then Tab.
+                    </p>
+                  )}
+                  <button type="submit" class="button button-primary">Check</button>
+                </form>
+              )}
+              <div class="check-result" data-result aria-live="polite"></div>
+              {item.selfCheck && (
+                <p class="cannot-check" data-cannot-check>
+                  The site cannot check this one. Run your program, then tick each item below when your work does it.
                 </p>
               )}
-              <button type="submit" class="button button-primary">Check</button>
-            </form>
-          )}
-          <div class="check-result" data-result aria-live="polite"></div>
-          {item.selfCheck && (
-            <p class="cannot-check" data-cannot-check>
-              The site cannot check this one. Run your program, then tick each item below when your work does it.
-            </p>
-          )}
-          {item.selfCheck && (
-            <fieldset class="self-check" data-self-check data-item-key={item.key}>
-              <legend>Check your work</legend>
-              <ul>
-                {item.selfCheck.map((req) => (
-                  <li>
-                    <input type="checkbox" id={req.id} data-item-key={item.key} data-requirement={req.index} />
-                    <label for={req.id}><Fragment set:html={req.html} /></label>
-                  </li>
-                ))}
-              </ul>
-            </fieldset>
-          )}
-          {item.alsoCheck && (
-            <fieldset class="self-check also-check" data-also-check data-item-key={item.key}>
-              <legend>Also check yourself</legend>
-              <p class="also-note">The automatic check cannot see these, so tick each one when your work does it.</p>
-              <ul>
-                {item.alsoCheck.map((req) => (
-                  <li>
-                    <input type="checkbox" id={req.id} data-item-key={item.key} data-requirement={req.index} />
-                    <label for={req.id}><Fragment set:html={req.html} /></label>
-                  </li>
-                ))}
-              </ul>
-            </fieldset>
-          )}
-          {item.answerHref && <div class="item-answer" data-answer-slot hidden></div>}
-          <p class="report"><a href={item.reportHref}>{REPORT_LABEL}</a></p>
-        </section>
-      </>
-    ))}
-    {view.outro.length > 0 && (
-      <div class="practice-outro">{view.outro.map((html) => <Fragment set:html={html} />)}</div>
-    )}
+              {item.selfCheck && (
+                <fieldset class="self-check" data-self-check data-item-key={item.key}>
+                  <legend>Check your work</legend>
+                  <ul>
+                    {item.selfCheck.map((req) => (
+                      <li>
+                        <input type="checkbox" id={req.id} data-item-key={item.key} data-requirement={req.index} />
+                        <label for={req.id}><Fragment set:html={req.html} /></label>
+                      </li>
+                    ))}
+                  </ul>
+                </fieldset>
+              )}
+              {item.alsoCheck && (
+                <fieldset class="self-check also-check" data-also-check data-item-key={item.key}>
+                  <legend>Also check yourself</legend>
+                  <p class="also-note">The automatic check cannot see these, so tick each one when your work does it.</p>
+                  <ul>
+                    {item.alsoCheck.map((req) => (
+                      <li>
+                        <input type="checkbox" id={req.id} data-item-key={item.key} data-requirement={req.index} />
+                        <label for={req.id}><Fragment set:html={req.html} /></label>
+                      </li>
+                    ))}
+                  </ul>
+                </fieldset>
+              )}
+              {item.answerHref && <div class="item-answer" data-answer-slot hidden></div>}
+              <p class="report"><a href={item.reportHref}>{REPORT_LABEL}</a></p>
+            </section>
+          </div>
+        ))}
+        {view.outro.length > 0 && (
+          <div class="practice-outro" data-practice-outro>{view.outro.map((html) => <Fragment set:html={html} />)}</div>
+        )}
+      </div>
+      {paged && (
+        <div class="pager-controls" data-pager-controls hidden>
+          <button type="button" class="button pager-prev" data-pager-prev>Previous</button>
+          <button type="button" class="button button-primary pager-next" data-pager-next>Next</button>
+        </div>
+      )}
+      {paged && <div class="visually-hidden" data-pager-live aria-live="polite"></div>}
+    </div>
   </div>
   <p><a href={view.readingHref}>Back to {view.title}</a></p>
 </Base>
 
 <script>
   import '../../../../scripts/practice.ts';
+  import '../../../../scripts/practice-pager.ts';
 </script>
