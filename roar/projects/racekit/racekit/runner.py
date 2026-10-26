@@ -30,6 +30,11 @@ Known differences from the official runner (each an approximation, labelled wher
 * **the collision-sensor reading**: after a major collision racekit reports a lateral impulse of
   ``CRASH_IMPULSE`` N·s on the first agent step after the hold, and zeros otherwise; CARLA reports
   the real contact impulse;
+* **the first step after the hold**: the pinned runner does not re-read the sensors after the
+  respawn, so on CARLA that step sees the collision impulse together with the **stale crash-pose**
+  location, rotation and velocity (the start pose arrives one step later); racekit already reports
+  the start pose on that step. An agent that re-anchors on the impulse must not trust that step's
+  location (the Unit 1 lab recorder resets to its start index instead);
 * **during the 1 s hold** CARLA keeps applying the last control to a car placed at rest; racekit
   holds the car exactly still;
 * **physics**: racekit's car models are simple models of CARLA's vehicle (design 013 §4.4).

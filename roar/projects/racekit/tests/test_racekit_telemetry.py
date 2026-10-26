@@ -129,6 +129,25 @@ def test_sector_splits_handle_held_rows_and_progress_drops():
     assert sector_splits(partial, total, laps=laps)[0, 0] == pytest.approx(0.05)
 
 
+def test_a_recorded_crash_at_progress_zero_restarts_sector_one_after_the_hold():
+    """[sol] B1: the lab recorder's layout (CSV-shaped, progress 0 on its held rows). A crash before
+    the first waypoint leaves progress at 0 on both sides, so only the held rows mark the respawn."""
+    total, laps = 90, 1  # boundaries 30, 60, 85
+    rows = [(0.05 * i, 0, 0) for i in range(10)]  # t = 0.00 .. 0.45: still at progress 0, then a crash
+    rows += [(0.05 * (10 + k), 0, 1) for k in range(1, RESPAWN_HOLD_TICKS + 1)]  # hold: t = 0.55 .. 1.50
+    rows += [(1.50 + 0.05 * i, 3 * i, 0) for i in range(31)]  # the restart: t = 1.50 .. 3.00, progress 0 .. 90
+    csv_shaped = np.array(
+        [(t, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, p, 0.0, h) for t, p, h in rows],
+        dtype=[(name, "i8" if name in ("progress", "held") else "f8") for name in COLUMNS],
+    )
+    splits = sector_splits(csv_shaped, total, laps=laps, per_lap=3)
+    # sector 1 runs from the end of the hold (t = 1.50) to progress 30 (t = 2.00), not from t = 0
+    assert np.allclose(splits, [[0.50, 0.50, 0.45]], atol=1e-9)
+    # without the held rows the same recording shows no respawn: the lost time leaks into sector 1
+    no_held = csv_shaped[csv_shaped["held"] == 0]
+    assert sector_splits(no_held, total, laps=laps, per_lap=3)[0, 0] == pytest.approx(2.00, abs=1e-9)
+
+
 # --- the recorder (the lab path) -----------------------------------------------------------------
 
 

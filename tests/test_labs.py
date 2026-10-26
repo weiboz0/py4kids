@@ -119,6 +119,11 @@ def test_a_missing_lab_fails(lab_root):
     _code(PARAMETERS),  # untagged
     _code('import os\nTELEMETRY_PATH = os.environ.get("ROAR_LAB_CSV", "other.csv")\n', "parameters"),
     _code("TELEMETRY_PATH = 'x'\n", "parameters"),
+    # the right expression, then reassigned ([sol] S2): exactly one assignment is allowed
+    _code(PARAMETERS + "TELEMETRY_PATH = 'mine.txt'\n", "parameters"),
+    _code(PARAMETERS + "TELEMETRY_PATH += '.bak'\n", "parameters"),
+    _code(PARAMETERS + "TELEMETRY_PATH, other = 'mine.txt', 1\n", "parameters"),
+    _code(PARAMETERS + "if True:\n    TELEMETRY_PATH: str = 'mine.txt'\n", "parameters"),
 ])
 def test_a_missing_parameters_cell_fails(lab_root, parameters):
     cells = default_cells()
@@ -134,6 +139,27 @@ def test_a_lab_without_any_parameters_cell_fails(lab_root):
     write_lab(lab_root, cells)
     findings = lab_findings(lab_root, "labbook")
     assert any("first code cell must be tagged 'parameters'" in finding for finding in findings), findings
+
+
+@pytest.mark.parametrize("source", [
+    "TELEMETRY_PATH = 'mine.txt'\n",
+    "TELEMETRY_PATH += '.bak'\n",
+    "TELEMETRY_PATH: str = 'mine.txt'\n",
+    "other, TELEMETRY_PATH = 1, 'mine.txt'\n",
+    "[TELEMETRY_PATH, *rest] = ['mine.txt', 2]\n",
+    "def where():\n    TELEMETRY_PATH = 'mine.txt'\n    return TELEMETRY_PATH\n",
+    "print(TELEMETRY_PATH := 'mine.txt')\n",
+])
+def test_assigning_telemetry_path_outside_the_parameters_cell_fails(lab_root, source):
+    write_lab(lab_root, [*default_cells(), _code(source)])
+    findings = lab_findings(lab_root, "labbook")
+    assert findings == [(f"FAIL: {UNIT}: lab code cell 4 assigns TELEMETRY_PATH (only the parameters cell may "
+                         "set it)")]
+
+
+def test_reading_telemetry_path_in_other_cells_passes(lab_root):
+    write_lab(lab_root, [*default_cells(), _code("name = TELEMETRY_PATH\nprint(name, TELEMETRY_PATH)\n")])
+    assert lab_findings(lab_root, "labbook") == []
 
 
 @pytest.mark.parametrize("source", [

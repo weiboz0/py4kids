@@ -14,7 +14,10 @@ The columns (``COLUMNS``), one row per control tick:
 * ``offset``: the signed distance from the centreline (left positive);
 * ``held``: 1 on the respawn-hold ticks (the agent is not called), else 0.
 
-``held`` and ``offset`` may be all zero in a real-simulator recording.
+``offset`` may be all zero in a real-simulator recording. The Unit 1 lab recorder writes the hold
+itself: ``RESPAWN_HOLD_TICKS`` rows with ``held`` 1 at the runner's hold times, with progress 0
+(``sector_splits`` never reads progress on a held row), then the first row after the hold at the
+same time as the last held row.
 
 The v1 CSV starts with one comment line carrying the integer meta, then the column header, then
 the rows::

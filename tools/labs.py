@@ -10,7 +10,9 @@ against a committed-by-generation sample CSV. The check is BOOK-SCOPED to books 
   book without the flag);
 - the lab has no outputs or execution counts;
 - its first code cell is tagged ``parameters`` and sets
-  ``TELEMETRY_PATH = os.environ.get("ROAR_LAB_CSV", "telemetry.csv")``;
+  ``TELEMETRY_PATH = os.environ.get("ROAR_LAB_CSV", "telemetry.csv")``, its only assignment to
+  ``TELEMETRY_PATH``; no other code cell assigns ``TELEMETRY_PATH`` (``=``, augmented, annotated,
+  ``:=``, or inside a tuple / list target);
 - a **code** cell that mentions ``carla``, ``roar_py_carla``, ``competition_runner`` or
   ``subprocess`` (lower case, so prose such as "CARLA" in a comment does not count) is tagged
   ``no-exec``; markdown cells are exempt;
@@ -44,7 +46,8 @@ LABS_CONFIG = Path("curriculum") / "labs.yaml"
 CSV_ENV = "ROAR_LAB_CSV"
 PARAMETERS_TAG = "parameters"
 NO_EXEC_TAG = "no-exec"
-PARAMETERS_SOURCE = f'TELEMETRY_PATH = os.environ.get("{CSV_ENV}", "telemetry.csv")'
+PATH_NAME = "TELEMETRY_PATH"
+PARAMETERS_SOURCE = f'{PATH_NAME} = os.environ.get("{CSV_ENV}", "telemetry.csv")'
 SIMULATOR_MENTION = re.compile(r"carla|competition_runner|subprocess")
 READ_CALLS = frozenset({"read_csv", "load_csv"})
 # ``<module>.open(file, mode)`` takes the mode second, like the builtin; ``Path(...).open(mode)``
@@ -61,14 +64,45 @@ def _python_source(source: str) -> str | None:
     return "\n".join(line for line in source.splitlines() if not line.lstrip().startswith(("%", "!")))
 
 
+def _target_names(target: ast.AST) -> list[str]:
+    """The names an assignment target binds, through tuple, list and starred targets."""
+    if isinstance(target, ast.Name):
+        return [target.id]
+    if isinstance(target, (ast.Tuple, ast.List)):
+        return [name for element in target.elts for name in _target_names(element)]
+    if isinstance(target, ast.Starred):
+        return _target_names(target.value)
+    return []
+
+
+def _telemetry_path_assignments(tree: ast.Module) -> list[ast.AST]:
+    """Every assignment (``=``, augmented, annotated or ``:=``) anywhere in the cell that binds
+    ``TELEMETRY_PATH``."""
+    found = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            targets = node.targets
+        elif isinstance(node, (ast.AugAssign, ast.AnnAssign, ast.NamedExpr)):
+            targets = [node.target]
+        else:
+            continue
+        if any(name == PATH_NAME for target in targets for name in _target_names(target)):
+            found.append(node)
+    return found
+
+
 def _sets_telemetry_path(tree: ast.Module) -> bool:
-    return any(
-        isinstance(node, ast.Assign)
+    """Exactly one assignment to ``TELEMETRY_PATH``, a top-level ``TELEMETRY_PATH = <expected>``."""
+    assignments = _telemetry_path_assignments(tree)
+    if len(assignments) != 1:
+        return False
+    node = assignments[0]
+    return (
+        node in tree.body
+        and isinstance(node, ast.Assign)
         and len(node.targets) == 1
         and isinstance(node.targets[0], ast.Name)
-        and node.targets[0].id == "TELEMETRY_PATH"
         and ast.dump(node.value) == _EXPECTED_VALUE
-        for node in tree.body
     )
 
 
@@ -180,6 +214,9 @@ def lab_notebook_findings(scope: str, path: Path) -> list[str]:
         if PARAMETERS_TAG in cell_tags:
             findings.append(_fail(scope, f"lab code cell {index}: only the first code cell is the "
                                          "parameters cell"))
+        if tree is not None and _telemetry_path_assignments(tree):
+            findings.append(_fail(scope, f"lab code cell {index} assigns {PATH_NAME} (only the parameters "
+                                         "cell may set it)"))
         if SIMULATOR_MENTION.search(cell.source) and NO_EXEC_TAG not in cell_tags:
             findings.append(_fail(scope, f"lab code cell {index} uses the simulator "
                                          f"(carla / competition_runner / subprocess) but is not {NO_EXEC_TAG}"))
