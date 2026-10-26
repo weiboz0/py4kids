@@ -1,6 +1,6 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** DRAFT, v4 (2026-10-25).
+**Status:** APPROVED, v4 (2026-10-25). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
@@ -545,6 +545,11 @@ Pairings may be adjusted by each plan's gate without a design change.
   - N7, host failure: [FIXED v4, §7.3].
   - N8, deny-list breadth: [FIXED v4, §4.1].
   - N9, ruff: [FIXED v4, §7.1].
+- **[self]** APPROVE.
+
+### Round 4 (v4 @ b4db74c): CONSENSUS
+- **[sol]** APPROVE. B1, S2 and N3 were RESOLVED, with no new findings.
+- **[fable]** APPROVE WITH NITS in round 3. All of its nits were folded in v4.
 - **[self]** APPROVE.
 
 ## 10. Revision history
