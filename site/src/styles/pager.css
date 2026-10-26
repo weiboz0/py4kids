@@ -1,0 +1,220 @@
+/* The practice-page pager (plan 106): the wide layout with a sticky side list, the phone-width
+   <details>, the jump list's statuses, Previous / Next, the group kicker, and print. Colours are
+   the site's tokens (global.css, content.css). Until the island enables it (`.is-paged`), the
+   page lays out exactly as before: the chrome is [hidden] and every step shows. */
+
+.step-kicker {
+  margin: 0 0 0.15rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.practice-item > h2:focus {
+  outline: none;
+}
+
+.practice-item > h2:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The list. */
+.pager-nav {
+  margin: 0 0 1rem;
+}
+
+.pager-list {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.pager-summary {
+  padding: 0.55rem 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pager-summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.jump-list,
+.jump-sublist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jump-list {
+  padding: 0 0.4rem 0.5rem;
+}
+
+.jump-group-label {
+  margin: 0.6rem 0.4rem 0.2rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.jump-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.1rem 0.4rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.5rem;
+  border-left: 3px solid transparent;
+  border-radius: 4px;
+  color: var(--text);
+  text-decoration: none;
+  line-height: 1.35;
+}
+
+.jump-link:hover .jump-label {
+  text-decoration: underline;
+}
+
+.jump-link[aria-current='step'] {
+  border-left-color: var(--accent);
+  background: var(--bg);
+  font-weight: 700;
+}
+
+.jump-label {
+  color: var(--accent);
+}
+
+.jump-title {
+  flex-basis: 100%;
+  padding-left: 1.4rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.jump-tag {
+  font-size: 0.72rem;
+}
+
+.jump-status {
+  order: -1;
+  display: inline-block;
+  min-width: 1rem;
+  font-weight: 700;
+}
+
+.jump-status[data-state='passed'] {
+  color: var(--label-goals);
+}
+
+.jump-status[data-state='tried'],
+.jump-status[data-state='checking'] {
+  color: var(--muted);
+}
+
+/* Previous / Next. */
+.pager-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 1.25rem 0 0;
+}
+
+.pager-controls .button:disabled {
+  cursor: default;
+}
+
+.pager-controls .button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.intro-details {
+  margin: 0 0 1.25rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.intro-details > summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.intro-details > summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.intro-details > .practice-intro {
+  margin: 0.5rem 0 0.25rem;
+}
+
+.is-paged .practice-step > .practice-item {
+  margin-top: 0.75rem;
+}
+
+/* Wide screens: the list is a sticky side column scrolling on its own; the item keeps the
+   reading measure. */
+@media (min-width: 62rem) {
+  main:has(> .practice-layout.is-paged) {
+    max-width: calc(var(--measure) + 19rem + 2 * var(--gutter));
+  }
+
+  .practice-layout.is-paged {
+    display: grid;
+    grid-template-columns: 16rem minmax(0, var(--measure));
+    gap: 0 2.5rem;
+    align-items: start;
+  }
+
+  .practice-layout.is-paged .pager-nav {
+    position: sticky;
+    top: 0;
+    max-height: 100dvh;
+    overflow: auto;
+    margin: 0;
+    padding: 0.5rem 0;
+  }
+
+  .practice-layout.is-paged .pager-summary {
+    display: none;
+  }
+
+  .practice-layout.is-paged .pager-list {
+    padding-top: 0.4rem;
+  }
+}
+
+/* Print: every step, no pager chrome. `!important` beats progress.css's site-wide
+   `[hidden] { display: none !important; }`. */
+@media print {
+  .practice-step[hidden],
+  .practice-outro[hidden] {
+    display: block !important;
+  }
+
+  .pager-nav,
+  .pager-controls,
+  .intro-details > summary {
+    display: none !important;
+  }
+
+  .intro-details {
+    border: 0;
+    padding: 0;
+  }
+}
+
+@media print {
+  .intro-details::details-content {
+    display: block !important;
+    content-visibility: visible !important;
+  }
+}
