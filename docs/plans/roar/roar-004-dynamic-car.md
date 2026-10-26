@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.2** (§4.2 the spin-out rule, §4.3 the generator driver step 2, §4.4 items 2–3, §4.5, §5, §7.1).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-003` merges (#158).
+**v3.2** folds round 4. Both reviewers found the second stop shortcut, the sign-change clamp, which zeroed v_y (up to about 10 g in a substep). It now clamps v_x only. The prototype is re-frozen as an **immutable copy** ([fable] r4 S1): `scratchpad/u04/dyn_af442a6f.py` (read-only), md5 `af442a6f096e1654c38af75790c2a9fe`. Every pin, including the six base-3.5 singles, was re-run on it, and none moved. This copy is the reference for Phase A.
 **v3.1** folds round 3. [sol]'s two blockers were the stop shortcut ignoring grip and a stacked pin that was not a true interaction. [fable] approved with nits. The prototype is re-frozen at md5 `ad3896a7ffe72f4ca679f0fb0a3a9f83` (the stop's deceleration is capped at μg), and every race pin was re-run on it unchanged.
 **v3** folds plan-review round 2. [sol] found three blockers: the low-speed regime broke μg; the comparison was not against the best global setting; the Unit 8 μ premise was unstated. [fable] found that the low-speed gates did not match the prototype. The prototype is now **frozen** at `scratchpad/u04/dyn.py` md5 `94808dd3…` (superseded by v3.1's `ad3896a7…`), and every number below was measured on it.
 **v2** folds plan-review round 1. Both [sol] and [fable] rejected. The decisive finding was [fable] B1: the v1 probes never attached the section grip, so every truth-car number was measured at μ = 1.0. Every probe below was re-run with the grip attached, with the prototype's low-speed and brake-stop physics fixed.
@@ -121,7 +122,7 @@ All numbers are re-pinned on the shipped code.
   Design §4.2 says "|β| or |r| beyond a pinned threshold".
   A yaw-rate threshold cannot tell a legitimate full-lock turn at low speed (r ≈ 4.8 rad/s at 5 m/s) from a spin, and β can.
   The rule is |β| > 25° at a speed above 5 m/s.
-  At 5–10 m/s and full lock the probe's max |β| is 10.6° (defaults) and 11.7° (truth), so the rule does not trip.
+  Starting at 5–10 m/s at full lock, the probe's max |β| over ticks above 5 m/s (the rule's own condition) is 10.6° on the defaults and 11.7° on the truth car, so the rule does not trip. Over all ticks, the car slows into the kinematic regime, where β → atan(l_r·tan δ / L) ≈ 55° legitimately ([fable] r4 N2).
 - **The noise is throttle-only** (see Probe evidence).
   Design §4.4 says "a seeded actuator jitter", and this satisfies it.
   `KinematicCar` keeps its two-channel jitter, because Unit 1's pins depend on it.
@@ -162,7 +163,7 @@ All numbers are re-pinned on the shipped code.
   - **Measured:**
     - over μ ∈ {0.78, 1}, v₀ ∈ {0 … 5} m/s and 7 throttle, brake and steer combinations, the worst per-tick |a|/(μg) is **1.000**;
     - from rest under throttle 0.3 at steer 0, 0.5 and 1, v_x never goes negative and is non-decreasing while below 1 m/s.
-  - **Spin rule against legitimate turns** (frozen prototype, defaults and truth parameters): full lock at throttle 0.3 from 5, 6, 8 and 10 m/s peaks at |β| = 4.5–11.7°, with no trip.
+  - **Spin rule against legitimate turns** (frozen prototype, defaults and truth parameters): full lock at throttle 0.3 from 5, 6, 8 and 10 m/s peaks at |β| = 4.5–11.7° over ticks above 5 m/s, with no trip.
     The true spins trip:
     - 40 m/s full lock with full brake (|β| 27–34°);
     - full throttle at full lock from rest, power oversteer (40–68°);
@@ -173,7 +174,7 @@ All numbers are re-pinned on the shipped code.
   - the brake is on;
   - the brake is at least the drive (braking ≥ |drive|, [fable] r2 N2);
   - ‖v‖ ≤ min(braking − drive·sign(v_x) + c·v_x², μg)·h. This is the direction-aware net deceleration, **capped by the grip** ([sol] r3 B1): reverse throttle plus brake can no longer stop the car faster than μg.
-  Under braking, a sign change of v_x also clamps to 0, but only below 0.5 m/s, so a spinning car's v_x may cross zero.
+  Under braking, a sign change of v_x below ‖v‖ = 0.5 m/s clamps **v_x only** to 0. v_y and r stay with the μg-bounded forces ([sol] r4 B, [fable] r4 B1). A spinning car's v_x may cross zero above 0.5 m/s.
   This is deliberately unlike `KinematicCar`, whose RK4 substeps creep (see Out of scope).
 - **Section grip.** `mu` takes a scalar, or a length-6 sequence applied per grip section.
   A per-section μ requires `attach_track(track)`.
@@ -215,14 +216,19 @@ All are routed tests under `roar/projects/racekit/tests/`, plus the existing sui
   - with full throttle **and** full brake from 0.05 m/s, the car takes at least 3 substeps to stop, so it is not an early snap ([sol] B1);
   - with throttle 0.75 and full brake from 5 m/s, the car reaches v == 0.0 within 2 s.
 - **Low speed:**
-  - **Friction bound:** over μ ∈ {0.78, 1}, v₀ ∈ {0, 0.06, 0.4, 0.5, 1, 1.5, 2, 3, 5} m/s and the (throttle, steer, brake, reverse) set {(1, 1, 0, 0), (1, 0.5, 0, 0), (0.3, 1, 0, 0), (0, 1, 1, 0), (0, 0, 1, 0), (0, 0.5, 1, 0), (0.5, −1, 0.3, 0), (1, 0, 1, 1), (1, 1, 1, 1), (0.5, 0, 1, 0)} for 3 s each, including reverse with brake ([sol] r3 B1), every tick has |Δv|/(0.05·μg) ≤ 1.02 (probe 1.000).
+  - **Friction bound:** over μ ∈ {0.78, 1}, v₀ ∈ {0, 0.06, 0.4, 0.5, 1, 1.5, 2, 3, 5} m/s and the (throttle, steer, brake, reverse) set {(1, 1, 0, 0), (1, 0.5, 0, 0), (0.3, 1, 0, 0), (0, 1, 1, 0), (0, 0, 1, 0), (0, 0.5, 1, 0), (0.5, −1, 0.3, 0), (1, 0, 1, 1), (1, 1, 1, 1), (0.5, 0, 1, 0)} for 3 s each, including reverse with brake ([sol] r3 B1), run **both** with the wheel ramping from 0 and with it pre-settled, at lag 0 and 1 ([fable] r4 B1), every tick has |Δv|/(0.05·μg) ≤ 1.02 (probe 1.000).
+  - **Lateral-state fuzz** ([sol] r4 B): 3,000 seeded cases.
+    - Each case draws μ ∈ {0.78, 0.9, 1}, v_x ∈ [−0.5, 3], v_y ∈ [−1.5, 1.5] m/s and r ∈ [−4, 4] rad/s.
+    - Actions are random throttle, steer and brake, with reverse.
+    - Each case runs for 10 ticks.
+    - Every tick must have |Δv_world|/(0.05·μg) ≤ 1.02. The probe gives 1.000, and [sol]'s counterexample (v_x 0.2, v_y −0.49, r −3, full brake, steer −1) is now 0.918.
   - From rest under throttle 0.3 at steer ∈ {0, 0.5, 1}, for 4 s:
     - v_x ≥ 0 throughout;
     - v_x is non-decreasing while |v_x| < 1 m/s;
     - `spun_out()` never trips.
 
     Above the blend band, v_x is a body-frame component, and v_y·r coupling may legitimately move it ([fable] r2 N3).
-  - While |v_x| < 1 m/s and after 0.5 s, |v_y − l_r·v_x·tan δ / L| ≤ 0.1 m/s at half lock and ≤ 0.4 m/s at full lock (probe 0.062 and 0.308). At throttle 0.3 that window is only ticks 10–11, so the test also asserts the window is non-empty ([fable] r3 N2).
+  - While |v_x| < 1 m/s and after 0.5 s, |v_y − l_r·v_x·tan δ / L| ≤ 0.1 m/s at half lock and ≤ 0.4 m/s at full lock (probe 0.062 and 0.308). At throttle 0.3 that window is ticks 10–11 at half lock and tick 10 alone at full lock, so the test also asserts the window is non-empty ([fable] r3 N2, r4 N1).
     That bound is the relaxation lag, an absolute bound: at walking pace a small lag is a large angle.
 - **Lag:** with `lag_ticks = k`, a throttle step first changes v_x on tick k + 1.
 - **Steering rate:** the rate limit is respected.
@@ -230,7 +236,7 @@ All are routed tests under `roar/projects/racekit/tests/`, plus the existing sui
   - 40 m/s with full lock and full brake for 1 s triggers `spun_out()` (probe |β| 27.3°, truth car 34°). The margin over 25° is thin on the defaults, so any change to B or C re-checks this case ([fable] r3 N4);
   - full throttle at full lock from rest for 4 s triggers it (power oversteer);
   - a steady 15 m/s, 0.3g circle never does;
-  - full lock at throttle 0.3 from 5, 6, 8 and 10 m/s for 4 s never does (max |β| 11.7°);
+  - full lock at throttle 0.3 from 5, 6, 8 and 10 m/s for 4 s never does (max |β| 11.7° over ticks above 5 m/s);
   - the tests call the car's own `spun_out()`, never a re-implementation of the threshold.
 - **Grip:** a per-section `DynamicCar` raced without `attach_track` raises.
 
@@ -406,3 +412,26 @@ The prototype `scratchpad/u04/dyn.py` is the reference for the physics. The impl
   - base-3.5 stack: 2/5 unclean;
   - `monza-like` noise: 542.00 s (spread 0.25 s);
   - flat 20 m/s: 16 and 21 collisions.
+
+### Round 4 (v3.1 @ 9cb9863)
+- [self] APPROVE.
+- [sol] REJECT:
+  - **B** [FIXED] The sign-change clamp zeroed v_y: a sliding low-speed state stopped at 1.38 μg. The clamp now zeroes only v_x. A 3,000-case lateral-state fuzz gate was added, with a worst case of 1.000; the counterexample is now 0.918.
+  - The other round-3 findings were verified resolved: the base-3.5 singles are clean, the grid gate is falsifiable, the 3.8 count is right, and the reverse-plus-brake probes pass.
+- [fable] REJECT:
+  - **B1** [FIXED] Same clamp, found through a ramped wheel (1.417 on ad3896a7, because the author's probe pre-set the wheel). The friction gate now runs with ramped and pre-set wheels at lag 0 and 1, all 1.000 on af442a6f.
+  - **S1** [FIXED] There is now an immutable freeze copy.
+  - **N1** [FIXED] Window wording.
+  - **N2** [FIXED] β is stated over ticks above 5 m/s.
+  - **N3** [FIXED] The singles are in the re-run.
+- **Re-run on the immutable freeze `dyn_af442a6f.py`, all unchanged:**
+  - global 3.5 / 3.7: 327.40 / 323.05 s (spreads 0.30 / 0.40 s);
+  - 3.8: collisions on seeds 0, 1, 2 and 4;
+  - 3.9 and 4.0: DNF on every seed (12 or 13 collisions);
+  - the base-3.5 singles, each clean in 5/5: 325.35 / 321.30 / 323.60 / 324.95 / 325.25 s;
+  - the base-3.5 stack: collisions on seeds 0 and 4;
+  - combined: 313.50 s (spread 0.45 s);
+  - `monza-like` noise: 542.00 s (spread 0.25 s);
+  - the Unit 6 races: flat 16 and 21 collisions; limited 217.65 / 413.70 / 873.00 s;
+  - the starter: 34 spins, one repeated event;
+  - the limit lap: max |a|/(μg) 0.992.
