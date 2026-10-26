@@ -50,7 +50,8 @@ Without JavaScript (and for search indexing and printing), the page renders exac
   - `py4kids:checklist` `{ key, done }`, dispatched by `progress-page.ts` after a checklist is recorded;
   - `py4kids:step` `{ href }`, dispatched once per shown step from the pager's single show function (reached from the controls, the list, Back/Forward and load), which `progress-page.ts` records as the resume position, as it does for `py4kids:slide`.
   The pager sets "checking…" on `check-start` and clears it on the terminal `check`. **Statuses always come from the store:** on every `check` and `checklist` notification the pager re-reads that item's events and derives its status (`lib/pager.ts`), so ✓ appears only for a `pass` that was actually recorded, and a failed save leaves the list as it was.
-  **A failed save is said, not silent:** the item's result area adds "Your result could not be saved on this device, so it will not count toward your progress." (shown on the item, so it is there when the student returns to a hidden item), and the hidden-item announcement says "Exercise 2: Passed, but not saved". The existing unsaved-progress notice covers only a store that was not persistent at open, so it does not cover this case. When a check ends on a **hidden** item, a page-level polite live region announces "Exercise 2: Passed" (or "Not yet", "Could not check", "Stopped"), since the item's own `aria-live` region does not speak while hidden. Stop stays on the item; switching away does not stop a running check.
+  When a check ends on a **hidden** item, a page-level polite live region announces "Exercise 2: Passed" (or "Not yet", "Could not check", "Stopped"), since the item's own `aria-live` region does not speak while hidden.
+  **A failed save is said, not silent:** the item's result area adds "Your result could not be saved on this device, so it will not count toward your progress." (shown on the item, so it is there when the student returns to a hidden item), and the hidden-item announcement adds "but not saved". The existing unsaved-progress notice covers only a store that was not persistent at open, so it does not cover this case. Stop stays on the item; switching away does not stop a running check.
 - **Addressing and history:**
   - Hash resolution: `document.getElementById(hash)?.closest('[data-step]')`. The item anchor, the heading `#<anchor>-h` (which Pagefind sub-results link to), and any id inside a `before` block or the item all show their step. For an id other than the step or its heading, the pager scrolls that element into view after showing the step and does not move focus.
   - **At load**, an empty or unresolvable hash shows the first item and does not touch history. **On a later `hashchange`**, a hash that resolves to no step (the skip link `#main`, any in-page link outside a step) leaves the current step shown and lets the browser jump normally.
@@ -149,16 +150,22 @@ Without JavaScript (and for search indexing and printing), the page renders exac
 
 ### Round 3 (9a3a903)
 
-- `[fable]` **APPROVE WITH NITS**. Both nits fixed: the `### Round 4 (1013d94)
+- `[fable]` **APPROVE WITH NITS**. Both nits fixed: the Content Review section heading, deleted by the round-2 edit, is restored, and the fixture is named "Exercise 11".
+- `[sol]` **REQUEST CHANGES** (gpt-6-sol). Folded:
+  - MAJOR: `withStore` swallows save failures, so a terminal `pass` could show ✓ for an unrecorded pass. → Statuses are always re-derived from the store on each notification, and the event result only clears "checking…" and drives the announcement. A save-failure test is added. The stale "one notification" constraint and the Phase B summary are corrected.
+  - MINOR: the Exercise 11 fixture is fixed, and the claim that every `before` block is a heading is removed.
+
+### Round 4 (1013d94)
 
 - `[fable]` **APPROVE WITH NITS**. Its nit is fixed: the save-failure test makes an *open* IndexedDB store's write reject, since making IndexedDB unavailable would fall back to memory, where the write succeeds.
 - `[sol]` **REQUEST CHANGES** (gpt-6-sol). Folded:
   - MAJOR: a write rejected after the store opened was silent, because the unsaved-progress notice covers only a store that was not persistent at open. → `withStore` returns whether the write succeeded, and the terminal event carries `saved`. The item shows "Your result could not be saved on this device…", and the hidden announcement says "Passed, but not saved". The test is the write rejection on an open store.
 
-## Content Review` heading, deleted by the round-2 edit, is restored, and the fixture is named "Exercise 11".
-- `[sol]` **REQUEST CHANGES** (gpt-6-sol). Folded:
-  - MAJOR: `withStore` swallows save failures, so a terminal `pass` could show ✓ for an unrecorded pass. → Statuses are always re-derived from the store on each notification, and the event result only clears "checking…" and drives the announcement. A save-failure test is added. The stale "one notification" constraint and the Phase B summary are corrected.
-  - MINOR: the Exercise 11 fixture is fixed, and the claim that every `before` block is a heading is removed.
+### Round 5 (6dee031)
+
+- `[fable]` **APPROVE WITH NITS**. Both nits fixed:
+  - the round-record edit had split a Round 3 line and created a stray second Content Review heading; the records are rebuilt in order;
+  - the duplicated hidden-item announcement sentence is merged.
 
 ## Content Review
 
