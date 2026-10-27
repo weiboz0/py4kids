@@ -7,7 +7,7 @@ By the end of this unit students can:
 - Derive **pure pursuit**: the arc through a lookahead point at distance d and bearing α has curvature κ = 2 sin α / d, so δ = atan(L·κ). They check that on a circle it gives exactly 1/R.
 - Use a **speed-scaled lookahead** L_d = clip(k·v, L_min, L_max) and explain the trade: a longer lookahead is more stable and cuts more corners.
 - Explain **actuator delay**, why every real car has some, and race with `KinematicCar(lag_ticks=N)`.
-- Write the **Stanley** law at the front axle, δ = ψ_e + atan(k·e / v), and say why a law with no lookahead is delay-sensitive.
+- Write the **Stanley** law at the front axle, δ = ψ_e + atan2(−k·e_f, max(v, 1)) with the front-axle offset e_f left positive (so a car left of the line steers right), and say why a law with no lookahead is delay-sensitive.
 - Read an honest, conditional result.
   - On a car with **no delay**, pure pursuit does **not** beat Unit 4's controller; it cuts corners (RMS 0.14–0.15 m against about 0.10 m at 20 m/s).
   - At **30 m/s with a 2-tick delay**, pure pursuit is clean on every seed, while Unit 4's gains and Stanley crash on every seed.
@@ -48,7 +48,7 @@ Plan for **two to three 60–90 min sittings**, plus the lab on a CARLA machine.
 
 - **Never commit results.** Recordings live outside the repository (the Unit 1 lab sets this up). Check `git status` with the class before anyone commits.
 - **One recording at a time.** `ROAR_LAB_CSV` points at one file; students run the analysis twice and write the two RMS values down.
-- **Both agents run at 20 m/s.** On `carla_like`, the Unit 6 car, Unit 4's controller is clean at 20 m/s but crashes at 25 m/s while pure pursuit is clean (a preview, not shown to students yet). Do not let students raise `TARGET_SPEED` for the lab.
+- **Both agents run at 20 m/s.** On `carla_like`, the Unit 6 car, Unit 4's controller crashes at 25 m/s on `oval` while pure pursuit is clean (the plan's preview probe, not shown to students yet). Do not let students raise `TARGET_SPEED` for the lab.
 - **The interim CARLA checks are the author's** (design §7.3). Student CARLA results never enter the repository or the book.
 
 ## Common mistakes

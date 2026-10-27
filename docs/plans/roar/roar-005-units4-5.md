@@ -61,7 +61,7 @@ All probes are in `scratchpad/u05/`. The pin record is `p6_full.txt` (unfiltered
   ticks of actuator lag" under the dynamic car; the kinematic car needs it now to show the trade-off).
   The Unit 3 teacher notes already list actuator delay among the sources of model error.
 - **Units 4–5 change the driving.** Both agents hold 20 m/s with a PI loop (the starter holds 19.49 m/s), so race
-  times fall by about 1.4–1.7%; both keep `TARGET_SPEED = 20.0` (speed planning is Units 6–7).
+  times fall by about 1.4–2.0% (five-seed medians 2.0 / 1.7 / 1.4% on oval / test-circuit / monza-like; corrected in the content gate, [fable] N4); both keep `TARGET_SPEED = 20.0` (speed planning is Units 6–7).
 
 ## Buildout stays
 The whole-book lesson total becomes 9 + 3 + 3 = 15, under 30.
@@ -327,3 +327,22 @@ ranges, as stated.
 - [sol] APPROVE: round-5 B verified resolved; no new findings.
 - [fable] APPROVE WITH NITS (round 2 on v2; rounds 3–6 changed only gate labels and assertion locations, all within its nits N7–N10).
 - [self] APPROVE.
+
+## Content Review
+
+### Round 1 (implementation @ 8aef1bb + the RUF046 fix)
+- [self] APPROVE pending the fixes below. Every pin reproduced byte-for-byte by the tooling author (27 telemetry `tobytes()` comparisons against the probe) and again by the content authors; the blind solvers flagged statement ambiguities, fixed before the gate (Unit 4 Ex 2/3/4/8; Unit 5 Ex 2/5/8, including Unit 5 Ex 2's untaught `track.start_pose()` and Ex 5's pose on a straight).
+- [sol] REJECT:
+  - **B** [FIXED] The lab's CARLA cell set `ROAR_LAB_CSV` and started the runner in separate shell commands, so the runner could miss the variable. Each run is now one command (`set "ROAR_LAB_CSV=…" && python competition_runner.py`, quoted against a trailing space), the cell says to type the lines without `!`, and it shows how to start Jupyter with the variable set.
+  - **S** [FIXED] The Unit 5 teacher notes wrote Stanley as δ = ψ_e + atan(k·e/v), with the wrong sign for a left-positive offset; now δ = ψ_e + atan2(−k·e_f, max(v, 1)), as the lesson and agent.
+  - **N** [WONTFIX] `lag_ticks=2.0` is accepted as 2. That is `DynamicCar`'s validation exactly, which the plan asked the kinematic car to mirror.
+  - Blind solve: Unit 4 Ex 1, 4, 5 and Unit 5 Ex 1, 2, 4 agree with the solutions; every gate U4.1–U5.5 is asserted where the plan says.
+- [fable] APPROVE WITH NITS (blind-solved Unit 4 Ex 1–5, 8 and Unit 5 Ex 1–5, all agreeing; executed copies of both solutions notebooks, 21 s and 28 s; reproduced U5.2, the `"pid"` identity, and lag-2 seed 0 pursuit and detuned PD; checked the maths by hand):
+  - **S1** [FIXED] The teacher notes claimed Unit 4 was clean on `carla_like` at 20 m/s, which is not in the probe record; the note now states only the recorded 25 m/s result.
+  - **N1** [FIXED] (= [sol] S) the Stanley sign in the notes.
+  - **N2** [FIXED] The Unit 4 notes' stretch item duplicated core Exercise 1; replaced by the linearized time constant.
+  - **N3** [FIXED] Unit 4 Ex 4 step 3 now says the central-difference gap is largest on the first ticks.
+  - **N4** [FIXED] The plan's time-gain range is corrected to 1.4–2.0%.
+  - **N5** Noted: the post-execution report records the runtime totals and the api-order additions.
+  - **N6** [WONTFIX] An illustrative print in a Unit 4 lesson cell is not asserted; it is a restatement of the cell's own printed values, and every gated number is asserted.
+

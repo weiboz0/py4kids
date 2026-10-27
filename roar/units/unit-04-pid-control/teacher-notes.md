@@ -64,4 +64,4 @@ Plan for **two to three 60–90 min sittings**. There is no lab.
 - **Stretch:**
   - derivative kick: a set-point step through a finite-difference D against a measured-rate D;
   - the I term on steering vs the curvature feedforward;
-  - for strong students: derive the P loop's steady-state error in closed form and compare it with the measurement.
+  - for strong students: the closed-form time constant τ = 1/(a_T·K_P + 2c·v) of the linearized speed loop, and how well it predicts the settling times of Exercise 3 (the closed-form steady-state error is core Exercise 1).
