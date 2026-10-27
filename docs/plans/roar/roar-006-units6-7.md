@@ -7,6 +7,7 @@
 friction-circle attribution; [fable] REJECT: S1 the profile lead, S2 one clean rule, S3 like with like, S4 the lab
 budget, N1–N7; [self] the lab's 2 m rule). Unit 7 is re-probed (`q18`–`q21`) with the lead in seconds and one clean
 rule; the reference and every Unit 7 pin change.
+**v2.2** folds plan-review round 3 ([sol] B: the lab's section map by a recorder sidecar; S: the lab grid).
 **v2.1** folds plan-review round 2 ([sol] REJECT: B the lab's run budget, B the interim check vs the lab's
 fallback, S section 3's seed list, S U7.2's evidence class; [fable] APPROVE WITH NITS: S1–S2 the same two, N1–N7).
 
@@ -226,9 +227,16 @@ constants unless stated):
 - **U7.9, the section map:** the agent's section of every waypoint equals `grip_sections(load_track(name))` on all
   three tracks.
 - **U7.10, the lab** (design §7.2): `labs/real-sim.ipynb` passes `lab-check` against the sample CSV. It races
-  `agents/unit-07.py` on CARLA, splits the recording into the six sections **with the agent's own formula**
-  (cumulative distance along the recorded waypoints / lap length × 6, so knob k is the section the agent applies it
-  to; racekit's convention, not a property of Monza, [fable] r2 N4), and reports per section the
+  `agents/unit-07.py` on CARLA and splits the recording into the six sections **by the agent's own section map**
+  ([sol] r3 B1). The telemetry CSV's columns are fixed (`racekit.telemetry.COLUMNS`), so the lab's recorder change
+  (on top of Unit 5's) writes a **sidecar** once, at `initialize`: `<the CSV path>.sections.txt`, one integer per
+  waypoint, the agent's `self.section` list, derived from `TELEMETRY_PATH` (the parameters cell stays the only place
+  a file name appears). The analysis maps each driving row to `sections[progress % waypoints_per_lap]`. Without the
+  sidecar (the sample fixture has none) it falls back to equal progress slices and prints that they match the agent's
+  sections only on evenly spaced waypoints. A routed test splices the recorder into `agents/unit-07.py`, races `oval`
+  and asserts the sidecar equals `grip_sections(load_track("oval"))` and that the analysis's per-row sections from
+  the sidecar equal the fallback's there (evenly spaced waypoints). Six sections by arc length are racekit's
+  convention, not a property of Monza ([fable] r2 N4). It and reports per section the
   time, the median and peak speed, the max |cross-track error| and the collisions (Unit 5's recorder change supplies
   the error). Its racekit-prediction cell races the reference on `monza-like` (`carla_like(noise=True)`, seed 0) and
   **asserts** that race's per-section times, peak errors and 0 collisions (pinned in Phase C from the shipped agent,
@@ -239,8 +247,8 @@ constants unless stated):
      follow-up (an errata/fix plan), never replaced by a later run ([sol] r2 B2, [fable] r2 S2).
   2. **Not clean:** the student's path to a usable lab (lab tuning, not the check): lower A_LAT one grid step (4.4,
      then 4.0) and race again, at most 2 runs.
-  3. **Clean:** the sequential pass on CARLA on a coarse grid (1.1, 1.2, 1.3, 1.5), one 3-lap run per step, at most
-     3 steps per section, sections in order, a section stopping at its first unclean step, and a **sweep budget of 12
+  3. **Clean:** the sequential pass on CARLA on a coarse grid (1.1, 1.2, 1.3), one 3-lap run per step (so at most
+     3 steps per section, [sol] r3 S1), sections in order, a section stopping at its first unclean step, and a **sweep budget of 12
      runs**: when it is spent the pass stops, the sections not yet tried stay at 1.0, and the printout names them
      ([sol] r2 B1, [fable] r2 N1). The short form sweeps sections 0–1 only.
   4. Re-race the result twice; if either run is not clean, step every raised knob back once (the margin rule).
@@ -386,3 +394,10 @@ post-execution report records the book-level exec total against the 15 CI-minute
     [FIXED v2.1.] **N5** section 1's 1.5 is the grid top. [FIXED v2.1.] **N6** recount (about 270 races, 17 CPU-min,
     2.2 min); the oval row's class; keep the horizon stretch to three races. [FIXED v2.1.] **N7** cite `q19` for
     leads 0.4–0.6; `mu_now` is an attribute. [FIXED v2.1.]
+
+### Round 3 (v2.1 @ 7b58c69)
+- [sol] REJECT: round-2 B1, B2, S1, S2 resolved.
+  - **B1** the CSV schema cannot carry the agent's section boundaries, so the lab cannot reproduce them. [FIXED v2.2:
+    the recorder writes a `.sections.txt` sidecar of the agent's section map; the analysis uses it, with a stated
+    equal-slice fallback; a routed test checks the sidecar.]
+  - **S1** the 1.5 grid value was unreachable within three steps. [FIXED v2.2: the lab grid is (1.1, 1.2, 1.3).]
