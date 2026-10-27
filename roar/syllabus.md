@@ -67,6 +67,6 @@ Comparisons are noise-aware: one agent beats another only by more than the sprea
 | 2 | `unit-02-track-geometry` | unit | 3 | The starter steers at a point three waypoints ahead and never looks further: where exactly is the car relative to the track, and what is coming? Frames, heading, angle wrapping, projection, cross-track error and curvature, used to measure the starter. |
 | 3 | `unit-03-modelling-the-car` | unit | 3 | Where will the car be in one second? The kinematic bicycle, the longitudinal map, and Euler vs RK4 integration with their error orders. |
 | 4 | `unit-04-pid-control` | unit | 3 | Hold 20 m/s, then follow the line. P, I and D; windup and anti-windup; step-response tuning; steering from the cross-track error with heading damping and a curvature feedforward. |
-| 5 | `unit-05-geometric-steering` | unit | 3 | 🏁 Steer like a driver looks ahead. Pure pursuit, a speed-scaled lookahead, actuator delay and Stanley: stability vs corner-cutting, decided on CARLA in the lab. |
+| 5 | `unit-05-geometric-steering` | unit | 3 | Steer like a driver looks ahead. Pure pursuit, a speed-scaled lookahead, actuator delay and Stanley: stability vs corner-cutting, decided on CARLA in the lab. |
 
 *Later units, the checkpoints and the capstone are added by the plans that follow.*
