@@ -7,6 +7,8 @@
 friction-circle attribution; [fable] REJECT: S1 the profile lead, S2 one clean rule, S3 like with like, S4 the lab
 budget, N1–N7; [self] the lab's 2 m rule). Unit 7 is re-probed (`q18`–`q21`) with the lead in seconds and one clean
 rule; the reference and every Unit 7 pin change.
+**v2.1** folds plan-review round 2 ([sol] REJECT: B the lab's run budget, B the interim check vs the lab's
+fallback, S section 3's seed list, S U7.2's evidence class; [fable] APPROVE WITH NITS: S1–S2 the same two, N1–N7).
 
 ## Scope
 - Unit 6 `roar/units/unit-06-grip-and-speed-limit/` and Unit 7 `roar/units/unit-07-speed-planning/`: lesson,
@@ -42,7 +44,7 @@ Each race costs about 3–5 s of CPU (a 1500 s crash race about 11 s).
   a backward braking pass at A_DEC, a forward pass at A_ACC = 4) with TARGET_SPEED 45 m/s. The goal is the profile
   speed **a lead ahead of the car, measured in seconds of travel**: the first waypoint at least
   max(`PROFILE_LEAD_S`·v, 2 m) of path ahead of `current_index`. The lead pays for the speed loop's lag (the PI needs
-  time to brake to the profile). At the base the lead barely changes the time (0.1–0.6 s: 309.70–310.05 s), but at
+  time to brake to the profile). At the base the lead barely changes the time (0.1–0.35 s in `q18` and 0.4–0.6 s in `q19`: 309.70–310.05 s), but at
   the grid's edge a short lead crashes: (A_DEC 4.0, A_LAT 5.0) collides on every seed at 0.1 and 0.15 s and is clean
   from 0.2 s; (6.0, 4.0) collides at 0.1 and 0.15 s, passes 2 m only from 0.25 s. `PROFILE_LEAD_S = 0.3` is inside the
   clean range everywhere probed.
@@ -86,8 +88,8 @@ Each race costs about 3–5 s of CPU (a 1500 s crash race about 11 s).
 - **The reference `agents/unit-07.py` ships `GRIP = (1, 1, 1, 1, 1, 1)`.** A section is a fraction of *this* lap,
   so the knobs are per track; the lesson and milestone tune `test-circuit`, and the lab tunes the real car.
 - **Routed budget: design §7.1 "Routed pytest ≤ 5 min" becomes ≤ 8 min (design v4.4).** The roar routed suite is
-  4.5 min after `roar-005` on this 8-core machine; this plan's gates add about 220 races (about 16 CPU-minutes,
-  about 2 min on 8 workers). Every multi-seed gate is asserted in full in the routed pool, which is cheaper than any
+  4.5 min after `roar-005` on this 8-core machine; this plan's gates add about 270 races (about 17 CPU-minutes,
+  about 2.2 min on 8 workers, [fable] r2 N6). Every multi-seed gate is asserted in full in the routed pool, which is cheaper than any
   notebook. The budget is stated for an 8-core CI machine and the report records the measured time; recorded as a
   user follow-up.
 
@@ -150,7 +152,7 @@ seeds 0–4 unless stated.
   | `monza-like` | 891.85 | 881.80 | 875.70 | 871.55 | 868.75 | 868.15 | 11 spins | 21 spins | 21 spins |
 
   Every number is a clean time unless it says spins (then the spin count, not finished). `oval` is 216.50 s at every
-  A_LAT (the cap never binds below 20 m/s there).
+  A_LAT (the cap never binds below 20 m/s there; probe record, asserted at A_LAT 6 only, in U6.4).
 - **U6.3, the cap on the carla-like car** (`carla_like(noise=False)`, `max_seconds=1500`): `test-circuit` 434.70 /
   424.30 / 418.40 s at A_LAT 5 / 6 / 7, and 19 spins at 8; `monza-like` 892.60 / 882.45 / 876.30 / 872.15 s at
   5–8, and 21 spins at 9. The edge is lower than U6.2's: less grip.
@@ -168,7 +170,9 @@ constants unless stated):
   5.0, and at A_DEC 6.0 with A_LAT 4.0): at (4.0, 4.6) every lead is clean (309.70–309.95 s, max |offset| falling
   from 1.53 to 1.25 m); at (4.0, 5.0) leads 0.1 and 0.15 collide on every seed and 0.2–0.35 are clean (303.25–303.35
   s); at (6.0, 4.0) 0.1 and 0.15 collide, 0.2 finishes without a collision but exceeds 2 m (max 2.03–2.36 m), and
-  0.25–0.35 are clean. **Asserted:** the (4.0, 5.0) and (6.0, 4.0) rows at 0.15 and 0.3.
+  0.25–0.35 are clean. **Asserted:** the (4.0, 5.0) and (6.0, 4.0) rows at 0.15 and 0.3 (outcomes, collision lists,
+  and the clean cells' medians and max |offset|); every other figure in U7.2 is probe record, labelled so in the lesson
+  ([sol] r2 S2).
 - **U7.3, the (A_LAT, A_DEC) grid** (`q19`, lead 0.3 s, `GRIP` all 1): median times; ✗ = not clean on any seed.
 
   | A_DEC \ A_LAT | 4.0 | 4.4 | 4.6 | 4.8 | 5.0 | 5.2 | 5.4 | 5.6 |
@@ -194,7 +198,7 @@ constants unless stated):
   gate).
 - **U7.6, one knob at a time, and the stacking trap** (`q20`): each section alone, swept up the grid (1.05, 1.1,
   1.15, 1.2, 1.3, 1.4, 1.5) on seeds 0–4 until the first unclean step, keeps (1.2, 1.5, 1.1, 1.1, 1.05, 1.1)
-  (probe record, `q20.txt`); **stacked, that vector collides 23 times on every one of seeds 0–9**. **Asserted:** each single
+  (probe record, `q20.txt`; section 1's 1.5 is the grid's top, never an unclean step, [fable] r2 N5); **stacked, that vector collides 23 times on every one of seeds 0–9**. **Asserted:** each single
   knob's kept step clean on seeds 0–4, and the stack unclean on seeds 0–9.
 - **U7.7, the sequential pass** (`q20`), sections 0→5, each step on seeds 0–4, stop at the first unclean step, keep
   the last clean one:
@@ -203,13 +207,15 @@ constants unless stated):
   |---|---|---|
   | 0 | 1.2, 303.10 s | 1.3: collisions [9, 0, 0, 4, 13] |
   | 1 | 1.4, 298.35 s | 1.5: [23, 23, 23, 23, 23] |
-  | 2–5 | 1.0 | 1.05: seed 4 collides 18 times, seeds 0–3 clean |
+  | 2, 4, 5 | 1.0 | 1.05: seed 4 collides 18 times, seeds 0–3 clean |
+  | 3 | 1.0 | 1.05: seeds 1 and 4 collide 18 times each, [0, 18, 0, 0, 18] |
 
   The ten-seed check of the five-seed result (1.2, 1.4, 1.0, 1.0, 1.0, 1.0) fails: seeds 5 and 8 collide 18 times
   each (max 6.48 / 6.38 m), the other eight are clean. The vector sits on the edge: seeds 0–4 were not enough, and
-  raising any later section by one step tipped seed 4 over. One step back on the raised
+  raising any later section by one step tipped seed 4 over (and seed 1 too in section 3). Section 1
+  was clean alone at 1.5 (U7.6) and fails at 1.5 on top of section 0's 1.2: the lesson's concrete interaction. One step back on the raised
   knobs, **(1.15, 1.3, 1.0, 1.0, 1.0, 1.0): clean on seeds 0–9, 299.60 s (spread 0.15)**.
-  **Asserted:** sections 0 and 1's kept and first-unclean steps, the seed-4 failures of sections 2–5, the ten-seed
+  **Asserted:** sections 0 and 1's kept and first-unclean steps, each of sections 2–5's per-seed collision list at 1.05 (from `q20`), the ten-seed
   failure of the edge vector (which seeds), and the accepted vector's ten-seed result.
 - **U7.8, per-section knobs beat the best global setting** (design gate), like with like:
   - with margin: the accepted vector, 299.60 s (0.15), beats the reference (one step inside the global edge),
@@ -220,26 +226,35 @@ constants unless stated):
 - **U7.9, the section map:** the agent's section of every waypoint equals `grip_sections(load_track(name))` on all
   three tracks.
 - **U7.10, the lab** (design §7.2): `labs/real-sim.ipynb` passes `lab-check` against the sample CSV. It races
-  `agents/unit-07.py` on CARLA (the design §7.3 interim check: 3 laps, 0 collisions, untimed), splits the recording
-  into the six sections by progress (racekit's convention, not a property of Monza), and reports per section the
+  `agents/unit-07.py` on CARLA, splits the recording into the six sections **with the agent's own formula**
+  (cumulative distance along the recorded waypoints / lap length × 6, so knob k is the section the agent applies it
+  to; racekit's convention, not a property of Monza, [fable] r2 N4), and reports per section the
   time, the median and peak speed, the max |cross-track error| and the collisions (Unit 5's recorder change supplies
   the error). Its racekit-prediction cell races the reference on `monza-like` (`carla_like(noise=True)`, seed 0) and
   **asserts** that race's per-section times, peak errors and 0 collisions (pinned in Phase C from the shipped agent,
   ±0.05 s / ±0.01 m; the race is U7.4's seed 0).
   **The decision procedure** uses the unit's clean rule (finished, 0 collisions, every section's peak error ≤ 2 m):
-  1. Race the reference three laps. Not clean: lower A_LAT one grid step (4.4, then 4.0) and repeat; that is the
-     interim check.
-  2. Clean: run the sequential pass on CARLA with **one 3-lap run per step, at most 12 runs**, sections in order,
-     stopping a section at its first unclean step.
-  3. Re-race the result twice; if either run is not clean, step every raised knob back once (the margin rule).
-  A host failure (the server exits, or the agent gets no first tick) is repeated, not counted. The lab prints the
-  runs used. It names CARLA's spiky waypoint curvature (phantom braking in the profile, smoothed only downward by the
+  1. **Race `agents/unit-07.py` exactly as shipped, three laps** (its SHA-256 printed). For the author this first run
+     *is* the design §7.3 interim check, recorded PASS or FAIL in `qualification.md`; a FAIL is surfaced as the §7.3
+     follow-up (an errata/fix plan), never replaced by a later run ([sol] r2 B2, [fable] r2 S2).
+  2. **Not clean:** the student's path to a usable lab (lab tuning, not the check): lower A_LAT one grid step (4.4,
+     then 4.0) and race again, at most 2 runs.
+  3. **Clean:** the sequential pass on CARLA on a coarse grid (1.1, 1.2, 1.3, 1.5), one 3-lap run per step, at most
+     3 steps per section, sections in order, a section stopping at its first unclean step, and a **sweep budget of 12
+     runs**: when it is spent the pass stops, the sections not yet tried stay at 1.0, and the printout names them
+     ([sol] r2 B1, [fable] r2 N1). The short form sweeps sections 0–1 only.
+  4. Re-race the result twice; if either run is not clean, step every raised knob back once (the margin rule).
+  The worst case is 1 + 2 + 12 + 2 = 17 runs, about 3 hours at about 10 min per run; the short form fits one sitting
+  ([fable] r2 N2). A host failure (the server exits, or the agent gets no first tick) is repeated, not counted. The
+  lab prints the runs used. It says plainly that one run per step is weaker evidence than the lesson's five seeds,
+  which is why step 4 exists ([fable] r2 N3). It names CARLA's spiky waypoint curvature (phantom braking in the profile, smoothed only downward by the
   backward pass) as a thing to look for, and points at Unit 9 for a smoothed line ([fable] N6).
   **Where each gate is asserted:** U6.1–U6.4 and U7.1–U7.9 in the routed test
   `tests/test_racekit_unit06_07_premise.py` as stated, in the session's parallel pool (`_premise.py`'s `race_all`);
   the milestones assert a trimmed subset (below); the lessons show the rest as the probe record, labelled so.
 
-**Runtime.** The routed module races about 220 jobs (about 16 CPU-minutes, about 2 min on 8 workers). The milestones
+**Runtime.** The routed module races about 270 jobs (about 17 CPU-minutes, about 2.2 min on 8 workers; the roar suite then
+about 6.5 min). The milestones
 race seed 0 of U6.1 (`test-circuit` only), U6.2 at A_LAT 9.5 and 9.75, U6.4 on seed 0, U7.1 at 0.3 and 0.5, U7.2's
 (4.0, 5.0) row at 0.15 and 0.3 on seed 0, U7.4 on seeds 0–4 of `test-circuit`, U7.6's stack on seed 0 and U7.7's
 accepted vector on seeds 0–4 (about 3 min in all, sequential). Units 6–7 notebooks ≤ 6 min in total; the
@@ -259,12 +274,14 @@ post-execution report records the book-level exec total against the 15 CI-minute
 - `concepts.yaml` gets the 5 ids; `coverage-map.yaml` the Unit 6 and Unit 7 entries (`lessons: 3` each);
   manifests mirror them; Unit 7's manifest declares `lab: true`.
 - `api-order.yaml`: every new callable the notebooks use, each mapped. Expected: `DynamicCar`, its `reset`,
-  `advance`, `sideslip`, `spun_out` and `mu_now` (the skidpad, [fable] N4) → `dynamic-bicycle` / `friction-circle`;
+  `advance`, `sideslip` and `spun_out` (the skidpad, [fable] N4; `mu_now` is an attribute, read in the lesson only,
+  [fable] r2 N7) → `dynamic-bicycle` / `friction-circle`;
   `carla_like` → `cornering-speed-limit`; `grip_sections` → `section-knob-sweep`. Record any others in the report.
 - `syllabus.md` rows for Units 6–7 (**no emoji**: the PDF font has no glyph for it; the Unit 7 row names the CARLA
   lab in words).
 - `roar/docs/qualification.md` ([sol] B2): the design §7.3 record's skeleton (the final-qualification table, empty,
-  and an **Interim checks** section with the `roar-006` row: the Unit 7 reference, untimed, 3 laps, 0 collisions,
+  and an **Interim checks** section with the `roar-006` row: `agents/unit-07.py` **as shipped**, untimed, 3 laps,
+  0 collisions, PASS/FAIL on its first run,
   `PENDING (author)`, the submission's SHA-256 and the repository commit). It holds only the author's reference agent.
 - Design 013 **v4.4**: the routed budget (≤ 8 min on an 8-core CI machine), the §6 Unit 7 row's per-section knob
   wording and the (A_LAT, A_DEC) grid, and the clean rule, citing this plan.
@@ -285,7 +302,7 @@ post-execution report records the book-level exec total against the 15 CI-minute
      already close).
 - **Exercises:** at least 6 `## Exercise N` and at least 2 stretch. Stretch: (a) the friction circle under combined
   braking and cornering on the skidpad (brake while turning, find where it spins); (b) the effect of κ_ahead's
-  horizon (25 vs 10 waypoints) on the clean edge.
+  horizon (25 vs 10 waypoints) on the clean edge, in at most three races ([fable] r2 N6).
 - `agents/unit-06.py` and its milestone.
 
 ### Phase C: Unit 7 content (the same dispatch rule)
@@ -351,3 +368,21 @@ post-execution report records the book-level exec total against the 15 CI-minute
     callables. [FIXED v2: Phase A.] **N5** the budget assumes 8 cores, and trims. [FIXED v2: stated for 8 cores;
     unclean grid cells asserted on seeds 0–1.] **N6** CARLA's spiky curvature and the section convention.
     [FIXED v2: U7.10.] **N7** the knobs absorb the lead's effect too. [FIXED v2: the deviation lists it.]
+
+### Round 2 (v2 @ 742397a)
+- [self] APPROVE WITH NITS: the reviewers' points below are right; nothing further.
+- [sol] REJECT: its round-1 B1, B2 and S are resolved.
+  - **B1** the 12-run lab cap cannot hold the sequential pass as specified. [FIXED v2.1: a coarse lab grid, at most
+    3 steps per section, a 12-run sweep budget that stops the pass and names the untried sections.]
+  - **B2** a lower-A_LAT run could be recorded as the reference's interim check. [FIXED v2.1: the check is the
+    shipped agent's first run, PASS/FAIL; the fallback is lab tuning.]
+  - **S1** section 3's seed list is [0, 18, 0, 0, 18], not seed 4 only. [FIXED v2.1: its own row; per-section lists
+    asserted.]
+  - **S2** U7.2's other figures had no evidence class. [FIXED v2.1: probe record, labelled.]
+- [fable] APPROVE WITH NITS (all round-1 findings resolved; numbers re-raced and reproduced):
+  - **S1** = [sol] S1. [FIXED v2.1.] **S2** = [sol] B2. [FIXED v2.1.]
+  - **N1** = [sol] B1. [FIXED v2.1.] **N2** the lab's wall-clock cost and a short form. [FIXED v2.1.] **N3** one run
+    per step is weaker evidence; say so. [FIXED v2.1.] **N4** split the recording with the agent's section formula.
+    [FIXED v2.1.] **N5** section 1's 1.5 is the grid top. [FIXED v2.1.] **N6** recount (about 270 races, 17 CPU-min,
+    2.2 min); the oval row's class; keep the horizon stretch to three races. [FIXED v2.1.] **N7** cite `q19` for
+    leads 0.4–0.6; `mu_now` is an attribute. [FIXED v2.1.]
