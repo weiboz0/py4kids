@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.2** (§4.4 item 1, §5, §6 Units 4–5, §7.2).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-004` merges (#159).
+**v2.4** folds round 5 ([sol] B: the respawning race's 41 collisions are asserted).
 **v2.3** folds round 4 ([sol] B: the lab table is asserted by the lab itself).
 **v2.2** folds round 3 ([sol] B: the lag-1/lag-3 rows are marked probe record).
 **v2.1** folds round 2 ([sol] B: every stated multi-seed gate is asserted somewhere; [fable] N7–N11).
@@ -200,8 +201,8 @@ ranges, as stated.
   telemetry `offset` one row earlier (the alignment the Unit 2 milestone uses) within 1e-4 m (the Unit 1 recorder
   writes 0 there today; the test asserts the new column, [fable] N4). A second, respawning race exercises the
   stale-row rule deterministically ([fable] N10): `STEERING = "pid"`, `TARGET_SPEED = 30.0`, `test-circuit`,
-  `KinematicCar(jitter=0.05, lag_ticks=2)`, seed 0, `max_seconds=400` (41 collisions); the analysis's exclusion
-  drops exactly the first row after each hold run.
+  `KinematicCar(jitter=0.05, lag_ticks=2)`, seed 0, `max_seconds=400`; the test asserts exactly 41 collisions and
+  that the analysis's exclusion drops exactly the first row after each hold run.
   **The stale row ([sol] S):** on CARLA the first observation after a respawn hold is still the crash pose (the Unit 1
   lab says so), so that row's cross-track error is meaningless although `held == 0`. The analysis excludes the first
   row after every hold run (and, in a file without held rows, the row where progress drops) from the RMS and max,
@@ -317,4 +318,7 @@ ranges, as stated.
 
 ### Round 4 (v2.2 @ 20bf848)
 - [sol] REJECT: **B** [FIXED v2.3] The U5.6 lab table had no assertion; the lab's racekit-prediction cell now asserts it, and `lab-check` executes that cell. Round-3 B verified resolved. Every other figure under Gates is asserted by a named milestone, routed test or lesson cell, or is marked probe record (checked line by line in [self]).
+
+### Round 5 (v2.3 @ c08e9d2)
+- [sol] REJECT: **B** [FIXED v2.4] The respawning lab-recorder race's 41 collisions are now asserted by the routed test. Round-4 B verified resolved; its full pass over U4.1–U5.6 found no other unasserted, unlabelled figure.
 
