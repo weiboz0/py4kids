@@ -322,3 +322,8 @@ ranges, as stated.
 ### Round 5 (v2.3 @ c08e9d2)
 - [sol] REJECT: **B** [FIXED v2.4] The respawning lab-recorder race's 41 collisions are now asserted by the routed test. Round-4 B verified resolved; its full pass over U4.1–U5.6 found no other unasserted, unlabelled figure.
 
+
+### Round 6 (v2.4 @ f48a2d0): CONSENSUS
+- [sol] APPROVE: round-5 B verified resolved; no new findings.
+- [fable] APPROVE WITH NITS (round 2 on v2; rounds 3–6 changed only gate labels and assertion locations, all within its nits N7–N10).
+- [self] APPROVE.
