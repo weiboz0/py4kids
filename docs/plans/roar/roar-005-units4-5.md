@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.2** (§4.4 item 1, §5, §6 Units 4–5, §7.2).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-004` merges (#159).
+**v2.2** folds round 3 ([sol] B: the lag-1/lag-3 rows are marked probe record).
 **v2.1** folds round 2 ([sol] B: every stated multi-seed gate is asserted somewhere; [fable] N7–N11).
 **v2** folds plan-review round 1 ([sol] REJECT: B the pin record, S tolerances, S the lab's stale row; [fable] APPROVE WITH NITS: S1 the detuned PD, S2 runtime, S3 lab and starter pins, N1–N6).
 
@@ -170,6 +171,8 @@ ranges, as stated.
   | 3 | crashes, 60 each | crashes [53, 53, 53, 53, 50] | clean, 1.4305 (0.1659), 282.00 s (spread 3.75) | crashes [41, 41, 41, 41, 44] |
 
   (The starter here keeps its P speed loop; the other three use Unit 4's PI.)
+  **The lag-1 and lag-3 rows are probe record, not gates** ([sol] r3 B): their five-seed figures are shown for
+  context only; the lesson asserts their seed-0 values (below), and nothing asserts their medians.
   **The gate:** at lag 2, pure pursuit is clean 5/5 and Unit 4's PD and Stanley collide on every seed (the exact
   per-seed collision lists above); the detuned PD is also clean at lag 2, and pure pursuit's RMS median beats it by
   more than both ranges (0.4526 vs 0.5149); at lag 0, Unit 4's RMS median beats pure pursuit's by more than both
@@ -304,4 +307,8 @@ ranges, as stated.
   - **N9** [FIXED v2.1] The detuned PD at lag 0 is raced in the routed test.
   - **N10** [FIXED v2.1] The respawning lab-recorder race is named.
   - **N11** [FIXED] The filtered v1 record is renamed `p6_FILTERED_DO_NOT_CITE.txt`.
+
+### Round 3 (v2.1 @ 663a3e5)
+- [sol] REJECT: **B** [FIXED v2.2] The U5.4 lag-1 and lag-3 five-seed figures sat under "Gates" without an assertion; they are now marked probe record (the seed-0 values are asserted in the lesson). Its round-2 B and N were verified resolved; the routed-test budget (about 166 s for `pytest roar`) is under the 5-minute cap.
+- [self] APPROVE. [fable] APPROVE WITH NITS (round 2; all folded).
 
