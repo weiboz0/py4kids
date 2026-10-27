@@ -177,12 +177,19 @@ def test_a_hard_coded_csv_path_fails(lab_root, source):
     SETUP,
     "import roar_py_carla\n",
     "import subprocess\nsubprocess.run(['python', 'competition_runner.py'])\n",
+    "from racekit.cars import carla_like\nimport carla\n",
 ])
 def test_an_untagged_simulator_code_cell_fails(lab_root, source):
     write_lab(lab_root, [*default_cells(), _code(source)])
     findings = lab_findings(lab_root, "labbook")
     assert findings == [(f"FAIL: {UNIT}: lab code cell 4 uses the simulator (carla / competition_runner / "
                          "subprocess) but is not no-exec")]
+
+
+def test_racekit_carla_like_is_not_the_simulator(lab_root):
+    source = "from racekit.cars import carla_like\ncar = carla_like(noise=True)\n"
+    write_lab(lab_root, [*default_cells(), _code(source)])
+    assert lab_findings(lab_root, "labbook") == []
 
 
 @pytest.mark.parametrize(("source", "detail"), [
