@@ -53,6 +53,13 @@ class KinematicCar:
       from ``random.Random(seed)``; the brake is never jittered. ``run_race(seed=...)`` calls
       ``seed()`` before each race. With ``jitter = 0`` (the default) no random number is drawn and
       the car is exactly deterministic.
+    * **actuator lag** (plan roar-005, taught in Unit 5): with ``lag_ticks = N > 0`` the action takes
+      effect ``N`` control ticks after it is commanded, through the same FIFO as ``DynamicCar``'s.
+      The FIFO holds (throttle, steer, brake) only; ``hand_brake`` and ``reverse`` act immediately
+      (as in ``DynamicCar``). The jitter is drawn at command time (first) and the jittered action is
+      queued (then); ``reset()`` refills the queue with ``N`` zero actions, so a respawn discards the
+      queued commands. With ``lag_ticks = 0`` (the default) the queue is never used and the car is exactly
+      the lag-free car.
 
     The steady-state circle radius is ``L / tan δ``.
 
@@ -73,11 +80,14 @@ class KinematicCar:
         c_drag: float = 4.0e-4,
         integrator: str = "rk4",
         jitter: float = 0.0,
+        lag_ticks: int = 0,
     ) -> None:
         if integrator not in ("rk4", "euler"):
             raise ValueError("integrator must be 'rk4' or 'euler'")
         if not jitter >= 0.0:
             raise ValueError("jitter must be a standard deviation >= 0")
+        if isinstance(lag_ticks, bool) or lag_ticks < 0 or int(lag_ticks) != lag_ticks:
+            raise ValueError("lag_ticks must be an int >= 0")
         self.wheelbase = wheelbase
         self.max_steer = max_steer
         self.a_throttle = a_throttle
@@ -85,6 +95,8 @@ class KinematicCar:
         self.c_drag = c_drag
         self.integrator = integrator
         self.jitter = float(jitter)
+        self.lag_ticks = int(lag_ticks)
+        self.queue: deque = deque([(0.0, 0.0, 0.0)] * self.lag_ticks)
         self._rng = random.Random(0)
         self.x = self.y = self.yaw = self.v = 0.0
 
@@ -94,6 +106,7 @@ class KinematicCar:
 
     def reset(self, x: float, y: float, yaw: float, v: float = 0.0) -> None:
         self.x, self.y, self.yaw, self.v = float(x), float(y), float(yaw), float(v)
+        self.queue = deque([(0.0, 0.0, 0.0)] * self.lag_ticks)
 
     def velocity(self) -> Tuple[float, float]:
         return self.v * math.cos(self.yaw), self.v * math.sin(self.yaw)
@@ -107,6 +120,9 @@ class KinematicCar:
             gauss = self._rng.gauss
             throttle = min(1.0, max(0.0, throttle + gauss(0.0, self.jitter)))
             steer = min(1.0, max(-1.0, steer + gauss(0.0, self.jitter)))
+        if self.lag_ticks:
+            self.queue.append((throttle, steer, brake))
+            throttle, steer, brake = self.queue.popleft()
         tan_delta = math.tan(-steer * self.max_steer)
         k_yaw = tan_delta / self.wheelbase
         drive = self.a_throttle * throttle * (-1.0 if reverse >= 0.5 else 1.0)
