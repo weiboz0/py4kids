@@ -7,6 +7,7 @@
 friction-circle attribution; [fable] REJECT: S1 the profile lead, S2 one clean rule, S3 like with like, S4 the lab
 budget, N1–N7; [self] the lab's 2 m rule). Unit 7 is re-probed (`q18`–`q21`) with the lead in seconds and one clean
 rule; the reference and every Unit 7 pin change.
+**v2.3** folds plan-review round 4 ([sol] B: the sidecar in progress order, tested on a shifted start; S: ignore it).
 **v2.2** folds plan-review round 3 ([sol] B: the lab's section map by a recorder sidecar; S: the lab grid).
 **v2.1** folds plan-review round 2 ([sol] REJECT: B the lab's run budget, B the interim check vs the lab's
 fallback, S section 3's seed list, S U7.2's evidence class; [fable] APPROVE WITH NITS: S1–S2 the same two, N1–N7).
@@ -230,12 +231,17 @@ constants unless stated):
   `agents/unit-07.py` on CARLA and splits the recording into the six sections **by the agent's own section map**
   ([sol] r3 B1). The telemetry CSV's columns are fixed (`racekit.telemetry.COLUMNS`), so the lab's recorder change
   (on top of Unit 5's) writes a **sidecar** once, at `initialize`: `<the CSV path>.sections.txt`, one integer per
-  waypoint, the agent's `self.section` list, derived from `TELEMETRY_PATH` (the parameters cell stays the only place
-  a file name appears). The analysis maps each driving row to `sections[progress % waypoints_per_lap]`. Without the
+  waypoint **in progress order** (line k is the section of waypoint (start_index + k) mod n, where `start_index` is
+  the recorder's progress origin, the same one Unit 1's recorder uses), derived from `TELEMETRY_PATH` (the parameters
+  cell stays the only place a file name appears). The analysis maps each driving row to
+  `sections[progress % waypoints_per_lap]`, which is then the right waypoint for any start ([sol] r4 B1). Without the
   sidecar (the sample fixture has none) it falls back to equal progress slices and prints that they match the agent's
   sections only on evenly spaced waypoints. A routed test splices the recorder into `agents/unit-07.py`, races `oval`
   and asserts the sidecar equals `grip_sections(load_track("oval"))` and that the analysis maps every driving row to
-  the sidecar's section of its waypoint. Six sections by arc length are racekit's
+  the sidecar's section of its waypoint; a second, direct test calls the recorder's sidecar writer with a shifted
+  start (start_index 10 and n − 3) and checks the rotation, a row on the lap wrap and a row in lap 2. `.gitignore`
+  gains `roar/**/labs/**/*.sections.txt` and `*.csv.sections.txt` beside the existing CSV rules, and the lab's "never
+  commit results" note names the sidecar ([sol] r4 S2). Six sections by arc length are racekit's
   convention, not a property of Monza ([fable] r2 N4). It reports per section the
   time, the median and peak speed, the max |cross-track error| and the collisions (Unit 5's recorder change supplies
   the error). Its racekit-prediction cell races the reference on `monza-like` (`carla_like(noise=True)`, seed 0) and
@@ -401,3 +407,9 @@ post-execution report records the book-level exec total against the 15 CI-minute
     the recorder writes a `.sections.txt` sidecar of the agent's section map; the analysis uses it, with a stated
     equal-slice fallback; a routed test checks the sidecar.]
   - **S1** the 1.5 grid value was unreachable within three steps. [FIXED v2.2: the lab grid is (1.1, 1.2, 1.3).]
+
+### Round 4 (v2.2 @ ee5af8c)
+- [sol] REJECT: round-3 B1 and S1 resolved in principle.
+  - **B1** progress counts from the recorder's start index, so `sections[progress % n]` misreads a shifted start.
+    [FIXED v2.3: the sidecar is written in progress order; a direct test covers a shifted start, the wrap and lap 2.]
+  - **S2** the sidecar is not ignored by `.gitignore`. [FIXED v2.3: ignore rules and the lab's note.]
