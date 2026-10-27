@@ -3,6 +3,8 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.4** (§4.3 the seeded checkpoint tracks, §6 CP-A, §7.1).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-006` merges (#161, d14572c).
+**v2.1** folds round 2's nits (probe vs gate time cap, the fixed reference settings, pinned file stems, the
+cell cap 11, the length table).
 **v2** folds plan-review round 1 ([sol] REJECT: B the `test-circuit` column was raced under another track name, so
 with another hidden grip, S Question 6's plan, S the race counts; [fable] APPROVE WITH NITS: S1 the routed budget, S2
 the notebook cell cap, S3 the weave evidence and Question 4, N1–N6). `test-circuit` is re-probed under its own name
@@ -56,9 +58,9 @@ not prove the sixth" Unit 7 taught), not a new concept; held-out tracks and over
 | 4.0 | 314.65 | 312.30 | 314.20 | 315.20 | 315.15 | 314.50 |
 | 4.2 | 311.10 | 308.75 | 310.55 | 311.60 | 311.55 | **310.80** (spread 0.20, max \|e\| 1.44 m) |
 | 4.4 | 307.55 | 305.40 | 307.15 | 308.15 | 308.05 | 307.30 |
-| 4.6 | 304.15 | ✗ (seed 1: 1 collision, max \|e\| 6.02 m) | 303.90 | 304.75 | 304.70 | ✗ (48–49 collisions every run) |
+| 4.6 | 304.15 | ✗ (seed 1: 1 collision, max \|e\| 6.02 m) | 303.90 | 304.75 | 304.70 | ✗ (48–49 collisions every run at the 1500 s probe cap) |
 | 4.8 | 300.90 | — | — | — | — | — |
-| 5.0 | ✗ (17 collisions every run) | — | — | — | — | — |
+| 5.0 | ✗ (17 collisions every run at the 1500 s probe cap) | — | — | — | — | — |
 
 All cells are medians in seconds over race seeds 0–4; every cell without ✗ is clean (finished, 0 collisions, max |e|
 ≤ 2 m). The `test-circuit` column is `q28`, raced under the track's own name; it reproduces Unit 7's pins (4.6 →
@@ -68,8 +70,11 @@ under the names the generator will write. A_LAT 3.0 on the checkpoint track: 336
 min–max m / tightest radius m): 1: 2625.6 / 1313 / 5.10–6.58 / 17.7; 2: 2662.0 / 1331 / 5.01–6.47 / 18.7; 3: 2670.4 /
 1335 / 5.13–6.36 / 20.5; 4: 2675.0 / 1337 / 5.14–6.58 / 17.3; 2026: 2655.8 / 1328 / 5.15–6.56 / 19.8; all with
 continuous curvature and 0 self-intersections; each builds in 0.01 s. Wall time per race 2.7–3.8 s; a crashing race
-runs to its time cap (about 17 s at 1500 s, about 5 s at 450 s), so every family and checkpoint race here uses
-`max_seconds=450` (a clean lap takes about 320 s).
+runs to its time cap (about 17 s at 1500 s, about 5 s at 450 s). **The probes used `max_seconds=1500`; the gates
+and notebooks use 450** (a clean lap takes about 320 s), so a ✗ cell's collision count is a 1500 s probe figure and
+is never asserted: a gate asserts only "not clean" (not finished, or a collision, or max |e| > 2 m), confirmed at 450 s
+during implementation (`q29` at 450 s: 14 collisions on the checkpoint track at 4.6, race seed 0) ([sol] r2 N,
+[fable] r2 N1).
 
 Also recorded (not in the checkpoint): on `monza-like` seeds 2–4 the Unit 7 reference crashes too; A_LAT 3.4 is clean
 on all four (`q23`). This is the Unit 7 agent's fragility outside its tuning track. It is a **follow-up** and a named
@@ -83,6 +88,10 @@ The grid is Unit 7's: A_LAT in steps of 0.2, A_DEC 5.0, PP_K 0.5, `PROFILE_LEAD_
 - **CP.1, the tracks:** the generator writes the five tracks, byte-stable (the existing checksum contract), each with
   0 self-intersections, continuous curvature, half-widths in the existing [5.0, 8.0] m bound, and the measured
   lengths, waypoint counts, half-width minima and tightest radii above (±0.1 m; ±0.01 m for the half-widths).
+  The five file stems are pinned literally: `test-circuit-seed1`, `test-circuit-seed2`, `test-circuit-seed3`,
+  `test-circuit-seed4`, `test-circuit-seed2026`. The routed test loads them by these literal names, with a comment
+  that the carla-like car's hidden grip is keyed to the name, so a rename changes the car and invalidates every pin
+  ([fable] r2 S1).
 - **CP.2, one track is not enough:** on `test-circuit` alone the edge is 4.8 (clean, 300.90 s) with 5.0 unclean, so
   the margin rule gives 4.6, and 4.6 is **not clean** on training seed 1 (race seed 1: 1 collision).
 - **CP.3, the family edge:** 4.4 is clean on all five training tracks on seeds 0–4 (medians as the table) and 4.6 is
@@ -102,20 +111,21 @@ The grid is Unit 7's: A_LAT in steps of 0.2, A_DEC 5.0, PP_K 0.5, `PROFILE_LEAD_
     5 + 3 + 6 + 4 = 18 cells, **90 races** (11 of them crash: 5.0 on `test-circuit`, 4.6 on seed 2026, one race of
     4.6 on seed 1), all at `max_seconds=450`: about 79 × 3.3 s + 11 × 5 s ≈ 315 CPU-s, **about 45 s on 8 workers**.
     `agents/checkpoint-a.py` is the 4.2 cell; `check_submission` on it (CP.5).
-  - The solutions notebook, one track per cell (at most 10 races, under the 120 s cell cap): Question 3 races
+  - The solutions notebook, one track per cell (at most 11 races, about 40 s, under the 120 s cell cap): Question 3 races
     `test-circuit` at 4.6, 4.8 and 5.0 (5 + 5 + 1, stopping a value at its first unclean race); Question 4 races 4.6 on
     seeds 1–4 (2 + 5 + 5 + 5); Question 5 races 4.4 on the five training tracks (25) and freezes 4.2 by the margin
     rule without racing it there (the routed test does); Question 6 races the checkpoint track once (5). That is
-    **58 races, about 3.5 min**; the cell-level cap holds because no cell races more than 10.
+    **58 races, about 3.5 min** (an upper bound measured under 8-way load; the report records the serial time,
+    [fable] r2 N4); the cell-level cap holds because no cell races more than 11.
 
 ## The checkpoint (questions; the brief opens with the project)
 **Brief:** "Your Unit 7 agent is fast on `test-circuit`. Race day is on a track you have never driven: a variant of
 `test-circuit`, every corner a little tighter or looser, every straight a little narrower or wider. You may tune on
 four other variants of the same family. You may race the checkpoint track once." The rules: no tuning on the
-checkpoint track; one global setting (A_LAT on Unit 7's grid; A_DEC, PP_K and the lead as in the Unit 7 reference);
-the clean rule on five seeds; target median ≤ 330 s. Precisely ([fable] N2): `GRIP` all 1.0 (a Unit 7 file may ship
-its accepted per-section vector; reset it); A_DEC, PP_K and the lead as in your Unit 7 submission (the reference's
-5.0, 0.5 and 0.3 s if you use the stand-in). Loading the checkpoint track and planning on it is allowed; racing it
+checkpoint track; one global setting, A_LAT on Unit 7's grid, with A_DEC, PP_K and the lead **fixed at the Unit 7
+reference's 5.0, 0.5 and 0.3 s** and `GRIP` all 1.0 (a Unit 7 file may ship its accepted per-section vector; reset
+it) ([sol] r2 N, [fable] N2); the clean rule on five seeds; target median ≤ 330 s. Every numeric gate uses these
+reference settings. Loading the checkpoint track and planning on it is allowed; racing it
 before race day is not.
 The student's submission is **their own Unit 7 submission** (the notebook points at `agents/unit-07.py` as the
 stand-in and says to use theirs); variants via `write_variant` (Unit 1).
@@ -142,7 +152,8 @@ stand-in and says to use theirs); variants via `write_variant` (Unit 1).
 - `roar/data/gen_tracks.py`: `SEEDED_TRACKS = (("test-circuit", 1), …, ("test-circuit", 4), ("test-circuit", 2026))`
   and their names; `generate.py` step 1 writes them with the named tracks (same checksum contract);
   `test_gen_tracks.py` covers them (CP.1): the driver test's exact output list gains the five names, the per-track
-  fixture covers them (the [5.0, 8.0] half-width bound holds: 5.01–6.58), and the 60 s generation budget is
+  fixture covers them (the [5.0, 8.0] half-width bound holds: 5.01–6.58; the name-keyed length table gains the five
+  names with `test-circuit`'s (2300, 2800) range, [fable] r2 N3), and the 60 s generation budget is
   re-measured ([fable] N1). `racekit`'s `TRACK_NAMES` stays the three named tracks; `conftest`'s missing-track check
   also names the seeded ones.
 - `agents/checkpoint-a.py` and `tests/test_racekit_checkpoint_a.py` (CP.2–CP.5), reusing `_agent_premise.py`'s
@@ -197,3 +208,13 @@ vector from Unit 7).
     checkpoint track allowed) [FIXED v2]; **N3** the target's floor (3.0 → 336.45 s) and 330 vs 329 [FIXED v2];
     **N4** book-level exec total and generation time in the report [FIXED v2]; **N5** the follow-up is registered
     [FIXED v2]; **N6** grading not on the public final number [FIXED v2].
+
+### Round 2 (v2 @ 3eadc61): CONSENSUS
+- [sol] APPROVE WITH NITS: B fixed (`q28` supports every revised cell), Question 6 fixed, 90 routed and 58 notebook
+  races recounted. N: label the probe cap vs the gate cap [FIXED v2.1]; N: one rule for A_DEC/PP_K/lead [FIXED v2.1:
+  fixed at the reference's values].
+- [fable] APPROVE WITH NITS: every cell and `q29` verified against the pickles; name consistency verified. S1 pin the
+  five file stems [FIXED v2.1]; N1 assert "not clean", never a cap-dependent count [FIXED v2.1]; N2 the cell cap is 11
+  [FIXED v2.1]; N3 the name-keyed length table [FIXED v2.1]; N4 record the serial notebook time [FIXED v2.1, in Phase D's
+  report].
+- [self] APPROVE.
