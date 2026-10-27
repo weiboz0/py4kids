@@ -68,5 +68,7 @@ Comparisons are noise-aware: one agent beats another only by more than the sprea
 | 3 | `unit-03-modelling-the-car` | unit | 3 | Where will the car be in one second? The kinematic bicycle, the longitudinal map, and Euler vs RK4 integration with their error orders. |
 | 4 | `unit-04-pid-control` | unit | 3 | Hold 20 m/s, then follow the line. P, I and D; windup and anti-windup; step-response tuning; steering from the cross-track error with heading damping and a curvature feedforward. |
 | 5 | `unit-05-geometric-steering` | unit | 3 | Steer like a driver looks ahead. Pure pursuit, a speed-scaled lookahead, actuator delay and Stanley: stability vs corner-cutting, decided on CARLA in the lab. |
+| 6 | `unit-06-grip-and-speed-limit` | unit | 3 | Why does the car spin at Parabolica? The dynamic bicycle, tyre saturation and the friction circle, and a curvature-limited speed that removes the spin-outs. |
+| 7 | `unit-07-speed-planning` | unit | 3 | Brake before the corner, and find the grip that is really there. A forward-backward speed profile, the braking and cornering trade, and per-section speed knobs tuned one at a time, then on CARLA in the lab. |
 
 *Later units, the checkpoints and the capstone are added by the plans that follow.*

@@ -1,0 +1,9 @@
+id: unit-06-grip-and-speed-limit
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [dynamic-bicycle, friction-circle, cornering-speed-limit]
+  requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering]
+  practices: [race-telemetry, repeated-run-measurement, telemetry-plotting, menger-curvature, kinematic-bicycle, longitudinal-map, pid-control, pure-pursuit]

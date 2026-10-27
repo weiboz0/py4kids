@@ -10,11 +10,14 @@ api_order_version: 1
 infrastructure: [KinematicCar, Path, TemporaryDirectory, abs, advance, apply_action, arange, argmax, argmin, array, atan2, check_submission, clip, cos, degrees, diff, enumerate, float, get, get_last_gym_observation, getsource, hypot, initialize, int, isinstance, isnan, items, join, len, linspace, list, load_submission, load_track, log2, max, mean, median, min, mkdtemp, nonzero, norm, percentile, print, race_meta, radians, range, read, readline, reset, round, run_race, seed, shim_installed, sign, sin, sorted, spread, sqrt, step, str, sum, tan, where, write, write_variant, zeros, zip]
 taught:
   CumulativeProgress: race-telemetry
+  DynamicCar: dynamic-bicycle
   axhline: telemetry-plotting
   axvline: telemetry-plotting
+  carla_like: cornering-speed-limit
   colorbar: telemetry-plotting
   fill_between: telemetry-plotting
   grid: telemetry-plotting
+  grip_sections: section-knob-sweep
   legend: telemetry-plotting
   loglog: telemetry-plotting
   noise_aware_better: repeated-run-measurement
@@ -35,6 +38,8 @@ taught:
   set_xlabel: telemetry-plotting
   set_ylabel: telemetry-plotting
   show: telemetry-plotting
+  sideslip: dynamic-bicycle
+  spun_out: friction-circle
   subplots: telemetry-plotting
   tight_layout: telemetry-plotting
   update: race-telemetry
