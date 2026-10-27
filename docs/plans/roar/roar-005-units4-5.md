@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.2** (§4.4 item 1, §5, §6 Units 4–5, §7.2).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-004` merges (#159).
+**v2.1** folds round 2 ([sol] B: every stated multi-seed gate is asserted somewhere; [fable] N7–N11).
 **v2** folds plan-review round 1 ([sol] REJECT: B the pin record, S tolerances, S the lab's stale row; [fable] APPROVE WITH NITS: S1 the detuned PD, S2 runtime, S3 lab and starter pins, N1–N6).
 
 ## Scope
@@ -106,7 +107,7 @@ The whole-book lesson total becomes 9 + 3 + 3 = 15, under 30.
   - With `STEERING = "pid"` the file races exactly like `agents/unit-04.py` (to the tick; asserted).
 
 ## Gates (pinned from the probes; a miss means stop, amend and re-gate)
-Deterministic (jitter 0) times are within one tick (±0.05 s) of the pins, settling times within one tick, and
+Deterministic (jitter 0) race times are within one tick (±0.05 s) of the pins, U4.1's settling times are exact to the tick (a deterministic straight-line run), and
 jittered median times within ±0.05 s ([sol] S, design §4.5); clean/crash outcomes and the per-seed collision lists
 are exact, and every noise-aware comparison is strict. RMS / max |offset| on driving rows (`held == 0`) within ±0.0005 / ±0.005 m
 of the pins unless stated; "noise-aware" means `racekit.measure.noise_aware_better` or a median gap larger than both
@@ -173,6 +174,13 @@ ranges, as stated.
   per-seed collision lists above); the detuned PD is also clean at lag 2, and pure pursuit's RMS median beats it by
   more than both ranges (0.4526 vs 0.5149); at lag 0, Unit 4's RMS median beats pure pursuit's by more than both
   ranges.
+  **Where each gate is asserted ([sol] r2 B, [fable] N7, N9):** every multi-seed claim in U4.3, U4.4, U5.3, U5.4 and
+  U5.5 is asserted in full by a routed racekit test, `tests/test_racekit_unit04_05_premise.py`, which races the
+  reference submissions (via `write_variant`) in the session's parallel process pool (`_premise.py`'s `race_all`
+  pattern): the exact per-seed collision lists of Unit 4's PD, Stanley and the starter at lag 2, the detuned PD at
+  lags 0 and 2, all four controllers at lag 0, and the U5.5 sweep medians on five seeds. The milestones assert the
+  trimmed subset below, and the lesson shows the rest as the probe record. Added routed cost: about 4 CPU-minutes,
+  about 35 s on 8 workers.
   **Runtime trim ([fable] S2):** the milestone races lag 0 for all four controllers (5 seeds), and at lag 2 pure
   pursuit, Unit 4's PD and the detuned PD on 5 seeds, Stanley and the starter on seed 0 only (their crash rows cost
   about 11–13 s each). Lags 1 and 3 appear in the lesson for seed 0 only, pinned from `p6_seed0_lag13.txt`:
@@ -186,7 +194,10 @@ ranges, as stated.
   the Unit 1 recorder with one change, `offset` = the agent's own `self.cross_track_error`; a routed racekit test
   splices it into `agents/unit-05.py`, races `oval` (jitter 0) and checks the recorded `offset` against racekit's
   telemetry `offset` one row earlier (the alignment the Unit 2 milestone uses) within 1e-4 m (the Unit 1 recorder
-  writes 0 there today; the test asserts the new column, [fable] N4).
+  writes 0 there today; the test asserts the new column, [fable] N4). A second, respawning race exercises the
+  stale-row rule deterministically ([fable] N10): `STEERING = "pid"`, `TARGET_SPEED = 30.0`, `test-circuit`,
+  `KinematicCar(jitter=0.05, lag_ticks=2)`, seed 0, `max_seconds=400` (41 collisions); the analysis's exclusion
+  drops exactly the first row after each hold run.
   **The stale row ([sol] S):** on CARLA the first observation after a respawn hold is still the crash pose (the Unit 1
   lab says so), so that row's cross-track error is meaningless although `held == 0`. The analysis excludes the first
   row after every hold run (and, in a file without held rows, the row where progress drops) from the RMS and max,
@@ -280,4 +291,17 @@ ranges, as stated.
   - **S2** [FIXED v2] Runtime: the milestone is trimmed; the budget is 8 min with the book total reported.
   - **S3** [FIXED v2] The lab table and the starter's `test-circuit` times are pinned or raced.
   - **N1–N6** [FIXED v2].
+
+### Round 2 (v2 @ e3f5122)
+- [self] APPROVE.
+- [sol] REJECT:
+  - **B** [FIXED v2.1] The milestone's runtime trim left the five-seed Stanley/starter lag-2 lists and the U5.5 medians unasserted. A routed premise test now asserts every stated multi-seed gate in a parallel pool; the milestone keeps the trimmed subset.
+  - **N** [FIXED v2.1] Settling: U4.1 is exact to the tick, and the shared rule now says so.
+  - Round 1 verified resolved; U4.2, lag-2 seed 0 (pursuit, PD, detuned PD) and a lab row reproduced with the venv interpreter.
+- [fable] APPROVE WITH NITS (every round-1 finding verified resolved; the detuned PD five-seed row, two lab rows and the starter's `test-circuit` times reproduced digit for digit; the milestone runtime arithmetic checked at about 3 min):
+  - **N7** [FIXED v2.1] (with [sol] B): gates asserted where stated.
+  - **N8** [FIXED v2.1] Settling wording.
+  - **N9** [FIXED v2.1] The detuned PD at lag 0 is raced in the routed test.
+  - **N10** [FIXED v2.1] The respawning lab-recorder race is named.
+  - **N11** [FIXED] The filtered v1 record is renamed `p6_FILTERED_DO_NOT_CITE.txt`.
 
