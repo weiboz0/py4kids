@@ -24,19 +24,19 @@ On `test-circuit` the accepted knobs (1.15, 1.3, 1, 1, 1, 1) reach 299.60 s, fas
 
 Plan for **two to three 60–90 min sittings**, plus the lab on a CARLA machine.
 
-1. **Sitting 1: the profile** (lesson §§1–3).
+1. **Sitting 1: the profile** (the hook and lesson §§1–2).
    - Hook: the Unit 6 agent is clean and slow. Plot its speed: it brakes late and never goes above 20 m/s.
    - The backward pass on the board: start at a corner's cap and walk backward with v² = v_next² + 2·a·Δs. Students who know dynamic programming recognize a relaxation.
    - Race the profile at 45 m/s: it collides. Two fixes, both "look further ahead": the steering lookahead and the speed lead.
-2. **Sitting 2: two knobs** (lesson §4).
+2. **Sitting 2: two knobs** (lesson §3).
    - The (A_LAT, A_DEC) grid. Have students mark the clean cells before showing the times, and find the edge.
    - The friction-circle exercise: a_lat² + a_dec² along the edge. It is not constant; ask why. The car obeys the circle; the planner does not model it.
    - The margin rule and the reference; the gain over Unit 6.
-3. **Sitting 3: per-section knobs** (lesson §5).
+3. **Sitting 3: per-section knobs** (lesson §4).
    - One knob at a time: every section has room. Stack them: every seed collides. This is the moment of the unit; let it land.
    - The sequential pass, and the ten-seed check that fails on seeds 5 and 8. Five seeds were not enough; the margin rule fixes it.
    - Like with like: compare the knobs with the best global setting, not with a deliberately conservative one.
-4. **The lab** (on the CARLA machine; the full procedure can take about 3 hours, the short form fits one sitting).
+4. **The lab** (lesson §5, on the CARLA machine; the full procedure can take about 3 hours, the short form fits one sitting).
    - The first run of the shipped agent is recorded as it is; tuning comes after.
    - The sequential pass on a coarse grid within a 12-run budget; the short form sweeps sections 0 and 1 only.
 

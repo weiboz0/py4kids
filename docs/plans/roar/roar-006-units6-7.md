@@ -257,8 +257,10 @@ constants unless stated):
      3 steps per section, [sol] r3 S1), sections in order, a section stopping at its first unclean step, and a **sweep budget of 12
      runs**: when it is spent the pass stops, the sections not yet tried stay at 1.0, and the printout names them
      ([sol] r2 B1, [fable] r2 N1). The short form sweeps sections 0–1 only.
-  4. Re-race the result twice; if either run is not clean, step every raised knob back once (the margin rule).
-  The worst case is 1 + 2 + 12 + 2 = 17 runs, about 3 hours at about 10 min per run; the short form fits one sitting
+  4. Re-race the result twice; if either run is not clean, step every raised knob back once (the margin rule) and
+     re-race the stepped-back setting twice; if that fails too, the result is all knobs at 1.0, marked provisional
+     (content gate [sol] r1 B).
+  The worst case is 1 + 2 + 12 + 4 = 19 runs, about 3 hours at about 10 min per run; the short form fits one sitting
   ([fable] r2 N2). A host failure (the server exits, or the agent gets no first tick) is repeated, not counted. The
   lab prints the runs used. It says plainly that one run per step is weaker evidence than the lesson's five seeds,
   which is why step 4 exists ([fable] r2 N3). It names CARLA's spiky waypoint curvature (phantom braking in the profile, smoothed only downward by the
@@ -419,3 +421,17 @@ post-execution report records the book-level exec total against the 15 CI-minute
 - [fable] APPROVE WITH NITS (round 2); every nit folded in v2.1, and the v2.2–v2.3 changes touch only the lab's
   section map and ignore rules that [sol] reviewed.
 - [self] APPROVE.
+
+## Content Review
+
+### Round 1 (implementation @ 5317c99, CI ALL GREEN)
+- [self] APPROVE pending the fixes below. Both units open with their hook and a race before any theory; no student material reads or quotes `racekit/_truth.py`; `agents/unit-07.py`'s SHA-256 is unchanged since Phase A and matches `qualification.md`. The blind solvers' statement fixes were folded before the gate (Unit 6 Ex 6, 7; Unit 7 Ex 3, 6, 9).
+- [sol] REJECT (blind-solved Unit 6 Ex 2, 4, 7 and Unit 7 Ex 2, 3, 6, all agreeing with the solutions; races not rerun, `uv` unavailable in its sandbox):
+  - **B** [FIXED] The lab's step 4 stepped the knobs back after a failed re-race and ended without racing the new setting, so a student could finish on a setting never clean on CARLA. The stepped-back setting is now re-raced twice; if that fails too, the result is all knobs at 1.0, printed as PROVISIONAL. The worst case becomes 1 + 2 + 12 + 4 = 19 runs (short form 13); the plan's lab procedure is amended to match, and the replay cell asserts the step-back path.
+  - **S** [FIXED] The replay accepted runs logged after the procedure ended. It now raises on any leftover run, asserted in the cell.
+- [fable] APPROVE WITH NITS (blind-solved Unit 6 Ex 2, 4, 7 and Unit 7 Ex 2, 3, 6 to the printed values, all agreeing; spot-checked lesson numbers; hygiene, provenance, the hidden truth, the sidecar and its ignore rules, the registry and the `tools/labs.py` carve-out all checked):
+  - **S1** [FIXED] Both teacher notes cited the plan's outline section numbers; the Pacing citations now match the shipped lessons (Unit 6: hook and §1, §§2–3, §§4–6; Unit 7: hook and §§1–2, §3, §4, the lab §5).
+  - **N2** [FIXED] Unit 7 solutions Ex 3's prediction now gives the walk's waypoints 2, 2, 2, 4, 5, 7 (segments just under 2 m).
+  - **N3** [FIXED] Unit 6 Exercise 6's run time reads "about a minute" in both notebooks.
+  - **N4** [FIXED] Unit 6 solutions Ex 5's diagnosis prints the computed excess instead of a hard-coded 22%.
+  - **N5** [WONTFIX] The Probe-evidence range 309.70–310.05 s covers both `q18` and `q19` (the lead in `q19` at 0.4–0.6 s); U7.2's 309.70–309.95 s is `q18` alone. Both are right.

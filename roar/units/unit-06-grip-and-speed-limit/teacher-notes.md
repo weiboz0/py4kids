@@ -28,15 +28,15 @@ It is **safe and slow on purpose**: it removes every spin and collision (`carla_
 
 Plan for **two to three 60–90 min sittings**. There is no lab in this unit.
 
-1. **Sitting 1: why it spins** (lesson §§1–3).
+1. **Sitting 1: why it spins** (the hook and lesson §1).
    - Hook: race the Unit 5 agent on the dynamic car. Let students watch the spin-outs in the telemetry before any theory: what changed between Unit 5 and now? Only the car.
    - The dynamic bicycle on the board. Keep the algebra to slip angles and the two lateral forces; the yaw equation is one line.
    - The low-speed comparison: at 5 m/s the two models agree, so the earlier units were right where they were used.
-2. **Sitting 2: the friction circle** (lesson §§3–4).
+2. **Sitting 2: the friction circle** (lesson §§2–3).
    - The skidpad: a fixed steer, speed ramped, lateral acceleration plotted against speed. It rises as v²/R and flattens near μg, then the car spins. This is the single most useful plot in the unit.
    - v_max = √(a_lat/|κ|): connect it to the skidpad plot (the flat part is the a_lat the formula needs).
    - Build the cap from `curvature_ahead`, and race it.
-3. **Sitting 3: edges and margins** (lesson §§5–7).
+3. **Sitting 3: edges and margins** (lesson §§4–6).
    - The A_LAT sweep on `DynamicCar()` and on the carla-like car. Ask students to predict the edge from μg before showing the table.
    - The clean rule and the margin rule: five clean seeds do not prove the sixth, and CARLA is not racekit.
    - The bridge: the cap only brakes when the corner is already close, and it never goes above 20 m/s. Unit 7 plans the whole lap.
