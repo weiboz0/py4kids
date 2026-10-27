@@ -346,3 +346,65 @@ ranges, as stated.
   - **N5** Noted: the post-execution report records the runtime totals and the api-order additions.
   - **N6** [WONTFIX] An illustrative print in a Unit 4 lesson cell is not asserted; it is a restatement of the cell's own printed values, and every gated number is asserted.
 
+
+### Round 2 (fixes @ d35eea8): CONSENSUS
+- [sol] APPROVE: its B and S are verified fixed, the N WONTFIX is accepted, and [fable]'s fixes are verified, with no new issues.
+- [fable] APPROVE WITH NITS (round 1; every S and N is folded or dispositioned).
+- [self] APPROVE.
+
+## Post-Execution Report
+
+**Status: SHIPPED.** Units 4–5 are complete:
+- the submission holds its speed with a PI loop and steers from the cross-track error (Unit 4);
+- Unit 5 adds pure pursuit, which is robust to actuator delay;
+- the first 🏁 lab since Unit 1 lets CARLA choose between the two.
+
+### Commits
+On `feature/roar-005-units-4-5`:
+
+| Commit | What |
+|---|---|
+| d05bb12 → 9a5310b | plan v1 → v2.4 (6 plan-gate rounds) |
+| 4cfc6cb | Phase A: `KinematicCar(lag_ticks)`, `agents/unit-04.py` and `unit-05.py`, routed U4/U5 premise tests, registry (7 concepts), syllabus rows, design v4.3 |
+| f5cb5ad | Phases B–D: lessons, exercises, Unit 4 solutions, milestones, the Unit 5 lab and its recorder test, teacher notes |
+| 8aef1bb | Unit 5 blind solutions; exercise statements disambiguated after the blind solves |
+| 5e1216c, d35eea8 | lint, and content gate round 1 |
+| 247ae8c | the syllabus row drops 🏁 (the PDF font has no glyph; the first CI run failed at the PDF build) |
+
+### Gates
+Every pin reproduces exactly on the shipped code. The tooling author compared whole-telemetry bytes against the probe in 27 cases; the content authors, the blind solvers and [fable] reproduced the pins again. Nothing was re-pinned.
+
+**Unit 4:**
+- **U4.1, step response:** P 0.05 leaves a 0.5081 m/s error; PI without anti-windup overshoots 28.71% and settles in 17.70 s; with anti-windup, 0.26% and 3.55 s.
+- **U4.2:** 216.35 / 400.55 / 858.45 s, clean.
+- **U4.3, against the starter:** RMS 0.104 against 0.140–0.159 m, beyond both ranges, and race times are better beyond the noise.
+- **U4.4:** the no-feedforward and no-D ablations behave as pinned.
+
+**Unit 5:**
+- **U5.1:** the circle identity holds to 1e-15.
+- **U5.2:** 216.35 / 400.50 / 858.45 s, and `"pid"` is identical to Unit 4.
+- **U5.3:** pure pursuit 0.142–0.148 m; it does not beat Unit 4 on a lag-free car.
+- **U5.4, at lag 2 and 30 m/s:** pure pursuit is clean 5/5. Unit 4's PD crashes [41, 42, 43, 43, 40] and Stanley [20, 16, 16, 17, 20]. The detuned PD is clean but loses to pure pursuit beyond noise (0.4526 against 0.5149).
+- **U5.5:** the best lookahead grows with the delay.
+- **U5.6:** the lab passes `lab-check` and asserts its prediction table; the recorder test checks the offset alignment, the 41-collision respawning race and the stale-row exclusion.
+
+### Blind solve
+Every exercise was solved by the separate-session solutions authors. [fable] solved Unit 4 Ex 1–5 and 8 and Unit 5 Ex 1–5; [sol] solved Unit 4 Ex 1, 4 and 5 and Unit 5 Ex 1, 2 and 4. All answers agree.
+
+### Implementation deviations
+- **The routed premise fixture is about twice the plan's estimate:** 73 s wall on 8 workers (about 8 CPU-minutes) against "about 35 s". The shipped agents keep Unit 3's per-tick `predict`. `pytest roar` is now about 4 minutes, still under the 5-minute cap (racekit tests: 183 s).
+- **The Unit 5 milestone takes 216 s** against "about 3 min"; the Units 4–5 notebooks are about 6.5 min in total (≤ 8 min).
+  - Unit 4: lesson 28 s, milestone 122 s, solutions 22 s.
+  - Unit 5: lesson 73 s, milestone 216 s, solutions 30 s, lab 30 s.
+  - Book-level exec totals: see Verification.
+- **The race-time gain is 1.4–2.0%,** not 1.4–1.7%.
+- **The PID's anti-windup band is the throttle's (0, 1);** the command is split into throttle and brake afterwards (equivalent to the plan's text).
+- **No 🏁 in the syllabus:** design 013 marks lab units with it, but the PDF font cannot render it; the row names the lab in words (user follow-up).
+- **api-order:** `pursuit_curvature` and `pursuit_wheel_angle` are added, mapped to `pure-pursuit`; no other callables.
+
+### Carried forward
+- **roar-006:** Unit 6 races the Unit 5 agent (pure pursuit, k = 0.3) on `carla_like`. The `p4.py` preview has it clean on `oval` at 25 m/s, while Unit 4's PD crashes there.
+- **User follow-up:** the restated Unit 5 gate, and the choice of lag 2 as the stress level (`scratchpad/roar-followups.md`).
+
+### Verification
+`TMPDIR=/dev/shm bash scripts/ci-local.sh`: ALL GREEN at 247ae8c (unit tests 2244 passed, 2 skipped; recsys 348 passed; roar 376 passed; notebooks, curriculum, PDF, site and pre-merge guard green).
