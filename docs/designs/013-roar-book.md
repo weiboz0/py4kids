@@ -1,9 +1,11 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4.3 (2026-10-26). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.4 (2026-10-27). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
+v4.4 (plan `roar-006`) restates the Unit 7 row (per-section speed knobs, the (A_LAT, A_DEC) grid, the clean rule)
+and raises the routed pytest budget to 8 min.
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -294,7 +296,7 @@ Challenge), `solutions.ipynb`, `teacher-notes.md` and `manifest.yaml`.
 | 4 | PID control | "Hold 20 m/s, then follow the line." | P/I/D; discrete PID; windup; step-response tuning; steering from heading error | Overshoot and settling in bounds; cross-track error below the starter's |
 | 5 | Geometric steering 🏁 | "Steer like a driver looks ahead." | Pure pursuit; speed-scaled lookahead; Stanley; stability vs corner-cutting | Under actuator delay at speed, speed-scaled pure pursuit stays clean where the tighter controllers crash, and beats a detuned PD (noise-aware); with no delay it pays in corner-cutting (v4.3) |
 | 6 | Grip and the speed limit | "Why does the car spin at Parabolica?" | Dynamic bicycle; tyre saturation; friction circle; v_max = √(μg/κ); the spin-out failure | A curvature-limited speed controller removes spin-outs and collisions on `test-circuit` |
-| 7 | Speed planning 🏁 | "Brake *before* the corner, and find the grip that is really there." | Forward–backward speed profile; lookahead planning; **per-section μ by a one-knob sweep** (one parameter per section, accepted by Unit 1's median-and-spread rule; Unit 12 generalizes to many knobs) | A large median race-time gain over Unit 6 at 0 collisions; per-section μ beats a single global μ (noise-aware) |
+| 7 | Speed planning 🏁 | "Brake *before* the corner, and find the grip that is really there." | Forward–backward speed profile; lookahead planning (a speed lead in seconds); the planned cornering and braking rates read together as a grid (v4.4); **per-section speed knobs by one-knob sweeps** (one multiplier per section, accepted by Unit 1's median-and-spread rule and a clean rule: finished, 0 collisions, max cross-track error ≤ 2 m; the knobs absorb μ and the planner's other errors, so they are not μ estimates, and Unit 8 measures μ; Unit 12 generalizes to many knobs) | A large median race-time gain over Unit 6 at 0 collisions; per-section knobs beat the best single global setting (noise-aware, v4.4) |
 | CP-A | **Checkpoint A** | A complete clean agent on an unseen-for-tuning seeded track | — (strict) | Finishes within a target time, with 0 collisions |
 
 ### Part 2: Measuring the real car
@@ -363,7 +365,8 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - **Book notebook exec ≤ 15 CI-minutes:** `exec-lessons` + `exec-solutions` wall time, with the 1-minute load
     average recorded at start and end. It **excludes** track and telemetry generation, which are reported
     separately and must stay ≤ 1 min.
-  - **Routed pytest ≤ 5 min.**
+  - **Routed pytest ≤ 8 min** on an 8-core CI machine (v4.4, plan `roar-006`; it was 5 min, and the Unit 6–7 gates
+    add about 2 min of pooled races).
   - The per-cell 120 s cap is retained.
   - **Per-tick (a measured target from the [fable] probe, not a cap the runner enforces):** the simulation costs
     about 0.2 ms per tick, and a 17,000-tick starter-baseline race takes ≤ 4 s. A student's `step()` adds to that.
@@ -597,3 +600,8 @@ Pairings may be adjusted by each plan's gate without a design change.
   does not beat Unit 4's PD-plus-feedforward (it cuts corners); with a 2-tick actuator delay at 30 m/s it is clean where
   Unit 4's gains and Stanley crash, and it beats a detuned PD that also survives. The gate pins both halves, and the
   Unit 5 lab lets CARLA decide.
+- v4.4 (2026-10-27): the §6 Unit 7 row and the §7.1 routed budget (plan `roar-006`). Probes show that the planned
+  braking rate decides how much cornering speed is safe, and that a waypoint-count lead does not transfer; Unit 7 reads
+  A_LAT and A_DEC together as a grid and follows the profile with a lead in seconds. Per-section "μ" is taught as
+  per-section speed knobs (they absorb the planner's other errors; Unit 8 measures μ), accepted under a clean rule
+  (finished, 0 collisions, max cross-track error ≤ 2 m). The routed pytest budget is 8 min on an 8-core CI machine.

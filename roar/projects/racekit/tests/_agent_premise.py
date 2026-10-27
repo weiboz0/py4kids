@@ -2,7 +2,9 @@
 test session in parallel with ``_premise.race_all``.
 
 Each job races a reference submission (``agents/*.py``), with some module constants changed through
-``write_variant``, on ``KinematicCar(jitter=..., lag_ticks=...)``. The results are
+``write_variant``, on ``KinematicCar(jitter=..., lag_ticks=...)`` (the default ``car="kinematic"``) or,
+for Units 6-7 (plan roar-006, ``_speed_premise.py``), on ``DynamicCar()`` (``"dynamic"``),
+``carla_like(noise=False)`` (``"carla0"``) or ``carla_like(noise=True)`` (``"carla"``). The results are
 ``{job key: [AgentOutcome per seed]}``, read through the session fixture ``agent_premise``
 (``conftest.py``).
 """
@@ -48,6 +50,7 @@ class AgentOutcome(NamedTuple):
     finished: bool
     rms: float  # RMS |offset| over the driving rows (held == 0)
     max_offset: float  # max |offset| over the driving rows
+    spins: int = 0  # respawns caused by a spin-out (plan roar-006)
 
 
 class AgentJob(NamedTuple):
@@ -58,12 +61,27 @@ class AgentJob(NamedTuple):
     lag_ticks: int = 0
     seeds: Tuple[int, ...] = SEEDS
     max_seconds: float = SCORECARD_CAP
+    car: str = "kinematic"  # "kinematic" (jitter, lag_ticks), "dynamic", "carla0" or "carla"
+
+
+def make_car(job: AgentJob):
+    """A fresh car for one race of ``job``."""
+    from racekit.cars import DynamicCar, KinematicCar, carla_like
+
+    if job.car == "kinematic":
+        return KinematicCar(jitter=job.jitter, lag_ticks=job.lag_ticks)
+    if job.car == "dynamic":
+        return DynamicCar()
+    if job.car == "carla0":
+        return carla_like(noise=False)
+    if job.car == "carla":
+        return carla_like(noise=True)
+    raise ValueError(f"unknown car {job.car!r}")
 
 
 def race_agent_job(job: AgentJob) -> List[AgentOutcome]:
     """Race one job (every seed in ``job.seeds``) in this process."""
     import numpy as np
-    from racekit.cars import KinematicCar
     from racekit.runner import run_race
     from racekit.variants import write_variant
 
@@ -76,12 +94,12 @@ def race_agent_job(job: AgentJob) -> List[AgentOutcome]:
                                        {name: repr(value) for name, value in constants})
         outcomes = []
         for seed in job.seeds:
-            car = KinematicCar(jitter=job.jitter, lag_ticks=job.lag_ticks)
-            result = run_race(submission, job.track, car=car, seed=seed, max_seconds=job.max_seconds)
+            result = run_race(submission, job.track, car=make_car(job), seed=seed, max_seconds=job.max_seconds)
             telemetry = result.telemetry
             offset = np.abs(telemetry["offset"][telemetry["held"] == 0])
             outcomes.append(AgentOutcome(result.total_time, result.collisions, result.finished,
-                                         float(np.sqrt(np.mean(offset ** 2))), float(np.max(offset))))
+                                         float(np.sqrt(np.mean(offset ** 2))), float(np.max(offset)),
+                                         result.respawn_causes.count("spin")))
     return outcomes
 
 

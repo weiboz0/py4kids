@@ -21,3 +21,8 @@ concepts:
 - {id: pure-pursuit, name: "Pure pursuit: the arc through a lookahead point", category: techniques, kind: technique}
 - {id: lookahead-tuning, name: "Speed-scaled lookahead, actuator delay, stability vs corner-cutting", category: techniques, kind: technique}
 - {id: stanley-steering, name: "The Stanley front-axle steering law", category: techniques, kind: technique}
+- {id: dynamic-bicycle, name: "The dynamic bicycle: slip angles, lateral tyre forces and the yaw equation", category: techniques, kind: technique}
+- {id: friction-circle, name: "Tyre saturation, the friction circle and the spin-out", category: techniques, kind: technique}
+- {id: cornering-speed-limit, name: "The cornering speed limit v = sqrt(a_lat / kappa) and a curvature-limited speed goal", category: techniques, kind: technique}
+- {id: speed-profile, name: "The forward-backward speed profile and following it with a lead in seconds", category: techniques, kind: technique}
+- {id: section-knob-sweep, name: "Per-section knobs by one-knob sweeps: the clean rule, the sequential pass and the margin rule", category: techniques, kind: technique}

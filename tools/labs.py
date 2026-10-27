@@ -48,7 +48,8 @@ PARAMETERS_TAG = "parameters"
 NO_EXEC_TAG = "no-exec"
 PATH_NAME = "TELEMETRY_PATH"
 PARAMETERS_SOURCE = f'{PATH_NAME} = os.environ.get("{CSV_ENV}", "telemetry.csv")'
-SIMULATOR_MENTION = re.compile(r"carla|competition_runner|subprocess")
+# racekit's ``carla_like`` is the model car, not the simulator (plan roar-006 U7.10), so it does not count.
+SIMULATOR_MENTION = re.compile(r"carla(?!_like)|competition_runner|subprocess")
 READ_CALLS = frozenset({"read_csv", "load_csv"})
 # ``<module>.open(file, mode)`` takes the mode second, like the builtin; ``Path(...).open(mode)``
 # (any other attribute ``open``) takes it first.
