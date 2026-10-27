@@ -236,7 +236,7 @@ constants unless stated):
   sections only on evenly spaced waypoints. A routed test splices the recorder into `agents/unit-07.py`, races `oval`
   and asserts the sidecar equals `grip_sections(load_track("oval"))` and that the analysis's per-row sections from
   the sidecar equal the fallback's there (evenly spaced waypoints). Six sections by arc length are racekit's
-  convention, not a property of Monza ([fable] r2 N4). It and reports per section the
+  convention, not a property of Monza ([fable] r2 N4). It reports per section the
   time, the median and peak speed, the max |cross-track error| and the collisions (Unit 5's recorder change supplies
   the error). Its racekit-prediction cell races the reference on `monza-like` (`carla_like(noise=True)`, seed 0) and
   **asserts** that race's per-section times, peak errors and 0 collisions (pinned in Phase C from the shipped agent,
