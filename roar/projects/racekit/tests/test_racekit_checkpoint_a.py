@@ -142,7 +142,8 @@ def test_cp4_the_unit_6_agent_is_clean_but_misses_the_target(checkpoint_a):
 def test_cp4_the_checkpoint_tracks_neighbours_of_the_frozen_value(checkpoint_a):
     _assert_clean_row(checkpoint_a[cell_key(CHECKPOINT, 4.4)], 307.30)
     # Unit 7's single-track value does not survive the checkpoint track
-    assert not _all_clean(checkpoint_a[cell_key(CHECKPOINT, 4.6)])
+    outcomes = checkpoint_a[cell_key(CHECKPOINT, 4.6)]
+    assert len(outcomes) == 5 and not any(_clean(o) for o in outcomes), outcomes  # not clean on any seed
 
 
 # --- CP.5 -----------------------------------------------------------------------------------------------
