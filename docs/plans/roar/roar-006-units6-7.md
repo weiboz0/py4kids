@@ -435,3 +435,42 @@ post-execution report records the book-level exec total against the 15 CI-minute
   - **N3** [FIXED] Unit 6 Exercise 6's run time reads "about a minute" in both notebooks.
   - **N4** [FIXED] Unit 6 solutions Ex 5's diagnosis prints the computed excess instead of a hard-coded 22%.
   - **N5** [WONTFIX] The Probe-evidence range 309.70–310.05 s covers both `q18` and `q19` (the lead in `q19` at 0.4–0.6 s); U7.2's 309.70–309.95 s is `q18` alone. Both are right.
+
+### Round 2 (fixes @ 51e41be, CI ALL GREEN): CONSENSUS
+- [sol] APPROVE: B and S verified fixed (cell 12 executed with its asserts and focused checks of every terminal path); the plan's 19-run maximum matches the code; no regressions.
+- [fable] APPROVE WITH NITS: S1 and N2–N4 verified fixed, N5's WONTFIX accepted; the lab fix verified on five further scenarios.
+  - **N1** [FIXED] Unit 7 teacher notes' lab bullet now describes the re-raced step-back and the provisional result.
+  - **N2** [FIXED] The lab's "runs used … of at most" line prints 13 in the short form.
+- [self] APPROVE.
+
+## Post-Execution Report
+
+**Status: SHIPPED.** Units 6–7 are complete:
+- Unit 6 puts the car on tyres: the dynamic bicycle, the friction circle and a curvature speed cap (`agents/unit-06.py`, safe and slow: `carla_like` medians 216.50 / 422.65 / 880.50 s, all clean);
+- Unit 7 plans the lap with a forward–backward speed profile and tunes per-section knobs (`agents/unit-07.py`: `test-circuit` 304.15 s on ten seeds, spread 0.20, all clean; `oval` 152.75 s; `monza-like` 515.10 s), with the CARLA lab.
+
+**Verification.**
+- `TMPDIR=/dev/shm bash scripts/ci-local.sh`: ALL GREEN at 5317c99, at 51e41be (the content-gate fixes; routed roar suite 406 passed in 376.3 s) and at the final commit (round-2 nits and this report).
+- Every gate U6.1–U6.4 and U7.1–U7.10 is asserted, in the routed test (`test_racekit_unit06_07_premise.py`, 24 tests; `test_racekit_unit07_lab.py`, 4 tests) and in the milestones.
+- The routed roar suite: 406 passed in 378.6 s (6.3 min, under the 8-min cap of design v4.4, on this 8-core machine).
+- Units 6–7 notebooks, measured by their authors: Unit 6 lesson 45 s, solutions 79 s, milestone 72 s; Unit 7 lesson 37 s, solutions 58 s, milestone 49 s; about 340 s in total, under the plan's 6 min.
+- The lab passes `lab-check`; the lesson buildout total is 21, under 30.
+- `agents/unit-07.py` SHA-256 `4d56c05b…eb9f` is unchanged since Phase A; `qualification.md` records it.
+
+**Deviations from the plan (recorded).**
+1. **Tooling: `tools/labs.py`'s simulator-mention regex** flagged `racekit.carla_like` as a CARLA call in the lab's racekit prediction cell. It is now `carla(?!_like)|competition_runner|subprocess`, with a test (`tests/test_labs.py`: `carla_like` alone passes; `carla_like` with `import carla` still fails). A tooling change outside the phases' file list, made to let the planned lab pass the planned check.
+2. **U6.4's seed-0 times are probe record** (`q8`: 216.50 / 422.55 / 880.40 s), not plan text: the plan quotes only the five-seed medians. The lesson and the milestone assert them, labelled "seed 0 of the probe record".
+3. **One extra U7.2 job:** the (A_DEC 6.0, A_LAT 4.0) cell at the reference lead 0.3 s on seeds 0–4. It is not a U7.3 edge cell; the (4.0, 5.0) cell is, and is reused.
+4. **Interpretation choices in the routed test:**
+   - U7.4's max |offset| (0.81 / 1.67 m) is read as the median of the per-seed maxima, ±0.01;
+   - U7.2's clean cells assert q18's per-seed max |offset| lists, ±0.01; U7.7 asserts seeds 5 and 8 at 6.48 / 6.38 m;
+   - U7.7 also asserts that section 1 at 1.5 *alone* is clean (the plan's "concrete interaction");
+   - the job table lives in a new helper, `_speed_premise.py`, rather than inside `_agent_premise.py`.
+   The milestone checks the accepted vector on seeds 0–4 (median 299.60 s); the ten-seed check is in the routed test.
+5. **The lab's racekit prediction is pinned** on `monza-like`, `carla_like` (noisy), seed 0: 515.10 s; per-section time / max |error|: 67.85 / 0.265, 93.50 / 1.624, 102.90 / 1.554, 73.10 / 1.672, 92.70 / 0.444, 85.05 / 1.594.
+6. **Exercise statements** were clarified after the blind solves (Unit 6 Ex 6, 7; Unit 7 Ex 3, 6, 9), before the content gate.
+7. **The lab's step 4 was tightened by the content gate** ([sol] r1 B): a stepped-back setting is re-raced twice, and a further failure gives a provisional all-1.0 result; the worst case is 19 runs (short form 13) where the gated plan said 17, and the plan's procedure is amended to match.
+
+**Interim CARLA check (design §7.3): PENDING (author).** The first run of `agents/unit-07.py` as shipped, untimed, 3 laps, 0 collisions, on the pinned stack. It is recorded in `roar/docs/qualification.md`, surfaced as a user follow-up, and `roar-008`'s plan review names it as a risk.
+
+**Follow-ups (held for the end of the run):** the routed budget raise to 8 min (design v4.4); the knobs-are-not-μ and A_DEC-as-planning-knob deviations; the interim CARLA check.

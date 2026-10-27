@@ -43,7 +43,7 @@ Plan for **two to three 60–90 min sittings**, plus the lab on a CARLA machine.
 ## The lab: what to watch for
 
 - **Never commit results.** The recording **and** its `.sections.txt` sidecar live outside the repository. Check `git status` with the class before anyone commits.
-- **One run per step is weak evidence.** The lesson needed ten seeds to catch an edge; CARLA cannot afford that, which is why the lab re-races its result twice and steps back if either run is not clean.
+- **One run per step is weak evidence.** The lesson needed ten seeds to catch an edge; CARLA cannot afford that, which is why the lab re-races its result twice, steps back if either run is not clean, and re-races the stepped-back setting twice too; if that also fails, the result is all knobs at 1.0, marked provisional.
 - **Phantom braking.** CARLA's waypoints give a spiky curvature, so the profile can dip where the road does not bend. Point students at it in the speed plot; Unit 9 smooths the line.
 - **The interim CARLA check is the author's** (design §7.3). Student CARLA results never enter the repository or the book.
 
