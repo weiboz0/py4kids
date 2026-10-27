@@ -23,6 +23,8 @@ taught:
   plot_telemetry: telemetry-plotting
   plot_track: telemetry-plotting
   predict: numerical-integration
+  pursuit_curvature: pure-pursuit
+  pursuit_wheel_angle: pure-pursuit
   read_csv: race-telemetry
   repeat_races: repeated-run-measurement
   scatter: telemetry-plotting

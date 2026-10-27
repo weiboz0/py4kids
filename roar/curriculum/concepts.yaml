@@ -14,3 +14,10 @@ concepts:
 - {id: kinematic-bicycle, name: "The kinematic bicycle model and its steady-state circle", category: techniques, kind: technique}
 - {id: longitudinal-map, name: "Throttle, brake and drag: the longitudinal map and terminal speed", category: techniques, kind: technique}
 - {id: numerical-integration, name: "Euler and RK4 integration, error orders and timestep error", category: techniques, kind: technique}
+- {id: pid-control, name: "P, I and D terms; discrete PID; a derivative from a measured rate", category: techniques, kind: technique}
+- {id: integrator-windup, name: "Actuator saturation, integrator windup and conditional integration", category: techniques, kind: technique}
+- {id: step-response, name: "Step response: overshoot, settling time, steady-state error and tuning", category: techniques, kind: technique}
+- {id: cross-track-steering, name: "Steering from the cross-track error with heading damping and curvature feedforward", category: techniques, kind: technique}
+- {id: pure-pursuit, name: "Pure pursuit: the arc through a lookahead point", category: techniques, kind: technique}
+- {id: lookahead-tuning, name: "Speed-scaled lookahead, actuator delay, stability vs corner-cutting", category: techniques, kind: technique}
+- {id: stanley-steering, name: "The Stanley front-axle steering law", category: techniques, kind: technique}

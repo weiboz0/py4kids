@@ -10,7 +10,7 @@ from __future__ import annotations
 import multiprocessing
 import os
 from concurrent.futures import ProcessPoolExecutor
-from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 SEEDS = (0, 1, 2, 3, 4)
 CRASH_CAP = 600.0  # s: the cap for races expected to crash (keeps the suite short)
@@ -64,23 +64,27 @@ def _race_job(job: Job) -> List[Outcome]:
     return outcomes
 
 
-def race_all(jobs: Dict[str, Job]) -> Dict[str, List[Outcome]]:
-    """Race every job, in parallel (one process per CPU, at most 8)."""
+def race_all(jobs: Dict[str, Any], worker: Callable[[Any], List[Any]] = _race_job) -> Dict[str, List[Any]]:
+    """Race every job, in parallel (one process per CPU, at most 8).
+
+    ``worker`` races one job (a module-level function, so the spawned processes can import it);
+    a job is any NamedTuple with ``track`` and ``seeds`` (and optionally ``until_crash``).
+    """
     keys = list(jobs)
     # split multi-seed jobs into one task per seed, except the sequential until-crash ones
-    tasks: List[Tuple[str, Job]] = []
+    tasks: List[Tuple[str, Any]] = []
     for key in keys:
         job = jobs[key]
-        if job.until_crash:
+        if getattr(job, "until_crash", False):
             tasks.append((key, job))
         else:
             tasks.extend((key, job._replace(seeds=(seed,))) for seed in job.seeds)
     # longest first: until-crash and long tracks
-    tasks.sort(key=lambda task: (not task[1].until_crash, task[1].track != "monza-like"))
+    tasks.sort(key=lambda task: (not getattr(task[1], "until_crash", False), task[1].track != "monza-like"))
     workers = max(1, min(8, os.cpu_count() or 1, len(tasks)))
     context = multiprocessing.get_context("spawn")
     with ProcessPoolExecutor(max_workers=workers, mp_context=context) as pool:
-        results = list(pool.map(_race_job, [job for _, job in tasks]))
+        results = list(pool.map(worker, [job for _, job in tasks]))
     merged: Dict[str, List[Outcome]] = {key: [] for key in keys}
     for (key, _), outcomes in zip(tasks, results):
         merged[key].extend(outcomes)

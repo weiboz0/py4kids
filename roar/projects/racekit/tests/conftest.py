@@ -77,3 +77,11 @@ def premise():
     from _premise import premise_jobs, race_all
 
     return race_all(premise_jobs())
+
+
+@pytest.fixture(scope="session")
+def agent_premise():
+    """The Unit 4 / Unit 5 premise races (plan roar-005), raced once per session in parallel."""
+    from _agent_premise import race_agent_premise
+
+    return race_agent_premise()
