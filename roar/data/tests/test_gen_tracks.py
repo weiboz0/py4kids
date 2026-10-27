@@ -15,11 +15,27 @@ LENGTH_WINDOWS = {
     "oval": (1300.0, 1500.0),  # two 300 m straights, two 120 m-radius 180° corners
     "test-circuit": (2300.0, 2800.0),  # "about 2.5 km"
     "monza-like": (5500.0, 6100.0),  # "about 5.8 km"
+    # the seeded checkpoint tracks (plan roar-007): variants of test-circuit, so test-circuit's window
+    "test-circuit-seed1": (2300.0, 2800.0),
+    "test-circuit-seed2": (2300.0, 2800.0),
+    "test-circuit-seed3": (2300.0, 2800.0),
+    "test-circuit-seed4": (2300.0, 2800.0),
+    "test-circuit-seed2026": (2300.0, 2800.0),
 }
 SEEDS = (1, 2, 3, 7)
+# CP.1 (plan roar-007): the seeded checkpoint tracks' file stems, pinned literally (the carla-like car's
+# hidden grip is keyed to the track name), and their measured stats:
+# (length m, waypoints, min half-width m, tightest radius m)
+SEEDED_STATS = {
+    "test-circuit-seed1": (2625.6, 1313, 5.10, 17.7),
+    "test-circuit-seed2": (2662.0, 1331, 5.01, 18.7),
+    "test-circuit-seed3": (2670.4, 1335, 5.13, 20.5),
+    "test-circuit-seed4": (2675.0, 1337, 5.14, 17.3),
+    "test-circuit-seed2026": (2655.8, 1328, 5.15, 19.8),
+}
 
 
-@pytest.fixture(scope="module", params=g.TRACK_NAMES)
+@pytest.fixture(scope="module", params=g.ALL_NAMES)
 def track(request):
     return g.build(request.param)
 
@@ -125,6 +141,25 @@ def test_half_widths_are_positive_and_per_waypoint(track):
     assert np.all(track.z == 0.0)
 
 
+def test_the_seeded_checkpoint_tracks_are_named_literally():
+    assert g.SEEDED_NAMES == tuple(SEEDED_STATS)
+    assert g.ALL_NAMES == g.TRACK_NAMES + g.SEEDED_NAMES
+    assert all(g.build(name).name == name for name in g.SEEDED_NAMES)
+
+
+@pytest.mark.parametrize("name", tuple(SEEDED_STATS))
+def test_the_seeded_checkpoint_tracks_measure_as_probed(name):
+    length, waypoints, min_half_width, tightest_radius = SEEDED_STATS[name]
+    track = g.build(name)
+    assert track.length == pytest.approx(length, abs=0.1)
+    assert track.x.size == waypoints
+    assert float(track.half_width.min()) == pytest.approx(min_half_width, abs=0.01)
+    assert 1.0 / float(np.abs(track.curvature).max()) == pytest.approx(tightest_radius, abs=0.1)
+    assert g.curvature_is_continuous(track)
+    assert g.self_intersections(track.x, track.y) == 0
+    assert np.all(track.half_width >= 5.0) and np.all(track.half_width <= 8.0)
+
+
 def test_monza_like_is_labelled_inspired_by_monza():
     doc = g.monza_like_spec.__doc__ + g.__doc__
     assert "inspired by Monza" in doc.replace("**", "")
@@ -142,7 +177,7 @@ def test_closure_rejects_a_spec_without_one_designated_arc():
 
 
 def test_two_builds_are_byte_identical():
-    for name in g.TRACK_NAMES:
+    for name in g.ALL_NAMES:
         first, second = g.build(name), g.build(name)
         assert g.npz_bytes(first.arrays()) == g.npz_bytes(second.arrays())
         assert g.content_hash(first.arrays()) == g.content_hash(second.arrays())
@@ -179,12 +214,20 @@ def test_driver_generates_twice_identically_within_budget(tmp_path):
     first = generate.generate(tmp_path / "a")
     elapsed = time.perf_counter() - start
     second = generate.generate(tmp_path / "b")
-    # design 013 §7.1: total generation (tracks, roar-004's sysid logs and the lab sample) ≤ 1 min
+    # design 013 §7.1: total generation (the named and seeded tracks, roar-004's sysid logs and the lab
+    # sample) ≤ 1 min
     assert elapsed <= 60.0
     assert first == second
-    assert sorted(first) == (
+    assert sorted(first) == sorted(
         ["lab/sample_telemetry.csv", "sysid/monza-like-seed0.csv", "sysid/oval-steady-seed0.csv"]
-        + [f"tracks/{name}.npz" for name in sorted(g.TRACK_NAMES)]
+        + [f"tracks/{name}.npz" for name in g.TRACK_NAMES]
+        + [
+            "tracks/test-circuit-seed1.npz",
+            "tracks/test-circuit-seed2.npz",
+            "tracks/test-circuit-seed3.npz",
+            "tracks/test-circuit-seed4.npz",
+            "tracks/test-circuit-seed2026.npz",
+        ]
     )
     for path in first:
         assert (tmp_path / "a" / path).read_bytes() == (tmp_path / "b" / path).read_bytes()

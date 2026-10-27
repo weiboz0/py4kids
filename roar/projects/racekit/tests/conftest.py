@@ -21,6 +21,8 @@ DATA = REPO / "roar" / "data"
 if str(DATA) not in sys.path:
     sys.path.insert(0, str(DATA))
 
+from gen_tracks import SEEDED_NAMES  # the seeded checkpoint tracks (plan roar-007)
+
 SUBMISSION_HEADER = '''\
 from __future__ import annotations
 
@@ -46,7 +48,7 @@ CONSTRUCTOR = '''\
 
 @pytest.fixture(scope="session", autouse=True)
 def generated_tracks():
-    missing = [name for name in TRACK_NAMES if not (tracks_dir() / f"{name}.npz").is_file()]
+    missing = [name for name in TRACK_NAMES + SEEDED_NAMES if not (tracks_dir() / f"{name}.npz").is_file()]
     if missing:
         pytest.fail(
             f"generated tracks missing ({missing}); run "
@@ -93,3 +95,11 @@ def speed_premise():
     from _speed_premise import race_speed_premise
 
     return race_speed_premise()
+
+
+@pytest.fixture(scope="session")
+def checkpoint_a():
+    """Checkpoint A's gate races (plan roar-007 CP.2-CP.4), raced once per session in parallel."""
+    from _checkpoint_premise import race_checkpoint_a
+
+    return race_checkpoint_a()

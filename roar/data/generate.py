@@ -5,7 +5,10 @@
 It runs its steps in a declared order and writes everything into ``roar/data/generated/``
 (gitignored, regenerated on every CI run, never committed):
 
-1. tracks (``gen_tracks.py``): ``generated/tracks/<name>.npz``;
+1. tracks (``gen_tracks.py``): ``generated/tracks/<name>.npz`` for the three named tracks
+   (``oval``, ``test-circuit``, ``monza-like``) and the seeded checkpoint tracks (plan roar-007:
+   ``test-circuit-seed1`` … ``test-circuit-seed4``, Checkpoint A's training family, and
+   ``test-circuit-seed2026``, its checkpoint track), all under the same checksum contract;
 2. the carla-like car's sensor logs (``gen_sysid.py``, plan roar-004): a noisy ``monza-like`` race
    at global a_lat 3.5 and a noisy steady 15 m/s ``oval`` lap, recorded by the data-side driver
    (``drivers.py``) in the racekit sensor-log format, at ``generated/sysid/monza-like-seed0.csv``
@@ -53,9 +56,9 @@ STARTER = DATA_DIR.parent / "projects" / "racekit" / "agents" / "starter.py"
 
 
 def track_outputs(out_dir: Path) -> dict[str, tuple[bytes, str]]:
-    """Step 1: every named track, as ``relative path -> (npz bytes, content hash)``."""
+    """Step 1: every named and seeded track, as ``relative path -> (npz bytes, content hash)``."""
     outputs = {}
-    for name in gen_tracks.TRACK_NAMES:
+    for name in gen_tracks.ALL_NAMES:
         track = gen_tracks.build(name)
         arrays = track.arrays()
         outputs[f"tracks/{name}.npz"] = (gen_tracks.npz_bytes(arrays), gen_tracks.content_hash(arrays))
