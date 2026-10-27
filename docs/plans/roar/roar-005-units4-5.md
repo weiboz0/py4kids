@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.2** (§4.4 item 1, §5, §6 Units 4–5, §7.2).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-004` merges (#159).
+**v2.3** folds round 4 ([sol] B: the lab table is asserted by the lab itself).
 **v2.2** folds round 3 ([sol] B: the lag-1/lag-3 rows are marked probe record).
 **v2.1** folds round 2 ([sol] B: every stated multi-seed gate is asserted somewhere; [fable] N7–N11).
 **v2** folds plan-review round 1 ([sol] REJECT: B the pin record, S tolerances, S the lab's stale row; [fable] APPROVE WITH NITS: S1 the detuned PD, S2 runtime, S3 lab and starter pins, N1–N6).
@@ -209,6 +210,8 @@ ranges, as stated.
   (`p7.txt`): Unit 4 RMS 0.1054 / 0.1288 / 0.2420 m (858.55 / 858.95 / 861.85 s) and Unit 5 0.1450 / 0.1655 /
   0.2142 m (858.60 / 858.90 / 859.75 s) at lag 0 / 1 / 2. They cross at lag 2; the lab names the crossover: if
   CARLA's Unit 4 RMS is below Unit 5's, the real car behaves like a small delay.
+  The lab's racekit-prediction cell **asserts** these six RMS values (±0.0005 m) and times (±0.05 s) and that all six
+  races are clean, so `lab-check`, which executes it against the sample CSV, gates them ([sol] r4 B).
 
 ## Phases
 
@@ -311,4 +314,7 @@ ranges, as stated.
 ### Round 3 (v2.1 @ 663a3e5)
 - [sol] REJECT: **B** [FIXED v2.2] The U5.4 lag-1 and lag-3 five-seed figures sat under "Gates" without an assertion; they are now marked probe record (the seed-0 values are asserted in the lesson). Its round-2 B and N were verified resolved; the routed-test budget (about 166 s for `pytest roar`) is under the 5-minute cap.
 - [self] APPROVE. [fable] APPROVE WITH NITS (round 2; all folded).
+
+### Round 4 (v2.2 @ 20bf848)
+- [sol] REJECT: **B** [FIXED v2.3] The U5.6 lab table had no assertion; the lab's racekit-prediction cell now asserts it, and `lab-check` executes that cell. Round-3 B verified resolved. Every other figure under Gates is asserted by a named milestone, routed test or lesson cell, or is marked probe record (checked line by line in [self]).
 
