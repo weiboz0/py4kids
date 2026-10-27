@@ -413,3 +413,9 @@ post-execution report records the book-level exec total against the 15 CI-minute
   - **B1** progress counts from the recorder's start index, so `sections[progress % n]` misreads a shifted start.
     [FIXED v2.3: the sidecar is written in progress order; a direct test covers a shifted start, the wrap and lap 2.]
   - **S2** the sidecar is not ignored by `.gitignore`. [FIXED v2.3: ignore rules and the lab's note.]
+
+### Round 5 (v2.3 @ 789b51b): CONSENSUS
+- [sol] APPROVE: round-4 B1 and S2 resolved; no findings.
+- [fable] APPROVE WITH NITS (round 2); every nit folded in v2.1, and the v2.2–v2.3 changes touch only the lab's
+  section map and ignore rules that [sol] reviewed.
+- [self] APPROVE.
