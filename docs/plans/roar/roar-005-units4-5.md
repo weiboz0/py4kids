@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.2** (§4.4 item 1, §5, §6 Units 4–5, §7.2).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-004` merges (#159).
+**v2** folds plan-review round 1 ([sol] REJECT: B the pin record, S tolerances, S the lab's stale row; [fable] APPROVE WITH NITS: S1 the detuned PD, S2 runtime, S3 lab and starter pins, N1–N6).
 
 ## Scope
 - Unit 4 `roar/units/unit-04-pid-control/` and Unit 5 `roar/units/unit-05-geometric-steering/`: lesson, exercises,
@@ -15,7 +16,7 @@
 - Both units race on racekit's **kinematic** car (design §4.4 item 1); the dynamic car arrives in Unit 6.
 
 ## Probe evidence
-All probes are in `scratchpad/u05/` (`probe_agent.py` is a parametrized copy of `agents/unit-03.py`;
+All probes are in `scratchpad/u05/`. The pin record is `p6_full.txt` (unfiltered: every controller's full settings, regenerated from `p6.pkl`; the v1 `p6.txt` had `"SPEED_MODE": "pi"` stripped by a display filter, [sol] B), `p6_seed0_lag13.txt` (per-seed lags 1 and 3) and `p7.txt` (the detuned PD and the lab table). Every Unit 4, Unit 5 and Stanley row uses `SPEED_MODE = "pi"`; only the starter rows use the P loop (`probe_agent.py` is a parametrized copy of `agents/unit-03.py`;
 `lagcar.py` prototypes `lag_ticks` as a subclass that applies jitter first, then the FIFO, exactly as `DynamicCar`).
 `LagKinematicCar(lag_ticks=0)` reproduces `KinematicCar` to the tick on all three tracks (the starter's
 223.50 / 412.75 / 882.55 s, and every candidate's time and RMS).
@@ -32,8 +33,11 @@ All probes are in `scratchpad/u05/` (`probe_agent.py` is a parametrized copy of 
   starter's); without the D term it oscillates and crashes.
 - **Pure pursuit vs delay (`p2.py`–`p4.py`, `p6.py`):** on the lag-free kinematic car, pure pursuit (and a longer
   lookahead in particular) does **not** beat Unit 4's controller: it cuts corners. With a 2-tick actuator delay at
-  30 m/s, speed-scaled pure pursuit is the **only** controller that finishes clean; Unit 4's PD and Stanley crash on
-  every seed, and the starter does not finish inside the cap.
+  30 m/s, speed-scaled pure pursuit finishes clean while **the Unit 4 gains** and Stanley (k = 3) crash on every seed
+  and the starter does not finish inside the cap. A reactive law survives only when detuned ([fable] S1):
+  PD with K_E 0.05, K_HEAD 0.5 is clean at lag 2 but sits further off the line than pure pursuit (`p7.txt`).
+  Pure pursuit gets that detuning for free from its speed-scaled lookahead, which is why it is the robust choice
+  when the delay is unknown.
   A preview on `carla_like` (`p4.py`, `oval`, not shown to students before Unit 6) agrees: at 25 m/s Unit 4's PD
   crashes on 3/3 seeds and pure pursuit (k = 0.3) is clean.
 
@@ -43,7 +47,8 @@ All probes are in `scratchpad/u05/` (`probe_agent.py` is a parametrized copy of 
   starter at 20 m/s.
   The honest, pinned claim is the design's own "stability vs corner-cutting": **under actuator delay, a speed-scaled
   lookahead keeps the car stable where the tighter controllers go unstable, and it pays for that with corner-cutting
-  when there is no delay.** Gate U5.4 pins both halves. CARLA's delay is unknown until Unit 8 measures it, so the
+  when there is no delay.** Gate U5.4 pins both halves, and pins a detuned PD that also survives lag 2 but loses to pure pursuit beyond noise.
+  Lag 2 is the smallest delay that discriminates on the kinematic car (at lag 1 all four controllers are clean); it stands in for `carla_like`'s 1-tick lag plus its steering-rate limit and tyre dynamics, which the `p4.py` preview agrees with ([fable] N3). The lesson says so in one sentence. CARLA's delay is unknown until Unit 8 measures it, so the
   Unit 5 lab runs both agents on CARLA and lets the real car decide which the student keeps (design §6 gate policy:
   a falsifiable experiment, either outcome acceptable on the evidence).
   `agents/unit-05.py` ships pure pursuit, because it is the robust choice when the delay is unknown.
@@ -74,7 +79,8 @@ The whole-book lesson total becomes 9 + 3 + 3 = 15, under 30.
 - `practices:` both units practise the measurement concepts (`race-telemetry`, `repeated-run-measurement`,
   `telemetry-plotting`) and the Unit 2 instruments (`cross-track-error`, `menger-curvature`, `frames-and-heading`);
   Unit 4 practises `longitudinal-map` (the steady-state error is a drag balance); Unit 5 practises Unit 4's
-  `pid-control` and `cross-track-steering`.
+  `pid-control` and `cross-track-steering`. Unit 4 also practises `kinematic-bicycle` (δ_ff = atan(L·κ) is its
+  steady-state circle) ([fable] N5).
 
 ## The reference submissions
 - **`agents/unit-04.py`** = `agents/unit-03.py` (its instruments and `predict` kept) with:
@@ -84,7 +90,9 @@ The whole-book lesson total becomes 9 + 3 + 3 = 15, under 30.
   - steering: wheel angle δ = atan(L·κ_i) − K_E·e + K_HEAD·ψ_e with `K_E = 0.2` rad/m and `K_HEAD = 1.0`, where e is
     Unit 2's cross-track error, ψ_e = wrap(segment heading − yaw) on Unit 2's `segment_index`, and κ_i the Menger
     curvature at that index; steer = −δ / δ_max, clipped. (The heading term is the D term:
-    ė = −v·sin ψ_e, which the lesson derives.)
+    ė = −v·sin ψ_e, which the lesson derives. So K_HEAD = K_D·v: the effective damping K_D falls as 1/v, a third
+    less at 30 m/s than at 20, which is part of why fixed gains fail at speed with delay; the lesson says so,
+    [fable] N2.)
   - The P-only, no-feedforward and no-D variants are reachable by `write_variant` (`FEEDFORWARD = False`,
     `K_HEAD = 0.0`).
 - **`agents/unit-05.py`** = `agents/unit-04.py` with `STEERING = "pursuit"` (also `"pid"` = Unit 4's law exactly, and
@@ -93,11 +101,14 @@ The whole-book lesson total becomes 9 + 3 + 3 = 15, under 30.
     the target is the first waypoint after `segment_index` whose straight-line distance from the car is ≥ L_d;
     α is its bearing in the car frame (Unit 2's `to_car_frame`); δ = atan2(2L·sin α, d) with d the distance to it;
   - Stanley (`ST_K = 3.0`): the front-axle point (x + L cos ψ, y + L sin ψ) is projected onto the segments
-    `segment_index − 4 … segment_index + 11`; δ = wrap(segment heading − ψ) + atan2(−ST_K·e_f, max(v, 1)).
+    `segment_index − 4 … segment_index + 11` (wider than needed: the front axle lands on segment i + 1 or i + 2; a
+    code comment says so, [fable] N6); δ = wrap(segment heading − ψ) + atan2(−ST_K·e_f, max(v, 1)).
   - With `STEERING = "pid"` the file races exactly like `agents/unit-04.py` (to the tick; asserted).
 
 ## Gates (pinned from the probes; a miss means stop, amend and re-gate)
-Times are exact to 1e-9 (tick-quantized); RMS / max |offset| on driving rows (`held == 0`) within ±0.0005 / ±0.005 m
+Deterministic (jitter 0) times are within one tick (±0.05 s) of the pins, settling times within one tick, and
+jittered median times within ±0.05 s ([sol] S, design §4.5); clean/crash outcomes and the per-seed collision lists
+are exact, and every noise-aware comparison is strict. RMS / max |offset| on driving rows (`held == 0`) within ±0.0005 / ±0.005 m
 of the pins unless stated; "noise-aware" means `racekit.measure.noise_aware_better` or a median gap larger than both
 ranges, as stated.
 
@@ -129,7 +140,8 @@ ranges, as stated.
   | monza-like | 0.1029 (0.0042) | 0.1416 (0.0040) | 858.55 (0.00) | 870.50 (0.45) |
 
   On every track the RMS median gap exceeds the larger range, and `noise_aware_better(unit_04_times, starter_times)`
-  holds. All 15 races are clean.
+  holds. All 15 races are clean. The starter's five-seed times are raced in the Unit 4 milestone (the `test-circuit`
+  starter times 407.50 s, spread 0.65, come from `p1.py` and have no earlier shipped pin, [fable] S3).
 - **U4.4, the ablations** (jitter 0.05, seeds 0–4): without the feedforward the RMS medians are
   0.1327 / 0.1794 / 0.1374 m (worse than with it on all three; worse than the starter on `test-circuit`), all clean;
   without the D term (`K_HEAD = 0`) on `test-circuit` with `max_seconds=400` every seed crashes, with
@@ -153,27 +165,45 @@ ranges, as stated.
   | 0 | clean, RMS 0.1295 (0.0060) | clean, 0.1582 (0.0139) | clean, 0.3097 (0.0153) | clean, 0.2346 (0.0167) |
   | 1 | clean, 0.2136 (0.0077) | clean, 0.1939 (0.0129) | clean, 0.3469 (0.0198) | clean, 0.3233 (0.0154) |
   | 2 | **crashes** [41, 42, 43, 43, 40] | **crashes** [20, 16, 16, 17, 20] | **clean**, 0.4526 (0.0234), 269.70 s | does not finish in 400 s ([0, 1, 0, 0, 0] collisions) |
+  | 2, detuned PD (K_E 0.05, K_HEAD 0.5) | clean, RMS 0.5149 (0.0376), 269.70 s; at lag 0: 0.3538 (0.0280) | | | |
   | 3 | crashes, 60 each | crashes [53, 53, 53, 53, 50] | clean, 1.4305 (0.1659), 282.00 s (spread 3.75) | crashes [41, 41, 41, 41, 44] |
 
   (The starter here keeps its P speed loop; the other three use Unit 4's PI.)
   **The gate:** at lag 2, pure pursuit is clean 5/5 and Unit 4's PD and Stanley collide on every seed (the exact
-  per-seed collision lists above); at lag 0, Unit 4's RMS median beats pure pursuit's by more than both ranges.
-  The milestone asserts lags 0 and 2 for all four controllers; lags 1 and 3 are shown in the lesson for seed 0 only
-  (pinned per seed from the same probe run).
+  per-seed collision lists above); the detuned PD is also clean at lag 2, and pure pursuit's RMS median beats it by
+  more than both ranges (0.4526 vs 0.5149); at lag 0, Unit 4's RMS median beats pure pursuit's by more than both
+  ranges.
+  **Runtime trim ([fable] S2):** the milestone races lag 0 for all four controllers (5 seeds), and at lag 2 pure
+  pursuit, Unit 4's PD and the detuned PD on 5 seeds, Stanley and the starter on seed 0 only (their crash rows cost
+  about 11–13 s each). Lags 1 and 3 appear in the lesson for seed 0 only, pinned from `p6_seed0_lag13.txt`:
+  lag 1 starter 280.25 s / 0.3335, PD 269.40 / 0.2150, pursuit 269.05 / 0.3498, Stanley 269.00 / 0.1904, all clean;
+  lag 3 starter 41 collisions, PD 60, Stanley 53, pursuit clean 282.00 s / 1.4305.
 - **U5.5, the lookahead sweep** (the same setting, `PP_K` ∈ {0.2, 0.3, 0.4, 0.5}): RMS medians at lag 0
   0.1800 / 0.3097 / 0.4656 / 0.6477 m (a longer lookahead cuts corners), at lag 2 1.2972 (time 292.35 s, spread 5.75:
-  it weaves) / 0.4526 / 0.5625 / 0.7203 m, all clean. The best lookahead grows with the delay.
+  it weaves) / 0.4526 / 0.5625 / 0.7203 m, all clean. The best lookahead grows with the delay. The milestone races
+  the sweep on seed 0 only (per-seed pins from `p6.pkl`); the lesson shows the medians.
 - **U5.6, the lab** (design §7.2): `labs/real-sim.ipynb` passes `lab-check` against the sample CSV. Its recorder is
   the Unit 1 recorder with one change, `offset` = the agent's own `self.cross_track_error`; a routed racekit test
   splices it into `agents/unit-05.py`, races `oval` (jitter 0) and checks the recorded `offset` against racekit's
-  telemetry `offset` one row earlier (the alignment the Unit 2 milestone uses) within 1e-4 m.
+  telemetry `offset` one row earlier (the alignment the Unit 2 milestone uses) within 1e-4 m (the Unit 1 recorder
+  writes 0 there today; the test asserts the new column, [fable] N4).
+  **The stale row ([sol] S):** on CARLA the first observation after a respawn hold is still the crash pose (the Unit 1
+  lab says so), so that row's cross-track error is meaningless although `held == 0`. The analysis excludes the first
+  row after every hold run (and, in a file without held rows, the row where progress drops) from the RMS and max,
+  and says why; the routed test covers a respawning race.
+  **The lab table ([fable] S3)**, racekit's predictions on `monza-like` at 20 m/s, jitter 0.05, seed 0, all clean
+  (`p7.txt`): Unit 4 RMS 0.1054 / 0.1288 / 0.2420 m (858.55 / 858.95 / 861.85 s) and Unit 5 0.1450 / 0.1655 /
+  0.2142 m (858.60 / 858.90 / 859.75 s) at lag 0 / 1 / 2. They cross at lag 2; the lab names the crossover: if
+  CARLA's Unit 4 RMS is below Unit 5's, the real car behaves like a small delay.
 
 ## Phases
 
 ### Phase A: racekit and registry (Opus subagent for the racekit change; registry inline)
 - `KinematicCar(lag_ticks: int = 0)`: validated (an int ≥ 0); a FIFO of (throttle, steer, brake), refilled with zeros
   by `reset()` (a respawn resets it, as `DynamicCar`); jitter is drawn first, then the FIFO, as `DynamicCar`.
-  Docstring updated. Tests: lag 0 is bit-identical to the old car over a fuzz of actions; with lag k an action first
+  Docstring updated: the FIFO holds (throttle, steer, brake) only, `hand_brake` and `reverse` act immediately (as
+  `DynamicCar`), jitter is drawn at command time and queued, and `reset`/respawn discards queued commands
+  ([fable] N1). Tests: lag 0 is bit-identical to the old car over a fuzz of actions; with lag k an action first
   changes the state on tick k + 1; `reset` refills the queue; a respawn mid-race drains it; the jitter draw order is
   unchanged; the U5.4 lag-2 row reproduces for seed 0 (one race per controller).
 - `concepts.yaml` gets the 7 ids; `coverage-map.yaml` gets the Unit 4 and Unit 5 entries (`lessons: 3` each); the
@@ -181,7 +211,8 @@ ranges, as stated.
 - `library_methods` / `api-order.yaml`: the closed list of new callables the notebooks use, each mapped to
   infrastructure or a teaching concept (no taught callable before its unit). Expected: none beyond those already
   listed plus `to_car_frame`-style student functions (student code is not a library call); add any the content needs
-  and record them in the post-execution report.
+  and record them in the post-execution report. `append`, `deque` and `popleft` (a FIFO or history cell) are added to
+  infrastructure if used ([fable] N5).
 - `syllabus.md` rows for Units 4–5; design 013 **v4.3** (the restated Unit 5 gate, citing this plan).
 
 ### Phase B: Unit 4 content (Opus subagents: lesson + exercise statements; solutions in a separate fresh session)
@@ -208,12 +239,13 @@ ranges, as stated.
   4. Actuator delay: what it is, why every real car has some, and `KinematicCar(lag_ticks=...)`.
   5. The delay study at 30 m/s (U5.4): stability vs corner-cutting.
   6. Speed-scaled lookahead, swept (U5.5).
-  7. Stanley, and why a law with no lookahead is delay-sensitive.
+  7. Stanley, and why a law with no lookahead is delay-sensitive; a detuned PD survives the delay too, but pure
+     pursuit gets the detuning for free from its lookahead and stays closer to the line.
   8. Choosing under uncertainty: the reference keeps pure pursuit until CARLA says otherwise (the lab).
 - **Exercises:** at least 6 and at least 2 stretch. Stretch: (a) the lookahead that minimizes RMS at lag 1;
   (b) a lookahead point interpolated on the polyline (exact arc distance) vs the first-waypoint rule.
-- `agents/unit-05.py`, its milestone (U5.1–U5.5), and `labs/real-sim.ipynb` (U5.6): the Unit 1 lab's set-up by
-  reference (not copied), the one-line recorder change, the analysis (RMS and max |offset|, time, collisions), and a
+- `agents/unit-05.py`, its milestone (U5.1–U5.5), and `labs/real-sim.ipynb` (U5.6): the five design §7.2 steps
+  listed briefly, with a pointer to the Unit 1 lab for the details ([fable] N4); the stale post-respawn row excluded; the one-line recorder change, the analysis (RMS and max |offset|, time, collisions), and a
   comparison table against racekit's predictions for `unit-04.py` and `unit-05.py` on `monza-like` at 20 m/s with
   lag 0, 1 and 2 (seed 0, jitter 0.05). The student runs both agents on CARLA and keeps the one the real car prefers.
 - The routed lab-recorder test (U5.6).
@@ -224,8 +256,9 @@ ranges, as stated.
 - `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN.
 - `bash scripts/pre-merge-guard.sh --pr` OK.
 - All the gates hold in the milestones; the lab passes `lab-check`.
-- Units 4–5 notebook execution totals ≤ 5 min (the delay study is the cost; it is sized to lags 0 and 2 × 5 seeds in
-  the milestone and seed 0 only in the lesson).
+- Units 4–5 notebook execution totals ≤ 8 min ([fable] S2 measured about 9–11 min for the v1 scope; the trims above
+  bring the milestone to about 3 min), and the post-execution report records the book-level exec-lessons +
+  exec-solutions total against design §7.1's 15 CI-minute cap. Over budget means trim, not raise.
 
 ## Out of scope
 - The dynamic car and `carla_like` in content (Unit 6); speed planning (Units 6–7); MPC (Unit 10).
@@ -234,3 +267,17 @@ ranges, as stated.
   follow-up).
 
 ## Plan Review
+
+### Round 1 (v1 @ d05bb12)
+- [self] APPROVE WITH NITS: the K_HEAD = K_D·v scaling must be stated; the lesson's lag-1/lag-3 rows need per-seed pins. Both [FIXED v2].
+- [sol] REJECT (it could not run uv in its read-only sandbox, so it reviewed from the probe record):
+  - **B** [FIXED v2] The pin record did not match the probe inputs: the v1 `p6.txt` was produced through a display filter that stripped `"SPEED_MODE": "pi"`. The races did use PI. The unfiltered record `p6_full.txt` was regenerated from the pickle and is cited; the stray `p6.pkl` was moved out of the repository and `p6.py` now writes beside itself.
+  - **S** [FIXED v2] Tolerances: deterministic times and settling within one tick, jittered medians ±0.05 s; outcomes and noise-aware comparisons stay strict.
+  - **S** [FIXED v2] The lab excludes CARLA's stale first row after a respawn from the RMS.
+  - Confirmed: the restated Unit 5 gate is a defensible conditional claim; lag 2 is within the design's actuator-lag range; the lag semantics match `DynamicCar`; the D-term sign is right.
+- [fable] APPROVE WITH NITS (reproduced U4.1, the lag-0 equivalence, U5.1 to 5.5e-15, U4.2/U5.2, and samples of U4.3, U5.3, U5.4, U4.4; checked the lap wrap, the Stanley window, respawn with a queue and the derivative sign):
+  - **S1** [FIXED v2] "the only controller that finishes clean" was false for a detuned PD; restated, and the detuned PD (0.05 / 0.5) is pinned and beaten by pure pursuit beyond noise.
+  - **S2** [FIXED v2] Runtime: the milestone is trimmed; the budget is 8 min with the book total reported.
+  - **S3** [FIXED v2] The lab table and the starter's `test-circuit` times are pinned or raced.
+  - **N1–N6** [FIXED v2].
+
