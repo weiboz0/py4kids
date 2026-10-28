@@ -4,6 +4,8 @@
 **v4.7** (below).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-007` merged (#162, 062a11c).
+**v2.1** folds plan-review round 2 ([sol] S: the squared QR identity, S: no grip estimate at all in the lab;
+[fable] N1–N2).
 **v2** folds plan-review round 1 ([sol] REJECT: B the lab ending on an un-raced value, S the race count; [fable]
 APPROVE WITH NITS: S1 hidden truth in student material, S2 QR before it is taught, S3 the Unit 9 hook, S4 the lab's
 PROVISIONAL wording and the probe's row rule, S5 a tolerance on the pin, N1–N6; [self] N1 = S2, N2 the shipped
@@ -111,7 +113,8 @@ The probe agents are `agents/unit-07.py` plus the constants below (`p10`'s line 
   - **At the same f the line buys about 25 s on `test-circuit`** (0.54: 279.60 against 304.70 s) and **27 s on
     `monza-like`** (0.60: 473.45 against 500.70 s).
   - **A new line breaks the speed tuning:** the line's family edge is **0.56** (0.58 fails on seed4), one grid step
-    *below* the centreline's 0.58. Carried over unchanged, Unit 8's frozen 0.56 is still clean on all six tracks, but
+    *below* the centreline's 0.58. Carried over unchanged, Unit 8's frozen 0.56 is still clean on the five training
+    tracks (the gate's claim; the probe also has seed2026 clean at 0.56, not gated), but
     its **margin is gone**: it now sits at the edge, and the value Unit 8 proved was its edge (0.58) crashes. Re-tuned by the margin rule, the line freezes **0.54**, and the unseen seed2026 races **282.05 s**
     clean (Unit 8: 303.30 s; Checkpoint A: 310.80 s), where 0.58 is not clean.
   - **Local widening, as built, loses** (`p24`, `p25`): on `test-circuit` and seed2026 it is not clean at any raced f
@@ -243,11 +246,14 @@ hidden table (tests are not student material); student material never does.
 2. fit the longitudinal map and the steering gain on their own logs, and compare with racekit's;
 3. the six grip probes on CARLA (one race each, a section pushed with `GRIP[s] = 3.5`; each run stops at its first
    respawn or after 3 minutes), and μ̂ per section with the lesson's rules: a probe with no respawn gives a lower
-   bound, and a section with ≤ 20 qualifying rows gives no estimate (then the racekit-free fallback is the lowest
-   estimate on the lap);
+   bound, and a section with ≤ 20 qualifying rows gives no estimate. A section without an estimate takes the lowest
+   estimate on the lap; if **no** section has an estimate, the lab records "grip not identified" and step 4 races the
+   student's Unit 7 setting with only the measured steering gain changed (66° or their own), by the same
+   twice-each, stop-at-the-first-failure rule;
 4. predict with racekit first (the asserted cell), then decide: ship 66° or the student's measured gain, and
    `MU_FRACTION` 0.54 for the first CARLA race (one grid step inside the racekit family's frozen 0.56, since CARLA is
-   a track the family never saw), racing it twice; if either race is not clean, 0.52 twice, then 0.50 twice. The
+   a track the family never saw), racing it twice and stopping at the first race that is not clean; then 0.52 the same
+   way, then 0.50. The
    result is the first value clean on both of its races. If 0.50 also fails, **no setting is accepted**: the lab
    records "not clean at 0.50" and the student keeps their Unit 7 submission for CARLA (as the Unit 7 lab's
    PROVISIONAL result is flagged, never accepted); the lab never reports a value it did not race;
@@ -280,7 +286,8 @@ hidden table (tests are not student material); student material never does.
   1. The hook: "Your sim-tuned agent is slow, or crashes, on CARLA. Why?" The Unit 7 agent on `monza-like` and on
      seed2026: tuned on one track, it does not know the car.
   2. Least squares: a log as a matrix, `lstsq`, residuals, the lag chosen by the residual (U8.1); QR as how it is
-     solved, and ‖Ac − b‖ = ‖Rc − Qᵀb‖ up to a constant.
+     solved, and ‖Ac − b‖² = ‖Rc − Qᵀb‖² + const (the squared norms; the constant is the part of b outside A's
+     column space).
   3. The longitudinal map and the steering gain from the committed logs: **measured** 65.7° against the agent's
      **assumed** 70° (never "the car's 66°": student material states measured values against assumed ones only).
   4. Grip: why the race log cannot identify it, the limit probe one section at a time, |a| from positions, the
@@ -352,3 +359,11 @@ hidden table (tests are not student material); student material never does.
     start-pinned `p10` file, and the first construction's local widening was clean, so "as built" stays [FIXED v2];
     **N4** the `monza-like` fragility note reconciled (a 450 s cap; clean at 900 s) [FIXED v2, Risks]; **N5** the race
     count [FIXED v2, = [sol] S]; **N6** the budget trend in the changelog [FIXED v2, Phase A].
+
+### Round 2 (v2 @ 9cb1bf3)
+- [sol] REJECT (every round-1 finding RESOLVED): **S** the lesson outline stated the QR identity with unsquared norms
+  [FIXED v2.1]; **S** the lab's fallback was undefined when no section has an estimate [FIXED v2.1: "grip not
+  identified", then the Unit 7 setting with the measured steering gain, by the same rule].
+- [fable] APPROVE (every round-1 finding RESOLVED; job table re-summed to 141, ≈ 1.2 min CPU-pooled): N1 the lesson
+  says "the five training tracks" for 0.56 [FIXED v2.1]; N2 stop at the first failed race [FIXED v2.1].
+- [self] APPROVE.
