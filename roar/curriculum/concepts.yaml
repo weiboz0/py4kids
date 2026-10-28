@@ -31,3 +31,6 @@ concepts:
 - {id: grip-identification, name: "Per-section grip from limit probes, a percentile estimate and its lower bound, and planning with a fraction of it", category: techniques, kind: technique}
 - {id: racing-line, name: "The racing line: offsets on a B-spline, width bounds and the smoothest line by bounded least squares", category: techniques, kind: technique}
 - {id: line-retune, name: "Following a line and re-tuning the speed for it: the line-relative clean rule and the honest comparison", category: techniques, kind: technique}
+- {id: error-model-linearization, name: "The path-frame error model, linearised about the line in discrete time, with the actuator lag", category: techniques, kind: technique}
+- {id: ltv-mpc, name: "Linear time-varying MPC: a horizon cost stacked in closed form and solved as one least-squares problem per tick", category: techniques, kind: technique}
+- {id: tick-budget, name: "The per-tick compute budget: p50 and p99, warm-up, timing outside a pool, and the over-budget policy", category: techniques, kind: technique}

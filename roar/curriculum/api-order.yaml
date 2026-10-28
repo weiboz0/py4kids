@@ -6,8 +6,8 @@ api_order_version: 1
 #                   may not appear in any entry (or entry-positioned file) before the coverage-map
 #                   entry that introduces its concept.
 # Every `library_methods` name must be in exactly one of the two; every `taught` key must be in
-# `library_methods`. roar-002 added the first names with Unit 1; roar-003 added Units 2–3's; roar-008 added Units 8–9's.
-infrastructure: [KinematicCar, Path, TemporaryDirectory, abs, advance, apply_action, arange, argmax, argmin, array, atan2, check_submission, clip, column_stack, concatenate, cos, degrees, diff, enumerate, float, floor, get, get_last_gym_observation, getsource, hypot, initialize, int, isinstance, isnan, items, join, len, linspace, list, load_submission, load_track, log2, max, mean, median, min, mkdtemp, nonzero, norm, percentile, print, race_meta, radians, range, read, readline, reset, roll, round, run_race, seed, shim_installed, sign, sin, sorted, spread, sqrt, std, step, str, sum, tan, vstack, where, write, write_variant, zeros, zip]
+# `library_methods`. roar-002 added the first names with Unit 1; roar-003 added Units 2–3's; roar-008 added Units 8–9's; roar-009 added Unit 10's.
+infrastructure: [KinematicCar, Path, TemporaryDirectory, abs, advance, allclose, apply_action, arange, argmax, argmin, array, atan, atan2, check_submission, clip, column_stack, concatenate, cos, degrees, diff, empty, enumerate, float, floor, get, get_last_gym_observation, getsource, hypot, initialize, int, isfinite, isinstance, isnan, items, join, len, linspace, list, load_submission, load_track, log2, max, mean, median, min, mkdtemp, nonzero, norm, percentile, print, race_meta, radians, range, read, readline, reset, roll, round, run_race, seed, shim_installed, sign, sin, sorted, spread, sqrt, std, step, str, sum, tan, vstack, where, write, write_variant, zeros, zip]
 taught:
   CumulativeProgress: race-telemetry
   DynamicCar: dynamic-bicycle
@@ -15,6 +15,8 @@ taught:
   axvline: telemetry-plotting
   carla_like: cornering-speed-limit
   colorbar: telemetry-plotting
+  cumsum: ltv-mpc
+  eye: ltv-mpc
   fill_between: telemetry-plotting
   grid: telemetry-plotting
   grip_sections: section-knob-sweep
@@ -24,7 +26,9 @@ taught:
   loglog: telemetry-plotting
   lsq_linear: racing-line
   lstsq: linear-least-squares
+  minimize: ltv-mpc
   noise_aware_better: repeated-run-measurement
+  perf_counter: tick-budget
   plot: telemetry-plotting
   plot_speed_map: telemetry-plotting
   plot_telemetry: telemetry-plotting
@@ -47,5 +51,7 @@ taught:
   spun_out: friction-circle
   subplots: telemetry-plotting
   tight_layout: telemetry-plotting
+  tile: ltv-mpc
+  tril: ltv-mpc
   update: race-telemetry
   write_csv: race-telemetry

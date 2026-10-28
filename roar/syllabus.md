@@ -73,5 +73,6 @@ Comparisons are noise-aware: one agent beats another only by more than the sprea
 | — | `checkpoint-01-part-1` | checkpoint | 0.5 | Checkpoint A: tune one setting on a family of training tracks, then race a track it was never tuned on, once, clean and within 330 s. |
 | 8 | `unit-08-system-identification` | unit | 3 | Your sim-tuned agent is slow, or crashes, on CARLA: measure the car. Least squares on logs, the steering gain, per-section grip from limit probes, and planning with a fraction of the measured grip, then on CARLA in the lab. |
 | 9 | `unit-09-racing-line` | unit | 3 | The centreline is not the fast line, but a new line breaks your speed tuning. The smoothest line as bounded least squares, following it, and re-tuning the speed. |
+| 10 | `unit-10-mpc` | unit | 3 | Plan the next 2 s, every tick. The steering error model linearised about the line, LTV MPC as one least-squares solve per tick, the actuator lag, the per-tick budget, and an honest comparison with pure pursuit, then on CARLA in the lab. |
 
 *Later units, the checkpoints and the capstone are added by the plans that follow.*
