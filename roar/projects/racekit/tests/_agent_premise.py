@@ -15,7 +15,7 @@ import hashlib
 import json
 import tempfile
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Tuple
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 from _premise import SEEDS, race_all
 
@@ -62,6 +62,7 @@ class AgentJob(NamedTuple):
     seeds: Tuple[int, ...] = SEEDS
     max_seconds: float = SCORECARD_CAP
     car: str = "kinematic"  # "kinematic" (jitter, lag_ticks), "dynamic", "carla0" or "carla"
+    laps: Optional[int] = None  # None: run_race's default (plan roar-008's grip probes race one lap)
 
 
 def make_car(job: AgentJob):
@@ -94,7 +95,9 @@ def race_agent_job(job: AgentJob) -> List[AgentOutcome]:
                                        {name: repr(value) for name, value in constants})
         outcomes = []
         for seed in job.seeds:
-            result = run_race(submission, job.track, car=make_car(job), seed=seed, max_seconds=job.max_seconds)
+            laps = {} if job.laps is None else {"laps": job.laps}
+            result = run_race(submission, job.track, car=make_car(job), seed=seed, max_seconds=job.max_seconds,
+                              **laps)
             telemetry = result.telemetry
             offset = np.abs(telemetry["offset"][telemetry["held"] == 0])
             outcomes.append(AgentOutcome(result.total_time, result.collisions, result.finished,
