@@ -4,6 +4,10 @@
 **v4.7** (below).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-007` merged (#162, 062a11c).
+**v2** folds plan-review round 1 ([sol] REJECT: B the lab ending on an un-raced value, S the race count; [fable]
+APPROVE WITH NITS: S1 hidden truth in student material, S2 QR before it is taught, S3 the Unit 9 hook, S4 the lab's
+PROVISIONAL wording and the probe's row rule, S5 a tolerance on the pin, N1–N6; [self] N1 = S2, N2 the shipped
+B-spline reconstruction).
 
 ## Scope
 - Unit 8 `roar/units/unit-08-system-identification/` (a **lab unit**: `labs/real-sim.ipynb`, design §7.2) and Unit 9
@@ -19,7 +23,10 @@
 - **The interim CARLA check of `agents/unit-07.py` is PENDING (author).** It has not run on CARLA. Units 8–9 build on
   the Unit 7 agent; if the author's check fails, an errata/fix plan follows before Part 2 ships.
 - **The Unit 7 reference is fragile off its tuning track** (`roar-007`): it crashes on every seed of
-  `test-circuit-seed2026` and on one seed of `test-circuit-seed1`. This plan's probes give two causes, both of which
+  `test-circuit-seed2026` and on one seed of `test-circuit-seed1`. (The session's follow-up note that it also crashes
+  on `monza-like` seeds 2–4 is **not** reproduced: at the 900 s cap a `monza-like` race needs, it is clean on seeds 0–4
+  at 515.10 s (`p9`, and `roar-006`); the note came from races capped at 450 s, which cannot finish there. Corrected
+  in the follow-ups.) This plan's probes give two causes, both of which
   Unit 8 measures: the per-section grip (seed2026) and the **steering gain** (the agent assumes 70° of full lock; the
   car has 66°, and on `monza-like` the mismatch is what limits the speed, below). The interim CARLA check is therefore
   more likely to fail than the racekit record suggested, and Unit 8's lab is where a student meets that on CARLA.
@@ -39,7 +46,7 @@ The probe agents are `agents/unit-07.py` plus the constants below (`p10`'s line 
   0.05 s, over driving rows (three consecutive `held == 0` rows, no jump over 5 m, v > 5 m/s) whose waypoint
   `(progress + 1) mod n` lies in section s; the estimate μ̂_s·g is the 99th percentile.
   - On all six `test-circuit` tracks (the five training tracks and seed2026), **every section** gives μ̂g/μg in
-    **[0.980, 0.999]** (36 sections; each probe crashed 3–19 times).
+    **[0.980, 0.999]** (36 sections; each probe crashed 3–18 times).
   - On `monza-like`, sections 1–5 give [0.971, 0.993]; **section 0 never crashed** (it is the start straight: 0
     collisions, 0.656). An estimate counts only where the probe actually lost grip; elsewhere it is a lower bound.
   - All 42 races take 19 s on 8 workers.
@@ -104,15 +111,17 @@ The probe agents are `agents/unit-07.py` plus the constants below (`p10`'s line 
   - **At the same f the line buys about 25 s on `test-circuit`** (0.54: 279.60 against 304.70 s) and **27 s on
     `monza-like`** (0.60: 473.45 against 500.70 s).
   - **A new line breaks the speed tuning:** the line's family edge is **0.56** (0.58 fails on seed4), one grid step
-    *below* the centreline's 0.58. Carried over unchanged, Unit 8's tuning sits at the line's edge, and Unit 8's edge
-    value crashes. Re-tuned by the margin rule, the line freezes **0.54**, and the unseen seed2026 races **282.05 s**
+    *below* the centreline's 0.58. Carried over unchanged, Unit 8's frozen 0.56 is still clean on all six tracks, but
+    its **margin is gone**: it now sits at the edge, and the value Unit 8 proved was its edge (0.58) crashes. Re-tuned by the margin rule, the line freezes **0.54**, and the unseen seed2026 races **282.05 s**
     clean (Unit 8: 303.30 s; Checkpoint A: 310.80 s), where 0.58 is not clean.
-  - **Local widening, as built, loses** (`p24`, `p25`): on `test-circuit` and seed2026 it is not clean at any f from
-    0.50 to 0.60 with 60-waypoint windows, nor at 0.50–0.54 with 120-waypoint windows (with 200, seed2026 is clean at
+  - **Local widening, as built, loses** (`p24`, `p25`): on `test-circuit` and seed2026 it is not clean at any raced f
+    (0.50, 0.54, 0.56, 0.58, 0.60) with 60-waypoint windows, nor at 0.50–0.54 with 120-waypoint windows (with 200, seed2026 is clean at
     0.50 and `test-circuit` is not); the offsets must return to 0 within a few control points of each window's edge,
     a swing the follower cannot track at speed. On `monza-like` it is clean and lies between: 487.55 s at 0.60.
   - **History (`p10`–`p17`, kept for the lesson's trap):** the first line interpolated the control values linearly.
-    It raced (299.35 s at 0.56), but its kinks at every control point raised the Menger curvature (Σκ²Δs 0.2880 →
+    It raced (299.35 s at 0.56 with the start pinned, `p10-test-circuit_monza-like-2.5.pkl`; unpinned it was 2.94 m
+    off its line on the first tick), and its local widening was clean at 0.56 (300.40 s), so "local widening loses"
+    depends on how it is built; the lesson and notes keep the qualifier "as built". Its kinks at every control point raised the Menger curvature (Σκ²Δs 0.2880 →
     0.3023) and capped the speed there. A pure-curvature objective (κ_i ≈ κ_c + κ_c² n_i + n''_i) halves those
     kinks but swings the line across the straights, and the follower crashes at every f; its full-resolution solve is
     too ill-conditioned for `lsq_linear` or L-BFGS-B in 500 s.
@@ -139,7 +148,8 @@ The whole-book lesson total becomes 21 + 0.5 + 3 + 3 = 27.5, under 30.
 ## Concepts (5 new; all `kind: technique`, globally unique)
 - Unit 8 (`unit-08-system-identification`), requires Units 1–7:
   - `linear-least-squares`: a linear model as a matrix of logged columns, `np.linalg.lstsq`, residuals and their RMS,
-    choosing a lag by the residual;
+    choosing a lag by the residual; QR (`np.linalg.qr`) as how least squares is solved well, and the identity
+    ‖Ac − b‖² = ‖Rc − Qᵀb‖² + const that Unit 9 uses;
   - `car-identification`: the longitudinal fit (a_T, a_B, c, lag) and the steering gain from steady rows, against the
     agent's assumed values; validation on rows the fit did not use;
   - `grip-identification`: limit probes one section at a time, |a| from the second difference of logged positions,
@@ -183,9 +193,12 @@ hidden table (tests are not student material); student material never does.
 
 - **U8.1 the committed logs:** `roar-004`'s G4.6 assertions hold, now through `racekit.sysid_data` (the loader
   returns the same arrays as `read_log_csv`).
-- **U8.2 the grip probe (`p6`):** on `test-circuit` every section's μ̂g/μg lies in [0.97, 1.02]; on `monza-like`
-  sections 1–5 lie in [0.95, 1.02] and section 0 has 0 probe collisions and μ̂g/μg < 0.8 (a lower bound).
-  The shipped `MU_G` equals `test-circuit`'s probe estimates rounded to 0.01.
+- **U8.2 the grip probe (`p6`):** routed test only (it reads the car's hidden table): on `test-circuit` every
+  section's μ̂g/μg lies in [0.97, 1.02]; on `monza-like` sections 1–5 lie in [0.95, 1.02] and section 0 has 0 probe
+  collisions and μ̂g/μg < 0.8. **The milestone and the solutions assert only measured, reproducible facts:** the six
+  probe races reproduce the shipped `MU_G` (`test-circuit`) to 0.01 m/s², every `test-circuit` probe crashed at least
+  once, and on `monza-like` section 0's probe has 0 collisions (so its number is reported as a lower bound, not an
+  estimate). A section with ≤ 20 qualifying rows gives **no estimate**.
 - **U8.3 the steering gain (`p7`, `p8`, `p9`):** the measured-μ planner at f 0.54 is not clean on `monza-like` at 70°
   and is clean at 66° through 0.62 (497.90 s); the Unit 7 reference at 66° is still not clean on seed2026.
 - **U8.4 the transfer (`p8`):** at 66° with each track's own μ̂, 0.58 is clean on the five training tracks and 0.60
@@ -194,13 +207,14 @@ hidden table (tests are not student material); student material never does.
 - **U8.5 the reference:** `agents/unit-08.py` on `test-circuit`, clean at 301.95 s; with `MU_G = None` it races
   exactly like `agents/unit-07.py` at 66°.
 - **U9.1 the line is valid** (race-free): for the six `test-circuit` tracks and `monza-like`, |n_i| ≤ w_i − 2.5 m
-  + 1e-9 at every waypoint, n_i = 0 on the 30 waypoints either side of the start, Σκ²Δs below the centreline's
+  + 1e-9 at every waypoint, |n_i| ≤ 1e-9 on the 30 waypoints either side of the start, Σκ²Δs below the centreline's
   (`test-circuit` 0.2326 ± 0.002 against 0.2880) and the lap shorter; the shipped `LINE_CONTROL` re-solves to within
   1e-6 m.
 - **U9.2 same f:** on `test-circuit` at 0.54 the line is clean at 279.60 s against the centreline's 304.70 s; on
   `monza-like` at 0.60, the line 473.45 s, local widening 487.55 s, the centreline 500.70 s, all clean.
-- **U9.3 a new line breaks the tuning:** with the line, 0.58 (Unit 8's family edge) is not clean on seed4, while on
-  the centreline 0.58 is clean on all five training tracks (U8.4).
+- **U9.3 a new line breaks the tuning (the margin):** with the line, 0.58 (Unit 8's family edge) is not clean on
+  seed4, while on the centreline 0.58 is clean on all five training tracks (U8.4); Unit 8's frozen 0.56 stays clean
+  with the line (U9.4), now at the edge.
 - **U9.4 the family and the transfer:** with the line, 0.56 is clean on the five training tracks; 0.54 is clean on
   seed2026 at 282.05 s, and 0.58 is not clean there.
 - **U9.5 local widening loses on `test-circuit`:** with 60-waypoint windows it is not clean at 0.50.
@@ -211,8 +225,13 @@ hidden table (tests are not student material); student material never does.
   committed logs as in U8.1).
 
 ## Budgets
-- Routed pytest: **≤ 10 min** (design v4.7) on this 8-core machine; the Unit 8–9 gates add about 120 races
-  (≤ 2 min pooled); measured, reported.
+- Routed pytest: **≤ 10 min** (design v4.7) on this 8-core machine. The Unit 8–9 job table, shared jobs counted once:
+  U8.2 12 probe races; U8.3 15 (`monza-like` at 70° f 0.54, at 66° f 0.62, the Unit 7 reference at 66° on seed2026);
+  U8.4 35 (0.58 on five tracks, 0.60 on seed4, 0.56 on seed2026); U8.5 5 + 2 single-race equivalences; U9.2 25 (the
+  line and the centreline at 0.54 on `test-circuit`, the line, local and centreline at 0.60 on `monza-like`); U9.3 5;
+  U9.4 35 (0.56 on five tracks, 0.54 and 0.58 on seed2026); U9.5 5; U9.6 2 equivalences: **141 races**, 31 of them
+  on `monza-like` (about 6 s of CPU each), the rest 2–5 s, about 2 min pooled on 8 workers; plus U9.1's seven line
+  solves (about 40 s, race-free; `monza-like` 16 s). Measured in Phase E; over 10 min means stop and amend.
 - Notebooks: Units 8–9 lessons, solutions and milestones **≤ 6 min** serial in total; the book-level exec total is
   reported against design v4.6's 30 CI-minutes (it was 20.4 min).
 - The per-cell 120 s cap holds; a cell races at most one gate cell (≤ 10 races) or the six probe races.
@@ -223,13 +242,17 @@ hidden table (tests are not student material); student material never does.
    (`TARGET_SPEED` fixed at 15 m/s, `SPEED_MODE = "flat"`);
 2. fit the longitudinal map and the steering gain on their own logs, and compare with racekit's;
 3. the six grip probes on CARLA (one race each, a section pushed with `GRIP[s] = 3.5`; each run stops at its first
-   respawn or after 3 minutes), and μ̂ per section, with the lower-bound rule;
+   respawn or after 3 minutes), and μ̂ per section with the lesson's rules: a probe with no respawn gives a lower
+   bound, and a section with ≤ 20 qualifying rows gives no estimate (then the racekit-free fallback is the lowest
+   estimate on the lap);
 4. predict with racekit first (the asserted cell), then decide: ship 66° or the student's measured gain, and
    `MU_FRACTION` 0.54 for the first CARLA race (one grid step inside the racekit family's frozen 0.56, since CARLA is
-   a track the family never saw), racing it twice; if either race is not clean, step down one grid step and race twice
-   again, and a further failure gives a PROVISIONAL 0.50 (the Unit 7 lab's rule: never end on an un-raced value);
-5. never commit results. Run budget: 2 recording runs + 6 probes + at most 4 races = 12 (short form: the steering gain
-   and at most 4 races, 6).
+   a track the family never saw), racing it twice; if either race is not clean, 0.52 twice, then 0.50 twice. The
+   result is the first value clean on both of its races. If 0.50 also fails, **no setting is accepted**: the lab
+   records "not clean at 0.50" and the student keeps their Unit 7 submission for CARLA (as the Unit 7 lab's
+   PROVISIONAL result is flagged, never accepted); the lab never reports a value it did not race;
+5. never commit results. Run budget: 2 recording runs + 6 probes + at most 6 races = 14 (short form: the steering gain
+   from the steady run and at most 6 races, 7).
 
 ## Phases
 
@@ -239,7 +262,9 @@ hidden table (tests are not student material); student material never does.
 - `agents/unit-08.py` and `agents/unit-09.py` as above, from `agents/unit-07.py` and the probe agents
   (`u9line.py`'s line logic moves to the notebook solver; the agent keeps only the interpolation); equivalences
   asserted to the tick; the shipped `LINE_CONTROL` produced by the Unit 9 solver (QR + `bvls`) and pasted at full
-  precision (a test re-solves and compares to 1e-9).
+  precision (a test re-solves and compares to 1e-6 m). The probes raced per-waypoint offsets; the agent rebuilds them
+  from the control values, which can differ in the last bits, so Phase A **re-runs every Unit 9 gate cell** with the
+  shipped agent and confirms each pin within ±1 tick (a miss means stop, amend and re-gate).
 - `tests/_line_premise.py` (the job table, as `_checkpoint_premise.py`) and `tests/test_racekit_unit08_09_premise.py`
   (U8.1–U8.5, U9.1–U9.6); U9.1 is a fast, race-free test.
 - `concepts.yaml` (5 ids), `coverage-map.yaml` (Unit 8 and Unit 9, `lessons: 3` each), manifests (Unit 8
@@ -247,19 +272,25 @@ hidden table (tests are not student material); student material never does.
 - `api-order.yaml` / `baseline.yaml`: `lstsq` and `qr` → `linear-least-squares`; `lsq_linear` → `racing-line`; `load_log`,
   `log_path` → `car-identification`; `percentile` is infrastructure. Record any others in the report.
 - `syllabus.md` rows (no emoji).
-- Design 013 **v4.7** (the three deviations above, the status line and the changelog).
+- Design 013 **v4.7** (the three deviations above, the status line and the changelog; the changelog notes that this
+  is the third routed-budget raise, 5 → 8 → 10 min, and why).
 
 ### Phase B: Unit 8 content (Opus subagents: lesson + exercise statements; solutions in a separate fresh session)
 - **Lesson:**
   1. The hook: "Your sim-tuned agent is slow, or crashes, on CARLA. Why?" The Unit 7 agent on `monza-like` and on
      seed2026: tuned on one track, it does not know the car.
-  2. Least squares: a log as a matrix, `lstsq`, residuals, the lag chosen by the residual (U8.1).
-  3. The longitudinal map and the steering gain from the committed logs; the agent assumed 70°.
+  2. Least squares: a log as a matrix, `lstsq`, residuals, the lag chosen by the residual (U8.1); QR as how it is
+     solved, and ‖Ac − b‖ = ‖Rc − Qᵀb‖ up to a constant.
+  3. The longitudinal map and the steering gain from the committed logs: **measured** 65.7° against the agent's
+     **assumed** 70° (never "the car's 66°": student material states measured values against assumed ones only).
   4. Grip: why the race log cannot identify it, the limit probe one section at a time, |a| from positions, the
      percentile, and the lower bound where the probe did not slide (U8.2).
   5. Using what was measured: 66° and f·μ̂ (U8.3), the family sweep of f and the transfer to the unseen track
      against Checkpoint A (U8.4); the reference (U8.5).
   6. To the real car: the lab.
+- **Hidden truth (both units):** the subagents are told that lessons, exercises, solutions, milestones, teacher notes and
+  the lab never import, read or quote `racekit._truth` or any ratio to the true μ; the agents round the measured gain
+  to 66° and say so.
 - **Exercises:** at least 6 and at least 2 stretch. Stretch: (a) identify the drag from a coast-down segment alone and
   compare with the full fit; (b) a probe at `GRIP[s] = 2.0` instead of 3.5: does it still slide, and what does the
   estimate become?
@@ -267,8 +298,8 @@ hidden table (tests are not student material); student material never does.
 
 ### Phase C: Unit 9 content (the same dispatch rule)
 - **Lesson:**
-  1. The hook: "The centreline is not the fast line, but a new line breaks your speed tuning." The line at Unit 8's
-     edge value crashes on a training track (U9.3).
+  1. The hook: "The centreline is not the fast line, but a new line breaks your speed tuning." Unit 8's frozen value
+     still finishes with the line, but its margin is gone: Unit 8's edge value crashes on a training track (U9.3).
   2. The line as offsets along the normals; the reduced problem as a cubic B-spline (four weights per waypoint, a
      weighted average, so bounds on the control values bound every waypoint); the smoothness objective as bounded
      linear least squares; `lsq_linear`; the start pin (U9.1). What the line changes: total curvature, length, and
@@ -301,3 +332,23 @@ hidden table (tests are not student material); student material never does.
   targets, `roar-004`).
 
 ## Plan Review
+
+### Round 1 (v1 @ 4daeffa)
+- [self] APPROVE WITH NITS: N1 `qr` is mapped to Unit 8 but not in its lesson [FIXED v2, = [fable] S2]; N2 the probes
+  raced per-waypoint offsets, the agent rebuilds them from B-spline control values [FIXED v2: Phase A re-runs every
+  Unit 9 gate cell with the shipped agent, ±1 tick].
+- [sol] REJECT:
+  - **B** the lab could end at a PROVISIONAL 0.50 it never raced [FIXED v2: 0.54, 0.52, 0.50 twice each; the result
+    is the first value clean on both races; otherwise no setting is accepted and the Unit 7 submission is kept].
+  - **S** the race count was understated [FIXED v2: the job table recounted, 141 races, 31 on `monza-like`].
+- [fable] APPROVE WITH NITS (every pinned number re-read from the pickles):
+  - **S1** truth-relative numbers in student material [FIXED v2: U8.2's truth comparison is routed-test only; the
+    milestone asserts reproducible measured facts; Phase B/C instruct the subagents; "measured 65.7° vs assumed 70°"];
+  - **S2** QR used before it is taught [FIXED v2: Unit 8 teaches QR and the identity];
+  - **S3** the Unit 9 hook overstated the break [FIXED v2: the margin is gone; Unit 8's frozen 0.56 stays clean];
+  - **S4** the lab's PROVISIONAL wording and the probe's row rule [FIXED v2];
+  - **S5** U9.1 needs a tolerance on the pin [FIXED v2: ≤ 1e-9];
+  - **N1** 3–18 collisions [FIXED v2]; **N2** "every raced f" [FIXED v2]; **N3** the history's numbers pinned to the
+    start-pinned `p10` file, and the first construction's local widening was clean, so "as built" stays [FIXED v2];
+    **N4** the `monza-like` fragility note reconciled (a 450 s cap; clean at 900 s) [FIXED v2, Risks]; **N5** the race
+    count [FIXED v2, = [sol] S]; **N6** the budget trend in the changelog [FIXED v2, Phase A].
