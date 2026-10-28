@@ -25,7 +25,7 @@ The book's tests race all 24 held-out perturbed cars: it is clean on every one (
 Plan for **two to three 60–90 min sittings**.
 
 1. **Sitting 1: what a crash costs** (the hook, §1–§2).
-   - Hook: Unit 10's agent on a handful of perturbed cars. Most are clean; one crashes once and loses more than three minutes; two crash at the same corner every lap and never finish.
+   - Hook: Unit 10's agent on four perturbed cars. One is clean; one crashes once and loses more than three minutes; two crash at the same corner every lap and never finish (the book's tests race all 24 training cars: 21 are clean).
    - Ask before showing: if a crash sends you back to the start, how much does a crash at 3 minutes cost? (About 3 minutes.)
    - Expected race time on the board: a 2 s gain on 21 cars against one 200 s crash.
    - Exercises 1–2.
