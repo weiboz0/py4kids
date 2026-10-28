@@ -8,6 +8,7 @@
 treated as pin corrections, S3 the stale-pose re-anchor untested, S4 the warnings count ungated; [fable] APPROVE
 WITH NITS: B1 U11.2 unsatisfiable at a 450 s cap, S2 re-salting, S3 no public lag-2 car, S4 level-triggered respawn
 detection, S5 the warning result too narrow, S6 U11.3 vacuous, N7–N10; [self] N1 the salt).
+**v2.1** folds the round-2 nits ([sol] N1; [fable] S1, N2–N4); CONSENSUS.
 New evidence: q10 (a crashed race's remainder equals a fresh fallback race of the same car), q11 (β triggers at 8°
 and 6° with race seeds k mod 5).
 
@@ -83,7 +84,9 @@ outcomes carry over and Phase A re-confirms them. Every gate race uses `noise=Tr
 - **The restart is a fresh race (q10):** for each of the 7 races at 0.58 that crash once with the fallback, the time
   after the respawn (race time − crash time − 1.0 s) is 0.4–0.7 s shorter than a fresh race of the same car and
   race seed started in the fallback configuration (`STEERING = "pursuit"`, `MU_FRACTION = 0.58 · 0.86`); fresh
-  races of one car vary by 0.15 s over race seeds 0–4.
+  races of one car vary by 0.15 s over race seeds 0–4. The offset is systematic (the remainder is always the
+  shorter); Phase A explains it from the runner's restart accounting and records its sign in the premise, and the
+  lesson states the cost as "t + 1 s, to within a second", never more precisely.
 - **Equivalence (q9):** with no respawn the probe agent races exactly as Unit 10 at the same constants (nominal car,
   0.54: 279.65 s both; 48/48 perturbed races at 0.54 identical).
 - **Transfer (q8):** at 0.54 on `test-circuit-seed2026` (its line and measured grip) 17/24 perturbed cars are clean;
@@ -116,8 +119,10 @@ API names: `perturbation_factors` → `perturbation-testing` (taught); `carla_li
   only). `fall_back()`: clear `mpc_queue`, `mpc_last` and the plan, set a re-anchor flag (the **next** step takes
   `nearest_index`, because CARLA's first post-respawn step carries the stale crash pose), switch steering to
   `FALLBACK_STEERING = "pursuit"`, multiply the lateral limit by `FALLBACK_SCALE = 0.86` and re-plan the profile;
-- the instruments: sideslip β and the warnings (`WARN_BETA_DEG = 8.0`, `WARN_ERROR_M = 1.6`) counted in
-  `self.warnings`, never acted on;
+- the instruments: sideslip β and the warnings (`WARN_BETA_DEG = 8.0`, `WARN_ERROR_M = 1.6`, computed above
+  `WARN_MIN_SPEED = 5.0` m/s) counted in `self.warnings` in every mode (before and after a fallback), never acted
+  on; a test-only constant `WARN_FALLBACK = False` (True: a warning also calls `fall_back()`) exists for U11.9 and
+  the lesson's §5, and is False in the shipped file;
 - `lateral_limit()` multiplied by `self.limit_scale` (1.0 until a respawn), so with no respawn it is Unit 10 to
   the tick.
 Python 3.8, numpy only, under `check_submission` (p99 ≤ 5 ms). A respawn costs one tick of about 3 ms (the profile
@@ -143,22 +148,26 @@ Only descriptive figures quoted in prose (a median, a mean, an error) may be cor
 - **U11.6 the gate (design §6):** `agents/unit-11.py` is clean on **24/24 held-out** perturbations (k = 24–47).
 - **U11.7 equivalence:** with no respawn, `agents/unit-11.py` races exactly as `agents/unit-10.py` at the same
   constants (the nominal car and 3 perturbed cars, to the tick).
-- **U11.7a the handler, on scripted sensors** (no race; fake sensor objects feeding `step()`): (i) a step with a
+- **U11.7a the handler, on scripted sensors** (no race; fake sensor objects feeding `step()`): (i) a step at 20 m/s with a
   β of 10° and a line error of 2 m increments `warnings` and issues exactly the action `agents/unit-10.py` issues
   from the same inputs and state; (ii) a respawn sequence as CARLA delivers it (the impulse with the stale crash
   pose, then the start pose) handles one respawn, keeps the index on the impulse step and re-anchors to the start
   on the next; (iii) the same impulse reading repeated on 10 consecutive steps is handled once; a new impulse after
   the 40-step refractory window is handled again.
 - **U11.8 transfer (a finding, gated both ways):** at 0.54 on `test-circuit-seed2026` (its Unit 9 line and measured
-  grip) on perturbations k = 0–11, race seed 0: at least one race not clean and at least one clean.
+  grip) on perturbations k = 0–11, race seed 0: at least one race not clean and at least one clean (q8: k = 6, 8, 9
+  and 10 crash).
+- **U11.9 warnings as a trigger (the negative result):** `agents/unit-11.py` at 0.58 with `WARN_FALLBACK = True`
+  (β 8°) on the training perturbations (race seed k mod 5): every car that crashes with `WARN_FALLBACK = False`
+  (U11.5) still crashes, and the mean race time is not lower than U11.5's training mean (q11: 298.07 vs 296.66 s).
 - `check_submission(agents/unit-11.py)` passes (outside any pool).
 
 ## Budgets
 - Routed pytest ≤ **15 min** (v4.9, interim). The Unit 11 job table (MPC races unless said): U11.2 24 (700 s cap);
   U11.3 7 pursuit races (fresh fallback twins); U11.4 72 (0.56, 0.54 and 0.52 on the training family; its 0.58 side
   is U11.2's races); U11.5 48 + 2 (700 s cap); U11.6 24; U11.7 5 (the nominal car with both agents, and 3 training
-  cars with Unit 11 at 0.54; their Unit 10 twins are U11.4's 0.54 races); U11.8 12. About 190 races, about 1,900 s of CPU (crash loops to 700 s count about 2.5 races each), about 4 min
-  pooled on 8 workers, taking the suite from 10.0 to about 14 min. Measured in Phase D; over 15 min means stop and
+  cars with Unit 11 at 0.54; their Unit 10 twins are U11.4's 0.54 races); U11.8 12; U11.9 24. About 215 races, about 2,100 s of CPU (crash loops to 700 s count about 2.5 races each), about 4 min
+  pooled on 8 workers, taking the suite from 10.0 to about 14.5 min. Measured in Phase D; over 15 min means stop and
   amend.
 - Notebooks: the Unit 11 lesson, solutions and milestone ≤ **5 min** serial in total, each cell ≤ 120 s: the
   notebooks race small families (6–8 perturbations), not the gates' 24; every claim about 24 comes from the premise
@@ -178,7 +187,8 @@ Only descriptive figures quoted in prose (a median, a mean, an error) may be cor
   expected time, §3 the family, §4 edge and margin on the family + the held-out check + the seed2026 transfer
   finding, §5 detection and lead times + the W6 negative result, §6 the fallback + the lag-2 car, §7 the shipped
   agent); exercises (8 core + Challenges 9 β-triggered braking, noise-aware; 10 the seed2026 margin); milestone.
-  Solutions in a **separate fresh** Opus session.
+  Solutions in a **separate fresh** Opus session. The lesson calls the lag-2 car "the lag Unit 8 identified, plus
+  one tick", never a hidden value.
 - **Phase C — teacher notes** (inline).
 - **Phase D — verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN; budgets measured.
 
@@ -207,3 +217,15 @@ Only descriptive figures quoted in prose (a median, a mean, an error) may be cor
   - N7 U11.7's nominal Unit 10 race [FIXED v2]. N8 the family stated precisely [FIXED v2, Scope]. N9 the respawn
     tick cost [FIXED v2]. N10 the notebook exec headroom [FIXED v2, Budgets].
 - [self] APPROVE WITH NITS. N1 the salt [FIXED v2 with [fable] S2].
+
+### Round 2 (v2 @ 1550a3f): CONSENSUS
+- [sol] APPROVE WITH NITS. N1 the q11 warning result has no premise gate [FIXED v2.1: U11.9, with a test-only
+  `WARN_FALLBACK` constant].
+- [fable] APPROVE WITH NITS (re-ran q10 for cars 8 and 16: −0.55 / −0.45 s).
+  - S1 the remainder is systematically 0.45–0.7 s shorter than a fresh race, unexplained [FIXED v2.1: Phase A explains
+    and records the sign; the lesson says "t + 1 s, to within a second"].
+  - N2 the β instrument's speed threshold and counting after a fallback [FIXED v2.1: `WARN_MIN_SPEED`, counted in
+    every mode; U11.7a (i) at 20 m/s].
+  - N3 the lag-2 car is "the Unit 8-identified lag plus one", never a `_truth` value [FIXED v2.1: Phase B brief].
+  - N4 pins for Phase A [FIXED v2.1: q10 sign; U11.8's crash set k = 6, 8, 9, 10].
+- [self] APPROVE.
