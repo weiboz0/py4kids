@@ -35,8 +35,8 @@ and 6° with race seeds k mod 5).
   clean on 48/48 perturbed `test-circuit` races crashes on 7 of 24 perturbed cars. The lesson presents this as a
   finding, and Checkpoint B (roar-011) inherits it.
 - **Budgets.** The routed suite is at 10.0 of 12 min after `roar-009`; this plan's races (perturbed MPC races, some
-  of them crash loops that run to the time cap) take it to about 12.5–13 min. This plan raises the interim routed
-  budget to **14 min** (v4.9), the fifth raise, and the follow-up to the author (raise again or move gates to a
+  of them crash loops that run to a 700 s cap) take it to about 14 min. This plan raises the interim routed
+  budget to **15 min** (v4.9), the fifth raise, and the follow-up to the author (raise again or move gates to a
   slower tier) is re-stated.
 
 ## Probe evidence (scratchpad `u11/`, `test-circuit`, MPC budget off (`MPC_BUDGET_MS = None`) in every probe)
