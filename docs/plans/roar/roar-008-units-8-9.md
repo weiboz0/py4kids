@@ -4,6 +4,7 @@
 **v4.7** (below).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-007` merged (#162, 062a11c).
+**v2.2** folds the round-3 nit ([fable] N1: the no-estimate path's one setting); CONSENSUS.
 **v2.1** folds plan-review round 2 ([sol] S: the squared QR identity, S: no grip estimate at all in the lab;
 [fable] N1–N2).
 **v2** folds plan-review round 1 ([sol] REJECT: B the lab ending on an un-raced value, S the race count; [fable]
@@ -248,8 +249,8 @@ hidden table (tests are not student material); student material never does.
    respawn or after 3 minutes), and μ̂ per section with the lesson's rules: a probe with no respawn gives a lower
    bound, and a section with ≤ 20 qualifying rows gives no estimate. A section without an estimate takes the lowest
    estimate on the lap; if **no** section has an estimate, the lab records "grip not identified" and step 4 races the
-   student's Unit 7 setting with only the measured steering gain changed (66° or their own), by the same
-   twice-each, stop-at-the-first-failure rule;
+   student's Unit 7 submission as-is with only the measured steering gain changed (66° or their own), twice,
+   stopping at the first race that is not clean; if it is not clean twice, no setting is accepted;
 4. predict with racekit first (the asserted cell), then decide: ship 66° or the student's measured gain, and
    `MU_FRACTION` 0.54 for the first CARLA race (one grid step inside the racekit family's frozen 0.56, since CARLA is
    a track the family never saw), racing it twice and stopping at the first race that is not clean; then 0.52 the same
@@ -366,4 +367,11 @@ hidden table (tests are not student material); student material never does.
   identified", then the Unit 7 setting with the measured steering gain, by the same rule].
 - [fable] APPROVE (every round-1 finding RESOLVED; job table re-summed to 141, ≈ 1.2 min CPU-pooled): N1 the lesson
   says "the five training tracks" for 0.56 [FIXED v2.1]; N2 stop at the first failed race [FIXED v2.1].
+- [self] APPROVE.
+
+### Round 3 (v2.1 @ f62cb0f): CONSENSUS
+- [sol] APPROVE: both round-2 S findings RESOLVED; the lab is at most 14 runs; no new findings.
+- [fable] APPROVE WITH NITS: every round-2 finding RESOLVED; the lab's decision procedure is total and never ends on an
+  un-raced value. N1 the no-estimate path's setting and ladder were ambiguous [FIXED v2.2: the Unit 7 submission
+  as-is with the measured steering gain, twice; otherwise no setting].
 - [self] APPROVE.
