@@ -203,6 +203,9 @@ configuration" and stops.
    configuration is unchanged.
 1. **Timing first, off CARLA:** `check_submission` on the MPC file on the same machine, idle (p99 ≤ 5 ms); if it
    fails, lower `MPC_HORIZON` to 20 and re-check; if that fails, the lab keeps the accepted configuration and stops.
+   A file carrying a Monza `LINE_CONTROL` cannot race on racekit, so it is timed through a copy with
+   `LINE_CONTROL = None` and nothing else changed: a proxy (racekit: p99 0.99–1.01 ms with the line, 0.98 ms
+   without), which passes only at p99 ≤ 4 ms (content gate [sol] B1).
 2. **R1–R2:** the MPC file, twice: `agents/unit-10.py`-style (the student's Unit 10 file) with the accepted
    configuration's constants copied in (`LINE_CONTROL` or `None`, `MU_G` or `None` with `A_LAT`, `MU_FRACTION`,
    `MAX_STEER`, …); step 1's `check_submission` runs on exactly that file. The weights were tuned on the line at 0.58
@@ -363,4 +366,14 @@ Round 1 (on `d696485`, after `ci-local` ALL GREEN; brief: blind-solve Ex 2, 3, 6
   - N1 teacher notes said pursuit at 0.58 "crashes on every seed" of `test-circuit-seed4`; the evidence is "not clean
     on any seed" (crash shown on seed 0) [FIXED].
 
-Round 2: [sol] re-review of B1's fix.
+Round 2 (on `ab6ffa4`): [sol] re-review of B1's fix.
+
+- [sol] REJECT.
+  - B1 (narrowed) the lab said the timing copy's p99 "is the R1 file's"; the line changes the geometry, curvature and
+    profile that `step()` reads, so that is not established [FIXED: the copy is called a proxy; measured on racekit,
+    the shipped file with its `test-circuit` line and without it, idle, 3 runs each: p99 0.99–1.01 ms vs 0.98 ms;
+    a timing copy passes only at p99 ≤ 4 ms; plan and teacher notes say the same].
+  - N1 "exactly the file R1 will race" still in step 1 [FIXED: "the file R1 will race, or its timing copy"; the lab
+    asks for a file comparison showing the two differ only in `LINE_CONTROL`].
+
+Round 3: [sol] re-review.

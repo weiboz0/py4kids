@@ -45,7 +45,7 @@ Plan for **two to three 60–90 min sittings**, plus the lab on a CARLA machine.
 ## The lab: what to watch for
 
 - **Start from an accepted configuration.** The lab compares MPC only against a configuration the student has already raced clean on CARLA (their Unit 8 lab's accepted setting). Students with only a PROVISIONAL Unit 7 result race it twice first; a student with no clean CARLA race at all records "no accepted configuration" and stops.
-- **Timing first, off CARLA.** `check_submission` on the student's MPC file, on an idle machine. Close the browser and the other notebooks first. A file with a Monza `LINE_CONTROL` cannot race on racekit (the agent refuses a line solved for another track): time a copy with `LINE_CONTROL = None`; the solve costs the same on any line.
+- **Timing first, off CARLA.** `check_submission` on the student's MPC file, on an idle machine. Close the browser and the other notebooks first. A file with a Monza `LINE_CONTROL` cannot race on racekit (the agent refuses a line solved for another track): time a copy with `LINE_CONTROL = None`, a proxy that passes only at p99 ≤ 4 ms (on racekit the line changed p99 by under 3%).
 - **The weights were tuned on the line at 0.58.** On a centreline or `A_LAT` configuration they have never been probed; R1–R2 decide either way.
 - **The procedure never ends on a value it did not race.** R3–R4 only after MPC is accepted, and only for a configuration that plans with `MU_FRACTION`.
 - **Never commit results.** Check `git status` with the class before anyone commits.
