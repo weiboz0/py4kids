@@ -74,6 +74,7 @@ The probe agents are `agents/unit-07.py` plus the constants below (`p10`'s line 
   - **The steering gain is what limits `monza-like`.** At 70° the measured-μ planner fails on `monza-like` from 0.54
     (a growing weave on the long straights, as in Checkpoint A); at 66° it is clean through 0.62 (497.90 s), against
     the Unit 7 reference's 515.10 s.
+    (70° at f 0.58, in the lesson's table, is also not clean on seeds 0–4; raced in the content gate by [fable].)
   - The steering gain does **not** cure seed2026 (`p9`): the Unit 7 reference (A_LAT 4.6, GRIP 1) at 66° still
     crashes on every seed there (that one is grip), while at 66° it becomes clean on seed1 (302.05 s).
 - **The racing line (`p18`–`p25`; the first attempt, `p10`/`p12`, is history below).** Offsets n_i along each
@@ -259,7 +260,7 @@ hidden table (tests are not student material); student material never does.
    records "not clean at 0.50" and the student keeps their Unit 7 submission for CARLA (as the Unit 7 lab's
    PROVISIONAL result is flagged, never accepted); the lab never reports a value it did not race;
 5. never commit results. Run budget: 2 recording runs + 6 probes + at most 6 races = 14 (short form: the steering gain
-   from the steady run and at most 6 races, 7).
+   from the steady run and the no-estimate path's at most 2 races, 3).
 
 ## Phases
 
@@ -375,3 +376,65 @@ hidden table (tests are not student material); student material never does.
   un-raced value. N1 the no-estimate path's setting and ladder were ambiguous [FIXED v2.2: the Unit 7 submission
   as-is with the measured steering gain, twice; otherwise no setting].
 - [self] APPROVE.
+
+## Content Review
+
+Round 1 (on `45a714c`, after `ci-local` ALL GREEN; brief: blind-solve U8 Ex 2, 6, 7 and U9 Ex 3, 5, 7 first).
+
+- [sol] APPROVE WITH NITS (static review; it could not run `uv`).
+  Blind solves agree with the solutions' formulas and asserts (race values not rerun).
+  - S1 the Unit 9 lesson omits that the direct curvature objective was solved on the reduced basis and its line did not
+    race [FIXED: §3 now says the line swung across the straights and crashed at every fraction tried].
+- [fable] APPROVE WITH NITS. Blind solves run from the repo root match the solutions exactly
+  (U8 Ex 2 lag 1, (5.174, 8.539, 3.081e-4); Ex 6 9.36 / 7.56; Ex 7 302.00 / 297.65 s, gain 4.35 s;
+  U9 Ex 3 −37.2% objective vs −19.2% Σκ²Δs; Ex 5 131 / 9 / 42; Ex 7 276.25 vs 300.25 s, gain 24.0 s),
+  and every further lesson pin re-checked holds.
+  - S1 teacher notes quoted the estimates' ratio to the true μ ("1–3% below the limit") [FIXED: reworded without
+    the number].
+  - S2 the same as [sol] S1 [FIXED].
+  - N3 the lesson's 70° f 0.58 "not clean" was outside the probe record [FIXED: [fable] raced it, not clean on seeds
+    0–4; recorded under Probe evidence].
+  - N4 the lab's short-form budget said 7 runs; the no-estimate path makes it 3 [FIXED in the lab and the plan].
+  - N5 "exactly the centreline" vs the shipped 1e-12 solver slack [FIXED: "to the solver's 1e-12"].
+  - N6 the row rule said "longer than 5 m" and the solutions used `<= 5.0`, while the lesson, milestone, lab and
+    test use `< 5.0` [FIXED: "shorter than 5 m" and `< 5.0` throughout].
+- [self] APPROVE WITH NITS. No hidden truth in student material (grep for `_truth`, true μ, ratios, "the car's 66").
+  - N1 Unit 8 teacher notes "crashes on every seed" was ambiguous [FIXED: "on every seed there"].
+
+All three APPROVE WITH NITS; no [OPEN] findings.
+
+## Post-Execution Report
+
+**Shipped.** Unit 8, system identification: lesson, exercises, solutions, the CARLA lab `labs/real-sim.ipynb`, teacher
+notes, manifest, `agents/unit-08.py`, `racekit/sysid_data.py`, milestone.
+Unit 9, the racing line: lesson, exercises, solutions, teacher notes, manifest, `agents/unit-09.py`, milestone.
+Also the routed tests (`test_racekit_unit08_09_premise.py`, `_line_solver.py`, `_line_premise.py`,
+`test_racekit_sysid_data.py`), the registry (5 concepts, coverage, api-order, baseline, syllabus rows 8–9) and
+design 013 v4.7.
+
+**Verification.**
+- `ci-local.sh` ALL GREEN on `45a714c`; a final run on the content-gate fixes precedes the PR.
+- Every gate pin U8.1–U8.6 and U9.1–U9.6 reproduced exactly; the content gate's blind solves reproduced the
+  solutions independently.
+
+**Budgets, measured.**
+- Routed pytest: 568 s alone, 561 s in CI (under load from another session's CI); budget 10 min (design v4.7).
+  At 9.4 of 10 min there is no headroom for Units 10–13; see the follow-ups.
+- Notebooks, serial: Unit 8 lesson 57 s, solutions 26 s, milestone 88 s, lab 21 s; Unit 9 lesson about 36 s,
+  solutions 59 s, milestone 99 s. Without the lab that is 365 s (6.1 min) against the plan's 6 min target:
+  **a deviation of about 0.1 min**, accepted; the milestones carry most of it (each re-races its unit's headline).
+- Book-level notebook exec: about 26.8 min (20.4 + 6.4) against design v4.6's 30 CI-minutes.
+  Units 10–13 will not fit in the remaining 3.2 min; see the follow-ups.
+
+**Deviations from the plan.**
+- The line premise runs as one `LineOutcome` worker per line, with 9 line solves where the plan budgeted 7.
+- The milestones were trimmed to stay under the per-cell cap.
+- `_agent_premise.AgentJob` gained `laps` for the one-lap probe races.
+- U8.1 asserts the measured values (rounded), not a ratio to the truth; the truth comparison lives only in the routed
+  U8.2 test.
+- The content gate added one fact to the probe record: 70° at f 0.58 is not clean on `monza-like`.
+
+**Risks carried forward.**
+- The author's interim CARLA check of `agents/unit-07.py` is still PENDING. Units 8–9 build on that agent, and so
+  does the Unit 8 lab.
+- The Unit 7 reference stays fragile off its tuning track. Units 8–9 explain why: grip, and the steering gain.

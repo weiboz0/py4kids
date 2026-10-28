@@ -17,7 +17,7 @@ This unit introduces three concepts:
 
 `agents/unit-08.py` is the Unit 7 agent with two measured things changed: the steering gain (66°, rounded from the measured 65.7°, where Unit 7 assumed 70°) and a per-section grip table `MU_G` measured on `test-circuit`, planned at `MU_FRACTION = 0.56`.
 On `test-circuit` it races 301.95 s.
-The headline is the transfer: tuned on the five training tracks, it races the unseen `test-circuit-seed2026` clean in 303.30 s, where Checkpoint A's single setting took 310.80 s and the Unit 7 reference crashes on every seed.
+The headline is the transfer: tuned on the five training tracks, it races the unseen `test-circuit-seed2026` clean in 303.30 s, where Checkpoint A's single setting took 310.80 s and the Unit 7 reference crashes on every seed there.
 On `monza-like`, the steering gain alone decides how hard the agent can plan: at 70° the measured-grip planner fails from f = 0.54; at 66° it is clean up to 0.62.
 
 ## Pacing
@@ -60,7 +60,7 @@ Plan for **two to three 60–90 min sittings**, plus the lab on a CARLA machine.
 
 - The longitudinal fit uses three columns and a lag. What would a fourth column have to be for the fit to find the road's slope?
 - Why does a 6% steering-gain error hurt more at 45 m/s than at 20 m/s?
-- The probe estimates sit 1–3% below the limit. Is a biased-low estimate a problem for planning, or a feature?
+- A percentile of what the car did can only read at or below the limit. Is a biased-low estimate a problem for planning, or a feature?
 - On CARLA you get six probe runs, not sixty. Which sections would you probe first, and why?
 
 ## Differentiation
