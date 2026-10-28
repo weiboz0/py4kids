@@ -1,6 +1,6 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4.7 (2026-10-28). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.8 (2026-10-28). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
@@ -9,6 +9,7 @@ and raises the routed pytest budget to 8 min.
 v4.5 (plan `roar-007`) names the seeded checkpoint tracks and pins Checkpoint A's gate.
 v4.6 (plan `roar-007`) raises the book notebook exec budget to 30 CI-minutes, after the first book-level measurement.
 v4.7 (plan `roar-008`) restates the Unit 8 and Unit 9 rows from probes and raises the routed pytest budget to 10 min.
+v4.8 (plan `roar-009`) restates the MPC over-budget policy and raises both budgets (interim levels).
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -368,16 +369,21 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - an `api-order.yaml` concept id is unknown.
   Negative cases prove a premature use fails and an unmapped name fails.
 - **Budgets** (measured targets; an overrun means stop and amend):
-  - **Book notebook exec ≤ 30 CI-minutes** (v4.6; it was 15): `exec-lessons` + `exec-solutions` wall time, with the
+  - **Book notebook exec ≤ 40 CI-minutes** (v4.8, interim; it was 30 from v4.6, and 15 before that): `exec-lessons` + `exec-solutions` wall time, with the
     1-minute load average recorded at start and end. Every plan's report records the book-level total. It **excludes** track and telemetry generation, which are reported
     separately and must stay ≤ 1 min.
-  - **Routed pytest ≤ 10 min** on an 8-core CI machine (v4.7, plan `roar-008`; it was 8 min from v4.4, plan `roar-006`, and 5 min before that; the Unit 8–9 gates add 141 races). From v4.4: the Unit 6–7 gates
+  - **Routed pytest ≤ 12 min** on an 8-core CI machine (v4.8, interim, plan `roar-009`: the Unit 10 gates add 76 races,
+    65 of them MPC; it was 10 min from v4.7, plan `roar-008`; it was 8 min from v4.4, plan `roar-006`, and 5 min before that; the Unit 8–9 gates add 141 races). From v4.4: the Unit 6–7 gates
     add about 2 min of pooled races).
   - The per-cell 120 s cap is retained.
   - **Per-tick (a measured target from the [fable] probe, not a cap the runner enforces):** the simulation costs
     about 0.2 ms per tick, and a 17,000-tick starter-baseline race takes ≤ 4 s. A student's `step()` adds to that.
-  - **MPC:** the Unit 10 agent's `step()` has **p99 ≤ 5 ms** on the CI machine, warm-up excluded. Over budget, it falls back to pure
-    pursuit for that tick, and counts and reports the fallbacks. scipy's constrained solvers (about 90–300 ms per
+  - **MPC:** the Unit 10 agent's `step()` has **p99 ≤ 5 ms** on the CI machine, warm-up excluded. Its own check times
+    each MPC solve; a solve over budget is still applied (a self-timed check cannot recover the tick that overran),
+    counted, and **halves the horizon** for the rest of the race (40 → 20 → 10, never below 10), because pure pursuit
+    throughout at MPC's fraction crashes while MPC at a 10-tick horizon does not (v4.8, plan `roar-009`). A non-finite
+    solve applies the next command of the last finite plan, counted. Gate races disable the timing so pins stay
+    deterministic; both extremes of the policy are gated. scipy's constrained solvers (about 90–300 ms per
     tick in the probe) are used only on a single-corner segment of a few hundred ticks.
   - Notebooks size their runs to a few full races per cell.
 - **`ci-local.sh` wiring (`roar-001`):**
@@ -628,4 +634,11 @@ Pairings may be adjusted by each plan's gate without a design change.
     smoothest one, on a cubic B-spline of offsets; it lowers the total squared curvature by 19–41% and buys about 25 s
     on `test-circuit`. Local widening, as built, loses. Submissions import only numpy, so the line is solved offline
     and shipped as control values.
+- v4.8 (2026-10-28): the §7.1 MPC over-budget policy and budgets (plan `roar-009`).
+  - MPC's gain over pure pursuit is its tracking margin, not its lap time at the same fraction: it moves the family
+    edge from 0.56 to 0.60, and the re-tuned 0.58 races the unseen track 5.2 s faster than Unit 9.
+  - The over-budget policy shortens the horizon instead of handing ticks to pure pursuit (above).
+  - Routed pytest 10 → 12 min and book notebook exec 30 → 40 CI-minutes, the fourth and second raises. Both are
+    **interim**: by the measured per-unit costs, the remaining Part 2–3 plans will exceed them again, and the author is
+    asked whether to keep raising or to move long gates to a slower tier.
   - The routed pytest budget rises to 10 min: the third raise (5 → 8 → 10 min), each for a part's gates.

@@ -74,3 +74,10 @@ entries:
   introduces: [racing-line, line-retune]
   requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep, linear-least-squares, car-identification, grip-identification]
   practices: [menger-curvature, pure-pursuit, speed-profile, section-knob-sweep, grip-identification, repeated-run-measurement]
+- id: unit-10-mpc
+  kind: unit
+  title: "Model predictive control"
+  lessons: 3
+  introduces: [error-model-linearization, ltv-mpc, tick-budget]
+  requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep, linear-least-squares, car-identification, grip-identification, racing-line, line-retune]
+  practices: [linear-least-squares, racing-line, line-retune, pure-pursuit, step-response, repeated-run-measurement, telemetry-plotting]
