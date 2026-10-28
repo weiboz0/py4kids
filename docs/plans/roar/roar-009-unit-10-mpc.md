@@ -4,6 +4,11 @@
 **v4.8** (budgets, below).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-008` merged (#163, 2bf203e).
+**v2** folds plan-review round 1 ([sol] REJECT: B1 the shipped fallback never raced, B2 the lab's fallback to an
+un-raced pursuit configuration, S3 the race count; [fable] APPROVE WITH NITS: S1–S7, N8–N13; [self] N1–N2).
+The over-budget policy changes: an over-budget tick now **shortens the horizon** (40 → 20 → 10) instead of handing
+the next tick to pure pursuit, because pursuit at MPC's fraction is exactly what crashes (U10.3), while MPC at
+N = 10 is clean in 30/30 races at the frozen fraction (r8).
 
 ## Scope
 - Unit 10 `roar/units/unit-10-mpc/` (a **lab unit**, 🏁: `labs/real-sim.ipynb`, design §7.2): lesson, exercises,
@@ -78,18 +83,32 @@ speed-profile setting is Unit 9's; only the steering law changes.
   ψ₀ 0.05): `scipy.optimize.minimize` (SLSQP, the nonlinear path-frame model sin ψ and κ cos ψ/(1 − κe), bounds on
   u) reaches cost 3.49971 in 480 ms; the LTV least-squares u, evaluated on the nonlinear model, costs 3.53258
   (**0.94% above**) in 0.80 ms; max |u_LS − u_scipy| 3.5·10⁻⁴ 1/m.
+- **The degraded horizon at the frozen fraction** (r8, f 0.58, seeds 0–4): N = 10 is clean on all 30 races of the
+  family and seed2026 (max error ≤ 1.59 m; `test-circuit` 275.35 s, seed2026 277.30 s, seed4 271.55 s medians);
+  N = 20 also 30/30 (≤ 1.35 m; seed2026 276.85 s).
+- **Logs.** r3–r5 and r8 are saved as logs; r6, r7, t1, t2 and c1 were read from the terminal (c1 reproduces, [fable]).
+  Phase A saves every gate re-run's output in the scratchpad.
 - **Timing** (t1, t2, serial, load 8): p99 1.42 ms (loop G), **1.00 ms** (closed form) on seed2026; 1.45 ms on
   `monza-like`. Pursuit's step is 0.16 ms (p50).
 - **Cost.** An MPC race on `test-circuit` is about 7.5 s of CPU (pursuit 2.5 s), on `monza-like` about 14 s.
 
 ## Deviations from design (recorded; design 013 v4.8)
-- **The fallback is deterministic in the gates.** Design §7.1 says an over-budget tick falls back to pure pursuit and
-  counts the fallbacks. The reference does exactly that with `MPC_BUDGET_MS = 5.0` (a wall-clock check, so a race
-  can differ by a tick under load). The routed gate races set `MPC_BUDGET_MS = None` so the pins are deterministic,
-  and a separate test sets `MPC_BUDGET_MS = 0.0` (every tick falls back) and asserts the race equals
-  `agents/unit-09.py` at the same constants **to the tick**.
+- **The over-budget policy (design §7.1 says: fall back to pure pursuit for that tick).** A self-timed check can only
+  measure a solve after it has run, so it cannot recover the time of the tick that overran; it can only make the
+  next ticks cheaper. And pure pursuit at MPC's frozen fraction is what crashes (U10.3). So the reference applies the
+  command it has already computed, counts the tick in `self.over_budget`, and **halves the horizon** for the rest of
+  the race (40 → 20 → 10, never below 10), printing one line each time it does. Pure pursuit is the fallback only
+  for a solve whose result is not finite (`self.fallbacks`). Design v4.8 restates §7.1 this way.
+- **Deterministic races.** `MPC_BUDGET_MS = 5.0` ships; because it reads a wall clock, a loaded machine can shorten
+  the horizon at a different tick. The routed gates **and the notebooks' pinned race cells** race the variant
+  `MPC_BUDGET_MS = None` (no timing; the lesson says why). The two extremes of the shipped policy are both gated:
+  `None` (always N = 40) and `MPC_BUDGET_MS = 0.0` (every tick over budget, so N = 40, 20, then 10 for the rest of
+  the race, deterministically), U10.7.
 - **Budgets (v4.8):** routed pytest ≤ **12 min** (it was 10); book notebook exec ≤ **40 CI-minutes** (it was 30).
-  Unit 10 adds about 60 MPC races to the routed suite (about 70 s pooled) and about 4 min of serial notebook exec.
+  Unit 10 adds 71 races, 55 of them MPC (about 80 s pooled, below), and about 4–5 min of serial notebook exec, which
+  takes the book to about 31 of 30. 40, not 35, because Units 11–13, Checkpoint B and the capstone remain and each
+  has added 3–6 min; the follow-ups ask the author whether to keep raising or to move the long gates to a slower tier
+  (the question is held to the end of the run by the author's autopilot directive).
 
 ## Concepts (3 new; all `kind: technique`, globally unique)
 - `error-model-linearization`: the path-frame error model, linearised about the line; discrete time; why it is
@@ -103,57 +122,74 @@ Requires: `linear-least-squares` (Unit 8), `racing-line` and `line-retune` (Unit
 
 ## The reference submission
 `agents/unit-10.py` = `agents/unit-09.py` with `STEERING = "mpc"`, `MPC_HORIZON = 40`, `MPC_Q_E = 0.3`,
-`MPC_Q_PSI = 20.0`, `MPC_R_DU = 1000.0`, `MPC_LAG = 1`, `MPC_BUDGET_MS = 5.0`, and `MU_FRACTION = 0.58` (re-tuned
-for MPC on the family). It counts its fallbacks in `self.fallbacks`; on a fallback tick it records the curvature
-pursuit applied as the MPC's last command, so the next tick's Δu cost and lag queue stay true.
+`MPC_Q_PSI = 20.0`, `MPC_R_DU = 1000.0`, `MPC_LAG = 1`, `MPC_BUDGET_MS = 5.0`, `MPC_MIN_HORIZON = 10`, and
+`MU_FRACTION = 0.58` (re-tuned for MPC on the family). It keeps `self.horizon`, `self.over_budget` and
+`self.fallbacks` (the over-budget policy above); on a pursuit tick it records the curvature pursuit applied as the
+MPC's last command and in the lag queue, so the next tick's Δu cost and lag stay true.
+Hygiene, each commented: the reference speed is capped by `A_THROTTLE` (not a literal); the distance along the line
+starts at the car's segment, ignoring its position within it (under 2 m); the braking side of the profile is taken
+as given (the model assumes the speed loop follows it).
 With `STEERING = "pursuit"` it races exactly like `agents/unit-09.py` at the same `MU_FRACTION`.
 It imports only numpy, `math`, `time` and `roar_py_interface`; the `scipy` reference lives in the notebooks.
 
 ## Gates (pinned from the probes; Phase A re-runs every gate cell with the shipped agent and confirms each pin within
-±1 tick; a miss means stop, amend and re-gate)
-- **U10.1 the solve (race-free):** the closed-form G and h equal a one-tick-at-a-time build to 1e-12 on a random
-  state; on c1's corner the LTV least-squares cost (nonlinear evaluation) is within **2%** of `scipy` SLSQP's
+±2 ticks of the median; a miss means stop, amend and re-gate)
+- **U10.1 the solve (race-free):** the closed-form G and h equal a one-tick-at-a-time build (`np.allclose`,
+  rtol 1e-12, atol 1e-12) on a random state; on c1's corner the LTV least-squares cost (nonlinear evaluation) is within **2%** of `scipy` SLSQP's
   (probe 0.94%) and the controls within 10⁻³ 1/m.
 - **U10.2 same fraction:** at f 0.54 on `test-circuit` MPC is clean on seeds 0–4 with max line error ≤ 1.3 m
-  (probe 1.04 m) and **not** noise-aware faster than pursuit (both about 279.6 s): the honest same-f result.
+  (probe 1.04 m, seed 0 only; seeds 0–1 for the family) and **neither** is noise-aware better than the other (MPC
+  279.65 s, pursuit 279.60 s on seed 0): the honest same-f result.
 - **U10.3 the hook:** at f 0.58 on `test-circuit-seed4` pursuit (`agents/unit-09.py`) is not clean on any of seeds
   0–4, and MPC is clean on all five (271.10 s ± 2 ticks median).
-- **U10.4 the edge:** MPC at 0.60 is clean on all 25 family races; at 0.62 at least one family race is not clean
-  (probe: seed1 2/5).
+- **U10.4 the edge:** MPC at 0.60 is clean on all 25 family races; at 0.62 on `test-circuit-seed1` at least one of
+  seeds 0–4 is not clean (probe 2/5 clean).
 - **U10.5 the transfer:** `agents/unit-10.py` on `test-circuit-seed2026` is clean on seeds 0–4 at 276.85 s ± 2 ticks
-  median, noise-aware faster than Unit 9's 282.05 s.
+  median, noise-aware faster than `agents/unit-09.py` raced on the same five seeds (282.05 s in `roar-008`).
 - **U10.6 the lag:** with `MPC_LAG = 0` at f 0.60 on `test-circuit` MPC is not clean on any of seeds 0–4 (r7: 0/5).
-- **U10.7 fallback and budget:** `MPC_BUDGET_MS = 0.0` equals `agents/unit-09.py` (same `MU_FRACTION`, seed 0) to
-  the tick, with `fallbacks` equal to the step count; `check_submission(agents/unit-10.py)` passes (p99 ≤ 5 ms,
-  outside any pool).
-- **U10.8 `monza-like`:** MPC at 0.64 is clean on seeds 0–4 (468.75 s ± 2 ticks), where pursuit at 0.64 is not
-  clean on at least one (seeds 0–1 both not clean in the probe).
+- **U10.7 the over-budget policy and the budget:** with `MPC_BUDGET_MS = 0.0` (every tick over, so N = 10 after
+  two ticks) `agents/unit-10.py` is clean on seeds 0–4 of `test-circuit-seed4` and `test-circuit-seed2026` (r8, at
+  N = 10: 10/10), with `over_budget` equal to the step count and `fallbacks` 0; with `STEERING = "pursuit"` it
+  equals `agents/unit-09.py` at the same `MU_FRACTION` to the tick (seed 0);
+  `check_submission(agents/unit-10.py)` passes (p99 ≤ 5 ms; the routed suite runs tests serially, so it is outside
+  any pool).
+- **U10.8 `monza-like`:** MPC at 0.64 is clean on seeds 0–4 (468.75 s ± 2 ticks median; probed on seeds 0–1),
+  where pursuit at 0.64 is not clean on at least one. Pursuit's failure there is at the threshold (max error
+  2.03–2.06 m against the 2.0 m rule, no collision): the lesson and notes present it as a tracking-margin result, not
+  as pursuit crashing.
+- **Pins.** Where a gate rests on a 2-seed probe (U10.2, U10.8), a Phase-A miss of the pinned number is a pin
+  correction recorded in the report, not a regression; the clean/not-clean outcomes are the gates. Times are
+  pinned as the median ± 2 ticks throughout (Phase A confirms each).
 
 ## Budgets
-- Routed pytest ≤ **12 min** (v4.8). The Unit 10 job table: U10.2 5; U10.3 5 MPC + 5 pursuit; U10.4 25 + 25;
-  U10.5 5; U10.6 5; U10.7 1; U10.8 5 MPC (`monza-like`) + 5 pursuit; about 80 races, 66 of them MPC (about 7.5 s of
-  CPU each, 14 s on `monza-like`), about 75 s pooled on 8 workers. Measured in Phase E; over 12 min means stop and
-  amend. If U10.4's 0.62 cell is cut to seed1 only (5 races), it is 20 races fewer.
+- Routed pytest ≤ **12 min** (v4.8). The Unit 10 job table (MPC + pursuit): U10.2 5 + 5; U10.3 5 + 5; U10.4
+  25 + 5 (0.62 on seed1 only); U10.5 5 + 5; U10.6 5; U10.7 10 + 1; U10.8 5 + 5 (`monza-like`): **91 races, 70 of them
+  MPC** (about 7.5 s of CPU each, 14 s on `monza-like`; pursuit 2.5 s, 6 s), about 650 s of CPU, about 85 s pooled on
+  8 workers, taking the suite from 9.5 to about 11 min. Measured in Phase D; over 12 min means stop and amend.
 - Notebooks: the Unit 10 lesson, solutions and milestone **≤ 5 min** serial in total (an MPC race is about 7.5 s
-  serial: each notebook races at most about 10 MPC races). The book-level exec total is reported against v4.8's 40
+  serial: each notebook races at most about 10 MPC races, with `MPC_BUDGET_MS = None` in pinned cells). The book-level exec total is reported against v4.8's 40
   CI-minutes.
 - The per-cell 120 s cap holds.
 
 ## The CARLA lab (Unit 10, design §7.2)
-`labs/real-sim.ipynb`, "runs on your machine with CARLA 0.9.12 and `ROAR_PY`". Starting point: the student's
-accepted Unit 8 lab setting (or their Unit 7 submission when the Unit 8 lab accepted none), with their Unit 9 line if
-they built one.
+`labs/real-sim.ipynb`, "runs on your machine with CARLA 0.9.12 and `ROAR_PY`".
+**Starting point: the accepted configuration**, the exact submission the student's Unit 8 lab accepted (or their
+Unit 7 submission when it accepted none). It has been raced clean on CARLA; nothing un-raced is ever the fallback.
+0. **R0a–R0b (optional, only to add a Unit 9 line):** the accepted configuration with the student's line, pursuit,
+   twice. Both clean → it becomes the accepted configuration; otherwise the line is dropped and the accepted
+   configuration is unchanged.
 1. **Timing first, off CARLA:** `check_submission` on the MPC file on the same machine, idle (p99 ≤ 5 ms); if it
-   fails, lower `MPC_HORIZON` to 20 and re-check; if that fails, the lab keeps pursuit and stops.
-2. **R1–R2:** the MPC file at the student's accepted fraction, twice. Both clean (finished, 0 collisions,
-   line-relative error ≤ 2 m) → MPC is **accepted at that fraction**; otherwise MPC is **not accepted** and the
-   student keeps pursuit (no further races).
-3. **R3–R4 (only after acceptance):** the fraction + 0.02, twice; both clean → accepted at the higher fraction,
+   fails, lower `MPC_HORIZON` to 20 and re-check; if that fails, the lab keeps the accepted configuration and stops.
+2. **R1–R2:** the MPC file (the accepted configuration with `STEERING = "mpc"`), twice. Both clean (finished, 0
+   collisions, line-relative error ≤ 2 m) → MPC is **accepted at that fraction**; otherwise the student keeps the
+   accepted configuration (no further races).
+3. **R3–R4 (only after MPC is accepted):** the fraction + 0.02, twice; both clean → accepted at the higher fraction,
    otherwise the accepted value stays the one already raced. The procedure never ends on a value it did not race.
-4. Analysis cells: the clean rule, the median time against the accepted pursuit record, the fallback count printed
-   by the agent (`fallbacks` / steps).
-Run budget: 4 races (short form: R1–R2, 2). No results committed; `.gitignore` already covers the lab outputs.
-`lab-check` executes the analysis against the generated sample CSV.
+4. Analysis cells: the clean rule and the median time against the accepted configuration's record, from
+   `TELEMETRY_PATH` only. The agent prints one line each time it shortens its horizon (the runner's console shows
+   it); the lab asks the student to note those lines by hand, and the analysis does not read them.
+Run budget: 6 races (R0a–R0b, R1–R4); short form R1–R2, 2. No results committed; `.gitignore` already covers the lab
+outputs. `lab-check` executes the analysis against the generated sample CSV.
 
 ## Phases
 
@@ -164,8 +200,9 @@ Run budget: 4 races (short form: R1–R2, 2). No results committed; `.gitignore`
   `tests/test_racekit_unit10_premise.py` (U10.1–U10.8); U10.1 is race-free and imports `scipy`.
 - **Re-run every gate cell** with the shipped agent and confirm the pins (±1 tick).
 - `concepts.yaml` (3 ids), `coverage-map.yaml` (Unit 10, `lessons: 3`), the manifest (`lab: true`), `labs.yaml`.
-- `api-order.yaml` / `baseline.yaml`: `np.tril`, `np.cumsum` if not already present, and `scipy.optimize.minimize`
-  → `ltv-mpc`; `time.perf_counter` → `tick-budget`. Record any others in the report.
+- `api-order.yaml` / `baseline.yaml`, decided up front: `tril`, `cumsum`, `tile`, `eye` (with `k`) and `minimize` →
+  `ltv-mpc`; `perf_counter` → `tick-budget`; `empty` and `atan` as infrastructure if not already present. Record any
+  others in the report.
 - `syllabus.md` row 10 (no emoji).
 - Design 013 **v4.8** (the budget raises and the deterministic-fallback deviation; status line; changelog).
 
@@ -179,11 +216,13 @@ Run budget: 4 races (short form: R1–R2, 2). No results committed; `.gitignore`
      (U10.1); clip and apply the first command; recede.
   4. The exact reference on one corner: `scipy.optimize.minimize` on the nonlinear model, 0.94% better at 600× the
      time (U10.1). This is why the submission solves the linear problem.
-  5. Weights tuned on the **dynamic** car: the first weights weave and spin (p1), on the kinematic car they are fine.
+  5. The speed reference is a heuristic (the profile speed, capped by what the throttle can reach); say so.
+     Weights tuned on the **dynamic** car: the first weights weave and spin (p1), on the kinematic car they are fine.
      The lag ablation (U10.6).
   6. The honest comparison: at the same f, no faster (U10.2); the tracking margin; the re-tune on the family by the
      margin rule (U10.4) and the transfer (U10.5); `monza-like` (U10.8).
-  7. The tick budget: p50/p99, warm-up, the fallback, and why timing in a pool lies (U10.7).
+  7. The tick budget: p50/p99, warm-up, why timing in a pool lies, and what a self-timed check can and cannot do
+     (it cannot recover the tick that overran; it can shorten the horizon for the next ones) (U10.7).
   8. To the real car: the lab.
 - **Hidden truth:** student material never imports, reads or quotes `racekit._truth`; the lag is "measured lag 1
   tick (Unit 8)", the steering gain "measured, 66°".
@@ -209,3 +248,28 @@ Run budget: 4 races (short form: R1–R2, 2). No results committed; `.gitignore`
 - Any change to `racekit`.
 
 ## Plan Review
+
+### Round 1 (v1, 1a0a6da)
+- [sol] REJECT.
+  - B1 the routed pins disable the fallback the agent ships with, so no gate races the shipped policy
+    [FIXED v2: the policy is now "shorten the horizon"; both extremes are gated (U10.7 budget 0 on seed4 and seed2026,
+    r8 evidence 30/30 at N = 10)].
+  - B2 the lab could fall back to a pursuit configuration with a new line that never raced [FIXED v2: the starting
+    point is the Unit 8 lab's accepted configuration; a line enters only through R0a–R0b].
+  - S3 the job table summed to 86 races, 76 MPC, not 80/66 [FIXED v2: recounted after the changes, 91/70, about
+    85 s pooled].
+- [fable] APPROVE WITH NITS (re-derived G and h, reproduced c1).
+  - S1 "Phase E" [FIXED: Phase D].
+  - S2 the fallback semantics [FIXED v2: post-solve check, horizon halving; lesson §7 says what a self-timed check
+    cannot do].
+  - S3 notebooks would race the timed variant [FIXED: pinned cells race `MPC_BUDGET_MS = None`].
+  - S4 cut U10.4's 0.62 cell to seed1 [FIXED]; ask the author about the 4th raise now [WONTFIX: the author's
+    autopilot directive holds questions to the end of the run; recorded in the follow-ups]; justify 40 [FIXED].
+  - S5 U10.8's pursuit failure is at the threshold [FIXED: gate text and lesson framing].
+  - S6 2-seed probes and ±1 vs ±2 ticks [FIXED: the Pins rule; ±2 ticks throughout].
+  - S7 U10.5 needs Unit 9's five times [FIXED: 5 pursuit races in the job table].
+  - N8 neither noise-aware better [FIXED]. N9 allclose with rtol [FIXED]. N10 hygiene comments [FIXED: the reference
+    submission]. N11 api-order up front [FIXED]. N12 logs [FIXED: recorded; Phase A saves its outputs].
+    N13 the lab's fallback count [FIXED: printed lines, noted by hand, not analysed].
+- [self] APPROVE WITH NITS. N1 the literal 6 m/s² cap [FIXED: `A_THROTTLE`]. N2 the speed reference is a heuristic
+  [FIXED: lesson §5].
