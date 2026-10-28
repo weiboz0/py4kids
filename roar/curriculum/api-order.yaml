@@ -20,6 +20,7 @@ taught:
   fill_between: telemetry-plotting
   grid: telemetry-plotting
   grip_sections: section-knob-sweep
+  least_squares_plan: ltv-mpc
   legend: telemetry-plotting
   load_log: car-identification
   log_path: car-identification
@@ -27,6 +28,7 @@ taught:
   lsq_linear: racing-line
   lstsq: linear-least-squares
   minimize: ltv-mpc
+  mpc_command: tick-budget
   noise_aware_better: repeated-run-measurement
   perf_counter: tick-budget
   plot: telemetry-plotting
