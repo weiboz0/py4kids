@@ -71,5 +71,7 @@ Comparisons are noise-aware: one agent beats another only by more than the sprea
 | 6 | `unit-06-grip-and-speed-limit` | unit | 3 | Why does the car spin at Parabolica? The dynamic bicycle, tyre saturation and the friction circle, and a curvature-limited speed that removes the spin-outs. |
 | 7 | `unit-07-speed-planning` | unit | 3 | Brake before the corner, and find the grip that is really there. A forward-backward speed profile, the braking and cornering trade, and per-section speed knobs tuned one at a time, then on CARLA in the lab. |
 | — | `checkpoint-01-part-1` | checkpoint | 0.5 | Checkpoint A: tune one setting on a family of training tracks, then race a track it was never tuned on, once, clean and within 330 s. |
+| 8 | `unit-08-system-identification` | unit | 3 | Your sim-tuned agent is slow, or crashes, on CARLA: measure the car. Least squares on logs, the steering gain, per-section grip from limit probes, and planning with a fraction of the measured grip, then on CARLA in the lab. |
+| 9 | `unit-09-racing-line` | unit | 3 | The centreline is not the fast line, but a new line breaks your speed tuning. The smoothest line as bounded least squares, following it, and re-tuning the speed. |
 
 *Later units, the checkpoints and the capstone are added by the plans that follow.*

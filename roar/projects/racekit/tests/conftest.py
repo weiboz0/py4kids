@@ -103,3 +103,19 @@ def checkpoint_a():
     from _checkpoint_premise import race_checkpoint_a
 
     return race_checkpoint_a()
+
+
+@pytest.fixture(scope="session")
+def line_controls():
+    """The Unit 9 lines' control values (plan roar-008 U9.1), solved once per session in parallel."""
+    from _line_premise import solve_lines
+
+    return solve_lines()
+
+
+@pytest.fixture(scope="session")
+def line_premise(line_controls):
+    """The Unit 8-9 gate races (plan roar-008 U8.2-U8.5, U9.2-U9.6), raced once per session in parallel."""
+    from _line_premise import race_line_premise
+
+    return race_line_premise(line_controls)

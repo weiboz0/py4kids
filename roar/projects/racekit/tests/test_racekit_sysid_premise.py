@@ -11,21 +11,21 @@ import math
 
 import numpy as np
 import pytest
-from conftest import DATA
 from racekit import _truth
-from racekit.telemetry import read_log_csv
+from racekit.sysid_data import load_log, log_path
 from racekit.tracks import GRIP_SECTIONS, grip_sections, load_track
 
 DT = 0.05
 G = 9.81
-SYSID = DATA / "generated" / "sysid"
 
 
 def _log(name):
-    path = SYSID / name
+    """A committed log, through ``racekit.sysid_data`` (plan roar-008 U8.1: the same arrays as
+    ``read_log_csv``)."""
+    path = log_path(name)
     if not path.is_file():
         pytest.fail(f"{path} is missing; run `PYTHONHASHSEED=0 uv run --group roar python roar/data/generate.py`")
-    return read_log_csv(path)
+    return load_log(name)
 
 
 def _segments(log):
