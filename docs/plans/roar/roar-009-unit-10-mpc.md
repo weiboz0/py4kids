@@ -4,6 +4,8 @@
 **v4.8** (budgets, below).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-008` merged (#163, 2bf203e).
+**v2.1** folds plan-review round 2 ([sol] REJECT: B1 the non-finite fallback, B2 the lab with no accepted
+configuration, B3 the stale Phase A equivalence, S4 counts and tolerance; [fable] APPROVE WITH NITS: S1–S6, N7–N10).
 **v2** folds plan-review round 1 ([sol] REJECT: B1 the shipped fallback never raced, B2 the lab's fallback to an
 un-raced pursuit configuration, S3 the race count; [fable] APPROVE WITH NITS: S1–S7, N8–N13; [self] N1–N2).
 The over-budget policy changes: an over-budget tick now **shortens the horizon** (40 → 20 → 10) instead of handing
@@ -95,19 +97,25 @@ speed-profile setting is Unit 9's; only the steering law changes.
 ## Deviations from design (recorded; design 013 v4.8)
 - **The over-budget policy (design §7.1 says: fall back to pure pursuit for that tick).** A self-timed check can only
   measure a solve after it has run, so it cannot recover the time of the tick that overran; it can only make the
-  next ticks cheaper. And pure pursuit at MPC's frozen fraction is what crashes (U10.3). So the reference applies the
+  next ticks cheaper. Pursuit ticks would also break the Δu cost's and the lag queue's continuity, and pursuit
+  *throughout* at MPC's frozen fraction is what crashes (U10.3; a single pursuit tick would not). What is timed: the
+  `mpc()` call (the model, the stack and the solve), from `time.perf_counter()` before it to after it. So the reference applies the
   command it has already computed, counts the tick in `self.over_budget`, and **halves the horizon** for the rest of
-  the race (40 → 20 → 10, never below 10), printing one line each time it does. Pure pursuit is the fallback only
-  for a solve whose result is not finite (`self.fallbacks`). Design v4.8 restates §7.1 this way.
+  the race (40 → 20 → 10, never below 10), printing one line each time it does. In MPC mode pure pursuit is **never**
+  used: a solve whose result is not finite (possible only from non-finite inputs, such as a bad sensor reading;
+  `lstsq` on finite inputs returns finite values) applies the **next command of the last finite plan** (the plan
+  shifted by one tick; the last applied command once the plan is used up), counted in `self.fallbacks`.
+  Design v4.8 restates §7.1 this way.
 - **Deterministic races.** `MPC_BUDGET_MS = 5.0` ships; because it reads a wall clock, a loaded machine can shorten
   the horizon at a different tick. The routed gates **and the notebooks' pinned race cells** race the variant
   `MPC_BUDGET_MS = None` (no timing; the lesson says why). The two extremes of the shipped policy are both gated:
   `None` (always N = 40) and `MPC_BUDGET_MS = 0.0` (every tick over budget, so N = 40, 20, then 10 for the rest of
-  the race, deterministically), U10.7.
+  the race, deterministically), U10.7; the non-finite path is tested race-free (U10.7).
 - **Budgets (v4.8):** routed pytest ≤ **12 min** (it was 10); book notebook exec ≤ **40 CI-minutes** (it was 30).
-  Unit 10 adds 71 races, 55 of them MPC (about 80 s pooled, below), and about 4–5 min of serial notebook exec, which
+  Unit 10 adds 76 races, 65 of them MPC (about 72 s pooled, below), and about 4–5 min of serial notebook exec, which
   takes the book to about 31 of 30. 40, not 35, because Units 11–13, Checkpoint B and the capstone remain and each
-  has added 3–6 min; the follow-ups ask the author whether to keep raising or to move the long gates to a slower tier
+  has added 3–6 min. v4.8's levels are **interim** (the changelog says so): by these numbers both will need raising
+  again by `roar-011`/`roar-012`. The follow-ups ask the author whether to keep raising or to move the long gates to a slower tier
   (the question is held to the end of the run by the author's autopilot directive).
 
 ## Concepts (3 new; all `kind: technique`, globally unique)
@@ -115,8 +123,9 @@ speed-profile setting is Unit 9's; only the steering law changes.
   time-varying (a_t, κ_t along the horizon); the lag as part of the model.
 - `ltv-mpc`: the horizon cost; stacking the horizon in closed form; one least-squares solve per tick; clipping the
   first command; receding horizon; the weights tuned on the dynamic car; the exact `scipy` reference on one corner.
-- `tick-budget`: per-tick compute, p50/p99 with warm-up excluded, the fallback to pursuit and its count, and why
-  timing is never measured in a pool.
+- `tick-budget`: per-tick compute, p50/p99 with warm-up excluded, why timing is never measured in a pool, and the
+  shipped policy: an over-budget solve shortens the horizon (`over_budget`); a non-finite solve applies the shifted
+  last finite plan (`fallbacks`).
 Requires: `linear-least-squares` (Unit 8), `racing-line` and `line-retune` (Unit 9), `pure-pursuit`,
 `kinematic-bicycle`, `numerical-integration` (actuator lag via Unit 5's `step-response`), `cross-track-error`.
 
@@ -124,8 +133,8 @@ Requires: `linear-least-squares` (Unit 8), `racing-line` and `line-retune` (Unit
 `agents/unit-10.py` = `agents/unit-09.py` with `STEERING = "mpc"`, `MPC_HORIZON = 40`, `MPC_Q_E = 0.3`,
 `MPC_Q_PSI = 20.0`, `MPC_R_DU = 1000.0`, `MPC_LAG = 1`, `MPC_BUDGET_MS = 5.0`, `MPC_MIN_HORIZON = 10`, and
 `MU_FRACTION = 0.58` (re-tuned for MPC on the family). It keeps `self.horizon`, `self.over_budget` and
-`self.fallbacks` (the over-budget policy above); on a pursuit tick it records the curvature pursuit applied as the
-MPC's last command and in the lag queue, so the next tick's Δu cost and lag stay true.
+`self.fallbacks` and the last finite plan (the over-budget policy above); whatever command it applies goes into the
+lag queue and becomes the last command, so the next tick's Δu cost and lag stay true.
 Hygiene, each commented: the reference speed is capped by `A_THROTTLE` (not a literal); the distance along the line
 starts at the car's segment, ignoring its position within it (under 2 m); the braking side of the profile is taken
 as given (the model assumes the speed loop follows it).
@@ -149,8 +158,10 @@ It imports only numpy, `math`, `time` and `roar_py_interface`; the `scipy` refer
 - **U10.6 the lag:** with `MPC_LAG = 0` at f 0.60 on `test-circuit` MPC is not clean on any of seeds 0–4 (r7: 0/5).
 - **U10.7 the over-budget policy and the budget:** with `MPC_BUDGET_MS = 0.0` (every tick over, so N = 10 after
   two ticks) `agents/unit-10.py` is clean on seeds 0–4 of `test-circuit-seed4` and `test-circuit-seed2026` (r8, at
-  N = 10: 10/10), with `over_budget` equal to the step count and `fallbacks` 0; with `STEERING = "pursuit"` it
+  N = 10: 10/10; soft expectations under the Pins rule: medians near 271.55 s and 277.30 s), with `over_budget` equal to the step count and `fallbacks` 0; with `STEERING = "pursuit"` it
   equals `agents/unit-09.py` at the same `MU_FRACTION` to the tick (seed 0);
+  a race-free test gives `mpc()` a non-finite curvature and asserts that it applies the shifted last finite plan and
+  counts one fallback, with no call to pursuit;
   `check_submission(agents/unit-10.py)` passes (p99 ≤ 5 ms; the routed suite runs tests serially, so it is outside
   any pool).
 - **U10.8 `monza-like`:** MPC at 0.64 is clean on seeds 0–4 (468.75 s ± 2 ticks median; probed on seeds 0–1),
@@ -163,8 +174,9 @@ It imports only numpy, `math`, `time` and `roar_py_interface`; the `scipy` refer
 
 ## Budgets
 - Routed pytest ≤ **12 min** (v4.8). The Unit 10 job table (MPC + pursuit): U10.2 5 + 5; U10.3 5 + 5; U10.4
-  25 + 5 (0.62 on seed1 only); U10.5 5 + 5; U10.6 5; U10.7 10 + 1; U10.8 5 + 5 (`monza-like`): **91 races, 70 of them
-  MPC** (about 7.5 s of CPU each, 14 s on `monza-like`; pursuit 2.5 s, 6 s), about 650 s of CPU, about 85 s pooled on
+  25 + 5 (0.62 on seed1 only); U10.5 5 + 5; U10.6 5; U10.7 10 + 1; U10.8 5 + 5 (`monza-like`); the pursuit sides of U10.2 and
+  U10.5 are read from roar-008's `line_premise` fixture (`U9_REFERENCE`, `line_key(CHECKPOINT, 0.54)`), not re-raced:
+  **76 races, 65 of them MPC** (about 7.5 s of CPU each, 14 s on `monza-like`; pursuit 2.5 s, 6 s), about 565 s of CPU, about 72 s pooled on
   8 workers, taking the suite from 9.5 to about 11 min. Measured in Phase D; over 12 min means stop and amend.
 - Notebooks: the Unit 10 lesson, solutions and milestone **≤ 5 min** serial in total (an MPC race is about 7.5 s
   serial: each notebook races at most about 10 MPC races, with `MPC_BUDGET_MS = None` in pinned cells). The book-level exec total is reported against v4.8's 40
@@ -173,8 +185,12 @@ It imports only numpy, `math`, `time` and `roar_py_interface`; the `scipy` refer
 
 ## The CARLA lab (Unit 10, design §7.2)
 `labs/real-sim.ipynb`, "runs on your machine with CARLA 0.9.12 and `ROAR_PY`".
-**Starting point: the accepted configuration**, the exact submission the student's Unit 8 lab accepted (or their
-Unit 7 submission when it accepted none). It has been raced clean on CARLA; nothing un-raced is ever the fallback.
+**Starting point: the accepted configuration**, the exact submission the student's Unit 8 lab accepted. It has been
+raced clean on CARLA; nothing un-raced is ever the fallback.
+**When Unit 8 accepted none** (the student holds only a PROVISIONAL Unit 7 result): R00a–R00b race that Unit 7
+submission as-is, twice. Both clean → it becomes the accepted configuration and the lab continues; otherwise the lab
+records "no accepted configuration" and stops: MPC is never compared against a configuration that has not raced
+clean.
 0. **R0a–R0b (optional, only to add a Unit 9 line):** the accepted configuration with the student's line, pursuit,
    twice. Both clean → it becomes the accepted configuration; otherwise the line is dropped and the accepted
    configuration is unchanged.
@@ -183,25 +199,30 @@ Unit 7 submission when it accepted none). It has been raced clean on CARLA; noth
 2. **R1–R2:** the MPC file (the accepted configuration with `STEERING = "mpc"`), twice. Both clean (finished, 0
    collisions, line-relative error ≤ 2 m) → MPC is **accepted at that fraction**; otherwise the student keeps the
    accepted configuration (no further races).
-3. **R3–R4 (only after MPC is accepted):** the fraction + 0.02, twice; both clean → accepted at the higher fraction,
+3. **R3–R4 (only after MPC is accepted, and only when the accepted configuration plans with `MU_FRACTION`; a Unit 7
+   configuration on the `A_LAT` path skips them):** the fraction + 0.02, twice; both clean → accepted at the higher fraction,
    otherwise the accepted value stays the one already raced. The procedure never ends on a value it did not race.
 4. Analysis cells: the clean rule and the median time against the accepted configuration's record, from
    `TELEMETRY_PATH` only. The agent prints one line each time it shortens its horizon (the runner's console shows
    it); the lab asks the student to note those lines by hand, and the analysis does not read them.
-Run budget: 6 races (R0a–R0b, R1–R4); short form R1–R2, 2. No results committed; `.gitignore` already covers the lab
+Run budget: at most 8 races (R00a–R00b, R0a–R0b, R1–R4); short form R1–R2, 2. No results committed; `.gitignore` already covers the lab
 outputs. `lab-check` executes the analysis against the generated sample CSV.
 
 ## Phases
 
 ### Phase A: agent, routed test and registry (Opus subagent for the code; registry inline)
 - `agents/unit-10.py` from `agents/unit-09.py` and `u10/mpc2.py` as above, with the fallback; the equivalences
-  (pursuit mode = Unit 9; budget 0 = Unit 9) asserted to the tick.
+  (`STEERING = "pursuit"` = Unit 9 to the tick; budget 0 → N = 40, 20, then 10, asserted on `self.horizon`; a
+  race-free test feeds a non-finite input and asserts the shifted last finite plan is applied and counted).
 - `tests/_mpc_premise.py` (the job table, as `_line_premise.py`, lines from `_line_solver.solve_track`) and
   `tests/test_racekit_unit10_premise.py` (U10.1–U10.8); U10.1 is race-free and imports `scipy`.
-- **Re-run every gate cell** with the shipped agent and confirm the pins (±1 tick).
+- **One serial, timed race** of the shipped agent (`MPC_BUDGET_MS = 5.0`) on `test-circuit-seed2026`, seed 0, on an
+  idle machine: record `over_budget`, the final horizon and the per-tick max, so any lesson statement about how often
+  the policy fires rests on evidence.
+- **Re-run every gate cell** with the shipped agent and confirm the pins (median ± 2 ticks, the one tolerance throughout).
 - `concepts.yaml` (3 ids), `coverage-map.yaml` (Unit 10, `lessons: 3`), the manifest (`lab: true`), `labs.yaml`.
 - `api-order.yaml` / `baseline.yaml`, decided up front: `tril`, `cumsum`, `tile`, `eye` (with `k`) and `minimize` →
-  `ltv-mpc`; `perf_counter` → `tick-budget`; `empty` and `atan` as infrastructure if not already present. Record any
+  `ltv-mpc`; `perf_counter` → `tick-budget`; `empty`, `atan`, `allclose` and `isfinite` as infrastructure if not already present. Record any
   others in the report.
 - `syllabus.md` row 10 (no emoji).
 - Design 013 **v4.8** (the budget raises and the deterministic-fallback deviation; status line; changelog).
@@ -273,3 +294,21 @@ outputs. `lab-check` executes the analysis against the generated sample CSV.
     N13 the lab's fallback count [FIXED: printed lines, noted by hand, not analysed].
 - [self] APPROVE WITH NITS. N1 the literal 6 m/s² cap [FIXED: `A_THROTTLE`]. N2 the speed reference is a heuristic
   [FIXED: lesson §5].
+
+### Round 2 (v2, a46af45)
+- [sol] REJECT.
+  - B1 a non-finite solve still went to pursuit at 0.58, untested [FIXED v2.1: pursuit is never used in MPC mode; the
+    shifted last finite plan is applied and counted; a race-free U10.7 test].
+  - B2 the lab called a PROVISIONAL Unit 7 result "accepted" [FIXED v2.1: R00a–R00b race it twice first, otherwise
+    the lab stops with "no accepted configuration"].
+  - B3 Phase A still asserted "budget 0 = Unit 9" [FIXED v2.1: horizon checks and the pursuit-mode equivalence].
+  - S4 counts (86/65) and ±1 vs ±2 ticks [FIXED v2.1: recounted, now 76/65 after [fable] N7; one tolerance].
+- [fable] APPROVE WITH NITS.
+  - S1 the count [FIXED]. S2 the Phase A leftovers [FIXED, = [sol] B3/S4]. S3 `tick-budget`'s text [FIXED].
+  - S4 how often the policy fires on an idle machine, and what is timed [FIXED: a serial timed race in Phase A; the
+    `mpc()` call is timed].
+  - S5 R3–R4 meaningless for an `A_LAT` configuration [FIXED: skipped].
+  - S6 v4.8 levels will be exceeded again [FIXED: labelled interim in the changelog; the question stays a follow-up].
+  - N7 reuse roar-008's pursuit races [FIXED]. N8 `allclose`, `isfinite` [FIXED]. N9 soft medians for U10.7 [FIXED].
+    N10 the over-claimed rationale [FIXED: softened].
+- [self] APPROVE.
