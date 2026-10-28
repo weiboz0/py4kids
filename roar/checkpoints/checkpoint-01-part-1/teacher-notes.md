@@ -42,10 +42,11 @@ One sitting of **75–90 minutes**.
 - Question 5 (about 15 min): the family sweep, about 25 races (2 min); freeze the setting.
 - Question 6 (about 15 min): the plan, the one race on the checkpoint track, and the written comparison.
 
-**Short form** (60 min): give Question 1's table, and run Question 5 on `test-circuit` and seed 1 only (the seed that
-fails).
-Give the other three tracks' results as evidence: A_LAT 4.4 is clean on seeds 2, 3 and 4 (medians 307.15, 308.15 and
-308.05 s), so the student can still establish the family edge; the student still freezes before race day and races the
+**Short form** (60 min): give Question 1's table, and run Question 5 on the tracks `test-circuit` and `test-circuit-seed1`
+only (the track on which 4.6 failed in Question 4).
+Give the other three tracks' results as evidence: A_LAT 4.4 is clean on the tracks `test-circuit-seed2`, `-seed3` and
+`-seed4` (medians 307.15, 308.15 and 308.05 s), so the student can still establish the family edge.
+The student still freezes before race day and races the
 checkpoint track once.
 
 ## Grading

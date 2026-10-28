@@ -1,12 +1,13 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4.5 (2026-10-27). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.6 (2026-10-27). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
 v4.4 (plan `roar-006`) restates the Unit 7 row (per-section speed knobs, the (A_LAT, A_DEC) grid, the clean rule)
 and raises the routed pytest budget to 8 min.
 v4.5 (plan `roar-007`) names the seeded checkpoint tracks and pins Checkpoint A's gate.
+v4.6 (plan `roar-007`) raises the book notebook exec budget to 30 CI-minutes, after the first book-level measurement.
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -366,8 +367,8 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - an `api-order.yaml` concept id is unknown.
   Negative cases prove a premature use fails and an unmapped name fails.
 - **Budgets** (measured targets; an overrun means stop and amend):
-  - **Book notebook exec ≤ 15 CI-minutes:** `exec-lessons` + `exec-solutions` wall time, with the 1-minute load
-    average recorded at start and end. It **excludes** track and telemetry generation, which are reported
+  - **Book notebook exec ≤ 30 CI-minutes** (v4.6; it was 15): `exec-lessons` + `exec-solutions` wall time, with the
+    1-minute load average recorded at start and end. Every plan's report records the book-level total. It **excludes** track and telemetry generation, which are reported
     separately and must stay ≤ 1 min.
   - **Routed pytest ≤ 8 min** on an 8-core CI machine (v4.4, plan `roar-006`; it was 5 min, and the Unit 6–7 gates
     add about 2 min of pooled races).
@@ -613,3 +614,7 @@ Pairings may be adjusted by each plan's gate without a design change.
   crashes on every run of a seeded variant; one setting tuned on a family of four variants and `test-circuit` under
   the clean and margin rules is clean there. Checkpoint A pins the training family (seeds 1–4), the checkpoint track
   (seed 2026, named before it was probed) and a 330 s racekit target.
+- v4.6 (2026-10-27): the §7.1 notebook exec budget (plan `roar-007`). The first book-level measurement, at the end of
+  Part 1, is 20.4 min serial (load 3.1–3.8 on a shared 8-core machine): 17.7 min for Units 1–7, measured by no earlier
+  plan, and 2.6 min for Checkpoint A's solutions. The Unit 5 and Unit 4 milestones (3.8 and 2.1 min) are the largest
+  items. The budget is raised to 30 CI-minutes for Part 2 and the capstone, rather than cutting merged units' gates.

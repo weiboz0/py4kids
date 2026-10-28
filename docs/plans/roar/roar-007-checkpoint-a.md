@@ -218,3 +218,64 @@ vector from Unit 7).
   [FIXED v2.1]; N3 the name-keyed length table [FIXED v2.1]; N4 record the serial notebook time [FIXED v2.1, in Phase D's
   report].
 - [self] APPROVE.
+
+## Content Review
+
+### Round 1 (@ 8e38e8b; CI ALL GREEN)
+
+Blind solves: [sol] and [fable] each solved the checkpoint from `checkpoint.ipynb` and Units 1–7 before opening the solutions, froze before racing the checkpoint track, and raced it once.
+Both found the one-track edge 4.8 (margin 4.6), the failure of 4.6 on `test-circuit-seed1` race seed 1 (t = 207.10 s, a growing weave on the start straight), the family edge 4.4, the frozen value 4.2, a three-lap plan of 316.96 s, a margin cost of 4.20 s on paper, and race day clean at a median of 310.80 s (spread 0.20 s; 109.60 s faster than Unit 6).
+Every number agrees with `solutions.ipynb`.
+
+- **[sol] REJECT.**
+  - B1 [FIXED] Question 4 had no path for a student whose own agent is clean on every variant: there is then no failing race to describe. The setup names `REFERENCE` and `setting(a_lat, base=SUBMISSION)`; such a student races `setting(4.6, REFERENCE)` on `test-circuit-seed1`, studies that failure and says which agent it came from; the teacher notes grade it the same way.
+  - S2 [FIXED] The model answer's test race changes `PP_K`, a fixed knob. Statement, solutions and notes now say a proposed race is a diagnostic and may change any knob; the submission still tunes A_LAT only.
+  - S3 [FIXED] The short form raced only two training tracks but Question 5 needs all five. The notes now give 4.4's results on seeds 2–4 (clean; 307.15 / 308.15 / 308.05 s).
+- **[fable] APPROVE WITH NITS.**
+  - S1 [FIXED] = [sol] B1.
+  - N2 [FIXED] CP.4 asserts that 4.6 is not clean on any of the checkpoint track's five seeds (the notes' "crashes on every run"), still without a collision count.
+  - N3 [FIXED] The solutions read the car's waypoint as progress + 1, as Unit 7's lesson does (the printed radius column was one waypoint early; no assert changed).
+  - N4 [FIXED] A discussion prompt on race day beating the plan.
+  - N5 [FIXED] The setup's `A_ACC, TOP_SPEED` comment: use your own values if your file differs.
+- **[self] APPROVE WITH NITS.**
+  - N1 [FIXED] Question 5's one-track-per-cell layout did not say what to do when a value fails; it now says step down one grid step and re-run the five cells, keeping every result.
+
+### Round 2 (@ a6d01cc; CI ALL GREEN): CONSENSUS
+
+- [sol] APPROVE: B1, S2, S3 and every [fable]/[self] item RESOLVED; no new findings.
+- [fable] APPROVE WITH NITS: every round-1 item RESOLVED.
+  - N6 [WONTFIX] With the stand-in submission, `setting(4.6, REFERENCE)` writes `a-lat-4.6.py` over Question 3's identical file. The content is the same, and a student's own submission is a different path, so the fallback file is named `reference-...`; an identity test would be harder to read than the harm it prevents.
+  - N7 [FIXED] The short form named "seed 1" and "seeds 2, 3 and 4" where it meant the training tracks; it now names the tracks, and says seed1 is the track on which 4.6 failed.
+- [self] APPROVE.
+
+## Post-Execution Report
+
+**Status: SHIPPED.** Checkpoint A closes Part 1.
+The student tunes one global A_LAT on a training family (`test-circuit` and its seeded variants 1–4), finds the family edge 4.4, freezes 4.2 by the margin rule, and races the unseen checkpoint track `test-circuit-seed2026` once: clean on seeds 0–4, median 310.80 s (spread 0.20 s), inside the 330 s target and 109.60 s faster than the Unit 6 agent.
+The Unit 7 reference's 4.6, tuned on `test-circuit` alone, fails on `test-circuit-seed1` (race seed 1, a growing weave on the start straight) and on every seed of the checkpoint track.
+
+**Verification.**
+- `TMPDIR=/dev/shm bash scripts/ci-local.sh`: FAILED at 0388b52 (concept-scan, deviation 5); ALL GREEN at 8e38e8b, at a6d01cc (the content-gate fixes), and at the final commit.
+- Gates CP.1–CP.5 are asserted: CP.1 in `roar/data/tests/test_gen_tracks.py` (track stats), CP.2–CP.5 in `test_racekit_checkpoint_a.py` (11 tests, 36.9 s; 90 races at the 450 s cap), and every pinned value again in `solutions.ipynb`.
+- The routed roar suite: 469 passed in 418.5 s (7.0 min; target ≤ 7.5 min, cap 8 min).
+- `solutions.ipynb`: 158.7–161.4 s serial, 58 races, under the plan's 4 min.
+- Track generation (`roar/data/generate.py`, now with the five seeded tracks): about 15 s, under the 1-minute budget.
+- **Book-level notebook exec** (`exec-lessons` + `exec-solutions`, serial; load 3.1 at the start, 3.2 at the end): 1223 s = **20.4 min**, over design §7.1's 15 CI-minutes.
+  Units 1–7 alone are 1064 s (17.7 min): no earlier plan measured the book total, and the cap was already exceeded before this plan. The largest items are the Unit 5 milestone (228 s), Unit 4 milestone (125 s), Unit 5 lesson (76 s), Unit 6 solutions (77 s) and Unit 6 milestone (72 s).
+  Per the design's "stop and amend", design 013 v4.6 raises the budget to 30 CI-minutes and requires every plan to report the total (deviation 7); it is also a user follow-up.
+- The checkpoint notebook passes hygiene (no outputs, no solutions); concept-scan and stretch-check PASS.
+
+**Deviations from the plan (recorded).**
+1. **The routed test's job table** lives in a new helper, `tests/_checkpoint_premise.py` (18 cells, 90 races), as roar-006's `_speed_premise.py` did.
+2. **`test_racekit_check_submission.py`:** its assertion that `agents/` holds exactly the starter and unit-NN files is relaxed to require their presence, so `agents/checkpoint-a.py` is covered by the isolated Python 3.8 check.
+3. **One extra assert:** CP.3 also asserts that 4.6 is clean on `test-circuit` (the one-track margin is clean where it was tuned), which the plan's table implies but did not list.
+4. **Question 6's prompt** assumed the race would be slower than the plan; the solutions session found it is 6.16 s faster (the 0.3 s profile lead and an overshoot past 45 m/s on the straights), and the prompt now asks "faster or slower, by how much, and why".
+5. **Concept-scan fallout:** the strict checkpoint scan rejected `all`, `np.flatnonzero`, `Track.locate`, `np.roll` and `.tolist` in the solutions (unit solutions use some of them freely). The solutions were rewritten with max/min checks, `False in [...]`, `np.nonzero`, the telemetry's progress and an explicit next-index array; no pinned value changed. A follow-up asks whether these belong in `baseline.yaml`.
+6. **Content gate additions beyond the plan's question list:** `REFERENCE` and `setting(a_lat, base=SUBMISSION)` in the setup cell, and Question 4's fallback to the reference's failure ([sol] B1); the short form's given evidence; the diagnostic-race wording.
+7. **Design 013 v4.6** (the exec budget), above.
+8. **Disclosure:** while checking its work, the solutions session raced the checkpoint track in a scratch copy before writing Question 6. The shipped notebook races it exactly once (asserted by `race_log`), and the blind solvers in the content gate froze before racing it.
+
+**Follow-ups (held for the end of the run):**
+- the Unit 7 reference's fragility off its tuning track: a risk for the PENDING interim CARLA check, which `roar-008`'s plan names, and material for Unit 11;
+- the exec-budget amendment, or trimming the Unit 4–5 milestones instead;
+- whether `all`/`any`/`np.roll`/`.tolist` join `baseline.yaml`.
