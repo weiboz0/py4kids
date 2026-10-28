@@ -208,7 +208,8 @@ configuration" and stops.
    without), which passes only at p99 ≤ 4 ms (content gate [sol] B1).
 2. **R1–R2:** the MPC file, twice: `agents/unit-10.py`-style (the student's Unit 10 file) with the accepted
    configuration's constants copied in (`LINE_CONTROL` or `None`, `MU_G` or `None` with `A_LAT`, `MU_FRACTION`,
-   `MAX_STEER`, …); step 1's `check_submission` runs on exactly that file. The weights were tuned on the line at 0.58
+   `MAX_STEER`, …); step 1's `check_submission` runs on exactly that file, or, when it carries a Monza line, on its
+   `LINE_CONTROL = None` timing copy (a proxy, 4 ms). The weights were tuned on the line at 0.58
    and are un-probed on a centreline or `A_LAT` configuration; R1–R2 gate it either way, and the lab says so. Both clean (finished, 0
    collisions, line-relative error ≤ 2 m) → MPC is **accepted at that fraction**; otherwise the student keeps the
    accepted configuration (no further races).
@@ -376,4 +377,12 @@ Round 2 (on `ab6ffa4`): [sol] re-review of B1's fix.
   - N1 "exactly the file R1 will race" still in step 1 [FIXED: "the file R1 will race, or its timing copy"; the lab
     asks for a file comparison showing the two differ only in `LINE_CONTROL`].
 
-Round 3: [sol] re-review.
+Round 3 (on `a5203f8`): [sol] re-review.
+
+- [sol] REJECT.
+  - B1 the check cell printed `report.ok`, which passes up to 5 ms, so a 4.5 ms proxy could be logged as passing
+    [FIXED: the cell has `TIMING_COPY`, and its pass line requires `report.ok` and p99 ≤ 4 ms for a timing copy
+    (5 ms otherwise)].
+  - N1 the plan's R1–R2 item still said step 1 checks "exactly that file" [FIXED: qualified for the Monza-line copy].
+
+Round 4: [sol] re-review.
