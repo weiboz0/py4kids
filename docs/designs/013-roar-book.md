@@ -1,11 +1,13 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4.4 (2026-10-27). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.6 (2026-10-27). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
 v4.4 (plan `roar-006`) restates the Unit 7 row (per-section speed knobs, the (A_LAT, A_DEC) grid, the clean rule)
 and raises the routed pytest budget to 8 min.
+v4.5 (plan `roar-007`) names the seeded checkpoint tracks and pins Checkpoint A's gate.
+v4.6 (plan `roar-007`) raises the book notebook exec budget to 30 CI-minutes, after the first book-level measurement.
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -223,7 +225,10 @@ every `racekit` module with `ast.parse(feature_version=(3, 8))` and the deny-lis
   - `monza-like`, built from public facts about the circuit: about 5.8 km, long straights, the Rettifilo and Roggia
     chicanes, the two Lesmo corners, Ascari and the Parabolica. It is labelled **"inspired by Monza"**, not a copy of
     the CARLA map.
-  - **unseen-for-tuning** checkpoint tracks from named seeds. They are reproducible and not secret; the checkpoint
+  - **unseen-for-tuning** checkpoint tracks from named seeds (v4.5, plan `roar-007`: `test-circuit-seed1` …
+    `test-circuit-seed4` are Checkpoint A's training family and `test-circuit-seed2026` its checkpoint track; the
+    carla-like car's hidden grip is drawn per track name, so a variant differs in grip as well as shape). They are
+    reproducible and not secret; the checkpoint
     briefs forbid per-track tuning, and the content gate's blind solve tests that.
 - The real CARLA map and its waypoints are **never** committed or redistributed.
 
@@ -297,7 +302,7 @@ Challenge), `solutions.ipynb`, `teacher-notes.md` and `manifest.yaml`.
 | 5 | Geometric steering 🏁 | "Steer like a driver looks ahead." | Pure pursuit; speed-scaled lookahead; Stanley; stability vs corner-cutting | Under actuator delay at speed, speed-scaled pure pursuit stays clean where the tighter controllers crash, and beats a detuned PD (noise-aware); with no delay it pays in corner-cutting (v4.3) |
 | 6 | Grip and the speed limit | "Why does the car spin at Parabolica?" | Dynamic bicycle; tyre saturation; friction circle; v_max = √(μg/κ); the spin-out failure | A curvature-limited speed controller removes spin-outs and collisions on `test-circuit` |
 | 7 | Speed planning 🏁 | "Brake *before* the corner, and find the grip that is really there." | Forward–backward speed profile; lookahead planning (a speed lead in seconds); the planned cornering and braking rates read together as a grid (v4.4); **per-section speed knobs by one-knob sweeps** (one multiplier per section, accepted by Unit 1's median-and-spread rule and a clean rule: finished, 0 collisions, max cross-track error ≤ 2 m; the knobs absorb μ and the planner's other errors, so they are not μ estimates, and Unit 8 measures μ; Unit 12 generalizes to many knobs) | A large median race-time gain over Unit 6 at 0 collisions; per-section knobs beat the best single global setting (noise-aware, v4.4) |
-| CP-A | **Checkpoint A** | A complete clean agent on an unseen-for-tuning seeded track | — (strict) | Finishes within a target time, with 0 collisions |
+| CP-A | **Checkpoint A** | A complete clean agent on an unseen-for-tuning seeded track | — (strict) | One global setting, tuned on the training family only, finishes the checkpoint track clean on five seeds within a median of 330 s (v4.5) |
 
 ### Part 2: Measuring the real car
 
@@ -362,8 +367,8 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - an `api-order.yaml` concept id is unknown.
   Negative cases prove a premature use fails and an unmapped name fails.
 - **Budgets** (measured targets; an overrun means stop and amend):
-  - **Book notebook exec ≤ 15 CI-minutes:** `exec-lessons` + `exec-solutions` wall time, with the 1-minute load
-    average recorded at start and end. It **excludes** track and telemetry generation, which are reported
+  - **Book notebook exec ≤ 30 CI-minutes** (v4.6; it was 15): `exec-lessons` + `exec-solutions` wall time, with the
+    1-minute load average recorded at start and end. Every plan's report records the book-level total. It **excludes** track and telemetry generation, which are reported
     separately and must stay ≤ 1 min.
   - **Routed pytest ≤ 8 min** on an 8-core CI machine (v4.4, plan `roar-006`; it was 5 min, and the Unit 6–7 gates
     add about 2 min of pooled races).
@@ -605,3 +610,11 @@ Pairings may be adjusted by each plan's gate without a design change.
   A_LAT and A_DEC together as a grid and follows the profile with a lead in seconds. Per-section "μ" is taught as
   per-section speed knobs (they absorb the planner's other errors; Unit 8 measures μ), accepted under a clean rule
   (finished, 0 collisions, max cross-track error ≤ 2 m). The routed pytest budget is 8 min on an 8-core CI machine.
+- v4.5 (2026-10-27): §4.3 and the §6 CP-A row (plan `roar-007`). The Unit 7 reference, tuned on `test-circuit` alone,
+  crashes on every run of a seeded variant; one setting tuned on a family of four variants and `test-circuit` under
+  the clean and margin rules is clean there. Checkpoint A pins the training family (seeds 1–4), the checkpoint track
+  (seed 2026, named before it was probed) and a 330 s racekit target.
+- v4.6 (2026-10-27): the §7.1 notebook exec budget (plan `roar-007`). The first book-level measurement, at the end of
+  Part 1, is 20.4 min serial (load 3.1–3.8 on a shared 8-core machine): 17.7 min for Units 1–7, measured by no earlier
+  plan, and 2.6 min for Checkpoint A's solutions. The Unit 5 and Unit 4 milestones (3.8 and 2.1 min) are the largest
+  items. The budget is raised to 30 CI-minutes for Part 2 and the capstone, rather than cutting merged units' gates.

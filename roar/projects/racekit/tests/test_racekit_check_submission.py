@@ -234,7 +234,7 @@ AGENTS = sorted((RACEKIT / "agents").glob("*.py"))
 
 def test_unit_01_is_the_starter_copied():
     assert (RACEKIT / "agents" / "unit-01.py").read_bytes() == STARTER.read_bytes()
-    assert [path.name for path in AGENTS][:2] == ["starter.py", "unit-01.py"]
+    assert {"starter.py", "unit-01.py"} <= {path.name for path in AGENTS}
 
 
 @pytest.mark.slow

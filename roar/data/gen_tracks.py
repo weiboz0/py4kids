@@ -19,7 +19,12 @@ The closed centreline is resampled at 2.0 m spacing with a per-waypoint drivable
 ``monza-like`` is **inspired by Monza** (public layout facts only); it is not the CARLA map, and no
 CARLA map or waypoint data is used anywhere.
 
-CLI: ``python roar/data/gen_tracks.py [--out DIR] [--name NAME ...]`` writes ``<name>.npz`` files.
+The seeded checkpoint tracks (``SEEDED_TRACKS``: ``test-circuit-seed1`` … ``test-circuit-seed4``, the
+training family, and ``test-circuit-seed2026``, Checkpoint A's checkpoint track) are ``seeded_spec``
+variants of ``test-circuit``, generated alongside the three named tracks.
+
+CLI: ``python roar/data/gen_tracks.py [--out DIR] [--name NAME ...]`` writes ``<name>.npz`` files
+(every track in ``ALL_NAMES`` by default).
 The book's single driver, ``roar/data/generate.py``, calls this module and owns the checksums.
 """
 
@@ -40,6 +45,17 @@ SPACING = 2.0  # waypoint spacing (m)
 MAX_RESIDUAL_GAP = 2.5  # the shear stage only removes a float-level residual (m)
 FIELDS = ("x", "y", "z", "yaw", "half_width", "s", "curvature")
 TRACK_NAMES = ("oval", "test-circuit", "monza-like")
+# The seeded checkpoint tracks (design 013 §4.3, plan roar-007): (base, seed). Checkpoint A's training
+# family is test-circuit seeds 1-4 and its checkpoint track is seed 2026 (fixed before it was probed).
+# The names are seeded_spec's ``<base>-seed<seed>``; the carla-like car keys its hidden grip to the
+# track name, so renaming one changes the car on it.
+SEEDED_TRACKS = (
+    ("test-circuit", 1),
+    ("test-circuit", 2),
+    ("test-circuit", 3),
+    ("test-circuit", 4),
+    ("test-circuit", 2026),
+)
 
 
 @dataclass(frozen=True)
@@ -217,7 +233,7 @@ def seeded_spec(seed: int, base: str = "test-circuit") -> TrackSpec:
             replace(exit_, k0=k_new, half_width=width),
         ]
         i += 3
-    return TrackSpec(f"{base}-seed{seed}", tuple(out), spec.half_width)
+    return TrackSpec(seeded_name(base, seed), tuple(out), spec.half_width)
 
 
 # --- integration and closure ---------------------------------------------------------------------
@@ -365,12 +381,26 @@ def build_track(spec: TrackSpec) -> Track:
     )
 
 
-def build(name: str) -> Track:
-    return build_track(SPECS[name]())
-
-
 def seeded_track(seed: int, base: str = "test-circuit") -> Track:
     return build_track(seeded_spec(seed, base))
+
+
+def seeded_name(base: str, seed: int) -> str:
+    return f"{base}-seed{seed}"
+
+
+SEEDED_NAMES = tuple(seeded_name(base, seed) for base, seed in SEEDED_TRACKS)
+ALL_NAMES = TRACK_NAMES + SEEDED_NAMES  # every generated track, in the driver's order
+
+
+def build(name: str) -> Track:
+    """Build a named track (``TRACK_NAMES``) or a seeded checkpoint track (``SEEDED_NAMES``)."""
+    if name in SPECS:
+        return build_track(SPECS[name]())
+    for base, seed in SEEDED_TRACKS:
+        if name == seeded_name(base, seed):
+            return seeded_track(seed, base)
+    raise KeyError(f"unknown track {name!r}; expected one of {ALL_NAMES}")
 
 
 # --- oracles shared by the tests and the driver --------------------------------------------------
@@ -463,9 +493,9 @@ def write_track(track: Track, out_dir: Path) -> Path:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", type=Path, default=Path(__file__).resolve().parent / "generated" / "tracks")
-    parser.add_argument("--name", action="append", choices=TRACK_NAMES)
+    parser.add_argument("--name", action="append", choices=ALL_NAMES)
     args = parser.parse_args(argv)
-    for name in args.name or TRACK_NAMES:
+    for name in args.name or ALL_NAMES:
         track = build(name)
         path = write_track(track, args.out)
         print(f"{name}: {track.length:.1f} m, {track.x.size} waypoints -> {path}")

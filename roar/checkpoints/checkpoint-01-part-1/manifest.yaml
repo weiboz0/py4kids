@@ -1,0 +1,9 @@
+id: checkpoint-01-part-1
+kind: checkpoint
+blueprint_version: 1
+lessons: 0.5
+provenance: original
+concepts:
+  introduces: []
+  requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep]
+  practices: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, cross-track-error, menger-curvature, pure-pursuit, lookahead-tuning, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep]
