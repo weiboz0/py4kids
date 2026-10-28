@@ -76,16 +76,20 @@ outcomes carry over and Phase A re-confirms them. Every gate race uses `noise=Tr
   and passes 8° 0.9–2.4 s before a crash; |line error| > 1.6 m comes 0.15–0.9 s before. Falling back on a β > 6°
   warning (W6) is **worse** than falling back on the respawn alone (W0): mean 302.1 vs 293.7 s at 0.58 over the
   training family (q7): the warning trips in races that would have stayed clean, or too late to save the car.
-  With race seeds k mod 5 (q11), a β trigger at **8°** and at 6° each still crash all 3 crashing cars once, trip
-  falsely on 2 clean cars (2 and 18, 275.85 and 276.6 s instead of about 275.05) and give a mean of 298.07 / 298.03 s
-  against 296.66 s for the respawn alone. The shipped agent counts warnings (an instrument) and does not act on
+  With race seeds k mod 5 (q11), a β trigger at **8°** and at 6° each still crash all 3 crashing cars once (the
+  warning comes, the fallback is taken, and the car crashes anyway, finishing about 11 s later than with the respawn
+  alone), with no false trips on the clean cars, for a mean of 298.07 / 298.03 s against 296.66 s for the respawn
+  alone (corrected in Phase A: v2 said cars 2 and 18 tripped falsely; their times are their normal ones). The shipped agent counts warnings (an instrument) and does not act on
   them; the lesson states the result for these thresholds and this fallback, not for every possible reaction
   (Challenge 9 tries a braking reaction).
 - **The restart is a fresh race (q10):** for each of the 7 races at 0.58 that crash once with the fallback, the time
   after the respawn (race time − crash time − 1.0 s) is 0.4–0.7 s shorter than a fresh race of the same car and
   race seed started in the fallback configuration (`STEERING = "pursuit"`, `MU_FRACTION = 0.58 · 0.86`); fresh
   races of one car vary by 0.15 s over race seeds 0–4. The offset is systematic (the remainder is always the
-  shorter); Phase A explains it from the runner's restart accounting and records its sign in the premise, and the
+  shorter); Phase A found the cause: the runner resets the car, not the agent (as the official runner does), and
+  `fall_back()` resets the MPC state but not the speed PI loop, so its positive integral from before the crash
+  carries into the restart and the car takes a little more throttle (with `noise=False` and the PI reset added, the
+  remainder equals the fresh race to the tick); the sign is recorded in the premise, and the
   lesson states the cost as "t + 1 s, to within a second", never more precisely.
 - **Equivalence (q9):** with no respawn the probe agent races exactly as Unit 10 at the same constants (nominal car,
   0.54: 279.65 s both; 48/48 perturbed races at 0.54 identical).

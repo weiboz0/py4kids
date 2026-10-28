@@ -74,5 +74,6 @@ Comparisons are noise-aware: one agent beats another only by more than the sprea
 | 8 | `unit-08-system-identification` | unit | 3 | Your sim-tuned agent is slow, or crashes, on CARLA: measure the car. Least squares on logs, the steering gain, per-section grip from limit probes, and planning with a fraction of the measured grip, then on CARLA in the lab. |
 | 9 | `unit-09-racing-line` | unit | 3 | The centreline is not the fast line, but a new line breaks your speed tuning. The smoothest line as bounded least squares, following it, and re-tuning the speed. |
 | 10 | `unit-10-mpc` | unit | 3 | Plan the next 2 s, every tick. The steering error model linearised about the line, LTV MPC as one least-squares solve per tick, the actuator lag, the per-tick budget, and an honest comparison with pure pursuit, then on CARLA in the lab. |
+| 11 | `unit-11-robustness` | unit | 3 | One crash costs you the race so far. Respawn economics, testing on a family of perturbed cars (training and held-out), the robust fraction by the margin rule, spin and off-line warnings, and a fallback that turns a crash loop into one crash. |
 
 *Later units, the checkpoints and the capstone are added by the plans that follow.*

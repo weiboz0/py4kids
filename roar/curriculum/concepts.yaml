@@ -34,3 +34,6 @@ concepts:
 - {id: error-model-linearization, name: "The path-frame error model, linearised about the line in discrete time, with the actuator lag", category: techniques, kind: technique}
 - {id: ltv-mpc, name: "Linear time-varying MPC: a horizon cost stacked in closed form and solved as one least-squares problem per tick", category: techniques, kind: technique}
 - {id: tick-budget, name: "The per-tick compute budget: p50 and p99, warm-up, timing outside a pool, and the over-budget policy", category: techniques, kind: technique}
+- {id: respawn-economics, name: "Respawn economics: a crash restarts the race (t + 1 s), and the expected race time over a family of cars", category: techniques, kind: technique}
+- {id: perturbation-testing, name: "Testing across perturbed cars: a seeded family, training and held-out perturbations, the family edge and the margin rule", category: techniques, kind: technique}
+- {id: failure-fallback, name: "Failure detection and fallback: the respawn signal, sideslip and off-line warnings with their lead times, re-anchoring, reset and a degraded controller", category: techniques, kind: technique}
