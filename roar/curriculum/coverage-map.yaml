@@ -60,3 +60,17 @@ entries:
   introduces: []
   requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep]
   practices: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, cross-track-error, menger-curvature, pure-pursuit, lookahead-tuning, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep]
+- id: unit-08-system-identification
+  kind: unit
+  title: "System identification"
+  lessons: 3
+  introduces: [linear-least-squares, car-identification, grip-identification]
+  requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep]
+  practices: [repeated-run-measurement, race-telemetry, telemetry-plotting, longitudinal-map, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep]
+- id: unit-09-racing-line
+  kind: unit
+  title: "The racing line"
+  lessons: 3
+  introduces: [racing-line, line-retune]
+  requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep, linear-least-squares, car-identification, grip-identification]
+  practices: [menger-curvature, pure-pursuit, speed-profile, section-knob-sweep, grip-identification, repeated-run-measurement]

@@ -1,0 +1,10 @@
+id: unit-08-system-identification
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+lab: true
+concepts:
+  introduces: [linear-least-squares, car-identification, grip-identification]
+  requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep]
+  practices: [repeated-run-measurement, race-telemetry, telemetry-plotting, longitudinal-map, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep]

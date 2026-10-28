@@ -26,3 +26,8 @@ concepts:
 - {id: cornering-speed-limit, name: "The cornering speed limit v = sqrt(a_lat / kappa) and a curvature-limited speed goal", category: techniques, kind: technique}
 - {id: speed-profile, name: "The forward-backward speed profile and following it with a lead in seconds", category: techniques, kind: technique}
 - {id: section-knob-sweep, name: "Per-section knobs by one-knob sweeps: the clean rule, the sequential pass and the margin rule", category: techniques, kind: technique}
+- {id: linear-least-squares, name: "Linear least squares from logs: lstsq, residuals, a lag chosen by the residual, and QR", category: techniques, kind: technique}
+- {id: car-identification, name: "Identifying the car: the longitudinal map and the steering gain from logs, against the agent's assumed values", category: techniques, kind: technique}
+- {id: grip-identification, name: "Per-section grip from limit probes, a percentile estimate and its lower bound, and planning with a fraction of it", category: techniques, kind: technique}
+- {id: racing-line, name: "The racing line: offsets on a B-spline, width bounds and the smoothest line by bounded least squares", category: techniques, kind: technique}
+- {id: line-retune, name: "Following a line and re-tuning the speed for it: the line-relative clean rule and the honest comparison", category: techniques, kind: technique}

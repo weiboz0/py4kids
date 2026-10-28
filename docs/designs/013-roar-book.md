@@ -1,6 +1,6 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4.6 (2026-10-27). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.7 (2026-10-28). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
@@ -8,6 +8,7 @@ v4.4 (plan `roar-006`) restates the Unit 7 row (per-section speed knobs, the (A_
 and raises the routed pytest budget to 8 min.
 v4.5 (plan `roar-007`) names the seeded checkpoint tracks and pins Checkpoint A's gate.
 v4.6 (plan `roar-007`) raises the book notebook exec budget to 30 CI-minutes, after the first book-level measurement.
+v4.7 (plan `roar-008`) restates the Unit 8 and Unit 9 rows from probes and raises the routed pytest budget to 10 min.
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -308,8 +309,8 @@ Challenge), `solutions.ipynb`, `teacher-notes.md` and `manifest.yaml`.
 
 | # | Unit | Project hook | Introduces | Gate |
 |---|---|---|---|---|
-| 8 | System identification 🏁 | "Your sim-tuned agent is slow, or crashes, on CARLA. Why?" | Logging; matrices; linear least squares; fitting steering gain, drag and grip; residuals; per-section μ from data | The carla-like car's parameters are recovered within tolerance |
-| 9 | The racing line | "The centreline is not the fast line, but a new line breaks your speed tuning." | Width constraints; minimum-curvature line (`scipy.optimize` on a reduced problem); **local late-apex widening**; re-tuning speed with the line | Valid, collision-free line(s); an honest comparison: global line vs local widening vs centreline (falsifiable) |
+| 8 | System identification 🏁 | "Your sim-tuned agent is slow, or crashes, on CARLA. Why?" | Logging; matrices; linear least squares (and QR); fitting the longitudinal map and the **steering gain**; residuals; **per-section μ from limit probes** (one section pushed per race, the student's own agent as the driver, a percentile of \|a\|, a lower bound where it did not slide) and planning with a fraction of it (v4.7) | The carla-like car's parameters are recovered within tolerance; one fraction of the measured grip, tuned on the training family, transfers to the unseen track faster than Checkpoint A (v4.7) |
+| 9 | The racing line | "The centreline is not the fast line, but a new line breaks your speed tuning." | Width constraints; the **smoothest line** (squared second differences of its points, the usual stand-in for minimum curvature) as bounded least squares (`scipy.optimize.lsq_linear`) on a reduced problem, a cubic B-spline of offsets, solved offline and shipped as constants (a submission imports only numpy); **local widening**; re-tuning speed with the line (v4.7) | Valid, collision-free line(s); an honest comparison: global line vs local widening vs centreline (falsifiable) |
 | 10 | Model predictive control 🏁 | "Plan the next 2 s, every tick." | Linearization; discrete-time model; horizon cost; **LTV least-squares MPC** (linearize → stack → solve, box constraints by clipping); the compute budget per tick; `scipy.optimize` on a single corner as the exact reference | MPC meets the tick budget and is collision-free; an honest comparison with pure pursuit (falsifiable) |
 | 11 | Robustness | "One crash costs you a lap." | Respawn economics; fallback controller; off-track and spin detection; testing across seeds and perturbed parameters | Completes N/N perturbed-parameter races at 0 collisions |
 | CP-B | **Checkpoint B** | A full agent under parameter uncertainty | — (strict) | Completes hidden perturbed races, timed |
@@ -370,7 +371,7 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - **Book notebook exec ≤ 30 CI-minutes** (v4.6; it was 15): `exec-lessons` + `exec-solutions` wall time, with the
     1-minute load average recorded at start and end. Every plan's report records the book-level total. It **excludes** track and telemetry generation, which are reported
     separately and must stay ≤ 1 min.
-  - **Routed pytest ≤ 8 min** on an 8-core CI machine (v4.4, plan `roar-006`; it was 5 min, and the Unit 6–7 gates
+  - **Routed pytest ≤ 10 min** on an 8-core CI machine (v4.7, plan `roar-008`; it was 8 min from v4.4, plan `roar-006`, and 5 min before that; the Unit 8–9 gates add 141 races). From v4.4: the Unit 6–7 gates
     add about 2 min of pooled races).
   - The per-cell 120 s cap is retained.
   - **Per-tick (a measured target from the [fable] probe, not a cap the runner enforces):** the simulation costs
@@ -618,3 +619,13 @@ Pairings may be adjusted by each plan's gate without a design change.
   Part 1, is 20.4 min serial (load 3.1–3.8 on a shared 8-core machine): 17.7 min for Units 1–7, measured by no earlier
   plan, and 2.6 min for Checkpoint A's solutions. The Unit 5 and Unit 4 milestones (3.8 and 2.1 min) are the largest
   items. The budget is raised to 30 CI-minutes for Part 2 and the capstone, rather than cutting merged units' gates.
+- v4.7 (2026-10-28): the §6 Unit 8 and Unit 9 rows and the §7.1 routed budget (plan `roar-008`).
+  - Unit 8: the generated logs cannot identify per-section μ; limit probes (one section pushed per race, the student's
+    own agent as the driver) estimate it within 3% where the probe slid. The steering gain (70° assumed, 65.7° measured)
+    matters as much as μ: it is what limited `monza-like`. One fraction of the measured grip, tuned on the training
+    family, races the unseen track 7.5 s faster than Checkpoint A.
+  - Unit 9: a direct curvature objective does not race (its line swings across the straights), so the line is the
+    smoothest one, on a cubic B-spline of offsets; it lowers the total squared curvature by 19–41% and buys about 25 s
+    on `test-circuit`. Local widening, as built, loses. Submissions import only numpy, so the line is solved offline
+    and shipped as control values.
+  - The routed pytest budget rises to 10 min: the third raise (5 → 8 → 10 min), each for a part's gates.
