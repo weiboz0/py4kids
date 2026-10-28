@@ -201,8 +201,8 @@ configuration" and stops.
 0. **R0a–R0b (optional, only to add a Unit 9 line):** the accepted configuration with the student's line, pursuit,
    twice. Both clean → it becomes the accepted configuration; otherwise the line is dropped and the accepted
    configuration is unchanged.
-1. **Timing first, off CARLA:** `check_submission` on the MPC file on the same machine, idle (p99 ≤ 5 ms); if it
-   fails, lower `MPC_HORIZON` to 20 and re-check; if that fails, the lab keeps the accepted configuration and stops.
+1. **Timing first, off CARLA:** `check_submission` on the MPC file (or its timing copy, below) on the same machine,
+   idle (p99 ≤ 5 ms; the check cell's printed `CHECK passed` is the result); if it fails, lower `MPC_HORIZON` to 20 and re-check; if that fails, the lab keeps the accepted configuration and stops.
    A file carrying a Monza `LINE_CONTROL` cannot race on racekit, so it is timed through a copy with
    `LINE_CONTROL = None` and nothing else changed: a proxy (racekit: p99 0.99–1.01 ms with the line, 0.98 ms
    without), which passes only at p99 ≤ 4 ms (content gate [sol] B1).
@@ -392,4 +392,56 @@ Round 4 (on `0c3680e`): [sol] re-review.
     [FIXED: step 1 and the cell's comment say to set it with the copy; students log the printed `CHECK passed`
     value as `CHECK_40` / `CHECK_20`; the horizon change goes into the timing copy too].
 
-Round 5: [sol] re-review.
+Round 5 (on `648ea77`): [sol] re-review and a consistency pass over the whole step-1 path.
+
+- [sol] APPROVE WITH NITS. B1 resolved.
+  - N1 §5's prompts and stop message still said "the MPC file fails check_submission", which a 4.5 ms timing copy
+    with `report.ok` true could misread [FIXED: they name the timing copy and the printed `CHECK passed`; the plan's
+    step 1 too].
+
+**Consensus:** [self] APPROVE WITH NITS, [sol] APPROVE WITH NITS (round 5), [fable] APPROVE WITH NITS (round 1;
+rounds 2–5 touched only the lab's step-1 timing path, which it had approved). No `[OPEN]` findings.
+
+## Post-Execution Report
+
+**Shipped.** Unit 10 (model predictive control): `agents/unit-10.py` (LTV least-squares MPC, 40-tick horizon,
+`MU_FRACTION` 0.58, the horizon-shortening over-budget policy), the lesson, 10 exercises (Challenges 9–10), solutions,
+teacher notes, the CARLA lab, the milestone `milestones/unit-10-mpc.ipynb`, the Unit 10 premise tests (20) and the
+`mpc_premise` fixture; registry (3 concepts, coverage entry, manifest, api-order, baseline), syllabus row 10; design
+013 v4.8.
+
+**Gates.** U10.1–U10.8 confirmed by Phase A with the shipped agent (log `scratchpad/u10/phaseA-gates.log`): same
+fraction 0.54 neither noise-aware better (279.65 vs 279.60 s); pursuit at 0.58 on `test-circuit-seed4` not clean on any
+seed, MPC clean on all five (271.10 s); MPC family edge 0.60, frozen at 0.58; seed2026 276.85 s against Unit 9's
+282.05 s; lag-free MPC not clean; budget 0 → horizons 40, 20, 10 and clean (seed4 271.55 s median); `monza-like` at 0.64
+MPC clean, pursuit a threshold miss.
+
+**Pin corrections.** U10.8: pursuit's `monza-like` miss is 2.03–2.08 m on seeds 0–4 (the 2-seed probe said 2.03–2.06);
+the lesson and teacher notes carry the 5-seed range (re-raced by [fable]).
+
+**Budgets (measured).**
+- Routed roar pytest: 534 passed in 601 s (10.0 min) ≤ 12 min.
+- Unit 10 notebooks serial: lesson 62.6 s + solutions 85.9 s + milestone 123 s = 271.5 s (4.5 min) ≤ 5 min.
+- Book exec total about 31.3 of v4.8's 40 CI-minutes (26.8 before this plan + 4.5).
+- `ci-local` ALL GREEN on `d696485` (before the content-gate fixes) and on the final head (below).
+
+**Deviations (recorded).**
+- A `LinAlgError` from `lstsq` is treated like a non-finite plan (the shifted last finite plan, counted in
+  `fallbacks`), beyond the plan's "non-finite solve".
+- The reference walk in `mpc()` is bounded to one lap (never reached with n ≤ 80); the exercises' `horizon_reference`
+  omits the bound and says so.
+- The milestone races 13 MPC races (within the ≤ 5 min notebook budget).
+- U10.3's 5 pursuit races duplicate `line_premise[line_key(seed4, 0.58)]` if that key exists: a possible trim, not
+  done.
+- The lab times a `LINE_CONTROL = None` copy when the R1 file carries a Monza line: a measured proxy (racekit p99
+  0.99–1.01 ms with a line, 0.98 ms without) with a 4 ms margin, enforced by the check cell's `TIMING_COPY` (content
+  gate [sol] B1, rounds 1–5).
+
+**Content gate.** Five rounds; [sol]'s one blocker (the lab's timing step with a Monza line) took four rounds to
+close completely; [fable]'s and [self]'s nits were fixed in round 1. Consensus in round 5, no `[OPEN]`.
+
+**Risks.** The design §7.3 interim CARLA check of the Unit 7 reference is still PENDING (the author's); the MPC weights
+are un-probed on CARLA and off racekit's line (the lab's R1–R2 gate them).
+
+**Follow-ups** (in `scratchpad/roar-followups.md`): the v4.8 interim budget levels (raise again, or a slower tier);
+the U10.3 trim.
