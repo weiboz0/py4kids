@@ -385,4 +385,11 @@ Round 3 (on `a5203f8`): [sol] re-review.
     (5 ms otherwise)].
   - N1 the plan's R1–R2 item still said step 1 checks "exactly that file" [FIXED: qualified for the Monza-line copy].
 
-Round 4: [sol] re-review.
+Round 4 (on `0c3680e`): [sol] re-review.
+
+- [sol] REJECT. N1 resolved.
+  - B1 the lab never told students to set `TIMING_COPY = True` for the copy, so its default `False` applied 5 ms
+    [FIXED: step 1 and the cell's comment say to set it with the copy; students log the printed `CHECK passed`
+    value as `CHECK_40` / `CHECK_20`; the horizon change goes into the timing copy too].
+
+Round 5: [sol] re-review.
