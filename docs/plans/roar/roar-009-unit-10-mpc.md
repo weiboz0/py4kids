@@ -4,6 +4,7 @@
 **v4.8** (budgets, below).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-008` merged (#163, 2bf203e).
+**v2.2** folds the round-3 nits ([sol] N1; [fable] S1–S3, N4–N7); CONSENSUS.
 **v2.1** folds plan-review round 2 ([sol] REJECT: B1 the non-finite fallback, B2 the lab with no accepted
 configuration, B3 the stale Phase A equivalence, S4 counts and tolerance; [fable] APPROVE WITH NITS: S1–S6, N7–N10).
 **v2** folds plan-review round 1 ([sol] REJECT: B1 the shipped fallback never raced, B2 the lab's fallback to an
@@ -137,7 +138,9 @@ Requires: `linear-least-squares` (Unit 8), `racing-line` and `line-retune` (Unit
 lag queue and becomes the last command, so the next tick's Δu cost and lag stay true.
 Hygiene, each commented: the reference speed is capped by `A_THROTTLE` (not a literal); the distance along the line
 starts at the car's segment, ignoring its position within it (under 2 m); the braking side of the profile is taken
-as given (the model assumes the speed loop follows it).
+as given (the model assumes the speed loop follows it); `v_ref[t]`, `k_ref[t]` are the line's values after t + 1 ticks
+but drive the transition t → t + 1 (a half-step forward reference, inherited by the loop build and the `scipy`
+reference alike).
 With `STEERING = "pursuit"` it races exactly like `agents/unit-09.py` at the same `MU_FRACTION`.
 It imports only numpy, `math`, `time` and `roar_py_interface`; the `scipy` reference lives in the notebooks.
 
@@ -147,8 +150,10 @@ It imports only numpy, `math`, `time` and `roar_py_interface`; the `scipy` refer
   rtol 1e-12, atol 1e-12) on a random state; on c1's corner the LTV least-squares cost (nonlinear evaluation) is within **2%** of `scipy` SLSQP's
   (probe 0.94%) and the controls within 10⁻³ 1/m.
 - **U10.2 same fraction:** at f 0.54 on `test-circuit` MPC is clean on seeds 0–4 with max line error ≤ 1.3 m
-  (probe 1.04 m, seed 0 only; seeds 0–1 for the family) and **neither** is noise-aware better than the other (MPC
-  279.65 s, pursuit 279.60 s on seed 0): the honest same-f result.
+  (probe 1.04 m, seed 0 only; seeds 0–1 for the family) and **neither** is noise-aware better than the other:
+  `racekit.measure.noise_aware_better(mpc_times, pursuit_times)` and `noise_aware_better(pursuit_times, mpc_times)`
+  are both False on the five seeds (Unit 1's rule; MPC 279.65 s, pursuit 279.60 s on seed 0): the honest same-f
+  result.
 - **U10.3 the hook:** at f 0.58 on `test-circuit-seed4` pursuit (`agents/unit-09.py`) is not clean on any of seeds
   0–4, and MPC is clean on all five (271.10 s ± 2 ticks median).
 - **U10.4 the edge:** MPC at 0.60 is clean on all 25 family races; at 0.62 on `test-circuit-seed1` at least one of
@@ -158,8 +163,9 @@ It imports only numpy, `math`, `time` and `roar_py_interface`; the `scipy` refer
 - **U10.6 the lag:** with `MPC_LAG = 0` at f 0.60 on `test-circuit` MPC is not clean on any of seeds 0–4 (r7: 0/5).
 - **U10.7 the over-budget policy and the budget:** with `MPC_BUDGET_MS = 0.0` (every tick over, so N = 10 after
   two ticks) `agents/unit-10.py` is clean on seeds 0–4 of `test-circuit-seed4` and `test-circuit-seed2026` (r8, at
-  N = 10: 10/10; soft expectations under the Pins rule: medians near 271.55 s and 277.30 s), with `over_budget` equal to the step count and `fallbacks` 0; with `STEERING = "pursuit"` it
-  equals `agents/unit-09.py` at the same `MU_FRACTION` to the tick (seed 0);
+  N = 10: 10/10; soft expectations under the Pins rule: medians near 271.55 s and 277.30 s), with `over_budget` equal to the number of `mpc()` calls (one per telemetry row, warm-up included) and `fallbacks`
+  0; with `STEERING = "pursuit"` it
+  equals U10.3's `agents/unit-09.py` race (`test-circuit-seed4`, 0.58, seed 0) to the tick;
   a race-free test gives `mpc()` a non-finite curvature and asserts that it applies the shifted last finite plan and
   counts one fallback, with no call to pursuit;
   `check_submission(agents/unit-10.py)` passes (p99 ≤ 5 ms; the routed suite runs tests serially, so it is outside
@@ -174,7 +180,7 @@ It imports only numpy, `math`, `time` and `roar_py_interface`; the `scipy` refer
 
 ## Budgets
 - Routed pytest ≤ **12 min** (v4.8). The Unit 10 job table (MPC + pursuit): U10.2 5 + 5; U10.3 5 + 5; U10.4
-  25 + 5 (0.62 on seed1 only); U10.5 5 + 5; U10.6 5; U10.7 10 + 1; U10.8 5 + 5 (`monza-like`); the pursuit sides of U10.2 and
+  30 MPC (25 at 0.60, 5 at 0.62 on seed1); U10.5 5 + 5; U10.6 5; U10.7 10 + 1; U10.8 5 + 5 (`monza-like`); the pursuit sides of U10.2 and
   U10.5 are read from roar-008's `line_premise` fixture (`U9_REFERENCE`, `line_key(CHECKPOINT, 0.54)`), not re-raced:
   **76 races, 65 of them MPC** (about 7.5 s of CPU each, 14 s on `monza-like`; pursuit 2.5 s, 6 s), about 565 s of CPU, about 72 s pooled on
   8 workers, taking the suite from 9.5 to about 11 min. Measured in Phase D; over 12 min means stop and amend.
@@ -190,13 +196,17 @@ raced clean on CARLA; nothing un-raced is ever the fallback.
 **When Unit 8 accepted none** (the student holds only a PROVISIONAL Unit 7 result): R00a–R00b race that Unit 7
 submission as-is, twice. Both clean → it becomes the accepted configuration and the lab continues; otherwise the lab
 records "no accepted configuration" and stops: MPC is never compared against a configuration that has not raced
-clean.
+clean. A student with no clean CARLA race at all (the Unit 7 lab not run or not clean) also records "no accepted
+configuration" and stops.
 0. **R0a–R0b (optional, only to add a Unit 9 line):** the accepted configuration with the student's line, pursuit,
    twice. Both clean → it becomes the accepted configuration; otherwise the line is dropped and the accepted
    configuration is unchanged.
 1. **Timing first, off CARLA:** `check_submission` on the MPC file on the same machine, idle (p99 ≤ 5 ms); if it
    fails, lower `MPC_HORIZON` to 20 and re-check; if that fails, the lab keeps the accepted configuration and stops.
-2. **R1–R2:** the MPC file (the accepted configuration with `STEERING = "mpc"`), twice. Both clean (finished, 0
+2. **R1–R2:** the MPC file, twice: `agents/unit-10.py`-style (the student's Unit 10 file) with the accepted
+   configuration's constants copied in (`LINE_CONTROL` or `None`, `MU_G` or `None` with `A_LAT`, `MU_FRACTION`,
+   `MAX_STEER`, …); step 1's `check_submission` runs on exactly that file. The weights were tuned on the line at 0.58
+   and are un-probed on a centreline or `A_LAT` configuration; R1–R2 gate it either way, and the lab says so. Both clean (finished, 0
    collisions, line-relative error ≤ 2 m) → MPC is **accepted at that fraction**; otherwise the student keeps the
    accepted configuration (no further races).
 3. **R3–R4 (only after MPC is accepted, and only when the accepted configuration plans with `MU_FRACTION`; a Unit 7
@@ -229,8 +239,8 @@ outputs. `lab-check` executes the analysis against the generated sample CSV.
 
 ### Phase B: Unit 10 content (Opus subagents: lesson + exercise statements; solutions in a separate fresh session)
 - **Lesson:**
-  1. The hook: "Plan the next 2 s, every tick." Unit 9's agent at 0.58, one step above its frozen fraction, crashes
-     on a training track (U10.3); pure pursuit looks at one point. What if the steering planned the whole next 2 s?
+  1. The hook: "Plan the next 2 s, every tick." Unit 9's agent at 0.58, one step above its edge (0.56) and two above its
+     frozen 0.54, crashes on a training track (U10.3); pure pursuit looks at one point. What if the steering planned the whole next 2 s?
   2. The model: the path-frame errors, linearised; discrete time; time-varying a_t and κ_t; the queued (lagged)
      command.
   3. The horizon cost and the stacked least-squares solve: G and h built one tick at a time, then in closed form
@@ -311,4 +321,14 @@ outputs. `lab-check` executes the analysis against the generated sample CSV.
   - S6 v4.8 levels will be exceeded again [FIXED: labelled interim in the changelog; the question stays a follow-up].
   - N7 reuse roar-008's pursuit races [FIXED]. N8 `allclose`, `isfinite` [FIXED]. N9 soft medians for U10.7 [FIXED].
     N10 the over-claimed rationale [FIXED: softened].
+- [self] APPROVE.
+
+### Round 3 (v2.1, ca4043d) — CONSENSUS
+- [sol] APPROVE WITH NITS: rounds 1–2 resolved. N1 U10.2's "neither better" needs a rule [FIXED v2.2:
+  `noise_aware_better` False both ways on the five seeds].
+- [fable] APPROVE WITH NITS (re-derived G, h and the Δu row against an independent build; checked r7/r8 and the
+  fixture keys). S1 the lab's MPC file [FIXED: the Unit 10 file with the accepted constants; weights un-probed off the
+  line]. S2 no clean CARLA race at all [FIXED: stop]. S3 the hook's "one step" [FIXED]. N4 the pursuit-mode race
+  [FIXED: U10.3's seed-0 race]. N5 the job-table notation [FIXED]. N6 the half-step reference [FIXED: commented].
+  N7 the step count [FIXED].
 - [self] APPROVE.
