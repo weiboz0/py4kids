@@ -26,7 +26,7 @@ Frozen at 0.58, it races the unseen `test-circuit-seed2026` clean in 276.85 s, a
 Plan for **two to three 60–90 min sittings**, plus the lab on a CARLA machine.
 
 1. **Sitting 1: the model** (the hook and the model sections).
-   - Hook: Unit 9's agent at 0.58, one step above its edge, crashes on `test-circuit-seed4` on every seed. Pure pursuit looks at one point ahead. What if the steering planned the whole next 2 s?
+   - Hook: Unit 9's agent at 0.58, one step above its edge, is not clean on `test-circuit-seed4` on any seed (on seed 0 it crashes). Pure pursuit looks at one point ahead. What if the steering planned the whole next 2 s?
    - The two error equations on the board, then the linearisation (sin ψ ≈ ψ). Ask what changes from one tick to the next (the speed, the curvature): that is "time-varying".
    - The lag: the command the car is about to apply was decided last tick. Roll it through before planning.
 2. **Sitting 2: the solve** (the stacking, the exact reference and the weights).
@@ -34,16 +34,18 @@ Plan for **two to three 60–90 min sittings**, plus the lab on a CARLA machine.
    - One `lstsq` call per tick. Clip only the first command; the rest of the plan is thrown away and re-planned.
    - The exact reference: `scipy` on one corner, the cost comparison and the timing.
    - The weights: show the first weights weaving and spinning on the dynamic car, and the same weights clean on the kinematic car. The model is kinematic; the car is not.
+   - Exercises 1–5 (the model, the stacking, the solve, the lag, the timing) fit here and as homework.
 3. **Sitting 3: racing it** (the comparison, the budget and the lab).
    - Same fraction first: no faster. Then the edge, the margin rule and the unseen track.
    - The lag ablation: without the lag in the model, not clean on any seed.
    - The tick budget: p50, p99, and why a pooled run lies. What a self-timed check can and cannot do.
+   - Exercises 6–8 race the agent and take most of the unit's compute; Challenges 9–10 are homework.
 4. **The lab** (on the CARLA machine; at most 8 races, the short form is 2).
 
 ## The lab: what to watch for
 
 - **Start from an accepted configuration.** The lab compares MPC only against a configuration the student has already raced clean on CARLA (their Unit 8 lab's accepted setting). Students with only a PROVISIONAL Unit 7 result race it twice first; a student with no clean CARLA race at all records "no accepted configuration" and stops.
-- **Timing first, off CARLA.** `check_submission` on the student's MPC file, on an idle machine. Close the browser and the other notebooks first.
+- **Timing first, off CARLA.** `check_submission` on the student's MPC file, on an idle machine. Close the browser and the other notebooks first. A file with a Monza `LINE_CONTROL` cannot race on racekit (the agent refuses a line solved for another track): time a copy with `LINE_CONTROL = None`; the solve costs the same on any line.
 - **The weights were tuned on the line at 0.58.** On a centreline or `A_LAT` configuration they have never been probed; R1–R2 decide either way.
 - **The procedure never ends on a value it did not race.** R3–R4 only after MPC is accepted, and only for a configuration that plans with `MU_FRACTION`.
 - **Never commit results.** Check `git status` with the class before anyone commits.
@@ -72,7 +74,7 @@ Plan for **two to three 60–90 min sittings**, plus the lab on a CARLA machine.
 - **Support:**
   - give the closed-form G and h and have students write only the stacked least-squares call and the clipping;
   - give the lag roll-through and have students explain it in words.
-- **Core:** all non-stretch exercises unaided, and the edge search on at least three training tracks.
+- **Core:** all non-stretch exercises unaided.
 - **Stretch:**
   - a terminal cost (a larger weight on the last state), tested on the family;
   - a speed-dependent heading weight or horizon: noise-aware better or not?

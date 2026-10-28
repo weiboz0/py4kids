@@ -332,3 +332,35 @@ outputs. `lab-check` executes the analysis against the generated sample CSV.
   [FIXED: U10.3's seed-0 race]. N5 the job-table notation [FIXED]. N6 the half-step reference [FIXED: commented].
   N7 the step count [FIXED].
 - [self] APPROVE.
+
+## Content Review
+
+Round 1 (on `d696485`, after `ci-local` ALL GREEN; brief: blind-solve Ex 2, 3, 6, 7 first).
+
+- [sol] REJECT (static review; no races run). Blind solves of Ex 2, 3, 6 and 7 agree with the solutions.
+  - B1 the lab's timing step cannot time a file that carries a line solved for CARLA's Monza waypoints:
+    `check_submission` races `test-circuit` and the agent refuses a `LINE_CONTROL` of another track's length, so the
+    report says FAIL without measuring [FIXED: the lab's five steps and step 1 time a copy with
+    `LINE_CONTROL = None` and nothing else changed (the line only moves the waypoints; the horizon and matrix sizes,
+    so the solve cost, are unchanged), the check cell says so, §5 records which file was timed; teacher notes too].
+- [fable] APPROVE WITH NITS. Blind solves run from the repo root match the solutions exactly
+  (Ex 2 rollout gap 1.1e-15; Ex 3 J 1.476 vs 2.760, the three weights' largest changes and final errors;
+  Ex 6 274.70 s, offset gap 0.0; Ex 7 medians 276.30 / 276.25 s, neither noise-aware better, margin 0.24 m).
+  Re-checked: lesson §1–§3 numbers, step p50 0.90 / p99 1.02 ms idle, Ex 10's seed4 times, and pursuit at 0.64 on
+  `monza-like` on seeds 0–4 (all finish, 0 collisions, 2.031–2.083 m).
+  - N1 Ex 10's sentence asserted "to the tick" beyond its asserts [FIXED: the sentence prints both lists].
+  - N2 the plan's U10.8 says 2.03–2.06 m (2-seed probe), the lesson 2.03–2.08 m (5 seeds) [FIXED: pin correction
+    recorded in the post-execution report].
+  - N3 the budget-0 seed-0 time vs the seeds 0–4 median [WONTFIX: lesson cell 35 already gives both, seed 0 271.60 s
+    and "seeds 0–4: 271.55 s"].
+  - N4 `horizon_reference` omits the agent's one-lap bound [FIXED: a comment in exercises and solutions says the
+    agent adds it and why the two agree].
+  - N5 teacher notes' Core "edge search on at least three training tracks" has no exercise [FIXED: dropped].
+  - N6 exercise load per sitting [FIXED: teacher notes map Ex 1–5 to sitting 2 and Ex 6–8 to sitting 3,
+    Challenges as homework].
+  - N7 record the notebooks' measured total [FIXED: post-execution report].
+- [self] APPROVE WITH NITS.
+  - N1 teacher notes said pursuit at 0.58 "crashes on every seed" of `test-circuit-seed4`; the evidence is "not clean
+    on any seed" (crash shown on seed 0) [FIXED].
+
+Round 2: [sol] re-review of B1's fix.
