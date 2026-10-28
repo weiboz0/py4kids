@@ -119,3 +119,11 @@ def line_premise(line_controls):
     from _line_premise import race_line_premise
 
     return race_line_premise(line_controls)
+
+
+@pytest.fixture(scope="session")
+def mpc_premise(line_controls):
+    """The Unit 10 gate races (plan roar-009 U10.2-U10.8), raced once per session in parallel."""
+    from _mpc_premise import race_mpc_premise
+
+    return race_mpc_premise(line_controls)
