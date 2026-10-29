@@ -258,6 +258,12 @@ Verdicts: [self] APPROVE; [sol] REJECT (one S); [fable] APPROVE WITH NITS. Both 
 - [FIXED] [sol] S1 / [fable] N1: Ex 10's 282.55 s was attributed to "plan `roar-010`'s Phase A record", but the committed plan did not carry it, and the solution's `one_fraction` string still said "the premise's 0.54 median". The Post-Execution Report's U11.8 line now records it (median of the 12 seed2026 races at 0.54), and the string says "the Phase A record's 0.54 median".
 - [FIXED] [fable] N2: the plan's Phase B line still described Challenge 9 as "noise-aware"; now "compared across seeds (content gate N4)".
 
+### Round 3 (@ e8e97dc): CONSENSUS
+
+Verdicts: [self] APPROVE; [sol] APPROVE WITH NITS; [fable] APPROVE WITH NITS (round 2; both nits fixed in e8e97dc).
+
+- [FIXED] [sol] N1: the report said the final head was green and that round 3 confirmed before either was true; both lines now state the measured results.
+
 ## Post-Execution Report
 
 **Shipped.** Unit 11 (robustness): racekit's perturbed carla-like family (`PERTURBATION_FAMILY`,
@@ -294,7 +300,7 @@ answers "Is the restart exactly a fresh race?" with "Almost" and names the integ
 - Routed roar pytest: 566 passed in 821 s (13.7 min) ≤ 15 min (v4.9 interim).
 - Unit 11 notebooks serial: lesson 95 s + solutions 125.5 s + milestone 52 s = 272.5 s (4.5 min) ≤ 5 min.
 - Book exec total about 35.8 of v4.8's 40 CI-minutes (31.3 + 4.5), leaving about 4 for Checkpoint B and Units 12–13.
-- `ci-local` ALL GREEN on `6211f83` and on the final head (below).
+- `ci-local` ALL GREEN on `6211f83` (before the content gate) and on `e8e97dc` (after it; roar 566 passed in 820 s). The one commit after `e8e97dc` touches only this plan file's report text.
 
 **Deviations (recorded).**
 - Perturbed lag left out of the family (the first probe family with lag 2 made both controllers marginally stable);
@@ -307,7 +313,7 @@ answers "Is the restart exactly a fresh race?" with "Almost" and names the integ
   that "the first step over the threshold" made Ex 6's pins depend on an unrelated early blip); exercises, solutions
   and lesson changed together.
 
-**Content gate.** Round 1: three APPROVE WITH NITS; blind solves of Exercises 2, 4, 6 and 8 by [sol] and [fable] all agree with the solutions; seven findings fixed, one WONTFIX (a coincidence of two medians). Round 2: [sol]'s one attribution point (282.55 s now recorded in this report) and [fable]'s two nits fixed. Round 3 confirms.
+**Content gate.** Round 1: three APPROVE WITH NITS; blind solves of Exercises 2, 4, 6 and 8 by [sol] and [fable] all agree with the solutions; seven findings fixed, one WONTFIX (a coincidence of two medians). Round 2: [sol]'s one attribution point (282.55 s now recorded in this report) and [fable]'s two nits fixed. Round 3: [sol] APPROVE WITH NITS (its one nit, two report lines written before the results existed, fixed here). Consensus: [self] APPROVE, [sol] and [fable] APPROVE WITH NITS, no `[OPEN]`.
 
 **Risks.** The design §7.3 interim CARLA check of the Unit 7 reference is still PENDING (the author's). The family's
 ranges are the book's model of model error, not a CARLA measurement (said in the lesson and the teacher notes).
