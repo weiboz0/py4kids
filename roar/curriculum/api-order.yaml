@@ -6,16 +6,21 @@ api_order_version: 1
 #                   may not appear in any entry (or entry-positioned file) before the coverage-map
 #                   entry that introduces its concept.
 # Every `library_methods` name must be in exactly one of the two; every `taught` key must be in
-# `library_methods`. roar-002 added the first names with Unit 1; roar-003 added Units 2–3's; roar-008 added Units 8–9's; roar-009 added Unit 10's; roar-010 added Unit 11's.
+# `library_methods`. roar-002 added the first names with Unit 1; roar-003 added Units 2–3's; roar-008 added Units 8–9's; roar-009 added Unit 10's; roar-010 added Unit 11's; roar-012 added Unit 12's.
 infrastructure: [KinematicCar, Path, TemporaryDirectory, abs, advance, allclose, apply_action, arange, argmax, argmin, array, atan, atan2, check_submission, clip, column_stack, concatenate, cos, degrees, diff, empty, enumerate, float, floor, get, get_last_gym_observation, getsource, hypot, initialize, int, isfinite, isinstance, isnan, items, join, len, linspace, list, load_submission, load_track, log2, max, mean, median, min, mkdtemp, nonzero, norm, percentile, print, race_meta, radians, range, read, readline, reset, roll, round, run_race, seed, shim_installed, sign, sin, sorted, spread, sqrt, std, step, str, sum, tan, vstack, where, write, write_variant, zeros, zip]
 taught:
   CumulativeProgress: race-telemetry
   DynamicCar: dynamic-bicycle
+  Profile: step-profiling
+  Stats: step-profiling
   axhline: telemetry-plotting
   axvline: telemetry-plotting
   carla_like: cornering-speed-limit
   colorbar: telemetry-plotting
   cumsum: ltv-mpc
+  default_rng: black-box-search
+  disable: step-profiling
+  enable: step-profiling
   eye: ltv-mpc
   fill_between: telemetry-plotting
   grid: telemetry-plotting
@@ -30,6 +35,7 @@ taught:
   minimize: ltv-mpc
   mpc_command: tick-budget
   noise_aware_better: repeated-run-measurement
+  normal: black-box-search
   perturbation_factors: perturbation-testing
   perf_counter: tick-budget
   plot: telemetry-plotting
@@ -37,6 +43,7 @@ taught:
   plot_telemetry: telemetry-plotting
   plot_track: telemetry-plotting
   predict: numerical-integration
+  print_stats: step-profiling
   pursuit_curvature: pure-pursuit
   pursuit_wheel_angle: pure-pursuit
   qr: linear-least-squares
@@ -51,10 +58,12 @@ taught:
   set_ylabel: telemetry-plotting
   show: telemetry-plotting
   sideslip: dynamic-bicycle
+  sort_stats: step-profiling
   spun_out: friction-circle
   subplots: telemetry-plotting
   tight_layout: telemetry-plotting
   tile: ltv-mpc
   tril: ltv-mpc
+  uniform: black-box-search
   update: race-telemetry
   write_csv: race-telemetry

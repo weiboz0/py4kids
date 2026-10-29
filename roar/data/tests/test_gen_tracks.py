@@ -22,9 +22,10 @@ LENGTH_WINDOWS = {
     "test-circuit-seed4": (2300.0, 2800.0),
     "test-circuit-seed2026": (2300.0, 2800.0),
     "test-circuit-seed2027": (2300.0, 2800.0),  # Checkpoint B's race-day track (plan roar-011)
+    "test-circuit-seed2028": (2300.0, 2800.0),  # Unit 12's test track (plan roar-012)
 }
 SEEDS = (1, 2, 3, 7)
-# CP.1 (plan roar-007) and CPB.1 (plan roar-011): the seeded checkpoint tracks' file stems, pinned
+# CP.1 (plan roar-007), CPB.1 (plan roar-011) and U12.0 (plan roar-012): the seeded checkpoint tracks' file stems, pinned
 # literally (the carla-like car's hidden grip is keyed to the track name), and their measured stats:
 # (length m, waypoints, min half-width m, tightest radius m)
 SEEDED_STATS = {
@@ -34,6 +35,9 @@ SEEDED_STATS = {
     "test-circuit-seed4": (2675.0, 1337, 5.14, 17.3),
     "test-circuit-seed2026": (2655.8, 1328, 5.15, 19.8),
     "test-circuit-seed2027": (2631.2, 1316, 5.41, 19.3),  # CPB.1 (plan roar-011)
+    # U12.0 (plan roar-012): the loop length is 2627.1 m; the plan's (and probe p9's) 2625.1 m is the last
+    # waypoint's arc length s[-1], pinned below
+    "test-circuit-seed2028": (2627.1, 1314, 5.28, 15.6),
 }
 
 
@@ -162,6 +166,13 @@ def test_the_seeded_checkpoint_tracks_measure_as_probed(name):
     assert np.all(track.half_width >= 5.0) and np.all(track.half_width <= 8.0)
 
 
+def test_u12_0_the_test_track_measures_as_probe_p9_printed_it():
+    """Unit 12's test track (plan roar-012 U12.0): probe p9 printed the last waypoint's arc length."""
+    track = g.build("test-circuit-seed2028")
+    assert float(track.s[-1]) == pytest.approx(2625.1, abs=0.1)
+    assert track.length == pytest.approx(float(track.s[-1]) + g.SPACING, abs=0.01)
+
+
 def test_monza_like_is_labelled_inspired_by_monza():
     doc = g.monza_like_spec.__doc__ + g.__doc__
     assert "inspired by Monza" in doc.replace("**", "")
@@ -230,6 +241,7 @@ def test_driver_generates_twice_identically_within_budget(tmp_path):
             "tracks/test-circuit-seed4.npz",
             "tracks/test-circuit-seed2026.npz",
             "tracks/test-circuit-seed2027.npz",
+            "tracks/test-circuit-seed2028.npz",
         ]
     )
     for path in first:

@@ -37,3 +37,7 @@ concepts:
 - {id: respawn-economics, name: "Respawn economics: a crash restarts the race (t + 1 s), and the expected race time over a family of cars", category: techniques, kind: technique}
 - {id: perturbation-testing, name: "Testing across perturbed cars: a seeded family, training and held-out perturbations, the family edge and the margin rule", category: techniques, kind: technique}
 - {id: failure-fallback, name: "Failure detection and fallback: the respawn signal, sideslip and off-line warnings with their lead times, re-anchoring, reset and a degraded controller", category: techniques, kind: technique}
+- {id: black-box-search, name: "Black-box search against race time: coordinate, random and (1+λ) evolution-strategy search on a race budget, accepted by the noise-aware rule, rejecting settings that are not clean", category: techniques, kind: technique}
+- {id: held-out-track-validation, name: "Held-out track validation: overfitting knobs to the tracks they were tuned on; training, validation and test tracks; a crash-aware objective", category: techniques, kind: technique}
+- {id: step-profiling, name: "Profiling step(): cProfile on one race, where the tick's time goes, dead work and the horizon trade", category: techniques, kind: technique}
+- {id: determinism-and-packaging, name: "Determinism and packaging: same seed same race, repr round-trips and rounding traps, tick quantisation, timing on is not reproducible, dead knobs, the packaging checklist and version pinning", category: techniques, kind: technique}

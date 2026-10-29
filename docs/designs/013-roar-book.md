@@ -1,6 +1,6 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4.10 (2026-10-28). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.11 (2026-10-29). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
@@ -12,6 +12,7 @@ v4.7 (plan `roar-008`) restates the Unit 8 and Unit 9 rows from probes and raise
 v4.8 (plan `roar-009`) restates the MPC over-budget policy and raises both budgets (interim levels).
 v4.9 (plan `roar-010`) adds the perturbed carla-like family (§4.4) and raises the routed pytest budget to 15 min (interim).
 v4.10 (plan `roar-011`) names Checkpoint B's race-day track (§4.3), pins its gate (§6) and raises both budgets (interim).
+v4.11 (plan `roar-012`) names Unit 12's test track (§4.3), restates its gate (§6) and raises both budgets (interim).
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -232,7 +233,8 @@ every `racekit` module with `ast.parse(feature_version=(3, 8))` and the deny-lis
   - **unseen-for-tuning** checkpoint tracks from named seeds (v4.5, plan `roar-007`: `test-circuit-seed1` …
     `test-circuit-seed4` are Checkpoint A's training family and `test-circuit-seed2026` its checkpoint track;
     v4.10, plan `roar-011`: `test-circuit-seed2027` is Checkpoint B's race-day track, its seed fixed before it was
-    probed; the carla-like car's hidden grip is drawn per track name, so a variant differs in grip as well as shape). They are
+    probed; v4.11, plan `roar-012`: `test-circuit-seed2028` is Unit 12's test track, its seed fixed before it was
+    built or probed, raced only by Unit 12's gate, and `test-circuit-seed2026` is Unit 12's validation track; the carla-like car's hidden grip is drawn per track name, so a variant differs in grip as well as shape). They are
     reproducible and not secret; the checkpoint
     briefs forbid per-track tuning, and the content gate's blind solve tests that.
 - The real CARLA map and its waypoints are **never** committed or redistributed.
@@ -333,7 +335,7 @@ Challenge), `solutions.ipynb`, `teacher-notes.md` and `manifest.yaml`.
 
 | # | Unit | Project hook | Introduces | Gate |
 |---|---|---|---|---|
-| 12 | Tuning against race time | "You have 30 knobs and 0.3 s of noise. Which changes are real?" | Race time as a black-box objective; coordinate, random and evolution-strategy search; noise-aware acceptance; overfitting and held-out tracks; profiling `step()`; determinism and rounding traps; packaging and version pinning | The tuned agent beats the hand-tuned one on a **held-out** track (noise-aware) |
+| 12 | Tuning against race time | "You have about 30 knobs and 0.3 s of noise. Which changes are real?" | Race time as a black-box objective; coordinate, random and evolution-strategy search; noise-aware acceptance; overfitting and held-out tracks (training, validation and test tracks; a crash-aware objective); profiling `step()`; determinism and rounding traps; packaging and version pinning | The tuned agent beats the hand-tuned one on a **held-out** track (noise-aware): on the test track `test-circuit-seed2028` (its line and probed grip, 3 laps, race seeds 0–4, both clean on all five); `test-circuit-seed2026` is the validation track, never in the objective (v4.11) |
 | 13 | Race day (integration; **introduces nothing**) 🏁 | "Assemble, qualify and submit." | — It practises the Unit 8–12 concepts on `monza-like`: sysid-informed μ, line plus speed re-tune, MPC-or-pursuit choice, robustness, noise-aware tuning, the packaging checklist | The assembled submission passes `check_submission`, the timing budget and N/N clean races; it beats the Unit 7 agent (noise-aware) |
 | Capstone | **Your competition agent** (`project-14-…`) | Build, tune and justify the agent you submit | — An engineering report with an **ablation table** (race time bought by each stage, with spread) | The reference beats the starter by a pinned margin on `monza-like` at 0 collisions |
 
@@ -382,10 +384,11 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - an `api-order.yaml` concept id is unknown.
   Negative cases prove a premature use fails and an unmapped name fails.
 - **Budgets** (measured targets; an overrun means stop and amend):
-  - **Book notebook exec ≤ 45 CI-minutes** (v4.10, interim, plan `roar-011`: Checkpoint B adds about 4.5; it was 40 from v4.8, interim, 30 from v4.6, and 15 before that): `exec-lessons` + `exec-solutions` wall time, with the
+  - **Book notebook exec ≤ 50 CI-minutes** (v4.11, interim, plan `roar-012`: Unit 12 adds about 5; it was 45 from v4.10, interim, plan `roar-011`: Checkpoint B adds about 4.5; it was 40 from v4.8, interim, 30 from v4.6, and 15 before that): `exec-lessons` + `exec-solutions` wall time, with the
     1-minute load average recorded at start and end. Every plan's report records the book-level total. It **excludes** track and telemetry generation, which are reported
     separately and must stay ≤ 1 min.
-  - **Routed pytest ≤ 15.5 min** on an 8-core CI machine (v4.10, interim, plan `roar-011`: Checkpoint B's gates add
+  - **Routed pytest ≤ 18.5 min** on an 8-core CI machine (v4.11, interim, plan `roar-012`: the Unit 12 gates add
+    about 115 races, six of them one-lap grip probes; it was 15.5 min from v4.10, interim, plan `roar-011`: Checkpoint B's gates add
     70 pooled races and 5 serial ones; it was 15 min from v4.9, interim, plan `roar-010`: the Unit 11 gates add 218
     perturbed-car races, some of them crash loops to a 700 s cap; it was 12 min from v4.8, interim, plan `roar-009`:
     the Unit 10 gates add 76 races, 65 of them MPC; it was 10 min from v4.7, plan `roar-008`; it was 8 min from v4.4, plan `roar-006`, and 5 min before that; the Unit 8–9 gates add 141 races). From v4.4: the Unit 6–7 gates
@@ -679,3 +682,23 @@ Pairings may be adjusted by each plan's gate without a design change.
   - Routed pytest 15 → 15.5 min, the sixth raise, and book notebook exec 40 → 45 CI-minutes, the third book-exec raise,
     both **interim**: Units 12–13 and the capstone cannot all fit, so the author's tiering decision is due at Unit 12
     and stays in the held follow-up list.
+- v4.11 (2026-10-29): §4.3 Unit 12's test track, the §6 Unit 12 gate, and the §7.1 budgets (plan `roar-012`).
+  - A coordinate search over six global knobs on the five training tracks gains about 49 s over 15 laps, and that
+    setting is not clean on any race of `test-circuit-seed2026`: the knobs overfit the family. A crash-aware objective
+    (the training tracks plus `test-circuit` on Unit 11's three lowest-grip training cars, any race that is not clean
+    rejecting the setting) accepts one change, `A_DEC` 5.0 → 5.5 (`agents/unit-12.py`). Because the speed search's
+    failure on `test-circuit-seed2026` changed the objective, that track became the **validation** track, and the gate
+    moved to a fresh **test** track, `test-circuit-seed2028`, its seed fixed before it was built or probed: there
+    `unit-12.py` beats `unit-11.py` by Unit 1's rule (medians 269.65 vs 271.05 s, both clean on all five).
+  - **The edge is shipped on purpose** (a deviation): the next step, `A_DEC = 6.0`, crashes on the low-grip cars, so
+    5.5 is the family's edge, and Unit 11's margin rule (one grid step inside the edge) would ship 5.0, which is
+    `unit-11.py` itself; under that rule the §6 gate cannot be met here. Unit 12 ships the edge to measure what the
+    margin was for.
+  - **The cost** (a deviation): on Unit 11's 24 held-out perturbed cars `unit-12.py` finishes all 24 with 0
+    collisions (the §6 Unit 11 wording, N/N at 0 collisions, holds), but only 20 of 24 are clean by the full clean
+    rule (four exceed the 2 m line error, at 2.01–2.51 m), where `unit-11.py` is clean on all 24: the 1.35–1.40 s is
+    bought with line margin. Which agent races on race day is a judgment for the author, held in the follow-up list
+    for Unit 13.
+  - Routed pytest 15.5 → 18.5 min, the seventh raise, and book notebook exec 45 → 50 CI-minutes, the fourth
+    book-exec raise, both **interim**. The author's tiering decision (keep raising, or move the premise gates to a
+    slower tier) was due at Unit 12 and is now overdue; it stays first in the held follow-up list.

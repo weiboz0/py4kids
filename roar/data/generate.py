@@ -9,7 +9,8 @@ It runs its steps in a declared order and writes everything into ``roar/data/gen
    (``oval``, ``test-circuit``, ``monza-like``) and the seeded checkpoint tracks (plan roar-007:
    ``test-circuit-seed1`` … ``test-circuit-seed4``, Checkpoint A's training family, and
    ``test-circuit-seed2026``, its checkpoint track; plan roar-011: ``test-circuit-seed2027``, Checkpoint B's
-   race-day track), all under the same checksum contract;
+   race-day track; plan roar-012: ``test-circuit-seed2028``, Unit 12's test track), all under the same
+   checksum contract;
 2. the carla-like car's sensor logs (``gen_sysid.py``, plan roar-004): a noisy ``monza-like`` race
    at global a_lat 3.5 and a noisy steady 15 m/s ``oval`` lap, recorded by the data-side driver
    (``drivers.py``) in the racekit sensor-log format, at ``generated/sysid/monza-like-seed0.csv``
