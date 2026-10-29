@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.9** (§4.3 the seeded tracks, §6 CP-B, §7.1).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-010` merges (#165, f62130c).
+**v5.1** (CONSENSUS) folds round 5's nits (`p7` is proxy evidence; the CPU arithmetic; CPB.7 in Phase A).
 **v5** folds round 4 ([sol] B and [fable] S1 the endpoints do not bound a mid-race horizon switch: CPB.4c races the frozen file as shipped, serially (`p7`); CPB.4b reworded as the budget policy's end state; N the race-count arithmetic; [fable] N2).
 **v4** folds round 3 ([sol] B the pinned races ran a timing-off copy, not the frozen file: a worst-case-budget gate CPB.4b (`p6`) covers the shipped file; S `check_submission` races the default kinematic car; N five scored races; [fable] N1–N4).
 **v3** folds round 2 ([sol] B and [fable] S1 the submission check raced the race-day track before race day; [fable] S2 the seal check's mechanics, S3 timing off for the pinned races, N1–N3).
@@ -121,7 +122,7 @@ Only descriptive figures quoted in prose (a median, a mean) may be corrected in 
   the five sealed cars, raced **serially in the test process** after the pool has finished (as `check_submission`
   is): all five clean, median ≤ 300 s, and the number of horizon cuts (the agent's printed lines) recorded. With no
   cut the race is the timing-off race, so the five times must equal CPB.4's to a tick; with a cut the bar alone is
-  asserted and the cut count is reported. Probe `p7` (load average 2.8): 0 cuts, 283.95, 283.90, 283.60, 283.75,
+  asserted and the cut count is reported. Probe `p7` (proxy evidence: the Unit 11 stand-in with the three constants, `MPC_BUDGET_MS` untouched; load average 2.8): 0 cuts, 283.95, 283.90, 283.60, 283.75,
   283.95 s, identical to CPB.4. About 33 CPU-s serial.
 - **CPB.5 the contrast** (same five races): `agents/unit-11.py` at 0.54 with the race-day line and grip finishes all
   five and is not clean on at least three; `agents/unit-10.py` at 0.54 with the same constants does not finish at
@@ -148,7 +149,8 @@ Only descriptive figures quoted in prose (a median, a mean) may be corrected in 
     a conftest fixture `checkpoint_b_premise`). Jobs: 6 probes; CPB.3 15 + 15 (0.50, 0.48) + 7 + 7 (0.54 and 0.52,
     the first 7 in protocol order: `test-circuit`, `-seed1`, then `-seed2`'s first car, enough to include the
     not-clean race) = 44; CPB.4 5; CPB.4b 5; CPB.5 10. **70 pooled races** plus CPB.4c's 5 serial, about 70 × 6.1 s + the Unit 10 DNFs (3 × 700 s races,
-    about 2.5 races each) ≈ 7.5 CPU-min, about 1 min pooled on 8 workers, plus the six line solves (under 1 s).
+    about 2.5 races each) + CPB.4c's 33 s ≈ 8.5 CPU-min (8 pooled + 0.5 serial), about 1 min pooled on 8 workers plus
+    33 s serial, plus the six line solves (under 1 s).
   - The **target 300 s** sits above the clean race-day value (283.90 s) and below every fraction that is not clean
     on race day (their means 344.76–405.06 s); it is a racekit target on this track and has nothing to do with the
     book's 329 s CARLA bar on Monza (the teacher notes say so).
@@ -217,7 +219,7 @@ can still earn full marks on the write-up, which must say what their record show
 public in this plan, so the grade never rests on the final number alone.
 
 ## Budgets
-- Routed pytest: measured 13.7 min after `roar-010`; this plan adds about 1–1.5 min. **≤ 15.5 min** (v4.10, interim;
+- Routed pytest: measured 13.7 min after `roar-010`; this plan adds about 1.5–2 min (1 min pooled, 33 s serial, the line solves). **≤ 15.5 min** (v4.10, interim;
   over means stop and amend). The follow-up on the routed-suite budget (a slow tier) is re-stated.
 - Checkpoint notebooks: the solutions ≤ **5 min** serial, each cell ≤ 120 s: 6 probes (about 20 s), the line solve,
   Question 4's protocol (7 + 7 + 15 = 29 races, about 180 s, split one fraction per cell and 0.50 in two cells), race
@@ -232,7 +234,7 @@ public in this plan, so the grade never rests on the final number alone.
   - `roar/data/gen_tracks.py` `SEEDED_TRACKS` gains `("test-circuit", 2027)`; `generate.py` writes it (checksums);
     `test_gen_tracks.py` covers it (CPB.1); `conftest`'s missing-track check names it.
   - `agents/checkpoint-b.py`; `tests/_checkpoint_b_premise.py`, `tests/test_racekit_checkpoint_b.py`, the conftest
-    fixture; CPB.2–CPB.6 confirmed and logged.
+    fixture; CPB.2–CPB.7 confirmed and logged (CPB.8 in Phase B with the notebooks).
   - `coverage-map.yaml`: `checkpoint-02-part-2`, `kind: checkpoint`, `introduces: []`, `requires` all Unit 1–11
     concepts, `practices` the ones the questions use (grip-identification, racing-line, speed-profile,
     perturbation-testing, respawn-economics, failure-fallback, repeated-run-measurement); manifest mirrors it;
@@ -291,3 +293,9 @@ Verdicts: [self] APPROVE WITH NITS; [sol] REJECT (one B); [fable] APPROVE WITH N
 - [sol] B / [fable] S1: the two end states (CPB.4, CPB.4b) do not bound a race whose horizon switches part-way. New gate CPB.4c races the frozen file as shipped (5.0 ms), serially after the pool, on the five sealed cars; probe `p7`: 0 horizon cuts, identical to CPB.4 to the tick. CPB.4b is reworded as supporting evidence about the policy's end state, with no bracketing claim. Folded.
 - [sol] N / [fable] N1: the race count's arithmetic (70 pooled, 5 serial). Folded.
 - [fable] N2: the CPB.8 scan's known gap named in the test docstring. Folded.
+
+### Round 5 (v5 @ f3a5b0d): CONSENSUS
+Verdicts: [self] APPROVE; [sol] APPROVE WITH NITS; [fable] APPROVE WITH NITS (checked CPB.4c's mechanics against the agent and the runner: 0 printed cuts means the timing-off race, and `ci-local` runs pytest without xdist, so "after the pool" holds).
+- [sol] N1 / [fable] N3: `p7` is proxy evidence (the stand-in with the three constants); CPB.4c is the direct test. Folded.
+- [sol] N2 / [fable] N1: the routed estimate and the CPU arithmetic include CPB.4c. Folded.
+- [fable] N2: Phase A confirms CPB.2–CPB.7; CPB.8 lands with the notebooks. Folded.
