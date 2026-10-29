@@ -151,3 +151,20 @@ def checkpoint_b_premise(line_controls, race_day_line):
     from _checkpoint_b_premise import race_checkpoint_b
 
     return race_checkpoint_b(line_controls, race_day_line)
+
+
+@pytest.fixture(scope="session")
+def tuning_test_track():
+    """Unit 12's test track (plan roar-012 U12.0): its line, solved once, and its six grip probes,
+    raced once per session in parallel."""
+    from _tuning_premise import measure_test_track
+
+    return measure_test_track()
+
+
+@pytest.fixture(scope="session")
+def tuning_premise(line_controls, tuning_test_track):
+    """The Unit 12 gate races (plan roar-012 U12.1-U12.7), raced once per session in parallel."""
+    from _tuning_premise import race_tuning_premise
+
+    return race_tuning_premise(line_controls, tuning_test_track)

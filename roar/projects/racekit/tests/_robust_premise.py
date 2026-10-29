@@ -69,6 +69,7 @@ class RobustJob(NamedTuple):
     perturb: Optional[int] = None  # carla_like(perturb=...)
     lag_ticks: Optional[int] = None  # carla_like(lag_ticks=...)
     max_seconds: float = CAP
+    laps: Optional[int] = None  # None: run_race's default (3); Unit 12's knob map races one lap (roar-012)
 
 
 class RobustOutcome(NamedTuple):
@@ -195,8 +196,9 @@ def race_robust_job(job: RobustJob) -> List[RobustOutcome]:
             try:
                 agents: list = []
                 car = carla_like(noise=True, perturb=job.perturb, lag_ticks=job.lag_ticks)
+                laps = {} if job.laps is None else {"laps": job.laps}
                 result = run_race(_recorded(agent_class, agents), job.track, car=car, seed=seed,
-                                  max_seconds=job.max_seconds)
+                                  max_seconds=job.max_seconds, **laps)
             finally:
                 sys.modules.pop(module_name, None)
             (agent,) = agents
