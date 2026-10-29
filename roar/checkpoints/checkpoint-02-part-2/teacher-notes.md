@@ -75,6 +75,13 @@ record (clean at 0.54 and below on the three cars) so the student can still argu
 - **The written answers:** Question 1 (which estimate is a lower bound, and why), Question 3 (the expected times and
   the decision, argued before racing), Question 6 (what the margin bought, what the fallback bought, why expected
   time misjudged race day).
+- **Question 3's numbers:** from the table the student is given, the expected times are 286.95, **279.94**, 282.57,
+  282.21 and 285.11 s (0.56 … 0.48), so expected time picks 0.54 and the margin rule 0.48.
+  The plan's 279.95 s for 0.54 comes from the unrounded record; 279.94 is the right answer from the table.
+- **A failed `check_submission`:** the check races only racekit's kinematic car, so rerunning it breaks no seal.
+  A timing failure is rerun on an idle machine; any other failure is fixed in the frozen file without changing
+  `MU_FRACTION`, checked again, and reported in Question 5's answer.
+  If it still fails, no sealed car races: grade Questions 1–4 and the write-up, and record the race as not run.
 - A student whose own agent misses the bar after following Question 4 honestly can still earn full marks on the
   write-up, which must say what their record showed.
 - This plan's tables are public and `agents/checkpoint-b.py` ships the race-day line, grip and fraction (a known

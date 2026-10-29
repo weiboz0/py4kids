@@ -299,3 +299,19 @@ Verdicts: [self] APPROVE; [sol] APPROVE WITH NITS; [fable] APPROVE WITH NITS (ch
 - [sol] N1 / [fable] N3: `p7` is proxy evidence (the stand-in with the three constants); CPB.4c is the direct test. Folded.
 - [sol] N2 / [fable] N1: the routed estimate and the CPU arithmetic include CPB.4c. Folded.
 - [fable] N2: Phase A confirms CPB.2–CPB.7; CPB.8 lands with the notebooks. Folded.
+
+## Content Review
+
+### Round 1 (@ 6caac78)
+
+Verdicts: [self] APPROVE WITH NITS; [sol] REJECT (one blocker); [fable] APPROVE WITH NITS.
+Blind solves, from the statements and Units 8–11 before opening the solutions:
+[sol] derived Question 1's rule (static, against the Phase A log), computed Question 3 (286.95 / 279.94 / 282.57 / 282.21 / 285.11 s; pick 0.54; edge 0.50; margin 0.48) and raced Question 4 at 0.54 and 0.52 (each stops at the 7th race, `-seed2` car 16, 415.85 s and 414.60 s, one collision).
+[fable] raced Questions 1, 2 and 4 in full: the six probes give (9.10, 9.55, 7.79, 9.35, 9.00, 7.76) with section 0 a lower bound (finished, 0 collisions); the line matches `checkpoint-b.py` exactly; the protocol runs 7 + 7 + 15 = 29 races to the edge 0.50 and ships 0.48, every time to the tick of the Phase A log; it also executed the solutions (all asserts pass, 246 s) and checked every written-answer number against the live output.
+[self]: the Question 3 table sums to 120 races per fraction and gives the same expected times; the seal, the handout's absence from `checkpoint.ipynb` and the teacher notes' figures (18 of 19 further cars, 29 protocol races) match the plan.
+
+- [FIXED] [sol] B1: Question 5 froze the choice "once you have raced the race-day track", then told a student whose `check_submission` failed to fix, freeze again and check again on that track. Now the freeze is exact (`MU_FRACTION` never changes after Question 4; nothing in the frozen file changes once a sealed car has raced); the check races only racekit's kinematic car, so rerunning it breaks no seal; a timing failure is rerun idle, any other failure is fixed without changing `MU_FRACTION` and reported; if it still fails, no sealed car races and the teacher notes say how to grade.
+- [FIXED] [sol] S2 / [fable] N2: the student's table gives 279.94 s for 0.54 (rounded clean mean), the plan 279.95 s (unrounded record). The teacher notes now give the answer key from the table (279.94) and say where 279.95 comes from.
+- [FIXED] [fable] N1: "Every race in this notebook uses a timing-off copy": Question 1's probes race a `unit-07.py` variant with no MPC budget. Now "every race of your submission" (both notebooks).
+- [FIXED] [fable] N3: the solutions' deciding-race line raised `TypeError` on the floor path (`edge` None). Guarded.
+- [FIXED] [fable] N4: the lower-bound precedent is Unit 8's `monza-like` section 0, not Units 9–11's. Now "as Unit 8 did" (both notebooks).
