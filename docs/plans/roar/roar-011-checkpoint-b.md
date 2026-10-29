@@ -315,3 +315,11 @@ Blind solves, from the statements and Units 8–11 before opening the solutions:
 - [FIXED] [fable] N1: "Every race in this notebook uses a timing-off copy": Question 1's probes race a `unit-07.py` variant with no MPC budget. Now "every race of your submission" (both notebooks).
 - [FIXED] [fable] N3: the solutions' deciding-race line raised `TypeError` on the floor path (`edge` None). Guarded.
 - [FIXED] [fable] N4: the lower-bound precedent is Unit 8's `monza-like` section 0, not Units 9–11's. Now "as Unit 8 did" (both notebooks).
+
+### Round 2 (@ 48f4000)
+
+Verdicts: [self] APPROVE; [sol] REJECT (one blocker); [fable] APPROVE WITH NITS. Static re-reviews (a CI run was in progress).
+Both confirmed every round-1 fix as recorded.
+
+- [FIXED] [sol] B1 / [fable] N1–N2: the failed-check path said to fix "the frozen file" and check again, but `FROZEN_RACE_COPY` (the file race day races) is built in the freeze cell before the check, so after a fix it would be stale, and the frozen file is a generated file. Now a non-timing failure is corrected in `race_day_control` or `race_day_mu_g` (never the fraction) and the freeze cell is run again, rewriting both files, before the check is repeated (both notebooks; the teacher notes match).
+- [FIXED] [sol] N2: the rules cell names `check_submission` as the one run with the timing on (both notebooks).
