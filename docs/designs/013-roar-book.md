@@ -1,6 +1,6 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4.9 (2026-10-28). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.10 (2026-10-28). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
@@ -11,6 +11,7 @@ v4.6 (plan `roar-007`) raises the book notebook exec budget to 30 CI-minutes, af
 v4.7 (plan `roar-008`) restates the Unit 8 and Unit 9 rows from probes and raises the routed pytest budget to 10 min.
 v4.8 (plan `roar-009`) restates the MPC over-budget policy and raises both budgets (interim levels).
 v4.9 (plan `roar-010`) adds the perturbed carla-like family (§4.4) and raises the routed pytest budget to 15 min (interim).
+v4.10 (plan `roar-011`) names Checkpoint B's race-day track (§4.3), pins its gate (§6) and raises both budgets (interim).
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -229,8 +230,9 @@ every `racekit` module with `ast.parse(feature_version=(3, 8))` and the deny-lis
     chicanes, the two Lesmo corners, Ascari and the Parabolica. It is labelled **"inspired by Monza"**, not a copy of
     the CARLA map.
   - **unseen-for-tuning** checkpoint tracks from named seeds (v4.5, plan `roar-007`: `test-circuit-seed1` …
-    `test-circuit-seed4` are Checkpoint A's training family and `test-circuit-seed2026` its checkpoint track; the
-    carla-like car's hidden grip is drawn per track name, so a variant differs in grip as well as shape). They are
+    `test-circuit-seed4` are Checkpoint A's training family and `test-circuit-seed2026` its checkpoint track;
+    v4.10, plan `roar-011`: `test-circuit-seed2027` is Checkpoint B's race-day track, its seed fixed before it was
+    probed; the carla-like car's hidden grip is drawn per track name, so a variant differs in grip as well as shape). They are
     reproducible and not secret; the checkpoint
     briefs forbid per-track tuning, and the content gate's blind solve tests that.
 - The real CARLA map and its waypoints are **never** committed or redistributed.
@@ -325,7 +327,7 @@ Challenge), `solutions.ipynb`, `teacher-notes.md` and `manifest.yaml`.
 | 9 | The racing line | "The centreline is not the fast line, but a new line breaks your speed tuning." | Width constraints; the **smoothest line** (squared second differences of its points, the usual stand-in for minimum curvature) as bounded least squares (`scipy.optimize.lsq_linear`) on a reduced problem, a cubic B-spline of offsets, solved offline and shipped as constants (a submission imports only numpy); **local widening**; re-tuning speed with the line (v4.7) | Valid, collision-free line(s); an honest comparison: global line vs local widening vs centreline (falsifiable) |
 | 10 | Model predictive control 🏁 | "Plan the next 2 s, every tick." | Linearization; discrete-time model; horizon cost; **LTV least-squares MPC** (linearize → stack → solve, box constraints by clipping); the compute budget per tick; `scipy.optimize` on a single corner as the exact reference | MPC meets the tick budget and is collision-free; an honest comparison with pure pursuit (falsifiable) |
 | 11 | Robustness | "One crash costs you a lap." | Respawn economics; fallback controller; off-track and spin detection; testing across seeds and perturbed parameters | Completes N/N perturbed-parameter races at 0 collisions |
-| CP-B | **Checkpoint B** | A full agent under parameter uncertainty | — (strict) | Completes hidden perturbed races, timed |
+| CP-B | **Checkpoint B** | A full agent under parameter uncertainty | — (strict) | Completes hidden perturbed races, timed: on the race-day track `test-circuit-seed2027`, five sealed cars of the perturbed family (`perturb=k`, k = 1000–1004, race seed k mod 5), all clean, median ≤ 300 s, with the agent tuned on the track × car family only (the five training tracks × training cars k = 0–23) (v4.10) |
 
 ### Part 3: Going fast
 
@@ -380,10 +382,11 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - an `api-order.yaml` concept id is unknown.
   Negative cases prove a premature use fails and an unmapped name fails.
 - **Budgets** (measured targets; an overrun means stop and amend):
-  - **Book notebook exec ≤ 40 CI-minutes** (v4.8, interim; it was 30 from v4.6, and 15 before that): `exec-lessons` + `exec-solutions` wall time, with the
+  - **Book notebook exec ≤ 45 CI-minutes** (v4.10, interim, plan `roar-011`: Checkpoint B adds about 4.5; it was 40 from v4.8, interim, 30 from v4.6, and 15 before that): `exec-lessons` + `exec-solutions` wall time, with the
     1-minute load average recorded at start and end. Every plan's report records the book-level total. It **excludes** track and telemetry generation, which are reported
     separately and must stay ≤ 1 min.
-  - **Routed pytest ≤ 15 min** on an 8-core CI machine (v4.9, interim, plan `roar-010`: the Unit 11 gates add 218
+  - **Routed pytest ≤ 15.5 min** on an 8-core CI machine (v4.10, interim, plan `roar-011`: Checkpoint B's gates add
+    70 pooled races and 5 serial ones; it was 15 min from v4.9, interim, plan `roar-010`: the Unit 11 gates add 218
     perturbed-car races, some of them crash loops to a 700 s cap; it was 12 min from v4.8, interim, plan `roar-009`:
     the Unit 10 gates add 76 races, 65 of them MPC; it was 10 min from v4.7, plan `roar-008`; it was 8 min from v4.4, plan `roar-006`, and 5 min before that; the Unit 8–9 gates add 141 races). From v4.4: the Unit 6–7 gates
     add about 2 min of pooled races).
@@ -664,3 +667,15 @@ Pairings may be adjusted by each plan's gate without a design change.
     error) are measured and counted, but acting on them did not help, so the shipped agent acts on the respawn alone.
   - Routed pytest 12 → 15 min, the fifth raise, **interim**: the follow-up to the author (keep raising or move
     long gates to a slower tier) is re-stated.
+- v4.10 (2026-10-28): §4.3 Checkpoint B's race-day track, the §6 CP-B gate, and the §7.1 budgets (plan `roar-011`).
+  - Checkpoint B races a track and cars the agent has never met: `test-circuit-seed2027` (measured with Unit 8's grip
+    probes and solved with Unit 9's line, never raced before the file is frozen) and five sealed cars of the perturbed
+    family (k = 1000–1004, an honour rule: built only in the race-day cell, never inspected). Tuning uses the track ×
+    car family only: the five training tracks, each with its own line and measured grip, × the training cars.
+  - On that family the two Unit 11 rules disagree: the expected race time is lowest at 0.54, but 0.52 is not clean and
+    0.50 is clean on every family race, so the margin rule ships 0.48. On race day 0.48 is clean on all five sealed
+    cars (median 283.90 s), and 0.54 crashes on four of five (each finishes after the fallback). The gate is all five
+    clean with a median ≤ 300 s, a racekit target on this track, unrelated to the book's CARLA bar on Monza.
+  - Routed pytest 15 → 15.5 min, the sixth raise, and book notebook exec 40 → 45 CI-minutes, the third book-exec raise,
+    both **interim**: Units 12–13 and the capstone cannot all fit, so the author's tiering decision is due at Unit 12
+    and stays in the held follow-up list.

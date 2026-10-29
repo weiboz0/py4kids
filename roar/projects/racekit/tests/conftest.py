@@ -135,3 +135,19 @@ def robust_premise(line_controls):
     from _robust_premise import race_robust_premise
 
     return race_robust_premise(line_controls)
+
+
+@pytest.fixture(scope="session")
+def race_day_line():
+    """Checkpoint B's race-day line (plan roar-011), solved once per session."""
+    from _checkpoint_b_premise import solve_race_day_line
+
+    return solve_race_day_line()
+
+
+@pytest.fixture(scope="session")
+def checkpoint_b_premise(line_controls, race_day_line):
+    """Checkpoint B's pooled gate races (plan roar-011 CPB.2-CPB.5), raced once per session in parallel."""
+    from _checkpoint_b_premise import race_checkpoint_b
+
+    return race_checkpoint_b(line_controls, race_day_line)
