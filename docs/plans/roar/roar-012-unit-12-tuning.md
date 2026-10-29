@@ -341,3 +341,26 @@ Verdicts: [self] APPROVE; [sol] REJECT; [fable] pending at v4 (reviews v4 in rou
 ### Round 5 (v4.3 @ a3c447b): CONSENSUS
 Verdicts: [self] APPROVE; [sol] APPROVE WITH NITS; [fable] APPROVE WITH NITS. Both confirmed every round-4 fold; [fable] re-checked every number against p1–p9.
 - [fable] S1: the crash-aware table now lists all ten p4b evaluations, including MU 0.52 at A_DEC 5.5 not clean (car 18): `unit-12.py`'s only clean neighbour is `unit-11.py`. S2: headroom restated as 20–40 s (five capped probe crashes, the serial line solve). N3 "7–19 s"; N4 `PROFILE_LEAD_S = 0.1` acts by crashing; N5 the k = 43 margin in a test comment; N6 the pre-registration's provenance stated. [sol] N1: "about 30 knobs", the design's approximate hook. Folded (v5).
+
+## Content Review
+
+### Round 1 (@ c79eb98; CI ALL GREEN on c79eb98, roar routed 1038 s)
+
+Verdicts: [self] APPROVE; [sol] REJECT (one blocker); [fable] APPROVE WITH NITS.
+Blind solves, from the statements and the lesson before opening the solutions:
+[fable] raced Exercises 1, 3, 5 and 6 (Ex 1: 96.40/96.40/96.40/96.35/96.30, spread 0.10, sum spreads 0.45/0.80, ratio 4.5; Ex 3: 191.60 → 191.15 accepted, then rejected, gain 0.45 s in 10 races; Ex 5: 276.85/276.85, clean, beats unit-11; Ex 6A: speed setting not clean on cars 16 and 8, crash costs 117.80 and 153.75 s; Ex 6B below), every value equal to the solutions' asserts.
+[sol] could not race (its sandbox had no usable uv cache) and solved Exercises 1, 3, 5 and 6 against the pinned record; every answer agrees with the solutions.
+[self] solved Exercise 6B from the table: four clean settings, best (0.54, 5.5, 4.0), only clean neighbour (0.54, 5.0, 4.0), edge 5.5, margin rule 5.0 = `unit-11.py`; the solutions agree.
+
+- [FIXED] [sol] B1: lesson §5 said the crash-aware search rejected every other candidate because it was not clean on a low-grip car; two of its table's rejected candidates, (0.52, 5.0, 4.0) and (0.54, 4.5, 4.0), were clean but slower. Now: "two were clean but slower …, the rest were not clean on at least one low-grip car."
+- [FIXED] [fable] S1: Exercise 9 (statement and solution) attributed p3's not-clean `SPEED_KP = 0.4` and `TARGET_SPEED = 50` to the knobs alone; p3 stepped them from its incumbent (`MU_FRACTION` 0.60, `A_DEC` 5.5). Both now say so.
+- [FIXED] [fable] S2: the Exercise 2 solution gave `TARGET_SPEED 50` at 3 laps as −13.4 s (that is 60's); p2 records −10.50 s. Now −10.5 s.
+- [FIXED] [fable] N3: lesson §2's knob table is a mean over three seeds (476.83 s), not a median. Now "mean".
+- [FIXED] [fable] N4: lesson §6 called `predict()` "about 1 ms a tick" (that is the whole `step()`); now about 0.17 ms. The Exercise 7 solution said `PREDICT_TICKS = 1` shows "most" of the saving; now "about half" (one model step and the call still run).
+- [FIXED] [fable] N5: the slowest `step()` in the record is 1.40 ms (p6, `PREDICT_TICKS = 1`), not 1.37 ms (the shipped run's maximum).
+- [FIXED] [fable] N7: design 013 §6 row 12's hook now says "about 30 knobs", as the lesson and syllabus do.
+- [FIXED] [fable] N9: the Exercise 6 solution's car-18 assert now notes the race is clean at 1.99 m, 14 mm inside the rule.
+- [FIXED] [fable] N10: Exercise 1's `sum_to_track` now says it divides a ten-seed spread by a five-seed one (a rough ratio), in both notebooks.
+- [WONTFIX] [sol] N2 / [fable] N6: Phase A's gate log prints the nearest clean held-out car as k = 27 at 1.259 m in run 1 and k = 43 at 1.859 m in run 2. Run 1's report line took the minimum clean error; the committed test (`test_racekit_unit12_premise.py`, U12.7) takes the maximum, and its run gives k = 43 at 1.859 m, the figure the plan and test comment use. The races are deterministic; nothing in the content changes. Recorded in the post-execution report.
+- [WONTFIX] [fable] N8: the notebooks' 5.6 min against the plan's 5 is a recorded deviation; the two cuts found (Exercise 9's `TARGET_SPEED 50` re-race, about 4 s; Exercise 10's repeated draw 3.82, about 2 s) would save 6 s and cost two points the exercises make (the `same_race` check and an honest race count).
+- [WONTFIX] [fable] N11: `test_gen_tracks.py` pins the loop length 2627.1 m and a separate test pins `s[-1]` 2625.1 m; the post-execution report states both.
