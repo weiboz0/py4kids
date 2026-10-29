@@ -13,6 +13,8 @@ S3 = [sol] B1, S4 notebook timing, N1–N7).
 **v4** folds plan-review round 3 ([sol] REJECT: B1 seed2026 shaped the objective, so it cannot also be the
 independent test; S2 the knob count). New evidence: probe `p9`, a fresh test track `test-circuit-seed2028`, its seed
 fixed before any probing (scratchpad `u12/p9-preregistration.txt`).
+**v5 CONSENSUS** folds the round-5 nits ([fable] S1 the full crash-aware table, MU 0.52 at A_DEC 5.5 not clean;
+S2 headroom; N3–N6; [sol] N1 the 30 as an approximate hook).
 **v4.1** folds [fable]'s round-3 review of v3 (S1 `A_DEC = 5.5` is the edge, and Unit 11's margin rule would ship 5.0;
 N2–N7).
 
@@ -29,12 +31,13 @@ N2–N7).
 ## The idea (what the probes found, and the story the unit tells)
 The hook: "You have 30 knobs and 0.3 s of noise. Which changes are real?"
 The probes say both halves are honest, and that the real danger is not the noise.
-- **30 knobs.** `agents/unit-11.py` has 48 named module constants. The lesson classifies all 48 in one table (Phase
+- **About 30 knobs** (design §6's hook number, approximate until the lesson's inventory derives it). `agents/unit-11.py` has 48 named module constants. The lesson classifies all 48 in one table (Phase
   B, from the file and the agent's code): 24 act in a clean race, 6 more only after a respawn (30 tunable knobs), the
   rest are mode switches, counters or settings the shipped mode never reads. In the p2 sweep (17 knobs) six move a
   clean race's time by more than five times the noise (1.5 s; up to
-  8–19 s), three more by under 1 s yet beyond the noise (`LEAD_MIN_M = 8`, `MPC_Q_E = 0.1`, `MPC_Q_PSI = 100`), two of those three also crash the race at larger values
-  (`MPC_Q_E = 1.5`, `MPC_Q_PSI = 5`), and several do nothing at all (bit-identical races).
+  7–19 s), three more by under 1 s yet beyond the noise (`LEAD_MIN_M = 8`, `MPC_Q_E = 0.1`, `MPC_Q_PSI = 100`), two of those three also crash the race at larger values
+  (`MPC_Q_E = 1.5`, `MPC_Q_PSI = 5`), as does `PROFILE_LEAD_S = 0.1` (+0.82 s, 13 of 15
+  clean), and several do nothing at all (bit-identical races).
 - **0.3 s of noise.** One track's 3-lap spread over race seeds is 0.05–0.25 s; the sum over the five training tracks
   spreads 0.45 s (1 lap) to 0.80 s (3 laps). Races are deterministic per seed.
 - **Search works on the training family, and that is the trap.** A coordinate search over six global knobs on the
@@ -97,6 +100,24 @@ The probes say both halves are honest, and that the real danger is not the noise
   | p3 ES | 389.0 | 0/5 | — | — |
   | crash-aware (MU 0.54, **A_DEC 5.5**, A_ACC 4.0) | **280.65 / 0.05** | 5/5 | 24/24 (278.77) | **20/24** (278.84) |
 
+  The crash-aware search's ten evaluations (p4b; per-replicate sums of 16 races, not-clean races by (track, car)):
+
+  | MU_FRACTION, A_DEC, A_ACC | clean | sums (s) | not clean |
+  |---|---|---|---|
+  | 0.54, 5.0, 4.0 (`unit-11.py`) | yes | 2224.90 / 2224.35 | — |
+  | 0.56, 5.0, 4.0 | no | 2411.70 / 2205.10 | car 8 |
+  | 0.52, 5.0, 4.0 | yes | 2245.50 / 2245.25 | — |
+  | **0.54, 5.5, 4.0** (`unit-12.py`) | yes | 2215.35 / 2215.25 | — |
+  | 0.54, 4.5, 4.0 | yes | 2238.75 / 2238.90 | — |
+  | 0.54, 6.0, 4.0 | no | 2984.10 / 2966.65 | cars 16, 18, 8 (both), nominal test-circuit |
+  | 0.54, 5.5, 4.5 | no | 2718.85 / 2203.70 | cars 16, 8 |
+  | 0.54, 5.5, 3.5 | no | 2246.25 / 2246.45 | cars 18 (both), 8 |
+  | 0.56, 5.5, 4.0 | no | 2495.40 / 2501.40 | cars 8, 16 |
+  | 0.52, 5.5, 4.0 | no | 2235.50 / 2235.65 | car 18 |
+
+  So `unit-12.py` has exactly one clean grid neighbour, `A_DEC = 5.0` = `unit-11.py`: it fails one step in
+  `MU_FRACTION` either way (even the slower 0.52), in `A_ACC` either way, and in `A_DEC` up. The margin rule along
+  any axis returns `unit-11.py`. The lesson's §5 and Exercise 6 carry this table.
   The crash-aware objective adds `test-circuit` on training cars 16, 18, 8 (Unit 11's `grip_order[:3]`; race seed
   (k + r) mod 5 for replicate r) to each replicate: 16 races per evaluation. Its coordinate search over MU_FRACTION,
   A_DEC, A_ACC (160 races, 938 CPU-s) accepts A_DEC 5.5 only; MU 0.56, A_DEC 6.0, A_ACC 4.5 and A_ACC 3.5 each fail
@@ -136,7 +157,8 @@ The probes say both halves are honest, and that the real danger is not the noise
 
 ## Deviations from design (recorded; design 013 v4.11)
 - §6's gate "the tuned agent beats the hand-tuned one on a held-out track (noise-aware)" is met on a fresh **test**
-  track, `test-circuit-seed2028` (new in `SEEDED_TRACKS`; seed fixed before probing), with `noise_aware_better` over
+  track, `test-circuit-seed2028` (new in `SEEDED_TRACKS`; seed fixed in this plan's review session before the track was built or
+  raced), with `noise_aware_better` over
   race seeds 0–4. `test-circuit-seed2026` (Checkpoint A's track) is Unit 12's **validation** track: never in the
   objective, but it shaped the objective (the speed search failed there), so it is not the gate's test. The tuned
   agent is the crash-aware search's result; the unit also gates the speed search's failure on both tracks.
@@ -203,7 +225,7 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
 - **U12.7 the cost (both ways):** `unit-12.py` on held-out perturbed cars k = 24–47 (`test-circuit`, race seed
   k mod 5): all 24 finish with 0 collisions; at least 20 clean and at least 1 not clean; every not-clean one has max
   line error ≤ 2.6 m (p4: four, k = 24, 29, 32, 35 at 2.01–2.51 m; the set is reported, not asserted: k = 24 sits
-  11 mm over the rule); `unit-12.py`'s max line error on the U12.5a seed2026 races is reported (1.76 m vs
+  11 mm over the rule, and the nearest clean car, k = 43, is 14 cm inside it: a test comment says both); `unit-12.py`'s max line error on the U12.5a seed2026 races is reported (1.76 m vs
   1.20 m).
 - **U12.8 equivalence:** `unit-12.py` differs from `unit-11.py` only in `A_DEC` (AST), and both have 48 module
   constants (excluding the `State` / `Action` type aliases): the hook's count.
@@ -212,12 +234,13 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
 ## Budgets
 - Routed pytest: the Unit 12 job table (3-lap MPC races unless said): U12.1 1 re-race (its twin is a U12.5 race);
   U12.2 4 one-lap races; U12.3 2 + 3 (plus `unit-11.py`'s `test-circuit` seeds 0, 1: 2); U12.4 10 + 5 (and
-  `unit-11.py`'s 10 training races); U12.0 6 one-lap probes (a session fixture, with the test track's 131-value line solve, as
+  `unit-11.py`'s 10 training races); U12.0 6 one-lap probes (five of them crash to the 300 s cap; a session fixture, with the test track's 131-value line solve, as
   `race_day_line` does for 2027); U12.5a 10; U12.5 15; U12.6 32 + 2 (`A_DEC = 6.0` on car 16 at replicates 0 and 1, both crash in p8); U12.7 24. The fixture runs each distinct job once (U12.4's and U12.3's
   `unit-11.py` races are U12.6's): about 118 races; the two `A_DEC = 6.0` races crash (p8's six crashed at 486–557 s), about two clean
   races' CPU each. About 720 CPU-s, about 2.3 min pooled. The suite measured 927–936 s on `roar-011`, against 15.5
   min: this plan raises the interim routed budget to **18.5 min** (v4.11), the seventh raise: about 1,050–1,060 s
-  estimated, about 50 s of headroom; a Phase D measurement over 1,110 s stops and amends the plan (design §7.1),
+  estimated, about 1,070–1,090 s with U12.0's five capped crash probes (about 6 CPU-s each) and the
+  serial line solve, so about 20–40 s of headroom; a Phase D measurement over 1,110 s stops and amends the plan (design §7.1),
   it is not re-run. The author's tiering decision (keep raising, or move the
   premise gates to a slower tier) is overdue and stays in the follow-up list.
 - Notebooks: the Unit 12 lesson, solutions and milestone ≤ **5 min** serial in total, each cell ≤ 120 s (target
@@ -314,3 +337,7 @@ Verdicts: [self] APPROVE; [sol] REJECT; [fable] pending at v4 (reviews v4 in rou
 ### Round 4 (v4.1 @ 6d54501)
 - [sol] REJECT: B1 Phase B still sent the milestone's U12.5 table to seed2026 (the validation track); now the test track `test-circuit-seed2028`, with the lesson's seed2026 races labelled validation. N2: U12.7 cites U12.5a; the budget counts two `A_DEC = 6.0` races (p8's six are probe evidence). Folded (v4.2).
 - [fable] APPROVE WITH NITS (v4.1): S1 the lesson outline now places seed2026 (validation, §4–§5) and seed2028 (test, raced last, with the speed setting's 4/5 there); the milestone fix is [sol]'s B1. S2 the budget: two 6.0 races, 50 s headroom, the test track's line solve and probes as a session fixture. N1 random's draws beat its own incumbent, not coordinate's; N2 the knob sentence no longer double-counts; N3 U12.1's twin is tagged past the job-key dedupe; N4 the hook's 30 vs the derived count, `A_THROTTLE` by digest; N6 per-car comparison. N5 (U12.5a report-only) not taken: the validation result is the lesson's pivot, so it stays gated. Folded (v4.3).
+
+### Round 5 (v4.3 @ a3c447b): CONSENSUS
+Verdicts: [self] APPROVE; [sol] APPROVE WITH NITS; [fable] APPROVE WITH NITS. Both confirmed every round-4 fold; [fable] re-checked every number against p1–p9.
+- [fable] S1: the crash-aware table now lists all ten p4b evaluations, including MU 0.52 at A_DEC 5.5 not clean (car 18): `unit-12.py`'s only clean neighbour is `unit-11.py`. S2: headroom restated as 20–40 s (five capped probe crashes, the serial line solve). N3 "7–19 s"; N4 `PROFILE_LEAD_S = 0.1` acts by crashing; N5 the k = 43 margin in a test comment; N6 the pre-registration's provenance stated. [sol] N1: "about 30 knobs", the design's approximate hook. Folded (v5).
