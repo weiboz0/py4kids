@@ -323,3 +323,9 @@ Both confirmed every round-1 fix as recorded.
 
 - [FIXED] [sol] B1 / [fable] N1–N2: the failed-check path said to fix "the frozen file" and check again, but `FROZEN_RACE_COPY` (the file race day races) is built in the freeze cell before the check, so after a fix it would be stale, and the frozen file is a generated file. Now a non-timing failure is corrected in `race_day_control` or `race_day_mu_g` (never the fraction) and the freeze cell is run again, rewriting both files, before the check is repeated (both notebooks; the teacher notes match).
 - [FIXED] [sol] N2: the rules cell names `check_submission` as the one run with the timing on (both notebooks).
+
+### Round 3 (@ c24fb84)
+
+Verdicts: [self] APPROVE; [sol] REJECT (one blocker); [fable] APPROVE WITH NITS. Static re-reviews; both confirmed the round-2 fixes.
+
+- [FIXED] [sol] B1 / [fable] N1: after a corrected line on the failed-check path, Question 2's `race_day_offsets` was stale, and Question 5 plans and judges the sealed races with it. Now the correction goes in a new cell above Question 5's first cell and recomputes `race_day_offsets` when the line changes; then the freeze cell and Question 5's first cell are run again (none races). Both notebooks; the teacher notes match.
