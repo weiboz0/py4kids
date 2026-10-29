@@ -20,8 +20,9 @@ The closed centreline is resampled at 2.0 m spacing with a per-waypoint drivable
 CARLA map or waypoint data is used anywhere.
 
 The seeded checkpoint tracks (``SEEDED_TRACKS``: ``test-circuit-seed1`` … ``test-circuit-seed4``, the
-training family, and ``test-circuit-seed2026``, Checkpoint A's checkpoint track) are ``seeded_spec``
-variants of ``test-circuit``, generated alongside the three named tracks.
+training family, ``test-circuit-seed2026``, Checkpoint A's checkpoint track, and
+``test-circuit-seed2027``, Checkpoint B's race-day track) are ``seeded_spec`` variants of ``test-circuit``,
+generated alongside the three named tracks.
 
 CLI: ``python roar/data/gen_tracks.py [--out DIR] [--name NAME ...]`` writes ``<name>.npz`` files
 (every track in ``ALL_NAMES`` by default).
@@ -46,7 +47,8 @@ MAX_RESIDUAL_GAP = 2.5  # the shear stage only removes a float-level residual (m
 FIELDS = ("x", "y", "z", "yaw", "half_width", "s", "curvature")
 TRACK_NAMES = ("oval", "test-circuit", "monza-like")
 # The seeded checkpoint tracks (design 013 §4.3, plan roar-007): (base, seed). Checkpoint A's training
-# family is test-circuit seeds 1-4 and its checkpoint track is seed 2026 (fixed before it was probed).
+# family is test-circuit seeds 1-4 and its checkpoint track is seed 2026 (fixed before it was probed);
+# Checkpoint B's race-day track is seed 2027 (plan roar-011, also fixed before it was probed).
 # The names are seeded_spec's ``<base>-seed<seed>``; the carla-like car keys its hidden grip to the
 # track name, so renaming one changes the car on it.
 SEEDED_TRACKS = (
@@ -55,6 +57,7 @@ SEEDED_TRACKS = (
     ("test-circuit", 3),
     ("test-circuit", 4),
     ("test-circuit", 2026),
+    ("test-circuit", 2027),
 )
 
 

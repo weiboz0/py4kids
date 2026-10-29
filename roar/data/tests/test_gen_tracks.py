@@ -21,10 +21,11 @@ LENGTH_WINDOWS = {
     "test-circuit-seed3": (2300.0, 2800.0),
     "test-circuit-seed4": (2300.0, 2800.0),
     "test-circuit-seed2026": (2300.0, 2800.0),
+    "test-circuit-seed2027": (2300.0, 2800.0),  # Checkpoint B's race-day track (plan roar-011)
 }
 SEEDS = (1, 2, 3, 7)
-# CP.1 (plan roar-007): the seeded checkpoint tracks' file stems, pinned literally (the carla-like car's
-# hidden grip is keyed to the track name), and their measured stats:
+# CP.1 (plan roar-007) and CPB.1 (plan roar-011): the seeded checkpoint tracks' file stems, pinned
+# literally (the carla-like car's hidden grip is keyed to the track name), and their measured stats:
 # (length m, waypoints, min half-width m, tightest radius m)
 SEEDED_STATS = {
     "test-circuit-seed1": (2625.6, 1313, 5.10, 17.7),
@@ -32,6 +33,7 @@ SEEDED_STATS = {
     "test-circuit-seed3": (2670.4, 1335, 5.13, 20.5),
     "test-circuit-seed4": (2675.0, 1337, 5.14, 17.3),
     "test-circuit-seed2026": (2655.8, 1328, 5.15, 19.8),
+    "test-circuit-seed2027": (2631.2, 1316, 5.41, 19.3),  # CPB.1 (plan roar-011)
 }
 
 
@@ -227,6 +229,7 @@ def test_driver_generates_twice_identically_within_budget(tmp_path):
             "tracks/test-circuit-seed3.npz",
             "tracks/test-circuit-seed4.npz",
             "tracks/test-circuit-seed2026.npz",
+            "tracks/test-circuit-seed2027.npz",
         ]
     )
     for path in first:

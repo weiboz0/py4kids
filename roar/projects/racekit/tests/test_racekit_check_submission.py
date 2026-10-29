@@ -230,6 +230,9 @@ def test_racekit_core_imports_numpy_only():
 
 
 AGENTS = sorted((RACEKIT / "agents").glob("*.py"))
+# an agent whose shipped line was solved for another track is checked on that track (the agent refuses
+# a line of the wrong length): Checkpoint B's reference ships the race-day track's line (plan roar-011)
+AGENT_TRACKS = {"checkpoint-b.py": "test-circuit-seed2027"}
 
 
 def test_unit_01_is_the_starter_copied():
@@ -247,6 +250,8 @@ def test_isolated_python_3_8_check_submission_run(agent):
         "--with", "numpy<1.25", "--with", "scipy<1.11", "--with-editable", "roar/projects/racekit",
         "python", "-m", "racekit.check_submission", agent.relative_to(REPO).as_posix(),
     ]
+    if agent.name in AGENT_TRACKS:
+        command += ["--track", AGENT_TRACKS[agent.name]]
     run = subprocess.run(command, cwd=REPO, capture_output=True, text=True, timeout=600, check=False)
     assert run.returncode == 0, run.stdout + run.stderr
     match = re.search(r"python=(\d+)\.(\d+)\.\d+ numpy=(\d+)\.(\d+)", run.stdout)

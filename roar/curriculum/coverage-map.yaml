@@ -88,3 +88,10 @@ entries:
   introduces: [respawn-economics, perturbation-testing, failure-fallback]
   requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep, linear-least-squares, car-identification, grip-identification, racing-line, line-retune, error-model-linearization, ltv-mpc, tick-budget]
   practices: [repeated-run-measurement, ltv-mpc, pure-pursuit, speed-profile, telemetry-plotting]
+- id: checkpoint-02-part-2
+  kind: checkpoint
+  title: "Checkpoint B: a full agent on a track and a car it has never met"
+  lessons: 0.5
+  introduces: []
+  requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep, linear-least-squares, car-identification, grip-identification, racing-line, line-retune, error-model-linearization, ltv-mpc, tick-budget, respawn-economics, perturbation-testing, failure-fallback]
+  practices: [grip-identification, racing-line, speed-profile, perturbation-testing, respawn-economics, failure-fallback, repeated-run-measurement]
