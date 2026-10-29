@@ -80,9 +80,10 @@ record (clean at 0.54 and below on the three cars) so the student can still argu
   The plan's 279.95 s for 0.54 comes from the unrounded record; 279.94 is the right answer from the table.
 - **A failed `check_submission`:** the check races only racekit's kinematic car, so rerunning it breaks no seal.
   A timing failure is rerun on an idle machine; any other failure is corrected in the race-day line or grip (never the
-  fraction), with the line's offsets recomputed if the line changed (Question 5 plans and judges every race with them);
-  the freeze cell is run again so that both the frozen file and its timing-off race copy are rewritten, the check is
-  run again, and the change is reported in Question 5's answer. None of these steps races.
+  fraction), and every Question 2 value that depends on them is recomputed (the line's offsets, the margin check and
+  the 0.54 plan of the race-day track: Question 5 plans, compares and judges every race with them); the freeze cell is
+  run again so that both the frozen file and its timing-off race copy are rewritten, the check is run again, and the
+  change is reported in Question 5's answer. None of these steps races a carla-like car.
   If it still fails, no sealed car races: grade Questions 1–4 and the write-up, and record the race as not run.
 - A student whose own agent misses the bar after following Question 4 honestly can still earn full marks on the
   write-up, which must say what their record showed.
