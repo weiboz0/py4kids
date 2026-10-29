@@ -170,7 +170,7 @@ Only descriptive figures quoted in prose (a median, a mean, an error) may be cor
 - Routed pytest ≤ **15 min** (v4.9, interim). The Unit 11 job table (MPC races unless said): U11.2 24 (700 s cap);
   U11.3 7 pursuit races (fresh fallback twins); U11.4 72 (0.56, 0.54 and 0.52 on the training family; its 0.58 side
   is U11.2's races); U11.5 48 + 2 (700 s cap); U11.6 24; U11.7 5 (the nominal car with both agents, and 3 training
-  cars with Unit 11 at 0.54; their Unit 10 twins are U11.4's 0.54 races); U11.8 12; U11.9 24. About 215 races, about 2,100 s of CPU (crash loops to 700 s count about 2.5 races each), about 4 min
+  cars with Unit 11 at 0.54; their Unit 10 twins are U11.4's 0.54 races); U11.8 12; U11.9 24. About 218 races, about 2,100 s of CPU (crash loops to 700 s count about 2.5 races each), about 4 min
   pooled on 8 workers, taking the suite from 10.0 to about 14.5 min. Measured in Phase D; over 15 min means stop and
   amend.
 - Notebooks: the Unit 11 lesson, solutions and milestone ≤ **5 min** serial in total, each cell ≤ 120 s: the
@@ -233,3 +233,20 @@ Only descriptive figures quoted in prose (a median, a mean, an error) may be cor
   - N3 the lag-2 car is "the Unit 8-identified lag plus one", never a `_truth` value [FIXED v2.1: Phase B brief].
   - N4 pins for Phase A [FIXED v2.1: q10 sign; U11.8's crash set k = 6, 8, 9, 10].
 - [self] APPROVE.
+
+## Content Review
+
+### Round 1 (@ 6211f83)
+
+Verdicts: [self] APPROVE WITH NITS; [sol] APPROVE WITH NITS; [fable] APPROVE WITH NITS.
+Blind solves: [sol] (static) and [fable] (raced, 8 races) solved Exercises 2, 4, 6 and 8 from the statements and the lesson before opening the solutions; every answer agrees with the solutions ([fable] to the tick: Ex 2 best 0.54 at both caps, break-even one race in 78; Ex 4 steps [4, 63]; Ex 6 quiet thresholds 6° (lead 1.25 s) and 1.4 m (lead 0.30 s); Ex 8 edge 0.56 on [16, 18, 8], shipped 0.54, car 35 clean).
+[self]: hook-first opening, no `_truth` in student material, the lesson's figures against the Phase A log (2.52 / 196.6 s ≈ 1.3%, 24/24 held-out, 8/12 on seed2026, 298.07 vs 296.66 s); no finding beyond the reviewers'.
+
+- [FIXED] [sol] S1 / [fable] S1: the manifest and coverage map listed `grip-identification` under `practices`, but no exercise identifies grip (Ex 3 and Ex 10 use measured grip as given). Dropped from both; Unit 9 keeps its practice.
+- [FIXED] [fable] S2: the lesson's summary table gave Unit 10 at 0.58 "20 / 24" held-out clean, a figure the tests never race directly. Now "20 / 24 without a crash (inferred: Unit 11's 0.58 races are Unit 10's until the first crash)".
+- [FIXED] [sol] N3 / [fable] S3: the teacher notes said the hook's two cars crash "at the same corner every lap"; their attempts last different lengths. Now "crash, restart, and crash again until the time runs out".
+- [FIXED] [sol] N2: the plan's budget said "about 215 races"; the listed counts (and the premise's asserted job count) are 218.
+- [FIXED] [fable] N4: `noise_aware_better` was imported and unused in the exercises and solutions, and the teacher notes said Challenge 9 is "compared noise-aware". Import dropped; the note says "compared across seeds".
+- [WONTFIX] [fable] N5: the held-out median at 0.54 (279.95 s) equals the training mean. Confirmed from the U11.6 outcomes in the Phase A log (median 279.95 s, mean 279.96 s): a coincidence, not a copy.
+- [FIXED] [fable] N6: Sitting 3 bundled Exercises 4–7; Exercise 7 alone is about 45 min. Pacing is now three sittings with Exercise 7 as homework or a fourth sitting.
+- [FIXED] [fable] N7: Ex 10 attributed 282.55 s to "the premise", which does not assert it. Now "from plan `roar-010`'s Phase A record" (exercises and solutions).

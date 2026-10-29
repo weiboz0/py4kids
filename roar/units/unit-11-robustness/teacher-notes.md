@@ -22,10 +22,10 @@ The book's tests race all 24 held-out perturbed cars: it is clean on every one (
 
 ## Pacing
 
-Plan for **two to three 60–90 min sittings**.
+Plan for **three 60–90 min sittings**, with Exercise 7 as homework or a fourth sitting.
 
 1. **Sitting 1: what a crash costs** (the hook, §1–§2).
-   - Hook: Unit 10's agent on four perturbed cars. One is clean; one crashes once and loses more than three minutes; two crash at the same corner every lap and never finish (the book's tests race all 24 training cars: 21 are clean).
+   - Hook: Unit 10's agent on four perturbed cars. One is clean; one crashes once and loses more than three minutes; two crash, restart, and crash again until the time runs out (the book's tests race all 24 training cars: 21 are clean).
    - Ask before showing: if a crash sends you back to the start, how much does a crash at 3 minutes cost? (About 3 minutes.)
    - Expected race time on the board: a 2 s gain on 21 cars against one 200 s crash.
    - Exercises 1–2.
@@ -37,7 +37,7 @@ Plan for **two to three 60–90 min sittings**.
 3. **Sitting 3: noticing and recovering** (§5–§7).
    - The respawn detector; the warnings and their lead times; the negative result.
    - The fallback, and the lag-2 car: the MPC trusts its lag model, so no fraction saves it; pure pursuit does not care.
-   - Exercises 4–7; Challenges 9–10 as homework.
+   - Exercises 4–6; Exercise 7 (a fallback for Unit 10, about 45 min) as homework or a fourth sitting; Challenges 9–10 as homework.
 
 ## Common mistakes
 
@@ -64,6 +64,6 @@ Plan for **two to three 60–90 min sittings**.
   - give the respawn detector and have students explain each of its three conditions.
 - **Core:** all non-stretch exercises unaided.
 - **Stretch:**
-  - Challenge 9, a braking reaction to the warning, compared noise-aware;
+  - Challenge 9, a braking reaction to the warning, compared across seeds;
   - Challenge 10, a fraction that is clean on `test-circuit-seed2026`'s perturbed cars, and what it costs on `test-circuit`;
   - for strong students: estimate the probability of a crash per car from the family and turn it into an expected time for a three-race qualifying session.
