@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.9** (§4.3 the seeded tracks, §6 CP-B, §7.1).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-010` merges (#165, f62130c).
+**v3** folds round 2 ([sol] B and [fable] S1 the submission check raced the race-day track before race day; [fable] S2 the seal check's mechanics, S3 timing off for the pinned races, N1–N3).
 **v2** folds plan-review round 1 ([sol] REJECT: B the student's own agent may find another edge, S the sealed-car loophole, S every probe's outcome, N Question 3 a lookup; [fable] APPROVE WITH NITS: S1 Question 2 named 0.48, S2 = [sol] N, S3 the race-day record must not be in the notebook, S4 = [sol] S, S5 CPB.4 a bound not a pin, S6 the book-exec raise, N1–N6).
 
 ## Scope
@@ -115,9 +116,13 @@ Only descriptive figures quoted in prose (a median, a mean) may be corrected in 
 - **CPB.7 the reference is Unit 11 plus three constants:** the module-level assignments of `agents/checkpoint-b.py`
   and `agents/unit-11.py` (parsed with `ast`) differ only in `MU_FRACTION`, `MU_G` and `LINE_CONTROL` (131 values
   against 133), and the bodies of every function and class are identical ([fable] N3).
-- **CPB.8 the seal:** in `solutions.ipynb` and `checkpoint.ipynb`, `perturb=` with a value ≥ 1000 (or the names
-  1000–1004 passed to a car builder) appears in exactly one code cell, the race-day cell; `perturbation_factors` is
-  never called on a value ≥ 1000.
+- **CPB.8 the seal:** the race-day cell of both `checkpoint.ipynb` and `solutions.ipynb` is cell-tagged `race-day`
+  and carries the scaffold line `SEALED_CARS = range(1000, 1005)`; in each notebook that tagged cell exists exactly
+  once, and no other code cell contains an integer literal from 1000 to 1005 or `SEALED_CARS`; no cell calls
+  `perturbation_factors` with `SEALED_CARS`, one of its members or such a literal ([fable] r2 S2).
+- **Timing off for the pinned races:** every CPB.3–CPB.5 race runs a `MPC_BUDGET_MS = None` variant (as
+  `_robust_premise` does), and so do the solutions' Question 4 and 5 races, so the tick-level pins reproduce on a
+  loaded machine; CPB.6 alone runs the file as shipped ([fable] r2 S3).
 - **Where each gate is asserted.**
   - CPB.1 in `roar/data/tests/test_gen_tracks.py` (the driver test's output list, the length-bounds dict and
     `SEEDED_STATS` gain the name; `gen_tracks.py`'s docstring names the track) ([fable] N4).
@@ -138,7 +143,8 @@ cars of the perturbed family, sealed (`perturb=1000` … `1004`). You may measur
 know, solve its line, and tune on the five training tracks with the training cars. You may race the race-day track
 once: five races, after every choice is frozen." The rules: the submission is **your own Unit 11 submission**
 (`agents/unit-11.py` is the stand-in; the solutions use it); only `MU_FRACTION`, `LINE_CONTROL` and `MU_G` change;
-the seal is an honour rule (above); no race on `test-circuit-seed2027` except the six probes and race day.
+the seal is an honour rule (above); no race on `test-circuit-seed2027` except the six probes and race day, and race
+day starts with the frozen file's `check_submission` (the nominal car) before the five sealed races.
 **The bar:** all five race-day races clean (finished, 0 collisions, max line error ≤ 2 m), median ≤ 300 s.
 1. **Measure the track.** Run Unit 8's six grip probes on `test-circuit-seed2027` (the given probe settings); from
    each probe's outcome (finished or not, collisions) and its telemetry compute each section's μg, and say which
@@ -168,13 +174,15 @@ the seal is an honour rule (above); no race on `test-circuit-seed2027` except th
    each fraction stopped at its first race that is not clean. Start at 0.54. **Every outcome has a defined path**
    ([sol] B):
    - 0.54 not clean: go down by 0.02 until a fraction is clean on all 15 (the edge); ship one step below it.
-   - 0.54 clean on all 15: go up by 0.02 until a fraction is not clean (at most 0.60); the edge is the highest
-     clean one; ship one step below it.
+   - 0.54 clean on all 15: go up by 0.02 until a fraction is not clean; the edge is the highest clean one; ship
+     one step below it. Clean on all 15 at 0.60: the edge is 0.60, ship 0.58 ([fable] N3).
    - nothing clean down to 0.40: ship 0.40 and say so; the race is still raced and the write-up carries the grade.
 
-   Report the edge and the shipped value; freeze it; `check_submission` on the race-day track. The stand-in finds
+   Report the edge and the shipped value, and freeze it. The stand-in finds
    0.50 and ships 0.48; a student's agent may not, and that is not an error.
-5. **Race day.** Plan the lap at your frozen fraction (Question 2's function), then race the five sealed cars once.
+5. **Race day.** Plan the lap at your frozen fraction (Question 2's function); run `check_submission` on the frozen
+   file on the race-day track (the nominal car; it must pass before anything else races there) ([sol] r2 B,
+   [fable] r2 S1); then race the five sealed cars once.
    Report clean, the median and the mean against the bar, and compare with the plan.
 6. **What bought what.** With the race-day record your teacher hands out after Question 5 (the `p4` table, kept in
    the teacher notes and the solutions, **never in `checkpoint.ipynb`**) ([fable] S3): what the margin bought on race
@@ -191,7 +199,7 @@ public in this plan, so the grade never rests on the final number alone.
   over means stop and amend). The follow-up on the routed-suite budget (a slow tier) is re-stated.
 - Checkpoint notebooks: the solutions ≤ **5 min** serial, each cell ≤ 120 s: 6 probes (about 20 s), the line solve,
   Question 4's protocol (7 + 7 + 15 = 29 races, about 180 s, split one fraction per cell and 0.50 in two cells), race
-  day (5 races, about 35 s). The checkpoint notebook itself has no outputs and no races.
+  day (`check_submission`, about 6 s, then 5 races, about 35 s). The checkpoint notebook itself has no outputs and no races.
 - Book exec total: about 35.8 CI-min after `roar-010` + about 4.5 = about 40.3, **over** v4.8's 40.
   Design v4.10 raises the interim book-exec target to **45 CI-min** (the third book-exec raise, after 15 → 30 → 40),
   enough for this plan with headroom; Units 12–13 and the capstone (about 3–4.5 CI-min each) cannot all fit, so the
@@ -213,8 +221,9 @@ public in this plan, so the grade never rests on the final number alone.
   `_truth` value; the sealed cars' factors are never computed in either notebook; the race-day record (`p4`) and
   the expected times of Question 3 are never in `checkpoint.ipynb` (the teacher notes carry the `p4` handout).
 - **Phase C — teacher notes** (inline): goals, a 60–90 min sitting plan (Question 4 is the long part; the short form
-  races only `-seed2`, the family's hardest track), grading (the race is pass/fail; the written answers to 3 and 6
-  carry the rest; since this plan's table is public, the grade rests on the evidence and the reasoning, never on
+  races only `-seed2`, the family's hardest track, reports those races and does not claim the protocol's edge,
+  [fable] r2 N2), grading (the race is pass/fail; the written answers to 1, 3 and 6
+  and the evidence of 4 carry the rest ([fable] r2 N1); since this plan's table is public, the grade rests on the evidence and the reasoning, never on
   the final number alone), the 300 s target vs the 329 s CARLA bar, common mistakes (shipping the expected-time
   minimum against a clean bar; racing the race-day track before freezing; inspecting the sealed cars; reading a
   lower bound as a measurement); the race-day record (`p4`) as the Question 6 handout; the 0.52 edge resting on one
@@ -240,3 +249,10 @@ Verdicts: [self] APPROVE WITH NITS (CPB.4 is not knife-edge on the line error: 1
 - [fable] S5 (CPB.4 a bound): the five times pinned to a tick. Folded.
 - [fable] S6 (the book-exec raise): 45 CI-min, the third book-exec raise; the tiering decision due at Unit 12, held in the follow-up list (the autopilot directive holds questions to the end). Folded.
 - [fable] N1–N6: CPB.3 wording and car order; the one-race edge; CPB.7 (AST comparison); the generator test's bounds dict and docstring; the known give-away; rounding. Folded.
+
+### Round 2 (v2 @ d856cd4)
+Verdicts: [self] APPROVE WITH NITS; [sol] REJECT (one B); [fable] APPROVE WITH NITS (re-derived every pin from the probe pickles and re-ran the six grip probes: all match).
+- [sol] B / [fable] S1: Question 4's `check_submission` raced the race-day track before race day. It moves to Question 5, the first step of race day after the freeze (the nominal car); the rules say so. (A training track cannot host the check: the frozen file's line is solved for `test-circuit-seed2027`, and the agent refuses another track's line.) Folded.
+- [fable] S2: CPB.8's mechanics pinned (a `race-day` cell tag, the `SEALED_CARS = range(1000, 1005)` scaffold, the literal scan on both notebooks). Folded.
+- [fable] S3: the pinned races and the solutions' races run with `MPC_BUDGET_MS = None`; CPB.6 runs the shipped file. Folded.
+- [fable] N1–N3: grading text aligned; the short form does not claim the edge; the upward path's cap outcome. Folded.
