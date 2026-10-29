@@ -33,8 +33,8 @@ The probes say both halves are honest, and that the real danger is not the noise
   B, from the file and the agent's code): 24 act in a clean race, 6 more only after a respawn (30 tunable knobs), the
   rest are mode switches, counters or settings the shipped mode never reads. In the p2 sweep (17 knobs) six move a
   clean race's time by more than five times the noise (1.5 s; up to
-  8–19 s), three more by under 1 s yet beyond the noise (`LEAD_MIN_M = 8`, `MPC_Q_E = 0.1`, `MPC_Q_PSI = 100`), two more move it only by making the race not clean (`MPC_Q_E`,
-  `MPC_Q_PSI`), and several do nothing at all (bit-identical races).
+  8–19 s), three more by under 1 s yet beyond the noise (`LEAD_MIN_M = 8`, `MPC_Q_E = 0.1`, `MPC_Q_PSI = 100`), two of those three also crash the race at larger values
+  (`MPC_Q_E = 1.5`, `MPC_Q_PSI = 5`), and several do nothing at all (bit-identical races).
 - **0.3 s of noise.** One track's 3-lap spread over race seeds is 0.05–0.25 s; the sum over the five training tracks
   spreads 0.45 s (1 lap) to 0.80 s (3 laps). Races are deterministic per seed.
 - **Search works on the training family, and that is the trap.** A coordinate search over six global knobs on the
@@ -86,7 +86,7 @@ The probes say both halves are honest, and that the real danger is not the noise
   0.5, SPEED_KI [0, 0.3] 0.05, TARGET_SPEED [40, 60] 5; 200 races per method):
   coordinate 1383.15 → **1334.25** (MU 0.54 + 3 × 0.02 = `0.6000000000000001`, A_DEC 5.5, A_ACC 4.5); random (rng 12, batches of 6) → 1381.53;
   (1+4)-ES (σ = one grid step, ×1.5 on accept, ×0.8 on reject) → 1357.17. About 1,100 CPU-s per method. Random
-  search drew two not-clean settings (0 collisions, line error 2.5 / 3.1 m) faster than anything else: counting a
+  search drew two not-clean settings (0 collisions, line error 2.5 / 3.1 m) faster than random search's own incumbent: counting a
   not-clean race at its time would have accepted them.
 - **p4 held out** (`test-circuit-seed2026`, its Unit 9 line and measured grip, 3 laps, seeds 0–4, nominal car):
 
@@ -100,7 +100,7 @@ The probes say both halves are honest, and that the real danger is not the noise
   The crash-aware objective adds `test-circuit` on training cars 16, 18, 8 (Unit 11's `grip_order[:3]`; race seed
   (k + r) mod 5 for replicate r) to each replicate: 16 races per evaluation. Its coordinate search over MU_FRACTION,
   A_DEC, A_ACC (160 races, 938 CPU-s) accepts A_DEC 5.5 only; MU 0.56, A_DEC 6.0, A_ACC 4.5 and A_ACC 3.5 each fail
-  on a low-grip car. Its four held-out misses (k = 24, 29, 32, 35) finish with 0 collisions, faster than shipped
+  on a low-grip car. Its four held-out misses (k = 24, 29, 32, 35) finish with 0 collisions, faster than `unit-11.py` on the same car
   (279.45–280.05 s), at line error 2.01–2.51 m.
 - **p8 (plan review)**: the p3 coordinate setting raced with its exact `MU_FRACTION = 0.6000000000000001` and with
   the grid value 0.60: identical race times on all 15 races (training sums 1334.35 / 1334.15, 10/10 clean; seed2026
@@ -175,8 +175,8 @@ header comment saying why. Every function and class body identical (an AST check
 **Any failed gate assertion** (an outcome, a ranking or a tolerance) stops Phase A and amends the plan. Times are
 pinned to ±1 tick (0.05 s). Every race `MPC_BUDGET_MS = None`, nominal noisy car unless said; non-`test-circuit`
 tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`), as in Units 9–11.
-- **U12.1 determinism and noise:** one race re-raced with the same seed, in the same pool as its twin, has identical
-  telemetry; `unit-11.py`'s
+- **U12.1 determinism and noise:** one race re-raced with the same seed, in the same pool as its twin (the job tagged
+  so the premise's job-key dedupe races it twice), has identical telemetry; `unit-11.py`'s
   3-lap spread on `test-circuit-seed2026` over seeds 0–4 is ≤ 0.25 s (0.15).
 - **U12.2 knob map (1 lap, `test-circuit`, seed 0; p8):** `FALLBACK_SCALE = 0.5`, `CURVATURE_HORIZON = 5` and
   `PREDICT_TICKS = 1` each race identically to the shipped file (identical telemetry, 96.40 s); `MU_FRACTION = 0.60`
@@ -212,11 +212,12 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
 ## Budgets
 - Routed pytest: the Unit 12 job table (3-lap MPC races unless said): U12.1 1 re-race (its twin is a U12.5 race);
   U12.2 4 one-lap races; U12.3 2 + 3 (plus `unit-11.py`'s `test-circuit` seeds 0, 1: 2); U12.4 10 + 5 (and
-  `unit-11.py`'s 10 training races); U12.0 6 one-lap probes; U12.5a 10; U12.5 15; U12.6 32 + 2 (`A_DEC = 6.0` on car 16 at replicates 0 and 1, both crash in p8); U12.7 24. The fixture runs each distinct job once (U12.4's and U12.3's
+  `unit-11.py`'s 10 training races); U12.0 6 one-lap probes (a session fixture, with the test track's 131-value line solve, as
+  `race_day_line` does for 2027); U12.5a 10; U12.5 15; U12.6 32 + 2 (`A_DEC = 6.0` on car 16 at replicates 0 and 1, both crash in p8); U12.7 24. The fixture runs each distinct job once (U12.4's and U12.3's
   `unit-11.py` races are U12.6's): about 118 races; the two `A_DEC = 6.0` races crash (p8's six crashed at 486–557 s), about two clean
   races' CPU each. About 720 CPU-s, about 2.3 min pooled. The suite measured 927–936 s on `roar-011`, against 15.5
   min: this plan raises the interim routed budget to **18.5 min** (v4.11), the seventh raise: about 1,050–1,060 s
-  estimated, about 35 s of headroom; a Phase D measurement over 1,110 s stops and amends the plan (design §7.1),
+  estimated, about 50 s of headroom; a Phase D measurement over 1,110 s stops and amends the plan (design §7.1),
   it is not re-run. The author's tiering decision (keep raising, or move the
   premise gates to a slower tier) is overdue and stays in the follow-up list.
 - Notebooks: the Unit 12 lesson, solutions and milestone ≤ **5 min** serial in total, each cell ≤ 120 s (target
@@ -259,8 +260,10 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
   and the p3 table: the speed search's 48.9 s, then its held-out races), then §1 the objective and the noise, §2
   the knob map (p2 as a pinned table; two live 1-lap demonstrations: a dead knob, a big one), §3 coordinate search
   live (p8's 40 races, two cells), random and ES on the pinned p3 record plus a small live random draw, §4 overfitting (p5 pinned; one
-  live held-out race of the overfit setting), §5 the crash-aware objective and `unit-12.py` (p4 pinned; the cost,
-  20/24), §6 profiling (`cProfile` on one race), §7 determinism, rounding traps and packaging. Exercises: 8 core + 2
+  live **validation** race of the overfit setting on seed2026), §5 the crash-aware objective and `unit-12.py` (p4
+  pinned; seed2026 as validation: 280.65 vs 282.00 s; the cost, 20/24; then the **test** track seed2028, raced last:
+  269.65 vs 271.05 s, and the speed setting there 4/5 clean, about 10 s faster when clean, one 480.45 s crash: a
+  respawn-economics point, mean about 305 s vs 271), §6 profiling (`cProfile` on one race), §7 determinism, rounding traps and packaging. Exercises: 8 core + 2
   Challenges (9: search `SPEED_KP`/`SPEED_KI`/`TARGET_SPEED` on a small box and report why they are fragile; 10: an
   optional policy-gradient taste on one knob, compared honestly with coordinate search on the same race budget, per
   design §6). Milestone: the U12.5 race table (`unit-12.py` vs `unit-11.py` on the **test** track `test-circuit-seed2028`, its
@@ -270,7 +273,9 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
 - **Phase C — teacher notes** (inline).
 - **Phase D — verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN; budgets measured (the routed
   time from the log; the book-exec figure as the per-notebook serial sum, since `ci-local` prints no per-book time).
-  The post-execution report records the lesson's final 24 / 6 knob split.
+  The post-execution report records the lesson's final 24 / 6 knob split. The hook's "30 knobs" is design §6's round
+  number; the lesson's derived count may differ, and says so; `A_THROTTLE` (time-identical in p2, telemetry not
+  compared) is classified by a digest check in Phase B.
 
 ## Out of scope
 - Re-tuning for `monza-like` or choosing the race-day agent (Unit 13, roar-013); deep RL as core content (the
@@ -308,3 +313,4 @@ Verdicts: [self] APPROVE; [sol] REJECT; [fable] pending at v4 (reviews v4 in rou
 
 ### Round 4 (v4.1 @ 6d54501)
 - [sol] REJECT: B1 Phase B still sent the milestone's U12.5 table to seed2026 (the validation track); now the test track `test-circuit-seed2028`, with the lesson's seed2026 races labelled validation. N2: U12.7 cites U12.5a; the budget counts two `A_DEC = 6.0` races (p8's six are probe evidence). Folded (v4.2).
+- [fable] APPROVE WITH NITS (v4.1): S1 the lesson outline now places seed2026 (validation, §4–§5) and seed2028 (test, raced last, with the speed setting's 4/5 there); the milestone fix is [sol]'s B1. S2 the budget: two 6.0 races, 50 s headroom, the test track's line solve and probes as a session fixture. N1 random's draws beat its own incumbent, not coordinate's; N2 the knob sentence no longer double-counts; N3 U12.1's twin is tagged past the job-key dedupe; N4 the hook's 30 vs the derived count, `A_THROTTLE` by digest; N6 per-car comparison. N5 (U12.5a report-only) not taken: the validation result is the lesson's pivot, so it stays gated. Folded (v4.3).
