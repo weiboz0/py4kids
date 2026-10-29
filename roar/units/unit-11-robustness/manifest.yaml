@@ -1,0 +1,9 @@
+id: unit-11-robustness
+kind: unit
+blueprint_version: 1
+lessons: 3
+provenance: original
+concepts:
+  introduces: [respawn-economics, perturbation-testing, failure-fallback]
+  requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep, linear-least-squares, car-identification, grip-identification, racing-line, line-retune, error-model-linearization, ltv-mpc, tick-budget]
+  practices: [repeated-run-measurement, ltv-mpc, pure-pursuit, speed-profile, telemetry-plotting]

@@ -1,6 +1,6 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4.8 (2026-10-28). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.9 (2026-10-28). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
@@ -10,6 +10,7 @@ v4.5 (plan `roar-007`) names the seeded checkpoint tracks and pins Checkpoint A'
 v4.6 (plan `roar-007`) raises the book notebook exec budget to 30 CI-minutes, after the first book-level measurement.
 v4.7 (plan `roar-008`) restates the Unit 8 and Unit 9 rows from probes and raises the routed pytest budget to 10 min.
 v4.8 (plan `roar-009`) restates the MPC over-budget policy and raises both budgets (interim levels).
+v4.9 (plan `roar-010`) adds the perturbed carla-like family (§4.4) and raises the routed pytest budget to 15 min (interim).
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -250,6 +251,16 @@ every `racekit` module with `ast.parse(feature_version=(3, 8))` and the deny-lis
      lab repeats the identification on the student's own CARLA logs.
    - Optional per-run **noise** (a seeded actuator jitter) reproduces the about-0.3 s run-to-run spread, so
      noise-aware comparison is taught on realistic data.
+   - The **perturbed family** (v4.9, plan `roar-010`, taught in Unit 11): `carla_like(perturb=k)` is car `k` of a
+     seeded family. Its mass and yaw inertia (one factor), steering gain, throttle and brake authority, drag and
+     every section's grip are each multiplied by a factor drawn from `random.Random(f"perturb:{k}")`, one `uniform`
+     per factor in the published order and ranges of `PERTURBATION_FAMILY` (grip ×0.92–1.00, steering gain
+     ×0.95–1.05, throttle ×0.90–1.10, brake ×0.90–1.05, mass and yaw inertia ×0.95–1.10, drag ×0.90–1.10);
+     `perturbation_factors(k)` returns the factors, which are relative and reveal no hidden value. The ranges are
+     the book's model of model error, not a measurement of CARLA's. The lag is **not** perturbed: a lag one tick
+     longer than the identified one crash-loops the Unit 10 MPC at every fraction (probe), and Unit 8 identifies the
+     lag as a whole number of ticks; `carla_like(lag_ticks=N)` builds that car on its own. `perturb=None` and
+     `lag_ticks=None` (the defaults) are the unperturbed car exactly.
 
 ### 4.5 Determinism and honesty
 - Pure numpy, fixed tick, fixed seeds, no wall-clock effect on the simulation. The per-tick compute time of `step()`
@@ -372,8 +383,9 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   - **Book notebook exec ≤ 40 CI-minutes** (v4.8, interim; it was 30 from v4.6, and 15 before that): `exec-lessons` + `exec-solutions` wall time, with the
     1-minute load average recorded at start and end. Every plan's report records the book-level total. It **excludes** track and telemetry generation, which are reported
     separately and must stay ≤ 1 min.
-  - **Routed pytest ≤ 12 min** on an 8-core CI machine (v4.8, interim, plan `roar-009`: the Unit 10 gates add 76 races,
-    65 of them MPC; it was 10 min from v4.7, plan `roar-008`; it was 8 min from v4.4, plan `roar-006`, and 5 min before that; the Unit 8–9 gates add 141 races). From v4.4: the Unit 6–7 gates
+  - **Routed pytest ≤ 15 min** on an 8-core CI machine (v4.9, interim, plan `roar-010`: the Unit 11 gates add 218
+    perturbed-car races, some of them crash loops to a 700 s cap; it was 12 min from v4.8, interim, plan `roar-009`:
+    the Unit 10 gates add 76 races, 65 of them MPC; it was 10 min from v4.7, plan `roar-008`; it was 8 min from v4.4, plan `roar-006`, and 5 min before that; the Unit 8–9 gates add 141 races). From v4.4: the Unit 6–7 gates
     add about 2 min of pooled races).
   - The per-cell 120 s cap is retained.
   - **Per-tick (a measured target from the [fable] probe, not a cap the runner enforces):** the simulation costs
@@ -642,3 +654,13 @@ Pairings may be adjusted by each plan's gate without a design change.
     **interim**: by the measured per-unit costs, the remaining Part 2–3 plans will exceed them again, and the author is
     asked whether to keep raising or to move long gates to a slower tier.
   - The routed pytest budget rises to 10 min: the third raise (5 → 8 → 10 min), each for a part's gates.
+- v4.9 (2026-10-28): §4.4 the perturbed carla-like family, and the §7.1 routed budget (plan `roar-010`).
+  - Unit 11 tests across a seeded family of perturbed cars (above), 24 training and 24 held-out perturbations.
+    A crash restarts the race (it costs t + 1 s), so the robust fraction is the one that minimises the expected
+    race time over the family: 0.54 for the Unit 10 MPC, one step inside the family edge, clean on all 24 held-out
+    cars. The §6 gate "N/N perturbed-parameter races at 0 collisions" is met with the full clean rule on N = 24.
+  - The lag is left out of the family: one extra tick of lag is model error that no fraction fixes. A respawn
+    fallback (pure pursuit, a smaller lateral limit) turns the crash loop into one crash; warnings (sideslip, line
+    error) are measured and counted, but acting on them did not help, so the shipped agent acts on the respawn alone.
+  - Routed pytest 12 → 15 min, the fifth raise, **interim**: the follow-up to the author (keep raising or move
+    long gates to a slower tier) is re-stated.

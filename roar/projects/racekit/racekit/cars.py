@@ -13,7 +13,19 @@ from __future__ import annotations
 import math
 import random
 from collections import deque
-from typing import Any, Callable, List, Optional, Protocol, Sequence, Tuple, Union  # Protocol: 3.8+
+from types import MappingProxyType
+from typing import (  # Protocol: 3.8+
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 G = 9.81  # m/s^2
 SPIN_MIN_SPEED = 5.0  # m/s: the spin-out rule applies above this speed (separate from the blend band)
@@ -472,17 +484,66 @@ def _rhs(
     return vx * c - vy * s, vx * s + vy * c, r, dvx, dvy, dr
 
 
-def carla_like(noise: bool = False) -> DynamicCar:
+# The perturbed carla-like family (plan roar-010; design 013 §4.4 v4.9): each factor multiplies one of
+# the car's parameters, drawn uniformly from its range, in this order. The ranges are the book's
+# choice (a model of model error, not a measurement of CARLA's): grip from -8 % to 0 %, the rest a few
+# per cent either way. "mass" scales the mass and the yaw inertia together; "grip" scales every
+# section's mu. The lag is not perturbed (``carla_like(lag_ticks=...)`` changes it on its own).
+PERTURBATION_FAMILY: Mapping[str, Tuple[float, float]] = MappingProxyType({
+    "grip": (0.92, 1.00),
+    "steering": (0.95, 1.05),
+    "throttle": (0.90, 1.10),
+    "brake": (0.90, 1.05),
+    "mass": (0.95, 1.10),
+    "drag": (0.90, 1.10),
+})
+
+
+def perturbation_factors(k: int) -> Dict[str, float]:
+    """The factors of the perturbed car number ``k``: one ``uniform(low, high)`` per entry of
+    ``PERTURBATION_FAMILY``, in its order, from ``random.Random(f"perturb:{k}")``. Deterministic: the
+    same ``k`` gives the same factors on every machine. Each factor is relative (1.0 is the car of
+    ``carla_like()``)."""
+    if isinstance(k, bool) or not isinstance(k, int):
+        raise TypeError("k must be an int")
+    rng = random.Random(f"perturb:{k}")
+    return {name: rng.uniform(low, high) for name, (low, high) in PERTURBATION_FAMILY.items()}
+
+
+class _ScaledGrip:
+    """A track's per-section grip, every section multiplied by one factor (a perturbed car's)."""
+
+    def __init__(self, table: Callable[[str], Sequence[float]], factor: float) -> None:
+        self.table = table
+        self.factor = factor
+
+    def __call__(self, track_name: str) -> Tuple[float, ...]:
+        return tuple(mu * self.factor for mu in self.table(track_name))
+
+
+def carla_like(noise: bool = False, perturb: Optional[int] = None, lag_ticks: Optional[int] = None) -> DynamicCar:
     """The book's stand-in for CARLA: a ``DynamicCar`` with its own (unpublished) parameters and a
     seeded per-section grip that it takes from the track it is raced on. ``noise=True`` adds a
-    seeded throttle jitter (``run_race(seed=...)`` seeds it)."""
+    seeded throttle jitter (``run_race(seed=...)`` seeds it).
+
+    ``perturb=k`` (an int) builds car ``k`` of the perturbed family: its mass and yaw inertia, steering
+    gain, throttle and brake authority, drag and grip are each multiplied by
+    ``perturbation_factors(k)`` (ranges in ``PERTURBATION_FAMILY``). ``lag_ticks=N`` (an int >= 0)
+    replaces the car's actuator lag. With ``perturb=None`` and ``lag_ticks=None`` (the defaults) it is
+    exactly the unperturbed car."""
     from . import _truth
 
+    if lag_ticks is not None and (isinstance(lag_ticks, bool) or not isinstance(lag_ticks, int) or lag_ticks < 0):
+        raise ValueError("lag_ticks must be None or an int >= 0")
+    # unperturbed, every factor is 1.0 (x * 1.0 == x exactly, so the car is today's to the bit)
+    f = perturbation_factors(perturb) if perturb is not None else dict.fromkeys(PERTURBATION_FAMILY, 1.0)
     car = DynamicCar(
-        mass=_truth.MASS, yaw_inertia=_truth.YAW_INERTIA, lf=_truth.LF, wheelbase=_truth.WHEELBASE,
-        max_steer=_truth.MAX_STEER, a_throttle=_truth.A_THROTTLE, a_brake=_truth.A_BRAKE,
-        c_drag=_truth.C_DRAG, tyre_b=_truth.TYRE_B, tyre_c=_truth.TYRE_C, lag_ticks=_truth.LAG_TICKS,
+        mass=_truth.MASS * f["mass"], yaw_inertia=_truth.YAW_INERTIA * f["mass"], lf=_truth.LF,
+        wheelbase=_truth.WHEELBASE, max_steer=_truth.MAX_STEER * f["steering"],
+        a_throttle=_truth.A_THROTTLE * f["throttle"], a_brake=_truth.A_BRAKE * f["brake"],
+        c_drag=_truth.C_DRAG * f["drag"], tyre_b=_truth.TYRE_B, tyre_c=_truth.TYRE_C,
+        lag_ticks=_truth.LAG_TICKS if lag_ticks is None else lag_ticks,
         jitter=_truth.NOISE_SIGMA if noise else 0.0,
     )
-    car._grip_table = _truth.grip_table
+    car._grip_table = _truth.grip_table if perturb is None else _ScaledGrip(_truth.grip_table, f["grip"])
     return car
