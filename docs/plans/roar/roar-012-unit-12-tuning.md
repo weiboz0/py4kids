@@ -7,6 +7,9 @@
 **v2** folds plan-review round 1 ([sol] REJECT: B1 the held-out failure raced a rounded setting, S2 the crash-aware
 acceptance ungated, S3 budget headroom, N4 the knob inventory; [fable] APPROVE WITH NITS: S1 the 20/24 cost as a
 deviation, S2 budgets and notebook sizing, S3 the float repr, N1–N8). New evidence: probe `p8`.
+**v3** folds plan-review round 2 ([sol] REJECT: B1 the policy-gradient Challenge untaught, S2 U12.7 too tight, N3
+headroom; [fable] APPROVE WITH NITS: S1 headroom and duplicate races, S2 the objective still overfits its family,
+S3 = [sol] B1, S4 notebook timing, N1–N7).
 
 ## Scope
 - Unit 12 `roar/units/unit-12-tuning/` (no 🏁: design §6 gives Unit 12 none): lesson, exercises (core + Challenges),
@@ -33,13 +36,17 @@ The probes say both halves are honest, and that the real danger is not the noise
   other track crashes. **Many knobs + a family that does not contain the failure = overfitting**; the held-out track
   shows it.
 - **The fix is the objective, not the search.** Adding Unit 11's three lowest-grip training cars to the objective
-  (still rejecting any not-clean race) makes the same coordinate search accept **one** change, `A_DEC` 5.0 → 5.5,
+  (still rejecting any not-clean race) makes a coordinate search over three of the knobs the speed search moved
+  (`MU_FRACTION`, `A_DEC`, `A_ACC`) accept **one** change, `A_DEC` 5.0 → 5.5,
   and reject every other step. That setting is 1.35 s faster on the held-out track (280.65 vs 282.00 s, both 5/5
   clean, spread 0.05 / 0.15 s): Unit 1's rule says it is real. The unit ships it as `agents/unit-12.py`.
 - **What it costs.** On Unit 11's 24 held-out perturbed cars, `unit-12.py` finishes all 24 with 0 collisions (Unit
   11's design gate, N/N at 0 collisions, holds) but 4 of them (k = 24, 29, 32, 35) exceed the clean rule's 2 m line
   error (2.01–2.51 m); `unit-11.py` is clean on all 24. The 1.35 s is bought with line margin. The lesson says so,
   and Unit 13 decides which agent races (the follow-up list carries the choice to the author).
+  This is the same overfitting one level up: the objective's family (training cars 0–23 are 24/24 clean) still does
+  not contain every failure (held-out cars 24–47: 20/24). A crash-aware objective made the held-out failures rarer
+  (17 of 24 → 4 of 24) and smaller (line error, no collisions), not impossible; the lesson says so in those words.
 
 ## Probe evidence (scratchpad `u12/`; `MPC_BUDGET_MS = None` in every race; nominal car is `carla_like(noise=True)`)
 - **p1 noise and cost** (`unit-11.py`, seeds 0–9): 3-lap medians test-circuit 279.65, seed1 276.30, seed2 275.55,
@@ -118,7 +125,7 @@ The probes say both halves are honest, and that the real danger is not the noise
 ## Concepts (4 new; all `kind: technique`, globally unique)
 | id | taught where | practised |
 |---|---|---|
-| `black-box-search` | lesson §1–§3: race time as a black-box objective; coordinate, random and (1+λ) evolution-strategy search on a race budget; acceptance by Unit 1's rule; rejecting not-clean settings | Ex 1–4, 9 |
+| `black-box-search` | lesson §1–§3: race time as a black-box objective; coordinate, random and (1+λ) evolution-strategy search on a race budget; acceptance by Unit 1's rule; rejecting not-clean settings; §3's optional last part, a taste of policy gradient on one knob (a Gaussian policy over the knob, the update μ ← μ + α · mean over draws of (baseline − race time) · (x − μ) / σ², with the baseline the draws' mean time), compared with coordinate search on the same race budget | Ex 1–4, 9 |
 | `held-out-track-validation` | lesson §4–§5: overfitting knobs to the tracks they were tuned on; the held-out track; the crash-aware objective | Ex 5, 6, 10 |
 | `step-profiling` | lesson §6: `cProfile` on one race, where `step()`'s time goes, dead work, the horizon trade | Ex 7 |
 | `determinism-and-packaging` | lesson §7: same seed same race; `repr` round-trips, step accumulation, tick quantisation, timing-on is not reproducible, dead knobs; the packaging checklist and version pinning | Ex 8 |
@@ -155,18 +162,22 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
   vs 2224.90 / 2224.35); `A_DEC = 6.0` is not clean on at least one of its six low-grip-car races (p8: all six), the
   step the search rejected.
 - **U12.7 the cost (both ways):** `unit-12.py` on held-out perturbed cars k = 24–47 (`test-circuit`, race seed
-  k mod 5): all 24 finish with 0 collisions; at least 20 clean; the not-clean ones are exactly k ∈ {24, 29, 32, 35},
-  each with max line error ≤ 2.6 m; `unit-12.py`'s max line error on the U12.5 seed2026 races is reported (1.76 m vs
+  k mod 5): all 24 finish with 0 collisions; at least 20 clean and at least 1 not clean; every not-clean one has max
+  line error ≤ 2.6 m (p4: four, k = 24, 29, 32, 35 at 2.01–2.51 m; the set is reported, not asserted: k = 24 sits
+  11 mm over the rule); `unit-12.py`'s max line error on the U12.5 seed2026 races is reported (1.76 m vs
   1.20 m).
-- **U12.8 equivalence:** `unit-12.py` differs from `unit-11.py` only in `A_DEC` (AST).
+- **U12.8 equivalence:** `unit-12.py` differs from `unit-11.py` only in `A_DEC` (AST), and both have 48 module
+  constants (excluding the `State` / `Action` type aliases): the hook's count.
 - `check_submission(agents/unit-12.py)` passes (outside any pool).
 
 ## Budgets
 - Routed pytest: the Unit 12 job table (3-lap MPC races unless said): U12.1 1 re-race (its twin is a U12.5 race);
   U12.2 4 one-lap races; U12.3 2 + 3 (plus `unit-11.py`'s `test-circuit` seeds 0, 1: 2); U12.4 10 + 5 (and
-  `unit-11.py`'s 10 training races); U12.5 10; U12.6 32 + 6; U12.7 24. About 110 races, about 600 CPU-s, about
-  2 min pooled. The suite measured 927–936 s on `roar-011`, against 15.5 min: this plan raises the interim routed
-  budget to **18 min** (v4.11), the seventh raise, leaving about 1 min of headroom over the estimate. The author's tiering decision (keep raising, or move the
+  `unit-11.py`'s 10 training races); U12.5 10; U12.6 32 + 6; U12.7 24. The fixture runs each distinct job once (U12.4's and U12.3's
+  `unit-11.py` races are U12.6's): about 97 races; the six `A_DEC = 6.0` races crash (500–556 s), about two clean
+  races' CPU each. About 600 CPU-s, about 2 min pooled. The suite measured 927–936 s on `roar-011`, against 15.5
+  min: this plan raises the interim routed budget to **18.5 min** (v4.11), the seventh raise: about 1,050–1,060 s
+  estimated, about 50 s of headroom. The author's tiering decision (keep raising, or move the
   premise gates to a slower tier) is overdue and stays in the follow-up list.
 - Notebooks: the Unit 12 lesson, solutions and milestone ≤ **5 min** serial in total, each cell ≤ 120 s (target
   ≤ 60 s). The race table, 1-lap races at about 2 CPU-s, 3-lap at about 6:
@@ -192,7 +203,13 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
   - Registry: 4 concepts, coverage-map entry `unit-12-tuning`, manifest, api-order (the 9 names above), baseline
     `library_methods`, syllabus row 12 (no emoji); design 013 v4.11 (§6 row 12's gate text, §7.1 budgets,
     changelog).
-- **Phase B — content (Opus subagents).** Every coordinate step is snapped to its grid with `round(x, 2)`; §7 shows
+- **Phase B — content (Opus subagents).** Every notebook race uses a timing-off copy (`MPC_BUDGET_MS = None`, the
+  setup's `NO_TIMING`, as Unit 11's notebooks do); trap 4 (timing on is not reproducible) is shown from the pinned
+  p6 record in an unasserted cell, never raced as an assertion. The live search's 40 races end on the budget, not on
+  convergence (MU 0.58; 50 races reach 0.60): the lesson says so. §5 footnotes that the rejected `A_DEC = 6.0` was
+  marginal on the nominal car too (not clean on one nominal `test-circuit` race in p4's search). Challenge 10's
+  policy gradient is taught in §3's optional part before it is asked for; it needs only `normal` and arithmetic
+  (no new name beyond the nine registered). Every coordinate step is snapped to its grid with `round(x, 2)`; §7 shows
   the unrounded `0.6000000000000001` once, on purpose (same time, different telemetry: "different race" means the
   telemetry, not the time). Lesson, project-first: the hook (the knob count from the file, the noise,
   and the p3 table: the speed search's 48.9 s, then its held-out races), then §1 the objective and the noise, §2
@@ -205,7 +222,9 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
   design §6). Milestone: the U12.5 race table (`unit-12.py` vs `unit-11.py` on seed2026) and `check_submission`.
   Solutions in a **separate fresh** Opus session.
 - **Phase C — teacher notes** (inline).
-- **Phase D — verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN; budgets measured.
+- **Phase D — verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN; budgets measured (the routed
+  time from the log; the book-exec figure as the per-notebook serial sum, since `ci-local` prints no per-book time).
+  The post-execution report records the lesson's final 24 / 6 knob split.
 
 ## Out of scope
 - Re-tuning for `monza-like` or choosing the race-day agent (Unit 13, roar-013); deep RL as core content (the
@@ -222,3 +241,12 @@ Verdicts: [self] APPROVE WITH NITS; [sol] REJECT; [fable] APPROVE WITH NITS.
 - [fable] S1: the 20/24 cost recorded as a deviation (and in v4.11's changelog), with the race-day agent named as a judgment fork for the author. Folded.
 - [sol] N4 / [fable] N7: the inventory: 48 constants; the lesson classifies all 48 (the 30-knob split is derived there, not from p2's 17). Folded.
 - [fable] N1 (six clean knobs, two that act by crashing), N2 (dead-knob values now probed, p8), N4 (`write_variant` is infrastructure), N5 (a small live ES exercise), N6 (`held-out-track-validation`), N8 (seed2026 line error 1.76 vs 1.20 m): folded. N3 ("different race" means telemetry): folded into Phase B.
+
+### Round 2 (v2 @ 416a92e)
+Verdicts: [self] APPROVE WITH NITS; [sol] REJECT; [fable] APPROVE WITH NITS. Both confirmed every round-1 fold against p8.
+- [sol] B1 / [fable] S3: Challenge 10's policy gradient was assessed but untaught. §3 gains an optional part teaching it (the Gaussian-policy update written out, a baseline, the same race budget as coordinate search); it needs only `normal`. Folded.
+- [sol] S2: U12.7 pinned the exact not-clean set while k = 24 sits 11 mm over the rule; now "at least 20 clean, at least 1 not clean, every not-clean one ≤ 2.6 m", the set reported. Folded.
+- [sol] N3 / [fable] S1: headroom was overstated; duplicate `unit-11.py` races deduplicated (about 97 races), the crash races' CPU counted, the routed budget 18.5 min (about 50 s headroom). Folded.
+- [fable] S2: the crash-aware objective still overfits its own family (24/24 training cars, 20/24 held-out); stated in the idea and for the lesson; the Unit 13 follow-up names `checkpoint-b.py` (MU 0.48) as the third race-day candidate. Folded.
+- [fable] S4: notebook races use `NO_TIMING`; trap 4 shown from the pinned record, unasserted. Folded.
+- [fable] N1 (the 40-race search ends on budget), N2 (three of the knobs the speed search moved), N3 (U12.8 pins the 48-constant count; the 24/6 split recorded in the report), N4 (the 1.20 m report-only, as written), N5 (comment in the test), N6 (book exec as a serial sum), N7 (the A_DEC 6.0 nominal footnote): folded.
