@@ -203,7 +203,7 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
 - **U12.7 the cost (both ways):** `unit-12.py` on held-out perturbed cars k = 24–47 (`test-circuit`, race seed
   k mod 5): all 24 finish with 0 collisions; at least 20 clean and at least 1 not clean; every not-clean one has max
   line error ≤ 2.6 m (p4: four, k = 24, 29, 32, 35 at 2.01–2.51 m; the set is reported, not asserted: k = 24 sits
-  11 mm over the rule); `unit-12.py`'s max line error on the U12.5 seed2026 races is reported (1.76 m vs
+  11 mm over the rule); `unit-12.py`'s max line error on the U12.5a seed2026 races is reported (1.76 m vs
   1.20 m).
 - **U12.8 equivalence:** `unit-12.py` differs from `unit-11.py` only in `A_DEC` (AST), and both have 48 module
   constants (excluding the `State` / `Action` type aliases): the hook's count.
@@ -213,7 +213,7 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
 - Routed pytest: the Unit 12 job table (3-lap MPC races unless said): U12.1 1 re-race (its twin is a U12.5 race);
   U12.2 4 one-lap races; U12.3 2 + 3 (plus `unit-11.py`'s `test-circuit` seeds 0, 1: 2); U12.4 10 + 5 (and
   `unit-11.py`'s 10 training races); U12.0 6 one-lap probes; U12.5a 10; U12.5 15; U12.6 32 + 2 (`A_DEC = 6.0` on car 16 at replicates 0 and 1, both crash in p8); U12.7 24. The fixture runs each distinct job once (U12.4's and U12.3's
-  `unit-11.py` races are U12.6's): about 118 races; the six `A_DEC = 6.0` races crash (486–557 s), about two clean
+  `unit-11.py` races are U12.6's): about 118 races; the two `A_DEC = 6.0` races crash (p8's six crashed at 486–557 s), about two clean
   races' CPU each. About 720 CPU-s, about 2.3 min pooled. The suite measured 927–936 s on `roar-011`, against 15.5
   min: this plan raises the interim routed budget to **18.5 min** (v4.11), the seventh raise: about 1,050–1,060 s
   estimated, about 35 s of headroom; a Phase D measurement over 1,110 s stops and amends the plan (design §7.1),
@@ -263,7 +263,9 @@ tracks race their Unit 9 line and measured grip (`_line_solver`, `MEASURED_MU_G`
   20/24), §6 profiling (`cProfile` on one race), §7 determinism, rounding traps and packaging. Exercises: 8 core + 2
   Challenges (9: search `SPEED_KP`/`SPEED_KI`/`TARGET_SPEED` on a small box and report why they are fragile; 10: an
   optional policy-gradient taste on one knob, compared honestly with coordinate search on the same race budget, per
-  design §6). Milestone: the U12.5 race table (`unit-12.py` vs `unit-11.py` on seed2026) and `check_submission`.
+  design §6). Milestone: the U12.5 race table (`unit-12.py` vs `unit-11.py` on the **test** track `test-circuit-seed2028`, its
+  line and probed grip given as data, raced once at the end) and `check_submission`; the lesson's seed2026 races are
+  labelled validation throughout.
   Solutions in a **separate fresh** Opus session.
 - **Phase C — teacher notes** (inline).
 - **Phase D — verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN; budgets measured (the routed
@@ -303,3 +305,6 @@ Verdicts: [self] APPROVE; [sol] REJECT; [fable] pending at v4 (reviews v4 in rou
 ### Round 3, [fable] (v3 @ 760c10e): APPROVE WITH NITS
 - [FOLDED] S1: 5.5 is the crash-aware edge (6.0 crashes on all six low-grip races), so Unit 11's margin rule ships 5.0 = `unit-11.py`; the unit ships the edge to meet design §6's gate and to measure the margin's value; stated in the idea, the deviations and Ex 6 (apply the margin rule to the table).
 - [FOLDED] N2 crash times 486–557 s; N3 trap 1 wording; N4 profiling prints, never asserts; N5 an over-budget Phase D stops and amends, and U12.6's 6.0 evidence is car 16 at both replicates (2 races, not 6); N6 U12.1's re-race shares its twin's pool; N7 the Unit 13 follow-up carries Unit 11 §7's seed2026 crashes and Checkpoint B's 4/5 sealed crashes at 0.54.
+
+### Round 4 (v4.1 @ 6d54501)
+- [sol] REJECT: B1 Phase B still sent the milestone's U12.5 table to seed2026 (the validation track); now the test track `test-circuit-seed2028`, with the lesson's seed2026 races labelled validation. N2: U12.7 cites U12.5a; the budget counts two `A_DEC = 6.0` races (p8's six are probe evidence). Folded (v4.2).
