@@ -336,3 +336,47 @@ Verdicts: [self] APPROVE; [sol] REJECT (one blocker); [fable] APPROVE WITH NITS 
 
 - [FIXED] [sol] B1 / [fable] N2: Question 5 also reads Question 2's `planned_lap_054[RACE_DAY_TRACK]` (the margin's cost on paper, and the solutions' assert that the frozen plan is slower). The correction cell now recomputes every Question 2 value that depends on the line or grip: `race_day_offsets`, `inside_margin` and `planned_lap_054[RACE_DAY_TRACK]`. Both notebooks; the teacher notes match.
 - [FIXED] [fable] N1: "none of these cells races" sat beside `check_submission`'s kinematic race; now "races a carla-like car".
+
+### Round 5 (@ e644ea0): CONSENSUS
+
+Verdicts: [self] APPROVE; [sol] APPROVE (no findings); [fable] APPROVE WITH NITS (traced every value Question 5 reads after a correction).
+
+- [WONTFIX] [fable] N1–N3: the correction cell's list omits Question 2's figure, includes `inside_margin` (re-checked, though Question 5 does not read it), and leaves Question 2's written comparison as first made. Nothing downstream reads the figure or the Q2 answer; the change is reported in Question 5's written answer, which is where the grader reads it. Cosmetic; left as is.
+
+## Post-Execution Report
+
+**Shipped.** Checkpoint B (`roar/checkpoints/checkpoint-02-part-2/`: statements, solutions, teacher notes, manifest):
+a Unit 11 agent measured, lined and tuned for a race-day track it has never raced (`test-circuit-seed2027`, new in
+`gen_tracks.SEEDED_TRACKS`) and raced once on five sealed perturbed cars (k = 1000–1004).
+`agents/checkpoint-b.py` (unit-11.py with `MU_FRACTION` 0.48, the race-day `MU_G` and `LINE_CONTROL`); the premise
+(`tests/_checkpoint_b_premise.py`, `tests/test_racekit_checkpoint_b.py`, fixtures `race_day_line`,
+`checkpoint_b_premise`); registry (coverage entry `checkpoint-02-part-2`, manifest, syllabus row); design 013 v4.10.
+
+**Gates.** CPB.1–CPB.7 confirmed by Phase A (log `scratchpad/cpb/phaseA-gates.log`); CPB.8 by the notebooks:
+- CPB.1: `test-circuit-seed2027` 2631.2 m, 1316 waypoints, min half-width 5.41 m, tightest radius 19.3 m; the line 131 values.
+- CPB.2: probes (9.10, 9.55, 7.79, 9.35, 9.00, 7.76); section 0 finished in 109.40 s with 0 collisions (the lower bound); sections 1–5 crashed 12 / 7 / 5 / 3 / 3 times.
+- CPB.3: protocol cars (16, 18, 8); 0.54 and 0.52 stop at the 7th race (`-seed2`, car 16: 415.85 s and 414.60 s, one collision each); 0.50 and 0.48 clean on all 15; edge 0.50, shipped 0.48.
+- CPB.4: race day at 0.48, timing off: 283.95, 283.90, 283.60, 283.75, 283.95 s, all clean, median 283.90 s ≤ 300, max line error 1.33 m.
+- CPB.4b (worst budget, `MPC_BUDGET_MS = 0.0`): all clean, median 284.35 s.
+- CPB.4c (the frozen file as shipped, serial): logger run cuts [0, 0, 1, 0, 0], every time equal to CPB.4; Phase A pytest run cuts [0, 2, 0, 0, 0] at load about 12 (car 1001 284.00 s, bar asserted only); `ci-local` run `ci-roar011a` cuts [0, 0, 0, 1, 0], times equal to CPB.4, median 283.90 s.
+- CPB.5: Unit 11 at 0.54 1/5 clean (mean 382.82 s); Unit 10 at 0.54 does not finish 3 of 5.
+- CPB.6: `check_submission(agents/checkpoint-b.py, track="test-circuit-seed2027")` PASS (282.25 s, step() p99 1.011 ms), also in the isolated Python 3.8 run.
+- CPB.7: the agent differs from unit-11.py only in the three constants (AST).
+- CPB.8: the `race-day`-tagged scaffold cell exists once in each notebook, no other 1000–1005 literal or `SEALED_CARS`; passes.
+
+**Content gate.** Five rounds (Content Review above). Blind solves: [fable] raced Questions 1, 2 and 4 in full and reproduced every pin to the tick; [sol] raced Question 4 at 0.54 and 0.52. The blockers were all on Question 5's failed-`check_submission` path (the freeze's wording, a stale race copy, stale Question 2 values); the success path was right from round 1.
+
+**Budgets (measured).**
+- Routed roar pytest: 593 passed in 936 s on `ci-roar011a` (`6caac78`, another user's process at about 2 CPUs) and 927 s on `ci-roar011c` (`e644ea0`), against the 15.5-min (930 s) interim budget: the first run over by 6 s, the second inside by 3 s. No headroom left; recorded as a follow-up.
+- Checkpoint B notebooks serial: statements 1.9 s; solutions 242.2 s (the solutions author's run; [fable]'s run 246 s), slowest cell 58.5 s ≤ 120 s; ≤ 5 min.
+- Book exec: about 35.8 (after roar-010) + 4.1 ≈ 39.9 of v4.10's 45 CI-minutes (estimate from the per-notebook serial times; `ci-local` does not print per-book exec time).
+
+**Deviations (recorded).**
+- `tests/test_racekit_check_submission.py` gains `AGENT_TRACKS = {"checkpoint-b.py": "test-circuit-seed2027"}`: the frozen race-day line fits only its own track, so the isolated check races it there.
+- Question 3's table gives 279.94 s for 0.54 (rounded clean mean); the plan's 279.95 s is from the unrounded record. The solutions assert within 0.01; the teacher notes give 279.94 as the answer.
+- Question 4 on the stand-in races to the edge and freezes 0.48 without racing 0.48 itself on the protocol (the margin step is a rule, not a test); Phase A's CPB.3 raced 0.48 as evidence.
+- CPB.8 skips while the notebooks do not exist (Phase A); it asserts once they do.
+
+**CI.** `ci-local` ALL GREEN on `6caac78` (before the content gate) and on `e644ea0` (after it: roar 593 passed in 927 s; CPB.4c times equal to CPB.4, cuts [0, 0, 0, 0, 0]). The one commit after `e644ea0` touches only this plan file.
+
+**Follow-ups** (held to the end of the book): routed roar budget (927–936 s vs 930 s); book-exec tiering due at Unit 12; the recurring DLASCL warning; how to grade a check that never passes.
