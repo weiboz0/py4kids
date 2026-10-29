@@ -168,3 +168,11 @@ def tuning_premise(line_controls, tuning_test_track):
     from _tuning_premise import race_tuning_premise
 
     return race_tuning_premise(line_controls, tuning_test_track)
+
+
+@pytest.fixture(scope="session")
+def race_day_premise():
+    """The Unit 13 gate races (plan roar-013 U13.1-U13.5), raced once per session in parallel."""
+    from _race_day_premise import race_race_day_premise
+
+    return race_race_day_premise()
