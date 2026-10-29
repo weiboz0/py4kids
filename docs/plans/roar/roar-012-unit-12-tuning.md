@@ -364,3 +364,46 @@ Blind solves, from the statements and the lesson before opening the solutions:
 - [WONTFIX] [sol] N2 / [fable] N6: Phase A's gate log prints the nearest clean held-out car as k = 27 at 1.259 m in run 1 and k = 43 at 1.859 m in run 2. Run 1's report line took the minimum clean error; the committed test (`test_racekit_unit12_premise.py`, U12.7) takes the maximum, and its run gives k = 43 at 1.859 m, the figure the plan and test comment use. The races are deterministic; nothing in the content changes. Recorded in the post-execution report.
 - [WONTFIX] [fable] N8: the notebooks' 5.6 min against the plan's 5 is a recorded deviation; the two cuts found (Exercise 9's `TARGET_SPEED 50` re-race, about 4 s; Exercise 10's repeated draw 3.82, about 2 s) would save 6 s and cost two points the exercises make (the `same_race` check and an honest race count).
 - [WONTFIX] [fable] N11: `test_gen_tracks.py` pins the loop length 2627.1 m and a separate test pins `s[-1]` 2625.1 m; the post-execution report states both.
+
+### Round 2 (@ 52786b9; CI ALL GREEN on 52786b9, roar routed 1035.85 s): CONSENSUS
+
+Verdicts: [self] APPROVE; [sol] APPROVE WITH NITS (B1 verified fixed; every [FIXED] checked against the pinned records, no new error; the [WONTFIX] rationales supported by the test code and logs); [fable] APPROVE WITH NITS (round 1, no blockers; its nits folded or dispositioned above).
+
+- [FIXED] [sol] N1: two dispositions above point at the post-execution report, which was not yet in the plan; it follows.
+
+## Post-Execution Report
+
+**Shipped:** Unit 12 (`roar/units/unit-12-tuning/`: lesson, 8 core exercises + 2 Challenges, solutions, teacher notes, manifest), the milestone `roar/projects/racekit/milestones/unit-12-tuning.ipynb`, `agents/unit-12.py` (`unit-11.py` with `A_DEC` 5.0 → 5.5), the test track `test-circuit-seed2028`, the Unit 12 premise (`tests/_tuning_premise.py`, `tests/test_racekit_unit12_premise.py`, 16 tests), the registry (4 concepts, 9 API names, coverage map, syllabus row 12) and design 013 v4.11.
+
+**Gates, as measured** (Phase A, `scratchpad/u12/phaseA-gates.log`; the same tests ran green in CI on c79eb98 and on 52786b9):
+- U12.0: `test-circuit-seed2028` passes every generator check (two-run byte identity; the loop length pinned at 2627.1 m and `s[-1]` at 2625.1 m, two conventions for one track, each with its own test); its six probes as pinned.
+- U12.1: the re-race has identical telemetry; `unit-11.py`'s 3-lap spread on seed2026 is 0.15 s.
+- U12.2: `FALLBACK_SCALE = 0.5`, `CURVATURE_HORIZON = 5`, `PREDICT_TICKS = 1` race identically to the shipped file (96.40 s); `MU_FRACTION = 0.60` 93.95 s.
+- U12.3 / U12.4: the overfit setting and the speed search's setting are clean on their training races and clean on none of their seed2026 races.
+- U12.5a: validation, seed2026: `unit-12.py` 280.65 s vs `unit-11.py` 282.00 s (medians), both 5/5 clean.
+- U12.5: the gate, test track seed2028: 269.65 vs 271.05 s, both 5/5 clean, `noise_aware_better` holds; the speed setting is clean 4/5 (one 480.45 s crash).
+- U12.6: both 16/16 clean on the crash-aware objective, sums 2215.35 / 2215.25 vs 2224.90 / 2224.35; `A_DEC = 6.0` crashes on car 16 at both replicates.
+- U12.7: 24/24 held-out cars finish with 0 collisions, 20/24 clean (not clean: k = 24, 29, 32, 35 at 2.011–2.508 m); the nearest clean car is k = 43 at 1.859 m. The log's first run printed k = 27 at 1.259 m because its report line took the minimum clean error; the committed test takes the maximum, and the races are deterministic. On seed2026, max line error 1.76 m vs 1.20 m.
+- U12.8: `unit-12.py` differs from `unit-11.py` only in `A_DEC`; both have 48 module constants.
+- `check_submission(agents/unit-12.py)` PASS (the milestone asserts it too).
+
+**Knob split (the lesson's final count):** of the 48 module constants, 24 act in a clean race, 6 act only after a respawn, and 18 do nothing in the shipped mode; the hook says "about 30" (24 + 6), and design §6's hook now says "about 30" as well.
+
+**Budgets:**
+- Routed roar suite: 1038.28 s on c79eb98 and 1035.85 s on 52786b9 (both ALL GREEN), within the raised 18.5 min (1,110 s): about 72 s of headroom.
+- Notebooks: lesson 119.7 s, solutions about 144 s, milestone 69.1 s, about 5.6 min serial against the plan's 5 min. **Deviation:** the plan said a solutions cell over 120 s splits; none is (the slowest is 22.8 s), but the total is over. Much of it is required crash races running to their time caps (Ex 6's car 8 at 250 s among them). The content gate found only about 6 s that could be cut without losing a taught point, so the deviation stands.
+- Book exec (per-notebook serial sum, since `ci-local` prints no per-book time): about 45.9 CI-min against the raised 50.
+
+**Deviations from the plan's text:**
+- U12.0's 2625.1 m is `s[-1]`; the generator test also pins the closed loop length, 2627.1 m.
+- U12.2 races 5 one-lap races, not 4 (the shipped file's own race is the comparison).
+- The lesson's race counts differ slightly from the Budgets table's estimate (the live search is 40 races in two cells, as planned; the knob demos 3 one-lap races).
+- §3's optional policy-gradient part uses pretend races (a stated stand-in function), labelled as such; Challenge 10 races it for real.
+- Exercise 10's coordinate search is "at most 5 races": its own rule stops after 4 (found by the solutions session; both notebooks fixed).
+
+**Process notes:** a Phase B subagent ran `uv` from a subdirectory once and removed the stray `.venv` / `uv.lock` it created; the root `.venv` and `uv.lock` were verified untouched.
+
+**Follow-ups** (held to the end of the book, `scratchpad/roar-followups.md`):
+- The routed / book-exec tiering decision (now overdue; the routed suite has 72 s of headroom).
+- The race-day agent choice for Unit 13: `unit-11.py` (24/24 held-out clean), `unit-12.py` (1.35–1.40 s faster, 20/24), or `checkpoint-b.py` (`MU_FRACTION` 0.48).
+- 279.94 vs 279.95 (Checkpoint B), grading a check that never passes, and the DLASCL warning.
