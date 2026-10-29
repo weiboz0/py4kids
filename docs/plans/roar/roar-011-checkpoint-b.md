@@ -3,6 +3,7 @@
 **Design:** `docs/designs/013-roar-book.md` **v4.9** (§4.3 the seeded tracks, §6 CP-B, §7.1).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-010` merges (#165, f62130c).
+**v4** folds round 3 ([sol] B the pinned races ran a timing-off copy, not the frozen file: a worst-case-budget gate CPB.4b (`p6`) covers the shipped file; S `check_submission` races the default kinematic car; N five scored races; [fable] N1–N4).
 **v3** folds round 2 ([sol] B and [fable] S1 the submission check raced the race-day track before race day; [fable] S2 the seal check's mechanics, S3 timing off for the pinned races, N1–N3).
 **v2** folds plan-review round 1 ([sol] REJECT: B the student's own agent may find another edge, S the sealed-car loophole, S every probe's outcome, N Question 3 a lookup; [fable] APPROVE WITH NITS: S1 Question 2 named 0.48, S2 = [sol] N, S3 the race-day record must not be in the notebook, S4 = [sol] S, S5 CPB.4 a bound not a pin, S6 the book-exec raise, N1–N6).
 
@@ -108,7 +109,14 @@ Only descriptive figures quoted in prose (a median, a mean) may be corrected in 
   say so ([fable] N1, N2).
 - **CPB.4 race day** (`agents/checkpoint-b.py`, hidden cars k = 1000–1004, race seed k mod 5, 700 s cap): all five
   **clean**, median ≤ the **target 300 s**; pinned to the probe: the five times 283.95, 283.90, 283.60, 283.75,
-  283.95 s to a tick (0.05 s), median 283.90 s, max line error ≤ 1.5 m (probe 1.33 m) ([fable] S5).
+  283.95 s to a tick (0.05 s), median 283.90 s, max line error ≤ 1.5 m (probe 1.33 m) ([fable] S5). These races use
+  the timing-off copy (reproducibility).
+- **CPB.4b the shipped file under the worst budget** ([sol] r3 B): the frozen file's over-budget policy can only
+  shorten the horizon (40 → 20 → 10 ticks, never back), so the shipped file's race lies between the timing-off race
+  and the race with every `mpc()` call over budget. That second race, `agents/checkpoint-b.py` with
+  `MPC_BUDGET_MS = 0.0` (as U10.7), on the same five sealed cars: all five clean, median ≤ 300 s; pinned to the probe
+  `p6`: 284.35, 284.35, 284.00, 284.20, 284.55 s to a tick, median 284.35 s, max line error ≤ 1.7 m (probe 1.52 m).
+  Five more pooled races (70 in all).
 - **CPB.5 the contrast** (same five races): `agents/unit-11.py` at 0.54 with the race-day line and grip finishes all
   five and is not clean on at least three; `agents/unit-10.py` at 0.54 with the same constants does not finish at
   least one.
@@ -118,18 +126,20 @@ Only descriptive figures quoted in prose (a median, a mean) may be corrected in 
   against 133), and the bodies of every function and class are identical ([fable] N3).
 - **CPB.8 the seal:** the race-day cell of both `checkpoint.ipynb` and `solutions.ipynb` is cell-tagged `race-day`
   and carries the scaffold line `SEALED_CARS = range(1000, 1005)`; in each notebook that tagged cell exists exactly
-  once, and no other code cell contains an integer literal from 1000 to 1005 or `SEALED_CARS`; no cell calls
+  once, and no other code cell contains an integer literal from 1000 to 1005 or `SEALED_CARS` (each code cell parsed with
+  `ast`, walking `ast.Constant` ints and `ast.Name` ids; a cell that does not parse fails the test) ([fable] r3 N4); no cell calls
   `perturbation_factors` with `SEALED_CARS`, one of its members or such a literal ([fable] r2 S2).
 - **Timing off for the pinned races:** every CPB.3–CPB.5 race runs a `MPC_BUDGET_MS = None` variant (as
-  `_robust_premise` does), and so do the solutions' Question 4 and 5 races, so the tick-level pins reproduce on a
-  loaded machine; CPB.6 alone runs the file as shipped ([fable] r2 S3).
+  `_robust_premise` does), and so do the solutions' Question 4 and 5 sealed races, so the tick-level pins reproduce
+  on a loaded machine; CPB.4b runs the worst budget; CPB.6 and Question 5's `check_submission` run the file as shipped
+  ([fable] r2 S3, r3 N3).
 - **Where each gate is asserted.**
   - CPB.1 in `roar/data/tests/test_gen_tracks.py` (the driver test's output list, the length-bounds dict and
     `SEEDED_STATS` gain the name; `gen_tracks.py`'s docstring names the track) ([fable] N4).
   - CPB.2–CPB.8 in the routed `tests/test_racekit_checkpoint_b.py` (helper `tests/_checkpoint_b_premise.py`,
     a conftest fixture `checkpoint_b_premise`). Jobs: 6 probes; CPB.3 15 + 15 (0.50, 0.48) + 7 + 7 (0.54 and 0.52,
     the first 7 in protocol order: `test-circuit`, `-seed1`, then `-seed2`'s first car, enough to include the
-    not-clean race) = 44; CPB.4 5; CPB.5 10. **65 races**, about 65 × 6.1 s + the Unit 10 DNFs (3 × 700 s races,
+    not-clean race) = 44; CPB.4 5; CPB.4b 5; CPB.5 10. **70 races**, about 65 × 6.1 s + the Unit 10 DNFs (3 × 700 s races,
     about 2.5 races each) ≈ 7.5 CPU-min, about 1 min pooled on 8 workers, plus the six line solves (under 1 s).
   - The **target 300 s** sits above the clean race-day value (283.90 s) and below every fraction that is not clean
     on race day (their means 344.76–405.06 s); it is a racekit target on this track and has nothing to do with the
@@ -141,10 +151,13 @@ Only descriptive figures quoted in prose (a median, a mean) may be corrected in 
 **Brief:** "Race day. A track you have never driven, `test-circuit-seed2027`, and a car you have never met: five
 cars of the perturbed family, sealed (`perturb=1000` … `1004`). You may measure the track with the carla-like car you
 know, solve its line, and tune on the five training tracks with the training cars. You may race the race-day track
-once: five races, after every choice is frozen." The rules: the submission is **your own Unit 11 submission**
+once: the submission check, then five scored races, after every choice is frozen." ([sol] r3 N) The rules: the submission is **your own Unit 11 submission**
 (`agents/unit-11.py` is the stand-in; the solutions use it); only `MU_FRACTION`, `LINE_CONTROL` and `MU_G` change;
 the seal is an honour rule (above); no race on `test-circuit-seed2027` except the six probes and race day, and race
-day starts with the frozen file's `check_submission` (the nominal car) before the five sealed races.
+day starts with the frozen file's `check_submission` (racekit's default kinematic car) before the five sealed races.
+Races in the notebook use a timing-off copy of the file (`write_variant(..., MPC_BUDGET_MS=None)`, as Unit 11's
+solutions do), so the numbers reproduce on any machine; the frozen file itself keeps `MPC_BUDGET_MS = 5.0` and is
+what `check_submission` validates ([fable] r3 N1).
 **The bar:** all five race-day races clean (finished, 0 collisions, max line error ≤ 2 m), median ≤ 300 s.
 1. **Measure the track.** Run Unit 8's six grip probes on `test-circuit-seed2027` (the given probe settings); from
    each probe's outcome (finished or not, collisions) and its telemetry compute each section's μg, and say which
@@ -181,7 +194,8 @@ day starts with the frozen file's `check_submission` (the nominal car) before th
    Report the edge and the shipped value, and freeze it. The stand-in finds
    0.50 and ships 0.48; a student's agent may not, and that is not an error.
 5. **Race day.** Plan the lap at your frozen fraction (Question 2's function); run `check_submission` on the frozen
-   file on the race-day track (the nominal car; it must pass before anything else races there) ([sol] r2 B,
+   file on the race-day track (racekit's default kinematic car, with the timing check; it must pass before any
+   sealed car races there) ([sol] r3 S, [fable] r3 N2) ([sol] r2 B,
    [fable] r2 S1); then race the five sealed cars once.
    Report clean, the median and the mean against the bar, and compare with the plan.
 6. **What bought what.** With the race-day record your teacher hands out after Question 5 (the `p4` table, kept in
@@ -256,3 +270,10 @@ Verdicts: [self] APPROVE WITH NITS; [sol] REJECT (one B); [fable] APPROVE WITH N
 - [fable] S2: CPB.8's mechanics pinned (a `race-day` cell tag, the `SEALED_CARS = range(1000, 1005)` scaffold, the literal scan on both notebooks). Folded.
 - [fable] S3: the pinned races and the solutions' races run with `MPC_BUDGET_MS = None`; CPB.6 runs the shipped file. Folded.
 - [fable] N1–N3: grading text aligned; the short form does not claim the edge; the upward path's cap outcome. Folded.
+
+### Round 3 (v3 @ 07a2073)
+Verdicts: [self] APPROVE WITH NITS; [sol] REJECT (one B); [fable] APPROVE WITH NITS.
+- [sol] B: the pinned race-day races ran a timing-off copy, not the frozen file. Probe `p6`: the frozen file with every `mpc()` call over budget (`MPC_BUDGET_MS = 0.0`, the horizon drops to 10) is clean on all five sealed cars, median 284.35 s. New gate CPB.4b; since the policy only shortens the horizon, the shipped file's race is bracketed by CPB.4 and CPB.4b. Folded.
+- [sol] S: `check_submission` races racekit's default kinematic car, not a nominal carla-like car; the wording says so. Folded.
+- [sol] N: "five races" now "the submission check, then five scored races". Folded.
+- [fable] N1–N4: the timing-off copy named in the rules; "before any sealed car races there"; the gate names which runs keep timing; CPB.8 scans with `ast`. Folded.
