@@ -4,7 +4,11 @@
 (Unit 13's gate pinned on `monza-like`, and the budgets, below).
 **Book:** `roar`. **Autopilot** per AGENTS.md.
 **Base:** branches from `main` after `roar-012` merged (#167, d8cf80b).
-**v1.**
+**v1**; **v2** folds plan-review round 1 ([sol] REJECT: B1 the N/N gate never raced the shipped timing policy, B2 the
+lab's five-launch record and acceptance paths, S3 Exercise 6's data; [fable] APPROVE WITH NITS: S1 the isolated
+3.8 check's track, S2–S5, S6 the lab under lab-check, S7, N1–N6; [self] the held-out cars as validation). New
+evidence: probes `p8` (fresh test cars 48–71, pre-registered), `p9` (the timing policy bracketed) and `p10` (both
+edges confirmed at the shipped `A_ACC` 5.0).
 
 ## Scope
 - Unit 13 `roar/units/unit-13-race-day/` (🏁: design §6 gives Unit 13 a real-sim lab): lesson, exercises (core +
@@ -31,19 +35,25 @@ perturbed family: training cars k = 0–23, held-out cars k = 24–47, race seed
   0 and 1 plus the three lowest-grip **training** cars (k = 16, 18, 8: grip factors 0.930, 0.934, 0.936), 3 laps;
   any not-clean race rejects the setting; Unit 1's rule on the two per-replicate sums accepts a step. A coordinate
   search from `unit-11.py`'s (0.54, 5.0, 4.0) over `MU_FRACTION` (grid 0.02), `A_DEC` (0.5) and `A_ACC` (0.5), 100
-  races (p2): `MU_FRACTION` climbs clean to 0.66 (0.68 is not clean: cars 16 and 8 collide); `A_DEC` 5.5 is not
-  clean on all three low-grip cars (4.5 is clean but slower); `A_ACC` 4.0 → 4.5 → 5.0 is accepted, and 5.0, 5.5, 6.0
-  are a plateau (1861.93 / 1861.88 / 1862.00 s).
+  races (p2): `MU_FRACTION` climbs clean to 0.66 (0.68 is not clean: at `A_ACC` 4.0 car 8 collides and car 16 runs 2.01 m from
+  its line; at the shipped `A_ACC` 5.0, p10, cars 16 and 8 collide and car 18 runs 2.01 m); `A_DEC` 5.5 is not
+  clean on all three low-grip cars at `A_ACC` 4.0, 5.5 and (p10) 5.0 (4.5 is clean but slower); `A_ACC` 4.0 → 4.5 → 5.0 is accepted, and 5.0, 5.5, 6.0
+  are a plateau (per-replicate sums [1861.95, 1861.90], [1861.90, 1861.85] and [1862.05, 1861.95] s).
+  The lesson's and Exercise 3's table pins every evaluated setting with its two per-replicate sums and, for a
+  not-clean one, each failing race's reason (collision, or line error over 2 m), from `u13/p2.pkl`.
   **A determinism trap, live:** the search's literal last step, `A_ACC` 5.0 → 5.5, was accepted on a floating-point
-  tie (gain 0.05 s against a spread of 0.05 s, compared as floats). Unit 12's traps apply: compare in whole ticks
+  tie (the pairs [1861.95, 1861.90] and [1861.90, 1861.85]: gain 0.0500000000001819 s against a spread of
+  0.049999999999954525 s, exactly one tick each, so the float comparison says "beats"). Unit 12's traps apply: compare in whole ticks
   (or with a half-tick tolerance), and the step is a tie, not a gain. The incumbent is **(0.66, 5.0, 5.0)**: the
-  **edge** on two knobs, `MU_FRACTION` (0.68 not clean) and `A_DEC` (5.5 not clean). `A_ACC` has no edge in the box.
+  **edge** on two knobs, `MU_FRACTION` (0.68 not clean) and `A_DEC` (5.5 not clean). The search found no edge for `A_ACC`
+  (6.0 is clean; 6.5 and 7.0, inside its box of 2.0–7.0, were not raced).
 - **The margin rule, on every knob at its edge.** Unit 11's rule (one grid step inside the edge) was stated for
   its one knob. On held-out cars 24–47 (3 laps, p3):
 
   | setting (`MU_FRACTION`, `A_DEC`, `A_ACC`) | held-out clean | median (s) | max line error (m) | not clean |
   |---|---|---|---|---|
   | the edge E (0.66, 5.0, 5.0) | 22/24 | 465.05 | 9.53 | car 24 (2 collisions, 737 s), car 41 (2 collisions, 889 s) |
+  | the search's literal output E′ (0.66, 5.0, 5.5) | 22/24 | 465.00 | 2.64 | cars 41 and 46 (1 collision each) |
   | margin on `MU_FRACTION` only, M (0.64, 5.0, 5.0) | 23/24 | 467.02 | 5.42 | car 41 (1 collision, 685 s) |
   | **margin on both edged knobs, M2 (0.64, 4.5, 5.0)** | **24/24** | 468.83 | 1.34 | none |
   | margin on `A_DEC` only, P (0.66, 4.5, 5.0) | 24/24 | 466.73 | 1.44 | none |
@@ -52,12 +62,16 @@ perturbed family: training cars k = 0–23, held-out cars k = 24–47, race seed
   | `unit-07.py` as shipped | 12/24 | 708.17 | 6.73 | 12 cars, 144 collisions, each cut at 900 s |
 
   The rule applied only to Unit 11's knob (M) is **not** N/N; applied to **every knob at its edge** (M2) it is.
-  M2 is the rule's answer, fixed before the held-out cars are raced; M is the cautionary row (Unit 11's rule
-  read too narrowly). P (margin only on the knob that failed) is also 24/24 and about 2 s faster: Challenge 9
+  M2 is the rule's answer, fixed before any held-out result: p3 raced E, E′, M and M2 in one pre-declared job, and P
+  was raced afterwards (p3b). M is the cautionary row (Unit 11's rule read too narrowly). P (margin only on the knob that failed) is also 24/24 and about 2 s faster: Challenge 9
   asks whether that is a finding or a fit to the held-out cars. **The unit ships M2.** M2 is also 24/24 clean on
   the training cars (median 468.35 s, max line error 1.30 m).
-  Honesty: the held-out cars are racekit's stand-in for "a car you have not met"; **the real test is CARLA**, raced
-  in the lab. The lesson says that racekit's held-out family is a validation set for the margin, not a promise.
+  **A test set, raced once.** The held-out cars 24–47 showed which reading of the rule to ship and P's 2 s, so (as
+  Unit 12 taught for tracks) they have become a **validation** set. Before any further choice, this plan
+  pre-registered fresh family cars k = 48–71 (`u13/p8-preregistration.txt`) and raced M2 on them once (p8): **24/24
+  clean**, median 469.65 s, max line error 1.37 m. The lesson keeps the three sets apart: training cars 0–23 (in
+  the objective: 16, 18, 8), validation cars 24–47, test cars 48–71. Honesty: all three are racekit's stand-in for
+  "a car you have not met"; **the real test is CARLA**, raced in the lab.
 - **MPC or pursuit (falsifiable, Unit 10's question again).** At M2 on the nominal car, seeds 0–4: MPC 468.55 s
   (spread 0.10, max line error 1.01 m), pursuit (`STEERING = "pursuit"`) 468.60 s (spread 0.10, 1.66 m): Unit 1's
   rule says neither is faster. On the held-out cars pursuit is **13/24 clean (11 collisions)**, MPC 24/24. MPC
@@ -66,7 +80,15 @@ perturbed family: training cars k = 0–23, held-out cars k = 24–47, race seed
 - **The gate (design §6: `check_submission`, the timing budget, N/N clean races, beats the Unit 7 agent
   noise-aware).** `unit-13.py` vs `unit-07.py` on `monza-like`, nominal car, 3 laps, seeds 0–4: 468.55 s (spread
   0.10, 5/5 clean) against 515.10 s (spread 0.15, 5/5 clean): 46.55 s, Unit 1's rule holds by a wide margin.
-  N/N: 5/5 nominal and 24/24 held-out cars. `check_submission(agents/unit-13.py, track="monza-like")` passes,
+  N/N: 5/5 nominal, 24/24 validation cars and 24/24 test cars.
+  **The shipped timing policy.** The races above switch timing off; the submitted file keeps `MPC_BUDGET_MS = 5.0`,
+  and under load a slow `mpc()` call halves the horizon for the rest of the race (40 → 20 → 10, never restored).
+  Timing-on races are not reproducible (Unit 12), so the plan brackets the policy deterministically (p9): M2 with
+  the horizon fixed at 20, and with `MPC_BUDGET_MS = 0.0` (every call over budget: the horizon is 10 from the
+  third tick to the end, the policy's worst case), is clean on nominal seeds 0–4, cars 24–47 and cars 48–71 at
+  both (106 races, max line error 1.38 m at 20 and 1.58 m at 10). A loaded race runs a prefix at 40, then 20, then
+  10, each regime clean on every car raced; the lesson says that this brackets the policy and does not prove every
+  switching time. `check_submission(agents/unit-13.py, track="monza-like")` passes,
   step p99 about 1.0 ms (p6, under a load of 7.7). On its **default** track (`test-circuit`) it fails at
   construction (`LINE_CONTROL has 285 values, this track needs 133`): a race-day submission is checked on its
   own track, as the Unit 10 lab found.
@@ -93,20 +115,34 @@ perturbed family: training cars k = 0–23, held-out cars k = 24–47, race seed
   0.997 ms; on `test-circuit` it fails at construction (`u13/p6.log`).
 - **p7 the gate vs Unit 7:** above; with timing on (5.0 ms, a 5-worker pool) M2 is 468.60 / 0.25, still clean, and
   some races halve the horizon under load (`u13/p7.log`): timing-on races are not reproducible (Unit 12).
+- **p8 the test cars** (pre-registered in `u13/p8-preregistration.txt` before any race on them): M2 on k = 48–71,
+  24/24 clean, median 469.65 s, max line error 1.37 m (`u13/p8.log`).
+- **p9 the timing policy, bracketed:** M2 at `MPC_HORIZON = 20` (timing off) and at `MPC_BUDGET_MS = 0.0`, on
+  nominal seeds 0–4, cars 24–47 and cars 48–71: 106/106 clean (`u13/p9.log`).
+- **p10 the edges at the shipped `A_ACC` 5.0:** (0.68, 5.0, 5.0) and (0.66, 5.5, 5.0) are each not clean on cars
+  16, 18 and 8 (`u13/p10.log`).
+- **Expected time over the validation cars** (per-car times in `u13/p3.pkl`, `p3c.pkl`; a race cut at 900 s counts
+  at 900 s): E 494.11 s, M 476.24 s, M2 468.98 s, `unit-07.py` 707.62 s. Here expected time also picks M2: E's two
+  crashes cost more than its 3.9 s a clean race saves (unlike Checkpoint B's race day, where the expected-time rule
+  picked the edge).
 
 ## Deviations from design (recorded; design 013 v4.12)
-- §6's Unit 13 gate "N/N clean races" is pinned as **5/5 nominal (seeds 0–4) and 24/24 held-out perturbed cars
-  (k = 24–47)** on `monza-like`; "the timing budget" is `check_submission`'s p99 ≤ 5 ms on `monza-like`.
+- §6's Unit 13 gate "N/N clean races" is pinned as **5/5 nominal (seeds 0–4), 24/24 validation cars (k = 24–47)
+  and 24/24 test cars (k = 48–71, at the timing policy's worst case)** on `monza-like`; "the timing budget" is
+  `check_submission`'s p99 ≤ 5 ms on `monza-like`. Cars 48–71 are a new, Unit 13 test set of the same family (Unit
+  11 named only 0–23 and 24–47); the sealed range k ≥ 1000 stays untouched.
 - Unit 11's margin rule is applied to **every knob at its edge** (Unit 11 stated it for its one knob); the unit
   shows the one-knob reading failing (M, 23/24).
 - The race-day agent is a **re-tune of `unit-11.py`** on `monza-like`; `unit-12.py`'s `A_DEC = 5.5` is not carried
   (on `monza-like` at `MU_FRACTION` 0.66 it is not clean on all three low-grip cars). This resolves the roar-012
   follow-up "which agent races" by the book's own rules; the follow-up list keeps it for the author.
+  `checkpoint-b.py` (`MU_FRACTION` 0.48, Checkpoint B's margin answer on its own track) is the slowest tuned agent on
+  `monza-like` (493.50 s, p1) and was not raced on the perturbed cars there: a re-tune on the known track replaces it.
 - `check_submission` is called with `track="monza-like"` everywhere (its default track refuses a Monza line).
 
 ## Concepts
 **Introduces nothing** (design §6). Practises (each exercised in Unit 13's exercises, by name):
-`grip-identification`, `cornering-speed-limit`, `racing-line`, `line-retune`, `ltv-mpc`, `pure-pursuit`,
+`cornering-speed-limit`, `speed-profile`, `racing-line`, `line-retune`, `ltv-mpc`, `pure-pursuit`,
 `tick-budget`, `perturbation-testing`, `respawn-economics`, `repeated-run-measurement`, `black-box-search`,
 `held-out-track-validation`, `determinism-and-packaging`. No new API names: every callable is in
 `baseline.yaml` `library_methods` and taught by Unit 12 or earlier (`concept-scan` enforces it).
@@ -125,8 +161,10 @@ values of `monza-like`'s line, written with `repr`), `MU_G` = (5.38, 8.96, 9.12,
   `MEASURED_MU_G["monza-like"]`.
 - **U13.1 the gate:** `unit-13.py` vs `unit-07.py`, seeds 0–4: both 5/5 clean; `noise_aware_better(unit-13,
   unit-07)`; medians 468.55 and 515.10 s.
-- **U13.2 N/N on the held-out cars:** `unit-13.py` on k = 24–47 (race seed k mod 5): 24/24 clean (finished, 0
+- **U13.2 N/N on the validation cars:** `unit-13.py` on k = 24–47 (race seed k mod 5): 24/24 clean (finished, 0
   collisions, max line error ≤ 2 m; p3: max 1.34 m).
+- **U13.2b N/N on the test cars, at the timing policy's worst case:** `unit-13.py` with `MPC_BUDGET_MS = 0.0` on
+  k = 48–71 (race seed k mod 5): 24/24 clean (p9: max 1.54 m); the race prints its two horizon cuts.
 - **U13.3 the margin was needed:** the one-knob margin M (0.64, 5.0, 5.0) on car 41 (race seed 1) is not clean
   (p3: 1 collision).
 - **U13.4 pursuit loses the margin:** `unit-13.py` with `STEERING = "pursuit"` on car 34 (race seed 4) is not
@@ -136,9 +174,9 @@ values of `monza-like`'s line, written with `repr`), `MU_G` = (5.38, 8.96, 9.12,
 - **U13.6** `check_submission(agents/unit-13.py, track="monza-like")` passes (outside any pool; p99 ≤ 5 ms).
 
 ## Budgets
-- **Routed pytest:** U13.1 10 races (5 MPC, 5 `unit-07.py`); U13.2 24 MPC; U13.3 1 (a crash race, about 15 s);
-  U13.4 1 pursuit; U13.5 1; the line solve (about 2 s); U13.6 serial, about 10 s. About 37 races, about 340 CPU-s,
-  about 50–60 s pooled. The suite measured 1036–1038 s on `roar-012` against 18.5 min (1,110 s): **this plan
+- **Routed pytest:** U13.1 10 races (5 MPC, 5 `unit-07.py`); U13.2 24 MPC; U13.2b 24 at horizon 10 (about 5.7 s each); U13.3 1 (a crash race, about 15 s);
+  U13.4 1 pursuit; U13.5 1; the line solve (about 2 s); U13.6 serial, about 10 s. About 61 races, about 480 CPU-s,
+  about 70–80 s pooled (about 1,115 s in all). The suite measured 1036–1038 s on `roar-012` against 18.5 min (1,110 s): **this plan
   raises the interim routed budget to 19.5 min (1,170 s; v4.12), the eighth raise**; over 1,170 s in Phase D stops
   and amends the plan. The tiering decision stays the first follow-up.
 - **Notebooks** (lesson + solutions + milestone; the lab's analysis cells are seconds): ≤ **4 min** serial in total,
@@ -158,9 +196,12 @@ values of `monza-like`'s line, written with `repr`), `MU_G` = (5.38, 8.96, 9.12,
 ## Phases
 - **Phase A — agent + premise + registry** (Opus subagent).
   - `agents/unit-13.py` (written with `write_variant` from `unit-11.py`; constants with `repr`; header comment
-    naming the unit, the five constants and why).
+    naming the unit, the five constants and why; the comments on `MU_G` and `LINE_CONTROL` rewritten for
+    `monza-like`: the AST compare ignores comments, so Phase A reads them).
+  - `tests/test_racekit_check_submission.py`: `AGENT_TRACKS` gains `"unit-13.py": "monza-like"` (the isolated
+    Python 3.8 run of every agent would otherwise race it on `test-circuit` and fail at construction).
   - `tests/_race_day_premise.py` + `tests/test_racekit_unit13_premise.py` + a conftest fixture (pooled races, the
-    existing pool runner); every gate U13.0–U13.6 confirmed and logged.
+    existing pool runner); every gate U13.0–U13.6 (with U13.2b) confirmed and logged.
   - Registry: coverage-map entry `unit-13-race-day` (introduces nothing; practises the list above), manifest
     (`lab: true`), syllabus row 13 (no emoji); `qualification.md`'s `roar-013` row: `agents/unit-13.py`, timed,
     its SHA-256 at the Phase A commit (re-recorded if the file changes before merge), `PENDING (author)`; design
@@ -177,25 +218,29 @@ values of `monza-like`'s line, written with `repr`), `MU_G` = (5.38, 8.96, 9.12,
     default track's refusal shown; the timing budget, timing off vs on); §6 package and submit (the checklist,
     the season's rules re-checked, what to re-check if the season changes; the interim CARLA check `PENDING`).
   - **Exercises (8 core + 1 Challenge),** each naming the concepts it practises:
-    1. Section 0's lower bound (`grip-identification`, `cornering-speed-limit`): each section's largest curvature
+    1. Section 0's lower bound (`cornering-speed-limit`, `speed-profile`): each section's largest curvature
        on the solved line and v_max = √(μg/κ) at the measured grip; which sections can the lower bound limit? No
-       races.
+       races. (It uses the measured μg; it identifies nothing, so it claims no `grip-identification` credit.)
     2. The line (`racing-line`, `line-retune`): solve `monza-like`'s line with the setup's Unit 9 solver; check the
        width constraint; compare with `unit-13.py`'s `LINE_CONTROL`. No races.
     3. The re-tune's record (`black-box-search`, `repeated-run-measurement`, `determinism-and-packaging`): replay
-       p2's table step by step with Unit 1's rule; find the float tie; decide it in whole ticks; name the incumbent
-       and its edges. No races.
-    4. The margin (`perturbation-testing`, `held-out-track-validation`): from the table, the margin setting under
-       the one-knob reading (M) and the every-edge reading (M2); race both on car 41 (2 races); clean counts from
-       p3's pinned table.
+       p2's table (every setting's two per-replicate sums, pinned, and each not-clean race's reason) step by step
+       with Unit 1's rule; find the float tie; decide it in whole ticks; name the incumbent and its edges. No races.
+    4. The margin (`perturbation-testing`, `held-out-track-validation`, on held-out **cars**: the statement says the
+       training/validation/test idea carries from tracks to cars): from the table, the margin setting under the
+       one-knob reading (M) and the every-edge reading (M2); race both on car 41 (2 races); clean counts from p3's
+       pinned table; which set is spent, and which is the test.
     5. MPC or pursuit (`ltv-mpc`, `pure-pursuit`): race `unit-13.py` and its pursuit copy on car 34 (2 races, about
        14 s); with p4's pinned nominal table, decide by Unit 10's order (time, then margin).
-    6. Respawn economics (`respawn-economics`): expected race time over the held-out family for E, M, M2 and
-       `unit-07.py` from p3's pinned times; when does expected time pick the edge, and why does the race day not?
-       No races.
+    6. Respawn economics (`respawn-economics`): the 24 per-car times of E, M, M2 and `unit-07.py` on cars 24–47
+       are given (pinned from `u13/p3.pkl` and `p3c.pkl`; a race cut at 900 s counts at 900 s, the stated crash
+       cost). Compute each expected race time (494.11, 476.24, 468.98, 707.62 s); here expected time also picks
+       M2; find the crash rate at which E's per-race saving would pay for its crashes, and compare with Checkpoint
+       B, where expected time picked the edge. No races.
     7. Timing (`tick-budget`): one `run_race` of `unit-13.py` with timing **on** and one with it off on seed 0,
-       printing `step_ms` p50/p99 and whether the times match; nothing load-dependent asserted (2 races, about
-       20 s). (If the budget is tight in Phase B, 1 lap.)
+       printing `step_ms` p50/p99 and whether the times match; nothing load-dependent is asserted or printed as a
+       fixed claim (the solutions brief says so; 2 races, about 20 s; 1 lap if the budget is tight); then, from
+       p9's pinned record, why the horizon-20 and budget-0 races bracket the shipped policy.
     8. The packaging checklist (`determinism-and-packaging`): read `unit-13.py`'s text; check its constants
        against the pinned ones; `check_submission` on the default track (the refusal, shown) and the reasons a
        race-day file is checked on its own track; write the checklist as a list of strings. The timed
@@ -204,14 +249,28 @@ values of `monza-like`'s line, written with `repr`), `MU_G` = (5.38, 8.96, 9.12,
        races); is P a finding or a fit to the held-out cars, and what would you need to race to tell?
   - **Milestone:** U13.0's file checks (constants, line, grip), U13.1's 10 races and the noise-aware verdict, and
     `check_submission(UNIT_13, track="monza-like")` PASS with p99 printed and ≤ 5 ms asserted.
-  - **Lab** `labs/real-sim.ipynb` (lab-check rules; analysis cells run on the sample CSV): race day on CARLA. The
-    starting point is the Unit 10 lab's accepted configuration (or the Unit 8 one); assemble the file (your line,
-    your `MU_G`, `MAX_STEER`, your accepted fraction, one grid step of margin on every knob you pushed to an edge
-    on CARLA); the timing step off CARLA (the Unit 10 lab's timing copy for a file with a Monza line); the
-    checklist; then **the race-day record: five consecutive official-runner launches, none discarded** (design
-    §7.3's protocol, for the student's own file); the analysis: one recording by the clean rule (as the Unit 10
-    lab), then the five-launch table (clean count, median, spread) and the comparison with the student's Unit 7
-    lab record by Unit 1's rule. Results stay on the student's machine (the public-repo warning).
+  - **Lab** `labs/real-sim.ipynb` (lab-check rules: one parameters cell holds the only `.csv` path; analysis cells
+    run on the sample CSV): race day on CARLA.
+    - **The starting file.** The latest configuration that has raced clean on CARLA in an earlier lab, in this
+      order: the Unit 10 lab's accepted configuration, else the Unit 8 lab's, else the Unit 7 lab's, else the
+      Unit 5 or Unit 1 lab file. Nothing that has not raced clean on CARLA is ever the race-day file.
+    - **Assemble** that file's own constants (line, `MU_G`, `MAX_STEER`, fraction, steering choice) and put one grid
+      step of margin on **every knob that reached an edge on CARLA** (a knob never pushed to a not-clean setting
+      gets none). If the assembled file differs from the starting file, it must be **accepted** first: clean on
+      two practice launches (the earlier labs' rule); if either is not clean, the starting file is the race-day
+      file. The timing step runs off CARLA first (the Unit 10 lab's timing copy for a file with a Monza line).
+    - **The checklist** (one file, numpy only, Python 3.8, the unmodified runner files, the season's
+      `instruction.txt` / `requirements.txt` wording read from the current page, the file's SHA-256 written down).
+    - **The race-day record: five consecutive official-runner launches of that one file, none discarded or
+      restarted.** A host failure (the CARLA server exits, or the agent never receives its first tick) is not an
+      agent failure: it is recorded, the five-launch block restarts, and both blocks stay in the record (design
+      §7.3).
+    - **Analysis, per launch.** Point `ROAR_LAB_CSV` at each launch's recording in turn and run the analysis cell
+      (the clean rule on that recording, as the Unit 10 lab); type each launch's result into `LAUNCHES`, a hand-typed
+      list of (time, runner collisions, finished, max error, clean, host failure) in a plain cell, as the Unit 10
+      lab's run log does. A summary cell computes the clean count, the median and spread of the clean launches,
+      and Unit 1's comparison with the student's Unit 7 lab record (`UNIT_7_TIMES`, typed in); it executes clean
+      on empty lists against the fixture. Results stay on the student's machine (the public-repo warning).
   - Solutions in a **separate fresh** Opus session.
 - **Phase C — teacher notes** (inline): goals, two or three sittings, the lab sitting, common mistakes, prompts,
   differentiation.
@@ -221,6 +280,24 @@ values of `monza-like`'s line, written with `repr`), `MU_G` = (5.38, 8.96, 9.12,
 ## Out of scope
 - The capstone, the site flag, the final qualification and the publication flag (`roar-014`).
 - Any racekit change; any new concept or API name.
-- The author's CARLA runs (the interim check is recorded `PENDING (author)`).
+- The author's CARLA runs (the interim check is recorded `PENDING (author)`; it is a named risk in `roar-014`'s
+  `## Plan Review`, design §7.3, and in the follow-up list).
 
 ## Plan Review
+
+### Round 1 (v1 @ 554c035)
+
+Verdicts: [self] APPROVE WITH NITS (S1 below); [sol] REJECT (B1, B2, S3); [fable] APPROVE WITH NITS (S1–S7, N1–N6).
+
+- [FIXED v2] [sol] B1: the N/N gate raced timing off only, while the file ships `MPC_BUDGET_MS = 5.0`, whose load-driven horizon cuts change the steering. The policy only halves the horizon (40 → 20 → 10) and never restores it, so p9 brackets it deterministically: horizon 20, and `MPC_BUDGET_MS = 0.0` (10 from the third tick), 106/106 clean on nominal, validation and test cars. New gate U13.2b: the test cars at budget 0. The lesson says the bracket covers each regime, not every switching time.
+- [FIXED v2] [sol] B2 / [fable] S6: the lab now names the starting file (the latest configuration that raced clean on CARLA, in a fixed order down to the Unit 1 lab), the acceptance of an assembled file (two clean practice launches, else the starting file races), per-launch analysis (each recording through the clean-rule cell, results typed into `LAUNCHES`), the summary cell under lab-check's one-CSV rule, and design §7.3's host-failure rule.
+- [FIXED v2] [sol] S3: Exercise 6 is given the 24 per-car times of E, M, M2 and `unit-07.py` (a race cut at 900 s counts at 900 s, stated); the expected times are pinned (494.11, 476.24, 468.98, 707.62 s), and here expected time also picks M2, which the exercise contrasts with Checkpoint B.
+- [FIXED v2] [self] S1: the held-out cars 24–47 decided between readings of the rule and showed P's 2 s, so they are now a validation set; p8 raced M2 once on fresh, pre-registered family cars 48–71 (24/24 clean), the unit's test cars.
+- [FIXED v2] [fable] S1: Phase A adds `"unit-13.py": "monza-like"` to `AGENT_TRACKS` in `test_racekit_check_submission.py`.
+- [FIXED v2] [fable] S2: 0.68's failures are stated per car (car 8 collides, car 16 2.01 m at `A_ACC` 4.0; p10 at 5.0); the pinned table carries each not-clean race's reason.
+- [FIXED v2] [fable] S3: "no edge in the box" is now "no edge found (6.0 clean; 6.5 and 7.0 not raced)"; p10 confirms both edges at the shipped `A_ACC` 5.0.
+- [FIXED v2] [fable] S4: the per-replicate pair sums are pinned (the tie's exact float gain and spread in the plan).
+- [FIXED v2] [fable] S5: Exercise 1 no longer claims `grip-identification`; the unit practises `cornering-speed-limit` and `speed-profile` there, and Exercise 4 states the tracks-to-cars reframe.
+- [FIXED v2] [fable] S7: Deviations say why `checkpoint-b.py` is not the race-day agent.
+- [FIXED v2] [fable] N1 (E′ row), N2 (p3's pre-declared job), N3 (comments rewritten in Phase A), N5 (the PENDING check as a named risk for `roar-014`), N6 (print-only timing in Exercise 7).
+- [WONTFIX] [fable] N4: budgets confirmed as stated (now about 1,115 s against 1,170 s with U13.2b).
