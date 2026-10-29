@@ -190,7 +190,7 @@ Only descriptive figures quoted in prose (a median, a mean, an error) may be cor
 - **Phase B — content (Opus subagents).** Lesson (project-first: the hook race table, then §1 crash cost, §2
   expected time, §3 the family, §4 edge and margin on the family + the held-out check + the seed2026 transfer
   finding, §5 detection and lead times + the W6 negative result, §6 the fallback + the lag-2 car, §7 the shipped
-  agent); exercises (8 core + Challenges 9 β-triggered braking, noise-aware; 10 the seed2026 margin); milestone.
+  agent); exercises (8 core + Challenges 9 β-triggered braking, compared across seeds (content gate N4); 10 the seed2026 margin); milestone.
   Solutions in a **separate fresh** Opus session. The lesson calls the lag-2 car "the lag Unit 8 identified, plus
   one tick", never a hidden value.
 - **Phase C — teacher notes** (inline).
@@ -250,3 +250,68 @@ Blind solves: [sol] (static) and [fable] (raced, 8 races) solved Exercises 2, 4,
 - [WONTFIX] [fable] N5: the held-out median at 0.54 (279.95 s) equals the training mean. Confirmed from the U11.6 outcomes in the Phase A log (median 279.95 s, mean 279.96 s): a coincidence, not a copy.
 - [FIXED] [fable] N6: Sitting 3 bundled Exercises 4–7; Exercise 7 alone is about 45 min. Pacing is now three sittings with Exercise 7 as homework or a fourth sitting.
 - [FIXED] [fable] N7: Ex 10 attributed 282.55 s to "the premise", which does not assert it. Now "from plan `roar-010`'s Phase A record" (exercises and solutions).
+
+### Round 2 (@ 0813690)
+
+Verdicts: [self] APPROVE; [sol] REJECT (one S); [fable] APPROVE WITH NITS. Both verified the six round-1 [FIXED] items; [fable] confirmed the [WONTFIX] from the Phase A log (held-out median 279.95 s against training mean 279.95 s: two statistics on two car sets).
+
+- [FIXED] [sol] S1 / [fable] N1: Ex 10's 282.55 s was attributed to "plan `roar-010`'s Phase A record", but the committed plan did not carry it, and the solution's `one_fraction` string still said "the premise's 0.54 median". The Post-Execution Report's U11.8 line now records it (median of the 12 seed2026 races at 0.54), and the string says "the Phase A record's 0.54 median".
+- [FIXED] [fable] N2: the plan's Phase B line still described Challenge 9 as "noise-aware"; now "compared across seeds (content gate N4)".
+
+## Post-Execution Report
+
+**Shipped.** Unit 11 (robustness): racekit's perturbed carla-like family (`PERTURBATION_FAMILY`,
+`perturbation_factors(k)`, `carla_like(perturb=, lag_ticks=)`), `agents/unit-11.py` (the Unit 10 agent at
+`MU_FRACTION` 0.54 with an edge-triggered respawn handler that falls back to pure pursuit at 0.86 of the limit, and
+counted warnings), the lesson, 10 exercises (Challenges 9–10), solutions, teacher notes, the milestone
+`milestones/unit-11-robustness.ipynb`, the Unit 11 premise tests (16), the perturbation tests and the
+`robust_premise` fixture; registry (3 concepts, coverage entry, manifest, api-order, baseline), syllabus row 11;
+design 013 v4.9.
+
+**Gates.** U11.1–U11.9 confirmed by Phase A with the shipped racekit and agent (log `scratchpad/u11/phaseA-gates.log`):
+- U11.1: factors deterministic and in range for k = 0–999; `perturb=None` races identical to the old car; a lag-2 car
+  identical to a hand-built one.
+- U11.2: Unit 10 at 0.58 on the training family 21/24 clean; car 8 crashes once, cars 16 and 20 crash-loop.
+- U11.3: all 7 once-crashed races (3 training, 4 held-out at 0.58) have a remainder within 1.0 s of the fresh fallback
+  twin (−0.40 to −0.65 s).
+- U11.4: mean race time 318.66 / 294.35 / 279.95 / 282.58 s at 0.58 / 0.56 / 0.54 / 0.52; 0.56 not clean, 0.54
+  clean on all 24 and lowest.
+- U11.5: Unit 11 at 0.58 finishes all 48 with at most 1 collision; the lag-2 car: Unit 10 at 0.54 does not finish
+  (23 collisions), Unit 11 at 0.54 finishes in 321.65 s with 1 collision.
+- U11.6: 24/24 held-out clean at 0.54 (median 279.95 s, mean 279.96 s, at most 1.35 m from the line).
+- U11.7: Unit 11 = Unit 10 to the tick on the nominal car and 3 perturbed cars; U11.7a scripted-sensor tests pass.
+- U11.8: seed2026 at 0.54 (cars 0–11, race seed 0) is 8/12 clean (k = 6, 8, 9, 10 crash once and finish in 421.90–422.95 s); median race time over the 12: **282.55 s** (the figure Exercise 10's `slower_by` subtracts).
+- U11.9: with `WARN_FALLBACK = True` the same three cars crash; mean 298.07 s against 296.66 s.
+- `check_submission(agents/unit-11.py)` passes (p99 1.013 ms, standalone).
+
+**The q10 offset (explained).** The remainder after a crash is 0.40–0.65 s *shorter* than a fresh fallback race because
+the speed loop's PI integral carries across the respawn (the runner resets the car and the progress, never the
+agent; `fall_back()` resets the MPC state, not the speed PID). Resetting it too makes the remainder equal to the fresh
+race to the tick (probe on car 8, seed 3). The shipped agent keeps the carry-over (within U11.3's 1.0 s); the lesson
+answers "Is the restart exactly a fresh race?" with "Almost" and names the integral.
+
+**Budgets (measured).**
+- Routed roar pytest: 566 passed in 821 s (13.7 min) ≤ 15 min (v4.9 interim).
+- Unit 11 notebooks serial: lesson 95 s + solutions 125.5 s + milestone 52 s = 272.5 s (4.5 min) ≤ 5 min.
+- Book exec total about 35.8 of v4.8's 40 CI-minutes (31.3 + 4.5), leaving about 4 for Checkpoint B and Units 12–13.
+- `ci-local` ALL GREEN on `6211f83` and on the final head (below).
+
+**Deviations (recorded).**
+- Perturbed lag left out of the family (the first probe family with lag 2 made both controllers marginally stable);
+  the lag-2 car is a separate `lag_ticks=2` case (design v4.9).
+- `PERTURBATION_FAMILY`'s keys are `grip, steering, throttle, brake, mass, drag` ("steering" for the steering gain).
+- U11.9 races with `WARN_ERROR_M = None` so only the β warning triggers (the plan's "β 8°").
+- The plan's prose said q11 had false trips on cars 2 and 18; Phase A found they never trip (slow cars, not false
+  trips) and the plan was corrected.
+- Lead time is "the start of the last continuous run over the threshold before the crash" (the solutions author found
+  that "the first step over the threshold" made Ex 6's pins depend on an unrelated early blip); exercises, solutions
+  and lesson changed together.
+
+**Content gate.** Round 1: three APPROVE WITH NITS; blind solves of Exercises 2, 4, 6 and 8 by [sol] and [fable] all agree with the solutions; seven findings fixed, one WONTFIX (a coincidence of two medians). Round 2: [sol]'s one attribution point (282.55 s now recorded in this report) and [fable]'s two nits fixed. Round 3 confirms.
+
+**Risks.** The design §7.3 interim CARLA check of the Unit 7 reference is still PENDING (the author's). The family's
+ranges are the book's model of model error, not a CARLA measurement (said in the lesson and the teacher notes).
+
+**Follow-ups** (in `scratchpad/roar-followups.md`): the routed budget raised a fifth time (15 min interim); book exec
+headroom about 4 CI-minutes for Checkpoint B and Units 12–13 (the author's tiering decision); `grip-identification` dropped from
+Unit 11's `practices` (content gate S1): re-identifying grip on a perturbed car would be new scope.
