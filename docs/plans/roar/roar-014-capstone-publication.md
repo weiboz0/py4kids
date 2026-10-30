@@ -13,6 +13,8 @@ protocol: `TARGET_SPEED`), `p8v` (its validation cars), `p9` (per-seed lists; pu
 with `TARGET_SPEED = 50.0` and nothing else changed. Its **test cars are k = 96–119** (race seed k mod 5, 3 laps,
 `monza-like`, timing off), never raced before; they are raced **once**, by probe `p10` after this commit, and the
 result is reported as it comes: no choice in this plan may change after it.
+**v2.1** records `p10` (raced once after dc170c9): nominal 5/5 clean, median 447.90 s; the test cars **23/24** clean
+(car 117 collides twice, 590.05 s, 4.485 m); `check_submission` PASS. The choice stands, as pre-registered.
 
 ## Scope
 - The capstone project `roar/projects/project-14-competition-agent/` (`brief.ipynb`, `solutions.ipynb`,
@@ -92,7 +94,19 @@ Unit 11's margin rule ships one step inside the edge: **50.0**. On the validatio
 (median 448.12 s, max error 1.341 m); 52.5 without the margin is 21/24 (cars 24, 43, 46 collide). The other knobs
 tried: `PROFILE_LEAD_S` 0.2 is accepted by 0.85 s (a plateau; not pursued), 0.4 slower; `MPC_Q_E` 0.2 slower, 0.5 not
 clean. Why it works: `TARGET_SPEED` was set in Unit 4 and never re-tuned after the grip, the line and MPC raised the
-corner speeds. The test cars (pre-registered above) are raced once in `p10`.
+corner speeds.
+
+**The test cars, raced once (`u14/p10.log`, pre-registered at dc170c9; `p10.py` refuses a second run):** cars 96–119,
+race seed k mod 5: **23/24 clean**, median 448.48 s; **car 117** (seed 2) finishes with 2 collisions, 590.05 s, max
+line error 4.485 m (its CPU time, 4.47 s against about 9.3, fits the fallback's switch to pursuit). The other 23:
+445.30–451.15 s, max error ≤ 1.323 m. `agents/unit-13.py` was 24/24 on its test cars (72–95).
+This is the capstone's honest trade, and the report's: **20.65 s faster on the nominal car, one crash in 24 cars it
+had never met**. The margin rule thinned the risk (52.5, without it, was 21/24 on the validation cars); it did not
+remove it. By expected time over the test cars the choice still pays (one 590 s race among 24 costs about 5.9 s a race
+on average against about 20 s saved), but that is read after the fact, from cars that can no longer judge a new
+choice: the next choice would need a fresh pre-registered set. Car 117 is not re-raced and nothing is re-tuned.
+Which file the author's CARLA qualification races (`unit-13.py`, 24/24, or the capstone's, faster and 23/24) is the
+author's decision (follow-up).
 
 **The build-up ablation** (`u14/p2.log`, `p3.log`, `p9`; one file, `agents/unit-13.py` with constants changed by
 `write_variant`; seeds 0–4, 3 laps, timing off; S1–S7 with the respawn fallback off, `RESPAWN_IMPULSE = 1e300`, and
@@ -111,7 +125,7 @@ the pre-re-tune knobs `MU_FRACTION` 0.54, `A_DEC` 5.0, `A_ACC` 4.0):
 | S7 | Unit 10: `"mpc"` | 5/5 | 482.00 / 0.05 | 0.00 | False | 0.976 |
 | S8 | Unit 11: the respawn fallback on | 5/5 | 482.00 / 0.05 | 0.00 | False | 0.976 (telemetry identical to S7) |
 | S9 | Unit 13: the re-tune = `agents/unit-13.py` | 5/5 | 468.55 / 0.10 | 13.45 | True | 1.009 |
-| S10 | the capstone's choice: `TARGET_SPEED` 50.0 = `agents/capstone.py` | (p10) | (p10; s0 447.80, s1 447.90) | about 20.7 | (p10) | (p10) |
+| S10 | the capstone's choice: `TARGET_SPEED` 50.0 = `agents/capstone.py` | 5/5 | 447.90 / 0.20 | 20.65 | True | 1.141 |
 
 (c): from the centreline (no line raced). The story:
 - **A stage can cost time.** Unit 4's PID at the bar's speed is 16 s *slower* than the starter (it buys precision:
@@ -129,7 +143,8 @@ the pre-re-tune knobs `MU_FRACTION` 0.54, `A_DEC` 5.0, `A_ACC` 4.0):
   the report states.
 
 **The gate** (seeds 0–4, all in the premise): the capstone reference `agents/capstone.py` against the bar, both clean
-at 0 collisions, Unit 1's rule, margin **≥ 700 s** on the medians (pinned from `p10`; expected about 755 s).
+at 0 collisions, Unit 1's rule, margin **≥ 700 s** on the medians: **755.65 s** (`p10`: 447.80, 447.90, 447.95,
+448.00, 447.80; max error ≤ 1.141 m; `noise_aware_better` True).
 `agents/unit-13.py` against the bar: 468.55 vs 1203.55, 735.00 s (seeds 0–4 above; U13.1 already races unit-13's).
 
 **Unit 13's three exercises** (`u14/p5.log`–`p7.log`; one 1-lap race of `unit-13.py`, seed 0, timing off, 159.15 s,
@@ -161,7 +176,7 @@ Phase A re-measures every pinned value with the shipped code; a miss stops the p
   `carla_like(noise=True)`; the shipped starter never finishes `monza-like` on that car. Gate: the capstone reference
   beats it by **≥ 700 s**, both clean at 0 collisions, by Unit 1's rule on seeds 0–4.
 - §6 capstone: the reference is `agents/capstone.py` (`unit-13.py` with `TARGET_SPEED` 50.0), the solution's worked
-  "your own choice"; its test cars are 96–119 (§4.4 gains the range), raced once.
+  "your own choice"; its test cars are 96–119 (§4.4 gains the range), raced once: 23/24 clean (recorded as is).
 - §6 row 13: Unit 13 also practises the seven concepts above (the capstone rule), with `lessons: 4`.
 - §3: `site` and `publication` wait on the author's final qualification (a follow-up plan sets them); `buildout`
   is removed here.
@@ -192,13 +207,14 @@ assumed-baseline concept). Unit 13 adds `numerical-integration`, `integrator-win
      `agents/unit-07.py`; `check_submission` on `monza-like`; the packaging checklist (Unit 13).
   5. **The engineering report.** A memo: the ablation table, what each stage bought with its spread, the stage that
      cost time and why, what MPC and the fallback buy that time does not show (margin), the order of the ablation,
-     your choice's evidence (training, validation), what you would do next, and the CARLA caveat (racekit is a
+     your choice's evidence (training, validation, and a test set if you pre-registered one), what you would do next, and the CARLA caveat (racekit is a
      model; CARLA is the test).
   **The student's race count** (stated in the brief): the bar 9, the choice about 30 plus 24 validation, the
   build-up 55, the leave-one-out 20, qualify 10: about 150 races, about 20 CPU-minutes serial, run across the three
   sittings and at home (the brief says which can run while you write). A student may cut the build-up and the
   leave-one-out to seeds 0–2 and say so in the report.
-- **Solutions** (a separate fresh session; the reference `agents/capstone.py`): the bar (the shipped starter capped
+- **Solutions** (a separate fresh session; the reference `agents/capstone.py`): the test cars' record (`p10`, 23/24,
+  car 117) given as data and read in the model report, never raced; the bar (the shipped starter capped
   at 120 s: collisions ≥ 1, not finished; `TARGET_SPEED` 14 at seed 0 live: 1203.45); the choice (`p8`'s table and
   `p8v`'s validation counts as the probe record of plan `roar-014`, given as data; the whole-tick replay of the
   acceptance; seed 0 of 50.0 live: 447.80); the build-up (seed 0 of S1–S10 live, each checked against the record
@@ -247,9 +263,9 @@ Every value the solutions assert is a deterministic pin from Phase A; anything e
   the profiled lap). Each cell ≤ 120 s. Book exec about 49.3 → **about 51.5 of 55 CI-min. No raise.**
 
 ## Phases
-- **Probe p10 (after this plan's pre-registration commit, before Phase A):** `agents/capstone.py`'s configuration
-  on the nominal car seeds 0–4 and on the pre-registered test cars 96–119, once; `check_submission` on `monza-like`,
-  idle. Reported as it comes; recorded in the plan.
+- **Probe p10 (done, after dc170c9; recorded above):** nominal 5/5, test cars 23/24, `check_submission` PASS
+  (p99 0.998 ms, load 2.46). The test cars are **not** in the routed premise (24 races would not fit the headroom);
+  their record is `p10`'s, quoted with its log.
 - **Phase A — agent + premise + registry** (Opus subagent).
   - `agents/capstone.py` (written with `write_variant` from `unit-13.py`; a `#` header naming the capstone, the one
     constant and its evidence); `AGENT_TRACKS` gains `"capstone.py": "monza-like"`.
