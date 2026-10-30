@@ -32,4 +32,4 @@ A FAIL is surfaced as a follow-up and triggers an errata/fix plan before the nex
 | plan | agent | check | submission SHA-256 | repository commit | result |
 |---|---|---|---|---|---|
 | `roar-006` | `roar/projects/racekit/agents/unit-07.py` | untimed, 3 laps, 0 collisions | `4d56c05bfa3ba50de3e4e0c15fcb07dd4d5e33db24219497c389a0f63fa3eb9f` (at the `roar-006` Phase A commit; re-recorded if the file changes before merge) | the `roar-006` merge commit | PENDING (author) |
-| `roar-013` | the Unit 13 reference | timed | — | — | not yet shipped |
+| `roar-013` | `roar/projects/racekit/agents/unit-13.py` | timed | `5a64c19ed58cf8e27e5b493b317df199add9f65e43c50643f539fda4dfccf0da` (at the `roar-013` Phase A commit; re-recorded if the file changes before merge) | the `roar-013` merge commit | PENDING (author) |

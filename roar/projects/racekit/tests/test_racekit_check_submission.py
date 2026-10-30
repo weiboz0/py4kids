@@ -231,8 +231,9 @@ def test_racekit_core_imports_numpy_only():
 
 AGENTS = sorted((RACEKIT / "agents").glob("*.py"))
 # an agent whose shipped line was solved for another track is checked on that track (the agent refuses
-# a line of the wrong length): Checkpoint B's reference ships the race-day track's line (plan roar-011)
-AGENT_TRACKS = {"checkpoint-b.py": "test-circuit-seed2027"}
+# a line of the wrong length): Checkpoint B's reference ships the race-day track's line (plan roar-011),
+# and Unit 13's race-day agent ships monza-like's (plan roar-013)
+AGENT_TRACKS = {"checkpoint-b.py": "test-circuit-seed2027", "unit-13.py": "monza-like"}
 
 
 def test_unit_01_is_the_starter_copied():
