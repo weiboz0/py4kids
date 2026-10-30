@@ -107,7 +107,7 @@ cars 16, 18, 8; a setting not clean is rejected; Unit 1's rule on the per-replic
 
 Unit 11's margin rule ships one step inside the edge: **50.0**. On the validation cars 24–47: 50.0 is **24/24** clean
 (median 448.12 s, max error 1.341 m); 52.5 without the margin is 21/24 (cars 24, 43, 46 collide). The other knobs
-tried: `PROFILE_LEAD_S` 0.2 is accepted by 0.85 s (a plateau; not pursued), 0.4 slower; `MPC_Q_E` 0.2 slower, 0.5 not
+tried: `PROFILE_LEAD_S` 0.2 is accepted by 0.85 s (a plateau; not pursued at Phase B; completed through validation in content-gate round 1: 0.0 kept, 22/24), 0.4 slower; `MPC_Q_E` 0.2 slower, 0.5 not
 clean. Why it works: `TARGET_SPEED` was set in Unit 4 and never re-tuned after the grip, the line and MPC raised the
 corner speeds.
 
@@ -409,7 +409,8 @@ All match the solutions.
   s), all clean; a lead below 0 is floored at `LEAD_MIN_M`, so 0.0 ends the walk with no edge and is kept by the
   brief's rule; on the validation cars 0.0 is clean on **22 of 24** (car 24: 2 collisions, 707.25 s, 3.975 m; car 35:
   2.009 m). No second candidate; the solution's cell 7 and answer 6 give it as data with asserts.
-  (Recorded, not used by the solution: 0.1 on the same validation cars is clean 24/24, median 468.10 s, p11b.)
+  (Recorded as it came, in the solution's cell 7: the validation cars also raced 0.2, p11, 24/24, median 468.60 s, and
+  0.1, p11b, 24/24, median 468.10 s, while the walk was open; they changed no choice.)
 - [FIXED] [sol] B2: the brief promised the tested file is the submitted file "byte for byte", but `race()` adds
   `NO_TIMING`. The brief (Milestone 2 step 3 and the `race()` comment) now says so: the test races the frozen file with
   only its timing switched off, as every race in the notebook, and Milestone 4's `check_submission` races it exactly as
@@ -429,3 +430,12 @@ All match the solutions.
   unaffected. Plan Phase A listed them; changing the map is out of this round's scope.
 - [WONTFIX] [fable] N6: the one-race guard is per kernel; the brief calls it "a seat belt, not a record" and the
   pre-registration with its timestamp is the record.
+
+### Round 2 (@ 5ee7a10)
+Verdicts: [self] APPROVE; [sol] APPROVE WITH NITS (one S); [fable] APPROVE WITH NITS (one S, two N). Every round-1
+[FIXED] verified against the probes (p8a, p11, p11b, p11c) and the code; the three [WONTFIX] accepted.
+- [FIXED] [sol] S1 = [fable] S1: the brief's Milestone 4 still defined `check_passed` as `report.ok`; it now matches the
+  solution (parse and shape stages empty, the race finished; `report.ok`, with the p99 budget, printed).
+- [FIXED] [fable] N2: the Phase B record's "not pursued" for `PROFILE_LEAD_S` notes its round-1 completion.
+- [FIXED] [fable] N3: the solution records all three validation runs of `PROFILE_LEAD_S` (0.2, 0.1 and 0.0) as they came.
+Consensus: no [OPEN] finding; all three approve. Text-only folds; CI re-run on the final head.
