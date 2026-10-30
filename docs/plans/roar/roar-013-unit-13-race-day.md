@@ -429,7 +429,7 @@ The nits are folded at the next commit, and CI runs on that head.
 
 **Budgets:**
 - Routed roar suite: 1117.42 s on bdddd25 and 1117.59 s on 8fe8d39 (both ALL GREEN), within the raised 19.5 min (1,170 s): about 52 s of headroom.
-- Notebooks: lesson 45.7 s, solutions 68.1 s, milestone 87.3 s, about 3.4 min serial against the plan's 4 min; no cell over 60 s.
+- Notebooks: lesson 45.7 s, solutions 68.1 s, milestone 87.3 s, about 3.4 min serial against the plan's 4 min.
 - Book exec (per-notebook serial sum): about 49.3 CI-min against the raised 55.
 
 **Deviations from the plan's text:**
