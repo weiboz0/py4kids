@@ -412,3 +412,37 @@ The nits are folded at the next commit, and CI runs on that head.
 - [FIXED] [sol] N2: the teacher notes said "at most 2 practice launches"; now two counted practice launches (a host failure is relaunched, not counted).
 - [FIXED] [fable] N2: a practice launch's host failure goes in the student's own notes, not in `LAUNCHES`.
 - [FIXED] [fable] N3: the starting file's own timing check goes through its timing copy, at 4 ms, if it carries a line.
+
+## Post-Execution Report
+
+**Shipped:** Unit 13 (`roar/units/unit-13-race-day/`: lesson, 8 core exercises + Challenge 9, solutions, the race-day CARLA lab `labs/real-sim.ipynb`, teacher notes, manifest), the milestone `roar/projects/racekit/milestones/unit-13-race-day.ipynb`, `agents/unit-13.py` (`unit-11.py` with six constants changed: `monza-like`'s `LINE_CONTROL` (285 values) and `MU_G`, `MU_FRACTION` 0.64, `A_DEC` 4.5, `A_ACC` 5.0, `MPC_MIN_HORIZON` 40; a `#` header above the unchanged docstring), the Unit 13 premise (`tests/_race_day_premise.py`, `tests/test_racekit_unit13_premise.py`, 10 tests, conftest `race_day_premise`), `AGENT_TRACKS` `"unit-13.py": "monza-like"`, the registry (coverage map, syllabus row 13; Unit 13 introduces nothing), `roar/docs/qualification.md`'s roar-013 row PENDING (author), and design 013 v4.12.
+
+**Gates, as measured** (Phase A, `scratchpad/u13/phaseA-gates.log`; the same tests ran green in CI on bdddd25 and on 8fe8d39):
+- U13.0: the six constants are the only differences from `unit-11.py`; the line equals the setup's solve (max |difference| 0 m, 285 values); `MU_G` is Unit 8's measured grip; `MPC_MIN_HORIZON` equals `MPC_HORIZON`.
+- U13.0b: with `MPC_BUDGET_MS = 0.0`, three `mpc_command` calls are counted (`over_budget` 1, 2, 3) and the horizon stays 40.
+- U13.1: `unit-13.py` 468.55 s (spread 0.10, max line error 1.009 m) against `unit-07.py` 515.10 s (spread 0.15), both 5/5 clean, `noise_aware_better` holds; 46.55 s faster.
+- U13.2: the test cars 72–95, 24/24 clean, 0 collisions, median 468.65 s, max line error 1.373 m; every time equals p11's (raced once there) to the tick.
+- U13.3: M (0.64, 5.0, 5.0) on car 41: 685.55 s, 1 collision, 5.417 m, not clean.
+- U13.4: pursuit on car 34: 603.85 s, 1 collision, 5.338 m, not clean.
+- U13.5: `MU_G[0]` = 12.0 races identically to the shipped file at seed 0 (468.55 s, 0.9878 m, the same telemetry).
+- U13.6: `check_submission(unit-13.py, track="monza-like")` PASS, step p99 0.994 ms (wall-clock, serial; p6 0.997 ms); the isolated Python 3.8 `check_submission` run passes on `monza-like`.
+
+**Budgets:**
+- Routed roar suite: 1117.42 s on bdddd25 and 1117.59 s on 8fe8d39 (both ALL GREEN), within the raised 19.5 min (1,170 s): about 52 s of headroom.
+- Notebooks: lesson 45.7 s, solutions 68.1 s, milestone 87.3 s, about 3.4 min serial against the plan's 4 min; no cell over 60 s.
+- Book exec (per-notebook serial sum): about 49.3 CI-min against the raised 55.
+
+**Deviations from the plan's text:**
+- Exercise 3 is also given `AT_A_ACC_5`, the record's four settings at `A_ACC` 5.0 (p3, p3b, p10), so its edges are found from data next to the incumbent rather than from `P2` alone.
+- Checkpoint B's contrast is worded as a break-even ("by the family's record 0.54 would beat 0.48 while fewer than 4.5% of races crashed"), with Checkpoint B's race-day outcome stated (content gate round 1).
+- U13.2b was dropped in the plan (v3), and cars 48–71 were demoted to validation after p9 raced them again; both are recorded in the deviations and design v4.12 §4.4.
+- `MU_G` is written with `repr`, so section 4's grip reads 9.7, not 9.70; Exercise 8's `PINNED` carries that text.
+- The lab's timing check fails closed (4 ms unless the file has no line), comes before the practice launches, and a failed check races the starting file (content gate rounds 1–3); the protocol is otherwise the plan's.
+
+**Process notes:** the CI runs on 524ee8c and 1d4c3eb were stopped (by process group) once each round's findings superseded them; the final head's run is the one cited. No reviewer ran `uv` during a CI run.
+
+**Follow-ups** (held to the end of the book, `scratchpad/roar-followups.md`):
+- The routed / book-exec tiering decision (two plans overdue; routed 52 s of headroom).
+- The race-day agent choice: the margin answer M2 shipped; the faster P (about 2 s) is Challenge 9.
+- `MPC_MIN_HORIZON = MPC_HORIZON` on race day: confirm the trade against Unit 10's adaptive policy.
+- The interim timed CARLA check of the Unit 13 reference is PENDING (author); a named risk for roar-014's plan review, and on CARLA "the reference" means the lab-assembled file with the author's own Monza line and grip.
