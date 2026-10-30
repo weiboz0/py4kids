@@ -439,3 +439,57 @@ Verdicts: [self] APPROVE; [sol] APPROVE WITH NITS (one S); [fable] APPROVE WITH 
 - [FIXED] [fable] N2: the Phase B record's "not pursued" for `PROFILE_LEAD_S` notes its round-1 completion.
 - [FIXED] [fable] N3: the solution records all three validation runs of `PROFILE_LEAD_S` (0.2, 0.1 and 0.0) as they came.
 Consensus: no [OPEN] finding; all three approve. Text-only folds; CI re-run on the final head.
+
+## Post-Execution Report
+
+**Shipped:** the capstone `roar/projects/project-14-competition-agent/` (brief: the bar, your choice and its
+pre-registered test, build it up, qualify, the engineering report, Make it yours, Requirements; solutions; teacher
+notes; manifest), Unit 13 Exercises 9–11 (the car you race, the models under the MPC, the parts you did not ship)
+with the Challenge renumbered to Exercise 12, Unit 13's notes and manifest (lessons 4, seven concepts practised), the
+capstone premise (`tests/_capstone_premise.py`, `tests/test_racekit_capstone_premise.py`, conftest
+`capstone_premise`), the registry (coverage map, syllabus, `books.yaml` with `buildout` removed, `tests/test_books.py`),
+`roar/docs/qualification.md`'s note, and design 013 v4.13.
+The book is concept-complete: 13 units, 2 checkpoints and the capstone.
+The `site` and `publication` flags stay unset: they wait on the author's final CARLA qualification.
+
+**Gates, as measured** (Phase A, `scratchpad/u14/phaseA-gates.log`; C14.0–C14.1 and C14.4 ran green in CI on
+9a5d419):
+- C14.0: the shipped starter, seed 0, cap 120 s: not finished, 2 collisions, max centreline error 2.707 m.
+- C14.1: the bar (the starter at `TARGET_SPEED` 14.0) 1203.45, 1203.55, 1203.90, 1203.85, 1203.20 s, 5/5 clean,
+  max error 0.706 m; `unit-13.py` 468.55, 468.55, 468.55, 468.65, 468.60 s, 5/5 clean; `noise_aware_better` True;
+  margin 735.00 s (≥ 700).
+- C14.2: seed 0 of S1–S10 each MATCH the record to the tick and 0.01 m (S1 1219.90, S3 617.05, S9 468.55, S10
+  447.80 s; S7 and S8 identical telemetry); asserted again in the capstone solutions.
+- C14.3: R1 lag 1, fit 5.075 / 8.533 / 3.137e-4; R2 Euler 0.123 m, against the car 0.520 / 0.558 / 0.472 m; R4
+  one tick ≤ 2.31e-4 m; R5 Stanley not clean in 70 s (first crash 23.00 s); R6 overshoot 0% / 50.0%, settling 7.80 /
+  28.45 s by Unit 4's rule, peak integral 1.35 / 173.89; R7 the MPC among the profile's top entries.
+- C14.4: every `py4kids-tools --book roar` check PASS, the capstone rule included, with `buildout` removed.
+- The worked choice: `TARGET_SPEED` 50.0, validation 24/24, the pre-registered test (dc170c9, p10) 23/24 (car 117);
+  the incumbent `unit-13.py` submitted under Unit 13's N/N rule.
+
+**Budgets:**
+- Routed roar suite: 1120.26 s on 9a5d419 (ALL GREEN), within the interim 1,170 s; no raise (1123.98 s on 1d569a1).
+- Notebooks: capstone solutions 113.1 s serial (5ee7a10, the folds' copy), Unit 13 solutions 77.5 s serial.
+  The plan's book-exec estimate (about 51.5 of 55 CI-min) was not separately re-summed.
+
+**Deviations from the plan's text:**
+- The veto: the worked choice passed validation and failed its test; the incumbent is submitted as a later safety
+  decision under Unit 13's N/N rule, because the pre-registration named no rule (plan rounds 2–3, recorded).
+- R6's settling pin corrected from 7.75 / 28.40 s to 7.80 / 28.45 s (Unit 4's rule, first tick after the last outside
+  ±2%), and R4's one-tick bound to 2.31e-4 m, at Phase B.
+- The second knob (content gate round 1): `PROFILE_LEAD_S` completed through validation by probes p11, p11b, p11c
+  (validation cars only): 0.0 kept with no edge, 22/24 on validation, no second candidate.
+- The candidate is written outside the public repository (`RUNS`), and the test race is stated as the frozen file
+  with only its timing off (content gate round 1).
+- S1 is slower than the bar (−16.20 s) because of speed, not steering: over the same 17.14 km the starter's
+  proportional speed loop rides above its 14 m/s target (mean 14.24 m/s) while Unit 4's PI loop holds 14.05 m/s
+  (the capstone solutions' answer 3, from the live seed-0 races).
+
+**Process notes:** the CI run on 1d569a1 failed only on the site's `e2e-pwa/offline.spec.ts` usaco-bronze hang test
+(`interrupts` "restart" for "sab"), which passed alone (18.7 s) and on 9a5d419; the branch touches no site file. The
+run on 5ee7a10 was stopped by process group when round 2's text fold superseded it. The final head's run is the one
+cited. No reviewer ran `uv` during a CI run.
+
+**Follow-ups** (held to the end of the book, `scratchpad/roar-followups.md`): the flags; the CARLA final
+qualification and the 329 s proxy, which racekit cannot test (uncalibrated against CARLA lap times); the routed /
+book-exec tiering decision; the race-day choices; the capstone's practices list (content gate N5).
