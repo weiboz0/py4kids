@@ -11,10 +11,11 @@ By the end of this unit students can:
 - Decide **MPC or pursuit** honestly: time first, then margin.
 - **Qualify and package:** `check_submission` on the race's own track, the timing budget, "ship the behaviour you tested" (`MPC_MIN_HORIZON = MPC_HORIZON`), the packaging checklist, and the season's rules read from the current page.
 - Run a **race-day record** on CARLA: five consecutive launches, none discarded, with the host-failure rule.
+- **Open the parts** (Exercises 9–11, added by plan `roar-014` so that every concept is practised before the capstone): identify the car's longitudinal map from a race and replay it with Euler and RK4; read sideslip and yaw rate against the kinematic and dynamic bicycles; check the MPC's linear error model where the car drives; see windup, Stanley's crash at speed, and where the tick's time goes.
 
 This unit **introduces nothing**.
-It practises earlier units' concepts (Units 1, 5–7 and 9–12): `cornering-speed-limit`, `speed-profile`, `racing-line`, `line-retune`, `ltv-mpc`, `pure-pursuit`, `tick-budget`, `perturbation-testing`, `respawn-economics`, `repeated-run-measurement`, `black-box-search`, `held-out-track-validation`, `determinism-and-packaging`.
-It uses Unit 8's measured grip but identifies nothing, so it does not practise `grip-identification`; nor does the lab, which carries the student's own CARLA grip over from an earlier lab.
+It practises earlier units' concepts (Units 1 and 3–12): `cornering-speed-limit`, `speed-profile`, `racing-line`, `line-retune`, `ltv-mpc`, `pure-pursuit`, `tick-budget`, `perturbation-testing`, `respawn-economics`, `repeated-run-measurement`, `black-box-search`, `held-out-track-validation`, `determinism-and-packaging`, and (Exercises 7 and 9–11) `numerical-integration`, `integrator-windup`, `stanley-steering`, `dynamic-bicycle`, `car-identification`, `error-model-linearization`, `step-profiling`.
+It uses Unit 8's measured grip but identifies no grip, so it does not practise `grip-identification` (Exercise 9 identifies the longitudinal map, `car-identification`); nor does the lab, which carries the student's own CARLA grip over from an earlier lab.
 
 `agents/unit-13.py` is `agents/unit-11.py` with six constants changed:
 - `monza-like`'s line (`LINE_CONTROL`, 285 values) and measured grip (`MU_G`);
@@ -27,7 +28,7 @@ It is clean on all 24 validation cars (24–47), all 24 further validation cars 
 
 ## Pacing
 
-Plan for **two 60–90 min sittings**, plus the lab on a CARLA machine.
+Plan for **three 60–90 min sittings** (`lessons: 4` with the lab), plus the lab on a CARLA machine.
 
 1. **Sitting 1: assemble and re-tune** (the hook, §1–§2).
    - Hook: one file, one track, one car you have not met.
@@ -43,8 +44,13 @@ Plan for **two 60–90 min sittings**, plus the lab on a CARLA machine.
      Unit 11's rule, read for one knob, is not enough here.
    - §4: MPC or pursuit, with pursuit's crash on car 34.
    - §5–§6: `check_submission` on its own track, the race-day timing trade, the checklist and the season's rules.
-   - Exercises 4–8; Challenge 9 as homework.
-3. **The lab** (on the CARLA machine): two counted practice launches (a host failure is relaunched, not counted) plus the 5-launch record; a host failure adds a block.
+   - Exercises 4–8.
+3. **Sitting 3: open the parts** (Exercises 9–11; one 70 s Stanley race and one profiled lap, the rest reuses Exercise 7's race).
+   - Exercise 9: the car's longitudinal map at lags 0–3, and Euler against RK4 against the car. Ask why RK4 is not closer to the car than Euler (the model error dominates).
+   - Exercise 10: sideslip and yaw rate; the linear error model at the tightest point, and why it is safe where the car drives.
+   - Exercise 11: windup with and without the PID's limits; Stanley's crash; the profile.
+   - Challenge 12 as homework.
+4. **The lab** (on the CARLA machine): two counted practice launches (a host failure is relaunched, not counted) plus the 5-launch record; a host failure adds a block.
 
 ## The lab: what to watch for
 
@@ -70,7 +76,7 @@ Plan for **two 60–90 min sittings**, plus the lab on a CARLA machine.
 ## Common mistakes
 
 - **Tuning on the test cars.** Cars 72–95 were raced once, after the file was fixed.
-  Any choice made from them would spend them; Challenge 9 asks what to race instead (a fresh, pre-registered set).
+  Any choice made from them would spend them; Challenge 12 asks what to race instead (a fresh, pre-registered set).
 - **Reading the margin rule for one knob.** The margin on `MU_FRACTION` alone (M) crashes on car 41.
   Every knob at its edge gets one grid step of margin; a knob with no edge gets none.
 - **Accepting a float tie.** A gain of exactly one tick against a spread of exactly one tick is a tie.
@@ -83,6 +89,11 @@ Plan for **two 60–90 min sittings**, plus the lab on a CARLA machine.
   On race day you check the machine before the race and ship the behaviour you tested.
 - **Calling the stand-in "the car".** Every racekit number is a model number.
   CARLA is the test, and the lab's record is what counts.
+- **Fitting the map at lag 0** (Exercise 9). The command acts a tick late; the lag with the smallest RMS (1) is the one Unit 8 measured.
+- **Expecting RK4 to match the car** (Exercise 9). RK4 beats Euler on the model's own equations; against the car, the model's error is larger than either integrator's.
+- **Calling the agent's own `PID` or `rk4_step`** (Exercises 9 and 11). Students write Unit 3's integrators and Unit 4's PID themselves; the file's helpers are not taught names.
+- **Trusting the linear error model everywhere** (Exercise 10). It is safe where the car drives (one tick differs by at most about 2.3e-4 m); at a 5 m error it overshoots by metres.
+- **Reading the profile's numbers as a timing claim** (Exercise 11). The profile shows *where* the time goes (the MPC solve); its seconds depend on the machine.
 
 ## Discussion prompts
 
@@ -99,5 +110,5 @@ Plan for **two 60–90 min sittings**, plus the lab on a CARLA machine.
   - give Exercise 6's expected-time sums and have students write only the comparison.
 - **Core:** all non-stretch exercises unaided.
 - **Stretch:**
-  - Challenge 9: P, the margin only on the knob that failed; is it a finding or a fit, and what would you race to tell?
+  - Challenge 12: P, the margin only on the knob that failed; is it a finding or a fit, and what would you race to tell?
   - For strong students: design the race-day protocol for a second track (which car sets, how many races, what is raced once) and estimate its cost before racing anything.
