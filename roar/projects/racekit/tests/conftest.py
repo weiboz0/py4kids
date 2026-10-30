@@ -176,3 +176,11 @@ def race_day_premise():
     from _race_day_premise import race_race_day_premise
 
     return race_race_day_premise()
+
+
+@pytest.fixture(scope="session")
+def capstone_premise():
+    """The capstone's bar races (plan roar-014 C14.1), raced once per session in parallel."""
+    from _capstone_premise import race_capstone_premise
+
+    return race_capstone_premise()

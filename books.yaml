@@ -93,8 +93,5 @@ books:
   depends_on:
   - python-projects
   lesson_budget: [30, 50]
-  # buildout (design 013 §3, plan roar-001): units land from roar-002 on. The first plan whose entries bring
-  # the whole-book `lessons` total to at least 30 AND introduce every catalog concept removes this flag.
-  buildout: true
   dependency_group: roar
   labs: true

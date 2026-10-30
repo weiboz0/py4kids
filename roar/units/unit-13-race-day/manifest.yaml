@@ -1,10 +1,10 @@
 id: unit-13-race-day
 kind: unit
 blueprint_version: 1
-lessons: 3
+lessons: 4
 provenance: original
 lab: true
 concepts:
   introduces: []
   requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep, linear-least-squares, car-identification, grip-identification, racing-line, line-retune, error-model-linearization, ltv-mpc, tick-budget, respawn-economics, perturbation-testing, failure-fallback, black-box-search, held-out-track-validation, step-profiling, determinism-and-packaging]
-  practices: [cornering-speed-limit, speed-profile, racing-line, line-retune, ltv-mpc, pure-pursuit, tick-budget, perturbation-testing, respawn-economics, repeated-run-measurement, black-box-search, held-out-track-validation, determinism-and-packaging]
+  practices: [cornering-speed-limit, speed-profile, racing-line, line-retune, ltv-mpc, pure-pursuit, tick-budget, perturbation-testing, respawn-economics, repeated-run-measurement, black-box-search, held-out-track-validation, determinism-and-packaging, numerical-integration, integrator-windup, stanley-steering, dynamic-bicycle, car-identification, error-model-linearization, step-profiling]

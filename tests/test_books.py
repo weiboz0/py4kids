@@ -45,9 +45,10 @@ def test_registry_ids_order_and_dependencies():
     # (30.5 = Units 1-10 at 3 each + Checkpoint A 0.5), so the flag was removed (design 011).
     assert books[4].get("buildout", False) is False
     assert books[4]["lesson_budget"] == [30, 60]
-    # roar ships in buildout (design 013 §3, plan roar-001); its units land from roar-002 on.
+    # roar left buildout at roar-014 (the capstone): the book is concept-complete and its 44 lessons are
+    # inside [30, 50], so the flag was removed (design 013 v4.13 §3).
     assert books[5]["depends_on"] == ["python-projects"]
-    assert books[5]["buildout"] is True
+    assert books[5].get("buildout", False) is False
     assert books[5]["lesson_budget"] == [30, 50]
 
 

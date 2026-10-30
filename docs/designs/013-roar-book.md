@@ -1,6 +1,6 @@
 # Design 013 — "Applied Python: Autonomous Racing" (a new advanced book for the Berkeley ROAR series)
 
-**Status:** APPROVED, v4.12 (2026-10-29). The design gate is CLOSED: consensus in round 4.
+**Status:** APPROVED, v4.13 (2026-10-29). The design gate is CLOSED: consensus in round 4.
 v2 folded the round-1 design review and a re-check of the Summer 2026 season's published reports. v3 folds round 2
 ([sol] REJECT on B2 only; [fable] APPROVE WITH NITS with one MUST). v3.1 made the interim CARLA checks
 non-blocking. v4 folds round 3. See the Design Review section.
@@ -14,6 +14,8 @@ v4.9 (plan `roar-010`) adds the perturbed carla-like family (§4.4) and raises t
 v4.10 (plan `roar-011`) names Checkpoint B's race-day track (§4.3), pins its gate (§6) and raises both budgets (interim).
 v4.11 (plan `roar-012`) names Unit 12's test track (§4.3), restates its gate (§6) and raises both budgets (interim).
 v4.12 (plan `roar-013`) names the perturbed family's car sets (§4.4), pins Unit 13's gate on `monza-like` (§6) and raises both budgets (interim).
+v4.13 (plan `roar-014`) pins the capstone's gate (§6), adds Unit 13's practice of the capstone rule's seven concepts, names the capstone's
+and the student's test cars (§4.4), removes `buildout`, and moves the `site` and `publication` flags to a follow-up plan (§3, §7.3).
 
 The book `roar` is tutorial material whose purpose is to let a strong student **reach a reasonable ranking in the
 Berkeley ROAR Simulation Racing Series** (§1.3 defines "reasonable").
@@ -119,12 +121,16 @@ outside CI (§7.3). The book teaches toward the frontier but promises only this 
 - **dependency_group:** `roar` (numpy, scipy, matplotlib, and the editable `racekit` package via
   `[tool.uv.sources] racekit = { path = "roar/projects/racekit", editable = true }`). No torch, CARLA or `ROAR_PY`.
 - **flags:**
-  - `site` is set in `roar-014` together with publication. The book is not shown on the public site before its
+  - `site` is set together with `publication`. The book is not shown on the public site before its
     CARLA qualification.
-  - `publication` is set only after the §7.3 qualification, in `roar-014`.
-- **lesson_budget:** `[30, 50]`, a whole-book total over 13 units at 2–3 sittings each.
-  `roar-001` sets **`buildout: true`** on the book's `books.yaml` entry (as recsys did) and removes it once the
-  authored total reaches 30 and the concept catalog is fully introduced. There are no placeholder curriculum entries.
+  - `publication` is set only after the §7.3 final qualification.
+    Both flags **wait on the author's final qualification** (v4.13): it needs the author's machine, so `roar-014`
+    ships the capstone with both flags unset, and a follow-up plan records the five launches and sets them.
+- **lesson_budget:** `[30, 50]`, a whole-book total over 13 units at 2–3 sittings each
+  (Unit 13 has four, v4.13: three sittings plus the lab; the book's total is 44).
+  `roar-001` set **`buildout: true`** on the book's `books.yaml` entry (as recsys did); `roar-014` removed it (v4.13),
+  once the authored total had reached 30 and the concept catalog was fully introduced. There are no placeholder
+  curriculum entries.
 
 ## 4. The simulator: the `racekit` package (approach 3, "own sim + calibration")
 
@@ -270,6 +276,10 @@ every `racekit` module with `ast.parse(feature_version=(3, 8))` and the deny-lis
      k = 24–47 (Unit 13's **validation** cars, with k = 48–71); Unit 13's **test** cars k = 72–95, pre-registered and
      raced once before the gate; and the **sealed** cars k ≥ 1000 (Checkpoint B's race day), never built outside
      their race-day cell. A perturbed race uses the race seed k mod 5.
+     From v4.13 (plan `roar-014`): cars k = 96–119 are the **capstone's test cars**, pre-registered for the capstone
+     solution's worked choice and raced once (probe `p10`): they are **spent**, never raced again; cars k = 120–143 are
+     **a student's own test cars** in the capstone, pre-registered by the student and raced once, after the candidate
+     file is frozen. No routed gate or notebook races cars 72–143 except Unit 13's U13.2 (cars 72–95).
 
 ### 4.5 Determinism and honesty
 - Pure numpy, fixed tick, fixed seeds, no wall-clock effect on the simulation. The per-tick compute time of `step()`
@@ -341,8 +351,8 @@ Challenge), `solutions.ipynb`, `teacher-notes.md` and `manifest.yaml`.
 | # | Unit | Project hook | Introduces | Gate |
 |---|---|---|---|---|
 | 12 | Tuning against race time | "You have about 30 knobs and 0.3 s of noise. Which changes are real?" | Race time as a black-box objective; coordinate, random and evolution-strategy search; noise-aware acceptance; overfitting and held-out tracks (training, validation and test tracks; a crash-aware objective); profiling `step()`; determinism and rounding traps; packaging and version pinning | The tuned agent beats the hand-tuned one on a **held-out** track (noise-aware): on the test track `test-circuit-seed2028` (its line and probed grip, 3 laps, race seeds 0–4, both clean on all five); `test-circuit-seed2026` is the validation track, never in the objective (v4.11) |
-| 13 | Race day (integration; **introduces nothing**) 🏁 | "Assemble, qualify and submit." | — It practises the Unit 8–12 concepts on `monza-like`: sysid-informed μ, line plus speed re-tune, MPC-or-pursuit choice, robustness, noise-aware tuning, the packaging checklist | The assembled submission passes `check_submission`, the timing budget and N/N clean races; it beats the Unit 7 agent (noise-aware): on `monza-like`, 3 laps, `check_submission(track="monza-like")` passes with step p99 ≤ 5 ms; N/N is 5/5 clean on the nominal car (race seeds 0–4), 24/24 on the validation cars k = 24–47 and 24/24 on the test cars k = 72–95; it beats `agents/unit-07.py` by Unit 1's rule on race seeds 0–4 (v4.12) |
-| Capstone | **Your competition agent** (`project-14-…`) | Build, tune and justify the agent you submit | — An engineering report with an **ablation table** (race time bought by each stage, with spread) | The reference beats the starter by a pinned margin on `monza-like` at 0 collisions |
+| 13 | Race day (integration; **introduces nothing**) 🏁 | "Assemble, qualify and submit." | — It practises the Unit 8–12 concepts on `monza-like`: sysid-informed μ, line plus speed re-tune, MPC-or-pursuit choice, robustness, noise-aware tuning, the packaging checklist. It also carries the capstone rule (v4.13): from its own race it practises `numerical-integration`, `car-identification`, `dynamic-bicycle`, `error-model-linearization`, `integrator-windup`, `stanley-steering` and `step-profiling` (three core exercises); `lessons: 4` | The assembled submission passes `check_submission`, the timing budget and N/N clean races; it beats the Unit 7 agent (noise-aware): on `monza-like`, 3 laps, `check_submission(track="monza-like")` passes with step p99 ≤ 5 ms; N/N is 5/5 clean on the nominal car (race seeds 0–4), 24/24 on the validation cars k = 24–47 and 24/24 on the test cars k = 72–95; it beats `agents/unit-07.py` by Unit 1's rule on race seeds 0–4 (v4.12) |
+| Capstone | **Your competition agent** (`project-14-competition-agent`) | Build, tune and justify the agent you submit | — An engineering report with an **ablation table** (race time bought by each stage, with spread) | The reference beats the starter by a pinned margin on `monza-like` at 0 collisions (v4.13): "the starter" is the starter made clean by its own knob, `TARGET_SPEED = 14.0`, on `carla_like(noise=True)` (the shipped starter never finishes `monza-like` on that car); the reference, `agents/unit-13.py`, beats it by **≥ 700 s** on the medians, both clean at 0 collisions, by Unit 1's rule on race seeds 0–4, 3 laps |
 
 Unit 12's Challenge may include an **optional** reinforcement-learning taste (a policy-gradient tune of one
 parameter, compared honestly with search). Deep RL is not core.
@@ -399,6 +409,11 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
     perturbed-car races, some of them crash loops to a 700 s cap; it was 12 min from v4.8, interim, plan `roar-009`:
     the Unit 10 gates add 76 races, 65 of them MPC; it was 10 min from v4.7, plan `roar-008`; it was 8 min from v4.4, plan `roar-006`, and 5 min before that; the Unit 8–9 gates add 141 races). From v4.4: the Unit 6–7 gates
     add about 2 min of pooled races).
+  - v4.13, plan `roar-014`: **no raise** of either budget. The capstone's routed gates add five pooled races (the bar;
+    `unit-13.py`'s five are Unit 13's U13.1 races, reused from the session fixture) and one capped serial race:
+    measured 6.4 s wall and 28.7 CPU-s for the pool, 0.8 s for the serial race. The capstone's solutions and Unit 13's
+    three new exercises add about 2 CI-minutes of notebook exec (planned about 51.5 of 55; the plan's verification
+    phase records the measured total).
   - The per-cell 120 s cap is retained.
   - **Per-tick (a measured target from the [fable] probe, not a cap the runner enforces):** the simulation costs
     about 0.2 ms per tick, and a 17,000-tick starter-baseline race takes ≤ 4 s. A student's `step()` adds to that.
@@ -459,8 +474,9 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
   follow-up. A PENDING check is also a **named risk** in the `## Plan Review` of the next part's first plan
   (`roar-008` for the Unit 7 check, `roar-014` for the Unit 13 check), so gate reviewers see it. When the author runs a check and it fails, an errata/fix plan follows before the next part ships. Only
   the final qualification hard-gates the `publication` flag.
-- Before `roar-014` sets the `publication` flag, the author runs the **final reference submission** on the pinned
-  stack:
+- Before the `publication` flag is set (a follow-up plan to `roar-014`, v4.13), the author runs the **final reference
+  submission** on the pinned stack (v4.13: the capstone's reference, `agents/unit-13.py`, unless a follow-up plan
+  records an author override of §6 row 13's rule):
   - CARLA 0.9.12;
   - Monza v1.1;
   - `ROAR_Competition` at the pinned commit;
@@ -501,7 +517,7 @@ This covers `scripts/ci-local.sh` and the routed `uv run --group roar` suite.
 | `roar-008` / `roar-009` / `roar-010` | Units 8–9 / Unit 10 / Unit 11 |
 | `roar-011` | Checkpoint B |
 | `roar-012` / `roar-013` | Unit 12 / Unit 13 (integration; records the interim timed CARLA check as PENDING (author)) |
-| `roar-014` | Capstone; site flag; §7.3 qualification; publication flag |
+| `roar-014` | Capstone; `buildout` removed (v4.13: the site flag, the §7.3 final qualification and the publication flag move to a follow-up plan) |
 
 Pairings may be adjusted by each plan's gate without a design change.
 
@@ -734,3 +750,25 @@ Pairings may be adjusted by each plan's gate without a design change.
     identified grip.
   - Routed pytest 18.5 → 19.5 min, the eighth raise, and book notebook exec 50 → 55 CI-minutes, the fifth book-exec
     raise, both **interim**. The author's tiering decision is overdue and stays first in the held follow-up list.
+- v4.13 (2026-10-29): §3 the flags and `buildout`, §4.4 the capstone's and the student's test cars, §6 the capstone row and
+  row 13, §7.1 the budgets, §7.3 and §8 (plan `roar-014`, the book's last).
+  - **The capstone's gate made precise** (a deviation). The shipped starter never finishes `monza-like` on
+    `carla_like(noise=True)` (a crash loop from the first few hundred waypoints, on every seed), although Unit 1
+    measured it clean on `KinematicCar`: the file is the same, the car changed. "The starter" in the gate is the
+    starter made clean by its own one knob, `TARGET_SPEED = 14.0` (the fastest clean point of 8–16; 16 finishes
+    2.695 m from the centreline), 1203.55 s median, spread 0.70. The reference, `agents/unit-13.py` (468.55 s), beats
+    it by 735.00 s; the pinned margin is **≥ 700 s**, both clean at 0 collisions, by Unit 1's rule on race seeds 0–4.
+  - **The capstone's reference is `agents/unit-13.py`, unchanged.** The capstone solution's worked choice
+    (`TARGET_SPEED` 50.0, one knob by Unit 13's protocol and margin rule: 447.90 s, 24/24 on the validation cars
+    24–47) failed its pre-registered test cars 96–119, raced once (23/24: car 117 collides), and by §6 row 13's rule
+    (clean on every fresh car) is not submitted; it is recorded as informational in `roar/docs/qualification.md`.
+    Cars 96–119 are spent; a student's own test cars are 120–143 (§4.4).
+  - **The capstone rule** (row 13): seven concepts were introduced but practised by no later non-capstone entry
+    (`numerical-integration`, `integrator-windup`, `stanley-steering`, `dynamic-bicycle`, `car-identification`,
+    `error-model-linearization`, `step-profiling`). Unit 13, the integration unit that carries the rule, practises
+    them in three core exercises on its own race, and its `lessons` goes 3 → 4 (the book's total is 44).
+  - **The flags** (a narrowing of the `roar-014` row): `site` and `publication` wait on the author's final
+    qualification, which needs the author's machine; `roar-014` ships both unset and a follow-up plan sets them.
+    The final qualification races `agents/unit-13.py` unless a follow-up plan records an author override.
+    `buildout` is removed: the book is concept-complete and its 44 lessons are inside `[30, 50]`.
+  - No raise of either budget (§7.1).

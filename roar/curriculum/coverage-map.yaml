@@ -1,8 +1,8 @@
 map_version: 1
-# No entries yet: this is a `buildout: true` foundation (design 013 §3, plan roar-001).
-# Units, Checkpoints A and B and the capstone land from roar-002 on, each adding its entry here,
-# with `lessons` sized so the whole-book total lands inside the [30, 50] budget. The first plan whose
-# entries bring the total to at least 30 and introduce every catalog concept removes `buildout`.
+# The book is concept-complete: 13 units, Checkpoints A and B and the capstone, every catalog concept
+# introduced and practised by a non-capstone entry (the capstone rule; Unit 13 carries it), and the
+# whole-book `lessons` total is 44, inside the [30, 50] budget. `buildout` (design 013 §3) was removed by
+# plan roar-014, so the lesson-budget minimum and introduction completeness are fully enforced.
 entries:
 - id: unit-01-the-race-and-baseline
   kind: unit
@@ -105,7 +105,14 @@ entries:
 - id: unit-13-race-day
   kind: unit
   title: "Race day"
+  lessons: 4
+  introduces: []
+  requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep, linear-least-squares, car-identification, grip-identification, racing-line, line-retune, error-model-linearization, ltv-mpc, tick-budget, respawn-economics, perturbation-testing, failure-fallback, black-box-search, held-out-track-validation, step-profiling, determinism-and-packaging]
+  practices: [cornering-speed-limit, speed-profile, racing-line, line-retune, ltv-mpc, pure-pursuit, tick-budget, perturbation-testing, respawn-economics, repeated-run-measurement, black-box-search, held-out-track-validation, determinism-and-packaging, numerical-integration, integrator-windup, stanley-steering, dynamic-bicycle, car-identification, error-model-linearization, step-profiling]
+- id: project-14-competition-agent
+  kind: project
+  title: "Your competition agent"
   lessons: 3
   introduces: []
   requires: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, frames-and-heading, waypoint-projection, cross-track-error, menger-curvature, kinematic-bicycle, longitudinal-map, numerical-integration, pid-control, integrator-windup, step-response, cross-track-steering, pure-pursuit, lookahead-tuning, stanley-steering, dynamic-bicycle, friction-circle, cornering-speed-limit, speed-profile, section-knob-sweep, linear-least-squares, car-identification, grip-identification, racing-line, line-retune, error-model-linearization, ltv-mpc, tick-budget, respawn-economics, perturbation-testing, failure-fallback, black-box-search, held-out-track-validation, step-profiling, determinism-and-packaging]
-  practices: [cornering-speed-limit, speed-profile, racing-line, line-retune, ltv-mpc, pure-pursuit, tick-budget, perturbation-testing, respawn-economics, repeated-run-measurement, black-box-search, held-out-track-validation, determinism-and-packaging]
+  practices: [roar-race-and-submission, race-telemetry, repeated-run-measurement, telemetry-plotting, cross-track-error, pid-control, pure-pursuit, cornering-speed-limit, speed-profile, grip-identification, racing-line, ltv-mpc, failure-fallback, respawn-economics, perturbation-testing, black-box-search, held-out-track-validation, determinism-and-packaging]
