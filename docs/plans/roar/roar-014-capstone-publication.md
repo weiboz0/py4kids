@@ -177,11 +177,13 @@ clean: Exercise 7's `untimed` race, so no new race; telemetry `u14/r_tel.pkl`):
   `DynamicCar()` twin at the peak point (kinematic r 0.510, dynamic 0.397).
 - R4 `error-model-linearization` (Unit 10): the tightest line point (κ 0.0353, 12.75 m/s); linear vs nonlinear over
   2 s, 0.35 vs 0.29 m at (0.1 m, 0.01 rad) up to 25.40 vs 20.97 at (5 m, 0.8 rad); in the race's own range
-  (|ψ| ≤ 0.118 rad) one tick differs by ≤ 2.3e-4 m.
+  (|ψ| ≤ 0.118 rad) one tick differs by at most 2.31e-4 m (measured 2.314e-4).
 - R5 `stanley-steering` (Unit 5): Stanley never races `monza-like` clean (fallback off, 1 lap, seed 0: the first
   crash at about 44.5 m/s, sooner the higher `ST_K`: 1 → progress 1057, 3 → 413, 8 → 237); a 70 s cap shows it.
 - R6 `integrator-windup` (Unit 4): `unit-13.py`'s `PID(0.5, 0.1)` launching `KinematicCar()` from 0 to 45 m/s: with
-  limits (0, 1) 0% overshoot, settles 7.75 s, peak integral 1.35; with no limits 50.0% overshoot, 28.40 s, 173.89.
+  limits (0, 1) 0% overshoot, settles 7.80 s, peak integral 1.35; with no limits 50.0% overshoot, 28.45 s, 173.89
+  (settling by Unit 4's `step_metrics`, the first tick after the last one outside ±2%; the probe log's 7.75 / 28.40
+  took the last tick outside, one tick earlier: corrected in Phase B).
   No race (the limits are not a module constant).
 - R7 `step-profiling` (Unit 12): `cProfile` over Exercise 7's untimed race replayed (about 4 CPU-s, re-racing the same
   1 lap under the profiler); the student reads where the tick's time goes (the MPC solve); nothing load-dependent is
