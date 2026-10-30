@@ -385,7 +385,18 @@ Blind solves, from the statements and the lesson before opening the solutions:
 - [FIXED] [sol] N4: the lesson called the milestone's check "this unit's one timed run"; Exercise 7 also races once with the timing on. Now "one timed submission check", with Exercise 7's race named as the same race.
 - [FIXED] [fable] N2: the plan's table gave M's car-41 race as 685 s, the lesson 686 s (685.55 s); the plan now says 686 s.
 - [FIXED] [fable] N3: M's car-41 race runs 686 s of race time; the car-41 pair is now "about 25 s" in the lesson, Exercise 4 and its solution.
-- [FIXED] [fable] N4: the teacher notes said "It practises Units 8–12" for a list with Units 1, 5 and 7 concepts; now "Units 1, 5 and 7–12".
+- [FIXED] [fable] N4: the teacher notes said "It practises Units 8–12" for a list with Units 1, 5 and 7 concepts; now "Units 1, 5–7 and 9–12" (round 2).
 - [FIXED] [fable] N5: the lab's summary accepted launches after a complete block as a new block in progress; it now refuses any launch after a complete block (a sixth, or a second block), with a worked example for the sixth.
 - [FIXED] [fable] N6: the lab's margin step named only `MU_FRACTION`'s grid; it now says any other knob steps by the grid its lab raced it on.
 - [FIXED] [fable] N7: the exercises' (and solutions') `race()` could not race `unit-07.py`; it now mirrors the lesson's `source == UNIT_07` branch.
+
+### Round 2 (@ 524ee8c; static review of the round-1 fixes; the CI run on 524ee8c was stopped, superseded by round 2's fixes)
+
+Verdicts: [self] APPROVE WITH NITS; [sol] REJECT (one blocker); [fable] APPROVE WITH NITS.
+[fable] traced every round-1 fix in the current files and the lab's four paths (the assembled file fails timing; a practice launch not clean; a host failure mid-block; a sixth launch): all resolved.
+
+- [FIXED] [sol] B1: the lab's fallback (the starting file races even when its own timing check fails) contradicted the checklist, which required a passed timing check, a passed `check_submission` and MPC constants an early starting file may not have. The checklist now says the starting file races exactly as its earlier lab raced it: the margin, horizon and passed-timing items apply only to an assembled file; `check_submission` "built and raced it"; the MPC item applies to a file with MPC; and the starting file's own step-1 result is written down, passed or not.
+- [FIXED] [sol] N1: the teacher notes' pacing still said the car-41 pair takes about 20 s; now about 25 s.
+- [FIXED] [fable] N1: the practised concepts come from Units 1, 5–7 and 9–12 (Unit 6 introduces `cornering-speed-limit`; Unit 8 introduces none of them); the teacher notes now say so.
+- [FIXED] [fable] N2: the timing cell's `RACE_FILE` comment now points at the timing copy (the file itself only if its `LINE_CONTROL` is `None`).
+- [FIXED] [fable] N3: a practice launch with a host failure is recorded, not counted, and launched again (step 2).

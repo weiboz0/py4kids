@@ -13,7 +13,7 @@ By the end of this unit students can:
 - Run a **race-day record** on CARLA: five consecutive launches, none discarded, with the host-failure rule.
 
 This unit **introduces nothing**.
-It practises earlier units' concepts (Units 1, 5 and 7–12): `cornering-speed-limit`, `speed-profile`, `racing-line`, `line-retune`, `ltv-mpc`, `pure-pursuit`, `tick-budget`, `perturbation-testing`, `respawn-economics`, `repeated-run-measurement`, `black-box-search`, `held-out-track-validation`, `determinism-and-packaging`.
+It practises earlier units' concepts (Units 1, 5–7 and 9–12): `cornering-speed-limit`, `speed-profile`, `racing-line`, `line-retune`, `ltv-mpc`, `pure-pursuit`, `tick-budget`, `perturbation-testing`, `respawn-economics`, `repeated-run-measurement`, `black-box-search`, `held-out-track-validation`, `determinism-and-packaging`.
 It uses Unit 8's measured grip but identifies nothing, so it does not practise `grip-identification`; nor does the lab, which carries the student's own CARLA grip over from an earlier lab.
 
 `agents/unit-13.py` is `agents/unit-11.py` with six constants changed:
@@ -39,7 +39,7 @@ Plan for **two 60–90 min sittings**, plus the lab on a CARLA machine.
      Then the re-tune's table and the float tie.
    - Exercises 1–3 (no races).
 2. **Sitting 2: margin, steering and qualifying** (§3–§6).
-   - §3: M and M2 on car 41 (about 20 s of racing).
+   - §3: M and M2 on car 41 (about 25 s of racing).
      Unit 11's rule, read for one knob, is not enough here.
    - §4: MPC or pursuit, with pursuit's crash on car 34.
    - §5–§6: `check_submission` on its own track, the race-day timing trade, the checklist and the season's rules.
