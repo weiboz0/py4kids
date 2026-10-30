@@ -15,7 +15,7 @@ with `TARGET_SPEED = 50.0` and nothing else changed. Its **test cars are k = 96�
 result is reported as it comes: no choice in this plan may change after it.
 **v2.1** records `p10` (raced once after dc170c9): nominal 5/5 clean, median 447.90 s; the test cars **23/24** clean
 (car 117 collides twice, 590.05 s, 4.485 m); `check_submission` PASS. The choice stands, as pre-registered.
-**v3** folds plan-review round 2 ([sol] REJECT: B1 a file not clean on every fresh car is not submitted, by Unit 13's
+**v3.1 CONSENSUS** folds the round-3 findings (below). **v3** folds plan-review round 2 ([sol] REJECT: B1 a file not clean on every fresh car is not submitted, by Unit 13's
 own rule, B2 the routed fallback dropped gate seeds, S3 the expected-time claim compared different cars; [fable]
 APPROVE WITH NITS: S1 the shipped file's timing behaviour, S2 the student's test cars, S3 the author's choice
 informed, N1–N4). **The capstone's reference is `agents/unit-13.py`**: the worked choice (`TARGET_SPEED` 50.0)
@@ -23,6 +23,13 @@ passed training and validation and **failed its pre-registered test** (23/24), a
 (clean on every fresh car, a pass/fail rule fixed before `p10` ran) vetoes it. A test can veto a choice; it never
 selects a new one: the incumbent submitted is the file that passed its own test (cars 72–95, 24/24) before any of
 this. No `agents/capstone.py` is shipped; nothing is re-tuned; car 117 is not re-raced.
+The pre-registered choice and its result stay as recorded above (dc170c9, `p10`): the pre-registration fixed the
+choice and its test, not the fallback. Submitting the incumbent is a **later safety decision** (v3), taken by
+Unit 13's existing rule after the test failed; it is not described as pre-registered. dc170c9's pre-registration
+omitted the pass/fail rule; the rule applied is design §6 row 13 and Unit 13's N/N on every set of cars it has never
+been tuned on, merged in 44f9753 (#168) before dc170c9, and the reference changed as a consequence the
+pre-registration's last sentence did not foresee. The teacher notes carry this as a mistake to avoid: a
+pre-registration that names no rule (the brief's Milestone 2 states the rule before the race).
 
 ## Scope
 - The capstone project `roar/projects/project-14-competition-agent/` (`brief.ipynb`, `solutions.ipynb`,
@@ -47,13 +54,13 @@ That run needs the author's Windows machine; autopilot cannot run it.
 So this plan ships the capstone with both flags **unset**, leaves the final-qualification table "not yet run", and
 records the flags as the first follow-up: after the author's run, a short plan records the launches and sets both
 flags (or, if the proxy fails, a re-tune plan follows, design §7.3).
-Which file the final qualification races (the lab-assembled Unit 13 file, or one with the capstone's choice) is the
-author's decision, also a follow-up.
+The final qualification races the capstone's reference, `agents/unit-13.py` (on CARLA, the lab-assembled file with the
+author's own Monza line and grip), unless a follow-up plan records an author override of design §6 row 13's rule and why.
 This is a narrowing of the design's `roar-014` row, recorded in v4.13; it relaxes no rule.
 
 **Named risk (design §7.3):** the `roar-013` interim **timed** CARLA check of `agents/unit-13.py` is `PENDING
-(author)`. The capstone's reference differs from it by one constant, so a failing CARLA check would also question the
-capstone's numbers on CARLA. On CARLA, "the Unit 13 reference" means the lab-assembled file with the author's own
+(author)`. The capstone's reference is that same file, so a failing CARLA check is a failing check of the capstone's
+reference. On CARLA, "the Unit 13 reference" means the lab-assembled file with the author's own
 Monza line and grip (`monza-like` is racekit's model of the track). Recorded again in `## Plan Review`.
 
 ## The capstone rule (tool-forced)
@@ -114,8 +121,9 @@ before `p10` ran; 23/24 fails it. So the worked choice is **not submitted**: the
 measured: 20.65 s faster on the nominal car, and one crash in 24 fresh cars; it does not net them into an expected
 time (the two files' test results are on different cars). The margin rule thinned the risk (52.5, without it, was
 21/24 on the validation cars); it did not remove it, and only a test the file could fail showed that.
-A next choice would need a fresh pre-registered set. Which file the author's CARLA qualification races is the
-author's decision (follow-up); `qualification.md` records both candidates side by side.
+A next choice would need a fresh pre-registered set. The 50.0 file is **informational, not a submission candidate**
+under design §6 row 13; the author may race it on CARLA as an extra row, and the final qualification races
+`unit-13.py` unless a follow-up plan records an override.
 
 **The build-up ablation** (`u14/p2.log`, `p3.log`, `p9`; one file, `agents/unit-13.py` with constants changed by
 `write_variant`; seeds 0–4, 3 laps, timing off; S1–S7 with the respawn fallback off, `RESPAWN_IMPULSE = 1e300`, and
@@ -201,6 +209,9 @@ assumed-baseline concept). Unit 13 adds `numerical-integration`, `integrator-win
 - **Brief** (project-first; student-facing, no solutions or outputs; 5 milestone headings, `## Make it yours`,
   `## Requirements checklist`; project-strict: no borrowed tools, every call taught). The student's file: their own
   race-day file from Unit 13 if it has the book's mode switches, else `agents/unit-13.py` (the brief says so).
+  Three files are named throughout: the **incumbent** (the file you start from), the **candidate** (the incumbent
+  with your one choice, frozen before its test) and the **submitted file** (the candidate if it passes its test, else
+  the incumbent, whose own evidence is Unit 13's record or your earlier labs').
   1. **The bar.** Race the starter on `monza-like` on `carla_like(noise=True)` (seed 0, capped): it never finishes,
      although Unit 1 measured it clean on the kinematic car (why: the car changed). Make it clean with its one knob
      (`TARGET_SPEED` 10, 12, 14, 16 at seed 0; then the chosen one on seeds 0–4): the bar.
@@ -211,14 +222,15 @@ assumed-baseline concept). Unit 13 adds `numerical-integration`, `integrator-win
      judge it on validation cars (24–47), and **freeze** the result (or keep the value, with the evidence). Then
      the test, stated before any race of it: write down the frozen file and the rule (clean on every car), race
      **your own test cars 120–143 once**, record the result as it comes, and submit the frozen file only if it
-     passes; otherwise submit your previous file. Never revise the choice on the test, never race the test cars
+     passes; otherwise submit the incumbent. Cars 120–143 test only the one frozen candidate (a second knob's evidence
+     stops at validation), so no student spends them twice. Never revise the choice on the test, never race the test cars
      72–119, `test-circuit-seed2027/2028`, or cars ≥ 1000 (a test set raced to make a choice is spent).
-  3. **Build it up.** The ablation of **your frozen file**: the bar, then one unit's idea per stage (the reference
+  3. **Build it up.** The ablation of **the submitted file**: the bar, then one unit's idea per stage (the reference
      grid S1–S10 given as a starting point; a stage whose given constants are not clean for your file needs its own
      fastest clean value, as S2b and S3 did), on seeds 0–4: median, spread, time bought, Unit 1's verdict against
-     the previous stage, max error, clean; and the leave-one-out cross-check (line, grip, MPC, your choice). If
-     your choice kept the value, the ablation ends at S9 and the report says so.
-  4. **Qualify.** Your frozen file against the bar (Unit 1's rule, 0 collisions, seeds 0–4) and against
+     the previous stage, max error, clean; and the leave-one-out cross-check (line, grip, MPC, your choice). The candidate is its last row,
+     marked submitted or not (the solution's S10); if your choice kept the value, there is no candidate row.
+  4. **Qualify.** The submitted file against the bar (Unit 1's rule, 0 collisions, seeds 0–4) and against
      `agents/unit-07.py`; `check_submission` on `monza-like`; the packaging checklist (Unit 13).
   5. **The engineering report.** A memo: the ablation table, what each stage bought with its spread, the stage that
      cost time and why, what MPC and the fallback buy that time does not show (margin), the order of the ablation,
@@ -238,7 +250,9 @@ assumed-baseline concept). Unit 13 adds `numerical-integration`, `integrator-win
   timing gate); a model report.
 - **Teacher notes** (inline): goals, the three sittings, the hook, the rubric, mistakes (an ablation with one seed;
   reading 0.00 s as "MPC is useless"; additive thinking; the order; tuning on test cars; netting a crash into an
-  expected time across different cars), prompts, differentiation; the rubric states the reference's own trade.
+  expected time across different cars; a pre-registration that names no rule), prompts, differentiation; the rubric
+  states the reference's own trade; the solutions never race cars 120–143, and a student who re-runs Milestone 2 after
+  racing them has spent them.
 
 ## Unit 13's three exercises
 Inserted before the Challenge (which becomes Exercise 12, still tagged `stretch`):
@@ -280,7 +294,10 @@ Every value the solutions assert is a deterministic pin from Phase A; anything e
   (p99 0.998 ms, load 2.46). The test cars are **not** in the routed premise (24 races would not fit the headroom);
   their record is `p10`'s, quoted with its log.
 - **Phase A — premise + registry** (Opus subagent).
-  - `tests/_capstone_premise.py` + `tests/test_racekit_capstone_premise.py` (C14.0, C14.1; the existing pool
+  - `roar/projects/racekit/tests/_capstone_premise.py` + `roar/projects/racekit/tests/test_racekit_capstone_premise.py`
+    (the routed roar suite; C14.0, C14.1: the five `unit-13.py` races are read from the `race_day_premise` fixture's
+    `monza-like` seeds 0–4 keys, no re-race; the bar's five run in the new pool, `car="carla"`, constants
+    `(("TARGET_SPEED", 14.0),)`, `max_seconds=1300`; the never-raced assertion covers cars 72–143; the existing pool
     runner and the `race_day_premise` fixture); re-measure C14.2's seed-0 races and C14.3's values and log them
     (`scratchpad/u14/phaseA-gates.log`).
   - Registry: coverage-map entry `project-14-competition-agent` (`kind: project`, `lessons: 3`, introduces nothing,
@@ -288,9 +305,10 @@ Every value the solutions assert is a deterministic pin from Phase A; anything e
     `lessons: 4`; syllabus: Unit 13's lessons, the capstone row (no emoji), the "added by the plans that follow"
     line deleted; `books.yaml` drops `buildout` (and its comment), the coverage map's header comment updated; design
     013 v4.13 (§3, §4.4 cars 96–119 and 120–143, §6 capstone row and row 13, §7.1 measured budgets, changelog).
-    `qualification.md`: a note under the final qualification that the flags wait on it, with both candidates side by
-    side and their SHA-256s (`unit-13.py`: 468.55 s, 24/24 on cars 72–95, the submitted reference; `unit-13.py` with
-    `TARGET_SPEED` 50.0: 447.90 s, 23/24 on cars 96–119, car 117, not submitted); the file it races is the author's.
+    `qualification.md`: a note under the final qualification that the flags wait on it, that it races `unit-13.py`
+    (468.55 s, 24/24 on cars 72–95; its SHA-256) unless a follow-up plan records an author override, and an
+    informational row: `unit-13.py` with `TARGET_SPEED` 50.0, 447.90 s, failed N/N (23/24 on cars 96–119, car 117),
+    not a submission candidate under design §6 row 13.
 - **Phase B — content** (Opus subagents): the capstone brief (statements) and Unit 13's three new exercise
   statements in one session; the capstone solutions and Unit 13's three new solutions in a **separate fresh**
   session. Every race timing off except the capstone solutions' `check_submission`. Never race
@@ -299,7 +317,7 @@ Every value the solutions assert is a deterministic pin from Phase A; anything e
   Exercises 9–11, the Challenge renumbered.
 - **Phase D — verification:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` ALL GREEN; budgets measured.
 - **Content gate scope for blind solving:** reviewers solve Unit 13's Exercises 9–11 and the capstone's Milestones
-  1–2 on the given data (including the veto) plus seed 0 of S1, S3 and S10 (they cannot run 150 races).
+  1–2 on the given data (including the veto) plus seed 0 of S1, S3 and S10 (they cannot run 175 races).
 
 ## Out of scope
 - The `site` and `publication` flags and the final qualification (the author's CARLA run; a follow-up plan).
@@ -354,3 +372,21 @@ Verdicts: [self] APPROVE WITH NITS (sides with [sol] B1); [sol] REJECT; [fable] 
   rubric states the trade.
 - [FIXED v3] [fable] N1 (the candidate knobs, and a second knob if the student picks the solution's), N2 (no empty
   S10 row), N3 (design §3's sittings phrase), N4 (the bar is 10 races).
+
+### Round 3 (v3 @ a20283f): CONSENSUS at v3.1
+Verdicts: [self] APPROVE WITH NITS; [sol] REJECT (one blocker, folded in v3.1); [fable] APPROVE WITH NITS (withdraws
+its round-2 objection: Unit 13's N/N rule was merged in 44f9753 before dc170c9, and the incumbent's test is
+independent of cars 96–119, so the veto selects nothing from them).
+- [FIXED v3.1] [sol] B1 / [fable] S2: three files named throughout (incumbent, candidate, submitted file);
+  Milestones 3–4 ablate and qualify the submitted file; the candidate is the ablation's last row, marked.
+- [FIXED v3.1] [sol] S2 / [fable] S1: the pre-registered choice and its result stay as recorded; the incumbent
+  submission is labelled a later safety decision; the plan says the pre-registration named no rule, which rule was
+  applied and when it was merged.
+- [FIXED v3.1] [sol] S3: the premise files are under `roar/projects/racekit/tests/` (the routed roar suite).
+- [FIXED v3.1] [fable] S3: the Flags section's leftover v2 sentence corrected.
+- [FIXED v3.1] [fable] S4: the 50.0 row is informational, not a submission candidate; the final qualification races
+  `unit-13.py` unless a follow-up plan records an author override.
+- [FIXED v3.1] [fable] N5 (175 races), N6 (one test, one file; the never-raced assertion covers 72–143), N7 (C14.1's
+  race keys and the bar's job spelled out), N8 (the teacher notes on cars 120–143).
+Consensus: [sol]'s only blocker is resolved by a text change that names the file each milestone evaluates; no
+number, gate or phase changed; [self] and [fable] approve. Implementation proceeds at v3.1.
