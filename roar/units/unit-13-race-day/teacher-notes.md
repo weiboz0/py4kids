@@ -13,8 +13,8 @@ By the end of this unit students can:
 - Run a **race-day record** on CARLA: five consecutive launches, none discarded, with the host-failure rule.
 
 This unit **introduces nothing**.
-It practises Units 8–12: `cornering-speed-limit`, `speed-profile`, `racing-line`, `line-retune`, `ltv-mpc`, `pure-pursuit`, `tick-budget`, `perturbation-testing`, `respawn-economics`, `repeated-run-measurement`, `black-box-search`, `held-out-track-validation`, `determinism-and-packaging`.
-It uses Unit 8's measured grip but identifies nothing, so it does not practise `grip-identification`; the lab does, through the student's own CARLA grip.
+It practises earlier units' concepts (Units 1, 5 and 7–12): `cornering-speed-limit`, `speed-profile`, `racing-line`, `line-retune`, `ltv-mpc`, `pure-pursuit`, `tick-budget`, `perturbation-testing`, `respawn-economics`, `repeated-run-measurement`, `black-box-search`, `held-out-track-validation`, `determinism-and-packaging`.
+It uses Unit 8's measured grip but identifies nothing, so it does not practise `grip-identification`; nor does the lab, which carries the student's own CARLA grip over from an earlier lab.
 
 `agents/unit-13.py` is `agents/unit-11.py` with six constants changed:
 - `monza-like`'s line (`LINE_CONTROL`, 285 values) and measured grip (`MU_G`);
@@ -55,7 +55,8 @@ Plan for **two 60–90 min sittings**, plus the lab on a CARLA machine.
   A knob the student never pushed to a not-clean setting gets no margin.
   An assembled file that differs from the starting file needs two clean practice launches; otherwise the starting file races.
 - **Fix the horizon.** The race-day file sets `MPC_MIN_HORIZON` to its own `MPC_HORIZON`, so the race is the behaviour its practice launches tested.
-  Timing is checked before the race, off CARLA, on an idle machine (the Unit 10 lab's timing copy for a file with a Monza line).
+  Timing is checked first, before the practice launches, off CARLA, on an idle machine (the Unit 10 lab's timing copy for a file with a Monza line, at 4 ms; the cell checks at 4 ms unless told the file has no line).
+  If the assembled file fails, the starting file races, with no practice launches.
 - **Five consecutive launches, none discarded.**
   A host failure (the server exits, or the agent never gets its first tick) is recorded and the block restarts; both blocks stay in the record.
   Students are tempted to "just run it again" after a bad launch: that is exactly what the record forbids.

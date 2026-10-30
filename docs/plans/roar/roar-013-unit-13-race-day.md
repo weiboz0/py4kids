@@ -60,7 +60,7 @@ perturbed family: training cars k = 0–23, held-out cars k = 24–47, race seed
   |---|---|---|---|---|
   | the edge E (0.66, 5.0, 5.0) | 22/24 | 465.05 | 9.53 | car 24 (2 collisions, 737 s), car 41 (2 collisions, 889 s) |
   | the search's literal output E′ (0.66, 5.0, 5.5) | 22/24 | 465.00 | 2.64 | cars 41 and 46 (1 collision each) |
-  | margin on `MU_FRACTION` only, M (0.64, 5.0, 5.0) | 23/24 | 467.02 | 5.42 | car 41 (1 collision, 685 s) |
+  | margin on `MU_FRACTION` only, M (0.64, 5.0, 5.0) | 23/24 | 467.02 | 5.42 | car 41 (1 collision, 686 s) |
   | **margin on both edged knobs, M2 (0.64, 4.5, 5.0)** | **24/24** | 468.83 | 1.34 | none |
   | margin on `A_DEC` only, P (0.66, 4.5, 5.0) | 24/24 | 466.73 | 1.44 | none |
   | `unit-11.py` as shipped (0.54, 5.0, 4.0) | 24/24 | 482.23 | 1.31 | none |
@@ -366,3 +366,26 @@ Verdicts: [self] APPROVE; [sol] APPROVE WITH NITS (N1–N2); [fable] APPROVE WIT
 - [FIXED v3.1] [sol] N2 / [fable] N2: six constants; the header says the docstring's halving sentence is inert.
 - [FIXED v3.1] [fable] N4: U13.0 compares with the session fixture's `line_controls`.
 - [FIXED v3.1] [fable] N5 (where the ranges are named; §4.4 gains all four), N6 ("sysid-informed μ" used, not practised), N7 (Challenge 9's answer: a fresh pre-registered car set, never 72–95), N8 (Exercise 2's tolerance), N9 (why timing-off pins are the shipped race).
+
+## Content Review
+
+### Round 1 (@ bdddd25; CI ALL GREEN on bdddd25, roar routed 1117 s)
+
+Verdicts: [self] APPROVE WITH NITS; [sol] REJECT (one blocker); [fable] APPROVE WITH NITS.
+Blind solves, from the statements and the lesson before opening the solutions:
+[fable] solved Exercises 1, 3, 4 and 6 (Ex 1: section 0's cap 45 m/s, grip needed 0.0705 m/s², sections 1-5 limited, profile unchanged at `MU_G[0]` = 12; Ex 3: float replay ends at E′ (0.66, 5.0, 5.5) on the one-tick tie, whole ticks end at E (0.66, 5.0, 5.0), edges `MU_FRACTION` 0.68 and `A_DEC` 5.5, `A_ACC` none; Ex 4 raced: M on car 41 685.55 s, 1 collision, not clean, M2 467.40 s clean; Ex 6: 494.11 / 476.24 / 468.98 / 707.62 s, break-even rate 0.0112 against the observed 0.0833), and re-raced Challenge 9 (P: 465.40 s clean on car 41, 466.45 s at seed 0) and Exercise 7 (timed and untimed 1-lap races 159.15 s, every telemetry field equal); every value equals the solutions'.
+[sol] solved Exercises 1, 3, 4 and 6 against the pinned record (it could not race: no `uv` in its sandbox); every answer agrees with the solutions.
+[self] replayed Exercise 3 from `P2` both ways (E′ in floats, E in ticks) and recomputed Exercise 6; the solutions agree.
+
+- [FIXED] [sol] B1: the lab's timing cell defaulted `TIMING_COPY = False`, so a Monza-line timing copy passed at 5 ms if a student changed only `RACE_FILE`, while this check is the fixed-horizon file's only timing protection. The cell now fails closed: `HAS_LINE = True` by default (4 ms), and only a file whose own `LINE_CONTROL` is `None` is set to 5 ms.
+- [FIXED] [sol] S2: the lab's practice-launch commands came before the timing cell, while the protocol times the assembled file first. The timing cell now comes first (pointing at the assembled file in `roar-runs\race-day`, before it is copied in), and the launch cell says it follows a passed step 1.
+- [FIXED] [sol] S3: the teacher notes said the lab practises `grip-identification`; it carries the student's CARLA grip from an earlier lab. Now: the lab identifies nothing either.
+- [FIXED] [fable] S1: the lab's step 1 left the path "the starting file fails the timing check too" unresolved. Now: an assembled file that fails is not raced and there are no practice launches; the starting file races, and its own check's result is written down (it raced clean on CARLA on this machine and keeps its own horizon policy).
+- [FIXED] [self] S1: Exercise 6's `checkpoint_b` statement said Checkpoint B's 0.54 "beat the margin rule's 0.48 while fewer than 4.5% of races crashed", which reads as a race result; on Checkpoint B's race day 0.48 won. Now: by the family's record 0.54 would beat 0.48 while fewer than 4.5% of races crashed (the family showed 1.7%), yet on race day four of five sealed cars crashed once at 0.54 and 0.48 won. ([fable] checked the 4.5% against Checkpoint B's solutions: accurate as a break-even.)
+- [FIXED] [sol] N4: the lesson called the milestone's check "this unit's one timed run"; Exercise 7 also races once with the timing on. Now "one timed submission check", with Exercise 7's race named as the same race.
+- [FIXED] [fable] N2: the plan's table gave M's car-41 race as 685 s, the lesson 686 s (685.55 s); the plan now says 686 s.
+- [FIXED] [fable] N3: M's car-41 race runs 686 s of race time; the car-41 pair is now "about 25 s" in the lesson, Exercise 4 and its solution.
+- [FIXED] [fable] N4: the teacher notes said "It practises Units 8–12" for a list with Units 1, 5 and 7 concepts; now "Units 1, 5 and 7–12".
+- [FIXED] [fable] N5: the lab's summary accepted launches after a complete block as a new block in progress; it now refuses any launch after a complete block (a sixth, or a second block), with a worked example for the sixth.
+- [FIXED] [fable] N6: the lab's margin step named only `MU_FRACTION`'s grid; it now says any other knob steps by the grid its lab raced it on.
+- [FIXED] [fable] N7: the exercises' (and solutions') `race()` could not race `unit-07.py`; it now mirrors the lesson's `source == UNIT_07` branch.
