@@ -44,7 +44,7 @@ Plan for **two 60–90 min sittings**, plus the lab on a CARLA machine.
    - §4: MPC or pursuit, with pursuit's crash on car 34.
    - §5–§6: `check_submission` on its own track, the race-day timing trade, the checklist and the season's rules.
    - Exercises 4–8; Challenge 9 as homework.
-3. **The lab** (on the CARLA machine): at most 2 practice launches plus the 5-launch record; a host failure adds a block.
+3. **The lab** (on the CARLA machine): two counted practice launches (a host failure is relaunched, not counted) plus the 5-launch record; a host failure adds a block.
 
 ## The lab: what to watch for
 

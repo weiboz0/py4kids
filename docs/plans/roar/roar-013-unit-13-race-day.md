@@ -400,3 +400,15 @@ Verdicts: [self] APPROVE WITH NITS; [sol] REJECT (one blocker); [fable] APPROVE 
 - [FIXED] [fable] N1: the practised concepts come from Units 1, 5–7 and 9–12 (Unit 6 introduces `cornering-speed-limit`; Unit 8 introduces none of them); the teacher notes now say so.
 - [FIXED] [fable] N2: the timing cell's `RACE_FILE` comment now points at the timing copy (the file itself only if its `LINE_CONTROL` is `None`).
 - [FIXED] [fable] N3: a practice launch with a host failure is recorded, not counted, and launched again (step 2).
+
+### Round 3 (@ 1d4c3eb; static review of the round-2 fixes): CONSENSUS
+
+Verdicts: [self] APPROVE WITH NITS; [sol] APPROVE WITH NITS; [fable] APPROVE WITH NITS. No blockers.
+[sol] and [fable] each traced the lab's paths again (the assembled file fails timing; a practice launch not clean; a host failure in practice or mid-block; a sixth launch; the timing cell fails closed): all resolved.
+The nits are folded at the next commit, and CI runs on that head.
+
+- [FIXED] [fable] S1: the timing cell's `RACE_FILE` was labelled the timing copy but named the same path the launch cell copies in as the race file; the timing copy is now a separate file, `race-day\submission-timing.py`.
+- [FIXED] [sol] N1: the lab's takeaway said the race-day file's horizon never changes mid-race; now an assembled file's, and a starting file that races instead keeps the horizon policy it raced with.
+- [FIXED] [sol] N2: the teacher notes said "at most 2 practice launches"; now two counted practice launches (a host failure is relaunched, not counted).
+- [FIXED] [fable] N2: a practice launch's host failure goes in the student's own notes, not in `LAUNCHES`.
+- [FIXED] [fable] N3: the starting file's own timing check goes through its timing copy, at 4 ms, if it carries a line.
