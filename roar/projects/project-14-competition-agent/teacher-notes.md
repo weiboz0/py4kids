@@ -64,6 +64,7 @@ Plan for **three 60–90 min sittings** plus racing at home (about 175 races, ab
 - **A pre-registration that names no rule.** "I will race the test cars" is not a pre-registration; "I submit the candidate only if it is clean on all 24" is. (The plan behind this capstone made exactly this mistake once and recorded it.)
 - **Netting a crash into an expected time across different cars.** A test crash and a nominal gain are two facts; report them apart.
 - **Ablating the wrong file.** The ablation and the qualification are of the **submitted** file; a rejected candidate is the ablation's last row, marked.
+- **Saving the candidate inside the repository.** The repository is public; `candidate.py`, the records and the report live in the student's own `roar-runs` folder, never in a commit.
 - **Racing the starter without a long enough cap.** The bar's races take about 1200 s; a 900 s cap reports a crash that did not happen.
 
 ## Discussion prompts

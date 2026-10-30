@@ -170,7 +170,7 @@ clean: Exercise 7's `untimed` race, so no new race; telemetry `u14/r_tel.pkl`):
   at lag 1, `A_THROTTLE` 5.075, `A_BRAKE` 8.533, `C_DRAG` 3.137e-4 against the agent's assumed 6.0 / 8.0 / 4.0e-4
   (RMS 0.607); fitted on the first half, RMS 0.453 on the second (assumed 0.604).
 - R2 `numerical-integration` (Unit 3): a 1 s replay from 31 start rows; on the agent's own model Euler is 0.123 m
-  (median) from a fine RK4 and RK4 5e-9 m; against the real car model error dominates (Euler 0.520, RK4 0.558; RK4
+  (median) from a fine RK4 and RK4 at most 5e-9 m; against the real car model error dominates (Euler 0.520, RK4 0.558; RK4
   with R1's map 0.472).
 - R3 `dynamic-bicycle` (Unit 6): sideslip from positions above 5 m/s, max 4.38°, median 0.59°; peak lateral
   acceleration 8.71 m/s² at 19.56 m/s; measured over kinematic yaw rate median 0.976 (p10 0.657, p90 1.473); a
@@ -392,3 +392,40 @@ independent of cars 96–119, so the veto selects nothing from them).
   race keys and the bar's job spelled out), N8 (the teacher notes on cars 120–143).
 Consensus: [sol]'s only blocker is resolved by a text change that names the file each milestone evaluates; no
 number, gate or phase changed; [self] and [fable] approve. Implementation proceeds at v3.1.
+
+## Content Review
+
+### Round 1 (@ 1d569a1)
+Verdicts: [self] APPROVE WITH NITS (one S); [sol] REJECT (three B, one S); [fable] APPROVE WITH NITS (one S, six N).
+Blind solves ([sol] and [fable], from the statements before the solutions): Exercise 9 lag 1, fit 5.075 / 8.533 /
+3.137e-4, Euler 0.123 m, against the car 0.520 / 0.558 / 0.472; Exercise 10 the one-tick gap 2.314e-4 m; Exercise 11
+overshoot 0% / 50.0%, settling 7.80 / 28.45 s by Unit 4's rule, peak integral 1.35 / 173.89, Stanley not clean in 70 s
+(first crash 23.00 s); Milestone 2 accepts 47.5, 50.0 and 52.5 on whole ticks, 55.0 not clean, edge 52.5, margin 50.0,
+validation 24/24, test 23/24, the incumbent submitted; Milestone 3 seed 0 S1 1219.90, S3 617.05, S10 447.80 s.
+All match the solutions.
+- [FIXED] [sol] B1: the brief requires a `TARGET_SPEED` student's second knob through training **and validation**;
+  the solution stopped `PROFILE_LEAD_S` at training. Probes p11, p11b, p11c (scratchpad `u14/`, validation cars
+  24–47 only) completed it: 0.2, 0.1 and 0.0 each beat the value before on training (sums 1876.9 / 1874.95 / 1872.55
+  s), all clean; a lead below 0 is floored at `LEAD_MIN_M`, so 0.0 ends the walk with no edge and is kept by the
+  brief's rule; on the validation cars 0.0 is clean on **22 of 24** (car 24: 2 collisions, 707.25 s, 3.975 m; car 35:
+  2.009 m). No second candidate; the solution's cell 7 and answer 6 give it as data with asserts.
+  (Recorded, not used by the solution: 0.1 on the same validation cars is clean 24/24, median 468.10 s, p11b.)
+- [FIXED] [sol] B2: the brief promised the tested file is the submitted file "byte for byte", but `race()` adds
+  `NO_TIMING`. The brief (Milestone 2 step 3 and the `race()` comment) now says so: the test races the frozen file with
+  only its timing switched off, as every race in the notebook, and Milestone 4's `check_submission` races it exactly as
+  submitted, timing on.
+- [FIXED] [sol] B3 = [fable] N2: `assert check_passed` used `report.ok`, which includes the load-dependent p99 budget.
+  The solution now asserts the parse and shape stages empty and the race finished, and prints `report.ok`; checklist
+  item 6 prints it too.
+- [FIXED] [self] S = [sol] S4 = [fable] S1: the brief wrote `candidate.py` beside the notebook, inside the public
+  repository clone. It now writes it to `RUNS`, a folder of the student's own outside the repository (the labs'
+  `roar-runs`), with the labs' "This repository is public" warning; the teacher notes gain the mistake.
+- [FIXED] [fable] N4: "steps 1 to 3" → "steps 1 and 2" (step 3 is the freeze).
+- [FIXED] [fable] N7: the plan's "RK4 5e-9 m" is the maximum ("at most 5e-9 m").
+- [WONTFIX] [fable] N3: `np.atan2` in Unit 13's solutions. `arctan2` is not on the book's closed name list
+  (`baseline.yaml` `library_methods`); `atan2` is, and numpy 2.5.3 is pinned.
+- [WONTFIX] [fable] N5: the capstone's `practices` list `grip-identification` and `pid-control`: the ablation races
+  those stages (S5, S1) and reads what they bought; capstone practice earns no coverage credit, so the capstone rule is
+  unaffected. Plan Phase A listed them; changing the map is out of this round's scope.
+- [WONTFIX] [fable] N6: the one-race guard is per kernel; the brief calls it "a seat belt, not a record" and the
+  pre-registration with its timestamp is the record.
