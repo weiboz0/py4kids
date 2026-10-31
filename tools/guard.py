@@ -137,7 +137,13 @@ def _paths(root: Path, ref: str) -> set[str]:
 def guard_failures(root: Path, refs: Sequence[str]) -> list[str]:
     path_sets = {ref: _paths(root, ref) for ref in refs}
     registry = yaml.safe_load((root / "books.yaml").read_text(encoding="utf-8"))
-    book_roots = [book.get("root", book["id"]) for book in registry["books"]]
+    # The unit-/project-/checkpoint-NN rules are py4kids layout (design 014 D1); aio roots get
+    # their own id rules in aio-001 Phase D.
+    book_roots = [
+        book.get("root", book["id"])
+        for book in registry["books"]
+        if book.get("content_model", "py4kids") == "py4kids"
+    ]
     failures = collision_failures(path_sets, book_roots)
 
     for path in sorted(_git_lines(root, "ls-files")):

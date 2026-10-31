@@ -1608,8 +1608,10 @@ def test_ci_local_reads_books_from_registry():
     # `recsys` book directories are in the static `ruff check` scope (design 011 §7 / plan
     # recsys-001 Phase F) — a path argument, not id-branching — so drop those static paths too.
     # The same holds for the `roar` book's paths (design 013 §7.1, plan roar-001 Phase B).
+    # The step-1 aio-book forbidden-flag tuple (design 014 D1) names flags, not books.
     unflagged = (
-        text.replace('"acsl", "site", "labs")', ")").replace("has_flag acsl", "").replace("acsl-check", "")
+        text.replace('("judge", "patterns", "acsl", "labs")', "")
+        .replace('"acsl", "site", "labs")', ")").replace("has_flag acsl", "").replace("acsl-check", "")
         .replace("recsys/projects/bookrec", "").replace("recsys/data", "")
         .replace("roar/projects/racekit", "").replace("roar/data", "").replace("roar/tests", "")
     )

@@ -106,7 +106,8 @@ def test_a_passing_lab_executes_against_the_sample(lab_root):
 
 def test_a_book_without_labs_passes_and_the_real_registry_flags_roar():
     assert lab_findings(REPO, "python-projects") == []
-    assert yaml.safe_load((REPO / "books.yaml").read_text(encoding="utf-8"))["books"][-1]["labs"] is True
+    books = {b["id"]: b for b in yaml.safe_load((REPO / "books.yaml").read_text(encoding="utf-8"))["books"]}
+    assert books["roar"]["labs"] is True
 
 
 def test_a_missing_lab_fails(lab_root):

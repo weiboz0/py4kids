@@ -4,6 +4,10 @@ Design 008 renamed `book1` / `book1b` / `book2` to `python-projects` / `python-c
 `usaco-bronze`, and student- and teacher-facing text names a book by its title.
 Historical records (docs/plans, docs/designs, docs/reviews, docs/architecture, ERRATA.md) keep the
 old ids and are never scanned.
+
+Design 014 (plan aio-001 Phase C): the imported olympiad books (`content_model: aio` roots) and their
+tooling (`tools/aio/`, `scripts/aio/`) say "Book 1"/"Book 2" in prose on purpose (their own two
+books), so the "book name" rule exempts them; every id, path, CLI and output-name rule still applies.
 """
 from __future__ import annotations
 
@@ -36,11 +40,21 @@ TRANSITION_LINE = ('TRANSITION = {"book1b": "python-concepts", "book1": "python-
 HISTORICAL_PREFIXES = ("docs/plans/", "docs/designs/", "docs/reviews/", "docs/architecture/")
 LIVE_DIRS = ("tools/", "tests/", "scripts/")
 LIVE_FILES = ("books.yaml", ".gitignore", "output/README.md", "README.md", "TODO.md")
+# Rules that do not apply under an aio root or the aio tooling dirs (design 014 D1).
+AIO_EXEMPT_RULES = frozenset({"book name"})
+AIO_TOOL_DIRS = ("tools/aio/", "scripts/aio/")
 
 
 def _book_roots() -> tuple[str, ...]:
     registry = yaml.safe_load((REPO / "books.yaml").read_text(encoding="utf-8"))
     return tuple(book["root"] + "/" for book in registry["books"])
+
+
+def _aio_roots() -> tuple[str, ...]:
+    registry = yaml.safe_load((REPO / "books.yaml").read_text(encoding="utf-8"))
+    return tuple(
+        book["root"] + "/" for book in registry["books"] if book.get("content_model") == "aio"
+    )
 
 
 def _repo_files() -> list[str]:
@@ -78,15 +92,17 @@ def _project_structure_section() -> str:
     return text[start:end]
 
 
-def findings_for(label: str, text: str) -> list[str]:
+def findings_for(label: str, text: str, aio_roots: tuple[str, ...] | None = None) -> list[str]:
     found = []
     exempt_used = False
+    aio = label.startswith(AIO_TOOL_DIRS + (_aio_roots() if aio_roots is None else aio_roots))
+    rules = [(name, pattern) for name, pattern in PATTERNS if not (aio and name in AIO_EXEMPT_RULES)]
     for number, line in enumerate(text.splitlines(), 1):
         if label == TRANSITION_FILE and line == TRANSITION_LINE and not exempt_used:
             exempt_used = True  # the one-release old→new map must name the old roots; exempt it once only
             continue
         scanned = HISTORICAL_FILE_NAME.sub("", line)
-        for name, pattern in PATTERNS:
+        for name, pattern in rules:
             if pattern.search(scanned):
                 found.append(f"{label}:{number}: {name}: {line.strip()[:160]}")
     return found
@@ -94,10 +110,11 @@ def findings_for(label: str, text: str) -> list[str]:
 
 def test_no_old_book_ids_or_names_in_live_files():
     findings = []
+    aio_roots = _aio_roots()
     for path in live_files():
         text = _text(path)
         if text is not None:
-            findings.extend(findings_for(path, text))
+            findings.extend(findings_for(path, text, aio_roots))
     findings.extend(findings_for("AGENTS.md §Project Structure", _project_structure_section()))
     assert findings == [], "\n".join(findings)
 
@@ -112,6 +129,20 @@ def test_live_file_set_covers_every_scope():
     assert not any(path.startswith(HISTORICAL_PREFIXES) for path in files)
     assert not any(path.endswith("/ERRATA.md") or path == "ERRATA.md" for path in files)
     assert "tests/test_book_ids.py" not in files
+    # the imported aio books and their tooling are scanned (design 014; LIVE_DIRS covers the tools)
+    assert _aio_roots() == ("aio-ml/", "aio-dl/")
+    for prefix in (*_aio_roots(), *AIO_TOOL_DIRS):
+        assert any(path.startswith(prefix) for path in files), prefix
+
+
+def test_aio_paths_exempt_only_the_book_name_rule():
+    roots = ("aio-ml/", "aio-dl/")
+    for label in ("aio-ml/syllabus.md", "aio-dl/units/x.md", "tools/aio/model.py", "scripts/aio/b.sh"):
+        assert findings_for(label, "the Book 2 syllabus", roots) == [], label
+        for sample in ("cd book1/units", "--book book2 x", "'book1'", "book2:topic", "book1-student.pdf"):
+            assert findings_for(label, sample, roots), (label, sample)
+    assert findings_for("tools/model.py", "the Book 2 syllabus", roots)  # py4kids tools: no exemption
+    assert findings_for("recsys/syllabus.md", "the Book 1 syllabus", roots)
 
 
 def test_patterns_flag_old_forms_and_spare_historical_links():

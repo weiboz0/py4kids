@@ -89,7 +89,9 @@ def dependency_baseline(root: Path, book: str) -> set[str]:
         entry = registry.get(current, {"depends_on": []})
         result: set[str] = set()
         for dependency in entry.get("depends_on", []) or []:
-            if not isinstance(dependency, str):
+            # Only py4kids-model books supply py4kids concepts (design 014 D1): an aio
+            # dependency's coverage map is a different schema and contributes nothing here.
+            if not isinstance(dependency, str) or content_model(root, dependency) != "py4kids":
                 continue
             result |= introduced_concepts(root, dependency)
             result |= resolve(dependency, trail | {current})
@@ -254,6 +256,36 @@ def books_with_flag(root: Path, flag: str) -> list[str]:
     return [book for book in book_entries(root) if book_flag(root, book, flag)]
 
 
+CONTENT_MODELS = ("py4kids", "aio")
+
+
+def content_model(root: Path, book: str) -> str:
+    """Return the book's ``content_model`` (design 014 D1): ``py4kids`` (default) or ``aio``.
+
+    A malformed value reads as ``py4kids``; ci-local step 1 rejects it.
+    """
+    configured = book_entry(root, book).get("content_model", "py4kids")
+    return configured if configured in CONTENT_MODELS else "py4kids"
+
+
+def aio_round(root: Path, book: str) -> int | None:
+    """Return an ``aio`` book's olympiad round (design 014 D1); ``None`` when absent or malformed."""
+    configured = book_entry(root, book).get("aio_round")
+    if isinstance(configured, int) and not isinstance(configured, bool):
+        return configured
+    return None
+
+
+def books_with_content_model(root: Path, model: str) -> list[str]:
+    """Return registered book ids (registry order) whose ``content_model`` is ``model``."""
+    return [book for book in book_entries(root) if content_model(root, book) == model]
+
+
+def py4kids_books(root: Path) -> list[str]:
+    """Return the registered ``content_model: py4kids`` books, the set py4kids tools walk."""
+    return books_with_content_model(root, "py4kids")
+
+
 def book_title(root: Path, book: str) -> str:
     configured = book_entry(root, book).get("title")
     return configured if isinstance(configured, str) and configured.strip() else book
@@ -275,7 +307,7 @@ def qualified_owner_alternation(root: Path, book: str | None = None) -> str:
     Qualified concept ids are ``<owner>:<concept-id>``; building the owner part from the
     registry lets hyphenated ids (``usaco-bronze:str-split``) and future books work unedited.
     """
-    owners = set(book_entries(root))
+    owners = set(py4kids_books(root))  # aio books own no py4kids concepts (design 014 D1)
     if book:
         owners.add(book)
     ordered = sorted(owners, key=lambda owner: (-len(owner), owner))
@@ -417,6 +449,10 @@ def _parse_publication_config(root: Path, book: str) -> tuple[PublicationConfig 
     base = book_path(root, book)
     path = base / PUBLICATION_CONFIG
     where = f"{book}/{PUBLICATION_CONFIG}"
+    if content_model(root, book) != "py4kids":
+        # An aio book's publication.yaml is usaaio's schema, published by tools/aio (design 014).
+        model = content_model(root, book)
+        return None, [f"{where}: a content_model {model} book is not py4kids-published (design 014)"]
     if not path.is_file():
         return None, [f"{where}: missing (every publication book needs one; design 010 D1)"]
     try:

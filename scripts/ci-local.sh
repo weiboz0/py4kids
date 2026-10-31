@@ -32,6 +32,19 @@ if catalog.get("books_version") != 2:
 for book in catalog["books"]:
     if book.get("root") != book["id"] or not Path(book["root"]).is_dir():
         sys.exit(f"FAIL: book {book['id']!r}: root must equal the id and exist")
+    # content_model / aio_round (design 014 D1): an `aio` book is an imported olympiad book.
+    model = book.get("content_model", "py4kids")
+    if model not in ("py4kids", "aio"):
+        sys.exit(f"FAIL: book {book['id']!r}: content_model must be 'py4kids' or 'aio', got {model!r}")
+    if model == "aio":
+        rnd = book.get("aio_round")
+        if not isinstance(rnd, int) or isinstance(rnd, bool) or rnd < 1:
+            sys.exit(f"FAIL: book {book['id']!r}: an aio book requires a positive integer aio_round")
+        forbidden = [flag for flag in ("judge", "patterns", "acsl", "labs") if flag in book]
+        if forbidden:
+            sys.exit(f"FAIL: book {book['id']!r}: flags not allowed on an aio book: {', '.join(forbidden)}")
+    elif "aio_round" in book:
+        sys.exit(f"FAIL: book {book['id']!r}: aio_round is allowed only on a content_model: aio book")
     flags = [flag for flag in ("publication", "judge", "patterns", "acsl", "site", "labs") if book.get(flag) is True]
     print(book["id"], *flags)
 PY
@@ -58,6 +71,19 @@ PY
 )"
 declare -A GROUP
 while read -r gid ggrp; do GROUP["$gid"]="$ggrp"; done <<< "$groups"
+
+# `content_model` (design 014 D1) is likewise a VALUE read on its own line: "<id> <model>"
+# (py4kids when absent; validated in the registry check above). Phase E routes steps on it.
+models="$(uv run python - <<'PY'
+import yaml
+
+catalog = yaml.safe_load(open("books.yaml", encoding="utf-8"))
+for book in catalog["books"]:
+    print(book["id"], book.get("content_model") or "py4kids")
+PY
+)"
+declare -A MODEL
+while read -r mid mmodel; do MODEL["$mid"]="$mmodel"; done <<< "$models"
 
 has_flag() { [[ " $2 " == *" $1 "* ]]; }
 

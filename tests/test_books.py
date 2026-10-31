@@ -8,7 +8,12 @@ from tools.books import (
     SiteConfigError,
     SlideAllow,
     SlideConfig,
+    aio_round,
+    books_with_content_model,
     books_with_flag,
+    content_model,
+    publication_config_errors,
+    qualified_concept_id_pattern,
     site_config,
     site_config_errors,
 )
@@ -27,8 +32,9 @@ def test_registry_ids_order_and_dependencies():
     books = catalog["books"]
     assert [b["id"] for b in books] == [
         "python-projects", "python-concepts", "usaco-bronze", "acsl", "recsys", "roar",
+        "aio-ml", "aio-dl",
     ]
-    assert [b["number"] for b in books] == [1, 1, 2, 2, 3, 3]  # a series ordinal only; drives no tooling
+    assert [b["number"] for b in books] == [1, 1, 2, 2, 3, 3, 4, 4]  # a series ordinal only; drives no tooling
     assert books[0]["depends_on"] == []  # python-projects
     assert books[1]["depends_on"] == []  # python-concepts: self-contained variant of python-projects
     assert books[2]["depends_on"] == ["python-projects"]  # usaco-bronze
@@ -50,6 +56,9 @@ def test_registry_ids_order_and_dependencies():
     assert books[5]["depends_on"] == ["python-projects"]
     assert books[5].get("buildout", False) is False
     assert books[5]["lesson_budget"] == [30, 50]
+    # the imported olympiad books (design 014 D1): aio-dl builds on aio-ml only
+    assert books[6]["depends_on"] == []  # aio-ml
+    assert books[7]["depends_on"] == ["aio-ml"]  # aio-dl
 
 
 def test_recsys_declares_its_dependency_group_as_a_string_not_a_flag():
@@ -61,11 +70,12 @@ def test_recsys_declares_its_dependency_group_as_a_string_not_a_flag():
     assert "dependency_group" not in FLAGS
     assert books["recsys"]["dependency_group"] == "recsys"
     assert books["roar"]["dependency_group"] == "roar"
+    assert books["aio-ml"]["dependency_group"] == books["aio-dl"]["dependency_group"] == "aio"
     for book_id, book in books.items():
         value = book.get("dependency_group")
         assert value is None or isinstance(value, str), book_id
     declared = {i for i, b in books.items() if b.get("dependency_group")}
-    assert declared == {"recsys", "roar"}
+    assert declared == {"recsys", "roar", "aio-ml", "aio-dl"}
     text = (REPO / "books.yaml").read_text(encoding="utf-8")
     assert "`dependency_group`" in text  # documented in the registry comment block
 
@@ -103,6 +113,13 @@ def test_registry_titles_and_subtitles():
     assert books["roar"]["title"] == "Applied Python: Autonomous Racing"
     assert books["roar"]["subtitle"] == (
         "Build a competitive ROAR agent, from waypoints to optimal control"
+    )
+    # unchanged from the usaaio registry (design 014 D1)
+    assert books["aio-ml"]["title"] == "Machine Learning for the AI Olympiad"
+    assert books["aio-ml"]["subtitle"] == "Round 1: Foundations, Models, and Practice"
+    assert books["aio-dl"]["title"] == "Deep Learning for the AI Olympiad"
+    assert books["aio-dl"]["subtitle"] == (
+        "Round 2: Transformers, Generative Models, and Open-Ended Modeling"
     )
 
 
@@ -179,9 +196,14 @@ def test_acsl_season_map_records_source_and_contests():
 
 
 def test_book_roots_have_required_layout():
+    # projects/ + checkpoints/ are the py4kids layout; an aio book has units/ + mocktests/ instead
+    # (design 014 D1), and its required-root-files list is tools/aio's (aio-001 Phase D).
     for book in load_catalog()["books"]:
         root = REPO / book["root"]
-        for sub in ("curriculum", "units", "projects", "checkpoints", "reference", "docs"):
+        model = book.get("content_model", "py4kids")
+        subs = ("curriculum", "units", "reference", "docs")
+        subs += ("projects", "checkpoints") if model == "py4kids" else ("mocktests",)
+        for sub in subs:
             assert (root / sub).is_dir(), f"{book['id']} missing {sub}/"
         assert (root / "syllabus.md").is_file(), f"{book['id']} missing syllabus.md"
 
@@ -227,6 +249,8 @@ def test_site_config_real_books():
     for book in books_with_flag(REPO, "site"):
         assert site_config_errors(REPO, book) == []
         config = site_config(REPO, book)
+        if content_model(REPO, book) != "py4kids":
+            continue  # an aio site book starts `proposed` (design 014 D7); not yet flagged
         assert config.classification == "confirmed"  # plan 102 flipped all four
         assert config.fixture_budget_kb == 130
 
@@ -358,3 +382,114 @@ def test_slide_tags_only_on_lesson_cells():
         "usaco-bronze/units/unit-01-reading-the-input": 1,
         "usaco-bronze/units/unit-10-stacks-queues-deques": 1,
     }
+
+
+# --- content_model / aio_round (design 014 D1, plan aio-001 Phase C) --------------------------
+
+
+def test_registry_content_model_and_aio_round():
+    books = {b["id"]: b for b in load_catalog()["books"]}
+    assert "content_model" not in FLAGS and "aio_round" not in FLAGS  # values, not flags
+    assert books_with_content_model(REPO, "aio") == ["aio-ml", "aio-dl"]
+    assert books_with_content_model(REPO, "py4kids") == [
+        "python-projects", "python-concepts", "usaco-bronze", "acsl", "recsys", "roar",
+    ]
+    assert [aio_round(REPO, book) for book in ("aio-ml", "aio-dl")] == [1, 2]
+    for book_id, book in books.items():
+        if book.get("content_model") != "aio":
+            assert "content_model" not in book and "aio_round" not in book, book_id
+            assert content_model(REPO, book_id) == "py4kids" and aio_round(REPO, book_id) is None
+            continue
+        assert not any(flag in book for flag in ("judge", "patterns", "acsl", "labs")), book_id
+        assert not any(flag in book for flag in ("publication", "site")), book_id  # not yet
+    text = (REPO / "books.yaml").read_text(encoding="utf-8")
+    assert "`content_model`" in text and "`aio_round`" in text  # documented in the header
+
+
+def test_content_model_helpers_default_and_malformed(tmp_path):
+    root = make_registry(tmp_path, [
+        {"id": "a"},
+        {"id": "b", "content_model": "aio", "aio_round": 2},
+        {"id": "c", "content_model": "weird", "aio_round": True},
+    ])
+    assert [content_model(root, b) for b in "abc"] == ["py4kids", "aio", "py4kids"]
+    assert [aio_round(root, b) for b in "abc"] == [None, 2, None]
+    assert books_with_content_model(root, "aio") == ["b"]
+    assert content_model(root, "unregistered") == "py4kids"
+
+
+def test_aio_books_are_not_py4kids_concept_owners_or_publications():
+    pattern = qualified_concept_id_pattern(REPO)
+    assert pattern.fullmatch("python-projects:list-literal")
+    assert not pattern.fullmatch("aio-ml:linear-regression")
+    for book in ("aio-ml", "aio-dl"):
+        assert publication_config_errors(REPO, book) == [
+            f"{book}/publication.yaml: a content_model aio book is not py4kids-published (design 014)"
+        ]
+
+
+def test_ci_local_reads_content_model_separately_from_the_flags():
+    text = (REPO / "scripts/ci-local.sh").read_text(encoding="utf-8")
+    assert 'print(book["id"], book.get("content_model") or "py4kids")' in text
+    assert "declare -A MODEL" in text
+
+
+def _step1_registry_script() -> str:
+    text = (REPO / "scripts/ci-local.sh").read_text(encoding="utf-8")
+    start = text.index("books=\"$(uv run python - <<'PY'\n") + len("books=\"$(uv run python - <<'PY'\n")
+    return text[start:text.index("\nPY\n", start)]
+
+
+def _run_step1(tmp_path: Path, books: list[dict]):
+    import subprocess
+    import sys
+
+    make_registry(tmp_path, books)
+    script = tmp_path / "step1.py"
+    script.write_text(_step1_registry_script(), encoding="utf-8")
+    return subprocess.run(
+        [sys.executable, str(script)], cwd=tmp_path, capture_output=True, text=True, check=False
+    )
+
+
+def test_ci_local_step1_accepts_the_real_registry():
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, "-c", _step1_registry_script()],
+        cwd=REPO, capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "aio-ml\n" in result.stdout and "aio-dl\n" in result.stdout
+
+
+def test_ci_local_step1_accepts_valid_models(tmp_path):
+    result = _run_step1(tmp_path, [
+        {"id": "a", "judge": True},
+        {"id": "b", "content_model": "py4kids"},
+        {"id": "c", "content_model": "aio", "aio_round": 1, "publication": True},
+    ])
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["a judge", "b", "c publication"]
+
+
+@pytest.mark.parametrize(
+    ("entry", "message"),
+    [
+        ({"content_model": "usaaio"}, "content_model must be 'py4kids' or 'aio'"),
+        ({"content_model": "aio"}, "an aio book requires a positive integer aio_round"),
+        ({"content_model": "aio", "aio_round": "1"}, "requires a positive integer aio_round"),
+        ({"content_model": "aio", "aio_round": True}, "requires a positive integer aio_round"),
+        ({"aio_round": 1}, "aio_round is allowed only on a content_model: aio book"),
+        ({"content_model": "py4kids", "aio_round": 2}, "aio_round is allowed only"),
+        ({"content_model": "aio", "aio_round": 1, "judge": True}, "not allowed on an aio book: judge"),
+        ({"content_model": "aio", "aio_round": 1, "patterns": True}, "not allowed on an aio book: patterns"),
+        ({"content_model": "aio", "aio_round": 1, "acsl": True}, "not allowed on an aio book: acsl"),
+        ({"content_model": "aio", "aio_round": 1, "labs": True}, "not allowed on an aio book: labs"),
+    ],
+)
+def test_ci_local_step1_rejects_bad_aio_entries(tmp_path, entry, message):
+    result = _run_step1(tmp_path, [{"id": "ok"}, {"id": "bad", **entry}])
+    assert result.returncode != 0
+    assert "FAIL: book 'bad':" in result.stderr and message in result.stderr
