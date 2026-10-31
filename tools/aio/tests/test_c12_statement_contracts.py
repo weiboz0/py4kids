@@ -3,11 +3,11 @@ from __future__ import annotations
 import ast
 import json
 import re
-from pathlib import Path
 
-from tools.books import unit_dir
+from conftest import ROOT
 
-ROOT = Path(__file__).parents[1]
+from tools.aio.books import unit_dir
+
 BOOK1_ROOT = ROOT / "aio-ml"
 PRACTICE = unit_dir(BOOK1_ROOT, "C12-classical-models") / "practice"
 LESSONS = unit_dir(BOOK1_ROOT, "C12-classical-models") / "lessons"

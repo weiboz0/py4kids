@@ -3,8 +3,9 @@
 #
 # Usage: scripts/aio/aio-provision-cache.sh [--root REPO]
 #
-# Reads the artifact manifest <REPO>/aio-ml/curriculum/artifacts.yaml (REPO defaults to this
-# script's repository) and, for every artifact:
+# Reads the artifact manifest <REPO>/<round-1 book>/curriculum/artifacts.yaml (REPO defaults to
+# this script's repository; the round-1 book is the `content_model: aio`, `aio_round: 1` entry of
+# <REPO>/books.yaml, so no book root is hard-coded) and, for every artifact:
 #   - file present with the recorded SHA-256  -> skip;
 #   - otherwise download it (curl -fsSL --retry 3) to <path>.tmp, verify the SHA-256, mv into place;
 #   - a SHA-256 mismatch after download        -> loud failure, non-zero exit (nothing moved).
@@ -40,14 +41,34 @@ while [[ $# -gt 0 ]]; do
 done
 
 ROOT="$(cd "$ROOT" && pwd)"
-MANIFEST="$ROOT/aio-ml/curriculum/artifacts.yaml"
-[[ -f "$MANIFEST" ]] || { echo "aio-provision-cache: FAIL no manifest at $MANIFEST" >&2; exit 1; }
 
 if [[ -n "${AIO_PYTHON:-}" ]]; then
     PY=("$AIO_PYTHON")
 else
     PY=(uv run --project "$TOOL_ROOT" --frozen python)
 fi
+
+# The round-1 aio book's root, from registry data (design 014 D1).
+read -r -d '' ROUND1_PARSER <<'PYEOF' || true
+import sys
+import yaml
+
+registry = sys.argv[1]
+try:
+    books = yaml.safe_load(open(registry, encoding="utf-8"))["books"]
+except Exception as exc:
+    sys.exit(f"aio-provision-cache: FAIL {registry}: cannot read the book registry ({exc})")
+roots = [
+    book.get("root") for book in books
+    if isinstance(book, dict) and book.get("content_model") == "aio" and book.get("aio_round") == 1
+]
+if len(roots) != 1 or not isinstance(roots[0], str) or not roots[0]:
+    sys.exit(f"aio-provision-cache: FAIL {registry}: expected one aio_round 1 book, found {len(roots)}")
+print(roots[0])
+PYEOF
+ROUND1_ROOT="$("${PY[@]}" -I -c "$ROUND1_PARSER" "$ROOT/books.yaml")"
+MANIFEST="$ROOT/$ROUND1_ROOT/curriculum/artifacts.yaml"
+[[ -f "$MANIFEST" ]] || { echo "aio-provision-cache: FAIL no manifest at $MANIFEST" >&2; exit 1; }
 
 # Validate the manifest and emit one TAB-separated line per artifact: id url path sha256.
 read -r -d '' PARSER <<'PYEOF' || true

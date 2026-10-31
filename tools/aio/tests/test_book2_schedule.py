@@ -11,20 +11,22 @@ from typing import Any
 
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools import audit_curriculum, render_course_structure, render_curriculum_roadmap
-from tools.books import BookSpec, load_book_catalog, validate_book_root
-from tools.checks import schedule as schedule_checker
-from tools.model import load_syllabus
+from tools.aio import audit_curriculum, render_course_structure, render_curriculum_roadmap
+from tools.aio.books import BookSpec, load_book_catalog, validate_book_root
+from tools.aio.checks import schedule as schedule_checker
+from tools.aio.model import load_syllabus
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 BOOK2_ROOT = ROOT / "aio-dl"
-FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "two-books-valid"
+FIXTURE_ROOT = ROOT / "tools" / "aio" / "tests" / "fixtures" / "two-books-valid"
 BOOK1_SCHEDULE_SHA256 = "d40c894764dbdb49939ddf55412afc3b736b3a8f10f46847caf3be4c34caf8a7"
 BOOK1_STRUCTURE_SHA256 = "1537c797c9f1108f1779850218b65313c656254b28a54723095b0b5c842dfed6"
 BOOK2_SCHEDULE_SHA256 = "fef51a85cbd652de279d60429c0a5559ba2e6a6ac6e767f2dd5293c22bf65e56"
-BOOK2_MANIFEST_SHA256 = "d9b6c0c53872ccbebe657f4ddf085844206305ccfb3daf31e555cc8189dab6d9"
+# usaaio a20128f pinned d9b6c0c5...; the D3 renames (qualified ids, the bridge file name)
+# are the only byte changes.
+BOOK2_MANIFEST_SHA256 = "0a6e81adc7eb5940078db323e8d7526f246d9f5d9c287be3bd2b418278ad87e2"
 B2_019 = "B2-019-attention-transformers"
 B2_020 = "B2-020-language-transformers"
 B2_021 = "B2-021-cross-modal-transformers-vision"
@@ -323,8 +325,8 @@ def _assert_both_schedule_apis_reject(root: Path, message: str) -> None:
 
 
 def test_parallel_book2_schedule_and_renderer_modules_remain_forbidden() -> None:
-    assert importlib.util.find_spec("tools.checks.book2_schedule") is None
-    assert importlib.util.find_spec("tools.render_book2_structure") is None
+    assert importlib.util.find_spec("tools.aio.checks.book2_schedule") is None
+    assert importlib.util.find_spec("tools.aio.render_book2_structure") is None
 
 
 def test_schedule_dispatch_uses_explicit_book_policies() -> None:
@@ -414,7 +416,7 @@ def test_live_book2_minutes_enter_the_aggregate_baseline() -> None:
         assert "| **Planned-unit subtotal** | **142** | **182** |" in document
         assert "**620.75–660.75 manifested-baseline hours**" in document
         assert "**627.75–667.75 scheduled-baseline hours**" in document
-    roadmap = documents[Path("docs/curriculum-roadmap.md")]
+    roadmap = documents[Path("aio-ml/docs/curriculum-roadmap.md")]
     assert (
         "| aio-dl | aio-dl:B2-019-attention-transformers | Attention and Transformer "
         "Mechanics | round-2-extension | 22–28 |"
@@ -999,15 +1001,18 @@ def test_schedule_dispatch_rejects_registry_number_schedule_mismatch(
     shutil.copytree(FIXTURE_ROOT, fixture)
     registry_path = fixture / "books.yaml"
     registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
-    registry["books"][1]["number"] = 3
+    registry["books"][1]["aio_round"] = 3
     registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
     book2 = load_book_catalog(fixture).by_id("aio-dl")
 
     report = schedule_checker.check_schedule(book2.root, book_spec=book2)
 
     assert not report.ok
+    # py4kids (design 014 D1): dispatch is on aio_round alone, so aio_round 3 has no policy;
+    # usaaio reached Book2SchedulePolicy through its round-2 book id and reported
+    # "schedule book 2 does not match registered book number 3".
     assert any(
-        "schedule book 2 does not match registered book number 3" in error
+        "registered book number 3 has no schedule policy" in error
         for error in report.errors
     )
 

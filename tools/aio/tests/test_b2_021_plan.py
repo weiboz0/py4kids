@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import yaml
+from conftest import ROOT
 
-from tools.model import load_roadmap, load_syllabus, load_syllabus_contract
+from tools.aio.model import load_roadmap, load_syllabus, load_syllabus_contract
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK2_ROOT = ROOT / "aio-dl"
 UNIT_ID = "B2-021-cross-modal-transformers-vision"
 PREREQUISITES = [

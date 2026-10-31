@@ -15,16 +15,16 @@ from pathlib import Path
 import nbformat
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools import audit_curriculum
-from tools.books import unit_relpath
-from tools.checks.coverage import check_coverage
-from tools.checks.hygiene import check_hygiene
-from tools.checks.layer_boundary import check_layer_boundary
-from tools.checks.prereq import check_prereq
-from tools.model import load_syllabus, load_unit_manifests
+from tools.aio import audit_curriculum
+from tools.aio.books import unit_relpath
+from tools.aio.checks.coverage import check_coverage
+from tools.aio.checks.hygiene import check_hygiene
+from tools.aio.checks.layer_boundary import check_layer_boundary
+from tools.aio.checks.prereq import check_prereq
+from tools.aio.model import load_syllabus, load_unit_manifests
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 BOOK2_ROOT = ROOT / "aio-dl"
 UNIT_ID = "B2-019-attention-transformers"
@@ -1187,7 +1187,7 @@ def test_generator_is_deterministic_cpu_only_and_uses_no_network(tmp_path: Path)
 
 
 def test_unit_standards_names_b2_019_in_double_length_roster() -> None:
-    standards = (ROOT / "docs/unit-standards.md").read_text(encoding="utf-8")
+    standards = (ROOT / "aio-ml/docs/unit-standards.md").read_text(encoding="utf-8")
     assert "B2-019-attention-transformers" in standards
     assert "F5, F6, C8, C10, C12, B2-019, B2-020, B2-021, B2-022, B2-023, and B2-024" in standards
     assert "B2-020-language-transformers" in standards

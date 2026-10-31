@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 import torch
+from conftest import ROOT
 
-from tools.books import unit_dir
+from tools.aio.books import unit_dir
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 PRACTICE = unit_dir(BOOK1_ROOT, "C8-neural-training") / "practice"
 # Plan 031: the folder is resolved by id; it still lives under the book's units tree.

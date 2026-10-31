@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tools.books import unit_dir
+from tools.aio.books import unit_dir
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "verify-register.py"
+SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "aio" / "verify-register.py"
 SPEC = importlib.util.spec_from_file_location("verify_register", SCRIPT)
 verify_register = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
@@ -152,9 +152,9 @@ def test_register_main_follows_noncanonical_registered_book1_root(
         yaml.safe_dump({"practice": [problem]}), encoding="utf-8"
     )
     (repo / "books.yaml").write_text(
-        "books_version: 1\n"
+        "books_version: 2\n"
         "books:\n"
-        "  - {id: book1, number: 1, root: round1, depends_on: []}\n",
+        "  - {id: aio-ml, number: 4, root: round1, depends_on: [], content_model: aio, aio_round: 1}\n",
         encoding="utf-8",
     )
 

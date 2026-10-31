@@ -12,11 +12,11 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from conftest import ROOT
 
-from tools.books import load_book_catalog, unit_dir
+from tools.aio.books import load_book_catalog, unit_dir
 
-ROOT = Path(__file__).resolve().parents[1]
-FILTER = ROOT / "tools/publish_theme/panels.lua"
+FILTER = ROOT / "tools/aio/publish_theme/panels.lua"
 BASE_COMMIT = "60b1247"  # main before Plan 033: the filter without the table fixes
 READER = "markdown+tex_math_single_backslash-raw_tex"
 

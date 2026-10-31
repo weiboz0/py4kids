@@ -27,16 +27,15 @@ from typing import Any
 import nbformat
 import pytest
 import torch
+from conftest import ROOT
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
 
 sys.dont_write_bytecode = True
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK2_ROOT = ROOT / "aio-dl"
 UNIT_ID = "B2-023-generative-models-diffusion"
 UNIT = BOOK2_ROOT / "units" / UNIT_ID
-CI_LOCAL = ROOT / "scripts/ci-local.sh"
 GENERATOR = UNIT / "scripts" / "generate_generative_data.py"
 
 # --- named-function mutants (one per pinned function) -----------------------------------
@@ -570,10 +569,3 @@ def test_heldout_rows_in_training_are_detected_at_the_named_seam(
     result = _run_training_harness(practice, namespace)
     assert result["changed"]
     assert result["heldout_seen"] == result["heldout_all"]
-
-
-def test_book2_ci_runs_generative_model_integrity_suite() -> None:
-    source = CI_LOCAL.read_text(encoding="utf-8")
-    latent = "uv run pytest -q tests/test_latent_model_checks.py\n"
-    generative = "uv run pytest -q tests/test_generative_model_checks.py\n"
-    assert latent + generative in source

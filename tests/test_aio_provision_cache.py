@@ -35,6 +35,7 @@ def _setup(tmp_path, artifacts):
     src, root = tmp_path / "src", tmp_path / "repo"
     src.mkdir()
     (root / "aio-ml" / "curriculum").mkdir(parents=True)
+    _write_registry(root)
     entries, sources = [], {}
     for i, (rel, data) in enumerate(artifacts.items()):
         f = src / f"a{i}.bin"
@@ -45,6 +46,16 @@ def _setup(tmp_path, artifacts):
         )
     _write_manifest(root, entries)
     return root, sources
+
+
+def _write_registry(root, aio_round=1):
+    # The manifest lives in the registry's aio_round-1 book (no hard-coded book root).
+    (root / "books.yaml").write_text(
+        "books_version: 2\nbooks:\n"
+        "  - {id: python-projects, number: 1, root: python-projects, depends_on: []}\n"
+        f"  - {{id: aio-ml, number: 4, root: aio-ml, depends_on: [], content_model: aio, "
+        f"aio_round: {aio_round}}}\n"
+    )
 
 
 def _write_manifest(root, entries):
@@ -130,9 +141,25 @@ def test_failed_download_fails(tmp_path):
 
 
 def test_missing_manifest_fails(tmp_path):
+    _write_registry(tmp_path)
     res = _run(tmp_path)
     assert res.returncode != 0
     assert "no manifest" in res.stderr
+
+
+@pytest.mark.parametrize("registry", ["absent", "no-round-1-book"])
+def test_manifest_book_comes_from_the_registry(tmp_path, registry):
+    root, _ = _setup(tmp_path, ARTS)
+    if registry == "absent":
+        (root / "books.yaml").unlink()
+        message = "cannot read the book registry"
+    else:
+        _write_registry(root, aio_round=2)
+        message = "expected one aio_round 1 book, found 0"
+    res = _run(root)
+    assert res.returncode != 0
+    assert message in res.stderr
+    assert not (root / CACHE).exists()
 
 
 @pytest.mark.parametrize(

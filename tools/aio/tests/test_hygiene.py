@@ -1,6 +1,6 @@
 import json
 
-from tools.checks.hygiene import check_hygiene
+from tools.aio.checks.hygiene import check_hygiene
 
 
 def notebook(cell):

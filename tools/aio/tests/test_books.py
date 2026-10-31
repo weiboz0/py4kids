@@ -27,11 +27,11 @@ REQUIRED_PATHS = (
 
 def _books_module():
     try:
-        return importlib.import_module("tools.books")
+        return importlib.import_module("tools.aio.books")
     except ModuleNotFoundError as exc:
-        if exc.name != "tools.books":
+        if exc.name != "tools.aio.books":
             raise
-        pytest.fail("tools.books is the missing Plan 019 registry producer")
+        pytest.fail("tools.aio.books is the missing Plan 019 registry producer")
 
 
 def _write_yaml(path: Path, value: object) -> None:
@@ -124,12 +124,12 @@ def write_two_book_repo(repo: Path, *, corrupt_book2: bool = False) -> None:
     _write_yaml(
         repo / "books.yaml",
         {
-            "books_version": 1,
+            "books_version": 2,
             "books": [
-                {"id": "aio-ml", "number": 1, "root": "aio-ml", "depends_on": []},
+                {"id": "aio-ml", "number": 4, "content_model": "aio", "aio_round": 1, "root": "aio-ml", "depends_on": []},
                 {
                     "id": "aio-dl",
-                    "number": 2,
+                    "number": 4, "content_model": "aio", "aio_round": 2,
                     "root": "aio-dl",
                     "depends_on": ["aio-ml"],
                 },
@@ -159,12 +159,12 @@ def write_two_book_repo(repo: Path, *, corrupt_book2: bool = False) -> None:
             lambda repo: _write_yaml(
                 repo / "books.yaml",
                 {
-                    "books_version": 1,
+                    "books_version": 2,
                     "books": [
-                        {"id": "aio-ml", "number": 1, "root": "../escape", "depends_on": []},
+                        {"id": "aio-ml", "number": 4, "content_model": "aio", "aio_round": 1, "root": "../escape", "depends_on": []},
                         {
                             "id": "aio-dl",
-                            "number": 2,
+                            "number": 4, "content_model": "aio", "aio_round": 2,
                             "root": "aio-dl",
                             "depends_on": ["aio-ml"],
                         },
@@ -224,8 +224,8 @@ def _mutate_syllabus_contract(
             id="duplicate-id",
         ),
         pytest.param(
-            lambda repo: _mutate_registry(repo, lambda raw: raw["books"][1].update(number=1)),
-            "duplicate.*number",
+            lambda repo: _mutate_registry(repo, lambda raw: raw["books"][1].update(aio_round=1)),
+            "duplicate aio_round",
             id="duplicate-number",
         ),
         pytest.param(
@@ -261,8 +261,8 @@ def _mutate_syllabus_contract(
             id="symlink-root",
         ),
         pytest.param(
-            lambda repo: (repo / "book3").mkdir(),
-            "undeclared.*book3",
+            lambda repo: (repo / "aio-book3").mkdir(),
+            "undeclared.*aio-book3",
             id="undeclared-book3",
         ),
     ],
@@ -281,12 +281,12 @@ def test_catalog_structure_mutation_matrix(
 
 def test_catalog_rejects_undeclared_symlink_alias_of_declared_book(tmp_path: Path) -> None:
     write_two_book_repo(tmp_path)
-    (tmp_path / "book3").symlink_to(tmp_path / "aio-ml", target_is_directory=True)
+    (tmp_path / "aio-book3").symlink_to(tmp_path / "aio-ml", target_is_directory=True)
 
     with pytest.raises(ValueError) as exc_info:
         _books_module().load_book_catalog(tmp_path)
 
-    assert str(exc_info.value) == f"{tmp_path}: undeclared book root book3 is a symlink"
+    assert str(exc_info.value) == f"{tmp_path}: undeclared book root aio-book3 is a symlink"
 
 
 @pytest.mark.parametrize("consumer", ["validate", "imports", "evidence", "resolve"])
@@ -475,7 +475,7 @@ def test_evidence_resolution_rejects_duplicate_owner_matches(tmp_path: Path, kin
 
 def test_book_selection_parser_helper_requires_exactly_one_selection() -> None:
     parser = argparse.ArgumentParser()
-    importlib.import_module("tools.cli").add_book_selection_arguments(parser)
+    importlib.import_module("tools.aio.cli").add_book_selection_arguments(parser)
 
     assert parser.parse_args(["--book", "aio-dl"]).book == "aio-dl"
     assert parser.parse_args(["--all"]).all_books is True

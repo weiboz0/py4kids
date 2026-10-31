@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import ROOT
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK2_ROOT = ROOT / "aio-dl"
 
 EXPECTED_MUTATIONS = [
@@ -62,9 +62,9 @@ EXPECTED_COVERED_POINTS = {
 
 def _mutation_module():
     try:
-        return importlib.import_module("tools.verify_attention_mutations")
+        return importlib.import_module("tools.aio.verify_attention_mutations")
     except ModuleNotFoundError:
-        pytest.fail("tools.verify_attention_mutations must provide the attention mutation runner")
+        pytest.fail("tools.aio.verify_attention_mutations must provide the attention mutation runner")
 
 
 def _write_notebook(path: Path, target_source: str) -> None:
@@ -312,7 +312,9 @@ def test_book2_promotes_exactly_the_seven_attention_points() -> None:
             ensure_ascii=False,
         ).encode()
     ).hexdigest()
-    assert unchanged_digest == "82018bf15324385cfba0467a2e3023c33e795818a8cb747d20efe888b82f63e9"
+    # usaaio a20128f pinned 82018bf15324...; re-pinned after the D3 renames, which a
+    # rename-applied recomputation of the a20128f bytes reproduces exactly.
+    assert unchanged_digest == "80cbb0d3483d3f2530d58da1cb7775cef5eb4a03bcfb9289290d678c282be53b"
 
 
 def test_attention_manifest_adds_only_the_exact_seven_evidence_claims() -> None:
@@ -343,4 +345,6 @@ def test_attention_manifest_adds_only_the_exact_seven_evidence_claims() -> None:
             ensure_ascii=False,
         ).encode()
     ).hexdigest()
-    assert unchanged_digest == "d7e6d12d144b7bc08b6a2d957de0be6595de42a3458d8316c69d8170c3fa8040"
+    # usaaio a20128f pinned d7e6d12d144b...; re-pinned after the D3 renames, which a
+    # rename-applied recomputation of the a20128f bytes reproduces exactly.
+    assert unchanged_digest == "d580a5d7ba4ebdfe4a87c07a87f0bc2b0a960b2377ff83ba1d958a0f3f5bb267"

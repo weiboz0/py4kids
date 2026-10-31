@@ -9,8 +9,9 @@ new text of the few files whose diff matters, it decides per book:
 - `glossary`: no render, only the glossary audit (D5 rule 5);
 - `none`: unchanged; ci-local prints `INFO build-book: <book> unchanged (change-routed)`.
 
-Global publication inputs (the publisher, its theme, `tools/books.py`, `build-book.sh`, the
-registry, and the Python environment) route every book to `full`. So does `--all-books`, and so
+Global publication inputs (the publisher, its theme, `tools/aio/books.py`, `build-book.sh`, the
+registry, and the Python environment) route every book to `full`. In py4kids the aio publisher
+lives under `tools/aio/` and `scripts/aio/` (plan aio-001 Phase D path disposition). So does `--all-books`, and so
 does a missing `origin/main` or merge-base (fail-safe).
 
 The CLI gathers the change set: the committed diff against the merge-base with `origin/main`,
@@ -31,18 +32,19 @@ import yaml
 
 from tools.aio.books import unit_id_of
 
+_TOOLS = "tools/aio/"
 GLOBAL_EXACT = frozenset({
-    "tools/books.py", "scripts/build-book.sh", "books.yaml", "pyproject.toml", "uv.lock",
+    "tools/aio/books.py", "scripts/aio/build-book.sh", "books.yaml", "pyproject.toml", "uv.lock",
 })
-GLOBAL_PREFIXES = ("tools/publish_theme/",)
+GLOBAL_PREFIXES = ("tools/aio/publish_theme/",)
 INFO_UNCHANGED = "INFO build-book: {book} unchanged (change-routed)"
 
 
 def is_global_input(path: str) -> bool:
     if path in GLOBAL_EXACT or path.startswith(GLOBAL_PREFIXES):
         return True
-    name = path.removeprefix("tools/")
-    return path.startswith("tools/") and "/" not in name and name.startswith("publish") \
+    name = path.removeprefix(_TOOLS)
+    return path.startswith(_TOOLS) and "/" not in name and name.startswith("publish") \
         and name.endswith(".py")
 
 

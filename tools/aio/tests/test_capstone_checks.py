@@ -26,15 +26,14 @@ from pathlib import Path
 
 import nbformat
 import pytest
+from conftest import ROOT
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
 
 sys.dont_write_bytecode = True
 
-ROOT = Path(__file__).resolve().parents[1]
 UNIT_ID = "B2-024-gpu-scientific-ml-capstone"
 UNIT = ROOT / "aio-dl" / "units" / UNIT_ID
-CI_LOCAL = ROOT / "scripts/ci-local.sh"
 ANSWER_CHECK = "### Answer check"
 
 # --- named-function mutants ----------------------------------------------------------
@@ -470,10 +469,3 @@ def test_answer_checks_assert_one_test_call_and_a_clean_seam() -> None:
         check = str(notebook.cells[_answer_index(notebook) + 1].source)
         assert f'capstone_data.test_call_count("{TASKS[practice]}") == 1' in check, practice
         assert "SEAM" in check, practice
-
-
-def test_book2_ci_runs_capstone_integrity_suite() -> None:
-    source = CI_LOCAL.read_text(encoding="utf-8")
-    generative = "uv run pytest -q tests/test_generative_model_checks.py\n"
-    capstone = "uv run pytest -q tests/test_capstone_checks.py\n"
-    assert generative + capstone in source

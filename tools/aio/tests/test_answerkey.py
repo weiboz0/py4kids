@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from tools.checks.answerkey import check_answerkey
-from tools.cli import main
-from tools.model import load_mock_manifests
+from tools.aio.checks.answerkey import check_answerkey
+from tools.aio.cli import main
+from tools.aio.model import load_mock_manifests
 
 FIXTURES = Path(__file__).parent / "fixtures" / "answerkey"
 
@@ -15,9 +15,9 @@ def _registered_fixture(tmp_path: Path, content_root: Path) -> Path:
     book = repo / "aio-ml"
     shutil.copytree(content_root, book)
     (repo / "books.yaml").write_text(
-        "books_version: 1\n"
+        "books_version: 2\n"
         "books:\n"
-        "  - {id: book1, number: 1, root: book1, depends_on: []}\n",
+        "  - {id: aio-ml, number: 4, root: aio-ml, depends_on: [], content_model: aio, aio_round: 1}\n",
         encoding="utf-8",
     )
     for relative in (

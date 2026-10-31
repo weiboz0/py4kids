@@ -7,12 +7,11 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools.books import BookSpec, live_units, unit_dir, unit_id_of, unit_relpath
-from tools.checks.schedule import _parse_book2_schedule, _parse_schedule
-from tools.checks.unit_order import check_unit_order
-
-ROOT = Path(__file__).resolve().parents[1]
+from tools.aio.books import BookSpec, live_units, unit_dir, unit_id_of, unit_relpath
+from tools.aio.checks.schedule import _parse_book2_schedule, _parse_schedule
+from tools.aio.checks.unit_order import check_unit_order
 
 # A three-week toy schedule: F1, then C1 and F2 in week 2 (allocation order breaks the tie), C2.
 SCHEDULE_UNITS = [["F1-a"], ["C1-b", "F2-c"], ["C2-d"]]
@@ -201,7 +200,7 @@ def test_unit_order_exempts_book2(tmp_path: Path) -> None:
 
 
 def test_unit_order_passes_the_live_book1() -> None:
-    from tools.books import load_book_catalog
+    from tools.aio.books import load_book_catalog
 
     book = load_book_catalog(ROOT).by_id("aio-ml")
     report = check_unit_order(book.root, book_spec=book)

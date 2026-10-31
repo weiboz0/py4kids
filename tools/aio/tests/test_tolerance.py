@@ -5,8 +5,8 @@ from pathlib import Path
 import nbformat
 import pytest
 
-from tools.checks.tolerance import check_tolerance
-from tools.cli import main
+from tools.aio.checks.tolerance import check_tolerance
+from tools.aio.cli import main
 
 
 def _registered_fixture(content_root: Path) -> Path:
@@ -18,9 +18,9 @@ def _registered_fixture(content_root: Path) -> Path:
         if source.exists():
             shutil.copytree(source, book / tree)
     (repo / "books.yaml").write_text(
-        "books_version: 1\n"
+        "books_version: 2\n"
         "books:\n"
-        "  - {id: book1, number: 1, root: book1, depends_on: []}\n",
+        "  - {id: aio-ml, number: 4, root: aio-ml, depends_on: [], content_model: aio, aio_round: 1}\n",
         encoding="utf-8",
     )
     for relative in (
@@ -254,7 +254,7 @@ def test_tolerance_zero_notebooks_maps_to_exit_3(tmp_path, capsys):
 
 def test_scans_any_notebook_path_under_content_trees(tmp_path):
     """A notebook at a path no allowlist anticipated must still be guarded."""
-    from tools.checks.tolerance import check_tolerance
+    from tools.aio.checks.tolerance import check_tolerance
 
     novel = tmp_path / "units" / "X1-unit" / "extras" / "supplement.ipynb"
     novel.parent.mkdir(parents=True)
@@ -280,7 +280,7 @@ def test_scans_any_notebook_path_under_content_trees(tmp_path):
 
 
 def test_build_artifacts_are_not_scanned(tmp_path):
-    from tools.checks.tolerance import check_tolerance
+    from tools.aio.checks.tolerance import check_tolerance
 
     art = tmp_path / "mocktests" / "r1-001" / "build" / "rendered.ipynb"
     art.parent.mkdir(parents=True)

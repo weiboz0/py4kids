@@ -15,10 +15,10 @@ from typing import Any
 
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools.checks.layer_boundary import check_layer_boundary
+from tools.aio.checks.layer_boundary import check_layer_boundary
 
-ROOT = Path(__file__).resolve().parents[1]
 UNIT_ID = "B2-023-generative-models-diffusion"
 PROBLEM_ID = "B2-023-p06"
 STATEMENT = "practice/p06.ipynb"

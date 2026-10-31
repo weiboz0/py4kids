@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 import yaml
 
-from tools.books import unit_dir
+from tools.aio.books import unit_dir
 
 BOOK2_UNIT = "B2-019-attention-transformers"
 BOOK2_CONCEPTS = [
@@ -99,12 +99,12 @@ def _touch(root: Path, relative: str) -> None:
 
 def _layer_checker():
     try:
-        return importlib.import_module("tools.checks.layer_boundary")
+        return importlib.import_module("tools.aio.checks.layer_boundary")
     except ModuleNotFoundError as exc:
-        if exc.name != "tools.checks.layer_boundary":
+        if exc.name != "tools.aio.checks.layer_boundary":
             raise
         pytest.fail(
-            "tools.checks.layer_boundary must enforce the Book 1 / Book 2 boundary"
+            "tools.aio.checks.layer_boundary must enforce the Book 1 / Book 2 boundary"
         )
 
 
@@ -366,12 +366,12 @@ def _build_registered_layer_fixture(repo: Path) -> tuple[dict[str, Any], Path]:
     _write_yaml(
         repo / "books.yaml",
         {
-            "books_version": 1,
+            "books_version": 2,
             "books": [
-                {"id": "aio-ml", "number": 1, "root": "aio-ml", "depends_on": []},
+                {"id": "aio-ml", "number": 4, "content_model": "aio", "aio_round": 1, "root": "aio-ml", "depends_on": []},
                 {
                     "id": "aio-dl",
-                    "number": 2,
+                    "number": 4, "content_model": "aio", "aio_round": 2,
                     "root": "aio-dl",
                     "depends_on": ["aio-ml"],
                 },

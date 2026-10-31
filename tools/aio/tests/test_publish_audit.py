@@ -9,8 +9,8 @@ import pytest
 import yaml
 from publication_fixture import fixture_book, write_yaml
 
-from tools.publish import build_all
-from tools.publish_audit import audit
+from tools.aio.publish import build_all
+from tools.aio.publish_audit import audit
 
 
 def _render_stub(projects) -> None:

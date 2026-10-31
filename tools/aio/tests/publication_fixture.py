@@ -40,8 +40,8 @@ def fixture_book(
 ) -> Path:
     repo = tmp_path / "repo"
     book = repo / "aio-ml"
-    write_yaml(repo / "books.yaml", {"books_version": 1, "books": [{
-        "id": "aio-ml", "number": 1, "root": "aio-ml", "depends_on": [],
+    write_yaml(repo / "books.yaml", {"books_version": 2, "books": [{
+        "id": "aio-ml", "number": 4, "content_model": "aio", "aio_round": 1, "root": "aio-ml", "depends_on": [],
         "title": "Fixture Book", "subtitle": "Round 1: Fixtures", "publication": True}]})
     # Unit U1: lesson with a <details> block, a session notebook with an open answer section
     # and a planted output, a review, one Set A and one Set B practice.

@@ -9,50 +9,25 @@ import subprocess
 import sys
 import tomllib
 from collections import Counter
-from collections.abc import Callable
 from pathlib import Path
 
-import pytest
 import yaml
+from conftest import ROOT
 
-from tools.books import unit_dir
-from tools.checks.blueprint import check_blueprint
-from tools.checks.coverage import check_coverage
-from tools.checks.hygiene import check_hygiene
-from tools.checks.new_mocktest import scaffold_mocktest
-from tools.checks.overlap import REMEDY as OVERLAP_CORPUS_REMEDY
-from tools.checks.overlap import check_overlap
-from tools.checks.prereq import check_prereq
-from tools.model import load_syllabus, load_unit_manifests
+from tools.aio.books import unit_dir
+from tools.aio.checks.blueprint import check_blueprint
+from tools.aio.checks.coverage import check_coverage
+from tools.aio.checks.hygiene import check_hygiene
+from tools.aio.checks.new_mocktest import scaffold_mocktest
+from tools.aio.checks.overlap import REMEDY as OVERLAP_CORPUS_REMEDY
+from tools.aio.checks.overlap import check_overlap
+from tools.aio.checks.prereq import check_prereq
+from tools.aio.model import load_syllabus, load_unit_manifests
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
-
-
-def _load_renumber():
-    import importlib.util
-
-    spec = importlib.util.spec_from_file_location(
-        "renumber_book1_units_integration", ROOT / "scripts" / "renumber-aio-ml-units.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-# Plan 031 mapping: resolves historical (pre-renumbering) unit paths in the live tree.
-_RENUMBER = _load_renumber()
 BOOK2_ROOT = ROOT / "aio-dl"
 
 PLAN019_PRE_CUTOVER_COMMIT = "4cc38946548f618ac131d246bfd4191d20e4e7d8"
-PLAN019_POST_CUTOVER_COMMIT = "ab795cdfb1ea6efcebce351ef7968f36435bffec"
-PLAN022_SOURCE_COMMIT = "d653fcbf1fdcd46fd759bf2a03506d5368c17926"
-PLAN022_CHANGED_BOOK1_NOTEBOOKS = (
-    "units/C12-classical-models/lessons/06-kmeans-and-model-comparison.ipynb",
-    "units/C12-classical-models/practice/p20.ipynb",
-    "units/C12-classical-models/practice/p20_solution.ipynb",
-)
 
 NEW_CONCEPT_CLUSTERS = {
     "seaborn-programming": "python-scientific",
@@ -454,9 +429,9 @@ def seed_repo(root: Path, *, registered: bool = False) -> Path:
     (content_root / "syllabus.md").write_text((BOOK1_ROOT / "syllabus.md").read_text())
     if registered:
         (root / "books.yaml").write_text(
-            "books_version: 1\n"
+            "books_version: 2\n"
             "books:\n"
-            "  - {id: book1, number: 1, root: book1, depends_on: []}\n"
+            "  - {id: aio-ml, number: 4, root: aio-ml, depends_on: [], content_model: aio, aio_round: 1}\n"
         )
         for relative in (
             "curriculum/course-schedule.yaml",
@@ -800,7 +775,7 @@ def test_plan019_phase1_exact_live_corpus_counts_and_double_length_roster():
         "C8-neural-training",
         "C12-classical-models",
     }
-    standards = (ROOT / "docs" / "unit-standards.md").read_text()
+    standards = (ROOT / "aio-ml" / "docs" / "unit-standards.md").read_text()
     assert (
         "Double-length units (F5, F6, C8, C10, C12, B2-019, B2-020, B2-021, B2-022, B2-023, and B2-024) use 4–6 sessions."
         in standards
@@ -816,377 +791,9 @@ def _plan019_commit_available(root: Path, commit: str) -> bool:
     ).returncode == 0
 
 
-def _plan019_read_blob(root: Path, commit: str, path: str) -> bytes | None:
-    proc = subprocess.run(
-        ["git", "show", f"{commit}:{path}"],
-        cwd=root,
-        capture_output=True,
-        check=False,
-    )
-    return proc.stdout if proc.returncode == 0 else None
-
-
-def _plan019_pre_cutover_paths(root: Path) -> list[str]:
-    tracked = subprocess.run(
-        [
-            "git",
-            "ls-tree",
-            "-r",
-            "--name-only",
-            PLAN019_PRE_CUTOVER_COMMIT,
-            "--",
-            "units",
-            "mocktests",
-        ],
-        cwd=root,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return [
-        path
-        for path in tracked.stdout.splitlines()
-        if path.endswith((".ipynb", "manifest.yaml"))
-    ]
-
-
-def _plan019_live(root: Path, historical: str) -> Path:
-    """A historical `units/<old id>/...` path (Plan 019 inventory, Plan 022 commit) in the
-    live tree: Plan 031 renamed the folders, so map the old id and resolve it by id."""
-    parts = historical.split("/")
-    if parts[0] != "units":
-        return root / "aio-ml" / historical
-    new_id = _RENUMBER.OLD_TO_NEW_ID[parts[1]]
-    return unit_dir(root / "aio-ml", new_id).joinpath(*parts[2:])
-
-
-def _plan019_inventory(root: Path) -> tuple[dict[str, object], dict[str, set[int]]]:
-    inventory = yaml.safe_load(
-        (root / "tests/fixtures/plan019-path-inventory.yaml").read_text(encoding="utf-8")
-    )
-    changed_cells = {
-        row["path"]: set(row["cells"])
-        for row in inventory["notebook_pyproject_discovery"]
-    }
-    for row in inventory["special_notebook_consumers"]:
-        changed_cells.setdefault(row["path"], set()).update(row["cells"])
-    return inventory, changed_cells
-
-
-def _plan019_assert_live_migration_cells(
-    root: Path,
-    inventory: dict[str, object],
-    changed_cells: dict[str, set[int]],
-) -> None:
-    discovery_rows = inventory["notebook_pyproject_discovery"]
-    special_rows = inventory["special_notebook_consumers"]
-    assert isinstance(discovery_rows, list)
-    assert isinstance(special_rows, list)
-    assert len(discovery_rows) == 64
-    assert len(special_rows) == 3
-    assert len(changed_cells) == 67
-
-    for path, indices in changed_cells.items():
-        destination = _plan019_live(root, path)
-        assert destination.is_file(), path
-        notebook = json.loads(destination.read_bytes())
-        for index in indices:
-            assert index < len(notebook["cells"]), (path, index)
-            source = "".join(notebook["cells"][index]["source"])
-            assert "AIO_BOOK_ROOT" in source or "book_root" in source.lower(), (
-                path,
-                index,
-            )
-            assert "pyproject.toml" not in source, (path, index)
-
-
-def _plan019_digest(value: object) -> str:
-    encoded = json.dumps(
-        value,
-        ensure_ascii=False,
-        separators=(",", ":"),
-        sort_keys=True,
-    ).encode()
-    return hashlib.sha256(encoded).hexdigest()
-
-
-def _plan019_clone_with_plan022_notebooks(source: Path, destination: Path) -> Path:
-    subprocess.run(
-        ["git", "clone", "--no-local", "--quiet", str(source), str(destination)],
-        check=True,
-    )
-    for relative_path in PLAN022_CHANGED_BOOK1_NOTEBOOKS:
-        blob = subprocess.run(
-            [
-                "git",
-                "show",
-                f"{PLAN022_SOURCE_COMMIT}:aio-ml/{relative_path}",
-            ],
-            cwd=source,
-            capture_output=True,
-            check=True,
-        ).stdout
-        _plan019_live(destination, relative_path).write_bytes(blob)
-    return destination
-
-
-def _plan019_historyless_fixture(source: Path, destination: Path) -> Path:
-    fixture_path = Path("tests/fixtures/plan019-path-inventory.yaml")
-    (destination / fixture_path).parent.mkdir(parents=True)
-    shutil.copy2(source / fixture_path, destination / fixture_path)
-    _, changed_cells = _plan019_inventory(destination)
-    for relative_path in changed_cells:
-        live = _plan019_live(source, relative_path)
-        target = destination / live.relative_to(source)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(live, target)
-    decoy = destination / "aio-ml/units/not-in-plan019/manifest.yaml"
-    decoy.parent.mkdir(parents=True)
-    decoy.write_text("not: [a, valid, manifest\n", encoding="utf-8")
-    return destination
-
-
-def test_plan019_cutover_ignores_exact_plan022_three_blob_worktree_change(
-    tmp_path: Path,
-) -> None:
-    required_commits = (
-        PLAN019_PRE_CUTOVER_COMMIT,
-        PLAN019_POST_CUTOVER_COMMIT,
-        PLAN022_SOURCE_COMMIT,
-    )
-    missing_commits = [
-        commit for commit in required_commits if not _plan019_commit_available(ROOT, commit)
-    ]
-    if missing_commits:
-        pytest.skip(
-            "exact Plan 022 blob witness requires repository history: "
-            + ",".join(missing_commits)
-        )
-
-    fixture_root = _plan019_clone_with_plan022_notebooks(ROOT, tmp_path / "repository")
-    assert all(
-        subprocess.run(
-            ["git", "cat-file", "-e", f"{commit}^{{commit}}"],
-            cwd=fixture_root,
-            check=False,
-        ).returncode
-        == 0
-        for commit in (PLAN019_PRE_CUTOVER_COMMIT, PLAN019_POST_CUTOVER_COMMIT)
-    )
-    for relative_path in PLAN022_CHANGED_BOOK1_NOTEBOOKS:
-        plan022_blob = _plan019_read_blob(
-            fixture_root,
-            PLAN022_SOURCE_COMMIT,
-            f"aio-ml/{relative_path}",
-        )
-        post_cutover_blob = _plan019_read_blob(
-            fixture_root,
-            PLAN019_POST_CUTOVER_COMMIT,
-            f"aio-ml/{relative_path}",
-        )
-        assert plan022_blob is not None, relative_path
-        assert post_cutover_blob is not None, relative_path
-        assert _plan019_live(fixture_root, relative_path).read_bytes() == plan022_blob
-        assert plan022_blob != post_cutover_blob, relative_path
-
-    _assert_plan019_cutover(fixture_root)
-
-
-@pytest.mark.parametrize(
-    "missing_commit",
-    [PLAN019_PRE_CUTOVER_COMMIT, PLAN019_POST_CUTOVER_COMMIT],
-    ids=["pre-cutover-missing", "post-cutover-missing"],
-)
-def test_plan019_historyless_mode_checks_only_inventory_destinations(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-    missing_commit: str,
-) -> None:
-    fixture_root = _plan019_historyless_fixture(ROOT, tmp_path / "archive")
-
-    def commit_available(_root: Path, commit: str) -> bool:
-        return commit != missing_commit
-
-    def forbidden_blob_read(_root: Path, _commit: str, _path: str) -> bytes | None:
-        pytest.fail("historyless mode must not read historical blobs")
-
-    def forbidden_digest(_value: object) -> str:
-        pytest.fail("historyless mode must not derive historical digests from live files")
-
-    monkeypatch.setattr(sys.modules[__name__], "_plan019_digest", forbidden_digest)
-    _assert_plan019_cutover(
-        fixture_root,
-        commit_available=commit_available,
-        blob_reader=forbidden_blob_read,
-    )
-
-    assert capsys.readouterr().out.strip() == (
-        "PLAN019_CUTOVER_MODE=historyless "
-        f"reason=missing-commit:{missing_commit} structural-destinations=67"
-    )
-
-
-@pytest.mark.parametrize("mutation", ["delete-destination", "corrupt-marker"])
-def test_plan019_historyless_mode_rejects_live_inventory_mutations(
-    tmp_path: Path,
-    mutation: str,
-) -> None:
-    fixture_root = _plan019_historyless_fixture(ROOT, tmp_path / "archive")
-    _, changed_cells = _plan019_inventory(fixture_root)
-    first_path, indices = next(iter(changed_cells.items()))
-    destination = _plan019_live(fixture_root, first_path)
-    if mutation == "delete-destination":
-        destination.unlink()
-    else:
-        notebook = json.loads(destination.read_bytes())
-        first_index = min(indices)
-        notebook["cells"][first_index]["source"] = [
-            "from pathlib import Path\n",
-            "repo_root = Path.cwd()\n",
-        ]
-        destination.write_text(json.dumps(notebook), encoding="utf-8")
-
-    with pytest.raises(AssertionError):
-        _assert_plan019_cutover(
-            fixture_root,
-            commit_available=lambda _root, commit: (
-                commit != PLAN019_PRE_CUTOVER_COMMIT
-            ),
-            blob_reader=lambda _root, _commit, _path: pytest.fail(
-                "historyless mode must not read historical blobs"
-            ),
-        )
-
-
-def _assert_plan019_cutover(
-    root: Path,
-    *,
-    commit_available: Callable[[Path, str], bool] = _plan019_commit_available,
-    blob_reader: Callable[[Path, str, str], bytes | None] = _plan019_read_blob,
-) -> None:
-    inventory, changed_cells = _plan019_inventory(root)
-    _plan019_assert_live_migration_cells(root, inventory, changed_cells)
-
-    missing_commits = [
-        commit
-        for commit in (PLAN019_PRE_CUTOVER_COMMIT, PLAN019_POST_CUTOVER_COMMIT)
-        if not commit_available(root, commit)
-    ]
-    if missing_commits:
-        label = "missing-commit" if len(missing_commits) == 1 else "missing-commits"
-        print(
-            "PLAN019_CUTOVER_MODE=historyless "
-            f"reason={label}:{','.join(missing_commits)} structural-destinations=67"
-        )
-        return
-
-    print("PLAN019_CUTOVER_MODE=history-present historical-proof=pre-to-post")
-    paths = _plan019_pre_cutover_paths(root)
-    notebooks = [path for path in paths if path.endswith(".ipynb")]
-    manifests = [path for path in paths if path.endswith("manifest.yaml")]
-
-    assert len(notebooks) == 991
-    assert len(manifests) == 20
-    assert len(changed_cells) == 67
-    assert _plan019_digest(paths) == (
-        "76c9236aa561f1bb9c45cd88f3562047fa8e2a5aaec4f18010e43ed81a34e2ec"
-    )
-
-    manifest_records: list[list[str]] = []
-    unchanged_records: list[list[str]] = []
-    changed_structures: list[list[object]] = []
-    changed_sources: list[list[object]] = []
-    for path in manifests:
-        before_bytes = blob_reader(root, PLAN019_PRE_CUTOVER_COMMIT, path)
-        after_bytes = blob_reader(
-            root,
-            PLAN019_POST_CUTOVER_COMMIT,
-            f"aio-ml/{path}",
-        )
-        assert before_bytes is not None, path
-        assert after_bytes is not None, path
-        manifest_records.append([path, hashlib.sha256(after_bytes).hexdigest()])
-        assert after_bytes == before_bytes, path
-
-    observed_changed: set[str] = set()
-    for path in notebooks:
-        before_bytes = blob_reader(root, PLAN019_PRE_CUTOVER_COMMIT, path)
-        after_bytes = blob_reader(
-            root,
-            PLAN019_POST_CUTOVER_COMMIT,
-            f"aio-ml/{path}",
-        )
-        assert before_bytes is not None, path
-        assert after_bytes is not None, path
-        if path not in changed_cells:
-            unchanged_records.append([path, hashlib.sha256(after_bytes).hexdigest()])
-            assert after_bytes == before_bytes, path
-            continue
-
-        observed_changed.add(path)
-        after = json.loads(after_bytes)
-        structure = {key: value for key, value in after.items() if key != "cells"}
-        structure["cells"] = []
-        for index, cell in enumerate(after["cells"]):
-            if index in changed_cells[path]:
-                structure["cells"].append(
-                    {key: value for key, value in cell.items() if key != "source"}
-                )
-                changed_sources.append([path, index, cell["source"]])
-            else:
-                structure["cells"].append(cell)
-        changed_structures.append([path, structure])
-
-        before = json.loads(before_bytes)
-        expected_cells = changed_cells[path]
-        assert {key: value for key, value in before.items() if key != "cells"} == {
-            key: value for key, value in after.items() if key != "cells"
-        }, path
-        assert len(before["cells"]) == len(after["cells"])
-        actual_cells = {
-            index
-            for index, (old_cell, new_cell) in enumerate(
-                zip(before["cells"], after["cells"], strict=True)
-            )
-            if old_cell != new_cell
-        }
-        assert actual_cells == expected_cells, path
-        for index, (old_cell, new_cell) in enumerate(
-            zip(before["cells"], after["cells"], strict=True)
-        ):
-            if index not in expected_cells:
-                assert new_cell == old_cell, (path, index)
-                continue
-            old_without_source = {key: value for key, value in old_cell.items() if key != "source"}
-            new_without_source = {key: value for key, value in new_cell.items() if key != "source"}
-            assert new_without_source == old_without_source, (path, index)
-            new_source = "".join(new_cell["source"])
-            assert "AIO_BOOK_ROOT" in new_source or "book_root" in new_source.lower()
-            assert "pyproject.toml" not in new_source
-
-    assert observed_changed == set(changed_cells)
-    assert _plan019_digest(manifest_records) == (
-        "75bc145bacd5bacd1c7ec0f62ac966357c314d6cafaf865a51fc1587d42a1c63"
-    )
-    assert _plan019_digest(unchanged_records) == (
-        "0d8749d8fbe48bb37a0dc696a4343779da91d59dad4fbfb619d066856e7b7b5c"
-    )
-    assert _plan019_digest(changed_structures) == (
-        "46ba55a9dd7c657719edca781d6f6035de6dfd01116e9fd9881f62b3a715b73d"
-    )
-    assert _plan019_digest(changed_sources) == (
-        "dd129b119cd491ea083c53b16613a6f1467fec0275639052071bcb9480d24014"
-    )
-
-
-def test_plan019_task3_every_book1_manifest_and_notebook_matches_pinned_cutover() -> None:
-    _assert_plan019_cutover(ROOT)
-
-
 def test_plan019_task3_book1_pdf_sources_match_the_pinned_r1_set() -> None:
     proc = subprocess.run(
-        ["bash", "scripts/build-pdf.sh", "--book", "aio-ml", "--list-inputs"],
+        ["bash", "scripts/aio/build-pdf.sh", "--book", "aio-ml", "--list-inputs"],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -1773,9 +1380,10 @@ def test_plan019_phase1_book1_narrative_order_and_book2_dependency_contract():
     )
 
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())
-    assert any(dependency.startswith("seaborn>=") for dependency in project["project"]["dependencies"])
+    # py4kids: usaaio's project dependencies are the `aio` dependency group (design 014).
+    assert any(dependency.startswith("seaborn>=") for dependency in project["dependency-groups"]["aio"])
     assert re.search(r'^name = "seaborn"$', (ROOT / "uv.lock").read_text(), re.MULTILINE)
-    standards = (ROOT / "docs" / "unit-standards.md").read_text()
+    standards = (ROOT / "aio-ml" / "docs" / "unit-standards.md").read_text()
     assert (
         "Double-length units (F5, F6, C8, C10, C12, B2-019, B2-020, B2-021, B2-022, B2-023, and B2-024) use 4–6 sessions."
         in standards
@@ -1816,7 +1424,7 @@ def test_cli_exit_codes(tmp_path):
         [
             sys.executable,
             "-m",
-            "tools.cli",
+            "tools.aio.cli",
             "--root",
             str(tmp_path),
             "--book",
@@ -1855,7 +1463,7 @@ problems:
 """
     )
     fail = subprocess.run(
-        [sys.executable, "-m", "tools.cli", "--root", str(fail_root), "--book", "aio-ml", "prereq-check"],
+        [sys.executable, "-m", "tools.aio.cli", "--root", str(fail_root), "--book", "aio-ml", "prereq-check"],
         capture_output=True,
         text=True,
         check=False,
@@ -1865,7 +1473,7 @@ problems:
     skip_book = seed_repo(skip_root, registered=True)
     scaffold_mocktest(skip_book, "r1-001", "2026-08-15")
     skipped = subprocess.run(
-        [sys.executable, "-m", "tools.cli", "--root", str(skip_root), "--book", "aio-ml", "blueprint-check"],
+        [sys.executable, "-m", "tools.aio.cli", "--root", str(skip_root), "--book", "aio-ml", "blueprint-check"],
         capture_output=True,
         text=True,
         check=False,
@@ -1920,7 +1528,7 @@ def test_ci_flags_draft_manifest_loudly(tmp_path):
     book = seed_repo(tmp_path, registered=True)
     scaffold_mocktest(book, "r1-001", "2026-08-15")
     proc = subprocess.run(
-        [sys.executable, "-m", "tools.cli", "--root", str(tmp_path), "--book", "aio-ml", "blueprint-check"],
+        [sys.executable, "-m", "tools.aio.cli", "--root", str(tmp_path), "--book", "aio-ml", "blueprint-check"],
         capture_output=True,
         text=True,
         check=False,
@@ -1933,7 +1541,7 @@ def test_scope_cli_is_registered_and_loader_errors_are_blocking(tmp_path):
     seed_repo(tmp_path, registered=True)
 
     proc = subprocess.run(
-        [sys.executable, "-m", "tools.cli", "--root", str(tmp_path), "--book", "aio-ml", "scope-check"],
+        [sys.executable, "-m", "tools.aio.cli", "--root", str(tmp_path), "--book", "aio-ml", "scope-check"],
         capture_output=True,
         text=True,
         check=False,
@@ -1944,474 +1552,7 @@ def test_scope_cli_is_registered_and_loader_errors_are_blocking(tmp_path):
     assert "invalid choice" not in proc.stderr
 
 
-def test_ci_local_wires_both_mutation_runners_and_generated_document_checks():
-    lines = _ci_noncomment_lines()
-
-    audit = 'uv run python -m tools.audit_curriculum --root "$book1_root" --check'
-    aggregate = (
-        'uv run python -m tools.render_curriculum_roadmap --root "$repo_root" --check'
-    )
-    structure = (
-        'uv run python -m tools.render_course_structure --root "$book1_root" --check'
-    )
-    training = 'uv run python -m tools.verify_training_mutations --root "$book1_root"'
-    classical = 'uv run python -m tools.verify_classical_mutations --root "$book1_root"'
-    for command in (audit, aggregate, structure, training, classical):
-        assert lines.count(command) == 1
-    assert lines.index(audit) < lines.index(aggregate) < lines.index(structure)
-    assert lines.index(structure) < lines.index(training) < lines.index(classical)
-    assert any(
-        line.startswith('uv run usaaio-tools --book "$book" "$c"') for line in lines
-    )
-    assert any("scope-check" in line for line in lines)
-
-
-def test_pre_merge_guard_runs_embedded_yaml_with_uv_python():
-    script = (ROOT / "scripts" / "pre-merge-guard.sh").read_text()
-
-    assert "uv run python -" in script
-    assert "python3 -" not in script
-
-
-def test_pre_merge_guard_pins_current_scope_inventory_digest():
-    script = (ROOT / "scripts" / "pre-merge-guard.sh").read_text()
-    inventory = (ROOT / "tests/fixtures/plan019-path-inventory.yaml").read_bytes()
-    digest = hashlib.sha256(inventory).hexdigest()
-
-    assert digest in script
-
-
-def test_pre_merge_guard_rejects_staged_protected_path(tmp_path: Path) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    for relative in (
-        "scripts/pre-merge-guard.sh",
-        "scripts/verify-staged-scope.py",
-        "tests/fixtures/plan019-path-inventory.yaml",
-    ):
-        target = repo / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes((ROOT / relative).read_bytes())
-    (repo / "scripts/pre-merge-guard.sh").chmod(0o755)
-    (repo / "scripts/verify-staged-scope.py").chmod(0o755)
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "base")
-    protected = repo / "tests/.env.production"
-    protected.write_text("SECRET=bad\n", encoding="utf-8")
-    _git(repo, "add", "-f", "tests/.env.production")
-
-    proc = subprocess.run(
-        ["bash", "scripts/pre-merge-guard.sh"],
-        cwd=repo,
-        env=_fake_uv_environment(tmp_path),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert proc.returncode != 0
-    assert "protected env path" in proc.stdout + proc.stderr
-
-
-def test_pre_merge_guard_allows_the_declared_language_token_lesson(tmp_path: Path) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    _install_pre_merge_enforcement(repo)
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "base")
-    lesson = (
-        repo
-        / "aio-dl/units/B2-020-language-transformers/lessons"
-        / "01-train-token-embeddings.ipynb"
-    )
-    lesson.parent.mkdir(parents=True)
-    lesson.write_text("{}\n", encoding="utf-8")
-    _git(repo, "add", lesson.relative_to(repo).as_posix())
-
-    proc = subprocess.run(
-        ["bash", "scripts/pre-merge-guard.sh"],
-        cwd=repo,
-        env=_fake_uv_environment(tmp_path),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
-@pytest.mark.parametrize(
-    ("mutation", "targets"),
-    [
-        pytest.param("delete", ("scripts/verify-staged-scope.py",), id="delete-verifier"),
-        pytest.param(
-            "delete",
-            ("tests/fixtures/plan019-path-inventory.yaml",),
-            id="delete-inventory",
-        ),
-        pytest.param(
-            "delete",
-            (
-                "scripts/verify-staged-scope.py",
-                "tests/fixtures/plan019-path-inventory.yaml",
-            ),
-            id="delete-both",
-        ),
-        pytest.param("replace", ("scripts/verify-staged-scope.py",), id="replace-verifier"),
-        pytest.param(
-            "replace",
-            ("tests/fixtures/plan019-path-inventory.yaml",),
-            id="replace-inventory",
-        ),
-        pytest.param("symlink", ("scripts/verify-staged-scope.py",), id="symlink-verifier"),
-        pytest.param(
-            "symlink",
-            ("tests/fixtures/plan019-path-inventory.yaml",),
-            id="symlink-inventory",
-        ),
-    ],
-)
-def test_pre_merge_guard_fails_closed_when_enforcement_file_is_mutated(
-    tmp_path: Path, mutation: str, targets: tuple[str, ...]
-) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    for relative in (
-        "scripts/pre-merge-guard.sh",
-        "scripts/verify-staged-scope.py",
-        "tests/fixtures/plan019-path-inventory.yaml",
-    ):
-        target = repo / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes((ROOT / relative).read_bytes())
-    (repo / "scripts/pre-merge-guard.sh").chmod(0o755)
-    (repo / "scripts/verify-staged-scope.py").chmod(0o755)
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "base")
-
-    for relative in targets:
-        target = repo / relative
-        target.unlink()
-        if mutation == "replace":
-            target.write_text("replacement\n", encoding="utf-8")
-        elif mutation == "symlink":
-            peer = repo / "enforcement-copy"
-            peer.write_bytes((ROOT / relative).read_bytes())
-            target.symlink_to(peer)
-    protected = repo / "tests/.env.production"
-    protected.write_text("SECRET=bad\n", encoding="utf-8")
-    _git(repo, "add", "-A", "-f")
-
-    proc = subprocess.run(
-        ["bash", "scripts/pre-merge-guard.sh"],
-        cwd=repo,
-        env=_fake_uv_environment(tmp_path),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert proc.returncode != 0
-    diagnostic = proc.stdout + proc.stderr
-    assert "enforcement file" in diagnostic.lower()
-    assert any(relative in diagnostic for relative in targets)
-
-
-@pytest.mark.parametrize(
-    ("mutation", "relative"),
-    [
-        pytest.param("delete", "scripts/verify-staged-scope.py", id="index-delete"),
-        pytest.param(
-            "replace",
-            "tests/fixtures/plan019-path-inventory.yaml",
-            id="index-replace",
-        ),
-        pytest.param("symlink", "scripts/verify-staged-scope.py", id="index-symlink"),
-    ],
-)
-def test_pre_merge_guard_rejects_index_only_enforcement_mutation(
-    tmp_path: Path, mutation: str, relative: str
-) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    _install_pre_merge_enforcement(repo)
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "base")
-
-    target = repo / relative
-    original = target.read_bytes()
-    protected = repo / "tests/.env.production"
-    protected.write_text("SECRET=bad\n", encoding="utf-8")
-    _git(repo, "add", "-f", "tests/.env.production")
-    if mutation == "delete":
-        _git(repo, "rm", "--cached", relative)
-    else:
-        target.unlink()
-        if mutation == "replace":
-            target.write_text("replacement\n", encoding="utf-8")
-        else:
-            peer = repo / "enforcement-copy"
-            peer.write_bytes(original)
-            target.symlink_to(peer)
-        _git(repo, "add", relative)
-        target.unlink()
-    target.write_bytes(original)
-
-    proc = subprocess.run(
-        ["bash", "scripts/pre-merge-guard.sh"],
-        cwd=repo,
-        env=_fake_uv_environment(tmp_path),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert proc.returncode != 0
-    diagnostic = proc.stdout + proc.stderr
-    assert "enforcement file" in diagnostic.lower()
-    assert relative in diagnostic
-
-
-def _git(cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        ["git", *args], cwd=cwd, capture_output=True, text=True, check=True
-    )
-
-
-def _roadmap(destination: str | None, planned_id: str | None) -> str:
-    return yaml.safe_dump(
-        {
-            "roadmap_version": 1,
-            "layers": [],
-            "planned_units": (
-                [{"id": planned_id, "knowledge_points": ["topic-a"]}] if planned_id else []
-            ),
-            "knowledge_points": (
-                [{"id": "topic-a", "destination": destination}] if destination else []
-            ),
-        },
-        sort_keys=False,
-    )
-
-
-def _fake_uv_environment(tmp_path: Path) -> dict[str, str]:
-    executable = tmp_path / "bin" / "uv"
-    executable.parent.mkdir()
-    executable.write_text(
-        "#!/usr/bin/env bash\n"
-        "set -euo pipefail\n"
-        "[[ $1 == run ]]\n"
-        "shift\n"
-        "[[ $1 == python ]]\n"
-        "shift\n"
-        'exec "$TEST_PYTHON" "$@"\n'
-    )
-    executable.chmod(0o755)
-    env = os.environ.copy()
-    env["PATH"] = f"{executable.parent}:{env['PATH']}"
-    env["TEST_PYTHON"] = sys.executable
-    return env
-
-
-def test_pre_merge_guard_pr_mode_fails_when_origin_main_is_unavailable(tmp_path: Path):
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    script = repo / "scripts" / "pre-merge-guard.sh"
-    script.parent.mkdir()
-    script.write_bytes((ROOT / "scripts" / "pre-merge-guard.sh").read_bytes())
-    script.chmod(0o755)
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "base")
-
-    proc = subprocess.run(
-        ["bash", "scripts/pre-merge-guard.sh", "--pr"],
-        cwd=repo,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert proc.returncode == 1
-    assert "origin/main" in proc.stderr
-    assert "unverified" in proc.stderr
-
-
-def _install_pre_merge_enforcement(repo: Path) -> None:
-    for relative in (
-        "scripts/pre-merge-guard.sh",
-        "scripts/verify-staged-scope.py",
-        "tests/fixtures/plan019-path-inventory.yaml",
-    ):
-        target = repo / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes((ROOT / relative).read_bytes())
-    (repo / "scripts/pre-merge-guard.sh").chmod(0o755)
-    (repo / "scripts/verify-staged-scope.py").chmod(0o755)
-
-
-def test_pre_merge_guard_rejects_parallel_roadmap_ownership_collisions(tmp_path):
-    repo = tmp_path / "repo"
-    remote = tmp_path / "remote.git"
-    other = tmp_path / "other"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    _install_pre_merge_enforcement(repo)
-    coverage = repo / "curriculum" / "coverage-map.yaml"
-    coverage.parent.mkdir()
-    coverage.write_text(_roadmap(None, None))
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "base")
-    _git(tmp_path, "init", "--bare", str(remote))
-    _git(repo, "remote", "add", "origin", str(remote))
-    _git(repo, "push", "-u", "origin", "main")
-    _git(repo, "checkout", "-b", "feature")
-    coverage.write_text(_roadmap("U-feature", "P-collision"))
-
-    _git(tmp_path, "clone", "-b", "main", str(remote), str(other))
-    _git(other, "config", "user.email", "test@example.com")
-    _git(other, "config", "user.name", "Test")
-    other.joinpath("curriculum", "coverage-map.yaml").write_text(
-        _roadmap("U-main", "P-collision")
-    )
-    _git(other, "add", ".")
-    _git(other, "commit", "-m", "parallel roadmap")
-    _git(other, "push", "origin", "main")
-
-    proc = subprocess.run(
-        ["bash", "scripts/pre-merge-guard.sh", "--pr"],
-        cwd=repo,
-        env=_fake_uv_environment(tmp_path),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert proc.returncode == 1
-    assert "roadmap knowledge-point ownership collision: topic-a" in proc.stdout
-    assert "roadmap planned-unit ownership collision: P-collision" in proc.stdout
-
-
-def test_pre_merge_guard_rejects_b2_unit_id_collision_legacy_regex_misses(
-    tmp_path: Path,
-) -> None:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    _install_pre_merge_enforcement(repo)
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "enforcement base")
-    for name in ("B2-019-attention", "B2-019-collision"):
-        directory = repo / "units" / name
-        directory.mkdir(parents=True)
-        directory.joinpath("manifest.yaml").write_text(f"unit: {name}\n")
-
-    proc = subprocess.run(
-        ["bash", "scripts/pre-merge-guard.sh"],
-        cwd=repo,
-        env=_fake_uv_environment(tmp_path),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert proc.returncode == 1
-    assert "duplicate aio-ml/units number(s): B2-019" in proc.stdout
-
-
-def _ci_noncomment_lines() -> list[str]:
-    return [
-        line.strip()
-        for line in (ROOT / "scripts" / "ci-local.sh").read_text().splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    ]
-
-
-def test_ci_executes_book2_boundary_before_derived_and_preserves_r1_checks() -> None:
-    lines = _ci_noncomment_lines()
-    checks = next(line for line in lines if line.startswith("for c in prereq-check"))
-
-    assert "layer-boundary-check" in checks
-    assert 'uv run python -m tools.render_course_structure --root "$book1_root" --check' in lines
-    assert 'bash scripts/build-pdf.sh --book "$book" || { rc=$?; [[ $rc -eq 3 ]] || exit "$rc"; }' in lines
-    assert "prereq-check" in checks
-    assert "coverage-check" in checks
-    assert "blueprint-check" in checks
-    assert 'find "$book_root/units" "$book_root/mocktests" -type f \\' in lines
-
-
-def test_ci_registry_probe_reports_noncanonical_roots_without_id_fallback(
-    tmp_path: Path,
-) -> None:
-    repo = tmp_path / "repo"
-    (repo / "round1").mkdir(parents=True)
-    (repo / "advanced").mkdir()
-    (repo / "books.yaml").write_text(
-        "books_version: 1\nbooks:\n"
-        "  - {id: book1, number: 1, root: round1, depends_on: []}\n"
-        "  - {id: book2, number: 2, root: advanced, depends_on: [book1]}\n",
-        encoding="utf-8",
-    )
-
-    proc = subprocess.run(
-        [
-            "bash", str(ROOT / "scripts/ci-local.sh"), "--root", str(repo),
-            "--registry-probe",
-        ],
-        cwd=ROOT,
-        env={**os.environ, "PATH": f"{Path.home() / '.local/bin'}:{os.environ['PATH']}"},
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert proc.stdout.splitlines() == [
-        f"book1\t1\t{repo / 'round1'}",
-        f"book2\t2\t{repo / 'advanced'}",
-    ]
-    script = (ROOT / "scripts/ci-local.sh").read_text(encoding="utf-8")
-    assert "$PWD/$book" not in script
-    assert "--root book1" not in script
-
-
-def test_ci_executes_book2_schedule_check() -> None:
-    lines = _ci_noncomment_lines()
-    checks = next(line for line in lines if line.startswith("for c in prereq-check"))
-    assert "schedule-check" in checks
-    assert any(
-        line.startswith('uv run usaaio-tools --book "$book" "$c"') for line in lines
-    )
-
-
-def test_ci_executes_attention_mutations() -> None:
-    lines = _ci_noncomment_lines()
-    assert "uv run python -m tools.verify_attention_mutations --root \"$book2_root\"" in lines
-    assert not any("SKIP attention mutations" in line for line in lines)
-
-
 def test_ci_checks_book2_material_inventory_freshness(tmp_path: Path) -> None:
-    lines = _ci_noncomment_lines()
-    assert 'uv run python -m tools.audit_curriculum --root "$book2_root" --check' in lines
-
     (tmp_path / "books.yaml").write_text((ROOT / "books.yaml").read_text())
     (tmp_path / "aio-ml").mkdir()
     copied_book2 = tmp_path / "aio-dl"
@@ -2431,7 +1572,7 @@ def test_ci_checks_book2_material_inventory_freshness(tmp_path: Path) -> None:
         [
             str(ROOT / ".venv" / "bin" / "python"),
             "-m",
-            "tools.audit_curriculum",
+            "tools.aio.audit_curriculum",
             "--root",
             str(copied_book2),
             "--check",
@@ -2445,214 +1586,3 @@ def test_ci_checks_book2_material_inventory_freshness(tmp_path: Path) -> None:
     assert "ERROR material inventory stale" in proc.stderr
 
 
-def _plan019_roadmap(*, r1_destination: str, r2_destination: str) -> str:
-    return yaml.safe_dump(
-        {
-            "roadmap_version": 1,
-            "layers": ["round-1-core", "round-2-extension"],
-            "planned_units": [],
-            "knowledge_points": [
-                {
-                    "id": "r1-topic",
-                    "layer": "round-1-core",
-                    "destination": r1_destination,
-                },
-                {
-                    "id": "r2-topic",
-                    "layer": "round-2-extension",
-                    "destination": r2_destination,
-                },
-            ],
-        },
-        sort_keys=False,
-    )
-
-
-def _install_plan019_guard(repo: Path) -> None:
-    _install_pre_merge_enforcement(repo)
-
-
-def _write_legacy_layout(repo: Path) -> None:
-    (repo / "units" / "C1-base").mkdir(parents=True, exist_ok=True)
-    (repo / "units" / "C1-base" / "manifest.yaml").write_text("unit: C1-base\n")
-    coverage = repo / "curriculum" / "coverage-map.yaml"
-    coverage.parent.mkdir(parents=True, exist_ok=True)
-    coverage.write_text(_plan019_roadmap(r1_destination="C1-base", r2_destination="B2-019"))
-    (repo / "syllabus.md").write_text("legacy\n")
-
-
-def _cut_over_fixture(repo: Path) -> None:
-    for legacy in ("units", "curriculum"):
-        shutil.rmtree(repo / legacy)
-    (repo / "syllabus.md").unlink()
-    (repo / "books.yaml").write_text(
-        yaml.safe_dump(
-            {
-                "books_version": 1,
-                "books": [
-                    {"id": "aio-ml", "number": 1, "root": "aio-ml", "depends_on": []},
-                    {
-                        "id": "aio-dl",
-                        "number": 2,
-                        "root": "aio-dl",
-                        "depends_on": ["aio-ml"],
-                    },
-                ],
-            },
-            sort_keys=False,
-        )
-    )
-    for book in ("aio-ml", "aio-dl"):
-        (repo / book / "units").mkdir(parents=True, exist_ok=True)
-        (repo / book / "curriculum").mkdir(parents=True, exist_ok=True)
-    (repo / "aio-ml/curriculum/coverage-map.yaml").write_text(
-        _plan019_roadmap(r1_destination="C1-base", r2_destination="B2-019")
-    )
-    (repo / "aio-dl/curriculum/coverage-map.yaml").write_text(
-        _plan019_roadmap(r1_destination="C1-base", r2_destination="B2-019")
-    )
-
-
-def _legacy_union_fixture(tmp_path: Path) -> tuple[Path, Path]:
-    repo = tmp_path / "repo"
-    remote = tmp_path / "remote.git"
-    other = tmp_path / "other"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    _install_plan019_guard(repo)
-    _write_legacy_layout(repo)
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "legacy base")
-    _git(tmp_path, "init", "--bare", str(remote))
-    _git(repo, "remote", "add", "origin", str(remote))
-    _git(repo, "push", "-u", "origin", "main")
-    _git(repo, "checkout", "-b", "feature")
-    _cut_over_fixture(repo)
-    _git(tmp_path, "clone", "-b", "main", str(remote), str(other))
-    _git(other, "config", "user.email", "test@example.com")
-    _git(other, "config", "user.name", "Test")
-    return repo, other
-
-
-def _push_parallel_main(other: Path) -> None:
-    _git(other, "add", ".")
-    _git(other, "commit", "-m", "parallel main")
-    _git(other, "push", "origin", "main")
-
-
-def _run_plan019_guard(repo: Path, tmp_path: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        ["bash", "scripts/pre-merge-guard.sh", "--pr"],
-        cwd=repo,
-        env=_fake_uv_environment(tmp_path),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-
-def test_pre_merge_guard_translates_legacy_unit_collision_into_book1(
-    tmp_path: Path,
-) -> None:
-    repo, other = _legacy_union_fixture(tmp_path)
-    (repo / "aio-ml/units/C13-feature").mkdir(parents=True)
-    (repo / "aio-ml/units/C13-feature/manifest.yaml").write_text("unit: C13-feature\n")
-    (other / "units/C13-main").mkdir(parents=True)
-    (other / "units/C13-main/manifest.yaml").write_text("unit: C13-main\n")
-    _push_parallel_main(other)
-
-    proc = _run_plan019_guard(repo, tmp_path)
-
-    assert proc.returncode == 1
-    assert "C13" in proc.stdout + proc.stderr
-    assert "aio-ml" in proc.stdout + proc.stderr
-
-
-def test_pre_merge_guard_allows_noncolliding_legacy_book1_addition(
-    tmp_path: Path,
-) -> None:
-    repo, other = _legacy_union_fixture(tmp_path)
-    (repo / "aio-ml/units/C14-feature").mkdir(parents=True)
-    (repo / "aio-ml/units/C14-feature/manifest.yaml").write_text("unit: C14-feature\n")
-    (other / "units/C13-main").mkdir(parents=True)
-    (other / "units/C13-main/manifest.yaml").write_text("unit: C13-main\n")
-    _push_parallel_main(other)
-
-    proc = _run_plan019_guard(repo, tmp_path)
-
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
-@pytest.mark.parametrize("layer", ["r1", "r2"])
-def test_pre_merge_guard_translates_combined_legacy_coverage_row_collisions(
-    tmp_path: Path, layer: str
-) -> None:
-    repo, other = _legacy_union_fixture(tmp_path)
-    relative = f"book{1 if layer == 'r1' else 2}/curriculum/coverage-map.yaml"
-    feature_path = repo / relative
-    feature_path.write_text(
-        _plan019_roadmap(
-            r1_destination="C13-feature" if layer == "r1" else "C1-base",
-            r2_destination="B2-020-feature" if layer == "r2" else "B2-019",
-        )
-    )
-    (other / "curriculum/coverage-map.yaml").write_text(
-        _plan019_roadmap(
-            r1_destination="C13-main" if layer == "r1" else "C1-base",
-            r2_destination="B2-020-main" if layer == "r2" else "B2-019",
-        )
-    )
-    _push_parallel_main(other)
-
-    proc = _run_plan019_guard(repo, tmp_path)
-
-    assert proc.returncode == 1
-    assert f"{layer}-topic" in proc.stdout + proc.stderr
-
-
-def test_pre_merge_guard_rejects_untranslatable_legacy_addition(tmp_path: Path) -> None:
-    repo, other = _legacy_union_fixture(tmp_path)
-    (other / "curriculum/unclassified-new-contract.yaml").write_text("new: true\n")
-    _push_parallel_main(other)
-
-    proc = _run_plan019_guard(repo, tmp_path)
-
-    assert proc.returncode == 1
-    assert "untranslatable" in (proc.stdout + proc.stderr).lower()
-    assert "unclassified-new-contract.yaml" in proc.stdout + proc.stderr
-
-
-def test_pre_merge_guard_handles_post_cutover_origin_main_without_translation(
-    tmp_path: Path,
-) -> None:
-    repo = tmp_path / "repo-post"
-    remote = tmp_path / "remote-post.git"
-    other = tmp_path / "other-post"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    _install_plan019_guard(repo)
-    _write_legacy_layout(repo)
-    _cut_over_fixture(repo)
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "post-cutover base")
-    _git(tmp_path, "init", "--bare", str(remote))
-    _git(repo, "remote", "add", "origin", str(remote))
-    _git(repo, "push", "-u", "origin", "main")
-    _git(repo, "checkout", "-b", "feature")
-    _git(tmp_path, "clone", "-b", "main", str(remote), str(other))
-    _git(other, "config", "user.email", "test@example.com")
-    _git(other, "config", "user.name", "Test")
-    (repo / "aio-ml/units/C13-feature").mkdir(parents=True)
-    (repo / "aio-ml/units/C13-feature/manifest.yaml").write_text("unit: C13-feature\n")
-    (other / "aio-ml/units/C13-main").mkdir(parents=True)
-    (other / "aio-ml/units/C13-main/manifest.yaml").write_text("unit: C13-main\n")
-    _push_parallel_main(other)
-
-    proc = _run_plan019_guard(repo, tmp_path)
-
-    assert proc.returncode == 1
-    assert "C13" in proc.stdout + proc.stderr

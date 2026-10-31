@@ -12,14 +12,14 @@ from typing import Any
 
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools import model
-from tools import render_curriculum_roadmap as renderer
-from tools.checks import scope as scope_checker
-from tools.checks.prereq import taught_closure
-from tools.checks.scope import check_scope
+from tools.aio import model
+from tools.aio import render_curriculum_roadmap as renderer
+from tools.aio.checks import scope as scope_checker
+from tools.aio.checks.prereq import taught_closure
+from tools.aio.checks.scope import check_scope
 
-ROOT = Path(__file__).parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 BOOK2_ROOT = ROOT / "aio-dl"
 
@@ -223,11 +223,11 @@ def _fixture_renderer_main(argv: list[str]) -> int:
 
 
 def test_scope_checker_module_exists() -> None:
-    assert (Path(__file__).parents[1] / "tools" / "checks" / "scope.py").is_file()
+    assert (Path(__file__).parents[1] / "checks" / "scope.py").is_file()
 
 
 def test_roadmap_renderer_module_exists() -> None:
-    assert (Path(__file__).parents[1] / "tools" / "render_curriculum_roadmap.py").is_file()
+    assert (Path(__file__).parents[1] / "render_curriculum_roadmap.py").is_file()
 
 
 def test_load_roadmap_exposes_typed_contract(tmp_path: Path) -> None:
@@ -490,7 +490,7 @@ units:
     _write_yaml(root / "curriculum" / "official-topics.yaml", topics)
     _write_yaml(root / "curriculum" / "material-inventory.yaml", inventory)
     _write_yaml(root / "curriculum" / "coverage-map.yaml", roadmap)
-    reconciliation = root / "docs" / "audits" / "015-plan014-reconciliation.md"
+    reconciliation = root / "docs" / "015-plan014-reconciliation.md"
     reconciliation.parent.mkdir(parents=True)
     reconciliation.write_text(
         """# Plan 014 reconciliation
@@ -1448,7 +1448,7 @@ def test_provisional_concepts_cannot_ship_early(tmp_path: Path) -> None:
 @pytest.mark.parametrize("broken", ["missing", "invalid-abandonment"])
 def test_plan014_reconciliation_is_required_and_structured(tmp_path: Path, broken: str) -> None:
     _base_contract(tmp_path)
-    path = tmp_path / "docs" / "audits" / "015-plan014-reconciliation.md"
+    path = tmp_path / "docs" / "015-plan014-reconciliation.md"
     if broken == "missing":
         path.unlink()
     else:
@@ -1470,7 +1470,7 @@ def test_plan014_abandonment_fields_are_nonempty_and_date_is_iso(
     tmp_path: Path, line: str, message: str
 ) -> None:
     _base_contract(tmp_path)
-    path = tmp_path / "docs" / "audits" / "015-plan014-reconciliation.md"
+    path = tmp_path / "docs" / "015-plan014-reconciliation.md"
     labels = ("Branch/PR", "Date", "Reason", "Owner decision")
     replacement_label = next(label for label in labels if line.startswith(f"- {label}:"))
     text = path.read_text()
@@ -1499,11 +1499,13 @@ def _initialize_scope_git_repository(root: Path) -> str:
     return _scope_git(root, "rev-parse", "HEAD").stdout.strip()
 
 
-def test_plan014_merged_reconciliation_accepts_unavailable_git_history(
+def test_plan014_merged_reconciliation_needs_no_git_history(
     tmp_path: Path,
 ) -> None:
+    # design 014 D3: usaaio warned "squash ancestry unverified" here; the ancestry probe is
+    # removed, so a merged reconciliation naming its squash commit passes without a warning.
     _base_contract(tmp_path)
-    reconciliation = tmp_path / "docs" / "audits" / "015-plan014-reconciliation.md"
+    reconciliation = tmp_path / "docs" / "015-plan014-reconciliation.md"
     reconciliation.write_text(
         "Plan 014 is **merged**.\n"
         "Its squash commit is `deadbeefdeadbeefdeadbeefdeadbeefdeadbeef`.\n"
@@ -1512,9 +1514,7 @@ def test_plan014_merged_reconciliation_accepts_unavailable_git_history(
     report = check_scope(tmp_path)
 
     assert report.ok, report.errors
-    assert report.warnings == [
-        "Plan 014 reconciliation squash ancestry unverified: Git work tree unavailable"
-    ]
+    assert report.warnings == []
 
 
 def test_plan014_reconciliation_ignores_unrelated_parent_git_repository(
@@ -1523,7 +1523,7 @@ def test_plan014_reconciliation_ignores_unrelated_parent_git_repository(
     _scope_git(tmp_path, "init", "-b", "main")
     nested = tmp_path / "archive"
     _base_contract(nested)
-    reconciliation = nested / "docs" / "audits" / "015-plan014-reconciliation.md"
+    reconciliation = nested / "docs" / "015-plan014-reconciliation.md"
     reconciliation.write_text(
         "Plan 014 is **merged**.\n"
         "Its squash commit is `deadbeefdeadbeefdeadbeefdeadbeefdeadbeef`.\n"
@@ -1534,53 +1534,12 @@ def test_plan014_reconciliation_ignores_unrelated_parent_git_repository(
     assert report.ok, report.errors
 
 
-def test_plan014_merged_squash_commit_must_be_ancestor(tmp_path: Path) -> None:
-    _base_contract(tmp_path)
-    _initialize_scope_git_repository(tmp_path)
-    tree = _scope_git(tmp_path, "write-tree").stdout.strip()
-    nonancestor = _scope_git(tmp_path, "commit-tree", tree, "-m", "unmerged").stdout.strip()
-    reconciliation = tmp_path / "docs" / "audits" / "015-plan014-reconciliation.md"
-    reconciliation.write_text(
-        f"Plan 014 is **merged**.\nIts squash commit is `{nonancestor}`.\n"
-    )
-
-    _assert_error(check_scope(tmp_path), "is not an ancestor of HEAD")
-
-
-def test_plan014_corrupt_root_git_metadata_fails_loudly(tmp_path: Path) -> None:
-    _base_contract(tmp_path)
-    reconciliation = tmp_path / "docs" / "audits" / "015-plan014-reconciliation.md"
-    reconciliation.write_text(
-        "Plan 014 is **merged**.\n"
-        "Its squash commit is `deadbeefdeadbeefdeadbeefdeadbeefdeadbeef`.\n"
-    )
-    (tmp_path / ".git").write_text("gitdir: missing-git-directory\n")
-
-    _assert_error(check_scope(tmp_path), "Git metadata at repository root is unusable")
-
-
-def test_plan014_partial_root_git_metadata_under_parent_fails_loudly(
-    tmp_path: Path,
-) -> None:
-    _scope_git(tmp_path, "init", "-b", "main")
-    nested = tmp_path / "archive"
-    _base_contract(nested)
-    reconciliation = nested / "docs" / "audits" / "015-plan014-reconciliation.md"
-    reconciliation.write_text(
-        "Plan 014 is **merged**.\n"
-        "Its squash commit is `deadbeefdeadbeefdeadbeefdeadbeefdeadbeef`.\n"
-    )
-    (nested / ".git").mkdir()
-
-    _assert_error(check_scope(nested), "Git metadata at repository root is unusable")
-
-
 def test_plan014_reconciliation_scrubs_repository_environment(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _base_contract(tmp_path)
     commit = _initialize_scope_git_repository(tmp_path)
-    reconciliation = tmp_path / "docs" / "audits" / "015-plan014-reconciliation.md"
+    reconciliation = tmp_path / "docs" / "015-plan014-reconciliation.md"
     reconciliation.write_text(
         f"Plan 014 is **merged**.\nIts squash commit is `{commit}`.\n"
     )
@@ -1604,35 +1563,6 @@ def test_plan014_reconciliation_scrubs_repository_environment(
     assert report.ok, report.errors
 
 
-def test_plan014_missing_git_binary_reports_unusable_metadata(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _base_contract(tmp_path)
-    commit = _initialize_scope_git_repository(tmp_path)
-    reconciliation = tmp_path / "docs" / "audits" / "015-plan014-reconciliation.md"
-    reconciliation.write_text(
-        f"Plan 014 is **merged**.\nIts squash commit is `{commit}`.\n"
-    )
-    monkeypatch.setenv("PATH", "")
-
-    _assert_error(check_scope(tmp_path), "Git metadata at repository root is unusable")
-
-
-def test_plan014_unknown_commit_reports_incomplete_history(tmp_path: Path) -> None:
-    _base_contract(tmp_path)
-    _initialize_scope_git_repository(tmp_path)
-    reconciliation = tmp_path / "docs" / "audits" / "015-plan014-reconciliation.md"
-    reconciliation.write_text(
-        "Plan 014 is **merged**.\n"
-        "Its squash commit is `deadbeefdeadbeefdeadbeefdeadbeefdeadbeef`.\n"
-    )
-
-    report = check_scope(tmp_path)
-
-    _assert_error(report, "Git history is unavailable or incomplete")
-    assert all("is not an ancestor" not in error for error in report.errors)
-
-
 def test_renderer_owns_both_documents_and_keeps_assessments_separate(tmp_path: Path) -> None:
     contract = _base_contract(tmp_path)
     evidence = contract["roadmap"]["knowledge_points"][0]["evidence_by_modality"]["theory"]
@@ -1642,10 +1572,10 @@ def test_renderer_owns_both_documents_and_keeps_assessments_separate(tmp_path: P
     rendered = _render_fixture_documents(tmp_path)
 
     assert set(rendered) == {
-        Path("docs/audits/015-coverage-audit.md"),
+        Path("docs/coverage-audit.md"),
         Path("docs/curriculum-roadmap.md"),
     }
-    audit = rendered[Path("docs/audits/015-coverage-audit.md")]
+    audit = rendered[Path("docs/coverage-audit.md")]
     roadmap = rendered[Path("docs/curriculum-roadmap.md")]
     assert "Practices: U1-core-p1, U1-core-p2, U1-core-p3" in audit
     assert "Assessments: U1-core-p1" in audit
@@ -1664,7 +1594,7 @@ def test_renderer_labels_unit_and_total_inventoried_notebook_counts(tmp_path: Pa
     _write_yaml(tmp_path / "curriculum" / "material-inventory.yaml", contract["inventory"])
 
     audit = _render_fixture_documents(tmp_path)[
-        Path("docs/audits/015-coverage-audit.md")
+        Path("docs/coverage-audit.md")
     ]
 
     assert "| Unit notebooks | 765 |" in audit
@@ -1680,7 +1610,7 @@ def test_renderer_surfaces_checker_derived_practice_shortfall(tmp_path: Path) ->
     _write_yaml(tmp_path / "curriculum" / "coverage-map.yaml", contract["roadmap"])
 
     rendered = _render_fixture_documents(tmp_path)
-    audit = rendered[Path("docs/audits/015-coverage-audit.md")]
+    audit = rendered[Path("docs/coverage-audit.md")]
     roadmap = rendered[Path("docs/curriculum-roadmap.md")]
 
     assert "- **Practice shortfall:** 3" in audit
@@ -2053,7 +1983,7 @@ def test_renderer_check_detects_stale_output_without_overwriting(tmp_path: Path)
 
     assert _fixture_renderer_main(["--root", str(tmp_path)]) == 0
     assert _fixture_renderer_main(["--root", str(tmp_path), "--check"]) == 0
-    audit = tmp_path / "docs" / "audits" / "015-coverage-audit.md"
+    audit = tmp_path / "docs" / "coverage-audit.md"
     audit.write_text("stale\n")
 
     assert _fixture_renderer_main(["--root", str(tmp_path), "--check"]) == 1
@@ -2064,7 +1994,7 @@ def test_renderer_rejects_symlinked_output_file_without_touching_target(tmp_path
     _base_contract(tmp_path)
     outside = tmp_path / "outside.md"
     outside.write_text("sentinel\n")
-    output = tmp_path / "docs" / "audits" / "015-coverage-audit.md"
+    output = tmp_path / "docs" / "coverage-audit.md"
     output.symlink_to(outside)
 
     assert _fixture_renderer_main(["--root", str(tmp_path)]) == 1
@@ -2075,18 +2005,21 @@ def test_renderer_rejects_symlinked_output_parent_without_writing_outside(
     tmp_path: Path,
 ) -> None:
     _base_contract(tmp_path)
-    audits = tmp_path / "docs" / "audits"
-    reconciliation = audits / "015-plan014-reconciliation.md"
+    # py4kids: the audit's parent is the book's docs/ (usaaio: docs/audits/).
+    docs = tmp_path / "docs"
+    reconciliation = docs / "015-plan014-reconciliation.md"
     reconciliation_text = reconciliation.read_text()
     reconciliation.unlink()
-    audits.rmdir()
-    outside = tmp_path / "outside-audits"
+    for leftover in docs.iterdir():
+        leftover.unlink()
+    docs.rmdir()
+    outside = tmp_path / "outside-docs"
     outside.mkdir()
     outside.joinpath("015-plan014-reconciliation.md").write_text(reconciliation_text)
-    audits.symlink_to(outside, target_is_directory=True)
+    docs.symlink_to(outside, target_is_directory=True)
 
     assert _fixture_renderer_main(["--root", str(tmp_path)]) == 1
-    assert not outside.joinpath("015-coverage-audit.md").exists()
+    assert not outside.joinpath("coverage-audit.md").exists()
 
 
 def test_renderer_replaces_outputs_atomically_inside_their_parent_directories(
@@ -2104,7 +2037,7 @@ def test_renderer_replaces_outputs_atomically_inside_their_parent_directories(
 
     assert _fixture_renderer_main(["--root", str(tmp_path)]) == 0
     assert {target.relative_to(tmp_path) for _, target in replacements} == {
-        Path("docs/audits/015-coverage-audit.md"),
+        Path("docs/coverage-audit.md"),
         Path("docs/curriculum-roadmap.md"),
     }
     assert all(source.parent == target.parent for source, target in replacements)
@@ -2120,7 +2053,7 @@ def test_scope_pass_implies_roadmap_loader_and_renderer_accept_contract(tmp_path
     rendered = _render_fixture_documents(tmp_path)
     assert loaded.knowledge_points[0].id == "topic-a"
     assert set(rendered) == {
-        Path("docs/audits/015-coverage-audit.md"),
+        Path("docs/coverage-audit.md"),
         Path("docs/curriculum-roadmap.md"),
     }
 
@@ -2392,11 +2325,11 @@ def test_book2_roadmap_partition_mutations_fail_scope_check(
 
 def _scope_books_module():
     try:
-        return importlib.import_module("tools.books")
+        return importlib.import_module("tools.aio.books")
     except ModuleNotFoundError as exc:
-        if exc.name != "tools.books":
+        if exc.name != "tools.aio.books":
             raise
-        pytest.fail("tools.books is the missing Plan 019 registry producer")
+        pytest.fail("tools.aio.books is the missing Plan 019 registry producer")
 
 
 def _copy_two_book_scope_repo(destination: Path) -> tuple[Path, Path]:

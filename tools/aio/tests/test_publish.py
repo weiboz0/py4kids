@@ -9,8 +9,8 @@ import pytest
 import yaml
 from publication_fixture import fixture_book, write_notebook, write_yaml
 
-from tools import publish
-from tools.publish import (
+from tools.aio import publish
+from tools.aio.publish import (
     EDITIONS,
     PublishError,
     build,
@@ -21,7 +21,7 @@ from tools.publish import (
     output_stem,
     parse_details,
 )
-from tools.publish_output import refresh_output
+from tools.aio.publish_output import refresh_output
 
 
 def _project_text(project: Path) -> str:
@@ -390,7 +390,7 @@ def test_inline_collected_answer_paragraphs_are_answer_bodies(repo: Path) -> Non
 def test_index_chapter_reaches_latex_as_a_command(repo: Path) -> None:
     import subprocess
 
-    from tools.publish_pdf import pandoc_command
+    from tools.aio.publish_pdf import pandoc_command
 
     index = (build(repo, "aio-ml", "student").path / "the-index.qmd").read_text()
     assert index.startswith("```{=latex}\n\\pubchapterlabel{}")
@@ -402,7 +402,7 @@ def test_index_chapter_reaches_latex_as_a_command(repo: Path) -> None:
 
 
 def test_build_pdf_gives_wide_tables_relative_widths() -> None:
-    from tools.publish_pdf import (
+    from tools.aio.publish_pdf import (
         CELL_PADDING,
         LINE_CHARACTERS,
         _cells,

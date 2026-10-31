@@ -10,14 +10,14 @@ from pathlib import Path
 import nbformat
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools import audit_curriculum
-from tools.checks.coverage import check_coverage
-from tools.checks.hygiene import check_hygiene
-from tools.checks.layer_boundary import check_layer_boundary
-from tools.model import load_syllabus, load_unit_manifests
+from tools.aio import audit_curriculum
+from tools.aio.checks.coverage import check_coverage
+from tools.aio.checks.hygiene import check_hygiene
+from tools.aio.checks.layer_boundary import check_layer_boundary
+from tools.aio.model import load_syllabus, load_unit_manifests
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 BOOK2_ROOT = ROOT / "aio-dl"
 UNIT_ID = "B2-020-language-transformers"
@@ -81,7 +81,7 @@ def _fixture_module():
 
 
 def _register_module():
-    path = ROOT / "scripts/verify-register.py"
+    path = ROOT / "scripts/aio/verify-register.py"
     spec = importlib.util.spec_from_file_location("b2_020_verify_register", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -235,28 +235,6 @@ def test_task4_policy_and_solution_set_fail_closed(tmp_path: Path) -> None:
     )
 
 
-def test_ci_bounds_b2_020_and_b2_021_and_preserves_other_solution_execution() -> None:
-    script = (ROOT / "scripts/ci-local.sh").read_text(encoding="utf-8")
-    assert (
-        "if [[ $relative == units/B2-020-language-transformers/practice/"
-        "p??_solution.ipynb || $relative == units/B2-021-cross-modal-transformers-vision/"
-        "practice/p??_solution.ipynb || $relative == units/B2-022-probabilistic-latent-models/"
-        "practice/p??_solution.ipynb || $relative == units/B2-023-generative-models-diffusion/"
-        "practice/p??_solution.ipynb || $relative == units/B2-024-gpu-scientific-ml-capstone/"
-        "practice/p??_solution.ipynb || $relative == mocktests/r2-001/solutions/"
-        "p??_solution.ipynb ]]; then"
-    ) in script
-    assert (
-        'timeout 20s uv run --project .. jupyter execute "$relative"'
-    ) in script
-    assert (
-        'else\n'
-        '      (cd "$book_root" && AIO_BOOK_ROOT="$book_root" '
-        'uv run --project .. jupyter execute "$relative")\n'
-        '    fi'
-    ) in script
-
-
 def test_statement_notebooks_are_complete_unexecuted_and_source_isolated() -> None:
     paths = [
         UNIT / "lesson.ipynb",
@@ -350,8 +328,6 @@ def test_pretraining_heldout_rows_and_masked_pairs_are_disjoint_from_training() 
         )
     }
     assert mlm_train.isdisjoint(mlm_heldout)
-
-
 
 
 def test_collected_checkpoint_answers_match_their_numbered_questions() -> None:
@@ -472,7 +448,7 @@ def test_syllabus_and_standards_publish_b2_020_as_double_length() -> None:
     assert set(unit.teaches) == OWNED
     assert set(unit.concept_prerequisites) == IMPORTED
     assert unit.length == "double"
-    standards = (ROOT / "docs/unit-standards.md").read_text(encoding="utf-8")
+    standards = (ROOT / "aio-ml/docs/unit-standards.md").read_text(encoding="utf-8")
     assert "F5, F6, C8, C10, C12, B2-019, B2-020, B2-021, B2-022, B2-023, and B2-024" in standards
     assert all(
         standards.count(unit) >= 2

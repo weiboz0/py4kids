@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "verify-comment-only.py"
+SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "aio" / "verify-comment-only.py"
 _spec = importlib.util.spec_from_file_location("verify_comment_only", SCRIPT)
 verify = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(verify)
@@ -68,9 +68,21 @@ def _write(root, notebooks):
         path.write_text(json.dumps(nb, indent=1), encoding="utf-8")
 
 
+# py4kids aio-001: the verifier takes its book roots from the registry (usaaio hard-coded
+# its two book ids), so the fixture repository registers both aio books.
+REGISTRY = (
+    "books_version: 2\nbooks:\n"
+    "  - {id: aio-ml, number: 4, root: aio-ml, depends_on: [], content_model: aio, aio_round: 1}\n"
+    "  - {id: aio-dl, number: 4, root: aio-dl, depends_on: [aio-ml], content_model: aio,"
+    " aio_round: 2}\n"
+)
+
+
 @pytest.fixture
 def repo(tmp_path):
     _write(tmp_path, BASE)
+    (tmp_path / "books.yaml").write_text(REGISTRY, encoding="utf-8")
+    (tmp_path / "aio-dl").mkdir(exist_ok=True)
     _git(tmp_path, "init", "-q", "-b", "main")
     _git(tmp_path, "-c", "user.name=t", "-c", "user.email=t@t", "add", ".")
     _git(tmp_path, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "base")

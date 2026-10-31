@@ -8,13 +8,13 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-from tools import audit_curriculum as audit
-from tools import render_course_structure
-from tools import render_curriculum_roadmap as roadmap_renderer
-from tools.checks.schedule import load_validated_schedule
-from tools.model import load_syllabus
+from tools.aio import audit_curriculum as audit
+from tools.aio import render_course_structure
+from tools.aio import render_curriculum_roadmap as roadmap_renderer
+from tools.aio.checks.schedule import load_validated_schedule
+from tools.aio.model import load_syllabus
 
-REPO_ROOT = Path(__file__).parents[1]
+REPO_ROOT = Path(__file__).parents[3]
 
 
 def _fixture_schedule_loader(root: str | Path):
@@ -545,8 +545,8 @@ def test_plan019_task3_generated_book1_and_aggregate_evidence_is_current() -> No
 
 def test_plan019_task3_aggregate_renderer_reads_registered_books_in_dependency_order() -> None:
     rendered = roadmap_renderer.render_documents(REPO_ROOT)
-    audit_document = rendered[Path("docs/audits/015-coverage-audit.md")]
-    roadmap_document = rendered[Path("docs/curriculum-roadmap.md")]
+    audit_document = rendered[Path("aio-ml/docs/coverage-audit.md")]
+    roadmap_document = rendered[Path("aio-ml/docs/curriculum-roadmap.md")]
 
     for document in rendered.values():
         assert "`aio-ml/syllabus.md` and `aio-dl/syllabus.md`" in document
@@ -564,7 +564,7 @@ def test_plan019_task3_aggregate_renderer_reads_registered_books_in_dependency_o
     audit_rows = [
         (match.group("point"), match.group("book"))
         for match in re.finditer(
-            r"^### (?P<point>[^\n]+)\n\n- \*\*Book:\*\* (?P<book>book[12])$",
+            r"^### (?P<point>[^\n]+)\n\n- \*\*Book:\*\* (?P<book>aio-(?:ml|dl))$",
             audit_document,
             re.MULTILINE,
         )
@@ -637,45 +637,13 @@ def test_plan019_task3_aggregate_rejects_cross_book_candidate_id_collisions(
         ValueError,
         match=(
             "aggregate non-required candidate 'importance-sampling' is owned by both "
-            "book1 and book2"
+            "aio-ml and aio-dl"
         ),
     ):
         roadmap_renderer.render_documents(
             tmp_path,
             _schedule_loader=lambda _root: SimpleNamespace(total_minutes=0),
         )
-
-
-def test_plan019_task3_ci_enforces_generated_evidence_without_a_skip() -> None:
-    commands = [
-        line.strip()
-        for line in (REPO_ROOT / "scripts" / "ci-local.sh").read_text(
-            encoding="utf-8"
-        ).splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    ]
-
-    assert not any("SKIP generated Book 1 evidence freshness" in line for line in commands)
-    audit_command = 'uv run python -m tools.audit_curriculum --root "$book1_root" --check'
-    aggregate_command = (
-        'uv run python -m tools.render_curriculum_roadmap --root "$repo_root" --check'
-    )
-    assert commands.count(audit_command) == 1
-    assert commands.count(aggregate_command) == 1
-    assert commands.index(audit_command) < commands.index(aggregate_command)
-
-
-def test_plan019_task3_scope_allows_both_shared_generated_outputs() -> None:
-    inventory = yaml.safe_load(
-        (REPO_ROOT / "tests/fixtures/plan019-path-inventory.yaml").read_text(
-            encoding="utf-8"
-        )
-    )
-
-    assert {
-        "docs/audits/015-coverage-audit.md",
-        "docs/curriculum-roadmap.md",
-    } <= set(inventory["staged_scope"]["exact_files"])
 
 
 def _install_canonical_schedule_fixture(

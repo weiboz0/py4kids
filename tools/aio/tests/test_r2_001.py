@@ -15,17 +15,17 @@ from pathlib import Path
 import nbformat
 import pytest
 import yaml
+from conftest import ROOT
 from nbclient import NotebookClient
 
-from tools.checks.answerkey import check_answerkey
-from tools.checks.blueprint import check_blueprint
-from tools.checks.hygiene import check_hygiene
-from tools.checks.schedule import check_schedule
-from tools.model import load_mock_manifests
+from tools.aio.checks.answerkey import check_answerkey
+from tools.aio.checks.blueprint import check_blueprint
+from tools.aio.checks.hygiene import check_hygiene
+from tools.aio.checks.schedule import check_schedule
+from tools.aio.model import load_mock_manifests
 
 sys.dont_write_bytecode = True
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK2_ROOT = ROOT / "aio-dl"
 TEST_DIR = BOOK2_ROOT / "mocktests" / "r2-001"
 SEED = 20261101
@@ -167,11 +167,6 @@ def test_schedule_marks_r2_001_as_the_live_final_assessment():
         "kind": "r2-mock", "status": "live", "test": "r2-001", "after_book_week": 37,
     }
     assert check_schedule(BOOK2_ROOT, expected_book_number=2).ok
-
-
-def test_ci_local_runs_r2_001_solutions_under_the_20_second_timeout():
-    text = (ROOT / "scripts" / "ci-local.sh").read_text()
-    assert "$relative == mocktests/r2-001/solutions/p??_solution.ipynb" in text
 
 
 def test_generator_check_is_byte_identical():

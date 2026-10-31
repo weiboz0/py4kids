@@ -272,9 +272,8 @@ def load_book_catalog(repo_root: str | Path) -> BookCatalog:
     root = Path(repo_root).resolve()
     registry_path = root / "books.yaml"
     raw = _load_yaml_mapping(registry_path, label="book registry")
-    missing_top = sorted(repr(key) for key in _REGISTRY_REQUIRED_KEYS - set(raw))
-    if missing_top:
-        raise ValueError(f"{registry_path}: book registry is missing {missing_top}")
+    # The registry's top level stays exact (py4kids books.yaml has only these two keys).
+    _require_exact_keys(raw, _REGISTRY_REQUIRED_KEYS, label=f"{registry_path}: book registry")
     if type(raw["books_version"]) is not int or raw["books_version"] != _REGISTRY_VERSION:
         raise ValueError(f"{registry_path}: books_version must be integer {_REGISTRY_VERSION}")
     records = raw["books"]

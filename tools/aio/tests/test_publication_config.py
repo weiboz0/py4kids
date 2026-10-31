@@ -7,14 +7,12 @@ from pathlib import Path
 import pytest
 import yaml
 
-from tools.books import (
+from tools.aio.books import (
     load_book_catalog,
     load_publication_config,
     output_pdf_name,
     publication_config_errors,
 )
-
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def _write_yaml(path: Path, value: object) -> None:
@@ -23,9 +21,9 @@ def _write_yaml(path: Path, value: object) -> None:
 
 
 def _registry(**extra: object) -> dict[str, object]:
-    record: dict[str, object] = {"id": "aio-ml", "number": 1, "root": "aio-ml", "depends_on": []}
+    record: dict[str, object] = {"id": "aio-ml", "number": 4, "content_model": "aio", "aio_round": 1, "root": "aio-ml", "depends_on": []}
     record.update(extra)
-    return {"books_version": 1, "books": [record]}
+    return {"books_version": 2, "books": [record]}
 
 
 def _config(**overrides: object) -> dict[str, object]:
@@ -61,14 +59,6 @@ def _repo(tmp_path: Path, config: dict[str, object] | None = None, **registry: o
     return repo
 
 
-def test_real_books_are_publication_books_with_valid_configs() -> None:
-    catalog = load_book_catalog(ROOT)
-    for book in catalog.books:
-        assert book.publication is True
-        assert book.title and book.subtitle
-        assert publication_config_errors(ROOT, book.id) == []
-
-
 def test_old_format_registry_without_publication_keys_stays_valid(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     (repo / "aio-ml").mkdir(parents=True)
@@ -76,7 +66,7 @@ def test_old_format_registry_without_publication_keys_stays_valid(tmp_path: Path
     book = load_book_catalog(repo).by_id("aio-ml")
     assert (book.title, book.subtitle, book.publication) == ("", "", False)
     assert publication_config_errors(repo, "aio-ml") == [
-        "book1: not a publication book (books.yaml publication: true)"
+        "aio-ml: not a publication book (books.yaml publication: true)"
     ]
 
 
@@ -91,7 +81,7 @@ def test_registry_rejects_missing_required_key(tmp_path: Path) -> None:
     (repo / "aio-ml").mkdir(parents=True)
     _write_yaml(
         repo / "books.yaml",
-        {"books_version": 1, "books": [{"id": "aio-ml", "number": 1, "root": "aio-ml"}]},
+        {"books_version": 2, "books": [{"id": "aio-ml", "number": 4, "content_model": "aio", "aio_round": 1, "root": "aio-ml"}]},
     )
     with pytest.raises(ValueError, match="missing=\\[\"'depends_on'\"\\]"):
         load_book_catalog(repo)

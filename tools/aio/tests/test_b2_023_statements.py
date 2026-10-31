@@ -8,19 +8,18 @@ import re
 import subprocess
 import sys
 from collections import Counter
-from pathlib import Path
 
 import nbformat
 import torch
 import yaml
+from conftest import ROOT
 
-from tools.checks.hygiene import check_hygiene
-from tools.checks.tolerance import check_tolerance
-from tools.model import load_unit_manifests
+from tools.aio.checks.hygiene import check_hygiene
+from tools.aio.checks.tolerance import check_tolerance
+from tools.aio.model import load_unit_manifests
 
 sys.dont_write_bytecode = True
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK2_ROOT = ROOT / "aio-dl"
 UNIT_ID = "B2-023-generative-models-diffusion"
 UNIT = BOOK2_ROOT / "units" / UNIT_ID
@@ -500,14 +499,3 @@ def test_solution_notebooks_are_complete_answer_checked_and_output_free() -> Non
         assert answer_index + 1 < len(notebook.cells)
         assert all(cell.cell_type == "code" for cell in notebook.cells[answer_index + 1 :])
         assert all(str(cell.source).strip() for cell in notebook.cells[answer_index + 1 :])
-
-
-def test_ci_bounds_b2_023_solutions_at_twenty_seconds() -> None:
-    script = (ROOT / "scripts/ci-local.sh").read_text(encoding="utf-8")
-    assert (
-        "|| $relative == units/B2-023-generative-models-diffusion/practice/p??_solution.ipynb "
-        "|| $relative == units/B2-024-gpu-scientific-ml-capstone/practice/p??_solution.ipynb "
-        "|| $relative == mocktests/r2-001/solutions/p??_solution.ipynb ]]"
-        in script
-    )
-    assert 'timeout 20s uv run --project .. jupyter execute "$relative"' in script

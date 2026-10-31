@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import ast
-import importlib.util
-import json
 import os
 import re
 import shlex
@@ -14,10 +12,21 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-import yaml
+from conftest import ROOT
 
-ROOT = Path(__file__).parents[1]
-INVENTORY = ROOT / "tests" / "fixtures" / "plan019-path-inventory.yaml"
+# The aio producers (design 014 D3: usaaio's tools/, scripts/ and tests/ live under tools/aio/,
+# scripts/aio/ and tools/aio/tests/ in py4kids). usaaio pinned the contract tests below (which
+# build their own repository-root fixtures) in the dropped plan019-path-inventory.yaml
+# (`task0_contract_tests`, minus the dropped test_reference_migration.py).
+AIO_PYTHON_PRODUCERS = ("tools/aio", "scripts/aio")
+AIO_SHELL_PRODUCERS = "scripts/aio"
+CONTRACT_TESTS = frozenset(
+    {
+        "tools/aio/tests/test_books.py",
+        "tools/aio/tests/test_book_isolation.py",
+        "tools/aio/tests/test_clean_checkout.py",
+    }
+)
 CONTENT_TOKENS = {
     "units",
     "curriculum",
@@ -30,154 +39,6 @@ CONTENT_TOKENS = {
 }
 
 
-def _inventory() -> dict[str, Any]:
-    return yaml.safe_load(INVENTORY.read_text(encoding="utf-8"))
-
-
-def _live_book1_path(historical: str) -> Path:
-    """A pre-Plan 019 `units/<old id>/...` path resolved in today's tree.
-
-    The inventory keeps historical paths; Plan 031 renamed the unit folders, so the live
-    path maps the old id through the renumbering table and resolves the folder by id.
-    """
-    from tools.books import unit_dir
-
-    parts = historical.split("/")
-    if parts[0] != "units":
-        return ROOT / "aio-ml" / historical
-    spec = importlib.util.spec_from_file_location(
-        "renumber_live_paths", ROOT / "scripts" / "renumber-aio-ml-units.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    folder = unit_dir(ROOT / "aio-ml", module.OLD_TO_NEW_ID[parts[1]])
-    return folder.joinpath(*parts[2:])
-
-
-def _notebook_pyproject_cells(path: Path) -> list[int]:
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    return [
-        index
-        for index, cell in enumerate(raw.get("cells", []))
-        if cell.get("cell_type") == "code" and "pyproject.toml" in "".join(cell.get("source", []))
-    ]
-
-
-def _discover_pyproject_notebooks(repo: Path) -> list[dict[str, object]]:
-    roots = (
-        (repo / "units", "units"),
-        (repo / "mocktests", "mocktests"),
-        (repo / "aio-ml" / "units", "units"),
-        (repo / "aio-ml" / "mocktests", "mocktests"),
-        (repo / "aio-dl" / "units", "aio-dl/units"),
-        (repo / "aio-dl" / "mocktests", "aio-dl/mocktests"),
-    )
-    rows: list[dict[str, object]] = []
-    for root, normalized_prefix in roots:
-        if not root.is_dir():
-            continue
-        for path in sorted(root.rglob("*.ipynb")):
-            if "build" in path.parts:
-                continue
-            cells = _notebook_pyproject_cells(path)
-            if cells:
-                relative = path.relative_to(root).as_posix()
-                rows.append({"path": f"{normalized_prefix}/{relative}", "cells": cells})
-    return sorted(rows, key=lambda row: str(row["path"]).encode())
-
-
-def test_path_inventory_pins_exactly_64_code_cell_pyproject_consumers() -> None:
-    rows = _inventory()["notebook_pyproject_discovery"]
-    assert len(rows) == 64
-    assert len({row["path"] for row in rows}) == 64
-
-    baseline_present = (ROOT / rows[0]["path"]).exists()
-    discovered = _discover_pyproject_notebooks(ROOT)
-    if baseline_present:
-        assert discovered == rows
-    else:
-        assert discovered == [], discovered
-        for row in rows:
-            migrated_path = _live_book1_path(row["path"])
-            assert migrated_path.is_file(), row["path"]
-            assert _notebook_pyproject_cells(migrated_path) == []
-
-
-def test_a_65th_unclassified_pyproject_notebook_is_discovered(tmp_path: Path) -> None:
-    rows = _inventory()["notebook_pyproject_discovery"]
-    for row in rows:
-        path = tmp_path / row["path"]
-        path.parent.mkdir(parents=True, exist_ok=True)
-        cell_count = max(row["cells"]) + 1
-        cells = [{"cell_type": "markdown", "source": ["fixture\n"]} for _ in range(cell_count)]
-        for index in row["cells"]:
-            cells[index] = {"cell_type": "code", "source": ["Path('pyproject.toml')\n"]}
-        path.write_text(json.dumps({"cells": cells}), encoding="utf-8")
-    extra = tmp_path / "units" / "C99-unclassified" / "lesson.ipynb"
-    extra.parent.mkdir(parents=True)
-    extra.write_text(
-        json.dumps({"cells": [{"cell_type": "code", "source": ["Path('pyproject.toml')\n"]}]}),
-        encoding="utf-8",
-    )
-
-    discovered = _discover_pyproject_notebooks(tmp_path)
-
-    assert len(discovered) == 65
-    assert discovered != rows
-    assert {row["path"] for row in discovered} - {row["path"] for row in rows} == {
-        "units/C99-unclassified/lesson.ipynb"
-    }
-
-
-def test_path_inventory_names_split_token_and_special_relative_consumers() -> None:
-    inventory = _inventory()
-    assert inventory["split_token_python_consumers"] == [
-        "tests/test_c8_solution_regressions.py",
-        "tests/test_c12_solution_regressions.py",
-        "tests/test_c12_statement_contracts.py",
-    ]
-    special = {row["path"]: row["cells"] for row in inventory["special_notebook_consumers"]}
-    assert special == {
-        "units/C4-classical-ml-practice/lessons/01-pandas-and-data-loading.ipynb": [22],
-        "mocktests/r1-001/problems/p09.ipynb": [3],
-        "mocktests/r1-001/solutions/p09_solution.ipynb": [2, 14],
-    }
-    expected_markers = {
-        "units/C4-classical-ml-practice/lessons/01-pandas-and-data-loading.ipynb": {
-            22: ("fallback: repo root", "units/C4-classical-ml-practice/practice/data")
-        },
-        "mocktests/r1-001/problems/p09.ipynb": {
-            3: ("../data/p09_train.csv", "mocktests/r1-001/data/p09_train.csv")
-        },
-        "mocktests/r1-001/solutions/p09_solution.ipynb": {
-            2: ("../data/p09_train.csv", "mocktests/r1-001/data/p09_train.csv"),
-            14: ("../data/gen_p09.py", "mocktests/r1-001/data/gen_p09.py"),
-        },
-    }
-    for relative, cells in expected_markers.items():
-        path = ROOT / relative
-        legacy = path.exists()
-        if not path.exists():
-            path = _live_book1_path(relative)
-        assert path.is_file(), relative
-        notebook = json.loads(path.read_text(encoding="utf-8"))
-        for index, markers in cells.items():
-            source = "".join(notebook["cells"][index]["source"])
-            if legacy:
-                assert all(marker in source for marker in markers), (relative, index)
-            else:
-                assert not any(marker in source for marker in markers[1:]), (relative, index)
-                assert "AIO_BOOK_ROOT" in source or "book_root" in source.lower(), (
-                    relative,
-                    index,
-                )
-    for relative in inventory["split_token_python_consumers"]:
-        path = ROOT / relative
-        assert path.is_file()
-        assert _python_path_consumers(path), relative
-
-
 def _looks_like_content_path(value: str) -> bool:
     normalized = value.replace("\\", "/")
     return any(
@@ -187,69 +48,6 @@ def _looks_like_content_path(value: str) -> bool:
         or normalized.endswith(f"/{token}")
         for token in CONTENT_TOKENS
     )
-
-
-def _python_path_consumers(path: Path) -> list[int]:
-    source = path.read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    parents = {child: node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
-    lines: set[int] = set()
-    for node in ast.walk(tree):
-        if not (
-            isinstance(node, ast.Constant)
-            and isinstance(node.value, str)
-            and _looks_like_content_path(node.value)
-        ):
-            continue
-        current: ast.AST | None = node
-        structural = False
-        for _ in range(6):
-            current = parents.get(current)
-            if current is None:
-                break
-            if isinstance(current, ast.BinOp) and isinstance(current.op, ast.Div):
-                structural = True
-            if isinstance(current, ast.Call):
-                function = current.func
-                name = (
-                    function.attr
-                    if isinstance(function, ast.Attribute)
-                    else function.id
-                    if isinstance(function, ast.Name)
-                    else ""
-                )
-                if name in {
-                    "Path",
-                    "joinpath",
-                    "glob",
-                    "rglob",
-                    "open",
-                    "read_text",
-                    "write_text",
-                    "mkdir",
-                }:
-                    structural = True
-        if structural:
-            lines.add(node.lineno)
-    return sorted(lines)
-
-
-def test_ast_inventory_fails_for_any_new_unclassified_python_consumer() -> None:
-    inventory = _inventory()
-    classified = set(inventory["python_consumers"]) | set(inventory["task0_contract_tests"])
-    discovered = {
-        path.relative_to(ROOT).as_posix()
-        for base in (ROOT / "tools", ROOT / "scripts", ROOT / "tests")
-        for path in base.rglob("*.py")
-        if _python_path_consumers(path)
-    }
-    assert discovered <= classified, sorted(discovered - classified)
-    # Before cutover the generated baseline list is exact.  After cutover the same
-    # files remain classified even though their joins become selected-book-local.
-    if (ROOT / "syllabus.md").exists():
-        assert discovered - set(inventory["task0_contract_tests"]) == set(
-            inventory["python_consumers"]
-        )
 
 
 def _invalid_root_accesses(source: str, *, language: str) -> list[str]:
@@ -685,7 +483,7 @@ def _actual_shell_root_accesses(path: Path) -> list[dict[str, object]]:
             r"\bfor\s+(?:dir|[A-Za-z_][A-Za-z0-9_]*)\s+in\s+units\s+mocktests\b"
         ),
         "hardcoded-repo-book-root": re.compile(
-            rf"{repository_root_reference}/book[12](?:[/\"'\s]|$)"
+            rf"{repository_root_reference}/aio-(?:ml|dl)(?:[/\"'\s]|$)"
         ),
     }
     violations: list[dict[str, object]] = []
@@ -708,24 +506,26 @@ def _actual_shell_root_accesses(path: Path) -> list[dict[str, object]]:
 
 def _actual_repository_root_accesses(
     repo: Path = ROOT,
+    *,
+    python_dirs: tuple[str, ...] = ("tools", "scripts", "tests"),
+    shell_dir: str = "scripts",
 ) -> dict[str, list[dict[str, object]]]:
     violations: dict[str, list[dict[str, object]]] = {}
-    contract_tests = set(_inventory()["task0_contract_tests"])
-    for base in (repo / "tools", repo / "scripts", repo / "tests"):
+    for base in (repo / name for name in python_dirs):
         if not base.is_dir():
             continue
         for path in sorted(base.rglob("*.py")):
             relative = path.relative_to(repo).as_posix()
-            if relative in contract_tests:
+            if relative in CONTRACT_TESTS:
                 continue
             rows = _actual_python_root_accesses(path)
-            if relative.startswith("tests/"):
+            if relative.startswith(("tests/", "tools/aio/tests/")):
                 rows = [
                     row for row in rows if row["kind"] != "hardcoded-repo-book-root"
                 ]
             if rows:
                 violations[relative] = rows
-    for path in sorted((repo / "scripts").rglob("*.sh")):
+    for path in sorted((repo / shell_dir).rglob("*.sh")):
         rows = _actual_shell_root_accesses(path)
         if rows:
             violations[path.relative_to(repo).as_posix()] = rows
@@ -780,7 +580,7 @@ def test_static_contract_allows_selected_book_local_joins() -> None:
         ),
         (
             "scripts/producer.sh",
-            'book_root="$repo_root/book1"\n',
+            'book_root="$repo_root/aio-ml"\n',
             1,
             "hardcoded-repo-book-root",
         ),
@@ -1361,14 +1161,11 @@ def test_actual_scanner_allows_spaced_bare_redirect_in_exact_git_command(
 
 
 def test_actual_producers_have_no_repository_root_content_access() -> None:
-    actual = _actual_repository_root_accesses()
-    expected_transition = _inventory()["repository_root_violations"]
-    if (ROOT / "syllabus.md").exists():
-        assert actual == expected_transition
-        pytest.fail(
-            "pre-cutover repository-root consumers remain and must be migrated atomically: "
-            + ", ".join(actual)
-        )
+    # usaaio's pre-cutover branch (a root syllabus.md compared against the dropped inventory's
+    # transition list) cannot arise here: test_atomic_cutover refuses every legacy root.
+    actual = _actual_repository_root_accesses(
+        ROOT, python_dirs=AIO_PYTHON_PRODUCERS, shell_dir=AIO_SHELL_PRODUCERS
+    )
     assert actual == {}, actual
 
 
@@ -1458,115 +1255,123 @@ def test_book_local_generated_paths_are_ignored_without_ignoring_sources(
         assert proc.returncode == 1, relative
 
 
-def _solution_notebook(book: str) -> str:
-    return json.dumps(
-        {
-            "cells": [
-                {
-                    "cell_type": "code",
-                    "execution_count": None,
-                    "metadata": {},
-                    "outputs": [],
-                    "source": [
-                        "import os\n",
-                        "from pathlib import Path\n",
-                        "with Path(os.environ['VERIFY_TRACE']).open('a') as trace:\n",
-                        "    trace.write('solution:' + os.environ['NOTEBOOK_PATH'] + '\\n')\n",
-                    ],
-                }
-            ],
-            "metadata": {},
-            "nbformat": 4,
-            "nbformat_minor": 5,
-        }
-    )
+
+
+# --- scripts/aio/verify-clean-checkout.sh (plan aio-001 Phase D / F.2) ---------------------
+# usaaio's verifier archived HEAD and ran its own ci-local (PDF builds and every solution) in the
+# archive. The py4kids rewrite clones HEAD into a fresh directory, provisions step B into the
+# clone from outside it, runs ci-local there and then requires every provisioned file to be
+# ignored and untracked. These tests drive the real script against a fixture repository whose
+# provisioning and CI are stubs that record a trace and check what they can see.
+
+_FIXTURE_GITIGNORE = """\
+__pycache__/
+aio-*/reference/*
+!aio-*/reference/.gitkeep
+!aio-*/reference/analysis.md
+"""
+
+_STUB_FETCH = """\
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $1 == --root && $3 == --all ]]
+root=$2
+printf 'fetch:%s\\n' "$root" >> "$VERIFY_TRACE"
+for book in aio-ml aio-dl; do
+  mkdir -p "$root/$book/reference/2026"
+  printf '%s\\n' '%PDF-1.4 fixture paper' > "$root/$book/reference/2026/paper.pdf"
+done
+"""
+
+_STUB_PROVISION = """\
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $1 == --root ]]
+root=$2
+printf 'provision:%s\\n' "$root" >> "$VERIFY_TRACE"
+mkdir -p "$root/aio-ml/reference/cache"
+printf 'artifact\\n' > "$root/aio-ml/reference/cache/artifact.bin"
+"""
+
+_STUB_CI = """\
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $PWD == "$CLONE" ]]
+[[ $TMPDIR == /dev/shm ]]
+[[ ! -e UNTRACKED_WORKTREE_SENTINEL ]]
+[[ $(cat TRACKED_HEAD_SENTINEL) == "committed bytes" ]]
+[[ -s aio-ml/reference/cache/artifact.bin ]]
+for book in aio-ml aio-dl; do
+  [[ -s "$book/reference/2026/paper.pdf" ]]
+done
+printf 'ci:%s\\n' "$PWD" >> "$VERIFY_TRACE"
+"""
+
+# The verifier lists the aio roots with `uv run --frozen python -` and py4kids' tools/books.py
+# (copied into the fixture). This stub `uv` runs that interpreter directly, so no environment
+# is synced into the fixture.
+_STUB_UV = """\
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $1 == run && $2 == --frozen && $3 == python ]]
+shift 3
+exec "$TEST_PYTHON" "$@"
+"""
+
+
+def _git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, check=True)
+
+
+def _write_executable(path: Path, source: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(source, encoding="utf-8")
+    path.chmod(0o755)
 
 
 def _clean_checkout_fixture(
     tmp_path: Path,
     *,
     verifier_mutator: Callable[[str], str] | None = None,
-    ci_mutator: Callable[[str], str] | None = None,
-    build_mutator: Callable[[str], str] | None = None,
-) -> tuple[Path, Path]:
+    fetch_source: str = _STUB_FETCH,
+    provision_source: str = _STUB_PROVISION,
+    ci_source: str = _STUB_CI,
+    gitignore: str = _FIXTURE_GITIGNORE,
+) -> Path:
     repo = tmp_path / "clean-repo"
     repo.mkdir()
     _git(repo, "init", "-b", "main")
     _git(repo, "config", "user.email", "test@example.com")
     _git(repo, "config", "user.name", "Test")
-    source_verifier = ROOT / "scripts" / "verify-clean-checkout.sh"
-    assert source_verifier.is_file(), "scripts/verify-clean-checkout.sh is the missing producer"
-    verifier = repo / "scripts" / "verify-clean-checkout.sh"
-    verifier.parent.mkdir(parents=True)
+    source_verifier = ROOT / "scripts" / "aio" / "verify-clean-checkout.sh"
+    assert source_verifier.is_file(), "scripts/aio/verify-clean-checkout.sh is the missing producer"
     verifier_source = source_verifier.read_text(encoding="utf-8")
     if verifier_mutator is not None:
         verifier_source = verifier_mutator(verifier_source)
-    verifier.write_text(verifier_source, encoding="utf-8")
-    verifier.chmod(0o755)
+    _write_executable(repo / "scripts" / "aio" / "verify-clean-checkout.sh", verifier_source)
+    _write_executable(repo / "scripts" / "aio" / "fetch-reference.sh", fetch_source)
+    _write_executable(repo / "scripts" / "aio" / "aio-provision-cache.sh", provision_source)
+    _write_executable(repo / "scripts" / "ci-local.sh", ci_source)
+    (repo / "tools").mkdir()
+    for name in ("__init__.py", "books.py"):
+        shutil.copy2(ROOT / "tools" / name, repo / "tools" / name)
     (repo / "books.yaml").write_text(
-        "books_version: 1\n"
+        "books_version: 2\n"
         "books:\n"
-        "  - {id: book1, number: 1, root: book1, depends_on: []}\n"
-        "  - {id: book2, number: 2, root: book2, depends_on: [book1]}\n",
+        "  - {id: python-projects, number: 1, root: python-projects, depends_on: []}\n"
+        "  - {id: aio-ml, number: 4, root: aio-ml, depends_on: [], content_model: aio,"
+        " aio_round: 1}\n"
+        "  - {id: aio-dl, number: 4, root: aio-dl, depends_on: [aio-ml], content_model: aio,"
+        " aio_round: 2}\n",
         encoding="utf-8",
     )
-    (repo / "pyproject.toml").write_text(
-        "[project]\nname = 'clean-checkout-fixture'\nversion = '0.0.0'\n",
-        encoding="utf-8",
-    )
-    ci_source = """#!/usr/bin/env bash
-set -euo pipefail
-[[ ! -d .git ]]
-[[ ! -e UNTRACKED_WORKTREE_SENTINEL ]]
-[[ $(cat TRACKED_HEAD_SENTINEL) == "committed bytes" ]]
-printf 'archive:no-git\\nci:archive-local\\n' >> "$VERIFY_TRACE"
-BOOKS=(book1 book2)
-for book in "${BOOKS[@]}"; do
-  [[ -d "$book" ]]
-  printf 'book:%s\\n' "$book" >> "$VERIFY_TRACE"
-  bash scripts/build-pdf.sh "$book"
-  [[ -s "$book/build/student.pdf" ]]
-done
-mapfile -t solutions < <(find book1 book2 -type f -name '*_solution.ipynb' | LC_ALL=C sort)
-[[ ${#solutions[@]} -eq 2 ]]
-for notebook in "${solutions[@]}"; do
-  NOTEBOOK_PATH="$notebook" "$TEST_PYTHON" - "$notebook" <<'PY'
-import json
-import sys
-
-namespace = {}
-raw = json.load(open(sys.argv[1], encoding="utf-8"))
-for cell in raw["cells"]:
-    if cell["cell_type"] == "code":
-        exec("".join(cell["source"]), namespace)
-PY
-done
-"""
-    if ci_mutator is not None:
-        ci_source = ci_mutator(ci_source)
-    ci = repo / "scripts" / "ci-local.sh"
-    ci.write_text(ci_source, encoding="utf-8")
-    ci.chmod(0o755)
-    build_source = (
-        "#!/usr/bin/env bash\n"
-        "set -euo pipefail\n"
-        "book=$1\n"
-        'mkdir -p "$book/build"\n'
-        "printf '%s\\n' '%PDF-1.4 fixture' > \"$book/build/student.pdf\"\n"
-        'printf \'pdf:%s\\n\' "$book" >> "$VERIFY_TRACE"\n'
-    )
-    if build_mutator is not None:
-        build_source = build_mutator(build_source)
-    build = repo / "scripts" / "build-pdf.sh"
-    build.write_text(build_source, encoding="utf-8")
-    build.chmod(0o755)
+    (repo / ".gitignore").write_text(gitignore, encoding="utf-8")
     for book in ("aio-ml", "aio-dl"):
-        solution = repo / book / "units" / f"{book}-unit" / "practice" / "p01_solution.ipynb"
-        solution.parent.mkdir(parents=True)
-        solution.write_text(_solution_notebook(book), encoding="utf-8")
-        cache = repo / book / "reference"
-        cache.mkdir(parents=True)
-    (repo / "aio-ml" / "reference" / "cache").mkdir()
+        (repo / book / "reference").mkdir(parents=True)
+        (repo / book / "reference" / ".gitkeep").write_text("", encoding="utf-8")
+        (repo / book / "reference" / "analysis.md").write_text("# Analysis\n", encoding="utf-8")
+    (repo / "python-projects" / "reference").mkdir(parents=True)
+    (repo / "python-projects" / "reference" / "notes.md").write_text("py4kids\n", encoding="utf-8")
     tracked_sentinel = repo / "TRACKED_HEAD_SENTINEL"
     tracked_sentinel.write_text("committed bytes\n", encoding="utf-8")
     _git(repo, "add", ".")
@@ -1574,711 +1379,222 @@ done
     tracked_sentinel.write_text("dirty staged bytes\n", encoding="utf-8")
     _git(repo, "add", tracked_sentinel.name)
     (repo / "UNTRACKED_WORKTREE_SENTINEL").write_text(
-        "must not enter the tracked-HEAD archive\n", encoding="utf-8"
+        "must not enter the clone\n", encoding="utf-8"
     )
-    return repo, tmp_path / "trace.log"
+    return repo
 
 
-def _run_clean_checkout_fixture(repo: Path, trace: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        ["bash", "scripts/verify-clean-checkout.sh"],
-        cwd=repo,
-        env={
-            **os.environ,
+def _run_clean_checkout(
+    tmp_path: Path, repo: Path, **extra_env: str
+) -> tuple[subprocess.CompletedProcess[str], list[str], Path]:
+    parent = tmp_path / "shm"
+    parent.mkdir(exist_ok=True)
+    fake_bin = tmp_path / "fake-bin"
+    _write_executable(fake_bin / "uv", _STUB_UV)
+    trace = tmp_path / "trace.log"
+    trace.write_text("", encoding="utf-8")
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.startswith(("GIT_", "AIO_CLEAN_CHECKOUT_", "AIO_REFERENCE_SOURCE"))
+    }
+    env.update(
+        {
+            "PATH": f"{fake_bin}:{env['PATH']}",
             "TEST_PYTHON": sys.executable,
             "VERIFY_TRACE": str(trace),
-            "AIO_REFERENCE_CACHE": str(repo / "aio-ml/reference/cache"),
-        },
-        capture_output=True,
-        text=True,
-        check=False,
+            "AIO_CLEAN_CHECKOUT_PARENT": str(parent),
+            **extra_env,
+        }
     )
-
-
-def _assert_complete_clean_checkout_trace(
-    proc: subprocess.CompletedProcess[str], trace: Path
-) -> None:
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    lines = trace.read_text(encoding="utf-8").splitlines()
-    assert lines.count("archive:no-git") == 1
-    assert lines.count("ci:archive-local") == 1
-    assert {line for line in lines if line.startswith("book:")} == {
-        "book:book1",
-        "book:book2",
-    }
-    assert {line for line in lines if line.startswith("pdf:")} == {
-        "pdf:book1",
-        "pdf:book2",
-    }
-    assert {line for line in lines if line.startswith("solution:")} == {
-        "solution:aio-ml/units/aio-ml-unit/practice/p01_solution.ipynb",
-        "solution:aio-dl/units/aio-dl-unit/practice/p01_solution.ipynb",
-    }
-
-
-def test_clean_checkout_verifier_executes_archive_local_ci_pdfs_and_all_solutions(
-    tmp_path: Path,
-) -> None:
-    repo, trace = _clean_checkout_fixture(tmp_path)
-
-    proc = _run_clean_checkout_fixture(repo, trace)
-
-    _assert_complete_clean_checkout_trace(proc, trace)
-
-
-def _comment_out_ci_invocation(source: str) -> str:
-    lines = source.splitlines(keepends=True)
-    mutated = [
-        f"# mutation removed CI: {line}"
-        if "ci-local.sh" in line and line.strip() and not line.lstrip().startswith("#")
-        else line
-        for line in lines
-    ]
-    assert mutated != lines, "fixture could not locate the archive-local CI invocation"
-    return "".join(mutated)
-
-
-def _replace_with_worktree_copy_verifier(_source: str) -> str:
-    return """#!/usr/bin/env bash
-set -euo pipefail
-archive_dir=$(mktemp -d)
-trap 'rm -rf "$archive_dir"' EXIT
-cp -a . "$archive_dir/repo"
-rm -rf "$archive_dir/repo/.git"
-cd "$archive_dir/repo"
-bash scripts/ci-local.sh
-"""
-
-
-def _replace_with_tracked_worktree_copy_verifier(_source: str) -> str:
-    return """#!/usr/bin/env bash
-set -euo pipefail
-archive_dir=$(mktemp -d)
-trap 'rm -rf "$archive_dir"' EXIT
-git ls-files -z | tar --null -T - -cf - | tar -x -C "$archive_dir"
-cd "$archive_dir"
-bash scripts/ci-local.sh
-"""
-
-
-def _replace_pdf_output_with_empty_file(source: str) -> str:
-    mutated = source.replace(
-        "printf '%s\\n' '%PDF-1.4 fixture' > \"$book/build/student.pdf\"",
-        'touch "$book/build/student.pdf"',
-    )
-    assert mutated != source, "fixture could not locate the nonempty PDF write"
-    return mutated
-
-
-@pytest.mark.parametrize(
-    ("verifier_mutator", "ci_mutator", "build_mutator"),
-    [
-        pytest.param(_comment_out_ci_invocation, None, None, id="comment-only-verifier"),
-        pytest.param(
-            _replace_with_worktree_copy_verifier,
-            None,
-            None,
-            id="worktree-copy-leaks-untracked-sentinel",
-        ),
-        pytest.param(
-            _replace_with_tracked_worktree_copy_verifier,
-            None,
-            None,
-            id="tracked-worktree-copy-leaks-staged-sentinel",
-        ),
-        pytest.param(
-            None,
-            lambda source: source.replace("BOOKS=(book1 book2)", "BOOKS=(book1)"),
-            None,
-            id="omitted-book",
-        ),
-        pytest.param(
-            None,
-            lambda source: source.replace("find book1 book2 -type f", "find book1 -type f").replace(
-                "[[ ${#solutions[@]} -eq 2 ]]", "[[ ${#solutions[@]} -eq 1 ]]"
-            ),
-            None,
-            id="omitted-solution",
-        ),
-        pytest.param(
-            None,
-            None,
-            _replace_pdf_output_with_empty_file,
-            id="zero-byte-pdf",
-        ),
-    ],
-)
-def test_clean_checkout_adversarial_noop_and_omission_mutations_fail(
-    tmp_path: Path,
-    verifier_mutator: Callable[[str], str] | None,
-    ci_mutator: Callable[[str], str] | None,
-    build_mutator: Callable[[str], str] | None,
-) -> None:
-    repo, trace = _clean_checkout_fixture(
-        tmp_path,
-        verifier_mutator=verifier_mutator,
-        ci_mutator=ci_mutator,
-        build_mutator=build_mutator,
-    )
-
-    proc = _run_clean_checkout_fixture(repo, trace)
-
-    with pytest.raises((AssertionError, FileNotFoundError)):
-        _assert_complete_clean_checkout_trace(proc, trace)
-
-
-def _git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, check=True)
-
-
-def _ci_guard_fixture(repo: Path, *, initialize_git: bool = False) -> tuple[Path, Path]:
-    (repo / "scripts").mkdir(parents=True)
-    (repo / "aio-ml" / "units").mkdir(parents=True)
-    (repo / "aio-ml" / "mocktests").mkdir()
-    (repo / "aio-dl" / "units").mkdir(parents=True)
-    (repo / "aio-dl" / "mocktests").mkdir()
-    shutil.copy2(ROOT / "scripts" / "ci-local.sh", repo / "scripts" / "ci-local.sh")
-    build = repo / "scripts" / "build-pdf.sh"
-    build.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
-    build.chmod(0o755)
-    guard = repo / "scripts" / "pre-merge-guard.sh"
-    guard.write_text(
-        "#!/usr/bin/env bash\n"
-        "if compgen -e | grep -q '^GIT_'; then\n"
-        "  printf 'poisoned-git-environment\\n' >> \"$GUARD_TRACE\"\n"
-        "  exit 91\n"
-        "fi\n"
-        "printf 'guard-invoked\\n' >> \"$GUARD_TRACE\"\n"
-        "exit \"${GUARD_EXIT:-0}\"\n",
-        encoding="utf-8",
-    )
-    guard.chmod(0o755)
-    fake_bin = repo / "fake-bin"
-    fake_bin.mkdir()
-    uv = fake_bin / "uv"
-    uv.write_text(
-        "#!/usr/bin/env bash\n"
-        "if [[ \" $* \" == *\" --project \"*\" python - \"* ]]; then\n"
-        "  printf 'book1\\t1\\t%s/book1\\n' \"$PWD\"\n"
-        "  printf 'book2\\t2\\t%s/book2\\n' \"$PWD\"\n"
-        "fi\n",
-        encoding="utf-8",
-    )
-    uv.chmod(0o755)
-    trace = repo / "guard.trace"
-    if initialize_git:
-        _git(repo, "init", "-b", "main")
-    return fake_bin, trace
-
-
-def _run_ci_guard_fixture(
-    repo: Path,
-    fake_bin: Path,
-    trace: Path,
-    *,
-    guard_exit: int = 0,
-    extra_env: dict[str, str] | None = None,
-    args: tuple[str, ...] = (),
-    cwd: Path | None = None,
-) -> subprocess.CompletedProcess[str]:
-    env = {
-        **os.environ,
-        "PATH": f"{fake_bin}:{os.environ['PATH']}",
-        "GUARD_TRACE": str(trace),
-        "GUARD_EXIT": str(guard_exit),
-        **(extra_env or {}),
-    }
-    return subprocess.run(
-        ["bash", str(repo / "scripts" / "ci-local.sh"), *args],
-        cwd=cwd or repo,
+    proc = subprocess.run(
+        ["bash", "scripts/aio/verify-clean-checkout.sh"],
+        cwd=repo,
         env=env,
         capture_output=True,
         text=True,
         check=False,
     )
+    return proc, trace.read_text(encoding="utf-8").splitlines(), parent
 
 
-def test_ci_invokes_pre_merge_guard_exactly_once_in_git_checkout(tmp_path: Path) -> None:
-    repo = tmp_path / "repo"
-    fake_bin, trace = _ci_guard_fixture(repo, initialize_git=True)
-
-    proc = _run_ci_guard_fixture(repo, fake_bin, trace)
-
+def _assert_complete_clean_checkout(
+    proc: subprocess.CompletedProcess[str], lines: list[str], parent: Path
+) -> None:
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert trace.read_text(encoding="utf-8").splitlines() == ["guard-invoked"]
-    assert "SKIP pre-merge-guard" not in proc.stdout
-    assert "ci-local: ALL GREEN" in proc.stdout
+    assert [line.split(":", 1)[0] for line in lines] == ["fetch", "provision", "ci"], lines
+    clones = {line.split(":", 1)[1] for line in lines}
+    assert len(clones) == 1, lines
+    clone = Path(clones.pop())
+    assert clone.parent == parent
+    assert clone.name.startswith("aio-clean-checkout.")
+    assert not clone.exists(), "the clone is removed unless AIO_CLEAN_CHECKOUT_KEEP=1"
+    assert "3 provisioned file(s)" in proc.stdout
+    assert "PASS verify-clean-checkout" in proc.stdout
 
 
-def test_ci_relative_root_still_invokes_guard_in_git_checkout(tmp_path: Path) -> None:
-    repo = tmp_path / "repo"
-    fake_bin, trace = _ci_guard_fixture(repo, initialize_git=True)
-
-    proc = _run_ci_guard_fixture(
-        repo,
-        fake_bin,
-        trace,
-        args=("--root", repo.name),
-        cwd=repo.parent,
-    )
-
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert trace.read_text(encoding="utf-8").splitlines() == ["guard-invoked"]
-    assert "SKIP pre-merge-guard" not in proc.stdout
-    assert "ci-local: ALL GREEN" in proc.stdout
-
-
-def test_ci_historyless_archive_skips_only_pre_merge_guard(tmp_path: Path) -> None:
-    repo = tmp_path / "repo"
-    fake_bin, trace = _ci_guard_fixture(repo)
-
-    proc = _run_ci_guard_fixture(repo, fake_bin, trace)
-
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert not trace.exists()
-    assert proc.stdout.count(
-        "SKIP pre-merge-guard: Git work tree unavailable in clean archive"
-    ) == 1
-    assert "ci-local: ALL GREEN" in proc.stdout
-
-
-def test_ci_historyless_mode_ignores_unrelated_parent_git_repository(
+def test_clean_checkout_verifier_clones_provisions_into_the_clone_and_runs_ci(
     tmp_path: Path,
 ) -> None:
-    parent = tmp_path / "parent"
-    parent.mkdir()
-    _git(parent, "init", "-b", "main")
-    repo = parent / "archive"
-    fake_bin, trace = _ci_guard_fixture(repo)
+    repo = _clean_checkout_fixture(tmp_path)
 
-    proc = _run_ci_guard_fixture(repo, fake_bin, trace)
+    proc, lines, parent = _run_clean_checkout(tmp_path, repo)
+
+    _assert_complete_clean_checkout(proc, lines, parent)
+    assert not any((repo / book / "reference" / "2026").exists() for book in ("aio-ml", "aio-dl"))
+
+
+def test_clean_checkout_keep_leaves_a_clone_with_only_ignored_provisioned_files(
+    tmp_path: Path,
+) -> None:
+    repo = _clean_checkout_fixture(tmp_path)
+
+    proc, lines, _ = _run_clean_checkout(tmp_path, repo, AIO_CLEAN_CHECKOUT_KEEP="1")
 
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert not trace.exists()
-    assert proc.stdout.count(
-        "SKIP pre-merge-guard: Git work tree unavailable in clean archive"
-    ) == 1
-    assert "ci-local: ALL GREEN" in proc.stdout
-
-
-def test_ci_corrupt_root_git_metadata_fails_instead_of_skipping(tmp_path: Path) -> None:
-    repo = tmp_path / "repo"
-    fake_bin, trace = _ci_guard_fixture(repo)
-    (repo / ".git").write_text("gitdir: missing-git-directory\n", encoding="utf-8")
-
-    proc = _run_ci_guard_fixture(repo, fake_bin, trace)
-
-    assert proc.returncode != 0
-    assert not trace.exists()
-    assert "FAIL: Git metadata at repository root is unusable" in proc.stderr
-    assert "SKIP pre-merge-guard" not in proc.stdout
-    assert "ci-local: ALL GREEN" not in proc.stdout
-
-
-def test_ci_partial_root_git_metadata_under_parent_repo_fails_loudly(
-    tmp_path: Path,
-) -> None:
-    parent = tmp_path / "parent"
-    parent.mkdir()
-    _git(parent, "init", "-b", "main")
-    repo = parent / "archive"
-    fake_bin, trace = _ci_guard_fixture(repo)
-    (repo / ".git").mkdir()
-
-    proc = _run_ci_guard_fixture(repo, fake_bin, trace)
-
-    assert proc.returncode != 0
-    assert not trace.exists()
-    assert "FAIL: Git metadata at repository root is unusable" in proc.stderr
-    assert "SKIP pre-merge-guard" not in proc.stdout
-    assert "ci-local: ALL GREEN" not in proc.stdout
-
-
-def test_ci_pre_merge_guard_failure_remains_blocking_with_git_metadata(
-    tmp_path: Path,
-) -> None:
-    repo = tmp_path / "repo"
-    fake_bin, trace = _ci_guard_fixture(repo, initialize_git=True)
-
-    proc = _run_ci_guard_fixture(repo, fake_bin, trace, guard_exit=17)
-
-    assert proc.returncode == 17
-    assert trace.read_text(encoding="utf-8").splitlines() == ["guard-invoked"]
-    assert "SKIP pre-merge-guard" not in proc.stdout
-    assert "ci-local: ALL GREEN" not in proc.stdout
-
-
-def test_ci_scrubs_repository_environment_before_probe_and_guard(
-    tmp_path: Path,
-) -> None:
-    repo = tmp_path / "repo"
-    fake_bin, trace = _ci_guard_fixture(repo, initialize_git=True)
-
-    proc = _run_ci_guard_fixture(
-        repo,
-        fake_bin,
-        trace,
-        extra_env={
-            "GIT_DIR": "/nonexistent/poisoned-git-dir",
-            "GIT_WORK_TREE": "/nonexistent/poisoned-work-tree",
-            "GIT_INDEX_FILE": "/nonexistent/poisoned-index",
-            "GIT_OBJECT_DIRECTORY": "/nonexistent/poisoned-objects",
-            "GIT_COMMON_DIR": "/nonexistent/poisoned-common-dir",
-            "GIT_ALTERNATE_OBJECT_DIRECTORIES": "/nonexistent/poisoned-alternates",
-            "GIT_CONFIG_COUNT": "1",
-            "GIT_CONFIG_KEY_0": "core.worktree",
-            "GIT_CONFIG_VALUE_0": "/nonexistent/poisoned-config-work-tree",
-            "GIT_CEILING_DIRECTORIES": str(repo.parent),
-        },
-    )
-
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert trace.read_text(encoding="utf-8").splitlines() == ["guard-invoked"]
-    assert "SKIP pre-merge-guard" not in proc.stdout
-
-
-def _init_scope_repo(tmp_path: Path) -> Path:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    token = repo / "units" / "C8-embeddings" / "lessons" / "01-tokens-and-embeddings.ipynb"
-    token.parent.mkdir(parents=True)
-    token.write_text(
-        json.dumps(
-            {
-                "cells": [
-                    {"cell_type": "markdown", "source": ["# Tokens\n"]},
-                    {
-                        "cell_type": "code",
-                        "source": [
-                            "from pathlib import Path\n",
-                            "ROOT = next(p for p in Path.cwd().parents if (p / 'pyproject.toml').exists())\n",
-                        ],
-                    },
-                    {"cell_type": "markdown", "source": ["unchanged teaching body\n"]},
-                ],
-                "metadata": {},
-                "nbformat": 4,
-                "nbformat_minor": 5,
-            }
-        ),
-        encoding="utf-8",
-    )
-    existing_token = repo / "tests" / "token-policy.md"
-    existing_token.parent.mkdir(parents=True)
-    existing_token.write_text("pre-existing token path\n", encoding="utf-8")
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "base")
-    return repo
-
-
-def _install_scope_verifier(repo: Path) -> Path:
-    source = ROOT / "scripts" / "verify-staged-scope.py"
-    assert source.is_file(), "scripts/verify-staged-scope.py is the missing producer"
-    target = repo / "scripts" / source.name
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source, target)
-    return target
-
-
-def _scope_proc(repo: Path, mode: str) -> subprocess.CompletedProcess[str]:
-    script = _install_scope_verifier(repo)
-    return subprocess.run(
-        [sys.executable, str(script), mode, str(INVENTORY)],
-        cwd=repo,
+    clone = Path(lines[-1].split(":", 1)[1])
+    status = subprocess.run(
+        ["git", "-C", str(clone), "status", "--porcelain", "--ignored"],
         capture_output=True,
         text=True,
-        check=False,
-    )
+        check=True,
+    ).stdout.splitlines()
+    assert sorted(line for line in status if "__pycache__" not in line) == [
+        "!! aio-dl/reference/2026/",
+        "!! aio-ml/reference/2026/",
+        "!! aio-ml/reference/cache/",
+    ]
+    head = _git(clone, "rev-parse", "HEAD").stdout
+    assert head == _git(repo, "rev-parse", "HEAD").stdout
 
 
-def test_staged_scope_aborts_on_unrelated_notes_before_staging(tmp_path: Path) -> None:
-    repo = _init_scope_repo(tmp_path)
-    (repo / "notes.md").write_text("unrelated\n", encoding="utf-8")
-
-    proc = _scope_proc(repo, "--preflight")
-
-    assert proc.returncode != 0
-    assert "notes.md" in proc.stdout + proc.stderr
-    assert _git(repo, "diff", "--cached", "--name-only").stdout == ""
-
-
-def test_staged_scope_preflight_accepts_inventoried_top_level_rename(
+def test_clean_checkout_reference_source_copies_each_aio_root_instead_of_fetching(
     tmp_path: Path,
 ) -> None:
-    repo = _init_scope_repo(tmp_path)
-    syllabus = repo / "syllabus.md"
-    syllabus.write_text("legacy syllabus\n", encoding="utf-8")
-    _git(repo, "add", "syllabus.md")
-    _git(repo, "commit", "-m", "add legacy syllabus")
-    (repo / "aio-ml").mkdir(exist_ok=True)
-    _git(repo, "mv", "syllabus.md", "aio-ml/syllabus.md")
+    repo = _clean_checkout_fixture(tmp_path)
+    source = tmp_path / "corpus"
+    for book in ("aio-ml", "aio-dl"):
+        paper = source / book / "reference" / "2026" / "paper.pdf"
+        paper.parent.mkdir(parents=True)
+        paper.write_text("%PDF-1.4 local corpus\n", encoding="utf-8")
+    (source / "aio-ml" / "reference" / "r1-2026").mkdir()
+    (source / "aio-ml" / "reference" / "r1-2026" / "index.yaml").write_text(
+        "parts: []\n", encoding="utf-8"
+    )
+    stray = source / "python-projects" / "reference" / "stray.pdf"
+    stray.parent.mkdir(parents=True)
+    stray.write_text("not an aio root\n", encoding="utf-8")
 
-    proc = _scope_proc(repo, "--preflight")
+    proc, lines, _ = _run_clean_checkout(
+        tmp_path, repo, AIO_REFERENCE_SOURCE=str(source), AIO_CLEAN_CHECKOUT_KEEP="1"
+    )
 
     assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert [line.split(":", 1)[0] for line in lines] == ["provision", "ci"], lines
+    clone = Path(lines[-1].split(":", 1)[1])
+    assert (clone / "aio-ml/reference/r1-2026/index.yaml").is_file()
+    assert (clone / "aio-dl/reference/2026/paper.pdf").read_text() == "%PDF-1.4 local corpus\n"
+    assert not (clone / "python-projects/reference/stray.pdf").exists()
+    assert "4 provisioned file(s)" in proc.stdout
+
+
+def test_clean_checkout_reference_source_without_a_book_reference_fails_closed(
+    tmp_path: Path,
+) -> None:
+    repo = _clean_checkout_fixture(tmp_path)
+    source = tmp_path / "corpus"
+    (source / "aio-ml" / "reference").mkdir(parents=True)
+
+    proc, lines, _ = _run_clean_checkout(tmp_path, repo, AIO_REFERENCE_SOURCE=str(source))
+
+    assert proc.returncode != 0
+    assert "AIO_REFERENCE_SOURCE has no aio-dl/reference/" in proc.stderr
+    assert not any(line.startswith("ci:") for line in lines)
+
+
+def _comment_out(marker: str) -> Callable[[str], str]:
+    def mutate(source: str) -> str:
+        lines = source.splitlines(keepends=True)
+        mutated = [
+            f"# mutation removed: {line}"
+            if marker in line and line.strip() and not line.lstrip().startswith("#")
+            else line
+            for line in lines
+        ]
+        assert mutated != lines, f"fixture could not locate {marker!r}"
+        return "".join(mutated)
+
+    return mutate
+
+
+def _replace_with_worktree_copy_verifier(_source: str) -> str:
+    return """#!/usr/bin/env bash
+set -euo pipefail
+export CLONE=$(mktemp -d "$AIO_CLEAN_CHECKOUT_PARENT/aio-clean-checkout.XXXXXX")
+cp -a . "$CLONE"
+bash "$CLONE/scripts/aio/fetch-reference.sh" --root "$CLONE" --all
+bash "$CLONE/scripts/aio/aio-provision-cache.sh" --root "$CLONE"
+(cd "$CLONE" && TMPDIR=/dev/shm bash scripts/ci-local.sh)
+echo "3 provisioned file(s)"
+echo "PASS verify-clean-checkout"
+rm -rf "$CLONE"
+"""
 
 
 @pytest.mark.parametrize(
-    ("relative", "category"),
+    ("fixture_kwargs", "message"),
     [
-        ("tests/new-token-notes.md", "token"),
-        ("tests/.env.local", "env"),
-        ("tests/api-secret.md", "secret"),
-        ("tests/credential.txt", "credential"),
+        pytest.param(
+            {"verifier_mutator": _comment_out('bash -c "$ci_cmd"')},
+            None,
+            id="comment-only-verifier-skips-ci",
+        ),
+        pytest.param(
+            {"verifier_mutator": _comment_out('fetch-reference.sh" --root')},
+            None,
+            id="verifier-skips-fetch",
+        ),
+        pytest.param(
+            {"verifier_mutator": _comment_out('aio-provision-cache.sh" --root')},
+            None,
+            id="verifier-skips-provisioning",
+        ),
+        pytest.param(
+            {"verifier_mutator": _replace_with_worktree_copy_verifier},
+            None,
+            id="worktree-copy-leaks-untracked-and-staged-sentinels",
+        ),
+        pytest.param(
+            {"gitignore": "__pycache__/\naio-*/reference/2026/\n"},
+            "provisioned file is not ignored: aio-ml/reference/cache/artifact.bin",
+            id="provisioned-cache-not-ignored",
+        ),
+        pytest.param(
+            {"provision_source": _STUB_PROVISION + "printf 'leak\\n' > \"$root/LEAK.txt\"\n"},
+            "untracked-unignored",
+            id="provisioning-leaks-an-unignored-file",
+        ),
+        pytest.param(
+            {"ci_source": _STUB_CI + "printf 'edited\\n' >> TRACKED_HEAD_SENTINEL\n"},
+            "tracked changes",
+            id="ci-modifies-a-tracked-file",
+        ),
+        pytest.param(
+            {"ci_source": _STUB_CI + "exit 7\n"},
+            None,
+            id="ci-failure-is-blocking",
+        ),
     ],
 )
-def test_staged_scope_rejects_new_token_and_secret_paths(
-    tmp_path: Path, relative: str, category: str
+def test_clean_checkout_adversarial_mutations_fail(
+    tmp_path: Path, fixture_kwargs: dict[str, Any], message: str | None
 ) -> None:
-    repo = _init_scope_repo(tmp_path)
-    (repo / relative).write_text("forbidden\n", encoding="utf-8")
-    _git(repo, "add", "-f", relative)
+    repo = _clean_checkout_fixture(tmp_path, **fixture_kwargs)
 
-    proc = _scope_proc(repo, "--cached")
+    proc, lines, parent = _run_clean_checkout(tmp_path, repo)
 
-    assert proc.returncode != 0
-    output = proc.stdout + proc.stderr
-    assert relative in output
-    diagnostic = output.replace(relative, "").lower()
-    assert "protected" in diagnostic
-    assert category in diagnostic
-
-
-def test_staged_scope_allows_safe_named_path_under_same_tests_prefix(tmp_path: Path) -> None:
-    repo = _init_scope_repo(tmp_path)
-    relative = "tests/ordinary-notes.md"
-    path = repo / relative
-    path.write_text("ordinary test fixture\n", encoding="utf-8")
-    _git(repo, "add", relative)
-
-    proc = _scope_proc(repo, "--cached")
-
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
-def test_staged_scope_rejects_modifying_preexisting_non_c8_token_path(tmp_path: Path) -> None:
-    repo = _init_scope_repo(tmp_path)
-    existing = repo / "tests" / "token-policy.md"
-    existing.write_text("modified token path\n", encoding="utf-8")
-    _git(repo, "add", existing.relative_to(repo).as_posix())
-
-    proc = _scope_proc(repo, "--cached")
-
-    assert proc.returncode != 0
-    output = proc.stdout + proc.stderr
-    assert "tests/token-policy.md" in output
-    diagnostic = output.replace("tests/token-policy.md", "").lower()
-    assert "protected" in diagnostic
-    assert "token" in diagnostic
-
-
-@pytest.mark.parametrize(
-    "mutation",
-    ["expected-root-resolution", "other-cell", "arbitrary-path-cell"],
-)
-def test_exact_c8_token_notebook_exception_is_cell_scoped(
-    tmp_path: Path, mutation: str
-) -> None:
-    repo = _init_scope_repo(tmp_path)
-    old = repo / "units" / "C8-embeddings" / "lessons" / "01-tokens-and-embeddings.ipynb"
-    new = repo / "aio-ml" / old.relative_to(repo)
-    new.parent.mkdir(parents=True)
-    old.rename(new)
-    notebook = json.loads(new.read_text(encoding="utf-8"))
-    notebook["cells"][1]["source"] = [
-        "import os, pathlib\n",
-        '_env_root = os.environ.get("AIO_BOOK_ROOT")\n',
-        "if _env_root:\n",
-        "    _root = pathlib.Path(_env_root).resolve()\n",
-        "else:\n",
-        "    _start = pathlib.Path.cwd().resolve()\n",
-        "    _root = next(\n",
-        "        p for p in [_start, *_start.parents]\n",
-        '        if (p / "syllabus.md").is_file() and (p / "curriculum").is_dir()\n',
-        "    )\n",
-        'os.environ["GENSIM_DATA_DIR"] = str(_root / "reference" / "cache" / "gensim")\n',
-        "\n",
-        "import numpy as np\n",
-        "from gensim.utils import simple_preprocess",
-    ]
-    if mutation == "other-cell":
-        notebook["cells"][2]["source"] = ["changed teaching body\n"]
-    elif mutation == "arbitrary-path-cell":
-        notebook["cells"][1]["source"] = [
-            "import os\n",
-            "from pathlib import Path\n",
-            "_ = os.environ.get('AIO_BOOK_ROOT')\n",
-            "ROOT = Path('/etc').resolve()\n",
-        ]
-    new.write_text(json.dumps(notebook), encoding="utf-8")
-    _git(repo, "add", "-A")
-
-    proc = _scope_proc(repo, "--cached")
-
-    if mutation != "expected-root-resolution":
+    with pytest.raises(AssertionError):
+        _assert_complete_clean_checkout(proc, lines, parent)
+    if message is not None:
         assert proc.returncode != 0
-        assert "cell" in (proc.stdout + proc.stderr).lower()
-    else:
-        assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
-def test_permanent_protected_mode_rejects_future_token_path_change(tmp_path: Path) -> None:
-    repo = _init_scope_repo(tmp_path)
-    path = repo / "tests/token-policy.md"
-    path.write_text("future mutation\n", encoding="utf-8")
-    _git(repo, "add", path.relative_to(repo).as_posix())
-
-    proc = _scope_proc(repo, "--protected-cached")
-
-    assert proc.returncode != 0
-    assert "protected token path" in proc.stdout + proc.stderr
-
-
-# --- Plan 031: the chained plan031-rename token exception ------------------------------------
-
-PLAN031_OLD = "aio-ml/units/C8-embeddings/lessons/01-tokens-and-embeddings.ipynb"
-PLAN031_NEW = "aio-ml/units/10-C5-embeddings/lessons/01-tokens-and-embeddings.ipynb"
-PLAN031_ROOT_CELL = [
-    "import os, pathlib\n",
-    '_env_root = os.environ.get("AIO_BOOK_ROOT")\n',
-    "if _env_root:\n",
-    "    _root = pathlib.Path(_env_root).resolve()\n",
-    "else:\n",
-    "    _start = pathlib.Path.cwd().resolve()\n",
-    "    _root = next(\n",
-    "        p for p in [_start, *_start.parents]\n",
-    '        if (p / "syllabus.md").is_file() and (p / "curriculum").is_dir()\n',
-    "    )\n",
-    'os.environ["GENSIM_DATA_DIR"] = str(_root / "reference" / "cache" / "gensim")\n',
-    "\n",
-    "import numpy as np\n",
-    "from gensim.utils import simple_preprocess",
-]
-
-
-def _plan031_token_repo(tmp_path: Path) -> Path:
-    repo = tmp_path / "repo"
-    repo.mkdir()
-    _git(repo, "init", "-b", "main")
-    _git(repo, "config", "user.email", "test@example.com")
-    _git(repo, "config", "user.name", "Test")
-    token = repo / PLAN031_OLD
-    token.parent.mkdir(parents=True)
-    notebook = {
-        "cells": [
-            {
-                "cell_type": "markdown",
-                "metadata": {},
-                "source": ["# C8-embeddings — Session 01\n", "Builds on **F3-matrices**.\n"],
-            },
-            {"cell_type": "code", "metadata": {}, "source": PLAN031_ROOT_CELL},
-            {"cell_type": "markdown", "metadata": {}, "source": ["C8 practice: C8-p05\n"]},
-        ],
-        "metadata": {},
-        "nbformat": 4,
-        "nbformat_minor": 5,
-    }
-    token.write_text(json.dumps(notebook, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-m", "base")
-    for name in ("verify-staged-scope.py", "renumber-aio-ml-units.py"):
-        target = repo / "scripts" / name
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ROOT / "scripts" / name, target)
-    return repo
-
-
-def _plan031_rename(repo: Path, *, extra: str = "") -> None:
-    spec = importlib.util.spec_from_file_location(
-        "renumber_for_test", ROOT / "scripts" / "renumber-aio-ml-units.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    old_text = (repo / PLAN031_OLD).read_text(encoding="utf-8")
-    (repo / PLAN031_NEW).parent.mkdir(parents=True)
-    _git(repo, "mv", PLAN031_OLD, PLAN031_NEW)
-    new_text = module.rewrite_text(old_text, PLAN031_OLD)
-    assert "C5-embeddings" in new_text and "F4-matrices" in new_text and "C5-p05" in new_text
-    (repo / PLAN031_NEW).write_text(new_text.replace("practice", "practice" + extra), encoding="utf-8")
-    _git(repo, "add", "-A")
-
-
-def _plan031_scope(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [sys.executable, str(repo / "scripts" / "verify-staged-scope.py"), *args, str(INVENTORY)],
-        cwd=repo,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-
-def test_inventory_token_exception_is_a_typed_chain() -> None:
-    entries = _inventory()["token_path_exception"]
-    assert [entry["kind"] for entry in entries] == ["plan019-cell1", "plan031-rename"]
-    assert entries[1]["old_path"] == entries[0]["new_path"] == PLAN031_OLD
-    assert entries[1]["new_path"] == PLAN031_NEW
-    assert entries[0]["path_resolution_source_sha256"] == entries[1]["path_resolution_source_sha256"]
-    assert (ROOT / PLAN031_NEW).is_file()
-
-
-@pytest.mark.parametrize("mode", ["--protected-cached", "--cached"])
-def test_plan031_mapped_rename_of_token_notebook_is_accepted(tmp_path: Path, mode: str) -> None:
-    repo = _plan031_token_repo(tmp_path)
-    _plan031_rename(repo)
-
-    proc = _plan031_scope(repo, mode)
-
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
-def test_plan031_mapped_rename_is_accepted_in_protected_range(tmp_path: Path) -> None:
-    repo = _plan031_token_repo(tmp_path)
-    base = _git(repo, "rev-parse", "HEAD").stdout.strip()
-    _plan031_rename(repo)
-    _git(repo, "commit", "-m", "renumber")
-
-    proc = _plan031_scope(repo, "--protected-range", "--base", base)
-
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-
-
-def test_plan031_rename_with_any_other_change_is_rejected(tmp_path: Path) -> None:
-    repo = _plan031_token_repo(tmp_path)
-    _plan031_rename(repo, extra=" (edited)")
-
-    proc = _plan031_scope(repo, "--protected-cached")
-
-    assert proc.returncode != 0
-    assert "beyond the Plan 031 renumbering" in proc.stderr
-
-
-def test_plan031_rename_requires_the_pinned_rewrite_script(tmp_path: Path) -> None:
-    repo = _plan031_token_repo(tmp_path)
-    _plan031_rename(repo)
-    with (repo / "scripts" / "renumber-aio-ml-units.py").open("a", encoding="utf-8") as handle:
-        handle.write("\n# drift\n")
-
-    proc = _plan031_scope(repo, "--protected-cached")
-
-    assert proc.returncode != 0
-    assert "does not match its pin" in proc.stderr
-
-
-@pytest.mark.parametrize("mode", ["--protected-cached", "--protected-diff"])
-def test_later_edit_to_renamed_token_notebook_is_still_rejected(tmp_path: Path, mode: str) -> None:
-    repo = _plan031_token_repo(tmp_path)
-    _plan031_rename(repo)
-    _git(repo, "commit", "-m", "renumber")
-    path = repo / PLAN031_NEW
-    path.write_text(path.read_text(encoding="utf-8").replace("Session 01", "Session 1"), encoding="utf-8")
-    _git(repo, "add", PLAN031_NEW)
-
-    proc = _plan031_scope(repo, mode)
-
-    assert proc.returncode != 0
-    assert PLAN031_NEW in proc.stderr
+        assert message in proc.stdout + proc.stderr

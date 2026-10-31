@@ -7,7 +7,7 @@ from pathlib import Path
 
 import yaml
 
-from tools.ci_scope import INFO_UNCHANGED, BookInfo, change_set, route_books
+from tools.aio.ci_scope import INFO_UNCHANGED, BookInfo, change_set, route_books
 
 BOOKS = [
     BookInfo("aio-ml", "aio-ml", ("F1-a", "C3-b"), ("F1-a", "C3-b")),
@@ -22,37 +22,38 @@ def _route(changed, **kwargs):
 
 def test_unit_content_change_routes_to_a_scoped_check_of_exactly_that_unit() -> None:
     assert _route(["aio-ml/units/C3-b/lessons/01-x.ipynb", "aio-ml/units/C3-b/manifest.yaml"]) == {
-        "aio-ml": "scoped book1 --units C3-b", "aio-dl": "none book2"}
+        "aio-ml": "scoped aio-ml --units C3-b", "aio-dl": "none aio-dl"}
 
 
 def test_mock_only_change_routes_to_mocktests_with_zero_units() -> None:
     assert _route(["aio-dl/mocktests/r2-001/theory/p01.md"]) == {
-        "aio-ml": "none book1", "aio-dl": "scoped book2 --mocktests r2-001"}
+        "aio-ml": "none aio-ml", "aio-dl": "scoped aio-dl --mocktests r2-001"}
 
 
 def test_global_publication_inputs_route_every_book_full() -> None:
-    for path in ("tools/publish.py", "tools/publish_audit.py", "tools/publish_theme/theme.tex",
-                 "tools/books.py", "scripts/build-book.sh", "books.yaml", "pyproject.toml",
-                 "uv.lock"):
+    for path in ("tools/aio/publish.py", "tools/aio/publish_audit.py",
+                 "tools/aio/publish_theme/theme.tex", "tools/aio/books.py",
+                 "scripts/aio/build-book.sh", "books.yaml", "pyproject.toml", "uv.lock"):
         assert _route([path, "aio-ml/units/C3-b/x.ipynb"]) == {
-            "aio-ml": "full book1", "aio-dl": "full book2"}, path
+            "aio-ml": "full aio-ml", "aio-dl": "full aio-dl"}, path
 
 
 def test_front_and_back_matter_route_full() -> None:
-    assert _route(["aio-dl/front-matter/preface.md"])["aio-dl"] == "full book2"
-    assert _route(["aio-ml/back-matter/glossary.md"])["aio-ml"] == "full book1"
+    assert _route(["aio-dl/front-matter/preface.md"])["aio-dl"] == "full aio-dl"
+    assert _route(["aio-ml/back-matter/glossary.md"])["aio-ml"] == "full aio-ml"
 
 
 def test_unrelated_changes_are_unchanged_and_print_info() -> None:
-    routes = _route(["docs/plans/030-book-editions.md", "tools/checks/scope.py", "TODO.md"])
-    assert routes == {"aio-ml": "none book1", "aio-dl": "none book2"}
-    assert INFO_UNCHANGED.format(book="aio-dl") == "INFO build-book: book2 unchanged (change-routed)"
+    routes = _route(["docs/plans/030-book-editions.md", "tools/aio/checks/scope.py", "TODO.md",
+                     "tools/publish.py", "tools/books.py", "scripts/build-book.sh"])
+    assert routes == {"aio-ml": "none aio-ml", "aio-dl": "none aio-dl"}
+    assert INFO_UNCHANGED.format(book="aio-dl") == "INFO build-book: aio-dl unchanged (change-routed)"
 
 
 def test_all_books_and_missing_merge_base_render_everything() -> None:
-    assert _route([], all_books=True) == {"aio-ml": "full book1", "aio-dl": "full book2"}
+    assert _route([], all_books=True) == {"aio-ml": "full aio-ml", "aio-dl": "full aio-dl"}
     assert _route(["TODO.md"], diff_available=False) == {
-        "aio-ml": "full book1", "aio-dl": "full book2"}
+        "aio-ml": "full aio-ml", "aio-dl": "full aio-dl"}
 
 
 def _config(chapters: list[dict[str, str]], **extra: object) -> str:
@@ -66,15 +67,15 @@ def test_publication_yaml_that_only_adds_chapters_routes_to_the_added_units() ->
     texts = {"old": old, "new": new}
     routes = _route(["aio-ml/publication.yaml"], old_text=lambda _: texts["old"],
                     new_text=lambda _: texts["new"])
-    assert routes["aio-ml"] == "scoped book1 --units C3-b"
+    assert routes["aio-ml"] == "scoped aio-ml --units C3-b"
     retitled = _config([{"unit": "F1-a", "title": "A2"}, {"unit": "C3-b", "title": "B"}])
     routes = _route(["aio-ml/publication.yaml"], old_text=lambda _: old,
                     new_text=lambda _: retitled)
-    assert routes["aio-ml"] == "full book1"
+    assert routes["aio-ml"] == "full aio-ml"
     other_key = _config([{"unit": "F1-a", "title": "A"}, {"unit": "C3-b", "title": "B"}],
                         volumes={"editions": ["teacher"], "parts": []})
     assert _route(["aio-ml/publication.yaml"], old_text=lambda _: old,
-                  new_text=lambda _: other_key)["aio-ml"] == "full book1"
+                  new_text=lambda _: other_key)["aio-ml"] == "full aio-ml"
 
 
 def _coverage(rows: list[dict[str, object]]) -> str:
@@ -104,9 +105,9 @@ def test_coverage_map_changes_route_by_introduced_concepts() -> None:
     def route(new: str) -> str:
         return _route(path, old_text=lambda _: old, new_text=lambda _: new)["aio-ml"]
 
-    assert route(changed_unit) == "scoped book1 --units C3-b"
-    assert route(prerequisites_only) == "glossary book1"
-    assert route(unattributed) == "full book1"
+    assert route(changed_unit) == "scoped aio-ml --units C3-b"
+    assert route(prerequisites_only) == "glossary aio-ml"
+    assert route(unattributed) == "full aio-ml"
 
 
 def test_teaching_order_prefixed_folder_routes_by_unit_id() -> None:
@@ -117,7 +118,7 @@ def test_teaching_order_prefixed_folder_routes_by_unit_id() -> None:
 
 
 def test_unconfigured_unit_change_routes_full() -> None:
-    assert _route(["aio-ml/units/C9-new/lesson.ipynb"])["aio-ml"] == "full book1"
+    assert _route(["aio-ml/units/C9-new/lesson.ipynb"])["aio-ml"] == "full aio-ml"
 
 
 def _git(repo: Path, *args: str) -> str:

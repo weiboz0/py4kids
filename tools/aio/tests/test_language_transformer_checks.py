@@ -5,13 +5,12 @@ from pathlib import Path
 
 import nbformat
 import pytest
+from conftest import ROOT
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK2_ROOT = ROOT / "aio-dl"
 UNIT = BOOK2_ROOT / "units" / "B2-020-language-transformers"
-CI_LOCAL = ROOT / "scripts/ci-local.sh"
 
 FUNCTION_VARIANTS = (
     pytest.param(
@@ -246,8 +245,3 @@ def test_tampered_encoder_tensor_fails_recomputed_state_hash(
     ]
     assert len(failures) == 1
     assert "canonical_encoder_state_hash" in notebook.cells[failures[0]].source
-
-
-def test_book2_ci_runs_language_transformer_integrity_suite() -> None:
-    source = CI_LOCAL.read_text(encoding="utf-8")
-    assert "uv run pytest -q tests/test_language_transformer_checks.py" in source

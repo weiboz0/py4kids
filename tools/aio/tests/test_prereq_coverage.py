@@ -4,12 +4,12 @@ from posixpath import normpath
 
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools.checks.coverage import check_coverage
-from tools.checks.prereq import check_prereq
-from tools.model import load_mock_manifests, load_syllabus, load_unit_manifests
+from tools.aio.checks.coverage import check_coverage
+from tools.aio.checks.prereq import check_prereq
+from tools.aio.model import load_mock_manifests, load_syllabus, load_unit_manifests
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 BOOK2_ROOT = ROOT / "aio-dl"
 
@@ -656,12 +656,12 @@ def _write_first_live_registered_book2_fixture(
     _write_yaml(
         repo / "books.yaml",
         {
-            "books_version": 1,
+            "books_version": 2,
             "books": [
-                {"id": "aio-ml", "number": 1, "root": "aio-ml", "depends_on": []},
+                {"id": "aio-ml", "number": 4, "content_model": "aio", "aio_round": 1, "root": "aio-ml", "depends_on": []},
                 {
                     "id": "aio-dl",
-                    "number": 2,
+                    "number": 4, "content_model": "aio", "aio_round": 2,
                     "root": "aio-dl",
                     "depends_on": ["aio-ml"],
                 },

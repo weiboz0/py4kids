@@ -9,11 +9,11 @@ from typing import Any
 
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools.checks import schedule as schedule_checker
-from tools.model import load_roadmap, load_syllabus, load_syllabus_contract
+from tools.aio.checks import schedule as schedule_checker
+from tools.aio.model import load_roadmap, load_syllabus, load_syllabus_contract
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK2_ROOT = ROOT / "aio-dl"
 UNIT_ID = "B2-024-gpu-scientific-ml-capstone"
 B2_023 = "B2-023-generative-models-diffusion"
@@ -266,7 +266,7 @@ def test_b2_024_planned_row_is_retained_but_no_longer_provisional() -> None:
 
 
 def test_b2_024_double_length_standard_is_six_sessions_and_28_practices() -> None:
-    standards = (ROOT / "docs" / "unit-standards.md").read_text(encoding="utf-8")
+    standards = (ROOT / "aio-ml" / "docs" / "unit-standards.md").read_text(encoding="utf-8")
     assert "use 4–6 sessions" in standards
     assert "double-length units: 24–30" in standards
     assert "B2-023, and B2-024) use 4–6 sessions" in standards

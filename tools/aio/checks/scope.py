@@ -614,6 +614,20 @@ def _validate_evidence_schema(
                         valid &= _require_nonempty_string(
                             item, text_field, item_label, errors
                         )
+            # py4kids aio-001 Phase D: a modality may cite each lesson anchor, practice and
+            # assessment once. usaaio's duplicate-evidence test passed only because its copied
+            # fixture lacked the repository-root reconciliation file; once the reconciliation
+            # moved into the book (design 014 D3) the duplicate itself was accepted.
+            keys = [
+                (item.get("path"), item.get("heading"), item.get("cell_ordinal"))
+                if field == "lesson_anchors"
+                else item.get("id")
+                for item in value
+                if isinstance(item, dict)
+            ]
+            for duplicate in sorted({repr(key) for key in keys if keys.count(key) > 1}):
+                errors.append(f"{modality_label}: duplicate {field} evidence {duplicate}")
+                valid = False
     return valid
 
 

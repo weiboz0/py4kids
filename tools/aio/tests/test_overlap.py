@@ -4,8 +4,8 @@ from pathlib import Path
 import nbformat
 import pytest
 
-from tools.checks.overlap import check_overlap
-from tools.cli import print_report
+from tools.aio.checks.overlap import check_overlap
+from tools.aio.cli import print_report
 
 
 def write_manifest(
@@ -98,7 +98,7 @@ def test_overlap_skips_loudly_without_corpus(tmp_path):
     write_manifest(tmp_path, "original problem text")
     report = check_overlap(tmp_path)
     assert report.skipped
-    assert "bash scripts/fetch-reference.sh" in report.skipped
+    assert "bash scripts/aio/fetch-reference.sh" in report.skipped
 
 
 def test_overlap_flags_near_copy_fixture(tmp_path):
@@ -343,13 +343,13 @@ def test_overlap_loud_skip_preserved(tmp_path, monkeypatch, capsys):
     write_reference(tmp_path, "reference text that must not be scanned")
     notebook = write_notebook(tmp_path, "unreadable.ipynb", markdown="not scanned")
     notebook.write_text("not valid notebook json")
-    monkeypatch.setattr("tools.checks.overlap.shutil.which", lambda _: None)
+    monkeypatch.setattr("tools.aio.checks.overlap.shutil.which", lambda _: None)
 
     report = check_overlap(tmp_path)
 
     assert report.skipped
     assert report.skipped.startswith("pdftotext unavailable")
-    assert "bash scripts/fetch-reference.sh" in report.skipped
+    assert "bash scripts/aio/fetch-reference.sh" in report.skipped
     assert print_report(report) == 3
     assert "SKIP overlap-scan" in capsys.readouterr().out
 
@@ -365,7 +365,7 @@ def test_overlap_partial_pdftotext_failure_warns(tmp_path, monkeypatch):
     (tmp_path / "units").mkdir()
     import shutil as _sh
 
-    from tools.checks.overlap import check_overlap
+    from tools.aio.checks.overlap import check_overlap
     if _sh.which("pdftotext") is None:
         import pytest as _pytest
         _pytest.skip("pdftotext unavailable")

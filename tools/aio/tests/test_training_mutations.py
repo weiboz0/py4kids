@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 
 import pytest
+from conftest import ROOT
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 
 EXPECTED_MUTATIONS = [
@@ -50,9 +50,9 @@ EXPECTED_MUTATIONS = [
 
 def _mutation_module():
     try:
-        return importlib.import_module("tools.verify_training_mutations")
+        return importlib.import_module("tools.aio.verify_training_mutations")
     except ModuleNotFoundError:
-        pytest.fail("tools.verify_training_mutations must provide the permanent mutation runner")
+        pytest.fail("tools.aio.verify_training_mutations must provide the permanent mutation runner")
 
 
 def _write_notebook(path: Path, target_source: str) -> None:

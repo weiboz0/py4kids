@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import ast
 import json
-from pathlib import Path
 
 import numpy as np
 import pytest
+from conftest import ROOT
 
-from tools.books import unit_dir
+from tools.aio.books import unit_dir
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 PRACTICE = unit_dir(BOOK1_ROOT, "C12-classical-models") / "practice"
 # Plan 031: the folder is resolved by id; it still lives under the book's units tree.

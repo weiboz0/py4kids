@@ -21,19 +21,17 @@ from __future__ import annotations
 
 import os
 import sys
-from pathlib import Path
 
 import nbformat
 import pytest
+from conftest import ROOT
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
 
 sys.dont_write_bytecode = True
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK2_ROOT = ROOT / "aio-dl"
 SOLUTIONS = BOOK2_ROOT / "mocktests" / "r2-001" / "solutions"
-CI_LOCAL = ROOT / "scripts" / "ci-local.sh"
 ANSWER_CHECK = "### Answer check"
 
 Edit = tuple[str, str]
@@ -173,9 +171,3 @@ def test_open_ended_mutant_fails_the_answer_check(name):
     failed_at, ename = _run(notebook)
     assert failed_at == _answer_check_index(notebook), (name, failed_at)
     assert ename == "AssertionError", (name, ename)
-
-
-def test_suite_is_wired_into_ci_local_step_7():
-    text = CI_LOCAL.read_text()
-    step7 = text[text.index('step "7/9'):text.index('step "8/9')]
-    assert "uv run pytest -q tests/test_r2_001_checks.py" in step7

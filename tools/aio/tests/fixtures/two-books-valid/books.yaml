@@ -1,4 +1,4 @@
-books_version: 1
+books_version: 2
 books:
-  - {id: book1, number: 1, root: book1, depends_on: []}
-  - {id: book2, number: 2, root: book2, depends_on: [book1]}
+  - {id: aio-ml, number: 4, root: aio-ml, depends_on: [], content_model: aio, aio_round: 1}
+  - {id: aio-dl, number: 4, root: aio-dl, depends_on: [aio-ml], content_model: aio, aio_round: 2}

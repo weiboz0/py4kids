@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.checks.api_comments import (
+from tools.aio.checks.api_comments import (
     Waiver,
     analyze,
     check_api_comments,
@@ -474,9 +474,9 @@ def test_first_use_is_computed_across_the_book(tmp_path):
 
 def test_book2_counts_book1_explanations(tmp_path):
     (tmp_path / "books.yaml").write_text(
-        "books_version: 1\nbooks:\n"
-        "  - {id: book1, number: 1, root: book1, depends_on: []}\n"
-        "  - {id: book2, number: 2, root: book2, depends_on: [book1]}\n",
+        "books_version: 2\nbooks:\n"
+        "  - {id: aio-ml, number: 4, root: aio-ml, depends_on: [], content_model: aio, aio_round: 1}\n"
+        "  - {id: aio-dl, number: 4, root: aio-dl, depends_on: [aio-ml], content_model: aio, aio_round: 2}\n",
         encoding="utf-8",
     )
     write(tmp_path, "aio-ml/units/01-F1/lesson.ipynb",
@@ -495,7 +495,7 @@ def test_book2_counts_book1_explanations(tmp_path):
 
 
 def test_cli_registration():
-    from tools.cli import SUBCOMMANDS
+    from tools.aio.cli import SUBCOMMANDS
 
     assert SUBCOMMANDS["api-comments-check"][1] is check_api_comments
 

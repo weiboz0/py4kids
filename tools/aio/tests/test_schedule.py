@@ -8,20 +8,20 @@ from typing import Any
 
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools import render_course_structure as course_renderer
-from tools.books import unit_dir
-from tools.model import load_unit_manifests
+from tools.aio import render_course_structure as course_renderer
+from tools.aio.books import unit_dir
+from tools.aio.model import load_unit_manifests
 
-ROOT = Path(__file__).parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 
 
 def _schedule_checker():
     try:
-        return importlib.import_module("tools.checks.schedule")
+        return importlib.import_module("tools.aio.checks.schedule")
     except ModuleNotFoundError:
-        pytest.fail("tools.checks.schedule must provide the canonical schedule checker")
+        pytest.fail("tools.aio.checks.schedule must provide the canonical schedule checker")
 
 
 def _write_yaml(path: Path, value: object) -> None:
@@ -1195,9 +1195,9 @@ def test_schedule_checker_is_bound_to_the_selected_bookspec_root(
     _write_yaml(
         repo / "books.yaml",
         {
-            "books_version": 1,
+            "books_version": 2,
             "books": [
-                {"id": "aio-ml", "number": 1, "root": "aio-ml", "depends_on": []}
+                {"id": "aio-ml", "number": 4, "content_model": "aio", "aio_round": 1, "root": "aio-ml", "depends_on": []}
             ],
         },
     )
@@ -1205,11 +1205,11 @@ def test_schedule_checker_is_bound_to_the_selected_bookspec_root(
     book_root.mkdir()
     _build_schedule_fixture(book_root)
     try:
-        books = importlib.import_module("tools.books")
+        books = importlib.import_module("tools.aio.books")
     except ModuleNotFoundError as exc:
-        if exc.name != "tools.books":
+        if exc.name != "tools.aio.books":
             raise
-        pytest.fail("tools.books is the missing Plan 019 registry producer")
+        pytest.fail("tools.aio.books is the missing Plan 019 registry producer")
     book = books.load_book_catalog(repo).by_id("aio-ml")
 
     selected = _schedule_checker().check_schedule(book.root)

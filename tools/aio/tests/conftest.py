@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 
 import tools.aio.checks.schedule
 import tools.aio.model
+
+# The py4kids repository root (design 014: usaaio's tests/ moved to tools/aio/tests/, so the
+# usaaio `Path(__file__).parents[1]` repo root is now parents[3]). Test modules import it
+# with `from conftest import ROOT`.
+ROOT = Path(__file__).resolve().parents[3]
 
 # The B2-020 deferred solution policy was live only through 2026-09-30.
 # Tests that exercise the live-policy path pin every live-clock read on that

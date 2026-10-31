@@ -1,14 +1,14 @@
 import subprocess
 import sys
 
-import tools
-from tools.cli import SUBCOMMANDS, main
-from tools.model import Report
+import tools.aio
+from tools.aio.cli import SUBCOMMANDS, main
+from tools.aio.model import Report
 
 
 def run_cli(*args):
     return subprocess.run(
-        [sys.executable, "-m", "tools.cli", *args],
+        [sys.executable, "-m", "tools.aio.cli", *args],
         capture_output=True,
         text=True,
         check=False,
@@ -18,7 +18,7 @@ def run_cli(*args):
 def test_version_flag():
     proc = run_cli("--version")
     assert proc.returncode == 0
-    assert tools.__version__ in proc.stdout
+    assert tools.aio.__version__ in proc.stdout
 
 
 def test_help_lists_planned_subcommands():

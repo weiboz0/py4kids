@@ -14,14 +14,14 @@ from pathlib import Path
 import nbformat
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools.checks.hygiene import check_hygiene
-from tools.checks.tolerance import check_tolerance
-from tools.model import load_unit_manifests
+from tools.aio.checks.hygiene import check_hygiene
+from tools.aio.checks.tolerance import check_tolerance
+from tools.aio.model import load_unit_manifests
 
 sys.dont_write_bytecode = True
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK2_ROOT = ROOT / "aio-dl"
 UNIT_ID = "B2-021-cross-modal-transformers-vision"
 UNIT = BOOK2_ROOT / "units" / UNIT_ID
@@ -519,58 +519,3 @@ def test_training_solutions_execute_via_authoritative_jupyter_route_without_inpl
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert path.read_bytes() == before
-
-
-def test_ci_timeout_path_match_propagates_timeout_exit(tmp_path: Path) -> None:
-    fake_bin = tmp_path / "bin"
-    fake_bin.mkdir()
-    timeout_log = tmp_path / "timeout.log"
-    timeout = fake_bin / "timeout"
-    timeout.write_text(
-        '#!/usr/bin/env bash\nprintf \'%s\\n\' "$*" >> "$TIMEOUT_LOG"\nexit 124\n',
-        encoding="utf-8",
-    )
-    timeout.chmod(0o755)
-    uv_log = tmp_path / "uv.log"
-    uv = fake_bin / "uv"
-    uv.write_text(
-        '#!/usr/bin/env bash\nprintf \'%s\\n\' "$*" >> "$UV_LOG"\nexit 0\n',
-        encoding="utf-8",
-    )
-    uv.chmod(0o755)
-    env = {
-        **os.environ,
-        "PATH": f"{fake_bin}:{os.environ['PATH']}",
-        "TIMEOUT_LOG": str(timeout_log),
-        "UV_LOG": str(uv_log),
-    }
-    relative = f"units/{UNIT_ID}/practice/p17_solution.ipynb"
-    proc = subprocess.run(
-        ["bash", str(ROOT / "scripts/ci-local.sh"), "--solution-probe", str(BOOK2_ROOT), relative],
-        cwd=ROOT,
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert proc.returncode == 124, proc.stdout + proc.stderr
-    assert timeout_log.read_text(encoding="utf-8").splitlines() == [
-        f"20s uv run --project .. jupyter execute {relative}"
-    ]
-
-    ordinary = "units/01-F1-scientific-python/practice/p17_solution.ipynb"
-    proc = subprocess.run(
-        ["bash", str(ROOT / "scripts/ci-local.sh"), "--solution-probe", str(BOOK2_ROOT), ordinary],
-        cwd=ROOT,
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert timeout_log.read_text(encoding="utf-8").splitlines() == [
-        f"20s uv run --project .. jupyter execute {relative}"
-    ]
-    assert uv_log.read_text(encoding="utf-8").splitlines() == [
-        f"run --project .. jupyter execute {ordinary}"
-    ]

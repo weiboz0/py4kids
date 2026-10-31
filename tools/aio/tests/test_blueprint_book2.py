@@ -10,11 +10,11 @@ from typing import Any
 
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools.checks.blueprint import check_blueprint
-from tools.model import Report, load_blueprint, load_mock_manifests
+from tools.aio.checks.blueprint import check_blueprint
+from tools.aio.model import Report, load_blueprint, load_mock_manifests
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 BOOK2_ROOT = ROOT / "aio-dl"
 
@@ -189,7 +189,7 @@ def test_live_book2_blueprint_is_the_plan_024_version_1_yaml():
 
 
 def test_live_book2_blueprint_clusters_match_book2_syllabus_and_targets_sum():
-    from tools.model import load_syllabus
+    from tools.aio.model import load_syllabus
 
     blueprint = load_blueprint(BOOK2_ROOT)
     syllabus = load_syllabus(BOOK2_ROOT)
@@ -467,7 +467,7 @@ def test_draft_r2_manifest_is_skipped_loudly(tmp_path):
 
 
 def test_answerkey_discovers_flat_two_day_r2_manifest(tmp_path):
-    from tools.checks.answerkey import check_answerkey
+    from tools.aio.checks.answerkey import check_answerkey
 
     manifest = valid_manifest()
     write_book2(tmp_path, manifest)
@@ -484,7 +484,7 @@ def test_answerkey_discovers_flat_two_day_r2_manifest(tmp_path):
 
 
 def test_overlap_scan_discovers_flat_two_day_r2_statement_files(tmp_path):
-    from tools.checks.overlap import check_overlap
+    from tools.aio.checks.overlap import check_overlap
 
     statement = (
         "Consider an imaginary lighthouse keeper who records the brightness of seven lamps "

@@ -5,9 +5,10 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools.checks.prereq import check_prereq
-from tools.model import (
+from tools.aio.checks.prereq import check_prereq
+from tools.aio.model import (
     load_blueprint,
     load_mock_manifests,
     load_syllabus,
@@ -15,17 +16,16 @@ from tools.model import (
     load_unit_manifests,
 )
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 
 
 def _books_module():
     try:
-        return importlib.import_module("tools.books")
+        return importlib.import_module("tools.aio.books")
     except ModuleNotFoundError as exc:
-        if exc.name != "tools.books":
+        if exc.name != "tools.aio.books":
             raise
-        pytest.fail("tools.books is the missing Plan 019 registry producer")
+        pytest.fail("tools.aio.books is the missing Plan 019 registry producer")
 
 
 def test_load_syllabus_real_repo():
@@ -776,9 +776,9 @@ def _write_selected_book_model_fixture(repo: Path) -> object:
     (repo / "books.yaml").write_text(
         yaml.safe_dump(
             {
-                "books_version": 1,
+                "books_version": 2,
                 "books": [
-                    {"id": "aio-ml", "number": 1, "root": "aio-ml", "depends_on": []}
+                    {"id": "aio-ml", "number": 4, "content_model": "aio", "aio_round": 1, "root": "aio-ml", "depends_on": []}
                 ],
             },
             sort_keys=False,

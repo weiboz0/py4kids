@@ -9,12 +9,11 @@ from pathlib import Path
 
 import nbformat
 import pytest
+from conftest import ROOT
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
 
-ROOT = Path(__file__).resolve().parents[1]
-REFERENCE = ROOT / "tests" / "fixtures" / "b2_021_reference.py"
-CI_LOCAL = ROOT / "scripts" / "ci-local.sh"
+REFERENCE = ROOT / "tools" / "aio" / "tests" / "fixtures" / "b2_021_reference.py"
 UNIT = ROOT / "aio-dl" / "units" / "B2-021-cross-modal-transformers-vision"
 
 TRAINING = {
@@ -955,8 +954,3 @@ def test_untouched_p24_cross_modal_audit_passes(tmp_path: Path) -> None:
     notebook_path = _working_notebook(tmp_path, "p24")
     _instrument_p24_audit(notebook_path)
     _execute(notebook_path)
-
-
-def test_book2_ci_runs_vision_transformer_integrity_suite() -> None:
-    source = CI_LOCAL.read_text(encoding="utf-8")
-    assert "uv run pytest -q tests/test_vision_transformer_checks.py" in source

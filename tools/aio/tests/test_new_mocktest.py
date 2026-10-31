@@ -1,12 +1,12 @@
 from pathlib import Path
 
 import pytest
+from conftest import ROOT
 
-from tools.checks.blueprint import check_blueprint
-from tools.checks.new_mocktest import scaffold_mocktest
-from tools.model import load_mock_manifests
+from tools.aio.checks.blueprint import check_blueprint
+from tools.aio.checks.new_mocktest import scaffold_mocktest
+from tools.aio.model import load_mock_manifests
 
-ROOT = Path(__file__).resolve().parents[1]
 BOOK1_ROOT = ROOT / "aio-ml"
 
 

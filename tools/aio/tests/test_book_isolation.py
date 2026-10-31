@@ -12,32 +12,32 @@ from typing import Any
 
 import pytest
 import yaml
+from conftest import ROOT
 
-from tools import audit_curriculum, render_course_structure
-from tools.checks.answerkey import check_answerkey
-from tools.checks.schedule import load_validated_schedule
-from tools.model import load_syllabus
+from tools.aio import audit_curriculum, render_course_structure
+from tools.aio.checks.answerkey import check_answerkey
+from tools.aio.checks.schedule import load_validated_schedule
+from tools.aio.model import load_syllabus
 
-ROOT = Path(__file__).parents[1]
 TEMP_BOOK1_SENTINEL = "TEMP_BOOK1_ONLY"
 TEMP_BOOK2_COLLISION = "TEMP_BOOK2_COLLISION"
 
 
 def _books_module():
     try:
-        return importlib.import_module("tools.books")
+        return importlib.import_module("tools.aio.books")
     except ModuleNotFoundError as exc:
-        if exc.name != "tools.books":
+        if exc.name != "tools.aio.books":
             raise
-        pytest.fail("tools.books is the missing Plan 019 registry producer")
+        pytest.fail("tools.aio.books is the missing Plan 019 registry producer")
 
 
 def _write_registry(repo: Path, *, include_book2: bool) -> None:
-    books: list[dict[str, Any]] = [{"id": "aio-ml", "number": 1, "root": "aio-ml", "depends_on": []}]
+    books: list[dict[str, Any]] = [{"id": "aio-ml", "number": 4, "content_model": "aio", "aio_round": 1, "root": "aio-ml", "depends_on": []}]
     if include_book2:
-        books.append({"id": "aio-dl", "number": 2, "root": "aio-dl", "depends_on": ["aio-ml"]})
+        books.append({"id": "aio-dl", "number": 4, "content_model": "aio", "aio_round": 2, "root": "aio-dl", "depends_on": ["aio-ml"]})
     (repo / "books.yaml").write_text(
-        yaml.safe_dump({"books_version": 1, "books": books}, sort_keys=False),
+        yaml.safe_dump({"books_version": 2, "books": books}, sort_keys=False),
         encoding="utf-8",
     )
 
@@ -49,7 +49,7 @@ def _copy_book(repo: Path, book_id: str) -> None:
 
 
 def _pdf_inputs(repo: Path, book_id: str) -> bytes:
-    script = ROOT / "scripts" / "build-pdf.sh"
+    script = ROOT / "scripts" / "aio" / "build-pdf.sh"
     proc = subprocess.run(
         ["bash", str(script), "--root", str(repo), "--book", book_id, "--list-inputs"],
         cwd=repo,
@@ -224,12 +224,12 @@ def test_book1_pdf_inputs_follow_noncanonical_registered_root(tmp_path: Path) ->
     repo = tmp_path / "repo"
     shutil.copytree(ROOT / "aio-ml", repo / "round1", ignore=shutil.ignore_patterns("build"))
     (repo / "books.yaml").write_text(
-        "books_version: 1\n"
+        "books_version: 2\n"
         "books:\n"
-        "  - {id: book1, number: 1, root: round1, depends_on: []}\n",
+        "  - {id: aio-ml, number: 4, root: round1, depends_on: [], content_model: aio, aio_round: 1}\n",
         encoding="utf-8",
     )
-    script = ROOT / "scripts" / "build-pdf.sh"
+    script = ROOT / "scripts" / "aio" / "build-pdf.sh"
 
     proc = subprocess.run(
         [
@@ -270,9 +270,9 @@ def test_fetch_reference_follows_noncanonical_registered_book1_root(
     paper.parent.mkdir(parents=True)
     paper.write_bytes(b"%PDF-1.4 fixture\n%%EOF\n")
     (repo / "books.yaml").write_text(
-        "books_version: 1\n"
+        "books_version: 2\n"
         "books:\n"
-        "  - {id: book1, number: 1, root: round1, depends_on: []}\n",
+        "  - {id: aio-ml, number: 4, root: round1, depends_on: [], content_model: aio, aio_round: 1}\n",
         encoding="utf-8",
     )
     bin_dir = tmp_path / "fetch-bin"
@@ -283,7 +283,7 @@ def test_fetch_reference_follows_noncanonical_registered_book1_root(
         encoding="utf-8",
     )
     fake_file.chmod(0o755)
-    script = ROOT / "scripts" / "fetch-reference.sh"
+    script = ROOT / "scripts" / "aio" / "fetch-reference.sh"
 
     proc = subprocess.run(
         ["bash", str(script), "--root", str(repo), "--book", "aio-ml"],
@@ -356,9 +356,9 @@ def _live_noncanonical_book2_pdf_fixture(tmp_path: Path) -> tuple[Path, Path]:
         encoding="utf-8",
     )
     (repo / "books.yaml").write_text(
-        "books_version: 1\n"
+        "books_version: 2\n"
         "books:\n"
-        "  - {id: book2, number: 2, root: advanced, depends_on: []}\n",
+        "  - {id: aio-dl, number: 4, root: advanced, depends_on: [], content_model: aio, aio_round: 2}\n",
         encoding="utf-8",
     )
     bin_dir = tmp_path / "bin"
@@ -368,7 +368,7 @@ def _live_noncanonical_book2_pdf_fixture(tmp_path: Path) -> tuple[Path, Path]:
 
 def _run_fixture_pdf_build(repo: Path, bin_dir: Path, mode: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["bash", str(ROOT / "scripts" / "build-pdf.sh"), "--root", str(repo), "--book", "aio-dl"],
+        ["bash", str(ROOT / "scripts" / "aio" / "build-pdf.sh"), "--root", str(repo), "--book", "aio-dl"],
         cwd=repo,
         env={
             **os.environ,
@@ -439,7 +439,7 @@ def test_pdf_build_skips_with_exit_3_without_lualatex(tmp_path: Path) -> None:
         if located:
             (empty_bin / tool).symlink_to(located)
     proc = subprocess.run(
-        ["bash", str(ROOT / "scripts" / "build-pdf.sh"), "--root", str(repo), "--book", "aio-dl"],
+        ["bash", str(ROOT / "scripts" / "aio" / "build-pdf.sh"), "--root", str(repo), "--book", "aio-dl"],
         cwd=repo,
         env={**os.environ, "PATH": str(empty_bin), "HOME": str(tmp_path),
              "AIO_PYTHON": sys.executable},
@@ -463,7 +463,7 @@ def test_book2_pdf_rejects_student_source_symlink_outside_registered_root(
 
     proc = subprocess.run(
         [
-            "bash", str(ROOT / "scripts/build-pdf.sh"), "--root", str(repo),
+            "bash", str(ROOT / "scripts/aio/build-pdf.sh"), "--root", str(repo),
             "--book", "aio-dl", "--list-inputs",
         ],
         cwd=repo,
@@ -485,14 +485,14 @@ def test_fetch_reference_rejects_symlinked_reference_destination(tmp_path: Path)
     outside.mkdir()
     (book / "reference").symlink_to(outside, target_is_directory=True)
     (repo / "books.yaml").write_text(
-        "books_version: 1\nbooks:\n"
-        "  - {id: book1, number: 1, root: round1, depends_on: []}\n",
+        "books_version: 2\nbooks:\n"
+        "  - {id: aio-ml, number: 4, root: round1, depends_on: [], content_model: aio, aio_round: 1}\n",
         encoding="utf-8",
     )
 
     proc = subprocess.run(
         [
-            "bash", str(ROOT / "scripts/fetch-reference.sh"), "--root", str(repo),
+            "bash", str(ROOT / "scripts/aio/fetch-reference.sh"), "--root", str(repo),
             "--book", "aio-ml",
         ],
         cwd=repo,
