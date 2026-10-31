@@ -38,6 +38,18 @@ by the same roster in the same round.
 8. **Provenance.** `adapted-from` tags present where content resembles a known source;
    note any resemblance the tags miss.
 
+### `content_model: aio` books (design 014, D-006)
+
+Duties 1–3, 5 and 8 apply unchanged. The others read:
+
+- **4 → Set-ladder integrity.** Sets A/B/C are honestly graded (fundamentals → exam register →
+  integration and challenge); the unit overview motivates the unit. There is no project-first duty.
+- **6 → Pacing** against the manifest's `estimated_minutes`; there is no stretch duty.
+  Mock tests match their `mocktests/blueprint.yaml` (points, sections, difficulty).
+- **7 → Accessibility** against the aio baseline: Calculus AB + basic Python + declared prerequisites.
+- **9 (added) → No past papers.** The overlap scan ran with `--require-corpus` on the changed
+  content, and nothing reproduces past-test text.
+
 ## Format
 
 Findings append to the plan file's `## Content Review`, one review round per reviewer pass:

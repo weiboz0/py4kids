@@ -32,3 +32,13 @@ scripts launched from the JupyterLab/VS Code terminal; notebooks remain the medi
 all other work and for turtle exercise write-ups.
 Rationale: keeps the zero-new-dependencies graphics choice (user-settled 2026-09-06)
 compatible with notebooks-as-source-of-truth (design 000). User-approved 2026-09-06.
+
+## D-006 (2026-10-31) — Content models
+D-001 (project-first), D-002 (checkpoints replace mock tests) and D-004 (fresh minimal tooling;
+usaaio scope inventories, mutation checks and legacy handling deliberately absent) govern
+`py4kids`-model books.
+A book registered `content_model: aio` (design 014: the AI Olympiad books migrated from usaaio)
+follows the aio model instead, and for those books this decision **supersedes D-001, D-002 and D-004**:
+they keep mock tests and the usaaio checks, including the mutation verifiers, isolated in `tools/aio/`.
+Rationale: their audience (Calculus AB + Python), contest-shaped A/B/C practice and blueprinted mock
+tests fit poorly into the beginner unit laws (design 014 §1). User-approved 2026-10-31.

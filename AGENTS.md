@@ -19,7 +19,8 @@ gates, autopilot through merge) tailored for course-content development.
   - **Genuine judgment forks** (scope / curriculum-direction / trust decisions) via `AskUserQuestion`.
   - **Hard safeguards** (always stop): committing secrets (`.gh-token`, `.env*`, `*token*`,
     `*secret*`, `*credential*`); committing student data — names, rosters, grades, work
-    (**the repo is PUBLIC**); `git push --force`/`reset --hard` on shared history;
+    (**the repo is PUBLIC**); committing raw past-test papers, verbatim past-problem text,
+    or a hidden test set (design 014); `git push --force`/`reset --hard` on shared history;
     a direct commit to `main`; edits to this file / `docs/development-workflow.md` /
     `docs/content-review-gate.md` / `docs/architecture/decisions.md` (governance —
     human-reviewed, except when the user explicitly asks); plan-scope expansion beyond the
@@ -47,6 +48,12 @@ gates, autopilot through merge) tailored for course-content development.
   These are CI checks; reviewers enforce the judgment calls (which tool is safe as a black box).
 - **Project-first is law.** Every unit opens with its project/problem hook;
   a unit that opens with concept drill is a gate-blocking finding.
+- **Content models (design 014, D-006).** A book registered `content_model: aio` (the AI Olympiad
+  books `aio-ml`/`aio-dl`) is bound **instead** by the aio laws of design 014 §2 D5:
+  a Calculus AB + basic Python baseline, units of lessons + A/B/C practice sets, and mock tests.
+  The project-first, stretch, teacher-notes, checkpoint and 60–90 min laws above do not apply to it.
+  **Every gate, the problem-notebook hygiene law, prereq closure, coverage and taught-before-assessed
+  still apply to it**, enforced by its own checks in `tools/aio/`.
 - **Always run `scripts/ci-local.sh` before merge — local is the gate.**
 - **Always write a post-execution report** in the plan file before shipping.
 
@@ -57,6 +64,8 @@ See `docs/designs/000-project-design.md §1` for the full tree. Top level:
 (design 008): `python-projects/` (*Python by Projects*), `python-concepts/`
 (*Python, Concept by Concept*, a variant of it) and `usaco-bronze/` (*Contest Python: USACO Bronze*;
 design 008 plans its split into `usaco-bronze/` and `acsl/`, *Contest Python: ACSL*).
+`aio-ml/` and `aio-dl/` (*Machine Learning* / *Deep Learning for the AI Olympiad*, design 014)
+use the `aio` content model: units hold `lessons/`, `practice/` and `review.ipynb`, and each book has `mocktests/`.
 Each book owns its `syllabus.md`, `curriculum/`, `units/`, `projects/`, `checkpoints/`,
 `reference/`, and learner-facing `docs/`;
 a contest book imports Python-book prerequisites only through qualified registry contracts.
@@ -85,6 +94,9 @@ notebook execution + hygiene, manifest/prereq/coverage/stretch checks, PDF build
 pre-merge guard.
 Checks whose tools don't exist yet print `SKIP (plan NNN)` — a skip is only acceptable
 while the named plan is unshipped.
+One declared standing skip (design 014 D4): the aio past-paper overlap scan without a local corpus.
+It is fail-closed (`overlap --require-corpus`) for `ci-local.sh --all-books` and for any plan
+that changes aio content; a skip in such a plan is gate-blocking.
 
 ## Git
 
