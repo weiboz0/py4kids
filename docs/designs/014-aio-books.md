@@ -1,8 +1,8 @@
 # Design 014 — The AI Olympiad books (migrating usaaio into py4kids)
 
-**Status:** DRAFT — v4.1 (2026-10-31). v2 folded design-review round 1 ([self] 2 MUST + 1 NIT; [sol] REJECT, 2 BLOCKER + 4 MUST + 1 NIT;
+**Status:** APPROVED BY THE GATE — v4.2 (2026-10-31). v2 folded design-review round 1 ([self] 2 MUST + 1 NIT; [sol] REJECT, 2 BLOCKER + 4 MUST + 1 NIT;
 [fable] APPROVE WITH NITS, 7 MUST + 3 NIT). v3 folded round 2 ([sol] REJECT, 1 BLOCKER + 3 MUST; [fable] APPROVE WITH NITS, 3 MUST + 4 NIT).
-v4 folds round 3 ([sol] REJECT, 1 MUST; [fable] APPROVE WITH NITS, 3 MUST + 3 NIT). v4.1 folds round 4 (both APPROVE WITH NITS). Awaiting the author's approval and the author's approval.
+v4 folds round 3 ([sol] REJECT, 1 MUST; [fable] APPROVE WITH NITS, 3 MUST + 3 NIT). v4.1 folded round 4 (both APPROVE WITH NITS); v4.2 folds the [fable] confirmation. Gate consensus reached; awaiting the author's approval and the author's approval.
 Brings the two books of the `usaaio` repository (`weiboz0/usaaio`, at commit `a20128f`) into py4kids,
 publishes their editions from here, and puts them on the learning website (design 012).
 Plans for these books live under `docs/plans/aio/` (`aio-NNN`); `tools/guard.py` already guards namespaced plan directories.
@@ -100,6 +100,9 @@ What py4kids contributes: the registry and its flags, descriptive book ids, the 
     **Exception — live rendered docs:** usaaio `render_curriculum_roadmap.py:22-23` writes repo-root `docs/curriculum-roadmap.md` and `docs/audits/015-coverage-audit.md`.
     They move to `aio-ml/docs/curriculum-roadmap.md` and `aio-ml/docs/coverage-audit.md`, the port makes the renderer's targets book-root-relative, and both are excluded from the archive;
     `scope.py:108`'s read of `docs/audits/015-plan014-reconciliation.md` likewise points at `aio-ml/docs/` (the file moves there, not to the archive).
+    **usaaio-history probes are dropped:** `scope.py:105-210` `_check_reconciliation` also requires the git toplevel and runs `git merge-base --is-ancestor b486d72 HEAD` on a usaaio squash commit that py4kids history never contains;
+    the port drops that ancestry probe (history-bound, like the historical-policy clock) and keeps the reconciliation file's content checks.
+    No other ported tool probes usaaio history (`merge-base`/`rev-parse` elsewhere are against `origin/main` and the current toplevel); aio-001 re-greps to confirm.
     Because audits may quote problem text, the archive is overlap-scanned once at import, with the corpus present; any hit is redacted before commit.
     This is **a new archive-target mode** (`overlap --require-corpus --paths <dir>`), since the ported scanner reads only a book root's mock manifests and practice notebooks (usaaio `overlap.py:245,296`):
     it extracts text from `.md`, `.yaml`/`.yml` and `.ipynb` (markdown and code sources), fails closed on any file it cannot parse or any other extension, and reuses the scanner's thresholds.
@@ -309,6 +312,13 @@ its content-review duty is fidelity (the fidelity diff and parity table above), 
   5. NIT schema path → **[FIXED]**.
   6. NIT unbalanced parentheses; unnamed docs destinations → **[FIXED]** D3 renames and archive bullets.
 
+- **[fable] confirmation on v4.1 (commit ad8b291): APPROVE WITH NITS.** Round-4 MUSTs and NITs verified resolved.
+  1. MUST `scope.py` reconciliation check's usaaio-SHA ancestry probe would fail on every py4kids run → **[FIXED]** D3: probe dropped, content checks kept.
+
+### Design-review outcome: **CONSENSUS on v4.2** — [self] APPROVE · [sol] APPROVE WITH NITS (r4, folded) · [fable] APPROVE WITH NITS (v4.1 confirmation, folded)
+
+No `[OPEN]` findings. The governance amendments of §3 still require the author's explicit approval before they ship.
+
 ## Revision history
 
 - v1 (2026-10-31): first draft.
@@ -316,3 +326,4 @@ its content-review duty is fidelity (the fidelity diff and parity table above), 
 - v3 (2026-10-31): folds round 2 (above).
 - v4 (2026-10-31): folds round 3 (above).
 - v4.1 (2026-10-31): folds round 4 (above).
+- v4.2 (2026-10-31): drops the usaaio-history ancestry probe ([fable] confirmation); gate consensus.
