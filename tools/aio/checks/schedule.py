@@ -11,8 +11,8 @@ from typing import Any
 
 import yaml
 
-from tools.books import BookSpec, load_book_catalog, resolve_contained_path
-from tools.model import (
+from tools.aio.books import BookSpec, load_book_catalog, resolve_contained_path
+from tools.aio.model import (
     CourseSchedule,
     Report,
     ScheduleAllocation,
@@ -156,14 +156,16 @@ def schedule_policy(
     """Dispatch from trusted registry identity, never mutable schedule shape."""
 
     selected_root = Path(root).resolve()
-    number, book_id = _selected_book_identity(
+    number, _book_id = _selected_book_identity(
         selected_root,
         book_spec=book_spec,
         expected_book_number=expected_book_number,
     )
-    if (book_id is None and number == 1) or (book_id == "aio-ml" and number == 1):
+    # py4kids aio-001 Phase D (design 014 D1): dispatch on registry data only. `number` is the
+    # registered aio_round (catalog adapter); usaaio also matched the ids `book1`/`book2`.
+    if number == 1:
         return Book1SchedulePolicy()
-    if (book_id is None and number == 2) or book_id == "aio-dl":
+    if number == 2:
         return Book2SchedulePolicy(expected_book_number=number)
     raise ValueError(f"registered book number {number} has no schedule policy")
 

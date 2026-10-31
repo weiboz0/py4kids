@@ -11,9 +11,9 @@ from pathlib import Path
 
 import yaml
 
-from tools.books import BookSpec
-from tools.checks.schedule import Book2CourseSchedule, load_validated_schedule
-from tools.model import CourseSchedule, load_syllabus
+from tools.aio.books import BookSpec
+from tools.aio.checks.schedule import Book2CourseSchedule, load_validated_schedule
+from tools.aio.model import CourseSchedule, load_syllabus
 
 DOCUMENT = Path("docs/course-structure.md")
 OWNED_REGIONS = (

@@ -10,13 +10,25 @@ from typing import Any
 
 import yaml
 
-from tools.model import load_syllabus_contract
+from tools.aio.model import load_syllabus_contract
 
-_REGISTRY_KEYS = frozenset({"books_version", "books"})
-_BOOK_KEYS = frozenset({"id", "number", "root", "depends_on"})
-# Optional publication keys (Plan 030 D1). A `publication: true` book must carry a title and a
-# subtitle; tools key on the `publication` flag, never on book ids.
-_BOOK_OPTIONAL_KEYS = frozenset({"title", "subtitle", "publication"})
+# Catalog adapter (py4kids plan aio-001 Phase D, design 014 D1). The registry is the py4kids
+# `books.yaml` (books_version 2), shared with the py4kids-model books; this catalog keeps only the
+# `content_model: aio` books and maps usaaio's book `number` onto each book's `aio_round` (the
+# py4kids `number` is a series ordinal and drives no aio tooling). Non-aio records are validated by
+# py4kids' own registry checks (ci-local step 1), not here.
+_REGISTRY_VERSION = 2
+_REGISTRY_REQUIRED_KEYS = frozenset({"books_version", "books"})
+_AIO_CONTENT_MODEL = "aio"
+_BOOK_KEYS = frozenset({"id", "number", "root", "depends_on", "content_model", "aio_round"})
+# Optional keys of an aio record. A `publication: true` book must carry a title and a subtitle;
+# tools key on the `publication` flag, never on book ids. `dependency_group`, `site` and
+# `lesson_budget` are py4kids registry keys the aio tools do not read.
+_BOOK_OPTIONAL_KEYS = frozenset(
+    {"title", "subtitle", "publication", "dependency_group", "site", "lesson_budget"}
+)
+# Undeclared top-level folders with this prefix are refused (the aio book-root namespace).
+_AIO_ROOT_PREFIX = "aio-"
 _IMPORT_KEYS = frozenset({"book", "units", "concepts"})
 _EVIDENCE_IMPORT_KEYS = frozenset({"book", "concepts", "lesson_paths", "practices", "assessments"})
 _FORBIDDEN_LEGACY_ROOTS = (
@@ -256,37 +268,53 @@ def _dependency_order(books: list[BookSpec]) -> tuple[BookSpec, ...]:
 
 
 def load_book_catalog(repo_root: str | Path) -> BookCatalog:
-    """Load registry structure without validating any book's content tree."""
+    """Load the aio books of the py4kids registry without validating any book's content tree."""
     root = Path(repo_root).resolve()
     registry_path = root / "books.yaml"
     raw = _load_yaml_mapping(registry_path, label="book registry")
-    _require_exact_keys(raw, _REGISTRY_KEYS, label=str(registry_path))
-    if type(raw["books_version"]) is not int or raw["books_version"] != 1:
-        raise ValueError(f"{registry_path}: books_version must be integer 1")
+    missing_top = sorted(repr(key) for key in _REGISTRY_REQUIRED_KEYS - set(raw))
+    if missing_top:
+        raise ValueError(f"{registry_path}: book registry is missing {missing_top}")
+    if type(raw["books_version"]) is not int or raw["books_version"] != _REGISTRY_VERSION:
+        raise ValueError(f"{registry_path}: books_version must be integer {_REGISTRY_VERSION}")
     records = raw["books"]
     if not isinstance(records, list) or not records:
         raise ValueError(f"{registry_path}: books must be a nonempty list")
+
+    registered_ids: set[str] = set()
+    aio_records: list[tuple[int, dict[str, Any]]] = []
+    for index, record in enumerate(records):
+        label = f"{registry_path}: books[{index}]"
+        if not isinstance(record, dict):
+            raise ValueError(f"{label} must be a mapping")  # noqa: TRY004
+        if isinstance(record.get("id"), str):
+            registered_ids.add(record["id"])
+        if record.get("content_model") == _AIO_CONTENT_MODEL:
+            aio_records.append((index, record))
+    if not aio_records:
+        raise ValueError(f"{registry_path}: no content_model: {_AIO_CONTENT_MODEL} book is registered")
 
     books: list[BookSpec] = []
     seen_ids: set[str] = set()
     seen_numbers: set[int] = set()
     seen_roots: set[Path] = set()
-    for index, record in enumerate(records):
+    for index, record in aio_records:
         label = f"{registry_path}: books[{index}]"
-        if not isinstance(record, dict):
-            raise ValueError(f"{label} must be a mapping")  # noqa: TRY004
         _require_book_keys(record, label=label)
         title, subtitle, publication = _publication_fields(record, label=label)
         book_id = _validated_book_id(record["id"], label=f"{label}.id")
-        number = record["number"]
-        if type(number) is not int or number <= 0:
+        series_number = record["number"]
+        if type(series_number) is not int or series_number <= 0:
             raise ValueError(f"{label}.number must be a positive integer")
+        number = record["aio_round"]
+        if type(number) is not int or number <= 0:
+            raise ValueError(f"{label}.aio_round must be a positive integer")
         dependencies = _ordered_unique_strings(record["depends_on"], label=f"{label}.depends_on")
         book_root = _validated_relative_root(root, record["root"], book_id=book_id)
         if book_id in seen_ids:
             raise ValueError(f"{registry_path}: duplicate book id {book_id!r}")
         if number in seen_numbers:
-            raise ValueError(f"{registry_path}: duplicate book number {number}")
+            raise ValueError(f"{registry_path}: duplicate aio_round {number}")
         if book_root in seen_roots:
             raise ValueError(f"{registry_path}: duplicate book root {record['root']!r}")
         seen_ids.add(book_id)
@@ -303,10 +331,17 @@ def load_book_catalog(repo_root: str | Path) -> BookCatalog:
                 publication=publication,
             )
         )
+    aio_ids = {book.id for book in books}
+    for book in books:
+        foreign = sorted(set(book.depends_on) & (registered_ids - aio_ids))
+        if foreign:
+            raise ValueError(
+                f"book {book.id}: an aio book may depend only on aio books, not {foreign}"
+            )
 
     declared_roots = {book.root for book in books}
     for entry in sorted(root.iterdir(), key=lambda path: path.name):
-        if not entry.name.startswith("book") or entry.name == "books.yaml":
+        if not entry.name.startswith(_AIO_ROOT_PREFIX):
             continue
         if not (entry.is_dir() or entry.is_symlink()):
             continue
@@ -320,6 +355,15 @@ def load_book_catalog(repo_root: str | Path) -> BookCatalog:
             raise ValueError(f"{root}: forbidden legacy root {legacy}")
 
     return BookCatalog(repo_root=root, books=_dependency_order(books))
+
+
+def book_for_round(repo_root: str | Path, aio_round: int) -> BookSpec:
+    """The registered aio book serving `aio_round` (BookSpec.number := aio_round)."""
+    catalog = load_book_catalog(repo_root)
+    matches = [book for book in catalog.books if book.number == aio_round]
+    if len(matches) != 1:
+        raise ValueError(f"no single registered aio book has aio_round {aio_round}")
+    return matches[0]
 
 
 def _path_has_symlink_component(root: Path, path: Path) -> bool:

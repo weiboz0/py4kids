@@ -22,7 +22,7 @@ from pathlib import Path
 
 import yaml
 
-from tools.books import (
+from tools.aio.books import (
     load_book_catalog,
     resolve_contained_path,
     unit_dir,
@@ -30,7 +30,7 @@ from tools.books import (
     unit_relpath,
 )
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 BOOK_ROOT: Path | None = None
 
 

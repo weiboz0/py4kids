@@ -24,7 +24,7 @@ from pathlib import Path
 
 import nbformat
 
-from tools.model import ManifestProblem, MockManifest, Report, load_mock_manifests
+from tools.aio.model import ManifestProblem, MockManifest, Report, load_mock_manifests
 
 MARKER_RE = re.compile(r"^- (?P<id>\S+): answer: (?P<answer>.+?)\s*$")
 POINTER_RE = re.compile(r"^solutions/(?P<file>[^#]+\.ipynb)#(?P<tag>[^#]+)$")

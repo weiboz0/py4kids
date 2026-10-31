@@ -6,7 +6,7 @@ from pathlib import Path
 import nbformat
 from jsonschema.exceptions import ValidationError
 
-from tools.model import Report
+from tools.aio.model import Report
 
 LEAK_MARKERS = ("# SOLUTION", "answer_key")
 

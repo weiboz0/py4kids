@@ -1095,7 +1095,7 @@ manifests:
 notebooks:
 - path: mocktests/r1-001/problems/p05.ipynb
   kind: notebook
-  semantic_sha256: e960308b523276c409b7209cac541102f85db6c27a3464d7a3dd5acae437e73c
+  semantic_sha256: 8cadd96e07409c9d7a3eb7e38c9e842c048f8db08fca23b1921ebf674064359f
   anchors:
   - anchor: 'mocktests/r1-001/problems/p05.ipynb :: Problem 5. > The Tide Ledger :: cell 1'
     heading_path:
@@ -1385,7 +1385,7 @@ notebooks:
   - sensor_z.mean
 - path: mocktests/r1-001/problems/p07.ipynb
   kind: notebook
-  semantic_sha256: 47436f370ecfd055f228947fdf2df2076f232815fb829634a43e4479e74e5f48
+  semantic_sha256: 6eb76682fedc658676fe4397fe47458da7ac5c61e5e15eab9945a407beef33ff
   anchors:
   - anchor: 'mocktests/r1-001/problems/p07.ipynb :: Problem 7. > PyTorch Modules and a Fresh ResNet Cut :: cell 1'
     heading_path:
@@ -1570,7 +1570,7 @@ notebooks:
   - torch.tensor
 - path: mocktests/r1-001/problems/p09.ipynb
   kind: notebook
-  semantic_sha256: ad534b25709c98a4c20ee15d779832fbc702df715e5afdf0cd7f91891a21b29d
+  semantic_sha256: 0bff725fd9853912fa162a73559563629613d82855f0d454de60aacce5b3c81f
   anchors:
   - anchor: 'mocktests/r1-001/problems/p09.ipynb :: Problem 9. > Urban Street-Tree Health :: cell 1'
     heading_path:
@@ -1648,7 +1648,7 @@ notebooks:
   - y.value_counts
 - path: mocktests/r1-001/solutions/p05_solution.ipynb
   kind: notebook
-  semantic_sha256: bc125add819679a6e390549cbb7d5a86d07cf0421b49e1a258ca8e577972092c
+  semantic_sha256: a032102676e738fec31aae0ddc132c02ec698a2b11f86db84098894d6e3ce133
   anchors:
   - anchor: 'mocktests/r1-001/solutions/p05_solution.ipynb :: Problem 5 — The Tide Ledger :: cell 1'
     heading_path:
@@ -2067,7 +2067,7 @@ notebooks:
   - x.std
 - path: mocktests/r1-001/solutions/p07_solution.ipynb
   kind: notebook
-  semantic_sha256: c149b8874996b2d23f1fc17f6fac01bfa1ad756e009413532d11252bea0aa0c2
+  semantic_sha256: 02645d9eff36abf4f5218c46d09aad506fcc9f8fa98dafc2b143a7840323cfc1
   anchors:
   - anchor: 'mocktests/r1-001/solutions/p07_solution.ipynb :: Problem 7 — PyTorch Modules and a Fresh ResNet Cut :: cell 1'
     heading_path:
@@ -2342,7 +2342,7 @@ notebooks:
   - torch.tensor
 - path: mocktests/r1-001/solutions/p09_solution.ipynb
   kind: notebook
-  semantic_sha256: 57d9a866d801d9516ae721343745f58bdf884488e62f415fc1b631a91e3102ec
+  semantic_sha256: 3292d533044590a7dbfd2883566a720c12b7a0ee7a470600526361d0a5f3f0d8
   anchors:
   - anchor: 'mocktests/r1-001/solutions/p09_solution.ipynb :: P9 — Urban Street-Tree Health: blind exemplar :: cell 1'
     heading_path:
@@ -25171,7 +25171,7 @@ notebooks:
   api_tokens: []
 - path: units/09-C4-classical-ml-practice/lessons/01-pandas-and-data-loading.ipynb
   kind: notebook
-  semantic_sha256: 631e68d19f0d6180646cd16ed09ccb258fb42faed52bc07a6cd2aeceefb3b0c2
+  semantic_sha256: 7f719f4979c5b7570e9e06752cc527d21583a7a5ee9c5a0648e1e7178bca5edd
   anchors:
   - anchor: 'units/09-C4-classical-ml-practice/lessons/01-pandas-and-data-loading.ipynb :: C4-classical-ml-practice — Session
       1: Pandas and Data Loading :: cell 1'
@@ -27719,7 +27719,7 @@ notebooks:
   api_tokens: []
 - path: units/10-C5-embeddings/lessons/01-tokens-and-embeddings.ipynb
   kind: notebook
-  semantic_sha256: 7fddded88d6e6837a8074f2038494378d7cf23c720eff99a6c3b3b19a77c4632
+  semantic_sha256: 6621db03a26a34a7eb41f6f962cd6aa27f3df455637c2ed123057b241d5fbfc6
   anchors:
   - anchor: 'units/10-C5-embeddings/lessons/01-tokens-and-embeddings.ipynb :: C5-embeddings — Session 1: Tokens and Embeddings
       :: cell 1'
@@ -27948,7 +27948,7 @@ notebooks:
   - tokens.index
 - path: units/10-C5-embeddings/lessons/02-matrices-and-similarity.ipynb
   kind: notebook
-  semantic_sha256: f6c315f93da0d78b42d9085cb10a51fdd35dfde030923d906536a7d694ea071f
+  semantic_sha256: ae24762d408d015be4e1118554fe1c8b5a1e3e1413da1842128c62759f1f1b79
   anchors:
   - anchor: 'units/10-C5-embeddings/lessons/02-matrices-and-similarity.ipynb :: C5-embeddings — Session 2: Embedding Matrices
       and the Similarity Matrix :: cell 1'
@@ -28185,7 +28185,7 @@ notebooks:
   - rng.normal
 - path: units/10-C5-embeddings/lessons/03-neighbors-and-retrieval.ipynb
   kind: notebook
-  semantic_sha256: 8cdfa54b6d40cea49783e15ad0204b367494c6307338e69a376270aad89d2e7b
+  semantic_sha256: 585bcef9d308a363c8bd1dca471d3faec9461c582372caf7719362f8a4449b10
   anchors:
   - anchor: 'units/10-C5-embeddings/lessons/03-neighbors-and-retrieval.ipynb :: C5-embeddings — Session 3: Nearest Neighbors
       and Retrieval :: cell 1'
@@ -28595,7 +28595,7 @@ notebooks:
   - math.gcd
 - path: units/10-C5-embeddings/practice/p05.ipynb
   kind: notebook
-  semantic_sha256: 484aed2d5be3116bde5182531b115730634b9e303107891050ab61a21c900d14
+  semantic_sha256: 1cd3e6c0043867609beb476375c806aeedff11cad0346a550633f19fe98a7672
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p05.ipynb :: C5-embeddings — Practice p05 :: cell 1'
     heading_path:
@@ -28619,7 +28619,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p05_solution.ipynb
   kind: notebook
-  semantic_sha256: 09cc6cac3190503836c86935c5c3e691f1bb9d963683d9c8107aa0dd36923e52
+  semantic_sha256: 411737b22eec376e3b6d4fc7b2a8721bbc2c61823761573b5c81e5e08319ab36
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p05_solution.ipynb :: C5-embeddings — Practice p05 — Solution :: cell 1'
     heading_path:
@@ -28724,7 +28724,7 @@ notebooks:
   - toks.index
 - path: units/10-C5-embeddings/practice/p07.ipynb
   kind: notebook
-  semantic_sha256: 42fa1def95a151801bd2c31558fb4b725cb0b3a2ec17fad9018d22f5786a4429
+  semantic_sha256: c4824fdbe8a6753af692640fd25e407f0e566649cba4677b2e56708afd33682d
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p07.ipynb :: C5-embeddings — Practice p07 :: cell 1'
     heading_path:
@@ -28751,7 +28751,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p07_solution.ipynb
   kind: notebook
-  semantic_sha256: e76e78c5e1380f29752f4adca4eda6eb8b8d792e77a1052b089fa85ff481765b
+  semantic_sha256: c79066a0785061bf361957c971f25a890ad994c26f72175986b7b7c21ae8ff61
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p07_solution.ipynb :: C5-embeddings — Practice p07 — Solution :: cell 1'
     heading_path:
@@ -28803,7 +28803,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p08.ipynb
   kind: notebook
-  semantic_sha256: 08cd0936a4c35174148fd727cee43a687e078ddd05512e5423719762b93611a0
+  semantic_sha256: 37ffb6fdfd4253bb8d2aeccc6b0f67affe110a94c9b3aabcb8dd9610308c6d74
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p08.ipynb :: C5-embeddings — Practice p08 :: cell 1'
     heading_path:
@@ -28831,7 +28831,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p08_solution.ipynb
   kind: notebook
-  semantic_sha256: cee5aa676029690222a4d5248771d019e8010b3ce607f2a6226a0eaf52ab2c5e
+  semantic_sha256: b6b65e35e12e00ed37b6c4ca0e62372c541fbded7c95845638c4b30df424443d
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p08_solution.ipynb :: C5-embeddings — Practice p08 — Solution :: cell 1'
     heading_path:
@@ -28885,7 +28885,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p09.ipynb
   kind: notebook
-  semantic_sha256: d86a7060c3628cfa44d1b98d7cd195beff54567e0fc85998f1c99f94f6810704
+  semantic_sha256: aef5d8177f6e3b4728a24b3d078444133ede3fb1ffb6f701f217bb645726f636
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p09.ipynb :: C5-embeddings — Practice p09 :: cell 1'
     heading_path:
@@ -28912,7 +28912,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p09_solution.ipynb
   kind: notebook
-  semantic_sha256: 69e9dcbfa5f1d2dc26655f94f60ab62f67ad95854d2471b0b802594adc12c222
+  semantic_sha256: 578ae7cbe931a158cb8baf6103229807bc01630d99a85efd5fbcaf4ac91060ad
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p09_solution.ipynb :: C5-embeddings — Practice p09 — Solution :: cell 1'
     heading_path:
@@ -28965,7 +28965,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p10.ipynb
   kind: notebook
-  semantic_sha256: ce33f303e8dc066ab9f4c900ed18232bb576a902c60bcbb388f2df357c23d826
+  semantic_sha256: 43b6c89c26fa46b37c5aa2981141372d23788c366a34c97c2180c93aee78571b
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p10.ipynb :: C5-embeddings — Practice p10 :: cell 1'
     heading_path:
@@ -28988,7 +28988,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p10_solution.ipynb
   kind: notebook
-  semantic_sha256: 61c7d20cd1074397f8e8a363aee61f72be29c09d0801a265e0ca5a896bbec0d5
+  semantic_sha256: d9bf7d73c976fb76558d29c6a278e7061d7ef5567ce52a4857f3cf61ae130fa7
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p10_solution.ipynb :: C5-embeddings — Practice p10 — Solution :: cell 1'
     heading_path:
@@ -29041,7 +29041,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p11.ipynb
   kind: notebook
-  semantic_sha256: c504bf5e4c209ceeaf3db85e6dce8ad526e786334e7758e98790513dfa164040
+  semantic_sha256: 12b38aeab8e341dfd8f69e410df7b41ac6af4bd90e75d2c9db1c1727e4c5cd4e
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p11.ipynb :: C5-embeddings — Practice p11 :: cell 1'
     heading_path:
@@ -29073,7 +29073,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p11_solution.ipynb
   kind: notebook
-  semantic_sha256: 02c5c2206a486b0dbbe9d4aadd7fe1be50dc297dbb7c792f89eeb7455c3679ab
+  semantic_sha256: 00ff250d980c34d6c71366d63cec5c5fde1304eafba5b1fa50f47a3bacf56189
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p11_solution.ipynb :: C5-embeddings — Practice p11 — Solution :: cell 1'
     heading_path:
@@ -29137,7 +29137,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p12.ipynb
   kind: notebook
-  semantic_sha256: 9bf230bf66f7804f54b1cbadcfdd48a9d540fd89dff2c3d68337982106aa827a
+  semantic_sha256: 047a28b63f2a595c6fce40ea238a1608625c2ffa6ff8ff02a7b32021832baf40
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p12.ipynb :: C5-embeddings — Practice p12 :: cell 1'
     heading_path:
@@ -29168,7 +29168,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p12_solution.ipynb
   kind: notebook
-  semantic_sha256: 806654a379bf373cfced8d5eff505a3183efd7b017fb0bce1a21c32065a6b58f
+  semantic_sha256: f385988f7477d53e0deb50e40f7714c2e80d200e11ec683ee7de11b569a2363a
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p12_solution.ipynb :: C5-embeddings — Practice p12 — Solution :: cell 1'
     heading_path:
@@ -29235,7 +29235,7 @@ notebooks:
   - rng.normal
 - path: units/10-C5-embeddings/practice/p13.ipynb
   kind: notebook
-  semantic_sha256: 2a6ea3368d334262860ae683fd77e014c330727ee9506f329b55ec8e63a066ad
+  semantic_sha256: e8bc453300dc11a87c76b1ab106e5b528e66a256821c639e122c7277c3fcc179
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p13.ipynb :: C5-embeddings — Practice p13 :: cell 1'
     heading_path:
@@ -29267,7 +29267,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p13_solution.ipynb
   kind: notebook
-  semantic_sha256: d97060903bd283e091a22ad81ce3bb51b508c97cb041fe104a5c72a1fa43154c
+  semantic_sha256: c37a4574d01c2a97674bc085f2ae1c9c088ea209e58832c7d4e15188d2a85269
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p13_solution.ipynb :: C5-embeddings — Practice p13 — Solution :: cell 1'
     heading_path:
@@ -29323,7 +29323,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p14.ipynb
   kind: notebook
-  semantic_sha256: b74dc37189090d3768177ecd22ec01913fa1891cdef8e55031d58b0a0dcce5a5
+  semantic_sha256: edd4e158dcef818a869384b50bbfc905258750c2f12bcb92bd3ea3a59f020e00
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p14.ipynb :: C5-embeddings — Practice p14 :: cell 1'
     heading_path:
@@ -29346,7 +29346,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p14_solution.ipynb
   kind: notebook
-  semantic_sha256: b4dda371d3ca7ca40750a02987e801da107a619429af0e5d8fba74b0ce03dc35
+  semantic_sha256: 7e337a7fdee163a50bc12bca86f7a8f86e43f0fff4612dac529bee0035786db2
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p14_solution.ipynb :: C5-embeddings — Practice p14 — Solution :: cell 1'
     heading_path:
@@ -29470,7 +29470,7 @@ notebooks:
   - toks.index
 - path: units/10-C5-embeddings/practice/p16.ipynb
   kind: notebook
-  semantic_sha256: 0776d5decb3210e72e7aac606584403c48de67b118bfd0fcbc795a5225fea23e
+  semantic_sha256: b27e59445669e3977c3fa4c57098dfd8f980e2402a6721c46b2317c0b02e86dd
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p16.ipynb :: C5-embeddings — Practice p16 :: cell 1'
     heading_path:
@@ -29497,7 +29497,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p16_solution.ipynb
   kind: notebook
-  semantic_sha256: 6149408dbf628397f0d138f4795fb65a0c6cb8e46d3114713a622a3a2f570c86
+  semantic_sha256: 1b4523b376743c0ae18ce75c71bc15b7dd034c8a3feb523b9f05990761ac8f9d
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p16_solution.ipynb :: C5-embeddings — Practice p16 — Solution :: cell 1'
     heading_path:
@@ -29550,7 +29550,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p17.ipynb
   kind: notebook
-  semantic_sha256: 01d405bc5b918b1ea19c145cdae957eb724ffa4f2340e7d9ed55ee51949fe8b3
+  semantic_sha256: d28f1ac28b6ab55c6d63f2ddd3d8ff04f20d7fce5268ed11ed1ff0913f26ed67
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p17.ipynb :: C5-embeddings — Practice p17 :: cell 1'
     heading_path:
@@ -29573,7 +29573,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p17_solution.ipynb
   kind: notebook
-  semantic_sha256: a40a85f32d4c0784fee89c2b3aed5950a44272165e1ddb2aeded8d582af8ac76
+  semantic_sha256: f076c6bd6bcc7c65695746708d1e3a0ee5b3d67ea618ec119de1cdd3a229a192
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p17_solution.ipynb :: C5-embeddings — Practice p17 — Solution :: cell 1'
     heading_path:
@@ -29624,7 +29624,7 @@ notebooks:
   - words.index
 - path: units/10-C5-embeddings/practice/p18.ipynb
   kind: notebook
-  semantic_sha256: 2221202f4cfb9625a552b1bfa4bec7584e35ab172bb63db60b76e300eca7c4f4
+  semantic_sha256: 6ab028c274b31a75ff8b67008f31dc68b69ce466c86ff692e422f4803466759b
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p18.ipynb :: C5-embeddings — Practice p18 :: cell 1'
     heading_path:
@@ -29651,7 +29651,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p18_solution.ipynb
   kind: notebook
-  semantic_sha256: 40fb22589622f8404de2f568a5c2ec05e355aead27ea711faa098d2290e611d4
+  semantic_sha256: b7fabdf502d83e447810a35a937d9e988d413499e7d9315c501d9acd8932c1e4
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p18_solution.ipynb :: C5-embeddings — Practice p18 — Solution :: cell 1'
     heading_path:
@@ -29697,7 +29697,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p19.ipynb
   kind: notebook
-  semantic_sha256: 837e9fc13939835147f066aded76d19baf3897b7bf77ac5e85019b706c3f0903
+  semantic_sha256: 7e6f03cc7efab7b67399008a8f6f1d78e690370c4a1ab21a4c88bdf2df8a48c3
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p19.ipynb :: C5-embeddings — Practice p19 :: cell 1'
     heading_path:
@@ -29720,7 +29720,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p19_solution.ipynb
   kind: notebook
-  semantic_sha256: c6d413fa79cb5af91ed20d4e4a11188cf67453a855637b16fcdbd90eafa61efe
+  semantic_sha256: 2923bb7fdacd8d416c91d985cfb21d65d3aaa86c2afeedb010bc63dfc90b56e0
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p19_solution.ipynb :: C5-embeddings — Practice p19 — Solution :: cell 1'
     heading_path:
@@ -29766,7 +29766,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p20.ipynb
   kind: notebook
-  semantic_sha256: baec27e1afb1fe19964669e65b73542e4f2dd00c37ac17c3bfa820df58cd0693
+  semantic_sha256: ce102338cc6af5ec830c790a49df9b0a737f2b4f4da5c33afa42fa572ebf3711
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p20.ipynb :: C5-embeddings — Practice p20 :: cell 1'
     heading_path:
@@ -29789,7 +29789,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/10-C5-embeddings/practice/p20_solution.ipynb
   kind: notebook
-  semantic_sha256: 507a72a2810b9be4d883bbc4be84901c9457f2c6c142648be891eb209101d186
+  semantic_sha256: 167ad6cf782e50ea8c026aff5a7b133f6de31b509497c2a3c1a925f50959e8a8
   anchors:
   - anchor: 'units/10-C5-embeddings/practice/p20_solution.ipynb :: C5-embeddings — Practice p20 — Solution :: cell 1'
     heading_path:
@@ -43323,7 +43323,7 @@ notebooks:
   - worked.transform
 - path: units/16-C9-dimensionality-reduction/lessons/03-truncated-svd-practice.ipynb
   kind: notebook
-  semantic_sha256: 9b8f47bba4fa23bcd9608aa23e3fe1d10144ac8325af9b5f70d09e930490243f
+  semantic_sha256: f3680557f377a17e67ac0caf76402d50d2384e57da1d146228c8efdeeddb75c0
   anchors:
   - anchor: 'units/16-C9-dimensionality-reduction/lessons/03-truncated-svd-practice.ipynb :: C9-dimensionality-reduction —
       Session 3: Truncated SVD in Practice — Compressing the Embedding Stack :: cell 1'
@@ -44199,7 +44199,7 @@ notebooks:
   - rng.normal
 - path: units/16-C9-dimensionality-reduction/practice/p07.ipynb
   kind: notebook
-  semantic_sha256: 81e4dd78af29d95db3cf5bda6c7858c03035d67dee618aad5ef0d2294ec7d600
+  semantic_sha256: 756f989a0bba0dcccfdfd80c694e1af346cdc19f6b655dab6a1eb4ae2946330a
   anchors:
   - anchor: 'units/16-C9-dimensionality-reduction/practice/p07.ipynb :: C9-dimensionality-reduction — Practice p07 :: cell
       1'
@@ -44232,7 +44232,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/16-C9-dimensionality-reduction/practice/p07_solution.ipynb
   kind: notebook
-  semantic_sha256: f14c30b0147de7e2e1af37846c94c30e62c6fde5fd12dbdba6b22152ad8fa652
+  semantic_sha256: 91278d42b30f817d89968b870e53147b9e2532aa8283ac9bf3b90153cadddc03
   anchors:
   - anchor: 'units/16-C9-dimensionality-reduction/practice/p07_solution.ipynb :: C9-dimensionality-reduction — Practice p07
       — Solution :: cell 1'
@@ -44381,7 +44381,7 @@ notebooks:
   - rng.uniform
 - path: units/16-C9-dimensionality-reduction/practice/p09.ipynb
   kind: notebook
-  semantic_sha256: 320d042ab1a49558352e5f70c7c597fdaec4c68fa7157349bcf3afb826186625
+  semantic_sha256: c199c9ff70aca86d504c327193d20fa1fb6948cd92197440b02084179d08b797
   anchors:
   - anchor: 'units/16-C9-dimensionality-reduction/practice/p09.ipynb :: C9-dimensionality-reduction — Practice p09 :: cell
       1'
@@ -44411,7 +44411,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/16-C9-dimensionality-reduction/practice/p09_solution.ipynb
   kind: notebook
-  semantic_sha256: e13bd5aba8269d9e9a48dbf9887f8f624ce1d5199c80d86fbf197a2f6dab6b76
+  semantic_sha256: 62e93ca84f2e862159f0ca1985af9793b12c5be360c68382380546751466f71a
   anchors:
   - anchor: 'units/16-C9-dimensionality-reduction/practice/p09_solution.ipynb :: C9-dimensionality-reduction — Practice p09
       — Solution :: cell 1'
@@ -44647,7 +44647,7 @@ notebooks:
   - rng.normal
 - path: units/16-C9-dimensionality-reduction/practice/p12.ipynb
   kind: notebook
-  semantic_sha256: db690c77e599b8bac50a8fa2f98b8c4cbb8a2de5dade890686434ae446e6503f
+  semantic_sha256: f4f13506d605295b6fea6295b73905e34c717b97ed224b595a12a0643268ac74
   anchors:
   - anchor: 'units/16-C9-dimensionality-reduction/practice/p12.ipynb :: C9-dimensionality-reduction — Practice p12 :: cell
       1'
@@ -44686,7 +44686,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/16-C9-dimensionality-reduction/practice/p12_solution.ipynb
   kind: notebook
-  semantic_sha256: 4e9a72a47b4b7776d7bf4fd5fe75593f470720ef3ab7929d1262a17a6379ade9
+  semantic_sha256: f0ad08bdd153aec57138efe912f9f6c641214d5414fe7efebcb363872051c960
   anchors:
   - anchor: 'units/16-C9-dimensionality-reduction/practice/p12_solution.ipynb :: C9-dimensionality-reduction — Practice p12
       — Solution :: cell 1'
@@ -44843,7 +44843,7 @@ notebooks:
   - scores.min
 - path: units/16-C9-dimensionality-reduction/practice/p14.ipynb
   kind: notebook
-  semantic_sha256: 46b131f54ee22c372d11b4363227c15db033908e43f45c8b1dc08e66fea5c1c3
+  semantic_sha256: 96d3f07da767c82b1bc9dacc384aec21639f941b4196db51f504176cd682b5ca
   anchors:
   - anchor: 'units/16-C9-dimensionality-reduction/practice/p14.ipynb :: C9-dimensionality-reduction — Practice p14 :: cell
       1'
@@ -44881,7 +44881,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/16-C9-dimensionality-reduction/practice/p14_solution.ipynb
   kind: notebook
-  semantic_sha256: dd3cce7d476810b5b75d7214cba4395cc8920b1a429bd57837e79ee98c34d749
+  semantic_sha256: 1c29b0704d89a66b659b91e1e1fcad27ee22cda9a2dd5ef90403f19b8be0d3bd
   anchors:
   - anchor: 'units/16-C9-dimensionality-reduction/practice/p14_solution.ipynb :: C9-dimensionality-reduction — Practice p14
       — Solution :: cell 1'
@@ -46548,7 +46548,7 @@ notebooks:
   - torch.zeros
 - path: units/17-C10-cnn-transfer/lessons/02-resnet-reading.ipynb
   kind: notebook
-  semantic_sha256: 1ec54154e0560eac5bbc2f3706704a12b4d75b405456dea46594b592629266bf
+  semantic_sha256: b734361c4692b842d68eb038bdf5d11cbb2ecf994714d38e041c24a5d43e5100
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/lessons/02-resnet-reading.ipynb :: C10-cnn-transfer — Session 2: Reading ResNet-50
       :: cell 1'
@@ -46871,7 +46871,7 @@ notebooks:
   - x.to
 - path: units/17-C10-cnn-transfer/lessons/03-truncation-and-transfer.ipynb
   kind: notebook
-  semantic_sha256: ea377e02c99e3f203a89cead604e9faa7f246d744ab72dc0fb9fb44e27f3b52e
+  semantic_sha256: a329b0c78ec5f28519e1f23f4f5fc26bc25dccefe8576495813adf16ced7d54d
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/lessons/03-truncation-and-transfer.ipynb :: C10-cnn-transfer — Session 3: Truncation
       and Transfer :: cell 1'
@@ -47735,7 +47735,7 @@ notebooks:
   - torch.set_default_dtype
 - path: units/17-C10-cnn-transfer/practice/p08.ipynb
   kind: notebook
-  semantic_sha256: 7281dd74291592dddaeb6ad9a7b9cc7c75a0fe984d41ae56bfafa5a4a7395b6a
+  semantic_sha256: 8765f914dfcc7481ee122884bb2c704f5bc0109a90f59ef2dc62f950d4fff862
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p08.ipynb :: C10-cnn-transfer — Practice p08 :: cell 1'
     heading_path:
@@ -47760,7 +47760,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p08_solution.ipynb
   kind: notebook
-  semantic_sha256: 83a050d4a22ef3dff4c87a33a4a0bf7025d6052ffdc11de76592523c4a35dc9f
+  semantic_sha256: 686458e4b158f4898f4b29c85d3b00a206f26c43d38a587838f54c458d9480b2
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p08_solution.ipynb :: C10-cnn-transfer — Practice p08 — Solution :: cell 1'
     heading_path:
@@ -47802,7 +47802,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p09.ipynb
   kind: notebook
-  semantic_sha256: 1688d696ee3206168846b0a14dd5531ea69c2f4faab016f1f3a537d8265b22fa
+  semantic_sha256: 27b3ebfa3e4f36a49e5daf3ee4e83822a0ae78a88e974f62460b27951ff6b490
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p09.ipynb :: C10-cnn-transfer — Practice p09 :: cell 1'
     heading_path:
@@ -47833,7 +47833,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p09_solution.ipynb
   kind: notebook
-  semantic_sha256: a9965db3f50faaf7ed83339288ecb7d423df63a413a9208363b8efa45973dd13
+  semantic_sha256: ffa44d0ae94b61690c08b36588087cc9a2b87c591be2191f03c7df492ec0ca65
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p09_solution.ipynb :: C10-cnn-transfer — Practice p09 — Solution :: cell 1'
     heading_path:
@@ -48037,7 +48037,7 @@ notebooks:
   - torch.tensor
 - path: units/17-C10-cnn-transfer/practice/p11.ipynb
   kind: notebook
-  semantic_sha256: 35ea6747858b2a905134163b7bde430be3e7acedd4312aa4caf414b807af0f65
+  semantic_sha256: 787ef97e66bd40fb733a89246fe58763e44eed59a1232c50c117e03ee59033a7
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p11.ipynb :: C10-cnn-transfer — Practice p11 :: cell 1'
     heading_path:
@@ -48078,7 +48078,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p11_solution.ipynb
   kind: notebook
-  semantic_sha256: 7761f348ae743536e00f25514ce6e8b6c91db9a3e2d05d29f2fe3d8d6f550131
+  semantic_sha256: 6ad73936b1201d6b92cf0d245344a5d474f31542c12697e8d272a8dbbb2e9c09
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p11_solution.ipynb :: C10-cnn-transfer — Practice p11 — Solution :: cell 1'
     heading_path:
@@ -48149,7 +48149,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p12.ipynb
   kind: notebook
-  semantic_sha256: 018944fc2eb8a2da7233ca820e1aad7e49710647dddbdf282fd0e9e8b15848a8
+  semantic_sha256: 7eeb41ce69c11442de5c4f2b804eb1966c9ef2937dae0081bf6cc47bee0b8487
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p12.ipynb :: C10-cnn-transfer — Practice p12 :: cell 1'
     heading_path:
@@ -48172,7 +48172,7 @@ notebooks:
   - pathlib.Path.cwd
 - path: units/17-C10-cnn-transfer/practice/p12_solution.ipynb
   kind: notebook
-  semantic_sha256: 49c878841d7b26ccf8079699d9797b60d8f5f9ef612e82ca8111a50a00a07896
+  semantic_sha256: bf77a43b56b3c70097e25db9111d0028c7b2e68cb0cff1504d6f127d3153c364
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p12_solution.ipynb :: C10-cnn-transfer — Practice p12 — Solution :: cell 1'
     heading_path:
@@ -48290,7 +48290,7 @@ notebooks:
   - torch.zeros
 - path: units/17-C10-cnn-transfer/practice/p14.ipynb
   kind: notebook
-  semantic_sha256: 04db9caadeda93b1202e43f8a378e836e9cb30c1df5627e802c9890d8f652f9c
+  semantic_sha256: 55b68159017bfd92d7c791a21d11083d4f50054ec5d7885d2da0d619234d36cc
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p14.ipynb :: C10-cnn-transfer — Practice p14 :: cell 1'
     heading_path:
@@ -48320,7 +48320,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p14_solution.ipynb
   kind: notebook
-  semantic_sha256: 5cb21cef9f65e44832236509bee87c68a382718067497e1513221b81042d236d
+  semantic_sha256: 7d2a29fea2da3dc990b9e35ba578213985e5bca16c6af3168f73bd0726b8e795
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p14_solution.ipynb :: C10-cnn-transfer — Practice p14 — Solution :: cell 1'
     heading_path:
@@ -48363,7 +48363,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p15.ipynb
   kind: notebook
-  semantic_sha256: bb85d0c513ad6613896c33957f218f9e82fdb789c73a2a5d73a06e342efaf360
+  semantic_sha256: 2903738e1d7183d96c4261088c4dd131b2b1c37f74534161d321fc74cf7e472b
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p15.ipynb :: C10-cnn-transfer — Practice p15 :: cell 1'
     heading_path:
@@ -48411,7 +48411,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p15_solution.ipynb
   kind: notebook
-  semantic_sha256: b1dbcfb12cb23b8da55cba649a06f494c4e8ab110dde7d5699dbfea23646523d
+  semantic_sha256: 84dfa4e611734dbcb845af619e61722962b27e0b7492a98f263f54edd81b5eba
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p15_solution.ipynb :: C10-cnn-transfer — Practice p15 — Solution :: cell 1'
     heading_path:
@@ -48476,7 +48476,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p16.ipynb
   kind: notebook
-  semantic_sha256: 339a733d732269d38394b1aabe43e81adcc3634bc4b6d8a7a757c19b39070d89
+  semantic_sha256: 3852e5d991ac7e4052269f4244ab0c8c49f50f34fab64412056089726dd222b2
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p16.ipynb :: C10-cnn-transfer — Practice p16 :: cell 1'
     heading_path:
@@ -48519,7 +48519,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p16_solution.ipynb
   kind: notebook
-  semantic_sha256: 86a93ff83765d114a16096e2b921e2760661d212473779ab8524cf98466f81f6
+  semantic_sha256: 467dfa89fb3f5be34fb2ca443bafda2dca5bfeea1290e1567087f9b0d5b4c245
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p16_solution.ipynb :: C10-cnn-transfer — Practice p16 — Solution :: cell 1'
     heading_path:
@@ -48586,7 +48586,7 @@ notebooks:
   - trunk.parameters
 - path: units/17-C10-cnn-transfer/practice/p17.ipynb
   kind: notebook
-  semantic_sha256: 17c85962268137c3eb2f8879284ef38abd9d41b7b420d0607528f405441d80a9
+  semantic_sha256: 8cbc669826af492efbbb4355fc91ad2761a304e04b44da66b901d0bf736bf342
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p17.ipynb :: C10-cnn-transfer — Practice p17 :: cell 1'
     heading_path:
@@ -48628,7 +48628,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p17_solution.ipynb
   kind: notebook
-  semantic_sha256: ff84a103a4641d1db7d01073eea3b028aed5c6b1c2799baf7ba607247ec7c710
+  semantic_sha256: 48a82fef9edd470e7f9ff6440b98f42f9a173d5d5b8343f76e88837d0a2e3d75
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p17_solution.ipynb :: C10-cnn-transfer — Practice p17 — Solution :: cell 1'
     heading_path:
@@ -48765,7 +48765,7 @@ notebooks:
   - stack.mean
 - path: units/17-C10-cnn-transfer/practice/p19.ipynb
   kind: notebook
-  semantic_sha256: 96cf73e1cfb23370065bbdee12dd87ea8e27729a3d7b866ccbf9bfac4476ff05
+  semantic_sha256: d5e2272e0c550a406c2cb94a12f9f9c5865ed734cbb0453a67a7b71fb49e1e36
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p19.ipynb :: C10-cnn-transfer — Practice p19 :: cell 1'
     heading_path:
@@ -48808,7 +48808,7 @@ notebooks:
   - torchvision.models.resnet50
 - path: units/17-C10-cnn-transfer/practice/p19_solution.ipynb
   kind: notebook
-  semantic_sha256: b3db9544c8a5012d8883166a878bdecd3187c747cea7e7d6e2fcdde3a341ca95
+  semantic_sha256: ee04e3268f2c36641ffd446c1adc37b694e0818f47204211ec78f5905b2b5a4f
   anchors:
   - anchor: 'units/17-C10-cnn-transfer/practice/p19_solution.ipynb :: C10-cnn-transfer — Practice p19 — Solution :: cell 1'
     heading_path:

@@ -29,7 +29,7 @@ from typing import Any
 
 import yaml
 
-from tools.books import unit_id_of
+from tools.aio.books import unit_id_of
 
 GLOBAL_EXACT = frozenset({
     "tools/books.py", "scripts/build-book.sh", "books.yaml", "pyproject.toml", "uv.lock",
@@ -252,12 +252,12 @@ def change_set(root: Path) -> tuple[list[str], str | None]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m tools.ci_scope")
+    parser = argparse.ArgumentParser(prog="python -m tools.aio.ci_scope")
     parser.add_argument("--root", type=Path, default=Path("."))
     parser.add_argument("--all-books", action="store_true")
     arguments = parser.parse_args(argv)
     root = arguments.root.resolve()
-    from tools.books import live_units, load_book_catalog, load_publication_config
+    from tools.aio.books import live_units, load_book_catalog, load_publication_config
 
     catalog = load_book_catalog(root)
     infos = []

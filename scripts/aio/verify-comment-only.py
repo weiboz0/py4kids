@@ -33,11 +33,12 @@ from typing import Any
 
 import nbformat
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.checks.api_comments import (
+from tools.aio.books import load_book_catalog
+from tools.aio.checks.api_comments import (
     _CARD_HEADING,
     CARD_MARKER,
     cell_comments,
@@ -111,8 +112,14 @@ def _git(*args: str, root: Path) -> str:
     ).stdout
 
 
+def _book_roots(root: Path) -> list[str]:
+    """The registered aio book roots, repo-relative (py4kids aio-001: registry data, not ids)."""
+    catalog = load_book_catalog(root)
+    return [book.root.relative_to(catalog.repo_root).as_posix() for book in catalog.books]
+
+
 def _base_notebooks(base: str, root: Path) -> set[str]:
-    listing = _git("ls-tree", "-r", "--name-only", base, "--", "aio-ml", "aio-dl", root=root)
+    listing = _git("ls-tree", "-r", "--name-only", base, "--", *_book_roots(root), root=root)
     return {line for line in listing.splitlines() if _in_scope(line)}
 
 
@@ -323,7 +330,7 @@ def main(argv: list[str] | None = None) -> int:
     base_paths = _base_notebooks(args.base, root)
     head_paths = {
         path.relative_to(root).as_posix()
-        for book in ("aio-ml", "aio-dl")
+        for book in _book_roots(root)
         for path in (root / book).rglob("*.ipynb")
         if _in_scope(path.relative_to(root).as_posix())
     }

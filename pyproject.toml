@@ -103,6 +103,10 @@ line-length = 100
 # deny-list refuses them in annotation positions (design 013 §4.1), and racekit holds itself to it.
 [tool.ruff.lint.per-file-ignores]
 "roar/projects/racekit/**" = ["UP006", "UP007", "UP035", "UP045"]
+# aio-001 Phase D part 1: the imported usaaio tests still import `tools.X` (rewritten to
+# `tools.aio.X` by Phase D part 2), so their import blocks sort as third-party until then.
+# Remove this entry with that rewrite.
+"tools/aio/tests/**" = ["I001"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

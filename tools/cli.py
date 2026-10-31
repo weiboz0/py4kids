@@ -55,6 +55,15 @@ BOOK_LEVEL_CHECKS = {
 
 
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["aio"]:
+        # Design 014 D4 / plan aio-001 Phase D: `py4kids-tools aio …` delegates, before the
+        # py4kids parser (which requires --book), to the ported usaaio CLI with its own
+        # --book/--all grammar. Imported lazily: the group-free run never loads tools.aio.
+        # Exit codes pass through unchanged (3 = SKIP).
+        from tools.aio.cli import main as aio_main
+
+        return aio_main(list(argv[1:]))
     try:
         arguments = _parser().parse_args(argv)
     except SystemExit as error:

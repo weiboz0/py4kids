@@ -16,7 +16,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from tools.books import output_pdf_name
+from tools.aio.books import output_pdf_name
 
 PDF_FILES = ("syllabus.pdf",)
 PDF_FOLDERS = ("handouts", "mocktests")
@@ -71,8 +71,8 @@ def refresh_output(root: Path, book_id: str, owner: str, sources: list[Path]) ->
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m tools.publish_output")
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
+    parser = argparse.ArgumentParser(prog="python -m tools.aio.publish_output")
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--book", required=True)
     parser.add_argument("--owner", required=True, choices=OWNERS)
     parser.add_argument("pdfs", nargs="*", type=Path)

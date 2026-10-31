@@ -17,7 +17,7 @@ Book 2 is scanned after its dependencies (Book 1), so a callee Book 1 explains i
 Book 2. Cell indices in messages and waivers are 0-based (`nb.cells[i]`).
 
 Report mode: while `enforce: false` in `api_comments_baseline.yaml`, findings print as
-warnings and the check passes. Run `python -m tools.checks.api_comments --root <book root>`
+warnings and the check passes. Run `python -m tools.aio.checks.api_comments --root <book root>`
 for a per-unit summary or a filtered finding list.
 """
 
@@ -39,15 +39,15 @@ from typing import Any
 
 import yaml
 
-from tools.books import load_book_catalog, mocktests_root, unit_id_of
-from tools.books import units_root as books_units_root
-from tools.checks.tolerance import (
+from tools.aio.books import load_book_catalog, mocktests_root, unit_id_of
+from tools.aio.books import units_root as books_units_root
+from tools.aio.checks.tolerance import (
     _canonical_module,
     _dotted_name,
     _import_aliases,
     _resolved_name,
 )
-from tools.model import Report
+from tools.aio.model import Report
 
 NAME = "api-comments-check"
 CONFIG_PATH = Path(__file__).with_name("api_comments_baseline.yaml")
@@ -1245,7 +1245,7 @@ def check_api_comments(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="python -m tools.checks.api_comments",
+        prog="python -m tools.aio.checks.api_comments",
         description="Per-unit API-comment inventory (Plan 032).",
     )
     parser.add_argument("--root", required=True, help="book root, e.g. aio-ml")

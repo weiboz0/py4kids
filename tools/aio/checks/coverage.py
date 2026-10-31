@@ -5,8 +5,8 @@ from posixpath import normpath
 
 import yaml
 
-from tools.books import resolve_contained_path
-from tools.model import Report, load_syllabus, load_unit_manifests
+from tools.aio.books import resolve_contained_path
+from tools.aio.model import ROUND2_AIO_ROUND, Report, load_syllabus, load_unit_manifests
 
 
 def check_coverage(root: str | Path) -> Report:
@@ -81,7 +81,7 @@ def check_coverage(root: str | Path) -> Report:
         unit_dir = manifest.path.parent
         declared_solutions = [unit_dir / problem.solution_path for problem in manifest.practice]
         statement_only_book2 = (
-            manifest.book == 2
+            manifest.book == ROUND2_AIO_ROUND
             and manifest.solution_policy == "deferred"
             and declared_solutions
             and not any(path.is_file() for path in declared_solutions)

@@ -4,22 +4,22 @@ import argparse
 import sys
 from collections.abc import Callable
 
-import tools
-from tools.books import load_book_catalog, validate_book_root
-from tools.checks.answerkey import check_answerkey
-from tools.checks.api_comments import check_api_comments
-from tools.checks.blueprint import check_blueprint
-from tools.checks.coverage import check_coverage
-from tools.checks.hygiene import check_hygiene
-from tools.checks.layer_boundary import check_layer_boundary
-from tools.checks.new_mocktest import scaffold_mocktest
-from tools.checks.overlap import check_overlap
-from tools.checks.prereq import check_prereq
-from tools.checks.schedule import check_schedule
-from tools.checks.scope import check_scope
-from tools.checks.tolerance import check_tolerance
-from tools.checks.unit_order import check_unit_order
-from tools.model import Report
+import tools.aio
+from tools.aio.books import load_book_catalog, validate_book_root
+from tools.aio.checks.answerkey import check_answerkey
+from tools.aio.checks.api_comments import check_api_comments
+from tools.aio.checks.blueprint import check_blueprint
+from tools.aio.checks.coverage import check_coverage
+from tools.aio.checks.hygiene import check_hygiene
+from tools.aio.checks.layer_boundary import check_layer_boundary
+from tools.aio.checks.new_mocktest import scaffold_mocktest
+from tools.aio.checks.overlap import check_overlap, check_overlap_paths
+from tools.aio.checks.prereq import check_prereq
+from tools.aio.checks.schedule import check_schedule
+from tools.aio.checks.scope import check_scope
+from tools.aio.checks.tolerance import check_tolerance
+from tools.aio.checks.unit_order import check_unit_order
+from tools.aio.model import Report
 
 CheckFn = Callable[..., Report]
 
@@ -65,6 +65,8 @@ def add_book_selection_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def print_report(report: Report) -> int:
+    for note in report.notes:
+        print(f"INFO {report.name}: {note}")
     for warning in report.warnings:
         print(f"WARNING {report.name}: {warning}")
     if report.skipped:
@@ -82,7 +84,7 @@ def print_report(report: Report) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="usaaio-tools")
-    parser.add_argument("--version", action="version", version=f"usaaio-tools {tools.__version__}")
+    parser.add_argument("--version", action="version", version=f"usaaio-tools {tools.aio.__version__}")
     parser.add_argument("--root", default=".", help="repository root")
     add_book_selection_arguments(parser)
     sub = parser.add_subparsers(dest="command")
@@ -91,6 +93,21 @@ def main(argv: list[str] | None = None) -> int:
         if fn is None:
             command_parser.add_argument("test_id")
             command_parser.add_argument("--date", required=True)
+        if name == "overlap-scan":
+            # py4kids aio-001 Phase D: the overlap gates' fail-closed modes.
+            command_parser.add_argument(
+                "--require-corpus",
+                action="store_true",
+                help="fail (instead of SKIP) on a missing corpus or any corpus extraction failure",
+            )
+            command_parser.add_argument(
+                "--paths",
+                metavar="DIR",
+                help=(
+                    "archive mode: scan every file under DIR against every registered book's "
+                    "reference corpus (implies --require-corpus; fails closed on unscannable files)"
+                ),
+            )
 
     arguments = sys.argv[1:] if argv is None else argv
     if not arguments:
@@ -136,6 +153,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"created {path}")
         return 0
 
+    if args.command == "overlap-scan" and args.paths is not None:
+        for book in catalog.books:
+            structural_errors = validate_book_root(book)
+            if structural_errors:
+                for error in structural_errors:
+                    print(f"ERROR {book.id}: {error}", file=sys.stderr)
+                return 1
+        return print_report(check_overlap_paths(args.paths, [book.root for book in catalog.books]))
+
     check = SUBCOMMANDS[args.command][1]
     assert check is not None
     exit_code = 0
@@ -147,7 +173,11 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"ERROR {book.id}: {error}", file=sys.stderr)
                 exit_code = 1
                 continue
-            if args.command in {"answerkey-check", "overlap-scan"}:
+            if args.command == "overlap-scan":
+                report = check(
+                    book.root, book_number=book.number, require_corpus=args.require_corpus
+                )
+            elif args.command == "answerkey-check":
                 report = check(book.root, book_number=book.number)
             elif args.command in {"schedule-check", "unit-order-check"}:
                 report = check(book.root, book_spec=book)

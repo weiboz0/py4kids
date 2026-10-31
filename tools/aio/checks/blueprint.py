@@ -5,7 +5,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from tools.model import (
+from tools.aio.model import (
     Blueprint,
     ManifestProblem,
     MockManifest,

@@ -1,6 +1,6 @@
 """Audit the generated edition projects of one book (Plan 030 D5).
 
-`python -m tools.publish_audit --book <id> [--units U...] [--mocktests T...] [--glossary-only]`
+`python -m tools.aio.publish_audit --book <id> [--units U...] [--mocktests T...] [--glossary-only]`
 
 The expected scope comes from this invocation (full when neither `--units` nor `--mocktests` is
 given), never from the projects' own `scope.json`, and a disagreement is an error.
@@ -51,7 +51,7 @@ from typing import Any
 
 import yaml
 
-from tools.books import (
+from tools.aio.books import (
     BookSpec,
     PublicationConfig,
     load_book_catalog,
@@ -60,7 +60,7 @@ from tools.books import (
     unit_id_of,
     unit_relpath,
 )
-from tools.publish import fence_code, markdown_text, title_text
+from tools.aio.publish import fence_code, markdown_text, title_text
 
 # --- the audit's own edition table -----------------------------------------------------------
 
@@ -995,7 +995,7 @@ def output_stem_of(project: Path) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m tools.publish_audit")
+    parser = argparse.ArgumentParser(prog="python -m tools.aio.publish_audit")
     parser.add_argument("--root", type=Path, default=Path("."))
     parser.add_argument("--book", required=True)
     parser.add_argument("--units", nargs="*")

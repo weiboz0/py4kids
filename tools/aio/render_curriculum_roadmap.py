@@ -14,12 +14,14 @@ from typing import Any
 
 import yaml
 
-from tools.books import BookSpec, load_book_catalog
-from tools.checks.schedule import load_validated_schedule, scheduled_baseline_minutes
-from tools.checks.scope import LAYERS, MINIMUM_QUALIFYING_PRACTICES, check_scope
-from tools.model import CourseSchedule, KnowledgePoint, Roadmap, load_roadmap
+from tools.aio.books import BookSpec, load_book_catalog
+from tools.aio.checks.schedule import load_validated_schedule, scheduled_baseline_minutes
+from tools.aio.checks.scope import LAYERS, MINIMUM_QUALIFYING_PRACTICES, check_scope
+from tools.aio.model import CourseSchedule, KnowledgePoint, Roadmap, load_roadmap
 
-AUDIT_PATH = Path("docs/audits/015-coverage-audit.md")
+# py4kids aio-001 Phase D (design 014 D3): the targets are book-root-relative. A registered
+# render writes them under the aio_round-1 book (aio-ml/docs/...); usaaio wrote repo-root docs/.
+AUDIT_PATH = Path("docs/coverage-audit.md")
 ROADMAP_PATH = Path("docs/curriculum-roadmap.md")
 EDITORIAL_EXISTING_UNIT_ESTIMATES = {
     "convolutional-neural-network-basics": ("C10", 8.0, 12.0, "C10 CNN training"),
@@ -87,8 +89,22 @@ def _cell(value: object) -> str:
     return text.replace("|", "\\|").replace("\n", " ")
 
 
+# py4kids aio-001 Phase D: qualified values (`<book id>:<local>`) sort by their owner's registry
+# (dependency / aio_round) order, then bytewise. usaaio sorted the whole string bytewise, which
+# ordered `book1:` before `book2:`; after the D3 rename (`aio-ml`, `aio-dl`) a bytewise sort
+# would put the round-2 book first. Set by `render_documents` for a registered render.
+_OWNER_RANK: dict[str, int] = {}
+
+
+def _order_key(value: str) -> bytes:
+    owner, separator, local = value.partition(":")
+    if separator and owner in _OWNER_RANK:
+        return f"\x00{_OWNER_RANK[owner]:04d}:{local}".encode()
+    return value.encode()
+
+
 def _joined(values: list[str]) -> str:
-    return ", ".join(sorted(values, key=str.encode)) if values else "—"
+    return ", ".join(sorted(values, key=_order_key)) if values else "—"
 
 
 def _practice_shortfall(point: KnowledgePoint) -> int:
@@ -376,6 +392,21 @@ def _append_non_required_candidates(lines: list[str], topics: dict) -> None:
     lines.append("")
 
 
+def _book_files(book_roots: tuple[str, ...], relative: str) -> str:
+    """`<root>/<relative>` for each registered book, in registry order, joined by "and"."""
+    return " and ".join(f"`{root}/{relative}`" for root in book_roots)
+
+
+def _registered_layout(repo_root: Path) -> tuple[tuple[str, ...], Path]:
+    """The registered book roots (repo-relative, dependency order) and the round-1 book root."""
+    catalog = load_book_catalog(repo_root)
+    roots = tuple(book.root.relative_to(catalog.repo_root).as_posix() for book in catalog.books)
+    round1 = [book for book in catalog.books if book.number == 1]
+    if len(round1) != 1:
+        raise ValueError("the roadmap renderer needs exactly one aio_round-1 book")
+    return roots, round1[0].root.relative_to(catalog.repo_root)
+
+
 def _render_audit(
     roadmap: Roadmap,
     inventory: dict,
@@ -384,6 +415,7 @@ def _render_audit(
     *,
     point_owners: dict[str, str] | None = None,
     owner_order: dict[str, int] | None = None,
+    book_roots: tuple[str, ...] = (),
 ) -> str:
     counts = inventory.get("counts") or {}
     point_owners = point_owners or {}
@@ -402,10 +434,10 @@ def _render_audit(
         coverage_counts[point.coverage] = coverage_counts.get(point.coverage, 0) + 1
     if point_owners:
         introduction = [
-            "The shipped-content contracts live in `aio-ml/syllabus.md` and `aio-dl/syllabus.md`,",
+            f"The shipped-content contracts live in {_book_files(book_roots, 'syllabus.md')},",
             "registered in dependency order by `books.yaml`.",
             "This aggregate report renders the book-local adjudications in",
-            "`aio-ml/curriculum/coverage-map.yaml` and `aio-dl/curriculum/coverage-map.yaml`",
+            _book_files(book_roots, "curriculum/coverage-map.yaml"),
             "against their book-local deterministic evidence inventories.",
             "This report is not a third source of truth.",
         ]
@@ -507,6 +539,7 @@ def _render_roadmap(
     *,
     point_owners: dict[str, str] | None = None,
     unit_owners: dict[str, str] | None = None,
+    book_roots: tuple[str, ...] = (),
 ) -> str:
     show_owners = point_owners is not None
     point_owners = point_owners or {}
@@ -514,7 +547,7 @@ def _render_roadmap(
     rounds = _required_rounds(topics)
     if point_owners:
         introduction = [
-            "The shipped-content contracts live in `aio-ml/syllabus.md` and `aio-dl/syllabus.md`,",
+            f"The shipped-content contracts live in {_book_files(book_roots, 'syllabus.md')},",
             "registered in dependency order by `books.yaml`.",
             "This aggregate roadmap records acknowledged shipped and planned curriculum state; it is not a third source of truth.",
         ]
@@ -789,6 +822,39 @@ def _registered_inputs(
     )
 
 
+def _render_registered(
+    roadmap: Roadmap,
+    inventory: dict[str, Any],
+    baseline: TimeBaseline,
+    topics: dict[str, Any],
+    point_owners: dict[str, str],
+    unit_owners: dict[str, str],
+    owner_order: dict[str, int],
+    *,
+    book_roots: tuple[str, ...],
+    round1_root: Path,
+) -> dict[Path, str]:
+    return {
+        round1_root / AUDIT_PATH: _render_audit(
+            roadmap,
+            inventory,
+            baseline,
+            topics,
+            point_owners=point_owners,
+            owner_order=owner_order,
+            book_roots=book_roots,
+        ),
+        round1_root / ROADMAP_PATH: _render_roadmap(
+            roadmap,
+            baseline,
+            topics,
+            point_owners=point_owners,
+            unit_owners=unit_owners,
+            book_roots=book_roots,
+        ),
+    }
+
+
 def render_documents(
     root: str | Path,
     *,
@@ -807,23 +873,16 @@ def render_documents(
             unit_owners,
             owner_order,
         ) = _registered_inputs(root, _schedule_loader=_schedule_loader)
-        return {
-            AUDIT_PATH: _render_audit(
-                roadmap,
-                inventory,
-                baseline,
-                topics,
-                point_owners=point_owners,
-                owner_order=owner_order,
-            ),
-            ROADMAP_PATH: _render_roadmap(
-                roadmap,
-                baseline,
-                topics,
-                point_owners=point_owners,
-                unit_owners=unit_owners,
-            ),
-        }
+        book_roots, round1_root = _registered_layout(root)
+        _OWNER_RANK.clear()
+        _OWNER_RANK.update(owner_order)
+        try:
+            return _render_registered(
+                roadmap, inventory, baseline, topics, point_owners, unit_owners, owner_order,
+                book_roots=book_roots, round1_root=round1_root,
+            )
+        finally:
+            _OWNER_RANK.clear()
     roadmap = load_roadmap(root)
     inventory = _yaml(root / "curriculum" / "material-inventory.yaml")
     topics = _yaml(root / "curriculum" / "official-topics.yaml")

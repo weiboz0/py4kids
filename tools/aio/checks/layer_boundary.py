@@ -7,9 +7,9 @@ import re
 from collections import Counter
 from pathlib import Path
 
-from tools.books import resolve_contained_path
-from tools.checks.prereq import taught_closure
-from tools.model import (
+from tools.aio.books import resolve_contained_path
+from tools.aio.checks.prereq import taught_closure
+from tools.aio.model import (
     KnowledgePoint,
     Report,
     UnitManifest,
@@ -292,7 +292,7 @@ def check_layer_boundary(root: str | Path) -> Report:
         catalog = None
         book = None
         if (root.parent / "books.yaml").is_file():
-            from tools.books import load_book_catalog
+            from tools.aio.books import load_book_catalog
 
             catalog = load_book_catalog(root.parent)
             book = next(

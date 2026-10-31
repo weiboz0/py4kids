@@ -8,7 +8,7 @@ from pathlib import Path
 
 import nbformat
 
-from tools.model import Report
+from tools.aio.model import Report
 
 CALL_TOLERANCES = {
     "np.isclose": ("atol", "rtol"),

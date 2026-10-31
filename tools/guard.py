@@ -109,6 +109,71 @@ def collision_failures(
     return failures
 
 
+# aio-model books (design 014; plan aio-001 Phase D). Their ids follow usaaio's layout, keyed on
+# `content_model: aio`, never on a book id: `units/NN-<code>-<slug>` (teaching-order prefix NN and
+# unit code such as `C5`), `units/B2-0NN-<slug>`, and `mocktests/rN-NNN`.
+_AIO_UNIT_ORDER = r"^[0-9]{2}(?=-)"
+_AIO_UNIT_CODE = re.compile(r"^[0-9]{2}-(?P<code>[A-Z]+[0-9]+)(?=-)")
+_AIO_ROUND2_UNIT = r"^B2-[0-9]{3}(?=-)"
+_AIO_MOCKTEST = r"^r[0-9]+-[0-9]{3}(?![0-9])"
+# The D3 ignore rules as tracked-path refusals (design 014 D3; the repo is PUBLIC): under an aio
+# root, `reference/*` other than `.gitkeep`/`analysis.md` (raw past papers, the download cache),
+# the two hidden sets and the five C11 grading artifacts, all book-root-relative.
+_AIO_REFERENCE_KEEP = frozenset({"reference/.gitkeep", "reference/analysis.md"})
+_AIO_IGNORED_FILES = frozenset({
+    "units/18-C11-competition-craft/data/heldout.csv",
+    "mocktests/r1-001/data/p09_heldout.csv",
+    "units/18-C11-competition-craft/practice/p15_contract.csv",
+    "units/18-C11-competition-craft/practice/p17_log.csv",
+    "units/18-C11-competition-craft/practice/p17_predictions.csv",
+    "units/18-C11-competition-craft/practice/p18_audit.csv",
+    "units/18-C11-competition-craft/practice/p18_predictions.csv",
+})
+
+
+def _child_names(paths: Iterable[str], prefix: str) -> set[str]:
+    return {
+        path[len(prefix) :].split("/", 1)[0]
+        for path in paths
+        if path.startswith(prefix) and "/" in path[len(prefix) :]
+    }
+
+
+def aio_collision_failures(
+    path_sets: Mapping[str, Iterable[str]], aio_roots: Iterable[str]
+) -> list[str]:
+    """Find aio unit-id and mock-test-id collisions under each `content_model: aio` root."""
+    paths = _merged_paths(path_sets)
+    failures: list[str] = []
+    for root in aio_roots:
+        units = _child_names(paths, f"{root}/units/")
+        failures.extend(_duplicate_failure(f"{root}/units order", units, _AIO_UNIT_ORDER))
+        codes = [match["code"] for name in units if (match := _AIO_UNIT_CODE.match(name))]
+        duplicates = sorted(code for code, count in Counter(codes).items() if count > 1)
+        if duplicates:
+            failures.append(f"duplicate {root}/units code(s): {' '.join(duplicates)}")
+        failures.extend(_duplicate_failure(f"{root}/units", units, _AIO_ROUND2_UNIT))
+        mocktests = _child_names(paths, f"{root}/mocktests/")
+        failures.extend(_duplicate_failure(f"{root}/mocktests", mocktests, _AIO_MOCKTEST))
+    return failures
+
+
+def aio_tracked_path_failures(tracked: Iterable[str], aio_roots: Iterable[str]) -> list[str]:
+    """Refuse tracked files the D3 ignore rules keep local-only under an aio root."""
+    failures: list[str] = []
+    roots = list(aio_roots)
+    for path in sorted(tracked):
+        for root in roots:
+            if not path.startswith(root + "/"):
+                continue
+            relative = path[len(root) + 1 :]
+            if relative.startswith("reference/") and relative not in _AIO_REFERENCE_KEEP:
+                failures.append(f"tracked local-only aio reference file: {path}")
+            elif relative in _AIO_IGNORED_FILES:
+                failures.append(f"tracked local-only aio grading file: {path}")
+    return failures
+
+
 def _git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["git", *args], cwd=root, capture_output=True, text=True, check=False
@@ -138,15 +203,23 @@ def guard_failures(root: Path, refs: Sequence[str]) -> list[str]:
     path_sets = {ref: _paths(root, ref) for ref in refs}
     registry = yaml.safe_load((root / "books.yaml").read_text(encoding="utf-8"))
     # The unit-/project-/checkpoint-NN rules are py4kids layout (design 014 D1); aio roots get
-    # their own id rules in aio-001 Phase D.
+    # their own id rules (aio_collision_failures, keyed on content_model: aio).
     book_roots = [
         book.get("root", book["id"])
         for book in registry["books"]
         if book.get("content_model", "py4kids") == "py4kids"
     ]
     failures = collision_failures(path_sets, book_roots)
+    aio_roots = [
+        book.get("root", book["id"])
+        for book in registry["books"]
+        if book.get("content_model", "py4kids") == "aio"
+    ]
+    failures.extend(aio_collision_failures(path_sets, aio_roots))
 
-    for path in sorted(_git_lines(root, "ls-files")):
+    tracked = _git_lines(root, "ls-files")
+    failures.extend(aio_tracked_path_failures(tracked, aio_roots))
+    for path in sorted(tracked):
         name = path.rsplit("/", 1)[-1].lower()
         if name == ".gh-token" or name.startswith(".env") or name.endswith((".pem", ".key")):
             failures.append(f"tracked secret-like file: {path}")

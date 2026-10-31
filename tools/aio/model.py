@@ -235,6 +235,8 @@ class Report:
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     skipped: str | None = None
+    # Informational lines (py4kids aio-001: overlap-scan --require-corpus corpus reconciliation).
+    notes: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -415,6 +417,12 @@ def _string_list(value: object, *, field_name: str, path: Path) -> list[str]:
     return list(value)
 
 
+# A unit manifest's `book:` field holds the aio_round of the book that owns it (py4kids aio-001
+# Phase D, design 014 D1; the catalog maps BookSpec.number := aio_round). Round-2 manifests carry
+# the round-2 contract fields; the comparisons below are against this aio_round, not a book id.
+ROUND2_AIO_ROUND = 2
+
+
 def _positive_int(value: object, *, field_name: str, path: Path) -> int:
     if type(value) is not int or value <= 0:
         raise ValueError(f"{path}: {field_name} must be a positive integer")
@@ -428,7 +436,7 @@ def _unit_contract(
     default_track: str,
 ) -> tuple[int, str, int, str]:
     unit_id = str(raw.get("id", raw.get("unit", "")))
-    is_book2 = unit_id.startswith("B2-") or raw.get("book") == 2
+    is_book2 = unit_id.startswith("B2-") or raw.get("book") == ROUND2_AIO_ROUND
     required = ("book", "layer", "round", "track")
     if is_book2:
         missing = [field_name for field_name in required if field_name not in raw]
@@ -567,7 +575,7 @@ def load_unit_manifests(
         book, layer, round_number, track = _unit_contract(
             raw, path=path, default_track=default_track
         )
-        is_book2 = unit_id.startswith("B2-") or book == 2
+        is_book2 = unit_id.startswith("B2-") or book == ROUND2_AIO_ROUND
         if is_book2:
             required = (
                 "concept_prerequisites",

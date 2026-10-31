@@ -5,8 +5,8 @@ from pathlib import Path
 
 import yaml
 
-from tools.checks.blueprint import ARC_ROTATION, DEFAULT_ANCHORS, DEFAULT_TIME_BUDGET, is_round2
-from tools.model import Blueprint, load_blueprint
+from tools.aio.checks.blueprint import ARC_ROTATION, DEFAULT_ANCHORS, DEFAULT_TIME_BUDGET, is_round2
+from tools.aio.model import Blueprint, load_blueprint
 
 DIFFICULTY_DRAW = {"intro": 0.23, "core": 0.45, "advanced": 0.32}
 

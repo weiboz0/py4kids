@@ -23,9 +23,9 @@ from typing import Any
 
 import yaml
 
-from tools.books import BookSpec
-from tools.checks.schedule import load_validated_schedule, scheduled_baseline_minutes
-from tools.model import CourseSchedule, load_unit_manifests
+from tools.aio.books import BookSpec
+from tools.aio.checks.schedule import load_validated_schedule, scheduled_baseline_minutes
+from tools.aio.model import ROUND2_AIO_ROUND, CourseSchedule, load_unit_manifests
 
 INVENTORY_PATH = Path("curriculum/material-inventory.yaml")
 ScheduleLoader = Callable[[str | Path], CourseSchedule]
@@ -327,7 +327,7 @@ def _unit_notebooks(root: Path, manifest_paths: list[Path]) -> list[dict[str, An
             for problem in practice_rows
         ]
         statement_only_book2 = (
-            manifest.get("book") == 2
+            manifest.get("book") == ROUND2_AIO_ROUND
             and isinstance(manifest.get("solution_policy"), dict)
             and manifest["solution_policy"].get("status") == "deferred"
             and declared_solutions

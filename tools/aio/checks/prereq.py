@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from tools.model import Report, Syllabus, load_mock_manifests, load_syllabus, load_unit_manifests
+from tools.aio.model import (
+    Report,
+    Syllabus,
+    load_mock_manifests,
+    load_syllabus,
+    load_unit_manifests,
+)
 
 
 def transitive_prereqs(syllabus: Syllabus, unit_id: str) -> set[str]:
@@ -35,7 +41,7 @@ def taught_closure(
             owner_id, local_id = unit_id.split(":", 1)
             if owner_id == book.id:
                 raise ValueError(f"qualified prerequisite {unit_id!r} names the wrong owner")
-            from tools.books import load_book_imports, resolve_qualified_import
+            from tools.aio.books import load_book_imports, resolve_qualified_import
 
             resolve_qualified_import(catalog, book, unit_id)
             imports = load_book_imports(book)
@@ -56,7 +62,7 @@ def taught_closure(
         if unit_id in syllabus.units:
             closure_units |= transitive_prereqs(syllabus, unit_id)
         elif catalog is not None and book is not None:
-            from tools.books import load_book_imports
+            from tools.aio.books import load_book_imports
 
             imports = load_book_imports(book)
             if unit_id in imports.units:
@@ -99,7 +105,7 @@ def check_prereq(root: str | Path) -> Report:
     book = None
     registry = selected_root.parent / "books.yaml"
     if registry.is_file():
-        from tools.books import load_book_catalog
+        from tools.aio.books import load_book_catalog
 
         catalog = load_book_catalog(selected_root.parent)
         book = next((candidate for candidate in catalog.books if candidate.root == selected_root), None)

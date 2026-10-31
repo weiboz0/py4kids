@@ -20,7 +20,7 @@ while (($#)); do
 done
 [[ -n "$book_id" ]] || { echo "build-pdf: --book is required" >&2; exit 2; }
 repo_root=$(cd "$repo_root" && pwd)
-script_repo_root=$(cd "$(dirname "$0")/.." && pwd)
+script_repo_root=$(cd "$(dirname "$0")/../.." && pwd)
 export PATH="$HOME/.local/bin:$PATH"
 
 if [[ -n ${AIO_PYTHON:-} ]]; then
@@ -32,4 +32,4 @@ else
 fi
 args=(--root "$repo_root" --book "$book_id")
 ((list_inputs)) && args+=(--list-inputs)
-PYTHONPATH="$script_repo_root${PYTHONPATH:+:$PYTHONPATH}" "${python_cmd[@]}" -m tools.publish_pdf "${args[@]}"
+PYTHONPATH="$script_repo_root${PYTHONPATH:+:$PYTHONPATH}" "${python_cmd[@]}" -m tools.aio.publish_pdf "${args[@]}"

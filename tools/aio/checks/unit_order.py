@@ -18,9 +18,9 @@ from pathlib import Path
 
 import yaml
 
-from tools.books import BookSpec, unit_id_of
-from tools.checks.schedule import _parse_schedule, _registered_book
-from tools.model import Report
+from tools.aio.books import BookSpec, unit_id_of
+from tools.aio.checks.schedule import _parse_schedule, _registered_book
+from tools.aio.model import Report
 
 NAME = "unit-order-check"
 _FOLDER = re.compile(r"(?P<order>\d{2})-(?P<id>.+)\Z")

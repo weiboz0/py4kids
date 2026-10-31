@@ -6,11 +6,11 @@
 #   https://forum.beaver-edge.ai/c/ai-olympiads/usa-north-america-ai-olympiad/8
 #   https://forum.beaver-edge.ai/c/ai-olympiads/2025-usa-na-aio-round-2/9
 set -euo pipefail
-script_repo_root=$(cd "$(dirname "$0")/.." && pwd)
+script_repo_root=$(cd "$(dirname "$0")/../.." && pwd)
 repo_root=$script_repo_root
 
 usage() {
-  echo "usage: scripts/fetch-reference.sh [--root REPO] (--book BOOK_ID|--all)" >&2
+  echo "usage: scripts/aio/fetch-reference.sh [--root REPO] (--book BOOK_ID|--all)" >&2
 }
 
 selection=""
@@ -28,7 +28,7 @@ python_bin=${AIO_PYTHON:-python3}
 if ! registry_records=$(PYTHONPATH="$script_repo_root${PYTHONPATH:+:$PYTHONPATH}" \
   "$python_bin" - "$repo_root" "$selection" <<'PY'
 import sys
-from tools.books import load_book_catalog
+from tools.aio.books import load_book_catalog
 
 catalog = load_book_catalog(sys.argv[1])
 books = catalog.books if sys.argv[2] == "all" else (catalog.by_id(sys.argv[2]),)
@@ -44,7 +44,7 @@ require_contained_destination() { # require_contained_destination <book-root> <d
   PYTHONPATH="$script_repo_root${PYTHONPATH:+:$PYTHONPATH}" \
     "$python_bin" - "$1" "$2" <<'PY'
 import sys
-from tools.books import resolve_contained_path
+from tools.aio.books import resolve_contained_path
 
 resolve_contained_path(
     sys.argv[1], sys.argv[2], label="fetch-reference destination", must_exist=False

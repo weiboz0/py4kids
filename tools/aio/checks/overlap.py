@@ -9,6 +9,7 @@ reported once per statement-file/corpus-part pair.
 
 from __future__ import annotations
 
+import json
 import math
 import re
 import shutil
@@ -19,13 +20,13 @@ from typing import Any
 
 import nbformat
 
-from tools.model import Report, _parse_yaml, load_mock_manifests
+from tools.aio.model import Report, _parse_yaml, load_mock_manifests
 
 SHINGLE_SIZE = 8
 SHINGLE_THRESHOLD = 2
 COSINE_THRESHOLD = 0.35
 FILE_COSINE_WARNING_THRESHOLD = 0.5
-REMEDY = "reference corpus absent; run bash scripts/fetch-reference.sh"
+REMEDY = "reference corpus absent; run bash scripts/aio/fetch-reference.sh"
 
 # Register mandated by mocktests/blueprint.yaml style_rules must not dominate
 # mock-test cosine similarity. These patterns intentionally cover only that register.
@@ -216,12 +217,49 @@ def _statement_file_text(path: Path) -> str:
     return path.read_text(errors="ignore")
 
 
+def _expected_corpus_parts(root: Path) -> list[Path]:
+    """Every PDF corpus part a book's `reference/` holds (what extraction must yield)."""
+    reference = root / "reference"
+    return sorted(reference.glob("*/*.pdf")) if reference.is_dir() else []
+
+
+def _corpus_reconciliation(
+    root: Path, corpus: list[tuple[str, str]], failures: list[str]
+) -> tuple[str, list[str]]:
+    """py4kids aio-001: expected versus extracted corpus parts, and every shortfall as an error."""
+    expected = _expected_corpus_parts(root)
+    extracted = {label for label, _ in corpus if label.endswith(".pdf")}
+    index_parts = sum(1 for label, _ in corpus if not label.endswith(".pdf"))
+    note = (
+        f"{root.name} corpus: PDF parts expected {len(expected)}, extracted {len(extracted)}; "
+        f"index text parts {index_parts}; extraction failures {len(failures)}"
+    )
+    errors = [f"--require-corpus: {failure}" for failure in failures]
+    errors.extend(
+        f"--require-corpus: corpus part not extracted: {pdf}"
+        for pdf in expected
+        if str(pdf) not in extracted and not any(str(pdf) in failure for failure in failures)
+    )
+    return note, errors
+
+
 def check_overlap(
-    root: str | Path, *, book_number: int | None = None
+    root: str | Path, *, book_number: int | None = None, require_corpus: bool = False
 ) -> Report:
     root = Path(root)
     corpus, summary_corpus, skipped, corpus_failures = _corpus(root)
-    if skipped:
+    notes: list[str] = []
+    if require_corpus:
+        # py4kids aio-001 Phase D: a missing corpus or ANY extraction warning fails the scan.
+        if skipped:
+            return Report(
+                name="overlap-scan", ok=False, errors=[f"--require-corpus: {skipped}"]
+            )
+        note, corpus_errors = _corpus_reconciliation(root, corpus, corpus_failures)
+        notes.append(note)
+        if corpus_errors:
+            return Report(name="overlap-scan", ok=False, errors=corpus_errors, notes=notes)
+    elif skipped:
         return Report(name="overlap-scan", ok=True, skipped=skipped)
     corpus_texts = [text for _, text in corpus]
     corpus_cosine_texts = [_without_mock_register_boilerplate(text) for text in corpus_texts]
@@ -301,4 +339,93 @@ def check_overlap(
             if overlap >= SHINGLE_THRESHOLD:
                 errors.append(f"{path} overlaps {label} (shingles={overlap})")
                 break
-    return Report(name="overlap-scan", ok=not errors, errors=errors, warnings=warnings)
+    return Report(
+        name="overlap-scan", ok=not errors, errors=errors, warnings=warnings, notes=notes
+    )
+
+
+# --- archive mode (py4kids aio-001 Phase D): `overlap-scan --require-corpus --paths <dir>` ----
+# Every file under <dir> is scored by its text against every aio book's reference corpus with
+# the verbatim-copy shingle detector (SHINGLE_THRESHOLD shingles of SHINGLE_SIZE words), the
+# rule the scanner applies to practice notebooks. Fail closed: a file with any other extension,
+# a file that does not decode or parse, a missing corpus or any corpus extraction failure fails.
+
+ARCHIVE_TEXT_SUFFIXES = frozenset({
+    ".md", ".yaml", ".yml", ".py", ".sh", ".txt", ".csv", ".json", ".toml", ".lua", ".tex",
+})
+ARCHIVE_TEXT_NAMES = frozenset({".gitignore", ".gitkeep"})
+
+
+def _archive_notebook_text(path: Path) -> str:
+    notebook = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(notebook, dict) or not isinstance(notebook.get("cells"), list):
+        raise ValueError("not a notebook (no cells list)")  # noqa: TRY004
+    texts: list[str] = []
+    for cell in notebook["cells"]:
+        if not isinstance(cell, dict):
+            raise ValueError("malformed notebook cell")  # noqa: TRY004
+        if cell.get("cell_type") not in {"markdown", "code"}:
+            continue
+        source = cell.get("source", "")
+        if isinstance(source, list):
+            source = "".join(str(line) for line in source)
+        texts.append(str(source))
+    return "\n".join(texts)
+
+
+def _archive_file_text(path: Path) -> str | None:
+    """A scannable file's text, or None when its extension is not scannable."""
+    if path.suffix == ".ipynb":
+        return _archive_notebook_text(path)
+    if path.suffix in ARCHIVE_TEXT_SUFFIXES or path.name in ARCHIVE_TEXT_NAMES:
+        return path.read_text(encoding="utf-8", errors="strict")
+    return None
+
+
+def check_overlap_paths(scan_root: str | Path, book_roots: list[Path]) -> Report:
+    """Archive mode: scan every file under `scan_root` against all `book_roots` corpora."""
+    name = "overlap-scan"
+    scan_root = Path(scan_root)
+    if not scan_root.is_dir():
+        return Report(name=name, ok=False, errors=[f"--paths: not a directory: {scan_root}"])
+    errors: list[str] = []
+    notes: list[str] = []
+    corpus: list[tuple[str, set[tuple[str, ...]]]] = []
+    for book_root in book_roots:
+        parts, _summaries, skipped, failures = _corpus(Path(book_root))
+        if skipped:
+            errors.append(f"--require-corpus: {Path(book_root).name}: {skipped}")
+            continue
+        note, corpus_errors = _corpus_reconciliation(Path(book_root), parts, failures)
+        notes.append(note)
+        errors.extend(corpus_errors)
+        corpus.extend((label, _shingles(text)) for label, text in parts)
+    if errors:
+        return Report(name=name, ok=False, errors=errors, notes=notes)
+    if not corpus:
+        return Report(name=name, ok=False, errors=["--require-corpus: no corpus parts"], notes=notes)
+
+    scanned = 0
+    files = sorted(path for path in scan_root.rglob("*") if not path.is_dir())
+    for path in files:
+        if path.is_symlink():
+            errors.append(f"{path}: symlink is not scanned (fail closed)")
+            continue
+        try:
+            text = _archive_file_text(path)
+        except (OSError, UnicodeDecodeError, ValueError) as exc:
+            errors.append(f"{path}: cannot read or parse ({exc.__class__.__name__}: {exc})")
+            continue
+        if text is None:
+            errors.append(f"{path}: unscannable extension {path.suffix or path.name!r} (fail closed)")
+            continue
+        scanned += 1
+        file_shingles = _shingles(_without_boilerplate(text))
+        for label, reference_shingles in corpus:
+            overlap = len(file_shingles & reference_shingles)
+            if overlap >= SHINGLE_THRESHOLD:
+                errors.append(f"{path} overlaps {label} (shingles={overlap})")
+    notes.append(
+        f"archive {scan_root}: files {len(files)}, scanned {scanned}, corpus parts {len(corpus)}"
+    )
+    return Report(name=name, ok=not errors, errors=errors, notes=notes)

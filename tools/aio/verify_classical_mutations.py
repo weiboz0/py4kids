@@ -18,6 +18,11 @@ import nbformat
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
 
+from tools.aio.books import book_for_round
+
+# The aio_round of the book whose notebooks this verifier mutates.
+AIO_ROUND = 1
+
 
 @dataclass(frozen=True)
 class MutationSpec:
@@ -214,8 +219,20 @@ def run_mutation(root: Path, spec: MutationSpec) -> MutationResult:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root", type=Path, default=Path.cwd())
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--root", type=Path, default=None, help="book root (default: cwd)")
+    # py4kids aio-001 Phase D (design 014 D1): select the book from registry data, the
+    # aio_round-1 book of the registry at REPO_ROOT, instead of a hard-coded book root.
+    selection.add_argument("--repo-root", type=Path, default=None)
     args = parser.parse_args(argv)
+    if args.repo_root is not None:
+        try:
+            args.root = book_for_round(args.repo_root, AIO_ROUND).root
+        except ValueError as exc:
+            print(f"FAIL {exc}", file=sys.stderr)
+            return 1
+    elif args.root is None:
+        args.root = Path.cwd()
 
     results: list[MutationResult] = []
     try:

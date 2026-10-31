@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-import tools.checks.schedule
-import tools.model
+import tools.aio.checks.schedule
+import tools.aio.model
 
 # The B2-020 deferred solution policy was live only through 2026-09-30.
 # Tests that exercise the live-policy path pin every live-clock read on that
@@ -24,5 +24,5 @@ class _DeferredPolicyWindowDatetime(datetime):
 
 @pytest.fixture
 def deferred_policy_window(monkeypatch: pytest.MonkeyPatch) -> None:
-    for module in (tools.model, tools.checks.schedule):
+    for module in (tools.aio.model, tools.aio.checks.schedule):
         monkeypatch.setattr(module, "datetime", _DeferredPolicyWindowDatetime)

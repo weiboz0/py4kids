@@ -4,9 +4,7 @@ import datetime as dt
 import hashlib
 import json
 import math
-import os
 import re
-import subprocess
 import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -14,8 +12,8 @@ from typing import Any
 
 import yaml
 
-from tools.books import unit_id_of
-from tools.model import Report, load_syllabus, load_unit_manifests
+from tools.aio.books import unit_id_of
+from tools.aio.model import Report, load_syllabus, load_unit_manifests
 
 LAYERS = [
     "shared-foundation",
@@ -102,10 +100,19 @@ def _cycle_nodes(graph: dict[str, list[str]]) -> set[str]:
     return cycles
 
 
+def _round1_book_id(catalog) -> str | None:
+    """The registered aio_round-1 book's id (the catalog maps BookSpec.number := aio_round)."""
+    if catalog is None:
+        return None
+    return next((book.id for book in catalog.books if book.number == 1), None)
+
+
 def _check_reconciliation(
     root: Path, errors: list[str], warnings: list[str]
 ) -> None:
-    path = root / "docs" / "audits" / "015-plan014-reconciliation.md"
+    # py4kids aio-001 Phase D (design 014 D3): the reconciliation moved into the round-1 book's
+    # docs/ (usaaio read it from the repository root's docs/audits/).
+    path = root / "docs" / "015-plan014-reconciliation.md"
     if not path.is_file():
         errors.append(f"Plan 014 reconciliation is missing: {path.relative_to(root)}")
         return
@@ -143,72 +150,9 @@ def _check_reconciliation(
     if match is None:
         errors.append("Plan 014 reconciliation merged resolution must name its squash commit")
         return
-    git_metadata = root / ".git"
-    if not git_metadata.exists() and not git_metadata.is_symlink():
-        warnings.append(
-            "Plan 014 reconciliation squash ancestry unverified: "
-            "Git work tree unavailable"
-        )
-        return
-    git_env = {
-        name: value for name, value in os.environ.items() if not name.startswith("GIT_")
-    }
-    try:
-        probe = subprocess.run(
-            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=False,
-            env=git_env,
-        )
-    except OSError as exc:
-        errors.append(
-            f"Plan 014 reconciliation Git metadata at repository root is unusable: {exc}"
-        )
-        return
-    if probe.returncode != 0:
-        errors.append("Plan 014 reconciliation Git metadata at repository root is unusable")
-        return
-    try:
-        work_tree = Path(probe.stdout.strip()).resolve(strict=True)
-        inspected_root = root.resolve(strict=True)
-    except (OSError, RuntimeError):
-        errors.append("Plan 014 reconciliation Git metadata at repository root is unusable")
-        return
-    if work_tree != inspected_root:
-        errors.append("Plan 014 reconciliation Git metadata at repository root is unusable")
-        return
-    try:
-        proc = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(root),
-                "merge-base",
-                "--is-ancestor",
-                match.group(1),
-                "HEAD",
-            ],
-            capture_output=True,
-            text=True,
-            check=False,
-            env=git_env,
-        )
-    except OSError as exc:
-        errors.append(
-            f"Plan 014 reconciliation Git metadata at repository root is unusable: {exc}"
-        )
-        return
-    if proc.returncode == 1:
-        errors.append(
-            f"Plan 014 reconciliation squash commit {match.group(1)} is not an ancestor of HEAD"
-        )
-    elif proc.returncode != 0:
-        detail = proc.stderr.strip() or f"git exited {proc.returncode}"
-        errors.append(
-            "Plan 014 reconciliation Git history is unavailable or incomplete: "
-            f"{detail}"
-        )
+    # py4kids aio-001 Phase D (design 014 D3): usaaio's squash-ancestry probe
+    # (`git merge-base --is-ancestor <sha> HEAD`) is dropped; the commit is usaaio history that
+    # the py4kids repository never contains. The content checks above are kept.
 
 
 def _iso_date(
@@ -1029,7 +973,7 @@ def _check_roadmap(
     active_foreign_point_ids: set[str] = set()
     imported_units: set[str] = set()
     if catalog is not None and book is not None and book.depends_on:
-        from tools.books import (
+        from tools.aio.books import (
             load_book_evidence_imports,
             load_book_imports,
             resolve_qualified_import,
@@ -1256,7 +1200,7 @@ def _check_roadmap(
             if not (
                 coverage == "covered"
                 and disposition == "keep"
-                and destination == "aio-ml:C5-embeddings"
+                and destination == f"{_round1_book_id(catalog)}:C5-embeddings"
             ):
                 errors.append(
                     "nlp-tokenization must retain covered Book 1 C5 destination and keep disposition"
@@ -1337,7 +1281,7 @@ def check_scope(root: str | Path) -> Report:
     catalog = None
     book = None
     if (root.parent / "books.yaml").is_file():
-        from tools.books import load_book_catalog
+        from tools.aio.books import load_book_catalog
 
         catalog = load_book_catalog(root.parent)
         book = next((candidate for candidate in catalog.books if candidate.root == root), None)
@@ -1352,7 +1296,10 @@ def check_scope(root: str | Path) -> Report:
         catalog=catalog,
         book=book,
     )
-    _check_reconciliation(
-        catalog.repo_root if catalog is not None else root, errors, warnings
-    )
+    round1_root = root
+    if catalog is not None:
+        round1_root = next(
+            (candidate.root for candidate in catalog.books if candidate.number == 1), root
+        )
+    _check_reconciliation(round1_root, errors, warnings)
     return Report(name="scope-check", ok=not errors, errors=errors, warnings=warnings)

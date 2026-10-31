@@ -44,7 +44,7 @@ if ((scoped)) && ((${#units[@]} + ${#mocktests[@]} == 0)); then
   exit 2
 fi
 repo_root=$(cd "$repo_root" && pwd -P)
-script_repo_root=$(cd "$(dirname "$0")/.." && pwd -P)
+script_repo_root=$(cd "$(dirname "$0")/../.." && pwd -P)
 export PATH="$HOME/.local/bin:$PATH"
 
 py() {
@@ -55,7 +55,7 @@ py() {
 # A publication book needs a valid <book>/publication.yaml (Plan 030 D1).
 if ! py - "$repo_root" "$book" <<'PY'
 import sys
-from tools.books import publication_config_errors
+from tools.aio.books import publication_config_errors
 errors = publication_config_errors(sys.argv[1], sys.argv[2])
 for error in errors:
     print("FAIL: " + error, file=sys.stderr)
@@ -74,7 +74,7 @@ publish_args=(--root "$repo_root" --book "$book" --all-editions)
 if ((scoped)); then
   publish_args+=(--units "${units[@]}" --mocktests "${mocktests[@]}")
 fi
-if ! profiles="$(py -m tools.publish "${publish_args[@]}")"; then
+if ! profiles="$(py -m tools.aio.publish "${publish_args[@]}")"; then
   echo "FAIL: build-book: $book: publish" >&2
   exit 1
 fi
@@ -134,5 +134,5 @@ if ((scoped)); then
   echo "build-book: scoped check of $book (units: ${units[*]:-none}; mock tests: ${mocktests[*]:-none}) in $((SECONDS-build_start))s"
   exit 0
 fi
-py -m tools.publish_output --root "$repo_root" --book "$book" --owner book "${pdfs[@]}"
+py -m tools.aio.publish_output --root "$repo_root" --book "$book" --owner book "${pdfs[@]}"
 echo "build-book: ${#pdfs[@]} edition PDFs in $((SECONDS-build_start))s"

@@ -33,7 +33,7 @@ from typing import Any
 
 import yaml
 
-from tools.books import (
+from tools.aio.books import (
     EDITION_NAMES,
     BookSpec,
     PublicationConfig,
@@ -1290,8 +1290,8 @@ def build_all(repo_root: Path, book_id: str, *, units: list[str] | None = None,
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m tools.publish")
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
+    parser = argparse.ArgumentParser(prog="python -m tools.aio.publish")
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--book", required=True)
     parser.add_argument("--edition", choices=tuple(EDITIONS))
     parser.add_argument("--volume", type=int)

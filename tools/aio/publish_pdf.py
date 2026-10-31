@@ -35,7 +35,7 @@ from typing import Any
 
 import yaml
 
-from tools.books import (
+from tools.aio.books import (
     BookSpec,
     ChapterSpec,
     PublicationConfig,
@@ -45,7 +45,7 @@ from tools.books import (
     resolve_contained_path,
     unit_dir,
 )
-from tools.publish import (
+from tools.aio.publish import (
     THEME,
     Chapter,
     Publisher,
@@ -53,7 +53,7 @@ from tools.publish import (
     mock_paper_sources,
     mock_solution_sources,
 )
-from tools.publish_output import refresh_output
+from tools.aio.publish_output import refresh_output
 
 STATEMENT = re.compile(r"^p\d+\.ipynb$")
 MISSING_CHARACTER = "Missing character"
@@ -369,7 +369,7 @@ def build(repo_root: Path, book_id: str, *, jobs: int | None = None) -> list[Pat
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m tools.publish_pdf")
+    parser = argparse.ArgumentParser(prog="python -m tools.aio.publish_pdf")
     parser.add_argument("--root", type=Path, default=Path("."))
     parser.add_argument("--book", required=True)
     parser.add_argument("--list-inputs", action="store_true")
