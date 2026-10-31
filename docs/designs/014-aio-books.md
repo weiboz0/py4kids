@@ -1,8 +1,8 @@
 # Design 014 — The AI Olympiad books (migrating usaaio into py4kids)
 
-**Status:** APPROVED BY THE GATE — v4.2 (2026-10-31). v2 folded design-review round 1 ([self] 2 MUST + 1 NIT; [sol] REJECT, 2 BLOCKER + 4 MUST + 1 NIT;
+**Status:** APPROVED — v4.2 (2026-10-31). v2 folded design-review round 1 ([self] 2 MUST + 1 NIT; [sol] REJECT, 2 BLOCKER + 4 MUST + 1 NIT;
 [fable] APPROVE WITH NITS, 7 MUST + 3 NIT). v3 folded round 2 ([sol] REJECT, 1 BLOCKER + 3 MUST; [fable] APPROVE WITH NITS, 3 MUST + 4 NIT).
-v4 folds round 3 ([sol] REJECT, 1 MUST; [fable] APPROVE WITH NITS, 3 MUST + 3 NIT). v4.1 folded round 4 (both APPROVE WITH NITS); v4.2 folds the [fable] confirmation. Gate consensus reached; awaiting the author's approval and the author's approval.
+v4 folds round 3 ([sol] REJECT, 1 MUST; [fable] APPROVE WITH NITS, 3 MUST + 3 NIT). v4.1 folded round 4 (both APPROVE WITH NITS); v4.2 folds the [fable] confirmation. Gate consensus reached. **Approved by the author on 2026-10-31 ("Do it autopilot")**, including the §3 governance amendments and the ids `aio-ml`/`aio-dl` and the author's approval.
 Brings the two books of the `usaaio` repository (`weiboz0/usaaio`, at commit `a20128f`) into py4kids,
 publishes their editions from here, and puts them on the learning website (design 012).
 Plans for these books live under `docs/plans/aio/` (`aio-NNN`); `tools/guard.py` already guards namespaced plan directories.
