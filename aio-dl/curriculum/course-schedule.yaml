@@ -1,0 +1,444 @@
+schedule_version: 1
+book: 2
+status: live
+starts_after_global_week: 40
+total_book_weeks: 37
+total_minutes: 10270
+final_assessment:
+  kind: r2-mock
+  status: live
+  test: r2-001
+  after_book_week: 37
+weeks:
+  - book_week: 1
+    global_week: 41
+    allocations:
+      - kind: bridge-diagnostic
+        unit: B2-019-attention-transformers
+        minutes: 30
+      - kind: lesson-session
+        unit: B2-019-attention-transformers
+        session: 1
+        minutes: 90
+      - kind: practice
+        unit: B2-019-attention-transformers
+        chunk: 1
+        minutes: 135
+        problem_ids: [B2-019-p01, B2-019-p02, B2-019-p06, B2-019-p13]
+  - book_week: 2
+    global_week: 42
+    allocations:
+      - kind: lesson-session
+        unit: B2-019-attention-transformers
+        session: 2
+        minutes: 90
+      - kind: practice
+        unit: B2-019-attention-transformers
+        chunk: 2
+        minutes: 185
+        problem_ids: [B2-019-p03, B2-019-p04, B2-019-p07, B2-019-p08, B2-019-p14]
+  - book_week: 3
+    global_week: 43
+    allocations:
+      - kind: lesson-session
+        unit: B2-019-attention-transformers
+        session: 3
+        minutes: 90
+      - kind: practice
+        unit: B2-019-attention-transformers
+        chunk: 3
+        minutes: 330
+        problem_ids: [B2-019-p05, B2-019-p09, B2-019-p10, B2-019-p15, B2-019-p16, B2-019-p21, B2-019-p23]
+  - book_week: 4
+    global_week: 44
+    allocations:
+      - kind: lesson-session
+        unit: B2-019-attention-transformers
+        session: 4
+        minutes: 90
+      - kind: practice
+        unit: B2-019-attention-transformers
+        chunk: 4
+        minutes: 180
+        problem_ids: [B2-019-p11, B2-019-p17, B2-019-p18]
+  - book_week: 5
+    global_week: 45
+    allocations:
+      - kind: lesson-session
+        unit: B2-019-attention-transformers
+        session: 5
+        minutes: 90
+      - kind: practice
+        unit: B2-019-attention-transformers
+        chunk: 5
+        minutes: 290
+        problem_ids: [B2-019-p12, B2-019-p19, B2-019-p20, B2-019-p22, B2-019-p24]
+  - book_week: 6
+    global_week: 46
+    allocations:
+      - kind: review
+        unit: B2-019-attention-transformers
+        chunk: 1
+        minutes: 60
+  - book_week: 7
+    global_week: 47
+    allocations:
+      - kind: bridge-diagnostic
+        unit: B2-020-language-transformers
+        minutes: 30
+      - kind: lesson-session
+        unit: B2-020-language-transformers
+        session: 1
+        minutes: 90
+      - kind: practice
+        unit: B2-020-language-transformers
+        chunk: 1
+        minutes: 135
+        problem_ids: [B2-020-p01, B2-020-p02, B2-020-p06, B2-020-p13]
+  - book_week: 8
+    global_week: 48
+    allocations:
+      - kind: lesson-session
+        unit: B2-020-language-transformers
+        session: 2
+        minutes: 90
+      - kind: practice
+        unit: B2-020-language-transformers
+        chunk: 2
+        minutes: 185
+        problem_ids: [B2-020-p03, B2-020-p04, B2-020-p07, B2-020-p08, B2-020-p14]
+  - book_week: 9
+    global_week: 49
+    allocations:
+      - kind: lesson-session
+        unit: B2-020-language-transformers
+        session: 3
+        minutes: 90
+      - kind: practice
+        unit: B2-020-language-transformers
+        chunk: 3
+        minutes: 330
+        problem_ids: [B2-020-p05, B2-020-p09, B2-020-p10, B2-020-p15, B2-020-p16, B2-020-p17, B2-020-p23]
+  - book_week: 10
+    global_week: 50
+    allocations:
+      - kind: lesson-session
+        unit: B2-020-language-transformers
+        session: 4
+        minutes: 90
+      - kind: practice
+        unit: B2-020-language-transformers
+        chunk: 4
+        minutes: 180
+        problem_ids: [B2-020-p12, B2-020-p18, B2-020-p21]
+  - book_week: 11
+    global_week: 51
+    allocations:
+      - kind: lesson-session
+        unit: B2-020-language-transformers
+        session: 5
+        minutes: 90
+      - kind: practice
+        unit: B2-020-language-transformers
+        chunk: 5
+        minutes: 290
+        problem_ids: [B2-020-p11, B2-020-p19, B2-020-p20, B2-020-p22, B2-020-p24]
+  - book_week: 12
+    global_week: 52
+    allocations:
+      - kind: review
+        unit: B2-020-language-transformers
+        chunk: 1
+        minutes: 60
+  - book_week: 13
+    global_week: 53
+    allocations:
+      - kind: bridge-diagnostic
+        unit: B2-021-cross-modal-transformers-vision
+        minutes: 30
+      - kind: lesson-session
+        unit: B2-021-cross-modal-transformers-vision
+        session: 1
+        minutes: 90
+      - kind: practice
+        unit: B2-021-cross-modal-transformers-vision
+        chunk: 1
+        minutes: 135
+        problem_ids: [B2-021-p01, B2-021-p02, B2-021-p06, B2-021-p13]
+  - book_week: 14
+    global_week: 54
+    allocations:
+      - kind: lesson-session
+        unit: B2-021-cross-modal-transformers-vision
+        session: 2
+        minutes: 90
+      - kind: practice
+        unit: B2-021-cross-modal-transformers-vision
+        chunk: 2
+        minutes: 185
+        problem_ids: [B2-021-p03, B2-021-p04, B2-021-p07, B2-021-p08, B2-021-p14]
+  - book_week: 15
+    global_week: 55
+    allocations:
+      - kind: lesson-session
+        unit: B2-021-cross-modal-transformers-vision
+        session: 3
+        minutes: 90
+      - kind: practice
+        unit: B2-021-cross-modal-transformers-vision
+        chunk: 3
+        minutes: 280
+        problem_ids: [B2-021-p05, B2-021-p09, B2-021-p10, B2-021-p11, B2-021-p15, B2-021-p17]
+  - book_week: 16
+    global_week: 56
+    allocations:
+      - kind: lesson-session
+        unit: B2-021-cross-modal-transformers-vision
+        session: 4
+        minutes: 90
+      - kind: practice
+        unit: B2-021-cross-modal-transformers-vision
+        chunk: 4
+        minutes: 225
+        problem_ids: [B2-021-p12, B2-021-p16, B2-021-p18, B2-021-p20]
+  - book_week: 17
+    global_week: 57
+    allocations:
+      - kind: lesson-session
+        unit: B2-021-cross-modal-transformers-vision
+        session: 5
+        minutes: 90
+      - kind: practice
+        unit: B2-021-cross-modal-transformers-vision
+        chunk: 5
+        minutes: 285
+        problem_ids: [B2-021-p19, B2-021-p21, B2-021-p22, B2-021-p23, B2-021-p24]
+  - book_week: 18
+    global_week: 58
+    allocations:
+      - kind: review
+        unit: B2-021-cross-modal-transformers-vision
+        chunk: 1
+        minutes: 60
+  - book_week: 19
+    global_week: 59
+    allocations:
+      - kind: bridge-diagnostic
+        unit: B2-022-probabilistic-latent-models
+        minutes: 30
+      - kind: lesson-session
+        unit: B2-022-probabilistic-latent-models
+        session: 1
+        minutes: 90
+      - kind: practice
+        unit: B2-022-probabilistic-latent-models
+        chunk: 1
+        minutes: 135
+        problem_ids: [B2-022-p01, B2-022-p02, B2-022-p06, B2-022-p13]
+  - book_week: 20
+    global_week: 60
+    allocations:
+      - kind: lesson-session
+        unit: B2-022-probabilistic-latent-models
+        session: 2
+        minutes: 90
+      - kind: practice
+        unit: B2-022-probabilistic-latent-models
+        chunk: 2
+        minutes: 210
+        problem_ids: [B2-022-p03, B2-022-p07, B2-022-p08, B2-022-p14, B2-022-p15]
+  - book_week: 21
+    global_week: 61
+    allocations:
+      - kind: lesson-session
+        unit: B2-022-probabilistic-latent-models
+        session: 3
+        minutes: 90
+      - kind: practice
+        unit: B2-022-probabilistic-latent-models
+        chunk: 3
+        minutes: 250
+        problem_ids: [B2-022-p04, B2-022-p09, B2-022-p10, B2-022-p17, B2-022-p18]
+  - book_week: 22
+    global_week: 62
+    allocations:
+      - kind: lesson-session
+        unit: B2-022-probabilistic-latent-models
+        session: 4
+        minutes: 90
+      - kind: practice
+        unit: B2-022-probabilistic-latent-models
+        chunk: 4
+        minutes: 220
+        problem_ids: [B2-022-p05, B2-022-p11, B2-022-p12, B2-022-p16, B2-022-p21]
+  - book_week: 23
+    global_week: 63
+    allocations:
+      - kind: lesson-session
+        unit: B2-022-probabilistic-latent-models
+        session: 5
+        minutes: 90
+      - kind: practice
+        unit: B2-022-probabilistic-latent-models
+        chunk: 5
+        minutes: 295
+        problem_ids: [B2-022-p19, B2-022-p20, B2-022-p22, B2-022-p23, B2-022-p24]
+  - book_week: 24
+    global_week: 64
+    allocations:
+      - kind: review
+        unit: B2-022-probabilistic-latent-models
+        chunk: 1
+        minutes: 60
+  - book_week: 25
+    global_week: 65
+    allocations:
+      - kind: bridge-diagnostic
+        unit: B2-023-generative-models-diffusion
+        minutes: 30
+      - kind: lesson-session
+        unit: B2-023-generative-models-diffusion
+        session: 1
+        minutes: 90
+      - kind: practice
+        unit: B2-023-generative-models-diffusion
+        chunk: 1
+        minutes: 135
+        problem_ids: [B2-023-p01, B2-023-p02, B2-023-p06, B2-023-p13]
+  - book_week: 26
+    global_week: 66
+    allocations:
+      - kind: lesson-session
+        unit: B2-023-generative-models-diffusion
+        session: 2
+        minutes: 90
+      - kind: practice
+        unit: B2-023-generative-models-diffusion
+        chunk: 2
+        minutes: 265
+        problem_ids: [B2-023-p07, B2-023-p08, B2-023-p14, B2-023-p17, B2-023-p22]
+  - book_week: 27
+    global_week: 67
+    allocations:
+      - kind: lesson-session
+        unit: B2-023-generative-models-diffusion
+        session: 3
+        minutes: 90
+      - kind: practice
+        unit: B2-023-generative-models-diffusion
+        chunk: 3
+        minutes: 115
+        problem_ids: [B2-023-p03, B2-023-p09, B2-023-p15]
+  - book_week: 28
+    global_week: 68
+    allocations:
+      - kind: lesson-session
+        unit: B2-023-generative-models-diffusion
+        session: 4
+        minutes: 90
+      - kind: practice
+        unit: B2-023-generative-models-diffusion
+        chunk: 4
+        minutes: 295
+        problem_ids: [B2-023-p04, B2-023-p10, B2-023-p11, B2-023-p16, B2-023-p18, B2-023-p19]
+  - book_week: 29
+    global_week: 69
+    allocations:
+      - kind: lesson-session
+        unit: B2-023-generative-models-diffusion
+        session: 5
+        minutes: 90
+      - kind: practice
+        unit: B2-023-generative-models-diffusion
+        chunk: 5
+        minutes: 300
+        problem_ids: [B2-023-p05, B2-023-p12, B2-023-p20, B2-023-p21, B2-023-p23, B2-023-p24]
+  - book_week: 30
+    global_week: 70
+    allocations:
+      - kind: review
+        unit: B2-023-generative-models-diffusion
+        chunk: 1
+        minutes: 60
+  - book_week: 31
+    global_week: 71
+    allocations:
+      - kind: bridge-diagnostic
+        unit: B2-024-gpu-scientific-ml-capstone
+        minutes: 30
+      - kind: lesson-session
+        unit: B2-024-gpu-scientific-ml-capstone
+        session: 1
+        minutes: 90
+      - kind: practice
+        unit: B2-024-gpu-scientific-ml-capstone
+        chunk: 1
+        minutes: 140
+        problem_ids: [B2-024-p01, B2-024-p02, B2-024-p06, B2-024-p07]
+  - book_week: 32
+    global_week: 72
+    allocations:
+      - kind: lesson-session
+        unit: B2-024-gpu-scientific-ml-capstone
+        session: 2
+        minutes: 90
+      - kind: practice
+        unit: B2-024-gpu-scientific-ml-capstone
+        chunk: 2
+        minutes: 190
+        problem_ids: [B2-024-p03, B2-024-p12, B2-024-p16, B2-024-p23]
+  - book_week: 33
+    global_week: 73
+    allocations:
+      - kind: lesson-session
+        unit: B2-024-gpu-scientific-ml-capstone
+        session: 3
+        minutes: 90
+      - kind: practice
+        unit: B2-024-gpu-scientific-ml-capstone
+        chunk: 3
+        minutes: 280
+        problem_ids: [B2-024-p08, B2-024-p15, B2-024-p21, B2-024-p22, B2-024-p24]
+  - book_week: 34
+    global_week: 74
+    allocations:
+      - kind: lesson-session
+        unit: B2-024-gpu-scientific-ml-capstone
+        session: 4
+        minutes: 90
+      - kind: practice
+        unit: B2-024-gpu-scientific-ml-capstone
+        chunk: 4
+        minutes: 255
+        problem_ids: [B2-024-p04, B2-024-p09, B2-024-p17, B2-024-p18, B2-024-p25]
+  - book_week: 35
+    global_week: 75
+    allocations:
+      - kind: lesson-session
+        unit: B2-024-gpu-scientific-ml-capstone
+        session: 5
+        minutes: 90
+      - kind: practice
+        unit: B2-024-gpu-scientific-ml-capstone
+        chunk: 5
+        minutes: 215
+        problem_ids: [B2-024-p10, B2-024-p13, B2-024-p19, B2-024-p28]
+  - book_week: 36
+    global_week: 76
+    allocations:
+      - kind: lesson-session
+        unit: B2-024-gpu-scientific-ml-capstone
+        session: 6
+        minutes: 90
+      - kind: practice
+        unit: B2-024-gpu-scientific-ml-capstone
+        chunk: 6
+        minutes: 290
+        problem_ids: [B2-024-p05, B2-024-p11, B2-024-p14, B2-024-p20, B2-024-p26, B2-024-p27]
+  - book_week: 37
+    global_week: 77
+    allocations:
+      - kind: review
+        unit: B2-024-gpu-scientific-ml-capstone
+        chunk: 1
+        minutes: 60

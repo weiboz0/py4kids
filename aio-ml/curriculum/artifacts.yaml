@@ -1,0 +1,34 @@
+# External artifacts for the aio books (design 014 D8), provisioned into the git-ignored
+# reference/cache/ by scripts/aio/aio-provision-cache.sh, which verifies each sha256.
+# aio-dl downloads nothing; every artifact here is consumed by aio-ml.
+# Notebooks set GENSIM_DATA_DIR / TORCH_HOME to <book>/reference/cache/{gensim,torch} themselves.
+schema: 1
+artifacts:
+  # gensim.downloader.load("glove-wiki-gigaword-100") needs three files in GENSIM_DATA_DIR:
+  # the index (information.json, refreshed from list.json when online), the model's loader
+  # module (__init__.py) and the data file. The index is pinned to a gensim-data commit so its
+  # bytes cannot drift under the recorded sha256.
+  - id: gensim-information-json
+    url: https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/bd93f51f7536dbf84f194cd8a81c0644b7b95b41/list.json
+    path: aio-ml/reference/cache/gensim/information.json
+    sha256: a6cf32eebecd2385ba9f8f1946edecda76d24889dfeeb67cf020c46aa1ee6c58
+    size: 21626
+    consumers: [gensim.downloader index for glove-wiki-gigaword-100]
+  - id: glove-wiki-gigaword-100-loader
+    url: https://github.com/RaRe-Technologies/gensim-data/releases/download/glove-wiki-gigaword-100/__init__.py
+    path: aio-ml/reference/cache/gensim/glove-wiki-gigaword-100/__init__.py
+    sha256: 9326acb9a750c5b46706122219f75e28061717d40fe725ab132a6cd9817ecd85
+    size: 268
+    consumers: [gensim.downloader loader for glove-wiki-gigaword-100]
+  - id: glove-wiki-gigaword-100
+    url: https://github.com/RaRe-Technologies/gensim-data/releases/download/glove-wiki-gigaword-100/glove-wiki-gigaword-100.gz
+    path: aio-ml/reference/cache/gensim/glove-wiki-gigaword-100/glove-wiki-gigaword-100.gz
+    sha256: 4934d4708bf3d65f28fc984dbbfa18af9cbd2505d166a7258a1a957808559b43
+    size: 134300434
+    consumers: [C5 lessons + practice, C9 lesson 03 + practice, r1-001 p05]
+  - id: resnet50-imagenet1k-v1
+    url: https://download.pytorch.org/models/resnet50-0676ba61.pth
+    path: aio-ml/reference/cache/torch/hub/checkpoints/resnet50-0676ba61.pth
+    sha256: 0676ba61b6795bbe1773cffd859882e5e297624d384b6993f7c9e683e722fb8a
+    size: 102530333
+    consumers: [C10 lessons 02/03 + practice, r1-001 p07]
