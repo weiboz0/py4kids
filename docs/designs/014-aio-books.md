@@ -1,8 +1,8 @@
 # Design 014 — The AI Olympiad books (migrating usaaio into py4kids)
 
-**Status:** DRAFT — v3 (2026-10-31). v2 folded design-review round 1 ([self] 2 MUST + 1 NIT; [sol] REJECT, 2 BLOCKER + 4 MUST + 1 NIT;
-[fable] APPROVE WITH NITS, 7 MUST + 3 NIT). v3 folds round 2 ([sol] REJECT, 1 BLOCKER + 3 MUST; [fable] APPROVE WITH NITS, 3 MUST + 4 NIT).
-Awaiting round 3 and the author's approval.
+**Status:** DRAFT — v4 (2026-10-31). v2 folded design-review round 1 ([self] 2 MUST + 1 NIT; [sol] REJECT, 2 BLOCKER + 4 MUST + 1 NIT;
+[fable] APPROVE WITH NITS, 7 MUST + 3 NIT). v3 folded round 2 ([sol] REJECT, 1 BLOCKER + 3 MUST; [fable] APPROVE WITH NITS, 3 MUST + 4 NIT).
+v4 folds round 3 ([sol] REJECT, 1 MUST; [fable] APPROVE WITH NITS, 3 MUST + 3 NIT). Awaiting round 4 and the author's approval.
 Brings the two books of the `usaaio` repository (`weiboz0/usaaio`, at commit `a20128f`) into py4kids,
 publishes their editions from here, and puts them on the learning website (design 012).
 Plans for these books live under `docs/plans/aio/` (`aio-NNN`); `tools/guard.py` already guards namespaced plan directories.
@@ -86,11 +86,12 @@ What py4kids contributes: the registry and its flags, descriptive book ids, the 
     `units/18-C11-competition-craft/data/heldout.csv`, `mocktests/r1-001/data/p09_heldout.csv`, and the five C11 practice-output CSV rules (py4kids has no `*.csv` rule, so each is ported explicitly).
     `tools/guard.py` gains them as tracked-path refusals.
   - **Renames:** qualified ids `book1:<id>` → `aio-ml:<id>` (manifests, `book2/syllabus.md` `imports:`/`evidence_imports:`, tests, `scope.py`);
-    the `../../../../book1/units/...` remediation links in 309 aio-dl notebooks → `../../../../aio-ml/units/...`; test fixtures (the `book1`/`book2` literals in tests and fixtures (about 380, incl. `tests/fixtures/two-books-valid/book1/` and kin);
+    the `book1/units` path spelling in aio-dl remediation links (321 notebooks, 309 of them as `../../../../book1/units/...`), renamed by spelling rather than by depth prefix → `aio-ml/units`;
+    the lesson file `lessons/00-book1-bridge.ipynb` in units B2-019…B2-022 → `00-aio-ml-bridge.ipynb`, with every reference to it (about 105, in manifests, lessons, `curriculum/` and `front-matter/`) updated; test fixtures (the `book1`/`book2` literals in tests and fixtures (about 380, incl. `tests/fixtures/two-books-valid/book1/` and kin);
     `USAAIO_BOOK_ROOT` → `AIO_BOOK_ROOT`. Unit folder names and unit ids are unchanged.
     The rename is one scripted substitution with a before/after count report.
     **"Book 1"/"Book 2" prose is not renamed** (about 600 mentions across the content, tools and tests, where it means the aio books themselves):
-    `tests/test_book_ids.py` is amended so its **book-name** rule (`\bBook (1b|1|2)\b`, line 24) exempts `content_model: aio` roots and `tools/aio/`; its **id** rules stay in force there.
+    `tests/test_book_ids.py` is amended so its **book-name** rule (`\bBook (1b|1|2)\b`, line 26) exempts `content_model: aio` roots and `tools/aio/`; its **id** rules stay in force there.
     **Acceptance proof:** the amended `test_book_ids` (extended to `tools/aio/`) passes, and a grep for the `book1`/`book2` id spellings returns zero hits outside `docs/history/usaaio/`.
   - **Fidelity transformations.** The import changes files only by (a) the listed renames and (b) the D4 tooling dispositions; nothing else, and in particular **no notebook output is cleared**:
     usaaio's hygiene law covers student *problem* notebooks only (`units/*/practice/p*.ipynb` without `solution`, `mocktests/*/problems/*.ipynb`; usaaio `hygiene.py:14-19`),
@@ -122,7 +123,8 @@ What py4kids contributes: the registry and its flags, descriptive book ids, the 
     | `scripts/verify-comment-only.py` + `tests/test_verify_comment_only.py` | ported (it backs the api-comments plans) |
     | `scripts/verify-staged-scope.py`, `tests/fixtures/plan019-path-inventory.yaml` (sha256-pinned in usaaio `pre-merge-guard.sh`) + `tests/test_plan031_guard.py` | dropped; their tracked-path refusal of hidden sets and raw papers is re-homed in `tools/guard.py` (D3 ignore rules), with py4kids guard tests |
     | `tests/test_renumber_book1_units.py`, `tests/test_reference_migration.py` | dropped with their one-off scripts |
-    | `verify_historical_deferred_policy.py` and its tests | dropped (above) |
+    | `verify_historical_deferred_policy.py`, `scripts/verify-historical-deferred-policy.sh` and their tests | dropped (above) |
+    | the loader-coupled tests and fixtures that build `books_version: 1` registries (`test_books.py`, `test_book_isolation.py`, `test_integration.py`, `test_publication_config.py`, `test_model.py`, `test_schedule.py`, `test_tolerance.py`, `test_answerkey.py`, `test_api_comments.py`, `test_layer_boundary.py`, `publication_fixture.py`, about 10 modules) | ported, rewritten to the `books_version: 2` + `content_model: aio` + `aio_round` schema; each rewritten test keeps its assertion, and the parity table counts them per module |
 
   - **Wheel packaging:** `[tool.hatch.build.targets.wheel]` excludes `tools/aio/tests/`.
   - The shared gate scripts stay py4kids': `tools/guard.py` gains the aio roots' unit-id (`NN-<id>`, `B2-0NN-<id>`) and mock-test-id (`rN-NNN`) collision rules; usaaio's own `pre-merge-guard.sh` is not carried.
@@ -144,13 +146,14 @@ What py4kids contributes: the registry and its flags, descriptive book ids, the 
   - `publication: true` on both books. The ported aio publisher builds, from each book's existing `publication.yaml` (usaaio schema, `publication_version: 1`, unchanged):
     `aio-ml`: `student-print`, `student-vol1..3`, `teacher-vol1..3`, `answer-key`; `aio-dl`: `student`, `student-print`, `teacher`, `answer-key`;
     plus `syllabus.pdf`, `handouts/<unit>.pdf`, and `mocktests/<test>-{paper,solutions}.pdf`.
-  - Output lands in `output/<id>/<id>-<edition>[-vol<N>].pdf`. Step 5 routes `aio` books to the aio scripts under `tools.ci_scope`'s render/skip logic, through the group (D2).
+  - Output lands in `output/<id>/<id>-<edition>[-vol<N>].pdf`. Step 5 routes `aio` books to the aio scripts through the group (D2). **The aio edition router is the ported `tools/aio/ci_scope.py`** (per changed unit or mock test: full, scoped, glossary or none, with its tests);
+    py4kids' `tools/ci_scope.py` only contributes its shared-file full trigger (theme, templates, toolchain), which forces a full aio render too.
     Answers outside the Teacher's Edition stay Set A only (`student_answers: {set: A}`).
   - Toolchain (Quarto + lualatex + makeindex) is shared with py4kids; the aio theme stays its own (`tools/aio/publish_theme/`), so the editions look as they do today.
 - **D7 — The website: an explicit contract extension of design 012.**
   Both books get `site: true` and a `site.yaml`, in aio-003, after the import and editions are green.
   Design 012 D1 excluded books whose code Pyodide cannot run; this is the extension, and it is a **bundle schema major version** (closed enums change), with consumers updated in the same plan:
-  - **Ids and kinds.** The schema's entry-id patterns (`bundle.schema.json:38-47`) and the exporter's prefix parsing (`bundle.py:70,219-221`) gain the aio unit patterns (`NN-<id>`, `B2-0NN-<id>`) and a new kind `mocktest` (`rN-NNN`), gated by `content_model`;
+  - **Ids and kinds.** The schema's entry-id patterns (`bundle.schema.json:38-47`) and the exporter's prefix parsing (`bundle.py:70,219-221`) gain the aio unit patterns (`NN-<id>`, `B2-0NN-<id>`; the current `[a-z0-9]` patterns, `bundle.schema.json:21-40`, are widened to admit the uppercase unit codes, and `ENTRY_NUMBER`, `bundle.py:70`, gains an aio branch) and a new kind `mocktest` (`rN-NNN`), gated by `content_model`;
     `site/src/lib/types.ts:16,147` unions widen to match; the global key stays `book/entry/notebook/cell_id`.
   - **Lesson parts.** An aio unit's lesson is its overview `lesson.ipynb` followed by `lessons/NN-*.ipynb`, exported as an **additive, optional** `lesson.parts[]` (title + blocks each).
     py4kids lessons keep `lesson.blocks` unchanged and emit no `parts`, so their bundles change only in the schema version; the site's readers treat a lesson without `parts` as one part.
@@ -163,8 +166,8 @@ What py4kids contributes: the registry and its flags, descriptive book ids, the 
     A block gains `runnable: bool` (new field); a block whose cumulative namespace imports an unsupported package is `runnable: false`.
   - **Export-time outputs (new machinery).** Lesson outputs today come from stored `cell.outputs` (`tools/export/lesson.py:131`), and most aio lessons store none
     (aio-ml: 92 of about 690 lesson code cells; aio-dl: none). The aio adapter uses stored outputs where present and otherwise executes the lesson under the `aio` group at export,
-    caching outputs under `build/aio-outputs/`. **The cache key is** the notebook's content hash + the `uv.lock` hash + the SHA-256 of every provisioned artifact (D8) the lesson's unit consumes, per the D8 inventory;
-    a lesson whose consumed artifacts cannot be determined is never served from cache. The notebooks in the repo are not changed. `build-site.sh` therefore routes `export` through each book's group, and the export inherits the exec preconditions (D8).
+    caching outputs under `build/aio-outputs/`. **The cache key is** the notebook's content hash + the `uv.lock` hash + the hash of every tracked file under the lesson's unit directory and the book's `curriculum/` and `data/` (tracked data such as C11's `data/train.csv`, generator scripts, generated inputs) + the SHA-256 of every provisioned artifact (D8) the unit consumes.
+    The cache-filling run also installs a `sys.addaudithook` `open` recorder; a lesson that reads any file outside that hashed set (other than the interpreter and installed packages) is recorded **uncacheable** and re-executed on every export, so an undeclared input can never serve stale output. The notebooks in the repo are not changed. `build-site.sh` therefore routes `export` through each book's group, and the export inherits the exec preconditions (D8).
     Measured: aio-ml lessons hold about 680–690 code cells (about 75 touch torch); aio-dl lessons hold 84 (68 touch torch) — aio-dl is mostly read-and-attempt on the web.
   - **Checking.** The classification tool proposes `check-asserts` for portable assert-checked practice, `check-answer` for `mc`/`mc-normal-form`, `check-self` for `proof` and any torch-bound item.
     `site.yaml` starts `classification: proposed`; aio-004/005 confirm the tags.
@@ -180,7 +183,7 @@ What py4kids contributes: the registry and its flags, descriptive book ids, the 
     and ships `scripts/aio-provision-cache.sh`, which fills the cache from those public sources and verifies a recorded SHA-256 per artifact.
     **A clean checkout + `aio-provision-cache.sh` + `ci-local.sh` must pass**; that sequence is the aio-001 verification. Replacing downloads with committed, integrity-checked subsets (as recsys did) is a follow-up.
 - **D9 — CI budget.** The aio books' notebook execution (about 1,346 notebooks across lessons, practice solutions and mock tests) is the largest cost.
-  aio-001 measures it. If the full run exceeds 60 CI-minutes, `tools.ci_scope` scopes aio exec to changed aio paths on ordinary branches,
+  aio-001 measures it. If the full run exceeds 60 CI-minutes, the aio router (`tools/aio/ci_scope.py`, D6) scopes aio exec to changed aio paths on ordinary branches,
   and `ci-local.sh --all-books` (required before any aio content merge and for release) runs it in full.
 
 ## 3. Governance amendments (precondition — needs the author's explicit authorization)
@@ -208,7 +211,7 @@ The gate roster is unchanged (3-way, [self]/[sol]/[fable]).
 | governance PR | §3 amendments | docs-only |
 | **aio-001** Import | Phase 1: dependency resolution (D8) + external-artifact inventory and `aio-provision-cache.sh`. Then registry entries (`content_model`, `aio_round`); snapshot + provisioning (D3); `tools/aio/` and its tests (D4); ci-local routing table (D2); guard rules; CI budget measured (D9) | the D4 parity table, every row matching; clean checkout + provision + `ci-local.sh` green; py4kids books' results unchanged; rename-count report + `test_book_ids` + zero-hit grep; `git ls-files` proves no ignored path is tracked; fidelity diff: imported files byte-identical to usaaio `a20128f` apart from the D3 fidelity transformations (renames, D4 dispositions); `overlap --require-corpus` over the books and `docs/history/usaaio/` |
 | **aio-002** Editions | `publication: true`; step-5 routing; `output/aio-*/` | every edition builds; aio publish-audit passes; page counts within ±2% of the usaaio `a20128f` PDFs (same content, same theme) |
-| **aio-003** Site | the D7 contract: schema major bump, id patterns + `mocktest` kind, `lesson.parts[]`, `runnable`, export-time output cache, aio answer-release rule, `build-site.sh` group routing, site types/views; `site: true`, `classification: proposed` | schema + consumer tests for each new part (ids, kinds, parts, runnable, mocktest, aio glossary); output-cache key test (an artifact checksum or lock change invalidates); leak-guard test (no Set B/C or mock-test solution in any bundle); site-check; py4kids bundles regenerate unchanged apart from the schema version; e2e: read a lesson part, step slides across a part boundary, resume, attempt a Set A item, see a torch block read-only with its output, open a mock test |
+| **aio-003** Site | the D7 contract: schema major bump, id patterns + `mocktest` kind, `lesson.parts[]`, `runnable`, export-time output cache, aio answer-release rule, `build-site.sh` group routing, site types/views; `site: true`, `classification: proposed` | schema + consumer tests for each new part (ids, kinds, parts, runnable, mocktest, aio glossary); output-cache key tests (a change to an artifact checksum, `uv.lock`, or a tracked local data file invalidates; a read outside the hashed set marks the lesson uncacheable); leak-guard test (no Set B/C or mock-test solution in any bundle); site-check; py4kids bundles regenerate unchanged apart from the schema version; e2e: read a lesson part, step slides across a part boundary, resume, attempt a Set A item, see a torch block read-only with its output, open a mock test |
 | **aio-004 / aio-005** Classification | per-book check-tag confirmation, `classification: confirmed` | site-check in confirmed mode |
 | follow-up | committed artifact subsets (D8) | integrity checks |
 
@@ -277,8 +280,21 @@ its content-review duty is fidelity (the fidelity diff and parity table above), 
   6. NIT `verify-register` for round 1 only → **[FIXED]** D2 table.
   7. NIT wheel ships tests → **[FIXED]** D4 wheel exclude.
 
+### Round 3 (on v3, commit 2e321b3)
+
+- **[sol] REJECT.** Round-2 items 1–3 verified resolved.
+  1. MUST cache key omits tracked local inputs (C11 `data/train.csv`) → **[FIXED]** D7: key hashes unit + `curriculum/` + `data/` tracked files; an audit-hook recorder marks any lesson reading outside the set uncacheable; aio-003 test row.
+- **[fable] APPROVE WITH NITS.** All round-2 dispositions verified.
+  1. MUST `00-book1-bridge.ipynb` trips the kept `Book[12]-` id rule → **[FIXED]** D3 renames the file to `00-aio-ml-bridge.ipynb` with its ~105 references; rule line reference corrected.
+  2. MUST loader-coupled `books_version: 1` tests undispositioned → **[FIXED]** D4 row: rewritten to the v2 schema, counted in parity.
+  3. MUST two `ci_scope`s → **[FIXED]** D6/D9 name `tools/aio/ci_scope.py` as the aio router; py4kids' contributes the shared-file trigger.
+  4. NIT link count → **[FIXED]** 321/309, renamed by spelling.
+  5. NIT uppercase ids → **[FIXED]** D7 widened patterns + `ENTRY_NUMBER` branch.
+  6. NIT `.sh` historical script → **[FIXED]** D4 row.
+
 ## Revision history
 
 - v1 (2026-10-31): first draft.
 - v2 (2026-10-31): folds round 1 (above).
 - v3 (2026-10-31): folds round 2 (above).
+- v4 (2026-10-31): folds round 3 (above).
