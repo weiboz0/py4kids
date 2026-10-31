@@ -356,6 +356,17 @@ ARCHIVE_TEXT_SUFFIXES = frozenset({
 ARCHIVE_TEXT_NAMES = frozenset({".gitignore", ".gitkeep"})
 
 
+# Archive mode only (py4kids aio-001): archived prose quotes starter imports as inline code
+# spans (`import numpy as np`) rather than on lines of their own, so `_without_boilerplate`'s
+# import/from line rule never sees them. A span whose content is an import statement is the
+# same boilerplate and is dropped; the prose around it is still scanned.
+INLINE_IMPORT_SPAN = re.compile(r"`(?:import|from)\s[^`\n]*`")
+
+
+def _without_archive_boilerplate(text: str) -> str:
+    return _without_boilerplate(INLINE_IMPORT_SPAN.sub(" ", text))
+
+
 def _archive_notebook_text(path: Path) -> str:
     notebook = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(notebook, dict) or not isinstance(notebook.get("cells"), list):
@@ -420,7 +431,7 @@ def check_overlap_paths(scan_root: str | Path, book_roots: list[Path]) -> Report
             errors.append(f"{path}: unscannable extension {path.suffix or path.name!r} (fail closed)")
             continue
         scanned += 1
-        file_shingles = _shingles(_without_boilerplate(text))
+        file_shingles = _shingles(_without_archive_boilerplate(text))
         for label, reference_shingles in corpus:
             overlap = len(file_shingles & reference_shingles)
             if overlap >= SHINGLE_THRESHOLD:

@@ -126,6 +126,36 @@ def test_archive_scans_notebook_markdown_and_code(tmp_path):
 
 
 @needs_pdftotext
+def test_archive_inline_import_spans_are_boilerplate_but_copied_prose_is_not(tmp_path):
+    # The starter imports a reference paper shares with all Python ML material: usaaio's
+    # boilerplate rule drops lines that begin with import/from; archive prose quotes them as
+    # inline code spans instead (usaaio docs/plans/006-units-tranche-2.md:166).
+    book = _book(
+        tmp_path / "book", text=f"import numpy as np import matplotlib.pyplot as plt {COPIED}"
+    )
+    archive = tmp_path / "archive"
+    archive.mkdir()
+    prose = (
+        "the only hits are the universal `import numpy as np` / "
+        "`import matplotlib.pyplot as plt` starter boilerplate"
+    )
+    (archive / "inline-imports.md").write_text(prose, encoding="utf-8")
+    (archive / "copied.md").write_text(f"{prose}. {COPIED}.", encoding="utf-8")
+    # The same words outside a code span are still prose and still a hit.
+    (archive / "plain.md").write_text(
+        "the only hits are import numpy as np import matplotlib pyplot as plt here",
+        encoding="utf-8",
+    )
+
+    report = check_overlap_paths(archive, [book])
+
+    assert sorted(error.split(" overlaps ")[0] for error in report.errors) == [
+        str(archive / "copied.md"),
+        str(archive / "plain.md"),
+    ]
+
+
+@needs_pdftotext
 def test_archive_clean_text_passes(tmp_path):
     book = _book(tmp_path / "book")
     archive = tmp_path / "archive"
