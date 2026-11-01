@@ -18,6 +18,8 @@ from tools.aio.books import load_book_catalog, unit_dir
 
 FILTER = ROOT / "tools/aio/publish_theme/panels.lua"
 BASE_COMMIT = "60b1247"  # main before Plan 033: the filter without the table fixes
+# usaaio `git show 60b1247:tools/publish_theme/panels.lua`, pinned (py4kids aio-001 Phase F).
+PRE_PLAN033_PANELS = ROOT / "tools/aio/tests/fixtures/panels-pre-plan033.lua"
 READER = "markdown+tex_math_single_backslash-raw_tex"
 
 
@@ -177,16 +179,14 @@ $$a = b$$
 def test_outside_tables_only_the_global_dot_rule_changes(tmp_path: Path) -> None:
     """Prose and code outside tables match the pre-Plan-033 filter, apart from the global break
     after `.` before a letter or digit; a table elsewhere in the document changes nothing."""
-    git = shutil.which("git")
-    old = subprocess.run([git, "show", f"{BASE_COMMIT}:tools/publish_theme/panels.lua"],
-                         cwd=ROOT, capture_output=True, text=True, check=False) if git else None
-    if old is None or old.returncode != 0:
-        pytest.skip(f"git history with {BASE_COMMIT} is not available")
+    # py4kids aio-001 Phase F: usaaio read the pre-Plan-033 filter from its own git history
+    # (`git show 60b1247:tools/publish_theme/panels.lua`), which py4kids does not import, so the
+    # test skipped here. That blob is pinned byte for byte as a fixture and read instead.
     new = _latex(PROSE, "--wrap=none")
     with_table = _latex(PROSE + "\n" + C9_P18, "--wrap=none")
     assert with_table.startswith(new.rstrip("\n"))
     lua = tmp_path / "panels-before.lua"
-    lua.write_text(old.stdout, encoding="utf-8")
+    lua.write_bytes(PRE_PLAN033_PANELS.read_bytes())
     before = _latex(PROSE, "--wrap=none", lua=lua)
     assert new != before  # the dot rule is visible here
     assert new.replace(".\\allowbreak{}", ".") == before.replace(".\\allowbreak{}", ".")
