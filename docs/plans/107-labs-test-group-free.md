@@ -22,11 +22,12 @@ Rejected: `pytest.importorskip("racekit")` (would silently skip in a fresh clone
 ## Phases
 
 ### Phase A — the fix (inline; trivially scoped)
-- `tests/test_labs.py`: the test writes the stand-in package beside the lab before calling `lab_findings`.
+- `tests/test_labs.py`: the test writes the stand-in package beside the lab before calling `lab_findings`, with a comment that the stand-in resolves through the kernel's working directory (`_execute_lab`'s `resources.metadata.path`) and shadows an installed `racekit`, so neither `importorskip` nor the real package belongs here.
   No other test, no tool code and no content changes.
 
 ### Phase B — verification (named)
-1. In a fresh venv **without** `racekit` (`UV_PROJECT_ENVIRONMENT` pointed at a new `/dev/shm` directory, `uv sync --frozen` with no groups; `python -c "import racekit"` must fail first): `uv run pytest -q` passes, including this test.
+1. In a fresh venv **without** `racekit` (`UV_PROJECT_ENVIRONMENT` pointed at a new `/dev/shm` directory, `uv sync --frozen` with no groups; that venv's own interpreter, `uv run --no-sync python -c "import racekit"`, must fail first): `uv run --no-sync pytest -q` passes, including this test.
+   The test also passes in a venv **with** `--group roar` synced (the shadowing case).
 2. Mutation check: with the stand-in's `carla_like` renamed, the test fails (the lab really executes the import).
 3. `scripts/ci-local.sh` green; `scripts/pre-merge-guard.sh --pr` OK.
 
@@ -34,6 +35,25 @@ Rejected: `pytest.importorskip("racekit")` (would silently skip in a fresh clone
 Test-only fix: no units, projects or checkpoints ship. Also out of scope: the aio-001 branch's clean-checkout provisioning workaround (`uv sync --group roar`), which aio-001 can drop after rebasing onto this fix.
 
 ## Plan Review
+
+### Round 1 — [self] (2026-11-01)
+- **Verdict**: APPROVE
+- Empirical scope check: in a fresh no-group venv (`import racekit` fails in that venv's interpreter), the group-free suite with this one test deselected gave 2247 passed; the test alone fails with `ModuleNotFoundError: racekit`. It is the only group leak.
+
+### Round 1 — [sol] (2026-11-01)
+- **Verdict**: APPROVE WITH NITS (GPT-6, `--model gpt-6-sol`)
+1. `[FIXED]` Phase B.1: a bare `python -c` probe may check another interpreter. Priority: Nice to Have.
+   → Response: B.1 now probes with the fresh venv's own interpreter (`uv run --no-sync`).
+
+### Round 1 — [fable] (2026-11-01)
+- **Verdict**: APPROVE WITH NITS
+- Verified the diagnosis, the stand-in and the mutation proof in a scratch racekit-free venv; full group-free suite 2247 passed with only this test deselected.
+1. `[FIXED]` Phase A: comment that the stand-in resolves via the kernel cwd and shadows an installed racekit. Priority: Nice to Have.
+   → Response: added to Phase A.
+2. `[FIXED]` Phase B.1: also record a pass in a venv with `--group roar`. Priority: Nice to Have.
+   → Response: added to B.1.
+
+Consensus: all three APPROVE / APPROVE WITH NITS; plan gate CLOSED (v1.1).
 
 ## Content Review
 
