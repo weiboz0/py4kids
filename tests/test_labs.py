@@ -188,7 +188,15 @@ def test_an_untagged_simulator_code_cell_fails(lab_root, source):
 
 def test_racekit_carla_like_is_not_the_simulator(lab_root):
     source = "from racekit.cars import carla_like\ncar = carla_like(noise=True)\n"
-    write_lab(lab_root, [*default_cells(), _code(source)])
+    lab = write_lab(lab_root, [*default_cells(), _code(source)])
+    # racekit is in the roar group only, and this suite is group-free (plan 107). The lab kernel
+    # runs in the lab's directory (_execute_lab's resources.metadata.path), so this stand-in
+    # resolves first and shadows any installed racekit: the test is about the checker, not racekit.
+    stand_in = lab.parent / "racekit"
+    stand_in.mkdir()
+    (stand_in / "__init__.py").write_text("", encoding="utf-8")
+    (stand_in / "cars.py").write_text("def carla_like(noise=False):\n    return noise\n",
+                                      encoding="utf-8")
     assert lab_findings(lab_root, "labbook") == []
 
 
