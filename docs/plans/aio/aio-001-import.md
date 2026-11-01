@@ -488,5 +488,7 @@ This branch routes `full`. Run 4 took 349.7 min end to end.
   usaaio's test passed only because its fixture lacked the repository-root reconciliation.
 - **Phase F, 025f499d:** the pinned pre-Plan-033 `panels.lua` fixture (F.1).
 - **Clean-checkout provisioning** (F.2): `uv sync --frozen --group roar --inexact` before ci-local, for a pre-existing `main` test-environment gap.
+  Plan 107 (PR #171, merged before this branch's PR) closed that gap, so a clean checkout no longer needs it.
 - **Import report "Renamed paths"** (Phase B item 3): the report lists per-root move counts and the special renames rather than every renamed path; every rename is still recoverable from those counts and the full changed-file list ([fable] nit 2).
 - **Content gate, after the verification runs:** `tools/aio/tests/test_exec_isolation.py` (aio suite 1783) and the removal of the premature `build/aio-outputs/` ignore rule; the final `ci-local.sh --all-books` run below covers both.
+- **Final gate run:** the first `ci-local.sh --all-books` on `05e207de` failed one site test (`e2e-pwa/offline.spec.ts:157`, python-concepts: one navigation `ERR_ABORTED` in the offline-cache assertion) while a second full CI ran on the machine; the PWA suite then passed 3/3 on the same `dist/`. The branch was rebased onto plan 107 and the gate re-run alone (below).
