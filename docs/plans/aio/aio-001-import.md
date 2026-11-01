@@ -253,7 +253,32 @@ Also out of scope: `publication` and editions (aio-002), `site` and the export a
 
 ## Content Review
 
-(pending — duty: fidelity, per design §4 and the aio reading of docs/content-review-gate.md)
+Duty: fidelity (design §4) plus conventional review of the tooling changes, with the aio reading of `docs/content-review-gate.md` (duty 9: no past papers).
+
+### Review 1 — [self] (2026-11-01)
+- **Verdict**: APPROVE
+- Checked: the aio per-book and all-books check lists in `scripts/ci-local.sh` match usaaio `a20128f` lines 123–133 verbatim, and exit 3 is tolerated only where usaaio tolerated it (per-book checks, hygiene, PDFs).
+  `tools/guard.py` refuses tracked aio `reference/*` and the seven local-only grading files, keyed on `content_model: aio`.
+  `route_exec` sends a book `full` on any change outside `units/<x>/` and `mocktests/<x>/`; a code-cell scan of both books found no reference to another unit, mock test or book, so `scoped` is sound.
+  The only `git ls-files` hits on token/secret names are lesson titles (`01-train-token-embeddings`, `unit-06-secret-codes`).
+  The report records both environment caveats (the usaaio branch mirror, the roar sync).
+  No findings.
+
+### Review 1 — [sol] (2026-11-01)
+- **Verdict**: APPROVE (GPT-6, `--model gpt-6-sol`)
+- No findings.
+
+### Review 1 — [fable] (2026-11-01)
+- **Verdict**: APPROVE WITH NITS
+- Independently re-ran the import dry-run (report byte-identical; 1,501 identical / 91 differing = `classify.tsv`; 0 notebooks differ), the archive comparison (44/44), the leak and guard checks, the junit per-file recount, and read-only aio and group-free test subsets.
+1. `[FIXED]` `tools/aio/ci_scope.py:261`: the exec-scoping invariant (no aio code cell reads another unit's, mock test's or book's files) holds but is unenforced. Priority: Nice to Have.
+   → Response: added `tools/aio/tests/test_exec_isolation.py`, which scans every code cell of every registered aio book and fails on any such reference.
+2. `[WONTFIX]` `docs/history/aio-import/import-usaaio.py:240`: the "Renamed paths" list is sliced `[:0]`, so `import-report.md` records per-root move counts and the special renames, not every renamed path as Phase B worded it. Priority: Nice to Have.
+   → Response: the script is the recorded import tool whose byte-for-byte reproducibility is fidelity evidence; it stays as run. The per-root counts plus the full "Changed files" list make every rename auditable; the wording difference is recorded under Deviations below.
+3. `[FIXED]` `.gitignore:117`: `build/aio-outputs/` is already covered by `build/` and belongs to aio-003's export cache. Priority: Nice to Have.
+   → Response: removed; aio-003 adds what its cache needs.
+
+Consensus: all three APPROVE / APPROVE WITH NITS; no `[OPEN]` items.
 
 ## Post-Execution Report
 
@@ -463,3 +488,5 @@ This branch routes `full`. Run 4 took 349.7 min end to end.
   usaaio's test passed only because its fixture lacked the repository-root reconciliation.
 - **Phase F, 025f499d:** the pinned pre-Plan-033 `panels.lua` fixture (F.1).
 - **Clean-checkout provisioning** (F.2): `uv sync --frozen --group roar --inexact` before ci-local, for a pre-existing `main` test-environment gap.
+- **Import report "Renamed paths"** (Phase B item 3): the report lists per-root move counts and the special renames rather than every renamed path; every rename is still recoverable from those counts and the full changed-file list ([fable] nit 2).
+- **Content gate, after the verification runs:** `tools/aio/tests/test_exec_isolation.py` (aio suite 1783) and the removal of the premature `build/aio-outputs/` ignore rule; the final `ci-local.sh --all-books` run below covers both.
