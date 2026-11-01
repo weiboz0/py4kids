@@ -57,4 +57,27 @@ Consensus: all three APPROVE / APPROVE WITH NITS; plan gate CLOSED (v1.1).
 
 ## Content Review
 
+Test-code review (no content ships).
+
+### Review 1 — [self] (2026-11-01)
+- **Verdict**: APPROVE
+- The diff is `tests/test_labs.py` only; the stand-in lives in the test's `tmp_path` lab directory, and the comment names why `importorskip` does not belong. No findings.
+
+### Review 1 — [sol] (2026-11-01)
+- **Verdict**: APPROVE (GPT-6, `--model gpt-6-sol`)
+- No findings.
+
+### Review 1 — [fable] (2026-11-01)
+- **Verdict**: APPROVE
+- Re-ran the test and the mutation in its own racekit-free venv. No findings.
+
+Consensus: all three APPROVE; no `[OPEN]` items.
+
 ## Post-Execution Report
+
+- **Phase A** (`af906b62`): `test_racekit_carla_like_is_not_the_simulator` writes a stand-in `racekit/__init__.py` + `racekit/cars.py` beside the lab; no tool, content or other test changes.
+- **B.1:** in a fresh no-group venv (`uv run --no-sync python -c "import racekit"` → `ModuleNotFoundError`), `tests/test_labs.py` 47 passed; before the fix the full group-free suite there gave 2247 passed with only this test failing.
+  In a venv with `--group roar` synced (racekit from `roar/projects/racekit`), the test passes too (the stand-in shadows it).
+- **B.2:** with the stand-in defining `carla_unlike`, the test fails: `ImportError: cannot import name 'carla_like' from 'racekit.cars' (…/labs/racekit/cars.py)`, so the lab really executes the import.
+- **B.3:** `TMPDIR=/dev/shm bash scripts/ci-local.sh` in the worktree, whose `.venv` was created fresh with no groups: **ALL GREEN** (step 2 group-free suite passed before any routed suite installed racekit; site SKIP, no site input changed); `pre-merge-guard: OK`.
+- Deviations: none.
