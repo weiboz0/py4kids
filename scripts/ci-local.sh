@@ -317,6 +317,9 @@ aio_in_exec_scope() {
   done
   return 1
 }
+# The executed notebooks import their units' data/*.py helpers; no bytecode is written into the
+# book trees, whose step-2 inventory tests require them cache-free (a re-run would otherwise fail).
+export PYTHONDONTWRITEBYTECODE=1
 for index in "${!AIO_IDS[@]}"; do
   book=${AIO_IDS[$index]}
   book_root=${AIO_ROOTS[$index]}
@@ -363,6 +366,7 @@ for index in "${!AIO_IDS[@]}"; do
     (cd "$book_root" && AIO_BOOK_ROOT="$book_root" uv run --project .. --group aio jupyter execute "$relative")
   done
 done
+unset PYTHONDONTWRITEBYTECODE
 
 step "4/7 curriculum + assets"
 # Per-entry checks iterate existing dirs, so they cover authored entries and are inert for
