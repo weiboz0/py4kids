@@ -24,6 +24,7 @@ import sys
 
 import nbformat
 import pytest
+from ci_local_text import aio_suite_runs, ci_step
 from conftest import ROOT
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
@@ -171,3 +172,14 @@ def test_open_ended_mutant_fails_the_answer_check(name):
     failed_at, ename = _run(notebook)
     assert failed_at == _answer_check_index(notebook), (name, failed_at)
     assert ename == "AssertionError", (name, ename)
+
+
+# --- plan aio-001 Phase E: the usaaio ci-local wiring test, rewritten against the py4kids
+# --- scripts/ci-local.sh aio routing.
+
+def test_suite_is_wired_into_ci_local_step_7():
+    # usaaio wired this suite into its ci-local step 7; py4kids runs it in step 2's routed aio
+    # suite, which no later step repeats.
+    step2 = ci_step("2/7", "3/7")
+    assert "uv run --group aio pytest -q tools/aio/tests" in step2
+    assert aio_suite_runs("test_r2_001_checks.py")

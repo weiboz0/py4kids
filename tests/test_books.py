@@ -430,8 +430,16 @@ def test_aio_books_are_not_py4kids_concept_owners_or_publications():
 
 def test_ci_local_reads_content_model_separately_from_the_flags():
     text = (REPO / "scripts/ci-local.sh").read_text(encoding="utf-8")
-    assert 'print(book["id"], book.get("content_model") or "py4kids")' in text
+    # Design 014 D2 / plan aio-001 Phase E: content_model and aio_round are VALUES on their own
+    # line ("<id> <model> <aio_round-or-empty>"), never boolean flags.
+    assert (
+        'print(book["id"], book.get("content_model") or "py4kids", book.get("aio_round") or "")'
+        in text
+    )
     assert "declare -A MODEL" in text
+    assert "declare -A ROUND" in text
+    flags_line = next(line for line in text.splitlines() if line.strip().startswith("flags = ["))
+    assert "content_model" not in flags_line and "aio_round" not in flags_line
 
 
 def _step1_registry_script() -> str:

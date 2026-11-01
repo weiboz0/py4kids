@@ -10,6 +10,7 @@ from pathlib import Path
 import nbformat
 import pytest
 import yaml
+from ci_local_text import PLAIN_EXEC, TIMED_EXEC, ci_text
 from conftest import ROOT
 
 from tools.aio import audit_curriculum
@@ -617,3 +618,21 @@ def test_live_schedule_appends_exact_second_six_week_ledger() -> None:
     assert [row["book_week"] for row in weeks] == list(range(7, 13))
     assert [row["global_week"] for row in weeks] == list(range(47, 53))
     assert [sum(item["minutes"] for item in row["allocations"]) for row in weeks] == [255, 275, 420, 270, 380, 60]
+
+
+# --- plan aio-001 Phase E: the usaaio ci-local wiring test, rewritten against the py4kids
+# --- scripts/ci-local.sh aio routing.
+
+def test_ci_bounds_b2_020_and_b2_021_and_preserves_other_solution_execution() -> None:
+    script = ci_text()
+    assert (
+        "if [[ $relative == units/B2-020-language-transformers/practice/"
+        "p??_solution.ipynb || $relative == units/B2-021-cross-modal-transformers-vision/"
+        "practice/p??_solution.ipynb || $relative == units/B2-022-probabilistic-latent-models/"
+        "practice/p??_solution.ipynb || $relative == units/B2-023-generative-models-diffusion/"
+        "practice/p??_solution.ipynb || $relative == units/B2-024-gpu-scientific-ml-capstone/"
+        "practice/p??_solution.ipynb || $relative == mocktests/r2-001/solutions/"
+        "p??_solution.ipynb ]]; then"
+    ) in script
+    assert TIMED_EXEC in script
+    assert f"else\n      {PLAIN_EXEC}\n    fi" in script

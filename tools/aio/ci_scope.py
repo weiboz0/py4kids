@@ -16,6 +16,10 @@ does a missing `origin/main` or merge-base (fail-safe).
 
 The CLI gathers the change set: the committed diff against the merge-base with `origin/main`,
 plus staged, unstaged, and untracked files.
+
+`--exec` (py4kids plan aio-001 Phase E, design 014 D9) routes the aio notebook execution of
+ci-local step 3 instead, for every aio book: the full run measured over 60 CI-minutes, so an
+ordinary branch executes only the aio notebooks its change can affect (`route_exec`).
 """
 
 from __future__ import annotations
@@ -228,6 +232,66 @@ def route_books(books: Iterable[BookInfo], changed: Iterable[str], *, all_books:
     return routes
 
 
+# --- aio notebook-execution routing (design 014 D9) -------------------------------------------
+
+# Inputs every aio notebook can depend on: the ported tooling and scripts, the gate itself, the
+# registry and the Python environment. Any change to one executes every aio book in full.
+EXEC_GLOBAL_EXACT = frozenset({
+    "scripts/ci-local.sh", "books.yaml", "pyproject.toml", "uv.lock", ".python-version",
+})
+EXEC_GLOBAL_PREFIXES = ("tools/aio/", "scripts/aio/")
+
+
+def is_exec_global_input(path: str) -> bool:
+    return path in EXEC_GLOBAL_EXACT or path.startswith(EXEC_GLOBAL_PREFIXES)
+
+
+def route_exec(books: Iterable[tuple[str, str]], changed: Iterable[str], *,
+               all_books: bool = False, diff_available: bool = True) -> dict[str, Route]:
+    """Which aio notebooks ci-local step 3 executes, per `(book id, repo-relative root)`.
+
+    - `full`: every solution, practice-solution, mock-test-solution and lesson notebook; for
+      `--all-books`, a missing merge-base (fail-safe), a global input (`is_exec_global_input`),
+      or any change under the book root outside `units/<unit folder>/` and
+      `mocktests/<test id>/` (curriculum, data, reference, syllabus, front/back matter, …);
+    - `scoped`: only the notebooks under the changed unit folders (`Route.units` holds folder
+      names, e.g. `10-C5-embeddings`) and mock-test folders (`Route.mocktests`);
+    - `none`: nothing under the book or any global input changed.
+
+    Notebooks never read another book's files (no aio code cell names the other root), so a
+    change to one book does not route the other.
+    """
+    books = list(books)
+    paths = sorted({path.strip().removeprefix("./") for path in changed if path.strip()})
+    routes = {book_id: Route() for book_id, _ in books}
+    if all_books or not diff_available:
+        reason = "--all-books" if all_books else "origin/main or merge-base unavailable"
+        for route in routes.values():
+            route.escalate("full", reason)
+        return routes
+    for path in paths:
+        if is_exec_global_input(path):
+            for route in routes.values():
+                route.escalate("full", f"global exec input {path}")
+    for book_id, root in books:
+        route = routes[book_id]
+        prefix = root.rstrip("/") + "/"
+        for path in paths:
+            if not path.startswith(prefix):
+                continue
+            parts = path[len(prefix):].split("/")
+            if parts[0] == "units" and len(parts) > 2:
+                route.add_unit(parts[1], f"{path} changed")
+            elif parts[0] == "mocktests" and len(parts) > 2:
+                route.add_mocktest(parts[1], f"{path} changed")
+            else:
+                route.escalate("full", f"{path} changed")
+    for route in routes.values():
+        if route.mode == "full":
+            route.units, route.mocktests = [], []
+    return routes
+
+
 # --- the impure change-set collection ---------------------------------------------------------
 
 
@@ -257,11 +321,24 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m tools.aio.ci_scope")
     parser.add_argument("--root", type=Path, default=Path("."))
     parser.add_argument("--all-books", action="store_true")
+    parser.add_argument("--exec", action="store_true", dest="exec_routes",
+                        help="route ci-local step 3's aio notebook execution (every aio book)")
     arguments = parser.parse_args(argv)
     root = arguments.root.resolve()
     from tools.aio.books import live_units, load_book_catalog, load_publication_config
 
     catalog = load_book_catalog(root)
+    if arguments.exec_routes:
+        exec_books = [(book.id, book.root.relative_to(root).as_posix()) for book in catalog.books]
+        changed, base = change_set(root)
+        exec_routes = route_exec(exec_books, changed, all_books=arguments.all_books,
+                                 diff_available=base is not None)
+        for book_id, _ in exec_books:
+            route = exec_routes[book_id]
+            print(route.command(book_id))
+            for reason in route.reasons[:5]:
+                print(f"#   {book_id}: {reason}", file=sys.stderr)
+        return 0
     infos = []
     for book in catalog.books:
         if not book.publication:

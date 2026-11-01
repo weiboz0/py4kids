@@ -27,6 +27,7 @@ from typing import Any
 import nbformat
 import pytest
 import torch
+from ci_local_text import aio_suite_runs
 from conftest import ROOT
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
@@ -569,3 +570,11 @@ def test_heldout_rows_in_training_are_detected_at_the_named_seam(
     result = _run_training_harness(practice, namespace)
     assert result["changed"]
     assert result["heldout_seen"] == result["heldout_all"]
+
+
+# --- plan aio-001 Phase E: the usaaio ci-local wiring test, rewritten against the py4kids
+# --- scripts/ci-local.sh aio routing.
+
+def test_book2_ci_runs_generative_model_integrity_suite() -> None:
+    # usaaio re-ran this suite in its ci-local step 7; py4kids runs it in step 2's routed aio suite.
+    assert aio_suite_runs("test_generative_model_checks.py")

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import yaml
 
-from tools.aio.ci_scope import INFO_UNCHANGED, BookInfo, change_set, route_books
+from tools.aio.ci_scope import INFO_UNCHANGED, BookInfo, change_set, route_books, route_exec
 
 BOOKS = [
     BookInfo("aio-ml", "aio-ml", ("F1-a", "C3-b"), ("F1-a", "C3-b")),
@@ -151,3 +151,54 @@ def test_change_set_unions_committed_staged_unstaged_and_untracked(tmp_path: Pat
     changed, base = change_set(repo)
     assert base is None  # fail-safe: route_books(..., diff_available=False) renders everything
     assert "untracked.txt" in changed
+
+
+# --- plan aio-001 Phase E (design 014 D9): aio notebook-execution routing -----------------------
+
+EXEC_BOOKS = [("aio-ml", "aio-ml"), ("aio-dl", "aio-dl")]
+
+
+def _exec(changed, **kwargs):
+    routes = route_exec(EXEC_BOOKS, changed, **kwargs)
+    return {book: route.command(book) for book, route in routes.items()}
+
+
+def test_exec_branch_touching_only_py4kids_books_runs_no_aio_exec() -> None:
+    assert _exec([
+        "python-projects/units/unit-01-story-machine/lesson.ipynb", "recsys/data/gen_catalog.py",
+        "tools/curriculum.py", "tests/test_books.py", "docs/plans/aio/aio-001-import.md",
+        "scripts/build-pdf.sh",
+    ]) == {"aio-ml": "none aio-ml", "aio-dl": "none aio-dl"}
+
+
+def test_exec_unit_and_mocktest_changes_scope_to_their_folders_in_their_book_only() -> None:
+    assert _exec([
+        "aio-ml/units/10-C5-embeddings/practice/p05_solution.ipynb",
+        "aio-ml/units/10-C5-embeddings/manifest.yaml",
+        "aio-ml/mocktests/r1-001/solutions/p05_solution.ipynb",
+    ]) == {
+        "aio-ml": "scoped aio-ml --units 10-C5-embeddings --mocktests r1-001",
+        "aio-dl": "none aio-dl",
+    }
+
+
+def test_exec_book_level_inputs_run_that_book_in_full() -> None:
+    for path in ("aio-dl/curriculum/coverage-map.yaml", "aio-dl/syllabus.md",
+                 "aio-dl/front-matter/preface.md", "aio-dl/reference/analysis.md",
+                 "aio-dl/units/README.md", "aio-dl/mocktests/index.md"):
+        assert _exec([path, "aio-ml/units/01-F1-x/lesson.ipynb"]) == {
+            "aio-ml": "scoped aio-ml --units 01-F1-x", "aio-dl": "full aio-dl"}, path
+
+
+def test_exec_global_inputs_run_every_aio_book_in_full() -> None:
+    for path in ("tools/aio/checks/scope.py", "tools/aio/tests/test_cli.py",
+                 "scripts/aio/build-pdf.sh", "scripts/ci-local.sh", "books.yaml",
+                 "pyproject.toml", "uv.lock", ".python-version"):
+        assert _exec([path]) == {"aio-ml": "full aio-ml", "aio-dl": "full aio-dl"}, path
+
+
+def test_exec_all_books_and_missing_merge_base_run_everything() -> None:
+    assert _exec([], all_books=True) == {"aio-ml": "full aio-ml", "aio-dl": "full aio-dl"}
+    assert _exec(["TODO.md"], diff_available=False) == {
+        "aio-ml": "full aio-ml", "aio-dl": "full aio-dl"}
+

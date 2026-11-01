@@ -12,6 +12,7 @@ from collections import Counter
 import nbformat
 import torch
 import yaml
+from ci_local_text import TIMED_EXEC, ci_text
 from conftest import ROOT
 
 from tools.aio.checks.hygiene import check_hygiene
@@ -499,3 +500,17 @@ def test_solution_notebooks_are_complete_answer_checked_and_output_free() -> Non
         assert answer_index + 1 < len(notebook.cells)
         assert all(cell.cell_type == "code" for cell in notebook.cells[answer_index + 1 :])
         assert all(str(cell.source).strip() for cell in notebook.cells[answer_index + 1 :])
+
+
+# --- plan aio-001 Phase E: the usaaio ci-local wiring test, rewritten against the py4kids
+# --- scripts/ci-local.sh aio routing.
+
+def test_ci_bounds_b2_023_solutions_at_twenty_seconds() -> None:
+    script = ci_text()
+    assert (
+        "|| $relative == units/B2-023-generative-models-diffusion/practice/p??_solution.ipynb "
+        "|| $relative == units/B2-024-gpu-scientific-ml-capstone/practice/p??_solution.ipynb "
+        "|| $relative == mocktests/r2-001/solutions/p??_solution.ipynb ]]"
+        in script
+    )
+    assert TIMED_EXEC in script

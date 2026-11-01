@@ -1,19 +1,90 @@
 #!/usr/bin/env bash
 # Authoritative local gate for py4kids.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+script_repo_root=$(cd "$(dirname "$0")/.." && pwd)
 export PY4KIDS_CI=1
 
 # --all-books renders every publication book's editions (required before a release); without it,
 # step 5 renders only the books the change touches and step 6 builds the site only when the change
-# touches it (design 010 D7).
+# touches it (design 010 D7). For the aio books it also runs the fail-closed overlap scan
+# (`overlap-scan --require-corpus`, design 014 D4).
+# The two probes are ported from usaaio's ci-local (plan aio-001 Phase E) and exit before step 1:
+# --registry-probe [--root REPO] prints the aio catalog adapter's records ("<id>\t<aio_round>\t<root>"),
+# --solution-probe BOOK_ROOT RELATIVE runs one aio solution notebook exactly as step 3 does.
+usage="usage: scripts/ci-local.sh [--all-books] | --registry-probe [--root REPO] | --solution-probe BOOK_ROOT RELATIVE"
 scope_args=()
-for arg in "$@"; do
-  case "$arg" in
+all_books=0
+registry_probe=0
+probe_root=
+solution_probe_root=
+solution_probe_relative=
+while (($#)); do
+  case "$1" in
     --all-books) scope_args=(--all-books) ;;
-    *) echo "usage: scripts/ci-local.sh [--all-books]" >&2; exit 2 ;;
+    --registry-probe) registry_probe=1 ;;
+    --root) (($# >= 2)) || { echo "$usage" >&2; exit 2; }; probe_root=$2; shift ;;
+    --solution-probe)
+      (($# >= 3)) || { echo "$usage" >&2; exit 2; }
+      solution_probe_root=$2
+      solution_probe_relative=$3
+      shift 2
+      ;;
+    *) echo "$usage" >&2; exit 2 ;;
   esac
+  shift
 done
+((${#scope_args[@]})) && all_books=1
+if [[ -n $probe_root ]] && ((!registry_probe)); then
+  echo "$usage" >&2; exit 2
+fi
+
+# aio notebook execution (usaaio a20128f ci-local step 3, ported verbatim apart from the
+# AIO_BOOK_ROOT rename and the aio dependency group): each notebook runs from its book root, where
+# `--project ..` is the py4kids root. The round-2 book's transformer-to-capstone practice solutions
+# (units B2-020..B2-024) and the r2-001 mock-test solutions are bounded at 20 s each.
+run_solution_notebook() {
+  local book_root=$1
+  local relative=$2
+  {
+    if [[ $relative == units/B2-020-language-transformers/practice/p??_solution.ipynb || $relative == units/B2-021-cross-modal-transformers-vision/practice/p??_solution.ipynb || $relative == units/B2-022-probabilistic-latent-models/practice/p??_solution.ipynb || $relative == units/B2-023-generative-models-diffusion/practice/p??_solution.ipynb || $relative == units/B2-024-gpu-scientific-ml-capstone/practice/p??_solution.ipynb || $relative == mocktests/r2-001/solutions/p??_solution.ipynb ]]; then
+      (cd "$book_root" && AIO_BOOK_ROOT="$book_root" timeout 20s uv run --project .. --group aio jupyter execute "$relative")
+    else
+      (cd "$book_root" && AIO_BOOK_ROOT="$book_root" uv run --project .. --group aio jupyter execute "$relative")
+    fi
+  }
+}
+
+if [[ -n $solution_probe_root || -n $solution_probe_relative ]]; then
+  [[ -n $solution_probe_root && -n $solution_probe_relative ]] || exit 2
+  run_solution_notebook "$solution_probe_root" "$solution_probe_relative"
+  exit $?
+fi
+
+cd "$script_repo_root"
+repo_root=$(pwd -P)
+
+# The aio catalog adapter (tools/aio/books.py, design 014 D1/D4): the content_model: aio books in
+# dependency order, one "<id>\t<aio_round>\t<absolute root>" line each (BookSpec.number := aio_round).
+aio_registry_records() {
+  PYTHONPATH="$script_repo_root${PYTHONPATH:+:$PYTHONPATH}" \
+    uv run --project "$script_repo_root" --group aio python - "$1" <<'PY'
+import sys
+
+from tools.aio.books import load_book_catalog
+
+for book in load_book_catalog(sys.argv[1]).books:
+    print(f"{book.id}\t{book.number}\t{book.root}")
+PY
+}
+
+if ((registry_probe)); then
+  if ! records=$(aio_registry_records "${probe_root:-$repo_root}"); then
+    echo "FAIL: cannot load registered aio books from ${probe_root:-$repo_root}" >&2
+    exit 1
+  fi
+  printf '%s\n' "$records"
+  exit 0
+fi
 
 step() { echo; echo "=== $1 ==="; }
 
@@ -72,18 +143,78 @@ PY
 declare -A GROUP
 while read -r gid ggrp; do GROUP["$gid"]="$ggrp"; done <<< "$groups"
 
-# `content_model` (design 014 D1) is likewise a VALUE read on its own line: "<id> <model>"
-# (py4kids when absent; validated in the registry check above). Phase E routes steps on it.
+# `content_model` and `aio_round` (design 014 D1/D2) are likewise VALUES read on their own line:
+# "<id> <model> <aio_round-or-empty>" (py4kids when absent; validated in the registry check above).
+# Steps 2-5 route on MODEL: an aio book runs the aio commands and none of the py4kids-model ones.
 models="$(uv run python - <<'PY'
 import yaml
 
 catalog = yaml.safe_load(open("books.yaml", encoding="utf-8"))
 for book in catalog["books"]:
-    print(book["id"], book.get("content_model") or "py4kids")
+    print(book["id"], book.get("content_model") or "py4kids", book.get("aio_round") or "")
 PY
 )"
 declare -A MODEL
-while read -r mid mmodel; do MODEL["$mid"]="$mmodel"; done <<< "$models"
+declare -A ROUND
+while read -r mid mmodel mround; do MODEL["$mid"]="$mmodel"; ROUND["$mid"]="$mround"; done <<< "$models"
+is_aio() { [[ "${MODEL[$1]:-py4kids}" == aio ]]; }
+
+# The aio books, from the aio catalog adapter (usaaio step 1: load the catalog and validate every
+# root). Every aio command runs under the aio dependency group (design 014 D8), so an aio book
+# must declare `dependency_group: aio`, and the adapter must see exactly the aio books above.
+AIO_IDS=()
+AIO_ROUNDS=()
+AIO_ROOTS=()
+aio_expected=()
+while read -r mid _; do
+  if is_aio "$mid"; then
+    aio_expected+=("$mid")
+    if [[ "${GROUP[$mid]:-}" != aio ]]; then
+      echo "FAIL: book '$mid': a content_model: aio book requires dependency_group: aio" >&2; exit 1
+    fi
+  fi
+done <<< "$models"
+if ((${#aio_expected[@]})); then
+  if ! aio_records=$(aio_registry_records "$repo_root"); then
+    echo "FAIL: cannot load the registered aio books" >&2; exit 1
+  fi
+  while IFS=$'\t' read -r aid around aroot; do
+    AIO_IDS+=("$aid"); AIO_ROUNDS+=("$around"); AIO_ROOTS+=("$aroot")
+    if [[ "${ROUND[$aid]:-}" != "$around" ]]; then
+      echo "FAIL: aio book '$aid': adapter round $around != books.yaml aio_round ${ROUND[$aid]:-}" >&2; exit 1
+    fi
+  done <<< "$aio_records"
+  if [[ "$(printf '%s\n' "${AIO_IDS[@]}" | LC_ALL=C sort)" != "$(printf '%s\n' "${aio_expected[@]}" | LC_ALL=C sort)" ]]; then
+    echo "FAIL: the aio catalog adapter books (${AIO_IDS[*]}) differ from books.yaml (${aio_expected[*]})" >&2; exit 1
+  fi
+  PYTHONPATH="$script_repo_root${PYTHONPATH:+:$PYTHONPATH}" uv run --group aio python - <<'PY'
+from tools.aio.books import load_book_catalog, validate_book_root
+
+catalog = load_book_catalog(".")
+errors = [error for book in catalog.books for error in validate_book_root(book)]
+if errors:
+    raise SystemExit("\n".join(errors))
+print("aio registry: " + " -> ".join(f"{book.id} (aio_round {book.number})" for book in catalog.books))
+PY
+fi
+# The registered aio book serving round N (the role usaaio's book number played).
+aio_root_for_round() {
+  local i
+  for i in "${!AIO_IDS[@]}"; do
+    [[ ${AIO_ROUNDS[$i]} == "$1" ]] && { echo "${AIO_ROOTS[$i]}"; return 0; }
+  done
+  return 1
+}
+aio_id_for_round() {
+  local i
+  for i in "${!AIO_IDS[@]}"; do
+    [[ ${AIO_ROUNDS[$i]} == "$1" ]] && { echo "${AIO_IDS[$i]}"; return 0; }
+  done
+  return 1
+}
+# An aio per-book or all-books check (`py4kids-tools aio`, the ported usaaio CLI; exit codes pass
+# through unchanged, 3 = SKIP).
+aio_tools() { uv run --group aio py4kids-tools aio "$@"; }
 
 has_flag() { [[ " $2 " == *" $1 "* ]]; }
 
@@ -112,6 +243,8 @@ uv run pytest -q
 # determinism contract); the seeded generators already thread one numpy rng and normalise gzip mtime.
 while read -r book grp <&3; do
   [[ -n "$grp" ]] || continue
+  # aio books have no per-book suite: the aio content model's one suite runs below.
+  is_aio "$book" && continue
   echo "routed suite: $book (uv run --group $grp)"
   # A book with a single generator driver (design 013 §4.3) regenerates through it; the driver
   # generates every output twice in-process and fails on a checksum mismatch. Otherwise the
@@ -132,8 +265,19 @@ while read -r book grp <&3; do
   PYTHONHASHSEED=0 uv run --group "$grp" pytest -q "$book"
 done 3<<< "$groups"
 
+# The aio content model's suite (design 014 D2/D4): one routed run, not per book, since it covers
+# both books; it lives outside tests/ so the group-free run above never imports the aio stack.
+# It includes the six content suites usaaio re-ran in its step 7 (language transformer, latent,
+# generative, capstone, vision transformer, r2-001), so they are not repeated below.
+if ((${#AIO_IDS[@]})); then
+  echo "routed suite: aio content model (uv run --group aio)"
+  uv run --group aio pytest -q tools/aio/tests
+fi
+
 step "3/7 notebook structure + execution"
 while read -r book flags <&3; do
+  # aio books run none of the py4kids-model step-3 commands (their own exec + hygiene follow).
+  is_aio "$book" && continue
   for check in hygiene-check structure-check noexec-check cell-lint milestone-check exec-solutions exec-lessons; do
     book_run "$book" "$check"
   done
@@ -147,11 +291,92 @@ while read -r book flags <&3; do
   fi
 done 3<<< "$books"
 
+# aio books (design 014 D2; usaaio step 3 ported verbatim): problem-notebook hygiene, then every
+# solution, practice-solution and mock-test-solution notebook, then every lesson, executed
+# top to bottom from the book root (run_solution_notebook, above).
+# CI budget (design 014 D9): the full aio run measured over 60 CI-minutes (plan aio-001 Phase E),
+# so on an ordinary branch tools/aio/ci_scope.py --exec routes each aio book to `full`, `scoped`
+# (only the changed unit and mock-test folders) or `none`; --all-books, a missing merge-base, and
+# any change to the aio tooling, the gate or the environment run everything. A book with no route
+# line runs in full (fail-safe). Hygiene always runs.
+declare -A AIO_EXEC
+if ((${#AIO_IDS[@]})); then
+  aio_exec_routes=$(uv run --group aio python -m tools.aio.ci_scope --exec "${scope_args[@]}")
+  while read -r route_mode route_book route_rest; do
+    [[ -n ${route_mode:-} ]] || continue
+    AIO_EXEC["$route_book"]="$route_mode ${route_rest:-}"
+  done <<< "$aio_exec_routes"
+fi
+aio_exec_prefixes=()
+aio_exec_mode=full
+aio_in_exec_scope() {
+  [[ $aio_exec_mode == full ]] && return 0
+  local prefix
+  for prefix in "${aio_exec_prefixes[@]}"; do
+    [[ $1 == "$prefix"* ]] && return 0
+  done
+  return 1
+}
+for index in "${!AIO_IDS[@]}"; do
+  book=${AIO_IDS[$index]}
+  book_root=${AIO_ROOTS[$index]}
+  echo "running [$book]: hygiene-check"
+  aio_tools --book "$book" hygiene-check || { rc=$?; [[ $rc -eq 3 ]] || exit "$rc"; }
+  read -r aio_exec_mode aio_exec_rest <<< "${AIO_EXEC[$book]:-full}"
+  aio_exec_prefixes=()
+  route_kind=
+  for token in ${aio_exec_rest:-}; do
+    case $token in
+      --units) route_kind=units ;;
+      --mocktests) route_kind=mocktests ;;
+      *) aio_exec_prefixes+=("$route_kind/$token/") ;;
+    esac
+  done
+  case $aio_exec_mode in
+    full) echo "aio exec: $book: full" ;;
+    scoped) echo "aio exec: $book: scoped to ${aio_exec_prefixes[*]}" ;;
+    none)
+      echo "SKIP: $book: aio notebook execution (change-routed: no aio exec input changed; --all-books runs it)"
+      continue
+      ;;
+    *) echo "FAIL: unknown aio exec route: $aio_exec_mode $book" >&2; exit 1 ;;
+  esac
+  mapfile -t notebooks < <(
+    find "$book_root/units" "$book_root/mocktests" -type f \
+      \( -path '*/solutions/*.ipynb' -o -path '*/practice/*solution*.ipynb' \) \
+      | LC_ALL=C sort
+  )
+  for notebook in "${notebooks[@]}"; do
+    relative=${notebook#"$book_root"/}
+    aio_in_exec_scope "$relative" || continue
+    echo "executing [$book]: $relative"
+    run_solution_notebook "$book_root" "$relative"
+  done
+  mapfile -t lessons < <(
+    find "$book_root/units" -type f -name '*.ipynb' \
+      -not -path '*/practice/*' -not -path '*/.ipynb_checkpoints/*' | LC_ALL=C sort
+  )
+  for notebook in "${lessons[@]}"; do
+    relative=${notebook#"$book_root"/}
+    aio_in_exec_scope "$relative" || continue
+    echo "executing [$book]: $relative"
+    (cd "$book_root" && AIO_BOOK_ROOT="$book_root" uv run --project .. --group aio jupyter execute "$relative")
+  done
+done
+
 step "4/7 curriculum + assets"
 # Per-entry checks iterate existing dirs, so they cover authored entries and are inert for
 # unauthored ones. Flag-gated checks follow each book's books.yaml flags (see the comments there);
 # books without `judge` run the turtle checks. Fastforward relaxation keys on prereq_policy.
 while read -r book flags <&3; do
+  if is_aio "$book"; then
+    # aio books run none of the py4kids-model curriculum checks above or below, turtle checks
+    # included (their own checks follow); only the site export check keeps its meaning (D2).
+    if has_flag site "$flags"; then
+      book_run "$book" site-check
+    fi
+    continue
+  fi
   for check in manifest-check prereq-check coverage-check concept-scan; do
     book_run "$book" "$check"
   done
@@ -179,6 +404,47 @@ while read -r book flags <&3; do
   fi
 done 3<<< "$books"
 
+if ((${#AIO_IDS[@]})); then
+  # aio per-book checks (usaaio step 5; hygiene-check ran in step 3). Exit 3 is the printed SKIP,
+  # tolerated here exactly as usaaio does; --all-books then runs the fail-closed overlap scan.
+  for book in "${AIO_IDS[@]}"; do
+    for c in prereq-check coverage-check scope-check schedule-check tolerance-check blueprint-check overlap-scan answerkey-check layer-boundary-check unit-order-check api-comments-check; do
+      echo "running [$book]: $c"
+      aio_tools --book "$book" "$c" || { rc=$?; [[ $rc -eq 3 ]] || exit "$rc"; }
+    done
+    if ((all_books)); then
+      echo "running [$book]: overlap-scan --require-corpus"
+      aio_tools --book "$book" overlap-scan --require-corpus
+    fi
+  done
+  # aio all-books checks (usaaio step 6): no SKIP tolerance.
+  for c in prereq-check scope-check schedule-check; do
+    aio_tools --all "$c"
+  done
+  # Register verification (usaaio step 4) for the aio_round 1 book; verify-register's own
+  # `number != 1` guard reads aio_round through the adapter.
+  aio_round1_id=$(aio_id_for_round 1) || { echo "FAIL: no registered aio_round 1 book" >&2; exit 1; }
+  uv run --group aio python scripts/aio/verify-register.py --book "$aio_round1_id"
+fi
+
+if ((${#AIO_IDS[@]})); then
+  # Step 4b (a part of step 4, so the gate keeps its seven steps) is usaaio step 7: the generated material inventories and course-structure documents must be
+  # current, and the three mutation verifiers must kill every planted mutant. Book roots resolve
+  # from aio_round, never from an id; no command here tolerates a SKIP.
+  aio_round1_root=$(aio_root_for_round 1) || { echo "FAIL: no registered aio_round 1 book" >&2; exit 1; }
+  aio_round2_root=$(aio_root_for_round 2) || { echo "FAIL: no registered aio_round 2 book" >&2; exit 1; }
+  echo "--- 4b: aio generated evidence + mutation checks ---"
+  uv run --group aio python -m tools.aio.audit_curriculum --root "$aio_round1_root" --check
+  uv run --group aio python -m tools.aio.audit_curriculum --root "$aio_round2_root" --check
+  uv run --group aio python -m tools.aio.render_curriculum_roadmap --root "$repo_root" --check
+  for book_root in "${AIO_ROOTS[@]}"; do
+    uv run --group aio python -m tools.aio.render_course_structure --root "$book_root" --check
+  done
+  uv run --group aio python -m tools.aio.verify_training_mutations --repo-root "$repo_root"
+  uv run --group aio python -m tools.aio.verify_classical_mutations --repo-root "$repo_root"
+  uv run --group aio python -m tools.aio.verify_attention_mutations --repo-root "$repo_root"
+fi
+
 step "5/7 PDF build"
 # Handouts and the syllabus for every book, judge books included (design 010 D5); build-pdf.sh
 # fails on a missing glyph. A publication book's editions render only when the change touches the
@@ -187,8 +453,20 @@ step "5/7 PDF build"
 rendered=()
 skipped=()
 while read -r book flags <&3; do
-  bash scripts/build-pdf.sh --book "$book"
+  if ! is_aio "$book"; then
+    bash scripts/build-pdf.sh --book "$book"
+  else
+    # aio PDFs (design 014 D2; usaaio step 8): syllabus, unit practice handouts, mock-test papers
+    # and solutions, through the aio group. Exit 3 means the toolchain is absent: SKIP, as usaaio.
+    uv run --group aio bash scripts/aio/build-pdf.sh --book "$book" \
+      || { rc=$?; [[ $rc -eq 3 ]] || exit "$rc"; echo "SKIP: $book: aio PDFs (lualatex or pandoc absent)"; }
+  fi
   if has_flag publication "$flags"; then
+    # The aio edition route (aio build-book + publish_audit through tools/aio/ci_scope.py) lands with
+    # `publication` in aio-002; until then an aio publication book must fail, never skip silently.
+    if is_aio "$book"; then
+      echo "FAIL: $book: aio editions are not routed yet (plan aio-002)" >&2; exit 1
+    fi
     decision="$(uv run python -m tools.ci_scope --book "$book" "${scope_args[@]}")"
     echo "book editions: $book: $decision"
     if [[ "$decision" == render:* ]]; then

@@ -12,6 +12,7 @@ from collections import Counter
 from pathlib import Path
 
 import yaml
+from ci_local_text import ci_noncomment_lines, ci_text
 from conftest import ROOT
 
 from tools.aio.books import unit_dir
@@ -1553,6 +1554,12 @@ def test_scope_cli_is_registered_and_loader_errors_are_blocking(tmp_path):
 
 
 def test_ci_checks_book2_material_inventory_freshness(tmp_path: Path) -> None:
+    lines = ci_noncomment_lines()
+    assert (
+        'uv run --group aio python -m tools.aio.audit_curriculum --root "$aio_round2_root" --check'
+        in lines
+    )
+
     (tmp_path / "books.yaml").write_text((ROOT / "books.yaml").read_text())
     (tmp_path / "aio-ml").mkdir()
     copied_book2 = tmp_path / "aio-dl"
@@ -1585,4 +1592,140 @@ def test_ci_checks_book2_material_inventory_freshness(tmp_path: Path) -> None:
     assert proc.returncode == 1
     assert "ERROR material inventory stale" in proc.stderr
 
+
+# --- plan aio-001 Phase E: the usaaio ci-local wiring test, rewritten against the py4kids
+# --- scripts/ci-local.sh aio routing.
+
+AIO_MODULE = "uv run --group aio python -m tools.aio."
+
+
+def test_ci_local_wires_both_mutation_runners_and_generated_document_checks():
+    lines = ci_noncomment_lines()
+
+    audit = AIO_MODULE + 'audit_curriculum --root "$aio_round1_root" --check'
+    aggregate = AIO_MODULE + 'render_curriculum_roadmap --root "$repo_root" --check'
+    structure = AIO_MODULE + 'render_course_structure --root "$book_root" --check'
+    training = AIO_MODULE + 'verify_training_mutations --repo-root "$repo_root"'
+    classical = AIO_MODULE + 'verify_classical_mutations --repo-root "$repo_root"'
+    for command in (audit, aggregate, structure, training, classical):
+        assert lines.count(command) == 1
+    assert lines.index(audit) < lines.index(aggregate) < lines.index(structure)
+    assert lines.index(structure) < lines.index(training) < lines.index(classical)
+    # The course-structure check runs for every registered aio root (usaaio: Book 1, then the rest).
+    assert lines[lines.index(structure) - 1] == 'for book_root in "${AIO_ROOTS[@]}"; do'
+    assert any(
+        line.startswith('aio_tools --book "$book" "$c"') for line in lines
+    )
+    assert any("scope-check" in line for line in lines)
+
+
+def test_ci_executes_book2_boundary_before_derived_and_preserves_r1_checks() -> None:
+    lines = ci_noncomment_lines()
+    checks = next(line for line in lines if line.startswith("for c in prereq-check"))
+
+    assert "layer-boundary-check" in checks
+    assert AIO_MODULE + 'render_course_structure --root "$book_root" --check' in lines
+    build = lines.index('uv run --group aio bash scripts/aio/build-pdf.sh --book "$book" \\')
+    assert lines[build + 1].startswith('|| { rc=$?; [[ $rc -eq 3 ]] || exit "$rc"; echo "SKIP: ')
+    assert "prereq-check" in checks
+    assert "coverage-check" in checks
+    assert "blueprint-check" in checks
+    assert 'find "$book_root/units" "$book_root/mocktests" -type f \\' in lines
+
+
+def test_ci_executes_book2_schedule_check() -> None:
+    lines = ci_noncomment_lines()
+    checks = next(line for line in lines if line.startswith("for c in prereq-check"))
+    assert "schedule-check" in checks
+    assert any(
+        line.startswith('aio_tools --book "$book" "$c"') for line in lines
+    )
+
+
+def test_ci_executes_attention_mutations() -> None:
+    lines = ci_noncomment_lines()
+    assert AIO_MODULE + 'verify_attention_mutations --repo-root "$repo_root"' in lines
+    assert not any("SKIP attention mutations" in line for line in lines)
+
+
+def test_ci_registry_probe_reports_noncanonical_roots_without_id_fallback(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "repo"
+    (repo / "round1").mkdir(parents=True)
+    (repo / "advanced").mkdir()
+    (repo / "books.yaml").write_text(
+        "books_version: 2\nbooks:\n"
+        "  - {id: aio-ml, number: 4, root: round1, depends_on: [], content_model: aio, aio_round: 1}\n"
+        "  - {id: aio-dl, number: 4, root: advanced, depends_on: [aio-ml], content_model: aio,"
+        " aio_round: 2}\n",
+        encoding="utf-8",
+    )
+
+    proc = subprocess.run(
+        [
+            "bash", str(ROOT / "scripts/ci-local.sh"), "--registry-probe", "--root", str(repo),
+        ],
+        cwd=ROOT,
+        env={**os.environ, "PATH": f"{Path.home() / '.local/bin'}:{os.environ['PATH']}"},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # The second column is aio_round (the adapter's BookSpec.number), not the series number 4.
+    assert proc.stdout.splitlines() == [
+        f"aio-ml\t1\t{repo / 'round1'}",
+        f"aio-dl\t2\t{repo / 'advanced'}",
+    ]
+    script = ci_text()
+    assert "$PWD/$book" not in script
+    assert "--root aio-ml" not in script
+    assert "--root aio-dl" not in script
+
+
+def test_ci_routes_aio_exec_through_the_aio_ci_scope_and_filters_both_loops() -> None:
+    """Plan aio-001 Phase E (design 014 D9): exec is change-routed; --all-books runs it in full."""
+    lines = ci_noncomment_lines()
+    assert (
+        'aio_exec_routes=$(uv run --group aio python -m tools.aio.ci_scope --exec "${scope_args[@]}")'
+        in lines
+    )
+    # A book with no route line runs in full (fail-safe), and both notebook loops are filtered.
+    assert 'read -r aio_exec_mode aio_exec_rest <<< "${AIO_EXEC[$book]:-full}"' in lines
+    assert lines.count('aio_in_exec_scope "$relative" || continue') == 2
+    # Hygiene precedes the route decision, so it always runs.
+    assert lines.index('aio_tools --book "$book" hygiene-check || { rc=$?; [[ $rc -eq 3 ]] || exit "$rc"; }') < (
+        lines.index('read -r aio_exec_mode aio_exec_rest <<< "${AIO_EXEC[$book]:-full}"')
+    )
+
+
+def test_ci_aio_exec_scope_filter_matches_only_routed_folders(tmp_path: Path) -> None:
+    text = ci_text()
+    start = text.index("aio_in_exec_scope() {")
+    function = text[start:text.index("\n}\n", start) + 3]
+    probe = tmp_path / "probe.sh"
+    probe.write_text(
+        function
+        + 'aio_exec_mode=scoped\n'
+        + 'aio_exec_prefixes=("units/10-C5-embeddings/" "mocktests/r1-001/")\n'
+        + 'for path in "$@"; do aio_in_exec_scope "$path" && echo "in $path" || echo "out $path"; done\n'
+        + 'aio_exec_mode=full\naio_exec_prefixes=()\naio_in_exec_scope units/x/y.ipynb && echo "full in"\n',
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        ["bash", str(probe), "units/10-C5-embeddings/practice/p01_solution.ipynb",
+         "units/10-C5-embeddings-extra/lesson.ipynb", "mocktests/r1-001/solutions/p05_solution.ipynb",
+         "mocktests/r1-0010/solutions/p01_solution.ipynb", "units/11-C6-x/lesson.ipynb"],
+        capture_output=True, text=True, check=True,
+    )
+    assert proc.stdout.splitlines() == [
+        "in units/10-C5-embeddings/practice/p01_solution.ipynb",
+        "out units/10-C5-embeddings-extra/lesson.ipynb",
+        "in mocktests/r1-001/solutions/p05_solution.ipynb",
+        "out mocktests/r1-0010/solutions/p01_solution.ipynb",
+        "out units/11-C6-x/lesson.ipynb",
+        "full in",
+    ]
 

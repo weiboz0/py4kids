@@ -9,6 +9,7 @@ from pathlib import Path
 
 import nbformat
 import pytest
+from ci_local_text import aio_suite_runs
 from conftest import ROOT
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
@@ -954,3 +955,11 @@ def test_untouched_p24_cross_modal_audit_passes(tmp_path: Path) -> None:
     notebook_path = _working_notebook(tmp_path, "p24")
     _instrument_p24_audit(notebook_path)
     _execute(notebook_path)
+
+
+# --- plan aio-001 Phase E: the usaaio ci-local wiring test, rewritten against the py4kids
+# --- scripts/ci-local.sh aio routing.
+
+def test_book2_ci_runs_vision_transformer_integrity_suite() -> None:
+    # usaaio re-ran this suite in its ci-local step 7; py4kids runs it in step 2's routed aio suite.
+    assert aio_suite_runs("test_vision_transformer_checks.py")

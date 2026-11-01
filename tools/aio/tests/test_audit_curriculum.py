@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 import pytest
 import yaml
+from ci_local_text import ci_noncomment_lines
 
 from tools.aio import audit_curriculum as audit
 from tools.aio import render_course_structure
@@ -764,3 +765,21 @@ def test_read_failures_fail_loudly(tmp_path: Path) -> None:
 
     with pytest.raises(audit.InventoryError, match="broken.ipynb"):
         audit.notebook_record(unreadable_as_file, "broken.ipynb")
+
+
+# --- plan aio-001 Phase E: the usaaio ci-local wiring test, rewritten against the py4kids
+# --- scripts/ci-local.sh aio routing.
+
+def test_plan019_task3_ci_enforces_generated_evidence_without_a_skip() -> None:
+    commands = ci_noncomment_lines()
+
+    assert not any("SKIP generated" in line for line in commands)
+    audit_command = (
+        'uv run --group aio python -m tools.aio.audit_curriculum --root "$aio_round1_root" --check'
+    )
+    aggregate_command = (
+        'uv run --group aio python -m tools.aio.render_curriculum_roadmap --root "$repo_root" --check'
+    )
+    assert commands.count(audit_command) == 1
+    assert commands.count(aggregate_command) == 1
+    assert commands.index(audit_command) < commands.index(aggregate_command)

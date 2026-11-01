@@ -26,6 +26,7 @@ from pathlib import Path
 
 import nbformat
 import pytest
+from ci_local_text import aio_suite_runs
 from conftest import ROOT
 from nbclient import NotebookClient
 from nbclient.exceptions import CellExecutionError
@@ -469,3 +470,11 @@ def test_answer_checks_assert_one_test_call_and_a_clean_seam() -> None:
         check = str(notebook.cells[_answer_index(notebook) + 1].source)
         assert f'capstone_data.test_call_count("{TASKS[practice]}") == 1' in check, practice
         assert "SEAM" in check, practice
+
+
+# --- plan aio-001 Phase E: the usaaio ci-local wiring test, rewritten against the py4kids
+# --- scripts/ci-local.sh aio routing.
+
+def test_book2_ci_runs_capstone_integrity_suite() -> None:
+    # usaaio re-ran this suite in its ci-local step 7; py4kids runs it in step 2's routed aio suite.
+    assert aio_suite_runs("test_capstone_checks.py")

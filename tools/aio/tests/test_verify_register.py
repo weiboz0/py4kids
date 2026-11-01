@@ -179,6 +179,55 @@ def test_register_main_follows_noncanonical_registered_book1_root(
     assert not (repo / "aio-ml").exists()
 
 
+
+def test_register_guard_reads_aio_round_through_the_adapter_not_the_series_number(
+    tmp_path: Path,
+) -> None:
+    """Plan aio-001 Phase E: ci-local runs verify-register for the aio_round 1 book only.
+
+    Both aio books carry the py4kids series `number: 4`; the script's `book.number != 1` guard
+    must see the adapter's `number := aio_round`, so the round-1 book passes and the round-2
+    book is refused with its aio_round, never with 4.
+    """
+    repo = tmp_path / "repo"
+    for root in ("round1", "round2"):
+        book = repo / root
+        unit = "C7-example"
+        problem = write_problem(
+            book,
+            unit,
+            "# C7-example — Practice p01\n\n"
+            "**Type:** scenario analysis · **Difficulty:** core · **Concepts:** testing",
+        )
+        (book / "units" / unit / "manifest.yaml").write_text(
+            yaml.safe_dump({"practice": [problem]}), encoding="utf-8"
+        )
+    (repo / "books.yaml").write_text(
+        "books_version: 2\n"
+        "books:\n"
+        "  - {id: aio-ml, number: 4, root: round1, depends_on: [], content_model: aio, aio_round: 1}\n"
+        "  - {id: aio-dl, number: 4, root: round2, depends_on: [aio-ml], content_model: aio,"
+        " aio_round: 2}\n",
+        encoding="utf-8",
+    )
+
+    def run(book_id: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, str(SCRIPT), "--root", str(repo), "--book", book_id, "--statements-only"],
+            cwd=repo,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    round1 = run("aio-ml")
+    assert round1.returncode == 0, round1.stdout + round1.stderr
+    assert "register verification: 1/1 passed" in round1.stdout
+    round2 = run("aio-dl")
+    assert round2.returncode == 2
+    assert "registered book 'aio-dl' is number 2" in round2.stderr
+    assert "number 4" not in round1.stderr + round2.stderr
+
 def test_register_rejects_statement_escape_outside_selected_book(tmp_path, monkeypatch):
     outside = tmp_path / "outside.ipynb"
     outside.write_text("{}\n", encoding="utf-8")

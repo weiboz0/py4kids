@@ -15,6 +15,7 @@ from pathlib import Path
 import nbformat
 import pytest
 import yaml
+from ci_local_text import ci_text
 from conftest import ROOT
 from nbclient import NotebookClient
 
@@ -363,3 +364,11 @@ def test_reference_solution_reproduces_r_and_baseline_reproduces_b(problem_id):
     b_text, r_text = marker["texts"][:2]
     assert math.isclose(score, marker["R"], rel_tol=0, abs_tol=_rounding_tolerance(r_text)), score
     assert math.isclose(base, marker["B"], rel_tol=0, abs_tol=_rounding_tolerance(b_text)), base
+
+
+# --- plan aio-001 Phase E: the usaaio ci-local wiring test, rewritten against the py4kids
+# --- scripts/ci-local.sh aio routing.
+
+def test_ci_local_runs_r2_001_solutions_under_the_20_second_timeout():
+    text = ci_text()
+    assert "$relative == mocktests/r2-001/solutions/p??_solution.ipynb" in text
