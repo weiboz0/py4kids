@@ -257,4 +257,209 @@ Also out of scope: `publication` and editions (aio-002), `site` and the export a
 
 ## Post-Execution Report
 
-(pending)
+**Draft (Phase F).** Branch `feature/aio-001-import`, rebased onto `main` 927d5f51.
+Phase F ran against b752070f (tree-identical to 1554c100, whose full ci-local run 4 was ALL GREEN) and added one port fix, 025f499d (F.1 below).
+Evidence lives in the session scratchpad (`aio001/`): `usaaio-ci.log`, `usaaio-junit.xml`, `py4kids-aio-junit.xml`, `junit-parity.md`, `ci-full-run4.log`, `clean-checkout.log`, `fid/`, `F5/`, `F4-overlap-*.txt`, `F6-id-grep.txt`.
+
+### F.1 Parity table
+
+The usaaio side ran in a fresh clone of usaaio at `a20128f` under `/dev/shm/usaaio-a20128f` (`../usaaio` was only read).
+It was provisioned per usaaio's own instructions: `uv sync` by `uv run`, and `scripts/fetch-reference.sh --all` for the 2026 papers.
+Then `TMPDIR=/dev/shm bash scripts/ci-local.sh` ran: **`ci-local: ALL GREEN`, 139 min** (`usaaio-ci.log`).
+The first attempt (`usaaio-ci-attempt1.log`) failed one test, `test_integration.py::test_plan019_cutover_ignores_exact_plan022_three_blob_worktree_change`.
+That test `git clone --no-local`s the repository and needs commit `4cc3894`.
+The commit is on the local branch `feature/plan-019-attention-transformers` in `../usaaio`, but a plain clone carries it only as a remote-tracking ref.
+So the clone's local branches were mirrored from `../usaaio`'s `refs/heads` (19 refs, HEAD still detached at `a20128f`, tree clean), and the test passed.
+This is a usaaio fresh-clone hazard; the test is a D4 drop here (class a).
+The py4kids side is ci-local run 4 (`ci-full-run4.log`, tree-identical to b752070f), plus a junit run of the aio suite at b752070f.
+
+| usaaio ci-local gate (a20128f) | usaaio outcome | py4kids command | py4kids outcome | Match / class |
+|---|---|---|---|---|
+| 1 registry (`load_book_catalog`, `validate_book_root`) | PASS `registry: book1 -> book2` | step 1 aio catalog adapter + root validation; `content_model`/`aio_round` validation | PASS `aio registry: aio-ml (aio_round 1) -> aio-dl (aio_round 2)` | match |
+| 1 `ruff check tools/ tests/` | PASS | step 1 `uv run ruff check tools/ tests/ scripts/ …` (covers `tools/aio/`, `scripts/aio/`) | PASS | match |
+| 2 `uv run pytest -q` | 1856 passed | step 2 `uv run --group aio pytest -q tools/aio/tests` | 1781 passed, 1 skipped (b752070f); 1782 passed after 025f499d | per-file table below |
+| 3 solution, practice-solution, mock-test-solution and lesson exec (20 s list) | PASS, 751 notebooks | step 3 aio exec, `cd <root> && AIO_BOOK_ROOT=… uv run --project .. --group aio jupyter execute` (route `full` on this branch) | PASS, 751 notebooks | match |
+| (no usaaio gate) | — | step 3 aio `hygiene-check` per book | PASS ×2 | moved from usaaio step 5 (deviation below) |
+| 4 `verify-register.py --book book1` | PASS 437/437 | step 4 `scripts/aio/verify-register.py --book aio-ml` | PASS 437/437 | match |
+| 5 per-book checks ×12 × 2 books (prereq, coverage, scope, schedule, tolerance, hygiene, blueprint, overlap-scan, answerkey, layer-boundary, unit-order, api-comments) | 24 PASS, 0 SKIP | step 4 `py4kids-tools aio --book <id> <check>` (11 checks; hygiene in step 3) | 22 PASS + hygiene 2 PASS, 0 SKIP | match |
+| 6 `--all` prereq, scope, schedule | 6 PASS | step 4 `py4kids-tools aio --all <check>` | 6 PASS | match |
+| 7 `audit_curriculum --check` ×2 | PASS ×2 | step 4b same | PASS ×2 | match |
+| 7 `render_curriculum_roadmap --check`, `render_course_structure --check` ×2 | PASS (silent) | step 4b same (targets `aio-ml/docs/…`) | PASS (silent) | match |
+| 7 training / classical / attention mutation verifiers | 5/5, 5/5, 5/5 (+ untouched 5/5) | step 4b same via `--repo-root` | 5/5, 5/5, 5/5 (+ untouched 5/5) | match |
+| 7 `pytest -q` language-transformer, latent, generative, capstone, vision-transformer, r2-001 checks | 20, 34, 46, 50, 52, 13 passed | step 2 aio suite (same files; no second run) | 20, 34, 46, 50, 52, 13 passed | match (run once, in step 2) |
+| 8 `build-pdf.sh` per book | 22 + 9 PDFs | step 5 `scripts/aio/build-pdf.sh --book <id>` | 22 + 9 PDFs | match |
+| 8 `build-book.sh` + `publish_audit` (ci_scope edition routes) | INFO unchanged (change-routed) ×2 | — | not run | (d) deferred to aio-002 |
+| 9 `pre-merge-guard.sh` | OK | step 7 py4kids `scripts/pre-merge-guard.sh` with the aio rules | OK | (e) replaced |
+| `--all-books` overlap (usaaio: in step 5) | PASS | `--all-books` `overlap-scan --require-corpus` per aio book | PASS ×2, 0 extraction failures (F.4) | match |
+
+**Step 2 per test file** (junit, usaaio clone at a20128f vs py4kids `tools/aio/tests` at b752070f):
+
+| test file | usaaio a20128f | py4kids | Δ |
+|---|---|---|---|
+| `test_answerkey.py` | 9 passed | 9 passed | +0 |
+| `test_api_comments.py` | 40 passed | 40 passed | +0 |
+| `test_attention_mutations.py` | 10 passed | 10 passed | +0 |
+| `test_audit_curriculum.py` | 36 passed | 35 passed | -1 |
+| `test_b2_019_statements.py` | 134 passed | 134 passed | +0 |
+| `test_b2_020_statements.py` | 22 passed | 22 passed | +0 |
+| `test_b2_021_plan.py` | 4 passed | 4 passed | +0 |
+| `test_b2_021_statements.py` | 19 passed | 19 passed | +0 |
+| `test_b2_022_plan.py` | 13 passed | 13 passed | +0 |
+| `test_b2_022_statements.py` | 17 passed | 17 passed | +0 |
+| `test_b2_023_plan.py` | 13 passed | 13 passed | +0 |
+| `test_b2_023_statements.py` | 17 passed | 17 passed | +0 |
+| `test_b2_024_plan.py` | 13 passed | 13 passed | +0 |
+| `test_b2_024_statements.py` | 18 passed | 18 passed | +0 |
+| `test_blueprint.py` | 21 passed | 21 passed | +0 |
+| `test_blueprint_book2.py` | 40 passed | 40 passed | +0 |
+| `test_book2_schedule.py` | 79 passed | 79 passed | +0 |
+| `test_book_isolation.py` | 14 passed | 14 passed | +0 |
+| `test_books.py` | 41 passed | 41 passed | +0 |
+| `test_c12_solution_regressions.py` | 123 passed | 123 passed | +0 |
+| `test_c12_statement_contracts.py` | 12 passed | 12 passed | +0 |
+| `test_c8_solution_regressions.py` | 18 passed | 18 passed | +0 |
+| `test_capstone_checks.py` | 50 passed | 50 passed | +0 |
+| `test_ci_scope.py` | 11 passed | 16 passed | +5 |
+| `test_classical_mutations.py` | 9 passed | 9 passed | +0 |
+| `test_clean_checkout.py` | 136 passed | 109 passed | -27 |
+| `test_cli.py` | 7 passed | 7 passed | +0 |
+| `test_compute_policy.py` | 16 passed | 16 passed | +0 |
+| `test_generative_model_checks.py` | 46 passed | 46 passed | +0 |
+| `test_historical_deferred_policy.py` | 2 passed | — | -2 |
+| `test_hygiene.py` | 8 passed | 8 passed | +0 |
+| `test_integration.py` | 61 passed | 34 passed | -27 |
+| `test_language_transformer_checks.py` | 20 passed | 20 passed | +0 |
+| `test_latent_model_checks.py` | 34 passed | 34 passed | +0 |
+| `test_layer_boundary.py` | 22 passed | 22 passed | +0 |
+| `test_model.py` | 53 passed | 53 passed | +0 |
+| `test_mutation_repo_root.py` | — | 9 passed | +9 |
+| `test_new_mocktest.py` | 8 passed | 8 passed | +0 |
+| `test_new_mocktest_book2.py` | 7 passed | 7 passed | +0 |
+| `test_overlap.py` | 22 passed | 22 passed | +0 |
+| `test_overlap_modes.py` | — | 12 passed | +12 |
+| `test_plan031_guard.py` | 3 passed | — | -3 |
+| `test_prereq_coverage.py` | 35 passed | 35 passed | +0 |
+| `test_publication_config.py` | 30 passed | 29 passed | -1 |
+| `test_publish.py` | 35 passed | 35 passed | +0 |
+| `test_publish_audit.py` | 30 passed | 30 passed | +0 |
+| `test_publish_theme_tables.py` | 10 passed | 9 passed 1 skipped | +0 |
+| `test_r2_001.py` | 22 passed | 22 passed | +0 |
+| `test_r2_001_checks.py` | 13 passed | 13 passed | +0 |
+| `test_reference_migration.py` | 9 passed | — | -9 |
+| `test_renumber_book1_units.py` | 26 passed | — | -26 |
+| `test_schedule.py` | 60 passed | 60 passed | +0 |
+| `test_scope.py` | 170 passed | 165 passed | -5 |
+| `test_tolerance.py` | 30 passed | 30 passed | +0 |
+| `test_training_mutations.py` | 13 passed | 13 passed | +0 |
+| `test_unit_order.py` | 20 passed | 20 passed | +0 |
+| `test_verify_comment_only.py` | 22 passed | 22 passed | +0 |
+| `test_verify_register.py` | 51 passed | 52 passed | +1 |
+| `test_vision_transformer_checks.py` | 52 passed | 52 passed | +0 |
+| **total** | 1856 passed | 1781 passed 1 skipped | -74 |
+
+Every difference carries a class:
+- `test_historical_deferred_policy.py` (−2), `test_reference_migration.py` (−9), `test_renumber_book1_units.py` (−26), `test_plan031_guard.py` (−3): **(a)** D4 drops.
+- `test_scope.py` (−5 net: 6 ancestry-probe tests removed, 1 `test_plan014_merged_reconciliation_needs_no_git_history` added): **(b)** the removed usaaio-history ancestry probe.
+- `test_integration.py` (−27 net: 29 cases of 18 test functions removed, which are the plan019/plan022 history tests and the usaaio `pre-merge-guard.sh` tests; 2 py4kids exec-routing tests added; the module's other Phase D drops were restored in Phase E): **(c)** listed coupled-test drops (Phase D), with the guard tests also **(e)**.
+- `test_clean_checkout.py` (−27 net: 32 cases of 27 test functions removed, covering `verify-staged-scope.py`, `renumber-book1-units.py`, `plan019-path-inventory.yaml`, plan031 rename rules and usaaio ci-local's guard wiring; 5 added for the rewritten verifier): **(a)**/**(c)**.
+- `test_audit_curriculum.py` (−1, `test_plan019_task3_scope_allows_both_shared_generated_outputs`, which asserts `verify-staged-scope` scope): **(a)**.
+- `test_publication_config.py` (−1, `test_real_books_are_publication_books_with_valid_configs`; the aio books carry no `publication` yet): **(d)**.
+- Added: `test_ci_scope.py` +5 (exec routing), `test_verify_register.py` +1 (`aio_round` mapping), `test_mutation_repo_root.py` +9, `test_overlap_modes.py` +12 (Phase D/E additions, no usaaio counterpart).
+- `test_publish_theme_tables.py`: usaaio 10 PASS, py4kids at b752070f 9 PASS + **1 SKIP**.
+  `test_outside_tables_only_the_global_dot_rule_changes` read the pre-Plan-033 filter from usaaio's git history (`git show 60b1247:tools/publish_theme/panels.lua`), which py4kids does not import.
+  It fit none of (a)–(e) and silently dropped an assertion, so it was treated as a port bug and fixed in **025f499d**:
+  the blob is pinned byte for byte as `tools/aio/tests/fixtures/panels-pre-plan033.lua` (sha256 `f33cd7e3…`) and the test reads it.
+  After the fix the module is 10 PASS, and the suite has 0 skips.
+
+### F.2 Clean checkout
+
+`AIO_CLEAN_CHECKOUT_KEEP=1 TMPDIR=/dev/shm bash scripts/aio/verify-clean-checkout.sh` at b752070f: **`ci-local: ALL GREEN`, then `PASS verify-clean-checkout: b752070f…`**, 358 min (`clean-checkout.log`).
+- The clone was `git clone`d into `/dev/shm/aio-clean-checkout.*`.
+  `uv run --frozen` created a fresh `.venv` from `uv.lock`: this is the real `--frozen` path, run for real for the first time.
+- Step B ran into the clone. `fetch-reference.sh --root <clone> --all` fetched the 4 2026 PDFs.
+  `aio-provision-cache.sh --root <clone>` fetched 4 artifacts, each with its sha256 verified. That is 8 provisioned files.
+- Results: group-free 2290 passed / 2 skipped; recsys 348; roar 636; aio suite 1781 passed / 1 skipped; aio exec `full` ×2, 751 notebooks; verify-register 437/437; mutation verifiers 5/5 ×3; aio PDFs 22 + 9; the four editions rendered; site built and tested; guard OK.
+- After the run, `git status --porcelain --ignored` shows no tracked change and no untracked-unignored file.
+  The provisioned trees are `!!` (ignored): `aio-ml/reference/r1-2026/`, `aio-ml/reference/cache/`, `aio-dl/reference/r2-2026/`.
+- **Needed: `uv sync --frozen --group roar --inexact` before ci-local**, passed as `AIO_CLEAN_CHECKOUT_PROVISION='bash scripts/aio/aio-provision-cache.sh --root "$CLONE" && uv sync --frozen --group roar --inexact'`.
+  The first attempt (`clean-checkout-attempt1.log`) failed step 2.
+  `tests/test_labs.py::test_racekit_carla_like_is_not_the_simulator` runs a roar notebook that imports `racekit`.
+  In a fresh venv, step 2's group-free `pytest -q` runs before the roar routed suite installs `racekit`, so the import fails.
+  This is **pre-existing on `main`**: a fresh clone of 927d5f51 fails the same test the same way, and it is not aio-related.
+  It is a follow-up for py4kids `main`, out of this plan's scope.
+- 025f499d (one test file and one fixture, after this run) was verified separately: aio suite **1782 passed, 0 skipped**; `tests/test_book_ids.py` + `tests/test_guard.py` 18 passed; ruff clean.
+
+### F.3 Fidelity diff
+
+`import-usaaio.py --dry-run` regenerated the D3 transform of `a20128f` (`/dev/shm/aio-fid`).
+Its import report is byte-identical to the committed `docs/history/aio-import/import-report.md`.
+Each regenerated file was then compared with `git show HEAD:<path>` (`fid/fidelity.py`, `fid/fidelity.json`, `fid/classify.tsv`).
+This applies the recorded renames forward, which is equivalent to reversing them.
+- **Archive:** 44/44 files in `docs/history/usaaio/` byte-identical to `a20128f` (no redaction was needed).
+- **Live set:** 1,592 files; **1,501 byte-identical** to the renamed source, every `.ipynb` among them (no notebook output changed).
+  91 differ, all Phase D/E edits:
+  - Book content (2): `aio-ml/curriculum/material-inventory.yaml`, `aio-dl/curriculum/material-inventory.yaml`.
+    They differ only in regenerated `semantic_sha256` values (67 of 1,013 and 338 of 364), because the D3 renames changed the hashed text.
+    With those values removed, the parsed YAML is equal, and `audit_curriculum --check` passes on both (Phase D part 1).
+  - `tools.X` → `tools.aio.X` imports only (16): `checks/{answerkey,api_comments,blueprint,hygiene,layer_boundary,new_mocktest,tolerance,unit_order}.py`, `publish_audit.py`, `publish_pdf.py`, `render_course_structure.py`, `tests/test_{cli,hygiene,overlap,publish,publish_audit}.py`.
+  - Ported scripts, repo root one level up (+ imports): `scripts/aio/{build-book.sh,build-pdf.sh,fetch-reference.sh,verify-register.py}`; `verify-comment-only.py` also takes its book roots from the registry.
+    `verify-clean-checkout.sh` is rewritten (Phase D).
+  - Id-literal branches → registry data (D1): `audit_curriculum.py`, `checks/coverage.py`, `model.py` (`ROUND2_AIO_ROUND`; `Report.notes` for the corpus reconciliation), `checks/schedule.py` (dispatch on `aio_round`), `verify_{training,classical,attention}_mutations.py` (`--repo-root` selects the book by `aio_round`).
+  - Catalog adapter `books.py` (v2 registry, `content_model: aio`, `number := aio_round`); CLI `cli.py` (delegate, `--require-corpus`, `--paths`); `checks/overlap.py` (`--require-corpus`, corpus reconciliation, archive mode); `checks/scope.py` (reconciliation path `aio-ml/docs/`, ancestry probe removed, duplicate-evidence fix); `render_curriculum_roadmap.py` (targets `aio-ml/docs/curriculum-roadmap.md`, `aio-ml/docs/coverage-audit.md`); `ci_scope.py` (aio publisher's global inputs, exec routing `route_exec`); `publish.py`, `publish_output.py` (`--root` default `parents[2]`); `checks/prereq.py` (ruff import re-wrap).
+  - Tests (61 files): shared `ROOT` from `conftest.py` (`parents[3]`) in place of `parents[1]`; v2 registries with `content_model`/`aio_round` (the 15 listed files); fixture and doc paths (`tools/aio/tests/fixtures/…`, `aio-ml/docs/…`); ci-local wiring assertions rewritten against the py4kids script (`ci_local_text.py`); the listed coupled-test drops; and two digests re-pinned to the renamed bytes (`test_attention_mutations.py`, `test_book2_schedule.py`).
+    The book bytes these digests cover are the identical transform shown above.
+- **Added with no usaaio source (7 + 1):** `aio-ml/IMPORTED.md`, `aio-dl/IMPORTED.md`, `aio-ml/curriculum/artifacts.yaml`, `scripts/aio/aio-provision-cache.sh`, `tools/aio/tests/{ci_local_text.py,test_mutation_repo_root.py,test_overlap_modes.py}`, and the 025f499d fixture `tools/aio/tests/fixtures/panels-pre-plan033.lua` (a usaaio blob from `60b1247`, verbatim).
+
+### F.4 Leak assertions
+
+- `git ls-files aio-ml aio-dl tools/aio` lists 6 `reference/` paths: `aio-{ml,dl}/reference/{.gitkeep,analysis.md}` and the fixture's two `.gitkeep`s. Nothing else.
+- No hidden set is tracked: `git ls-files | grep heldout` is empty.
+  The C11 `heldout.csv`, `r1-001/data/p09_heldout.csv` and the five C11 CSV rules are in `.gitignore`.
+- No cache file is tracked: 0 paths match `cache/`, `__pycache__` or `*.pyc`.
+  No tracked aio path is matched by an ignore rule.
+- `bash scripts/pre-merge-guard.sh --pr` (with `GH_TOKEN`): `pre-merge-guard: OK`.
+- `py4kids-tools aio --book aio-ml overlap-scan --require-corpus`: PASS.
+  Corpus: PDF parts expected 1, extracted 1, index text parts 37, extraction failures 0.
+  6 below-threshold similarity WARNINGs, the same scanner behaviour as usaaio.
+- `--book aio-dl`: PASS. Corpus: expected 3, extracted 3, index text parts 26, extraction failures 0.
+- `py4kids-tools aio --all overlap-scan --require-corpus --paths docs/history/usaaio`: PASS, files 44, scanned 44, corpus parts 67, 0 warnings.
+
+### F.5 py4kids unchanged
+
+Steps 3–6 of the `main`-tree run (`ci-gov.log`, 927d5f51) were compared with run 4, after normalizing paths and timings (`F5/full.diff`).
+Every py4kids line of step 3, step 4 and step 5's `build-pdf` is identical: the same PASS lines, the same counts and the same PDFs.
+The diff has two kinds of hunk only:
+1. **Pure insertions of aio output:** the step-3 aio hygiene and exec block, the step-4 aio checks and 4b, and the step-5 aio `build-pdf` (22 + 9 PDFs).
+   No py4kids line is removed or changed.
+2. **Change-routed steps that flip from skip to run**, as expected, because the branch changes `tools/`, `scripts/`, `books.yaml`, `pyproject.toml` and `uv.lock`:
+   - book editions for python-projects, python-concepts, usaco-bronze and acsl (`main`: skip; branch: rendered, `publish-audit: PASS`, 0 overfull hboxes);
+   - step 6 site (`main`: skip; branch: built, exported, and its e2e and solver-parity suites passed, e.g. 314 solvers / 1409 cases with 0 mismatches).
+   These are routing effects of `tools/ci_scope.py`, not result changes.
+
+### F.6 Rename proof
+
+- `uv run pytest -q tests/test_book_ids.py`: 7 passed.
+- Zero-hit grep: `git grep -I -E` over `aio-ml aio-dl tools/aio scripts/aio` covers the path segment, `--book book[12]`, quoted id, qualified id, `book[12]-`/`book1b-` output names and `USAAIO_`. **0 hits** (`F6-id-grep.txt`).
+
+### CI budget (D9, Phase E)
+
+The full aio run measured **111.7 CI-minutes**: suite 32.2, hygiene 0.1, exec 72.1, checks 3.0, 4b 1.6, PDFs 2.7.
+That is more than 60, so **exec scoping was added**: `tools/aio/ci_scope.py --exec` routes each book `full`, `scoped` or `none` on ordinary branches, and `--all-books` runs it in full.
+An ordinary branch costs about 40 aio minutes when no aio exec input changed.
+This branch routes `full`. Run 4 took 349.7 min end to end.
+
+### Deviations (recorded)
+
+- **Overlap archive mode:** an inline code span holding an import statement (`` `import numpy as np` ``) counts as boilerplate, as usaaio's `_without_boilerplate` already treats `import`/`from` lines.
+  The staged archive's only hit was `plans/006-units-tranche-2.md:166`. The rule is archive-mode only and is tested.
+- **`PYTHONDONTWRITEBYTECODE=1` around the aio exec loop:** without it, exec left `units/B2-02x-*/data/__pycache__` behind, and that failed the four cache-free inventory tests on a re-run.
+  usaaio's CI only ever ran on a fresh tree.
+- **Hygiene once, in step 3:** usaaio ran `hygiene-check` among the step-5 per-book checks. Here it runs before exec in step 3 and is not repeated in step 4.
+- **Step 4b echo heading:** `--- 4b: aio generated evidence + mutation checks ---` stands in for usaaio's step-7 heading, so the gate keeps seven steps.
+- **Registry top-level key fix:** `tools/aio/books.py` again requires the exact top level (`books_version`, `books`), as usaaio did; Phase D part 1 had loosened it.
+- **`ci_scope` paths:** the aio publisher's global inputs are `tools/aio/publish*.py`, `tools/aio/publish_theme/`, `tools/aio/books.py` and `scripts/aio/build-book.sh`.
+  The py4kids `tools/publish.py` no longer routes the aio books full.
+- **Scope duplicate-evidence fix:** `checks/scope.py` lets a modality cite each lesson anchor, practice and assessment only once.
+  usaaio's test passed only because its fixture lacked the repository-root reconciliation.
+- **Phase F, 025f499d:** the pinned pre-Plan-033 `panels.lua` fixture (F.1).
+- **Clean-checkout provisioning** (F.2): `uv sync --frozen --group roar --inexact` before ci-local, for a pre-existing `main` test-environment gap.
