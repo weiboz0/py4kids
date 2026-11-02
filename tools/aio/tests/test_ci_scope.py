@@ -44,10 +44,37 @@ def test_front_and_back_matter_route_full() -> None:
 
 
 def test_unrelated_changes_are_unchanged_and_print_info() -> None:
-    routes = _route(["docs/plans/030-book-editions.md", "tools/aio/checks/scope.py", "TODO.md",
+    # py4kids plan aio-002 B.3: `tools/aio/checks/scope.py` now routes full (B.2), so the aio
+    # path here is a test module, which stays `none`.
+    routes = _route(["docs/plans/030-book-editions.md", "tools/aio/tests/test_scope.py", "TODO.md",
                      "tools/publish.py", "tools/books.py", "scripts/build-book.sh"])
     assert routes == {"aio-ml": "none aio-ml", "aio-dl": "none aio-dl"}
     assert INFO_UNCHANGED.format(book="aio-dl") == "INFO build-book: aio-dl unchanged (change-routed)"
+
+
+# --- py4kids plan aio-002 B.2/B.3 (design 014 D6): the shared full trigger --------------------
+
+
+def test_aio_tooling_and_shared_ci_files_route_every_book_full() -> None:
+    for path in ("tools/aio/model.py", "tools/aio/checks/scope.py", "tools/aio/cli.py",
+                 "scripts/aio/build-pdf.sh", "scripts/ci-local.sh", ".python-version",
+                 "uv.lock", "books.yaml", "pyproject.toml"):
+        assert _route([path]) == {"aio-ml": "full aio-ml", "aio-dl": "full aio-dl"}, path
+
+
+def test_py4kids_tooling_and_aio_tests_route_no_book() -> None:
+    for path in ("tools/publish.py", "tools/ci_scope.py", "scripts/build-site.sh",
+                 "tools/aio/tests/test_scope.py", "tools/aio/tests/fixtures/x.yaml"):
+        assert _route([path]) == {"aio-ml": "none aio-ml", "aio-dl": "none aio-dl"}, path
+
+
+def test_router_cases_for_the_ci_local_edition_loop() -> None:
+    assert _route(["TODO.md"], all_books=True) == {
+        "aio-ml": "full aio-ml", "aio-dl": "full aio-dl"}
+    assert _route(["aio-ml/units/F1-a/practice/p01.ipynb"]) == {
+        "aio-ml": "scoped aio-ml --units F1-a", "aio-dl": "none aio-dl"}
+    assert _route(["aio-dl/mocktests/r2-001/problems/p01.md"]) == {
+        "aio-ml": "none aio-ml", "aio-dl": "scoped aio-dl --mocktests r2-001"}
 
 
 def test_all_books_and_missing_merge_base_render_everything() -> None:

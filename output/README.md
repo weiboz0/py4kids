@@ -5,6 +5,9 @@ The PDFs are built artifacts: git ignores them (`output/**/*.pdf` in `.gitignore
 Rebuild them with the scripts below; `scripts/ci-local.sh` runs both.
 `build-pdf.sh` runs for every book on every CI run.
 A book's editions (`build-book.sh`, then `publish-audit`) render only when the change touches that book, `tools/`, `scripts/`, `books.yaml`, `pyproject.toml` or `uv.lock`; otherwise CI prints `SKIP` for them.
+An `aio` book's editions (`scripts/aio/build-book.sh`, then `python -m tools.aio.publish_audit`, both under `uv run --group aio`; design 014 D6) are routed by `tools/aio/ci_scope.py` instead.
+They render in full when the change touches `tools/aio/` (not `tools/aio/tests/`), `scripts/aio/`, `books.yaml`, `pyproject.toml`, `uv.lock`, `scripts/ci-local.sh` or `.python-version`, or the book's `publication.yaml`, `front-matter/` or `back-matter/`.
+A change to one unit or mock test renders a scoped check of just that unit or test into `<id>/build/publish-check/` and leaves these PDFs alone; an unchanged book prints `INFO build-book: <id> unchanged (change-routed)`.
 `scripts/ci-local.sh --all-books` renders every book's editions.
 
 Each script owns its own files and replaces only those, so running one never deletes the other's PDFs.
@@ -84,14 +87,56 @@ It is not a `publication` book, so it renders no student/teacher editions; `buil
 `roar` ships in **buildout** state (design 013): units, checkpoints and the capstone, and therefore the handouts, land in `roar-002` and later.
 It is not a `publication` book yet, so it renders no student/teacher editions; `build-pdf.sh` replaces `syllabus.pdf` and `handouts/`.
 
+## `output/aio-ml/` — Machine Learning for the AI Olympiad
+
+"Selected answers" in the two `aio` books are the Set A (fundamentals) practices, set by `student_answers:` in each book's `publication.yaml`.
+
+| File | What it is | Made by |
+|---|---|---|
+| `aio-ml-student-print.pdf` | Student Book — Print Edition: lessons, reviews and practice statements (markdown only, with a pointer to each practice file); no answers of any kind | `scripts/aio/build-book.sh --book aio-ml` |
+| `aio-ml-student-vol1.pdf` | Student Book — Full Edition, Volume 1: Foundations and First Models (units 01–08: F1–F5, C1–C3), with starter code and an appendix of checkpoint answers and selected-practice solutions | `scripts/aio/build-book.sh --book aio-ml` |
+| `aio-ml-student-vol2.pdf` | Student Book — Full Edition, Volume 2: Practice, Embeddings, and Neural Networks (units 09–14: C4, C5, C6, F6, C7, F7) | `scripts/aio/build-book.sh --book aio-ml` |
+| `aio-ml-student-vol3.pdf` | Student Book — Full Edition, Volume 3: Training, Deep Models, and Competition Practice (units 15–19: C8–C12) | `scripts/aio/build-book.sh --book aio-ml` |
+| `aio-ml-answer-key.pdf` | Answer Key: the selected-practice solutions, one chapter per unit | `scripts/aio/build-book.sh --book aio-ml` |
+| `aio-ml-teacher-vol1.pdf` | Teacher's Edition, Volume 1: Foundations and First Models, with every answer inline and every practice solution | `scripts/aio/build-book.sh --book aio-ml` |
+| `aio-ml-teacher-vol2.pdf` | Teacher's Edition, Volume 2: Practice, Embeddings, and Neural Networks | `scripts/aio/build-book.sh --book aio-ml` |
+| `aio-ml-teacher-vol3.pdf` | Teacher's Edition, Volume 3: Training, Deep Models, and Competition Practice, ending with the `r1-001` mock test, its answers, rubric and solutions | `scripts/aio/build-book.sh --book aio-ml` |
+| `syllabus.pdf` | The Round 1 course structure (`aio-ml/docs/course-structure.md`) | `scripts/aio/build-pdf.sh --book aio-ml` |
+| `handouts/<unit>.pdf` | One practice handout per unit: its practice statement notebooks, without answers | `scripts/aio/build-pdf.sh --book aio-ml` |
+| `mocktests/r1-001-paper.pdf` | Mock test `r1-001`: `test.md`, then each problem file in manifest order | `scripts/aio/build-pdf.sh --book aio-ml` |
+| `mocktests/r1-001-solutions.pdf` | Mock test `r1-001`: the answer key, rubric and solution notebooks | `scripts/aio/build-pdf.sh --book aio-ml` |
+
+Both scripts run under `uv run --group aio`.
+`build-book.sh` replaces `aio-ml-*.pdf` (every edition is `<id>-<edition>[-vol<N>].pdf`); `build-pdf.sh` replaces `syllabus.pdf`, `handouts/` and `mocktests/`.
+
+## `output/aio-dl/` — Deep Learning for the AI Olympiad
+
+| File | What it is | Made by |
+|---|---|---|
+| `aio-dl-student-print.pdf` | Student Book — Print Edition: lessons, reviews and practice statements (markdown only, with a pointer to each practice file); no answers of any kind | `scripts/aio/build-book.sh --book aio-dl` |
+| `aio-dl-student.pdf` | Student Book — Full Edition: with starter code and an appendix of checkpoint answers and selected-practice solutions | `scripts/aio/build-book.sh --book aio-dl` |
+| `aio-dl-answer-key.pdf` | Answer Key: the selected-practice solutions, one chapter per unit | `scripts/aio/build-book.sh --book aio-dl` |
+| `aio-dl-teacher.pdf` | Teacher's Edition: every answer inline, every practice solution, and the `r2-001` mock test with its answers, rubric and solutions | `scripts/aio/build-book.sh --book aio-dl` |
+| `syllabus.pdf` | The Round 2 course structure (`aio-dl/docs/course-structure.md`) | `scripts/aio/build-pdf.sh --book aio-dl` |
+| `handouts/<unit>.pdf` | One practice handout per unit: its practice statement notebooks, without answers | `scripts/aio/build-pdf.sh --book aio-dl` |
+| `mocktests/r2-001-paper.pdf` | Mock test `r2-001`: `test.md`, then each problem file in manifest order (theory and programming parts interleaved) | `scripts/aio/build-pdf.sh --book aio-dl` |
+| `mocktests/r2-001-solutions.pdf` | Mock test `r2-001`: the answer key, rubric and solution notebooks | `scripts/aio/build-pdf.sh --book aio-dl` |
+
+Both scripts run under `uv run --group aio`.
+`build-book.sh` replaces `aio-dl-*.pdf`; `build-pdf.sh` replaces `syllabus.pdf`, `handouts/` and `mocktests/`.
+
 ## Publishing a release
 
 The PDFs are published as GitHub Releases on `weiboz0/py4kids`, never committed.
 
 1. Run `bash scripts/ci-local.sh --all-books` on the commit you release, on its own (never alongside another `ci-local.sh` run, which shares the build folders).
    It must end `ci-local: ALL GREEN`, with every book's editions rendered and audited.
-2. Stage copies of every book's PDFs outside the repository, each name prefixed with its book id, because handout names repeat across books:
-   `<id>-handout-<unit>.pdf`, `<id>-syllabus.pdf`, `python-projects-patterns.pdf`; the editions already start with the id (`<id>-<edition>.pdf`).
+2. Stage copies of the release PDFs outside the repository, each name prefixed with its book id, because handout names repeat across books.
+   Stage only this allowlist:
+   - every py4kids-model book's PDFs: `<id>-handout-<unit>.pdf`, `<id>-syllabus.pdf`, `python-projects-patterns.pdf`; the editions already start with the id (`<id>-<edition>.pdf`);
+   - for an `aio` book (`aio-ml`, `aio-dl`), **only** its student editions (`<id>-student*.pdf`), its syllabus (`<id>-syllabus.pdf`), its handouts (`<id>-handout-<unit>.pdf`) and its mock-test papers (`output/<id>/mocktests/<test>-paper.pdf`, staged as `<id>-<test>-paper.pdf`).
+
+   Never stage, for an `aio` book, `<id>-teacher*.pdf`, `<id>-answer-key.pdf` or any `mocktests/<test>-solutions.pdf`: they print the Set B/C answers and the mock-test solutions, and design 014 D7 releases only Set A answers and no mock-test solution.
 3. Tag the release `pdfs-<date>` (for example `pdfs-2026-09-30`) and create it against the **full** commit SHA (a short SHA is refused):
 
    ```bash
@@ -99,7 +144,8 @@ The PDFs are published as GitHub Releases on `weiboz0/py4kids`, never committed.
      --title "Book PDFs <date>" --notes "…" <staged PDFs>
    ```
 
-The Teacher's Edition is included in the release, by the user's choice (2026-09-29), even though the release is public.
+For the py4kids-model books, the Teacher's Edition is included in the release, by the user's choice (2026-09-29), even though the release is public.
+That choice does not cover the `aio` books (step 2).
 
 ## The learning website (design 012; plan 105 Phase F)
 

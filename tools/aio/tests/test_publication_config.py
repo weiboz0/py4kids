@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import ROOT
 
 from tools.aio.books import (
     load_book_catalog,
@@ -57,6 +58,14 @@ def _repo(tmp_path: Path, config: dict[str, object] | None = None, **registry: o
     if config is not None:
         _write_yaml(book / "publication.yaml", config)
     return repo
+
+
+def test_real_books_are_publication_books_with_valid_configs() -> None:
+    catalog = load_book_catalog(ROOT)
+    for book in catalog.books:
+        assert book.publication is True
+        assert book.title and book.subtitle
+        assert publication_config_errors(ROOT, book.id) == []
 
 
 def test_old_format_registry_without_publication_keys_stays_valid(tmp_path: Path) -> None:

@@ -454,8 +454,60 @@ step "5/7 PDF build"
 # fails on a missing glyph. A publication book's editions render only when the change touches the
 # book, or anything under tools/ or scripts/, or books.yaml (design 010 D7, tools/ci_scope.py), or
 # with --all-books. publish-audit needs the render, so it is skipped with it; never silently.
+# An aio publication book's editions (design 014 D6) are routed by tools/aio/ci_scope.py instead:
+# full when the change touches tools/aio/ (not its tests), scripts/aio/, books.yaml, pyproject.toml,
+# uv.lock, scripts/ci-local.sh or .python-version, or with --all-books; scoped to the changed units
+# and mock tests, glossary-only, or none (printed as INFO) for a change under the book's own paths.
 rendered=()
 skipped=()
+# The aio edition routes (usaaio a20128f step 8, ported verbatim apart from paths, the aio group,
+# the route loop reading fd 4, the book-set check and the rendered/skipped bookkeeping): the router prints one "<mode> <book> [--units ...] [--mocktests ...]" line per aio
+# publication book. The arguments are the registered aio publication books; a missing, repeated or
+# unregistered routed book fails, as does an unknown mode. full/scoped join `rendered`,
+# glossary/none join `skipped` with their route. The router command is overridable for the tests.
+aio_edition_router=(uv run --group aio python -m tools.aio.ci_scope)
+aio_edition_routes() {
+  local edition_routes route_mode route_book route_rest expected routed
+  local -a route_scope routed_books=()
+  if ! edition_routes=$("${aio_edition_router[@]}" --root "$repo_root" "${scope_args[@]}"); then
+    echo "FAIL: aio edition router (tools/aio/ci_scope.py) failed" >&2; exit 1
+  fi
+  while read -r route_mode route_book route_rest; do
+    [[ -n ${route_mode:-} ]] || continue
+    routed_books+=("${route_book:-}")
+  done <<< "$edition_routes"
+  expected=$(printf '%s\n' "$@" | sort)
+  routed=$(printf '%s\n' "${routed_books[@]}" | sort)
+  if [[ "$routed" != "$expected" ]]; then
+    echo "FAIL: aio edition routes ($(paste -sd' ' <<< "$routed")) differ from books.yaml's aio publication books ($*)" >&2
+    exit 1
+  fi
+  while read -r route_mode route_book route_rest <&4; do
+    [[ -n ${route_mode:-} ]] || continue
+    read -r -a route_scope <<< "${route_rest:-}"
+    case $route_mode in
+      full)
+        uv run --group aio bash scripts/aio/build-book.sh --book "$route_book"
+        uv run --group aio python -m tools.aio.publish_audit --root "$repo_root" --book "$route_book"
+        rendered+=("$route_book")
+        ;;
+      scoped)
+        uv run --group aio bash scripts/aio/build-book.sh --book "$route_book" "${route_scope[@]}"
+        uv run --group aio python -m tools.aio.publish_audit --root "$repo_root" --book "$route_book" "${route_scope[@]}"
+        rendered+=("$route_book (scoped ${route_scope[*]})")
+        ;;
+      glossary)
+        uv run --group aio python -m tools.aio.publish_audit --root "$repo_root" --book "$route_book" --glossary-only
+        skipped+=("$route_book (glossary audit only)")
+        ;;
+      none)
+        echo "INFO build-book: $route_book unchanged (change-routed)"
+        skipped+=("$route_book (change-routed)")
+        ;;
+      *) echo "FAIL: unknown edition route: $route_mode $route_book" >&2; exit 1 ;;
+    esac
+  done 4<<< "$edition_routes"
+}
 while read -r book flags <&3; do
   if ! is_aio "$book"; then
     bash scripts/build-pdf.sh --book "$book"
@@ -466,11 +518,8 @@ while read -r book flags <&3; do
       || { rc=$?; [[ $rc -eq 3 ]] || exit "$rc"; echo "SKIP: $book: aio PDFs (lualatex or pandoc absent)"; }
   fi
   if has_flag publication "$flags"; then
-    # The aio edition route (aio build-book + publish_audit through tools/aio/ci_scope.py) lands with
-    # `publication` in aio-002; until then an aio publication book must fail, never skip silently.
-    if is_aio "$book"; then
-      echo "FAIL: $book: aio editions are not routed yet (plan aio-002)" >&2; exit 1
-    fi
+    # An aio book's editions are routed once for every aio book, after this loop.
+    is_aio "$book" && continue
     decision="$(uv run python -m tools.ci_scope --book "$book" "${scope_args[@]}")"
     echo "book editions: $book: $decision"
     if [[ "$decision" == render:* ]]; then
@@ -483,6 +532,11 @@ while read -r book flags <&3; do
     fi
   fi
 done 3<<< "$books"
+aio_publication_books=()
+while read -r book flags; do
+  if is_aio "$book" && has_flag publication "$flags"; then aio_publication_books+=("$book"); fi
+done <<< "$books"
+aio_edition_routes "${aio_publication_books[@]}"
 echo "book editions rendered: ${rendered[*]:-none}; skipped: ${skipped[*]:-none}"
 
 step "6/7 site"

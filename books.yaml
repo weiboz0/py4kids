@@ -8,6 +8,8 @@ books_version: 2
 # never on book ids:
 #   publication: the book-publication pipeline (publish, publish-audit, the
 #                edition PDFs and the per-book cover/front matter).
+#                An `aio` book is published by tools/aio/ from its usaaio-schema
+#                publication.yaml (design 014 D6), never by the py4kids publisher.
 #   judge:       stdin `.py` solvers and the subprocess judge (the contest
 #                source policy and the solution-notebook judge harness).
 #   patterns:    the pattern checks (patterns.yaml, patterns doc) AND the
@@ -115,6 +117,7 @@ books:
   content_model: aio
   aio_round: 1
   dependency_group: aio
+  publication: true
 - id: aio-dl
   number: 4
   root: aio-dl
@@ -125,3 +128,4 @@ books:
   content_model: aio
   aio_round: 2
   dependency_group: aio
+  publication: true

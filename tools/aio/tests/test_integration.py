@@ -12,7 +12,7 @@ from collections import Counter
 from pathlib import Path
 
 import yaml
-from ci_local_text import ci_noncomment_lines, ci_text
+from ci_local_text import ci_noncomment_lines, ci_step, ci_text
 from conftest import ROOT
 
 from tools.aio.books import unit_dir
@@ -1729,3 +1729,151 @@ def test_ci_aio_exec_scope_filter_matches_only_routed_folders(tmp_path: Path) ->
         "full in",
     ]
 
+
+
+# --- py4kids plan aio-002 Phase B (design 014 D6): the aio edition routes of ci-local step 5 ------
+
+AIO_EDITION_CALL = 'aio_edition_routes "${aio_publication_books[@]}"'
+
+
+def test_ci_routes_aio_editions_once_through_the_aio_ci_scope_after_the_book_loop() -> None:
+    step5 = ci_step("5/7", "6/7")
+    lines = [
+        line.strip() for line in step5.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    assert lines.count("aio_edition_router=(uv run --group aio python -m tools.aio.ci_scope)") == 1
+    router = 'if ! edition_routes=$("${aio_edition_router[@]}" --root "$repo_root" "${scope_args[@]}"); then'
+    assert lines.count(router) == 1
+    # Defined before the per-book loop, called once after it and before the summary line.
+    definition = lines.index("aio_edition_routes() {")
+    book_loop = lines.index("while read -r book flags <&3; do")
+    book_loop_end = lines.index('done 3<<< "$books"')
+    summary = next(i for i, line in enumerate(lines) if line.startswith('echo "book editions rendered:'))
+    assert lines.count(AIO_EDITION_CALL) == 1
+    assert definition < book_loop < book_loop_end < lines.index(AIO_EDITION_CALL) < summary
+    # The expected books are the registered aio publication books.
+    expected = ('if is_aio "$book" && has_flag publication "$flags"; then '
+                'aio_publication_books+=("$book"); fi')
+    assert book_loop_end < lines.index(expected) < lines.index(AIO_EDITION_CALL)
+    # Inside the per-book loop an aio publication book skips the py4kids route; the stub is gone.
+    assert book_loop < lines.index('is_aio "$book" && continue') < lines.index(
+        'decision="$(uv run python -m tools.ci_scope --book "$book" "${scope_args[@]}")"')
+    assert "aio editions are not routed yet" not in ci_text()
+    # The four modes, the unknown-mode failure and the book-set check.
+    function = _aio_edition_function()
+    for mode in ("full)", "scoped)", "glossary)", "none)"):
+        assert f"\n      {mode}\n" in function, mode
+    build = "uv run --group aio bash scripts/aio/build-book.sh --book \"$route_book\""
+    audit = 'uv run --group aio python -m tools.aio.publish_audit --root "$repo_root" --book "$route_book"'
+    assert function.count(build) == 2 and function.count(audit) == 3
+    assert f'{build} "${{route_scope[@]}}"' in function
+    assert f'{audit} "${{route_scope[@]}}"' in function
+    assert f"{audit} --glossary-only" in function
+    assert 'echo "INFO build-book: $route_book unchanged (change-routed)"' in function
+    assert '*) echo "FAIL: unknown edition route: $route_mode $route_book" >&2; exit 1 ;;' in function
+    assert "differ from books.yaml's aio publication books" in function
+
+
+def _aio_edition_function() -> str:
+    text = ci_text()
+    start = text.index("aio_edition_routes() {")
+    return text[start:text.index("\n}\n", start) + 3]
+
+
+def _run_aio_edition_routes(tmp_path: Path, routes: str, *, router_rc: int = 0,
+                            books: tuple[str, ...] = ("aio-ml", "aio-dl"),
+                            scope_args: str = "", uv_fail: str = "") -> subprocess.CompletedProcess[str]:
+    """Run the extracted step-5 function with a stub router and a stub `uv` (nothing renders).
+
+    `uv_fail`: the stub `uv` exits 1 when its arguments contain this text (a failing build or audit).
+    """
+    stubs = tmp_path / "bin"
+    stubs.mkdir(exist_ok=True)
+    fail = f'if [[ "$*" == *"{uv_fail}"* ]]; then exit 1; fi\n' if uv_fail else ""
+    (stubs / "uv").write_text(f'#!/usr/bin/env bash\necho "STUB uv $*"\n{fail}', encoding="utf-8")
+    (stubs / "uv").chmod(0o755)
+    (tmp_path / "routes.txt").write_text(routes, encoding="utf-8")
+    router = tmp_path / "router.sh"
+    router.write_text(
+        '#!/usr/bin/env bash\necho "router $*" >&2\ncat "$(dirname "$0")/routes.txt"\n'
+        f"exit {router_rc}\n",
+        encoding="utf-8",
+    )
+    probe = tmp_path / "probe.sh"
+    probe.write_text(
+        "set -euo pipefail\n"
+        f"repo_root={tmp_path}\nscope_args=({scope_args})\nrendered=()\nskipped=()\n"
+        f"aio_edition_router=(bash {router})\n"
+        + _aio_edition_function()
+        + f"aio_edition_routes {' '.join(books)}\n"
+        + 'echo "rendered: ${rendered[*]:-none}; skipped: ${skipped[*]:-none}"\n',
+        encoding="utf-8",
+    )
+    return subprocess.run(
+        ["bash", str(probe)], capture_output=True, text=True, check=False,
+        env={**os.environ, "PATH": f"{stubs}:{os.environ['PATH']}"},
+    )
+
+
+def test_ci_aio_edition_routes_handle_all_four_modes(tmp_path: Path) -> None:
+    proc = _run_aio_edition_routes(
+        tmp_path,
+        "full aio-ml\nscoped aio-dl --units B2-019-x --mocktests r2-001\nglossary aio-x\nnone aio-y\n",
+        books=("aio-ml", "aio-dl", "aio-x", "aio-y"), scope_args="--all-books",
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    root = tmp_path
+    assert f"router --root {root} --all-books" in proc.stderr
+    assert proc.stdout.splitlines() == [
+        "STUB uv run --group aio bash scripts/aio/build-book.sh --book aio-ml",
+        f"STUB uv run --group aio python -m tools.aio.publish_audit --root {root} --book aio-ml",
+        ("STUB uv run --group aio bash scripts/aio/build-book.sh --book aio-dl"
+         " --units B2-019-x --mocktests r2-001"),
+        (f"STUB uv run --group aio python -m tools.aio.publish_audit --root {root} --book aio-dl"
+         " --units B2-019-x --mocktests r2-001"),
+        (f"STUB uv run --group aio python -m tools.aio.publish_audit --root {root} --book aio-x"
+         " --glossary-only"),
+        "INFO build-book: aio-y unchanged (change-routed)",
+        ("rendered: aio-ml aio-dl (scoped --units B2-019-x --mocktests r2-001); "
+         "skipped: aio-x (glossary audit only) aio-y (change-routed)"),
+    ]
+
+
+def test_ci_aio_edition_routes_fail_on_a_book_set_mismatch_or_unknown_mode(tmp_path: Path) -> None:
+    cases = {
+        "omitted": ("full aio-ml\n", "FAIL: aio edition routes (aio-ml) differ from books.yaml"),
+        "repeated": ("full aio-ml\nnone aio-ml\nnone aio-dl\n",
+                     "FAIL: aio edition routes (aio-dl aio-ml aio-ml) differ from books.yaml"),
+        "unregistered": ("full aio-ml\nnone aio-dl\nnone aio-zz\n",
+                         "FAIL: aio edition routes (aio-dl aio-ml aio-zz) differ from books.yaml"),
+        "unknown mode": ("bogus aio-ml\nnone aio-dl\n", "FAIL: unknown edition route: bogus aio-ml"),
+    }
+    for name, (routes, message) in cases.items():
+        case = tmp_path / name.replace(" ", "-")
+        case.mkdir()
+        proc = _run_aio_edition_routes(case, routes)
+        assert proc.returncode != 0, name
+        assert message in proc.stderr, (name, proc.stderr)
+        # A book-set mismatch fails before anything is built.
+        if name != "unknown mode":
+            assert "STUB uv" not in proc.stdout, name
+    failed = tmp_path / "router-failed"
+    failed.mkdir()
+    proc = _run_aio_edition_routes(failed, "full aio-ml\nfull aio-dl\n", router_rc=1)
+    assert proc.returncode != 0
+    assert "FAIL: aio edition router (tools/aio/ci_scope.py) failed" in proc.stderr
+    assert "STUB uv" not in proc.stdout
+
+
+def test_ci_aio_edition_routes_fail_when_a_build_or_audit_fails(tmp_path: Path) -> None:
+    # Content gate ([sol] NIT): a failing build-book or publish_audit must stop step 5, not be
+    # swallowed into `rendered`.
+    for name, failing in (("build", "scripts/aio/build-book.sh --book aio-ml"),
+                          ("audit", "tools.aio.publish_audit --root")):
+        case = tmp_path / name
+        case.mkdir()
+        proc = _run_aio_edition_routes(case, "full aio-ml\nfull aio-dl\n", uv_fail=failing)
+        assert proc.returncode != 0, name
+        assert "aio-dl" not in proc.stdout, (name, proc.stdout)  # nothing after the failure
+        assert "rendered:" not in proc.stdout, name

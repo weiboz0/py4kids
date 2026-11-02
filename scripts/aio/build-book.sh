@@ -49,7 +49,7 @@ export PATH="$HOME/.local/bin:$PATH"
 
 py() {
   PYTHONPATH="$script_repo_root${PYTHONPATH:+:$PYTHONPATH}" \
-    uv run --quiet --project "$script_repo_root" python "$@"
+    uv run --quiet --project "$script_repo_root" --group aio python "$@"
 }
 
 # A publication book needs a valid <book>/publication.yaml (Plan 030 D1).

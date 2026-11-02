@@ -130,7 +130,7 @@ def test_registry_feature_flags_are_booleans():
             assert isinstance(book.get(flag, False), bool), f"{book['id']} {flag}"
     enabled = {flag: [i for i, b in books.items() if b.get(flag)] for flag in FLAGS}
     assert enabled == {
-        "publication": ["python-projects", "python-concepts", "usaco-bronze", "acsl"],
+        "publication": ["python-projects", "python-concepts", "usaco-bronze", "acsl", "aio-ml", "aio-dl"],
         "judge": ["usaco-bronze", "acsl"],
         "patterns": ["python-projects"],
         "acsl": ["acsl"],
@@ -401,7 +401,8 @@ def test_registry_content_model_and_aio_round():
             assert content_model(REPO, book_id) == "py4kids" and aio_round(REPO, book_id) is None
             continue
         assert not any(flag in book for flag in ("judge", "patterns", "acsl", "labs")), book_id
-        assert not any(flag in book for flag in ("publication", "site")), book_id  # not yet
+        assert book.get("publication") is True, book_id  # aio editions (design 014 D6, plan aio-002)
+        assert "site" not in book, book_id  # not yet (aio-003)
     text = (REPO / "books.yaml").read_text(encoding="utf-8")
     assert "`content_model`" in text and "`aio_round`" in text  # documented in the header
 
@@ -426,6 +427,18 @@ def test_aio_books_are_not_py4kids_concept_owners_or_publications():
         assert publication_config_errors(REPO, book) == [
             f"{book}/publication.yaml: a content_model aio book is not py4kids-published (design 014)"
         ]
+
+
+def test_py4kids_build_book_refuses_an_aio_publication_book_before_rendering():
+    import subprocess
+
+    # Plan aio-002 A.4: with `publication: true` an aio book passes the flag gate, so the
+    # py4kids publisher must stop at its publication.yaml check; tools/aio/ publishes it.
+    result = subprocess.run(["bash", "scripts/build-book.sh", "--book", "aio-ml"], cwd=REPO,
+                            capture_output=True, text=True, check=False, timeout=60)
+    assert result.returncode == 2
+    assert "not py4kids-published (design 014)" in result.stderr
+    assert "render" not in result.stdout
 
 
 def test_ci_local_reads_content_model_separately_from_the_flags():
@@ -469,7 +482,7 @@ def test_ci_local_step1_accepts_the_real_registry():
         cwd=REPO, capture_output=True, text=True, check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert "aio-ml\n" in result.stdout and "aio-dl\n" in result.stdout
+    assert "aio-ml publication\n" in result.stdout and "aio-dl publication\n" in result.stdout
 
 
 def test_ci_local_step1_accepts_valid_models(tmp_path):
