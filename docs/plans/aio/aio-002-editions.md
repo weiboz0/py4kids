@@ -181,3 +181,121 @@ The round-3 fold is mechanical and adds no scope. The gate closes with all three
 ## Content Review
 
 ## Post-Execution Report
+
+Phases A–C are complete on `feature/aio-002-editions`: Phase A at `9b3ad391` (inline), and Phase B at `331871cd` (an Opus subagent with this plan as its brief).
+
+### Phase A
+- `books.yaml`: `publication: true` on both aio books, and the header's `publication` paragraph names the `tools/aio/` publisher.
+- The restored aio test is `test_real_books_are_publication_books_with_valid_configs`, as at usaaio `a20128f`. The aio suite is now 1790, up from aio-001's 1783: this test plus Phase B's new router tests.
+- Group-free test updates:
+  - `tests/test_books.py:133` (the `publication` set);
+  - `:404` (aio books now have `publication`, and still no `site`);
+  - `:485`, `test_ci_local_step1_accepts_the_real_registry`. The step-1 line for an aio book is now `aio-ml publication`, not the bare id. A.3's grep missed this one, and the full suite run caught it.
+- New `test_py4kids_build_book_refuses_an_aio_publication_book_before_rendering` (A.4). The existing `test_aio_books_are_not_py4kids_concept_owners_or_publications` already pinned the `publication_config` refusal.
+
+### Phase B
+- **ci-local step 5:**
+  - `aio_edition_router` and `aio_edition_routes` are defined inside step 5, before the per-book loop.
+  - The router runs once. Its output is read twice: first to check exactly one route per registered aio publication book, before anything renders; then on fd 4 to run each route, so the build commands cannot read the route lines from stdin.
+  - The per-book loop has `is_aio "$book" && continue`. The expected-book list is built in a short loop after it.
+  - A router failure prints its own FAIL line.
+  - A scoped book joins `rendered` as `<id> (scoped …)`.
+- **`tools/aio/ci_scope.py`:**
+  - `GLOBAL_EXACT` is `books.yaml`, `pyproject.toml`, `uv.lock`, `scripts/ci-local.sh` and `.python-version`.
+  - `GLOBAL_PREFIXES` is `tools/aio/` and `scripts/aio/`, with `tools/aio/tests/` excluded.
+  - The docstring is updated.
+- **`--group aio`** is added to `scripts/aio/build-book.sh` `py()` and to `scripts/aio/build-pdf.sh`'s uv runner.
+- **Tests:**
+  - `test_unrelated_changes_are_unchanged_and_print_info` now uses `tools/aio/tests/test_scope.py`.
+  - Router cases are added for every B.2 path.
+  - Integration tests: a text test, plus behavioural stub-router tests (all four modes; an omitted, repeated or unregistered book; an unknown mode; a failing router). They run the extracted function with a fake `uv`, so nothing renders.
+  - The py4kids step-5 text tests (`tests/test_ci_scope.py`, `tests/test_tools.py:1627`) pass unchanged.
+- **`output/README.md`:**
+  - The header states the aio rule.
+  - New `output/aio-ml/` and `output/aio-dl/` sections. The plan's "replacing 'not a `publication` book yet'" text did not exist for the aio books, so the sections are new; they are ported from usaaio's `output/README.md` with the D3 renames.
+  - Release step 2 is the explicit allowlist, and names what is never staged for an aio book.
+  - The 2026-09-29 Teacher's Edition note is scoped to the py4kids-model books.
+
+### C.1 Every edition builds
+`TMPDIR=/dev/shm bash scripts/ci-local.sh --all-books` on `331871cd` ended **`ci-local: ALL GREEN`**. That was the second run; see Deviations.
+
+| Suite / check | Result |
+|---|---|
+| group-free suite | 2291 passed, 2 skipped |
+| recsys suite | 348 passed |
+| roar suite | 636 passed |
+| aio suite | 1790 passed |
+| register verification | 437/437 |
+| mutation verifications | 5/5 ×3 |
+| aio PDFs | 22 + 9 |
+| aio editions | 8 PDFs for aio-ml in 676 s; 4 for aio-dl in 910 s |
+| aio `publish-audit` | `OK` for both books |
+| widest overfull line | 4.81 pt (aio-dl), within `overfull_max_pt: 5` |
+| step-5 summary | `book editions rendered: python-projects python-concepts usaco-bronze acsl aio-ml aio-dl; skipped: none` |
+
+### C.2 Page counts vs usaaio `a20128f`
+The baseline is `git clone ../usaaio /dev/shm/aio002-usaaio`, checked out at `a20128f3a0e5455d2f78478d1ad8565ac26d9621`, with `git status --porcelain` empty.
+`build-book.sh --book book1` and `--book book2` took 26 m 38 s.
+The on-disk `../usaaio/output/` PDFs have the same page counts as the fresh baseline, edition for edition.
+
+| Edition | usaaio | py4kids | Δ |
+|---|---|---|---|
+| aio-ml-student-print | 1023 | 1023 | 0% |
+| aio-ml-student-vol1 | 560 | 560 | 0% |
+| aio-ml-student-vol2 | 468 | 468 | 0% |
+| aio-ml-student-vol3 | 464 | 464 | 0% |
+| aio-ml-teacher-vol1 | 738 | 738 | 0% |
+| aio-ml-teacher-vol2 | 600 | 600 | 0% |
+| aio-ml-teacher-vol3 | 718 | 718 | 0% |
+| aio-ml-answer-key | 125 | 125 | 0% |
+| aio-dl-student | 552 | 552 | 0% |
+| aio-dl-student-print | 444 | 444 | 0% |
+| aio-dl-teacher | 936 | 936 | 0% |
+| aio-dl-answer-key | 46 | 46 | 0% |
+
+### C.3 Text parity
+Each edition was compared with `pdftotext` on both builds, after applying the D3 rename map to the usaaio text: `book1`→`aio-ml`, `book2`→`aio-dl`, and `USAAIO_BOOK_ROOT`→`AIO_BOOK_ROOT`.
+The comparison ignores whitespace and hyphenation breaks.
+- **All 8 aio-ml editions and the aio-dl answer key are character-identical**, from 139,809 to 1,681,002 characters each.
+- **The other aio-dl editions** (`student`, `student-print`, `teacher`) have the same text, re-wrapped. Their many qualified ids (`aio-ml:` is two characters longer than `book1:`) re-wrap lines and move a few lines across page breaks inside unit B2-019 and later.
+  Page counts are unchanged.
+  Leaving out each page's running head and page numbers, the character multisets differ by 3, 3 and 1 digits (page references in moved text) and by nothing else.
+  The aio-dl `teacher` edition's full-text character multiset is identical.
+
+There is no non-rename content difference.
+
+### C.4 Routing
+The scratch clone `/dev/shm/aio002-route` holds this branch plus one committed comment line in `aio-ml/units/01-F1-scientific-python/lessons/01-arrays-and-indexing.ipynb`.
+Its `origin/main` was set to the branch tip, so the probe is the whole change set.
+The extracted `aio_edition_routes aio-ml aio-dl` printed:
+- `build-book: scoped check of aio-ml (units: F1-scientific-python; mock tests: none) in 164s`, then `publish-audit aio-ml: OK`;
+- `INFO build-book: aio-dl unchanged (change-routed)`;
+- `rendered: aio-ml (scoped --units F1-scientific-python); skipped: aio-dl (change-routed)`.
+
+The render landed in `aio-ml/build/publish-check/`, and `output/` held only `README.md`.
+A first attempt left `origin/main` at `main`. It correctly routed both books `full`, because the branch changes global inputs. That attempt is not evidence for C.4.
+
+### C.5 Leaks
+- `git ls-files output` lists only `output/README.md`.
+- `pre-merge-guard: OK`.
+- `overlap-scan --require-corpus` passed for both books: aio-ml had 1/1 PDF parts and 37 index text parts; aio-dl had 3/3 and 26; neither had an extraction failure.
+- The provisioned corpus is git-ignored (`!!`).
+
+### C.6 py4kids unchanged
+Every py4kids-book line of this run's steps 3–6 matches aio-001's final gate run (`d80e76db` lineage): every PASS, FAIL and SKIP line, every `book editions:` and `publish-audit:` line, and every render page count (69 lines).
+The only added lines are the 12 aio edition renders.
+
+### C.7 CI budget
+`--all-books` step 5 adds the two aio edition builds: about 26.4 min of wall time (676 s + 910 s) plus the audits.
+That is also the cost of one full aio render on an ordinary branch that touches a B.2 global input.
+A scoped one-unit render took 164 s.
+An ordinary branch that touches no aio publication input adds only the router call.
+
+### Deviations (recorded)
+- **First `--all-books` run failed, fail-closed:** `overlap-scan --require-corpus` reported `reference corpus absent`.
+  The main checkout had never been step-B provisioned; aio-001 ran in a worktree.
+  It was provisioned with `bash scripts/aio/fetch-reference.sh --all` and `aio-provision-cache.sh`, plus the two local `index.yaml` files copied from `../usaaio` (read only, per `scripts/aio/verify-clean-checkout.sh`'s note that they come only from a local corpus).
+  All of these are ignored files. The second run was green. Log: `ci-all-1-nocorpus.log`.
+- A.3's missed `:485` assertion (above).
+- B.4's new README sections (above).
+- B.1's fd-4 read and pre-check pass, the scoped `rendered` text, and the router FAIL line are additions within B.1's contract.
