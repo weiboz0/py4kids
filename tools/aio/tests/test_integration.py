@@ -1790,7 +1790,7 @@ def _run_aio_edition_routes(tmp_path: Path, routes: str, *, router_rc: int = 0,
     """
     stubs = tmp_path / "bin"
     stubs.mkdir(exist_ok=True)
-    fail = f'[[ -n "{uv_fail}" && "$*" == *"{uv_fail}"* ]] && exit 1\n' if uv_fail else ""
+    fail = f'if [[ "$*" == *"{uv_fail}"* ]]; then exit 1; fi\n' if uv_fail else ""
     (stubs / "uv").write_text(f'#!/usr/bin/env bash\necho "STUB uv $*"\n{fail}', encoding="utf-8")
     (stubs / "uv").chmod(0o755)
     (tmp_path / "routes.txt").write_text(routes, encoding="utf-8")
