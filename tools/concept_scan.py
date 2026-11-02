@@ -34,6 +34,7 @@ from tools.books import (
     book_entries,
     book_flag,
     book_path,
+    content_model,
     known_baseline,
     prereq_policy,
     qualified_concept_id_pattern,
@@ -900,7 +901,7 @@ def _dependent_feature_owners(
 
     owners: dict[str, str] = {}
     for owner in sorted(registry):
-        if owner == book or not depends_on(owner):
+        if owner == book or content_model(root, owner) != "py4kids" or not depends_on(owner):
             continue
         path = book_path(root, owner) / "curriculum" / "concepts.yaml"
         if not path.is_file():

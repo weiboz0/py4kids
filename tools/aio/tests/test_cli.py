@@ -1,0 +1,70 @@
+import subprocess
+import sys
+
+import tools.aio
+from tools.aio.cli import SUBCOMMANDS, main
+from tools.aio.model import Report
+
+
+def run_cli(*args):
+    return subprocess.run(
+        [sys.executable, "-m", "tools.aio.cli", *args],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_version_flag():
+    proc = run_cli("--version")
+    assert proc.returncode == 0
+    assert tools.aio.__version__ in proc.stdout
+
+
+def test_help_lists_planned_subcommands():
+    proc = run_cli("--help")
+    assert proc.returncode == 0
+    for name in SUBCOMMANDS:
+        assert name in proc.stdout
+
+
+def test_check_subcommand_runs():
+    proc = run_cli("--book", "aio-ml", "prereq-check")
+    assert proc.returncode == 0
+    assert "PASS prereq-check" in proc.stdout
+
+
+def test_main_no_subcommand_prints_help(capsys):
+    assert main([]) == 0
+    assert "usage: usaaio-tools" in capsys.readouterr().out
+
+
+def test_main_check_subcommand_in_process(capsys):
+    assert main(["--book", "aio-ml", "prereq-check"]) == 0
+    assert "PASS prereq-check" in capsys.readouterr().out
+
+
+def test_schedule_help_describes_the_canonical_40_week_allocation():
+    proc = run_cli("--help")
+
+    assert proc.returncode == 0
+    assert "verify the canonical 40-week allocation" in proc.stdout
+    assert "canonical 35-week allocation" not in proc.stdout
+
+
+def test_all_continues_after_first_book_checker_exception(monkeypatch, capsys):
+    seen = []
+
+    def check(root):
+        seen.append(root.name)
+        if root.name == "aio-ml":
+            raise ValueError("first-book-loader-failure")
+        return Report(name="probe", ok=True)
+
+    monkeypatch.setitem(SUBCOMMANDS, "prereq-check", ("probe", check))
+
+    assert main(["--all", "prereq-check"]) == 1
+    output = capsys.readouterr()
+    assert seen == ["aio-ml", "aio-dl"]
+    assert "ERROR aio-ml:prereq-check: first-book-loader-failure" in output.err
+    assert "PASS aio-dl:probe" in output.out

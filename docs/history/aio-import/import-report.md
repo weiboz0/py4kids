@@ -1,0 +1,859 @@
+# usaaio import report (plan aio-001 Phase B)
+
+Source: `weiboz0/usaaio` at `a20128f`; 1659 paths.
+Live files: 1592 (484 rewritten by the rename rules); archive: 44 (byte-identical); dropped: 23.
+
+## Rename rule counts
+
+| rule | hits |
+|---|---|
+| qualified id | 16979 |
+| path segment | 2904 |
+| output name | 126 |
+| yaml book value | 2 |
+| table cell | 107 |
+| bold Book field | 94 |
+| quoted literal | 400 |
+| --book value | 6 |
+| example id | 1 |
+| bridge lesson | 0 |
+| env var | 124 |
+
+## Acceptance outcomes
+
+- (a) `test_book_ids` patterns on the live set (book-name rule exempt): **0 hits**
+- (b) produced `\w+aio-(ml|dl)[:/-]`: **0**; rewritten `.py` parse failures: **0**
+- (c) remaining `\bbook[12]\b` tokens: **301** in 19 files (listed below with disposition)
+- (d) per-rule counts above; dropped paths are excluded.
+
+## Dropped paths
+
+| path | reason |
+|---|---|
+| `.gitignore` | ported by hand into py4kids .gitignore (roots renamed) |
+| `AGENTS.md` | usaaio governance; superseded by py4kids AGENTS.md + design 014 |
+| `CLAUDE.md` | usaaio governance pointer |
+| `TODO.md` | usaaio backlog |
+| `books.yaml` | replaced by py4kids books.yaml entries |
+| `docs/proposals/.gitkeep` | empty placeholder (nothing to archive or scan) |
+| `docs/reviews/.gitkeep` | empty placeholder (nothing to archive or scan) |
+| `output/README.md` | py4kids has its own output/README.md |
+| `pyproject.toml` | replaced by the py4kids `aio` dependency group |
+| `scripts/ci-local.sh` | D2: routed into py4kids ci-local |
+| `scripts/migrate-reference-layout.sh` | D4: one-off migration script |
+| `scripts/pre-merge-guard.sh` | D4: py4kids guard is shared |
+| `scripts/renumber-book1-units.py` | D4: one-off migration script |
+| `scripts/verify-historical-deferred-policy.sh` | D4: historical-policy clock |
+| `scripts/verify-staged-scope.py` | D4: replaced by tools/guard.py refusals |
+| `scripts/verify-unit-renumbering.py` | D4: one-off migration script |
+| `tests/fixtures/plan019-path-inventory.yaml` | D4: replaced by tools/guard.py refusals |
+| `tests/test_historical_deferred_policy.py` | D4: historical-policy clock test |
+| `tests/test_plan031_guard.py` | D4: test of the replaced guard |
+| `tests/test_reference_migration.py` | D4: test of a one-off migration script |
+| `tests/test_renumber_book1_units.py` | D4: test of a one-off migration script |
+| `tools/verify_historical_deferred_policy.py` | D4: historical-policy clock |
+| `uv.lock` | replaced by the py4kids uv.lock |
+
+## Renamed paths
+
+- `book1/…` → `aio-ml/…`: 1050 files
+- `book2/…` → `aio-dl/…`: 410 files
+- `docs/…` → `aio-ml/…`: 6 files
+- `scripts/…` → `scripts/aio/…`: 6 files
+- `tests/…` → `tools/aio/…`: 85 files
+- `tools/…` → `tools/aio/…`: 35 files
+- `book2/units/B2-019-attention-transformers/lessons/00-book1-bridge.ipynb` → `aio-dl/units/B2-019-attention-transformers/lessons/00-aio-ml-bridge.ipynb`
+- `book2/units/B2-020-language-transformers/lessons/00-book1-bridge.ipynb` → `aio-dl/units/B2-020-language-transformers/lessons/00-aio-ml-bridge.ipynb`
+- `book2/units/B2-021-cross-modal-transformers-vision/lessons/00-book1-bridge.ipynb` → `aio-dl/units/B2-021-cross-modal-transformers-vision/lessons/00-aio-ml-bridge.ipynb`
+- `book2/units/B2-022-probabilistic-latent-models/lessons/00-book1-bridge.ipynb` → `aio-dl/units/B2-022-probabilistic-latent-models/lessons/00-aio-ml-bridge.ipynb`
+- `book2/units/B2-023-generative-models-diffusion/lessons/00-book1-bridge.ipynb` → `aio-dl/units/B2-023-generative-models-diffusion/lessons/00-aio-ml-bridge.ipynb`
+- `book2/units/B2-024-gpu-scientific-ml-capstone/lessons/00-book1-bridge.ipynb` → `aio-dl/units/B2-024-gpu-scientific-ml-capstone/lessons/00-aio-ml-bridge.ipynb`
+- `docs/audits/015-coverage-audit.md` → `aio-ml/docs/coverage-audit.md`
+- `tests/fixtures/two-books-valid/book1/curriculum/course-schedule.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/curriculum/course-schedule.yaml`
+- `tests/fixtures/two-books-valid/book1/curriculum/coverage-map.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/curriculum/coverage-map.yaml`
+- `tests/fixtures/two-books-valid/book1/curriculum/material-inventory.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/curriculum/material-inventory.yaml`
+- `tests/fixtures/two-books-valid/book1/curriculum/official-topics.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/curriculum/official-topics.yaml`
+- `tests/fixtures/two-books-valid/book1/curriculum/source-manifest.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/curriculum/source-manifest.yaml`
+- `tests/fixtures/two-books-valid/book1/docs/course-structure.md` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/docs/course-structure.md`
+- `tests/fixtures/two-books-valid/book1/mocktests/blueprint.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/mocktests/blueprint.yaml`
+- `tests/fixtures/two-books-valid/book1/mocktests/r1-001/manifest.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/mocktests/r1-001/manifest.yaml`
+- `tests/fixtures/two-books-valid/book1/reference/.gitkeep` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/reference/.gitkeep`
+- `tests/fixtures/two-books-valid/book1/syllabus.md` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/syllabus.md`
+- `tests/fixtures/two-books-valid/book1/units/F1-fixture/manifest.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-ml/units/F1-fixture/manifest.yaml`
+- `tests/fixtures/two-books-valid/book2/curriculum/course-schedule.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-dl/curriculum/course-schedule.yaml`
+- `tests/fixtures/two-books-valid/book2/curriculum/coverage-map.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-dl/curriculum/coverage-map.yaml`
+- `tests/fixtures/two-books-valid/book2/curriculum/material-inventory.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-dl/curriculum/material-inventory.yaml`
+- `tests/fixtures/two-books-valid/book2/curriculum/official-topics.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-dl/curriculum/official-topics.yaml`
+- `tests/fixtures/two-books-valid/book2/curriculum/source-manifest.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-dl/curriculum/source-manifest.yaml`
+- `tests/fixtures/two-books-valid/book2/docs/course-structure.md` → `tools/aio/tests/fixtures/two-books-valid/aio-dl/docs/course-structure.md`
+- `tests/fixtures/two-books-valid/book2/mocktests/blueprint.yaml` → `tools/aio/tests/fixtures/two-books-valid/aio-dl/mocktests/blueprint.yaml`
+- `tests/fixtures/two-books-valid/book2/reference/.gitkeep` → `tools/aio/tests/fixtures/two-books-valid/aio-dl/reference/.gitkeep`
+- `tests/fixtures/two-books-valid/book2/syllabus.md` → `tools/aio/tests/fixtures/two-books-valid/aio-dl/syllabus.md`
+- `tests/fixtures/two-books-valid/book2/units/.gitkeep` → `tools/aio/tests/fixtures/two-books-valid/aio-dl/units/.gitkeep`
+- `tests/fixtures/two-books-valid/books.yaml` → `tools/aio/tests/fixtures/two-books-valid/books.yaml`
+
+## Residual `book1`/`book2` tokens (outcome c)
+
+Each is a Python identifier, an inline test registry rewritten in Phase D, or another non-id use.
+
+- `tools/aio/tests/fixtures/two-books-valid/books.yaml` ×1: `2, root: book2, depends_on: [book1]}`
+- `tools/aio/tests/fixtures/two-books-valid/books.yaml` ×1: `{id: book1, number: 1, root: book1, depends_on: []}   - {id: boo`
+- `tools/aio/tests/fixtures/two-books-valid/books.yaml` ×1: `{id: book2, number: 2, root: book2, depends_on: [book1]}`
+- `tools/aio/tests/fixtures/two-books-valid/books.yaml` ×1: `ks_version: 1 books:   - {id: book1, number: 1, root: book1, depe`
+- `tools/aio/tests/fixtures/two-books-valid/books.yaml` ×1: `ok1, depends_on: []}   - {id: book2, number: 2, root: book2, depe`
+- `tools/aio/tests/test_answerkey.py` ×1: `"books:\n"         "  - {id: book1, number: 1, root: book1, depe`
+- `tools/aio/tests/test_answerkey.py` ×1: `{id: book1, number: 1, root: book1, depends_on: []}\n",`
+- `tools/aio/tests/test_api_comments.py` ×1: `2, root: book2, depends_on: [book1]}\n",         encoding="utf-8`
+- `tools/aio/tests/test_api_comments.py` ×1: `{id: book1, number: 1, root: book1, depends_on: []}\n"         "`
+- `tools/aio/tests/test_api_comments.py` ×1: `{id: book2, number: 2, root: book2, depends_on: [book1]}\n",`
+- `tools/aio/tests/test_api_comments.py` ×1: `\nbooks:\n"         "  - {id: book1, number: 1, root: book1, depe`
+- `tools/aio/tests/test_api_comments.py` ×1: `_on: []}\n"         "  - {id: book2, number: 2, root: book2, depe`
+- `tools/aio/tests/test_audit_curriculum.py` ×1: `owned by both "             "book1 and book2"         ),     ):`
+- `tools/aio/tests/test_audit_curriculum.py` ×1: `both "             "book1 and book2"         ),     ):         ro`
+- `tools/aio/tests/test_b2_019_statements.py` ×1: `coverage = check_coverage(book2)     boundary = check_layer_b`
+- `tools/aio/tests/test_b2_019_statements.py` ×1: `int) -> None:     practice = book2 / "units" / LANGUAGE_UNIT_ID`
+- `tools/aio/tests/test_b2_019_statements.py` ×2: `(tmp_path: Path) -> None:     book2 = _copy_registered_statement_`
+- `tools/aio/tests/test_b2_019_statements.py` ×1: `True)     missing = (         book2 / "units" / UNIT_ID / "practi`
+- `tools/aio/tests/test_b2_019_statements.py` ×1: `eferred")     manifest_path = book2 / "units" / LANGUAGE_UNIT_ID`
+- `tools/aio/tests/test_b2_019_statements.py` ×1: `error in check_layer_boundary(book2).errors     )   def test_b2_0`
+- `tools/aio/tests/test_b2_019_statements.py` ×1: `install_solution_placeholders(book2: Path, count: int) -> None:`
+- `tools/aio/tests/test_b2_019_statements.py` ×1: `it_curriculum.build_inventory(book2)      assert coverage.ok and`
+- `tools/aio/tests/test_b2_019_statements.py` ×1: `it_curriculum.build_inventory(book2)     assert any("missing solu`
+- `tools/aio/tests/test_b2_019_statements.py` ×1: `r for error in check_coverage(book2).errors)     assert any(`
+- `tools/aio/tests/test_b2_019_statements.py` ×1: `undary = check_layer_boundary(book2)     inventory = audit_curric`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `assert len(load_syllabus(book1.root).concepts) == 1     asse`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `assert len(load_syllabus(book2.root).concepts) == 1     asse`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `False), encoding="utf-8")     book2 = load_book_catalog(fixture).`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `_catalog(fixture)      book1, book2 = catalog.books     book1_rep`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `_policy(book1.root, book_spec=book1),         schedule_checker.Bo`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `_policy(book2.root, book_spec=book2),         schedule_checker.Bo`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `ad_book_catalog(fixture)      book1, book2 = catalog.books     bo`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `chedule(book1.root, book_spec=book1)     book2_report = schedule_`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `chedule(book2.root, book_spec=book2)      assert all(validate_boo`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `chedule(book2.root, book_spec=book2)      assert not report.ok`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `edule_checker.schedule_policy(book1.root, book_spec=book1),`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `edule_checker.schedule_policy(book2.root, book_spec=book2),`
+- `tools/aio/tests/test_book2_schedule.py` ×1: `hedule_checker.check_schedule(book1.root, book_spec=book1)     bo`
+- `tools/aio/tests/test_book2_schedule.py` ×2: `hedule_checker.check_schedule(book2.root, book_spec=book2)      a`
+- `tools/aio/tests/test_book_isolation.py` ×1: `syllabus = load_syllabus(book1.root)     schedule = load_val`
+- `tools/aio/tests/test_book_isolation.py` ×1: `"aio-ml"     syllabus_path = book1 / "syllabus.md"     syllabus_`
+- `tools/aio/tests/test_book_isolation.py` ×2: `"books:\n"         "  - {id: book1, number: 1, root: round1, dep`
+- `tools/aio/tests/test_book_isolation.py` ×1: `"books:\n"         "  - {id: book2, number: 2, root: advanced, d`
+- `tools/aio/tests/test_book_isolation.py` ×1: `answer_key = check_answerkey(book1.root)     return {         "s`
+- `tools/aio/tests/test_book_isolation.py` ×1: `",     )      schedule_path = book1 / "curriculum" / "course-sche`
+- `tools/aio/tests/test_book_isolation.py` ×1: `-8",     )     pdf_sentinel = book1 / "mocktests" / "r1-001" / "t`
+- `tools/aio/tests/test_book_isolation.py` ×1: `8")      inventory_sentinel = book1 / "units" / "01-F1-scientific`
+- `tools/aio/tests/test_book_isolation.py` ×1: `="utf-8",     )     answers = book1 / "mocktests" / "r1-001" / "s`
+- `tools/aio/tests/test_book_isolation.py` ×1: `\nbooks:\n"         "  - {id: book1, number: 1, root: round1, dep`
+- `tools/aio/tests/test_book_isolation.py` ×1: `it_curriculum.build_inventory(book1.root)     renderer = render_c`
+- `tools/aio/tests/test_book_isolation.py` ×1: `puts(repo: Path) -> None:     book1 = repo / "aio-ml"     syllabu`
+- `tools/aio/tests/test_book_isolation.py` ×1: `rse_structure.render_document(book1.root)     answer_key = check_`
+- `tools/aio/tests/test_book_isolation.py` ×1: `s.load_book_catalog(repo)     book1 = catalog.by_id("aio-ml")`
+- `tools/aio/tests/test_book_isolation.py` ×1: `sert books.validate_book_root(book1) == []     syllabus = load_sy`
+- `tools/aio/tests/test_book_isolation.py` ×1: `t order).     manifest_path = book1 / "mocktests" / "r1-001" / "m`
+- `tools/aio/tests/test_book_isolation.py` ×1: `tf-8",     )      structure = book1 / "docs" / "course-structure.`
+- `tools/aio/tests/test_book_isolation.py` ×1: `ule = load_validated_schedule(book1.root)     inventory = audit_c`
+- `tools/aio/tests/test_books.py` ×1: `books = _books_module()     book2 = books.load_book_catalog(tmp`
+- `tools/aio/tests/test_books.py` ×1: `"aio-dl").rename(repo / "real-book2"),                 (repo / "a`
+- `tools/aio/tests/test_books.py` ×1: `-dl").symlink_to(repo / "real-book2", target_is_directory=True),`
+- `tools/aio/tests/test_books.py` ×1: `ad_book_catalog(tmp_path)     book1 = catalog.by_id("aio-ml")`
+- `tools/aio/tests/test_books.py` ×2: `ad_book_catalog(tmp_path)     book2 = catalog.by_id("aio-dl")`
+- `tools/aio/tests/test_books.py` ×1: `ks_module().load_book_imports(book2)     resolved = _books_module`
+- `tools/aio/tests/test_books.py` ×1: `lve_qualified_import(catalog, book2, "aio-ml:softmax")      asser`
+- `tools/aio/tests/test_books.py` ×1: `lve_qualified_import(catalog, book2, "aio-ml:softmax").is_relativ`
+- `tools/aio/tests/test_books.py` ×1: `lve_qualified_import(catalog, book2, identity)      _mutate_regis`
+- `tools/aio/tests/test_books.py` ×1: `ntity)}"):             loader(book2)   def _write_practice_owner(`
+- `tools/aio/tests/test_books.py` ×1: `s_module().validate_book_root(book1) == []   def test_book2_selec`
+- `tools/aio/tests/test_ci_scope.py` ×1: `== {         "aio-ml": "full book1", "aio-dl": "full book2"}   d`
+- `tools/aio/tests/test_ci_scope.py` ×1: `== {         "aio-ml": "none book1", "aio-dl": "scoped book2 --m`
+- `tools/aio/tests/test_ci_scope.py` ×1: `route(unattributed) == "full book1"   def test_teaching_order_pr`
+- `tools/aio/tests/test_ci_scope.py` ×1: `"full book1", "aio-dl": "full book2"}     assert _route(["TODO.md`
+- `tools/aio/tests/test_ci_scope.py` ×1: `"full book1", "aio-dl": "full book2"}   def _config(chapters: lis`
+- `tools/aio/tests/test_ci_scope.py` ×1: `"full book1", "aio-dl": "full book2"}, path   def test_front_and_`
+- `tools/aio/tests/test_ci_scope.py` ×1: `"none book1", "aio-dl": "none book2"}     assert INFO_UNCHANGED.f`
+- `tools/aio/tests/test_ci_scope.py` ×1: `-units C3-b", "aio-dl": "none book2"}   def test_mock_only_change`
+- `tools/aio/tests/test_ci_scope.py` ×1: `= {         "aio-ml": "scoped book1 --units C3-b", "aio-dl": "non`
+- `tools/aio/tests/test_ci_scope.py` ×1: `aio-dl") == "INFO build-book: book2 unchanged (change-routed)"`
+- `tools/aio/tests/test_ci_scope.py` ×1: `ert routes["aio-ml"] == "full book1"     other_key = _config([{"u`
+- `tools/aio/tests/test_ci_scope.py` ×1: `face.md"])["aio-dl"] == "full book2"     assert _route(["aio-ml/b`
+- `tools/aio/tests/test_ci_scope.py` ×1: `n.ipynb"])["aio-ml"] == "full book1"   def _git(repo: Path, *args`
+- `tools/aio/tests/test_ci_scope.py` ×1: `oks=True) == {"aio-ml": "full book1", "aio-dl": "full book2"}`
+- `tools/aio/tests/test_ci_scope.py` ×1: `one book1", "aio-dl": "scoped book2 --mocktests r2-001"}   def te`
+- `tools/aio/tests/test_ci_scope.py` ×1: `other_key)["aio-ml"] == "full book1"   def _coverage(rows: list[d`
+- `tools/aio/tests/test_ci_scope.py` ×1: `oute(changed_unit) == "scoped book1 --units C3-b"     assert rout`
+- `tools/aio/tests/test_ci_scope.py` ×1: `requisites_only) == "glossary book1"     assert route(unattribute`
+- `tools/aio/tests/test_ci_scope.py` ×1: `rt routes == {"aio-ml": "none book1", "aio-dl": "none book2"}`
+- `tools/aio/tests/test_ci_scope.py` ×1: `sary.md"])["aio-ml"] == "full book1"   def test_unrelated_changes`
+- `tools/aio/tests/test_ci_scope.py` ×1: `t routes["aio-ml"] == "scoped book1 --units C3-b"     retitled =`
+- `tools/aio/tests/test_ci_scope.py` ×1: `{             "aio-ml": "full book1", "aio-dl": "full book2"}, pa`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `'book_root="$repo_root/book1"\n',             1,`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `"  printf 'book1\\t1\\t%s/book1\\n' \"$PWD\"\n"         "  pr`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `"  printf 'book2\\t2\\t%s/book2\\n' \"$PWD\"\n"         "fi\n`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `"pdf:book1",         "pdf:book2",     }     assert {line for`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `"book:book1",         "book:book2",     }     assert {line for`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `"$VERIFY_TRACE" BOOKS=(book1 book2) for book in "${BOOKS[@]}"; d`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `"books:\n"         "  - {id: book1, number: 1, root: book1, depe`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `2, root: book2, depends_on: [book1]}\n",         encoding="utf-8`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `source.replace("BOOKS=(book1 book2)", "BOOKS=(book1)"),`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `source: source.replace("find book1 book2 -type f", "find book1 -`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `{id: book1, number: 1, root: book1, depends_on: []}\n"         "`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `{id: book2, number: 2, root: book2, depends_on: [book1]}\n",`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `"$PWD\"\n"         "  printf 'book2\\t2\\t%s/book2\\n' \"$PWD\"\n`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `("book:")} == {         "book:book1",         "book:book2",     }`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `BOOKS=(book1 book2)", "BOOKS=(book1)"),             None,`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `\n' >> "$VERIFY_TRACE" BOOKS=(book1 book2) for book in "${BOOKS[@`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `]; then\n"         "  printf 'book1\\t1\\t%s/book1\\n' \"$PWD\"\n`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `_on: []}\n"         "  - {id: book2, number: 2, root: book2, depe`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `d book1 book2 -type f", "find book1 -type f").replace(`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `e -t solutions < <(find book1 book2 -type f -name '*_solution.ipy`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `e: source.replace("find book1 book2 -type f", "find book1 -type f`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `mapfile -t solutions < <(find book1 book2 -type f -name '*_soluti`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `ource: source.replace("BOOKS=(book1 book2)", "BOOKS=(book1)"),`
+- `tools/aio/tests/test_clean_checkout.py` ×1: `th("pdf:")} == {         "pdf:book1",         "pdf:book2",     }`
+- `tools/aio/tests/test_compute_policy.py` ×1: `)   def _remove_solution(book2: Path) -> None:     (book2 /`
+- `tools/aio/tests/test_compute_policy.py` ×1: `return f"{_manifest_path(book2).resolve()}: practice {PROBLE`
+- `tools/aio/tests/test_compute_policy.py` ×1: `def _add_extension_heading(book2: Path) -> None:     _add_mark`
+- `tools/aio/tests/test_compute_policy.py` ×1: `assert errors == [f"{_label(book2)} cpu task requires a local s`
+- `tools/aio/tests/test_compute_policy.py` ×1: `assert errors == [f"{_label(book2)} unsupported compute.policy`
+- `tools/aio/tests/test_compute_policy.py` ×1: `assert errors == [f"{_label(book2)} {message}"]   def test_opti`
+- `tools/aio/tests/test_compute_policy.py` ×1: `lambda book2: _add_markdown(book2, "Accelerator extension is op`
+- `tools/aio/tests/test_compute_policy.py` ×1: `return check_layer_boundary(book2).errors   def _label(book2: P`
+- `tools/aio/tests/test_compute_policy.py` ×1: `_errors(book2) == [f"{_label(book2)} {message}"]   @pytest.mark.`
+- `tools/aio/tests/test_compute_policy.py` ×1: `_errors(book2) == [f"{_label(book2)} {message}"]   def test_opti`
+- `tools/aio/tests/test_compute_policy.py` ×1: `")     _add_extension_heading(book2)     assert _errors(book2) ==`
+- `tools/aio/tests/test_compute_policy.py` ×1: `")     _add_markdown(         book2,         "```python\nprint('#`
+- `tools/aio/tests/test_compute_policy.py` ×1: `"aio-dl"   def _manifest_path(book2: Path) -> Path:     return bo`
+- `tools/aio/tests/test_compute_policy.py` ×6: `(tmp_path: Path) -> None:     book2 = _copied_repo(tmp_path)`
+- `tools/aio/tests/test_compute_policy.py` ×1: `, message: str ) -> None:     book2 = _copied_repo(tmp_path)`
+- `tools/aio/tests/test_compute_policy.py` ×1: `-colab-l4")     _add_markdown(book2, "Intro text.\n\n### Accelera`
+- `tools/aio/tests/test_compute_policy.py` ×1: `-colab-l4")     _add_markdown(book2, source)     message = "optio`
+- `tools/aio/tests/test_compute_policy.py` ×1: `="utf-8")   def _add_markdown(book2: Path, source: str) -> None:`
+- `tools/aio/tests/test_compute_policy.py` ×1: `Details.")     assert _errors(book2) == []   @pytest.mark.paramet`
+- `tools/aio/tests/test_compute_policy.py` ×1: `UTION).unlink()   def _errors(book2: Path) -> list[str]:     retu`
+- `tools/aio/tests/test_compute_policy.py` ×1: `ding(book2), _remove_solution(book2)),             "optional-cola`
+- `tools/aio/tests/test_compute_policy.py` ×1: `e(book2)     errors = _errors(book2)     assert errors == [f"{_la`
+- `tools/aio/tests/test_compute_policy.py` ×1: `e:     _add_markdown(         book2,         "## Accelerator exte`
+- `tools/aio/tests/test_compute_policy.py` ×4: `epo(tmp_path)     _set_policy(book2, "optional-colab-l4")     _ad`
+- `tools/aio/tests/test_compute_policy.py` ×1: `epo(tmp_path)     _set_policy(book2, "optional-colab-l4")     mut`
+- `tools/aio/tests/test_compute_policy.py` ×1: `epo(tmp_path)     _set_policy(book2, "optional-colab-l4")     pat`
+- `tools/aio/tests/test_compute_policy.py` ×1: `epo(tmp_path)     _set_policy(book2, policy)     _add_extension_h`
+- `tools/aio/tests/test_compute_policy.py` ×1: `est.param(             lambda book2: (_add_extension_heading(book`
+- `tools/aio/tests/test_compute_policy.py` ×1: `est.param(             lambda book2: None,             "optional-`
+- `tools/aio/tests/test_compute_policy.py` ×1: `est.param(             lambda book2: _add_markdown(book2, "Accele`
+- `tools/aio/tests/test_compute_policy.py` ×1: `g(book2)     errors = _errors(book2)     assert errors == [f"{_la`
+- `tools/aio/tests/test_compute_policy.py` ×1: `h)     _add_extension_heading(book2)     assert _errors(book2) ==`
+- `tools/aio/tests/test_compute_policy.py` ×1: `h, source: str ) -> None:     book2 = _copied_repo(tmp_path)`
+- `tools/aio/tests/test_compute_policy.py` ×1: `ifest.yaml"   def _set_policy(book2: Path, policy: str) -> None:`
+- `tools/aio/tests/test_compute_policy.py` ×2: `ing(book2)     assert _errors(book2) == []   def test_optional_co`
+- `tools/aio/tests/test_compute_policy.py` ×1: `k2: Path) -> Path:     return book2 / "units" / UNIT_ID / "manife`
+- `tools/aio/tests/test_compute_policy.py` ×1: `mp_path)     _remove_solution(book2)     errors = _errors(book2)`
+- `tools/aio/tests/test_compute_policy.py` ×1: `n(book2)     errors = _errors(book2)     assert errors == [f"{_la`
+- `tools/aio/tests/test_compute_policy.py` ×1: `ne:     path = _manifest_path(book2)     manifest = yaml.safe_loa`
+- `tools/aio/tests/test_compute_policy.py` ×1: `on(book2: Path) -> None:     (book2 / "units" / UNIT_ID / SOLUTIO`
+- `tools/aio/tests/test_compute_policy.py` ×1: `ook2: (_add_extension_heading(book2), _remove_solution(book2)),`
+- `tools/aio/tests/test_compute_policy.py` ×1: `ptional-colab-l4")     mutate(book2)     errors = _errors(book2)`
+- `tools/aio/tests/test_compute_policy.py` ×1: `ptional-colab-l4")     path = book2 / "units" / UNIT_ID / STATEME`
+- `tools/aio/tests/test_compute_policy.py` ×1: `rce: str) -> None:     path = book2 / "units" / UNIT_ID / STATEME`
+- `tools/aio/tests/test_compute_policy.py` ×1: `ry(book2).errors   def _label(book2: Path) -> str:     return f"{`
+- `tools/aio/tests/test_compute_policy.py` ×1: `s.",     )     assert _errors(book2) == []   @pytest.mark.paramet`
+- `tools/aio/tests/test_compute_policy.py` ×2: `t heading"     assert _errors(book2) == [f"{_label(book2)} {messa`
+- `tools/aio/tests/test_compute_policy.py` ×1: `th, policy: str) -> None:     book2 = _copied_repo(tmp_path)`
+- `tools/aio/tests/test_compute_policy.py` ×1: `y)     _add_extension_heading(book2)     errors = _errors(book2)`
+- `tools/aio/tests/test_integration.py` ×1: `book2.layer,         book2.track,     ) == (2, 2, "round`
+- `tools/aio/tests/test_integration.py` ×1: `book2.round,         book2.layer,         book2.track,`
+- `tools/aio/tests/test_integration.py` ×1: `in script     assert "--root book1" not in script   def test_ci_`
+- `tools/aio/tests/test_integration.py` ×1: `root: advanced, depends_on: [book1]}\n",         encoding="utf-8`
+- `tools/aio/tests/test_integration.py` ×1: `{id: book1, number: 1, root: book1, depends_on: []}\n"         )`
+- `tools/aio/tests/test_integration.py` ×1: `(         book2.book,         book2.round,         book2.layer,`
+- `tools/aio/tests/test_integration.py` ×1: `\nbooks:\n"         "  - {id: book1, number: 1, root: round1, dep`
+- `tools/aio/tests/test_integration.py` ×1: `_id]["prereqs"]         )     book2 = load_syllabus(BOOK2_ROOT).u`
+- `tools/aio/tests/test_integration.py` ×1: `_on: []}\n"         "  - {id: book2, number: 2, root: advanced, d`
+- `tools/aio/tests/test_integration.py` ×1: `ion", "extension")     assert book2.prereqs == [         "aio-ml:`
+- `tools/aio/tests/test_integration.py` ×1: `oks:\n"             "  - {id: book1, number: 1, root: book1, depe`
+- `tools/aio/tests/test_integration.py` ×1: `ormers"]     assert (         book2.book,         book2.round,`
+- `tools/aio/tests/test_integration.py` ×1: `osition         for prereq in book2.prereqs     )      project =`
+- `tools/aio/tests/test_integration.py` ×1: `t.splitlines() == [         f"book1\t1\t{repo / 'round1'}",`
+- `tools/aio/tests/test_integration.py` ×1: `{repo / 'round1'}",         f"book2\t2\t{repo / 'advanced'}",`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `id="b2-id-spoofed-as-book1",         ),         pytest.p`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `},     )     return data, book2   def _rewrite_fixture(root:`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `book2 = repo / "aio-dl"     book2.mkdir(parents=True)     data`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `data = _build_layer_fixture(book2)     book1 = repo / "aio-ml"`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `book1 = repo / "aio-ml"     (book1 / "units").mkdir(parents=True`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `in row["teaches"]     ]     (book1 / "syllabus.md").write_text(`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `"]     )     _rewrite_fixture(book2, data)     _write_yaml(`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `2 / "units" / unit_id).rename(book1 / "units" / unit_id)      boo`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `_id in UNIT_PREREQS:         (book2 / "units" / unit_id).rename(b`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `agment: str ) -> None:     _, book2 = _build_registered_layer_fix`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `ent: str ) -> None:     data, book2 = _build_registered_layer_fix`
+- `tools/aio/tests/test_layer_boundary.py` ×2: `hecker().check_layer_boundary(book2)      assert not report.ok`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `hecker().check_layer_boundary(book2)      assert report.ok, repor`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `lacement     _rewrite_fixture(book2, data)      report = _layer_c`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `le[dict[str, Any], Path]:     book2 = repo / "aio-dl"     book2.m`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `path / "repo")     artifact = book2 / "units" / BOOK2_UNIT / rela`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `path: Path, ) -> None:     _, book2 = _build_registered_layer_fix`
+- `tools/aio/tests/test_layer_boundary.py` ×1: `uild_layer_fixture(book2)     book1 = repo / "aio-ml"     (book1`
+- `tools/aio/tests/test_model.py` ×1: `(book.root)] == [         "C1-book1"     ]     with pytest.raises`
+- `tools/aio/tests/test_model.py` ×3: `: fixture}] units:   - id: C1-book1     track: core     title: Bo`
+- `tools/aio/tests/test_model.py` ×1: `_syllabus(tmp_path).units["C1-book1"]     manifest = load_unit_ma`
+- `tools/aio/tests/test_model.py` ×1: `bus(book.root).units) == {"C1-book1"}     assert [manifest.unit_i`
+- `tools/aio/tests/test_model.py` ×2: `ir = tmp_path / "units" / "C1-book1"     unit_dir.mkdir(parents=T`
+- `tools/aio/tests/test_model.py` ×2: `ite_text(         """unit: C1-book1 concepts_taught: [owned-conce`
+- `tools/aio/tests/test_model.py` ×1: `ite_text(         """unit: C1-book1 concepts_taught: [owned] conc`
+- `tools/aio/tests/test_model.py` ×1: `t = book_root / "units" / "C1-book1"     unit.mkdir(parents=True)`
+- `tools/aio/tests/test_model.py` ×1: `ternal = tmp_path / "external-book1"     book.root.rename(externa`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `)     unit = load_syllabus(book2).units["B2-019-attention-tran`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `assert load_mock_manifests(book2) == []     assert after == be`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `assert load_unit_manifests(book2) == []     assert load_mock_m`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `book1 = repo / "aio-ml"     book2 = repo / "aio-dl"     book1.m`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `book2 = repo / "aio-dl"     book1.mkdir(parents=True)     book2`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `)      report = check_prereq(book2)      assert not report.ok`
+- `tools/aio/tests/test_prereq_coverage.py` ×2: `= {         path.relative_to(book1).as_posix(): path.read_bytes(`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `before_report = check_prereq(book1)     assert before_report.ok,`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `repo = tmp_path / "repo"     book1 = repo / "aio-ml"     book2 =`
+- `tools/aio/tests/test_prereq_coverage.py` ×2: `()         for path in sorted(book1.glob("units/*/manifest.yaml")`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `,         },     )     return book2   def test_first_live_registe`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `2(BOOK1_ROOT / "syllabus.md", book1 / "syllabus.md")     book2_sy`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `2(BOOK1_ROOT / "syllabus.md", book1 / "syllabus.md")     shutil.c`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `2(BOOK2_ROOT / "syllabus.md", book2 / "syllabus.md")     for sour`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `aio-dl"     book1.mkdir()     book2.mkdir()     shutil.copy2(BOOK`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `aml")):         destination = book1 / source.relative_to(BOOK1_RO`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `book1.mkdir(parents=True)     book2.mkdir()     shutil.copy2(BOOK`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `h)      report = check_prereq(book2)      assert report.ok, repor`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `mp_path: Path, ) -> None:     book1 = tmp_path / "aio-ml"     boo`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `mp_path: Path, ) -> None:     book2 = _write_first_live_registere`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `nifest in load_mock_manifests(book1)]      assert load_unit_manif`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `nifest in load_mock_manifests(book1)]     before_report = check_p`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `ok1 = tmp_path / "aio-ml"     book2 = tmp_path / "aio-dl"     boo`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `ok2 = tmp_path / "aio-dl"     book1.mkdir()     book2.mkdir()`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `oncepts[0] = replacement     (book2 / "syllabus.md").write_text(b`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `placement: str ) -> None:     book2 = _write_first_live_registere`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `rs"]     _write_yaml(         book2 / "units" / unit.id / "manife`
+- `tools/aio/tests/test_prereq_coverage.py` ×1: `st.yaml"     r1_destination = book1 / "mocktests" / "r1-001" / "m`
+- `tools/aio/tests/test_publication_config.py` ×1: `repo, "aio-ml") == [         "book1: not a publication book (book`
+- `tools/aio/tests/test_scope.py` ×1: `roadmap = _book2_roadmap(book2)     point = next(         ro`
+- `tools/aio/tests/test_scope.py` ×1: `roadmap = _book2_roadmap(book2)     rows = _bridge_rows(road`
+- `tools/aio/tests/test_scope.py` ×1: `roadmap = _book2_roadmap(book2)     rows = {row["id"]: row f`
+- `tools/aio/tests/test_scope.py` ×1: `roadmap = _book2_roadmap(book2)     tokenization, embeddings`
+- `tools/aio/tests/test_scope.py` ×1: `_reown_tokenization_in_book2(book2)     _write_yaml(book2 / "cur`
+- `tools/aio/tests/test_scope.py` ×1: `_reown_tokenization_in_book2(book2: Path) -> None:     path = bo`
+- `tools/aio/tests/test_scope.py` ×1: `"aio-dl"   def _book2_roadmap(book2: Path) -> dict[str, Any]:`
+- `tools/aio/tests/test_scope.py` ×1: `).load_book_catalog(ROOT)     book2 = catalog.by_id("aio-dl")`
+- `tools/aio/tests/test_scope.py` ×1: `-programming"     _write_yaml(book2 / "curriculum/coverage-map.ya`
+- `tools/aio/tests/test_scope.py` ×1: `= _bridge_rows(_book2_roadmap(book2.root))      _assert_canonical`
+- `tools/aio/tests/test_scope.py` ×2: `= catalog.by_id("aio-ml")     book2 = catalog.by_id("aio-dl")`
+- `tools/aio/tests/test_scope.py` ×1: `ENTS     report = check_scope(book2.root)     assert report.ok, r`
+- `tools/aio/tests/test_scope.py` ×1: `_book2(book2)     _write_yaml(book2 / "curriculum" / "coverage-ma`
+- `tools/aio/tests/test_scope.py` ×2: `ap)      report = check_scope(book2)      assert not report.ok`
+- `tools/aio/tests/test_scope.py` ×1: `ap)      report = check_scope(book2)      assert not report.ok, m`
+- `tools/aio/tests/test_scope.py` ×1: `ap))     report = check_scope(book2)     assert not report.ok, mu`
+- `tools/aio/tests/test_scope.py` ×1: `catalog=catalog,         book=book2,     )      assert closure &`
+- `tools/aio/tests/test_scope.py` ×1: `catalog=catalog,         book=book2,     )      book2_owned = set`
+- `tools/aio/tests/test_scope.py` ×1: `k2: Path) -> None:     path = book2 / "syllabus.md"     text = pa`
+- `tools/aio/tests/test_scope.py` ×1: `ks.load_book_evidence_imports(book2)     assert set(evidence.conc`
+- `tools/aio/tests/test_scope.py` ×1: `ks.load_book_evidence_imports(book2)     book2_syllabus = model.l`
+- `tools/aio/tests/test_scope.py` ×1: `log=catalog,             book=book2,         )`
+- `tools/aio/tests/test_scope.py` ×1: `n"]         ]     _write_yaml(book2 / "curriculum" / "coverage-ma`
+- `tools/aio/tests/test_scope.py` ×2: `path: Path, ) -> None:     _, book2 = _copy_two_book_scope_repo(t`
+- `tools/aio/tests/test_scope.py` ×1: `ractices[0]))     _write_yaml(book2 / "curriculum" / "coverage-ma`
+- `tools/aio/tests/test_scope.py` ×1: `row for row in _book2_roadmap(book2.root)["knowledge_points"]}`
+- `tools/aio/tests/test_scope.py` ×1: `rts = books.load_book_imports(book2)     book1_syllabus = model.l`
+- `tools/aio/tests/test_scope.py` ×1: `rts = books.load_book_imports(book2)     evidence = books.load_bo`
+- `tools/aio/tests/test_scope.py` ×2: `s.load_book_catalog(ROOT)     book1 = catalog.by_id("aio-ml")`
+- `tools/aio/tests/test_scope.py` ×2: `s.load_book_catalog(ROOT)     book2 = catalog.by_id("aio-dl")`
+- `tools/aio/tests/test_scope.py` ×2: `tation: str ) -> None:     _, book2 = _copy_two_book_scope_repo(t`
+- `tools/aio/tests/test_scope.py` ×1: `turn yaml.safe_load(         (book2 / "curriculum" / "coverage-ma`
+- `tools/aio/tests/test_scope.py` ×1: `yllabus = model.load_syllabus(book1.root)      closure = taught_c`
+- `tools/aio/tests/test_scope.py` ×1: `yllabus = model.load_syllabus(book1.root)     book2_syllabus = mo`
+- `tools/aio/tests/test_scope.py` ×1: `yllabus = model.load_syllabus(book2.root)      with pytest.raises`
+- `tools/aio/tests/test_scope.py` ×1: `yllabus = model.load_syllabus(book2.root)     book1_syllabus = mo`
+- `tools/aio/tests/test_scope.py` ×1: `yllabus = model.load_syllabus(book2.root)     requested = "F1-sci`
+- `tools/aio/tests/test_tolerance.py` ×1: `"books:\n"         "  - {id: book1, number: 1, root: book1, depe`
+- `tools/aio/tests/test_tolerance.py` ×1: `{id: book1, number: 1, root: book1, depends_on: []}\n",`
+- `tools/aio/tests/test_verify_register.py` ×1: `"books:\n"         "  - {id: book1, number: 1, root: round1, dep`
+
+## Changed files
+
+- `aio-dl/back-matter/notation.md`
+- `aio-dl/curriculum/coverage-map.yaml`
+- `aio-dl/curriculum/material-inventory.yaml`
+- `aio-dl/front-matter/for-teachers.md`
+- `aio-dl/front-matter/how-to-use.md`
+- `aio-dl/mocktests/blueprint.yaml`
+- `aio-dl/mocktests/r2-001/problems/p01.ipynb`
+- `aio-dl/mocktests/r2-001/problems/p02.ipynb`
+- `aio-dl/mocktests/r2-001/problems/p03.ipynb`
+- `aio-dl/mocktests/r2-001/problems/p04.ipynb`
+- `aio-dl/mocktests/r2-001/problems/p05.ipynb`
+- `aio-dl/mocktests/r2-001/solutions/p01_solution.ipynb`
+- `aio-dl/mocktests/r2-001/solutions/p02_solution.ipynb`
+- `aio-dl/mocktests/r2-001/solutions/p03_solution.ipynb`
+- `aio-dl/mocktests/r2-001/solutions/p04_solution.ipynb`
+- `aio-dl/mocktests/r2-001/solutions/p05_solution.ipynb`
+- `aio-dl/reference/analysis.md`
+- `aio-dl/syllabus.md`
+- `aio-dl/units/B2-019-attention-transformers/lesson.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/lessons/00-aio-ml-bridge.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/lessons/01-query-key-value-and-scaled-dot-product.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/lessons/02-self-attention-and-masks.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/lessons/03-multi-head-position-and-cost.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/lessons/04-attention-module-and-tiny-training.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/lessons/05-transformer-blocks-and-architecture.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/manifest.yaml`
+- `aio-dl/units/B2-019-attention-transformers/practice/p01.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p01_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p02.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p02_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p03.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p03_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p04.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p04_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p05.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p05_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p06.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p06_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p07.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p07_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p08.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p08_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p09.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p09_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p10.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p10_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p11.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p11_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p12.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p12_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p13.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p13_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p14.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p14_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p15.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p15_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p16.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p16_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p17.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p17_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p18.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p18_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p19.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p19_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p20.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p20_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p21.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p21_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p22.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p22_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p23.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p23_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p24.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/practice/p24_solution.ipynb`
+- `aio-dl/units/B2-019-attention-transformers/review.ipynb`
+- `aio-dl/units/B2-020-language-transformers/lesson.ipynb`
+- `aio-dl/units/B2-020-language-transformers/lessons/00-aio-ml-bridge.ipynb`
+- `aio-dl/units/B2-020-language-transformers/lessons/01-train-token-embeddings.ipynb`
+- `aio-dl/units/B2-020-language-transformers/lessons/02-causal-transformer-language-model.ipynb`
+- `aio-dl/units/B2-020-language-transformers/lessons/03-pretraining-objectives.ipynb`
+- `aio-dl/units/B2-020-language-transformers/lessons/04-fine-tune-a-language-transformer.ipynb`
+- `aio-dl/units/B2-020-language-transformers/lessons/05-language-task-design-and-audit.ipynb`
+- `aio-dl/units/B2-020-language-transformers/manifest.yaml`
+- `aio-dl/units/B2-020-language-transformers/practice/p01.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p01_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p02.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p02_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p03.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p03_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p04.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p04_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p05.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p05_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p06.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p06_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p07.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p07_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p08.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p08_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p09.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p09_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p10.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p10_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p11.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p11_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p12.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p12_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p13.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p13_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p14.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p14_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p15.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p15_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p16.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p16_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p17.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p17_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p18.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p18_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p19.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p19_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p20.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p20_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p21.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p21_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p22.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p22_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p23.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p23_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p24.ipynb`
+- `aio-dl/units/B2-020-language-transformers/practice/p24_solution.ipynb`
+- `aio-dl/units/B2-020-language-transformers/review.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/lesson.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/lessons/00-aio-ml-bridge.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/lessons/01-image-patches-and-vision-transformers.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/lessons/02-detection-grids-and-set-prediction.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/lessons/03-unet-segmentation-and-skip-connections.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/lessons/04-graphs-cross-modal-attention.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/lessons/05-vision-system-design-and-audit.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/manifest.yaml`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p01.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p02.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p03.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p04.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p05.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p06.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p07.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p08.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p09.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p10.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p11.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p12.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p13.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p14.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p15.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p16.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p17.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p18.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p19.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p20.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p21.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p22.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p23.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/practice/p24.ipynb`
+- `aio-dl/units/B2-021-cross-modal-transformers-vision/review.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/lesson.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/lessons/00-aio-ml-bridge.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/lessons/01-multivariate-gaussians.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/lessons/02-kl-divergence.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/lessons/03-autoencoders.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/lessons/04-reparameterization-and-the-elbo.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/lessons/05-training-and-using-vaes.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/manifest.yaml`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p01.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p01_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p02.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p02_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p03.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p03_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p04.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p04_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p05.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p05_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p06.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p06_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p07.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p07_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p08.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p08_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p09.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p09_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p10.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p10_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p11.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p11_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p12.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p12_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p13.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p13_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p14.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p14_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p15.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p15_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p16.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p16_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p17.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p17_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p18.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p18_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p19.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p19_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p20.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p20_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p21.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p21_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p22.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p22_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p23.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p23_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p24.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/practice/p24_solution.ipynb`
+- `aio-dl/units/B2-022-probabilistic-latent-models/review.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/lesson.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/lessons/00-aio-ml-bridge.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/lessons/01-adversarial-games.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/lessons/02-training-and-diagnosing-gans.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/lessons/03-diffusion-forward-process.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/lessons/04-denoising-and-sampling.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/lessons/05-latent-and-conditional-diffusion.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/manifest.yaml`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p01.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p01_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p02.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p02_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p03.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p03_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p04.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p04_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p05.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p05_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p06.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p06_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p07.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p07_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p08.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p08_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p09.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p09_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p10.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p10_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p11.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p11_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p12.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p12_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p13.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p13_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p14.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p14_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p15.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p15_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p16.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p16_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p17.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p17_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p18.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p18_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p19.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p19_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p20.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p20_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p21.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p21_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p22.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p22_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p23.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p23_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p24.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/practice/p24_solution.ipynb`
+- `aio-dl/units/B2-023-generative-models-diffusion/review.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/lesson.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/lessons/00-aio-ml-bridge.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/lessons/01-gpu-workflow-on-colab-l4.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/lessons/02-experiment-design-under-budget.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/lessons/03-evaluating-open-ended-models.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/lessons/04-semi-supervised-pseudo-labeling.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/lessons/05-scientific-inverse-problems.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/lessons/06-mixture-parameter-regression.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/manifest.yaml`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p01.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p01_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p02.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p02_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p03.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p03_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p04.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p04_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p05.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p05_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p06.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p06_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p07.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p07_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p08.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p08_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p09.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p09_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p10.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p10_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p11.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p11_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p12.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p12_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p13.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p13_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p14.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p14_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p15.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p15_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p16.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p16_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p17.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p17_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p18.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p18_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p19.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p19_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p20.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p20_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p21.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p21_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p22.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p22_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p23.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p23_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p24.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p24_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p25.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p25_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p26.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p26_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p27.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p27_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p28.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/practice/p28_solution.ipynb`
+- `aio-dl/units/B2-024-gpu-scientific-ml-capstone/review.ipynb`
+- `aio-ml/docs/coverage-audit.md`
+- `aio-ml/docs/curriculum-architecture.md`
+- `aio-ml/docs/curriculum-roadmap.md`
+- `aio-ml/docs/mocktest-generation.md`
+- `aio-ml/front-matter/for-teachers.md`
+- `aio-ml/front-matter/how-to-use.md`
+- `aio-ml/mocktests/r1-001/problems/p05.ipynb`
+- `aio-ml/mocktests/r1-001/problems/p07.ipynb`
+- `aio-ml/mocktests/r1-001/problems/p09.ipynb`
+- `aio-ml/mocktests/r1-001/solutions/p05_solution.ipynb`
+- `aio-ml/mocktests/r1-001/solutions/p07_solution.ipynb`
+- `aio-ml/mocktests/r1-001/solutions/p09_solution.ipynb`
+- `aio-ml/reference/analysis.md`
+- `aio-ml/units/09-C4-classical-ml-practice/lessons/01-pandas-and-data-loading.ipynb`
+- `aio-ml/units/10-C5-embeddings/lessons/01-tokens-and-embeddings.ipynb`
+- `aio-ml/units/10-C5-embeddings/lessons/02-matrices-and-similarity.ipynb`
+- `aio-ml/units/10-C5-embeddings/lessons/03-neighbors-and-retrieval.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p05.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p05_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p07.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p07_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p08.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p08_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p09.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p09_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p10.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p10_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p11.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p11_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p12.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p12_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p13.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p13_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p14.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p14_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p16.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p16_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p17.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p17_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p18.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p18_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p19.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p19_solution.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p20.ipynb`
+- `aio-ml/units/10-C5-embeddings/practice/p20_solution.ipynb`
+- `aio-ml/units/16-C9-dimensionality-reduction/lessons/03-truncated-svd-practice.ipynb`
+- `aio-ml/units/16-C9-dimensionality-reduction/practice/p07.ipynb`
+- `aio-ml/units/16-C9-dimensionality-reduction/practice/p07_solution.ipynb`
+- `aio-ml/units/16-C9-dimensionality-reduction/practice/p09.ipynb`
+- `aio-ml/units/16-C9-dimensionality-reduction/practice/p09_solution.ipynb`
+- `aio-ml/units/16-C9-dimensionality-reduction/practice/p12.ipynb`
+- `aio-ml/units/16-C9-dimensionality-reduction/practice/p12_solution.ipynb`
+- `aio-ml/units/16-C9-dimensionality-reduction/practice/p14.ipynb`
+- `aio-ml/units/16-C9-dimensionality-reduction/practice/p14_solution.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/lessons/02-resnet-reading.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/lessons/03-truncation-and-transfer.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p08.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p08_solution.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p09.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p09_solution.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p11.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p11_solution.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p12.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p12_solution.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p14.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p14_solution.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p15.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p15_solution.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p16.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p16_solution.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p17.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p17_solution.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p19.ipynb`
+- `aio-ml/units/17-C10-cnn-transfer/practice/p19_solution.ipynb`
+- `scripts/aio/build-pdf.sh`
+- `scripts/aio/fetch-reference.sh`
+- `scripts/aio/verify-clean-checkout.sh`
+- `scripts/aio/verify-comment-only.py`
+- `tools/aio/checks/api_comments.py`
+- `tools/aio/checks/api_comments_baseline.yaml`
+- `tools/aio/checks/api_comments_waivers.yaml`
+- `tools/aio/checks/schedule.py`
+- `tools/aio/checks/scope.py`
+- `tools/aio/ci_scope.py`
+- `tools/aio/publish.py`
+- `tools/aio/publish_pdf.py`
+- `tools/aio/render_curriculum_roadmap.py`
+- `tools/aio/tests/publication_fixture.py`
+- `tools/aio/tests/test_answerkey.py`
+- `tools/aio/tests/test_api_comments.py`
+- `tools/aio/tests/test_attention_mutations.py`
+- `tools/aio/tests/test_audit_curriculum.py`
+- `tools/aio/tests/test_b2_019_statements.py`
+- `tools/aio/tests/test_b2_020_statements.py`
+- `tools/aio/tests/test_b2_021_plan.py`
+- `tools/aio/tests/test_b2_021_statements.py`
+- `tools/aio/tests/test_b2_022_plan.py`
+- `tools/aio/tests/test_b2_022_statements.py`
+- `tools/aio/tests/test_b2_023_plan.py`
+- `tools/aio/tests/test_b2_023_statements.py`
+- `tools/aio/tests/test_b2_024_plan.py`
+- `tools/aio/tests/test_b2_024_statements.py`
+- `tools/aio/tests/test_blueprint.py`
+- `tools/aio/tests/test_blueprint_book2.py`
+- `tools/aio/tests/test_book2_schedule.py`
+- `tools/aio/tests/test_book_isolation.py`
+- `tools/aio/tests/test_books.py`
+- `tools/aio/tests/test_c12_solution_regressions.py`
+- `tools/aio/tests/test_c12_statement_contracts.py`
+- `tools/aio/tests/test_c8_solution_regressions.py`
+- `tools/aio/tests/test_capstone_checks.py`
+- `tools/aio/tests/test_ci_scope.py`
+- `tools/aio/tests/test_classical_mutations.py`
+- `tools/aio/tests/test_clean_checkout.py`
+- `tools/aio/tests/test_cli.py`
+- `tools/aio/tests/test_compute_policy.py`
+- `tools/aio/tests/test_generative_model_checks.py`
+- `tools/aio/tests/test_integration.py`
+- `tools/aio/tests/test_language_transformer_checks.py`
+- `tools/aio/tests/test_latent_model_checks.py`
+- `tools/aio/tests/test_layer_boundary.py`
+- `tools/aio/tests/test_model.py`
+- `tools/aio/tests/test_new_mocktest.py`
+- `tools/aio/tests/test_new_mocktest_book2.py`
+- `tools/aio/tests/test_prereq_coverage.py`
+- `tools/aio/tests/test_publication_config.py`
+- `tools/aio/tests/test_publish.py`
+- `tools/aio/tests/test_publish_audit.py`
+- `tools/aio/tests/test_publish_theme_tables.py`
+- `tools/aio/tests/test_r2_001.py`
+- `tools/aio/tests/test_r2_001_checks.py`
+- `tools/aio/tests/test_schedule.py`
+- `tools/aio/tests/test_scope.py`
+- `tools/aio/tests/test_tolerance.py`
+- `tools/aio/tests/test_training_mutations.py`
+- `tools/aio/tests/test_unit_order.py`
+- `tools/aio/tests/test_verify_comment_only.py`
+- `tools/aio/tests/test_verify_register.py`
+- `tools/aio/tests/test_vision_transformer_checks.py`

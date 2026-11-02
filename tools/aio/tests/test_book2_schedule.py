@@ -1,0 +1,1317 @@
+from __future__ import annotations
+
+import hashlib
+import importlib.util
+import re
+import shutil
+from collections.abc import Callable
+from copy import deepcopy
+from pathlib import Path
+from typing import Any
+
+import pytest
+import yaml
+from conftest import ROOT
+
+from tools.aio import audit_curriculum, render_course_structure, render_curriculum_roadmap
+from tools.aio.books import BookSpec, load_book_catalog, validate_book_root
+from tools.aio.checks import schedule as schedule_checker
+from tools.aio.model import load_syllabus
+
+BOOK1_ROOT = ROOT / "aio-ml"
+BOOK2_ROOT = ROOT / "aio-dl"
+FIXTURE_ROOT = ROOT / "tools" / "aio" / "tests" / "fixtures" / "two-books-valid"
+BOOK1_SCHEDULE_SHA256 = "d40c894764dbdb49939ddf55412afc3b736b3a8f10f46847caf3be4c34caf8a7"
+BOOK1_STRUCTURE_SHA256 = "1537c797c9f1108f1779850218b65313c656254b28a54723095b0b5c842dfed6"
+BOOK2_SCHEDULE_SHA256 = "fef51a85cbd652de279d60429c0a5559ba2e6a6ac6e767f2dd5293c22bf65e56"
+# usaaio a20128f pinned d9b6c0c5...; the D3 renames (qualified ids, the bridge file name)
+# are the only byte changes.
+BOOK2_MANIFEST_SHA256 = "0a6e81adc7eb5940078db323e8d7526f246d9f5d9c287be3bd2b418278ad87e2"
+B2_019 = "B2-019-attention-transformers"
+B2_020 = "B2-020-language-transformers"
+B2_021 = "B2-021-cross-modal-transformers-vision"
+B2_022 = "B2-022-probabilistic-latent-models"
+B2_023 = "B2-023-generative-models-diffusion"
+B2_024 = "B2-024-gpu-scientific-ml-capstone"
+B2_021_PREREQUISITES = (
+    "aio-ml:F1-scientific-python",
+    "aio-ml:F4-matrices",
+    "aio-ml:C7-pytorch",
+    "aio-ml:C10-cnn-transfer",
+    "aio-ml:C8-neural-training",
+    B2_019,
+    B2_020,
+)
+B2_020_WEEK_PROBLEMS = (
+    ("B2-020-p01", "B2-020-p02", "B2-020-p06", "B2-020-p13"),
+    ("B2-020-p03", "B2-020-p04", "B2-020-p07", "B2-020-p08", "B2-020-p14"),
+    (
+        "B2-020-p05",
+        "B2-020-p09",
+        "B2-020-p10",
+        "B2-020-p15",
+        "B2-020-p16",
+        "B2-020-p17",
+        "B2-020-p23",
+    ),
+    ("B2-020-p12", "B2-020-p18", "B2-020-p21"),
+    ("B2-020-p11", "B2-020-p19", "B2-020-p20", "B2-020-p22", "B2-020-p24"),
+)
+B2_021_WEEK_PROBLEMS = (
+    ("B2-021-p01", "B2-021-p02", "B2-021-p06", "B2-021-p13"),
+    ("B2-021-p03", "B2-021-p04", "B2-021-p07", "B2-021-p08", "B2-021-p14"),
+    (
+        "B2-021-p05",
+        "B2-021-p09",
+        "B2-021-p10",
+        "B2-021-p11",
+        "B2-021-p15",
+        "B2-021-p17",
+    ),
+    ("B2-021-p12", "B2-021-p16", "B2-021-p18", "B2-021-p20"),
+    ("B2-021-p19", "B2-021-p21", "B2-021-p22", "B2-021-p23", "B2-021-p24"),
+)
+B2_021_WEEK_MINUTES = (255, 275, 370, 315, 375, 60)
+B2_022_WEEK_MINUTES = (255, 300, 340, 310, 385, 60)
+B2_023_WEEK_MINUTES = (255, 355, 205, 385, 390, 60)
+B2_024_WEEK_MINUTES = (260, 280, 370, 345, 305, 380, 60)
+
+
+def _load_schedule(root: Path = BOOK2_ROOT) -> dict[str, Any]:
+    raw = yaml.safe_load(
+        (root / "curriculum" / "course-schedule.yaml").read_text(encoding="utf-8")
+    )
+    assert isinstance(raw, dict)
+    return raw
+
+
+def _mutated_report(
+    tmp_path: Path, mutate: Callable[[dict[str, Any]], None]
+):
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    schedule = _load_schedule(selected)
+    mutate(schedule)
+    (selected / "curriculum" / "course-schedule.yaml").write_text(
+        yaml.safe_dump(schedule, sort_keys=False), encoding="utf-8"
+    )
+    return schedule_checker.check_schedule(selected, expected_book_number=2)
+
+
+def _mutated_root(
+    tmp_path: Path, mutate: Callable[[dict[str, Any]], None]
+) -> Path:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    schedule = _load_schedule(selected)
+    mutate(schedule)
+    (selected / "curriculum" / "course-schedule.yaml").write_text(
+        yaml.safe_dump(schedule, sort_keys=False), encoding="utf-8"
+    )
+    return selected
+
+
+def _write_yaml(path: Path, value: dict[str, Any]) -> None:
+    path.write_text(yaml.safe_dump(value, sort_keys=False), encoding="utf-8")
+
+
+def _two_manifest_root(tmp_path: Path) -> Path:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    shutil.rmtree(selected / "units" / B2_021, ignore_errors=True)
+    shutil.rmtree(selected / "units" / B2_022, ignore_errors=True)
+    shutil.rmtree(selected / "units" / B2_023, ignore_errors=True)
+    shutil.rmtree(selected / "units" / B2_024, ignore_errors=True)
+
+    syllabus_path = selected / "syllabus.md"
+    contract = yaml.safe_load(
+        re.search(
+            r"<!-- syllabus-canonical -->\s*```yaml\n(.*?)\n```",
+            syllabus_path.read_text(encoding="utf-8"),
+            re.DOTALL,
+        ).group(1)
+    )
+    contract["units"] = [
+        row for row in contract["units"] if row["id"] not in {B2_021, B2_022, B2_023, B2_024}
+    ]
+    _replace_syllabus_contract(syllabus_path, contract)
+
+    schedule_path = selected / "curriculum" / "course-schedule.yaml"
+    schedule = _load_schedule(selected)
+    schedule["total_book_weeks"] = 12
+    schedule["total_minutes"] = 3320
+    schedule["final_assessment"]["after_book_week"] = 12
+    schedule["weeks"] = schedule["weeks"][:12]
+    _write_yaml(schedule_path, schedule)
+    return selected
+
+
+def _replace_syllabus_contract(path: Path, raw: dict[str, Any]) -> None:
+    text = path.read_text(encoding="utf-8")
+    match = re.search(
+        r"(<!-- syllabus-canonical -->\s*```yaml\n)(.*?)(\n```)",
+        text,
+        re.DOTALL,
+    )
+    assert match is not None
+    replacement = (
+        match.group(1)
+        + yaml.safe_dump(raw, sort_keys=False).rstrip()
+        + match.group(3)
+    )
+    path.write_text(
+        text[: match.start()] + replacement + text[match.end() :],
+        encoding="utf-8",
+    )
+
+
+def _b2_021_problem_minutes(problem_number: int) -> int:
+    if problem_number <= 5:
+        return 20
+    if problem_number <= 12:
+        return 50
+    if problem_number <= 16:
+        return 45
+    if problem_number <= 20:
+        return 65
+    return 55
+
+
+def _prospective_schedule_only_three_manifest_root(tmp_path: Path) -> Path:
+    """Build only a schedule fixture; inherited concept/coverage metadata is invalid."""
+    selected = _two_manifest_root(tmp_path)
+    source = selected / "units" / B2_020
+    target = selected / "units" / B2_021
+    shutil.copytree(source, target)
+
+    manifest_path = target / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest["unit"] = B2_021
+    manifest["prereq_units"] = list(B2_021_PREREQUISITES)
+    manifest["estimated_minutes"]["practice"] = 1110
+    after_sessions = {
+        problem_id: session
+        for session, problem_ids in enumerate(B2_021_WEEK_PROBLEMS, start=1)
+        for problem_id in problem_ids
+    }
+    for problem_number, problem in enumerate(manifest["practice"], start=1):
+        problem_id = f"B2-021-p{problem_number:02}"
+        problem["id"] = problem_id
+        problem["minutes"] = _b2_021_problem_minutes(problem_number)
+        problem["after_session"] = after_sessions[problem_id]
+    _write_yaml(manifest_path, manifest)
+
+    syllabus_path = selected / "syllabus.md"
+    syllabus = load_syllabus(selected)
+    syllabus_text = syllabus_path.read_text(encoding="utf-8")
+    match = re.search(
+        r"<!-- syllabus-canonical -->\s*```yaml\n(.*?)\n```",
+        syllabus_text,
+        re.DOTALL,
+    )
+    assert match is not None
+    syllabus_contract = yaml.safe_load(match.group(1))
+    assert B2_021 not in syllabus.units
+    new_unit = deepcopy(
+        next(unit for unit in syllabus_contract["units"] if unit["id"] == B2_020)
+    )
+    new_unit.update(
+        id=B2_021,
+        title="Cross-modal Transformers and Advanced Vision",
+        prereqs=list(B2_021_PREREQUISITES),
+    )
+    syllabus_contract["units"].append(new_unit)
+    _replace_syllabus_contract(syllabus_path, syllabus_contract)
+
+    schedule_path = selected / "curriculum" / "course-schedule.yaml"
+    schedule = _load_schedule(selected)
+    schedule["total_book_weeks"] = 18
+    schedule["total_minutes"] = 4970
+    schedule["final_assessment"]["after_book_week"] = 18
+    for offset, problem_ids in enumerate(B2_021_WEEK_PROBLEMS):
+        practice_minutes = sum(
+            _b2_021_problem_minutes(int(problem_id[-2:]))
+            for problem_id in problem_ids
+        )
+        schedule["weeks"].append(
+            {
+                "book_week": 13 + offset,
+                "global_week": 53 + offset,
+                "allocations": [
+                    *(
+                        [
+                            {
+                                "kind": "bridge-diagnostic",
+                                "unit": B2_021,
+                                "minutes": 30,
+                            }
+                        ]
+                        if offset == 0
+                        else []
+                    ),
+                    {
+                        "kind": "lesson-session",
+                        "unit": B2_021,
+                        "session": offset + 1,
+                        "minutes": 90,
+                    },
+                    {
+                        "kind": "practice",
+                        "unit": B2_021,
+                        "chunk": offset + 1,
+                        "minutes": practice_minutes,
+                        "problem_ids": list(problem_ids),
+                    },
+                ],
+            }
+        )
+    schedule["weeks"].append(
+        {
+            "book_week": 18,
+            "global_week": 58,
+            "allocations": [
+                {
+                    "kind": "review",
+                    "unit": B2_021,
+                    "chunk": 1,
+                    "minutes": 60,
+                }
+            ],
+        }
+    )
+    _write_yaml(schedule_path, schedule)
+    return selected
+
+
+def _report_for_three_manifest_mutation(
+    tmp_path: Path,
+    mutate: Callable[[dict[str, Any]], None],
+):
+    selected = _prospective_schedule_only_three_manifest_root(tmp_path)
+    schedule_path = selected / "curriculum" / "course-schedule.yaml"
+    schedule = _load_schedule(selected)
+    mutate(schedule)
+    _write_yaml(schedule_path, schedule)
+    return schedule_checker.check_schedule(selected, expected_book_number=2)
+
+
+def _report_for_two_manifest_mutation(
+    tmp_path: Path,
+    *,
+    schedule_mutation: Callable[[dict[str, Any]], None] | None = None,
+    manifest_mutation: Callable[[dict[str, Any]], None] | None = None,
+):
+    selected = _two_manifest_root(tmp_path)
+    if schedule_mutation is not None:
+        schedule_path = selected / "curriculum" / "course-schedule.yaml"
+        schedule = _load_schedule(selected)
+        schedule_mutation(schedule)
+        _write_yaml(schedule_path, schedule)
+    if manifest_mutation is not None:
+        manifest_path = selected / "units" / B2_020 / "manifest.yaml"
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+        manifest_mutation(manifest)
+        _write_yaml(manifest_path, manifest)
+    return schedule_checker.check_schedule(selected, expected_book_number=2)
+
+
+def _assert_both_schedule_apis_reject(root: Path, message: str) -> None:
+    report = schedule_checker.check_schedule(root, expected_book_number=2)
+    assert not report.ok
+    assert any(message in error for error in report.errors), report.errors
+    with pytest.raises(ValueError) as exc_info:
+        schedule_checker.load_validated_schedule(root, expected_book_number=2)
+    assert message in str(exc_info.value)
+
+
+def test_parallel_book2_schedule_and_renderer_modules_remain_forbidden() -> None:
+    assert importlib.util.find_spec("tools.aio.checks.book2_schedule") is None
+    assert importlib.util.find_spec("tools.aio.render_book2_structure") is None
+
+
+def test_schedule_dispatch_uses_explicit_book_policies() -> None:
+    assert hasattr(schedule_checker, "Book1SchedulePolicy")
+    assert hasattr(schedule_checker, "Book2SchedulePolicy")
+    assert isinstance(
+        schedule_checker.schedule_policy(BOOK1_ROOT),
+        schedule_checker.Book1SchedulePolicy,
+    )
+    assert isinstance(
+        schedule_checker.schedule_policy(BOOK2_ROOT),
+        schedule_checker.Book2SchedulePolicy,
+    )
+
+
+def test_registered_book2_schedule_is_exact_thirty_seven_week_live_ledger() -> None:
+    raw = _load_schedule()
+
+    assert raw["schedule_version"] == 1
+    assert raw["book"] == 2
+    assert raw["status"] == "live"
+    assert raw["starts_after_global_week"] == 40
+    assert raw["total_book_weeks"] == 37
+    assert raw["total_minutes"] == 10270
+    assert raw["final_assessment"] == {
+        "kind": "r2-mock",
+        "status": "live",
+        "test": "r2-001",
+        "after_book_week": 37,
+    }
+    assert [week["book_week"] for week in raw["weeks"]] == list(range(1, 38))
+    assert [week["global_week"] for week in raw["weeks"]] == list(range(41, 78))
+    assert [
+        sum(allocation["minutes"] for allocation in week["allocations"])
+        for week in raw["weeks"]
+    ] == [255, 275, 420, 270, 380, 60] * 2 + list(B2_021_WEEK_MINUTES) + list(
+        B2_022_WEEK_MINUTES
+    ) + list(B2_023_WEEK_MINUTES) + list(B2_024_WEEK_MINUTES)
+
+    problem_ids = [
+        problem_id
+        for week in raw["weeks"]
+        for allocation in week["allocations"]
+        for problem_id in allocation.get("problem_ids", [])
+    ]
+    assert sorted(problem_ids) == [
+        *[f"B2-019-p{number:02}" for number in range(1, 25)],
+        *[f"B2-020-p{number:02}" for number in range(1, 25)],
+        *[f"B2-021-p{number:02}" for number in range(1, 25)],
+        *[f"B2-022-p{number:02}" for number in range(1, 25)],
+        *[f"B2-023-p{number:02}" for number in range(1, 25)],
+        *[f"B2-024-p{number:02}" for number in range(1, 29)],
+    ]
+    assert len(problem_ids) == len(set(problem_ids)) == 148
+
+    report = schedule_checker.check_schedule(BOOK2_ROOT)
+    assert report.ok, report.errors
+    validated = schedule_checker.load_validated_schedule(BOOK2_ROOT)
+    assert validated.status == "live"
+    assert [week.week for week in validated.weeks] == list(range(1, 38))
+    assert list(validated.global_weeks) == list(range(41, 78))
+    assert validated.total_minutes == 10270
+    assert validated.covered_problem_ids == frozenset(problem_ids)
+    inventory = audit_curriculum.build_inventory(BOOK2_ROOT)
+    assert inventory["counts"]["scheduled_minutes"] == 10270
+    assert inventory["counts"]["unit_practices"] == 148
+
+
+def test_live_book2_minutes_enter_the_aggregate_baseline() -> None:
+    rendered = render_course_structure.render_document(BOOK2_ROOT)
+    aggregate = audit_curriculum.build_inventory(BOOK2_ROOT)
+
+    assert aggregate["counts"]["scheduled_minutes"] == 10270
+    assert aggregate["counts"]["manifested_minutes"] == 10090
+    assert aggregate["counts"]["unit_practices"] == 148
+    assert "10,270 minutes" in rendered
+    assert "live manifests reconcile every lesson, practice ID, path, and minute" in rendered
+    assert rendered.count("255/275/420/270/380/60-minute progression") == 2
+    assert rendered.count("255/275/370/315/375/60-minute progression") == 1
+    assert rendered.count("255/300/340/310/385/60-minute progression") == 1
+    assert rendered.count("255/355/205/385/390/60-minute progression") == 1
+    assert rendered.count("260/280/370/345/305/380/60-minute progression") == 1
+
+    documents = render_curriculum_roadmap.render_documents(ROOT)
+    for document in documents.values():
+        assert "Current scheduled baseline: **29145 minutes / 485.75 hours**." in document
+        assert "| **Planned-unit subtotal** | **142** | **182** |" in document
+        assert "**620.75–660.75 manifested-baseline hours**" in document
+        assert "**627.75–667.75 scheduled-baseline hours**" in document
+    roadmap = documents[Path("aio-ml/docs/curriculum-roadmap.md")]
+    assert (
+        "| aio-dl | aio-dl:B2-019-attention-transformers | Attention and Transformer "
+        "Mechanics | round-2-extension | 22–28 |"
+    ) in roadmap
+
+
+def test_live_book2_schedule_reconciles_manifest_minutes_ids_and_paths() -> None:
+    report = schedule_checker.check_schedule(BOOK2_ROOT, expected_book_number=2)
+
+    assert report.ok, report.errors
+
+
+def test_generic_book2_schedule_accepts_two_manifest_ledger(tmp_path: Path) -> None:
+    selected = _two_manifest_root(tmp_path)
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert report.ok, report.errors
+    validated = schedule_checker.load_validated_schedule(
+        selected, expected_book_number=2
+    )
+    assert validated.declared_week_count == 12
+    assert validated.total_minutes == 3320
+    assert validated.covered_problem_ids == frozenset(
+        [f"B2-019-p{number:02}" for number in range(1, 25)]
+        + [f"B2-020-p{number:02}" for number in range(1, 25)]
+    )
+    inventory = audit_curriculum.build_inventory(selected, expected_book_number=2)
+    assert inventory["counts"]["scheduled_minutes"] == 3320
+    assert inventory["counts"]["unit_practices"] == 48
+
+
+def test_generic_book2_schedule_accepts_prospective_three_manifest_ledger(
+    tmp_path: Path,
+) -> None:
+    selected = _prospective_schedule_only_three_manifest_root(tmp_path)
+    raw = _load_schedule(selected)
+
+    assert raw["weeks"][:12] == _load_schedule()["weeks"][:12]
+    assert [
+        sum(allocation["minutes"] for allocation in week["allocations"])
+        for week in raw["weeks"][12:]
+    ] == list(B2_021_WEEK_MINUTES)
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert report.ok, report.errors
+    validated = schedule_checker.load_validated_schedule(
+        selected, expected_book_number=2
+    )
+    assert validated.declared_week_count == 18
+    assert validated.total_minutes == 4970
+    assert list(validated.global_weeks) == list(range(41, 59))
+    assert raw["final_assessment"]["after_book_week"] == 18
+    assert validated.covered_problem_ids == frozenset(
+        [f"B2-019-p{number:02}" for number in range(1, 25)]
+        + [f"B2-020-p{number:02}" for number in range(1, 25)]
+        + [f"B2-021-p{number:02}" for number in range(1, 25)]
+    )
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        pytest.param(
+            lambda schedule: schedule["weeks"][12]["allocations"][2][
+                "problem_ids"
+            ].__setitem__(0, "B2-021-p02"),
+            "B2-021-p02 must appear exactly once",
+            id="duplicate-problem-id",
+        ),
+        pytest.param(
+            lambda schedule: (
+                schedule["weeks"][13]["allocations"][0].update(session=3),
+                schedule["weeks"][14]["allocations"][0].update(session=2),
+            ),
+            f"{B2_021} lesson sessions must appear once in strictly increasing order",
+            id="misordered-sessions",
+        ),
+        pytest.param(
+            lambda schedule: schedule["weeks"][14]["allocations"].pop(0),
+            f"unallocated lesson session {B2_021}#3",
+            id="missing-session-3",
+        ),
+        pytest.param(
+            lambda schedule: (
+                schedule["weeks"][12]["allocations"][2].update(minutes=136),
+                schedule.update(total_minutes=4971),
+            ),
+            f"{B2_021} practice chunk 1 problem minutes 135; allocation minutes 136",
+            id="minute-mismatch",
+        ),
+    ],
+)
+def test_three_manifest_ledger_rejects_b2_021_contract_mutations(
+    tmp_path: Path,
+    mutate: Callable[[dict[str, Any]], None],
+    message: str,
+) -> None:
+    report = _report_for_three_manifest_mutation(tmp_path, mutate)
+
+    assert not report.ok
+    assert any(message in error for error in report.errors), report.errors
+
+
+def test_b2_021_whole_unit_must_follow_b2_020_completion(tmp_path: Path) -> None:
+    def move_whole_unit_early(schedule: dict[str, Any]) -> None:
+        earlier = [week["allocations"] for week in schedule["weeks"][6:12]]
+        later = [week["allocations"] for week in schedule["weeks"][12:18]]
+        for week, allocations in zip(schedule["weeks"][6:12], later, strict=True):
+            week["allocations"] = allocations
+        for week, allocations in zip(schedule["weeks"][12:18], earlier, strict=True):
+            week["allocations"] = allocations
+
+    report = _report_for_three_manifest_mutation(
+        tmp_path, move_whole_unit_early
+    )
+
+    assert not report.ok
+    expected = (
+        f"{B2_021} bridge-diagnostic allocation must begin after "
+        f"{B2_020} final review"
+    )
+    assert [
+        error
+        for error in report.errors
+        if f"{B2_021} " in error and f"after {B2_020} final review" in error
+    ] == [expected]
+
+
+def test_two_manifest_ledger_rejects_reversed_session_order(tmp_path: Path) -> None:
+    def reverse_sessions(schedule: dict[str, Any]) -> None:
+        for week in schedule["weeks"][6:11]:
+            lesson = next(
+                allocation
+                for allocation in week["allocations"]
+                if allocation["kind"] == "lesson-session"
+            )
+            lesson["session"] = 6 - lesson["session"]
+
+    def make_after_session_compatible(manifest: dict[str, Any]) -> None:
+        for problem in manifest["practice"]:
+            problem["after_session"] = 5
+
+    report = _report_for_two_manifest_mutation(
+        tmp_path,
+        schedule_mutation=reverse_sessions,
+        manifest_mutation=make_after_session_compatible,
+    )
+
+    assert not report.ok
+    assert any(
+        f"{B2_020} lesson sessions must appear once in strictly increasing order"
+        in error
+        for error in report.errors
+    ), report.errors
+
+
+def test_two_manifest_ledger_rejects_practices_collapsed_into_review_week(
+    tmp_path: Path,
+) -> None:
+    def collapse_practices(schedule: dict[str, Any]) -> None:
+        practices = []
+        for week in schedule["weeks"][6:11]:
+            practice_index = next(
+                index
+                for index, allocation in enumerate(week["allocations"])
+                if allocation["kind"] == "practice"
+            )
+            practices.append(week["allocations"].pop(practice_index))
+        schedule["weeks"][11]["allocations"][:0] = practices
+
+    report = _report_for_two_manifest_mutation(
+        tmp_path, schedule_mutation=collapse_practices
+    )
+
+    assert not report.ok
+    assert any(
+        f"{B2_020} practice chunks must cover its instructional weeks in order"
+        in error
+        for error in report.errors
+    ), report.errors
+
+
+@pytest.mark.parametrize(
+    ("schedule_mutation", "manifest_mutation", "message"),
+    [
+        pytest.param(
+            lambda schedule: schedule["weeks"][6]["allocations"][2][
+                "problem_ids"
+            ].__setitem__(0, "B2-019-p01"),
+            None,
+            "B2-019-p01 must appear exactly once",
+            id="duplicate-problem-across-units",
+        ),
+        pytest.param(
+            lambda schedule: schedule["weeks"][8]["allocations"].pop(0),
+            None,
+            f"unallocated lesson session {B2_020}#3",
+            id="missing-lesson-allocation",
+        ),
+        pytest.param(
+            None,
+            lambda manifest: manifest["practice"][0].update(minutes=21),
+            f"{B2_020} practice chunk 1 problem minutes 136; allocation minutes 135",
+            id="mismatched-practice-minute",
+        ),
+        pytest.param(
+            None,
+            lambda manifest: manifest["practice"][0].update(after_session=2),
+            "B2-020-p01 requires session 2 before its scheduled practice allocation",
+            id="after-session",
+        ),
+        pytest.param(
+            lambda schedule: schedule.update(total_minutes=3319),
+            None,
+            "Book 2 declared total 3319; actual 3320",
+            id="stale-total",
+        ),
+        pytest.param(
+            lambda schedule: schedule["weeks"][0]["allocations"][0].update(
+                minutes=31
+            ),
+            None,
+            "B2-019 pre-existing ledger must remain unchanged",
+            id="mutated-b2-019-ledger",
+        ),
+    ],
+)
+def test_two_manifest_ledger_rejects_contract_mutations(
+    tmp_path: Path,
+    schedule_mutation: Callable[[dict[str, Any]], None] | None,
+    manifest_mutation: Callable[[dict[str, Any]], None] | None,
+    message: str,
+) -> None:
+    report = _report_for_two_manifest_mutation(
+        tmp_path,
+        schedule_mutation=schedule_mutation,
+        manifest_mutation=manifest_mutation,
+    )
+
+    assert not report.ok
+    assert any(message in error for error in report.errors), report.errors
+
+
+@pytest.mark.parametrize("kind", ["bridge-diagnostic", "lesson-session", "practice", "review"])
+def test_b2_020_allocations_must_follow_b2_019_final_review(
+    tmp_path: Path, kind: str
+) -> None:
+    def move_early(schedule: dict[str, Any]) -> None:
+        source_week = next(
+            week
+            for week in schedule["weeks"][6:]
+            if any(allocation["kind"] == kind for allocation in week["allocations"])
+        )
+        source_index = next(
+            index
+            for index, allocation in enumerate(source_week["allocations"])
+            if allocation["kind"] == kind
+        )
+        allocation = source_week["allocations"].pop(source_index)
+        schedule["weeks"][5]["allocations"].insert(0, allocation)
+
+    report = _report_for_two_manifest_mutation(
+        tmp_path, schedule_mutation=move_early
+    )
+
+    assert not report.ok
+    assert any(
+        f"{B2_020} {kind} allocation must begin after {B2_019} final review"
+        in error
+        for error in report.errors
+    ), report.errors
+
+
+def test_live_book2_rejects_unit_directory_without_manifest(tmp_path: Path) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    (selected / "units" / "B2-999-missing-manifest").mkdir()
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any("must contain exactly one regular manifest.yaml; found 0" in error for error in report.errors)
+
+
+def test_live_book2_rejects_extra_unregistered_manifest(tmp_path: Path) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    extra = selected / "units" / "B2-999-extra"
+    shutil.copytree(selected / "units" / B2_019, extra)
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any("unregistered Book 2 unit directory B2-999-extra" in error for error in report.errors)
+
+
+def test_live_book2_rejects_extra_manifest_in_unit_directory(tmp_path: Path) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    unit = selected / "units" / B2_019
+    shutil.copy2(unit / "manifest.yaml", unit / "manifest-copy.yaml")
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any(
+        "must contain exactly one regular manifest.yaml; found 2" in error
+        for error in report.errors
+    )
+
+
+def test_live_book2_rejects_nonregular_manifest(tmp_path: Path) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    manifest = selected / "units" / B2_019 / "manifest.yaml"
+    manifest.unlink()
+    manifest.mkdir()
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any("manifest.yaml must be a regular file" in error for error in report.errors)
+
+
+def test_live_book2_rejects_non_directory_units_entry(tmp_path: Path) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    (selected / "units" / "README.txt").write_text("not a unit", encoding="utf-8")
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any("units entry README.txt must be a regular directory" in error for error in report.errors)
+
+
+@pytest.mark.parametrize("mode", ["symlink", "directory", "nonempty"])
+def test_live_book2_rejects_malformed_gitkeep_sentinel(
+    tmp_path: Path, mode: str
+) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    sentinel = selected / "units" / ".gitkeep"
+    sentinel.unlink()
+    if mode == "symlink":
+        sentinel.symlink_to(selected / "units" / B2_019, target_is_directory=True)
+    elif mode == "directory":
+        sentinel.mkdir()
+    else:
+        sentinel.write_text("not empty\n", encoding="utf-8")
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any(
+        ".gitkeep sentinel must be a regular, nonsymlink, empty file" in error
+        for error in report.errors
+    ), report.errors
+
+
+def test_live_book2_rejects_symlinked_unit_directory(tmp_path: Path) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    (selected / "units" / "B2-999-linked-unit").symlink_to(
+        selected / "units" / B2_019, target_is_directory=True
+    )
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any("unit directory symlink is forbidden" in error for error in report.errors)
+
+
+def test_live_book2_rejects_symlinked_manifest(tmp_path: Path) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    unit = selected / "units" / B2_019
+    manifest = unit / "manifest.yaml"
+    manifest.rename(unit / "real-manifest.yaml")
+    manifest.symlink_to(unit / "real-manifest.yaml")
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any("manifest symlink is forbidden" in error for error in report.errors)
+
+
+def test_live_book2_required_solution_path_uses_containment(tmp_path: Path) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    manifest_path = selected / "units" / B2_019 / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest["practice"][0]["solution_path"] = "practice/missing_solution.ipynb"
+    _write_yaml(manifest_path, manifest)
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any(
+        "path does not exist: units/B2-019-attention-transformers/practice/missing_solution.ipynb"
+        in error
+        for error in report.errors
+    ), report.errors
+
+
+def test_live_book2_rejects_unknown_policy_and_symlinked_solution_path(
+    tmp_path: Path,
+) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    unit = selected / "units" / B2_019
+    linked = unit / "practice" / "linked_solution.ipynb"
+    linked.symlink_to(unit / "practice" / "p02_solution.ipynb")
+    manifest_path = unit / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest["solution_policy"] = "optional"
+    manifest["practice"][0]["solution_path"] = "practice/linked_solution.ipynb"
+    _write_yaml(manifest_path, manifest)
+
+    _assert_both_schedule_apis_reject(
+        selected, "solution_policy must be 'required' or a valid deferred mapping"
+    )
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+    assert any("solution_path: declared manifest path" in error for error in report.errors)
+
+
+def test_live_book2_deferred_solution_path_still_uses_containment(
+    tmp_path: Path,
+) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    manifest_path = selected / "units" / B2_019 / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest["solution_policy"] = {
+        "status": "deferred",
+        "plan": "plan-020",
+        "expires": "2099-12-31",
+    }
+    manifest["practice"][0]["id"] = None
+    manifest["practice"][0]["solution_path"] = "../../syllabus.md"
+    _write_yaml(manifest_path, manifest)
+
+    _assert_both_schedule_apis_reject(
+        selected, "solution_path: declared manifest path: path escapes selected book root"
+    )
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        pytest.param(
+            lambda manifest: manifest.update(coverage_claims={"bad": "shape"}),
+            "coverage_claims must be a list",
+            id="claims-container",
+        ),
+        pytest.param(
+            lambda manifest: manifest["coverage_claims"][0].update(
+                evidence_by_modality=[]
+            ),
+            "coverage_claims row 0 evidence_by_modality must be a mapping",
+            id="evidence-container",
+        ),
+        pytest.param(
+            lambda manifest: next(
+                iter(
+                    manifest["coverage_claims"][0]["evidence_by_modality"].values()
+                )
+            ).update(lesson_anchors=7),
+            "coverage_claims row 0 lesson_anchors must be a list",
+            id="anchors-container",
+        ),
+    ],
+)
+def test_live_book2_rejects_malformed_coverage_path_containers_through_both_apis(
+    tmp_path: Path,
+    mutate: Callable[[dict[str, Any]], None],
+    message: str,
+) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    manifest_path = selected / "units" / B2_019 / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    mutate(manifest)
+    _write_yaml(manifest_path, manifest)
+
+    _assert_both_schedule_apis_reject(selected, message)
+
+
+@pytest.mark.parametrize("mode", ["traversal", "symlink"])
+def test_live_book2_paths_use_realpath_containment(tmp_path: Path, mode: str) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    unit = selected / "units" / B2_019
+    manifest_path = unit / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    if mode == "traversal":
+        manifest["practice"][0]["path"] = "../../syllabus.md"
+    else:
+        linked = unit / "practice" / "linked.ipynb"
+        linked.symlink_to(unit / "practice" / "p02.ipynb")
+        manifest["practice"][0]["path"] = "practice/linked.ipynb"
+    _write_yaml(manifest_path, manifest)
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any("declared manifest path" in error for error in report.errors), report.errors
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        pytest.param(
+            lambda manifest: manifest["practice"][0].update(minutes=21),
+            "B2-019-attention-transformers practice chunk 1 problem minutes 136; allocation minutes 135",
+            id="manifest-minute",
+        ),
+        pytest.param(
+            lambda manifest: manifest["practice"][0].update(id="B2-019-p99"),
+            "live manifest problem IDs must exactly match scheduled problem_ids",
+            id="manifest-id",
+        ),
+        pytest.param(
+            lambda manifest: manifest["practice"][0].update(path="practice/missing.ipynb"),
+            "path does not exist: units/B2-019-attention-transformers/practice/missing.ipynb",
+            id="manifest-path",
+        ),
+        pytest.param(
+            lambda manifest: manifest["practice"][21].update(after_session=6),
+            "B2-019-p22 requires session 6 before its scheduled practice allocation",
+            id="manifest-after-session",
+        ),
+    ],
+)
+def test_live_book2_schedule_rejects_manifest_drift(
+    tmp_path: Path,
+    mutate: Callable[[dict[str, Any]], None],
+    message: str,
+) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    manifest_path = selected / "units" / "B2-019-attention-transformers" / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    mutate(manifest)
+    manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any(message in error for error in report.errors), report.errors
+
+
+def test_two_book_schedule_fixture_is_valid_and_isolated(tmp_path: Path) -> None:
+    fixture = tmp_path / "repo"
+    shutil.copytree(FIXTURE_ROOT, fixture)
+    catalog = load_book_catalog(fixture)
+
+    book1, book2 = catalog.books
+    book1_report = schedule_checker.check_schedule(book1.root, book_spec=book1)
+    book2_report = schedule_checker.check_schedule(book2.root, book_spec=book2)
+
+    assert all(validate_book_root(book) == [] for book in catalog.books)
+    assert book1_report.ok, book1_report.errors
+    assert book2_report.ok, book2_report.errors
+    assert len(load_syllabus(book1.root).concepts) == 1
+    assert len(load_syllabus(book2.root).concepts) == 1
+    assert isinstance(
+        schedule_checker.schedule_policy(book1.root, book_spec=book1),
+        schedule_checker.Book1SchedulePolicy,
+    )
+    assert isinstance(
+        schedule_checker.schedule_policy(book2.root, book_spec=book2),
+        schedule_checker.Book2SchedulePolicy,
+    )
+
+
+def test_schedule_dispatch_rejects_registry_number_schedule_mismatch(
+    tmp_path: Path,
+) -> None:
+    fixture = tmp_path / "repo"
+    shutil.copytree(FIXTURE_ROOT, fixture)
+    registry_path = fixture / "books.yaml"
+    registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    registry["books"][1]["aio_round"] = 3
+    registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+    book2 = load_book_catalog(fixture).by_id("aio-dl")
+
+    report = schedule_checker.check_schedule(book2.root, book_spec=book2)
+
+    assert not report.ok
+    # py4kids (design 014 D1): dispatch is on aio_round alone, so aio_round 3 has no policy;
+    # usaaio reached Book2SchedulePolicy through its round-2 book id and reported
+    # "schedule book 2 does not match registered book number 3".
+    assert any(
+        "registered book number 3 has no schedule policy" in error
+        for error in report.errors
+    )
+
+
+def test_unregistered_direct_schedule_api_requires_explicit_identity(
+    tmp_path: Path,
+) -> None:
+    selected = tmp_path / "advanced"
+    shutil.copytree(BOOK2_ROOT, selected)
+
+    with pytest.raises(ValueError, match="expected_book_number or BookSpec"):
+        schedule_checker.schedule_policy(selected)
+    assert schedule_checker.check_schedule(selected, expected_book_number=2).ok
+
+    mismatched = BookSpec(id="aio-dl", number=2, root=selected.parent, depends_on=())
+    report = schedule_checker.check_schedule(selected, book_spec=mismatched)
+    assert not report.ok
+    assert any("does not match selected root" in error for error in report.errors)
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        pytest.param(
+            lambda schedule: schedule["weeks"][2].update(book_week=2),
+            "book_week rows must be ordered consecutively 1..37",
+            id="local-numbering",
+        ),
+        pytest.param(
+            lambda schedule: schedule["weeks"][2].update(global_week=99),
+            "global_week rows must be 41..77",
+            id="global-numbering",
+        ),
+        pytest.param(
+            lambda schedule: schedule["weeks"][0]["allocations"][2].update(
+                minutes=134
+            ),
+            "practice chunk 1 problem minutes 135; allocation minutes 134",
+            id="allocation-minutes",
+        ),
+        pytest.param(
+            lambda schedule: schedule["weeks"][0]["allocations"][2][
+                "problem_ids"
+            ].__setitem__(0, "B2-019-p02"),
+            "B2-019-p01 must appear exactly once",
+            id="duplicate-and-omitted-id",
+        ),
+        pytest.param(
+            lambda schedule: schedule["final_assessment"].update(
+                after_book_week=5
+            ),
+            "final assessment marker must follow book week 37",
+            id="stale-final-marker",
+        ),
+        pytest.param(
+            lambda schedule: schedule["weeks"][0]["allocations"][0].update(
+                kind="reading"
+            ),
+            "unknown Book 2 allocation kind reading",
+            id="unknown-kind",
+        ),
+        pytest.param(
+            lambda schedule: schedule["weeks"][0]["allocations"][1].update(
+                unit="aio-ml:C7-pytorch"
+            ),
+            "cross-book unit reference aio-ml:C7-pytorch",
+            id="cross-book-reference",
+        ),
+    ],
+)
+def test_staged_book2_schedule_rejects_contract_mutations(
+    tmp_path: Path,
+    mutate: Callable[[dict[str, Any]], None],
+    message: str,
+) -> None:
+    report = _mutated_report(tmp_path, mutate)
+
+    assert not report.ok
+    assert any(message in error for error in report.errors), report.errors
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        pytest.param(
+            "starts_after_global_week", 40.0,
+            "starts_after_global_week must be an integer", id="offset-float",
+        ),
+        pytest.param(
+            "starts_after_global_week", True,
+            "starts_after_global_week must be an integer", id="offset-bool",
+        ),
+        pytest.param(
+            "total_book_weeks", 12.0,
+            "total_book_weeks must be an integer", id="weeks-float",
+        ),
+        pytest.param(
+            "total_book_weeks", True,
+            "total_book_weeks must be an integer", id="weeks-bool",
+        ),
+        pytest.param(
+            "total_minutes", 3320.0,
+            "total_minutes must be an integer", id="total-float",
+        ),
+        pytest.param(
+            "total_minutes", True,
+            "total_minutes must be an integer", id="total-bool",
+        ),
+        pytest.param(
+            "final_assessment.after_book_week", 12.0,
+            "final_assessment.after_book_week must be an integer", id="marker-float",
+        ),
+        pytest.param(
+            "final_assessment.after_book_week", True,
+            "final_assessment.after_book_week must be an integer", id="marker-bool",
+        ),
+    ],
+)
+def test_book2_integer_fields_reject_float_and_bool_through_both_apis(
+    tmp_path: Path, field: str, value: object, message: str
+) -> None:
+    def mutate(schedule: dict[str, Any]) -> None:
+        if field == "final_assessment.after_book_week":
+            schedule["final_assessment"]["after_book_week"] = value
+        else:
+            schedule[field] = value
+
+    selected = _mutated_root(tmp_path, mutate)
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+    assert not report.ok
+    assert any(message in error for error in report.errors), report.errors
+    with pytest.raises(ValueError, match=message):
+        schedule_checker.load_validated_schedule(selected, expected_book_number=2)
+
+
+def test_staged_book2_schedule_rejects_first_live_manifest(tmp_path: Path) -> None:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    schedule_path = selected / "curriculum/course-schedule.yaml"
+    schedule = yaml.safe_load(schedule_path.read_text(encoding="utf-8"))
+    schedule["status"] = "staged"
+    schedule_path.write_text(yaml.safe_dump(schedule, sort_keys=False), encoding="utf-8")
+    manifest = selected / "units" / "B2-019-attention-transformers" / "manifest.yaml"
+    assert manifest.is_file()
+
+    report = schedule_checker.check_schedule(selected, expected_book_number=2)
+
+    assert not report.ok
+    assert any(
+        "staged Book 2 schedule is forbidden once a live manifest exists" in error
+        for error in report.errors
+    )
+
+
+def test_shared_renderer_supports_live_book2_manifest_coverage() -> None:
+    rendered = render_course_structure.render_document(BOOK2_ROOT)
+
+    assert "Book 2 Schedule" in rendered
+    assert "local weeks 1–37" in rendered
+    assert "display weeks 41–77" in rendered
+    assert "10,270 minutes" in rendered
+    assert "Status: live." in rendered
+    assert "live manifests reconcile every lesson, practice ID, path, and minute" in rendered
+    assert "derivation-heavy Week 3" in rendered
+    assert "live `r2-001` final assessment follows local Week 37" in rendered
+
+
+def test_two_manifest_renderer_derives_ranges_cadences_and_final_week(
+    tmp_path: Path,
+) -> None:
+    selected = _two_manifest_root(tmp_path)
+
+    rendered = render_course_structure.render_document(
+        selected, expected_book_number=2
+    )
+
+    assert "local weeks 1–12" in rendered
+    assert "display weeks 41–52" in rendered
+    assert rendered.count("255/275/420/270/380/60-minute progression") == 2
+    assert "live `r2-001` final assessment follows local Week 12" in rendered
+
+
+def test_live_book2_ledger_bytes_and_presence_of_all_units_are_pinned() -> None:
+    schedule_path = BOOK2_ROOT / "curriculum" / "course-schedule.yaml"
+    manifest_path = BOOK2_ROOT / "units" / B2_019 / "manifest.yaml"
+
+    assert hashlib.sha256(schedule_path.read_bytes()).hexdigest() == BOOK2_SCHEDULE_SHA256
+    assert hashlib.sha256(manifest_path.read_bytes()).hexdigest() == BOOK2_MANIFEST_SHA256
+    assert (BOOK2_ROOT / "units" / B2_020 / "manifest.yaml").is_file()
+    assert (BOOK2_ROOT / "units" / B2_021 / "manifest.yaml").is_file()
+    assert (BOOK2_ROOT / "units" / B2_022 / "manifest.yaml").is_file()
+    assert (BOOK2_ROOT / "units" / B2_023 / "manifest.yaml").is_file()
+    assert (BOOK2_ROOT / "units" / B2_024 / "manifest.yaml").is_file()
+    schedule_text = schedule_path.read_text(encoding="utf-8")
+    assert B2_020 in schedule_text and B2_021 in schedule_text
+    assert B2_022 in schedule_text
+    assert B2_023 in schedule_text
+    assert B2_024 in schedule_text
+
+
+def test_book1_bytes_remain_pinned_while_valid_book2_fixture_renders(
+    tmp_path: Path,
+) -> None:
+    schedule_path = BOOK1_ROOT / "curriculum" / "course-schedule.yaml"
+    structure_path = BOOK1_ROOT / "docs" / "course-structure.md"
+    schedule_bytes = schedule_path.read_bytes()
+    structure_bytes = structure_path.read_bytes()
+
+    assert hashlib.sha256(schedule_bytes).hexdigest() == BOOK1_SCHEDULE_SHA256
+    assert hashlib.sha256(structure_bytes).hexdigest() == BOOK1_STRUCTURE_SHA256
+    assert render_course_structure.render_document(BOOK1_ROOT).encode() == structure_bytes
+
+    fixture = tmp_path / "repo"
+    shutil.copytree(FIXTURE_ROOT, fixture)
+    fixture_catalog = load_book_catalog(fixture)
+    fixture_book2 = fixture_catalog.by_id("aio-dl")
+    assert schedule_checker.check_schedule(
+        fixture_book2.root, book_spec=fixture_book2
+    ).ok
+    fixture_rendered = render_course_structure.render_document(
+        fixture_book2.root, book_spec=fixture_book2
+    )
+    assert "Book 2 Schedule" in fixture_rendered
+    assert str(BOOK2_ROOT) not in fixture_rendered
+
+    assert hashlib.sha256(schedule_path.read_bytes()).hexdigest() == BOOK1_SCHEDULE_SHA256
+    assert hashlib.sha256(structure_path.read_bytes()).hexdigest() == BOOK1_STRUCTURE_SHA256
+
+    mutated = bytearray(schedule_bytes)
+    mutated[0] ^= 1
+    assert hashlib.sha256(mutated).hexdigest() != BOOK1_SCHEDULE_SHA256
+
+
+PLANNED_R2_MARKER = {"kind": "future-r2-mock", "status": "planned", "after_book_week": 37}
+LIVE_R2_MARKER = {"kind": "r2-mock", "status": "live", "test": "r2-001", "after_book_week": 37}
+
+
+def _marker_root(tmp_path: Path, marker: dict[str, Any], manifests: tuple[str, ...]) -> Path:
+    selected = tmp_path / "aio-dl"
+    shutil.copytree(BOOK2_ROOT, selected)
+    for existing in (selected / "mocktests").glob("r2-*"):
+        shutil.rmtree(existing)
+    for test_id in manifests:
+        test_dir = selected / "mocktests" / test_id
+        test_dir.mkdir(parents=True)
+        (test_dir / "manifest.yaml").write_text(f"test: {test_id}\n", encoding="utf-8")
+    schedule = _load_schedule(selected)
+    schedule["final_assessment"] = dict(marker)
+    _write_yaml(selected / "curriculum" / "course-schedule.yaml", schedule)
+    return selected
+
+
+def test_planned_r2_marker_is_accepted_only_without_r2_manifests(tmp_path: Path) -> None:
+    clean = _marker_root(tmp_path / "a", PLANNED_R2_MARKER, ())
+    assert schedule_checker.check_schedule(clean, expected_book_number=2).ok
+
+    stale = _marker_root(tmp_path / "b", PLANNED_R2_MARKER, ("r2-001",))
+    report = schedule_checker.check_schedule(stale, expected_book_number=2)
+    assert not report.ok
+    assert any(
+        "planned future-r2-mock marker is forbidden once an r2-* manifest exists" in error
+        for error in report.errors
+    ), report.errors
+
+
+def test_live_r2_marker_requires_the_named_manifest(tmp_path: Path) -> None:
+    live = _marker_root(tmp_path / "a", LIVE_R2_MARKER, ("r2-001",))
+    assert schedule_checker.check_schedule(live, expected_book_number=2).ok, (
+        schedule_checker.check_schedule(live, expected_book_number=2).errors
+    )
+
+    missing = _marker_root(tmp_path / "b", LIVE_R2_MARKER, ())
+    report = schedule_checker.check_schedule(missing, expected_book_number=2)
+    assert not report.ok
+    assert any(
+        "live r2-mock final assessment r2-001 requires mocktests/r2-001/manifest.yaml" in error
+        for error in report.errors
+    ), report.errors
+
+    other = _marker_root(tmp_path / "c", LIVE_R2_MARKER, ("r2-002",))
+    assert not schedule_checker.check_schedule(other, expected_book_number=2).ok
+
+
+@pytest.mark.parametrize(
+    "marker",
+    [
+        {**LIVE_R2_MARKER, "kind": "future-r2-mock"},
+        {**LIVE_R2_MARKER, "status": "planned"},
+        {**LIVE_R2_MARKER, "test": "r1-001"},
+        {**LIVE_R2_MARKER, "test": "r2-1"},
+        {**LIVE_R2_MARKER, "extra": True},
+        {key: value for key, value in LIVE_R2_MARKER.items() if key != "test"},
+        {**PLANNED_R2_MARKER, "test": "r2-001"},
+        {**LIVE_R2_MARKER, "after_book_week": 36},
+    ],
+)
+def test_malformed_final_assessment_markers_are_rejected(
+    tmp_path: Path, marker: dict[str, Any]
+) -> None:
+    selected = _marker_root(tmp_path, marker, ("r2-001",))
+    assert not schedule_checker.check_schedule(selected, expected_book_number=2).ok

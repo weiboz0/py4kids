@@ -18,6 +18,7 @@ from tools.books import (
     lesson_budget,
     peers,
     prereq_policy,
+    py4kids_books,
     qualified_concept_id_pattern,
     variant_of,
 )
@@ -109,7 +110,7 @@ def peer_registry_findings(root: Path) -> list[str]:
 
 def _is_peer_pair(root: Path, first: str, second: str) -> bool:
     """Two distinct registered books that list each other as peers."""
-    registered = book_entries(root)
+    registered = py4kids_books(root)  # aio books are never peers (design 014 D1)
     return (
         first != second
         and first in registered
@@ -126,7 +127,8 @@ def global_concept_uniqueness_findings(root: Path) -> list[str]:
     symmetric ``peers`` pair (design 008 D3), which may each define a shared id only when the two
     registry entries are identical as dicts (name, category and ``kind``, including its absence).
     """
-    registered = book_entries(root)
+    # Only py4kids-model books carry a py4kids concepts.yaml (design 014 D1).
+    registered = py4kids_books(root)
     owners: dict[str, set[str]] = {}
     catalogs: dict[str, object] = {}
     entries: dict[tuple[str, str], dict] = {}
@@ -412,8 +414,8 @@ def _is_transitive_dependent(root: Path, candidate: str, dependency: str) -> boo
 
 def _registered_concepts(root: Path, book: str) -> set[str]:
     """Return ids owned by a registered book, failing closed on malformed data."""
-    if book not in book_entries(root):
-        return set()
+    if book not in py4kids_books(root):
+        return set()  # unregistered, or an aio book (no py4kids concepts; design 014 D1)
     path = _curriculum(root, book) / "concepts.yaml"
     if not path.is_file():
         return set()

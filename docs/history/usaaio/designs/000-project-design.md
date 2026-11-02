@@ -1,0 +1,268 @@
+# Design 000 — USAAIO Mock Tests & Teaching Materials: Project Structure and Dev Process
+
+Status: APPROVED (user, 2026-08-03)
+Date: 2026-08-03
+
+## Purpose
+
+A project to produce mock tests and teaching materials for the USA AI Olympiad (USAAIO),
+for the author's own student(s).
+It adopts the PowerMarket development process (plan-driven lifecycle, multi-model review gates, autopilot through merge)
+tailored for content development rather than software.
+
+## Requirements (settled during brainstorming)
+
+- **Audience:** originally the author's own student(s); updated 2026-08-04 — the materials
+  form the curriculum of a **formal training course running across multiple semesters**
+  (units as course texts, practices as homework, mock tests as midterm/final instruments;
+  unit `estimated_minutes` feeds week-level pacing; a course-structure doc maps units to
+  semesters on the post-tranche roadmap). Delivery remains notebooks + printable PDFs.
+- **Target stage:** Book 1 is the complete Round 1 course for the 3-hour proctored exam;
+  Book 2 is the complete Round 2 course and declares Book 1 as its prerequisite book.
+- **Format:** notebooks as the source of truth, with build steps rendering printable PDFs: book editions (Quarto) and syllabus, handouts and mock-test papers (pandoc and lualatex).
+- **Curriculum:** syllabus-driven units derived from the official USAAIO scope and past problems;
+  each unit = lesson notebook + practice problems; mock tests sample across units via topic tags.
+- **Self-contained at a Calculus AB baseline:** the assumed background is a high schooler with
+  math training at Calculus AB (single-variable differential/integral calculus) plus basic Python.
+  Everything beyond that — linear algebra, probability/statistics, the multivariable pieces needed
+  for gradients and backprop, NumPy — is taught by foundation units inside the curriculum.
+  No external textbook or course is required.
+- **Originality:** mixed — original problems by default, plus adaptations of past USAAIO/IOAI problems,
+  with provenance tagged in each problem's manifest.
+- **Repeatability:** mock-test generation follows a documented, parameterized pipeline
+  (blueprint → problem specs → drafting → verification → assembly), so every `r1-NNN`
+  is produced the same way and the process itself improves over time.
+- **Similarity verification:** every mock test is verified against the real past tests in both directions —
+  *fidelity* (similar enough in structure, topic mix, difficulty, style) and
+  *overlap* (no problem near-duplicates a specific past problem unless tagged `adapted-from`).
+- **Process:** full PowerMarket adoption, tailored (gates retargeted at content correctness).
+- **Git:** public GitHub repo (github.com/weiboz0/usaaio); PR workflow via `gh`.
+  Because the repo is public, raw past-test papers and any student data are never committed —
+  only original material and our own derived analysis.
+
+## 1. Repo structure
+
+```
+usaaio/
+├── AGENTS.md                  # project rules, gates, and dispatch
+├── books.yaml                 # exact book registry and dependency order
+├── book1/                     # independently complete Round 1 course
+│   ├── syllabus.md            # Book 1 concept vocabulary and unit DAG
+│   ├── curriculum/            # schedule, coverage, inventory, topics, sources
+│   ├── units/                 # lessons, practices, solutions, manifests
+│   ├── mocktests/             # Book 1 blueprint and r1-* assessments
+│   ├── reference/             # R1 corpus; raw papers gitignored
+│   └── docs/course-structure.md
+├── book2/                     # independently complete Round 2 course
+│   ├── syllabus.md            # Book 2 ownership plus qualified Book 1 imports
+│   ├── curriculum/            # Book 2 schedule, coverage, inventory, topics, sources
+│   ├── units/                 # Round 2 lessons, practices, solutions, manifests
+│   ├── mocktests/             # Book 2 blueprint and r2-* assessments
+│   ├── reference/             # R2 corpus; raw papers gitignored
+│   └── docs/course-structure.md
+├── docs/
+│   ├── README.md              # lifecycle taxonomy (from powermarket)
+│   ├── development-workflow.md  # Steps 1–6 tailored for content
+│   ├── mocktest-generation.md   # the repeatable generation pipeline (see §2b)
+│   ├── content-review-gate.md   # replaces the code-review gate spec
+│   ├── architecture/decisions.md
+│   └── proposals/ designs/ plans/ reviews/   # numbered, 3-digit prefix
+├── tools/                     # book-selected validation and rendering package
+├── scripts/
+│   ├── ci-local.sh            # the authoritative gate (see §3)
+│   └── pre-merge-guard.sh     # plan-number + unit/mocktest-ID collision checks
+├── pyproject.toml             # uv-managed; numpy, sklearn, torch, jupyter, nbclient…
+└── TODO.md
+```
+
+## 2. Lifecycle and gates (what changes vs PowerMarket)
+
+The plan-driven lifecycle carries over unchanged:
+autopilot through merge is the default operating mode;
+feature branch before plan; numbered plan file committed before work;
+3-way plan-review gate; phase-by-phase build; post-execution report;
+PR; `pre-merge-guard --pr`; squash-merge to main.
+Hard safeguards carry over (no direct commits to main, governance docs human-reviewed,
+no force-push, unresolved `[OPEN]` blockers block merge).
+
+Two gates are retargeted:
+
+### Plan-review gate (3-way)
+
+The live roster is defined in `AGENTS.md ## Plan-review gate` and is authoritative.
+Since Plan 026 (2026-10-09) it matches `../py4kids`: self-review inline,
+Sol via `codex:codex-rescue` (GPT-6-sol, fallback GPT-5.6-sol, read-only),
+and a fresh read-only Fable 5 via `Agent`.
+Earlier rosters (GLM, DeepSeek, Opus slots) are historical and recorded in their plan files.
+The PowerMarket "integration-tests phase" rule becomes a **verification phase** rule.
+Every plan that ships problems or lessons MUST include a named verification phase specifying
+solution execution and answer-key reproduction, manifest validation, PDF validation, and the
+difficulty/timing budget.
+Unit practices use assert-based self-checks; mock tests compare manifest `answer_key` values.
+Book 1 retains printable mock-test PDFs; every live Book 2 unit requires a book-local
+student-facing PDF collection, and B2-019 requires exactly 32 sources and outputs.
+Exempt categories (docs-only, tooling-only refactors, plan-design plans) must say so in "Out of scope".
+
+### Curriculum self-containedness (§2a)
+
+The curriculum assumes exactly one baseline: **Calculus AB plus basic Python**.
+The Book 1 syllabus opens with a foundation track that teaches, from that baseline,
+everything the ML units need — linear algebra (vectors, matrices, dot products),
+probability and statistics, the multivariable calculus fragments required for gradients
+and backpropagation (partial derivatives, chain rule in several variables), and NumPy.
+Book 2 remains self-contained as a program by declaring Book 1 as a prerequisite book and
+persisting exact qualified imports rather than duplicating those lessons.
+
+Self-containedness is enforced structurally, not by convention:
+
+- Every unit's `manifest.yaml` declares `concepts-taught`, `concepts-used`, and `prereq-units`.
+- The syllabus defines the concept vocabulary; the units form a DAG over it.
+- A **prerequisite-closure check** (`tools prereq-check`, run in CI) verifies that every concept
+  a unit uses is either in the Calc AB + Python baseline (an explicit allowlist in the syllabus)
+  or taught by a unit reachable through its declared prerequisites. A gap is a merge blocker.
+- **Practice coverage is total:** each practice problem is tagged with the concepts it exercises,
+  and every concept in a unit's `concepts-taught` must be exercised by at least one practice
+  problem (`tools coverage-check`, run in CI — a gap is a merge blocker). A unit is not done
+  when its lesson is written; it is done when every knowledge point it teaches can be practiced.
+- The content-review gate for units includes an **accessibility review**: a reviewer reads the
+  lesson as the target student — flagging any step that silently assumes math beyond the
+  baseline plus declared prerequisites (e.g. an unexplained matrix inverse, an eigenvalue
+  mentioned before it is taught, integral notation beyond single-variable).
+
+Mock tests inherit the same discipline: a mock test's problems may only use concepts taught by
+units that exist (its manifest lists the units it draws on), so the student is never tested on
+something the curriculum has not taught.
+
+### Repeatable mock-test generation pipeline (§2b)
+
+Mock tests are not authored ad hoc.
+Every `r1-NNN` follows the same documented pipeline (`docs/mocktest-generation.md`),
+so generation is repeatable and each run's parameters are recorded:
+
+1. **Blueprint** — `book1/mocktests/blueprint.yaml` is the canonical Round 1 test specification,
+   derived from analysis of the Book 1 reference corpus (`book1/reference/analysis.md`):
+   question counts by section, topic distribution, difficulty curve, points, time budget.
+   It is versioned; changing it is a reviewed change like any other.
+2. **Instantiate** — `usaaio-tools --book book1 new-mocktest r1-NNN` scaffolds a test directory
+   from the blueprint
+   and emits a problem-spec sheet: one spec per slot
+   (topic tag from the syllabus, difficulty tier, points, format, originality mode).
+3. **Draft** — problems and solutions are drafted per spec (subagent-dispatched, parallelizable).
+   Datasets are produced by seeded generation scripts checked into `data/`,
+   so data are regenerable, not opaque blobs.
+4. **Verify** — the automated checks of §3 (solution execution, hygiene, manifest, blueprint
+   conformance, overlap scan, PDF build).
+5. **Gate** — the 3-way content-review gate (§2), which includes the fidelity review.
+
+The manifest records the blueprint version and every generation parameter,
+so a future session can reproduce or extend the test without reverse-engineering it.
+
+### Similarity verification (two directions)
+
+- **Fidelity — similar enough to the real tests.**
+  Automated: `tools blueprint-check` verifies each mock test's manifest against `blueprint.yaml`
+  (section/question counts, topic distribution within tolerance, points sum, time budget).
+  Human/model: the content-review gate includes an explicit fidelity review —
+  reviewers compare the mock against the reference corpus for style, wording register,
+  problem shape, and difficulty, and record a per-section fidelity verdict in the plan file.
+- **Overlap — not too similar to any specific past problem.**
+  Automated: `tools overlap-scan` compares every mock problem against the per-problem index
+  of the reference corpus (lexical n-gram + embedding similarity) and flags matches above
+  threshold. A flagged problem must either carry an `adapted-from: <reference id>` provenance
+  tag or be reworked; an untagged flag is a merge blocker.
+  Human/model: content-gate reviewers independently note any past problem a mock problem
+  resembles, checked against the provenance tags.
+
+### Content-review gate (replaces the code-review gate, same 3-way roster)
+
+The content gate uses the same roster as the plan gate (`AGENTS.md`, `docs/content-review-gate.md`).
+
+Reviewers receive the student-facing materials plus the answer key and must:
+
+1. independently solve or verify each problem before reading the solution;
+2. check wording for ambiguity and clarity;
+3. check difficulty and time budget against real Round 1;
+4. check rubric fairness and point allocation;
+5. verify provenance tags;
+6. review fidelity against the reference corpus and note any overlap with specific past problems
+   (see "Similarity verification" above).
+
+Findings are recorded in the plan file's review section with
+`[OPEN]` / `[FIXED]` / `[WONTFIX]` tags and source tags, exactly as in PowerMarket.
+All `[OPEN]` items resolve before merge.
+Changes to tooling code (`tools/`, `scripts/`) get conventional code review within the same gate.
+
+### Errata process (replaces the bug-investigation gate)
+
+When a student or reviewer finds a wrong answer key or a broken problem after merge:
+2-way diagnosis (Claude + Codex, read-only) → fix plan → gates → merge,
+plus an `ERRATA.md` entry in the affected mock test's directory.
+Trivial errata (typos) skip diagnosis and go straight to fix + content-review gate.
+
+## 3. Verification (CI)
+
+`scripts/ci-local.sh` is the authoritative pre-merge gate:
+
+1. **Solution execution** — every solution notebook under each selected book runs
+   top-to-bottom clean (nbclient, fixed seed, time-boxed) and its final answers match
+   the values recorded in the manifest / answer key.
+2. **Student-notebook hygiene** — problem notebooks contain no solution leakage
+   (no filled answer cells, no stray outputs); enforced by a lint in `tools/`.
+3. **Manifest validation** — schema check on every `manifest.yaml`
+   (topic tags exist in the syllabus, points sum to the test total, provenance present,
+   blueprint version + generation parameters recorded).
+4. **Blueprint conformance** — `usaaio-tools --book <id> blueprint-check` verifies each mock
+   against the selected book's `mocktests/blueprint.yaml` (fidelity, automated half).
+5. **Overlap scan** — `tools overlap-scan` flags problems too similar to the reference corpus
+   without an `adapted-from` tag (merge blocker).
+6. **Prerequisite closure** — `tools prereq-check` verifies the unit DAG: every concept used is
+   in the Calc AB + Python baseline allowlist or taught by a declared-prerequisite unit, and
+   every mock test draws only on concepts taught by existing units (merge blocker).
+7. **Practice coverage** — `tools coverage-check` verifies every concept in a unit's
+   `concepts-taught` is exercised by at least one tagged practice problem (merge blocker).
+8. **PDF build** — `scripts/build-pdf.sh --book <id>` writes each book's syllabus
+   (`docs/course-structure.md`), one practice handout per live unit, and each mock test's
+   paper and solutions into the gitignored `output/<book>/` (Plan 030 D4).
+   It renders from the edition publisher's shared converter through pandoc and lualatex,
+   keeps intermediate files and LaTeX logs under the selected book's `build/` (gitignored),
+   and fails on a missing glyph.
+   The four edition PDFs per book (`scripts/build-book.sh`, Quarto) are change-routed:
+   publication inputs trigger a full render plus `tools/publish_audit.py`, unit or mock-test
+   changes trigger a scoped check, and `scripts/ci-local.sh --all-books` renders everything.
+9. **Lint** — `ruff` on `tools/`, plus the collision guards.
+
+## 4. Agent dispatch
+
+Same area-based philosophy as PowerMarket, remapped:
+
+| Work | Dispatch |
+|------|----------|
+| Planning, review orchestration, test assembly | Orchestrator Claude inline |
+| Problem / lesson drafting | Opus subagents (parallelizable per unit/problem); live table in `AGENTS.md ## Agent dispatch` |
+| Blind independent solving (content gate) | 3-way gate roster (all reviewers solve blind) |
+| Tooling code (`tools/`, `scripts/`) | Opus subagent |
+| Trivially-scoped edits | Inline |
+
+Python environment via `uv`.
+No secrets are needed for content work; the secrets safeguard chiefly guards against
+committing student data or personal information.
+
+## First milestones (each its own plan)
+
+1. **001** — scaffold repo: CLAUDE.md, docs skeleton, pyproject, tooling skeleton, guard scripts, GitHub repo.
+2. **002** — reference corpus: ingest past USAAIO/IOAI tests into the owning book's
+   `reference/` with per-problem indexes and committed derived analysis.
+3. **003** — syllabus + blueprint: topic taxonomy from the official scope + the corpus analysis,
+   including the foundation track and the Calc AB + Python baseline concept allowlist;
+   derive `book1/mocktests/blueprint.yaml`; write `docs/mocktest-generation.md`.
+4. **004** — verification tooling: `blueprint-check` + `overlap-scan` + `prereq-check`
+   + `coverage-check` + `hygiene-check` (student-notebook solution-leakage lint, §3.2)
+   + `new-mocktest` scaffolder.
+5. **005** — first teaching unit (foundation track first: lesson + practice).
+6. **006** — first full mock test `r1-001` through the full pipeline.
+
+## Out of scope (for now)
+
+- Camp-level material beyond the registered Round 2 program.
+- Public distribution, licensing, or a course website.
+- Auto-grading infrastructure beyond answer-key checks.

@@ -25,6 +25,17 @@ books_version: 2
 # absent, the book runs group-free. It is read in ci-local step 1 as a SEPARATE line from the
 # boolean feature flags above (it is a value, not a flag), so tools still key on flags, never ids.
 #
+# `content_model` (string, not a boolean flag; design 014 D1): `py4kids` (the default when
+# absent) or `aio`. An `aio` book is an imported usaaio olympiad book (design 014): it follows
+# the aio-book law and runs the `tools/aio/` checks, and every py4kids tool that walks all
+# registered books filters to `content_model: py4kids`. The `judge`, `patterns`, `acsl` and
+# `labs` flags are rejected on an `aio` book. It is read in ci-local step 1 as a SEPARATE line,
+# like `dependency_group`.
+#
+# `aio_round` (integer; design 014 D1): the olympiad round an `aio` book serves (1 or 2). It is
+# required on every `aio` book and rejected on any other; the `tools/aio/` catalog adapter maps
+# usaaio's book `number` onto it (py4kids `number` stays a series ordinal).
+#
 # `peers` (design 008 D3 / 009 D5): books that may each introduce the same concept id, with
 # identical concepts.yaml entries. It must be symmetric; neither peer may require an id
 # only the other introduces.
@@ -95,3 +106,22 @@ books:
   lesson_budget: [30, 50]
   dependency_group: roar
   labs: true
+- id: aio-ml
+  number: 4
+  root: aio-ml
+  title: Machine Learning for the AI Olympiad
+  subtitle: 'Round 1: Foundations, Models, and Practice'
+  depends_on: []
+  content_model: aio
+  aio_round: 1
+  dependency_group: aio
+- id: aio-dl
+  number: 4
+  root: aio-dl
+  title: Deep Learning for the AI Olympiad
+  subtitle: 'Round 2: Transformers, Generative Models, and Open-Ended Modeling'
+  depends_on:
+  - aio-ml
+  content_model: aio
+  aio_round: 2
+  dependency_group: aio

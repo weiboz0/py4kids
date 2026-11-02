@@ -87,3 +87,28 @@ runner/dist/
 # Wrangler local state; Playwright results of the live smoke test.
 .wrangler/
 site/test-results/
+
+# The AI Olympiad books (design 014; plan aio-001), ported from usaaio's .gitignore with the roots renamed.
+# The repo is PUBLIC: raw past-test papers stay local-only (copyright), and so does the download cache
+# (scripts/aio/aio-provision-cache.sh fills it). Only reference/analysis.md and placeholders are committed.
+aio-ml/reference/*
+!aio-ml/reference/.gitkeep
+!aio-ml/reference/analysis.md
+aio-dl/reference/*
+!aio-dl/reference/.gitkeep
+!aio-dl/reference/analysis.md
+
+# C11 grading register: the held-back split is regenerated at grading time by `make_dataset.py --with-test`
+# and must never be committed (committing it would break the hidden-test teaching device).
+aio-ml/units/18-C11-competition-craft/data/heldout.csv
+
+# C11 solution notebooks materialize these deterministic grading artifacts when executed. They are
+# student outputs, not source files.
+aio-ml/units/18-C11-competition-craft/practice/p15_contract.csv
+aio-ml/units/18-C11-competition-craft/practice/p17_log.csv
+aio-ml/units/18-C11-competition-craft/practice/p17_predictions.csv
+aio-ml/units/18-C11-competition-craft/practice/p18_audit.csv
+aio-ml/units/18-C11-competition-craft/practice/p18_predictions.csv
+
+# Mock test r1-001 P9 grading data is regenerated from its seeded script.
+aio-ml/mocktests/r1-001/data/p09_heldout.csv
