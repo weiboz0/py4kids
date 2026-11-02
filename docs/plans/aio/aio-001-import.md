@@ -492,3 +492,7 @@ This branch routes `full`. Run 4 took 349.7 min end to end.
 - **Import report "Renamed paths"** (Phase B item 3): the report lists per-root move counts and the special renames rather than every renamed path; every rename is still recoverable from those counts and the full changed-file list ([fable] nit 2).
 - **Content gate, after the verification runs:** `tools/aio/tests/test_exec_isolation.py` (aio suite 1783) and the removal of the premature `build/aio-outputs/` ignore rule; the final `ci-local.sh --all-books` run below covers both.
 - **Final gate run:** the first `ci-local.sh --all-books` on `05e207de` failed one site test (`e2e-pwa/offline.spec.ts:157`, python-concepts: one navigation `ERR_ABORTED` in the offline-cache assertion) while a second full CI ran on the machine; the PWA suite then passed 3/3 on the same `dist/`. The branch was rebased onto plan 107 and the gate re-run alone (below).
+- **Final gate re-run** on `627a00f4` (rebased onto plan 107, nothing else running): `ci-local.sh --all-books` **ALL GREEN**, exit 0.
+  Python suites 2290 passed / 2 skipped, 348, 636 and the aio suite 1783 passed; register verification 437/437; all four mutation verifications 5/5.
+  `overlap-scan --require-corpus` ran fail-closed for both books (aio-ml: 1/1 PDF parts, 37 index text parts; aio-dl: 3/3 PDF parts, 26 index text parts; 0 extraction failures) and passed.
+  Site: 25 files / 426 unit tests, 159 e2e passed, PWA 23 + 10 passed (the `@hooks` steps run in their own pass), 5 passed in the last suite; pre-merge guard OK.
