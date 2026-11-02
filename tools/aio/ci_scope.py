@@ -9,10 +9,15 @@ new text of the few files whose diff matters, it decides per book:
 - `glossary`: no render, only the glossary audit (D5 rule 5);
 - `none`: unchanged; ci-local prints `INFO build-book: <book> unchanged (change-routed)`.
 
-Global publication inputs (the publisher, its theme, `tools/aio/books.py`, `build-book.sh`, the
-registry, and the Python environment) route every book to `full`. In py4kids the aio publisher
-lives under `tools/aio/` and `scripts/aio/` (plan aio-001 Phase D path disposition). So does `--all-books`, and so
-does a missing `origin/main` or merge-base (fail-safe).
+Global publication inputs route every book to `full` (py4kids plan aio-002 B.2, design 014 D6):
+every path under `tools/aio/` except its tests (`tools/aio/tests/`) and under `scripts/aio/`, where
+the aio publisher, its theme, its imports (`tools/aio/books.py`, `tools/aio/model.py`) and
+`build-book.sh` live (plan aio-001 Phase D path disposition); the shared registry and Python
+environment (`books.yaml`, `pyproject.toml`, `uv.lock`, py4kids `tools/ci_scope.py`'s shared
+files); and the shared gate and toolchain (`scripts/ci-local.sh`, `.python-version`). The rest of
+py4kids `tools/` and `scripts/` routes no aio book: no aio publisher file imports or calls it.
+This is wider than usaaio's publisher-only set, which missed the publisher's own imports.
+So does `--all-books`, and so does a missing `origin/main` or merge-base (fail-safe).
 
 The CLI gathers the change set: the committed diff against the merge-base with `origin/main`,
 plus staged, unstaged, and untracked files.
@@ -36,20 +41,19 @@ import yaml
 
 from tools.aio.books import unit_id_of
 
-_TOOLS = "tools/aio/"
+# The exec router's global set (`EXEC_GLOBAL_EXACT`, `EXEC_GLOBAL_PREFIXES`) minus the aio tests.
 GLOBAL_EXACT = frozenset({
-    "tools/aio/books.py", "scripts/aio/build-book.sh", "books.yaml", "pyproject.toml", "uv.lock",
+    "books.yaml", "pyproject.toml", "uv.lock", "scripts/ci-local.sh", ".python-version",
 })
-GLOBAL_PREFIXES = ("tools/aio/publish_theme/",)
+GLOBAL_PREFIXES = ("tools/aio/", "scripts/aio/")
+GLOBAL_EXCLUDED_PREFIXES = ("tools/aio/tests/",)
 INFO_UNCHANGED = "INFO build-book: {book} unchanged (change-routed)"
 
 
 def is_global_input(path: str) -> bool:
-    if path in GLOBAL_EXACT or path.startswith(GLOBAL_PREFIXES):
+    if path in GLOBAL_EXACT:
         return True
-    name = path.removeprefix(_TOOLS)
-    return path.startswith(_TOOLS) and "/" not in name and name.startswith("publish") \
-        and name.endswith(".py")
+    return path.startswith(GLOBAL_PREFIXES) and not path.startswith(GLOBAL_EXCLUDED_PREFIXES)
 
 
 @dataclass

@@ -26,7 +26,7 @@ export PATH="$HOME/.local/bin:$PATH"
 if [[ -n ${AIO_PYTHON:-} ]]; then
   python_cmd=("$AIO_PYTHON")
 elif command -v uv > /dev/null; then
-  python_cmd=(uv run --quiet --project "$script_repo_root" python)
+  python_cmd=(uv run --quiet --project "$script_repo_root" --group aio python)
 else
   python_cmd=(python3)
 fi
