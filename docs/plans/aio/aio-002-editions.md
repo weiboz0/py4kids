@@ -1,6 +1,6 @@
 # Plan aio-002 — Editions: `publication: true`, step-5 routing, `output/aio-*/`
 
-**v3** (2026-11-01) folds plan-review round 2 ([sol] REJECT: 1 BLOCKER + 2 MUST; [fable] APPROVE WITH NITS: 1 MUST + 4 NIT). **v2** folded plan-review round 1 ([self] APPROVE WITH NITS: 1 MUST + 1 NIT; [sol] REJECT: 1 BLOCKER + 2 MUST + 1 NIT; [fable] APPROVE WITH NITS: 2 MUST + 4 NIT). **v1** was the first draft.
+**v3.1** (2026-11-01) folds round 3 ([sol] APPROVE; [fable] APPROVE WITH NITS: 1 MUST + 3 NIT). **Plan gate CLOSED (consensus).** **v3** folded plan-review round 2 ([sol] REJECT: 1 BLOCKER + 2 MUST; [fable] APPROVE WITH NITS: 1 MUST + 4 NIT). **v2** folded plan-review round 1 ([self] APPROVE WITH NITS: 1 MUST + 1 NIT; [sol] REJECT: 1 BLOCKER + 2 MUST + 1 NIT; [fable] APPROVE WITH NITS: 2 MUST + 4 NIT). **v1** was the first draft.
 **Design:** `docs/designs/014-aio-books.md` (v4.2) §2 D6 and the §4 roadmap row **aio-002**.
 **Precondition:** aio-001 (PR #172, `d80e76db`) merged; the publisher (`tools/aio/publish*.py`, `tools/aio/publish_theme/`), `scripts/aio/build-book.sh` and the edition router (`tools/aio/ci_scope.py` `route_books`) were ported there and are tested by the aio suite, but nothing calls them yet.
 **Autopilot** per AGENTS.md.
@@ -49,16 +49,23 @@ The py4kids-model books' results are unchanged.
 1. `scripts/ci-local.sh` step 5: the `FAIL: … aio editions are not routed yet` stub is replaced by usaaio `a20128f` step 8's edition loop (`scripts/ci-local.sh:167-189` there), ported verbatim apart from paths and the group:
    `uv run --group aio python -m tools.aio.ci_scope --root "$repo_root" [--all-books]` produces one route line per aio publication book, and each mode runs as there:
    - `full` → `uv run --group aio bash scripts/aio/build-book.sh --book <id>` then `uv run --group aio python -m tools.aio.publish_audit --root … --book <id>`;
-   - `scoped` → the same two with `--units …` / `--mocktests …`;
+   - `scoped` → the same two, passing the route's `--units …` / `--mocktests …` words (`"${route_scope[@]}"`) verbatim to both, as usaaio does (no re-parsing);
    - `glossary` → `publish_audit … --glossary-only`;
    - `none` → `INFO build-book: <id> unchanged (change-routed)`;
    - any other mode → FAIL.
    The router runs **once** for all aio books, after the per-book loop's `done 3<<< "$books"` and before `echo "book editions rendered: …"`. A router failure fails the step.
    The aio books join that summary: `full`/`scoped` are appended to `rendered`, and `glossary`/`none` to `skipped` with the route. No aio route is silent.
+   **The loop is a shell function**, `aio_edition_routes`, defined inside step 5 before the per-book loop. It is not defined among the top-level helpers, because `tests/test_tools.py:1627-1633` orders the first `has_flag publication` before the first `build-book.sh` in the whole file.
+   Its interface:
+   - its arguments are the expected aio publication book ids;
+   - the router command comes from an overridable array, `aio_edition_router=(uv run --group aio python -m tools.aio.ci_scope)` (default), called with `--root "$repo_root" "${scope_args[@]}"`;
+   - it appends to the globals `rendered` and `skipped`.
+
+   Its body has no bare `}` line, so the tests can extract it from `name() {` to the first `\n}\n`, as `tools/aio/tests/test_integration.py:1706-1707` does for the exec loop.
    **Exactly one route line per book:** the loop collects the routed book ids and compares them with the registered aio `publication: true` books (`MODEL` + `has_flag publication`). A missing, duplicated or unregistered book fails the step (`FAIL: aio edition routes … differ from books.yaml …`), as the step-1 adapter check does for the catalog.
    The step-5 header comment (`scripts/ci-local.sh:453-456`) states the aio rule beside the py4kids one: the book's paths, `tools/aio/` (not its tests), `scripts/aio/`, the shared CI files of B.2, or `--all-books`.
    The stub's FAIL branch inside the per-book loop becomes `is_aio "$book" && continue` before the py4kids `tools.ci_scope` call.
-   `scripts/aio/build-book.sh`'s inner `py()` helper (`:49-52`) gains `--group aio`, so the publisher and `publish_output` run under the group as well.
+   `scripts/aio/build-book.sh`'s inner `py()` helper (`:50-53`) and the same nested `uv run … python` in `scripts/aio/build-pdf.sh:29` gain `--group aio`, so the publisher, `publish_output` and the PDF builder run under the group as well.
    The publisher imports only `yaml` and the stdlib, so this changes no output; it keeps the group boundary exact.
 2. **The shared trigger** (design D6: py4kids' `tools/ci_scope.py` "contributes its shared-file full trigger").
    The aio router's global set becomes the aio half of the py4kids rule:
@@ -158,6 +165,18 @@ Also out of scope: any `publication.yaml`, content or theme change; the website 
 3. NIT: stale prose in `scripts/ci-local.sh:453-456` and `output/README.md:7` → **[FIXED]** B.1, B.4.
 4. NIT: ci-local has no step selector → **[FIXED]** C.4 runs the extracted route loop and names the evidence lines.
 5. NIT: the baseline needs no `fetch-reference.sh` → **[FIXED]** C.2.
+
+### Round 3 (v3): CONSENSUS
+
+**[self]** APPROVE.
+**[sol]** APPROVE: no findings; its round-2 findings are resolved.
+**[fable]** APPROVE WITH NITS (1 MUST, 3 NIT); its round-2 findings are resolved.
+1. MUST: specify the interface of the extracted route-loop function, so the stub tests and C.4 can call it → **[FIXED]** B.1 names `aio_edition_routes`, its arguments, the overridable `aio_edition_router` array, and the no-bare-`}` rule.
+2. NIT: pin where the function is defined (`tests/test_tools.py:1627-1633`) → **[FIXED]** B.1: inside step 5.
+3. NIT: `scripts/aio/build-pdf.sh:29` has the same group gap; the `py()` lines are `:50-53` → **[FIXED]** B.1.
+4. NIT: say "verbatim" for the scoped words → **[FIXED]** B.1.
+
+The round-3 fold is mechanical and adds no scope. The gate closes with all three at APPROVE or APPROVE WITH NITS and no `[OPEN]` item.
 
 ## Content Review
 
