@@ -460,8 +460,8 @@ step "5/7 PDF build"
 # and mock tests, glossary-only, or none (printed as INFO) for a change under the book's own paths.
 rendered=()
 skipped=()
-# The aio edition routes (usaaio a20128f step 8, ported verbatim apart from paths and the aio
-# group): the router prints one "<mode> <book> [--units ...] [--mocktests ...]" line per aio
+# The aio edition routes (usaaio a20128f step 8, ported verbatim apart from paths, the aio group,
+# the route loop reading fd 4, the book-set check and the rendered/skipped bookkeeping): the router prints one "<mode> <book> [--units ...] [--mocktests ...]" line per aio
 # publication book. The arguments are the registered aio publication books; a missing, repeated or
 # unregistered routed book fails, as does an unknown mode. full/scoped join `rendered`,
 # glossary/none join `skipped` with their route. The router command is overridable for the tests.

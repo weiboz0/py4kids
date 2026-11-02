@@ -1783,11 +1783,15 @@ def _aio_edition_function() -> str:
 
 def _run_aio_edition_routes(tmp_path: Path, routes: str, *, router_rc: int = 0,
                             books: tuple[str, ...] = ("aio-ml", "aio-dl"),
-                            scope_args: str = "") -> subprocess.CompletedProcess[str]:
-    """Run the extracted step-5 function with a stub router and a stub `uv` (nothing renders)."""
+                            scope_args: str = "", uv_fail: str = "") -> subprocess.CompletedProcess[str]:
+    """Run the extracted step-5 function with a stub router and a stub `uv` (nothing renders).
+
+    `uv_fail`: the stub `uv` exits 1 when its arguments contain this text (a failing build or audit).
+    """
     stubs = tmp_path / "bin"
     stubs.mkdir(exist_ok=True)
-    (stubs / "uv").write_text('#!/usr/bin/env bash\necho "STUB uv $*"\n', encoding="utf-8")
+    fail = f'[[ -n "{uv_fail}" && "$*" == *"{uv_fail}"* ]] && exit 1\n' if uv_fail else ""
+    (stubs / "uv").write_text(f'#!/usr/bin/env bash\necho "STUB uv $*"\n{fail}', encoding="utf-8")
     (stubs / "uv").chmod(0o755)
     (tmp_path / "routes.txt").write_text(routes, encoding="utf-8")
     router = tmp_path / "router.sh"
@@ -1860,3 +1864,16 @@ def test_ci_aio_edition_routes_fail_on_a_book_set_mismatch_or_unknown_mode(tmp_p
     assert proc.returncode != 0
     assert "FAIL: aio edition router (tools/aio/ci_scope.py) failed" in proc.stderr
     assert "STUB uv" not in proc.stdout
+
+
+def test_ci_aio_edition_routes_fail_when_a_build_or_audit_fails(tmp_path: Path) -> None:
+    # Content gate ([sol] NIT): a failing build-book or publish_audit must stop step 5, not be
+    # swallowed into `rendered`.
+    for name, failing in (("build", "scripts/aio/build-book.sh --book aio-ml"),
+                          ("audit", "tools.aio.publish_audit --root")):
+        case = tmp_path / name
+        case.mkdir()
+        proc = _run_aio_edition_routes(case, "full aio-ml\nfull aio-dl\n", uv_fail=failing)
+        assert proc.returncode != 0, name
+        assert "aio-dl" not in proc.stdout, (name, proc.stdout)  # nothing after the failure
+        assert "rendered:" not in proc.stdout, name
