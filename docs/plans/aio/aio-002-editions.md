@@ -180,6 +180,32 @@ The round-3 fold is mechanical and adds no scope. The gate closes with all three
 
 ## Content Review
 
+Duty: conventional code review of the tooling plus public-repo safety. No content ships (docs/content-review-gate.md; design 014 §3).
+
+### Review 1 (2026-11-02, on `bbdde5c1`): CONSENSUS
+
+**[self]** APPROVE.
+The aio release allowlist in `output/README.md` stages only the student editions (which carry Set A answers only, per D7), the syllabus, the handouts and the mock-test papers.
+The step-5 function's empty-argument case compares equal: both sides print one empty line.
+
+**[sol]** APPROVE WITH NITS (1 NIT):
+1. NIT: the route-loop tests cannot catch a swallowed build or audit failure, because the stub `uv` always exits 0 → **[FIXED]** `c951d182`. `test_ci_aio_edition_routes_fail_when_a_build_or_audit_fails` makes the stub fail on the build and then on the audit.
+   It was mutation-checked: `|| true` on either step-5 command makes it fail.
+   That check also exposed a stub bug, a trailing `[[ … ]] && exit 1` that made every unmatched call exit 1; it is fixed.
+
+The router's global set matches B.2. The exactly-one-route check, the scoped-word forwarding and the fd-4 read are sound. No PDF is tracked, and there is no commit or release path for the restricted aio PDFs.
+
+**[fable]** APPROVE WITH NITS (2 NIT), after checking every plan item, bash correctness and the README paths against the scripts:
+1. NIT: the step-5 comment's "ported verbatim apart from paths and the aio group" omits the fd-4 read, the book-set check and the bookkeeping → **[FIXED]** the comment now names them.
+2. NIT: the text test pins exact shell strings, so a reformat breaks it → **[WONTFIX]** it is the house style for the ci-local text tests (aio-001's exec-route test does the same), and the behavioural test covers command fidelity independently.
+
+After the fixes, the suites that read `scripts/ci-local.sh` or the changed tests were re-run green:
+- aio `test_integration.py`, `test_ci_scope.py` and `test_publication_config.py`: 87 passed;
+- `tests/test_ci_scope.py`, `test_tools.py`, `test_books.py` and `test_book_ids.py`: 447 passed;
+- ruff clean; `pre-merge-guard` OK.
+
+The fix commits change only a test and one `ci-local.sh` comment line, so the green `--all-books` run on `331871cd` stands as the gate for every executable line.
+
 ## Post-Execution Report
 
 Phases A–C are complete on `feature/aio-002-editions`: Phase A at `9b3ad391` (inline), and Phase B at `331871cd` (an Opus subagent with this plan as its brief).
